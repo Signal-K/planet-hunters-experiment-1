@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Mission, Target, MineralMeta } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE, REMOTE_MINERAL_SILO_CAPACITY } from '@/lib/data'
+import { miningNeedsRecharge, unitsStillNeeded } from '@/lib/systems/mining-charges'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
@@ -298,6 +299,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const orderFilled = Object.entries(mission.requires.minerals).every(
     ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
   )
+  const stillNeeded = unitsStillNeeded(mission.requires.minerals, cargo)
+  // 4 charges left on a 3/5 platinum order cannot reliably land the last two
+  // hits. Recharge refills the magazine and keeps the cargo already collected.
+  const needsRecharge = miningNeedsRecharge(laserCharges, stillNeeded)
 
   // Charges depleted without filling the order — always show recovery options, not just during coaching
   const runFailed = laserCharges === 0 && !orderFilled
@@ -366,6 +371,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
   function handleReturn() {
     if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
+  }
+
+  function handleRecharge() {
+    setLaserCharges(MAX_CHARGES)
   }
 
   // Local-dev-only shortcut: fills the order instantly so testing later
@@ -631,11 +640,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-crit)', textTransform: 'uppercase' }}>Laser Depleted</div>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-text)', textAlign: 'center', lineHeight: 1.2 }}>Order Not Filled</div>
           <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', textAlign: 'center', lineHeight: 1.5 }}>
-            {totalCollected}/{totalNeeded} units collected. Fire at ore veins — each shot must hit a deposit.
+            {totalCollected}/{totalNeeded} units collected. Recharge keeps this cargo. Each new shot still has to hit a deposit.
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 280, marginTop: 8 }}>
-            <button className="mining-failure-retry" onClick={handleTryAgain}>
-              Try Again
+            <button className="mining-failure-retry" data-testid="mining-recharge-btn" onClick={handleRecharge}>
+              Recharge Laser
             </button>
             {onAbandon && (
               <button className="mining-failure-abandon" onClick={() => setConfirmingAbandon(true)}>
@@ -650,7 +659,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       {activeOverlay === 'warning' && (
         <div className="mining-charge-warning" style={{ position: 'absolute', top: hasCoach ? (coachManual ? 'var(--tutorial-manual-content-top)' : 'var(--tutorial-content-top)') : 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
           <div>
-            {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — order not filled
+            {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — recharge to keep this cargo
           </div>
         </div>
       )}
@@ -817,12 +826,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <button
             className="mining-command mining-command--return"
             type="button"
-            disabled={!orderFilled && laserCharges > 0}
+            disabled={!orderFilled && laserCharges > 0 && !needsRecharge}
             data-testid="return-home-btn"
-            onClick={handleReturn}
+            data-mode={needsRecharge && !orderFilled ? 'recharge' : 'return'}
+            onClick={needsRecharge && !orderFilled ? handleRecharge : handleReturn}
           >
             {(() => {
               const destination = deliveryTargetName ? `DELIVER TO ${deliveryTargetName.toUpperCase()}` : 'RETURN TO EARTH'
+              if (needsRecharge && !orderFilled) return 'RECHARGE LASER'
               return orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
             })()}
           </button>
