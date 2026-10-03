@@ -95,8 +95,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: 6,
     description: 'Higher thrust margin. Better chance on heavier payload builds.',
     tier: 1,
-    img: '/game/assets/rooms/engine_room_t1_icon.png',
-    detailImg: '/game/assets/rooms/engine_room_t1.png',
+    img: '/game/assets/rockets/parts/pulse-thruster-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/pulse-thruster-t1.png',
   },
   {
     id: 'fusion-thruster-t2',
@@ -166,8 +166,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: 3,
     description: 'Cheap ascent help. Offsets starter hull mass during launch.',
     tier: 1,
-    img: '/game/assets/rooms/mining_room_t1_icon.png',
-    detailImg: '/game/assets/rooms/mining_room_t1.png',
+    img: '/game/assets/rockets/parts/strap-booster-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/strap-booster-t1.png',
   },
   {
     id: 'vulcan-booster-t1',
@@ -179,8 +179,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: 4,
     description: 'Stronger booster pack. More reliable with industrial payloads.',
     tier: 1,
-    img: '/game/assets/rooms/mining_room_t1_icon.png',
-    detailImg: '/game/assets/rooms/mining_room_t1.png',
+    img: '/game/assets/rockets/parts/vulcan-booster-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/vulcan-booster-t1.png',
   },
   {
     id: 'focused-laser-t2',
@@ -249,6 +249,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     mass: 1,
     power: -1,
     description: 'Basic navigation, comms, and launch authority.',
+    img: '/game/assets/rockets/parts/cockpit-command-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/cockpit-command-t1.png',
   },
   {
     id: 'guidance-cockpit-t1',
@@ -259,6 +261,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     mass: 1,
     power: -1,
     description: 'Better flight computer. Improves mission review confidence.',
+    img: '/game/assets/rockets/parts/guidance-cockpit-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/guidance-cockpit-t1.png',
   },
 
   // ── Payload / Storage Silos ─────────────────────────────────────────
@@ -285,8 +289,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: -2,
     description: 'Drill control and sample hopper. Best for extraction missions.',
     tier: 1,
-    img: '/game/assets/rooms/cargo_bay_t1_icon.png',
-    detailImg: '/game/assets/rooms/cargo_bay_t1.png',
+    img: '/game/assets/rockets/parts/mining-payload-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/mining-payload-t1.png',
   },
   {
     id: 'storage-silo-t2',
@@ -356,6 +360,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: 0,
     description: 'Dense storable propellant. Low cost per delta-v, suits short orbital hops.',
     unlockedAtMissions: 2,
+    img: '/game/assets/rockets/parts/kerosene-stage-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/kerosene-stage-t1.png',
   },
   {
     id: 'lox-lh2-stage-t1',
@@ -367,6 +373,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: 0,
     description: 'High specific impulse. Better mass fraction for longer transfers.',
     unlockedAtMissions: 2,
+    img: '/game/assets/rockets/parts/lox-lh2-stage-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/lox-lh2-stage-t1.png',
   },
 
   // ── Fairing ─────────────────────────────────────────────────────────
@@ -380,6 +388,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: 0,
     description: 'Nose cone protects cargo during ascent. Jettisoned at separation altitude.',
     unlockedAtMissions: 2,
+    img: '/game/assets/rockets/parts/standard-fairing-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/standard-fairing-t1.png',
   },
   {
     id: 'heavy-fairing-t1',
@@ -391,6 +401,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: 0,
     description: 'Wider shroud for bulkier cargo. Needed for oversized mineral containers.',
     unlockedAtMissions: 2,
+    img: '/game/assets/rockets/parts/heavy-fairing-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/heavy-fairing-t1.png',
   },
 
   // ── Docking Port ────────────────────────────────────────────────────
@@ -404,6 +416,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: -1,
     description: 'Enables cargo handoff at orbital relay depots and stations.',
     unlockedAtMissions: 4,
+    img: '/game/assets/rockets/parts/standard-port-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/standard-port-t1.png',
   },
   {
     id: 'magnetic-port-t1',
@@ -415,6 +429,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: -1,
     description: 'Active magnetic capture — faster approach lock, higher docking success.',
     unlockedAtMissions: 4,
+    img: '/game/assets/rockets/parts/magnetic-port-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/magnetic-port-t1.png',
   },
 
   // ── Heat Shield ─────────────────────────────────────────────────────
@@ -428,6 +444,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: 0,
     description: 'Single-use ablative layer. Sufficient for standard re-entry profiles.',
     unlockedAtMissions: 6,
+    img: '/game/assets/rockets/parts/ablative-shield-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/ablative-shield-t1.png',
   },
   {
     id: 'ceramic-shield-t1',
@@ -439,6 +457,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: 0,
     description: 'Refractory ceramic tiles. Handles steeper re-entry angles and heavier return cargo.',
     unlockedAtMissions: 6,
+    img: '/game/assets/rockets/parts/ceramic-shield-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/ceramic-shield-t1.png',
   },
   {
     id: 'crew-quarters-t1',
@@ -465,8 +485,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     description: 'Stacked double bunk. Same footprint, higher crew capacity.',
     unlockedAtMissions: 5,
     tier: 2,
-    img: '/game/assets/rooms/crew_module_t2_icon.png',
-    detailImg: '/game/assets/rooms/crew_module_t2.png',
+    img: '/game/assets/rockets/parts/crew-transport-t2_icon.png',
+    detailImg: '/game/assets/rockets/parts/crew-transport-t2.png',
   },
   {
     id: 'crew-transport-t3',
@@ -507,8 +527,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     description: 'Two full double-bunk berths. Top-tier crew transport capacity.',
     unlockedAtMissions: 8,
     tier: 5,
-    img: '/game/assets/rooms/crew_module_t5_icon.png',
-    detailImg: '/game/assets/rooms/crew_module_t5.png',
+    img: '/game/assets/rockets/parts/crew-transport-t5_icon.png',
+    detailImg: '/game/assets/rockets/parts/crew-transport-t5.png',
   },
   {
     id: 'lander-module-t1',
@@ -520,6 +540,8 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: -2,
     description: 'Detaches to descend and land on a target, then re-docks with the ship in orbit for the return leg.',
     unlockedAtMissions: 4,
+    img: '/game/assets/rockets/parts/lander-module-t1_icon.png',
+    detailImg: '/game/assets/rockets/parts/lander-module-t1.png',
   },
 ]
 
