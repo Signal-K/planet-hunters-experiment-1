@@ -36,10 +36,13 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
     },
   },
   {
-    // SSL-332: after both guided missions the Hub offers the silo build.
+    // SSL-405: the three-try Flight Plan replaced the Storage Silo lesson,
+    // so the Hub no longer offers a silo card; the Flight Plan leads instead.
     key: 'storage-hub',
     assertion: () => {
-      cy.get('[data-testid="hub-build-storage-silo"]').should('be.visible')
+      assertOnHome()
+      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Open client contracts')
+      cy.get('[data-testid="hub-build-storage-silo"]').should('not.exist')
     },
   },
   {
@@ -133,12 +136,13 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid^="dev-shot-"]').should('have.length', 27)
   })
 
-  it('clicking Transport Hub lands on the two-leg client pick with the Transport coach', () => {
+  it('clicking Transport Hub lands on the Hub with the Flight Plan objective', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shot-transport-hub"]').click()
-    // Compact coach on the Hub: title plus the action.
-    cy.contains('Tap the Launchpad').should('be.visible')
-    cy.contains(/^transport$/i).should('be.visible')
+    // SSL-405: the Flight Plan strip names the active try and its objective.
+    cy.get('[data-testid="flight-plan"]').should('be.visible')
+      .and('contain', 'Open client contracts')
+      .and('contain', 'mining')
     cy.contains('Create a free account').should('not.exist')
   })
 
@@ -157,21 +161,14 @@ describe('DEV panel UI', () => {
     cy.contains('span', 'RETURNED FROM').next().should('have.text', '4 Vesta')
   })
 
-  it('clicking Storage Hub shows the Storage coach and silo card, and placing the silo opens Free Ops', () => {
+  it('clicking Storage Hub shows the Flight Plan and no retired silo card, with Free Ops still locked', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shot-storage-hub"]').click()
-    cy.contains('Build a Storage Silo').should('be.visible')
-    // scrollBehavior:false — the hub's sliding world is taller than the
-    // viewport, and Cypress's default scroll-to-top tucks the card under the
-    // fixed top bar (same pattern as earth-base-redesign.cy.ts).
-    cy.get('[data-testid="hub-build-storage-silo"]').click({ scrollBehavior: false })
-    cy.location('pathname').should('eq', '/game/build')
-    cy.get('[data-coach-id="build-plot-open"]').first().parents('button').first().click()
-    cy.get('[data-coach-id="build-confirm"]').click()
-    cy.get('[data-testid="tutorial-complete-sheet"]').should('be.visible')
-    cy.get('[data-testid="free-ops-activity-client-work"]').should('be.visible')
-    cy.get('[data-testid="free-ops-activity-space-telescope"]').should('be.visible')
-    cy.get('[data-testid="free-ops-activity-build-refinery"]').should('be.visible')
+    assertOnHome()
+    cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Open client contracts')
+    cy.get('[data-testid="hub-build-storage-silo"]').should('not.exist')
+    cy.get('[data-testid="tutorial-complete-sheet"]').should('not.exist')
+    cy.get('[data-testid="free-ops-activity-client-work"]').should('not.exist')
   })
 
   it('closes panel when DEV button clicked again', () => {

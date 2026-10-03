@@ -235,9 +235,18 @@ describe('UI zone contract', () => {
         assertZoneAvoids('bottom-nav', 'tutorial-rail')
         assertNoZone('ambient-prompt')
         assertKnownZonesOnly()
-        // The hub is the one screen that carries the Feedback launcher
-        // (layout.tsx showFeedback); it must stay clear of the rail and dock.
-        assertZoneAvoids('feedback-launcher', 'tutorial-rail')
+        // The Feedback launcher yields to the Flight Plan rail while training
+        // is active (layout.tsx: showFeedback && !coach), so the two can
+        // never share the hub.
+        assertNoZone('feedback-launcher')
+      })
+
+      it('shows the Feedback launcher on the Free Ops hub, clear of the dock', () => {
+        visitWithState({ screen: 'hub', tutorial: false, player: { missionsDone: 3 } })
+
+        cy.get('[data-testid="building-launchpad"]', { timeout: 15000 }).should('exist')
+        assertNoZone('tutorial-rail')
+        cy.get('[data-ui-zone="feedback-launcher"]').should('be.visible')
         assertZoneAvoids('feedback-launcher', 'bottom-nav')
       })
 

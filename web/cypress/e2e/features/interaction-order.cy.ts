@@ -177,10 +177,10 @@ describe('Interaction order hardening', () => {
     cy.get('[data-testid="resolve-cargo-btn"]').click()
     cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).click()
     cy.get('[data-testid="collect-reward-btn"]').dblclick()
-    // debrief settlement routes to the hub tutorial rail, not the market — see the
+    // debrief settlement completes the mining try and routes to the hub rail (scan try), not the market — see the
     // identical assertion in smoke/game-loop.cy.ts "M1 completion returns to hub".
     cy.contains('Commodity Exchange').should('not.exist')
-    cy.get('[data-testid="flight-plan"]').contains(/transport/i).should('be.visible')
+    cy.get('[data-testid="flight-plan"]').contains(/classify the transit candidate/i).should('be.visible')
     readSavedState().should(state => {
       expect(state.player.missionsDone).to.eq(1)
       expect(state.missionId).to.eq(null)

@@ -99,17 +99,22 @@ describe('Base trays and shared bar', () => {
             expect(card.width, 'centered card, not full bleed').to.be.lessThan(width)
             expect(Math.abs(card.left + card.width / 2 - width / 2)).to.be.lessThan(2)
           } else {
-            expect(card.width, 'phone tray is full width').to.be.closeTo(width, 1)
+            // Compare with the tray's own client width: a classic (non-overlay)
+            // scrollbar, as on the Linux CI browser, takes ~15px of the 390
+            // viewport from the card without the tray being any less full-bleed.
+            expect($tray[0].clientWidth, 'tray spans the viewport').to.be.closeTo(width, 16)
+            expect(card.width, 'phone tray is full width').to.be.closeTo($tray[0].clientWidth, 1)
           }
         })
         cy.get('body').type('{esc}')
         cy.get('.ln-page-surface--tray').should('not.exist')
       })
-      it('opens Mission Log as a tray over a still Base and closes it with Escape', () => {
+      it('opens Mission Log from the Hub dock as a tray over a still Base and closes it with Escape', () => {
         visitTray('/game/hub')
         cy.get('[data-screen="hub"]').should('be.visible').then($hub => {
           const before = $hub[0].getBoundingClientRect()
-          visitTray('/game/mission-history')
+          cy.get('[data-testid="hub-mission-log-btn"]').scrollIntoView().click()
+          cy.location('pathname').should('eq', '/game/mission-history')
           cy.get('[data-testid="mission-history-tray"]').should('be.visible')
           cy.get('[data-screen="hub"]').should('exist').then($still => {
             const after = $still[0].getBoundingClientRect()
@@ -121,6 +126,16 @@ describe('Base trays and shared bar', () => {
         cy.get('body').type('{esc}')
         cy.location('pathname').should('eq', '/game/hub')
         cy.get('[data-testid="mission-history-tray"]').should('not.exist')
+      })
+
+      // SSL-372 product gap: Market and Subsurface keep their URL on a cold
+      // load (TRAY_ROUTE_SCREENS in lib/game-route.ts) but Mission Log does
+      // not, so a reload of /game/mission-history lands on the Base. Left
+      // failing on purpose until the product gap is fixed.
+      it('keeps the Mission Log URL on a cold load', () => {
+        visitTray('/game/mission-history')
+        cy.location('pathname').should('eq', '/game/mission-history')
+        cy.get('[data-testid="mission-history-tray"]').should('be.visible')
       })
     })
   })

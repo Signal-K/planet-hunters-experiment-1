@@ -99,12 +99,9 @@ function assertGameplayButtonsAvoidCoachBlock() {
 
 function openContracts() {
   assertOnHome(10000)
-  cy.window().then(win => {
-    // No standing missions nav on desktop; the launchpad callout's
-    // "View Missions" is the entry there (see the retirement note below).
-    if (win.innerWidth >= 1024) cy.contains('button', 'View Missions', { timeout: 10000 }).click()
-    else cy.get('[data-testid="home-bar-ops"]').click()
-  })
+  // The shared Home bar's OPS action is the entry at every width. The
+  // launchpad's "View Missions" callout is hidden while the Flight Plan is up.
+  cy.get('[data-testid="home-bar-ops"]').click()
   cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
 }
 
@@ -122,7 +119,7 @@ describe('Tutorial rail regression', () => {
           doneSteps: { 0: true },
         }))
 
-        cy.get('[data-testid="flight-plan"]').should('contain', 'Extraction')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Open client contracts')
 
         // The retired desktop sidebar must stay gone; the shared bar's OPS
         // action is the one persistent way into Missions at every width.
@@ -140,7 +137,7 @@ describe('Tutorial rail regression', () => {
         }))
         openContracts()
 
-        cy.get('[data-testid="flight-plan"]').should('contain', 'Select a Mission')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Accept a mining contract')
         cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -154,7 +151,7 @@ describe('Tutorial rail regression', () => {
         openContracts()
         cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
 
-        cy.get('[data-testid="flight-plan"]').should('contain', 'Choose a Destination')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Choose the highlighted target')
         cy.get('[data-testid="continue-build-btn"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -195,7 +192,7 @@ describe('Tutorial rail regression', () => {
           doneSteps: { 0: true, 1: true, 2: true, 3: true },
         }))
 
-        cy.get('[data-testid="flight-plan"]').should('contain', 'Assemble the Rocket')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Open client contracts')
         cy.get('[data-testid="launch-btn"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -211,7 +208,7 @@ describe('Tutorial rail regression', () => {
           },
         }))
 
-        cy.get('[data-testid="flight-plan"]').should('contain', 'Build a Launchpad')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Open client contracts')
         cy.get('[data-testid="flight-plan-objective"]').click()
         cy.get('[data-testid="flight-plan-skip"]').click()
         cy.get('[data-testid="flight-plan"]').should('not.exist')
