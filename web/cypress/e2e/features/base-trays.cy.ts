@@ -109,26 +109,36 @@ describe('Base trays and shared bar', () => {
         cy.get('body').type('{esc}')
         cy.get('.ln-page-surface--tray').should('not.exist')
       })
-      it('opens Mission Log from the Hub dock as a tray over a still Base and closes it with Escape', () => {
+      it('opens Mission Log from the Hub dock as a tray over the Base and closes it with Escape', () => {
+        visitTray('/game/hub')
+        cy.get('[data-testid="hub-mission-log-btn"]').scrollIntoView().should('be.visible').click()
+        cy.location('pathname').should('eq', '/game/mission-history')
+        cy.get('[data-testid="mission-history-tray"]').should('be.visible')
+        cy.get('[data-screen="hub"]').should('exist')
+        cy.get('body').type('{esc}')
+        cy.location('pathname').should('eq', '/game/hub')
+        cy.get('[data-testid="mission-history-tray"]').should('not.exist')
+      })
+
+      // SSL-372 product gap: at 1440 the Base is 1316px wide with Mission Log
+      // open versus 1440 without it (390 is unchanged), so the tray re-frames
+      // the landscape instead of sitting over a still Base. Left failing on
+      // purpose until the product gap is fixed.
+      it('keeps the Base the same size while Mission Log is open', () => {
         visitTray('/game/hub')
         cy.get('[data-testid="hub-mission-log-btn"]').should('be.visible')
-        // Let the Base finish its first layout pass before measuring it.
         cy.wait(1000)
         cy.get('[data-screen="hub"]').should('be.visible').then($hub => {
           const before = $hub[0].getBoundingClientRect()
           cy.get('[data-testid="hub-mission-log-btn"]').scrollIntoView().click()
-          cy.location('pathname').should('eq', '/game/mission-history')
           cy.get('[data-testid="mission-history-tray"]').should('be.visible')
           cy.get('[data-screen="hub"]').should('exist').then($still => {
             const after = $still[0].getBoundingClientRect()
-            expect(after.width).to.eq(before.width)
-            expect(after.height).to.eq(before.height)
-            expect(after.top).to.eq(before.top)
+            expect(after.width, 'Base width').to.eq(before.width)
+            expect(after.height, 'Base height').to.eq(before.height)
+            expect(after.top, 'Base top').to.eq(before.top)
           })
         })
-        cy.get('body').type('{esc}')
-        cy.location('pathname').should('eq', '/game/hub')
-        cy.get('[data-testid="mission-history-tray"]').should('not.exist')
       })
 
       // SSL-372 product gap: Market and Subsurface keep their URL on a cold
