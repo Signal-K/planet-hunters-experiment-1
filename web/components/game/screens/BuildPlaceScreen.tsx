@@ -256,13 +256,19 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       </div>
 
       {/* Structure picker — compact strip below plots, above sticky actions */}
-      <div data-ui-zone={UI_ZONES.screenContent} data-beacon="build-structure-strip" style={{
+      <div
+        className="build-structure-strip"
+        data-testid="build-structure-strip"
+        data-ui-zone={UI_ZONES.screenContent}
+        data-beacon="build-structure-strip"
+        style={{
         position: 'absolute',
         left: 0, right: 0,
         bottom: 64,
         zIndex: 12,
         pointerEvents: 'none',
-      }}>
+        }}
+      >
         <div style={{
           background: 'linear-gradient(180deg, transparent, var(--ln-overlay))',
           padding: '10px 12px 0',
@@ -287,6 +293,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
               return (
                 <button
                   key={c.id}
+                  data-testid={`build-structure-card-${c.id}`}
                   onClick={() => {
                     if (canSelect) {
                       handlePick(c.id)
@@ -445,6 +452,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
             landnam-earth-base-v2.html, whose confirm sheet is --ln-ok), and
             amber is reserved for payout emphasis, never a primary button. */}
         <PrimaryBtn
+          testId="build-place-confirm"
           kind="green"
           coachId={cell != null ? 'build-confirm' : undefined}
           disabled={cell == null || !sel}

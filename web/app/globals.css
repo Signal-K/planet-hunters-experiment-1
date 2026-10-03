@@ -3052,33 +3052,41 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 .build-place-field {
   z-index: 0;
 }
-.build-place-screen [data-coach-id="build-structure-strip"] > div {
+.build-place-screen .build-structure-strip > div {
   background: linear-gradient(180deg, transparent, rgba(10, 10, 12, 0.75) 26%, var(--ln-void) 100%);
   border-top: 1px solid var(--ln-hairline-strong);
 }
-.build-place-screen [data-coach-id="build-structure-strip"] {
-  /* The shared command rail is a physical, always-on object on this scene.
-     Stack picker and confirmation controls above it; otherwise the rail
-     covers the exact confirmation affordance the Storage Silo coach names. */
-  bottom: 120px !important;
+.build-place-screen .build-structure-strip {
+  /* GameChromeBars is now an in-flow sibling of the screen area. The older
+     coach selector no longer matched after the Flight Plan migration, and
+     its 120px reservation left a dead lower band on wide screens. Keep the
+     picker immediately above the contextual confirm bar instead. */
+  /* The card row itself is taller than the 44px control: structure names can
+     wrap (notably Deep Space Telescope), and the cost/status line follows.
+     Reserve the whole confirm sheet, not just its button, so none of that
+     text slides underneath it at phone width. */
+  bottom: 104px !important;
 }
-.build-place-screen [data-coach-id="build-structure-strip"] button {
+.build-place-screen .build-structure-strip button {
   background: var(--ln-surface);
   border-color: var(--ln-cyan-border);
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
 }
-.build-place-screen [data-coach-id="build-structure-strip"] button:disabled {
+.build-place-screen .build-structure-strip button:disabled {
   opacity: 0.52;
 }
-.build-place-screen [data-coach-id="build-structure-strip"] button div,
-.build-place-screen [data-coach-id="build-structure-strip"] button div div {
+.build-place-screen .build-structure-strip button div,
+.build-place-screen .build-structure-strip button div div {
   color: var(--ln-text);
 }
-.build-place-screen [data-coach-id="build-structure-strip"] span:last-child {
+.build-place-screen .build-structure-strip span:last-child {
   color: var(--ln-text-dim);
 }
 .build-place-screen .sticky-actions {
-  bottom: 64px;
+  /* The shared game chrome consumes its own flex row/rail; it does not
+     overlap this screen. Anchoring here removes the portrait and desktop
+     gap while keeping the picker above the confirmation control. */
+  bottom: 0;
   background: var(--ln-surface);
   border-top: 1px solid var(--ln-cyan-border);
 }

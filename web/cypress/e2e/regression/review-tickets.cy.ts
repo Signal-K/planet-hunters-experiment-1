@@ -150,6 +150,29 @@ describe('Parallel mission runs (replaces the STS-487 single-mission guard)', ()
 })
 
 describe('Surface Silo placement persistence (KES-271)', () => {
+  it('keeps every build card reachable above Confirm at phone, landscape, and desktop sizes', () => {
+    const assertBuildControls = () => {
+      cy.get('[data-testid="build-structure-strip"]').should('be.visible')
+      cy.get('[data-testid="build-place-confirm"]').should('be.visible')
+      cy.get('[data-testid="build-structure-card-surface-silo"]').then($card => {
+        cy.get('[data-testid="build-place-confirm"]').then($confirm => {
+          const card = $card[0].getBoundingClientRect()
+          const confirm = $confirm[0].getBoundingClientRect()
+          expect(card.bottom, 'structure card clears Confirm').to.be.at.most(confirm.top)
+        })
+      })
+    }
+
+    for (const [width, height] of [[390, 844], [844, 390], [1440, 900]]) {
+      cy.viewport(width, height)
+      visitGame('/game/hub')
+      cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 10000 }).click()
+      cy.get('[data-testid="hub-new-structure-btn"]', { timeout: 10000 }).click()
+      cy.get('[data-testid="build-place-screen"]', { timeout: 10000 }).should('be.visible')
+      assertBuildControls()
+    }
+  })
+
   it('persists the placed silo and plot after returning to the base and reloading', () => {
     visitGame('/game/hub', {
       screen: 'hub',
