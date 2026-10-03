@@ -357,7 +357,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
     })
 
-    it('collecting the M1 reward returns to the Hub', () => {
+    it('collecting the M1 reward hands over to the scan try on the Galaxy screen', () => {
       const cargo = { platinum: 5 }
       visitWithState(fullState({
         screen: 'debrief',
@@ -389,7 +389,8 @@ describe('Full Game Loop — Landnam', () => {
       }))
       teardownVehicle()
       cy.get('[data-testid="collect-reward-btn"]').click()
-      cy.location('pathname').should('eq', '/game/hub')
+      // SSL-405: finishing the mining try opens the scan try's Galaxy screen.
+      cy.location('pathname').should('eq', '/game/galaxy')
     })
 
     it('shows Prospector unlock popup after M1 completion', () => {
@@ -424,7 +425,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.contains('Select Prospector').should('be.visible')
     })
 
-    it('M1 completion returns to hub with the Transport coach and does not open the market', () => {
+    it('M1 completion hands over to the scan try and does not open the market', () => {
       // M1 requires 5 platinum; player mined 7 so 2 are excess after delivery
       visitWithState(fullState({
         screen: 'debrief',
@@ -460,10 +461,9 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="collect-reward-btn"]').click()
 
       cy.contains('Commodity Exchange').should('not.exist')
-      // SSL-405: the Transport lesson coach is retired. The Hub is back with
-      // the launchpad, and the debrief did not route through the market.
-      cy.get('[data-testid="building-launchpad"]').should('be.visible')
-      cy.location('pathname').should('not.include', '/market')
+      // SSL-405: the Transport lesson coach is retired. Settling the mining
+      // debrief lands on the scan try's Galaxy screen, not the market.
+      cy.location('pathname').should('eq', '/game/galaxy')
     })
   })
 

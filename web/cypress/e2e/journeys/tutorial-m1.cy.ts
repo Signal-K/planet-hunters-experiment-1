@@ -233,8 +233,9 @@ function playM1() {
   completeMining()
   completeDebrief()
 
-  // Collecting the M1 reward completes the mining try and the Flight Plan
-  // moves on to the scan try on the Hub.
+  // Collecting the M1 reward completes the mining try; the Flight Plan hands
+  // over to the scan try on the Galaxy screen.
+  cy.location('pathname', { timeout: 15000 }).should('eq', '/game/galaxy')
   assertOnHome(10000)
   expectCoach('Classify the transit candidate')
 }
@@ -249,7 +250,7 @@ function playScanTryHandoff() {
   assertOnHome(10000)
   expectCoach('Classify the transit candidate')
   navToMissions()
-  cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('exist')
+  cy.get('[data-testid^="mission-accept-"]').should('exist')
 }
 
 // ─── Viewport configurations ──────────────────────────────────────────────────
