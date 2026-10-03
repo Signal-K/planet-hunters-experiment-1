@@ -157,7 +157,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
     .find(rocket => !rocket.locked && missionsDone >= rocket.missionsRequired) ?? ROCKET_MODELS[0]
 
   return (
-    <div className={`game-screen theme-light ${styles.screen}`}>
+    <div className={`game-screen theme-light ${styles.screen}`} data-testid="hangar-screen">
       <TopBar eyebrow="BASE · HANGAR" title="Hangar" onBack={onBack} />
       <div className={`screen-scroll ${styles.scroll}`} data-ui-zone={UI_ZONES.screenContent}>
         <div className={styles.inner}>
@@ -182,7 +182,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
             {/* Icon */}
               <div className={styles.customizerIcon}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 8v8l-8 5-8-5V8zM8 10l4 2.5 4-2.5M12 12.5V18" /></svg></div>
             <div className={styles.customizerText}>
-              <div className={styles.customizerTitle}>Customiser Online</div>
+              <div className={styles.customizerTitle} data-testid="hangar-customizer-title">Customiser Online</div>
               <div className={styles.customizerSummary} data-testid="ship-customizer-loadout-summary">
                 {hasLoadout
                   ? `${installedIds.length}/${sequence.length} modules fitted · ${successChance}% success`
@@ -196,7 +196,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
         <HangarAssemblyScene rocket={constructionRocket} pendingLaunch={!!pendingLaunch} />
 
         <div className={styles.sectionHeader}><span>Vehicle registry</span><span>{ROCKET_MODELS.length} registry entries</span></div>
-        <div className={styles.fleetGrid}>{ROCKET_MODELS.map(rocket => (
+        <div className={styles.fleetGrid} data-testid="hangar-fleet-grid">{ROCKET_MODELS.map(rocket => (
           <RocketCard key={rocket.id} rocket={rocket} missionsDone={missionsDone} onSelect={onSelect ? (id) => { captureGameEvent('hangar_rocket_selected', { rocket_id: id, cost_francs: rocket.costFrancs }); onSelect(id) } : onSelect} />
         ))}</div>
         <div className={styles.rail}><span><i className={styles.railValue}>●</i> Registry online</span><span>{missionsDone} missions logged</span><span>Balance {formatCurrency(francs, { compact: true })}</span></div>
