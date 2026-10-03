@@ -151,6 +151,29 @@
   .help { display: none; }
 }
 
+/* SSL-401: with the build drawer open on a portrait phone the pad collapses to
+   a strip (status line, one row of arrows, view/build buttons beside them) so
+   pad plus drawer leave most of the field visible. Arrow targets stay 44px. */
+@media (max-width: 720px) and (orientation: portrait) {
+  .compact {
+    width: min(366px, calc(100vw - 24px));
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--ln-s-2);
+  }
+  .compact .status { grid-column: 1 / -1; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: var(--ln-s-2); }
+  .compact .status strong { -webkit-line-clamp: 1; line-clamp: 1; }
+  .compact .cross {
+    grid-template-areas: 'left down up right centre';
+    grid-template-columns: repeat(5, 44px);
+    grid-auto-rows: 44px;
+    justify-content: start;
+  }
+  .compact .row { flex-direction: column; flex-wrap: nowrap; gap: var(--ln-s-1); }
+  .compact .action { min-height: 32px; padding: 0 var(--ln-s-1); font-size: 12px; letter-spacing: 0.04em; white-space: nowrap; }
+  .compact .action svg { display: none; }
+}
+
 /* Compact landscape (phone on its side): the pad must fit inside the frame
    height next to the cargo HUD, so it drops the help line and the view/build
    row becomes a single strip. */

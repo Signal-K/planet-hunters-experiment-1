@@ -152,7 +152,9 @@
   border-radius: var(--ln-r-pill);
   color: var(--ln-text-dim);
   font-family: var(--ln-font-mono);
-  font-size: var(--ln-fs-micro);
+  /* SSL-401: price tags never drop below the 12px phone minimum. */
+  font-size: max(12px, var(--ln-fs-micro));
+  line-height: 1.5;
 }
 
 .dot {

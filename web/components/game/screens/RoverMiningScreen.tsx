@@ -171,7 +171,7 @@ export default function RoverMiningScreen({
       <TopBar eyebrow={`SURFACE OPS · ${target.name.toUpperCase()}`} title="Field Rover" onBack={onBack} />
 
       <main className={styles.content} data-ui-zone={UI_ZONES.screenContent}>
-        <section className={styles.scenePanel} aria-label="TakeOn rover field">
+        <section className={styles.scenePanel} aria-label="TakeOn rover field" data-build-mode={buildMode && sandboxEnabled}>
           <TakeOnMount
             ref={takeonHandle}
             missionId={missionId}
