@@ -118,6 +118,28 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
   const onFailureRef = useRef(onFailure)
   onFailureRef.current = onFailure
   const controllerRef = useRef<MiningController | null>(null)
+  // The Pixi world is sized once at init. When the viewport changes size after
+  // mount (rotation, window resize) bump fitKey so the world is rebuilt to the
+  // new container and the playfield keeps filling it.
+  const [fitKey, setFitKey] = useState(0)
+  const fittedSizeRef = useRef<{ w: number; h: number } | null>(null)
+  useEffect(() => {
+    const parent = containerRef.current
+    if (!parent || typeof ResizeObserver === 'undefined') return
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const observer = new ResizeObserver(() => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => {
+        const fitted = fittedSizeRef.current
+        if (!fitted) return
+        if (Math.abs(parent.clientWidth - fitted.w) > 24 || Math.abs(parent.clientHeight - fitted.h) > 24) {
+          setFitKey(k => k + 1)
+        }
+      }, 200)
+    })
+    observer.observe(parent)
+    return () => { observer.disconnect(); if (timer) clearTimeout(timer) }
+  }, [])
   const [missFlash, setMissFlash] = useState(false)
   const missFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onMissRef = useRef<(() => void) | null>(null)
@@ -163,6 +185,7 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
       try {
         const worldW = Math.max(300, parent.clientWidth)
         const worldH = Math.max(200, parent.clientHeight)
+        fittedSizeRef.current = { w: parent.clientWidth, h: parent.clientHeight }
         const dpr = capDpr()
         // Ship-to-surface gap is where the laser fires and ore drifts — the
         // only part of the sky that's actually gameplay, not empty
@@ -370,7 +393,7 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
       // else: async init returns early (destroyed=true), canvas stays briefly then is GC'd with parent
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rocketImageSrc])
+  }, [rocketImageSrc, fitKey])
 
   return (
     <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" data-training-mining={trainingMiningTry || undefined}>
