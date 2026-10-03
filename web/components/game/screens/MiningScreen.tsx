@@ -434,15 +434,16 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [guideOpen, setGuideOpen] = useState(false)
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
 
-  // SSL-333: open the guide once, unprompted, on the player's first-ever
-  // mining run. After that it's opt-in via the "?" button same as before.
+  // SSL-333 opened the guide once on a first mining run. The Flight Plan owns
+  // the Fire Laser training try now, so the guide remains opt-in there and
+  // never covers the seam it asks the player to watch.
   useEffect(() => {
-    if (!localStorage.getItem(HUD_GUIDE_ACK_KEY)) {
+    if (!trainingMiningTry && !localStorage.getItem(HUD_GUIDE_ACK_KEY)) {
       setGuideOpen(true)
       localStorage.setItem(HUD_GUIDE_ACK_KEY, '1')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [trainingMiningTry])
 
   const isFreeOps = !mission.client
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
