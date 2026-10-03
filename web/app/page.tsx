@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PRODUCT_DESCRIPTION, PRODUCT_NAME, PRODUCT_WORDMARK } from '@/lib/brand'
+import { PRODUCT_WORDMARK } from '@/lib/brand'
 import styles from './landing.module.css'
 
 export default function Home() {
@@ -8,8 +8,8 @@ export default function Home() {
       <section className={styles.intro} aria-labelledby="landing-title">
         <div className={styles.copyPanel}>
           <div className={styles.eyebrow}>{PRODUCT_WORDMARK} · BASE ONLINE</div>
-          <h1 className={styles.title} id="landing-title">Run a space program from the ground up.</h1>
-          <p className={styles.copy}>{PRODUCT_DESCRIPTION} Build the base, run client missions, and use real science instruments once the programme is ready.</p>
+          <h1 className={styles.title} id="landing-title">Run your space agency.</h1>
+          <p className={styles.copy}>Build new rockets and settle the galaxy using real science.</p>
           <div className={styles.actions}>
             <Link className={styles.primary} href="/game" data-testid="landing-enter-operations">
               Continue
