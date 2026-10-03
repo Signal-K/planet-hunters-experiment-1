@@ -74,11 +74,11 @@ function buildAimGuide(shipY: number, surfaceY: number): Graphics {
 function buildEnginePlume(): Graphics {
   const g = new Graphics()
 
-  // Engine exhaust layers
-  g.ellipse(-30, 0, 18, 10).fill({ color: 0xff2200, alpha: 0.18 })
-  g.ellipse(-27, 0, 12, 7).fill({ color: 0xff6600, alpha: 0.45 })
-  g.ellipse(-24, 0, 7, 4).fill({ color: 0xffcc22, alpha: 0.82 })
-  g.circle(-22, 0, 3).fill({ color: 0xfff0aa, alpha: 1 })
+  // Engine exhaust layers: teal -> cyan -> white, same palette as the v2 launch flame (SSL-458)
+  g.ellipse(-30, 0, 18, 10).fill({ color: 0x3fb8cc, alpha: 0.18 })
+  g.ellipse(-27, 0, 12, 7).fill({ color: 0x70d9ea, alpha: 0.45 })
+  g.ellipse(-24, 0, 7, 4).fill({ color: 0xa3ecf5, alpha: 0.82 })
+  g.circle(-22, 0, 3).fill({ color: 0xe0f8ff, alpha: 1 })
 
   return g
 }

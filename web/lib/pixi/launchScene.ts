@@ -10,6 +10,10 @@
  * single texture, so booster/stage separation cannot run, and rotated it
  * reads as a shapeless blob. Launch always uses a composed stack that
  * matches rocket-composition.ts (boosters + core + upper stage).
+ *
+ * SSL-455/456: the composed stack is the rocket sprites v2 sheets
+ * (public/game/assets/rockets/launch). The procedural Graphics stack below
+ * is the fallback when those textures fail to load.
  */
 import { Application, Container, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
 import {
@@ -21,6 +25,19 @@ import {
   lerpColor,
 } from './launchCamera'
 import { LAUNCH_TIMELINE } from './launchTimeline'
+import {
+  buildHookSchedule,
+  padSmokeSpawnTimes,
+  prefersReducedMotion,
+  type ScheduledHook,
+} from './launchSpriteAnim'
+import {
+  FxLayer,
+  createSpriteStack,
+  loadLaunchSheets,
+  type LaunchSheets,
+  type SpriteStack,
+} from './launchSprites'
 import { drawPlanet } from './transitScene'
 
 export { LAUNCH_TIMELINE, LAUNCH_W, LAUNCH_H, launchFrameDt } from './launchTimeline'
@@ -88,12 +105,22 @@ function makeSoftCircleTexture(app: Application, radius: number): Texture {
   return app.renderer.generateTexture(g)
 }
 
-function buildLaunchStack(variant: 'explorer' | 'prospector'): {
+interface LaunchStack {
   root: Container
-  boosterL: Graphics
-  boosterR: Graphics
+  boosterL: Container
+  boosterR: Container
   lowerStage: Container
-} {
+}
+
+function buildLaunchStack(variant: 'explorer' | 'prospector', sheets: LaunchSheets | null): LaunchStack & { sprites: SpriteStack | null } {
+  if (sheets) {
+    const sprites = createSpriteStack(sheets)
+    return { root: sprites.root, boosterL: sprites.boosterL, boosterR: sprites.boosterR, lowerStage: sprites.lowerStage, sprites }
+  }
+  return { ...buildProceduralLaunchStack(variant), sprites: null }
+}
+
+function buildProceduralLaunchStack(variant: 'explorer' | 'prospector'): LaunchStack {
   const root = new Container()
   const wide = variant === 'prospector' ? 20 : 16
   const boosterH = variant === 'prospector' ? 168 : 152
@@ -327,13 +354,48 @@ export function buildLaunchScene(
   rocketRoot.scale.set(layout.rocketScale)
   app.stage.addChild(rocketRoot)
 
-  const { root: rocketVisual, boosterL, boosterR, lowerStage } = buildLaunchStack(variant)
-  rocketRoot.addChild(rocketVisual)
-
   const plumeContainer = new Container()
   rocketRoot.addChildAt(plumeContainer, 0)
   const plumeGfx = new Graphics()
   plumeContainer.addChild(plumeGfx)
+
+  // SSL-455/456: the stack mounts once the v2 sheets settle (hidden until then, so there is
+  // no procedural-to-sprite pop). A failed or slow load mounts the procedural stack instead.
+  const reducedMotion = prefersReducedMotion()
+  let stack: LaunchStack | null = null
+  let sprites: SpriteStack | null = null
+  let hookSchedule: ScheduledHook[] = []
+  const firedHooks = new Set<string>()
+  let padFx: FxLayer | null = null
+  let sepFx: FxLayer | null = null
+  const padSmokeTimes = padSmokeSpawnTimes(T.ignitionStart, T.liftoff)
+  let padSmokeNext = 0
+
+  // The baked flame must not draw over the pad deck: clip everything in the rocket
+  // container below the deck line while the camera is still on the pad.
+  const flameMask = new Graphics()
+  flameMask.rect(-W, -H * 40, W * 3, H * 40).fill(0xffffff)
+  flameMask.y = layout.padDeckY
+  app.stage.addChild(flameMask)
+  rocketRoot.mask = flameMask
+  let flameMaskOn = true
+
+  function mountStack(sheets: LaunchSheets | null) {
+    if (rocketRoot.destroyed || stack) return
+    const built = buildLaunchStack(variant, sheets)
+    stack = built
+    sprites = built.sprites
+    rocketRoot.addChild(built.root)
+    if (sheets && sprites) {
+      hookSchedule = buildHookSchedule(sheets.meta, T)
+      padFx = new FxLayer(sheets)
+      sepFx = new FxLayer(sheets)
+      const at = app.stage.getChildIndex(rocketRoot) + 1
+      app.stage.addChildAt(padFx.container, at)
+      app.stage.addChildAt(sepFx.container, at + 1)
+    }
+  }
+  void loadLaunchSheets(variant).then(mountStack)
 
   const hudStyle = new TextStyle({
     fontFamily: '"Oxanium", "Turret Road", monospace',
@@ -388,7 +450,7 @@ export function buildLaunchScene(
   let done = false
   let cloudDrift = 0
 
-  function detachPart(part: Container | Graphics, vx: number, vy: number, rot: number, life: number) {
+  function detachPart(part: Container, vx: number, vy: number, rot: number, life: number) {
     const worldPos = part.getGlobalPosition()
     const localPos = app.stage.toLocal(worldPos)
     if (part.parent) part.parent.removeChild(part)
@@ -402,10 +464,71 @@ export function buildLaunchScene(
     debris.push({ sprite: wrap, vx, vy, rot, life })
   }
 
+  // fx-sheet frames are authored at the same 2 px per author unit as the stack sheets.
+  const fxScale = layout.rocketScale * 0.5
+
+  function spawnPadSmoke() {
+    if (!padFx) return
+    const padW = Math.min(W * 0.38, 320)
+    padFx.spawn({
+      anim: 'fx/pad-smoke',
+      x: W / 2 + (Math.random() - 0.5) * padW * 0.6,
+      y: layout.padDeckY - 2,
+      scale: fxScale * (0.85 + Math.random() * 0.5),
+      vx: (Math.random() - 0.5) * 36,
+      flipX: Math.random() < 0.5,
+      alpha: 0.9,
+    })
+  }
+
+  // Runtime copies of the fx that are also baked into the separate frames, layered on top
+  // for the clamp tumble and extra debris the bake can't move.
+  function spawnBoosterSepFx() {
+    if (!sepFx || !sprites) return
+    const s = layout.rocketScale
+    const wide = sprites.authorWide
+    for (const side of [-1, 1] as const) {
+      const x = rocketRoot.x + side * (wide + 4) * s
+      sepFx.spawn({ anim: 'fx/sep-puff', x, y: rocketRoot.y - 30 * s, scale: fxScale, vx: side * 40, vy: 55, flipX: side < 0, alpha: 0.9 })
+      sepFx.spawn({ anim: 'fx/debris', x, y: rocketRoot.y - 70 * s, scale: fxScale, vx: side * 60, vy: 70 })
+      sepFx.spawn({ anim: 'fx/clamp-tumble', x: rocketRoot.x + side * wide * s, y: rocketRoot.y - 60 * s, scale: fxScale, vx: side * 110, vy: 40, life: 1.1, flipX: side < 0 })
+    }
+  }
+
+  function spawnStageSepFx() {
+    if (!sepFx || !sprites) return
+    const s = layout.rocketScale
+    const wide = sprites.authorWide
+    const y = rocketRoot.y - 148 * s
+    sepFx.spawn({ anim: 'fx/stage-sep-flash', x: rocketRoot.x, y, scale: fxScale })
+    sepFx.spawn({ anim: 'fx/debris', x: rocketRoot.x, y, scale: fxScale, vy: 90 })
+    for (const side of [-1, 1] as const) {
+      sepFx.spawn({ anim: 'fx/sep-puff', x: rocketRoot.x + side * (wide + 2) * s, y, scale: fxScale, vx: side * 50, vy: 90, flipX: side < 0, alpha: 0.9 })
+    }
+  }
+
   function update(elapsed: number, dt: number) {
     if (done) return
 
     fadeGfx.alpha = elapsed < 0.5 ? Math.max(0, 1 - elapsed / 0.5) : 0
+
+    if (sprites) {
+      for (const hook of hookSchedule) {
+        if (elapsed >= hook.t && !firedHooks.has(hook.name)) {
+          firedHooks.add(hook.name)
+          sprites.fire(hook, reducedMotion)
+        }
+      }
+      if (!reducedMotion) {
+        sprites.tick(dt)
+        padFx?.tick(dt)
+        sepFx?.tick(dt)
+        while (padSmokeNext < padSmokeTimes.length && elapsed >= padSmokeTimes[padSmokeNext]) {
+          padSmokeNext++
+          spawnPadSmoke()
+        }
+      }
+    }
 
     const igniting = elapsed >= T.ignitionStart && elapsed < T.liftoff
     const flying = elapsed >= T.liftoff
@@ -413,7 +536,7 @@ export function buildLaunchScene(
     const altitude = launchAltitude(elapsed)
     const cameraY = flying ? launchCameraY(altitude, layout.followStart) : 0
 
-    if (igniting || (flying && elapsed < T.liftoff + 0.5)) {
+    if (!reducedMotion && (igniting || (flying && elapsed < T.liftoff + 0.5))) {
       const shakeAmt = igniting ? ignitionT * 3 : Math.max(0, 1 - (elapsed - T.liftoff) / 0.5) * 4
       rocketRoot.x = W / 2 + (Math.random() - 0.5) * shakeAmt
     } else if (elapsed < T.orbit) {
@@ -423,6 +546,8 @@ export function buildLaunchScene(
     const orbitActive = elapsed >= T.orbit
     padContainer.y = launchPadOffsetY(cameraY)
     smokeContainer.y = launchPadOffsetY(cameraY)
+    if (padFx) padFx.container.y = padContainer.y
+    flameMask.y = padContainer.y + layout.padDeckY
     highAtmosContainer.y = H * 0.08 + cameraY * 0.25
     rocketRoot.y = launchRocketScreenY(altitude, cameraY, layout.rocketPadY)
 
@@ -435,6 +560,7 @@ export function buildLaunchScene(
       rocketRoot.x = orbitCenter.x + Math.cos(theta) * radius
       rocketRoot.y = orbitCenter.y + Math.sin(theta) * radius
       rocketRoot.rotation = theta + Math.PI / 2
+      if (flameMaskOn) { rocketRoot.mask = null; flameMaskOn = false }
       padContainer.alpha = 0
       smokeContainer.alpha = 0
       cloudContainer.alpha = 0
@@ -447,6 +573,7 @@ export function buildLaunchScene(
     } else {
       rocketRoot.rotation = 0
       rocketRoot.scale.set(layout.rocketScale)
+      if (!flameMaskOn) { rocketRoot.mask = flameMask; flameMaskOn = true }
       padContainer.alpha = 1
       smokeContainer.alpha = 1
       orbitScene.alpha = 0
@@ -481,7 +608,8 @@ export function buildLaunchScene(
       : (igniting ? ignitionT * 0.7 : flying ? 0.85 : 0)
     const plumeScale = igniting ? 0.45 + ignitionT * 0.7 : flying ? 1.05 : 0
     plumeGfx.clear()
-    if (plumeAlpha > 0) {
+    plumeGfx.visible = !sprites // the sprite sheets bake their own flame
+    if (plumeAlpha > 0 && !sprites) {
       const ph = 70 * plumeScale
       const pw = 16 * plumeScale
       plumeGfx
@@ -496,7 +624,7 @@ export function buildLaunchScene(
     }
 
     const worldPlumeY = rocketRoot.y + 8
-    if ((igniting || (flying && elapsed < T.liftoff + 3.2)) && elapsed % 0.05 < dt) {
+    if (!sprites && !reducedMotion && (igniting || (flying && elapsed < T.liftoff + 3.2)) && elapsed % 0.05 < dt) {
       const rate = igniting ? 1 : Math.max(0, 1 - (elapsed - T.liftoff) / 3.2)
       if (Math.random() < rate) spawnSmoke(W / 2, worldPlumeY - padContainer.y + 18 * plumeScale)
     }
@@ -514,13 +642,19 @@ export function buildLaunchScene(
 
     if (!boostersSeparated && elapsed >= T.boosterSep) {
       boostersSeparated = true
-      detachPart(boosterL, -70, 55, 0.9, 3.4)
-      detachPart(boosterR, 70, 55, -0.9, 3.4)
+      if (stack) {
+        // Spin signs follow the sheet's `detach` data: tops lean outward about the nozzle.
+        // (The procedural stack had them inverted, which swung the sprite tops under the core.)
+        detachPart(stack.boosterL, -70, 55, -0.9, 3.4)
+        detachPart(stack.boosterR, 70, 55, 0.9, 3.4)
+      }
+      if (sprites && !reducedMotion) spawnBoosterSepFx()
     }
 
     if (!stageSeparated && elapsed >= T.stageSep) {
       stageSeparated = true
-      detachPart(lowerStage, (Math.random() - 0.5) * 18, 90, 0.45, 4.2)
+      if (stack) detachPart(stack.lowerStage, (Math.random() - 0.5) * 18, 90, 0.45, 4.2)
+      if (sprites && !reducedMotion) spawnStageSepFx()
     }
 
     for (const d of debris) {
