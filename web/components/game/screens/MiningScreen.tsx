@@ -601,7 +601,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         ?
       </button>
 
-      {activeOverlay === 'guide' && (
+      {activeOverlay === 'guide' && (() => {
+        // SSL-441: with the coach card docked at the top, start the guide below it so it never covers the card or its SKIP.
+        const guideTop = hasCoach ? `calc(${coachManual ? 'var(--tutorial-manual-content-top)' : 'var(--tutorial-content-top)'} + 8px)` : '64px'
+        return (
         // SSL-330/SSL-331: this panel used to anchor from the bottom via
         // var(--ln-nav-h, 64px), a fallback built for a bottom nav bar. The
         // mining screen has none; its actual bottom rail is .mining-controls,
@@ -616,7 +619,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         // success/failure overlays on this same screen) instead of the old
         // bare, unstyled div, so it reads as the same chrome as the rest of
         // the mining HUD rather than floating text with no card behind it.
-        <aside className="mining-guide-overlay" aria-label="Mining controls" style={{ position: 'absolute', right: 16, top: 64, zIndex: 70, width: 'min(360px, calc(100% - 32px))', maxHeight: 'calc(100% - 220px)', overflowY: 'auto' }}>
+        <aside className={`mining-guide-overlay${hasCoach ? ' mining-guide-overlay--coached' : ''}`} aria-label="Mining controls" style={{ position: 'absolute', right: 16, top: guideTop, zIndex: 70, width: 'min(360px, calc(100% - 32px))', maxHeight: `max(120px, calc(100% - ${guideTop} - 170px))`, overflowY: 'auto' }}>
           <Panel accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
             {miningGuide(deliveryTargetName).map(item => (
@@ -638,7 +641,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             </button>
           </Panel>
         </aside>
-      )}
+        )
+      })()}
 
       {activeOverlay === 'success' && (
         <div className="mining-success-overlay" data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'flex', alignItems: 'flex-end', padding: 16 }}>
