@@ -102,7 +102,8 @@ describe('Full Game Loop — Landnam', () => {
 
     it('build screen allows placing launchpad and transitions to hub', () => {
       visitWithState({ screen: 'build', tutorial: true, doneSteps: {} })
-      cy.contains('Build a Launchpad').should('be.visible')
+      // SSL-405: the Flight Plan opens the mining try on every training screen.
+      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Open client contracts')
     })
 
     it('hub screen renders with launchpad building after placement', () => {
@@ -124,7 +125,7 @@ describe('Full Game Loop — Landnam', () => {
     // internal steps. The old MissionCard board and TargetPicker are gone.
     it('mission board shows the M1 contract with the coach when landing on missions', () => {
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
-      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Select a Mission')
+      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Accept a mining contract')
       cy.get('[data-testid="mission-board-section-client"]').should('be.visible').and('contain', 'Helios Propulsion Depot')
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').and('not.be.disabled')
     })
@@ -459,10 +460,10 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="collect-reward-btn"]').click()
 
       cy.contains('Commodity Exchange').should('not.exist')
-      // SSL-332: guided mission 2 is the Transport lesson. Its coach opens
-      // collapsed on the Hub; the body still explains the two-stop job.
-      cy.contains('Tap the Launchpad').should('be.visible')
-      cy.contains('Next, moving cargo').should('exist')
+      // SSL-405: the Transport lesson coach is retired. The Hub is back with
+      // the launchpad, and the debrief did not route through the market.
+      cy.get('[data-testid="building-launchpad"]').should('be.visible')
+      cy.location('pathname').should('not.include', '/market')
     })
   })
 
@@ -498,7 +499,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.contains('Select Prospector').should('be.visible')
     })
 
-    it('Transport coach step 30 shows on hub after M1 — no controlBuilt needed', () => {
+    it('Flight Plan moves on to the scan try on the hub once the mining try is done', () => {
       visitWithState(fullState({
         screen: 'hub',
         popup: null,
@@ -512,6 +513,7 @@ describe('Full Game Loop — Landnam', () => {
           placementPlots: { launchpad: 0 },
           controlBuilt: false,
           missionsDone: 1,
+          flightPlan: { completed: { mining: true }, hidden: false },
           freeOperations: false,
           clientMissions: {},
           clientCooldowns: {},
@@ -527,8 +529,8 @@ describe('Full Game Loop — Landnam', () => {
       }))
       cy.get('[data-testid="flight-plan"]')
         .should('be.visible')
-        .should('contain', 'Transport')
-        .should('contain', 'Launchpad')
+        .should('contain', 'Classify the transit candidate')
+        .should('contain', 'scan')
     })
   })
 
@@ -593,7 +595,9 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: true,
       }))
       cy.contains('Prospector').should('be.visible')
-      cy.contains('Two-Stop Route').should('be.visible')
+      // SSL-405: the Two-Stop Route lesson is retired; the Flight Plan strip
+      // stays up with the active try's objective.
+      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Open client contracts')
     })
 
     it('Transport preflight launch button visible with prebuilt Prospector', () => {

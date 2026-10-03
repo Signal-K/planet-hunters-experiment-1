@@ -629,7 +629,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                     </>
                   )}
                   <DockIconBtn testId="hub-subsurface-btn" icon={<SubsurfaceGlyph />} label="Subsurface" onClick={() => setSubsurface(true)} />
-                  <DockIconBtn icon={<HistoryGlyph />} label="Mission Log" onClick={() => onOpenScene('mission-history')} />
+                  <DockIconBtn testId="hub-mission-log-btn" icon={<HistoryGlyph />} label="Mission Log" onClick={() => onOpenScene('mission-history')} />
                   {player.freeOperations && (
                     <DockIconBtn testId="hub-surface-ops" icon={<SurfaceGlyph />} label="Sites" onClick={() => onOpenScene('surface-ops')} />
                   )}
