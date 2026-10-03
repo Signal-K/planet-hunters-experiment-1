@@ -2540,7 +2540,15 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
   border-radius: 8px;
 }
 @media (prefers-reduced-motion: reduce) {
-  html[data-flight-target] [data-beacon] { animation: none !important; box-shadow: 0 0 0 2px var(--ln-cyan) !important; }
+  html[data-flight-target~="bottom-tab-missions"] [data-beacon="bottom-tab-missions"],
+  html[data-flight-target~="build-structure-strip"] [data-beacon="build-structure-strip"],
+  html[data-flight-target~="building-launchpad"] [data-beacon="building-launchpad"],
+  html[data-flight-target~="launchpad-view-contracts"] [data-beacon="launchpad-view-contracts"],
+  html[data-flight-target~="hub-build-storage-silo"] [data-beacon="hub-build-storage-silo"],
+  html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"],
+  html[data-flight-target~="build-plot-0"] [data-beacon="build-plot-0"],
+  html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"],
+  html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] { animation: none !important; box-shadow: 0 0 0 2px var(--ln-cyan) !important; }
 }
 
 /* SSL-395 Flight Plan: in-flow strip between the screen and the nav. */
