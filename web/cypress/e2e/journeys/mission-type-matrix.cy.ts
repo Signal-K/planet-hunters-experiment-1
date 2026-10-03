@@ -103,10 +103,11 @@ describe('Deep Space Telescope / asteroid-discovery mission type across viewport
         cy.contains('Free Operations Required', { timeout: 10000 }).should('be.visible')
       })
 
-      it('gates the instrument behind building the telescope once Free Ops is unlocked', () => {
+      it('routes a Free Operations player without the telescope to its Launchpad deployment', () => {
         visit('/game/asteroid-discovery', 'asteroid-discovery', { freeOperations: true, deepSpaceTelescopeBuilt: false })
-        cy.contains('Build Deep Space Telescope', { timeout: 10000 }).should('be.visible')
-        cy.get('[data-testid="build-deep-space-telescope-btn"]').should('be.visible')
+        cy.contains('Launch Deep Space Telescope', { timeout: 10000 }).should('be.visible')
+        cy.get('[data-testid="launch-deep-space-telescope-btn"]').should('be.visible').click()
+        cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10000 }).should('be.visible')
       })
 
       it('downlinks a live NEOCP candidate and lets the player cast a verdict once the telescope is built', () => {

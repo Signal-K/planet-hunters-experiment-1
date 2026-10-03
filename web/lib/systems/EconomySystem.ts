@@ -5,7 +5,7 @@ import type { GameState } from '@/lib/game-types'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
-import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, deepSpaceTelescopeUnlocked, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
+import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { structureIsStaffed } from './AcademySystem'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
 import { freeOperationsUnlocked } from './AgencyOnboardingSystem'
@@ -441,8 +441,7 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
   if (!structure || structure.kind !== kind) return s
   if (s.player.placed.includes(kind)) return s
   if (kind === 'astronaut-academy' && !s.player.academyResearched) return s
-  if (kind === 'deep-space-telescope' && !deepSpaceTelescopeUnlocked({ transitSatelliteLevel: s.player.transitSatelliteLevel, clientMissions: s.player.clientMissions })) return s
-  if (!structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations, missionsDone: s.player.missionsDone, academyResearched: s.player.academyResearched, transitSatelliteLevel: s.player.transitSatelliteLevel, clientMissions: s.player.clientMissions, deepSpaceTelescopeMissionCompletedAt: s.player.deepSpaceTelescopeMissionCompletedAt })) return s
+  if (!structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations, missionsDone: s.player.missionsDone, academyResearched: s.player.academyResearched })) return s
   if (s.player.francs < structure.cost) return s
   if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
   const stash = { ...(s.player.stash ?? {}) }
@@ -466,11 +465,6 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
       placementPlots: { ...s.player.placementPlots, [kind]: plot },
       underConstruction: { ...s.player.underConstruction, [kind]: Date.now() },
       refineryBuilt: kind === 'refinery' ? true : s.player.refineryBuilt,
-      deepSpaceTelescopeBuilt: kind === 'deep-space-telescope' ? true : s.player.deepSpaceTelescopeBuilt,
-      deepSpaceTelescopeLevel: kind === 'deep-space-telescope'
-        ? Math.max(1, s.player.deepSpaceTelescopeLevel ?? 1)
-        : s.player.deepSpaceTelescopeLevel,
-      deepSpaceTelescopeLaunchedAt: kind === 'deep-space-telescope' ? Date.now() : s.player.deepSpaceTelescopeLaunchedAt,
       academyFunded: kind === 'astronaut-academy' ? true : s.player.academyFunded,
       crewUpkeepSettledDate: kind === 'astronaut-academy'
         ? new Date().toISOString().slice(0, 10)

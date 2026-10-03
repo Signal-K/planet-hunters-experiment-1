@@ -3,7 +3,6 @@
 import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types'
 import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 import { MINERAL_RARITY } from './minerals'
-import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
 import { FREE_OPS_START_MISSIONS_DONE } from './mission-generator'
 
 // Refining takes raw ore and returns it worth REFINING_VALUE_MULTIPLIER more,
@@ -65,16 +64,6 @@ export const STRUCTURES: StructureBlueprint[] = [
     description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day. Requires a Surface Silo for input storage and an established mining settlement — settlements ferry ore home in bulk, giving the Refinery a steady supply instead of one-off mining runs.',
   },
   {
-    id: 'deep-space-telescope',
-    name: 'Deep Space Telescope',
-    kind: 'deep-space-telescope',
-    cost: STRUCTURE_PRICES.deepSpaceTelescope,
-    costMaterials: { aluminium: 30, copper: 16, silicon: 10 },
-    unlocksAt: 'Transit telescope level 2 and client level 2 with a client',
-    unlockTrigger: 'deep-space-telescope-unlock',
-    description: 'Independent long-baseline instrument (STS-622) that downlinks unconfirmed NEO candidates from the Minor Planet Center for asteroid-discovery classification, separate from the transit satellite.',
-  },
-  {
     id: 'astronaut-academy',
     name: 'Astronaut Academy',
     kind: 'astronaut-academy',
@@ -92,33 +81,12 @@ export const STRUCTURES: StructureBlueprint[] = [
  *  HubScreen's copy, which could drift apart silently. */
 export const LAUNCHPAD_UPGRADE_COST = STRUCTURE_PRICES.launchpadUpgrade
 
-// Deep Space Telescope unlock (STS-622): requires the transit satellite to
-// have reached level 2 and at least one client relationship to have reached
-// client level 2 — a lighter bar than the Academy's two-client requirement,
-// since this gates a second instrument rather than a new profession. Exact
-// numbers are a build-time call per the ticket ("decide during build rather
-// than re-asked as a blocking question"), not a re-litigated design decision.
-export function deepSpaceTelescopeUnlocked(opts: { transitSatelliteLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
-  if ((opts.transitSatelliteLevel ?? 1) < 2) return false
-  return Object.values(opts.clientMissions ?? {}).some(
-    jobs => 1 + Math.floor(Math.max(0, jobs) / CLIENT_AFFINITY_MISSION_THRESHOLD) >= 2
-  )
-}
-
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; missionsDone?: number; transitSatelliteLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null; hasMiningSettlement?: boolean } = {}): boolean {
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; missionsDone?: number; hasMiningSettlement?: boolean } = {}): boolean {
   // SSL-332's storage silo is the only pre-Free-Ops construction step: it
   // becomes available after Extraction and Transport, and placement opens
   // Free Ops. Existing players retain access through their saved unlock.
   if (structure.id === 'surface-silo') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
-  // KES-128: the numeric threshold (deepSpaceTelescopeUnlocked) now only
-  // decides when the story-deep-space-telescope-survey mission (see
-  // runtimeCatalog.ts) is offered as the on-ramp — completing that mission is
-  // what actually opens the build slot, so a player never sees a bare
-  // structure appear with no narrative reason it happened.
-  if (structure.id === 'deep-space-telescope') {
-    return (deepSpaceTelescopeUnlocked(opts) && !!opts.deepSpaceTelescopeMissionCompletedAt) || !!opts.placed?.includes('deep-space-telescope')
-  }
   if (structure.unlockTrigger === 'always') return true
   // KES-283: the Refinery is a normal Earth Base plot purchase (same unlock
   // shape as the Surface Silo) rather than the KES-286 off-world

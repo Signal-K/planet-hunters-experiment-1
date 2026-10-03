@@ -79,15 +79,16 @@ export default function MissionOperationRoutes({
               game.setPlayer(player => ({
                 ...player,
                 missionPhase: 'debrief',
-                transitSatelliteLaunchedAt: game.mission?.payload?.type === 'satellite'
+                transitSatelliteLaunchedAt: game.mission?.payload?.instrumentId === 'transit-telescope'
                   ? (player.transitSatelliteLaunchedAt ?? Date.now())
                   : player.transitSatelliteLaunchedAt,
-                transitSatelliteLevel: game.mission?.payload?.type === 'satellite'
+                transitSatelliteLevel: game.mission?.payload?.instrumentId === 'transit-telescope'
                   ? Math.max(1, player.transitSatelliteLevel ?? 1)
                   : player.transitSatelliteLevel,
-                deepSpaceTelescopeMissionCompletedAt: game.mission?.payload?.type === 'deep-space-survey'
-                  ? (player.deepSpaceTelescopeMissionCompletedAt ?? Date.now())
-                  : player.deepSpaceTelescopeMissionCompletedAt,
+                deepSpaceTelescopeBuilt: game.mission?.payload?.instrumentId === 'deep-space-telescope' || player.deepSpaceTelescopeBuilt,
+                deepSpaceTelescopeLaunchedAt: game.mission?.payload?.instrumentId === 'deep-space-telescope'
+                  ? (player.deepSpaceTelescopeLaunchedAt ?? Date.now())
+                  : player.deepSpaceTelescopeLaunchedAt,
               }))
               game.setLastCargo({})
               game.go('debrief')

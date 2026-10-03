@@ -62,13 +62,10 @@ describe('buildRuntimeCatalog', () => {
     expect(activeTelescopeMission).toMatchObject({ programReward: expect.any(Object) })
   })
 
-  it('adds the deep space telescope survey mission once the telescope/affinity threshold is met but the mission is unfinished (KES-128)', () => {
+  it('adds the Deep Space Telescope deployment as a Free Operations instrument launch', () => {
     const player = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
-      transitSatelliteLevel: 2,
-      clientMissions: { 'client-a': 10 },
-      deepSpaceTelescopeMissionCompletedAt: null,
     }
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
@@ -78,17 +75,17 @@ describe('buildRuntimeCatalog', () => {
     })
 
     expect(catalog.targets.some(target => target.id === DEEP_SPACE_TELESCOPE_TARGET_ID)).toBe(true)
-    const surveyMission = catalog.missions.find(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)
-    expect(surveyMission).not.toHaveProperty('client')
-    expect(surveyMission).toMatchObject({
+    const deploymentMission = catalog.missions.find(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)
+    expect(deploymentMission).not.toHaveProperty('client')
+    expect(deploymentMission).toMatchObject({
       tag: 'STORY',
-      payload: { type: 'deep-space-survey' },
+      payload: { type: 'satellite', instrumentId: 'deep-space-telescope' },
       payout: { francs: 0, affinity: 0 },
-      programReward: expect.objectContaining({ outcome: expect.stringContaining('surveyed') }),
+      programReward: expect.objectContaining({ outcome: expect.stringContaining('online') }),
     })
   })
 
-  it('does not offer the deep space telescope mission below the telescope/affinity threshold', () => {
+  it('offers the Deep Space Telescope launch without an existing telescope or client level', () => {
     const player = { ...DEFAULT_STATE.player, freeOperations: true, transitSatelliteLevel: 1, clientMissions: {} }
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
@@ -97,16 +94,16 @@ describe('buildRuntimeCatalog', () => {
       player,
     })
 
-    expect(catalog.missions.some(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)).toBe(false)
+    expect(catalog.missions.some(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)).toBe(true)
   })
 
-  it('stops offering the deep space telescope mission once it has been completed or the telescope is already placed', () => {
+  it('stops offering the Deep Space Telescope mission once launched or already owned in a legacy save', () => {
     const completedPlayer = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
       transitSatelliteLevel: 2,
       clientMissions: { 'client-a': 10 },
-      deepSpaceTelescopeMissionCompletedAt: Date.now(),
+      deepSpaceTelescopeLaunchedAt: Date.now(),
     }
     const placedPlayer = {
       ...DEFAULT_STATE.player,
@@ -115,8 +112,13 @@ describe('buildRuntimeCatalog', () => {
       clientMissions: { 'client-a': 10 },
       placed: ['deep-space-telescope'],
     }
+    const flagOnlyLegacyPlayer = {
+      ...DEFAULT_STATE.player,
+      freeOperations: true,
+      deepSpaceTelescopeBuilt: true,
+    }
 
-    for (const player of [completedPlayer, placedPlayer]) {
+    for (const player of [completedPlayer, placedPlayer, flagOnlyLegacyPlayer]) {
       const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 4, player })
       expect(catalog.missions.some(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)).toBe(false)
     }

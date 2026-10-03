@@ -346,16 +346,13 @@ export interface Player {
   // an assumed migration.
   transitSatelliteLevel?: number
   transitSatelliteLaunchedAt?: number | null
-  // Deep Space Telescope (STS-622): a separate, one-time-build structure that
-  // gates the asteroid-discovery (NEOCP) instrument feed, the same way
+  // Deep Space Telescope: a separately launched orbital instrument which
+  // gates the asteroid-discovery (NEOCP) instrument feed.
   deepSpaceTelescopeBuilt?: boolean
   deepSpaceTelescopeLevel?: number
   deepSpaceTelescopeLaunchedAt?: number | null
-  // KES-128: completing the story-deep-space-telescope-survey mission — the
-  // on-ramp mirroring story-transit-telescope-launch — rather than the raw
-  // deepSpaceTelescopeUnlocked() threshold. Distinct from
-  // deepSpaceTelescopeLaunchedAt above, which marks when the structure was
-  // physically placed, not when the player earned the right to build it.
+  // Retained only to read historic survey saves; new launches use
+  // deepSpaceTelescopeLaunchedAt.
   deepSpaceTelescopeMissionCompletedAt?: number | null
   tessClassifications?: Record<string, TessClassification>
   // One-shot late-game narrative beat after a high-level TESS confirmation.

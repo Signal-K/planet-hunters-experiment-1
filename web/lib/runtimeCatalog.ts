@@ -2,7 +2,6 @@ import type { Catalog } from './catalog'
 import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from './data'
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
-import { deepSpaceTelescopeUnlocked } from './data/structures'
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -60,9 +59,9 @@ export function buildRuntimeCatalog({
   const hasActiveTransitTelescopeMission = missionId === TRANSIT_TELESCOPE_MISSION_ID || targetId === TRANSIT_TELESCOPE_TARGET_ID
   const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
   const shouldOfferDeepSpaceTelescopeMission = freeOperations
-    && !player?.deepSpaceTelescopeMissionCompletedAt
+    && !player?.deepSpaceTelescopeLaunchedAt
+    && !player?.deepSpaceTelescopeBuilt
     && !player?.placed?.includes('deep-space-telescope')
-    && deepSpaceTelescopeUnlocked({ transitSatelliteLevel: player?.transitSatelliteLevel, clientMissions: player?.clientMissions })
   const hasActiveDeepSpaceTelescopeMission = missionId === DEEP_SPACE_TELESCOPE_MISSION_ID || targetId === DEEP_SPACE_TELESCOPE_TARGET_ID
   const shouldIncludeDeepSpaceTelescopeMission = shouldOfferDeepSpaceTelescopeMission || hasActiveDeepSpaceTelescopeMission
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
@@ -115,6 +114,7 @@ export function buildRuntimeCatalog({
           type: 'satellite',
           name: 'Transit Telescope',
           cargoCost: 0,
+          instrumentId: 'transit-telescope',
         },
         requires: {
           minerals: {},
@@ -132,18 +132,19 @@ export function buildRuntimeCatalog({
   const deepSpaceTelescopeMission: Mission[] = shouldIncludeDeepSpaceTelescopeMission && !existingMissionIds.has(DEEP_SPACE_TELESCOPE_MISSION_ID)
     ? [{
         id: DEEP_SPACE_TELESCOPE_MISSION_ID,
-        title: 'Survey the Deep Space Telescope Site',
-        brief: 'Your transit telescope and client standing have earned you a second instrument. Fly a calibration survey to establish the Deep Space Telescope before you build it.',
+        title: 'Launch Deep Space Telescope',
+        brief: 'Deploy the Deep Space Telescope into Earth orbit. Its independent instrument feed opens asteroid-discovery classification.',
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
         sequence: missionsDone + 1,
-        unlockAt: 'Transit telescope level 2 and client level 2 with a client',
+        unlockAt: 'Reach Free Operations',
         targetId: DEEP_SPACE_TELESCOPE_TARGET_ID,
         payload: {
-          type: 'deep-space-survey',
-          name: 'Deep Space Telescope Array',
+          type: 'satellite',
+          name: 'Deep Space Telescope',
           cargoCost: 0,
+          instrumentId: 'deep-space-telescope',
         },
         requires: {
           minerals: {},
@@ -153,7 +154,7 @@ export function buildRuntimeCatalog({
         },
         programReward: {
           researchXP: 0,
-          outcome: 'Deep Space Telescope site surveyed · ready to build',
+          outcome: 'Deep Space Telescope online · asteroid discovery unlocked',
         },
         payout: { francs: 0, affinity: 0 },
       }]

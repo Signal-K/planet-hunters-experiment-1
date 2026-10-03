@@ -940,15 +940,16 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           crewVisitedTargets,
           roverDeployments,
           dailyClientPool: completedDailyPool,
-          transitSatelliteLaunchedAt: mission?.payload?.type === 'satellite'
+          transitSatelliteLaunchedAt: mission?.payload?.instrumentId === 'transit-telescope'
             ? (s.player.transitSatelliteLaunchedAt ?? Date.now())
             : s.player.transitSatelliteLaunchedAt,
-          transitSatelliteLevel: mission?.payload?.type === 'satellite'
+          transitSatelliteLevel: mission?.payload?.instrumentId === 'transit-telescope'
             ? Math.max(1, s.player.transitSatelliteLevel ?? 1) + 1
             : s.player.transitSatelliteLevel,
-          deepSpaceTelescopeMissionCompletedAt: mission?.payload?.type === 'deep-space-survey'
-            ? (s.player.deepSpaceTelescopeMissionCompletedAt ?? Date.now())
-            : s.player.deepSpaceTelescopeMissionCompletedAt,
+          deepSpaceTelescopeBuilt: mission?.payload?.instrumentId === 'deep-space-telescope' || s.player.deepSpaceTelescopeBuilt,
+          deepSpaceTelescopeLaunchedAt: mission?.payload?.instrumentId === 'deep-space-telescope'
+            ? (s.player.deepSpaceTelescopeLaunchedAt ?? Date.now())
+            : s.player.deepSpaceTelescopeLaunchedAt,
         },
         lastCargo: null,
         deliveredCargo: null,

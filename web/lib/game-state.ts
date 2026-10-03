@@ -24,8 +24,8 @@ const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'hub-subsurface', 'mis
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
-const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch'])
-const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope'])
+const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey'])
+const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope'])
 
 export const DEFAULT_STATE: GameState = {
   screen: 'intro',

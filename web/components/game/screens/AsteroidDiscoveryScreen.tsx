@@ -24,7 +24,7 @@ interface AsteroidDiscoveryScreenProps {
   /** Fixed record supplied only by the named visual dev preset. */
   visualCandidate?: AsteroidCandidate
   onBack: () => void
-  onBuildTelescope: () => void
+  onLaunchTelescope: () => void
   onSubmit: (candidateId: string, verdict: AsteroidVerdict) => void
 }
 
@@ -39,7 +39,7 @@ const VERDICT_ACTIONS: Array<{ id: AsteroidVerdict; label: string; kind: 'amber'
   { id: 'unsure', label: 'Skip', kind: 'ghost' },
 ]
 
-export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onBuildTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
+export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onLaunchTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
   // Stabilize the fallback so the fetch effect below (keyed on `classifications`)
   // doesn't get a new object identity every render when the field is unset —
   // e.g. preset-loaded dev state, which bypasses normalizeAndRepair()'s
@@ -140,10 +140,10 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         eyebrow="BASE / TELESCOPE REQUIRED"
         icon={<Telescope size={22} />}
         tone="cyan"
-        title="Build Deep Space Telescope"
-        body="Place the Deep Space Telescope to start receiving NEOCP asteroid candidates."
+        title="Launch Deep Space Telescope"
+        body="Deploy the Deep Space Telescope from the Launchpad to start receiving NEOCP asteroid candidates."
         onBack={onBack}
-        action={<PrimaryBtn testId="build-deep-space-telescope-btn" onClick={onBuildTelescope}>Build Telescope</PrimaryBtn>}
+        action={<PrimaryBtn testId="launch-deep-space-telescope-btn" onClick={onLaunchTelescope}>OPEN LAUNCHPAD</PrimaryBtn>}
       />
     )
   }

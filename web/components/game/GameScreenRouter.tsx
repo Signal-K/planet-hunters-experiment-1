@@ -315,7 +315,7 @@ export function ScreenContent({
           inspectSubjectId={inspectSignal?.kind === 'deep-space' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}
           onBack={() => game.goBack()}
-          onBuildTelescope={() => game.go('build')}
+          onLaunchTelescope={() => game.go('launchpad')}
           onSubmit={game.submitAsteroidClassification}
         />
       )
