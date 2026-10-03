@@ -38,6 +38,8 @@ export interface TargetStructureBlueprint {
   requiredMaterials: Record<string, number>
   buildTimeMs: number
   description: string
+  /** Cycle 3 scope gate for off-world build listings; data is never deleted. */
+  offworldCategory: import('../featureFlags').OffworldBuildCategory
 }
 
 export interface ClientStructureRecord {

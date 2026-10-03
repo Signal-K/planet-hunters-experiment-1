@@ -36,6 +36,7 @@ import {
   FREE_OPS_MISSION_SEQUENCE,
   TARGET_STRUCTURES,
   findTargetStructure,
+  visibleTargetStructures,
   generateFreeOpsMissions,
   getBuildSequence,
   getShipInteriorLayout,
@@ -684,7 +685,22 @@ describe('Construction mission templates and target structure blueprints', () =>
       expect(s.id).toBeTruthy()
       expect(s.buildTimeMs).toBeGreaterThan(0)
       expect(Object.keys(s.requiredMaterials).length).toBeGreaterThan(0)
+      expect(s.offworldCategory).toBeTruthy()
     }
+  })
+
+  it('keeps non-mining target blueprints in data but hides them by default', () => {
+    expect(TARGET_STRUCTURES.map(structure => structure.id)).toEqual(expect.arrayContaining([
+      'relay-mast',
+      'structural-frame',
+      'thrust-stand',
+    ]))
+    expect(visibleTargetStructures().map(structure => structure.id)).not.toEqual(expect.arrayContaining([
+      'relay-mast',
+      'structural-frame',
+      'thrust-stand',
+    ]))
+    expect(visibleTargetStructures(true)).toHaveLength(TARGET_STRUCTURES.length)
   })
 
   it('findTargetStructure resolves a known structure kind', () => {

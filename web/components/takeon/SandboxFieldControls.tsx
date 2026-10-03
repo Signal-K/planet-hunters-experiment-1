@@ -5,7 +5,6 @@ import { Compass, Hammer, Map as MapIcon, RotateCcw, Share2, Sprout, Trash2, X }
 import type { Player } from '@/lib/game-types'
 import {
   MINERAL_META,
-  SANDBOX_STRUCTURE_RECIPES,
   biomeIdsForTarget,
   canSeedBiosphere,
   habitabilityForTarget,
@@ -13,6 +12,7 @@ import {
   type CraftingRecipe,
   type LifeStage,
   type SurfaceTarget,
+  visibleSandboxStructureRecipes,
 } from '@/lib/data'
 import type { CreationSnapshot } from '@/lib/data/community'
 import {
@@ -111,7 +111,7 @@ export default function SandboxFieldControls({
     return () => window.clearInterval(timer)
   }, [handle])
 
-  const recipes = useMemo(() => SANDBOX_STRUCTURE_RECIPES.filter(r => r.takeonType), [])
+  const recipes = useMemo(() => visibleSandboxStructureRecipes(), [])
   const selectedRecipe = recipes.find(r => r.id === selected) ?? null
   const affordability = selectedRecipe ? fieldBuildAffordability(player, selectedRecipe, siteId) : null
   const hasFactory = fieldHasStructure(player, targetId, 'factory')
