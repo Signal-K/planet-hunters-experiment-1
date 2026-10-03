@@ -106,6 +106,7 @@ function AuthStep({ mode, error, onModeChange, onBack, onSignIn, onCreateAccount
   }
 
   const shownError = error ?? validationError
+  const waking = /warming up/i.test(shownError ?? '')
   return (
     <>
       <div className={styles.heading}>
@@ -120,7 +121,9 @@ function AuthStep({ mode, error, onModeChange, onBack, onSignIn, onCreateAccount
         )}
         {shownError && <div className={styles.error} role="alert">{shownError}</div>}
         <button type="submit" className={styles.primary} disabled={submitting} data-testid="auth-gate-submit">
-          {submitting ? (mode === 'signin' ? 'Signing in…' : 'Creating…') : (mode === 'signin' ? 'Sign in' : 'Create account')}
+          {submitting
+            ? (waking ? 'Waking server…' : (mode === 'signin' ? 'Signing in…' : 'Creating…'))
+            : (mode === 'signin' ? 'Sign in' : 'Create account')}
         </button>
       </form>
       <div className={styles.actions}>
