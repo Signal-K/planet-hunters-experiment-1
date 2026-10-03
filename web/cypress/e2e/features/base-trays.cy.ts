@@ -111,6 +111,9 @@ describe('Base trays and shared bar', () => {
       })
       it('opens Mission Log from the Hub dock as a tray over a still Base and closes it with Escape', () => {
         visitTray('/game/hub')
+        cy.get('[data-testid="hub-mission-log-btn"]').should('be.visible')
+        // Let the Base finish its first layout pass before measuring it.
+        cy.wait(1000)
         cy.get('[data-screen="hub"]').should('be.visible').then($hub => {
           const before = $hub[0].getBoundingClientRect()
           cy.get('[data-testid="hub-mission-log-btn"]').scrollIntoView().click()

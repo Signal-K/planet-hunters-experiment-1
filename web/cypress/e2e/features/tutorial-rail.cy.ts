@@ -212,21 +212,15 @@ describe('Tutorial rail regression', () => {
         cy.get('[data-testid="flight-plan-objective"]').click()
         cy.get('[data-testid="flight-plan-skip"]').click()
         cy.get('[data-testid="flight-plan"]').should('not.exist')
-        cy.get('[data-testid="building-launchpad"]').should('be.visible')
-        cy.window().then(win => {
-          if (win.innerWidth >= 1024) {
-            // No standing sidebar nav on desktop (see the retirement note
-            // above). At Ops 0 with nothing in flight, HubScreen shows the
-            // launchpad's "Choose your first contract" callout instead of
-            // ProgressionCard (the two are deliberately mutually exclusive
-            // — see HubScreen.tsx) — its "View Missions" CTA is the current
-            // path once a mission is actionable.
-            cy.contains('button', 'View Missions', { timeout: 10000 }).click()
-          } else {
-            cy.get('[data-testid="home-bar-ops"]').click()
-          }
-        })
-        cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').click()
+        // Skipping does not place anything: the player stays on Build and can
+        // still place the starter launchpad themselves.
+        cy.get('[data-testid="build-place-screen"]').should('be.visible')
+        cy.get('[data-testid="build-plot-0"]').click()
+        cy.get('[data-testid="build-place-confirm"]').click()
+        cy.get('[data-testid="building-launchpad"]', { timeout: 15000 }).should('be.visible')
+        // The shared Home bar's OPS action is the way into contracts at every width.
+        cy.get('[data-testid="home-bar-ops"]').click()
+        cy.get('[data-testid^="mission-accept-"]').first().should('be.visible').click()
         cy.get('[data-testid="continue-build-btn"]').should('be.visible')
       })
     })
