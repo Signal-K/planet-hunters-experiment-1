@@ -348,19 +348,28 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                       <div style={{
                         fontFamily: 'var(--ln-font-display)',
                         fontWeight: 800,
-                        fontSize: 10,
+                        // SSL-400: Build is used at phone width. Keep every
+                        // card datum at the shared 12px phone floor, then let
+                        // the card grow vertically rather than clipping a
+                        // name halfway through a glyph.
+                        fontSize: 12,
                         color: on ? color : 'var(--ln-text-dim)',
                         letterSpacing: '0.01em',
                         lineHeight: 1.25,
-                      }}>{c.name}</div>
+                        whiteSpace: 'normal',
+                        overflowWrap: 'break-word',
+                      }} data-testid={`build-structure-card-name-${c.id}`}>{c.name}</div>
                       <div style={{
                         fontFamily: 'var(--ln-font-mono)',
-                        fontSize: 8,
+                        fontSize: 12,
                         color: on ? color : 'var(--ln-text-muted)',
                         marginTop: 1,
                         fontWeight: 700,
                         letterSpacing: '0.04em',
-                      }}>
+                        lineHeight: 1.25,
+                        whiteSpace: 'normal',
+                        overflowWrap: 'break-word',
+                      }} data-testid={`build-structure-card-cost-${c.id}`}>
                         {unlocked ? (c.cost === 0 ? 'FREE' : formatCurrency(c.cost, { compact: true })) : c.unlocksAt}
                       </div>
                     </div>
@@ -398,7 +407,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
               </span>
               <span style={{
                 fontFamily: 'var(--ln-font-body)',
-                fontSize: 11,
+                fontSize: 12,
                 color: 'var(--ln-warn)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -419,7 +428,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
             </span>
             <span style={{
               fontFamily: 'var(--ln-font-body)',
-              fontSize: 11,
+              fontSize: 12,
               color: 'var(--ln-text-muted)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -429,7 +438,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 ? `Select a plot for the ${sel.name} · ${formatStructureCost(sel)} · Builds in ${Math.round(structureBuildMs(sel.id) / 1000)}s`
                 : `Place ${sel.name} here? · ${formatStructureCost(sel)} · Builds in ${Math.round(structureBuildMs(sel.id) / 1000)}s`}
             </span>
-          </div> : <div style={{ padding: '6px 2px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)' }}>No structures are available yet. Complete your current mission to unlock the next build.</div>}
+          </div> : <div style={{ padding: '6px 2px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-muted)' }}>No structures are available yet. Complete your current mission to unlock the next build.</div>}
         </div>
       </div>
 

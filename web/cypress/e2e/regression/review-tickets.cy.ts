@@ -173,6 +173,27 @@ describe('Surface Silo placement persistence (KES-271)', () => {
     }
   })
 
+  it('keeps Earth build-card text at the 12px phone floor without clipping glyphs (SSL-400)', () => {
+    for (const [width, height] of [[390, 844], [320, 740]]) {
+      cy.viewport(width, height)
+      visitGame('/game/hub')
+      cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 10000 }).click()
+      cy.get('[data-testid="hub-new-structure-btn"]', { timeout: 10000 }).click()
+      cy.get('[data-testid="build-place-screen"]', { timeout: 10000 }).should('be.visible')
+
+      cy.get('[data-testid^="build-structure-card-name-"]').each($name => {
+        const style = getComputedStyle($name[0])
+        expect(parseFloat(style.fontSize), 'card name font size').to.be.at.least(12)
+        expect($name[0].scrollWidth, 'card name has no horizontal glyph clipping').to.be.at.most($name[0].clientWidth)
+      })
+      cy.get('[data-testid^="build-structure-card-cost-"]').each($cost => {
+        const style = getComputedStyle($cost[0])
+        expect(parseFloat(style.fontSize), 'card cost font size').to.be.at.least(12)
+        expect($cost[0].scrollWidth, 'card cost has no horizontal glyph clipping').to.be.at.most($cost[0].clientWidth)
+      })
+    }
+  })
+
   it('persists the placed silo and plot after returning to the base and reloading', () => {
     visitGame('/game/hub', {
       screen: 'hub',
