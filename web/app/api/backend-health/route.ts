@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server'
+import { landnamPbUrl, sharedPbUrl } from '@/lib/pb-config'
 
 export const dynamic = 'force-dynamic'
 
+function serverPbUrl(internal: string | undefined, publicUrl: string): string {
+  const trimmed = internal?.trim() ?? ''
+  return trimmed.length > 0 ? trimmed : publicUrl
+}
+
 export async function GET() {
-  const sharedUrl = process.env.POCKETBASE_INTERNAL_URL
-    ?? process.env.NEXT_PUBLIC_SHARED_PB_URL
-    ?? 'http://localhost:8090'
-  
-  const landnamUrl = process.env.POCKETBASE_LANDNAM_INTERNAL_URL
-    ?? process.env.POCKETBASE_INTERNAL_URL
-    ?? process.env.NEXT_PUBLIC_LANDNAM_PB_URL
-    ?? 'http://localhost:8093'
+  const sharedUrl = serverPbUrl(process.env.POCKETBASE_INTERNAL_URL, sharedPbUrl())
+  const landnamUrl = serverPbUrl(
+    process.env.POCKETBASE_LANDNAM_INTERNAL_URL ?? process.env.POCKETBASE_INTERNAL_URL,
+    landnamPbUrl(),
+  )
 
   const results = {
     shared: { ok: false, url: sharedUrl },

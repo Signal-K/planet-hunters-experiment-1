@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import PocketBase from 'pocketbase'
+import { landnamPbUrl } from '@/lib/pb-config'
 
 export async function POST(req: NextRequest) {
   const { endpoint } = await req.json()
@@ -7,7 +8,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'missing endpoint' }, { status: 400 })
   }
 
-  const pb = new PocketBase(process.env.NEXT_PUBLIC_LANDNAM_PB_URL)
+  const pb = new PocketBase(landnamPbUrl())
 
   try {
     const record = await pb.collection('push_subscriptions').getFirstListItem(

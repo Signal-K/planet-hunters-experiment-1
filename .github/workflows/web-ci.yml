@@ -115,7 +115,10 @@ jobs:
       # which wrangler.jsonc binds to playlandnam.space as a custom domain.
       # NEXT_PUBLIC_* vars are inlined at build time (Next.js convention).
       - name: Build (OpenNext/Cloudflare)
-        run: npm run build:cf
+        run: |
+          node -e "console.log('PB urls', process.env.NEXT_PUBLIC_SHARED_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_ENV)"
+          npm run build:cf
+          node scripts/verify-deployed-pb-urls.mjs .open-next
         env:
           NEXT_TELEMETRY_DISABLED: 1
           NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
@@ -150,7 +153,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build (OpenNext/Cloudflare staging)
-        run: npm run build:cf
+        run: |
+          node -e "console.log('PB urls', process.env.NEXT_PUBLIC_SHARED_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_ENV)"
+          npm run build:cf
+          node scripts/verify-deployed-pb-urls.mjs .open-next
         env:
           NEXT_TELEMETRY_DISABLED: 1
           NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
