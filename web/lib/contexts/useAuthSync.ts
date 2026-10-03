@@ -29,6 +29,9 @@ function responseStatus(err: unknown): number | null {
 
 function authErrorMessage(err: unknown, fallback: string): string {
   if (typeof err !== 'object' || !err) return fallback
+  // PocketBase's SDK uses status 0 and "Something went wrong." when fetch
+  // never gets an HTTP response (connection refused, offline, bad URL).
+  if (responseStatus(err) === 0) return 'Could not reach the account server.'
   const data = 'data' in err ? err.data as unknown : null
   const fieldMessages: string[] = []
 
