@@ -1964,6 +1964,32 @@ button { cursor: pointer; }
   background: transparent;
   color: var(--ln-crimson);
 }
+/* SSL-413: MiningScreen renders under theme-deep, so the blueprint-only rules
+   above never styled the recovery overlay. Scrim and buttons for the deep theme. */
+.theme-deep.mining-screen .mining-failure-overlay {
+  background: rgba(6, 10, 18, 0.9);
+  overflow-y: auto;
+}
+.theme-deep.mining-screen .mining-failure-retry,
+.theme-deep.mining-screen .mining-failure-abandon {
+  width: 100%;
+  padding: var(--ln-s-3) 0;
+  border-radius: var(--ln-r-md);
+  font: 800 11px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.theme-deep.mining-screen .mining-failure-retry {
+  border: 0;
+  background: var(--ln-cyan);
+  color: var(--ln-text-on-cyan);
+}
+.theme-deep.mining-screen .mining-failure-abandon {
+  border: 1px solid var(--ln-crimson-border);
+  background: transparent;
+  color: var(--ln-text-dim);
+}
 .theme-blueprint.mining-screen .mining-charge-warning > div {
   margin: var(--ln-s-2) var(--ln-s-4);
   padding: 6px 14px;

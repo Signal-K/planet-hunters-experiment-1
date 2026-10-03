@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Mission, Target, MineralMeta } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE, REMOTE_MINERAL_SILO_CAPACITY } from '@/lib/data'
+import { miningNeedsRecharge, unitsStillNeeded } from '@/lib/systems/mining-charges'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
@@ -248,8 +249,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // required mineral(s) at only 2 of N pool entries (~33% for a single-mineral order against a
   // 6-mineral pool like Eros's), so of 30 charges — after accounting for shots that miss the
   // firing window entirely — the *expected* on-target hit count for a 5-unit single-mineral
-  // order fell meaningfully short of 5 on a below-average run, and every failed attempt wipes
-  // cargo via handleTryAgain (no partial credit), so a player could cycle failed attempts
+  // order fell meaningfully short of 5 on a below-average run, and a failed attempt
+  // used to wipe cargo (no partial credit), so a player could cycle failed attempts
   // indefinitely without ever clearing the order. Confirmed live: a 5-platinum starter-bulk
   // order on Eros stayed at 0/5 after 9000+ simulated shots (~6 real minutes) at the old budget.
   // 16x/80 gives ~2.7x the prior margin; still finite, not a difficulty-removing bump.
@@ -307,9 +308,18 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
   )
 
+  const stillNeeded = unitsStillNeeded(mission.requires.minerals, cargo)
+  // A magazine that cannot reliably cover the remaining units offers a recharge
+  // that keeps the cargo already collected (SSL-413).
+  const needsRecharge = miningNeedsRecharge(laserCharges, stillNeeded)
+
   // Charges depleted without filling the order — always show recovery options, not just during coaching
   const runFailed = laserCharges === 0 && !orderFilled
   const chargesLow = !orderFilled && laserCharges > 0 && laserCharges <= LOW_CHARGE_THRESHOLD
+
+  function handleRecharge() {
+    setLaserCharges(MAX_CHARGES)
+  }
 
   function handleTryAgain() {
     cargoRef.current = {}
@@ -677,11 +687,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-crit)', textTransform: 'uppercase' }}>Laser Depleted</div>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-text)', textAlign: 'center', lineHeight: 1.2 }}>Order Not Filled</div>
           <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', textAlign: 'center', lineHeight: 1.5 }}>
-            {totalCollected}/{totalNeeded} units collected. Fire at ore veins — each shot must hit a deposit.
+            {totalCollected}/{totalNeeded} units collected. Recharge keeps this cargo. Each new shot still has to hit a deposit.
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 280, marginTop: 8 }}>
-            <button className="mining-failure-retry" onClick={handleTryAgain}>
-              Try Again
+            <button className="mining-failure-retry" data-testid="mining-recharge-btn" onClick={handleRecharge}>
+              Recharge Laser
             </button>
             {onAbandon && (
               <button className="mining-failure-abandon" onClick={() => setConfirmingAbandon(true)}>
@@ -696,7 +706,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       {activeOverlay === 'warning' && (
         <div className="mining-charge-warning" style={{ position: 'absolute', top: 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
           <div>
-            {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — order not filled
+            {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining, recharge to keep this cargo
           </div>
         </div>
       )}
@@ -865,12 +875,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <button
             className="mining-command mining-command--return"
             type="button"
-            aria-disabled={(!orderFilled && laserCharges > 0) || undefined}
+            aria-disabled={(!orderFilled && laserCharges > 0 && !needsRecharge) || undefined}
             data-testid="return-home-btn"
-            onClick={handleReturn}
+            data-mode={needsRecharge && !orderFilled ? 'recharge' : 'return'}
+            onClick={needsRecharge && !orderFilled ? handleRecharge : handleReturn}
           >
             {(() => {
               const destination = deliveryTargetName ? `DELIVER TO ${deliveryTargetName.toUpperCase()}` : 'RETURN TO EARTH'
+              if (needsRecharge && !orderFilled) return 'RECHARGE LASER'
               return orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
             })()}
           </button>
