@@ -2109,6 +2109,28 @@ button { cursor: pointer; }
   100% { transform: scale(1); }
 }
 
+/* SSL-415: on a short landscape phone the bottom HUD covered the lower half of
+   the field and cut the terrain off. Dock the controls as a right-hand column
+   and give the playfield the remaining full height, so the whole terrain stays
+   inside the viewport and the controls never overlap it. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .mining-screen .mining-viewport,
+  .portrait-canvas--mining .mining-screen .mining-viewport { right: min(300px, 38vw); }
+  .mining-screen .mining-controls,
+  .portrait-canvas--mining .mining-controls {
+    left: auto;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: min(300px, 38vw);
+    overflow-y: auto;
+    border-top: 0;
+    border-left: 1px solid var(--ln-cyan-border);
+    box-shadow: -12px 0 28px rgba(0, 0, 0, 0.3);
+    padding: var(--ln-s-2) var(--ln-s-3);
+  }
+}
+
 .debrief-screen { background: var(--ln-void); }
 .debrief-arrival-board { position: relative; min-height: 240px; overflow: hidden; border: 1px solid var(--ln-hairline); border-radius: 10px; background: var(--ln-void); }
 .debrief-arrival-canvas { position: absolute; inset: 0; }
