@@ -4,15 +4,20 @@ Playtest note: scene changes were hard cuts. `GameScreenRouter` swapped `game.sc
 
 This pass wraps every routed screen in `SceneTransition` (`web/components/game/SceneTransition.tsx`, kinds in `web/lib/scene-transition.ts`). The swap happens while a void veil is fully opaque. Total motion is 180ms cover + 200ms reveal = 380ms. `prefers-reduced-motion: reduce` skips the hold and swaps immediately.
 
-Frames from the local preset pass are saved beside this file when the verification run captures them:
+Frames from the local preset pass (`m1-mining`, `m1-hub`, `ui-target-picker` on `localhost:3001`):
 
-- `docs/scene-transition-audit/mining-before-overlap.png` — staging playtest frame (coach and help panel over the field)
-- `docs/scene-transition-audit/mining-after-phone.png` — mining after the overlap fix, 390×844
-- `docs/scene-transition-audit/mining-after-desktop.png` — mining after the overlap fix, ~1280×800
-- `docs/scene-transition-audit/transition-fade.png` — shared void veil mid-fade
-- `docs/scene-transition-audit/transition-climb.png` — launch → transit climb
-- `docs/scene-transition-audit/transition-arrival.png` — transit → mining arrival
-- `docs/scene-transition-audit/transition-debrief.png` — return → debrief descent
+- `docs/scene-transition-audit/mining-after-phone.png` — mining, coach only, 390×844
+- `docs/scene-transition-audit/mining-after-phone-guide.png` — mining with the controls guide open, 390×844
+- `docs/scene-transition-audit/mining-after-desktop.png` — mining, coach only, 1280×800
+- `docs/scene-transition-audit/mining-after-desktop-guide.png` — mining with the controls guide open, 1280×800
+- `docs/scene-transition-audit/hub-before.png` — hub coach in the left rail, 1280×800
+- `docs/scene-transition-audit/map-desktop.png` — target map, 1280×800
+- `docs/scene-transition-audit/transition-fade.png` — live hub navigation, veil mid-cover
+- `docs/scene-transition-audit/transition-climb.png` — climb craft, paused mid-animation
+- `docs/scene-transition-audit/transition-arrival.png` — arrival craft, paused mid-animation
+- `docs/scene-transition-audit/transition-debrief.png` — debrief craft, paused mid-animation
+
+The climb, arrival, and debrief frames are the real veil markup and CSS, paused at 45% of the 380ms animation. A route change plays that same animation; the still is the mid-frame. The fade frame is a live click from the hub. The staging “before” frame is the 3 Oct playtest shot: the coach centered over the ore and the mining-controls panel overlapping it on the right.
 
 ## Shared system
 
