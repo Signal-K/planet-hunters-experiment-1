@@ -255,7 +255,7 @@ export default function SandboxFieldControls({
                 onClick={() => setSelected(isSelected ? null : recipe.id)}
                 data-testid={`sandbox-recipe-${recipe.id}`}
               >
-                  <span className={styles.cardName} data-testid="sandbox-recipe-name">{recipe.name}</span>
+                <span className={styles.cardName} data-testid="sandbox-recipe-name">{recipe.name}</span>
                 <CostChips recipe={recipe} />
                 <span className={styles.cardState}>{can.ok ? 'READY' : 'SHORT'}</span>
               </button>
