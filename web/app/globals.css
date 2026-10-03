@@ -3057,15 +3057,10 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   border-top: 1px solid var(--ln-hairline-strong);
 }
 .build-place-screen .build-structure-strip {
-  /* GameChromeBars is now an in-flow sibling of the screen area. The older
-     coach selector no longer matched after the Flight Plan migration, and
-     its 120px reservation left a dead lower band on wide screens. Keep the
-     picker immediately above the contextual confirm bar instead. */
-  /* The card row itself is taller than the 44px control: structure names can
-     wrap (notably Deep Space Telescope), and the cost/status line follows.
-     Reserve the whole confirm sheet, not just its button, so none of that
-     text slides underneath it at phone width. */
-  bottom: 104px !important;
+  /* The picker belongs directly above the contextual confirmation dock. The
+     dock's 44px control plus its 8px/24px vertical padding is 76px; the old
+     104px reserve left a visible blank band before the in-flow Home nav. */
+  bottom: 76px !important;
 }
 .build-place-screen .build-structure-strip button {
   background: var(--ln-surface);
