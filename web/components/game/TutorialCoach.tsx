@@ -25,6 +25,15 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   if (!step) return null
   const manual = !!step.manual
   const missionSetupStep = ['missions', 'targets', 'rocket-buy', 'fab'].includes(step.screen)
+  // Operational scenes (mining, delivery, flight) keep the coach in a short
+  // top band. The desktop rule that centers a ~920px card would otherwise
+  // sit on the ore, the depot, and the command buttons (SSL-429 / SSL-441).
+  const dockedCoach = ['mining', 'delivery', 'rover-mining', 'transit', 'landing', 'debrief', 'surface-ops'].includes(step.screen)
+  const overlayClass = missionSetupStep
+    ? 'tutorial-coach-overlay tutorial-coach-overlay--mission-setup'
+    : dockedCoach
+      ? 'tutorial-coach-overlay tutorial-coach-overlay--docked'
+      : 'tutorial-coach-overlay'
   // Hub owns a stacked title/HUD rail at every viewport. The old shared tutorial
   // rectangle started at 76px, which put the coach directly over the Jobs
   // chip and made the rest of the navigation look missing. Leave a small
@@ -79,7 +88,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   // ── Manual (full card) ──────────────────────────────────────────────────────
   if (manual) {
     return (
-      <div className={missionSetupStep ? 'tutorial-coach-overlay tutorial-coach-overlay--mission-setup' : 'tutorial-coach-overlay'} style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
+      <div className={overlayClass} data-coach-screen={step.screen} style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
         {resolvedCoachId && showPointer && <CoachPointer coachId={resolvedCoachId} />}
         <div
           data-ui-zone={UI_ZONES.tutorialRail}
@@ -158,7 +167,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
 
   // ── Active instruction card ─────────────────────────────────────────────────
   return (
-    <div className={missionSetupStep ? 'tutorial-coach-overlay tutorial-coach-overlay--mission-setup' : 'tutorial-coach-overlay'} style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
+    <div className={overlayClass} data-coach-screen={step.screen} style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
       {resolvedCoachId && showPointer && <CoachPointer coachId={resolvedCoachId} dir={resolvedDir} />}
       <div
         data-ui-zone={UI_ZONES.tutorialRail}

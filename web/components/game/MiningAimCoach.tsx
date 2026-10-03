@@ -34,9 +34,10 @@ export default function MiningAimCoach({ onDismiss }: { onDismiss: () => void })
     <div
       data-testid="mining-aim-coach"
       style={{
-        position: 'absolute',
-        top: 56, left: 'var(--ln-s-4)', right: 'var(--ln-s-4)', zIndex: 45,
-        margin: '0 auto', maxWidth: 420,
+        position: 'relative',
+        zIndex: 5,
+        margin: '8px 12px 0',
+        maxWidth: 420,
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '8px 12px',
         borderRadius: 12,

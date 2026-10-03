@@ -44,6 +44,7 @@ import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import { FrameSlot } from '@/components/layout/frame/FrameSlot'
 import LaunchShell from '@/components/layout/frame/shells/LaunchShell'
 import MissionSwitch from '@/components/layout/frame/shells/MissionSwitch'
+import SceneTransition from '@/components/game/SceneTransition'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
@@ -78,18 +79,20 @@ export function ScreenContent(props: ScreenContentProps) {
     game.onLaunch()
   }, [game.onLaunch])
   const launching = launchPending && screen === 'fab' && !!game.mission && !!game.target
-  if (launching && game.target) {
-    const rocketDisplay = rocketDisplayForConfig(game.rocket)
-    return (
-      <SurfaceLayout surface="launch">
-        <LaunchShell rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={game.target.name} onComplete={handleLaunchComplete} />
-      </SurfaceLayout>
-    )
-  }
+  const sceneKey = launching ? 'launch' : screen
+  const rocketDisplay = rocketDisplayForConfig(game.rocket)
   return (
-    <SurfaceLayout surface={surfaceForScreen(screen)}>
-      <ScreenBody {...props} onLaunch={handleLaunch} />
-    </SurfaceLayout>
+    <SceneTransition sceneKey={sceneKey}>
+      {launching && game.target ? (
+        <SurfaceLayout surface="launch">
+          <LaunchShell rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={game.target.name} onComplete={handleLaunchComplete} />
+        </SurfaceLayout>
+      ) : (
+        <SurfaceLayout surface={surfaceForScreen(screen)}>
+          <ScreenBody {...props} onLaunch={handleLaunch} />
+        </SurfaceLayout>
+      )}
+    </SceneTransition>
   )
 }
 
