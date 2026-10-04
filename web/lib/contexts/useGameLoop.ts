@@ -29,7 +29,7 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
-import { completeFlightPlanEvent } from '@/lib/systems/FlightPlanSystem'
+import { completeFlightPlanEvent, currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 
@@ -621,6 +621,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
     setState(s => {
       const existing = s.player.tessClassifications?.[subjectId]
+      // The training candidate is deliberately available before Free Ops. Once
+      // it is classified, Galaxy would immediately re-render as its normal
+      // locked Telescope gate because the active try has advanced to Part.
+      // Hand the player directly to that next try instead of leaving them on a
+      // screen which says the activity they just completed is unavailable.
+      const completedTrainingScan = subjectId.startsWith(TRAINING_ID_PREFIX)
+        && currentTrainingTry(s.player.flightPlan) === 'scan'
       const showArtifactNarrative = artifactNarrativeEligible({
         transitSatelliteLevel: s.player.transitSatelliteLevel,
         verdict,
@@ -629,6 +636,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       })
       const next: GameState = {
         ...s,
+        screen: completedTrainingScan ? 'hangar' : s.screen,
         player: {
           ...s.player,
           researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,
