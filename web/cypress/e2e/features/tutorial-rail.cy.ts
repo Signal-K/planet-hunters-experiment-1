@@ -99,9 +99,9 @@ function assertGameplayButtonsAvoidCoachBlock() {
 
 function openContracts() {
   assertOnHome(10000)
-  // The shared Home bar's OPS action is the entry at every width. The
+  // The shared loop switch is the contracts entry at every width. The
   // launchpad's "View Missions" callout is hidden while the Flight Plan is up.
-  cy.get('[data-testid="home-bar-ops"]').click()
+  cy.get('[data-testid="home-bar-switch"]').click()
   cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
 }
 
@@ -121,10 +121,10 @@ describe('Tutorial rail regression', () => {
 
         cy.get('[data-testid="flight-plan"]').should('contain', 'Open client contracts')
 
-        // The retired desktop sidebar must stay gone; the shared bar's OPS
+        // The retired desktop sidebar must stay gone; the shared loop switch
         // action is the one persistent way into Missions at every width.
         cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
-        cy.get('[data-testid="home-bar-ops"]').should('be.visible')
+        cy.get('[data-testid="home-bar-switch"]').should('be.visible')
 
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -211,8 +211,8 @@ describe('Tutorial rail regression', () => {
         cy.get('[data-testid="build-plot-0"]').click()
         cy.get('[data-testid="build-place-confirm"]').click()
         cy.get('[data-testid="building-launchpad"]', { timeout: 15000 }).should('be.visible')
-        // The shared Home bar's OPS action is the way into contracts at every width.
-        cy.get('[data-testid="home-bar-ops"]').click()
+        // The shared loop switch is the way into contracts at every width.
+        cy.get('[data-testid="home-bar-switch"]').click()
         cy.get('[data-testid^="mission-accept-"]').first().should('be.visible').click()
         cy.get('[data-testid="continue-build-btn"]').should('be.visible')
       })

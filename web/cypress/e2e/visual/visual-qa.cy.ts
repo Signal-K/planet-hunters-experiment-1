@@ -97,7 +97,7 @@ function skipAuthGateIfShown() {
 }
 
 function navToMissions() {
-  cy.get('[data-testid="home-bar-ops"]').should('be.visible').click()
+  cy.get('[data-testid="home-bar-switch"]').should('be.visible').click()
 }
 
 function jumpToCompletedDebrief(cargo: Record<string, number>) {

@@ -138,8 +138,8 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('[data-testid="hub-subsurface-btn"]').should('be.visible')
     cy.get('[data-testid^="progression-card-"]').should('not.exist')
     // Post-onboarding no longer duplicates the Mission Board in the
-    // progression stack; the shared bar's OPS action is the entry point.
-    cy.get('[data-testid="home-bar-ops"]').should('be.visible')
+    // progression stack; the shared loop switch is the entry point.
+    cy.get('[data-testid="home-bar-switch"]').should('be.visible')
 
     cy.get('.hub-push-opt-in').then($prompt => {
       if ($prompt.is(':visible')) {

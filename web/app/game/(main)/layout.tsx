@@ -289,10 +289,6 @@ function GameChrome({ children }: { children: ReactNode }) {
 
         {mountsSharedChrome(currentScreen, game.authGateOpen) && (
           <GameChromeBars
-            screen={currentScreen}
-            missionsDone={game.player.missionsDone}
-            hasActiveRun={!!game.player.activeMission}
-            onHome={() => game.go('hub')}
             onOperations={resumeOperations}
             onMarket={() => {
               // SSL-416: Market is locked until training ends; say so instead of ignoring the tap.

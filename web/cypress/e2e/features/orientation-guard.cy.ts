@@ -96,7 +96,7 @@ describe('Compact landscape play path (SSL-326)', () => {
       },
     })
     assertNoRotateWall()
-    cy.get('[data-testid="home-bar-ops"]', { timeout: 15000 }).click()
+    cy.get('[data-testid="home-bar-switch"]', { timeout: 15000 }).click()
     cy.get('[data-testid="mission-board-section-client"]', { timeout: 15000 }).should('be.visible')
     assertNoRotateWall()
     cy.screenshot('mobile-landscape-missions')

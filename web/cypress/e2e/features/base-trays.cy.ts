@@ -47,13 +47,15 @@ describe('Base trays and shared bar', () => {
     describe(`${width}x${height}`, () => {
       beforeEach(() => cy.viewport(width, height))
 
-      it('shows OPS, Hub, « », Market and Menu with 12px+ labels', () => {
+      it('shows only « », Market and Menu with 14px+ labels', () => {
         visitTray('/game/hub')
-        for (const id of ['home-bar-ops', 'home-bar-hub', 'home-bar-switch', 'home-bar-market', 'settings-button']) {
+        for (const id of ['home-bar-switch', 'home-bar-market', 'settings-button']) {
           cy.get(`[data-testid="${id}"]`).should('be.visible').then($b => {
-            expect(parseFloat(getComputedStyle($b[0]).fontSize)).to.be.at.least(12)
+            expect(parseFloat(getComputedStyle($b[0]).fontSize)).to.be.at.least(14)
           })
         }
+        cy.get('[data-testid="home-bar-ops"]').should('not.exist')
+        cy.get('[data-testid="home-bar-hub"]').should('not.exist')
       })
 
       it('closes Market with Escape and returns to the Base', () => {
@@ -66,7 +68,7 @@ describe('Base trays and shared bar', () => {
 
       it('opens Market with the M key', () => {
         visitTray('/game/hub')
-        cy.get('[data-testid="home-bar-hub"]').should('be.visible')
+        cy.get('[data-testid="home-bar-switch"]').should('be.visible')
         // The auth store's first change reloads the account save slot shortly
         // after load and overwrites a screen change made in that window. This
         // spec has no request to wait on, so let it finish before pressing M.

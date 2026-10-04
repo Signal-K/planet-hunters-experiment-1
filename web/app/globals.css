@@ -887,10 +887,8 @@ button { cursor: pointer; }
 
 /* SSL-346: shell-owned controls are available on every live surface. */
 .game-chrome-bottom { position:relative; z-index:70; flex:0 0 auto; display:flex; align-items:stretch; justify-content:center; gap:4px; padding:4px 8px; border-top:1px solid var(--ln-hairline); background:var(--ln-void); }
-.game-chrome-bottom__readout { display:none; align-items:center; padding:0 12px; color:var(--ln-cyan); font:800 12px var(--ln-font-display); letter-spacing:.12em; text-transform:uppercase; white-space:nowrap; }
-.game-chrome-bottom button { flex:1 1 0; min-width:0; max-width:128px; min-height:40px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
+.game-chrome-bottom button { flex:1 1 0; min-width:0; max-width:128px; min-height:44px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 14px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
 .game-chrome-bottom button[aria-current="page"], .game-chrome-bottom button:hover { border-color:var(--ln-cyan-border); background:var(--ln-cyan-soft); color:var(--ln-cyan-bright); }
-@media (min-width:600px) { .game-chrome-bottom__readout { display:inline-flex; } }
 /* Landscape phones: every screen's title bar shrinks to one 48px line. */
 @media (orientation:landscape) and (max-height:500px) {
   .top-bar { padding-top:8px !important; padding-bottom:8px !important; }
@@ -910,8 +908,7 @@ button { cursor: pointer; }
 @media (orientation:landscape) and (max-height:500px) {
   .portrait-canvas { flex-direction:row; }
   .game-chrome-bottom { order:-1; flex-direction:column; justify-content:flex-start; align-items:stretch; width:72px; padding:8px 4px; border-top:0; border-right:1px solid var(--ln-hairline); }
-  .game-chrome-bottom__readout { display:inline-flex; justify-content:center; padding:4px 0 8px; font-size:10px; }
-  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:32px; padding:4px; font-size:10px; letter-spacing:.06em; }
+  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:44px; padding:4px; font-size:14px; letter-spacing:.06em; }
 }
 
 .hub-sky-craft-control { position:absolute; z-index:11; top:96px; right:16px; display:flex; align-items:center; gap:8px; min-height:40px; padding:8px 12px; border:1px solid var(--ln-cyan-border); border-radius:8px; background:color-mix(in srgb, var(--ln-void) 74%, transparent); color:var(--ln-cyan-bright); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
@@ -2840,12 +2837,12 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 .flight-plan-skip { align-self: flex-start; margin-top: 4px; }
 .flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-panel-2, #101722); }
 .game-chrome-bottom__training-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 999px; background: var(--ln-cyan); }
-.game-chrome-bottom__training-chip { margin-left: 4px; font-size: 10px; color: var(--ln-cyan); }
+.game-chrome-bottom__training-chip { margin-left: 4px; font-size: 14px; color: var(--ln-cyan); }
 /* Phone widths: MENU + dot + "0/3" is wider than its slot and spilled past the
    bar edge. The chip already carries the state, so drop the dot there. */
 @media (max-width: 600px), (max-height: 500px) {
   .game-chrome-bottom__training-dot { display: none; }
-  .game-chrome-bottom__training-chip { margin-left: 3px; font-size: 9px; letter-spacing: 0; }
+  .game-chrome-bottom__training-chip { margin-left: 3px; font-size: 14px; letter-spacing: 0; }
 }
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
 

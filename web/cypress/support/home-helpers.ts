@@ -1,6 +1,6 @@
-// Stable selectors for the Home chrome (SSL-372). Home no longer renders an
-// "Earth Base" h1, so specs assert on the shared chrome bar instead.
-export const HOME_HUB_BUTTON = '[data-testid="home-bar-hub"]'
+// Stable selector for the rendered Base scene. The Cycle 4 bottom bar no
+// longer carries a duplicate HUB control.
+export const HOME_HUB_BUTTON = '[data-testid="hub-terrain-fallback"]'
 export const INTRO_TITLE = '[data-testid="intro-title"]'
 
 export function assertOnHome(timeout = 10000) {

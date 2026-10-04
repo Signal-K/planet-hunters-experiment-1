@@ -35,8 +35,7 @@ describe('Hub shared chrome and sky controls', () => {
     cy.get('[data-testid^="progression-card-"]').should('not.exist')
     cy.get('[data-testid="home-bottom-bar"]').should('be.visible')
     cy.get('[data-testid="home-bottom-bar"]').within(() => {
-      cy.get('[data-testid="home-bar-ops"]').should('be.visible')
-      cy.get('[data-testid="home-bar-hub"]').should('be.visible')
+      cy.get('[data-testid="home-bar-switch"]').should('be.visible')
       cy.get('[data-testid="home-bar-market"]').should('be.visible')
       cy.get('[data-testid="settings-button"]').should('be.visible')
     })

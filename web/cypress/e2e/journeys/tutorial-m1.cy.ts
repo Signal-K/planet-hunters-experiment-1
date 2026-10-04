@@ -131,7 +131,7 @@ function visitScanTry() {
 // every viewport.
 
 function navToMissions() {
-  cy.get('[data-testid="home-bar-ops"]').should('be.visible').click()
+  cy.get('[data-testid="home-bar-switch"]').should('be.visible').click()
   cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
 }
 
@@ -309,7 +309,7 @@ if (!MISSION_FILTER) describe('Desktop layout: Home chrome is the operations ent
   it('keeps the operations control available without retired navigation', () => {
     visitHub({ doneSteps: { 0: true } })
     cy.get('[data-testid="home-bottom-bar"]').should('be.visible')
-    cy.get('[data-testid="home-bar-ops"]').should('be.visible')
+    cy.get('[data-testid="home-bar-switch"]').should('be.visible')
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
   })
 
@@ -327,7 +327,7 @@ if (!MISSION_FILTER) describe('Mobile layout: Home chrome is visible, sidebar hi
 
   it('keeps the operations control available and the retired sidebar absent', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.get('[data-testid="home-bar-ops"]').should('be.visible')
+    cy.get('[data-testid="home-bar-switch"]').should('be.visible')
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
   })
 
