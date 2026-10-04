@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canonicalGamePath, canonicalGameRoute, shouldPushGamePath } from './game-route'
+import { canonicalGamePath, canonicalGameRoute } from './game-route'
 
 describe('canonical mission setup route', () => {
   it.each(['missions', 'targets', 'rocket-buy'] as const)(
@@ -26,22 +26,12 @@ describe('canonical mission setup route', () => {
   })
 })
 
-describe('state to URL sync', () => {
-  it('pushes when the screen moved away from the current URL', () => {
-    expect(shouldPushGamePath('/game/hub', '/game/mining', null)).toBe(true)
-  })
-
-  it('does not push when the URL already shows the screen', () => {
-    expect(shouldPushGamePath('/game/hub', '/game/hub', '/game/hub')).toBe(false)
-  })
-
-  it('pushes a newer screen even though an older push has not committed yet', () => {
-    // Back pushed /game/hub; before it commits the URL still reads
-    // /game/mining, and Resume returns the state to mining.
-    expect(shouldPushGamePath('/game/mining', '/game/mining', '/game/hub')).toBe(true)
-  })
-
-  it('does not push again once the in-flight push has committed', () => {
-    expect(shouldPushGamePath('/game/mining', '/game/mining', '/game/mining')).toBe(false)
+describe('trayScreenFromPath', () => {
+  it('keeps Market and Subsurface on a cold load, nothing else', async () => {
+    const { trayScreenFromPath } = await import('./game-route')
+    expect(trayScreenFromPath('/game/market')).toBe('market')
+    expect(trayScreenFromPath('/game/hub-subsurface/')).toBe('hub-subsurface')
+    expect(trayScreenFromPath('/game/missions')).toBeNull()
+    expect(trayScreenFromPath('/game/hub')).toBeNull()
   })
 })

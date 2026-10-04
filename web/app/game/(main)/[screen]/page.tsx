@@ -3,12 +3,12 @@
 import { use, useEffect } from 'react'
 import { notFound } from 'next/navigation'
 import { useGame } from '@/game-context'
+import type { Screen } from '@/lib/game-types'
 import { VALID_SCREENS } from '@/components/game/GameScreenRouter'
-import { isMissionSetupInternalScreen, screenForRouteSegment } from '@/lib/game-route'
+import { isMissionSetupInternalScreen } from '@/lib/game-route'
 
 export default function ScreenPage({ params }: { params: Promise<{ screen: string }> }) {
-  const { screen: segment } = use(params)
-  const screen = screenForRouteSegment(segment)
+  const { screen } = use(params)
   const game = useGame()
 
   // When the URL changes (browser back/forward), sync it into game state
@@ -20,6 +20,9 @@ export default function ScreenPage({ params }: { params: Promise<{ screen: strin
   // coach since it keys off game.screen, not the URL).
   useEffect(() => {
     if (!game.hydrated) return
+    // A push the game issued is still in flight. Params from earlier, slower
+    // navigations are stale; only the awaited path may land.
+    if (game.isStaleRoute(screen)) return
     // Until authentication is resolved, a deep URL is only the route that
     // opened underneath the entry gate. Letting it write into GameState here
     // races sign-in's canonical Earth Base redirect and can reopen Contracts.
@@ -27,12 +30,12 @@ export default function ScreenPage({ params }: { params: Promise<{ screen: strin
     // /game/missions owns the whole creation flow. Do not let the stable URL
     // reset an in-progress internal step during hydration or a rerender.
     if (screen === 'missions' && isMissionSetupInternalScreen(game.screen)) return
-    if (VALID_SCREENS.has(screen) && game.screen !== screen) {
-      game.setScreenFromUrl(screen)
+    if (VALID_SCREENS.has(screen as Screen) && game.screen !== screen) {
+      game.setScreenFromUrl(screen as Screen)
     }
   }, [screen, game.hydrated, game.authGateOpen, game.authUserId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!VALID_SCREENS.has(screen)) return notFound()
+  if (!VALID_SCREENS.has(screen as Screen)) return notFound()
 
   // Auth gate (sign in / sign up / continue with email) must be resolved
   // before any gameplay screen mounts — otherwise it's a purely cosmetic

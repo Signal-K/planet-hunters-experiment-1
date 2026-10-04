@@ -4,6 +4,7 @@ import React from 'react'
 import { IconBtn } from './Button'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatFrancs } from '@/lib/format'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
 
 interface TopBarProps {
   eyebrow?: string
@@ -55,8 +56,9 @@ function ClockIcon() {
 }
 
 export default function TopBar({ eyebrow, title, onBack, right, dense, solid, glass, scene, levelBadge, francs }: TopBarProps) {
+  const devBadge = isDevLauncherEnabled()
   return (
-    <div data-ui-zone={UI_ZONES.topChrome} style={{
+    <div className="top-bar" data-ui-zone={UI_ZONES.topChrome} style={{
       position: 'absolute',
       top: 0,
       left: 0,
@@ -65,7 +67,9 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
       // DEV shortcuts occupy the upper-left corner in local builds. Screens
       // without a back control still need a reserved title start, otherwise
       // the badge sits on top of the eyebrow (most visible on Debrief).
-      padding: `18px 14px 12px ${onBack ? 14 : 76}px`,
+      // SSL-414: the back control used to start at 14px, directly under the
+      // 40px DEV badge. Reserve its footprint on every screen when it renders.
+      padding: `18px 14px 12px ${devBadge ? (onBack ? 56 : 76) : (onBack ? 14 : 76)}px`,
       // Fully opaque (alpha 1, not e.g. 0.97) — verified against a live page
       // that even 3% transparency on a near-black background is visible as
       // faint bleed-through text behind bright card copy scrolling beneath it.
@@ -104,7 +108,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
       </div>
       <div style={{ flex: 1, pointerEvents: 'none' }}>
         {eyebrow && (
-          <div style={{
+          <div className="top-bar__eyebrow" style={{
             fontFamily: 'var(--ln-font-display)',
             fontSize: 9,
             fontWeight: 700,
@@ -116,7 +120,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
           </div>
         )}
         {title && (
-          <h1 style={{
+          <h1 className="top-bar__title" style={{
             margin: '2px 0 0 0',
             fontFamily: 'var(--ln-font-display)',
             fontSize: dense ? 18 : 22,

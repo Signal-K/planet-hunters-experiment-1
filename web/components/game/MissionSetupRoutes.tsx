@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import type { useGame } from '@/game-context'
 import type { Catalog } from '@/lib/catalog'
 import type { Screen } from '@/lib/game-types'
@@ -12,15 +12,16 @@ import {
   rocketDisplayForConfig,
   rocketModelForConfig,
   validateBuild,
-  rocketModelAvailable,
 } from '@/lib/data'
 import { clientAffinityLevel, crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { getRequiredRocketModel } from '@/lib/rockets'
 import { rocketCompositionForId, type RocketRoomRole } from '@/lib/data/rocket-composition'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import { formatCurrency } from '@/lib/format'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import ClientMark from '@/components/ui/ClientMark'
 import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
+import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
@@ -38,9 +39,10 @@ interface MissionSetupRoutesProps {
   coachManual: boolean
   deliveryTargetName?: string
   rocketDisplay: RocketDisplay
+  launchPending: boolean
   onTransferToLaunchpad: () => void
-  /** Starts the launch; the sequence itself renders in the Launch layout. */
   onLaunch: () => void
+  onLaunchComplete: () => void
 }
 
 const STEP_LABELS = ['CONTRACT', 'MAP', 'BLUEPRINT', 'REVIEW'] as const
@@ -157,7 +159,7 @@ function SetupFrame({ step, title, onBack, hasCoach, children }: {
   children: ReactNode
 }) {
   return (
-    <div className={`game-screen ${styles.root}`} data-testid="mission-setup-scaffold" data-step={step} data-coach={hasCoach}>
+    <div className={`game-screen ${styles.root}`} data-testid="mission-setup-scaffold" data-step={step}>
       <div className={styles.landscape} data-testid="mission-setup-landscape" aria-hidden="true">
         {/* SSL-311: this is the Earth Base operations place (same family as
             Launchpad's STS-630 scene panel), not a washed steel/light-card
@@ -190,7 +192,7 @@ function SetupFrame({ step, title, onBack, hasCoach, children }: {
   )
 }
 
-export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, onTransferToLaunchpad, onLaunch }: MissionSetupRoutesProps) {
+export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
   const relay = useMissionRelayModels({
     catalog: game.catalog,
     missionsDone: game.player.missionsDone,
@@ -209,9 +211,10 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
     game.player.unlockedSkillNodes ?? [],
   ) : [], [game.catalog.parts, game.catalog.targets, game.mission, game.player.launchpadUpgraded, game.player.missionsDone, game.player.unlockedSkillNodes])
   const [targetId, setTargetId] = useState('')
+  const mapRef = useRef<HTMLElement>(null)
   const requiredRocket = getRequiredRocketModel(game.player.missionsDone)
   const availableRockets = useMemo(
-    () => ROCKET_MODELS.filter(model => rocketModelAvailable(model, game.player.missionsDone)),
+    () => ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= game.player.missionsDone),
     [game.player.missionsDone],
   )
   const selectableRockets = useMemo(() => {
@@ -306,7 +309,17 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
             </article>
             <button type="button" className={`${styles.carouselArrow} ${styles.next}`} onClick={() => relay.selectRelativeSignal(1)} disabled={relay.cardModels.length < 2} aria-label="Next contract"><ChevronGlyph direction="next" /></button>
             <div className={styles.galleryDots} aria-hidden="true">{relay.cardModels.map((item, index) => <i key={item.mission.id} data-active={index === relay.selectedIndex} />)}</div>
-          </> : <div className={styles.empty}>NO COMPATIBLE CLIENT SIGNALS</div>}
+          </> : relay.onboardingComplete ? (
+            // SSL-332: both guided contracts are flown; the silo is what opens
+            // Free Ops, so say so instead of showing an empty board.
+            <div className={styles.empty} data-testid="mission-board-awaiting-silo">
+              <div className={styles.emptyPrompt}>
+                <span>AGENCY TRAINING</span>
+                <strong>Build a storage silo to open Free Ops</strong>
+                <button type="button" className={styles.primary} onClick={() => game.go('build')}>BUILD STORAGE SILO</button>
+              </div>
+            </div>
+          ) : <div className={styles.empty}>NO COMPATIBLE CLIENT SIGNALS</div>}
         </section>
       </SetupFrame>
     )
@@ -316,17 +329,24 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
     const selectedTarget = compatibleTargets.find(target => target.id === targetId)
     return (
       <SetupFrame step={2} title="Map" onBack={() => game.go('missions')} hasCoach={hasCoach}>
-        <section className={styles.targetMap} data-testid="mission-target-map">
-          <div className={styles.mapCanvas}>
+        <section
+          ref={mapRef}
+          className={styles.targetMap}
+          data-testid="mission-target-map"
+        >
+          <div className={styles.mapFilter} data-testid="mission-target-filter">
+            <strong>MISSION FILTER</strong>
+            <RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} />
+            <p>ONLY TARGETS WITH THE REQUIRED MINERALS, RANGE, CARGO, AND DRILL PARAMETERS ARE HIGHLIGHTED.</p>
+          </div>
+          <div className={styles.mapField}>
             <GalaxyMap mission={game.mission} targets={game.catalog.targets} compatibleIds={new Set(compatibleTargets.map(target => target.id))} pickedId={targetId} onPick={setTargetId} eligibleOnlyHighlight />
           </div>
-          <div className={styles.filterRibbon}>
-            <strong>MISSION FILTER ACTIVE</strong>
-            <span>ONLY TARGETS WITH THE REQUIRED MINERALS, RANGE, CARGO, AND DRILL PARAMETERS ARE HIGHLIGHTED.</span>
-            <RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} />
-          </div>
-          <div className={styles.mapAction} data-testid="target-selection-summary">
-            <div><span>{selectedTarget ? `${targetTypeLabel(selectedTarget.type)} · ELIGIBLE TARGET` : 'ELIGIBLE TARGET'}</span><h2>{selectedTarget?.name ?? 'SELECT A HIGHLIGHTED BODY'}</h2>{selectedTarget && <p><b>{targetTypeLabel(selectedTarget.type)}</b> · ORBIT {selectedTarget.orbit} · MISSION PARAMETERS PASS</p>}</div>
+          <div className={styles.mapRail} data-testid="target-selection-summary">
+            <div className={styles.mapPick}>
+              <span>{selectedTarget ? `${targetTypeLabel(selectedTarget.type)} · ORBIT ${selectedTarget.orbit}` : `${compatibleTargets.length} ELIGIBLE`}</span>
+              <h2>{selectedTarget?.name ?? 'Select a highlighted body'}</h2>
+            </div>
             <button type="button" className={styles.primary} data-testid="continue-build-btn" disabled={!selectedTarget} onClick={() => selectedTarget && game.onPickTarget(selectedTarget.id)}><StepGlyph step={2} /> CONFIRM TARGET</button>
           </div>
         </section>
@@ -369,7 +389,11 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
             <button type="button" onClick={() => game.onMoveStagedRocket(movableVehicle.id)}>MOVE VEHICLE TO THIS MISSION</button>
           </div>}
           <p className={styles.purchaseTerms}>{selectedRocket.costFrancs === 0 ? 'BUILD QUEUE · ₣0 · SINGLE-USE AFTER LAUNCH' : `COMPANY SHIPMENT · ${formatCurrency(selectedRocket.costFrancs, { compact: true })} · CHARGED ONCE`}</p>
-          <button type="button" className={styles.primary} disabled={!canAfford} onClick={() => game.onPurchaseRocket(selectedRocket.id)} data-testid="purchase-rocket-btn"><StepGlyph step={3} /> {selectedRocket.costFrancs === 0
+          <button type="button" className={styles.primary} aria-disabled={!canAfford || undefined} data-unaffordable={!canAfford || undefined} onClick={() => {
+            // SSL-399: a disabled button swallowed the tap with no reason. Keep it tappable and say why.
+            if (!canAfford) { game.addToast(`Not enough francs: you need ${formatCurrency(selectedRocket.costFrancs - game.player.francs, { compact: true })} more`, 'warn'); return }
+            game.onPurchaseRocket(selectedRocket.id)
+          }} data-testid="purchase-rocket-btn"><StepGlyph step={3} /> {selectedRocket.costFrancs === 0
             ? 'BUILD EXPLORER · ₣0'
             /* SSL-313: "ANOTHER" only once this model has actually been built before. */
             : `${(game.player.rocketPurchaseCounts?.[selectedRocket.id] ?? 0) > 0 ? 'BUILD ANOTHER' : 'BUILD'} ${selectedRocket.name.toUpperCase()} · ${formatCurrency(selectedRocket.costFrancs, { compact: true })}`}</button>
@@ -416,6 +440,7 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
           </aside>
         </section>
       </SetupFrame>
+      {launchPending && !vehicleInHangar && <ErrorBoundary fallback={null} onError={onLaunchComplete}><LaunchSequenceCanvas rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={game.target.name} onComplete={onLaunchComplete} /></ErrorBoundary>}
     </>
   }
 

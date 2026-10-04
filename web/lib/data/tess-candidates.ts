@@ -1,5 +1,4 @@
-/** One flux sample on a TESS lightcurve: x is time in days, y normalised flux. */
-export interface LightcurvePoint { x: number; y: number }
+import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
 import { TESS_SETTLED_LABELS, recordHasOpenConsensus } from '@/lib/citizen-science/open-anomaly'
 import { mineralsForArchetype, type TargetArchetype } from './target-archetypes'
 
@@ -73,7 +72,7 @@ export function tessLightcurvePoints(candidate: TessCandidate): LightcurvePoint[
   const points: LightcurvePoint[] = []
   const spanDays = 27.4
   const depth = candidate.depthPpm / 1_000_000
-  const transitWidth = transitSigmaDays(candidate)
+  const transitWidth = Math.max(0.045, Math.min(0.16, candidate.periodDays * 0.018))
 
   for (let i = 0; i < SYNTHETIC_POINT_COUNT; i += 1) {
     const x = (i / (SYNTHETIC_POINT_COUNT - 1)) * spanDays
@@ -91,24 +90,8 @@ export function tessLightcurvePoints(candidate: TessCandidate): LightcurvePoint[
   return points
 }
 
-// Gaussian width (days) of the synthetic transit profile above.
-function transitSigmaDays(candidate: TessCandidate): number {
-  return Math.max(0.045, Math.min(0.16, candidate.periodDays * 0.018))
-}
-
-/**
- * Whether a marked range overlaps one of the candidate's transits (centre
- * epoch + n·period, give or take two profile widths). Only meaningful for a
- * curve whose ephemeris is known — the TESS tutorial's confirmed planet.
- */
-export function rangeCoversTransit(candidate: TessCandidate, range: TransitRange): boolean {
-  const margin = transitSigmaDays(candidate) * 2
-  const lo = Math.min(range.x1, range.x2) - margin
-  const hi = Math.max(range.x1, range.x2) + margin
-  const period = candidate.periodDays
-  if (!(period > 0)) return false
-  const firstN = Math.ceil((lo - candidate.transitEpoch) / period)
-  return candidate.transitEpoch + firstN * period <= hi
+export function nextUnclassifiedTessCandidate(candidates: TessCandidate[], classifications: Record<string, TessClassification> = {}): TessCandidate | null {
+  return candidates.find(candidate => !classifications[candidate.id]) ?? candidates[0] ?? null
 }
 
 // `preferredId` is the player's satellite-pointing choice (see
@@ -138,7 +121,7 @@ export function dailyTessCandidates(candidates: TessCandidate[], dateKey: string
 // `lightcurve_points` is one continuous curve — so "switching sectors"
 // means windowing the one curve we have, but the *sector numbers* shown
 // are real, parsed from this field, not invented.
-function parseSectorList(sectorText: string): string[] {
+export function parseSectorList(sectorText: string): string[] {
   const text = (sectorText ?? '').trim()
   if (!text) return []
 
@@ -308,7 +291,7 @@ export function periodFromRanges(ranges: TransitRange[]): number | null {
   return gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length
 }
 
-function depthFromRanges(points: LightcurvePoint[], ranges: TransitRange[]): number | null {
+export function depthFromRanges(points: LightcurvePoint[], ranges: TransitRange[]): number | null {
   if (ranges.length === 0 || points.length === 0) return null
   const depths = ranges
     .map(range => {

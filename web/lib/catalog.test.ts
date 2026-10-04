@@ -55,7 +55,7 @@ describe('Landnam Catalog Mapping', () => {
     })
   })
 
-  it('normalizes legacy M3 catalog records to one of the corrected transport-client missions', () => {
+  it('normalizes legacy M3 catalog records to one of the corrected Transport-lesson missions', () => {
     const mission = toMission({
       slug: 'lnm_m3_ore_delivery',
       title: 'Legacy Delivery',
@@ -64,7 +64,7 @@ describe('Landnam Catalog Mapping', () => {
       target_id: 'lutetia',
       payload_type: 'rover',
     })
-    expect(mission.sequence).toBe(3)
+    expect(mission.sequence).toBe(2)
     expect(mission.deliveryTargetId).toBeDefined()
     expect(mission.client).toBeDefined()
   })
@@ -96,6 +96,26 @@ describe('Landnam Catalog Mapping', () => {
     }
     // PB's row is preserved too — this is a union, not a replacement.
     expect(merged.some(m => m.id === 'm1-iron')).toBe(true)
+  })
+
+  it('drops the retired M2 Prospector row (m2-silicon) that older databases still serve (SSL-332)', () => {
+    const legacyM2: Mission = {
+      id: 'm2-silicon',
+      title: 'Silicon Bulk Order',
+      brief: '',
+      client: 'helios-propulsion-depot',
+      tag: 'BULK',
+      difficulty: 'L2',
+      locked: false,
+      sequence: 2,
+      requires: { minerals: { silicon: 8 }, cargo_min: 8, drill_tier: 1, max_orbit: 5 },
+      payout: { francs: 1000, affinity: 1 },
+    }
+    const merged = withAuthoredExtras([legacyM2])
+    expect(merged.some(m => m.id === 'm2-silicon')).toBe(false)
+    const secondMissions = merged.filter(m => m.sequence === 2)
+    expect(secondMissions.length).toBeGreaterThan(0)
+    expect(secondMissions.every(m => m.tag === 'TRANSPORT' && !!m.deliveryTargetId)).toBe(true)
   })
 
   it('maps a raw client record with economy fields', () => {

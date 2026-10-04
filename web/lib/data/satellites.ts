@@ -23,4 +23,9 @@ export const SATELLITE_MODELS: SatelliteModel[] = [
     name: 'Transit Telescope',
     unlockHint: 'Reach Free Operations',
   },
+  {
+    id: 'deep-space-telescope',
+    name: 'Deep Space Telescope',
+    unlockHint: 'Reach Free Operations',
+  },
 ]

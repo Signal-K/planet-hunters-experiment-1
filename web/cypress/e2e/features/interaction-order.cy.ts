@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 import type { GameState } from '@/game-context'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
@@ -64,6 +65,11 @@ function visitWithState(state: StateOverride) {
       seedFixtureSession(win)
     },
   })
+  // The bar renders before auth and the remote load settle, and the [screen]
+  // route re-applies its URL when they do, undoing a click made in between.
+  // The first account save (a create after the 404 load) only fires once both
+  // have settled; the follow-up PATCH is not guaranteed, so wait on the create.
+  cy.wait('@pbGameStateCreate', { timeout: 20000 })
 }
 
 function readSavedState() {
@@ -71,6 +77,24 @@ function readSavedState() {
 }
 
 describe('Interaction order hardening', () => {
+  // The generic fixture stubs answer auth-refresh and the Landnam exchange with
+  // 503, so auth re-resolves after load and the [screen] route re-applies its
+  // stale URL over a screen the test just opened (the click lands, then the
+  // page snaps back to the hub). Let auth settle successfully instead, as
+  // takeon-visual-audit does.
+  beforeEach(() => {
+    const tokenPayload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }))
+    const e2eToken = `e30.${tokenPayload}.test`
+    cy.intercept('POST', '**/api/collections/users/auth-refresh', {
+      statusCode: 200,
+      body: { token: e2eToken, record: { id: 'e2e-fixture-user', email: 'e2e-fixture-user@example.com' } },
+    })
+    cy.intercept('POST', '**/api/landnam-auth/exchange', {
+      statusCode: 200,
+      body: { token: e2eToken, record: { id: 'e2e-fixture-user' } },
+    })
+  })
+
   it('repairs context screens when persisted mission context is missing', () => {
     visitWithState({
       screen: 'fab',
@@ -80,26 +104,28 @@ describe('Interaction order hardening', () => {
 
     // An onboarding assembly route with no mission has nothing to assemble;
     // it falls back to Earth Base, where the coach points at the contracts.
-    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+    assertOnHome()
     cy.get('[data-testid="mission-launch-review"]').should('not.exist')
-    cy.get('[data-testid="bottom-tab-missions"]').click()
+    cy.get('[data-testid="home-bar-ops"]').click()
     cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible')
   })
 
   it('a fixed-target mission skips the target map and goes straight to the vehicle', () => {
+    // SSL-332: missionsDone 1 is the Transport lesson, where the fixed-target
+    // relay contracts are offered (missionsDone 2 shows the silo prompt instead).
     // lnm_m3_ore_delivery is a retired M3 slug — withCorrectedM3 (lib/catalog.ts)
     // now maps it away entirely, so it never resolves to a mission. Use a current
     // fixed-target M3 mission (lib/data/missions.ts) instead.
-    visitWithState({ screen: 'hub', player: { missionsDone: 2, missionCount: 3 } })
-    cy.get('[data-testid="bottom-tab-missions"]').click()
+    visitWithState({ screen: 'hub', player: { missionsDone: 1, missionCount: 2 } })
+    cy.get('[data-testid="home-bar-ops"]').click()
     cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').click()
     cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
     cy.get('[data-testid="mission-target-map"]').should('not.exist')
   })
 
   it('backs out of fixed-target rocket purchase to its fixed target, never an empty target picker', () => {
-    visitWithState({ screen: 'hub', player: { missionsDone: 2, missionCount: 3 } })
-    cy.get('[data-testid="bottom-tab-missions"]').click()
+    visitWithState({ screen: 'hub', player: { missionsDone: 1, missionCount: 2 } })
+    cy.get('[data-testid="home-bar-ops"]').click()
     cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').click()
     cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
     cy.get('[data-testid="mission-setup-scaffold"] button[aria-label="Back"]').click()
@@ -122,14 +148,14 @@ describe('Interaction order hardening', () => {
       },
     })
 
-    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+    assertOnHome()
     cy.contains('EMERGENCY LOAN').should('not.exist')
     readSavedState().should(state => {
       expect(state.player.francs).to.eq(100_000_000)
       expect(state.player.loanDebt).to.eq(0)
     })
     cy.reload()
-    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+    assertOnHome()
     cy.contains('EMERGENCY LOAN').should('not.exist')
   })
 
@@ -151,10 +177,10 @@ describe('Interaction order hardening', () => {
     cy.get('[data-testid="resolve-cargo-btn"]').click()
     cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).click()
     cy.get('[data-testid="collect-reward-btn"]').dblclick()
-    // debrief settlement routes to the hub tutorial rail, not the market — see the
+    // debrief settlement completes the mining try and routes to the hub rail (scan try), not the market — see the
     // identical assertion in smoke/game-loop.cy.ts "M1 completion returns to hub".
     cy.contains('Commodity Exchange').should('not.exist')
-    cy.contains('Guided Ops · Mission 2').should('be.visible')
+    cy.get('[data-testid="flight-plan"]').contains(/classify the transit candidate/i).should('be.visible')
     readSavedState().should(state => {
       expect(state.player.missionsDone).to.eq(1)
       expect(state.missionId).to.eq(null)
@@ -168,13 +194,16 @@ describe('Interaction order hardening', () => {
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'mars',
       player: {
+        // Free Ops: agency training would otherwise redirect a mid-run screen.
+        missionsDone: 3,
+        freeOperations: true,
         activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order -> Mars' },
         missionPhase: 'mining',
       },
     })
 
     cy.get('[aria-label="back"]').click()
-    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+    assertOnHome()
     cy.get('[data-testid="hub-resume-mission-btn"]').click()
     cy.location('pathname').should('eq', '/game/mining')
     cy.get('[data-testid="mining-canvas"]').should('be.visible')

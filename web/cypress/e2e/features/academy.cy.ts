@@ -9,7 +9,6 @@
 import type { GameState } from '@/game-context'
 import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
-const COACH_KEY = 'landnam_academy_coach_seen_v1'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -36,9 +35,7 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
 }
 
 describe('Astronaut Academy', () => {
-  // Unlock gates were removed: after the tutorial the Academy is limited only
-  // by its build cost, with no client-level or Research XP step first.
-  it('pre-build: offers building the Academy straight away, with no client-level or research step', () => {
+  it('does not offer the mission before two-client affinity level 2 is reached', () => {
     cy.visit('/game/academy', {
       onBeforeLoad(win) {
         const full: GameState = {
@@ -46,21 +43,41 @@ describe('Astronaut Academy', () => {
           missionId: null, targetId: null,
           rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
           lastCargo: null, tutorial: false, doneSteps: {}, popup: null, menuOpen: false,
-          player: basePlayer({ clientMissions: {}, academyResearched: false, researchXP: 0 }),
+          player: basePlayer({ clientMissions: { 'helios-propulsion-depot': 10 } }),
+        } as GameState
+        seedAuthenticatedFixture(win, full, 'e2e-academy-user')
+      },
+    })
+    cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
+    cy.contains('Client level progress: 1/2 partner programmes').should('be.visible')
+    cy.contains('button', 'Research Academy').should('not.exist')
+  })
+
+  it('pre-build: shows the affinity/research/build steps and gates on research XP', () => {
+    cy.visit('/game/academy', {
+      onBeforeLoad(win) {
+        const full: GameState = {
+          screen: 'academy',
+          missionId: null, targetId: null,
+          rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
+          lastCargo: null, tutorial: false, doneSteps: {}, popup: null, menuOpen: false,
+          player: basePlayer({
+            clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
+            academyResearched: false,
+            researchXP: 0,
+          }),
         } as GameState
         seedAuthenticatedFixture(win, full, 'e2e-academy-user')
       },
     })
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('Establish the Academy').should('be.visible')
-    cy.contains('Build at Base').should('be.visible')
-    cy.contains('Research the Academy').should('not.exist')
-    cy.contains(/Client level progress/).should('not.exist')
-    cy.contains('button', 'Open Build & Place').should('not.be.disabled').click()
-    cy.location('pathname').should('eq', '/game/build')
+    cy.contains('Research the Academy').should('be.visible')
+    // researchXP is 0, so the Research Academy button must be disabled
+    cy.contains('button', 'Research Academy').should('be.disabled')
   })
 
-  it('built: renders the management view with tabs, and the AcademyCoach explains it on first visit', () => {
+  it('built: renders the management view with tabs', () => {
     cy.visit('/game/academy', {
       onBeforeLoad(win) {
         const full: GameState = {
@@ -78,27 +95,11 @@ describe('Astronaut Academy', () => {
           }),
         } as GameState
         seedAuthenticatedFixture(win, full, 'e2e-academy-user')
-        win.localStorage.removeItem(COACH_KEY)
       },
     })
 
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('ACADEMY L').should('be.visible')
-
-    // Coach fires on first visit, walks all 4 steps, then dismisses and persists.
-    cy.get('[data-testid="academy-coach"]').should('be.visible')
-    cy.contains('FUNDING KEEPS IT RUNNING').should('be.visible')
-    cy.get('[data-testid="academy-coach-next"]').click()
-    cy.contains('TRAIN OR HIRE').should('be.visible')
-    cy.get('[data-testid="academy-coach-next"]').click()
-    cy.contains('PUT THEM TO WORK').should('be.visible')
-    cy.get('[data-testid="academy-coach-next"]').click()
-    cy.contains('GROW THE PROGRAM').should('be.visible')
-    cy.get('[data-testid="academy-coach-next"]').click()
-    cy.get('[data-testid="academy-coach"]').should('not.exist')
-    cy.window().then(win => {
-      expect(win.localStorage.getItem(COACH_KEY)).to.eq('1')
-    })
 
     // Tab switching reaches every management surface.
     cy.get('[data-testid="academy-tab-training"]').click()
@@ -111,42 +112,16 @@ describe('Astronaut Academy', () => {
     cy.contains('Crew Quarters T1').should('be.visible')
   })
 
-  it('does not show the coach again on a second visit once dismissed', () => {
-    cy.visit('/game/academy', {
-      onBeforeLoad(win) {
-        const full: GameState = {
-          screen: 'academy',
-          missionId: null, targetId: null,
-          rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
-          lastCargo: null, tutorial: false, doneSteps: {}, popup: null, menuOpen: false,
-          player: basePlayer({
-            placed: ['launchpad', 'astronaut-academy'],
-            placementPlots: { launchpad: 0, 'astronaut-academy': 1 },
-            clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
-            academyResearched: true,
-            academyFunded: true,
-            crew: [],
-          }),
-        } as GameState
-        seedAuthenticatedFixture(win, full, 'e2e-academy-user')
-        win.localStorage.setItem(COACH_KEY, '1')
-      },
-    })
-    cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="academy-coach"]').should('not.exist')
-  })
-
-  // KES-341: compact-landscape rendered regression. The old AcademyCoach
-  // absolutely-positioned itself over the top of the 190px scene canvas —
-  // these assert the scene keeps real, non-trivial visible height whether
-  // the coach is up or dismissed, at both audited compact-landscape sizes.
+  // KES-341: compact-landscape rendered regression. These assert the scene
+  // keeps real, non-trivial visible height at both audited compact-landscape
+  // sizes.
   const LANDSCAPE_VIEWPORTS = [
     { key: 'landscape-844', width: 844, height: 390 },
     { key: 'landscape-926', width: 926, height: 428 },
   ] as const
 
   LANDSCAPE_VIEWPORTS.forEach(({ key, width, height }) => {
-    it(`[${key}] keeps the academy scene visible and dominant with the coach up, and after dismissal`, () => {
+    it(`[${key}] keeps the academy scene visible and dominant`, () => {
       cy.viewport(width, height)
       cy.visit('/game/academy', {
         onBeforeLoad(win) {
@@ -165,14 +140,10 @@ describe('Astronaut Academy', () => {
             }),
           } as GameState
           seedAuthenticatedFixture(win, full, 'e2e-academy-user')
-          win.localStorage.removeItem(COACH_KEY)
         },
       })
 
       cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
-      cy.get('[data-testid="academy-coach"]').should('be.visible')
-      // The coach reserves its own row (tutorialRail) rather than overlaying
-      // the scene, so the scene canvas must still report a real visible height.
       cy.get('[data-testid="academy-canvas"]').then($canvas => {
         expect($canvas.height()).to.be.greaterThan(120)
       })
@@ -181,13 +152,7 @@ describe('Astronaut Academy', () => {
         // real, reachable control rather than collapsing out of the scene.
         expect($tab.height()).to.be.at.least(24)
       })
-
-      cy.get('[data-testid="academy-coach-skip"]').click()
-      cy.get('[data-testid="academy-coach"]').should('not.exist')
-      cy.get('[data-testid="academy-canvas"]').then($canvas => {
-        expect($canvas.height()).to.be.greaterThan(120)
-      })
-      cy.screenshot(`academy-${key}-coach-dismissed`)
+      cy.screenshot(`academy-${key}`)
     })
 
     it(`[${key}] keeps crew training actionable from the roster surface`, () => {
@@ -209,7 +174,6 @@ describe('Astronaut Academy', () => {
             }),
           } as GameState
           seedAuthenticatedFixture(win, full, 'e2e-academy-user')
-          win.localStorage.setItem(COACH_KEY, '1')
         },
       })
       cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')

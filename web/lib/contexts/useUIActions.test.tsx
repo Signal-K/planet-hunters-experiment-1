@@ -12,6 +12,8 @@ interface UiHandle {
   screen: Screen
   go: (screen: Screen) => void
   goBack: (fallback?: Screen) => void
+  setScreenFromUrl: (screen: Screen) => void
+  skipNextUrlSync: { current: boolean }
 }
 
 function UiHarness({ onReady }: { onReady: (handle: UiHandle) => void }) {
@@ -30,8 +32,10 @@ function UiHarness({ onReady }: { onReady: (handle: UiHandle) => void }) {
       screen: state.screen,
       go: ui.go,
       goBack: ui.goBack,
+      setScreenFromUrl: ui.setScreenFromUrl,
+      skipNextUrlSync: ui.skipNextUrlSync,
     })
-  }, [onReady, state.screen, ui.go, ui.goBack])
+  }, [onReady, state.screen, ui.go, ui.goBack, ui.setScreenFromUrl, ui.skipNextUrlSync])
 
   return null
 }
@@ -105,5 +109,26 @@ describe('useUIActions logical back', () => {
     expect(handleRef.current?.screen).toBe('hub')
 
     await act(async () => root.unmount())
+  })
+})
+
+describe('useUIActions URL sync skip', () => {
+  it('does not arm the skip when the URL names the screen already showing', async () => {
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const handleRef: { current: UiHandle | null } = { current: null }
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<UiHarness onReady={handle => { handleRef.current = handle }} />)
+    })
+    // The harness starts on hub, so this changes nothing and no URL-sync
+    // effect will run to clear the flag; a stale flag would swallow the next push.
+    await act(async () => { handleRef.current?.setScreenFromUrl('hub') })
+    expect(handleRef.current?.skipNextUrlSync.current).toBe(false)
+
+    await act(async () => { handleRef.current?.setScreenFromUrl('market') })
+    expect(handleRef.current?.skipNextUrlSync.current).toBe(true)
+    await act(async () => { root.unmount() })
   })
 })

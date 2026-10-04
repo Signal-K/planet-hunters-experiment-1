@@ -136,18 +136,11 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
 
     cy.get('h1', { timeout: 15_000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
     cy.get('[data-testid="hub-subsurface-btn"]').should('be.visible')
-    cy.get('[data-testid="progression-card-skills"]').should('be.visible')
-    cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible')
+    cy.get('[data-testid^="progression-card-"]').should('not.exist')
     // Post-onboarding no longer duplicates the Mission Board in the
-    // progression stack; the persistent Missions action is the entry point.
-    cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible')
+    // progression stack; the shared bar's OPS action is the entry point.
+    cy.get('[data-testid="home-bar-ops"]').should('be.visible')
 
-    cy.get('[data-testid="hub-subsurface-btn"]').then($subsurface => {
-      const subsurface = $subsurface[0].getBoundingClientRect()
-      cy.get('[data-testid="progression-card-skills"]').then($skills => {
-        expectNoOverlap(subsurface, $skills[0].getBoundingClientRect(), 'Subsurface control does not overlap Skill Points card')
-      })
-    })
     cy.get('.hub-push-opt-in').then($prompt => {
       if ($prompt.is(':visible')) {
         const prompt = $prompt[0].getBoundingClientRect()

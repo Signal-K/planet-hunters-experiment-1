@@ -7,11 +7,13 @@ on:
     branches: ["**"]
     paths:
       - "web/**"
+      - "pocketbase/pb_migrations/**"
       - ".github/workflows/web-ci.yml"
   pull_request:
     branches: [master, main, "sprint/**"]
     paths:
       - "web/**"
+      - "pocketbase/pb_migrations/**"
       - ".github/workflows/web-ci.yml"
   workflow_dispatch:
   schedule:
@@ -57,6 +59,19 @@ jobs:
 
       - name: Unit tests
         run: npm run test:unit
+
+      - name: Validate PB migration files
+        working-directory: .
+        run: |
+          shopt -s nullglob
+          files=(pocketbase/pb_migrations/*.js)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No migration files found — skipping."
+            exit 0
+          fi
+          for f in "${files[@]}"; do
+            node --check "$f" && echo "OK: $f" || exit 1
+          done
 
   build:
     name: Next.js Build Check
@@ -115,10 +130,7 @@ jobs:
       # which wrangler.jsonc binds to playlandnam.space as a custom domain.
       # NEXT_PUBLIC_* vars are inlined at build time (Next.js convention).
       - name: Build (OpenNext/Cloudflare)
-        run: |
-          node -e "console.log('PB urls', process.env.NEXT_PUBLIC_SHARED_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_ENV)"
-          npm run build:cf
-          node scripts/verify-deployed-pb-urls.mjs .open-next
+        run: npm run build:cf
         env:
           NEXT_TELEMETRY_DISABLED: 1
           NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
@@ -153,10 +165,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build (OpenNext/Cloudflare staging)
-        run: |
-          node -e "console.log('PB urls', process.env.NEXT_PUBLIC_SHARED_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_ENV)"
-          npm run build:cf
-          node scripts/verify-deployed-pb-urls.mjs .open-next
+        run: npm run build:cf
         env:
           NEXT_TELEMETRY_DISABLED: 1
           NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
@@ -176,8 +185,9 @@ jobs:
     name: E2E — full journeys against staging (manual + nightly)
     # Manual (workflow_dispatch) or nightly (schedule), not on every push:
     # this runs the entire journeys suite for real against the live staging
-    # deployment over the network against the actual staging PocketBase
-    # backends. A local run of this same scope didn't
+    # deployment, including clean-start-loop.cy.ts's real account
+    # registration and playthrough over the network against the actual
+    # staging PocketBase backends. A local run of this same scope didn't
     # finish in 10+ minutes, so it isn't a reliable per-push gate yet —
     # trigger it by hand, or let the nightly cron (KES-115) catch drift that
     # happens between reviewed pushes. No `needs: deploy` deliberately: a

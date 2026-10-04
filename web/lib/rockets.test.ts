@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FREE_OPS_START_MISSIONS_DONE, MISSIONS, ROCKET_MODELS, ROCKET_IDS, canonicalRocketId, missionsRequirementMet, rocketConfigForModel, rocketModelAvailable } from '@/lib/data'
+import { MISSIONS, ROCKET_MODELS, ROCKET_IDS, canonicalRocketId, rocketConfigForModel } from '@/lib/data'
 import type { Mission } from '@/lib/data'
 import { ROCKET_ASSETS } from './rocket-assets'
 import {
@@ -60,15 +60,15 @@ describe('selectRocketForMission', () => {
     expect(selectRocketForMission(3, telescopeLaunch).id).toBe(ROCKET_IDS.explorer)
   })
 
-  it('defaults M2 Heavy Haul to Prospector because Explorer cannot carry the job', () => {
-    const heavyHaul = MISSIONS.find(mission => mission.sequence === 2)!
-    const explorer = ROCKET_MODELS.find(rocket => rocket.id === ROCKET_IDS.explorer)!
-    const prospector = ROCKET_MODELS.find(rocket => rocket.id === ROCKET_IDS.prospector)!
+  it('defaults the Transport lesson to the cheapest vehicle that can fly both legs', () => {
+    const transport = MISSIONS.find(mission => mission.sequence === 2)!
+    const selected = selectRocketForMission(1, transport)
 
-    expect(heavyHaul.requires.cargo_min).toBeGreaterThan(explorer.stats.cargo)
-    expect(rocketCompatibleWithMission(explorer, heavyHaul)).toBe(false)
-    expect(rocketCompatibleWithMission(prospector, heavyHaul)).toBe(true)
-    expect(selectRocketForMission(1, heavyHaul).id).toBe(ROCKET_IDS.prospector)
+    expect(transport.deliveryTargetId).toBeTruthy()
+    expect(rocketCompatibleWithMission(selected, transport)).toBe(true)
+    const cheaperCompatible = ROCKET_MODELS.filter(rocket =>
+      rocketCompatibleWithMission(rocket, transport) && rocket.costFrancs < selected.costFrancs)
+    expect(cheaperCompatible).toHaveLength(0)
   })
 
   it('reports cargo, orbit, and drill against the current job', () => {
@@ -100,23 +100,5 @@ describe('rocket asset family', () => {
     expect(ROCKET_ASSETS.prospector.blueprint).toContain('sr2_cutaway.png')
     expect(new Set(Object.values(ROCKET_ASSETS).map(assets => assets.exterior)).size).toBe(2)
     expect(new Set(Object.values(ROCKET_ASSETS).map(assets => assets.blueprint)).size).toBe(2)
-  })
-})
-
-describe('rocket availability after the tutorial', () => {
-  it('keeps the tutorial order: Prospector waits for M1', () => {
-    const prospector = ROCKET_MODELS.find(model => model.id === ROCKET_IDS.prospector)!
-    expect(rocketModelAvailable(prospector, 0)).toBe(false)
-    expect(rocketModelAvailable(prospector, 1)).toBe(true)
-  })
-
-  it('never gates by mission count once Free Operations starts', () => {
-    expect(missionsRequirementMet(FREE_OPS_START_MISSIONS_DONE + 5, 1)).toBe(false)
-    expect(missionsRequirementMet(FREE_OPS_START_MISSIONS_DONE + 5, FREE_OPS_START_MISSIONS_DONE)).toBe(true)
-  })
-
-  it('still hides models that are not built yet', () => {
-    const unannounced = ROCKET_MODELS.find(model => model.id === ROCKET_IDS.unannounced3)!
-    expect(rocketModelAvailable(unannounced, FREE_OPS_START_MISSIONS_DONE + 10)).toBe(false)
   })
 })

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
-import { canAffordStructure, STRUCTURES, structureAffordabilityGaps, structureUnlockLabel, structureUnlocked } from '@/lib/data'
+import { canAffordStructure, STRUCTURES, structureAffordabilityGaps, structureUnlocked } from '@/lib/data'
 import type { StructureBlueprint } from '@/lib/data'
 import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
@@ -30,7 +30,7 @@ const STRUCTURE_COLORS: Record<string, string> = {
 }
 
 interface BuildPlaceScreenProps {
-  onPlaced: (kind: string, plot: number) => void
+  onPlaced: (kind: string, plot: number) => boolean
   onBack: () => void
   hasCoach?: boolean
   player: {
@@ -38,7 +38,14 @@ interface BuildPlaceScreenProps {
     stash?: Record<string, number>
     placed: string[]
     freeOperations: boolean
+    refineryUnlocked?: boolean
+    academyResearched?: boolean
+    missionsDone?: number
     placementPlots?: Record<string, number>
+    transitSatelliteLevel?: number
+    clientMissions?: Record<string, number>
+    deepSpaceTelescopeMissionCompletedAt?: number | null
+    hasMiningSettlement?: boolean
   }
 }
 
@@ -78,6 +85,10 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
     // condition no mission ever satisfied — a permanent dead end. It's now a
     // normal Earth Base plot purchase (same unlock shape as Surface Silo), so
     // it belongs in this strip.
+    // Academy/crew progression is deferred with the retired affinity ladder.
+    // Existing placed academies remain readable, but no new Base plot offers
+    // this unrelated progression branch in the simplified launch loop.
+    && s.id !== 'astronaut-academy'
     && !player.placed.includes(s.id)
   )
   const sel = catalog.find(c => c.id === picked) ?? catalog[0]
@@ -95,6 +106,11 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
     ...(legacyLaunchpadPlot0 ? { launchpad: 0 } : {}),
   }
   const occupiedPlots = new Set<number>(Object.values(effectivePlots))
+  // Coach anchor for later guided builds (the SSL-332 storage silo), once plot
+  // 0 already holds the launchpad.
+  const firstOpenPlot = sortedEntities
+    .map(entity => readComponentNumber(entity, 'BuildPlot', 'index', 0))
+    .find(index => !occupiedPlots.has(index))
   const existingBuildings: HubBuildingDef[] = sortedEntities.flatMap(entity => {
     const index = readComponentNumber(entity, 'BuildPlot', 'index', 0)
     const kind = Object.entries(effectivePlots).find(([, plot]) => plot === index)?.[0]
@@ -123,7 +139,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const canSelectStructure = (structure: StructureBlueprint) => {
     const alreadyBuilt = player.placed.includes(structure.id)
     return !alreadyBuilt
-      && structureUnlocked(structure, { placed: player.placed, freeOperations: player.freeOperations })
+      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, missionsDone: player.missionsDone, hasMiningSettlement: player.hasMiningSettlement })
       && canAffordStructure(structure, { francs: player.francs, stash: player.stash })
   }
 
@@ -133,7 +149,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       const first = catalog.find(canSelectStructure)
       if (first) setPicked(first.id)
     }
-  }, [catalog, picked, player.francs, player.freeOperations, player.placed, player.stash])
+  }, [catalog, picked, player.academyResearched, player.francs, player.freeOperations, player.missionsDone, player.placed, player.refineryUnlocked, player.stash])
 
   function handlePick(id: string) {
     setPicked(id)
@@ -215,7 +231,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                   {on && sel && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={sel.id} size={44} /></span>}
                 </div>
                 <div
-                  data-coach-id={idx === 0 ? 'build-plot-0' : undefined}
+                  data-beacon={idx === 0 ? 'build-plot-0' : idx === firstOpenPlot ? 'build-plot-open' : undefined}
                   style={{
                   width: '100%',
                   height: 30,
@@ -240,13 +256,19 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       </div>
 
       {/* Structure picker — compact strip below plots, above sticky actions */}
-      <div data-ui-zone={UI_ZONES.screenContent} data-coach-id="build-structure-strip" style={{
+      <div
+        className="build-structure-strip"
+        data-testid="build-structure-strip"
+        data-ui-zone={UI_ZONES.screenContent}
+        data-beacon="build-structure-strip"
+        style={{
         position: 'absolute',
         left: 0, right: 0,
         bottom: 64,
         zIndex: 12,
         pointerEvents: 'none',
-      }}>
+        }}
+      >
         <div style={{
           background: 'linear-gradient(180deg, transparent, var(--ln-overlay))',
           padding: '10px 12px 0',
@@ -264,13 +286,14 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
           }}>
             {catalog.map(c => {
               const on = c.id === sel?.id
-              const unlocked = structureUnlocked(c, { placed: player.placed, freeOperations: player.freeOperations })
+              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, missionsDone: player.missionsDone, hasMiningSettlement: player.hasMiningSettlement })
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
               const color = STRUCTURE_COLORS[c.id] ?? '#3fa9ff'
               return (
                 <button
                   key={c.id}
+                  data-testid={`build-structure-card-${c.id}`}
                   onClick={() => {
                     if (canSelect) {
                       handlePick(c.id)
@@ -286,7 +309,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                     setBlocked({
                       id: c.id,
                       reason: !unlocked
-                        ? `Unlocks at ${structureUnlockLabel(c)}`
+                        ? `Unlocks at ${c.unlocksAt}`
                         : `Need ${gaps.join(', ')}`,
                     })
                     captureGameEvent('structure_placement_blocked', {
@@ -325,20 +348,29 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                       <div style={{
                         fontFamily: 'var(--ln-font-display)',
                         fontWeight: 800,
-                        fontSize: 10,
+                        // SSL-400: Build is used at phone width. Keep every
+                        // card datum at the shared 12px phone floor, then let
+                        // the card grow vertically rather than clipping a
+                        // name halfway through a glyph.
+                        fontSize: 12,
                         color: on ? color : 'var(--ln-text-dim)',
                         letterSpacing: '0.01em',
                         lineHeight: 1.25,
-                      }}>{c.name}</div>
+                        whiteSpace: 'normal',
+                        overflowWrap: 'break-word',
+                      }} data-testid={`build-structure-card-name-${c.id}`}>{c.name}</div>
                       <div style={{
                         fontFamily: 'var(--ln-font-mono)',
-                        fontSize: 8,
+                        fontSize: 12,
                         color: on ? color : 'var(--ln-text-muted)',
                         marginTop: 1,
                         fontWeight: 700,
                         letterSpacing: '0.04em',
-                      }}>
-                        {unlocked ? (c.cost === 0 ? 'FREE' : formatCurrency(c.cost, { compact: true })) : structureUnlockLabel(c)}
+                        lineHeight: 1.25,
+                        whiteSpace: 'normal',
+                        overflowWrap: 'break-word',
+                      }} data-testid={`build-structure-card-cost-${c.id}`}>
+                        {unlocked ? (c.cost === 0 ? 'FREE' : formatCurrency(c.cost, { compact: true })) : c.unlocksAt}
                       </div>
                     </div>
                   </div>
@@ -375,7 +407,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
               </span>
               <span style={{
                 fontFamily: 'var(--ln-font-body)',
-                fontSize: 11,
+                fontSize: 12,
                 color: 'var(--ln-warn)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -396,7 +428,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
             </span>
             <span style={{
               fontFamily: 'var(--ln-font-body)',
-              fontSize: 11,
+              fontSize: 12,
               color: 'var(--ln-text-muted)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -406,7 +438,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 ? `Select a plot for the ${sel.name} · ${formatStructureCost(sel)} · Builds in ${Math.round(structureBuildMs(sel.id) / 1000)}s`
                 : `Place ${sel.name} here? · ${formatStructureCost(sel)} · Builds in ${Math.round(structureBuildMs(sel.id) / 1000)}s`}
             </span>
-          </div> : <div style={{ padding: '6px 2px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)' }}>No structures are available yet. Complete your current mission to unlock the next build.</div>}
+          </div> : <div style={{ padding: '6px 2px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-muted)' }}>No structures are available yet. Complete your current mission to unlock the next build.</div>}
         </div>
       </div>
 
@@ -423,13 +455,25 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       <div
         className="sticky-actions"
         data-ui-zone={UI_ZONES.bottomActions}
-        data-coach-id={cell != null ? 'build-confirm' : undefined}
         style={{ zIndex: 15 }}
       >
         {/* Mint/green, not amber: the Earth Base flow carries no amber (see
             landnam-earth-base-v2.html, whose confirm sheet is --ln-ok), and
             amber is reserved for payout emphasis, never a primary button. */}
-        <PrimaryBtn kind="green" disabled={cell == null || !sel} onClick={() => cell != null && sel && onPlaced(sel.id, cell)}>
+        <PrimaryBtn
+          testId="build-place-confirm"
+          kind="green"
+          coachId={cell != null ? 'build-confirm' : undefined}
+          disabled={cell == null || !sel}
+          onClick={() => {
+            if (cell == null || !sel) return
+            if (onPlaced(sel.id, cell)) return
+            setBlocked({
+              id: sel.id,
+              reason: 'Placement could not be confirmed. Check requirements and try again.',
+            })
+          }}
+        >
           Confirm · Build Here →
         </PrimaryBtn>
       </div>

@@ -1,7 +1,7 @@
 // Daily client mission pool — deterministic per calendar day, resets at midnight.
 
 import type { ClientSlot, MineralMeta, Mission } from './types'
-import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_START_MISSIONS_DONE, requiredDrillTier, deliveryEligibleMineralKeys } from './mission-generator'
+import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_MISSION_SEQUENCE, requiredDrillTier, deliveryEligibleMineralKeys } from './mission-generator'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
 import { normalizeMissionPayout } from './payouts'
 
@@ -25,6 +25,11 @@ export interface DailyClientPool {
   missions: Mission[] // full generated pool (all statuses)
   acceptedId: string | null   // id of the mission currently in-flight
   completedIds: string[]      // ids completed today (reward already received via debrief)
+}
+
+export function todayDateKey(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 // Unsigned DJB2 hash — deterministic seeding for daily mission variety
@@ -107,7 +112,7 @@ export function generateDailyClientPool(
         tag: template.tag,
         difficulty: template.difficulty,
         locked: false,
-        sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+        sequence: FREE_OPS_MISSION_SEQUENCE,
         requires: {
           minerals: { [mineralKey]: amount },
           cargo_min: amount,
@@ -115,7 +120,7 @@ export function generateDailyClientPool(
           max_orbit: template.orbitMax,
         },
         payout: {
-          francs: normalizeMissionPayout(francs, FREE_OPS_START_MISSIONS_DONE + 1),
+          francs: normalizeMissionPayout(francs, FREE_OPS_MISSION_SEQUENCE),
           affinity: Math.max(5, Math.round(8 + amount / 2)),
         },
       })
@@ -123,4 +128,21 @@ export function generateDailyClientPool(
   }
 
   return missions
+}
+
+export function refreshPoolIfStale(
+  existing: DailyClientPool | undefined,
+  missionsDone: number,
+  clients: ClientSlot[],
+  minerals: Record<string, MineralMeta>,
+  clientMissions: Record<string, number> = {},
+): DailyClientPool {
+  const today = todayDateKey()
+  if (existing?.date === today) return existing
+  return {
+    date: today,
+    missions: generateDailyClientPool(today, missionsDone, clients, minerals, clientMissions),
+    acceptedId: null,
+    completedIds: [],
+  }
 }

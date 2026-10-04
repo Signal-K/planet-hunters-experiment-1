@@ -1,4 +1,4 @@
-import { ROCKET_MODELS, rocketModelAvailable, type Mission, type RocketModel } from '@/lib/data'
+import { ROCKET_MODELS, type Mission, type RocketModel } from '@/lib/data'
 
 export function getRequiredRocketModel(missionsDone: number): RocketModel {
   const eligible = unlockedRocketModels(missionsDone)
@@ -9,12 +9,14 @@ export function getRequiredRocketModel(missionsDone: number): RocketModel {
   ) ?? ROCKET_MODELS[0]
 }
 
-function unlockedRocketModels(missionsDone: number): RocketModel[] {
-  return ROCKET_MODELS.filter(rocket => rocketModelAvailable(rocket, missionsDone))
+export function unlockedRocketModels(missionsDone: number): RocketModel[] {
+  return ROCKET_MODELS.filter(
+    rocket => !rocket.locked && rocket.missionsRequired <= missionsDone,
+  )
 }
 
 /** Cargo the vehicle must carry: mineral pickup plus any launch payload. */
-function missionCargoNeed(mission: Mission): number {
+export function missionCargoNeed(mission: Mission): number {
   return mission.requires.cargo_min + (mission.payload?.cargoCost ?? 0)
 }
 

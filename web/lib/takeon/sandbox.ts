@@ -190,7 +190,7 @@ export function resetLandnamSandboxRegistry(): void {
   registered = new WeakSet()
 }
 
-function landnamBodyKindId(target: Pick<SurfaceTarget, 'id'>, lifeStage: LifeStage): string {
+export function landnamBodyKindId(target: Pick<SurfaceTarget, 'id'>, lifeStage: LifeStage): string {
   return `landnam:${target.id}:${lifeStage}`
 }
 

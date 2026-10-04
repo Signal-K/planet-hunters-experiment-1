@@ -10,6 +10,8 @@
 import { ROCKET_MODELS } from './rockets'
 import { CARGO_BONUS_CAP, CONTRACT_FEES, CONTRACT_FEE_STEP } from './economy'
 
+export const MISSION_PAYOUT_FLOORS = CONTRACT_FEES
+
 export function missionPayoutFloor(sequence: number): number {
   if (sequence <= 1) return CONTRACT_FEES[1]
   if (sequence === 2) return CONTRACT_FEES[2]
@@ -32,21 +34,20 @@ export function normalizeMissionPayout(raw: number, sequence: number): number {
   return Math.round(fee + Math.min(raw, fee * CARGO_BONUS_CAP))
 }
 
-// Cost of the Prospector — the rocket M2 forces every onboarding player
-// to buy (see DEFAULT_COMPLEXITY_BANDS comment in mission-generator.ts). Used
-// as the reference point for onboarding payout floors. The purchase gate
-// sits between M1 and M2 — you must already own it to fly M2 — so M1's floor
-// alone (not "M1+M2 combined") has to cover the purchase; M2's payout arrives
-// too late to help fund it.
+// Cost of the Prospector — the heavier vehicle unlocked after the first
+// guided contract and used for the Transport lesson. Used as the reference
+// point for onboarding payout floors. The purchase sits between the two guided
+// contracts, so the first contract's floor alone has to cover it; the second
+// payout arrives too late to help fund it, and then funds the storage silo.
 export const ONBOARDING_ROCKET_COST = ROCKET_MODELS.find(r => r.name === 'Prospector')?.costFrancs ?? 1_300_000_000
 
 /** Onboarding floor: 1.05× the Prospector's cost for the first two missions. */
 const ONBOARDING_PAYOUT_FLOOR = Math.round(ONBOARDING_ROCKET_COST * 1.05)
 
 /**
- * Ensures each of the first two missions pays enough on its own to afford the
- * mandatory Prospector purchase gating M2, since that purchase happens before M2's
- * payout is ever collected.
+ * Ensures each of the two guided missions pays enough on its own to afford a
+ * Prospector purchase, since that purchase happens before the second payout is
+ * ever collected.
  *
  * Idempotent (it is a floor, not a bonus), which is what kept the old
  * double-application — Debrief calibrated for display, then the game loop

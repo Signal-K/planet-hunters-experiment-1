@@ -131,7 +131,7 @@ describe('Earth Base — redesigned scene', () => {
       stash: { iron: 12, silicon: 5 },
     })
     assertNoHorizontalOverflow()
-    assertInsideViewport('[data-testid="progression-card-transit-satellite"]')
+    assertInsideViewport('[data-testid="hub-subsurface-btn"]')
     cy.screenshot('earth-base-03-desktop-full', { capture: 'viewport' })
   })
 
@@ -147,7 +147,7 @@ describe('Earth Base — redesigned scene', () => {
       placementPlots: { launchpad: 0, refinery: 1, 'transit-telescope': 2 },
     })
     assertNoHorizontalOverflow()
-    assertInsideViewport('[data-testid="progression-card-transit-satellite"]')
+    assertInsideViewport('[data-testid="hub-subsurface-btn"]')
     cy.screenshot('earth-base-08-narrow-landscape', { capture: 'viewport' })
   })
 

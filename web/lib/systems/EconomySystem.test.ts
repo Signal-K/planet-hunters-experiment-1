@@ -285,18 +285,26 @@ describe('applyConfirmShipCustomizerBuild', () => {
 })
 
 describe('Academy and staffing economy', () => {
-  it('charges the Academy build cost and materials in Free Ops without a research step', () => {
+  it('leaves an unaffordable refinery placement unchanged', () => {
+    const refinery = STRUCTURES.find(structure => structure.id === 'refinery')!
+    const before = makeState({
+      francs: refinery.cost,
+      stash: { aluminium: 0, copper: 0 },
+      freeOperations: true,
+      placed: ['surface-silo'],
+    })
+
+    expect(applyPlaceStructure(before, refinery, refinery.kind, 2)).toBe(before)
+  })
+
+  it('charges the Academy build cost and materials only after research', () => {
     const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
     const stash = { aluminium: 24, silicon: 12, copper: 8 }
-    // The tutorial's own order still holds: nothing but the Launchpad before Free Ops.
-    const tutorial = makeState({ francs: academy.cost, stash, freeOperations: false, missionsDone: 1 })
-    expect(applyPlaceStructure(tutorial, academy, academy.kind, 2)).toBe(tutorial)
-    // Cost checks stay.
-    const short = makeState({ francs: academy.cost - 1, stash })
-    expect(applyPlaceStructure(short, academy, academy.kind, 2)).toBe(short)
+    const locked = makeState({ francs: academy.cost, stash, academyResearched: false })
+    expect(applyPlaceStructure(locked, academy, academy.kind, 2)).toBe(locked)
 
     const built = applyPlaceStructure(
-      makeState({ francs: academy.cost, stash, academyResearched: false }),
+      makeState({ francs: academy.cost, stash, academyResearched: true }),
       academy,
       academy.kind,
       2,
@@ -307,6 +315,32 @@ describe('Academy and staffing economy', () => {
     expect(built.player.academyFunded).toBe(true)
     expect(built.player.crewUpkeepSettledDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     expect(built.player.underConstruction?.['astronaut-academy']).toBeGreaterThan(0)
+  })
+
+  it('keeps the storage silo as a build option without using it as the Free Ops gate (SSL-409)', () => {
+    const silo = STRUCTURES.find(structure => structure.id === 'surface-silo')!
+    const training = makeState({ francs: silo.cost, missionsDone: 2, freeOperations: false, placed: ['launchpad'] })
+    const trainingState = { ...training, tutorial: true, popup: null }
+
+    const built = applyPlaceStructure(trainingState, silo, silo.kind, 1)
+    expect(built.player.placed).toContain('surface-silo')
+    expect(built.player.freeOperations).toBe(false)
+    expect(built.tutorial).toBe(true)
+    expect(built.popup).toBeNull()
+  })
+
+  it('keeps the storage silo locked before the guided missions are flown', () => {
+    const silo = STRUCTURES.find(structure => structure.id === 'surface-silo')!
+    const early = { ...makeState({ francs: silo.cost, missionsDone: 1, freeOperations: false, placed: ['launchpad'] }), tutorial: true }
+    expect(applyPlaceStructure(early, silo, silo.kind, 1)).toBe(early)
+  })
+
+  it('does not re-raise the Free Ops handoff when a Free Ops player builds another structure', () => {
+    const refinery = STRUCTURES.find(structure => structure.id === 'refinery')!
+    const state = { ...makeState({ francs: refinery.cost, stash: { ...refinery.costMaterials }, placed: ['surface-silo'] }), popup: null }
+    const built = applyPlaceStructure(state, refinery, refinery.kind, 2)
+    expect(built.player.placed).toContain('refinery')
+    expect(built.popup).toBeNull()
   })
 
   it('keeps a placed surface silo after the save is reloaded', () => {

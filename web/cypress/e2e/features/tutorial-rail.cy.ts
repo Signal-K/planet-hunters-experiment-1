@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 import type { GameState } from '@/game-context'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
@@ -76,12 +77,12 @@ function rectsIntersect(a: DOMRect, b: DOMRect) {
 }
 
 function assertGameplayButtonsAvoidCoachBlock() {
-  cy.get('[data-testid="tutorial-coach-block"]').should('be.visible').then($coach => {
+  cy.get('[data-testid="flight-plan"]').should('be.visible').then($coach => {
     const coachRect = $coach[0].getBoundingClientRect()
 
     cy.get('.portrait-canvas button').each($button => {
       const button = $button[0] as HTMLButtonElement
-      if ($button.closest('[data-testid="tutorial-coach-overlay"]').length > 0) return
+      if ($button.closest('[data-testid="flight-plan"]').length > 0) return
 
       const style = getComputedStyle(button)
       if (style.display === 'none' || style.visibility === 'hidden' || style.pointerEvents === 'none') return
@@ -97,13 +98,10 @@ function assertGameplayButtonsAvoidCoachBlock() {
 }
 
 function openContracts() {
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-  cy.window().then(win => {
-    // No standing missions nav on desktop; the launchpad callout's
-    // "View Missions" is the entry there (see the retirement note below).
-    if (win.innerWidth >= 1024) cy.contains('button', 'View Missions', { timeout: 10000 }).click()
-    else cy.get('[data-testid="bottom-tab-missions"]').click()
-  })
+  assertOnHome(10000)
+  // The shared Home bar's OPS action is the entry at every width. The
+  // launchpad's "View Missions" callout is hidden while the Flight Plan is up.
+  cy.get('[data-testid="home-bar-ops"]').click()
   cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
 }
 
@@ -121,25 +119,12 @@ describe('Tutorial rail regression', () => {
           doneSteps: { 0: true },
         }))
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Open client contracts')
 
-        // On mobile the bottom tab bar's Missions tab is always visible. The
-        // old always-on desktop sidebar nav (`.desktop-sidebar`,
-        // `sidebar-nav-missions`) was retired in favour of screen-embedded
-        // navigation (`.hub-desktop-nav`, clicking the Launchpad itself,
-        // the progression card's "View Missions" CTA) — at this exact
-        // tutorial step ("Click the Launchpad") there is no persistent
-        // missions-nav element on desktop by design, so just confirm the
-        // retired sidebar and the mobile-only bottom tab bar both stay
-        // hidden rather than asserting a stand-in that doesn't exist here.
-        cy.window().then(win => {
-          if (win.innerWidth >= 1024) {
-            cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
-            cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-          } else {
-            cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
-          }
-        })
+        // The retired desktop sidebar must stay gone; the shared bar's OPS
+        // action is the one persistent way into Missions at every width.
+        cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
+        cy.get('[data-testid="home-bar-ops"]').should('be.visible')
 
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -152,7 +137,7 @@ describe('Tutorial rail regression', () => {
         }))
         openContracts()
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Select a Mission')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Accept a mining contract')
         cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -166,7 +151,7 @@ describe('Tutorial rail regression', () => {
         openContracts()
         cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Choose a Destination')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Choose the highlighted target')
         cy.get('[data-testid="continue-build-btn"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -185,8 +170,7 @@ describe('Tutorial rail regression', () => {
         openContracts()
         cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
 
-        cy.get('[data-testid="mission-setup-scaffold"]').should('have.attr', 'data-coach', 'true')
-        cy.get('[data-testid="tutorial-coach-block"]').should('be.visible').then($coach => {
+        cy.get('[data-testid="flight-plan"]').should('be.visible').then($coach => {
           const style = getComputedStyle($coach[0])
           expect(style.borderTopColor).not.to.equal('rgb(245, 166, 35)')
           expect(style.outlineColor).not.to.equal('rgb(245, 166, 35)')
@@ -208,7 +192,7 @@ describe('Tutorial rail regression', () => {
           doneSteps: { 0: true, 1: true, 2: true, 3: true },
         }))
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Assemble the Rocket')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Open client contracts')
         cy.get('[data-testid="launch-btn"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -224,24 +208,19 @@ describe('Tutorial rail regression', () => {
           },
         }))
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Build a Launchpad')
-        cy.contains('[data-testid="tutorial-coach-overlay"] button', 'Skip').click()
-        cy.get('[data-testid="tutorial-coach-overlay"]').should('not.exist')
-        cy.get('[data-testid="building-launchpad"]').should('be.visible')
-        cy.window().then(win => {
-          if (win.innerWidth >= 1024) {
-            // No standing sidebar nav on desktop (see the retirement note
-            // above). At Ops 0 with nothing in flight, HubScreen shows the
-            // launchpad's "Choose your first contract" callout instead of
-            // ProgressionCard (the two are deliberately mutually exclusive
-            // — see HubScreen.tsx) — its "View Missions" CTA is the current
-            // path once a mission is actionable.
-            cy.contains('button', 'View Missions', { timeout: 10000 }).click()
-          } else {
-            cy.get('[data-testid="bottom-tab-missions"]').click()
-          }
-        })
-        cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').click()
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Open client contracts')
+        cy.get('[data-testid="flight-plan-objective"]').click()
+        cy.get('[data-testid="flight-plan-skip"]').click()
+        cy.get('[data-testid="flight-plan"]').should('not.exist')
+        // Skipping does not place anything: the player stays on Build and can
+        // still place the starter launchpad themselves.
+        cy.get('[data-testid="build-place-screen"]').should('be.visible')
+        cy.get('[data-testid="build-plot-0"]').click()
+        cy.get('[data-testid="build-place-confirm"]').click()
+        cy.get('[data-testid="building-launchpad"]', { timeout: 15000 }).should('be.visible')
+        // The shared Home bar's OPS action is the way into contracts at every width.
+        cy.get('[data-testid="home-bar-ops"]').click()
+        cy.get('[data-testid^="mission-accept-"]').first().should('be.visible').click()
         cy.get('[data-testid="continue-build-btn"]').should('be.visible')
       })
     })

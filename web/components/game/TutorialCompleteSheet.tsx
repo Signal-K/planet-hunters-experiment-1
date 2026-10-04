@@ -1,69 +1,79 @@
 'use client'
 
-import { useState } from 'react'
-import type { ProgramFocus } from '@/lib/game-types'
+import type { AgencyTrainingStage, AgencyTrainingStep, FreeOpsActivity } from '@/lib/systems/AgencyOnboardingSystem'
 import PageSurface from '@/components/ui/PageSurface'
 import styles from './TutorialCompleteSheet.module.css'
 
-const FOCUSES: Array<{ id: ProgramFocus; label: string; body: string }> = [
-  { id: 'client-contracts', label: 'Client contracts', body: 'Mine and deliver paid orders while building relationships with repeat clients.' },
-  { id: 'mining', label: 'Independent mining', body: 'Choose your own targets, keep the ore, and decide when to sell it.' },
-  { id: 'instruments', label: 'Science instruments', body: 'Launch persistent tools and work with real observation datasets.' },
-  { id: 'construction', label: 'Program construction', body: 'Build storage and permanent off-world infrastructure for your own program.' },
-]
-
-interface TutorialCompleteSheetProps {
-  onDone: (focuses: ProgramFocus[]) => void
-  onBuildSilo: (focuses: ProgramFocus[]) => void
+// What each training stage taught, shown when the player reviews training
+// from the menu. Free Ops is the destination, not a lesson.
+const STAGE_SUMMARIES: Record<Exclude<AgencyTrainingStage, 'free-ops'>, string> = {
+  mining: 'Complete a mine-and-return client order.',
+  scan: 'Classify a real transit light curve.',
+  part: 'Fit a module in each ship stage and confirm.',
+  launchpad: 'Every mission launches from your pad.',
+  extraction: 'Mine ore for a client and bring it home.',
+  transport: 'Mine at one site, deliver to another.',
+  storage: 'Keep ore on Earth instead of selling every haul.',
 }
 
-/** The guided handoff is a choice, not a dismissal. Focus areas tune the
- * Launchpad's first Free Operations menu; an empty selection is explicit
- * free-form mode and leaves every operation visible. */
-export function TutorialCompleteSheet({ onDone, onBuildSilo }: TutorialCompleteSheetProps) {
-  const [choosing, setChoosing] = useState(false)
-  const [selected, setSelected] = useState<ProgramFocus[]>(['construction'])
+interface TutorialCompleteSheetProps {
+  /** SSL-332 agency training track (launchpad, extraction, transport,
+   *  storage, Free Ops). */
+  track: AgencyTrainingStep[]
+  /** The three Free Ops activities: client work, space telescope, refinery. */
+  activities: FreeOpsActivity[]
+  /** 'handoff' when the silo has just opened Free Ops; 'review' when the
+   *  player reopens their training from the menu. */
+  mode?: 'handoff' | 'review'
+  onChoose: (activity: FreeOpsActivity) => void
+  onClose: () => void
+}
 
-  const toggle = (focus: ProgramFocus) => setSelected(current => current.includes(focus)
-    ? current.filter(value => value !== focus)
-    : [...current, focus])
-
+/** The Free Ops handoff: the finished training track, then the three agency
+ * activities the player can start straight away. Reopened from the menu, it
+ * doubles as the training review. */
+export function TutorialCompleteSheet({ track, activities, mode = 'handoff', onChoose, onClose }: TutorialCompleteSheetProps) {
+  const review = mode === 'review'
   return (
     <PageSurface zIndex={200} contentClassName={styles.surface} testId="tutorial-complete-sheet">
-      {!choosing ? (
-        <section className={styles.intro}>
-          <span className={styles.eyebrow}>GUIDED OPERATIONS COMPLETE</span>
-          <h1>Your program starts here</h1>
-          <p>You can now choose client work, mine for yourself, launch science instruments, or build permanent infrastructure. First, tell Mission Control what you want close at hand.</p>
-          <button type="button" className={styles.primary} onClick={() => setChoosing(true)}>START MY PROGRAM</button>
-        </section>
-      ) : (
-        <section className={styles.chooser}>
-          <div className={styles.heading}>
-            <span className={styles.eyebrow}>YOUR PROGRAM · FOCUS AREAS</span>
-            <h1>What do you want to do next?</h1>
-            <p>Choose any combination. These become your subscribed operations on the Launchpad; you can still reveal everything at any time.</p>
-          </div>
-          <div className={styles.focusGrid}>
-            {FOCUSES.map(focus => {
-              const active = selected.includes(focus.id)
-              return <button key={focus.id} type="button" className={styles.focus} data-active={active} aria-pressed={active} onClick={() => toggle(focus.id)}>
-                <span className={styles.selector} aria-hidden="true" />
-                <strong>{focus.label}</strong>
-                <span>{focus.body}</span>
-              </button>
-            })}
-          </div>
-          <aside className={styles.siloRecommendation}>
-            <div><span>RECOMMENDED FIRST BUILD</span><strong>Build an Earth silo</strong><p>A silo lets you keep ore instead of selling every haul immediately. It is the foundation for fabrication and larger construction.</p></div>
-            <button type="button" onClick={() => onBuildSilo(selected)}>BUILD A SILO FIRST</button>
-          </aside>
-          <div className={styles.actions}>
-            <button type="button" className={styles.secondary} onClick={() => onDone([])}>USE FREE-FORM PROGRAM</button>
-            <button type="button" className={styles.primary} onClick={() => onDone(selected)} disabled={selected.length === 0}>SAVE FOCUS AREAS</button>
-          </div>
-        </section>
-      )}
+      <section className={styles.intro}>
+        <span className={styles.eyebrow}>{review ? 'AGENCY TRAINING' : 'AGENCY TRAINING COMPLETE'}</span>
+        <h1>{review ? 'How your agency works' : 'Your agency is operating'}</h1>
+        <ol className={styles.track} aria-label="Agency training">
+          {track.map(step => (
+            <li key={step.stage} className={styles.trackStep} data-status={step.status} data-testid={`agency-track-${step.stage}`}>
+              <span className={styles.trackMarker} aria-hidden="true" />
+              <span>{step.label}</span>
+              {review && step.stage !== 'free-ops'
+                ? <span className={styles.trackSummary}>{STAGE_SUMMARIES[step.stage]}</span>
+                : <span className={styles.trackStatus}>{step.status === 'done' ? 'Done' : step.status === 'current' ? 'Now' : 'Later'}</span>}
+            </li>
+          ))}
+        </ol>
+        <p>{review
+          ? 'Mining, transport and construction are separate jobs your agency can take on at any time. Pick one to start now.'
+          : 'Mining, transport and construction are now yours to run. Choose what your agency does first; the rest stays available from your base.'}</p>
+      </section>
+      <div className={styles.activityGrid}>
+        {activities.map(activity => (
+          <button
+            key={activity.id}
+            type="button"
+            className={styles.activity}
+            data-testid={`free-ops-activity-${activity.id}`}
+            onClick={() => onChoose(activity)}
+          >
+            <strong>{activity.label}</strong>
+            <span>{activity.body}</span>
+            <em>{activity.cta}</em>
+          </button>
+        ))}
+      </div>
+      <div className={styles.actions}>
+        <button type="button" className={styles.secondary} data-testid="tutorial-complete-close" onClick={onClose}>
+          {review ? 'CLOSE' : 'BACK TO BASE'}
+        </button>
+      </div>
     </PageSurface>
   )
 }

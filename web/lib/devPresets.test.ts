@@ -6,22 +6,20 @@ import { MISSIONS } from './data'
 // Every key listed in DEV_GROUPS must resolve to a valid preset
 const ALL_KEYS = DEV_GROUPS.flatMap(g => g.shots.map(s => s.key))
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1)!
-const SECOND_MISSION = MISSIONS.find(m => m.sequence === 2)!
-const THIRD_MISSION = MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta')!
+const TRANSPORT_MISSION = MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta')!
 
 describe('DEV_GROUPS', () => {
-  it('has groups for the currently active onboarding missions', () => {
+  it('has groups for each agency training stage (SSL-332)', () => {
     const labels = DEV_GROUPS.map(g => g.label)
-    expect(labels).toContain('Mission 1')
-    expect(labels).toContain('Mission 2')
-    // M3 (the two-leg "mine then deliver" client pick) shipped this
-    // sprint, so it must be replayable via the DEV panel like M1/M2.
-    expect(labels).toContain('Mission 3')
+    expect(labels).toContain('Extraction')
+    expect(labels).toContain('Transport')
+    expect(labels).toContain('Storage Silo')
     // Post-onboarding story mission (telescope launch) — replayable once
     // free ops + the transit telescope are built.
     expect(labels).toContain('First Satellite Launch')
     expect(labels).toContain('Recent UI')
     expect(labels).toHaveLength(5)
+    expect(labels).not.toContain('Mission 2')
   })
 
   it('every shot key resolves to a non-null preset', () => {
@@ -90,104 +88,67 @@ describe('resolvePreset — Mission 1 arc', () => {
   })
 })
 
-describe('resolvePreset — Mission 2 arc', () => {
-  it('m2-hub: missionsDone=1, hub screen, all M1 steps done, tutorial on', () => {
-    const p = resolvePreset('m2-hub')!
+describe('resolvePreset — Transport arc (two-leg mine-then-deliver)', () => {
+  it('transport-hub: missionsDone=1, hub screen, all Extraction steps done, tutorial on', () => {
+    const p = resolvePreset('transport-hub')!
     expect(p.screen).toBe('hub')
     expect(p.player!.missionsDone).toBe(1)
     expect(p.tutorial).toBe(true)
-    // All M1 coach steps should be marked done
     for (const id of [0, 1, 2, 3, 4, 5, 6, 9]) {
       expect(p.doneSteps![id], `step ${id} should be done`).toBe(true)
     }
-    // M2 step 20 not yet done (coach should show)
-    expect(p.doneSteps![20]).toBeUndefined()
-  })
-
-  it('m2-rocket-buy: missionsDone=1, rocket purchase screen, M2 mission + eros', () => {
-    const p = resolvePreset('m2-rocket-buy')!
-    expect(p.screen).toBe('rocket-buy')
-    expect(p.player!.missionsDone).toBe(1)
-    expect(p.missionId).toBe(SECOND_MISSION.id)
-    expect(p.targetId).toBe('eros')
-    expect(p.rocket!.chassis).toBe('hull-mk1')
-    expect(p.rocket!.propulsion).toBe('ion-a1')
-    expect(p.rocket!.drill).toBe('hand-drill')
-    expect(p.doneSteps![20]).toBe(true)
-    expect(p.doneSteps![21]).toBeUndefined()
-  })
-
-  it('m2-fab: missionsDone=1, fab screen after Prospector purchase, M2 mission + eros', () => {
-    const p = resolvePreset('m2-fab')!
-    expect(p.screen).toBe('fab')
-    expect(p.player!.missionsDone).toBe(1)
-    expect(p.missionId).toBe(SECOND_MISSION.id)
-    expect(p.targetId).toBe('eros')
-    expect(p.rocket!.chassis).toBe('hull-mk2')
-    expect(p.rocket!.propulsion).toBe('fusion-b2')
-    expect(p.rocket!.drill).toBe('laser-t2')
-    // Steps 20 and 21 are done before arriving at the post-purchase fab screen.
-    expect(p.doneSteps![20]).toBe(true)
-    expect(p.doneSteps![21]).toBe(true)
-  })
-
-  it('m2-mining: missionsDone=1, mining screen with active M2 mission', () => {
-    const p = resolvePreset('m2-mining')!
-    expect(p.screen).toBe('mining')
-    expect(p.missionId).toBe(SECOND_MISSION.id)
-    expect(p.player!.activeMission?.id).toBe(SECOND_MISSION.id)
-  })
-
-  it('m2-post-debrief: hub screen with second mission cargo retained in stash', () => {
-    const p = resolvePreset('m2-post-debrief')!
-    expect(p.screen).toBe('hub')
-    expect(p.player!.stash).toEqual(SECOND_MISSION.requires.minerals)
-    expect(p.lastCargo).toEqual(SECOND_MISSION.requires.minerals)
-    expect(p.player!.missionsDone).toBe(1)
-  })
-})
-
-describe('resolvePreset — Mission 3 arc (two-leg mine-then-deliver)', () => {
-  it('m3-hub: missionsDone=2, hub screen, all M1+M2 steps done, tutorial on', () => {
-    const p = resolvePreset('m3-hub')!
-    expect(p.screen).toBe('hub')
-    expect(p.player!.missionsDone).toBe(2)
-    expect(p.tutorial).toBe(true)
-    for (const id of [0, 1, 2, 3, 4, 5, 6, 9, 20, 21]) {
-      expect(p.doneSteps![id], `step ${id} should be done`).toBe(true)
-    }
-    // M3 step 30 not yet done (coach should show)
+    // Transport step 30 not yet done (coach should show)
     expect(p.doneSteps![30]).toBeUndefined()
     expect(p.missionId).toBeNull()
     expect(p.deliveryTargetId).toBeNull()
   })
 
-  it('m3-fab: missionsDone=2, fab screen, Belt Courier Run accepted with delivery target set', () => {
-    const p = resolvePreset('m3-fab')!
+  it('transport-fab: missionsDone=1, fab screen, Belt Courier Run accepted with delivery target set', () => {
+    const p = resolvePreset('transport-fab')!
     expect(p.screen).toBe('fab')
-    expect(p.player!.missionsDone).toBe(2)
-    expect(p.missionId).toBe(THIRD_MISSION.id)
-    expect(p.targetId).toBe(THIRD_MISSION.targetId)
-    expect(p.deliveryTargetId).toBe(THIRD_MISSION.deliveryTargetId)
+    expect(p.player!.missionsDone).toBe(1)
+    expect(p.missionId).toBe(TRANSPORT_MISSION.id)
+    expect(p.targetId).toBe(TRANSPORT_MISSION.targetId)
+    expect(p.deliveryTargetId).toBe(TRANSPORT_MISSION.deliveryTargetId)
     expect(p.rocket!.chassis).toBe('hull-mk2')
   })
 
-  it('m3-mining: missionsDone=2, mining screen with active two-leg mission', () => {
-    const p = resolvePreset('m3-mining')!
+  it('transport-mining: missionsDone=1, mining screen with active two-leg mission', () => {
+    const p = resolvePreset('transport-mining')!
     expect(p.screen).toBe('mining')
-    expect(p.missionId).toBe(THIRD_MISSION.id)
-    expect(p.deliveryTargetId).toBe(THIRD_MISSION.deliveryTargetId)
-    expect(p.player!.activeMission?.id).toBe(THIRD_MISSION.id)
+    expect(p.missionId).toBe(TRANSPORT_MISSION.id)
+    expect(p.deliveryTargetId).toBe(TRANSPORT_MISSION.deliveryTargetId)
+    expect(p.player!.activeMission?.id).toBe(TRANSPORT_MISSION.id)
   })
 
-  it('m3-debrief: debrief screen with two-leg mission cargo and delivery target set', () => {
-    const p = resolvePreset('m3-debrief')!
+  it('transport-debrief: debrief screen with two-leg mission cargo and delivery target set', () => {
+    const p = resolvePreset('transport-debrief')!
     expect(p.screen).toBe('debrief')
-    expect(p.missionId).toBe(THIRD_MISSION.id)
-    expect(p.targetId).toBe(THIRD_MISSION.targetId)
-    expect(p.deliveryTargetId).toBe(THIRD_MISSION.deliveryTargetId)
-    expect(p.lastCargo).toEqual(THIRD_MISSION.requires.minerals)
+    expect(p.missionId).toBe(TRANSPORT_MISSION.id)
+    expect(p.targetId).toBe(TRANSPORT_MISSION.targetId)
+    expect(p.deliveryTargetId).toBe(TRANSPORT_MISSION.deliveryTargetId)
+    expect(p.lastCargo).toEqual(TRANSPORT_MISSION.requires.minerals)
+    expect(p.player!.missionsDone).toBe(1)
+  })
+})
+
+describe('resolvePreset — Storage Silo arc', () => {
+  it('storage-hub: both guided missions done, no silo, still in training', () => {
+    const p = resolvePreset('storage-hub')!
+    expect(p.screen).toBe('hub')
     expect(p.player!.missionsDone).toBe(2)
+    expect(p.player!.placed).not.toContain('surface-silo')
+    expect(p.player!.freeOperations).toBe(false)
+    expect(p.tutorial).toBe(true)
+    expect(p.doneSteps![40]).toBeUndefined()
+  })
+
+  it('storage-build: build screen with the hub silo step done', () => {
+    const p = resolvePreset('storage-build')!
+    expect(p.screen).toBe('build')
+    expect(p.player!.missionsDone).toBe(2)
+    expect(p.doneSteps![40]).toBe(true)
+    expect(p.doneSteps![41]).toBeUndefined()
   })
 })
 
@@ -198,8 +159,8 @@ describe('resolvePreset — ship customizer', () => {
     expect(p.tutorial).toBe(false)
     expect(p.player!.placed).toContain('launchpad')
     expect(p.player!.unlockedSkillNodes).toContain('ship-customizer-1')
-    expect(p.missionId).toBe(SECOND_MISSION.id)
-    expect(p.targetId).toBe('eros')
+    expect(p.missionId).toBe(TRANSPORT_MISSION.id)
+    expect(p.targetId).toBe(TRANSPORT_MISSION.targetId)
   })
 })
 
@@ -208,7 +169,7 @@ describe('resolvePreset — hangar assembly', () => {
     const p = resolvePreset('ui-hangar-assembly')!
     expect(p.screen).toBe('hangar')
     expect(p.player!.pendingLaunch).toBe(true)
-    expect(p.player!.missionsDone).toBe(2)
+    expect(p.player!.missionsDone).toBe(1)
     expect(p.rocket!.chassis).toBe('hull-mk2')
   })
 })
@@ -231,7 +192,7 @@ describe('resolvePreset — recent UI surfaces', () => {
   it('opens Target Picker with a real mission loaded', () => {
     const p = resolvePreset('ui-target-picker')!
     expect(p.screen).toBe('targets')
-    expect(p.missionId).toBe(THIRD_MISSION.id)
+    expect(p.missionId).toBe(TRANSPORT_MISSION.id)
     expect(p.targetId).toBeNull()
   })
 
@@ -251,8 +212,11 @@ describe('resolvePreset — recent UI surfaces', () => {
 describe('dev shortcut routes', () => {
   it('maps dedicated mission URLs to preset keys', () => {
     expect(presetForMissionRoute(['m1'])).toBe('m1-hub')
-    expect(presetForMissionRoute(['m2', 'rocket'])).toBe('m2-rocket-buy')
-    expect(presetForMissionRoute(['m3', 'mining'])).toBe('m3-mining')
+    expect(presetForMissionRoute(['m2'])).toBe('transport-hub')
+    expect(presetForMissionRoute(['mission2', 'mining'])).toBe('transport-mining')
+    expect(presetForMissionRoute(['transport', 'fab'])).toBe('transport-fab')
+    expect(presetForMissionRoute(['storage', 'build'])).toBe('storage-build')
+    expect(presetForMissionRoute(['m3'])).toBeNull()
     expect(presetForMissionRoute(['telescope', 'transit'])).toBe('telescope-transit')
   })
 

@@ -17,7 +17,6 @@ import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
-import AsteroidDiscoveryCoach, { useAsteroidDiscoveryCoach } from '@/components/game/AsteroidDiscoveryCoach'
 
 interface AsteroidDiscoveryScreenProps {
   player: Player
@@ -25,7 +24,7 @@ interface AsteroidDiscoveryScreenProps {
   /** Fixed record supplied only by the named visual dev preset. */
   visualCandidate?: AsteroidCandidate
   onBack: () => void
-  onBuildTelescope: () => void
+  onLaunchTelescope: () => void
   onSubmit: (candidateId: string, verdict: AsteroidVerdict) => void
 }
 
@@ -40,7 +39,7 @@ const VERDICT_ACTIONS: Array<{ id: AsteroidVerdict; label: string; kind: 'amber'
   { id: 'unsure', label: 'Skip', kind: 'ghost' },
 ]
 
-export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onBuildTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
+export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onLaunchTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
   // Stabilize the fallback so the fetch effect below (keyed on `classifications`)
   // doesn't get a new object identity every render when the field is unset —
   // e.g. preset-loaded dev state, which bypasses normalizeAndRepair()'s
@@ -113,7 +112,6 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
 
   const isDesktop = useIsDesktop()
   const [isCompactLandscape, setIsCompactLandscape] = useState(false)
-  const coach = useAsteroidDiscoveryCoach()
 
   useEffect(() => {
     const query = window.matchMedia('(orientation: landscape) and (max-height: 520px)')
@@ -142,10 +140,10 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         eyebrow="BASE / TELESCOPE REQUIRED"
         icon={<Telescope size={22} />}
         tone="cyan"
-        title="Build Deep Space Telescope"
-        body="Place the Deep Space Telescope to start receiving NEOCP asteroid candidates."
+        title="Launch Deep Space Telescope"
+        body="Deploy the Deep Space Telescope from the Launchpad to start receiving NEOCP asteroid candidates."
         onBack={onBack}
-        action={<PrimaryBtn testId="build-deep-space-telescope-btn" onClick={onBuildTelescope}>Build Telescope</PrimaryBtn>}
+        action={<PrimaryBtn testId="launch-deep-space-telescope-btn" onClick={onLaunchTelescope}>OPEN LAUNCHPAD</PrimaryBtn>}
       />
     )
   }
@@ -296,7 +294,6 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       {isDesktop || isCompactLandscape ? (
         <div data-testid="asteroid-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
           <div style={{ overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
-            {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
             {devBar}
             {dataPanel}
           </div>
@@ -313,7 +310,6 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       ) : (
         <>
           <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
-            {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
             {devBar}
             {dataPanel}
             {payoffPanel && <div style={{ marginTop: 12 }}>{payoffPanel}</div>}

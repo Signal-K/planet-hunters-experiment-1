@@ -18,6 +18,8 @@ export interface BuildingCallout {
   body: string
   cta: string
   onCta: () => void
+  /** Optional "not now" for prompts the player can wave off. */
+  onDismiss?: () => void
 }
 
 export interface BuildingProps {
@@ -155,7 +157,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
       data-testid={`building-${kind}`}
       // Desktop tutorial spotlight target. With the sidebar gone, "open a
       // mission" is coached on the launchpad itself rather than a nav rail.
-      data-coach-id={`building-${kind}`}
+      data-beacon={`building-${kind}`}
       // 'auto' because the hub's buildings layer is pointerEvents:'none' — it
       // must not be a full-screen click catcher over the progression cards.
       style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', width: w, minWidth: w, maxWidth: w, pointerEvents: 'auto', opacity: dimmed ? 0.62 : 1, transition: 'opacity 200ms', ...style }}
@@ -294,6 +296,21 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             >
               {callout.cta} <ArrowGlyph />
             </button>
+            {callout.onDismiss && (
+              <button
+                type="button"
+                data-testid={`building-${kind}-callout-dismiss`}
+                onClick={e => { e.stopPropagation(); setCalloutOpen(false); callout.onDismiss?.() }}
+                style={{
+                  display: 'inline-flex', marginTop: 9, marginLeft: 12, padding: 0, cursor: 'pointer',
+                  background: 'transparent', border: 'none',
+                  fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 9.5,
+                  letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)',
+                }}
+              >
+                Dismiss
+              </button>
+            )}
             {/* Bubble tail — outline triangle with a fill triangle stacked over it */}
             <span style={{
               position: 'absolute', left: tailLeft, top: '100%', transform: 'translateX(-50%)',
@@ -311,5 +328,40 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
         </>
       )}
     </div>
+  )
+}
+
+export function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?: React.CSSProperties; onClick: () => void; plot?: number }) {
+  return (
+    <button
+      data-testid={plot != null ? `build-plot-${plot}` : 'build-plot'}
+      onClick={onClick}
+      style={{
+        position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
+        pointerEvents: 'auto',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, ...style,
+      }}
+    >
+      <div style={{ width: w, height: w * 0.5, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{
+          width: '88%', height: 26, borderRadius: '50% / 60%',
+          // 0.04 trailing gradient stop has no matching --ln-* token (nothing
+          // that faint exists); left as a literal fade-out, not swapped.
+          background: 'radial-gradient(ellipse at 50% 35%, var(--ln-cyan-soft), rgba(112,217,234,0.04) 70%)',
+          border: '2px dashed var(--ln-cyan-border)',
+          display: 'grid', placeItems: 'center',
+          animation: 'hub-pad-pulse 2s ease-in-out infinite',
+        }}>
+          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 15, fontWeight: 800, color: 'var(--ln-cyan-bright)' }}>+</span>
+        </div>
+      </div>
+      <div style={{
+        background: 'var(--hub-panel-deep)', border: '1px solid var(--hub-outline)', borderRadius: 999,
+        padding: 'var(--ln-s-1) var(--ln-s-2)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 8,
+        letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--hub-cyan)', whiteSpace: 'nowrap',
+      }}>
+        Build
+      </div>
+    </button>
   )
 }

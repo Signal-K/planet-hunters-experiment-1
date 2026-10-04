@@ -49,7 +49,7 @@ export interface LandnamSyncOptions {
  * `road`, `factory` and `silo` are Landnam sandbox additions registered by
  * `lib/takeon/sandbox.ts` (SSL-316).
  */
-const STRUCTURE_TYPES = new Set<StructureType>([
+export const STRUCTURE_TYPES = new Set<StructureType>([
   'solar-array',
   'beacon',
   'drill-rig',
@@ -146,13 +146,13 @@ function structureFromRecord(record: JsonRecord): Structure | null {
  * blueprint — a blue-gray block for a storage silo, which has no built-in glyph.
  * Rows already saved that way are repaired on load.
  */
-function persistedStructureProgress(structure: Structure): number | null {
+export function persistedStructureProgress(structure: Structure): number | null {
   if (structure.type !== 'habitat-frame') return null
   if (typeof structure.progress !== 'number' || !Number.isFinite(structure.progress)) return null
   return structure.progress
 }
 
-function restoredStructureProgress(type: StructureType, value: unknown): number | undefined {
+export function restoredStructureProgress(type: StructureType, value: unknown): number | undefined {
   if (type !== 'habitat-frame') return undefined
   if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined
   return value
@@ -315,7 +315,7 @@ export class LandnamSync implements SyncAdapter {
    * Keyed upserts mean only the latest snapshot per world/structure is kept.
    */
   private queueMissionUpload(userId: string, state: MissionState, roverName: string): void {
-    queueUpsert('voxel_worlds', this.worldFilter(userId, state.id), {
+    void queueUpsert('voxel_worlds', this.worldFilter(userId, state.id), {
       user: userId,
       target_id: state.id,
       body_id: state.bodyId,
@@ -331,7 +331,7 @@ export class LandnamSync implements SyncAdapter {
       weather: state.weather ?? null,
     })
     for (const structure of state.structures) {
-      queueUpsert(
+      void queueUpsert(
         'structures',
         `${this.worldFilter(userId, state.id)} && structure_id = "${filterValue(structure.id)}"`,
         {

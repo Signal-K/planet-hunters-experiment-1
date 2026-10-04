@@ -190,8 +190,9 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
   }
 
   return (
-    <aside data-testid="survey-sheet" className="survey-sheet" aria-label="Quick question" style={{
-      pointerEvents: 'auto',
+    <aside data-testid="survey-sheet" aria-label="Quick question" style={{
+      position: 'absolute', zIndex: 94, right: 16, bottom: 'calc(var(--ln-nav-h, 64px) + 16px)',
+      width: 'min(420px, calc(100% - 32px))', pointerEvents: 'auto',
       background: 'var(--ln-panel)', border: '2px solid var(--ln-cyan-border)',
       padding: '16px 16px 24px', boxShadow: 'var(--ln-shadow-panel)',
     }}>

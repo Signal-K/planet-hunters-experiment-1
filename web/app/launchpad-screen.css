@@ -166,6 +166,13 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-tower:focus-visible { outline: none; }
 .launchpad-tower:focus-visible .launchpad-primary-pad-control { outline: 2px solid var(--ln-text); outline-offset: 3px; }
+/* Phone portrait: the tower is only ~117px wide, so a 232px control centred on
+   it hung 10px off the left edge. Anchor it to the tower's left edge instead. */
+@media (max-width: 600px) and (orientation: portrait) {
+  .launchpad-tower .launchpad-primary-pad-control { left: 0; transform: none; min-width: 0; width: max-content; max-width: 200px; }
+  .launchpad-tower:hover .launchpad-primary-pad-control,
+  .launchpad-tower:focus-visible .launchpad-primary-pad-control { transform: translateY(-2px); }
+}
 .launchpad-tower-rocket { position: absolute; z-index: 4; left: 50%; bottom: 16%; width: 42%; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
 .launchpad-rocket { right: 3%; bottom: var(--hub-ground); width: 37%; height: auto; justify-content: flex-end; }
 .launchpad-rocket-art {
@@ -268,18 +275,6 @@ button.launchpad-scene-object { cursor: pointer; }
   gap: 16px;
 }
 
-.launchpad-show-all-operations {
-  grid-column: 1 / -1;
-  min-height: 40px;
-  border: 1px solid var(--ln-cyan-border);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--ln-cyan);
-  font: 800 9px var(--ln-font-display);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
 .launchpad-mission-choice {
   display: grid;
   min-width: 0;
@@ -349,7 +344,7 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-active-mission {
   position: absolute; z-index: 21; top: 96px; right: 24px;
-  display: grid; width: min(360px, calc(100% - 48px)); max-height: calc(100% - 96px - 86px); overflow: auto; gap: 16px; padding: 16px;
+  display: grid; width: min(448px, calc(100% - 48px)); gap: 16px; padding: 16px;
   border: 4px solid var(--hub-outline); border-radius: 12px;
   background: color-mix(in srgb, var(--ln-void) 84%, transparent);
   box-shadow: 0 16px 32px color-mix(in srgb, var(--ln-void) 44%, transparent);
@@ -389,10 +384,8 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-mission-run-list strong { color: var(--ln-cyan); font: 800 8px var(--ln-font-display); letter-spacing: .12em; }
 
 .launchpad-guide {
-  position: absolute; z-index: 24; top: 72px; left: 16px; right: 16px; width: auto;
-  max-height: min(168px, calc(100% - 72px - 86px));
-  overflow: auto;
-  padding: 16px; border: 1px solid var(--ln-cyan); border-radius: 10px;
+  position: absolute; z-index: 24; top: 24px; left: 24px; width: min(360px, calc(100% - 48px));
+  padding: 20px; border: 1px solid var(--ln-cyan); border-radius: 10px;
   background: var(--ln-shell); box-shadow: var(--ln-shadow-modal); color: var(--ln-text);
 }
 .launchpad-guide-close {
@@ -414,7 +407,7 @@ button.launchpad-scene-object { cursor: pointer; }
 /* The Hub dock is an action rail, not a floating modal. Keep its status and
    actions on the ground line so the widened launchpad remains visible above
    it and the last action cannot be hidden below a clipped sheet. */
-/* Hub itself has no BottomTabBar. The prior nav-height offset lifted its dock
+/* The prior nav-height offset lifted the Hub dock
    into the middle of the screen on desktop and portrait; anchor it to the
    actual canvas edge. */
 .hub-bottom-dock { bottom: 0 !important; }
@@ -550,4 +543,18 @@ button.launchpad-scene-object { cursor: pointer; }
     width: 100%;
   }
 
+}
+
+/* Landscape phones: a 48px title line and a 48px command rail leave the pad
+   most of the height, and New Mission uses the whole game area so every
+   option is on screen instead of in a clipped strip. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .launchpad-visual-scene { inset: 48px 0 48px; }
+  .launchpad-scene-rail { height: 48px; padding: 4px 8px; }
+  .launchpad-rail-actions button { height: 40px; }
+  .launchpad-mission-menu { top: 8px; bottom: 8px; max-height: none; }
+  .launchpad-mission-menu-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .portrait-canvas:has(.launchpad-scene-rail) .suite-hop-rail { top: 56px; flex-direction: row; align-items: center; }
+  .portrait-canvas:has(.launchpad-scene-rail) .suite-identity-chip { display: none; }
+  .portrait-canvas:has(.launchpad-mission-menu) .suite-hop-rail { display: none; }
 }

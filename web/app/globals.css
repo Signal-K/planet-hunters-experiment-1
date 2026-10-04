@@ -325,12 +325,6 @@
   color: var(--ln-blueprint-blue);
   backdrop-filter: none;
 }
-.portrait-canvas:has(.theme-blueprint) .bottom-tab-bar {
-  background: var(--ln-blueprint-paper-2);
-  border-top-color: var(--ln-blueprint-line-strong);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
 html:has(.theme-blueprint),
 body:has(.theme-blueprint) {
   background-color: var(--ln-blueprint-bg);
@@ -442,12 +436,6 @@ body:has(.theme-blueprint) {
   border-color: var(--ln-blueprint-line-strong);
   color: var(--ln-blueprint-blue);
   backdrop-filter: none;
-}
-.portrait-canvas:has(.theme-blueprint) .bottom-tab-bar {
-  background: var(--ln-blueprint-paper-2);
-  border-top-color: var(--ln-blueprint-line-strong);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 html:has(.theme-blueprint),
 body:has(.theme-blueprint) {
@@ -631,121 +619,10 @@ button { cursor: pointer; }
   }
 }
 
-/* Flex row above .bottom-tab-bar — screen content's own overflow-y:auto
+/* Flex row above the shared dock — screen content's own overflow-y:auto
    box naturally ends above the bar instead of guessing its height via
    per-screen paddingBottom hacks. */
 .game-screen-area { flex: 1; min-height: 0; position: relative; overflow: hidden; }
-
-.scene-transition { position: absolute; inset: 0; }
-.scene-transition-veil {
-  position: absolute;
-  inset: 0;
-  z-index: 40;
-  pointer-events: none;
-  background: var(--ln-void);
-  opacity: 0;
-}
-.scene-transition-veil[data-phase="out"] {
-  pointer-events: auto;
-  animation: scene-veil-cover 180ms ease forwards;
-}
-.scene-transition-veil[data-phase="in"] {
-  pointer-events: auto;
-  animation: scene-veil-reveal 200ms ease forwards;
-}
-@keyframes scene-veil-cover { from { opacity: 0; } to { opacity: 1; } }
-@keyframes scene-veil-reveal { from { opacity: 1; } to { opacity: 0; } }
-
-.scene-transition-craft {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.scene-transition-rocket {
-  position: absolute;
-  left: 50%;
-  top: 58%;
-  width: 18px;
-  height: 64px;
-  margin-left: -9px;
-  background: var(--ln-cyan-bright);
-  clip-path: polygon(50% 0, 100% 22%, 82% 22%, 82% 100%, 18% 100%, 18% 22%, 0 22%);
-}
-.scene-transition-rocket::after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  right: 4px;
-  top: 100%;
-  height: 16px;
-  background: var(--ln-cyan);
-  clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
-  opacity: 0.85;
-}
-.scene-transition-horizon {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 62%;
-  height: 2px;
-  background: var(--ln-cyan);
-  opacity: 0;
-}
-.scene-transition-body {
-  position: absolute;
-  left: 50%;
-  top: 48%;
-  width: 28px;
-  height: 28px;
-  margin-left: -14px;
-  border: 2px solid var(--ln-cyan);
-  border-radius: 50%;
-  opacity: 0;
-}
-.scene-transition-veil[data-kind="climb"] .scene-transition-rocket {
-  animation: scene-rocket-climb 380ms ease-in forwards;
-}
-.scene-transition-veil[data-kind="debrief"] .scene-transition-rocket {
-  animation: scene-rocket-descend 380ms ease-in forwards;
-}
-.scene-transition-veil[data-kind="arrival"] .scene-transition-horizon,
-.scene-transition-veil[data-kind="arrival"] .scene-transition-body {
-  opacity: 1;
-}
-.scene-transition-veil[data-kind="arrival"] .scene-transition-horizon {
-  animation: scene-horizon-sweep 380ms ease-out forwards;
-}
-.scene-transition-veil[data-kind="arrival"] .scene-transition-body {
-  animation: scene-body-grow 380ms ease-out forwards;
-}
-.scene-transition-veil[data-kind="arrival"] .scene-transition-rocket { display: none; }
-.scene-transition-veil[data-kind="climb"] .scene-transition-horizon,
-.scene-transition-veil[data-kind="climb"] .scene-transition-body,
-.scene-transition-veil[data-kind="debrief"] .scene-transition-horizon,
-.scene-transition-veil[data-kind="debrief"] .scene-transition-body { display: none; }
-@keyframes scene-rocket-climb {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(-70vh); opacity: 0; }
-}
-@keyframes scene-rocket-descend {
-  from { transform: translateY(-24vh); opacity: 0; }
-  40% { opacity: 1; }
-  to { transform: translateY(28vh); opacity: 0; }
-}
-@keyframes scene-horizon-sweep {
-  from { transform: scaleX(0.2); opacity: 0; }
-  to { transform: scaleX(1); opacity: 1; }
-}
-@keyframes scene-body-grow {
-  from { transform: scale(0.4); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .scene-transition-veil,
-  .scene-transition-rocket,
-  .scene-transition-horizon,
-  .scene-transition-body { animation: none !important; opacity: 0 !important; }
-}
 
 /* Mission Board owns a fixed StepFooter. End its scroll viewport above that
    rail so the board does not need artificial bottom padding or scroll past
@@ -805,33 +682,132 @@ button { cursor: pointer; }
   outline-offset: 2px;
 }
 
-/* SSL-35: Home carries Menu, Market and the mission switch in its bottom
-   bar; Friends, Community, Feedback and Garden moved into Menu. Keep the
-   quiet status chips just above that bar instead of on top of it. */
-.portrait-canvas:has([data-layout="home"]) .sync-status,
-.portrait-canvas:has([data-layout="home"]) .backend-status {
-  top: auto !important;
-  bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
-}
-/* A pop-up in the frame's overlay slot (e.g. Market) covers the screen; the
-   status chips would otherwise print on top of it. */
-.portrait-canvas:has([data-frame-slot="overlay"]:not(:empty)) .sync-status,
-.portrait-canvas:has([data-frame-slot="overlay"]:not(:empty)) .backend-status {
-  display: none;
+/* right:96 clears the shared shell's Menu pill (.game-menu-button occupies
+   12–84px from the edge). Compact landscape drops both pills to the 8px
+   command cluster so they do not sit on the hub HUD. */
+.game-friends-button {
+  position: absolute;
+  top: 56px;
+  right: 96px;
+  z-index: 22;
+  min-height: 34px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--ln-panel);
+  border: 1px solid var(--ln-hairline);
+  color: var(--ln-cyan);
+  font-family: var(--ln-font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.bottom-tab-bar {
-  flex: none;
-  height: var(--ln-nav-h);
-  display: flex;
-  /* Glass HUD register, not a flat solid bar — matches the translucent
-     dark-panel chrome (.bp-panel/.hud-chip/.scene-btn) in the Open Design
-     reference (open-design/.od/projects/
-     a531c672-4e0b-4c34-bd0f-19a33add20c6/landnam-earth-base-v2.html). */
-  background: rgba(6, 11, 22, 0.82);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
+/* Cross-game links (Garden, Spectra) and the shared-account chip. */
+.suite-hop-rail {
+  position: absolute; top: 96px; right: 12px; z-index: 22;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+}
+
+/* Hub utilities form one deliberate stacked header on device-sized canvases:
+   title/time, then balance/community/friends, then sync/suite links/feedback.
+   They used to be unrelated absolute coordinates, which drifted as soon as
+   the viewport changed. */
+@media (max-width: 1023px) {
+  /* MENU moved to the bottom bar, so this row no longer reserves its corner:
+     at 196px from the right, HUB ran over the balance pill on phones. */
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { top: 66px !important; right: 12px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 66px !important; right: 121px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 110px; bottom: auto !important; left: 12px; height: max-content; }
+  .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 110px !important; right: 12px !important; bottom: auto !important; min-height: 32px; }
+  /* Third header row: [sync]  ...  [GARDEN][FEEDBACK]. The rail used to be a
+     column at the same corner, so Feedback sat on top of it. The identity
+     chip is dropped here for room; GARDEN still carries its caption. */
+  .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 110px; right: 108px; flex-direction: row; align-items: center; }
+  .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none; }
+  .portrait-canvas:has([data-screen="hub"]) .feedback-panel { right: 12px !important; bottom: calc(var(--ln-nav-h) + 12px) !important; }
+  /* SSL-381: the active-craft control used to sit at top:96px, which is now the
+     third header row (sync / GARDEN / FEEDBACK at 110px). Start it below that row. */
+  .portrait-canvas:has([data-screen="hub"]) .hub-sky-craft-control { top: 156px; }
+}
+
+@media (max-width: 379px) {
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { width: 36px; min-width: 36px; padding: 0 !important; justify-content: center; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button span { display: none; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { width: 36px; min-width: 36px; padding: 0 !important; justify-content: center; right: 56px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button span { display: none; }
+}
+
+/* Desktop Base: the dock is a full-width band at the bottom of the game
+   area, so the sync note sits just above it rather than on its status text. */
+@media (min-width: 1024px) {
+  .portrait-canvas:has([data-screen="hub"]) .sync-status { bottom: 76px; }
+}
+
+/* Landscape phones: the Base header is one 48px row — title and balance on
+   the left, icon buttons and suite links on the right — and the dock loses
+   its panel so its buttons float over the ground instead of taking a band
+   of the scene. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button,
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 8px !important; width: 32px; min-width: 32px; height: 32px; min-height: 32px; padding: 0 !important; justify-content: center; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button span,
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button span { display: none; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { right: 188px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { right: 228px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 8px; right: 108px; flex-direction: row; align-items: center; }
+  .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none; }
+  .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 8px !important; right: 12px !important; bottom: auto !important; min-height: 32px; }
+  .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 36px; bottom: auto !important; left: 12px; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-sky-craft-control { top: 56px; }
+  .portrait-canvas:has([data-screen="hub"]) [data-testid="hub-clock-widget"] { display: none !important; }
+
+  .hub-bottom-dock-inner { max-width: none !important; padding: 8px 12px !important; border-top: 0 !important; border-radius: 0 !important; background: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  /* "Launchpad · Ready" repeats the building's own label; a live mission's
+     status (the banner variant) stays. */
+  .hub-bottom-dock-main:not([data-testid]) > div:first-child { display: none; }
+  .hub-bottom-dock-actions { margin-top: 0 !important; }
+}
+
+/* SSL-346: shell-owned controls are available on every live surface. */
+.game-chrome-bottom { position:relative; z-index:70; flex:0 0 auto; display:flex; align-items:stretch; justify-content:center; gap:4px; padding:4px 8px; border-top:1px solid var(--ln-hairline); background:var(--ln-void); }
+.game-chrome-bottom__readout { display:none; align-items:center; padding:0 12px; color:var(--ln-cyan); font:800 12px var(--ln-font-display); letter-spacing:.12em; text-transform:uppercase; white-space:nowrap; }
+.game-chrome-bottom button { flex:1 1 0; min-width:0; max-width:128px; min-height:40px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
+.game-chrome-bottom button[aria-current="page"], .game-chrome-bottom button:hover { border-color:var(--ln-cyan-border); background:var(--ln-cyan-soft); color:var(--ln-cyan-bright); }
+@media (min-width:600px) { .game-chrome-bottom__readout { display:inline-flex; } }
+/* Landscape phones: every screen's title bar shrinks to one 48px line. */
+@media (orientation:landscape) and (max-height:500px) {
+  .top-bar { padding-top:8px !important; padding-bottom:8px !important; }
+  .top-bar__eyebrow { display:none; }
+  .top-bar__title { margin:0 !important; font-size:18px !important; }
+  /* Bottom-left belongs to each screen's command rail here; sit the sync
+     note just under the title line instead. */
+  .portrait-canvas .sync-status { top:52px; bottom:auto; }
+}
+
+/* The game area inside .portrait-canvas. Screen overlays are positioned
+   against this, so none of them can land on the nav beside it. */
+.game-stage-main { position:relative; flex:1 1 auto; min-width:0; min-height:0; display:flex; flex-direction:column; }
+
+/* Landscape phones: height is the scarce axis, so the nav becomes a left
+   rail and the game keeps the full height. */
+@media (orientation:landscape) and (max-height:500px) {
+  .portrait-canvas { flex-direction:row; }
+  .game-chrome-bottom { order:-1; flex-direction:column; justify-content:flex-start; align-items:stretch; width:72px; padding:8px 4px; border-top:0; border-right:1px solid var(--ln-hairline); }
+  .game-chrome-bottom__readout { display:inline-flex; justify-content:center; padding:4px 0 8px; font-size:10px; }
+  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:32px; padding:4px; font-size:10px; letter-spacing:.06em; }
+}
+
+.hub-sky-craft-control { position:absolute; z-index:11; top:96px; right:16px; display:flex; align-items:center; gap:8px; min-height:40px; padding:8px 12px; border:1px solid var(--ln-cyan-border); border-radius:8px; background:color-mix(in srgb, var(--ln-void) 74%, transparent); color:var(--ln-cyan-bright); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
+/* Wide screens: the top-right corner is the Hub/Friends/Garden chrome, which
+   covered this control. Park the craft in open sky, left of the orbit. */
+@media (min-width: 1024px) {
+  .hub-sky-craft-control { top: 27%; right: auto; left: 50%; transform: translateX(-50%); }
+  .portrait-canvas:has([data-screen="hub"]) .hub-sky-craft-control { top: 27%; }
 }
 
 .game-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-bg); }
@@ -843,21 +819,6 @@ button { cursor: pointer; }
 /* The Hub and Launchpad share one physical campus. Each screen enters with a
    short ground-line camera move so navigation feels like approaching the pad,
    not replacing the entire scene. */
-.earth-base-campus-transition { animation: 520ms var(--ln-ease-mech) both earth-base-approach; transform-origin: 50% 76%; }
-@keyframes earth-base-recede { to { opacity: 0; transform: scale(0.90); } }
-@keyframes earth-base-approach { from { opacity: 0.72; transform: scale(1.16); } to { opacity: 1; transform: scale(1); } }
-@media (prefers-reduced-motion: reduce) {
-  .earth-base-campus-transition { animation: none; }
-}
-/* The authored scene is wider than a narrow phone viewport. Scaling it from
-   the camera centre during the 520ms approach pushes the first launchpad plot
-   off the left edge before the animation settles, so the actionable building
-   is briefly clipped in the very viewport where it is most likely to be
-   tapped. Keep the composition stable on portrait phones; desktop and tablet
-   retain the camera move. */
-@media (max-width: 640px) {
-  .earth-base-campus-transition { animation: none; }
-}
 .backend-status {
   position: absolute;
   right: var(--ln-s-3);
@@ -879,7 +840,7 @@ button { cursor: pointer; }
 .sync-status {
   position: absolute;
   left: var(--ln-s-3);
-  bottom: var(--ln-s-2);
+  bottom: calc(var(--ln-s-2) + var(--flight-plan-h, 0px));
   z-index: 96;
   display: inline-flex;
   align-items: center;
@@ -891,56 +852,28 @@ button { cursor: pointer; }
   pointer-events: none;
 }
 .sync-status span { width: 5px; height: 5px; border-radius: var(--ln-r-pill); background: currentColor; }
+/* Mission setup: compact layouts start the stage at 56px (one 40px header
+   row), so the coach anchors to the stage's inner top-left and the sync
+   note sits in the gutter under the stage. */
+/* Desktop stage: inset 96/32 plus its 4px border and an 8px gap. The contract
+   carousel's Previous arrow sits on the stage's left edge (52px wide) at mid
+   height, so the card starts to its right instead of covering it (SSL-383). */
+@media (max-width:720px), (max-height:520px), (orientation:portrait) {
+  .portrait-canvas:has([data-testid="mission-setup-scaffold"]) .sync-status { top: auto; bottom: 8px; }
+}
 
 .toast-stack {
   position: absolute;
-  /* Below the back / help cluster. Top-right at 8px sat on the mining "?"
-     and the dev skip control. */
-  top: 72px;
-  left: 12px;
-  right: auto;
+  top: 8px;
+  right: 12px;
   z-index: 85;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: 6px;
-  width: min(280px, calc(100% - 96px));
+  width: min(360px, calc(100% - 24px));
   pointer-events: none;
 }
-.portrait-canvas:has(.mining-screen) .toast-stack,
-.portrait-canvas:has(.transit-screen) .toast-stack,
-.portrait-canvas:has(.debrief-game) .toast-stack,
-.portrait-canvas:has([data-testid="rover-mining-screen"]) .toast-stack,
-.portrait-canvas:has([data-testid="delivery-screen"]) .toast-stack,
-.portrait-canvas:has([data-testid="launch-shell"]) .toast-stack {
-  top: auto;
-  bottom: 196px;
-  left: auto;
-  right: 16px;
-  align-items: flex-end;
-  width: min(220px, 38%);
-}
-.survey-sheet {
-  position: absolute;
-  z-index: 94;
-  right: 16px;
-  bottom: calc(var(--ln-nav-h, 72px) + 24px);
-  width: min(380px, calc(100% - 32px));
-  max-height: min(320px, calc(100% - 220px));
-  overflow: auto;
-  background: var(--ln-panel);
-  border: 2px solid var(--ln-cyan-border);
-  padding: 16px 16px 24px;
-  box-shadow: var(--ln-shadow-panel);
-}
-.portrait-canvas:has([data-layout="home"]) .survey-sheet {
-  top: 176px;
-  right: 16px;
-  bottom: auto;
-  width: min(320px, calc(100% - 32px));
-  max-height: min(280px, calc(100% - 280px));
-}
-
 .toast-item {
   display: flex;
   align-items: center;
@@ -961,133 +894,6 @@ button { cursor: pointer; }
   font: 700 16px/1 var(--ln-font-body);
 }
 .toast-dismiss:hover { color: var(--ln-text); border-color: var(--ln-cyan-border); }
-.tutorial-coach-body,
-.tutorial-coach-action { min-width: 0; }
-
-/* Coach copy is guidance, not a second screen. Keep the rail compact enough
-   that the surface underneath remains legible and interactive. */
-.tutorial-coach-body,
-.tutorial-coach-action { max-width: 760px; }
-
-@media (min-width: 900px) {
-  .tutorial-coach-overlay:not(.tutorial-coach-overlay--mission-setup) [data-testid="tutorial-coach-block"] {
-    left: 50% !important;
-    right: auto !important;
-    width: min(920px, calc(100% - 48px));
-    transform: translateX(-50%);
-  }
-}
-
-/* Hub coach stays in the left rail. The centered 920px card covered the
-   Launchpad, which is the control that step points at. */
-.tutorial-coach-overlay[data-coach-screen="hub"]:not(.tutorial-coach-overlay--mission-setup) [data-testid="tutorial-coach-block"] {
-  left: 16px !important;
-  right: auto !important;
-  width: min(420px, calc(100% - 48px)) !important;
-  transform: none !important;
-}
-
-/* Docked operational coach: a short band under the screen header, never a
-   card across the playfield. Specificity beats the 900px centering rule. */
-.tutorial-coach-overlay.tutorial-coach-overlay--docked:not(.tutorial-coach-overlay--mission-setup) [data-testid="tutorial-coach-block"] {
-  top: 80px !important;
-  left: 12px !important;
-  right: 12px !important;
-  width: auto !important;
-  max-width: none !important;
-  max-height: 108px;
-  transform: none !important;
-  overflow: auto;
-}
-.portrait-canvas:has([data-coach-screen="mining"]) .mining-stage,
-.portrait-canvas:has([data-coach-screen="delivery"]) [data-testid="delivery-screen"],
-.portrait-canvas:has([data-coach-screen="rover-mining"]) [data-testid="rover-mining-screen"],
-.portrait-canvas:has([data-coach-screen="debrief"]) .debrief-game {
-  padding-top: 132px;
-}
-
-@media (max-width: 899px) {
-  .tutorial-coach-card {
-    gap: 8px !important;
-    padding: 10px 10px 10px 8px !important;
-    border-radius: 12px !important;
-  }
-  .tutorial-coach-card .tutorial-coach-body {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    font-size: 11px !important;
-    line-height: 1.3 !important;
-  }
-  .tutorial-coach-card .tutorial-coach-action {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    font-size: 13px !important;
-    line-height: 1.25 !important;
-  }
-  .tutorial-coach-card--manual {
-    max-height: 132px !important;
-    overflow: hidden !important;
-  }
-  .tutorial-coach-controls { margin-top: 6px !important; }
-}
-
-/* At compact desktop widths the target map is the primary object. A rigid
-   1fr + 320px split reduced it to a thumbnail while leaving unused paper
-   around it. Let the atlas fill the setup canvas and float the selected-body
-   inspector over the quieter right side of the map. */
-
-@media (max-width: 520px) {
-  .tutorial-coach-card {
-    gap: 8px !important;
-    padding: 8px !important;
-  }
-  .tutorial-coach-card .tutorial-coach-body {
-    display: none;
-  }
-  .tutorial-coach-card .tutorial-coach-title {
-    font-size: 9px !important;
-    margin-bottom: 2px !important;
-  }
-  .tutorial-coach-card .tutorial-coach-action {
-    -webkit-line-clamp: 2;
-    font-size: 12px !important;
-  }
-  .tutorial-coach-card .tutorial-coach-side {
-    gap: 4px !important;
-  }
-  .tutorial-coach-card .tutorial-coach-side button {
-    padding: 3px 6px !important;
-  }
-}
-
-/* When .bottom-tab-bar is present it permanently occupies the bottom
-   var(--ln-nav-h), unlike the old floating radial nav — lift these corner
-   indicators above it so they don't sit on top of the tab labels. Scoped to
-   the same breakpoint the mobile bar uses; desktop status indicators keep
-   their normal position above the full-width command rail. */
-@media (orientation: landscape) and (max-width: 1023px) and (max-height: 500px) {
-  .game-menu-button {
-    top: var(--ln-s-2);
-  }
-  [data-testid="tutorial-coach-block"] {
-    max-height: 96px !important;
-  }
-  .tutorial-coach-card .tutorial-coach-body {
-    display: none;
-  }
-}
-
-@media (max-width: 1023px) {
-  .portrait-canvas:has(.bottom-tab-bar) .backend-status,
-  .portrait-canvas:has(.bottom-tab-bar) .sync-status {
-    bottom: calc(var(--ln-nav-h) + var(--ln-s-2));
-  }
-}
-
 /* Mining owns a variable-height bottom command rail. The global status chips
    cannot use the ordinary viewport-bottom anchor here: that puts NOT SYNCED
    directly on top of FIRE LASER whenever the rail grows on a small viewport.
@@ -1109,14 +915,6 @@ button { cursor: pointer; }
 }
 .portrait-canvas:has(.mining-screen) .backend-status { right: var(--ln-s-3); }
 
-/* SSL-35: a shell sheet that is itself a layout type (Community Hub is an
-   Instrument surface) gets its own full-page frame above the screen. */
-.shell-instrument-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 89;
-}
-
 .ln-page-surface {
   position: absolute;
   inset: 0;
@@ -1132,6 +930,25 @@ button { cursor: pointer; }
   max-height: none !important;
   box-shadow: none !important;
   overflow-y: auto;
+}
+
+/* SSL-347: Base trays (Menu, Friends, Community) are centered cards over the
+   still-mounted Base on wider screens; phones keep the full-bleed page. */
+@media (min-width: 768px) {
+  .ln-page-surface--tray {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--ln-s-6);
+    background: rgba(8, 8, 10, 0.72);
+  }
+  .ln-page-surface--tray .ln-page-surface__content {
+    width: min(720px, 100%);
+    min-height: 0;
+    max-height: 100% !important;
+    border-radius: var(--ln-r-xl) !important;
+    box-shadow: var(--ln-shadow-modal) !important;
+  }
 }
 
 .ln-action-confirm {
@@ -1174,10 +991,206 @@ button { cursor: pointer; }
 
 .ln-sheet--bottom { align-items: flex-end; }
 .ln-sheet__scrim { position: absolute; inset: 0; background: rgba(8, 8, 10, 0.72); }
+.auth-gate__scrim { position: absolute; inset: 0; background: rgba(8, 8, 10, 0.72); }
 .ln-sheet__panel { position: relative; background: linear-gradient(180deg, #232327, #0f0f11); border: 1px solid var(--ln-hairline); box-shadow: var(--ln-shadow-modal); }
 .ln-sheet__handle-wrap { display: flex; justify-content: center; margin-bottom: 14px; }
 .ln-sheet__handle { width: 40px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.22); }
 
+.auth-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 92;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+.auth-gate__panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.92fr) minmax(340px, 1.08fr);
+  width: min(900px, calc(100vw - 48px));
+  max-height: min(680px, calc(100dvh - 48px));
+  overflow: hidden;
+  padding: 0;
+  background: var(--ln-panel);
+  border: 1px solid var(--ln-cyan-border-strong);
+  border-radius: var(--ln-r-xl);
+  box-shadow: var(--ln-shadow-modal), 0 0 56px rgba(63,169,255,.14);
+  animation: gate-up 360ms cubic-bezier(.16,1,.3,1);
+}
+
+.auth-gate__handle { display: flex; justify-content: center; margin-bottom: 14px; }
+
+@media (min-width: 760px) {
+  .auth-gate { align-items: center; padding: 24px; }
+  .auth-gate__panel {
+    width: min(900px, calc(100vw - 48px));
+    padding: 0;
+    border: 1px solid var(--ln-cyan-border-strong);
+    border-radius: var(--ln-r-xl);
+    box-shadow: var(--ln-shadow-modal), 0 0 56px rgba(63,169,255,.14);
+  }
+  .auth-gate__handle { display: none; }
+  .auth-gate .ln-sheet__handle-wrap { display: none; }
+}
+
+@media (max-width: 759px) {
+  .auth-gate { align-items: center; padding: var(--ln-s-4); }
+  .auth-gate__panel {
+    width: 100%;
+    max-height: calc(100dvh - 32px);
+    overflow: hidden;
+    grid-template-columns: minmax(0, .76fr) minmax(0, 1.24fr);
+    border-bottom: 1px solid var(--ln-cyan-border-strong);
+    border-radius: var(--ln-r-xl);
+  }
+  /* Keep the approved mission-control card composition at compact widths.
+     The scene and account controls remain side by side, so this breakpoint
+     changes scale and padding rather than changing the screen into a sheet. */
+  .auth-gate__handle,
+  .auth-gate .ln-sheet__handle-wrap { display: none; }
+  .auth-gate__scene { min-height: 0; border-right: 1px solid var(--ln-hairline); border-bottom: 0; }
+  .auth-gate__scene-copy { left: var(--ln-s-3); top: var(--ln-s-3); gap: var(--ln-s-1); }
+  .auth-gate__scene-title { font-size: 18px; }
+  .auth-gate__scene-status { font-size: 8px; }
+  .auth-gate__orbit--outer { width: 220px; height: 100px; left: -8%; top: 48%; }
+  .auth-gate__orbit--inner { width: 150px; height: 68px; left: 14%; top: 53%; }
+  .auth-gate__planet { width: 64px; height: 64px; left: 31%; top: 46%; }
+  .auth-gate__ship { width: 78px; left: 54%; top: 35%; }
+  .auth-gate__telemetry { left: var(--ln-s-3); bottom: var(--ln-s-3); grid-template-columns: 1fr; gap: var(--ln-s-1); font-size: 7px; }
+  .auth-gate__content { align-self: auto; padding: var(--ln-s-5) var(--ln-s-4) var(--ln-s-5); }
+  .auth-gate__heading { font-size: 26px; }
+  .auth-gate__intro { margin-bottom: var(--ln-s-3); }
+  .auth-gate__tabs { margin-bottom: var(--ln-s-3); }
+}
+
+@media (max-width: 520px) {
+  /* iOS keyboard: lift the gate above it (--gate-kb set from visualViewport) */
+  .auth-gate { bottom: var(--gate-kb, 0px); }
+  .auth-gate__panel {
+    display: block;
+    max-height: calc(100dvh - 32px - var(--gate-kb, 0px));
+    overflow-y: auto;
+  }
+  .auth-gate__scene { display: none; }
+}
+
+/* SSL-299: at a phone in landscape (844x390) the two-column card is ~551px
+   of content inside a ~342px box with overflow hidden, so Password / Confirm
+   / Create Account render below the clip edge with no scroll path — a new
+   player literally cannot sign up. The scene column is decorative; drop it
+   and let the account column scroll inside the bounded panel, the same
+   bounded-inner-scroll shape SSL-27 used for the discovery screens. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .auth-gate { align-items: center; padding: var(--ln-s-2); }
+  .auth-gate__panel {
+    display: block;
+    width: min(560px, 100%);
+    max-height: calc(100dvh - 16px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .auth-gate__scene { display: none; }
+  .auth-gate__content { align-self: auto; padding: var(--ln-s-4); }
+  .auth-gate__heading { font-size: 22px; }
+  .auth-gate__intro { margin: var(--ln-s-1) 0 var(--ln-s-2); }
+  .auth-gate__tabs { margin-bottom: var(--ln-s-2); }
+  .auth-gate__form { gap: var(--ln-s-2); }
+  .auth-gate__input { padding: var(--ln-s-3); }
+  .auth-gate__primary { padding: var(--ln-s-3); }
+}
+
+.auth-gate__scene {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(180deg, rgba(10,18,29,.12), rgba(10,18,29,.92)), url('/game/assets/backgrounds/starmap.png') center / cover;
+  border-right: 1px solid var(--ln-hairline);
+}
+
+.auth-gate__scene::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  background: linear-gradient(135deg, rgba(63,169,255,.12), transparent 42%), linear-gradient(0deg, var(--ln-void), transparent 46%);
+}
+
+.auth-gate__scene-copy { position: absolute; left: var(--ln-s-6); top: var(--ln-s-6); display: grid; gap: var(--ln-s-2); }
+.auth-gate__eyebrow, .auth-gate__scene-status, .auth-gate__telemetry { font: 700 11px var(--ln-font-display); letter-spacing: .16em; text-transform: uppercase; }
+.auth-gate__eyebrow { color: var(--ln-cyan); }
+.auth-gate__scene-title { color: var(--ln-text); font: 700 30px var(--ln-font-display); letter-spacing: .08em; }
+.auth-gate__scene-status { color: var(--ln-ok); font-size: 10px; }
+.auth-gate__scene-status i { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--ln-ok); box-shadow: 0 0 12px var(--ln-ok); }
+.auth-gate__orbit { position: absolute; border: 1px solid rgba(63,169,255,.32); border-radius: 50%; transform: rotate(-24deg); }
+.auth-gate__orbit--outer { width: 390px; height: 180px; left: 2%; top: 42%; }
+.auth-gate__orbit--inner { width: 260px; height: 120px; left: 18%; top: 48%; border-color: rgba(245,166,35,.36); }
+.auth-gate__planet { position: absolute; width: 112px; height: 112px; left: 36%; top: 44%; border-radius: 50%; background: radial-gradient(circle at 32% 28%, var(--ln-cyan-bright), var(--ln-cyan-press) 46%, var(--ln-void) 78%); box-shadow: 0 0 42px rgba(63,169,255,.32); }
+.auth-gate__ship { position: absolute; width: 130px; left: 54%; top: 33%; transform: rotate(18deg); filter: drop-shadow(0 0 14px rgba(63,169,255,.55)); }
+.auth-gate__telemetry { position: absolute; bottom: var(--ln-s-6); left: var(--ln-s-6); display: grid; grid-template-columns: auto auto; gap: var(--ln-s-2) var(--ln-s-5); color: var(--ln-text-muted); font-size: 9px; }
+.auth-gate__telemetry strong { color: var(--ln-text-dim); font-weight: 700; }
+.auth-gate__content { align-self: center; padding: var(--ln-s-7); }
+.auth-gate__heading { margin-top: var(--ln-s-2); color: var(--ln-text); font: 700 34px var(--ln-font-display); letter-spacing: -.02em; }
+.auth-gate__intro { margin: var(--ln-s-3) 0 var(--ln-s-5); color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); }
+.auth-gate__tabs { display: flex; gap: var(--ln-s-2); margin-bottom: var(--ln-s-5); }
+.auth-gate__tab { flex: 1; padding: var(--ln-s-3); color: var(--ln-text-muted); background: transparent; border: 1px solid var(--ln-hairline); border-radius: var(--ln-r-md); cursor: pointer; font: 700 12px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.auth-gate__tab.is-active { color: var(--ln-cyan); background: rgba(63,169,255,.12); border-color: var(--ln-cyan-border-strong); }
+.auth-gate__form { display: flex; flex-direction: column; gap: var(--ln-s-3); }
+.auth-gate__input { width: 100%; box-sizing: border-box; padding: var(--ln-s-4); color: var(--ln-text); background: var(--ln-void); border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-md); outline: none; font: 400 16px var(--ln-font-body); }
+.auth-gate__input:focus { border-color: var(--ln-cyan); box-shadow: 0 0 0 2px rgba(63,169,255,.14), 0 0 18px rgba(63,169,255,.12); }
+.auth-gate__input::placeholder { color: var(--ln-text-muted); }
+.auth-gate__error { padding: var(--ln-s-3); color: var(--ln-crit); background: rgba(255,90,106,.1); border: 1px solid rgba(255,90,106,.36); border-radius: var(--ln-r-md); font: 400 12px/1.4 var(--ln-font-body); }
+.auth-gate__primary { width: 100%; padding: var(--ln-s-4); margin-top: var(--ln-s-1); color: var(--ln-void); background: var(--ln-cyan); border: 0; border-radius: var(--ln-r-md); cursor: pointer; font: 800 13px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; box-shadow: 0 3px 0 rgba(0,0,0,.28); }
+.auth-gate__primary:hover { background: var(--ln-cyan-bright); }
+.auth-gate__primary:disabled { cursor: not-allowed; opacity: .55; }
+
+/* After the base auth-gate rules so compact-landscape stretch/scroll wins
+   over `.auth-gate__content { align-self: center }` and the 520px scene
+   min-height (SSL-326 / overlaps SSL-299). */
+@media (orientation: landscape) and (max-height: 500px) {
+  .auth-gate {
+    align-items: stretch;
+    padding: var(--ln-s-2);
+  }
+  .auth-gate__panel {
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+    height: calc(100dvh - 16px);
+    overflow: hidden;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  }
+  .auth-gate__scene {
+    min-height: 0;
+  }
+  .auth-gate__content {
+    align-self: stretch;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: var(--ln-s-3) var(--ln-s-4);
+  }
+  .auth-gate__content > .auth-gate__eyebrow { display: none; }
+  .auth-gate__heading { margin-top: 0; font-size: 20px; }
+  .auth-gate__intro { display: none; }
+  .auth-gate__tabs { margin-bottom: var(--ln-s-2); }
+  .auth-gate__tab { padding: var(--ln-s-2); }
+  .auth-gate__form {
+    min-height: 0;
+    overflow-y: auto;
+    flex: 1 1 auto;
+  }
+  .auth-gate__input { padding: var(--ln-s-2) var(--ln-s-3); }
+  .auth-gate__primary { padding: var(--ln-s-2) var(--ln-s-3); }
+  .auth-gate__quick {
+    flex: 0 0 auto;
+    padding-top: var(--ln-s-2);
+    margin-top: var(--ln-s-1);
+  }
+}
 
 .screen-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 76px var(--ln-s-3) var(--ln-s-5); }
 /* .screen-scroll paints no background of its own, so it normally shows
@@ -1191,10 +1204,8 @@ button { cursor: pointer; }
    current theme's own --ln-void so light-theme screens actually get a
    light background instead of inheriting the dark default. */
 .screen-scroll.theme-light { background: var(--ln-void); }
-.screen-scroll--coach { padding-top: var(--tutorial-content-top); }
-.screen-scroll--coach-manual { padding-top: var(--tutorial-manual-content-top); }
 /* .screen-scroll lives inside .game-screen-area, which already stops above
-   .bottom-tab-bar — this padding-bottom only needs to fit the base 3-button
+   the shared dock — this padding-bottom only needs to fit the base 3-button
    verdict row now, not nav clearance too. TessDiscoveryScreen/transit-demo
    add a "CLEAR MARKS" ghost button below it once a region is marked, which
    grows .sticky-actions by ~50px past that reservation and overlaps the
@@ -1678,55 +1689,6 @@ button { cursor: pointer; }
 }
 
 .mining-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-void); display: flex; flex-direction: column; }
-.mining-stage {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-}
-/* The field is edge-to-edge (viewport is absolute). The guide is a right-hand
-   dock above the floating command bar, clear of the ship at x≈80 and of
-   FIRE LASER / FILL ORDER / SCROLL. */
-.mining-guide-dock {
-  position: absolute;
-  z-index: 8;
-  top: 72px;
-  right: 12px;
-  width: min(280px, calc(100% - 168px));
-  max-height: min(168px, calc(100% - 72px - 180px));
-  margin: 0;
-  overflow: auto;
-}
-.portrait-canvas:has([data-coach-screen="mining"]) .mining-guide-dock {
-  top: 188px;
-  max-height: min(168px, calc(100% - 188px - 180px));
-}
-.mining-guide-row {
-  display: grid;
-  grid-template-columns: minmax(0, 112px) minmax(0, 1fr);
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.mining-guide-row strong {
-  color: var(--ln-cyan);
-  font: 800 10px/1.3 var(--ln-font-display);
-  letter-spacing: 0.08em;
-}
-.mining-guide-row span {
-  color: var(--ln-text-dim);
-  font: 12px/1.4 var(--ln-font-body);
-}
-.mining-guide-dock button {
-  position: sticky;
-  bottom: 0;
-  background: var(--ln-panel);
-}
-@media (min-width: 1100px) {
-  .mining-guide-dock {
-    width: min(280px, calc(100% - 168px));
-  }
-}
 .mining-viewport {
   position: relative; flex: 1; overflow: hidden; min-height: 0;
   background: radial-gradient(ellipse at 70% 10%, #12203d, transparent 50%), linear-gradient(180deg, #090e1a 0%, var(--ln-void) 60%, #000000 100%);
@@ -2002,6 +1964,32 @@ button { cursor: pointer; }
   background: transparent;
   color: var(--ln-crimson);
 }
+/* SSL-413: MiningScreen renders under theme-deep, so the blueprint-only rules
+   above never styled the recovery overlay. Scrim and buttons for the deep theme. */
+.theme-deep.mining-screen .mining-failure-overlay {
+  background: rgba(6, 10, 18, 0.9);
+  overflow-y: auto;
+}
+.theme-deep.mining-screen .mining-failure-retry,
+.theme-deep.mining-screen .mining-failure-abandon {
+  width: 100%;
+  padding: var(--ln-s-3) 0;
+  border-radius: var(--ln-r-md);
+  font: 800 11px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.theme-deep.mining-screen .mining-failure-retry {
+  border: 0;
+  background: var(--ln-cyan);
+  color: var(--ln-text-on-cyan);
+}
+.theme-deep.mining-screen .mining-failure-abandon {
+  border: 1px solid var(--ln-crimson-border);
+  background: transparent;
+  color: var(--ln-text-dim);
+}
 .theme-blueprint.mining-screen .mining-charge-warning > div {
   margin: var(--ln-s-2) var(--ln-s-4);
   padding: 6px 14px;
@@ -2066,6 +2054,17 @@ button { cursor: pointer; }
   box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.3);
   color: var(--ln-text);
 }
+/* The shared command rail stays available during a live operation, but the
+   Mining HUD owns the primary action. Reserve the rail's real footprint so
+   FIRE LASER is never visually or physically hidden behind global navigation. */
+.portrait-canvas--mining .mining-controls {
+  bottom: 68px;
+}
+@media (min-width: 1024px) {
+  .portrait-canvas--mining .mining-controls {
+    bottom: 84px;
+  }
+}
 .theme-deep.mining-screen {
   background: var(--ln-void);
 }
@@ -2107,11 +2106,55 @@ button { cursor: pointer; }
 .theme-deep.mining-screen .mining-command:active:not(:disabled) {
   background: rgba(63, 169, 255, 0.24) !important;
 }
-.theme-deep.mining-screen .mining-command:disabled {
+.theme-deep.mining-screen .mining-command:disabled,
+.theme-deep.mining-screen .mining-command[aria-disabled="true"] {
   border-color: var(--ln-hairline);
   background: rgba(18, 34, 54, 0.42) !important;
   color: var(--ln-text-muted) !important;
   cursor: not-allowed;
+}
+/* SSL-360: distinct states for the fire cooldown — CHARGING must read as
+   "busy, not broken" (pulsing border, dimmed fill) and a tap that lands mid-
+   cooldown must visibly bounce so the player knows the tap registered. */
+.theme-deep.mining-screen .mining-command--charging {
+  border-color: var(--ln-cyan-border);
+  background: rgba(63, 169, 255, 0.06) !important;
+  color: var(--ln-text-muted) !important;
+  animation: ln-mining-charge-pulse 420ms ease-in-out;
+}
+.theme-deep.mining-screen .mining-command--tap-denied {
+  animation: ln-mining-tap-denied 160ms ease-out;
+}
+@keyframes ln-mining-charge-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(63, 169, 255, 0.55) !important; }
+  100% { box-shadow: 0 0 0 6px rgba(63, 169, 255, 0) !important; }
+}
+@keyframes ln-mining-tap-denied {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+
+/* SSL-415: on a short landscape phone the bottom HUD covered the lower half of
+   the field and cut the terrain off. Dock the controls as a right-hand column
+   and give the playfield the remaining full height, so the whole terrain stays
+   inside the viewport and the controls never overlap it. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .mining-screen .mining-viewport,
+  .portrait-canvas--mining .mining-screen .mining-viewport { right: min(300px, 38vw); }
+  .mining-screen .mining-controls,
+  .portrait-canvas--mining .mining-controls {
+    left: auto;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: min(300px, 38vw);
+    overflow-y: auto;
+    border-top: 0;
+    border-left: 1px solid var(--ln-cyan-border);
+    box-shadow: -12px 0 28px rgba(0, 0, 0, 0.3);
+    padding: var(--ln-s-2) var(--ln-s-3);
+  }
 }
 
 .debrief-screen { background: var(--ln-void); }
@@ -2124,6 +2167,21 @@ button { cursor: pointer; }
 .debrief-arrival-board h2 { margin: 5px 0 2px; color: var(--ln-text); font: 800 24px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
 .debrief-arrival-board p { margin: 0; color: var(--ln-text-muted); font: 10px var(--ln-font-mono); letter-spacing: .1em; text-transform: uppercase; }
 
+.intro-screen { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.intro-earth { position: absolute; inset: 0; }
+.intro-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,10,11,0.3) 0%, rgba(10,10,11,0.7) 50%, rgba(10,10,11,0.92) 100%); }
+.intro-content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px; text-align: center; z-index: 1; }
+.intro-badge { color: var(--ln-cyan); font: 700 11px var(--ln-font-mono); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 12px; }
+.intro-logo-mark { width: 104px; height: 104px; margin: 0 0 8px; filter: drop-shadow(0 0 18px rgba(112,217,234,0.28)); }
+.intro-title { color: #fff; font: 800 52px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; text-shadow: 0 0 40px rgba(112,217,234,0.3); margin: 0 0 10px; }
+.intro-welcome { color: var(--ln-text); font: 700 16px var(--ln-font-display); letter-spacing: 0.08em; margin: 0 0 8px; }
+.intro-subtitle { color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); max-width: 280px; margin: 0 0 36px; }
+.intro-begin-btn { min-height: 44px; padding: 10px 18px; background: transparent; color: var(--ln-cyan); font-family: var(--ln-font-display); font-weight: 800; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--ln-cyan-border); border-radius: 8px; cursor: pointer; transition: background 120ms ease-out, transform 100ms; }
+.intro-begin-btn:active { transform: translateY(2px); }
+.intro-reconnecting-indicator { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 4px; }
+.intro-reconnecting-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--ln-cyan); opacity: 0.3; animation: ln-pulse 1.2s ease-in-out infinite; }
+.intro-reconnecting-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.intro-reconnecting-indicator span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes ln-pulse { 0%, 100% { opacity: 0.2; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1); } }
 
 .mission-card-btn:focus-visible { outline-color: var(--ln-cyan) !important; outline-offset: 2px !important; }
@@ -2397,9 +2455,7 @@ button { cursor: pointer; }
 
 @media (max-height: 760px) and (max-width: 1023px) {
   .screen-scroll { padding-top: 68px; }
-  .screen-scroll--coach { padding-top: var(--tutorial-content-top); }
-  .screen-scroll--coach-manual { padding-top: var(--tutorial-manual-content-top); }
-}
+    }
 
 /* Desktop: use the full viewport; navigation remains in the bottom command rail. */
 /* Desktop: the app is a centered card on the lit backdrop — the `.stage`/`.app`
@@ -2436,28 +2492,7 @@ button { cursor: pointer; }
   .sticky-actions { padding-bottom: var(--ln-s-5); }
 }
 
-/* Desktop has NO persistent global navigation — no side rail, no bottom bar.
-   Neither appears in any Open Design shell, and both ate a permanent strip of
-   the playfield. Navigation on desktop is diegetic: structures on the Earth
-   Base are the menu, the topbar carries Back, and the mission flow is driven
-   by the step footer and progression cards. `.hub-desktop-nav` adds the few
-   destinations that have no building (Market, Atlas, Skills) to the base's own
-   action rail at desktop widths.
-
-   The bottom tab bar survives only under 1024px, where there is no room for
-   the base action rail to carry navigation as well. */
-.hub-desktop-nav {
-  display: none;
-}
-
 @media (min-width: 1024px) {
-  .bottom-tab-bar {
-    display: none;
-  }
-  .hub-desktop-nav {
-    display: flex;
-  }
-
   /* The tutorial rail spans the desktop content width. Keep the optional
      ambient notification prompt in a separate lower-left slot while that
      rail is present instead of claiming the rail's reserved rectangle. */
@@ -2512,20 +2547,77 @@ button { cursor: pointer; }
   50% { opacity: 1; box-shadow: 0 0 0 5px rgba(112,217,234,0.22), 0 0 26px rgba(112,217,234,0.55); }
 }
 
-/* CSS-driven element highlighting: set data-coach-target on <html> to pulse the target.
-   Works across position:fixed boundaries — no coordinate measurement needed. */
-@keyframes coach-target-pulse {
-  0%,100% { box-shadow: 0 0 0 2px rgba(245,166,35,0.65), 0 0 10px rgba(245,166,35,0.15); }
-  50%      { box-shadow: 0 0 0 3px rgba(245,166,35,1),    0 0 28px rgba(245,166,35,0.45); }
+/* SSL-395 beacon: Flight Plan sets data-flight-target (space-separated ids) on
+   <html>; the real control pulses its own outline. Nothing is drawn on top. */
+@keyframes flight-beacon-pulse {
+  0%,100% { box-shadow: 0 0 0 2px rgba(112,217,234,0.7), 0 0 10px rgba(112,217,234,0.2); }
+  50%      { box-shadow: 0 0 0 4px rgba(112,217,234,1),   0 0 24px rgba(112,217,234,0.5); }
 }
-html[data-coach-target="bottom-tab-missions"] [data-coach-id="bottom-tab-missions"] {
-  animation: coach-target-pulse 1.4s ease-in-out infinite;
-}
-html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-strip"] {
-  animation: coach-target-pulse 1.4s ease-in-out infinite;
+html[data-flight-target~="bottom-tab-missions"] [data-beacon="bottom-tab-missions"],
+html[data-flight-target~="build-structure-strip"] [data-beacon="build-structure-strip"],
+html[data-flight-target~="building-launchpad"] [data-beacon="building-launchpad"],
+html[data-flight-target~="launchpad-view-contracts"] [data-beacon="launchpad-view-contracts"],
+html[data-flight-target~="hub-build-storage-silo"] [data-beacon="hub-build-storage-silo"],
+html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"],
+html[data-flight-target~="build-plot-0"] [data-beacon="build-plot-0"],
+html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"],
+html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] {
+  animation: flight-beacon-pulse 1.4s ease-in-out infinite;
   border-radius: 8px;
 }
+@media (prefers-reduced-motion: reduce) {
+  html[data-flight-target~="bottom-tab-missions"] [data-beacon="bottom-tab-missions"],
+  html[data-flight-target~="build-structure-strip"] [data-beacon="build-structure-strip"],
+  html[data-flight-target~="building-launchpad"] [data-beacon="building-launchpad"],
+  html[data-flight-target~="launchpad-view-contracts"] [data-beacon="launchpad-view-contracts"],
+  html[data-flight-target~="hub-build-storage-silo"] [data-beacon="hub-build-storage-silo"],
+  html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"],
+  html[data-flight-target~="build-plot-0"] [data-beacon="build-plot-0"],
+  html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"],
+  html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] { animation: none !important; box-shadow: 0 0 0 2px var(--ln-cyan) !important; }
+}
+
+/* SSL-395 Flight Plan: in-flow strip between the screen and the nav. */
+.flight-plan, .flight-plan-chip { flex: none; position: relative; z-index: 30; font-family: var(--ln-font-body); }
+.flight-plan {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 6px 10px; background: var(--ln-panel-2, #101722);
+  border-top: 1px solid var(--ln-cyan-border, rgba(112,217,234,0.4));
+  color: var(--ln-text, #e8f4ff);
+}
+.flight-plan-row { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.flight-plan-line {
+  flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: column; justify-content: center;
+  text-align: left; background: transparent; border: 0; padding: 0 4px; color: inherit; cursor: pointer;
+}
+.flight-plan-kicker { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-cyan, #70d9ea); }
+.flight-plan-action { font-size: 14px; line-height: 1.3; }
+.flight-plan-btn, .flight-plan-skip, .flight-plan-chip {
+  min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 8px; cursor: pointer;
+  background: transparent; color: var(--ln-cyan, #70d9ea); border: 1px solid var(--ln-cyan-border, rgba(112,217,234,0.4));
+  font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase;
+}
+.flight-plan-btn.is-primary { background: var(--ln-cyan, #70d9ea); color: #06121a; }
+.flight-plan-radio { padding: 0 4px 6px; display: flex; flex-direction: column; gap: 4px; }
+.flight-plan-radio p { margin: 0; font-size: 14px; line-height: 1.4; color: var(--ln-text-muted, #b4c4d8); max-width: 760px; }
+.flight-plan-radio .flight-plan-hint { color: var(--ln-cyan); }
+.flight-plan-skip { align-self: flex-start; margin-top: 4px; }
+.flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-panel-2, #101722); }
+.game-chrome-bottom__training-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 999px; background: var(--ln-cyan); }
+.game-chrome-bottom__training-chip { margin-left: 4px; font-size: 10px; color: var(--ln-cyan); }
+/* Phone widths: MENU + dot + "0/3" is wider than its slot and spilled past the
+   bar edge. The chip already carries the state, so drop the dot there. */
+@media (max-width: 600px), (max-height: 500px) {
+  .game-chrome-bottom__training-dot { display: none; }
+  .game-chrome-bottom__training-chip { margin-left: 3px; font-size: 9px; letter-spacing: 0; }
+}
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
+
+/* SSL-407: scene-local cues, not positioned coach overlays. */
+.mining-training-seam { position: absolute; z-index: 11; pointer-events: none; left: 18%; right: 18%; top: 52%; height: 10px; border-radius: 999px; background: rgba(112,217,234,0.22); box-shadow: 0 0 12px 4px rgba(112,217,234,0.38); animation: flight-beacon-pulse 1.4s ease-in-out infinite; }
+.tess-training-dip-band { position: relative; }
+.tess-training-dip-band::after { content: ''; position: absolute; pointer-events: none; z-index: 2; left: 42%; width: 14%; top: 16%; bottom: 16%; background: rgba(112,217,234,0.12); border-inline: 1px solid var(--ln-cyan-border); }
+@media (prefers-reduced-motion: reduce) { .mining-training-seam { animation: none; } }
 
 /* ── Earth Base scene (Open Design "landnam-earth-base-v2") ──────────────
    Ported 2026-07-26. Rebuilt 2026-08-21 (KES-220) into a light daylight
@@ -2935,6 +3027,21 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   white-space: nowrap;
 }
 
+.hub-orbital-network__hit {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.hub-orbital-network__hit:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: -2px; }
+.hub-orbital-network__hit--transit { top: -8px; right: 0; }
+.hub-orbital-network__hit--deep-space { bottom: -6px; left: 0; }
+button.hub-orbital-network__status { cursor: pointer; font-family: var(--ln-font-display); }
+button.hub-orbital-network__status:disabled { cursor: default; }
+
 .hub-orbital-network__status--ready { color: var(--hub-chalk); border-color: var(--hub-chalk); }
 .hub-orbital-network__dot { width: 4px; height: 4px; background: currentColor; border-radius: 50%; }
 .hub-orbital-network__ping {
@@ -3001,26 +3108,36 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 .build-place-field {
   z-index: 0;
 }
-.build-place-screen [data-coach-id="build-structure-strip"] > div {
+.build-place-screen .build-structure-strip > div {
   background: linear-gradient(180deg, transparent, rgba(10, 10, 12, 0.75) 26%, var(--ln-void) 100%);
   border-top: 1px solid var(--ln-hairline-strong);
 }
-.build-place-screen [data-coach-id="build-structure-strip"] button {
+.build-place-screen .build-structure-strip {
+  /* The picker belongs directly above the contextual confirmation dock. The
+     dock's 44px control plus its 8px/24px vertical padding is 76px; the old
+     104px reserve left a visible blank band before the in-flow Home nav. */
+  bottom: 76px !important;
+}
+.build-place-screen .build-structure-strip button {
   background: var(--ln-surface);
   border-color: var(--ln-cyan-border);
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
 }
-.build-place-screen [data-coach-id="build-structure-strip"] button:disabled {
+.build-place-screen .build-structure-strip button:disabled {
   opacity: 0.52;
 }
-.build-place-screen [data-coach-id="build-structure-strip"] button div,
-.build-place-screen [data-coach-id="build-structure-strip"] button div div {
+.build-place-screen .build-structure-strip button div,
+.build-place-screen .build-structure-strip button div div {
   color: var(--ln-text);
 }
-.build-place-screen [data-coach-id="build-structure-strip"] span:last-child {
+.build-place-screen .build-structure-strip span:last-child {
   color: var(--ln-text-dim);
 }
 .build-place-screen .sticky-actions {
+  /* The shared game chrome consumes its own flex row/rail; it does not
+     overlap this screen. Anchoring here removes the portrait and desktop
+     gap while keeping the picker above the confirmation control. */
+  bottom: 0;
   background: var(--ln-surface);
   border-top: 1px solid var(--ln-cyan-border);
 }
@@ -3053,3 +3170,16 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 /* Compact Target keeps the route notice and telemetry over the atlas instead
    of spending a vertical row on them. That makes the orbital map fill the
    same body height as the other mission steps. */
+
+/* SSL-441: short landscape viewports have no room under the docked coach card,
+   so the coached mining guide moves to the free left column instead of
+   covering the card, the ore lane and the bottom control rail. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .mining-guide-overlay--coached {
+    right: auto !important;
+    left: 16px !important;
+    top: 64px !important;
+    width: 240px !important;
+    max-height: calc(100% - 64px - 170px) !important;
+  }
+}

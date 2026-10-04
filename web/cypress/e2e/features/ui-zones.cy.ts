@@ -133,7 +133,9 @@ function assertZoneAvoids(zone: string, forbidden: string) {
 function assertTransactionalScreenZones() {
   cy.get('[data-ui-zone="bottom-actions"]').should('be.visible')
   assertKnownZonesOnly()
-  assertNoZone('bottom-nav')
+  // The Home dock is shell chrome on every screen (GameChromeBars), laid out
+  // in-flow below the screen area, so it must clear the actions, not vanish.
+  assertZoneAvoids('bottom-nav', 'bottom-actions')
   assertNoZone('ambient-prompt')
   assertNoZone('feedback-launcher')
   assertZoneAvoids('toast-stack', 'bottom-actions')
@@ -145,12 +147,15 @@ function assertTransactionalScreenZones() {
 function assertMissionSetupActionClear(actionTestId: string) {
   cy.get(`[data-testid="${actionTestId}"]`).should('be.visible')
   assertKnownZonesOnly()
-  assertNoZone('bottom-nav')
   assertNoZone('ambient-prompt')
   assertNoZone('feedback-launcher')
   cy.get(`[data-testid="${actionTestId}"]`).then($action => {
     const actionRect = $action[0].getBoundingClientRect()
     cy.document().then(doc => {
+      // The Home dock is in-flow shell chrome on every screen; it must not sit on the action.
+      doc.querySelectorAll('[data-ui-zone="bottom-nav"]').forEach(nav => {
+        expect(rectsIntersect(nav.getBoundingClientRect(), actionRect), `bottom-nav must not overlap ${actionTestId}`).to.equal(false)
+      })
       doc.querySelectorAll('[data-ui-zone="toast-stack"]').forEach(toast => {
         expect(rectsIntersect(toast.getBoundingClientRect(), actionRect), `toast-stack must not overlap ${actionTestId}`).to.equal(false)
       })
@@ -225,21 +230,24 @@ describe('UI zone contract', () => {
         })
 
         cy.get('[data-ui-zone="tutorial-rail"]').should('be.visible')
-        // Desktop (>=1024px) deliberately has no bottom tab bar — its destinations
-        // hang off the hub's own action rail instead (see `.hub-desktop-nav` /
-        // `.bottom-tab-bar { display: none }` in HubScreen.tsx / globals.css).
-        if (viewport.width >= 1024) {
-          // Present in the DOM but CSS-hidden (`.bottom-tab-bar { display: none }`
-          // at >=1024px) rather than unmounted, so assertNoZone (DOM-absence)
-          // doesn't fit here the way it does for genuinely-unrendered zones.
-          cy.get('[data-ui-zone="bottom-nav"]').should('not.be.visible')
-        } else {
-          cy.get('[data-ui-zone="bottom-nav"]').should('be.visible')
-          assertZoneAvoids('bottom-nav', 'tutorial-rail')
-        }
+        // The shared Home chrome bar is the bottom-nav zone at every width.
+        cy.get('[data-ui-zone="bottom-nav"]').should('be.visible')
+        assertZoneAvoids('bottom-nav', 'tutorial-rail')
         assertNoZone('ambient-prompt')
         assertKnownZonesOnly()
+        // The Feedback launcher yields to the Flight Plan rail while training
+        // is active (layout.tsx: showFeedback && !coach), so the two can
+        // never share the hub.
         assertNoZone('feedback-launcher')
+      })
+
+      it('shows the Feedback launcher on the Free Ops hub, clear of the dock', () => {
+        visitWithState({ screen: 'hub', tutorial: false, player: { missionsDone: 3 } })
+
+        cy.get('[data-testid="building-launchpad"]', { timeout: 15000 }).should('exist')
+        assertNoZone('tutorial-rail')
+        cy.get('[data-ui-zone="feedback-launcher"]').should('be.visible')
+        assertZoneAvoids('feedback-launcher', 'bottom-nav')
       })
 
       it('shows the Free Ops push prompt only in the desktop ambient zone', () => {
@@ -439,7 +447,7 @@ describe('UI zone contract', () => {
 
         for (const state of states) {
           visitWithState(state)
-          cy.get('[data-testid="tutorial-coach-block"]').should('be.visible')
+          cy.get('[data-testid="flight-plan"]').should('be.visible')
           assertVisibleControlsAreTopmost()
         }
       })

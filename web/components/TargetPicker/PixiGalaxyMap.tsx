@@ -13,6 +13,7 @@ const LN_CYAN  = 0x3fa9ff
 const LN_AMBER = 0xf5a623
 
 // ── Body classification ──────────────────────────────────────────────────────
+const PLANET_IDS    = new Set(['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'neptune'])
 // The belt is a region, not a Target — every body here is a real, individually
 // pickable target (see lib/data/targets.ts); this set only groups them for the
 // zoomed-in "belt view" rendering below.
@@ -465,7 +466,7 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
           onClick={goToSolar}
           style={{
             position: 'absolute',
-            top: props.hasCoach ? 74 : 10,
+            top: 10,
             left: 10,
             zIndex: 10,
             display: 'flex', alignItems: 'center', gap: 5,

@@ -11,7 +11,6 @@ import IconBadge from '@/components/ui/IconBadge'
 import SegmentedBar from '@/components/ui/SegmentedBar'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
-import MiningAimCoach, { useMiningAimCoach } from '@/components/game/MiningAimCoach'
 
 // Out There: Omega Edition bolt glyph — used inside the charge-meter IconBadge.
 // Kept local since it's a one-off HUD glyph, not a shared icon set yet.
@@ -203,7 +202,7 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, trainingMiningTry = false, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
@@ -216,6 +215,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   /** Equipped drill/laser part tier (1-3). Gates how deep ore is reachable — deeper veins tease an upgrade. */
   laserTier?: number
   hasCoach?: boolean
+  trainingMiningTry?: boolean
   coachManual?: boolean
   onCoachDone?: () => void
   /** Transient Temple-Run-style hints ("Nice shot!", "You don't need that yet") — tutorial-scoped, not the persistent coach banner. */
@@ -249,8 +249,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // required mineral(s) at only 2 of N pool entries (~33% for a single-mineral order against a
   // 6-mineral pool like Eros's), so of 30 charges — after accounting for shots that miss the
   // firing window entirely — the *expected* on-target hit count for a 5-unit single-mineral
-  // order fell meaningfully short of 5 on a below-average run, and every failed attempt wipes
-  // cargo via handleTryAgain (no partial credit), so a player could cycle failed attempts
+  // order fell meaningfully short of 5 on a below-average run, and a failed attempt
+  // used to wipe cargo (no partial credit), so a player could cycle failed attempts
   // indefinitely without ever clearing the order. Confirmed live: a 5-platinum starter-bulk
   // order on Eros stayed at 0/5 after 9000+ simulated shots (~6 real minutes) at the old budget.
   // 16x/80 gives ~2.7x the prior margin; still finite, not a difficulty-removing bump.
@@ -277,7 +277,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
   const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
   const [sceneStatus, setSceneStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
-  const aimCoach = useMiningAimCoach()
   const firedRef = useRef(false)
   const hintedFirstHitRef = useRef(false)
   const hintedWrongOreRef = useRef(false)
@@ -285,6 +284,15 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const oreNearRef = useRef<((near: boolean) => void) | null>(null)
   const [oreNear, setOreNear] = useState(false)
   oreNearRef.current = (near: boolean) => setOreNear(near)
+
+  // Fire cooldown state lives in MiningCanvas (it must gate both the button
+  // and a direct canvas tap). chargingRef mirrors it up here the same way
+  // oreNearRef mirrors ore-proximity, purely for the button's own display.
+  const chargingRef = useRef<((charging: boolean) => void) | null>(null)
+  const [isCharging, setIsCharging] = useState(false)
+  chargingRef.current = (charging: boolean) => setIsCharging(charging)
+  const [tapDenied, setTapDenied] = useState(false)
+  const tapDeniedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Kept current every render (cheap Set build) so the "fire now" flash only
   // lights up for ore whose mineral is still short of the order — not any
@@ -299,14 +307,19 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const orderFilled = Object.entries(mission.requires.minerals).every(
     ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
   )
+
   const stillNeeded = unitsStillNeeded(mission.requires.minerals, cargo)
-  // 4 charges left on a 3/5 platinum order cannot reliably land the last two
-  // hits. Recharge refills the magazine and keeps the cargo already collected.
+  // A magazine that cannot reliably cover the remaining units offers a recharge
+  // that keeps the cargo already collected (SSL-413).
   const needsRecharge = miningNeedsRecharge(laserCharges, stillNeeded)
 
   // Charges depleted without filling the order — always show recovery options, not just during coaching
   const runFailed = laserCharges === 0 && !orderFilled
   const chargesLow = !orderFilled && laserCharges > 0 && laserCharges <= LOW_CHARGE_THRESHOLD
+
+  function handleRecharge() {
+    setLaserCharges(MAX_CHARGES)
+  }
 
   function handleTryAgain() {
     cargoRef.current = {}
@@ -315,6 +328,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     firedRef.current = false
     setSceneStatus('loading')
     setRunKey(k => k + 1)
+    if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
+    setTapDenied(false)
   }
 
   const collectMineral = useCallback((mineral: string) => {
@@ -347,9 +362,17 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     }
   }, [hasCoach, addToast, mission.requires.minerals, minerals])
 
-  function fireLaser() {
+  function fireLaser(quiet = false) {
     if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
-    if (aimCoach.visible) aimCoach.dismiss()
+    if (isCharging) {
+      if (quiet) return
+      // Tap landed mid-cooldown: acknowledge it instead of silently dropping
+      // it, so a phone tester never wonders whether the tap registered.
+      if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
+      setTapDenied(true)
+      tapDeniedTimerRef.current = setTimeout(() => setTapDenied(false), 160)
+      return
+    }
     setLaserCharges(c => c - 1)
     fireRef.current?.()
     if (!firedRef.current && hasCoach) {
@@ -357,6 +380,19 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       onCoachDone?.()
     }
   }
+
+  // SSL-413: players mashed FIRE LASER every ~0.6s in 15s bursts (rageclicks).
+  // Holding the button now re-fires the moment the laser has recharged.
+  const fireLaserRef = useRef(fireLaser)
+  fireLaserRef.current = fireLaser
+  const fireHoldRef = useRef(0)
+  const endFireHold = useCallback(() => window.clearInterval(fireHoldRef.current), [])
+  const beginFireHold = useCallback(() => {
+    window.clearInterval(fireHoldRef.current)
+    fireLaserRef.current()
+    fireHoldRef.current = window.setInterval(() => fireLaserRef.current(true), 120)
+  }, [])
+  useEffect(() => endFireHold, [endFireHold])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -367,14 +403,20 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [laserCharges, sceneStatus])
+  }, [laserCharges, sceneStatus, isCharging])
 
   function handleReturn() {
-    if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
-  }
-
-  function handleRecharge() {
-    setLaserCharges(MAX_CHARGES)
+    if (orderFilled || laserCharges <= 0) {
+      onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
+      return
+    }
+    // SSL-411: a disabled RETURN swallowed taps (read as rageclicks on the
+    // bare controls panel). Stay tappable and say what is still missing.
+    const missing = Object.entries(mission.requires.minerals)
+      .map(([id, amount]) => ({ id, left: amount - (cargoRef.current[id] ?? 0) }))
+      .filter(m => m.left > 0)
+      .map(m => `${m.left} more ${minerals[m.id]?.name ?? m.id}`)
+    addToast?.(`Order not filled yet: mine ${missing.join(' and ')}`, 'warn')
   }
 
   // Local-dev-only shortcut: fills the order instantly so testing later
@@ -402,22 +444,16 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [guideOpen, setGuideOpen] = useState(false)
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
 
-  // SSL-333: open the guide once, unprompted, on the player's first-ever
-  // mining run. After that it's opt-in via the "?" button same as before.
+  // SSL-333 opened the guide once on a first mining run. The Flight Plan owns
+  // the Fire Laser training try now, so the guide remains opt-in there and
+  // never covers the seam it asks the player to watch.
   useEffect(() => {
-    // The tutorial coach already explains the shot. Opening this guide on
-    // top of it is what put both cards over the ore and the fire controls.
-    if (hasCoach) {
-      try { localStorage.setItem(HUD_GUIDE_ACK_KEY, '1') } catch { /* ignore */ }
-      return
+    if (!trainingMiningTry && !localStorage.getItem(HUD_GUIDE_ACK_KEY)) {
+      setGuideOpen(true)
+      localStorage.setItem(HUD_GUIDE_ACK_KEY, '1')
     }
-    try {
-      if (!localStorage.getItem(HUD_GUIDE_ACK_KEY)) {
-        setGuideOpen(true)
-        localStorage.setItem(HUD_GUIDE_ACK_KEY, '1')
-      }
-    } catch { /* localStorage unavailable */ }
-  }, [hasCoach])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trainingMiningTry])
 
   const isFreeOps = !mission.client
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
@@ -440,7 +476,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       : null
 
   return (
-    <div className="game-screen mining-screen theme-deep" data-has-coach={hasCoach ? 'true' : 'false'}>
+    <div className="game-screen mining-screen theme-deep">
       <TopBar
         eyebrow={`${target.name.toUpperCase()} · SURFACE`}
         title="Mining Run"
@@ -575,8 +611,48 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         ?
       </button>
 
-      {/* Guide is rendered inside .mining-stage so it takes layout space
-          instead of covering the ore field or the fire/return buttons. */}
+      {activeOverlay === 'guide' && (() => {
+        // SSL-441: with the coach card docked at the top, start the guide below it so it never covers the card or its SKIP.
+        const guideTop = hasCoach ? `calc(${coachManual ? 'var(--tutorial-manual-content-top)' : 'var(--tutorial-content-top)'} + 8px)` : '64px'
+        return (
+        // SSL-330/SSL-331: this panel used to anchor from the bottom via
+        // var(--ln-nav-h, 64px), a fallback built for a bottom nav bar. The
+        // mining screen has none; its actual bottom rail is .mining-controls,
+        // whose real height (caption, stats, progress bar, action row) runs
+        // well past 64px, so the panel's own bottom edge sat on top of the
+        // charge meter and action buttons instead of clearing them (visible
+        // live at 2026-09-23 with the default onboarding save). Anchoring
+        // from the top below TopBar, with a capped scrollable height, avoids
+        // needing to measure that variable-height rail at all, and also
+        // means a longer guide list never gets clipped with no way to see
+        // the rest of it. Wrapped in the shared Panel component (like the
+        // success/failure overlays on this same screen) instead of the old
+        // bare, unstyled div, so it reads as the same chrome as the rest of
+        // the mining HUD rather than floating text with no card behind it.
+        <aside className={`mining-guide-overlay${hasCoach ? ' mining-guide-overlay--coached' : ''}`} aria-label="Mining controls" style={{ position: 'absolute', right: 16, top: guideTop, zIndex: 70, width: 'min(360px, calc(100% - 32px))', maxHeight: `max(120px, calc(100% - ${guideTop} - 170px))`, overflowY: 'auto' }}>
+          <Panel accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
+            {miningGuide(deliveryTargetName).map(item => (
+              <div key={item.label} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', color: 'var(--ln-cyan)', whiteSpace: 'nowrap', minWidth: 90 }}>{item.label}</span>
+                <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.4 }}>{item.desc}</span>
+              </div>
+            ))}
+            <button
+              onClick={() => setGuideOpen(false)}
+              style={{
+                width: '100%', marginTop: 4, padding: '8px 0', borderRadius: 8,
+                border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
+                color: 'var(--ln-cyan)', font: '800 10px var(--ln-font-display)',
+                letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
+              }}
+            >
+              Close
+            </button>
+          </Panel>
+        </aside>
+        )
+      })()}
 
       {activeOverlay === 'success' && (
         <div className="mining-success-overlay" data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'flex', alignItems: 'flex-end', padding: 16 }}>
@@ -628,18 +704,12 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
       {/* Low-charge warning banner — fades in when running short without filling the order */}
       {activeOverlay === 'warning' && (
-        <div className="mining-charge-warning" style={{ position: 'absolute', top: hasCoach ? (coachManual ? 'var(--tutorial-manual-content-top)' : 'var(--tutorial-content-top)') : 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+        <div className="mining-charge-warning" style={{ position: 'absolute', top: 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
           <div>
-            {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — recharge to keep this cargo
+            {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining, recharge to keep this cargo
           </div>
         </div>
       )}
-
-      <div className="mining-stage">
-      {aimCoach.visible && !hasCoach && !gateOpen && activeOverlay === null && sceneStatus === 'ready' && (
-        <MiningAimCoach onDismiss={aimCoach.dismiss} />
-      )}
-
       <div className="mining-viewport">
         <div className="mining-stars" />
         <MiningCanvas
@@ -653,10 +723,12 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           onReady={() => setSceneStatus('ready')}
           onFailure={() => setSceneStatus('failed')}
           fireRef={fireRef}
+          onFireRequest={() => fireLaser()}
           scrollRef={scrollRef}
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
-          aimAssistActive={aimCoach.visible}
+          chargingRef={chargingRef}
+          trainingMiningTry={trainingMiningTry}
         />
         {sceneStatus !== 'ready' && (
           <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">
@@ -669,33 +741,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         )}
       </div>
 
-      {activeOverlay === 'guide' && (
-        <aside className="mining-guide-dock" aria-label="Mining controls">
-          <Panel accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
-            {miningGuide(deliveryTargetName).map(item => (
-              <div key={item.label} className="mining-guide-row">
-                <strong>{item.label}</strong>
-                <span>{item.desc}</span>
-              </div>
-            ))}
-            <button
-              onClick={() => setGuideOpen(false)}
-              style={{
-                width: '100%', marginTop: 4, padding: '8px 0', borderRadius: 8,
-                border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
-                color: 'var(--ln-cyan)', font: '800 10px var(--ln-font-display)',
-                letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
-              }}
-            >
-              Close
-            </button>
-          </Panel>
-        </aside>
-      )}
-      </div>
-
-      <div className="mining-controls">
+      <div className="mining-controls" data-testid="mining-controls">
         {/* Caption — clarifies the fractions below are mission-order fulfillment, not cargo capacity */}
         <div style={{
           fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700,
@@ -804,27 +850,32 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             style={{
               minWidth: 0,
               borderRadius: 10,
-              boxShadow: hasCoach && oreNear
-                ? '0 0 0 2px rgba(112,217,234,0.7), 0 0 18px rgba(112,217,234,0.35)'
-                : 'none',
-              animation: hasCoach && oreNear ? 'ln-pulse 0.75s ease-in-out infinite' : 'none',
-              transition: 'box-shadow 150ms',
             }}>
           <button
-            className="mining-command mining-command--fire"
+            className={[
+              'mining-command mining-command--fire',
+              isCharging && 'mining-command--charging',
+              tapDenied && 'mining-command--tap-denied',
+            ].filter(Boolean).join(' ')}
             type="button"
             disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
             data-testid="fire-laser-btn"
-            onClick={fireLaser}
+            data-beacon="mining-fire-laser"
+            data-charging={isCharging}
+            onPointerDown={e => { if (e.button === 0) beginFireHold() }}
+            onPointerUp={endFireHold}
+            onPointerLeave={endFireHold}
+            onPointerCancel={endFireHold}
+            onClick={e => { if (e.detail === 0) fireLaser() }}
           >
-            {laserCharges > 0 ? 'FIRE LASER' : 'DEPLETED'}
+            {laserCharges <= 0 ? 'DEPLETED' : isCharging ? 'CHARGING' : 'FIRE LASER'}
           </button>
           </div>
           <div style={{ minWidth: 0 }}>
           <button
             className="mining-command mining-command--return"
             type="button"
-            disabled={!orderFilled && laserCharges > 0 && !needsRecharge}
+            aria-disabled={(!orderFilled && laserCharges > 0 && !needsRecharge) || undefined}
             data-testid="return-home-btn"
             data-mode={needsRecharge && !orderFilled ? 'recharge' : 'return'}
             onClick={needsRecharge && !orderFilled ? handleRecharge : handleReturn}

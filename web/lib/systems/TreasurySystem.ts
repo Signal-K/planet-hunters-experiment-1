@@ -96,7 +96,7 @@ export function createTreasuryState(initialBalanceFrancs: number = 0): TreasuryS
   }
 }
 
-function treasuryHasEntry(
+export function treasuryHasEntry(
   treasury: TreasuryState,
   kind: TreasuryLedgerKind,
   referenceId: string

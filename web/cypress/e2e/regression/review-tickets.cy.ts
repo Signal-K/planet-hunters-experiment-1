@@ -79,7 +79,6 @@ function visitGame(path: string, overrides: GameStateOverride = {}) {
       win.localStorage.setItem('ln_mining_freeops_first_entry_ack', '1')
       win.localStorage.setItem('ln_mining_freeops_first_success_ack', '1')
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-      win.localStorage.setItem('landnam_tess_coach_done_v1', '1')
     },
   })
 }
@@ -119,8 +118,10 @@ describe('Parallel mission runs (replaces the STS-487 single-mission guard)', ()
   // are now independently resumable (useGameLoop onPickMission): accepting
   // another contract parks the current run instead of discarding it.
   it('parks the active run when another contract is accepted', () => {
-    visitGame('/game/hub', {
-      screen: 'hub',
+    // With a run in flight the Home bar's OPS control resumes it (RESUME), so
+    // open the mission board directly to accept a second contract.
+    visitGame('/game/missions', {
+      screen: 'missions',
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'eros',
       player: {
@@ -134,7 +135,6 @@ describe('Parallel mission runs (replaces the STS-487 single-mission guard)', ()
       },
     })
 
-    cy.get('[data-testid="bottom-tab-missions"]', { timeout: 10000 }).click()
     cy.get('[data-testid^="mission-accept-"]', { timeout: 10000 }).first().then($accept => {
       const acceptedId = $accept.attr('data-testid')!.replace('mission-accept-', '')
       cy.wrap($accept).click()
@@ -150,6 +150,50 @@ describe('Parallel mission runs (replaces the STS-487 single-mission guard)', ()
 })
 
 describe('Surface Silo placement persistence (KES-271)', () => {
+  it('keeps every build card reachable above Confirm at phone, landscape, and desktop sizes', () => {
+    const assertBuildControls = () => {
+      cy.get('[data-testid="build-structure-strip"]').should('be.visible')
+      cy.get('[data-testid="build-place-confirm"]').should('be.visible')
+      cy.get('[data-testid="build-structure-card-surface-silo"]').then($card => {
+        cy.get('[data-testid="build-place-confirm"]').then($confirm => {
+          const card = $card[0].getBoundingClientRect()
+          const confirm = $confirm[0].getBoundingClientRect()
+          expect(card.bottom, 'structure card clears Confirm').to.be.at.most(confirm.top)
+        })
+      })
+    }
+
+    for (const [width, height] of [[390, 844], [844, 390], [1440, 900]]) {
+      cy.viewport(width, height)
+      visitGame('/game/hub')
+      cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 10000 }).click()
+      cy.get('[data-testid="hub-new-structure-btn"]', { timeout: 10000 }).click()
+      cy.get('[data-testid="build-place-screen"]', { timeout: 10000 }).should('be.visible')
+      assertBuildControls()
+    }
+  })
+
+  it('keeps Earth build-card text at the 12px phone floor without clipping glyphs (SSL-400)', () => {
+    for (const [width, height] of [[390, 844], [320, 740]]) {
+      cy.viewport(width, height)
+      visitGame('/game/hub')
+      cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 10000 }).click()
+      cy.get('[data-testid="hub-new-structure-btn"]', { timeout: 10000 }).click()
+      cy.get('[data-testid="build-place-screen"]', { timeout: 10000 }).should('be.visible')
+
+      cy.get('[data-testid^="build-structure-card-name-"]').each($name => {
+        const style = getComputedStyle($name[0])
+        expect(parseFloat(style.fontSize), 'card name font size').to.be.at.least(12)
+        expect($name[0].scrollWidth, 'card name has no horizontal glyph clipping').to.be.at.most($name[0].clientWidth)
+      })
+      cy.get('[data-testid^="build-structure-card-cost-"]').each($cost => {
+        const style = getComputedStyle($cost[0])
+        expect(parseFloat(style.fontSize), 'card cost font size').to.be.at.least(12)
+        expect($cost[0].scrollWidth, 'card cost has no horizontal glyph clipping').to.be.at.most($cost[0].clientWidth)
+      })
+    }
+  })
+
   it('persists the placed silo and plot after returning to the base and reloading', () => {
     visitGame('/game/hub', {
       screen: 'hub',

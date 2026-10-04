@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 // Tests for the ?preset= URL param and the DEV panel one-shots.
@@ -10,7 +11,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   },
   {
     key: 'm1-hub',
-    assertion: () => cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible'),
+    assertion: () => assertOnHome(),
   },
   {
     // Mission setup owns one route: target, vehicle and launch review are
@@ -22,26 +23,30 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
     },
   },
   {
-    key: 'm2-hub',
+    key: 'transport-hub',
     assertion: () => {
-      cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+      assertOnHome()
     },
   },
   {
-    key: 'm2-fab',
+    key: 'transport-fab',
     assertion: () => {
       cy.location('pathname').should('eq', '/game/missions')
       cy.get('[data-testid="assembly-selected-rocket"]').should('contain', 'Prospector')
     },
   },
   {
-    key: 'm3-hub',
+    // SSL-405: the three-try Flight Plan replaced the Storage Silo lesson,
+    // so the Hub no longer offers a silo card; the Flight Plan leads instead.
+    key: 'storage-hub',
     assertion: () => {
-      cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+      assertOnHome()
+      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Open client contracts')
+      cy.get('[data-testid="hub-build-storage-silo"]').should('not.exist')
     },
   },
   {
-    key: 'm3-debrief',
+    key: 'transport-debrief',
     assertion: () => {
       cy.contains(/^debrief$/i).should('be.visible')
     },
@@ -69,7 +74,7 @@ describe('Dev preset URL param (?preset=)', () => {
       },
     })
     cy.location('pathname').should('eq', '/game/hub')
-    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+    assertOnHome()
   })
 
   it('preset param is stripped from URL after load', () => {
@@ -91,9 +96,9 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shortcuts-panel"]').should('be.visible')
     cy.get('[data-testid="dev-return-to-game"]').should('be.visible')
-    cy.get('[data-testid="dev-group-mission-1"]').should('exist')
-    cy.get('[data-testid="dev-group-mission-2"]').should('exist')
-    cy.get('[data-testid="dev-group-mission-3"]').should('exist')
+    cy.get('[data-testid="dev-group-extraction"]').should('exist')
+    cy.get('[data-testid="dev-group-transport"]').should('exist')
+    cy.get('[data-testid="dev-group-storage-silo"]').should('exist')
     cy.get('[data-testid="dev-group-first-satellite-launch"]').should('exist')
     cy.get('[data-testid^="dev-group-"]').should('have.length', 5)
   })
@@ -103,15 +108,14 @@ describe('DEV panel UI', () => {
     // M1 shots
     cy.get('[data-testid="dev-shot-m1-hub"]').should('exist')
     cy.get('[data-testid="dev-shot-m1-fab"]').should('exist')
-    // M2 shots
-    cy.get('[data-testid="dev-shot-m2-hub"]').should('exist')
-    cy.get('[data-testid="dev-shot-m2-rocket-buy"]').should('exist')
-    cy.get('[data-testid="dev-shot-m2-fab"]').should('exist')
-    // M3 shots
-    cy.get('[data-testid="dev-shot-m3-hub"]').should('exist')
-    cy.get('[data-testid="dev-shot-m3-fab"]').should('exist')
-    cy.get('[data-testid="dev-shot-m3-mining"]').should('exist')
-    cy.get('[data-testid="dev-shot-m3-debrief"]').should('exist')
+    // Transport shots
+    cy.get('[data-testid="dev-shot-transport-hub"]').should('exist')
+    cy.get('[data-testid="dev-shot-transport-fab"]').should('exist')
+    cy.get('[data-testid="dev-shot-transport-mining"]').should('exist')
+    cy.get('[data-testid="dev-shot-transport-debrief"]').should('exist')
+    // Storage Silo shots
+    cy.get('[data-testid="dev-shot-storage-hub"]').should('exist')
+    cy.get('[data-testid="dev-shot-storage-build"]').should('exist')
     // First Satellite Launch shots
     cy.get('[data-testid="dev-shot-telescope-hub"]').should('exist')
     cy.get('[data-testid="dev-shot-telescope-fab"]').should('exist')
@@ -128,44 +132,43 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-ui-academy"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-hangar-assembly"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-instrument-hub"]').should('exist')
-    // ui-tess-discovery is listed in two groups, so 28 presets render 29 buttons.
-    cy.get('[data-testid^="dev-shot-"]').should('have.length', 29)
+    // ui-tess-discovery is listed in two groups, so 26 presets render 27 buttons.
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 27)
   })
 
-  it('clicking M2 Hub navigates to hub with M2 coach, no Save Progress prompt', () => {
+  it('clicking Transport Hub lands on the Hub with the Flight Plan objective', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
-    cy.get('[data-testid="dev-shot-m2-hub"]').click()
-    cy.contains('Guided Ops · Mission 2').should('be.visible')
+    cy.get('[data-testid="dev-shot-transport-hub"]').click()
+    // SSL-405: the Flight Plan strip names the active try and its objective.
+    cy.get('[data-testid="flight-plan"]').should('be.visible')
+      .and('contain', 'Open client contracts')
+      .and('contain', 'mining')
     cy.contains('Create a free account').should('not.exist')
   })
 
-  it('clicking M2 rocket purchase shows purchasable Prospector', () => {
+  it('clicking Transport Fab shows fab screen with the Prospector staged', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
-    cy.get('[data-testid="dev-shot-m2-rocket-buy"]').click()
-    cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
-    cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'PROSPECTOR').and('not.be.disabled')
-  })
-
-  it('clicking M2 Fab shows fab screen after Prospector purchase', () => {
-    cy.get('[data-testid="dev-shortcuts-toggle"]').click()
-    cy.get('[data-testid="dev-shot-m2-fab"]').click()
+    cy.get('[data-testid="dev-shot-transport-fab"]').click()
     cy.contains('Prospector').should('be.visible')
     cy.contains('LAUNCH').should('be.visible')
   })
 
-  it('clicking M3 Hub lands back on the two-leg client pick, replaying mission 3', () => {
+  it('clicking Transport Debrief shows the two-leg mission attributed to the delivery target', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
-    cy.get('[data-testid="dev-shot-m3-hub"]').click()
-    cy.contains('Guided Ops · Mission 3').should('be.visible')
-    cy.contains('Create a free account').should('not.exist')
-  })
-
-  it('clicking M3 Debrief shows the two-leg mission attributed to the delivery target', () => {
-    cy.get('[data-testid="dev-shortcuts-toggle"]').click()
-    cy.get('[data-testid="dev-shot-m3-debrief"]').click()
+    cy.get('[data-testid="dev-shot-transport-debrief"]').click()
     // The ship returns from the delivery stop; the route chip still names the
     // mining site first (KES-352).
     cy.contains('span', 'RETURNED FROM').next().should('have.text', '4 Vesta')
+  })
+
+  it('clicking Storage Hub shows the Flight Plan and no retired silo card, with Free Ops still locked', () => {
+    cy.get('[data-testid="dev-shortcuts-toggle"]').click()
+    cy.get('[data-testid="dev-shot-storage-hub"]').click()
+    assertOnHome()
+    cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Open client contracts')
+    cy.get('[data-testid="hub-build-storage-silo"]').should('not.exist')
+    cy.get('[data-testid="tutorial-complete-sheet"]').should('not.exist')
+    cy.get('[data-testid="free-ops-activity-client-work"]').should('not.exist')
   })
 
   it('closes panel when DEV button clicked again', () => {

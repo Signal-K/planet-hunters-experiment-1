@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 import PocketBase from 'pocketbase'
-import { landnamPbUrl } from '@/lib/pb-config'
 import { withPbRetry } from '@/lib/pbRetry'
 
 export async function GET(req: NextRequest) {
@@ -18,7 +17,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const pb = new PocketBase(landnamPbUrl())
+  const pb = new PocketBase(process.env.NEXT_PUBLIC_LANDNAM_PB_URL)
   const now = Date.now()
 
   const records = await withPbRetry(() =>

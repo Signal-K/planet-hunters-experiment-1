@@ -8,7 +8,6 @@ import { LICENSE_GRADE_ORDER, LICENSE_GRADE_XP_GATES } from '@/lib/systems/Progr
 import type { LicenseGrade } from '@/lib/game-types'
 import type { SkillBranch, SkillNodeId } from '@/lib/data/skills'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
-import SkillTreeCoach, { useSkillTreeCoach } from '@/components/game/SkillTreeCoach'
 import { captureGameEvent } from '@/lib/posthog'
 import styles from './SkillTreeScreen.module.css'
 
@@ -57,7 +56,6 @@ export default function SkillTreeScreen({
   const selectedNode = SKILL_NODES.find(node => node.id === selectedNodeId) ?? SKILL_NODES[0]
   const selectedUnlocked = hasSkill(unlockedSkillNodes, selectedNode.id)
   const selectedAffordable = canUnlockSkillNode({ id: selectedNode.id, skillPoints, unlockedSkillNodes })
-  const coach = useSkillTreeCoach()
 
   function unlockNode(id: string) {
     captureGameEvent('skill_node_unlocked', { node_id: id })
@@ -76,7 +74,6 @@ export default function SkillTreeScreen({
       <div className={styles.blueprintGrid} aria-hidden="true" />
 
       <TopBar eyebrow="BASE · ACADEMY" title="Skill Tree" onBack={onBack} glass />
-      {coach.visible && <SkillTreeCoach onDismiss={coach.dismiss} />}
 
       <div data-ui-zone={UI_ZONES.screenContent} data-testid="skill-tree-content" className={styles.content}>
         <header className={styles.hero}>

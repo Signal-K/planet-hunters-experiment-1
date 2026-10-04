@@ -1,0 +1,155 @@
+name: Cypress specs (local stack)
+
+# SSL-381: runs chosen Cypress specs against a fully local stack built on the
+# runner (shared PocketBase, Landnam PocketBase, Next dev server). It never
+# touches staging or production, and needs no secrets. Cypress cannot start on
+# macOS 27, so this is the place to run the layout/nav specs.
+#
+# Runs automatically when this file or anything under web/ changes on a cycle/**
+# branch (remove the web/** path to make it opt-in), and on demand
+# once it exists on the default branch. Edit the matrix below to choose specs.
+on:
+  push:
+    branches: ["cycle/**"]
+    paths:
+      - ".github/workflows/cypress-spec.yml"
+      - "web/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cypress-spec:
+    name: Cypress on a local stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Each spec needs its own profile: a profile's specPattern excludes
+          # specs that live in another profile's folder.
+          - { profile: responsive, spec: cypress/e2e/responsive/critical-screens-matrix.cy.ts }
+          - { profile: journeys, spec: cypress/e2e/journeys/tutorial-m1.cy.ts }
+          - { profile: regression, spec: cypress/e2e/regression/hub-progression-cards.cy.ts }
+          # SSL-372: the rest of the specs repointed at the Home chrome, run
+          # under the ticket's CYPRESS_PROFILE=full.
+          - { profile: full, spec: cypress/e2e/smoke/game-loop.cy.ts }
+          - { profile: full, spec: cypress/e2e/smoke/dev-shortcuts.cy.ts }
+          - { profile: full, spec: cypress/e2e/journeys/c1-c4-viewport-matrix.cy.ts }
+          - { profile: full, spec: cypress/e2e/journeys/surface-ops-settlement.cy.ts }
+          - { profile: full, spec: cypress/e2e/journeys/takeon-visual-audit.cy.ts }
+          - { profile: full, spec: cypress/e2e/features/interaction-order.cy.ts }
+          - { profile: full, spec: cypress/e2e/features/orientation-guard.cy.ts }
+          - { profile: full, spec: cypress/e2e/features/base-trays.cy.ts }
+          - { profile: surveys, spec: cypress/e2e/features/surveys.cy.ts }
+          - { profile: full, spec: cypress/e2e/features/tutorial-rail.cy.ts }
+          - { profile: full, spec: cypress/e2e/features/ui-zones.cy.ts }
+          - { profile: full, spec: cypress/e2e/regression/bug-hunt.cy.ts }
+          - { profile: full, spec: cypress/e2e/regression/game-state-save-race.cy.ts }
+          - { profile: full, spec: cypress/e2e/regression/returning-player-entry.cy.ts }
+          - { profile: full, spec: cypress/e2e/regression/review-tickets.cy.ts }
+    env:
+      NEXT_PUBLIC_FEATURE_SCAN_STATION: "true"
+      NEXT_PUBLIC_E2E_AUTH_AUTO_CONTINUE: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download shared PocketBase
+        run: |
+          PB_VERSION=0.27.0
+          curl -fsSL \
+            "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_amd64.zip" \
+            -o /tmp/pb-shared.zip
+          unzip -q /tmp/pb-shared.zip pocketbase -d /tmp/pb-shared-bin
+
+      - name: Start shared PocketBase
+        run: |
+          mkdir -p /tmp/pb-shared-data
+          /tmp/pb-shared-bin/pocketbase serve --http=127.0.0.1:8090 --dir=/tmp/pb-shared-data &
+          sleep 3
+          /tmp/pb-shared-bin/pocketbase superuser create ci@landnam.test CiTestPassword123! \
+            --dir=/tmp/pb-shared-data 2>/dev/null || true
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: pocketbase/go.mod
+          cache-dependency-path: pocketbase/go.sum
+
+      - name: Build Landnam PocketBase
+        working-directory: pocketbase
+        run: go build -o /tmp/landnam-pb .
+
+      - name: Start Landnam PocketBase
+        run: |
+          mkdir -p /tmp/pb-landnam-data
+          /tmp/landnam-pb serve --http=127.0.0.1:8091 --dir=/tmp/pb-landnam-data &
+          sleep 3
+          /tmp/landnam-pb superuser create ci@landnam.test CiTestPassword123! \
+            --dir=/tmp/pb-landnam-data 2>/dev/null || true
+
+      - name: Wait for PocketBase health
+        run: |
+          for i in {1..20}; do
+            if curl -sf http://127.0.0.1:8090/api/health >/dev/null && curl -sf http://127.0.0.1:8091/api/health >/dev/null; then
+              echo "Both PocketBase instances ready."
+              exit 0
+            fi
+            echo "Attempt $i/20"
+            sleep 2
+          done
+          echo "PocketBase never became healthy" >&2
+          exit 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web
+        run: npm ci
+
+      - uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Run Cypress
+        id: cypress
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: web
+          browser: chrome
+          install: false
+          start: npm run dev
+          wait-on: "http://localhost:3099"
+          wait-on-timeout: 120
+          spec: ${{ matrix.spec }}
+        env:
+          CYPRESS_PROFILE: ${{ matrix.profile }}
+          CYPRESS_baseUrl: http://localhost:3099
+          NEXT_PUBLIC_LANDNAM_PB_URL: http://127.0.0.1:8091
+          NEXT_PUBLIC_SHARED_PB_URL: http://127.0.0.1:8090
+          PORT: 3099
+          CI: true
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-spec-screenshots-${{ matrix.profile }}-${{ github.sha }}
+          path: web/cypress/screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload videos
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-spec-videos-${{ matrix.profile }}-${{ github.sha }}
+          path: web/cypress/videos/
+          if-no-files-found: ignore
+          retention-days: 7

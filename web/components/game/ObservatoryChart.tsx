@@ -13,13 +13,12 @@
  *   pointermove  → draw live selection rectangle between anchor and cursor
  *   pointerup    → commit the range [x1, x2] via onRange(x1, x2)
  *   tap (< 6px drag) on an existing range → remove it via onRemoveRange(index)
- *   tap anywhere else → mark a narrow range around the tap (SSL-359)
  */
 
 import { useEffect, useRef } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
-import type { LightcurvePoint } from '@/lib/data/tess-candidates'
+import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
 import type { TransitRange } from '@/lib/data'
 
 // Warm nebula sky, dialed back on blue: the flux scatter reads as pale
@@ -42,7 +41,7 @@ const DOT_HI     = 0xf5a623  // deep dip — amber
  * SSL-301: a fixed 3-decimal formatter on an auto Y domain produced runs of
  * identical tick labels ("1.000, 1.000, 1.000") whenever the flux span was
  * under a few millimag. Pick the smallest precision (3..6 dp) at which every
- * tick's label is distinct.
+ * tick's label is distinct, mirroring lightcurveYTicks in LightcurvePlot.tsx.
  */
 function yTickDecimals(ticks: number[]): number {
   for (let decimals = 3; decimals <= 6; decimals++) {
@@ -72,9 +71,6 @@ function mulberry32(seed: number): () => number {
 }
 
 const PAD_LEFT = 44, PAD_RIGHT = 10, PAD_TOP = 10, PAD_BOT = 26
-
-// Half-width, in canvas pixels, of the range a single tap marks.
-const TAP_MARK_HALF_PX = 12
 
 export interface ObservatoryChartProps {
   points:        LightcurvePoint[]
@@ -168,17 +164,7 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
       if (deltaPx < 6) {
         const tapX = dataForX(dragAnchorPx, xMin, xMax, plotW)
         const idx = rangesRef.current.findIndex(r => tapX >= Math.min(r.x1, r.x2) && tapX <= Math.max(r.x1, r.x2))
-        if (idx !== -1) {
-          onRemoveRef.current(idx)
-        } else {
-          // SSL-359: a tap on the dip marks it, so a phone player does not
-          // have to learn the drag first. The mark is a narrow window around
-          // the tap; dragging still sets an exact width.
-          onRangeRef.current(
-            dataForX(dragAnchorPx - TAP_MARK_HALF_PX, xMin, xMax, plotW),
-            dataForX(dragAnchorPx + TAP_MARK_HALF_PX, xMin, xMax, plotW),
-          )
-        }
+        if (idx !== -1) onRemoveRef.current(idx)
         selG.clear()
         return
       }

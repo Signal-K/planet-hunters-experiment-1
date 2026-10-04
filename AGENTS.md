@@ -5,20 +5,17 @@
 
 - Commit only after a coherent ticket outcome or acceptance slice is implemented and verified; never use checkpoint, progress, one-file, or speculative commits.
 - From the Landnam repository root, inspect `git status --short`, run appropriate checks, stage the complete task with `git add .`, then review `git diff --cached` and `git status --short`. Preserve and disclose unrelated user-owned work instead of staging it.
-- Every subject must be `🚀🐺 ↝ [KES-299 ATL-999]: Commit message`: two different non-flag, non-smiley/human-face emoji; exact arrow and spacing; every worked ticket key in one space-separated bracket pair including the active Linear key; concise achieved outcome.
+- Every subject must be `🚀🐺 ↝ [KES-299 ATL-999]: Commit message`: two different non-flag, non-smiley/human-face emoji; exact arrow and spacing; every worked ticket key in one space-separated bracket pair including the active Linear key; concise achieved outcome. Do not reuse the same emojis
 - A coding request authorizes the final task commit unless the user says not to commit. Never bypass the hook with `--no-verify`.
 
-## Linear-first agent workflow
 
-**Linear is the project-management system for Landnam.** Resolve or create the relevant Linear issue before changing code, keep its status current, and add implementation evidence before finishing. Historical `KES-` references may be included alongside the active Linear key.
-
-ZenNotes in the parent Navigation workspace is the source of truth for durable decisions and specifications; Linear issues should link to it rather than duplicating it.
+ZenNotes in the parent Navigation workspace is the source of truth for durable decisions and specifications; Linear tickets should link to it rather than duplicating it.
 
 > **Canonical guidance**: Read this file plus the applicable ZenNotes decision in the parent Navigation workspace before changing product or game logic.
 
 ## Product context
 
-Landnam has no local decision store. Read applicable ZenNotes decisions in the parent Navigation workspace before changing product or game logic; use Craft only for planning and feedback context associated with a Linear issue.
+Landnam has no local decision store. Read applicable ZenNotes decisions in the parent Navigation workspace before changing product or game logic; use Craft only for planning and feedback context associated with a Linear ticket.
 
 ## Repo Layout
 
@@ -64,7 +61,7 @@ Design rules (never violate):
 - No emoji. Status = shape + color + label
 - UPPERCASE + letter-spacing for all instrument labels and CTAs
 - Hairlines: ghosted cyan at 18% alpha (`--ln-hairline`)
-- **Theme is split by surface type, not global.** Operations screens (Launchpad, Mining HUD, Transit, Debrief, live Mission Board contract list) use the dark command-deck theme (`.theme-deep`, the default). Reference/guide/market/menu-style surfaces (e.g. `MarketScreen`, `HangarScreen`, `MissionHistoryScreen`) use the light editorial theme (`.theme-light`) — background/surface/text go light, `--ln-cyan`/`--ln-amber` stay as accents. This is not a user-facing toggle. See `workspace/decisions/landnam-light-theme-for-reference-and-menu-surfaces.md` for full rationale.
+- **Theme is split by surface type, not global.** Operations screens (Launchpad, Mining HUD, Transit, Debrief, live Mission Board contract list) use the dark command-deck theme (`.theme-deep`, the default). Reference/guide/market/menu-style surfaces (e.g. `ClientBonusGuideSheet`) use the light editorial theme (`.theme-light`) — background/surface/text go light, `--ln-cyan`/`--ln-amber` stay as accents. This is not a user-facing toggle. See `workspace/decisions/landnam-light-theme-for-reference-and-menu-surfaces.md` for full rationale.
 - **Scene-first gate for gameplay mechanics.** An operations screen must start from an illustrated/rendered place and make its primary action a contextual object or attached instrument in that place. Do not make a card grid, generic “available actions” stack, or white/blueprint shell the default route to a mechanic. Keep only a compact command rail for secondary navigation; cards are for reference and menu surfaces. `npm run verify:scene-surfaces` enforces the retired blueprint-theme and generic-action-panel bans for gameplay screens.
 - **Full design language reference**: `workspace/projects/landnam/decisions/landnam-ui-design-language-style-prompt.md` (ZenNotes) is the canonical doc — complete `--ln-*` color token table, texture/rendering preferences (chunky cel-shaded faceted flat color, no grain/noise/scanline), game-style references (Crashlands, Tiny Space Program, Out There: Omega), and the component vocabulary. Read it before any visual/UI design work — this direction changed twice in three days (2026-07-22 → 2026-07-23), so don't trust a cached summary of it, including this one; check the doc and `web/app/globals.css`'s `:root` comment directly.
 - **One dark-navy palette everywhere** (Mining, Transit, launch sequence, Mission Board, Target Picker, Rocket Purchase, Debrief all use `.theme-deep`) — an earlier mid-tone "steel/light-card" direction for Mission Board/Target Picker/Rocket Purchase (STS-494, decided 2026-07-22) was tried in code and **explicitly reverted 2026-07-23** for looking washed-out/illegible; don't reintroduce it. `.theme-light` (STS-413) remains separate, for reference/guide/market surfaces only.
@@ -116,8 +113,7 @@ PocketBase superuser (both): `liam@skinetics.tech` / `ThisIsATestPassword`
 | `web/lib/data.ts` | Static game data: missions, targets, parts, MINERAL_META |
 | `web/lib/catalog.ts` | PocketBase catalog fetch + static fallback |
 | `web/app/game/page.tsx` | Game entry point |
-| `web/app/game/(main)/layout.tsx` | App shell (chrome, coach, popups) |
-| `web/components/game/GameScreenRouter.tsx` | Screen router |
+| `web/components/game/GameApp.tsx` | Screen router |
 
 ## Progression model (MVP)
 

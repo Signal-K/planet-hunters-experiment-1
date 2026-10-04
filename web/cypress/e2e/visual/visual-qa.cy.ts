@@ -97,10 +97,7 @@ function skipAuthGateIfShown() {
 }
 
 function navToMissions() {
-  // SSL-35: Home has no Missions tab or dock button. Contracts open from the
-  // Launchpad building, the same path the M1 coach points at on every viewport.
-  cy.get('[data-testid="building-launchpad"]').should('be.visible').click()
-  cy.get('[data-testid="launchpad-new-mission-contracts-btn"]', { timeout: 10000 }).should('be.visible').click()
+  cy.get('[data-testid="home-bar-ops"]').should('be.visible').click()
 }
 
 function jumpToCompletedDebrief(cargo: Record<string, number>) {
@@ -128,12 +125,6 @@ describe('Visual QA — game screens and mining canvas', () => {
   // cleanup races async app.init(). Suppress — the visual content is unaffected.
   Cypress.on('uncaught:exception', (err) => {
     if (err.message.includes('_cancelResize')) return false
-    // Cypress's in-page load listener can resume a React commit that was
-    // waiting on a stylesheet after React already committed it (the stack
-    // runs through $Cypress.pause into react-dom's completeRootWhenReady).
-    // Seen only under Cypress on a cold /game/hub visit, never in a plain
-    // browser, and the retried attempt renders the same screen.
-    if (err.message.includes('Cannot commit the same tree as before')) return false
     return true
   })
   // ── 1. Full M1 playthrough with screenshots at every screen ────────────────
@@ -153,9 +144,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     // The app always mounts a hidden portrait-guard dialog whose copy starts
     // with "LANDNAM OPERATIONS". Scope this assertion to the actual intro
     // title so the hidden guard cannot win Cypress's text lookup in portrait.
-    // SSL-35: the intro is the Landing flow; a signed-in fresh save shows the
-    // wordmark heading with Start new game.
-    cy.get('[data-layout="landing"] h1', { timeout: 12000 }).should('be.visible').and('have.text', 'LANDNAM')
+    cy.get('[data-testid="intro-title"]', { timeout: 12000 }).should('be.visible').and('have.text', 'LANDNAM')
     cy.screenshot('01-intro-screen')
 
     // Begin → hub setup
@@ -169,7 +158,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.contains('button', 'Confirm · Build Here').click()
 
     // Hub with launchpad
-    cy.get('[data-testid="home-top-bar"]', { timeout: 10000 }).should('be.visible')
+    cy.get('h1', { timeout: 10000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('04-hub-launchpad-placed')
 
@@ -238,12 +227,13 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).should('be.visible').click()
     cy.get('[data-testid="collect-reward-btn"]', { timeout: 10000 }).should('be.visible').click()
 
-    // Guided M2 handoff
-    cy.contains('Guided Ops · Mission 2', { timeout: 10000 }).should('be.visible')
+    // Guided Transport handoff (SSL-332: mission 2 is the two-stop haul)
+    cy.contains('Tap the Launchpad', { timeout: 10000 }).should('be.visible')
+    cy.contains(/^transport$/i).should('be.visible')
     // Wait for the destination scene, not only the coach overlay. This keeps
     // the visual checkpoint honest when the Hub route is still settling after
     // the debrief transition (KES-167/KES-186).
-    cy.get('[data-testid="home-top-bar"]', { timeout: 10000 }).should('be.visible')
+    cy.get('h1', { timeout: 10000 }).invoke('text').should('match', /^(Base|Earth Base)$/)
     cy.get('[data-testid="hub-terrain-fallback"]').should('exist')
     cy.screenshot('12-hub-post-mission')
 
@@ -283,8 +273,11 @@ describe('Visual QA — game screens and mining canvas', () => {
       .invoke('prop', 'height')
       .should('be.gt', 0)
 
-    // Fire all 5 laser charges — some will miss → flash overlay activates.
-    // 5 is the energy cap; firing more makes the button disabled.
+    // Fire up to 5 laser charges — some will miss → flash overlay activates.
+    // 5 is the energy cap. SSL-360 added a ~420ms fire cooldown, so most of
+    // these clicks land mid-cooldown and are acknowledged-but-ignored rather
+    // than actually firing — that's fine here, this only needs one real shot
+    // to exercise the canvas's flash overlays, not five.
     for (let i = 0; i < 5; i++) {
       cy.get('[data-testid="fire-laser-btn"]').should('not.be.disabled').click()
       cy.wait(100)
@@ -366,7 +359,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     })
 
     skipAuthGateIfShown()
-    cy.get('[data-testid="home-top-bar"]', { timeout: 12000 }).should('be.visible')
+    cy.get('h1', { timeout: 12000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
     cy.get('[data-testid="settings-button"]').should('be.visible').and('not.be.disabled')
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('hub-launchpad-visible')

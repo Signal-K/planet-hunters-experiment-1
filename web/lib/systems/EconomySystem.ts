@@ -7,9 +7,11 @@ import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { structureIsStaffed } from './AcademySystem'
+import type { DailyEconomySnapshot } from './DailyEconomySystem'
+import { freeOperationsUnlocked } from './AgencyOnboardingSystem'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
-
+export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
 // Market price fluctuates based on supply — selling excess repeatedly causes
 // a price dip, capped so a mineral never sells for less than 40% of its
 // (already 80%-discounted) reference price.
@@ -156,7 +158,7 @@ export function storedUnits(stash: Record<string, number> | undefined): number {
  *  crediting francs and applying supply pressure per mineral — the same path a
  *  manual Commodity Exchange sale takes, run once per mineral in the set. Used
  *  when a self-directed haul (or a silo overflow) is sold on return. */
-function applySellHaul(s: GameState, haul: Record<string, number>, now: number = Date.now()): GameState {
+export function applySellHaul(s: GameState, haul: Record<string, number>, now: number = Date.now()): GameState {
   let next = s
   for (const [id, amount] of Object.entries(haul)) {
     if (amount > 0) next = applySellMinerals(next, id, amount, now, null)
@@ -167,7 +169,7 @@ function applySellHaul(s: GameState, haul: Record<string, number>, now: number =
 /** Pick which of a haul's units spill when a silo is over capacity: cheapest ore
  *  first, so the player keeps the valuable ore and only common ore is sold off.
  *  Never returns more units than the haul contains. */
-function pickOverflowFromHaul(haul: Record<string, number>, overflow: number): Record<string, number> {
+export function pickOverflowFromHaul(haul: Record<string, number>, overflow: number): Record<string, number> {
   if (overflow <= 0) return {}
   const byCheapest = Object.entries(haul)
     .filter(([, n]) => n > 0)
@@ -438,29 +440,31 @@ export function applyRocketStageRecovery(s: GameState, rocket: RocketModel): Gam
 export function applyPlaceStructure(s: GameState, structure: StructureBlueprint | undefined, kind: string, plot: number): GameState {
   if (!structure || structure.kind !== kind) return s
   if (s.player.placed.includes(kind)) return s
-  // The tutorial's own order is enforced here; after it, only cost limits a build.
-  if (!structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations })) return s
+  if (kind === 'astronaut-academy' && !s.player.academyResearched) return s
+  if (!structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations, missionsDone: s.player.missionsDone, academyResearched: s.player.academyResearched })) return s
   if (s.player.francs < structure.cost) return s
   if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
   const stash = { ...(s.player.stash ?? {}) }
   for (const [mineral, amount] of Object.entries(structure.costMaterials ?? {})) {
     stash[mineral] = Math.max(0, (stash[mineral] ?? 0) - amount)
   }
+  const placed = Array.from(new Set([...s.player.placed, kind]))
+  // SSL-332: placing the storage silo is the last training step. The tick it
+  // opens Free Ops ends the coach and raises the Free Ops handoff sheet.
+  const enteredFreeOperations = !s.player.freeOperations
+    && freeOperationsUnlocked({ missionsDone: s.player.missionsDone, placed })
   return {
     ...s,
+    ...(enteredFreeOperations ? { tutorial: false, popup: 'tutorial-complete' } : {}),
     player: {
       ...s.player,
+      ...(enteredFreeOperations ? { freeOperations: true } : {}),
       francs: s.player.francs - structure.cost,
       stash,
-      placed: Array.from(new Set([...s.player.placed, kind])),
+      placed,
       placementPlots: { ...s.player.placementPlots, [kind]: plot },
       underConstruction: { ...s.player.underConstruction, [kind]: Date.now() },
       refineryBuilt: kind === 'refinery' ? true : s.player.refineryBuilt,
-      deepSpaceTelescopeBuilt: kind === 'deep-space-telescope' ? true : s.player.deepSpaceTelescopeBuilt,
-      deepSpaceTelescopeLevel: kind === 'deep-space-telescope'
-        ? Math.max(1, s.player.deepSpaceTelescopeLevel ?? 1)
-        : s.player.deepSpaceTelescopeLevel,
-      deepSpaceTelescopeLaunchedAt: kind === 'deep-space-telescope' ? Date.now() : s.player.deepSpaceTelescopeLaunchedAt,
       academyFunded: kind === 'astronaut-academy' ? true : s.player.academyFunded,
       crewUpkeepSettledDate: kind === 'astronaut-academy'
         ? new Date().toISOString().slice(0, 10)

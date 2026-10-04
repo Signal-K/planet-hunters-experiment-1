@@ -23,8 +23,11 @@ describe('GalaxyMap', () => {
     expect(markup).toContain('data-testid="target-bennu"')
     expect(markup).toContain('viewBox="72 72 496 496"')
     expect(markup).toContain('>SUN</text>')
-    expect(markup).toContain('Solar system · target range')
     expect(markup).toContain('Bennu')
-    expect(markup).toContain('min-height:clamp(240px, 45vh, 520px)')
+    // The chart fills whatever field it is given; the setup stage owns the
+    // title, filter copy and selection summary.
+    expect(markup).toContain('preserveAspectRatio="xMidYMid meet"')
+    expect(markup).not.toContain('Solar system · target range')
+    expect(markup).not.toContain('SELECTED · ORBIT')
   })
 })

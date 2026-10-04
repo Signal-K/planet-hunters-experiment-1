@@ -99,7 +99,7 @@ export const SHIP_ROOM_DETAIL_ASSETS: Record<ShipRoomKind, string> = {
   lander: '/game/assets/rooms/lander_t1.png',
 }
 
-const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
+export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
   explorer: {
     rocketId: 'explorer',
     exteriorSrc: ROCKET_ASSETS.explorer.exterior,

@@ -300,6 +300,7 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
 
   return (
     <PageSurface
+      tray
       className="theme-deep"
       zIndex={210}
       contentTestId="friends-page"
@@ -307,6 +308,9 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
         background: 'transparent',
         padding: 0,
         overflow: 'hidden',
+        // SSL-419: ScenePanel is absolutely positioned; without a definite
+        // height the tray card collapses to 0 and the sheet renders off-screen.
+        height: '100%',
       }}
     >
       <ScenePanel ambient="survey" scene={<HubWorldBackground phase={skyPhase} />}>

@@ -1,18 +1,12 @@
-// KES-128: the Deep Space Telescope previously unlocked its build slot off a
-// bare numeric threshold (deepSpaceTelescopeUnlocked — SMS lvl2 + a client at
-// affinity lvl2) with no mission and no coach, unlike the Transit Telescope's
-// story-mission on-ramp + ObservatoryCoach treatment. This spec covers the
-// story-deep-space-telescope-survey mission on-ramp and the
-// AsteroidDiscoveryCoach. Since the unlock gates were removed, the survey
-// mission no longer gates the build slot: in Free Ops the telescope is
-// limited only by cost.
+// SSL-392: Deep Space Telescope is an owned orbital payload, not an Earth
+// structure. A Free Operations player must be able to choose and launch it
+// directly from the Launchpad without Transit Telescope or client progression.
 
 import type { GameState } from '@/game-context'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
-const COACH_KEY = 'landnam_asteroid_discovery_coach_seen_v1'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -69,20 +63,17 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
   })
 }
 
-function openBuildFromHub(playerOverrides: Partial<GameState['player']> = {}) {
-  // Build is guarded for an already-populated Free Ops base; this fixture is
-  // intentionally an empty build scene so the catalog can be inspected.
-  visitWithState('/game/build', 'build', {
-    placed: [],
-    placementPlots: {},
-    ...playerOverrides,
-  })
-}
-
-describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
-  it('offers the survey mission at Launchpad once the SMS/affinity threshold is met', () => {
+describe('Deep Space Telescope launch on-ramp (SSL-392)', () => {
+  it('offers Deep Space Telescope next to Transit Telescope and enters its launch flow without either telescope or client progression', () => {
+    cy.viewport(390, 844)
     visitWithState('/game/launchpad', 'launchpad', {
-      clientMissions: { 'earthbound-minerals': 10 },
+      placed: ['launchpad'],
+      placementPlots: { launchpad: 0 },
+      transitSatelliteLaunchedAt: null,
+      transitSatelliteLevel: undefined,
+      deepSpaceTelescopeBuilt: false,
+      deepSpaceTelescopeLaunchedAt: null,
+      clientMissions: {},
     })
     cy.get('[data-testid="launchpad-new-mission-btn"]', { timeout: 10000 }).click()
     cy.get('[data-testid="launchpad-new-mission-satellite-btn"]', { timeout: 10000 })
@@ -91,46 +82,14 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
     cy.get('[data-testid="launchpad-new-mission-satellite-btn"]').click()
     cy.get('[data-testid="launchpad-prepare-instrument-btn"]', { timeout: 10000 })
       .should('be.visible')
-      .and('contain.text', 'Survey')
-  })
-
-  it('does not offer the survey mission below the SMS/affinity threshold', () => {
-    visitWithState('/game/launchpad', 'launchpad', {
-      clientMissions: {},
-    })
-    cy.contains('Deep Space Telescope').should('not.exist')
-  })
-
-  // Unlock gates were removed: after the tutorial every Base structure is
-  // limited only by cost, so the survey mission no longer gates the slot.
-  it('offers Deep Space Telescope at Build/Place in Free Ops before the survey mission', () => {
-    openBuildFromHub({
-      clientMissions: {},
-      deepSpaceTelescopeMissionCompletedAt: null,
-      stash: { aluminium: 100, copper: 100, silicon: 100 },
-    })
-    cy.wait(1500)
-    cy.contains('button', 'Deep Space Telescope', { timeout: 10000 })
+      .and('contain.text', 'Launch Transit Telescope')
+    cy.get('[data-testid="launchpad-prepare-instrument-deep-space-telescope"]')
       .scrollIntoView()
       .should('be.visible')
-      .and('not.have.attr', 'aria-disabled', 'true')
-      .and('not.contain.text', 'Transit telescope level 2')
-  })
-
-  it('unlocks Deep Space Telescope at Build/Place once the survey mission is completed', () => {
-    openBuildFromHub({
-      clientMissions: { 'earthbound-minerals': 10 },
-      deepSpaceTelescopeMissionCompletedAt: Date.now(),
-      stash: { aluminium: 100, copper: 100, silicon: 100 },
-    })
-    // The catalog re-renders once the async fetch settles (falls back to
-    // STATIC_CATALOG against this offline profile), which can detach and
-    // replace this button mid-chain. Give it a beat before asserting.
-    cy.wait(1500)
-    cy.contains('button', 'Deep Space Telescope', { timeout: 10000 })
-      .scrollIntoView()
-      .should('be.visible')
-      .and('not.be.disabled')
+      .and('contain.text', 'Launch Deep Space Telescope')
+    cy.screenshot('ssl-392-instrument-choices')
+    cy.get('[data-testid="launchpad-prepare-instrument-deep-space-telescope"]').click()
+    cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
   })
 })
 
@@ -156,44 +115,9 @@ function interceptCandidates() {
   }).as('asteroidCandidates')
 }
 
-describe('AsteroidDiscoveryCoach (KES-128)', () => {
-  it('shows the coach on first visit once the telescope is built, walks all 3 steps, then persists dismissal', () => {
-    interceptCandidates()
-    visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
-      deepSpaceTelescopeBuilt: true,
-      deepSpaceTelescopeMissionCompletedAt: Date.now(),
-    })
-
-    cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="asteroid-discovery-coach"]').should('be.visible')
-    cy.contains('A REAL UNCONFIRMED OBJECT FEED').should('be.visible')
-    cy.get('[data-testid="asteroid-discovery-coach-next"]').click()
-    cy.contains('READ THE SKY POSITION').should('be.visible')
-    cy.get('[data-testid="asteroid-discovery-coach-next"]').click()
-    cy.contains('FLAG, MARK, OR SKIP').should('be.visible')
-    cy.get('[data-testid="asteroid-discovery-coach-next"]').click()
-    cy.get('[data-testid="asteroid-discovery-coach"]').should('not.exist')
-    cy.window().then(win => {
-      expect(win.localStorage.getItem(COACH_KEY)).to.eq('1')
-    })
-  })
-
-  it('does not show the coach again on a second visit once dismissed', () => {
-    interceptCandidates()
-    visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
-      deepSpaceTelescopeBuilt: true,
-      deepSpaceTelescopeMissionCompletedAt: Date.now(),
-    })
-    cy.window().then(win => win.localStorage.setItem(COACH_KEY, '1'))
-    cy.visit('/game/asteroid-discovery')
-    cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="asteroid-discovery-coach"]').should('not.exist')
-  })
-})
-
 // KES-342: compact-landscape rendered regression. The old AsteroidDiscoveryCoach
 // absolutely-positioned itself over the top of the screen; these confirm the
-// coach reserves its own space instead, that the new truthful sky-position
+// that the new truthful sky-position
 // visualization renders with the real candidate fields, and that verdict
 // actions stay reachable at a real touch size through to the saved state.
 const LANDSCAPE_VIEWPORTS = [
@@ -203,41 +127,13 @@ const LANDSCAPE_VIEWPORTS = [
 
 describe('Asteroid Discovery compact-landscape visualization (KES-342)', () => {
   LANDSCAPE_VIEWPORTS.forEach(({ key, width, height }) => {
-    it(`[${key}] renders the sky plot from real candidate fields, coach visible and dismissed`, () => {
-      cy.viewport(width, height)
-      interceptCandidates()
-      visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
-        deepSpaceTelescopeBuilt: true,
-        deepSpaceTelescopeMissionCompletedAt: Date.now(),
-      })
-
-      cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
-      cy.get('[data-testid="asteroid-discovery-coach"]').should('be.visible')
-      cy.get('[data-testid="asteroid-sky-plot"]').should('be.visible')
-        .and('contain.text', MOCK_CANDIDATE.ra.toFixed(4))
-        .and('contain.text', MOCK_CANDIDATE.decl.toFixed(4))
-      // Verdict buttons stay attached and real touch size even while the
-      // coach is up — it must never cover them.
-      cy.get('[data-testid="neocp-verdict-likely_real"]').should('be.visible').then($btn => {
-        // The touch target is the border box; jQuery height() drops padding
-        // and border.
-        expect($btn.outerHeight()).to.be.at.least(44)
-      })
-
-      cy.get('[data-testid="asteroid-discovery-coach-skip"]').click()
-      cy.get('[data-testid="asteroid-discovery-coach"]').should('not.exist')
-      cy.get('[data-testid="asteroid-sky-plot"]').should('be.visible')
-      cy.screenshot(`asteroid-discovery-${key}-coach-dismissed`)
-    })
-
     it(`[${key}] reduces to the primary readouts by default, with the rest behind More Data`, () => {
       cy.viewport(width, height)
       interceptCandidates()
       visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
         deepSpaceTelescopeBuilt: true,
-        deepSpaceTelescopeMissionCompletedAt: Date.now(),
+        deepSpaceTelescopeLaunchedAt: Date.now(),
       })
-      cy.window().then(win => win.localStorage.setItem(COACH_KEY, '1'))
       cy.visit('/game/asteroid-discovery')
       cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
       // Compact landscape scrolls the readout column; reachable is the contract.
@@ -252,9 +148,8 @@ describe('Asteroid Discovery compact-landscape visualization (KES-342)', () => {
       interceptCandidates()
       visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
         deepSpaceTelescopeBuilt: true,
-        deepSpaceTelescopeMissionCompletedAt: Date.now(),
+        deepSpaceTelescopeLaunchedAt: Date.now(),
       })
-      cy.window().then(win => win.localStorage.setItem(COACH_KEY, '1'))
       cy.visit('/game/asteroid-discovery')
       cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
       cy.get('[data-testid="neocp-verdict-likely_artifact"]').click()

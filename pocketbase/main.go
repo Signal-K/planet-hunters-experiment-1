@@ -44,6 +44,7 @@ func main() {
 	})
 
 	registerLandnamAuthExchange(app, sharedAuth)
+	registerLandnamOwnerAlerts(app)
 	registerFriendsRoutes(app)
 	registerCommunityRoutes(app)
 	registerTreasuryRoutes(app)
@@ -1322,7 +1323,9 @@ func seedCatalog(app core.App) {
 	}
 	missionSeeds := []missionSeed{
 		{"m1-iron", "Iron Reserve Order", "Client Slot 03A needs a starter iron shipment from a reachable asteroid.", "contractor-03a", "starter-bulk", "", 1, 6, 10, false, map[string]float64{"iron": 6}},
-		{"m2-silicon", "Silicon Bulk Order", "Client Slot 03B needs raw silicon for electronics-grade supply contracts.", "contractor-03b", "volatile-bulk", "Complete M1", 2, 8, 8, false, map[string]float64{"silicon": 8}},
+		// m2-silicon (the M2 Prospector bulk order) is retired: since SSL-332
+		// onboarding mission 2 is the authored Transport lesson, and the web
+		// catalog drops any PocketBase row at that sequence.
 	}
 	templateBySlug := map[string]missionTemplate{}
 	for _, t := range templates {

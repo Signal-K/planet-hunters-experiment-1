@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 import PocketBase from 'pocketbase'
-import { landnamPbUrl } from '@/lib/pb-config'
 
 export async function POST(req: NextRequest) {
   webpush.setVapidDetails(
@@ -14,7 +13,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'title and body required' }, { status: 400 })
   }
 
-  const pb = new PocketBase(landnamPbUrl())
+  const pb = new PocketBase(process.env.NEXT_PUBLIC_LANDNAM_PB_URL)
 
   const filter = userId ? `user_id = "${userId}"` : 'endpoint != ""'
   const records = await pb.collection('push_subscriptions').getFullList({ filter })

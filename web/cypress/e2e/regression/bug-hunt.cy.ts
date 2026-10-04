@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 /**
  * Bug-hunt: edge cases and break scenarios from manual-play simulation.
  * Each test targets a realistic failure mode that basic smoke tests miss.
@@ -16,7 +17,7 @@ const HUB_TITLE = /^(Base|Earth Base)$/
  *  the contract board from there the way a player does. */
 function openContracts() {
   cy.contains('h1', HUB_TITLE, { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="bottom-tab-missions"]').click()
+  cy.get('[data-testid="home-bar-ops"]').click()
   cy.get(CONTRACT_STEP, { timeout: 8000 }).should('be.visible')
 }
 
@@ -114,7 +115,7 @@ describe('Bug hunt — edge cases', () => {
     teardownVehicle()
     // Nothing is paid for an incomplete order, but the player can still leave.
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible').click()
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 8000 }).should('be.visible')
+    assertOnHome(8000)
   })
 
   // ─── 2. Loan system: player in debt clears it from debrief payout ────────────
@@ -138,7 +139,7 @@ describe('Bug hunt — edge cases', () => {
     })
     teardownVehicle()
     cy.get('[data-testid="collect-reward-btn"]').click()
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 8000 }).should('be.visible')
+    assertOnHome(8000)
     // Should not crash and state should not have negative francs
     cy.window().then(win => {
       const state = JSON.parse(win.localStorage.getItem(ACCOUNT_STORAGE_KEY) || '{}') as GameState
@@ -157,7 +158,7 @@ describe('Bug hunt — edge cases', () => {
         doneSteps: { 1: true, 2: true, 3: true },
       }) }),
     })
-    cy.get('[data-testid="tutorial-coach-overlay"]', { timeout: 8000 }).should('be.visible')
+    cy.get('[data-testid="flight-plan"]', { timeout: 8000 }).should('be.visible')
     cy.get('[data-testid="launch-btn"]').should('be.visible').and('not.be.disabled')
   })
 
@@ -241,7 +242,7 @@ describe('Bug hunt — edge cases', () => {
     cy.contains('MISSION TRANSIT', { timeout: 8000 }).should('be.visible')
     cy.get('[data-testid="top-bar-back"]').click()
     // Back from transit goes to hub (player can re-enter missions from there — no softlock)
-    cy.get('[data-testid="bottom-tab-missions"]', { timeout: 8000 }).should('be.visible')
+    cy.get('[data-testid="home-bar-ops"]', { timeout: 8000 }).should('be.visible')
   })
 
   // ─── 8. Duplicate mission pick (tap twice quickly) ───────────────────────────

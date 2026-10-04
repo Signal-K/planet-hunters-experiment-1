@@ -4,10 +4,9 @@
 // two real player-facing surfaces:
 //   1. Surface Ops "FIELD" tab (SurfaceOpsScreen.tsx) — post-onboarding,
 //      gated on freeOperations + hasLanded + site access purchased.
-//   2. The M3 tutorial delivery leg's manual cargo-dump scene
-//      (DeliveryScreen.tsx, useTakeonDropoff — only rendered when
-//      player.missionsDone === 2).
-// Neither had any Cypress coverage before this file: the existing
+// The current product scope is the post-onboarding Surface Ops FIELD scene.
+// The retired M3 delivery leg is deliberately not an acceptance target.
+// Neither had Cypress coverage before this file: the existing
 // surface-ops-settlement.cy.ts journey never leaves the default "LOGISTICS"
 // tab, and no spec anywhere seeds missionsDone: 2 into /game/delivery. Both
 // screenshots below are the first real evidence of what the vendored takeon
@@ -22,9 +21,7 @@
 // test below is the reproducible geometry check that finding asked for.
 
 import type { GameState } from '@/game-context'
-import { seedFixtureSession } from '../../support/authenticated-fixture'
-
-const STORAGE_KEY = 'landnam-game-state-v1'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -66,14 +63,26 @@ function visitWithState(path: string, state: Partial<GameState>) {
     ...state,
   } as GameState
 
+  const tokenPayload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }))
+  const e2eToken = `e30.${tokenPayload}.test`
+  // Override the generic offline failure stubs: this routed-screen fixture
+  // needs auth restoration to settle successfully before the URL synchroniser
+  // applies /game/surface-ops to the account-scoped state.
+  cy.intercept('POST', '**/api/collections/users/auth-refresh', {
+    statusCode: 200,
+    body: { token: e2eToken, record: { id: 'e2e-fixture-user', email: 'e2e-fixture-user@example.com' } },
+  })
+  cy.intercept('POST', '**/api/landnam-auth/exchange', {
+    statusCode: 200,
+    body: { token: e2eToken, record: { id: 'e2e-fixture-user' } },
+  })
+
   cy.visit(path, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      // Bypasses the auth gate the same way mine-then-deliver-flow.cy.ts
-      // does — the offline auth stub in cypress/support/e2e.ts always
-      // resolves to this guest identity regardless of the credentials'
-      // actual values.
-      seedFixtureSession(win)
+      // The live route shell reads the account-scoped save slot. A synthetic
+      // PocketBase session alone can pass the entry gate yet resume to Hub,
+      // leaving this test to inspect the wrong surface.
+      seedAuthenticatedFixture(win, full)
     },
   })
 }
@@ -81,8 +90,8 @@ function visitWithState(path: string, state: Partial<GameState>) {
 describe('Takeon visual audit: actual rendered gameplay, not just presence', () => {
   it('renders the Takeon rover canvas in Surface Ops FIELD view', () => {
     cy.viewport(1280, 900)
-    visitWithState('/game/surface-ops', {
-      screen: 'surface-ops',
+    visitWithState('/game/hub', {
+      screen: 'hub',
       player: basePlayer({
         freeOperations: true,
         hasLanded: true,
@@ -101,6 +110,7 @@ describe('Takeon visual audit: actual rendered gameplay, not just presence', () 
       }),
     } as Partial<GameState>)
 
+    cy.get('[data-testid="hub-surface-ops"]', { timeout: 15000 }).should('be.visible').click({ force: true })
     cy.get('[data-testid="surface-purchase-access"]', { timeout: 15000 }).should('not.exist')
     cy.contains('button[role="tab"]', 'FIELD', { timeout: 15000 }).should('not.be.disabled').click()
     cy.contains('button', 'Deploy Prospector', { timeout: 15000 }).click()
@@ -124,8 +134,8 @@ describe('Takeon visual audit: actual rendered gameplay, not just presence', () 
 
   it('keeps the Surface Ops FIELD canvas within the first mobile viewport (KES-202)', () => {
     cy.viewport(390, 844)
-    visitWithState('/game/surface-ops', {
-      screen: 'surface-ops',
+    visitWithState('/game/hub', {
+      screen: 'hub',
       player: basePlayer({
         freeOperations: true,
         hasLanded: true,
@@ -141,6 +151,7 @@ describe('Takeon visual audit: actual rendered gameplay, not just presence', () 
       }),
     } as Partial<GameState>)
 
+    cy.get('[data-testid="hub-surface-ops"]', { timeout: 15000 }).should('be.visible').click({ force: true })
     cy.get('[data-testid="surface-purchase-access"]', { timeout: 15000 }).should('not.exist')
     cy.contains('button[role="tab"]', 'FIELD', { timeout: 15000 }).should('not.be.disabled').click()
     cy.contains('button', 'Deploy Prospector', { timeout: 15000 }).click()
@@ -157,33 +168,17 @@ describe('Takeon visual audit: actual rendered gameplay, not just presence', () 
           expect(top, 'canvas top offset, no scroll').to.be.lessThan(win.innerHeight - 160)
         })
     })
+    cy.get('[data-testid="sandbox-palette-toggle"]', { timeout: 15000 }).click()
+    cy.get('[data-testid="sandbox-palette"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="sandbox-palette"] [data-testid="sandbox-recipe-name"]').each($name => {
+      const style = getComputedStyle($name[0])
+      expect(parseFloat(style.fontSize), 'off-world card name font size').to.be.at.least(12)
+      expect($name[0].scrollWidth, 'off-world card name has no horizontal glyph clipping').to.be.at.most($name[0].clientWidth)
+    })
     cy.wait(1500)
     cy.screenshot('takeon-surface-ops-field-view-mobile')
   })
 
-  it('renders the Takeon dropoff scene during the M3 tutorial delivery leg', () => {
-    cy.viewport(390, 844)
-    visitWithState('/game/delivery', {
-      screen: 'delivery',
-      missionId: 'lnm_m3_relay_bennu_vesta',
-      targetId: 'bennu',
-      deliveryTargetId: 'vesta',
-      lastCargo: { iron: 3, carbon: 2 },
-      player: basePlayer({
-        missionsDone: 2,
-        activeMission: { id: 'lnm_m3_relay_bennu_vesta', label: 'Two-Stop Route' },
-        missionPhase: 'delivery',
-        headingToDelivery: true,
-        returningToEarth: false,
-      }),
-    } as Partial<GameState>)
-
-    cy.get('[data-testid="delivery-screen"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="delivery-screen"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="delivery-dump-cargo"]', { timeout: 15000 }).should('be.visible')
-    cy.wait(1500)
-    cy.screenshot('takeon-m3-delivery-dropoff')
-  })
 })
 
 export {}

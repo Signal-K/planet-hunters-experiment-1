@@ -43,7 +43,7 @@ export function resolveIngestEnv(env: NodeJS.ProcessEnv = process.env): IngestEn
   }
 }
 
-function ingestLimitsFromEnv(env: IngestEnv): IngestLimits {
+export function ingestLimitsFromEnv(env: IngestEnv): IngestLimits {
   return {
     tess: Number.isFinite(env.tessLimit) && (env.tessLimit ?? 0) > 0 ? Number(env.tessLimit) : DEFAULT_INGEST_LIMITS.tess,
     neocp: Number.isFinite(env.neocpLimit) && (env.neocpLimit ?? 0) > 0 ? Number(env.neocpLimit) : DEFAULT_INGEST_LIMITS.neocp,
@@ -83,7 +83,7 @@ function mapExistingAsteroids(records: Array<Record<string, unknown>>): Existing
   })).filter(row => row.tempDesig)
 }
 
-async function loadSharedPool(pb: PocketBase): Promise<IngestPool> {
+export async function loadSharedPool(pb: PocketBase): Promise<IngestPool> {
   const [tess, asteroids] = await Promise.all([
     pb.collection(TESS_SUBJECTS_COLLECTION).getFullList({ sort: 'id', requestKey: null }),
     pb.collection(ASTEROID_CANDIDATES_COLLECTION).getFullList({ sort: '-created', requestKey: null }),

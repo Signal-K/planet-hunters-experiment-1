@@ -11,11 +11,12 @@
 
 import type { StructureBlueprint, TargetStructureBlueprint } from './types'
 import { STRUCTURES, REFINERY_RECIPES } from './structures'
-import { TARGET_STRUCTURES } from './target-structures'
+import { visibleTargetStructures } from './target-structures'
 import { SUBSURFACE_ROOMS } from './subsurface'
 import { ROCKET_COMPOSITIONS } from './rocket-composition'
 import { ROCKET_MODELS } from './rockets'
 import { SETTLEMENT_LAUNCHPAD } from './surface-ops'
+import { isOffworldBuildVisible, type OffworldBuildCategory } from '../featureFlags'
 
 export type CraftingCategory =
   | 'sandbox-structure'
@@ -51,6 +52,8 @@ export interface CraftingRecipe {
   output?: { kind: 'refined' | 'rocket-part'; id: string; amount: number }
   /** Decorative field structures have no function beyond layout/wayfinding. */
   decorative?: boolean
+  /** Scope category for structures built away from Earth. */
+  offworldCategory?: OffworldBuildCategory
 }
 
 /**
@@ -76,6 +79,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     takeonType: 'road',
     placeable: true,
     decorative: true,
+    offworldCategory: 'mining',
   },
   {
     id: 'field-beacon',
@@ -88,6 +92,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     takeonType: 'beacon',
     placeable: true,
     decorative: true,
+    offworldCategory: 'exploration',
   },
   {
     id: 'field-cache',
@@ -99,6 +104,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     producedAt: 'field',
     takeonType: 'cache',
     placeable: true,
+    offworldCategory: 'mining',
   },
   {
     id: 'field-solar-array',
@@ -110,6 +116,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     producedAt: 'field',
     takeonType: 'solar-array',
     placeable: true,
+    offworldCategory: 'mining',
   },
   {
     id: 'field-drill-rig',
@@ -121,6 +128,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     producedAt: 'field',
     takeonType: 'drill-rig',
     placeable: true,
+    offworldCategory: 'mining',
   },
   {
     id: 'field-generator',
@@ -132,6 +140,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     producedAt: 'field',
     takeonType: 'generator',
     placeable: true,
+    offworldCategory: 'mining',
   },
   {
     id: 'field-pylon',
@@ -143,6 +152,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     producedAt: 'field',
     takeonType: 'pylon',
     placeable: true,
+    offworldCategory: 'mining',
   },
   {
     id: 'field-refinery',
@@ -154,6 +164,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     producedAt: 'field',
     takeonType: 'refinery',
     placeable: true,
+    offworldCategory: 'mining',
   },
   {
     id: 'field-factory',
@@ -165,6 +176,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     producedAt: 'field',
     takeonType: 'factory',
     placeable: true,
+    offworldCategory: 'mining',
   },
   {
     id: 'field-silo',
@@ -176,6 +188,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     producedAt: 'field',
     takeonType: 'silo',
     placeable: true,
+    offworldCategory: 'mining',
   },
   {
     id: 'field-habitat-frame',
@@ -187,6 +200,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     producedAt: 'field',
     takeonType: 'habitat-frame',
     placeable: true,
+    offworldCategory: 'settlements',
   },
   {
     id: 'field-launch-pad',
@@ -199,6 +213,7 @@ export const SANDBOX_STRUCTURE_RECIPES: readonly CraftingRecipe[] = [
     takeonType: 'launch-pad',
     placeable: true,
     buildTimeMs: SETTLEMENT_LAUNCHPAD.buildTimeMs,
+    offworldCategory: 'mining',
   },
 ]
 
@@ -270,6 +285,7 @@ function fromTargetStructure(s: TargetStructureBlueprint): CraftingRecipe {
     producedAt: s.clientRole === 'self' ? 'field' : 'client',
     placeable: true,
     buildTimeMs: s.buildTimeMs,
+    offworldCategory: s.offworldCategory,
   }
 }
 
@@ -326,11 +342,11 @@ const VEHICLE_RECIPES: readonly CraftingRecipe[] = ROCKET_MODELS.filter(m => !m.
 
 /** Every recipe in the game, in Market display order. */
 export const CRAFTING_RECIPES: readonly CraftingRecipe[] = [
-  ...SANDBOX_STRUCTURE_RECIPES,
+  ...visibleSandboxStructureRecipes(),
   ...FACTORY_RECIPES,
   ...STRUCTURES.map(fromEarthStructure),
   ...SUBSURFACE_RECIPES,
-  ...TARGET_STRUCTURES.map(fromTargetStructure),
+  ...visibleTargetStructures().map(fromTargetStructure),
   ...REFINED_GOOD_RECIPES,
   ...ROCKET_COMPONENT_RECIPES,
   ...VEHICLE_RECIPES,
@@ -364,6 +380,15 @@ export function craftingRecipeById(id: string): CraftingRecipe | undefined {
 
 export function craftingRecipeForTakeonType(takeonType: string): CraftingRecipe | undefined {
   return SANDBOX_STRUCTURE_RECIPES.find(r => r.takeonType === takeonType)
+}
+
+/** Field drawer options for the current Cycle 3 mining-only scope. */
+export function visibleSandboxStructureRecipes(includeNonMining?: boolean): CraftingRecipe[] {
+  return SANDBOX_STRUCTURE_RECIPES.filter(recipe =>
+    recipe.takeonType != null
+    && recipe.offworldCategory != null
+    && isOffworldBuildVisible(recipe.offworldCategory, includeNonMining),
+  )
 }
 
 export interface CraftingAffordability {

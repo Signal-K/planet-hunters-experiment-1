@@ -50,7 +50,7 @@ export function canVisitorAct(action: VisitorAction, relation: ViewerRelation, v
 }
 
 /** What a viewer of a given relation can see of another player's work. */
-function visibleTo(relation: ViewerRelation, visibility: ShareVisibility): boolean {
+export function visibleTo(relation: ViewerRelation, visibility: ShareVisibility): boolean {
   return allowedVisitorActions(relation, visibility).includes('view')
 }
 
@@ -104,7 +104,8 @@ export interface ShareComment {
 }
 
 export const SHARE_TITLE_MAX = 64
-const SHARE_SUMMARY_MAX = 280
+export const SHARE_SUMMARY_MAX = 280
+export const SHARE_COMMENT_MAX = 500
 
 // ── Moderation ─────────────────────────────────────────────────────────────
 

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { partitionByOwner, rocketModelAvailable, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
+import { partitionByOwner, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
 import type { Mission } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
@@ -67,12 +67,12 @@ function MiningGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18h14M7 18l2-7h6l2 7M10 11V7h4v4M8 7h8M12 4v3" /></svg>
 }
 
-function OperationBrief({ kind, instrument, mining, builds, player, catalog, onPick, onBack, onOpenSiloBuild }: { kind: 'instrument' | 'mining' | 'build'; instrument?: Mission; mining?: Mission; builds: Mission[]; player: Player; catalog: Catalog; onPick: (id: string, freeHaulDisposition?: 'store' | 'sell') => void; onBack: () => void; onOpenSiloBuild?: () => void }) {
+function OperationBrief({ kind, instruments, mining, builds, player, catalog, onPick, onBack, onOpenSiloBuild }: { kind: 'instrument' | 'mining' | 'build'; instruments: Mission[]; mining?: Mission; builds: Mission[]; player: Player; catalog: Catalog; onPick: (id: string, freeHaulDisposition?: 'store' | 'sell') => void; onBack: () => void; onOpenSiloBuild?: () => void }) {
   const hasStorage = earthStorageBuilt(player)
   const market = Object.entries(catalog.minerals).sort(([, a], [, b]) => b.price - a.price).slice(0, 4)
   return <div className="launchpad-operation-brief" data-testid={`launchpad-operation-brief-${kind}`}>
     <button type="button" className="launchpad-mission-menu-close" onClick={onBack}>BACK</button>
-    {kind === 'instrument' && <><span className="launchpad-guide-kicker">OWN INFRASTRUCTURE / INSTRUMENT</span><h2>Launch an instrument</h2><p>An owned telescope stays in orbit after launch. It unlocks an instrument feed at Base; it is not a client contract and it does not consume a mining slot.</p>{instrument ? <button type="button" className="launchpad-mission-choice" data-testid="launchpad-prepare-instrument-btn" onClick={() => onPick(instrument.id)}><SatelliteGlyph /><strong>{instrument.title}</strong><span>{instrument.programReward?.outcome ?? instrument.brief}</span></button> : <p className="launchpad-operation-brief__muted">Your current instrument is online. Its orbital status indicator shows when a data review is ready; another instrument unlocks only when its stated prerequisite is met.</p>}</>}
+    {kind === 'instrument' && <><span className="launchpad-guide-kicker">OWN INFRASTRUCTURE / INSTRUMENT</span><h2>Launch an instrument</h2><p>An owned telescope stays in orbit after launch. It unlocks an instrument feed at Base; it is not a client contract and it does not consume a mining slot.</p>{instruments.length ? <div className="launchpad-operation-brief__choices">{instruments.map(instrument => <button type="button" key={instrument.id} className="launchpad-mission-choice" data-testid={instrument.payload?.instrumentId === 'transit-telescope' ? 'launchpad-prepare-instrument-btn' : `launchpad-prepare-instrument-${instrument.payload?.instrumentId ?? instrument.id}`} onClick={() => onPick(instrument.id)}><SatelliteGlyph /><strong>{instrument.title}</strong><span>{instrument.programReward?.outcome ?? instrument.brief}</span></button>)}</div> : <p className="launchpad-operation-brief__muted">Your current instruments are online. Their orbital status indicators show when a data review is ready.</p>}</>}
     {kind === 'mining' && <><span className="launchpad-guide-kicker">FREE OPS / OWN HAUL</span><h2>Plan a mining run</h2><p>Choose the destination for the haul before selecting a target and rocket. This run belongs to your program: no client claim and no daily limit.</p><div className="launchpad-operation-brief__choices"><button type="button" className="launchpad-mission-choice" data-testid="launchpad-mining-sell-btn" disabled={!mining} onClick={() => mining && onPick(mining.id, 'sell')}><MiningGlyph /><strong>SELL ON EARTH RETURN</strong><span>Exchange the complete haul immediately at the shown market price.</span></button><button type="button" className="launchpad-mission-choice" data-testid="launchpad-mining-store-btn" disabled={!mining || !hasStorage} onClick={() => mining && hasStorage && onPick(mining.id, 'store')}><InfrastructureGlyph /><strong>STORE IN SILO</strong><span>{hasStorage ? 'Keep ore for construction, fabrication, or a better market window.' : 'Requires an Earth Mineral Vault or Surface Silo.'}</span></button></div>{!hasStorage && onOpenSiloBuild && <button type="button" className="launchpad-operation-brief__link" data-testid="launchpad-build-silo-link" onClick={onOpenSiloBuild}>BUILD A SILO AT BASE</button>}<div className="launchpad-operation-brief__market"><span className="launchpad-guide-kicker">COMMODITY EXCHANGE / MAJOR MINERALS</span><div className="launchpad-operation-brief__prices">{market.map(([id, mineral]) => { const quote = player.dailyEconomySnapshot?.prices[id]; const movement = quote ? Math.round((quote.multiplier - 1) * 100) : 0; return <div key={id}><small>{mineral.name}</small><strong>₣{sellUnitPrice(id, player).price}/U</strong><span data-direction={movement >= 0 ? 'up' : 'down'}>{movement >= 0 ? '+' : ''}{movement}% TODAY</span></div> })}</div></div></>}
     {kind === 'build' && <><span className="launchpad-guide-kicker">OWN INFRASTRUCTURE</span><h2>Build something yourself</h2><p>You get your own work area on any planet — no competing for a plot. Mars is ready now; Mercury and Venus are yours too, once the thermal and pressure kit they need is fitted. Asteroids work differently: you buy or lease rights there before building.</p><p className="launchpad-operation-brief__muted">A mining settlement is a standing claim, not a one-off haul — once it&apos;s up, every later run to that body skips re-scouting and feeds the same local silo and refinery instead of hauling raw ore all the way back to Earth each time.</p><div className="launchpad-operation-brief__builds">{builds.map(mission => <button type="button" key={mission.id} className="launchpad-mission-choice" data-testid={`launchpad-build-${mission.id}`} onClick={() => onPick(mission.id)}><InfrastructureGlyph /><strong>{mission.title}</strong><span>{mission.programReward?.outcome ?? mission.brief}</span></button>)}</div></>}
   </div>
@@ -108,7 +108,6 @@ export default function LaunchpadScreen({
   const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   const [operationBrief, setOperationBrief] = useState<'instrument' | 'mining' | 'build' | null>(null)
-  const [showAllOperations, setShowAllOperations] = useState(false)
   const externallyControlled = onMissionMenuOpenChange !== undefined
   // Keep a local open signal as well as the app-level signal. The physical pad
   // is the primary control; an auth/catalog refresh can briefly replay the
@@ -121,20 +120,17 @@ export default function LaunchpadScreen({
     setMissionMenuOpen(open)
     onMissionMenuOpenChange?.(open)
   }
-  const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: rocketModelAvailable(model, missionsDone) }))
+  const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
   const unlockedFleet = fleet.filter(item => item.unlocked)
-  const launchedSatellites = player.transitSatelliteLaunchedAt ? SATELLITE_MODELS.length : 0
+  const launchedSatellites = [
+    player.transitSatelliteLaunchedAt,
+    player.deepSpaceTelescopeLaunchedAt || player.deepSpaceTelescopeBuilt || player.placed.includes('deep-space-telescope'),
+  ].filter(Boolean).length
   const { own } = partitionByOwner(catalog.missions, mission => mission)
   const sequence = missionsDone + 1
-  // `freeOperations` is derived from missionsDone during state hydration. Use
-  // the progression threshold here as well so a freshly hydrated fixture (or
-  // a legacy save carrying the stale boolean) cannot disable the owned mining
-  // control after the player has already completed the active onboarding.
-  const hasFreeOpsAccess = freeOperations || missionsDone >= 3
-  const focusSet = new Set(player.programFocuses ?? [])
-  const hasProgramFocus = focusSet.size > 0
-  const focusVisible = (focus: 'client-contracts' | 'mining' | 'instruments' | 'construction') =>
-    showAllOperations || !hasProgramFocus || focusSet.has(focus)
+  // `freeOperations` is derived during state hydration (SSL-332: guided
+  // missions plus a storage silo, or a legacy save past the old onboarding).
+  const hasFreeOpsAccess = freeOperations
   const operations = own.filter(mission => hasFreeOpsAccess || mission.sequence === sequence)
   const pickOperation = (id: string, freeHaulDisposition?: 'store' | 'sell') => {
     captureGameEvent('launchpad_operation_picked', { mission_id: id, disposition: freeHaulDisposition ?? null })
@@ -151,7 +147,7 @@ export default function LaunchpadScreen({
       difficulty: 'L2' as const,
       locked: false,
       sequence: sequence,
-      unlockAt: 'Complete M3',
+      unlockAt: 'Reach Free Operations',
       requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 4, drill_tier: 2, max_orbit: 8 },
       payout: { francs: 0, affinity: 0 },
     } satisfies Mission : undefined)
@@ -159,7 +155,7 @@ export default function LaunchpadScreen({
   // fall back to a construction mission when no telescope/remote-instrument
   // operation is currently offered, so the CTA never makes a newly available
   // telescope look like a generic Earth Base build job.
-  const infrastructureOperation = operations.find(mission => mission.payload?.type === 'satellite'
+  const infrastructureOperations = operations.filter(mission => mission.payload?.type === 'satellite'
       || mission.payload?.type === 'deep-space-survey')
   // The refinery only makes sense once there's ore flowing into it: gate it
   // behind an already-delivered silo and mining settlement rather than
@@ -256,7 +252,7 @@ export default function LaunchpadScreen({
             straight to Contracts pre-Free-Ops (see openMissionMenu above) —
             there is no separate "View All Contracts" button to ring at that
             stage, only this pad. The ring silently never appeared. */}
-        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" data-coach-id="launchpad-view-contracts" data-action="primary-mission" onClick={openMissionMenu} aria-label={padActionLabel}>
+        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" data-beacon="launchpad-view-contracts" data-action="primary-mission" onClick={openMissionMenu} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>
             <LaunchpadModules />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
@@ -296,19 +292,17 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-satellite-btn"
-                hidden={!focusVisible('instruments')}
-                disabled={!infrastructureOperation}
+                disabled={!infrastructureOperations.length}
                 onClick={() => setOperationBrief('instrument')}
               >
                 <SatelliteGlyph />
                 <strong>LAUNCH SATELLITE / TOOL</strong>
-                <span>{infrastructureOperation ? 'Deploy an instrument that keeps working for your program.' : 'No owned instrument launch is queued yet.'}</span>
+                <span>{infrastructureOperations.length ? 'Deploy an instrument that keeps working for your program.' : 'No owned instrument launch is queued yet.'}</span>
               </button>
               <button
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-mining-btn"
-                hidden={!focusVisible('mining')}
                 disabled={!ownMiningOperation}
                 onClick={() => setOperationBrief('mining')}
               >
@@ -320,7 +314,6 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-build-btn"
-                hidden={!focusVisible('construction')}
                 disabled={!buildOperation}
                 onClick={() => setOperationBrief('build')}
               >
@@ -332,7 +325,6 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-contracts-btn"
-                hidden={!focusVisible('client-contracts')}
                 onClick={onViewContracts}
               >
                 <MissionGlyph />
@@ -351,12 +343,7 @@ export default function LaunchpadScreen({
                   <span>{resourceFocusOperation.title}. Configuration is ready; choose a highlighted source and dispatch.</span>
                 </button>
               )}
-              {hasProgramFocus && (
-                <button type="button" className="launchpad-show-all-operations" onClick={() => setShowAllOperations(value => !value)}>
-                  {showAllOperations ? 'SHOW MY SUBSCRIPTIONS' : 'SHOW ALL OPERATIONS'}
-                </button>
-              )}
-            </div> : <OperationBrief kind={operationBrief} instrument={infrastructureOperation} mining={ownMiningOperation} builds={buildOperations} player={player} catalog={catalog} onPick={pickOperation} onBack={() => setOperationBrief(null)} onOpenSiloBuild={onOpenSiloBuild} />}
+            </div> : <OperationBrief kind={operationBrief} instruments={infrastructureOperations} mining={ownMiningOperation} builds={buildOperations} player={player} catalog={catalog} onPick={pickOperation} onBack={() => setOperationBrief(null)} onOpenSiloBuild={onOpenSiloBuild} />}
           </section>
         )}
 

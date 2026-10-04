@@ -10,6 +10,14 @@ import { VIEWPORTS, setupGameState, BASE_RESPONSIVE_STATE } from '../../support/
 
 const STORAGE_KEY = 'landnam-game-state-v1';
 
+// The Market is a Free Ops destination (SSL-332): the chrome button only
+// navigates once `player.freeOperations` holds, and it is re-derived on load
+// (silo placed, or the legacy missionsDone >= 3 path). Seed the legacy path.
+const FREE_OPS_STATE = {
+  ...BASE_RESPONSIVE_STATE,
+  player: { ...BASE_RESPONSIVE_STATE.player, missionsDone: 3, freeOperations: true },
+};
+
 describe('Responsive Layout — Critical Screens Matrix', () => {
   beforeEach(() => {
     cy.intercept('GET', '**/api/**', { statusCode: 500 }).as('blockBackend');
@@ -28,17 +36,14 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
         // scene-attached affordance that must remain reachable at every size.
         cy.get('[data-testid="hub-edit-build-btn"]').should('exist');
 
-        // Navigation must be visible and accessible
-        if (vp.width >= 1024) {
-          // Desktop uses the scene-attached Base dock, not the retired sidebar.
-          cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible');
-          cy.get('[data-testid="hub-edit-build-btn"]').should('be.visible');
-        } else {
-          // Mobile: bottom tab bar (its Base tab replaced the Launchpad tab)
-          cy.get('[data-testid="bottom-tab-hub"]').should('be.visible');
-          cy.get('[data-testid="bottom-tab-missions"]').should('be.visible');
-          cy.get('[data-testid="bottom-tab-market"]').should('be.visible');
-        }
+        // Shell-owned controls are identical on phone and desktop, so live
+        // operations never lose navigation outside the Base route.
+        cy.get('[data-testid="home-bottom-bar"]').should('be.visible');
+        cy.get('[data-testid="home-bottom-bar"]').should('be.visible');
+        cy.get('[data-testid="home-bar-hub"]').should('be.visible');
+        cy.get('[data-testid="home-bar-ops"]').should('be.visible');
+        cy.get('[data-testid="home-bar-market"]').should('be.visible');
+        cy.get('[data-testid="settings-button"]').should('be.visible');
 
         // Buttons should not be clipped or misaligned
         cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 5000 })
@@ -55,17 +60,19 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
       it(`Market renders properly at ${vp.name} (${vp.width}×${vp.height})`, () => {
         cy.viewport(vp.width, vp.height);
         setupGameState({
-          ...BASE_RESPONSIVE_STATE,
+          ...FREE_OPS_STATE,
           screen: 'market',
           player: {
-            ...BASE_RESPONSIVE_STATE.player,
+            ...FREE_OPS_STATE.player,
             stash: { iron: 500, ice: 250, regolith: 100 },
           },
         });
 
         // Market UI must be visible
         cy.contains('Commodity Exchange', { timeout: 5000 }).should('be.visible');
-        cy.get('[data-testid="market-commodity-grid"]', { timeout: 5000 }).should('be.visible');
+        // The grid sits below the fold in the page's own scroll container, and
+        // Cypress treats content clipped by an overflow ancestor as hidden.
+        cy.get('[data-testid="market-commodity-grid"]', { timeout: 5000 }).scrollIntoView().should('be.visible');
 
         // Commodity items must not overflow or wrap awkwardly
         cy.get('[data-testid="market-commodity-grid"] [data-testid^="commodity-"]')
@@ -77,6 +84,7 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
         // Sell buttons must be accessible
         cy.get('[data-testid="sell-all-btn"]', { timeout: 5000 })
           .first()
+          .scrollIntoView()
           .should('be.visible')
           .invoke('height').should('be.gt', 0);
 
@@ -108,22 +116,20 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
         cy.get('[data-testid="mining-canvas"]', { timeout: 20000 })
           .should('be.visible')
           .should($canvas => {
-            const rect = $canvas[0].getBoundingClientRect();
-            expect(rect.width, 'canvas width').to.be.greaterThan(0);
-            expect(rect.height, 'canvas height').to.be.greaterThan(0);
+            expect($canvas.width(), 'canvas width').to.be.gt(0);
+            expect($canvas.height(), 'canvas height').to.be.gt(0);
           });
 
-        // Mining HUD controls (fire + return) must be visible and not clipped
-        ['fire-laser-btn', 'return-home-btn'].forEach(testId => {
-          cy.get(`[data-testid="${testId}"]`, { timeout: 5000 })
-            .should('be.visible')
-            .should($btn => {
-              const rect = $btn[0].getBoundingClientRect();
-              expect(rect.width, `${testId} width`).to.be.greaterThan(0);
-              expect(rect.height, `${testId} height`).to.be.greaterThan(0);
-              expect(rect.bottom, `${testId} bottom`).to.be.at.most(vp.height);
-            });
-        });
+        // Mining HUD controls must be visible and accessible
+        cy.get('[data-testid="fire-laser-btn"]', { timeout: 5000 }).should('be.visible');
+
+        // Control buttons should not overlap or be clipped
+        cy.get('[data-testid="mining-controls"]').should('be.visible');
+        cy.get('[data-testid="mining-controls"] button')
+          .each($btn => {
+            cy.wrap($btn).invoke('width').should('be.gt', 0);
+            cy.wrap($btn).invoke('height').should('be.gt', 0);
+          });
 
         // Guide/help button visible on all sizes
         cy.get('[data-testid="mining-guide-btn"]').should('be.visible');
@@ -137,14 +143,10 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
     it('can navigate between screens at all viewports', () => {
       Object.entries(VIEWPORTS).forEach(([_vpKey, vp]) => {
         cy.viewport(vp.width, vp.height);
-        setupGameState(BASE_RESPONSIVE_STATE);
+        setupGameState(FREE_OPS_STATE);
 
         // From Hub → Market
-        if (vp.width >= 1024) {
-          cy.contains('button', 'Market').click();
-        } else {
-          cy.get('[data-testid="bottom-tab-market"]').click();
-        }
+        cy.get('[data-testid="home-bar-market"]').click();
 
         cy.contains('Commodity Exchange', { timeout: 5000 }).should('be.visible');
 

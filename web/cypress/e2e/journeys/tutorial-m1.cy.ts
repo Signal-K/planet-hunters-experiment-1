@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 export {}
@@ -6,9 +7,7 @@ export {}
 // These tests play the game as a real user would — they navigate using whatever
 // nav element is VISIBLE on screen, not by force-clicking hidden elements.
 //
-// Desktop (≥1024px): bottom tab bar is display:none; use the hub's own
-//                    desktop Missions action (the sidebar nav is retired).
-// Mobile (<1024px):  use bottom-tab-* directly.
+// Every width: the shared bottom bar (home-bar-*) is the navigation.
 //
 // Mission setup is one routed scene at /game/missions: contract carousel,
 // target map, vehicle blueprint, then hangar assembly / launch review.
@@ -103,30 +102,19 @@ function visitHub(overrides: Record<string, unknown> = {}) {
   })
 }
 
-// ─── Layout-aware nav helper ──────────────────────────────────────────────────
+// ─── Home-chrome navigation helper ───────────────────────────────────────────
 //
-// This is the crux of the desktop bug: on mobile the bottom tab bar is
-// visible, on desktop it is hidden. Tests MUST use the element the user can
-// actually see.
+// The persistent Home chrome replaces the retired breakpoint-specific bottom
+// tab and desktop dock. It is the one operations entry a player can use at
+// every viewport.
 
 function navToMissions() {
-  cy.window().then(win => {
-    const isDesktop = win.innerWidth >= 1024
-    if (isDesktop) {
-      // The old always-on desktop sidebar nav (`sidebar-nav-missions`) was
-      // retired; the Hub dock's desktop Missions action is the entry point
-      // that is present regardless of tutorial state.
-      cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-      cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible').click()
-    } else {
-      cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
-    }
-  })
+  cy.get('[data-testid="home-bar-ops"]').should('be.visible').click()
   cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
 }
 
 function expectCoach(title: string) {
-  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 10000 })
+  cy.get('[data-testid="flight-plan"]', { timeout: 10000 })
     .should('be.visible')
     .should('contain', title)
 }
@@ -211,115 +199,58 @@ function completeDebrief() {
 // ─── Full M1 play-through ─────────────────────────────────────────────────────
 
 function playM1() {
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  assertOnHome(10000)
 
-  // Step 1: tutorial coach says to open missions — follow what's VISIBLE on screen
-  expectCoach('Open a Mission')
+  // SSL-405: the Flight Plan strip leads with the active try's objective.
+  // The coach body only shows when the strip is expanded (and never at
+  // <=520px), so these checks read the always-visible objective line.
+  // Step 1: open client contracts from the shared Home bar.
+  expectCoach('Open client contracts')
   navToMissions()
 
   // Step 2: pick the M1 contract
-  expectCoach('Select a Mission')
+  expectCoach('Accept a mining contract')
   cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').click()
 
   // Step 3: pick a target on the map
   cy.get('[data-testid="mission-target-map"]', { timeout: 8000 }).should('be.visible')
-  expectCoach('Choose a Destination')
+  expectCoach('Choose the highlighted target')
   pickTarget('eros')
   cy.get('[data-testid="target-selection-summary"]').should('contain', '433 Eros')
   cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
 
-  // Step 4: vehicle blueprint — the Explorer is free during onboarding
+  // Step 4: vehicle blueprint — the Explorer is free during onboarding.
+  // The strip stays up (the try has no blueprint-specific step) and the
+  // Flight Plan has no manual Continue button on a try step.
   cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
-  expectCoach('Choose a Vehicle')
+  cy.get('[data-testid="flight-plan"]').should('be.visible')
+  cy.get('[data-testid="flight-plan-continue"]').should('not.exist')
   cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'BUILD EXPLORER').click()
 
-  // Step 5: hangar assembly (manual coach card), then roll out and launch
-  expectCoach('Assemble the Rocket')
-  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
+  // Step 5: hangar assembly, then roll out and launch
   rollOutAndLaunch()
 
   completeMining()
   completeDebrief()
 
-  // Collecting the M1 reward returns to Hub and the coach immediately opens
-  // M2's guided-ops card. Case-insensitive: the label is visually all-caps
-  // via CSS text-transform, not literal uppercase DOM text.
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/guided ops · mission 2/i).should('be.visible')
+  // Collecting the M1 reward completes the mining try; the Flight Plan hands
+  // over to the scan try on the Galaxy screen.
+  cy.location('pathname', { timeout: 15000 }).should('eq', '/game/galaxy')
+  assertOnHome(10000)
+  expectCoach('Classify the transit candidate')
 }
 
-// ─── Full M2 play-through ─────────────────────────────────────────────────────
+// ─── Scan try (after the mining try) ──────────────────────────────────────────
 //
-// Starts from hub with missionsDone=1 and M2 tutorial active. Step 20 is an
-// action coach card on hub (auto-dismisses on nav); step 21 is a manual
-// coach card on the vehicle blueprint.
+// SSL-405 replaced the Transport and Storage Silo lessons with the three-try
+// Flight Plan (mining, scan, part). With the mining try done the Hub leads with
+// the scan try while client contracts stay open on the Ops board.
 
-function playM2() {
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-  expectCoach('Guided Ops')
+function playScanTryHandoff() {
+  assertOnHome(10000)
+  expectCoach('Classify the transit candidate')
   navToMissions()
-
-  // M2's generated palladium order (see lib/data/missions.ts).
-  expectCoach('Choose Your Second Contract')
-  cy.get('[data-testid="mission-accept-generated-s2-starter-bulk-3"]').should('be.visible').click()
-
-  // Target map: an eligible body is preselected, so confirm it.
-  cy.get('[data-testid="mission-target-map"]', { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled').click()
-
-  // Blueprint — step 21 fires here as a manual card.
-  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
-  expectCoach('Select Your Rocket')
-  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
-  cy.get('[data-testid="tutorial-coach-block"]').should('not.exist')
-
-  // M2 unlocks the Prospector.
-  cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'PROSPECTOR').click()
-  rollOutAndLaunch()
-
-  completeMining()
-  completeDebrief()
-
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/guided ops · mission 3/i).should('be.visible')
-}
-
-// ─── Full M3 play-through ─────────────────────────────────────────────────────
-//
-// M3 is a two-stop mining and haul job (mine at a pickup target, deliver to
-// a second target before flying home). Both M3 missions have preset targets,
-// so accepting one skips the target map and goes straight to the blueprint.
-
-function playM3ToDeliveryLeg() {
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-
-  // Step 30: hub action step (auto-dismisses on nav, like M2's step 20).
-  expectCoach('Guided Ops')
-  navToMissions()
-
-  // Pick one of the two M3 client missions.
-  cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').should('be.visible').click()
-
-  // Blueprint — step 31 fires here (no target map since the route is preset).
-  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
-  expectCoach('Two-Stop Route')
-  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
-  cy.get('[data-testid="purchase-rocket-btn"]').should('be.visible').click()
-
-  // Hangar assembly — step 32 fires here.
-  expectCoach('Confirm The Run')
-  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
-  rollOutAndLaunch()
-
-  // The pickup leg is worked by the surface rover (DEV-only skip, as above).
-  cy.location('pathname', { timeout: 20000 }).should('eq', '/game/rover-mining')
-  cy.get('[data-testid="dev-skip-rover-mining-btn"]', { timeout: 15000 }).click()
-
-  // Cargo secured for the pickup leg — the two-leg mechanic routes to the
-  // delivery target next, not straight home.
-  cy.location('pathname', { timeout: 15000 }).should('eq', '/game/transit')
-  cy.contains(/Delivery LEG · MISSION TRANSIT/i).should('be.visible')
-  cy.contains('h1', '4 Vesta').should('be.visible')
+  cy.get('[data-testid^="mission-accept-"]').should('exist')
 }
 
 // ─── Viewport configurations ──────────────────────────────────────────────────
@@ -343,61 +274,45 @@ const VIEWPORTS = [
 // `mission` also skips the layout-guard describes below (not a mission
 // playthrough, so out of scope for a mission-specific video).
 
-const MISSION_FILTER = Cypress.env('mission') as 'M1' | 'M2' | 'M3' | undefined
+const MISSION_FILTER = Cypress.env('mission') as 'M1' | 'M2' | undefined
 const VIEWPORT_FILTER = Cypress.env('viewportLabel') as string | undefined
 const viewportsToRun = VIEWPORTS.filter(v => !VIEWPORT_FILTER || v.label === VIEWPORT_FILTER)
 
 
-// ─── Desktop nav guard ────────────────────────────────────────────────────────
-//
-// Explicitly asserts that on desktop the bottom tab bar is hidden and the
-// hub's own Missions action is shown — catching any regression where the CSS
-// breakpoint breaks.
+// ─── Shared Home chrome ───────────────────────────────────────────────────────
 
-if (!MISSION_FILTER) describe('Desktop layout: bottom tab bar hidden, sidebar retired', () => {
+if (!MISSION_FILTER) describe('Desktop layout: Home chrome is the operations entry', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
-  it('bottom-tab-missions is hidden and the retired sidebar is gone on desktop hub; the desktop Missions action remains available', () => {
+  it('keeps the operations control available without retired navigation', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-    // The old always-on desktop sidebar is retired and no longer rendered.
+    cy.get('[data-testid="home-bottom-bar"]').should('be.visible')
+    cy.get('[data-testid="home-bar-ops"]').should('be.visible')
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
-    cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible')
   })
 
-  it('tutorial coach on step 1 does NOT ring the hidden bottom tab bar', () => {
+  it('directs the first mining try to the Launchpad', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
-    // The desktop instruction names the Launchpad; no measured ring is drawn.
-    cy.get('[data-testid="tutorial-coach-ring"]').should('not.exist')
-    // And the instruction must not say "Tap menu" (the old two-stage copy)
-    cy.get('[data-testid="tutorial-coach-block"]').should('not.contain', 'Tap menu')
+    cy.get('[data-testid="flight-plan"]').should('contain', 'Open client contracts')
+    cy.get('html').should('have.attr', 'data-flight-target').and('include', 'building-launchpad')
   })
 })
 
-// ─── Mobile layout guard ──────────────────────────────────────────────────────
+// ─── Mobile Home chrome ───────────────────────────────────────────────────────
 
-if (!MISSION_FILTER) describe('Mobile layout: bottom tab bar visible, sidebar hidden', () => {
+if (!MISSION_FILTER) describe('Mobile layout: Home chrome is visible, sidebar hidden', () => {
   beforeEach(() => cy.viewport(390, 844))
 
-  it('bottom-tab-missions is visible and the retired sidebar is gone on mobile hub', () => {
+  it('keeps the operations control available and the retired sidebar absent', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
+    cy.get('[data-testid="home-bar-ops"]').should('be.visible')
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
   })
 
-  it('tutorial coach on step 1 highlights the Missions tab on mobile', () => {
-    // The Missions tab is highlighted by CSS on the element itself
-    // (html[data-coach-target] in globals.css), which can't drift; the
-    // separately measured CoachPointer ring is suppressed for it (SSL-280).
+  it('directs the first mining try to the Launchpad', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
-    cy.get('html').should('have.attr', 'data-coach-target', 'bottom-tab-missions')
-    cy.get('[data-testid="tutorial-coach-ring"]').should('not.exist')
+    cy.get('[data-testid="flight-plan"]').should('contain', 'Open client contracts')
+    cy.get('html').should('have.attr', 'data-flight-target').and('include', 'building-launchpad')
   })
 })
 
@@ -407,7 +322,7 @@ if (!MISSION_FILTER || MISSION_FILTER === 'M1') viewportsToRun.forEach(({ label,
   describe(`M1 full play-through — ${label} (${w}×${h})`, () => {
     beforeEach(() => cy.viewport(w, h))
 
-    it('plays M1 from hub through debrief to the M2 guided-ops handoff', () => {
+    it('plays M1 from hub through debrief to the scan try', () => {
       visitHub({ doneSteps: { 0: true }, tutorial: true })
       playM1()
     })
@@ -416,46 +331,17 @@ if (!MISSION_FILTER || MISSION_FILTER === 'M1') viewportsToRun.forEach(({ label,
 
 // ─── M2 full play-through ─────────────────────────────────────────────────────
 
-// Every coach step a real player completes during M1, including the
-// blueprint's "Choose a Vehicle" (8).
-const M1_DONE_STEPS = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 8: true, 9: true }
-
 if (!MISSION_FILTER || MISSION_FILTER === 'M2') viewportsToRun.forEach(({ label, w, h }) => {
-  describe(`M2 full play-through — ${label} (${w}×${h})`, () => {
+  describe(`Scan try handoff — ${label} (${w}×${h})`, () => {
     beforeEach(() => cy.viewport(w, h))
 
-    it('plays M2 from hub through debrief to the M3 guided-ops handoff', () => {
+    it('keeps the scan try on the Hub with client contracts still open', () => {
       visitHub({
         tutorial: true,
-        doneSteps: M1_DONE_STEPS,
-        player: basePlayer({ missionsDone: 1, missionCount: 1 }),
+        doneSteps: { 0: true },
+        player: basePlayer({ missionsDone: 1, missionCount: 1, flightPlan: { completed: { mining: true }, hidden: false } }),
       })
-      playM2()
-    })
-  })
-})
-
-// ─── M3 full play-through (through the pickup leg) ────────────────────────────
-// Excluded from an onboarding-video pass over M1/M2 (MISSION_FILTER), but
-// runs in the normal/CI/full-matrix case: the coach steps and screens it
-// exercises deserve regression coverage.
-
-if (!MISSION_FILTER || MISSION_FILTER === 'M3') viewportsToRun.forEach(({ label, w, h }) => {
-  describe(`M3 tutorial steps and launch — ${label} (${w}×${h})`, () => {
-    beforeEach(() => cy.viewport(w, h))
-
-    it('clears all M3 coach steps, mines the pickup site, and heads for the delivery target', () => {
-      visitHub({
-        tutorial: true,
-        doneSteps: { ...M1_DONE_STEPS, 20: true, 21: true, 22: true },
-        player: basePlayer({
-          missionsDone: 2,
-          missionCount: 2,
-          francs: 9_000_000_000,
-        }),
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
-      })
-      playM3ToDeliveryLeg()
+      playScanTryHandoff()
     })
   })
 })

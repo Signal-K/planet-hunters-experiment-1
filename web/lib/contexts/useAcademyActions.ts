@@ -7,6 +7,7 @@ import {
   applyCollectCrewTraining,
   applyHireCrew,
   applyRehireCrew,
+  applyResearchAcademy,
   applyResearchCrewModule,
   applySetAcademyFunding,
   applyShareChartsWithClient,
@@ -23,6 +24,10 @@ export function useAcademyActions(
   getCatalog: () => Catalog,
   addToast: (message: string, kind?: Toast['kind']) => void,
 ) {
+  const researchAcademy = useCallback(() => {
+    setState(state => applyResearchAcademy(state))
+  }, [setState])
+
   // Not a crew/academy mechanic, but shares this hook's research-spending
   // wiring — see lib/systems/LandingSystem.ts.
   const researchLanding = useCallback(() => {
@@ -79,6 +84,7 @@ export function useAcademyActions(
   }, [setState])
 
   return {
+    researchAcademy,
     researchLanding,
     setAcademyFunding,
     hireCrew,

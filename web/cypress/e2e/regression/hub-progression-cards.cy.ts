@@ -1,156 +1,87 @@
 import type { GameState } from '../../../game-context'
-import { seedFixtureSession } from '../../support/authenticated-fixture'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
-/**
- * The hub's progression cards stopped responding to clicks once the tutorial
- * finished.
- *
- * Cause: HubScreen's buildings layer wrapped its absolutely-positioned
- * buildings in a second `inset: 0` div with `pointerEvents: 'auto'` at
- * zIndex 10. ProgressionCard sits at zIndex 8, so that transparent wrapper
- * covered the whole screen and swallowed every tap on Open Skill Tree, Build
- * and Browse Contracts.
- *
- * It only reproduced *after* the tutorial because the card stack is hidden
- * while the coach is on screen — during onboarding there was nothing under the
- * catcher to click.
- *
- * These tests click each card and assert the route actually changed. Asserting
- * the button is merely visible would have passed throughout the bug.
- */
-
-const STORAGE_KEY = 'landnam-game-state-v1'
-const SURVEY_KEY = 'landnam-surveys-shown'
-const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
-// The sheet shown once when onboarding completes. Pre-acknowledged here: it is
-// a legitimate modal and would sit over the cards, which is not the bug under
-// test. (That two sheets *can* stack — this one plus the auth gate — is a
-// separate problem, see STS-614.)
 const TUTORIAL_ACK_KEY = 'ln_tutorial_complete_ack'
-const FAR_FUTURE = String(Date.now() + 365 * 24 * 60 * 60 * 1000)
-const ALL_SURVEYS = [
-  'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
-  'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
-  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
-        'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
-]
 
-// Past onboarding, nothing in flight, skill points banked and no satellite
-// station yet — the exact state in the bug report, which renders all three
-// cards at once.
 const POST_TUTORIAL: Partial<GameState> = {
-  screen: 'hub',
-  tutorial: false,
-  doneSteps: {},
+  screen: 'hub', tutorial: false, doneSteps: {},
   player: {
-    francs: 11_580_000_000,
-    activeMission: null,
-    missionCount: 1,
-    pendingLaunch: false,
-    placed: ['launchpad', 'refinery'],
-    placementPlots: { launchpad: 0, refinery: 1 },
-    controlBuilt: true,
-    missionsDone: 3,
-    skillPoints: 3,
-    unlockedSkillNodes: [],
-    freeOperations: true,
-    clientMissions: {},
-    clientCooldowns: {},
-    researchAnnotations: 0,
-    refineryBuilt: true,
-    refineryQueue: [],
-    refinedGoods: {},
-    launchpadUpgraded: false,
-    loanDebt: 0,
-    loanOffered: false,
+    francs: 11_580_000_000, activeMission: null, missionCount: 1,
+    pendingLaunch: false, placed: ['launchpad', 'refinery'],
+    placementPlots: { launchpad: 0, refinery: 1 }, controlBuilt: true,
+    missionsDone: 3, skillPoints: 3, unlockedSkillNodes: [], freeOperations: true,
+    clientMissions: {}, clientCooldowns: {}, researchAnnotations: 0,
+    refineryBuilt: true, refineryQueue: [], refinedGoods: {}, launchpadUpgraded: false,
+    loanDebt: 0, loanOffered: false,
   },
 } as Partial<GameState>
 
-const ACTIVE_MISSION_POST_TUTORIAL: Partial<GameState> = {
+const ACTIVE_RUN: Partial<GameState> = {
   ...POST_TUTORIAL,
-  player: {
-    ...POST_TUTORIAL.player,
-    activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
-    missionPhase: 'transit',
-  } as GameState['player'],
+  player: { ...POST_TUTORIAL.player, activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' }, missionPhase: 'transit' } as GameState['player'],
 }
 
 function visitHub(state: Partial<GameState> = POST_TUTORIAL) {
-  cy.visit('/game', {
-    onBeforeLoad(win) {
-      win.localStorage.clear()
-      win.localStorage.setItem(SNOOZE_KEY, FAR_FUTURE)
-      win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
-      win.localStorage.setItem(TUTORIAL_ACK_KEY, '1')
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-      // A fixture session, or the auth gate covers the whole screen.
-      seedFixtureSession(win)
-    },
-  })
+  cy.visit('/game', { onBeforeLoad(win) {
+    win.localStorage.clear()
+    win.localStorage.setItem(TUTORIAL_ACK_KEY, '1')
+    seedAuthenticatedFixture(win, state)
+  } })
 }
 
-describe('hub progression cards are clickable after the tutorial', () => {
-  beforeEach(() => visitHub())
-
-  it('Open Skill Tree navigates to the skill tree', () => {
-    cy.get('[data-testid="progression-card-skills"]').should('be.visible').click()
-    cy.contains('Skill Nodes', { timeout: 10_000 }).should('be.visible')
-  })
-
-  it('Dismiss hides the skill-point card without opening the tree', () => {
-    cy.get('[data-testid="progression-card-skills"]').should('be.visible')
-    cy.get('[data-testid="progression-card-skills-dismiss"]').click()
-    cy.get('[data-testid="progression-card-skills"]').should('not.exist')
-    cy.contains('Skill Nodes').should('not.exist')
-  })
-
-  it('does not repeat a Browse Contracts card once Free Ops has a mission entry', () => {
-    // In Free Ops the persistent Missions entry is the single way to the
-    // board (ProgressionCard); the old Browse Contracts card was retired.
-    cy.get('[data-testid="progression-card-skills"]').should('be.visible')
-    cy.get('[data-testid="progression-card-next-mission"]').should('not.exist')
-  })
-
-  it('Open Launchpad enters the Launchpad scene', () => {
-    // The separate full Launchpad UI was folded into the one Launchpad scene.
-    cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible').click()
-    cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
-    cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
-    cy.get('[data-testid="launchpad-rocket-fleet"]').should('be.visible')
-  })
-
-  it('the physical Launchpad opens the same Launchpad scene', () => {
-    cy.get('[data-testid="building-launchpad-hit"]').click({ force: true })
-    cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
-  })
-
-  it('an active Launchpad opens its scene and exposes explicit resume controls', () => {
-    visitHub(ACTIVE_MISSION_POST_TUTORIAL)
-    cy.get('[data-testid="building-launchpad-hit"]').click({ force: true })
-    cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
-    cy.get('[data-testid="launchpad-resume-mission-btn"]').should('be.visible')
-    cy.get('[data-testid="launchpad-mission-log-btn"]').should('be.visible')
-    // The pad opens its New Mission menu; closing it shows the active run.
-    cy.get('[data-testid="launchpad-new-mission-close"]').click()
-    cy.get('[data-testid="launchpad-active-mission-callout"]').should('contain', 'MISSION IN PROGRESS')
-  })
-
-  it('nothing transparent is covering the cards', () => {
-    // The regression directly: whatever the browser hit-tests at the centre of
-    // a card must be the card itself, not a full-bleed wrapper above it.
-    cy.get('[data-testid="progression-card-skills"]').then($card => {
-      const r = $card[0].getBoundingClientRect()
-      cy.document().then(doc => {
-        const hit = doc.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
-        expect($card[0].contains(hit), 'topmost element at the card centre is the card').to.eq(true)
-      })
+describe('Hub shared chrome and sky controls', () => {
+  it('replaces the retired progression card with persistent bars', () => {
+    visitHub()
+    cy.get('[data-testid^="progression-card-"]').should('not.exist')
+    cy.get('[data-testid="home-bottom-bar"]').should('be.visible')
+    cy.get('[data-testid="home-bottom-bar"]').within(() => {
+      cy.get('[data-testid="home-bar-ops"]').should('be.visible')
+      cy.get('[data-testid="home-bar-hub"]').should('be.visible')
+      cy.get('[data-testid="home-bar-market"]').should('be.visible')
+      cy.get('[data-testid="settings-button"]').should('be.visible')
     })
   })
 
-  it('buildings on the surface are still clickable', () => {
-    // The fix moved pointer-events onto the building roots. If that were wrong,
-    // the hub would trade one dead layer for another.
-    cy.get('[data-testid="progression-card-skills"]').should('exist')
-    cy.contains('Launchpad').should('exist')
+  it('shows an active craft in the sky and resumes the run from it', () => {
+    visitHub(ACTIVE_RUN)
+    cy.get('[data-testid="hub-sky-craft"]').should('be.visible').click()
+    cy.location('pathname', { timeout: 10_000 }).should('match', /\/game\/transit$/)
+  })
+
+  it('shows an arrived craft as one sky control that resumes the run', () => {
+    visitHub({
+      ...POST_TUTORIAL,
+      player: {
+        ...POST_TUTORIAL.player,
+        activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
+        missionPhase: 'transit', arrivalAt: Date.now() - 60_000,
+      } as GameState['player'],
+    })
+    cy.get('[data-testid="hub-sky-craft"]').should('have.length', 1).and('have.attr', 'data-craft-state', 'arrived').click()
+    cy.location('pathname', { timeout: 10_000 }).should('match', /\/game\/landing$/)
+  })
+
+  it('shows a craft waiting on the pad in the sky and opens the Launchpad', () => {
+    visitHub({ ...POST_TUTORIAL, player: { ...POST_TUTORIAL.player, pendingLaunch: true } as GameState['player'] })
+    cy.get('[data-testid="hub-sky-craft"]').should('have.attr', 'data-craft-state', 'waiting').click()
+    cy.location('pathname', { timeout: 10_000 }).should('match', /\/game\/launchpad$/)
+  })
+
+  it('opens Instrument Hub and asteroid discovery from owned telescopes in the sky', () => {
+    const owned = { ...POST_TUTORIAL, player: { ...POST_TUTORIAL.player, transitSatelliteLaunchedAt: Date.now() - 60_000, deepSpaceTelescopeBuilt: true } as GameState['player'] }
+    visitHub(owned)
+    cy.get('[data-testid="hub-sky-telescope-transit"]').click({ force: true })
+    cy.location('pathname', { timeout: 10_000 }).should('match', /\/game\/instrument-hub$/)
+    visitHub(owned)
+    cy.get('[data-testid="hub-sky-telescope-deep-space"]').click({ force: true })
+    cy.location('pathname', { timeout: 10_000 }).should('match', /\/game\/asteroid-discovery$/)
+  })
+
+  it('uses an addressable Subsurface tray without removing the Base root', () => {
+    visitHub()
+    cy.get('[data-testid="hub-subsurface-btn"]').click()
+    cy.location('pathname', { timeout: 10_000 }).should('eq', '/game/hub-subsurface')
+    cy.get('[data-testid="hub-terrain-fallback"]').should('exist')
+    cy.get('[data-testid="hub-subsurface-view"]').should('be.visible')
   })
 })

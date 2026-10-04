@@ -7,7 +7,6 @@ import {
   applyAcceptLoan,
   LICENSE_GRADE_XP_GATES,
   applyUnlockBlueprint,
-  applyUnlockSkillNode,
   applyUpgradeLicenseGrade,
   TREASURY_PLAYER_ID,
 } from './ProgressionSystem'
@@ -197,14 +196,5 @@ describe('applyAcceptLoan', () => {
 
     expect(next.player.francs).toBe(100_000)
     expect(next.player.treasury?.loans ?? {}).toEqual({})
-  })
-})
-
-describe('skill node unlocks after the tutorial', () => {
-  it('installs the Ship Customizer node without an unlock popup', () => {
-    const state = makeState({ popup: null, player: { freeOperations: true, missionsDone: 3, skillPoints: 5, unlockedSkillNodes: [] } })
-    const next = applyUnlockSkillNode(state, 'ship-customizer-1')
-    expect(next.player.unlockedSkillNodes).toContain('ship-customizer-1')
-    expect(next.popup).toBeNull()
   })
 })

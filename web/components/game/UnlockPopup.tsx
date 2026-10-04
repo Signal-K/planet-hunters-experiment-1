@@ -4,6 +4,8 @@ import React from 'react'
 import Image from 'next/image'
 import PageSurface from '@/components/ui/PageSurface'
 
+type UnlockKind = 'sr2' | 'loan' | 'ship-customizer'
+
 interface UnlockPopupProps {
   kind: string
   onClose: () => void
@@ -34,7 +36,7 @@ const UNLOCKS: Record<string, {
     accent: '#3fa9ff',
     eyebrow: 'Vehicle Available',
     title: 'PROSPECTOR',
-    body: 'Mission 2 needs 8 silicon — more than Explorer can carry. Prospector is the first heavier workhorse: larger cargo bay, stronger drill, and enough range for deeper starter targets.',
+    body: 'Prospector is the first heavier workhorse: larger cargo bay, stronger drill, and enough range for deeper starter targets.',
     art: 'rocket',
     imgSrc: '/game/assets/ships/ship_sr2.png',
     stats: [['CARGO', '10 UNITS'], ['DRILL', 'TIER 2'], ['ROLE', 'BULK RUNS']],
@@ -48,6 +50,15 @@ const UNLOCKS: Record<string, {
     art: 'coin',
     stats: [['ADVANCE', '5,000 F'], ['TERM', '2 RUNS'], ['RATE', '8%']],
     cta: 'Accept Loan',
+  },
+  'ship-customizer': {
+    accent: '#39d36a',
+    eyebrow: 'Facility Unlocked',
+    title: 'SHIP ROOMS',
+    body: 'The hangar now shows a full interior view of your ship — slot rooms to customise layout, capacity, and crew stations. Open Hangar from the base menu to explore it.',
+    art: 'rooms',
+    stats: [['VIEW', 'INTERIOR'], ['SLOTS', 'CUSTOM'], ['ACCESS', 'HANGAR']],
+    cta: 'Open Hangar',
   },
   'tutorial-complete': {
     accent: '#39d9ff',

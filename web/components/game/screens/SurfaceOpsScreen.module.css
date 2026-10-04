@@ -414,12 +414,23 @@
   flex-direction: column;
   min-height: 0;
   margin-bottom: 0;
+  /* SSL-400: a flex-column item with auto side margins shrink-wraps to its
+     content, which let the Takeon canvas backing width (718px) set the panel
+     width inside a 390px viewport. Pin to the container and cut the canvas
+     out of intrinsic sizing so its resize cannot feed back into the width. */
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .content[data-view='field'] .takeonMount {
   --takeon-min-height: 0px;
-  flex: 1 1 auto;
-  min-height: 0;
+  /* A live field without visible terrain is not an operation. Reserve the
+     compact-phone acceptance floor before the control deck consumes space. */
+  flex: 1 1 160px;
+  min-height: 160px;
+  min-width: 0;
+  contain: inline-size;
 }
 
 @media (max-width: 880px) {
@@ -470,6 +481,8 @@
 
   .content[data-view='field'] .takeonMount {
     margin-top: var(--ln-s-3);
+    flex-basis: 160px;
+    min-height: 160px;
   }
 }
 

@@ -1,23 +1,44 @@
-import { seedFixtureSession } from '../../support/authenticated-fixture'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
 describe('Smoke — Landnam', () => {
+  const dailyPoolMission = (
+    client: string,
+    mineral: string,
+    amount: number,
+    title: string,
+  ) => ({
+    id: `dcp-e2e-${client}`,
+    title,
+    brief: `${title} fixture for the Free Ops mission board smoke test.`,
+    client,
+    tag: 'STARTER',
+    difficulty: 'L1',
+    locked: false,
+    sequence: 4,
+    requires: {
+      minerals: { [mineral]: amount },
+      cargo_min: amount,
+      drill_tier: 1,
+      max_orbit: 4,
+    },
+    payout: {
+      francs: 750_000,
+      affinity: 8,
+    },
+  })
+
   const visitWithState = (state: Record<string, unknown>) => {
     const screen = typeof state.screen === 'string' ? state.screen : 'hub'
     cy.visit(`/game/${screen}`, {
       onBeforeLoad(win) {
-        win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(state))
-        // Suppress AuthGateSheet so it doesn't cover interactive elements
-        seedFixtureSession(win)
+        seedAuthenticatedFixture(win, state)
       },
     })
   }
 
-  it('root shows the program briefing with a way into /game', () => {
-    // The root used to redirect straight into /game; it is now a landing page
-    // that can be read before signing in (Cycle 2 landing, #76).
+  it('root redirects to /game', () => {
     cy.visit('/')
-    cy.get('[data-testid="landnam-landing"]').should('be.visible')
-    cy.get('[data-testid="landing-enter-operations"]').should('have.attr', 'href', '/game')
+    cy.url().should('include', '/game')
   })
 
   it('/game page loads without crashing', () => {
@@ -52,40 +73,36 @@ describe('Smoke — Landnam', () => {
     })
   })
 
-  // generated-s1-starter-bulk-1 is a Helios order for 5 platinum; the cargo
-  // below fills it so the debrief shows a full client payout.
   it('enforces cargo resolution before reward collection (post-onboarding)', () => {
+    // Debrief auto-resolves for onboarding missions (missionsDone < 3), so this
+    // gating behavior is only exercised past that boundary — see DebriefScreen.tsx.
     visitWithState({
       screen: 'debrief',
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'mars',
-      lastCargo: { platinum: 5 },
+      lastCargo: { iron: 4 },
       tutorial: false,
       player: { missionsDone: 3 },
     })
 
     cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
     cy.get('[data-testid="resolve-cargo-btn"]').click()
-    cy.contains('Net').should('be.visible')
+    cy.contains('Francs Earned').should('be.visible')
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
   })
 
-  it('requires explicit vehicle teardown before the ledger during onboarding too', () => {
-    // Onboarding debriefs used to auto-resolve cargo into a one-tap collect.
-    // KES-348 made the teardown an explicit step for every mission; the unit
-    // coverage is DebriefScreen.test.tsx.
+  it('auto-resolves cargo for onboarding missions, requiring only one tap to collect', () => {
     visitWithState({
       screen: 'debrief',
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'mars',
-      lastCargo: { platinum: 5 },
+      lastCargo: { iron: 4 },
       tutorial: false,
       player: { missionsDone: 0 },
     })
 
-    cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
-    cy.contains('Net').should('be.visible')
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+    cy.contains('Francs Earned').should('be.visible')
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
   })
 
@@ -103,7 +120,7 @@ describe('Smoke — Landnam', () => {
     // written; STS-394/STS-492 replaced it with real nodes and the License
     // Grade ladder, so assert on what actually ships.
     cy.contains('Skill Tree').should('be.visible')
-    cy.contains('FLIGHT AUTHORITY').should('exist')
+    cy.contains('License Grade').should('be.visible')
     cy.contains('Skill Nodes').should('be.visible')
     cy.contains('Laser Charge I').should('be.visible')
     cy.reload()
@@ -112,43 +129,58 @@ describe('Smoke — Landnam', () => {
   })
 
   it('shows Free Ops client missions after M3', () => {
-    // Free Ops lists the catalog's client work (useMissionRelayModels); the
-    // per-player daily pool this test used to seed is no longer read.
+    const date = new Date()
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     visitWithState({
       screen: 'missions',
       tutorial: false,
       player: {
         missionsDone: 3,
         freeOperations: true,
-        placed: ['launchpad'],
-        placementPlots: { launchpad: 0 },
+        clientMissions: {},
+        clientCooldowns: {},
+        dailyClientPool: {
+          date: dateKey,
+          acceptedId: null,
+          completedIds: [],
+          missions: [
+            dailyPoolMission('helios-propulsion-depot', 'platinum', 5, 'Helios Propulsion Depot starter contract'),
+            dailyPoolMission('arcturus-battery-systems', 'palladium', 5, 'Arcturus Battery Systems starter contract'),
+            dailyPoolMission('ferrum-orbital-construction', 'platinum', 5, 'Ferrum Orbital Construction starter contract'),
+          ],
+        },
       },
     })
 
-    cy.get('[data-testid="mission-board-section-client"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid^="mission-accept-"]').should('have.length.at.least', 1)
+    cy.contains('EARTH BASE · FREE OPS').should('be.visible')
+    cy.get('[data-testid^="mission-card-dcp-e2e-"]').should('have.length.at.least', 3)
     cy.contains('Helios Propulsion Depot').should('exist')
+    cy.contains('Arcturus Battery Systems').scrollIntoView().should('exist')
   })
 
-  it('shows the refinery in the Free Ops Build strip with its seed costs', () => {
+  it('places a refinery from the Build screen in Free Ops', () => {
     visitWithState({
-      screen: 'hub',
+      screen: 'build',
       tutorial: false,
       player: {
         francs: 1_000_000_000,
         missionsDone: 3,
         freeOperations: true,
-        placed: ['launchpad'],
-        placementPlots: { launchpad: 0 },
+        refineryUnlocked: true,
+        placed: ['launchpad', 'surface-silo'],
+        placementPlots: { launchpad: 0, 'surface-silo': 2 },
         stash: { aluminium: 20, copper: 10 },
+        surfaceOps: { sites: { 'mars-arcadia': { storage: {}, siteAccessPurchasedAt: 1 } } },
       },
     })
 
-    // Build is entered from the Hub; a saved 'build' route resumes to the Hub.
-    cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 15000 }).click()
-    cy.get('[data-testid="hub-new-structure-btn"]').click()
-    cy.get('[data-testid="build-place-screen"]').should('be.visible')
-    // No silo or settlement prerequisite any more: only the cost applies.
-    cy.contains('button', 'Refinery').should('be.visible').and('not.have.attr', 'aria-disabled', 'true')
+    cy.contains('Refinery').should('be.visible')
+    cy.contains('8,000,000').should('be.visible')
+    cy.contains('20 aluminium').should('be.visible')
+    cy.contains('10 copper').should('be.visible')
+    cy.contains('button', 'Refinery').click()
+    cy.get('[data-testid="build-plot-1"]').click()
+    cy.contains('button', 'Confirm · Build Here').click()
+    cy.get('[data-testid="building-refinery-hit"]', { timeout: 10000 }).should('be.visible')
   })
 })

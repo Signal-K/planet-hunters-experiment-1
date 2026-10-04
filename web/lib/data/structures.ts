@@ -1,9 +1,9 @@
 // Landnam game data — structures, refinery recipes, market templates
 
-import type { StructureBlueprint, RefineryRecipe } from './types'
+import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types'
 import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 import { MINERAL_RARITY } from './minerals'
-import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
+import { FREE_OPS_START_MISSIONS_DONE } from './mission-generator'
 
 // Refining takes raw ore and returns it worth REFINING_VALUE_MULTIPLIER more,
 // for a cycle fee proportional to the input's value. Previously each recipe
@@ -38,8 +38,9 @@ export const STRUCTURES: StructureBlueprint[] = [
     name: 'Surface Silo',
     kind: 'surface-silo',
     cost: SURFACE_SILO_PRICE,
-    unlocksAt: 'Free Operations',
-    unlockTrigger: 'free-operations',
+    // SSL-332: building it is the last guided step, and it is what opens Free Ops.
+    unlocksAt: 'Complete the guided missions',
+    unlockTrigger: 'onboarding-missions',
     description: 'Small Earth-side mineral storage. Hold ore for a better market window or for refinery input.',
   },
   {
@@ -48,22 +49,19 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'refinery',
     cost: STRUCTURE_PRICES.refinery,
     costMaterials: { aluminium: 20, copper: 10 },
-    unlocksAt: 'Free Operations',
+    unlocksAt: 'Surface Silo + an established mining settlement',
     unlockTrigger: 'free-operations',
     // KES-283: Level 1 only — processes one shipment of raw ore into refined
     // goods per day (a queue, not instant conversion; see RefineryScreen /
     // REFINERY_RECIPES). No multi-level tree or advanced recipes yet.
-    description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day.',
-  },
-  {
-    id: 'deep-space-telescope',
-    name: 'Deep Space Telescope',
-    kind: 'deep-space-telescope',
-    cost: STRUCTURE_PRICES.deepSpaceTelescope,
-    costMaterials: { aluminium: 30, copper: 16, silicon: 10 },
-    unlocksAt: 'Free Operations',
-    unlockTrigger: 'free-operations',
-    description: 'Independent long-baseline instrument (STS-622) that downlinks unconfirmed NEO candidates from the Minor Planet Center for asteroid-discovery classification, separate from the transit satellite.',
+    //
+    // SSL-74: gated on the Surface Silo (refining needs somewhere to hold
+    // input ore) plus an established off-world mining settlement (purchased
+    // site access — see SurfaceOpsSystem/applyPurchaseSiteAccess). A
+    // settlement lets a ferry bring home a full hold in one trip instead of
+    // repeated one-off mining runs; refining is the payoff for having made
+    // that investment, not a plain Free-Ops purchase.
+    description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day. Requires a Surface Silo for input storage and an established mining settlement — settlements ferry ore home in bulk, giving the Refinery a steady supply instead of one-off mining runs.',
   },
   {
     id: 'astronaut-academy',
@@ -71,8 +69,8 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'astronaut-academy',
     cost: STRUCTURE_PRICES.academy,
     costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
-    unlocksAt: 'Free Operations',
-    unlockTrigger: 'free-operations',
+    unlocksAt: 'Research after reaching client level 2 with two clients',
+    unlockTrigger: 'academy-research',
     description: 'Trains named astronauts, manages the roster, and coordinates Base staffing.',
   },
   { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: STRUCTURE_PRICES.garage, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
@@ -83,35 +81,26 @@ export const STRUCTURES: StructureBlueprint[] = [
  *  HubScreen's copy, which could drift apart silently. */
 export const LAUNCHPAD_UPGRADE_COST = STRUCTURE_PRICES.launchpadUpgrade
 
-// When the story-deep-space-telescope-survey mission is offered (STS-622,
-// KES-128): the transit satellite at level 2 and one client relationship at
-// client level 2. It only decides when that mission appears; the telescope
-// itself is an ordinary Free Operations purchase (see structureUnlocked).
-export function deepSpaceTelescopeUnlocked(opts: { transitSatelliteLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
-  if ((opts.transitSatelliteLevel ?? 1) < 2) return false
-  return Object.values(opts.clientMissions ?? {}).some(
-    jobs => 1 + Math.floor(Math.max(0, jobs) / CLIENT_AFFINITY_MISSION_THRESHOLD) >= 2
-  )
-}
-
-/**
- * Structure availability. The tutorial teaches a fixed set of buildings (the
- * Launchpad); once it ends (Free Operations), every structure is open and only
- * its cost limits it. 'manual' blueprints have no Base building behind them
- * yet, so they stay unavailable. A structure already placed stays available.
- */
-export function structureUnlocked(structure: StructureBlueprint, opts: { placed?: string[]; freeOperations?: boolean } = {}): boolean {
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; missionsDone?: number; hasMiningSettlement?: boolean } = {}): boolean {
+  // SSL-332's storage silo is the only pre-Free-Ops construction step: it
+  // becomes available after Extraction and Transport, and placement opens
+  // Free Ops. Existing players retain access through their saved unlock.
+  if (structure.id === 'surface-silo') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
+  if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   if (structure.unlockTrigger === 'always') return true
-  if (opts.placed?.includes(structure.id)) return true
-  if (structure.unlockTrigger === 'manual') return false
-  return !!opts.freeOperations
-}
-
-/** What a still-locked structure waits for, derived from the same rule so an
- *  older catalog row's unlocksAt copy cannot promise a retired gate. */
-export function structureUnlockLabel(structure: StructureBlueprint): string {
-  if (structure.unlockTrigger === 'manual') return structure.unlocksAt || 'Not yet available'
-  return 'Free Operations'
+  // KES-283: the Refinery is a normal Earth Base plot purchase (same unlock
+  // shape as the Surface Silo) rather than the KES-286 off-world
+  // site-commissioned structure whose unlock condition no mission ever
+  // satisfied — that broken trigger is retired for good.
+  //
+  // SSL-332 makes this an immediate Free Ops activity. The storage silo is
+  // the prerequisite because it provides the refinery's input buffer; an
+  // off-world settlement remains useful later, but is not a dead-end gate.
+  if (structure.id === 'refinery') {
+    return !!opts.placed?.includes('refinery')
+      || (!!opts.freeOperations && !!opts.placed?.includes('surface-silo'))
+  }
+  return false
 }
 
 export function canAffordStructure(structure: StructureBlueprint, opts: { francs: number; stash?: Record<string, number> }): boolean {
@@ -132,3 +121,9 @@ export function structureAffordabilityGaps(structure: StructureBlueprint, opts: 
   }
   return gaps
 }
+
+export const MARKET_TEMPLATES: MarketTemplate[] = [
+  { id: 'spot',     label: 'Spot Price',     currency: '₣', baseRate: 1.0, volatility: 0.05 },
+  { id: 'futures',  label: 'Futures Contract', currency: '₣', baseRate: 0.92, volatility: 0.02 },
+  { id: 'bulk',     label: 'Bulk Rate',       currency: '₣', baseRate: 0.85, volatility: 0.08 },
+]

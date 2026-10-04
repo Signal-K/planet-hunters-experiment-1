@@ -8,6 +8,7 @@ import {
   FACTORY_RECIPES,
   refundMinerals,
   SANDBOX_STRUCTURE_RECIPES,
+  visibleSandboxStructureRecipes,
   spendMinerals,
 } from './crafting'
 
@@ -31,6 +32,18 @@ describe('crafting registry', () => {
     expect(craftingRecipeForTakeonType('road')?.category).toBe('road')
     expect(craftingRecipeForTakeonType('factory')?.placeable).toBe(true)
     expect(craftingRecipeForTakeonType('refinery')).toBeDefined()
+  })
+
+  it('keeps non-mining field recipes in data but hides them by default', () => {
+    expect(SANDBOX_STRUCTURE_RECIPES.map(recipe => recipe.id)).toEqual(expect.arrayContaining([
+      'field-beacon',
+      'field-habitat-frame',
+    ]))
+    expect(visibleSandboxStructureRecipes().map(recipe => recipe.id)).not.toEqual(expect.arrayContaining([
+      'field-beacon',
+      'field-habitat-frame',
+    ]))
+    expect(visibleSandboxStructureRecipes(true)).toHaveLength(SANDBOX_STRUCTURE_RECIPES.length)
   })
 
   it('factory recipes consume refined goods and output rocket parts', () => {

@@ -3,7 +3,6 @@
 // `/api/community` routes (pocketbase/community.go), which apply the
 // friend/public visibility filter server-side.
 
-import { landnamPbUrl } from '@/lib/pb-config'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { getOutbox } from '@/lib/offline/pbOutbox'
 import { newRecordId } from '@/lib/offline/outbox'
@@ -39,7 +38,7 @@ class CommunityApiError extends Error {
 }
 
 function baseUrl(): string {
-  return landnamPbUrl().replace(/\/$/, '')
+  return (process.env.NEXT_PUBLIC_LANDNAM_PB_URL || 'http://localhost:8093').replace(/\/$/, '')
 }
 
 async function communityFetch<T>(path: string, init?: RequestInit): Promise<T> {

@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Nunito_Sans } from 'next/font/google'
 import styles from './MissionFlowPreview.module.css'
 import { JOBS, JOB_ORDER, GUIDE_CARDS, type JobKey, type StageKey } from './missionFlowPreviewData'
 
@@ -12,8 +11,6 @@ import { JOBS, JOB_ORDER, GUIDE_CARDS, type JobKey, type StageKey } from './miss
 // port to real React state. Does not replace MissionBoardScreen.tsx/
 // MissionCard.tsx; see the run report for the palette conflict with
 // Landnam's real dark tokens in web/app/globals.css.
-
-const nunitoSans = Nunito_Sans({ subsets: ['latin'], weight: ['500', '700', '800', '900'] })
 
 const FACE_CLASS: Record<string, string> = {
   helios: styles.faceHelios,
@@ -83,7 +80,7 @@ export default function MissionFlowPreview() {
   }
 
   return (
-    <div className={cx(styles.wrap, nunitoSans.className)}>
+    <div className={styles.wrap}>
       <main
         className={cx(styles.game, BIOME_CLASS[job.biome])}
         data-od-id="mission-board-screen"

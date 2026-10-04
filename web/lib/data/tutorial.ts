@@ -1,8 +1,44 @@
 // Landnam game data — tutorial steps
+//
+// SSL-332 agency training: EXTRACTION_STEPS (place the launchpad, then the
+// first mine-and-return contract), TRANSPORT_STEPS (the two-stop mine-and-haul
+// contract) and STORAGE_STEPS (build the Earth silo that opens Free Ops). The
+// old M2 Prospector steps are retired. Stage selection lives in
+// trainingCoachSteps below.
 
 import type { TutorialStep } from './types'
+import type { AgencyTrainingStage } from '@/lib/systems/AgencyOnboardingSystem'
+import type { TrainingTryId } from '@/lib/systems/FlightPlanSystem'
 
-export const M1_STEPS: TutorialStep[] = [
+export interface TrainingTryStep {
+  id: string
+  try: TrainingTryId
+  screen: string
+  objective: string
+  radio: string
+  hint?: string
+  beacon?: string
+  doneOn: 'mining-debriefed' | 'tess-classified' | 'part-tweaked'
+}
+
+/** The durable three-try plan. Steps are screen-local instructions; only the
+ * named real game event completes a try. */
+export const TRAINING_TRIES: readonly TrainingTryStep[] = [
+  { id: 'mine-launchpad', try: 'mining', screen: 'launchpad', objective: 'Open client contracts', radio: 'The first try is a complete mine-and-return run.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
+  { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
+  { id: 'mine-target', try: 'mining', screen: 'targets', objective: 'Choose the highlighted target', radio: 'The target carries the mineral named by the order.', doneOn: 'mining-debriefed' },
+  { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
+  { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
+  { id: 'scan-classify', try: 'scan', screen: 'galaxy', objective: 'Classify the transit candidate', radio: 'Review the light curve and submit a science verdict.', hint: 'The expected transit sits in the shaded dip band.', doneOn: 'tess-classified' },
+  { id: 'part-fit', try: 'part', screen: 'hangar', objective: 'Fit a module in each ship stage', radio: 'Open the ship customiser, choose a module for engine, booster, cockpit and payload, then confirm.', doneOn: 'part-tweaked' },
+]
+
+export function trainingTryStep(tryId: TrainingTryId, screen: string): TrainingTryStep | undefined {
+  return TRAINING_TRIES.find(step => step.try === tryId && step.screen === screen)
+    ?? TRAINING_TRIES.find(step => step.try === tryId)
+}
+
+export const EXTRACTION_STEPS: TutorialStep[] = [
   { id: 0, screen: 'build',   title: 'Build a Launchpad',
     body: 'Your first structure — all missions launch from here.',
     action: 'Tap a build pad, then confirm',
@@ -10,11 +46,11 @@ export const M1_STEPS: TutorialStep[] = [
     desktopBody: 'Your first structure — all missions launch from here.',
     desktopAction: 'Click a build pad, then confirm placement',
     desktopCoachId: 'build-confirm|build-plot-0', desktopDir: 'down' },
-  { id: 1, screen: 'hub',     title: 'Open a Mission',
-    body: 'Mining contracts are on the mission board.',
+  { id: 1, screen: 'hub',     title: 'Extraction',
+    body: 'Your agency\'s first job: mine ore for a client and bring it home. Contracts are on the mission board.',
     action: 'Tap the Launchpad',
     anchor: 'bottom', spot: null, coachId: 'building-launchpad', dir: 'up', cta: 'Launchpad',
-    desktopBody: 'Mining contracts are on the mission board.',
+    desktopBody: 'Your agency\'s first job: mine ore for a client and bring it home. Contracts are on the mission board.',
     desktopAction: 'Click the Launchpad',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
   // Sibling of step 1, same id — tapping the launchpad now opens its own
@@ -53,53 +89,26 @@ export const M1_STEPS: TutorialStep[] = [
   // point-and-aim mechanic the game doesn't have. The laser always fires
   // straight down from the ship's fixed screen position while the ore field
   // drifts underneath — it's a timing game, not aim-and-click. This is the
-  // coach a first-time player actually sees (the separate MiningAimCoach
+  // coach a first-time player actually sees (the separate Mining HUD
   // hint is suppressed for the whole tutorial, since `hasCoach` is true),
   // so the correction has to live here, not just in that component.
   { id: 6, screen: 'mining',   title: 'Mine the Asteroid',
     body: 'You can\'t aim the laser — it always fires straight down from your ship. Ore deposits (the coloured seams) drift past underneath. Wait for one to line up, then fire.',
     action: 'Tap FIRE LASER when a deposit lines up',
-    anchor: 'top', spot: null, cta: 'Fire the laser',
+    anchor: 'top', spot: null, cta: 'Fire the laser', coachId: 'mining-fire-laser',
     desktopAction: 'Click FIRE LASER when a deposit lines up' },
 ]
 
-export const M2_STEPS: TutorialStep[] = [
-  // Step 20: hub — action step (auto-dismisses when user navigates to missions).
-  // Mirrors M1 step 1: highlights the radial menu so the user knows exactly what to tap.
-  { id: 20, screen: 'hub', title: 'Guided Ops · Mission 2',
-    body: 'Prospector is now available — bigger cargo bay and stronger drill. You\'re still in guided operations. Accept a new mining contract to continue.',
+export const TRANSPORT_STEPS: TutorialStep[] = [
+  { id: 30, screen: 'hub', title: 'Transport',
+    body: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. The contract pays for both jobs.',
     action: 'Tap the Launchpad',
     anchor: 'bottom', spot: null, cta: 'Launchpad', coachId: 'building-launchpad', dir: 'up',
-    desktopBody: 'Prospector is now available — bigger cargo bay and stronger drill. You\'re still in guided operations. Click MISSIONS to continue.',
-    desktopAction: 'Click the Launchpad',
-    desktopCoachId: 'building-launchpad', desktopDir: 'up' },
-  // Sibling of step 20 — see the id:1 launchpad sibling above for why this exists.
-  { id: 20, screen: 'launchpad', title: 'Guided Ops · Mission 2',
-    body: 'Your own program is here — client contracts are one press further in.',
-    action: 'Tap View All Contracts',
-    anchor: 'bottom', spot: null, cta: 'View All Contracts', coachId: 'launchpad-view-contracts', dir: 'down',
-    desktopAction: 'Click View All Contracts',
-    desktopCoachId: 'launchpad-view-contracts', desktopDir: 'down' },
-  { id: 22, screen: 'missions', title: 'Choose Your Second Contract',
-    body: 'You already know the loop: accept a client contract, choose a viable target, mine the order, then return for payment and client experience. Prospector lets you take the larger order.',
-    action: 'Accept the available Mission 2 contract',
-    anchor: 'bottom', spot: null, cta: 'Accept contract' },
-  { id: 21, screen: 'rocket-buy', title: 'Prospector — Select Your Rocket',
-    body: 'Prospector has been assigned to this mission. It carries more ore than Explorer and reaches deeper mineral tiers.',
-    manual: true,
-    anchor: 'top', spot: null, cta: 'Got it' },
-]
-
-export const M3_STEPS: TutorialStep[] = [
-  { id: 30, screen: 'hub', title: 'Guided Ops · Mission 3',
-    body: 'This client needs more than ore returned to Earth. You will mine at one site, carry the order to their build site, then bring the rover home. The contract pays for both pieces of work.',
-    action: 'Tap the Launchpad',
-    anchor: 'bottom', spot: null, cta: 'Launchpad', coachId: 'building-launchpad', dir: 'up',
-    desktopBody: 'This client needs more than ore returned to Earth. You will mine at one site, carry the order to their build site, then bring the rover home. Click the Launchpad to begin.',
+    desktopBody: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. Click the Launchpad to begin.',
     desktopAction: 'Click the Launchpad',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
   // Sibling of step 30 — see the id:1 launchpad sibling above for why this exists.
-  { id: 30, screen: 'launchpad', title: 'Guided Ops · Mission 3',
+  { id: 30, screen: 'launchpad', title: 'Transport',
     body: 'Your own program is here — client contracts are one press further in.',
     action: 'Tap View All Contracts',
     anchor: 'bottom', spot: null, cta: 'View All Contracts', coachId: 'launchpad-view-contracts', dir: 'down',
@@ -119,8 +128,38 @@ export const M3_STEPS: TutorialStep[] = [
     anchor: 'top', spot: null, cta: 'Got it' },
 ]
 
-export const PROGRESSION_STEPS: TutorialStep[] = [
-  ...M1_STEPS,
-  ...M2_STEPS,
-  ...M3_STEPS,
+export const STORAGE_STEPS: TutorialStep[] = [
+  { id: 40, screen: 'hub', title: 'Build a Storage Silo',
+    body: 'Your agency can mine and haul. Now give it somewhere to keep ore on Earth. Building the silo opens Free Ops.',
+    action: 'Tap Build Silo',
+    anchor: 'bottom', spot: null, cta: 'Build Silo', coachId: 'hub-build-storage-silo', dir: 'up',
+    desktopAction: 'Click Build Silo',
+    desktopCoachId: 'hub-build-storage-silo', desktopDir: 'up' },
+  { id: 41, screen: 'build', title: 'Place the Silo',
+    body: 'Pick an open plot for the Surface Silo, then confirm.',
+    action: 'Tap an open plot, then confirm',
+    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-open', dir: 'down', cta: 'Build Surface Silo',
+    desktopAction: 'Click an open plot, then confirm placement',
+    desktopCoachId: 'build-confirm|build-plot-open', desktopDir: 'down' },
 ]
+
+export const PROGRESSION_STEPS: TutorialStep[] = [
+  ...EXTRACTION_STEPS,
+  ...TRANSPORT_STEPS,
+  ...STORAGE_STEPS,
+]
+
+/** Coach steps for an agency training stage. Launchpad placement is the
+ *  first beat of the Extraction step list; Free Ops has no coach. */
+export function trainingCoachSteps(stage: AgencyTrainingStage): TutorialStep[] {
+  if (stage === 'launchpad' || stage === 'extraction') return EXTRACTION_STEPS
+  if (stage === 'transport') return TRANSPORT_STEPS
+  if (stage === 'storage') return STORAGE_STEPS
+  return []
+}
+
+// Compatibility exports for the retired GameApp route shell. The live shell
+// selects the same agency stages through trainingCoachSteps.
+export const M1_STEPS = EXTRACTION_STEPS
+export const M2_STEPS = TRANSPORT_STEPS
+export const M3_STEPS = STORAGE_STEPS

@@ -46,7 +46,7 @@ export function takeonBodyForTarget(target: Pick<Target, 'id' | 'type'>): string
     ?? (target.type === 'asteroid' ? 'ironrock' : 'mars')
 }
 
-function roverCargoRequirements(mission: Mission, target: Target): Record<string, number> {
+export function roverCargoRequirements(mission: Mission, target: Target): Record<string, number> {
   if (Object.keys(mission.requires.minerals).length > 0) return { ...mission.requires.minerals }
 
   return Object.fromEntries(
@@ -171,7 +171,7 @@ export default function RoverMiningScreen({
       <TopBar eyebrow={`SURFACE OPS · ${target.name.toUpperCase()}`} title="Field Rover" onBack={onBack} />
 
       <main className={styles.content} data-ui-zone={UI_ZONES.screenContent}>
-        <section className={styles.scenePanel} aria-label="TakeOn rover field">
+        <section className={styles.scenePanel} aria-label="TakeOn rover field" data-build-mode={buildMode && sandboxEnabled}>
           <TakeOnMount
             ref={takeonHandle}
             missionId={missionId}

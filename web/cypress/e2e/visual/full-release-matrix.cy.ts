@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 export {}
 
 import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
@@ -85,7 +86,7 @@ function suppressNonGameplaySurfaces(win: Window) {
   // The science-console coach has dedicated walkthrough coverage. The release
   // matrix captures the working console underneath it, otherwise the overlay
   // hides the data evidence it is meant to audit.
-  win.localStorage.setItem('landnam_tess_coach_done_v1', '1')
+  win.localStorage.setItem('landnam_observatory_coach_seen_v1', '1')
   win.localStorage.setItem('landnam_asteroid_discovery_coach_seen_v1', '1')
   // The normal shell derives its storage namespace from PocketBase's restored
   // user record. Seed a valid-shaped fixture record, not retired credentials,
@@ -109,10 +110,9 @@ function continuePastAuthIfShown() {
 function goToMissions() {
   cy.window().then(win => {
     if (win.innerWidth >= 1024) {
-      cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-      clickDom('[data-testid="hub-desktop-missions-btn"]')
+      clickDom('[data-testid="home-bar-ops"]')
     } else {
-      clickDom('[data-testid="bottom-tab-missions"]')
+      clickDom('[data-testid="home-bar-ops"]')
     }
   })
   cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
@@ -178,8 +178,8 @@ function completeM3Delivery(viewport: string) {
   cy.get('[data-testid="delivery-screen"]', { timeout: 15000 }).should('be.visible')
   cy.get('[data-testid="delivery-cargo-hold"]', { timeout: 15000 }).should('be.visible')
   cy.get('body').then($body => {
-    if ($body.find('[data-testid="coach-got-it-btn"]').length > 0) {
-      cy.get('[data-testid="coach-got-it-btn"]').click({ force: true })
+    if ($body.find('[data-testid="flight-plan-continue"]').length > 0) {
+      cy.get('[data-testid="flight-plan-continue"]').click({ force: true })
     }
   })
   cy.get('[data-testid="delivery-screen"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
@@ -206,7 +206,7 @@ function completeDebrief() {
     .click({ force: true })
   cy.contains('Ledger').scrollIntoView().should('be.visible')
   clickDom('[data-testid="collect-reward-btn"]')
-  cy.contains('h1', /^(Base|Earth Base)$/i, { timeout: 10000 }).should('be.visible')
+  assertOnHome(10000)
 }
 
 function captureExtendedSurfaces(viewport: typeof VIEWPORTS[number]) {
@@ -321,14 +321,14 @@ function playM3(viewport: string) {
   cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
   screenshot(viewport, 'm3-rocket-selection')
   cy.get('body').then($body => {
-    if ($body.find('[data-testid="coach-got-it-btn"]').length > 0) {
-      cy.get('[data-testid="coach-got-it-btn"]').click({ force: true })
+    if ($body.find('[data-testid="flight-plan-continue"]').length > 0) {
+      cy.get('[data-testid="flight-plan-continue"]').click({ force: true })
     }
   })
   cy.contains('button', /BUILD ANOTHER/).first().should('be.visible').click({ force: true })
   cy.get('body').then($body => {
-    if ($body.find('[data-testid="coach-got-it-btn"]').length > 0) {
-      cy.get('[data-testid="coach-got-it-btn"]').click({ force: true })
+    if ($body.find('[data-testid="flight-plan-continue"]').length > 0) {
+      cy.get('[data-testid="flight-plan-continue"]').click({ force: true })
     }
   })
   rollOutToLaunchpad()
@@ -355,7 +355,7 @@ describe('Release journey — onboarding and late-game operations across viewpor
       })
 
       continuePastAuthIfShown()
-      cy.get('h1.intro-title', { timeout: 10000 }).should('be.visible').and('have.text', 'LANDNAM')
+      cy.get('[data-testid="intro-title"]', { timeout: 10000 }).should('be.visible').and('have.text', 'LANDNAM')
       screenshot(viewport.label, 'intro')
 
       cy.get('[data-testid="intro-begin-btn"]').should('be.visible').click({ force: true })

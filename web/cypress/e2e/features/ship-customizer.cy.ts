@@ -1,6 +1,16 @@
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 describe('Ship Customiser staged build', () => {
+  function contrastRatio(foreground: string, background: string) {
+    const channels = (color: string) => (color.match(/\d+(?:\.\d+)?/g) ?? []).slice(0, 3).map(Number)
+    const luminance = (color: string) => channels(color).map(channel => {
+      const normalized = channel / 255
+      return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
+    }).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0)
+    const [light, dark] = [luminance(foreground), luminance(background)].sort((a, b) => b - a)
+    return (light + 0.05) / (dark + 0.05)
+  }
+
   function visitCustomizer() {
     cy.visit('/game/hangar', {
       onBeforeLoad(win) {
@@ -98,5 +108,43 @@ describe('Ship Customiser staged build', () => {
     // Confirmed loadout is real game state, not a mock that resets on close —
     // the Hangar reflects it immediately without needing to reopen the modal.
     cy.get('[data-testid="ship-customizer-loadout-summary"]').should('contain', '4/4 modules fitted')
+  })
+
+  it('keeps the light-theme Hangar legible and unclipped across supported viewports', () => {
+    const viewports: Array<[number, number]> = [[844, 390], [926, 428], [390, 844], [1440, 900]]
+
+    viewports.forEach(([width, height]) => {
+      cy.viewport(width, height)
+      visitCustomizer()
+      cy.get('[data-testid="hangar-screen"]').should('be.visible')
+      cy.get('[data-testid="open-ship-customizer"]').then($button => {
+        const bounds = $button[0].getBoundingClientRect()
+        expect(bounds.width, `${width}x${height} customiser width`).to.be.greaterThan(43)
+        expect(bounds.height, `${width}x${height} customiser hit area`).to.be.greaterThan(43)
+      })
+      cy.get('[data-testid="hangar-screen"]').then($screen => {
+        const screen = $screen[0]
+        const style = getComputedStyle(screen)
+        expect(style.getPropertyValue('--ln-bp-ink').trim(), `${width}x${height} has no blueprint-only ink`).to.eq('')
+        expect(style.getPropertyValue('--ln-text').trim(), `${width}x${height} light text token`).to.not.eq('')
+        expect(document.documentElement.scrollWidth, `${width}x${height} horizontal overflow`).to.be.at.most(width)
+      })
+      cy.get('[data-testid="hangar-fleet-readout"]').then($readout => {
+        const readout = $readout[0]
+        const foreground = getComputedStyle(readout.querySelector('strong')!).color
+        const background = getComputedStyle(readout).backgroundColor
+        expect(contrastRatio(foreground, background), `${width}x${height} fleet readout contrast`).to.be.at.least(4.5)
+      })
+      cy.get('[data-testid="hangar-customizer-title"]').then($title => {
+        expect(contrastRatio(getComputedStyle($title[0]).color, 'rgb(255, 255, 255)'), `${width}x${height} customiser accent contrast`).to.be.at.least(4.5)
+      })
+      cy.get('[data-testid="hangar-construction-scene"]').should('be.visible')
+      cy.get('[data-testid="hangar-fleet-grid"]').scrollIntoView().then($grid => {
+        const bounds = $grid[0].getBoundingClientRect()
+        expect(bounds.top, `${width}x${height} registry can scroll into view`).to.be.at.least(0)
+        expect(bounds.bottom, `${width}x${height} registry is not clipped after scrolling`).to.be.at.most(height)
+      })
+      cy.screenshot(`ssl-48-hangar-${width}x${height}`)
+    })
   })
 })

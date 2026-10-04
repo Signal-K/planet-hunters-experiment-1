@@ -4,6 +4,7 @@ export interface MissionPayload {
   type: 'rover' | 'satellite' | 'deep-space-survey'
   name: string
   cargoCost: number
+  instrumentId?: 'transit-telescope' | 'deep-space-telescope'
 }
 
 export interface MissionSurveyPlan {
@@ -37,6 +38,8 @@ export interface TargetStructureBlueprint {
   requiredMaterials: Record<string, number>
   buildTimeMs: number
   description: string
+  /** Cycle 3 scope gate for off-world build listings; data is never deleted. */
+  offworldCategory: import('../featureFlags').OffworldBuildCategory
 }
 
 export interface ClientStructureRecord {
@@ -219,7 +222,7 @@ export interface StructureBlueprint {
   cost: number
   costMaterials?: Record<string, number>
   unlocksAt: string
-  unlockTrigger?: 'always' | 'free-operations' | 'client-mission-trigger' | 'academy-research' | 'deep-space-telescope-unlock' | 'manual'
+  unlockTrigger?: 'always' | 'onboarding-missions' | 'free-operations' | 'client-mission-trigger' | 'academy-research' | 'deep-space-telescope-unlock' | 'manual'
   description: string
 }
 

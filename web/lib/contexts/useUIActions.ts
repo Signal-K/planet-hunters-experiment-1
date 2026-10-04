@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react'
 import type { Toast } from '@/components/ui/ToastLayer'
-import type { Screen, GameState, ShellSheet } from '@/lib/game-types'
+import type { Screen, GameState } from '@/lib/game-types'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
 import { isHostScene, resolveLogicalBack, type HostScene } from '@/lib/screen-back'
@@ -14,6 +14,11 @@ export function useUIActions(
   const [toasts, setToasts] = useState<Toast[]>([])
   // Set by setScreenFromUrl to tell the URL-sync effect to skip one cycle
   const skipNextUrlSync = useRef(false)
+  // Path of a router.push the URL-sync effect has issued but Next has not
+  // committed yet. window.location.pathname is stale until then, so a quick
+  // second navigation (Back then Resume) would compare against the old path,
+  // push nothing, and let the slower first push land last.
+  const inflightPath = useRef<string | null>(null)
   // Whether Hub is showing its Subsurface half. HubScreen slides between
   // surface/subsurface as one continuous scene without a route change (a
   // real navigation would fight the slide animation and add spurious
@@ -25,9 +30,6 @@ export function useUIActions(
   // Every Launchpad entry is now the physical scene. The retired overview was
   // a generic dashboard that broke the Base's scene-first game flow.
   const [launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen] = useState(false)
-  // SSL-35: the one shell-level sheet or pop-up open over the current
-  // screen (Menu and the things it opens). Chrome, not save data.
-  const [shellSheet, setShellSheet] = useState<ShellSheet | null>(null)
   // Last physical place the player stood in (Hub / Launchpad / Academy).
   // Overlay Back uses this instead of visit history, so Launchpad never
   // returns to Hangar. Not persisted — it is chrome, not save data.
@@ -36,12 +38,10 @@ export function useUIActions(
 
   const rememberHost = useCallback((screen: Screen) => {
     if (isHostScene(screen)) lastHost.current = screen
+    else if (screen === 'hub-subsurface') lastHost.current = 'hub'
   }, [])
 
   const go = useCallback((screen: Screen) => {
-    // Shell sheets (Menu, the Market pop-up) belong to the screen they were
-    // opened over; moving on closes them.
-    setShellSheet(null)
     setState(s => {
       if (screen === 'hangar') {
         hangarReturnView.current = s.screen === 'launchpad' || s.screen === 'academy'
@@ -130,10 +130,25 @@ export function useUIActions(
       // should not be pushed back. A repaired route, however, must be written
       // back to the canonical URL instead of leaving /game/build rendering a
       // stale screen component forever.
+      // Arm the skip only when state.screen really changes: the URL-sync
+      // effect is the only thing that clears it, and it runs only on a change.
+      // A no-op here would leave the flag armed and swallow the next real
+      // navigation's push, stranding the URL on the old route.
+      if (s.screen === safeScreen) return s
       skipNextUrlSync.current = safeScreen === screen
       return { ...s, screen: safeScreen }
     })
   }, [setState])
+
+  // The [screen] page asks this before trusting a route param. True means the
+  // param belongs to an earlier navigation that a newer push has superseded.
+  const isStaleRoute = useCallback((screen: string) => {
+    const inflight = inflightPath.current
+    if (!inflight) return false
+    if (inflight !== `/game/${screen}`) return true
+    inflightPath.current = null
+    return false
+  }, [])
 
   const setPopup = useCallback((v: string | null) => {
     setState(s => ({ ...s, popup: v }))
@@ -155,5 +170,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, goBack, recordScreenTransition, goToMissions, markContractsOpened, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar, shellSheet, setShellSheet }
+  return { go, goBack, recordScreenTransition, goToMissions, markContractsOpened, setScreenFromUrl, skipNextUrlSync, inflightPath, isStaleRoute, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
 }

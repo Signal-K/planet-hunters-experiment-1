@@ -3,7 +3,8 @@ import { useRouter } from 'next/navigation'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
-import { identifyUser, captureGameEvent, resetAnalyticsIdentity } from '@/lib/posthog'
+import { getOutbox, isQueuedUpsert, queueUpsert } from '@/lib/offline/pbOutbox'
+import { identifyUser, captureGameEvent } from '@/lib/posthog'
 import { DEFAULT_STATE, loadState, mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import { accountGameStateStorageKey, gameStateStorageKey } from '@/lib/game-state-storage'
 import { isResumableMissionScreen } from '@/lib/initial-route'
@@ -30,6 +31,11 @@ import {
 // offline for real, or truly abandoned) and the gate is the correct outcome.
 const SESSION_REFRESH_INTERVAL_MS = 4 * 60 * 1000
 
+/** The one game_states row per account; also the outbox coalescing key. */
+function gameStateFilter(userId: string): string {
+  return `user = "${userId}"`
+}
+
 function responseStatus(err: unknown): number | null {
   if (typeof err === 'object' && err && 'status' in err && typeof err.status === 'number') return err.status
   return null
@@ -37,9 +43,6 @@ function responseStatus(err: unknown): number | null {
 
 function authErrorMessage(err: unknown, fallback: string): string {
   if (typeof err !== 'object' || !err) return fallback
-  // PocketBase's SDK uses status 0 and "Something went wrong." when fetch
-  // never gets an HTTP response (connection refused, offline, bad URL).
-  if (responseStatus(err) === 0) return 'Could not reach the account server.'
   const data = 'data' in err ? err.data as unknown : null
   const fieldMessages: string[] = []
 
@@ -152,7 +155,6 @@ export function useAuthSync({
   const skipNextRemotePersist = useRef(false)
   const lastPersistedMissionsDone = useRef<number | null>(null)
   const lastPersistedTutorial = useRef<boolean | null>(null)
-  const remoteSaveDirty = useRef(false)
   const resettingRef = useRef(false)
   resettingRef.current = resetting
   const localStateKey = gameStateStorageKey(storageKey, authUserId)
@@ -266,6 +268,27 @@ export function useAuthSync({
     }
   }, [])
 
+  // SSL-321: the ordinary save path. A failed save goes into the persisted
+  // outbox (one coalesced upsert per account), so it survives a reload or an
+  // iOS kill while offline and replays on reconnect. While one is queued,
+  // later saves replace it rather than racing it, so an older snapshot can
+  // never land on top of a newer one. Resolves once the state is either on
+  // the server or stored in the queue.
+  const persistRemoteState = useCallback(async (userId: string, nextState: GameState) => {
+    const filter = gameStateFilter(userId)
+    const payload = { user: userId, state: nextState, missions_done: nextState.player.missionsDone }
+    const outbox = getOutbox()
+    if (!(await outbox.has(op => isQueuedUpsert(op, 'game_states', filter)))) {
+      try {
+        await saveRemoteState(userId, nextState)
+        return
+      } catch {
+        // Offline or refused: fall through to the queue.
+      }
+    }
+    await queueUpsert('game_states', filter, payload, backendRecordId.current ?? userId)
+  }, [saveRemoteState])
+
   // Track auth identity changes. authRefresh() (called by the session-keepalive
   // effect above) also routes through authStore.save() and therefore fires
   // this same onChange on every renewal — for the same record id, that's not
@@ -296,7 +319,7 @@ export function useAuthSync({
     }
     if (!record) pbLandnam.authStore.clear()
     setAuthUserId(record?.id ?? null)
-    identifyUser(record, pbShared.authStore.isValid)
+    if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
   }), [])
 
   // Exchange the shared-backend session for a native Landnam auth token.
@@ -483,7 +506,7 @@ export function useAuthSync({
           setState(current => {
             if (current.player.activeMission) return current
             const transitStartedAt = Number.isFinite(launchedAt) ? launchedAt : null
-            const arrivalAt = phase === 'transit' && target && transitStartedAt !== null && current.player.missionsDone >= 3
+            const arrivalAt = phase === 'transit' && target && transitStartedAt !== null && current.player.freeOperations
               ? transitStartedAt + travelDurationMs(target, current.player.unlockedSkillNodes ?? [], 42 * 1000)
               : null
             const label = `${mission?.title ?? 'Active mission'} → ${target?.name ?? targetId}`
@@ -534,7 +557,7 @@ export function useAuthSync({
         backendLoadedFor.current = authUserId!
         setBackendReady(true)
         if (localStorage.getItem(localStateKey)) {
-          saveRemoteState(authUserId!, stateRef.current).catch(() => {})
+          persistRemoteState(authUserId!, stateRef.current).catch(() => {})
         }
         return
       }
@@ -592,7 +615,7 @@ export function useAuthSync({
       })
 
     return () => { active = false }
-  }, [authUserId, hydrated, isPreview, resetting, landnamAuthAttempted, setState, normalizeAndRepair, saveRemoteState, stateRef, localStateKey])
+  }, [authUserId, hydrated, isPreview, resetting, landnamAuthAttempted, setState, normalizeAndRepair, persistRemoteState, stateRef, localStateKey])
 
   // Persist state to backend. Debounced 400ms for ordinary state churn, but
   // flushed immediately (0ms) whenever missionsDone or tutorial changes — an
@@ -612,49 +635,31 @@ export function useAuthSync({
     const delay = isProgressionTransition ? 0 : 400
     const timer = window.setTimeout(async () => {
       try {
-        await saveRemoteState(authUserId, state)
-        remoteSaveDirty.current = false
+        await persistRemoteState(authUserId, state)
         lastPersistedMissionsDone.current = state.player.missionsDone
         lastPersistedTutorial.current = state.tutorial
       } catch {
-        // Local storage remains the offline source of truth until the data link recovers.
-        remoteSaveDirty.current = true
+        // Neither the server nor the queue took it (storage blocked): local
+        // storage remains the source of truth and the next change retries.
       }
     }, delay)
     return () => window.clearTimeout(timer)
-  }, [authUserId, hydrated, isPreview, resetting, backendReady, state, saveRemoteState])
+  }, [authUserId, hydrated, isPreview, resetting, backendReady, state, persistRemoteState])
 
-  // SSL-321: Safari has no Background Sync, and a failed game_states save used
-  // to wait for the next state change. Retry whenever the app resumes or the
-  // network returns (online / visible / pageshow), and try once more as the
-  // page is hidden, since iOS may never run another tick.
+  // SSL-321: Safari has no Background Sync. The outbox replays queued saves on
+  // online / visible / pageshow; this sends the latest state as the page is
+  // hidden, since iOS may never run another tick, and queues it if that fails.
   useEffect(() => {
     if (isPreview || !authUserId || !backendReady || backendLoadedFor.current !== authUserId) return
     const userId = authUserId
-    function retrySave() {
-      if (!remoteSaveDirty.current || navigator.onLine === false) return
-      saveRemoteState(userId, stateRef.current)
-        .then(() => { remoteSaveDirty.current = false })
-        .catch(() => { /* stays dirty for the next trigger */ })
-    }
     function onVisibility() {
-      if (document.visibilityState === 'visible') retrySave()
-      else if (!resettingRef.current) {
-        // Last chance before iOS suspends the page: send the latest state now.
-        saveRemoteState(userId, stateRef.current)
-          .then(() => { remoteSaveDirty.current = false })
-          .catch(() => { remoteSaveDirty.current = true })
+      if (document.visibilityState === 'hidden' && !resettingRef.current) {
+        persistRemoteState(userId, stateRef.current).catch(() => {})
       }
     }
-    window.addEventListener('online', retrySave)
-    window.addEventListener('pageshow', retrySave)
     document.addEventListener('visibilitychange', onVisibility)
-    return () => {
-      window.removeEventListener('online', retrySave)
-      window.removeEventListener('pageshow', retrySave)
-      document.removeEventListener('visibilitychange', onVisibility)
-    }
-  }, [authUserId, backendReady, isPreview, saveRemoteState, stateRef])
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [authUserId, backendReady, isPreview, persistRemoteState, stateRef])
 
   // Signing in must always land the player on Earth Base, never wherever the
   // auth gate happened to be sitting on top of (e.g. a deep-linked or
@@ -668,6 +673,16 @@ export function useAuthSync({
     // deep-linked screen. Replace the URL here as well as the game state so
     // that the route's URL -> state effect cannot put the player straight
     // back onto Contracts after the gate closes (especially on mobile).
+    //
+    // A player with no launchpad yet has not finished first-time placement:
+    // Base would show the "Tap the Launchpad" coach over an empty scene. Keep
+    // them on the intro/build flow instead (SSL-365).
+    if (current.player.placed.length === 0 && !current.player.freeOperations) {
+      const firstTimeScreen = current.screen === 'intro' ? 'intro' : 'build'
+      if (current.screen !== firstTimeScreen) setState(s => ({ ...s, screen: firstTimeScreen }))
+      router.replace(`/game/${firstTimeScreen}`)
+      return
+    }
     if (current.screen !== 'hub') setState(s => ({ ...s, screen: 'hub' }))
     router.replace('/game/hub')
   }, [router, setState, stateRef])
@@ -789,6 +804,9 @@ export function useAuthSync({
       return
     }
 
+    // A queued save replaying after the delete would resurrect the old game.
+    await getOutbox().discard(op => isQueuedUpsert(op, 'game_states', gameStateFilter(authUserId)))
+
     try {
       // The load can still be in flight when the player confirms reset. Find
       // the record by owner as a fallback instead of silently leaving the
@@ -818,18 +836,17 @@ export function useAuthSync({
       && !isPreview
 
     if (shouldFlush) {
-      try {
-        await saveRemoteState(signedOutUserId, stateRef.current)
-      } catch {
+      // Latest state first (queued if offline), then drain the queue while
+      // this account's token is still valid.
+      await persistRemoteState(signedOutUserId, stateRef.current).catch(() => {})
+      await getOutbox().flush()
+      if (await getOutbox().has(op => isQueuedUpsert(op, 'game_states', gameStateFilter(signedOutUserId)))) {
         addToast('Could not sync latest progress before sign out', 'warn')
       }
     }
 
     pbShared.authStore.clear()
     pbLandnam.authStore.clear()
-    // SSL-357: the next sign-in on this device must start a new PostHog
-    // person, not inherit this one's distinct_id.
-    resetAnalyticsIdentity()
     localStorage.removeItem('landnam-account-credentials')
     localStorage.removeItem(storageKey)
     if (signedOutUserId) localStorage.removeItem(accountGameStateStorageKey(storageKey, signedOutUserId))
@@ -838,7 +855,7 @@ export function useAuthSync({
     setAuthGateError(null)
     authGateDismissed.current = false
     if (!isPreview) setAuthGateOpen(true)
-  }, [addToast, authUserId, backendReady, isPreview, saveRemoteState, setState, stateRef, storageKey])
+  }, [addToast, authUserId, backendReady, isPreview, persistRemoteState, setState, stateRef, storageKey])
 
   return {
     authUserId, backendReady,

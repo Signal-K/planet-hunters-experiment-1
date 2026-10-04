@@ -9,11 +9,17 @@ interface ButtonProps {
   children: React.ReactNode
   onClick?: () => void
   disabled?: boolean
+  /** Keeps an unavailable action discoverable so its handler can explain the
+   * missing prerequisite, without claiming that it is currently operable. */
+  ariaDisabled?: boolean
   full?: boolean
   kind?: ButtonKind
   size?: ButtonSize
   variant?: 'primary' | 'secondary' | 'danger'
   testId?: string
+  /** Physical target for the tutorial pointer. Kept on the actual button so
+   *  the highlighted affordance remains directly operable. */
+  coachId?: string
 }
 
 const KIND_TOKENS: Record<ButtonKind, { color: string; border: string }> = {
@@ -22,13 +28,16 @@ const KIND_TOKENS: Record<ButtonKind, { color: string; border: string }> = {
   green: { color: 'var(--ln-ok)', border: 'var(--ln-ok)' },
 }
 
-export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'cyan', testId }: ButtonProps) {
+export function PrimaryBtn({ children, onClick, disabled, ariaDisabled = false, full = true, kind = 'cyan', testId, coachId }: ButtonProps) {
   const { color, border } = KIND_TOKENS[kind]
+  const unavailable = disabled || ariaDisabled
   return (
     <button
       data-testid={testId}
+      data-beacon={coachId}
       onClick={!disabled ? onClick : undefined}
       disabled={disabled}
+      aria-disabled={ariaDisabled || undefined}
       style={{
         width: full ? '100%' : 'auto',
         minHeight: 44,
@@ -43,12 +52,12 @@ export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'c
         border: `1px solid ${border}`,
         borderRadius: 8,
         boxShadow: 'none',
-        cursor: disabled ? 'not-allowed' : 'pointer',
+        cursor: unavailable ? 'not-allowed' : 'pointer',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 10,
-        opacity: disabled ? 0.45 : 1,
+        opacity: unavailable ? 0.45 : 1,
       }}
     >
       {children}
@@ -127,3 +136,4 @@ export function IconBtn({
   )
 }
 
+export default PrimaryBtn

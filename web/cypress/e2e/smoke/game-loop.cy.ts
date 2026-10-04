@@ -92,7 +92,7 @@ describe('Full Game Loop — Landnam', () => {
       // Intro and other chrome both say LANDNAM. Pin this to the authored
       // intro title so a compact-landscape session cannot pass against a
       // leftover rotate-to-portrait overlay (retired in SSL-326).
-      cy.get('.intro-title').should('be.visible').and('contain.text', 'LANDNAM')
+      cy.get('[data-testid="intro-title"]').should('be.visible').and('contain.text', 'LANDNAM')
       cy.contains('BEGIN OPERATIONS').should('be.visible')
       cy.get('[data-testid="intro-begin-btn"]').click()
       cy.get('[data-testid="build-place-screen"]').should('be.visible')
@@ -102,7 +102,8 @@ describe('Full Game Loop — Landnam', () => {
 
     it('build screen allows placing launchpad and transitions to hub', () => {
       visitWithState({ screen: 'build', tutorial: true, doneSteps: {} })
-      cy.contains('Build a Launchpad').should('be.visible')
+      // SSL-405: the Flight Plan opens the mining try on every training screen.
+      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Open client contracts')
     })
 
     it('hub screen renders with launchpad building after placement', () => {
@@ -124,7 +125,7 @@ describe('Full Game Loop — Landnam', () => {
     // internal steps. The old MissionCard board and TargetPicker are gone.
     it('mission board shows the M1 contract with the coach when landing on missions', () => {
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
-      cy.get('[data-testid="tutorial-coach-block"]').should('be.visible').and('contain', 'Select a Mission')
+      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Accept a mining contract')
       cy.get('[data-testid="mission-board-section-client"]').should('be.visible').and('contain', 'Helios Propulsion Depot')
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').and('not.be.disabled')
     })
@@ -144,8 +145,11 @@ describe('Full Game Loop — Landnam', () => {
       }))
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
       cy.get('[data-testid="mission-target-map"]').should('be.visible')
-      cy.get('[data-testid="coach-skip-btn"]').click()
-      cy.get('[data-testid="target-selection-summary"]').should('contain', 'ELIGIBLE TARGET')
+      cy.get('[data-testid=\"flight-plan-objective\"]').click()
+      cy.get('[data-testid=\"flight-plan-skip\"]').click()
+      // The only compatible target is auto-selected, so the summary shows its orbit
+      // rather than the "N ELIGIBLE" count.
+      cy.get('[data-testid="target-selection-summary"]').should('contain', 'ORBIT')
       cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled').click()
       cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
       cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'BUILD EXPLORER').click()
@@ -163,7 +167,7 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true },
       }))
       cy.get('[data-testid="mission-target-map"]').should('be.visible')
-      cy.contains('MISSION FILTER ACTIVE').should('be.visible')
+      cy.contains('MISSION FILTER').should('be.visible')
     })
   })
 
@@ -186,7 +190,8 @@ describe('Full Game Loop — Landnam', () => {
       // real setup flow rather than seeding the launch review directly.
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
-      cy.get('[data-testid="coach-skip-btn"]').click()
+      cy.get('[data-testid=\"flight-plan-objective\"]').click()
+      cy.get('[data-testid=\"flight-plan-skip\"]').click()
       cy.get('[data-testid="continue-build-btn"]').click()
       cy.get('[data-testid="purchase-rocket-btn"]').click()
       cy.get('[data-testid="transfer-to-launchpad-btn"]').click()
@@ -352,7 +357,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
     })
 
-    it('collecting the M1 reward returns to the Hub', () => {
+    it('collecting the M1 reward hands over to the scan try on the Galaxy screen', () => {
       const cargo = { platinum: 5 }
       visitWithState(fullState({
         screen: 'debrief',
@@ -384,7 +389,8 @@ describe('Full Game Loop — Landnam', () => {
       }))
       teardownVehicle()
       cy.get('[data-testid="collect-reward-btn"]').click()
-      cy.location('pathname').should('eq', '/game/hub')
+      // SSL-405: finishing the mining try opens the scan try's Galaxy screen.
+      cy.location('pathname').should('eq', '/game/galaxy')
     })
 
     it('shows Prospector unlock popup after M1 completion', () => {
@@ -419,7 +425,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.contains('Select Prospector').should('be.visible')
     })
 
-    it('M1 completion returns to hub with Prospector popup and does not open the market', () => {
+    it('M1 completion hands over to the scan try and does not open the market', () => {
       // M1 requires 5 platinum; player mined 7 so 2 are excess after delivery
       visitWithState(fullState({
         screen: 'debrief',
@@ -455,9 +461,9 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="collect-reward-btn"]').click()
 
       cy.contains('Commodity Exchange').should('not.exist')
-      cy.contains('Guided Ops · Mission 2').should('be.visible')
-      // The M2 coach opens collapsed; its body still names the new vehicle.
-      cy.contains('Prospector is now available').should('exist')
+      // SSL-405: the Transport lesson coach is retired. Settling the mining
+      // debrief lands on the scan try's Galaxy screen, not the market.
+      cy.location('pathname').should('eq', '/game/galaxy')
     })
   })
 
@@ -493,7 +499,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.contains('Select Prospector').should('be.visible')
     })
 
-    it('M2 coach step 20 shows on hub after M1 — no controlBuilt needed', () => {
+    it('Flight Plan moves on to the scan try on the hub once the mining try is done', () => {
       visitWithState(fullState({
         screen: 'hub',
         popup: null,
@@ -507,6 +513,7 @@ describe('Full Game Loop — Landnam', () => {
           placementPlots: { launchpad: 0 },
           controlBuilt: false,
           missionsDone: 1,
+          flightPlan: { completed: { mining: true }, hidden: false },
           freeOperations: false,
           clientMissions: {},
           clientCooldowns: {},
@@ -520,15 +527,15 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: true,
       }))
-      cy.get('[data-testid="tutorial-coach-block"]')
+      cy.get('[data-testid="flight-plan"]')
         .should('be.visible')
-        .should('contain', 'Guided Ops')
-        .should('contain', 'MISSIONS')
+        .should('contain', 'Classify the transit candidate')
+        .should('contain', 'scan')
     })
   })
 
-  describe('Phase 7: M2 — Iron starter order', () => {
-    it('M2 accessible on mission board after M1 without old Control Base gate', () => {
+  describe('Phase 7: Transport lesson (guided mission 2, SSL-332)', () => {
+    it('Transport contracts are on the mission board after M1 without old Control Base gate', () => {
       visitWithState(fullState({
         screen: 'missions',
         doneSteps: { 1: true },
@@ -554,15 +561,17 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.get('[data-testid^="mission-accept-generated-s2-"]').should('be.visible').and('not.be.disabled')
+      cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').should('be.visible').and('not.be.disabled')
+      cy.get('[data-testid^="mission-accept-generated-s2-"]').should('not.exist')
     })
 
-    it('M2 rocket purchase shows Prospector and purchase coach step', () => {
+    it('Transport rocket selection shows the two-stop route coach step', () => {
       visitWithState(fullState({
         screen: 'rocket-buy',
-        missionId: 'generated-s2-volatile-bulk-4',
-        targetId: 'eros',
-        doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 20: true },
+        missionId: 'lnm_m3_relay_bennu_vesta',
+        targetId: 'bennu',
+        deliveryTargetId: 'vesta',
+        doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 30: true },
         player: {
           francs: 9_000_000_000,
           activeMission: null,
@@ -586,15 +595,18 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: true,
       }))
       cy.contains('Prospector').should('be.visible')
-      cy.contains('Select Your Rocket').should('be.visible')
+      // SSL-405: the Two-Stop Route lesson is retired; the Flight Plan strip
+      // stays up with the active try's objective.
+      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Open client contracts')
     })
 
-    it('M2 preflight launch button visible with prebuilt Prospector', () => {
+    it('Transport preflight launch button visible with prebuilt Prospector', () => {
       visitWithState(fullState({
         screen: 'fab',
-        missionId: 'generated-s2-volatile-bulk-4',
-        targetId: 'eros',
-        doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 20: true, 21: true },
+        missionId: 'lnm_m3_relay_bennu_vesta',
+        targetId: 'bennu',
+        deliveryTargetId: 'vesta',
+        doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 30: true, 31: true },
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         player: {
           francs: 9_000_000_000,

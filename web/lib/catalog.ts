@@ -1,6 +1,6 @@
 import { pbLandnam } from './pb-landnam'
 import type { Target, Mission, Part, MineralMeta, Client, StructureBlueprint } from './data'
-import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions, generateSelfDirectedMiningPool, isOwnProgramMission } from './data'
+import { TARGETS, MISSIONS, AUTHORED_MISSIONS, TRANSPORT_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions, generateSelfDirectedMiningPool, isOwnProgramMission } from './data'
 import { normalizeMissionPayout } from './data/payouts'
 
 export interface Catalog {
@@ -33,6 +33,20 @@ export function mergeStructureCatalog(remote: StructureBlueprint[]): StructureBl
   return Array.from(merged.values())
 }
 
+// PocketBase JSON fields that are supposed to hold a mineral/material map
+// come back pre-parsed as an object when populated. JSON.parse() coerces its
+// argument to a string first, so calling it on a non-string (an array from a
+// misconfigured `[]` default, or an already-parsed object) throws instead of
+// parsing — only ever call it on an actual string.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseJsonMapField<T>(value: any, fallback: T): T {
+  if (value == null) return fallback
+  if (typeof value === 'string') {
+    try { return JSON.parse(value) } catch { return fallback }
+  }
+  return Array.isArray(value) ? fallback : value
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toTarget(r: any): Target {
   return {
@@ -50,21 +64,15 @@ export function toTarget(r: any): Target {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toMission(r: any): Mission {
   if (r.slug === 'lnm_m3_ore_delivery' || r.slug === 'm3-nickel-cobalt' || r.slug === 'm3-gold' || r.slug === 'lnm_m3_custom_mining') {
-    return AUTHORED_MISSIONS.find(m => m.sequence === M3_SEQUENCE) ?? AUTHORED_MISSIONS[0]
+    return AUTHORED_MISSIONS.find(m => m.sequence === TRANSPORT_SEQUENCE) ?? AUTHORED_MISSIONS[0]
   }
-  const minerals = typeof r.requires_minerals === 'object' && !Array.isArray(r.requires_minerals)
-    ? r.requires_minerals
-    : JSON.parse(r.requires_minerals || '{}')
+  const minerals = parseJsonMapField<Record<string, number>>(r.requires_minerals, {})
   const fallbackClient = r.client_slug ? CLIENTS[r.client_slug] : undefined
   const rawBrief = r.brief ?? ''
   const brief = fallbackClient && /^(?:Client|Contractor) Slot\s+/i.test(rawBrief)
     ? rawBrief.replace(/(?:Client|Contractor) Slot\s+\d+[A-Z]?/i, fallbackClient.name)
     : rawBrief
-  const constructionMaterials = typeof r.construction_required_materials === 'object' && !Array.isArray(r.construction_required_materials)
-    ? r.construction_required_materials
-    : r.construction_required_materials
-      ? JSON.parse(r.construction_required_materials)
-      : undefined
+  const constructionMaterials = parseJsonMapField<Record<string, number> | undefined>(r.construction_required_materials, undefined)
   return {
     id: r.slug,
     title: r.title,
@@ -106,12 +114,15 @@ export function toMission(r: any): Mission {
   }
 }
 
-// Applies the M3-sequence correction (PocketBase's seeded legacy M3 rows are
-// always replaced by the curated transport-client AUTHORED_MISSIONS pair),
+// Applies the Transport-sequence correction (PocketBase's seeded legacy M3 rows
+// and the retired M2 Prospector row, m2-silicon, which shares the Transport
+// sequence since SSL-332, are always replaced by the curated transport-client
+// AUTHORED_MISSIONS pair),
 // then generalizes that same "authored content PocketBase doesn't seed must
 // still reach the runtime catalog" pattern to every clientless authored
 // mission. seedCatalog() (pocketbase/main.go) only ever seeds the two
-// client-bearing onboarding rows (m1-iron, m2-silicon), so any AUTHORED_MISSIONS
+// client-bearing onboarding row (m1-iron; older databases may still hold the
+// retired m2-silicon row, dropped above), so any AUTHORED_MISSIONS
 // entry with no client — the academy intro, the self-directed mining intro,
 // crewed prospecting, ... — is never present in PocketBase's response and
 // would otherwise silently vanish whenever `missions` (the raw PB rows) is
@@ -119,14 +130,14 @@ export function toMission(r: any): Mission {
 // back in here, deduped by id, so a real PB row (should one ever share an id)
 // still wins.
 export function withAuthoredExtras(missions: Mission[]): Mission[] {
-  const correctedM3 = AUTHORED_MISSIONS.filter(m => m.sequence === M3_SEQUENCE)
+  const correctedM3 = AUTHORED_MISSIONS.filter(m => m.sequence === TRANSPORT_SEQUENCE)
   const correctedM3Ids = new Set(correctedM3.map(m => m.id))
   const withoutLegacyM3 = missions.filter(m =>
     m.id !== 'lnm_m3_ore_delivery' &&
     m.id !== 'm3-nickel-cobalt' &&
     m.id !== 'm3-gold' &&
     m.id !== 'lnm_m3_custom_mining' &&
-    m.sequence !== M3_SEQUENCE &&
+    m.sequence !== TRANSPORT_SEQUENCE &&
     !correctedM3Ids.has(m.id)
   )
   const merged = [...withoutLegacyM3, ...correctedM3]
@@ -197,9 +208,7 @@ export function toStructure(r: any): StructureBlueprint {
     name: r.name,
     kind: r.kind ?? r.slug,
     cost: r.cost_francs ?? 0,
-    costMaterials: typeof r.cost_materials === 'object' && !Array.isArray(r.cost_materials)
-      ? r.cost_materials
-      : (r.cost_materials ? JSON.parse(r.cost_materials) : undefined),
+    costMaterials: parseJsonMapField<Record<string, number> | undefined>(r.cost_materials, undefined),
     unlocksAt: r.unlocks_at ?? '',
     unlockTrigger: r.unlock_trigger_type || undefined,
     description: r.description ?? '',

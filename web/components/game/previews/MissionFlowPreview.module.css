@@ -28,8 +28,10 @@
   --space-2: #182764;
   --market: #33204e;
   --metal: #39324f;
-  --font-display: var(--od-font-display), "Oxanium", system-ui, sans-serif;
-  --font-body: var(--od-font-body), system-ui, sans-serif;
+  /* This development-only preview must remain deploy-build safe. The app
+     already bundles Oxanium, so do not pull a Google font just for it. */
+  --font-display: "Oxanium", system-ui, sans-serif;
+  --font-body: "Oxanium", system-ui, sans-serif;
   --radius: 7px;
   --shadow-hard: 0 5px 0 var(--ink);
   --ease: cubic-bezier(0.23, 1, 0.32, 1);

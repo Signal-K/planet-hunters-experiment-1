@@ -20,7 +20,11 @@ export interface OutboxItem {
   createdAt: number
   attempts: number
   nextAttemptAt: number
-  /** Set once attempts reach MAX_ATTEMPTS; kept in the queue and surfaced, never dropped. */
+  /**
+   * Set once attempts reach MAX_ATTEMPTS so the UI can surface a problem.
+   * The item is still retried at the capped backoff: a temporary server-side
+   * rejection must not turn into a permanently stranded Safari outbox item.
+   */
   failed: boolean
   lastError?: string
 }
@@ -152,6 +156,10 @@ export interface Outbox {
   start(): () => void
   /** Items still queued, oldest first (for tests and diagnostics). */
   pending(): OutboxItem[]
+  /** Whether any queued item (including one only in the persisted store) matches. */
+  has(match: (op: OutboxOp) => boolean): Promise<boolean>
+  /** Drops matching items, e.g. a game_states save for an account that was just reset. */
+  discard(match: (op: OutboxOp) => boolean): Promise<number>
 }
 
 export interface OutboxOptions {
@@ -165,6 +173,9 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
   let items: OutboxItem[] = []
   let loaded: Promise<void> | null = null
   let flushing: Promise<void> | null = null
+  // Set when something is enqueued mid-flush, so it is sent by a follow-up
+  // pass instead of waiting for the next online/visibility/timer trigger.
+  let flushAgain = false
   const listeners = new Set<(snapshot: OutboxSnapshot) => void>()
 
   const ensureLoaded = () => (loaded ??= store.load().then(loadedItems => {
@@ -196,7 +207,9 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
     await ensureLoaded()
     emit()
     for (const item of [...items]) {
-      if (item.failed || item.nextAttemptAt > now()) continue
+      // A failed item is deliberately retained and retried. `failed` is a
+      // user-visible warning threshold, not a terminal state.
+      if (item.nextAttemptAt > now()) continue
       const failure = await execute(item.op)
       if (failure === null || failure.kind === 'already-applied') {
         items = items.filter(i => i !== item)
@@ -214,8 +227,18 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
   }
 
   function flush(): Promise<void> {
-    if (flushing) return flushing
-    flushing = run().finally(() => { flushing = null; emit() })
+    if (flushing) {
+      flushAgain = true
+      return flushing
+    }
+    flushing = run().finally(() => {
+      flushing = null
+      emit()
+      if (flushAgain) {
+        flushAgain = false
+        if (isOnline()) void flush()
+      }
+    })
     return flushing
   }
 
@@ -247,5 +270,20 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
     },
     start,
     pending: () => items.map(i => ({ ...i })),
+    async has(match) {
+      await ensureLoaded()
+      return items.some(i => match(i.op))
+    },
+    async discard(match) {
+      await ensureLoaded()
+      const before = items.length
+      items = items.filter(i => !match(i.op))
+      const dropped = before - items.length
+      if (dropped > 0) {
+        await persist()
+        emit()
+      }
+      return dropped
+    },
   }
 }

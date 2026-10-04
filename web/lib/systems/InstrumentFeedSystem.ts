@@ -2,7 +2,7 @@ import { dailyTessCandidates, dailyAsteroidCandidates, type TessCandidate, type 
 import type { Player } from '@/lib/game-types'
 
 export const TRANSIT_TELESCOPE_INSTRUMENT_ID = 'transit-telescope'
-const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
+export const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
 
 export type InstrumentSignalKind = 'transit' | 'deep-space'
 
@@ -18,8 +18,8 @@ export interface InstrumentSignal {
 type InstrumentFeedPlayer = Pick<
   Player,
   | 'transitSatelliteLevel'
+  | 'transitSatelliteLevel'
   | 'satelliteTargetId'
-  | 'satelliteTargetChosenOn'
   | 'tessClassifications'
   | 'instrumentDigestNotifiedOn'
 >
@@ -35,7 +35,7 @@ export function instrumentDigestDateKey(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10)
 }
 
-function transitInstrumentLevel(player: InstrumentFeedPlayer): number {
+export function transitInstrumentLevel(player: InstrumentFeedPlayer): number {
   return Math.max(
     1,
     Math.floor(player.transitSatelliteLevel ?? 1)
@@ -56,21 +56,8 @@ export function transitInstrumentDigest(
     candidates,
     dateKey,
     transitInstrumentLevel(player),
-    satelliteTargetForDay(player, dateKey)
+    player.satelliteTargetId
   )
-}
-
-/**
- * SSL-358: "Tap a star to point the satellite tomorrow". A pick feeds the
- * downlinks dated after the day it was made, never the one already on screen.
- */
-function satelliteTargetForDay(
-  player: Pick<Player, 'satelliteTargetId' | 'satelliteTargetChosenOn'>,
-  dateKey: string
-): string | null {
-  if (!player.satelliteTargetId) return null
-  if (player.satelliteTargetChosenOn && player.satelliteTargetChosenOn >= dateKey) return null
-  return player.satelliteTargetId
 }
 
 export function unresolvedTransitInstrumentDigest(
@@ -90,7 +77,7 @@ export function unresolvedTransitInstrumentDigest(
   )
 }
 
-function deepSpaceInstrumentLevel(player: DeepSpaceInstrumentFeedPlayer): number {
+export function deepSpaceInstrumentLevel(player: DeepSpaceInstrumentFeedPlayer): number {
   return Math.max(1, Math.floor(player.deepSpaceTelescopeLevel ?? 1))
 }
 
@@ -165,7 +152,6 @@ export function collectInstrumentSignals(opts: {
     | 'deepSpaceTelescopeBuilt'
     | 'transitSatelliteLevel'
     | 'satelliteTargetId'
-    | 'satelliteTargetChosenOn'
     | 'tessClassifications'
     | 'deepSpaceTelescopeLevel'
     | 'asteroidClassifications'

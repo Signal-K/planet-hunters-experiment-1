@@ -4,7 +4,10 @@ import { applySellMinerals, applySellRefinedGoods, applyStartRefine, applyCollec
 import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import type { TreasuryState } from '@/lib/systems/TreasurySystem'
 import { captureGameEvent } from '@/lib/posthog'
+import { completeFlightPlanEvent } from '@/lib/systems/FlightPlanSystem'
+import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { pbLandnam } from '@/lib/pb-landnam'
+import type { Catalog } from '@/lib/catalog'
 import type { GameState } from '@/lib/game-types'
 import type { Mission, ShipRoomKind, StructureBlueprint, SubsurfaceRoomId } from '@/lib/data'
 
@@ -35,7 +38,13 @@ export function useEconomyActions(
   }, [setState])
 
   const placeStructure = useCallback((structure: StructureBlueprint | undefined, kind: string, plot: number) => {
-    setState(s => applyPlaceStructure(s, structure, kind, plot))
+    let placed = false
+    setState(s => {
+      const next = applyPlaceStructure(s, structure, kind, plot)
+      placed = next !== s
+      return next
+    })
+    return placed
   }, [setState])
 
   const upgradeLaunchpad = useCallback(() => {
@@ -109,7 +118,10 @@ export function useEconomyActions(
     setState(s => {
       const result = applyConfirmShipCustomizerBuild(s, installed, prevInstalled)
       applied = result.ok
-      return result.state
+      if (!result.ok) return result.state
+      const flightPlan = completeFlightPlanEvent(result.state.player.flightPlan, 'part-tweaked')
+      const player = { ...result.state.player, flightPlan }
+      return { ...result.state, tutorial: !freeOperationsUnlocked(player), player: { ...player, freeOperations: freeOperationsUnlocked(player) } }
     })
     return applied
   }, [setState])

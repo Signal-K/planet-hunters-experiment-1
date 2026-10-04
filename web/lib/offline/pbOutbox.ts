@@ -3,7 +3,6 @@
 // for any write that must survive being offline.
 
 import { ClientResponseError } from 'pocketbase'
-import { landnamPbUrl } from '@/lib/pb-config'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { createOutbox, browserStore, memoryStore, newRecordId, type Outbox, type OutboxFailure, type OutboxOp } from './outbox'
 
@@ -12,7 +11,7 @@ interface PbErrorBody {
 }
 
 /** Turn a PocketBase error into the outbox's retry vocabulary. */
-function classifyPbError(op: OutboxOp, error: unknown): OutboxFailure {
+export function classifyPbError(op: OutboxOp, error: unknown): OutboxFailure {
   if (!(error instanceof ClientResponseError)) return { kind: 'offline' }
   // status 0 is fetch failing outright: offline, aborted, or backgrounded.
   if (error.status === 0) return { kind: 'offline' }
@@ -26,7 +25,7 @@ function classifyPbError(op: OutboxOp, error: unknown): OutboxFailure {
 }
 
 function landnamBaseUrl(): string {
-  return landnamPbUrl().replace(/\/$/, '')
+  return (process.env.NEXT_PUBLIC_LANDNAM_PB_URL || 'http://localhost:8093').replace(/\/$/, '')
 }
 
 async function executeHttp(op: Extract<OutboxOp, { type: 'http' }>): Promise<OutboxFailure | null> {
@@ -92,9 +91,23 @@ export function queueCreate(collection: string, data: Record<string, unknown>, i
   return id
 }
 
-/** Create-or-update the record matching `filter`; safe to replay. */
-export function queueUpsert(collection: string, filter: string, data: Record<string, unknown>): void {
-  void getOutbox().enqueue({ type: 'upsert', collection, id: newRecordId(), filter, data })
+/**
+ * Create-or-update the record matching `filter`; safe to replay. `id` is used
+ * only if the record has to be created. Resolves once the write is stored.
+ */
+export function queueUpsert(collection: string, filter: string, data: Record<string, unknown>, id: string = newRecordId()): Promise<void> {
+  return getOutbox().enqueue({ type: 'upsert', collection, id, filter, data })
+}
+
+export function isQueuedUpsert(op: OutboxOp, collection: string, filter: string): boolean {
+  return op.type === 'upsert' && op.collection === collection && op.filter === filter
+}
+
+/** Queue a community API POST. Returns the client id sent as `body.id` so the server can dedupe replays. */
+export function queueCommunityPost(path: string, body: Record<string, unknown>): string {
+  const id = newRecordId()
+  void getOutbox().enqueue({ type: 'http', path: `/api/community${path}`, method: 'POST', body: { ...body, id } })
+  return id
 }
 
 export function queueUpdate(collection: string, id: string, data: Record<string, unknown>): void {

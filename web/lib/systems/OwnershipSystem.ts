@@ -47,11 +47,11 @@ export interface BodyOwnership {
   divisions: DivisionOwnership[]
 }
 
-function playerOwner(player: Pick<OwnershipPlayer, 'id' | 'name'>): Owner {
+export function playerOwner(player: Pick<OwnershipPlayer, 'id' | 'name'>): Owner {
   return { kind: 'player', id: player.id, name: player.name }
 }
 
-function clientOwner(clientId: string): Owner {
+export function clientOwner(clientId: string): Owner {
   const client = CLIENTS[clientId]
   return { kind: 'client', id: clientId, name: client?.name ?? clientId }
 }
@@ -78,7 +78,7 @@ export function mergeTerritoryClaims(...sources: (TerritoryClaim[] | undefined)[
   return [...byDivision.values()].sort((a, b) => a.claimedAt - b.claimedAt)
 }
 
-function resolveDivisionOwner(
+export function resolveDivisionOwner(
   division: TargetDivision,
   body: Owner,
   claims: TerritoryClaim[],

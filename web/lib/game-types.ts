@@ -9,6 +9,8 @@ import type { ClientBuildCompletionEvent, DailyEconomySnapshot } from './systems
 import type { TreasuryState } from './systems/TreasurySystem'
 import type { SiteRightsState } from './systems/SiteRightsSystem'
 import type { OffworldRefineryDeployment } from './systems/OffworldRefinerySystem'
+import type { FlightPlanProgress } from './systems/FlightPlanSystem'
+import type { FlightPlanEvent, TrainingTryId } from './systems/FlightPlanSystem'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -65,6 +67,7 @@ export type Screen =
   | 'intro'
   | 'build'
   | 'hub'
+  | 'hub-subsurface'
   | 'missions'
   | 'galaxy'
   | 'targets'
@@ -88,13 +91,33 @@ export type Screen =
   | 'mission-history'
   | 'narrative-ledger'
 
-// SSL-35: which layout each screen renders in lives in lib/screen-layouts.ts
-// (GAME_ROUTES). The old LOCATION_SCREENS boxed-vs-full-page split is retired:
-// every screen now sits on the shared full-page frame.
-
-/** Shell-level sheets and pop-ups (SSL-35). Market and Menu open from Home's
- * bottom bar; Friends, Community and Feedback open from Menu. */
-export type ShellSheet = 'menu' | 'market' | 'friends' | 'community' | 'feedback'
+// Screens that render a physical place in the game world (or a step in a
+// mission run through one) get the full, edge-to-edge viewport on desktop —
+// they are locations, not menus, and boxing them in the device-card chrome
+// reads as a modal sitting over the game rather than the game itself.
+// Screens NOT in this set ('intro', 'build', 'missions', 'targets', 'fab',
+// 'market', 'skills', 'rocket-buy', 'debrief') are menus/UI concepts and keep
+// the boxed card treatment. Debrief in particular is a mission-results
+// summary/paperwork screen, not a place — it was wrongly added here in
+// KES-261 and got full-screen treatment it never should have (KES-265).
+// See `.portrait-canvas--full-page` in globals.css.
+export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
+  'hub',
+  'hub-subsurface',
+  'launchpad',
+  'transit',
+  'landing',
+  'mining',
+  'rover-mining',
+  'delivery',
+  'refinery',
+  'academy',
+  'hangar',
+  'surface-ops',
+  'galaxy',
+  'asteroid-discovery',
+  'instrument-hub',
+])
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 
@@ -178,7 +201,6 @@ export interface FieldStructureRecord {
   siteId?: string
 }
 
-export type ProgramFocus = 'client-contracts' | 'mining' | 'instruments' | 'construction'
 
 export interface ResourceFocus {
   label: string
@@ -244,8 +266,8 @@ export interface Player {
   skillPoints?: number
   unlockedSkillNodes?: string[]
   freeOperations: boolean
-  /** Operation areas chosen when guided onboarding hands the program to the player. */
-  programFocuses?: ProgramFocus[]
+  /** Durable three-try onboarding state, persisted and synced with the save. */
+  flightPlan?: FlightPlanProgress
   /** Materials currently being gathered for a player-selected construction. */
   resourceFocus?: ResourceFocus
   debriefPending?: boolean
@@ -324,16 +346,13 @@ export interface Player {
   // an assumed migration.
   transitSatelliteLevel?: number
   transitSatelliteLaunchedAt?: number | null
-  // Deep Space Telescope (STS-622): a separate, one-time-build structure that
-  // gates the asteroid-discovery (NEOCP) instrument feed, the same way
+  // Deep Space Telescope: a separately launched orbital instrument which
+  // gates the asteroid-discovery (NEOCP) instrument feed.
   deepSpaceTelescopeBuilt?: boolean
   deepSpaceTelescopeLevel?: number
   deepSpaceTelescopeLaunchedAt?: number | null
-  // KES-128: completing the story-deep-space-telescope-survey mission — the
-  // on-ramp mirroring story-transit-telescope-launch — rather than the raw
-  // deepSpaceTelescopeUnlocked() threshold. Distinct from
-  // deepSpaceTelescopeLaunchedAt above, which marks when the structure was
-  // physically placed, not when the player earned the right to build it.
+  // Retained only to read historic survey saves; new launches use
+  // deepSpaceTelescopeLaunchedAt.
   deepSpaceTelescopeMissionCompletedAt?: number | null
   tessClassifications?: Record<string, TessClassification>
   // One-shot late-game narrative beat after a high-level TESS confirmation.
@@ -347,11 +366,6 @@ export interface Player {
   // picked from the PixiGalaxyStarMap after classifying today's candidate.
   // Consumed (cleared) once that candidate becomes today's daily pick.
   satelliteTargetId?: string | null
-  // UTC date key (instrumentDigestDateKey) the pointing choice was made on.
-  // The pick only feeds downlinks dated after this day, so choosing a star
-  // never swaps out the curve the player is looking at (SSL-358). Absent on
-  // picks saved before this field existed; those apply straight away.
-  satelliteTargetChosenOn?: string | null
   // True when a global "5 players confirmed a planet" event happened that
   // this player hasn't acted on yet — lets them re-pick their satellite
   // target immediately instead of waiting for the normal daily cycle. See
@@ -494,12 +508,11 @@ export interface GameActions {
   openLaunchpadMissionMenu: () => void
   launchpadMissionMenuOpen: boolean
   setLaunchpadMissionMenuOpen: (open: boolean) => void
-  shellSheet: ShellSheet | null
-  setShellSheet: (sheet: ShellSheet | null) => void
   returnFromHangar: () => void
   goToMissions: (scope?: SceneScope) => void
   markContractsOpened: (scope?: SceneScope) => void
   setScreenFromUrl: (screen: Screen) => void
+  isStaleRoute: (screen: string) => boolean
   setPlayer: React.Dispatch<React.SetStateAction<Player>>
   setMissionId: (id: string | null) => void
   setTargetId: (id: string | null) => void
@@ -527,11 +540,17 @@ export interface GameActions {
   onReturnArrived: () => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell') => void
   coachManualNext: () => void
+  startFlightPlan: () => void
+  completeFlightPlan: (event: FlightPlanEvent) => void
+  showFlightPlanHint: () => void
+  replayTrainingTry: (tryId: TrainingTryId) => void
+  openTrainingTry: (tryId: TrainingTryId) => void
+  skipFlightPlan: () => void
   completeStep: (id: number) => void
   resetGame: () => void
   signOut: () => void
   upgradeLaunchpad: () => void
-  placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => void
+  placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => boolean
   excavateSubsurface: () => void
   buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void
@@ -543,7 +562,7 @@ export interface GameActions {
   abandonMission: () => void
   launchTransitSatellite: () => void
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
-  chooseSatelliteTarget: (subjectId: string, dateKey?: string) => void
+  chooseSatelliteTarget: (subjectId: string) => void
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
   onLandingTouchdown: () => void
@@ -567,6 +586,7 @@ export interface GameActions {
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
   claimFriendGift: (giftId: string) => Promise<void>
+  researchAcademy: () => void
   researchLanding: () => void
   setAcademyFunding: (funded: boolean) => void
   hireCrew: (sourceId: string) => void
