@@ -20,7 +20,7 @@ export function HubClockWidget() {
       data-testid="hub-clock-widget"
       style={{
         display: 'flex', alignItems: 'center', gap: 6,
-        background: 'rgba(4,16,31,0.7)', border: '1.5px solid var(--hub-outline)',
+        background: 'var(--hub-panel)', border: '2px solid var(--hub-outline)',
         borderRadius: 999, padding: '5px 10px', flexShrink: 0,
       }}
     >

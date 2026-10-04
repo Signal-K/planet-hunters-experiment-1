@@ -21,7 +21,7 @@
 @font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-Bold.woff2")       format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
 @font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-ExtraBold.woff2")  format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
 
-/* ─── Root tokens (deep-space default) ──────────────────── */
+/* ─── Root tokens (Cycle 4 light-blueprint default) ─────── */
 /* Superseded 2026-07-31 — the 2026-07-23 navy palette below read as a heavy
    saturated dark-blue wash that stayed legible only in dim rooms and
    actively hurt contrast/eye comfort in bright ones (Liam feedback,
@@ -41,25 +41,25 @@
   --ln-blueprint-ink: #0f2436;
   --ln-blueprint-blue: #1f78c1;
   --ln-blueprint-line-strong: rgba(15, 36, 54, 0.30);
-  --ln-void:        #0a0a0c;
-  --ln-bg:          #131316;
-  --ln-bg-grid:     #1a1a1e;
-  --ln-surface:     #1c1c20;
-  --ln-surface-2:   #25252a;
-  --ln-surface-3:   #303036;
-  --ln-overlay:     rgba(10, 10, 12, 0.75);
+  --ln-void:        var(--ln-blueprint-bg);
+  --ln-bg:          var(--ln-blueprint-bg);
+  --ln-bg-grid:     var(--ln-blueprint-paper-2);
+  --ln-surface:     var(--ln-blueprint-paper);
+  --ln-surface-2:   var(--ln-blueprint-paper-2);
+  --ln-surface-3:   var(--ln-blueprint-paper-2);
+  --ln-overlay:     rgba(238, 243, 248, 0.86);
 
-  --ln-cyan:        #70d9ea;
-  --ln-cyan-bright: #a3ecf5;
-  --ln-cyan-press:  #3fb8cc;
-  --ln-cyan-soft:   rgba(112, 217, 234, 0.16);
-  --ln-cyan-border: rgba(112, 217, 234, 0.4);
+  --ln-cyan:        var(--ln-blueprint-blue);
+  --ln-cyan-bright: #42a6df;
+  --ln-cyan-press:  #17639f;
+  --ln-cyan-soft:   rgba(31, 120, 193, 0.10);
+  --ln-cyan-border: rgba(15, 36, 54, 0.30);
 
-  --ln-amber:        #f5a623;
-  --ln-amber-bright: #ffc25c;
-  --ln-amber-press:  #d68a0d;
-  --ln-amber-soft:   rgba(245, 166, 35, 0.14);
-  --ln-amber-border: rgba(245, 166, 35, 0.55);
+  --ln-amber:        #168a80;
+  --ln-amber-bright: #39a89e;
+  --ln-amber-press:  #0d625c;
+  --ln-amber-soft:   rgba(22, 138, 128, 0.12);
+  --ln-amber-border: rgba(22, 138, 128, 0.45);
 
   --ln-crimson:        #c8293e;
   --ln-crimson-bright: #e83a52;
@@ -83,32 +83,32 @@
   --ln-mineral-gold:    #ffd166;
   --ln-mineral-rare:    #c084ff;
 
-  --ln-text:       #e9e9ec;
-  --ln-text-dim:   #b4b4bc;
-  --ln-text-muted: #7c7c86;
-  --ln-text-ghost: rgba(233, 233, 236, 0.35);
-  --ln-text-on-cyan:  #0a1418;
+  --ln-text:       var(--ln-blueprint-ink);
+  --ln-text-dim:   #48596a;
+  --ln-text-muted: #60778e;
+  --ln-text-ghost: rgba(15, 36, 54, 0.35);
+  --ln-text-on-cyan:  #ffffff;
   --ln-text-on-amber: #1a1304;
   --ln-text-inverse:  #0a0a0c;
 
-  --ln-hairline:        rgba(255, 255, 255, 0.14);
-  --ln-hairline-strong: rgba(255, 255, 255, 0.30);
-  --ln-divider:         rgba(255, 255, 255, 0.10);
+  --ln-hairline:        rgba(15, 36, 54, 0.14);
+  --ln-hairline-strong: rgba(15, 36, 54, 0.30);
+  --ln-divider:         rgba(15, 36, 54, 0.14);
 
   /* Shell/panel/border tokens — neutral charcoal family, translucent-white
      glass for elevated surfaces rather than an opaque navy fill.
      --ln-panel-2 is the next charcoal step up from --ln-panel. */
-  --ln-shell:        #0a0a0c;
-  --ln-panel:        #1c1c20;
-  --ln-panel-2:      #25252a;
-  --ln-border:       rgba(255, 255, 255, 0.22);
-  --ln-payout:       #d8ff55;
-  --ln-play:         #fa49ca;
-  --ln-purple-depth: #25123d;
+  --ln-shell:        var(--ln-blueprint-bg);
+  --ln-panel:        var(--ln-blueprint-paper);
+  --ln-panel-2:      var(--ln-blueprint-paper-2);
+  --ln-border:       rgba(15, 36, 54, 0.30);
+  --ln-payout:       #168a80;
+  --ln-play:         var(--ln-blueprint-blue);
+  --ln-purple-depth: var(--ln-blueprint-paper-2);
 
-  --ln-shadow-card:   0 2px 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.10), 0 8px 24px rgba(0,0,0,0.5);
-  --ln-shadow-modal:  0 24px 64px rgba(0,0,0,0.7);
-  --ln-glow-cyan:     0 0 0 1px rgba(112,217,234,0.6), 0 0 18px rgba(112,217,234,0.35);
+  --ln-shadow-card:   5px 5px 0 var(--ln-blueprint-blue), 0 4px 12px rgba(15,36,54,0.12);
+  --ln-shadow-modal:  8px 8px 0 var(--ln-blueprint-blue), 0 24px 48px rgba(15,36,54,0.20);
+  --ln-glow-cyan:     0 0 0 2px var(--ln-blueprint-blue);
   --ln-glow-amber:    0 0 0 1px rgba(245,166,35,0.7), 0 0 18px rgba(245,166,35,0.4);
   --ln-glow-ok:       0 0 12px rgba(90,208,126,0.7);
 
@@ -2875,30 +2875,30 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 :root {
   /* Scene-local accents. Kept as hub-scoped tokens rather than overriding
      the global --ln-cyan/--ln-ok, which other screens already tune against. */
-  --hub-mint:       #5ad07e;
-  --hub-cyan:       #70d9ea;
+  --hub-mint:       #168a80;
+  --hub-cyan:       var(--ln-blueprint-blue);
   /* Chalky, slightly desaturated sage green — replaces the earlier hot-pink
      interactive accent (2026-08-23) across the Hub's clickable chrome (Jobs
      chip, Edit/Build CTA, active dock icons). The atmospheric dusk-horizon
      pink below is a separate, still-standing decision (KES-228) and is left
      alone — it's backdrop color, not interactive UI. */
-  --hub-chalk:       #9bc98a;
-  --hub-chalk-soft:  rgba(155, 201, 138, 0.16);
-  --hub-outline:    rgba(177, 198, 229, 0.4);
-  --hub-panel:      #04101f;
-  --hub-panel-deep: #020a16;
-  /* Dusk sky — deep navy overhead, warming toward the horizon. */
-  --hub-void:       #00040a;
-  --hub-bg:         #000d1f;
-  --hub-sky-top:    #050d1f;
-  --hub-sky-mid:    #12213f;
-  --hub-horizon:    #d9527e;
-  --hub-horizon-glow: rgba(227, 95, 160, 0.22);
+  --hub-chalk:       #d7eef8;
+  --hub-chalk-soft:  rgba(31, 120, 193, 0.12);
+  --hub-outline:    var(--ln-blueprint-line-strong);
+  --hub-panel:      var(--ln-blueprint-paper);
+  --hub-panel-deep: var(--ln-blueprint-paper-2);
+  /* Daylight blueprint scene: the Base is a physical place, not a dark HUD. */
+  --hub-void:       var(--ln-blueprint-bg);
+  --hub-bg:         var(--ln-blueprint-bg);
+  --hub-sky-top:    #d8edf9;
+  --hub-sky-mid:    #a8d4ef;
+  --hub-horizon:    #7db8d7;
+  --hub-horizon-glow: rgba(31, 120, 193, 0.14);
   /* Parallax hill silhouettes, far to near. */
-  --hub-hill-far:   #16233f;
-  --hub-hill-mid:   #0f1b34;
-  --hub-hill-near:  #0a1428;
-  --hub-skyline:    #0a1626;
+  --hub-hill-far:   #9abbd0;
+  --hub-hill-mid:   #769cb6;
+  --hub-hill-near:  #5f849f;
+  --hub-skyline:    #476c86;
   /* Ground contact line — 22% from the bottom. Keep this aligned with the DOM
      plot positions in HubScreen/BuildPlaceScreen, which derive from the same
      scene-local baseline. */

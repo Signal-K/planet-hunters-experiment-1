@@ -55,7 +55,7 @@ function RailCard({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId
         borderRadius: 9, padding: '7px 10px 7px 7px',
         cursor: onClick ? 'pointer' : undefined,
         textAlign: 'left',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
+        boxShadow: '4px 4px 0 var(--ln-blueprint-blue)',
       }}
     >
       <span style={{
@@ -73,12 +73,12 @@ export default function HUDStrip({ player, showStash = false, onSubsurfaceClick 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', width: 132 }}>
       <RailCard glyph={<FrancGlyph />}>
-        <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 12, color: '#eaf1f8' }}>
+        <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 12, color: 'var(--ln-text)' }}>
           {formatCurrency(player.francs, { compact: true })}
         </span>
       </RailCard>
       {onSubsurfaceClick && <RailCard glyph={<SubsurfaceGlyph />} onClick={onSubsurfaceClick} testId="hud-subsurface-chip">
-        <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', color: '#eaf1f8', textTransform: 'uppercase' }}>
+        <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', color: 'var(--ln-text)', textTransform: 'uppercase' }}>
           Subsurface
         </span>
       </RailCard>}
@@ -101,7 +101,7 @@ export default function HUDStrip({ player, showStash = false, onSubsurfaceClick 
                 }}>
                   <MineralGlyph shape={meta.shape} color={meta.color} />
                 </span>
-                <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 10, color: '#eaf1f8' }}>
+                <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 10, color: 'var(--ln-text)' }}>
                   {qty}
                 </span>
               </div>
