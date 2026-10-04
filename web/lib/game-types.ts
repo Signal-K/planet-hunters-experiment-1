@@ -539,7 +539,6 @@ export interface GameActions {
   onDeliveryUnloadComplete: () => void
   onReturnArrived: () => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell') => void
-  coachManualNext: () => void
   startFlightPlan: () => void
   completeFlightPlan: (event: FlightPlanEvent) => void
   showFlightPlanHint: () => void

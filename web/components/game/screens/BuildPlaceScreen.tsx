@@ -32,7 +32,6 @@ const STRUCTURE_COLORS: Record<string, string> = {
 interface BuildPlaceScreenProps {
   onPlaced: (kind: string, plot: number) => boolean
   onBack: () => void
-  hasCoach?: boolean
   player: {
     francs: number
     stash?: Record<string, number>
@@ -64,7 +63,7 @@ function formatStructureCost(structure: StructureBlueprint): string {
   return mineralCost ? `${francs} · ${mineralCost}` : francs
 }
 
-export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }: BuildPlaceScreenProps) {
+export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlaceScreenProps) {
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
   // A tap on a locked/unaffordable card previously only fired an analytics

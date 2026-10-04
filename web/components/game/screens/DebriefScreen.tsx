@@ -10,7 +10,6 @@ import StatusPill from '@/components/ui/StatusPill'
 import MineralChip from '@/components/game/MineralChip'
 import CostSummaryRow from '@/components/game/CostSummaryRow'
 import { UI_ZONES } from '@/lib/ui-zones'
-import TutorialHighlight from '@/components/game/TutorialHighlight'
 import { ScrapSequenceCanvas } from '@/components/game/ScrapSequenceCanvas'
 import DebriefCanvas from '@/components/game/screens/DebriefCanvas'
 import { formatCurrency } from '@/lib/format'
@@ -18,7 +17,7 @@ import { rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import StatRow from '@/components/ui/StatRow'
 import { captureGameEvent } from '@/lib/posthog'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -29,7 +28,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   freeOperations?: boolean
   annotations?: number
   missionsDone?: number
-  hasCoach?: boolean
   shipDestroyed?: boolean
   rocket?: Pick<RocketConfig, 'chassis'>
   rocketSource?: 'company' | 'fabricated'
@@ -296,7 +294,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       </div>
 
       <div className="debrief-command-dock" data-ui-zone={UI_ZONES.bottomActions}>
-        {hasCoach && <TutorialHighlight borderRadius={8} />}
         {!resolved ? (
           <PrimaryBtn
             // Amber is reserved for the payout amount itself. The action that

@@ -330,7 +330,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       skipTutorial: tutorial.skipTutorial,
       setDoneSteps: tutorial.setDoneSteps,
       completeStep: tutorial.completeStep,
-      coachManualNext: tutorial.coachManualNext,
       startFlightPlan: tutorial.startFlightPlan,
       completeFlightPlan: tutorial.completeFlightPlan,
       showFlightPlanHint: tutorial.showFlightPlanHint,

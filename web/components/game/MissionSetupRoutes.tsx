@@ -35,8 +35,6 @@ export type MissionSetupRoute = Extract<Screen, 'missions' | 'targets' | 'rocket
 interface MissionSetupRoutesProps {
   screen: MissionSetupRoute
   game: Game
-  hasCoach: boolean
-  coachManual: boolean
   deliveryTargetName?: string
   rocketDisplay: RocketDisplay
   launchPending: boolean
@@ -151,11 +149,10 @@ function HangarAssembly({ rocket, rocketImage, source }: {
   </div>
 }
 
-function SetupFrame({ step, title, onBack, hasCoach, children }: {
+function SetupFrame({ step, title, onBack, children }: {
   step: number
   title: string
   onBack: () => void
-  hasCoach: boolean
   children: ReactNode
 }) {
   return (
@@ -192,7 +189,7 @@ function SetupFrame({ step, title, onBack, hasCoach, children }: {
   )
 }
 
-export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
+export default function MissionSetupRoutes({ screen, game, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
   const relay = useMissionRelayModels({
     catalog: game.catalog,
     missionsDone: game.player.missionsDone,
@@ -268,7 +265,7 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
     ) : []
     const previewTargetTypes = [...new Set(previewTargets.map(target => targetTypeLabel(target.type)))]
     return (
-      <SetupFrame step={1} title="Contract" onBack={() => game.goBack()} hasCoach={hasCoach}>
+      <SetupFrame step={1} title="Contract" onBack={() => game.goBack()}>
         <section
           className={styles.contractGallery}
           data-testid="mission-board-section-client"
@@ -328,7 +325,7 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
   if (screen === 'targets' && game.mission) {
     const selectedTarget = compatibleTargets.find(target => target.id === targetId)
     return (
-      <SetupFrame step={2} title="Map" onBack={() => game.go('missions')} hasCoach={hasCoach}>
+      <SetupFrame step={2} title="Map" onBack={() => game.go('missions')}>
         <section
           ref={mapRef}
           className={styles.targetMap}
@@ -365,7 +362,7 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
         ?? game.player.dailyClientPool?.missions.find(mission => mission.id === movableVehicle.missionId)
       : null
     return (
-      <SetupFrame step={3} title="Blueprint" onBack={() => game.goBack()} hasCoach={hasCoach}>
+      <SetupFrame step={3} title="Blueprint" onBack={() => game.goBack()}>
         <section className={styles.rocketBlueprint} data-testid="mission-rocket-blueprint">
           <div className={styles.blueprintHeading}><span>ROCKET {selectableRockets.findIndex(model => model.id === selectedRocket.id) + 1} / {selectableRockets.length}</span><h2>{selectedRocket.name}</h2></div>
           <div className={styles.rocketSchematic} aria-label={`${selectedRocket.name} schematic`}><img src={selectedRocket.img} alt="" /></div>
@@ -412,7 +409,7 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
     const reviewRooms = rocketCompositionForId(rocket.id).stages.flatMap(stage => stage.rooms)
     const selectedVehicle = game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)
     return <>
-      <SetupFrame step={4} title={vehicleInHangar ? 'Hangar assembly' : 'Launch review'} onBack={() => game.goBack('rocket-buy')} hasCoach={hasCoach}>
+      <SetupFrame step={4} title={vehicleInHangar ? 'Hangar assembly' : 'Launch review'} onBack={() => game.goBack('rocket-buy')}>
         <section className={styles.missionReview} data-testid="mission-launch-review" data-location={vehicleInHangar ? 'hangar' : 'launchpad'}>
           {vehicleInHangar
             ? <HangarAssembly rocket={rocket} rocketImage={rocketDisplay.img} source={selectedVehicle?.source ?? 'company'} />

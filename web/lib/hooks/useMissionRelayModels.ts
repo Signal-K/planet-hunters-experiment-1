@@ -18,7 +18,6 @@ export interface MissionRelayCardModel {
   isStoryMission: boolean
   cardState: 'locked' | 'available'
   lockedDetail: string | undefined
-  isHighlighted: boolean
   routeLabel: string | undefined
   crewStatus: string | undefined
   crewReady: boolean
@@ -28,7 +27,6 @@ export interface UseMissionRelayModelsArgs {
   catalog: Catalog
   missionsDone: number
   freeOperations: boolean
-  hasCoach?: boolean
   francs?: number
   crew?: CrewMember[]
   player?: Player
@@ -43,7 +41,6 @@ export function useMissionRelayModels({
   catalog,
   missionsDone,
   freeOperations,
-  hasCoach,
   francs,
   crew = [],
   player,
@@ -97,13 +94,6 @@ export function useMissionRelayModels({
   // Never show locked/future missions during onboarding. Free Ops stays a
   // straightforward catalog of client work rather than a per-player slot list.
   const missionList = feasibleAvailable.filter(mission => isMissionBoardMission(mission, freeOperations))
-  const firstValidIdx = missionList.findIndex(m => {
-    if (m.jointProject && (francs ?? 0) < m.jointProject.playerCost) return false
-    const ctr = m.client ? CLIENTS[m.client] : null
-    if (m.client && !ctr) return false
-    const cr = freeOperations || m.sequence === sequence
-    return cr && (freeOperations || available.some(item => item.id === m.id))
-  })
   const cardModels: MissionRelayCardModel[] = missionList
     .map((m, idx) => {
       const client = m.client ? CLIENTS[m.client] : null
@@ -115,7 +105,6 @@ export function useMissionRelayModels({
       const unlocked = academyReady && clientReady && jointFundingReady && (freeOperations || available.some(item => item.id === m.id))
       const mTargets = feasibleTargetsFor(m, targets, parts, missionsDone, player?.launchpadUpgraded ?? false, player?.unlockedSkillNodes ?? [])
       const displayPayout = m.payout.francs
-      const isHighlighted = !!hasCoach && idx === firstValidIdx
       const cardState = !unlocked ? 'locked' as const : 'available' as const
       const lockedDetail = !jointFundingReady
         ? `Needs ${formatCurrency(m.jointProject!.playerCost)} co-funding`
@@ -130,7 +119,7 @@ export function useMissionRelayModels({
       const crewStatus = crewRequirementStatus(m.requires.crew, crew)
       return {
         mission: m, client, targetCount: mTargets.length, displayPayout,
-        unlocked, isStoryMission, cardState, lockedDetail, isHighlighted, routeLabel,
+        unlocked, isStoryMission, cardState, lockedDetail, routeLabel,
         crewStatus: m.requires.crew
           ? player?.shipCustomizerParts?.['crew-module'] === 'crew-quarters-t1'
             ? crewStatus.reason

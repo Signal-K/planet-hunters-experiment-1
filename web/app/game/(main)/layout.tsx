@@ -131,7 +131,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, settingsOpen])
 
   const coachIndex = activeTry ? ['mining', 'scan', 'part'].indexOf(activeTry) : -1
-  const hasCoach = !!coach
+  const onboardingActive = !!coach
 
   useEffect(() => {
     if (!coach) return
@@ -253,7 +253,7 @@ function GameChrome({ children }: { children: ReactNode }) {
               but the visible game tree belongs to this persistent layout. */}
           <div className="game-screen-area">
             {!game.authGateOpen && (
-              <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} />
+              <ScreenContent screen={game.screen} game={game} onboardingActive={onboardingActive} />
             )}
           </div>
         {coach && !game.popup && !game.authGateOpen && (
@@ -262,7 +262,6 @@ function GameChrome({ children }: { children: ReactNode }) {
             stepIndex={coachIndex}
               step={coach}
             total={3}
-            onManualNext={game.coachManualNext}
             hidden={game.player.flightPlan?.hidden}
             onHiddenChange={hidden => game.setPlayer(player => ({ ...player, flightPlan: { ...(player.flightPlan ?? { completed: {} }), hidden } }))}
             hint={activeTry && game.player.flightPlan?.hintShownFor === activeTry ? coach.hint : undefined}

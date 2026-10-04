@@ -3,7 +3,6 @@
 import React from 'react'
 import type { Mission, Client, MineralMeta } from '@/lib/data'
 import { isOwnProgramMission, missionDifficultyLabel, missionPayoutTier } from '@/lib/data'
-import TutorialHighlight from '@/components/game/TutorialHighlight'
 import ClientMark from '@/components/ui/ClientMark'
 import styles from '@/components/game/screens/MissionBoard.module.css'
 import { formatCurrency, FRANC } from '@/lib/format'
@@ -23,7 +22,6 @@ interface MissionCardProps {
   cooldownLabel?: string
   startBlocked?: boolean
   startBlockedLabel?: string
-  highlighted?: boolean
   previewed?: boolean
   routeLabel?: string
   crewStatus?: string
@@ -82,7 +80,6 @@ export default function MissionCard({
   cooldownLabel,
   startBlocked = false,
   startBlockedLabel = 'Mission in progress',
-  highlighted,
   previewed,
   routeLabel,
   crewStatus,
@@ -133,7 +130,6 @@ export default function MissionCard({
       className={cardClass}
       style={{ position: 'relative' }}
     >
-      {highlighted && <TutorialHighlight />}
       {client && onOpenClientDossier ? (
         // A real <button> can't nest inside the card's own <button> (invalid
         // HTML, causes a hydration error) — same span+role pattern the CTA

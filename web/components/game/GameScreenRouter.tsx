@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
-import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, SUBSURFACE_EXCAVATE_COST, trainingCoachSteps } from '@/lib/data'
-import { agencyTrainingStage, freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
+import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
+import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
 import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
@@ -69,7 +69,7 @@ export const VALID_SCREENS = new Set<Screen>([
 type ScreenContentProps = {
   screen: Screen
   game: ReturnType<typeof useGame>
-  hasCoach: boolean
+  onboardingActive: boolean
   /** Overrides HangarScreen's onBack; falls back to the remembered entry scene. */
   onBackFromHangar?: () => void
 }
@@ -86,7 +86,7 @@ export function ScreenContent(props: ScreenContentProps) {
 function ScreenBody({
   screen,
   game,
-  hasCoach,
+  onboardingActive,
   onBackFromHangar,
 }: ScreenContentProps) {
   // Launch sequence state lives here so it's scoped to the fab screen
@@ -119,14 +119,6 @@ function ScreenBody({
     ? game.catalog.targets.find(t => t.id === game.mission!.targetId)?.name
     : undefined
 
-  // Derive the coach step for coachManual (needed by AssemblyScreen)
-  const coachSteps = !game.tutorial || game.player.freeOperations ? [] : trainingCoachSteps(agencyTrainingStage(game.player))
-  // An active run always outranks onboarding copy. A player returning to an
-  // in-flight mission must see the resume affordance, not a fresh-contract
-  // coach card that routes them back to mission creation.
-  const coach = game.player.activeMission
-    ? null
-    : coachSteps.find(s => s.screen === screen && !game.doneSteps[s.id]) ?? null
   // Flight Plan supersedes the retired coach sequence. Keep the contextual
   // mining seam tied to the active try rather than the legacy coach state.
   const trainingMiningTry = currentTrainingTry(game.player.flightPlan) === 'mining'
@@ -176,7 +168,6 @@ function ScreenBody({
       return (
         <BuildPlaceScreen
           onBack={() => game.goBack()}
-          hasCoach={hasCoach}
           player={{
             francs: game.player.francs,
             stash: game.player.stash,
@@ -218,7 +209,7 @@ function ScreenBody({
         <HubScreen
           player={game.player}
           rocketVariant={rocketModelForConfig(game.rocket).tier >= 2 ? 'prospector' : 'explorer'}
-          hasCoach={hasCoach}
+          onboardingActive={onboardingActive}
           onOpenScene={s => {
             if (s === 'missions') { game.goToMissions(); return }
             if (s === 'launchpad') { game.openLaunchpad(); return }
@@ -354,8 +345,6 @@ function ScreenBody({
         <MissionSetupRoutes
           screen={screen}
           game={game}
-          hasCoach={hasCoach}
-          coachManual={coach?.manual ?? false}
           deliveryTargetName={deliveryTargetName}
           rocketDisplay={rocketDisplay}
           launchPending={launchPending}
@@ -376,9 +365,7 @@ function ScreenBody({
         <MissionOperationRoutes
           screen={screen}
           game={game}
-          hasCoach={hasCoach}
           trainingMiningTry={trainingMiningTry}
-          coachManual={coach?.manual ?? false}
           transitTarget={transitTarget}
           debriefOriginTarget={debriefOriginTarget}
           deliveryTargetName={deliveryTargetName}

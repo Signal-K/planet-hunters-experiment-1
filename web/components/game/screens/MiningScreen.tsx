@@ -202,7 +202,7 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, trainingMiningTry = false, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
@@ -214,10 +214,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   laserChargeCap?: number
   /** Equipped drill/laser part tier (1-3). Gates how deep ore is reachable — deeper veins tease an upgrade. */
   laserTier?: number
-  hasCoach?: boolean
   trainingMiningTry?: boolean
-  coachManual?: boolean
-  onCoachDone?: () => void
   /** Transient Temple-Run-style hints ("Nice shot!", "You don't need that yet") — tutorial-scoped, not the persistent coach banner. */
   addToast?: (message: string, kind?: 'info' | 'ok' | 'warn') => void
   /** Set for two-leg "mine then deliver" missions (mission.deliveryTargetId) — swaps the return button's copy from "Return to Earth" to "Deliver to {name}" since the ship isn't heading home yet. */
@@ -341,7 +338,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
     // Temple-Run-style transient hints — tutorial-scoped, separate from the
     // persistent coach banner. Each fires at most once per run.
-    if (hasCoach && addToast) {
+    if (trainingMiningTry && addToast) {
       const isNeeded = mineral in mission.requires.minerals
         && (cargoRef.current[mineral] ?? 0) <= mission.requires.minerals[mineral]
       if (!hintedFirstHitRef.current) {
@@ -360,7 +357,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         addToast('Order filled — tap RETURN', 'ok')
       }
     }
-  }, [hasCoach, addToast, mission.requires.minerals, minerals])
+  }, [trainingMiningTry, addToast, mission.requires.minerals, minerals])
 
   function fireLaser(quiet = false) {
     if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
@@ -375,9 +372,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     }
     setLaserCharges(c => c - 1)
     fireRef.current?.()
-    if (!firedRef.current && hasCoach) {
+    if (!firedRef.current && trainingMiningTry) {
       firedRef.current = true
-      onCoachDone?.()
     }
   }
 
@@ -448,13 +444,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // the Fire Laser training try now, so the guide remains opt-in there and
   // never covers the seam it asks the player to watch.
   useEffect(() => {
-    // The tutorial coach already explains the shot; the guide on top of it put
-    // both cards over the ore and the fire controls (SSL-441).
+    // Flight Plan already explains the shot; the guide must not create a
+    // second guidance layer over the ore and fire controls.
     if (trainingMiningTry) return
-    if (hasCoach) {
-      try { localStorage.setItem(HUD_GUIDE_ACK_KEY, '1') } catch { /* ignore */ }
-      return
-    }
     try {
       if (!localStorage.getItem(HUD_GUIDE_ACK_KEY)) {
         setGuideOpen(true)
@@ -462,7 +454,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       }
     } catch { /* localStorage unavailable */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasCoach, trainingMiningTry])
+  }, [trainingMiningTry])
 
   const isFreeOps = !mission.client
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
@@ -485,7 +477,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       : null
 
   return (
-    <div className="game-screen mining-screen theme-deep" data-has-coach={hasCoach ? 'true' : 'false'}>
+    <div className="game-screen mining-screen theme-deep" data-training-active={trainingMiningTry ? 'true' : 'false'}>
       <TopBar
         eyebrow={`${target.name.toUpperCase()} · SURFACE`}
         title="Mining Run"

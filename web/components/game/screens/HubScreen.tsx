@@ -178,7 +178,7 @@ const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 interface HubScreenProps {
   player: Player
   rocketVariant?: HubBuildingDef['rocketVariant']
-  hasCoach?: boolean
+  onboardingActive?: boolean
   onFocusBuilding: (b: string) => void
   onOpenScene: (s: Screen) => void
   onDismissHubPrompt?: (key: HubPromptKey) => void
@@ -192,7 +192,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -307,7 +307,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   // After the first run the launchpad offers the transit telescope, the one
   // prompt that used to live on a Home card. It is dismissible and goes away
   // once the satellite has launched.
-  const offersTransitTelescope = !hasCoach && !player.activeMission && player.missionsDone > 0
+  const offersTransitTelescope = !onboardingActive && !player.activeMission && player.missionsDone > 0
     && !!player.freeOperations && !player.transitSatelliteLaunchedAt
     && !isHubPromptDismissed(player, HUB_PROMPT_TRANSIT_TELESCOPE)
   const launchpadCallout: BuildingCallout | undefined =
@@ -319,7 +319,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         onCta: () => onOpenScene('launchpad'),
         onDismiss: onDismissHubPrompt ? () => onDismissHubPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined,
       }
-      : hasCoach || hasProgressionCards
+      : onboardingActive || hasProgressionCards
         ? undefined
         : {
           title: 'Choose your first contract',

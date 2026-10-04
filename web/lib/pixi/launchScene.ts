@@ -393,11 +393,13 @@ export function buildLaunchScene(
       // Sprite sheets resolve asynchronously. Cypress can advance away from
       // the launch scene before this continuation runs, which removes the
       // root from the stage and made getChildIndex throw during M1/visual QA.
-      const rootIndex = app.stage.children.indexOf(rocketRoot)
+      const stage = app.stage
+      if (!stage) return
+      const rootIndex = stage.children.indexOf(rocketRoot)
       if (rootIndex < 0) return
       const at = rootIndex + 1
-      app.stage.addChildAt(padFx.container, at)
-      app.stage.addChildAt(sepFx.container, at + 1)
+      stage.addChildAt(padFx.container, at)
+      stage.addChildAt(sepFx.container, at + 1)
     }
   }
   void loadLaunchSheets(variant).then(mountStack)

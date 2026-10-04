@@ -128,7 +128,7 @@ function GameCanvas() {
   }, [coachSteps, friendsOpen, hubOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
-  const hasCoach = !!coach
+  const onboardingActive = !!coach
 
   // No onboarding-step-level analytics existed before — only the
   // mission-level events (mission_completed etc). Without per-step coverage
@@ -225,7 +225,7 @@ function GameCanvas() {
         >
           {/* Gated the same way as [screen]/page.tsx — see STS-624. */}
           {!game.authGateOpen && (
-            <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
+            <ScreenContent screen={game.screen} game={game} onboardingActive={onboardingActive} onBackFromHangar={() => {
               game.returnFromHangar()
               if (window.location.pathname.includes('/game/ship-customizer')) {
                 router.replace('/game')
@@ -239,7 +239,6 @@ function GameCanvas() {
               stepIndex={coachIndex}
               step={coach}
               total={coachSteps.length}
-              onManualNext={game.coachManualNext}
               onSkip={() => {
                 // Distinct from a step being completed in the normal flow —
                 // this is the player bailing out of onboarding entirely, which

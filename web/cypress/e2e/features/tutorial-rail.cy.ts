@@ -159,8 +159,7 @@ describe('Tutorial rail regression', () => {
       // KES-192: onboarding coaching must never use amber as a panel accent
       // (CLAUDE.md / design-language doc: "never a panel accent... or generic
       // UI chrome"). The target map no longer wraps the map in a
-      // TutorialHighlight ring; the coach block itself is the accent, and it
-      // must not be amber either.
+      // Flight Plan is the only onboarding accent and must not be amber.
       it('coaches the target map without an amber accent (KES-192)', () => {
         visitWithState(fullState({
           screen: 'hub',
@@ -174,12 +173,6 @@ describe('Tutorial rail regression', () => {
           const style = getComputedStyle($coach[0])
           expect(style.borderTopColor).not.to.equal('rgb(245, 166, 35)')
           expect(style.outlineColor).not.to.equal('rgb(245, 166, 35)')
-        })
-        // Any highlight ring that is present must not be amber either.
-        cy.document().then(doc => {
-          doc.querySelectorAll('[data-testid="tutorial-coach-highlight"]').forEach(ring => {
-            expect(getComputedStyle(ring).borderTopColor).not.to.equal('rgb(245, 166, 35)')
-          })
         })
       })
 

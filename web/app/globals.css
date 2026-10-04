@@ -1452,15 +1452,6 @@ button { cursor: pointer; }
     min-height: 44px !important;
   }
 
-  [data-testid="observatory-coach"],
-  [data-testid="asteroid-discovery-coach"] {
-    top: 76px !important;
-    right: auto !important;
-    width: min(44vw, 360px) !important;
-    max-height: 112px;
-    overflow-y: auto;
-  }
-
   [data-testid="tess-discovery-desktop-grid"] .screen-scroll,
   [data-testid="asteroid-discovery-desktop-grid"] .screen-scroll {
     padding-top: 0;
@@ -2702,50 +2693,6 @@ button { cursor: pointer; }
     bottom: 14px;
     left: 14px;
   }
-}
-
-@keyframes coach-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
-@keyframes coach-spot {
-  0%,100% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 0 0 rgba(245,166,35,0); }
-  50% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 18px 3px rgba(245,166,35,0.6); }
-}
-@keyframes coach-spot-pulse {
-  0%,100% { border-color: rgba(255,255,255,0.28); box-shadow: 0 0 8px rgba(112,217,234,0.15); }
-  50% { border-color: rgba(112,217,234,0.9); box-shadow: 0 0 20px rgba(112,217,234,0.45); }
-}
-@keyframes coach-glow-fade {
-  0%,100% { opacity: 0.35; }
-  50% { opacity: 1; }
-}
-
-/* Cyan pulse ring. Sits over its positioned parent (or fills a highlight
-   overlay); never paints text, so animating the whole layer's opacity is safe.
-   Was amber (rgba(245,166,35,...)) until KES-192 — TutorialHighlight wraps
-   whole content panels (Target Picker, Rocket Buy, Launch Preflight, Debrief)
-   whenever hasCoach is true, so that amber was a panel accent on every
-   onboarding screen, not the small payout-emphasis use the standing amber
-   rule allows. Cyan matches TutorialCoach's own instruction-card border. */
-.coach-glow-ring {
-  position: absolute;
-  inset: 0;
-  border: 2px solid rgba(112,217,234,1);
-  border-radius: inherit;
-  box-shadow: 0 0 20px 5px rgba(112,217,234,0.45);
-  pointer-events: none;
-  will-change: opacity;
-  animation: coach-glow-fade 1.6s ease-in-out infinite;
-}
-@keyframes coach-point { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
-@keyframes coach-arrow-bounce {
-  0%,100% { transform: translateY(0); opacity: 0.7; }
-  40% { transform: translateY(10px); opacity: 1; }
-  60% { transform: translateY(8px); opacity: 1; }
-}
-
-/* Coach element highlight ring animation */
-@keyframes coach-ring-pulse {
-  0%, 100% { opacity: 0.65; box-shadow: 0 0 0 3px rgba(112,217,234,0.12), 0 0 14px rgba(112,217,234,0.3); }
-  50% { opacity: 1; box-shadow: 0 0 0 5px rgba(112,217,234,0.22), 0 0 26px rgba(112,217,234,0.55); }
 }
 
 /* SSL-395 beacon: Flight Plan sets data-flight-target (space-separated ids) on

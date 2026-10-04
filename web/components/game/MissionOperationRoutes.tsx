@@ -22,9 +22,7 @@ export type MissionOperationRoute = Extract<Screen, 'transit' | 'landing' | 'min
 interface MissionOperationRoutesProps {
   screen: MissionOperationRoute
   game: Game
-  hasCoach: boolean
   trainingMiningTry: boolean
-  coachManual: boolean
   transitTarget: Target
   debriefOriginTarget: Target
   deliveryTargetName?: string
@@ -35,9 +33,7 @@ interface MissionOperationRoutesProps {
 export default function MissionOperationRoutes({
   screen,
   game,
-  hasCoach,
   trainingMiningTry,
-  coachManual,
   transitTarget,
   debriefOriginTarget,
   deliveryTargetName,
@@ -193,10 +189,7 @@ export default function MissionOperationRoutes({
           minerals={game.catalog.minerals}
           laserChargeCap={game.laserChargeCap}
           laserTier={game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1}
-          hasCoach={hasCoach}
           trainingMiningTry={trainingMiningTry}
-          coachManual={coachManual}
-          onCoachDone={() => game.completeStep(6)}
           deliveryTargetName={deliveryTargetName}
           onAbandon={game.abandonMission}
           addToast={game.addToast}
@@ -272,7 +265,6 @@ export default function MissionOperationRoutes({
           freeOperations={game.player.freeOperations}
           annotations={game.player.researchAnnotations}
           missionsDone={game.player.missionsDone}
-          hasCoach={hasCoach}
           shipDestroyed={!!game.player.shipDestroyed}
           rocket={game.rocket}
           rocketSource={game.player.missionRocketSource}

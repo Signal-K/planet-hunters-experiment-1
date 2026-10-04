@@ -9,7 +9,6 @@ interface FlightPlanProps {
   stepIndex: number
   total: number
   step: TutorialStep | TrainingTryStep
-  onManualNext: () => void
   onSkip: () => void
   hidden?: boolean
   onHiddenChange?: (hidden: boolean) => void
@@ -17,14 +16,14 @@ interface FlightPlanProps {
 }
 
 /**
- * SSL-395 Flight Plan: replaces the TutorialCoach overlay. It lives in layout
+ * SSL-395 Flight Plan replaces the retired overlay guidance. It lives in layout
  * flow (a strip between the screen and the nav), so it never covers a control.
  * The target control is marked by its own outline via
  * `html[data-flight-target="…"] [data-coach-id="…"]` in globals.css.
  * Action gating is unchanged: steps still complete from real game actions;
  * `manual` steps get a Continue button here.
  */
-export default function FlightPlan({ stepIndex, total, step, onManualNext, onSkip, hidden: persistedHidden, onHiddenChange, hint }: FlightPlanProps) {
+export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: persistedHidden, onHiddenChange, hint }: FlightPlanProps) {
   const isDesktop = useIsDesktop()
   const [expanded, setExpanded] = useState(false)
   const [hidden, setHidden] = useState(false)
@@ -88,11 +87,6 @@ export default function FlightPlan({ stepIndex, total, step, onManualNext, onSki
           <span className="flight-plan-kicker">Flight Plan · {isTryStep ? step.try : step.title} · {stepIndex + 1}/{total}</span>
           <span className="flight-plan-action">{hint && !expanded ? `Hint: ${hint}` : action}</span>
         </button>
-        {!isTryStep && step.manual && (
-          <button type="button" className="flight-plan-btn is-primary" data-testid="flight-plan-continue" onClick={onManualNext}>
-            Continue
-          </button>
-        )}
         <button type="button" className="flight-plan-btn" data-testid="flight-plan-hide" aria-label="Hide Flight Plan" onClick={() => { setHidden(true); onHiddenChange?.(true) }}>
           ▾
         </button>
