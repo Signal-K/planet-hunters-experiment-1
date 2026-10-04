@@ -593,7 +593,7 @@
 
 /* Step 4: the Hangar build is the event. Mission facts form a subordinate
    command rail instead of replacing the scene with another review sheet. */
-.missionReview { background: var(--mission-ink); }
+.missionReview { background: var(--mission-paper-muted); }
 
 .hangarBuildScene,
 .launchpadReview {
@@ -654,11 +654,11 @@
 
 .replayAssembly { position: absolute; z-index: 12; right: 2%; top: 3%; padding: 7px 9px; border: 1px solid var(--ln-cyan-border); background: var(--mission-ink); color: var(--ln-cyan); font: 800 7px var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
 
-.launchpadReview { display: grid; place-items: center; background: linear-gradient(180deg, var(--ln-surface-2), var(--mission-ink)); }
-.launchpadReview img { width: 66%; height: 66%; object-fit: contain; transform: rotate(-90deg); filter: drop-shadow(15px 10px 8px rgba(0,0,0,.5)); }
+.launchpadReview { display: grid; place-items: center; color: var(--mission-ink); background: linear-gradient(180deg, var(--ln-surface-2), var(--mission-paper-muted)); }
+.launchpadReview img { width: 66%; height: 66%; object-fit: contain; transform: rotate(-90deg); filter: drop-shadow(15px 10px 8px color-mix(in srgb, var(--mission-ink) 32%, transparent)); }
 .launchpadReview > div:last-child { position: absolute; left: 4%; bottom: 6%; display: grid; gap: 4px; }
 .launchpadReview span, .launchpadReview small { color: var(--ln-cyan); font: 800 8px var(--ln-font-mono); letter-spacing: .1em; }
-.launchpadReview strong { color: var(--mission-paper-bright); font: 800 22px var(--ln-font-display); letter-spacing: .08em; }
+.launchpadReview strong { color: var(--mission-ink); font: 800 22px var(--ln-font-display); letter-spacing: .08em; }
 .launchTower { position: absolute; right: 18%; top: 7%; bottom: 0; width: 18%; border: 5px solid var(--ln-surface-3); border-bottom: 0; opacity: .7; }
 .launchTower i { position: absolute; left: -45%; width: 55%; height: 3px; background: var(--ln-cyan); }.launchTower i:nth-child(1) { top: 22%; }.launchTower i:nth-child(2) { top: 48%; }.launchTower i:nth-child(3) { top: 74%; }
 
