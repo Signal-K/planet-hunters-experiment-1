@@ -43,7 +43,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   stateRef.current = state
 
   const [hydrated, setHydrated] = useState(false)
-  const isPreview = useRef(false)
+  // Preview mode must be known on the first render. Initialising this only in
+  // the hydration effect lets the auth hook run once as a normal game route,
+  // opening the sign-in sheet over the preview before the effect marks it
+  // local-only.
+  const isPreview = useRef(
+    typeof window !== 'undefined'
+      && (new URLSearchParams(window.location.search).has('preview')
+        || new URLSearchParams(window.location.search).has('preset')
+        || window.location.pathname.endsWith('/game/ship-customizer')),
+  )
   const skipNextLocalPersist = useRef(false)
   // React StrictMode double-invokes effects in dev. This effect strips the
   // `?preset=`/`?preview=` query via history.replaceState as one of its own

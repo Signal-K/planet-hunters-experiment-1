@@ -41,27 +41,28 @@ interface Palette {
   shade: string
 }
 
+// The Base is the player’s home surface, so its scene stays in the same
+// blueprint language as its instruments at every local time. The clock still
+// reports local time; changing that time must not turn the whole route into a
+// separate dark product theme.
+const BLUEPRINT_PALETTE: Palette = {
+  skyTop: 'var(--hub-sky-top)',
+  skyMid: 'var(--hub-sky-mid)',
+  skyHorizon: 'var(--hub-horizon)',
+  haze: 'var(--hub-hill-far)',
+  ground: 'var(--hub-ground-far)',
+  groundNear: 'var(--hub-ground-near)',
+  groundLip: 'var(--hub-ground-lip)',
+  starOpacity: 0,
+  hazeGain: 1,
+  shade: 'transparent',
+}
+
 const PALETTES: Record<TimeOfDayPhase, Palette> = {
-  night: {
-    skyTop: '#040a18', skyMid: '#0b1830', skyHorizon: '#1b2b46',
-    haze: '#16233f', ground: '#0a1120', groundNear: '#070d19', groundLip: '#121d33',
-    starOpacity: 1, hazeGain: 0.55, shade: 'rgba(3,10,24,0.62)',
-  },
-  dawn: {
-    skyTop: '#2c3560', skyMid: '#7d7397', skyHorizon: '#e2a184',
-    haze: '#9d94ad', ground: '#4a4258', groundNear: '#3a3348', groundLip: '#635774',
-    starOpacity: 0.22, hazeGain: 0.95, shade: 'rgba(52,42,78,0.20)',
-  },
-  day: {
-    skyTop: '#4f9bda', skyMid: '#8fc9ec', skyHorizon: '#d5ecf7',
-    haze: '#bcdcee', ground: '#8d8a63', groundNear: '#6f6f4e', groundLip: '#a8a67c',
-    starOpacity: 0, hazeGain: 1, shade: 'transparent',
-  },
-  dusk: {
-    skyTop: '#26264f', skyMid: '#71446d', skyHorizon: '#e08a63',
-    haze: '#9c6a78', ground: '#3b2f42', groundNear: '#2c2334', groundLip: '#553f57',
-    starOpacity: 0.4, hazeGain: 0.85, shade: 'rgba(44,28,62,0.26)',
-  },
+  night: BLUEPRINT_PALETTE,
+  dawn: BLUEPRINT_PALETTE,
+  day: BLUEPRINT_PALETTE,
+  dusk: BLUEPRINT_PALETTE,
 }
 
 /**

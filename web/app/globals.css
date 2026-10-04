@@ -2875,30 +2875,33 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 :root {
   /* Scene-local accents. Kept as hub-scoped tokens rather than overriding
      the global --ln-cyan/--ln-ok, which other screens already tune against. */
-  --hub-mint:       #168a80;
+  --hub-mint:       color-mix(in srgb, var(--ln-blueprint-blue) 62%, var(--ln-blueprint-paper));
   --hub-cyan:       var(--ln-blueprint-blue);
   /* Chalky, slightly desaturated sage green — replaces the earlier hot-pink
      interactive accent (2026-08-23) across the Hub's clickable chrome (Jobs
      chip, Edit/Build CTA, active dock icons). The atmospheric dusk-horizon
      pink below is a separate, still-standing decision (KES-228) and is left
      alone — it's backdrop color, not interactive UI. */
-  --hub-chalk:       #d7eef8;
-  --hub-chalk-soft:  rgba(31, 120, 193, 0.12);
+  --hub-chalk:       color-mix(in srgb, var(--ln-blueprint-blue) 18%, var(--ln-blueprint-paper));
+  --hub-chalk-soft:  color-mix(in srgb, var(--ln-blueprint-blue) 12%, transparent);
   --hub-outline:    var(--ln-blueprint-line-strong);
   --hub-panel:      var(--ln-blueprint-paper);
   --hub-panel-deep: var(--ln-blueprint-paper-2);
   /* Daylight blueprint scene: the Base is a physical place, not a dark HUD. */
   --hub-void:       var(--ln-blueprint-bg);
   --hub-bg:         var(--ln-blueprint-bg);
-  --hub-sky-top:    #d8edf9;
-  --hub-sky-mid:    #a8d4ef;
-  --hub-horizon:    #7db8d7;
-  --hub-horizon-glow: rgba(31, 120, 193, 0.14);
+  --hub-sky-top:    color-mix(in srgb, var(--ln-blueprint-blue) 14%, var(--ln-blueprint-paper));
+  --hub-sky-mid:    color-mix(in srgb, var(--ln-blueprint-blue) 28%, var(--ln-blueprint-paper));
+  --hub-horizon:    color-mix(in srgb, var(--ln-blueprint-blue) 46%, var(--ln-blueprint-paper));
+  --hub-horizon-glow: color-mix(in srgb, var(--ln-blueprint-blue) 14%, transparent);
   /* Parallax hill silhouettes, far to near. */
-  --hub-hill-far:   #9abbd0;
-  --hub-hill-mid:   #769cb6;
-  --hub-hill-near:  #5f849f;
-  --hub-skyline:    #476c86;
+  --hub-hill-far:   color-mix(in srgb, var(--ln-blueprint-blue) 36%, var(--ln-blueprint-paper));
+  --hub-hill-mid:   color-mix(in srgb, var(--ln-blueprint-blue) 50%, var(--ln-blueprint-paper));
+  --hub-hill-near:  color-mix(in srgb, var(--ln-blueprint-blue) 62%, var(--ln-blueprint-paper));
+  --hub-skyline:    color-mix(in srgb, var(--ln-blueprint-ink) 54%, var(--ln-blueprint-paper));
+  --hub-ground-far: color-mix(in srgb, var(--ln-blueprint-blue) 34%, var(--ln-blueprint-paper));
+  --hub-ground-near: color-mix(in srgb, var(--ln-blueprint-blue) 48%, var(--ln-blueprint-paper));
+  --hub-ground-lip: color-mix(in srgb, var(--ln-blueprint-ink) 34%, var(--ln-blueprint-paper));
   /* Ground contact line — 22% from the bottom. Keep this aligned with the DOM
      plot positions in HubScreen/BuildPlaceScreen, which derive from the same
      scene-local baseline. */
