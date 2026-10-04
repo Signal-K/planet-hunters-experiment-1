@@ -11,6 +11,14 @@ import { isResumableMissionScreen } from '@/lib/initial-route'
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
 import { MISSIONS, TARGETS, travelDurationMs } from '@/lib/data'
+import {
+  isTransientAuthFailure,
+  retryTransient,
+  signInGateMessage,
+  waitForBackendHealth,
+  WARMING_GAVE_UP,
+  WARMING_STATUS,
+} from '@/lib/auth-resilience'
 
 // How often to proactively renew the shared-backend session while the tab is
 // open. authStore.isValid is a pure client-side JWT exp check with no server
@@ -167,6 +175,11 @@ export function useAuthSync({
       setSharedAuthRestoreSettled(true)
       return
     }
+    // Seed the identity before authRefresh(). That call saves the store and
+    // fires onChange. If this ref is still null, onChange treats the refresh
+    // as a new sign-in and clears landnamSynced, so the Hub sticks on
+    // NOT SYNCED after a cold start even though the exchange already worked.
+    knownAuthRecordId.current = record.id
     if (record.id !== authUserId) {
       setAuthUserId(record.id)
     }
@@ -674,27 +687,64 @@ export function useAuthSync({
     router.replace('/game/hub')
   }, [router, setState, stateRef])
 
+  const noteWarming = useCallback(() => setAuthGateError(WARMING_STATUS), [])
+
+  const openSession = useCallback(async (userId: string) => {
+    // Claim the exchange before the background effect starts, so a cold
+    // retry here is the one that marks the Hub synced.
+    landnamAuthAttemptedFor.current = userId
+    setLandnamAuthAttempted(true)
+    const { token, record: landnamRecord } = await retryTransient(
+      () => exchangeLandnamAuth(pbShared.authStore.token),
+      { onWait: noteWarming },
+    )
+    pbLandnam.authStore.save(token, landnamRecord)
+    setLandnamSynced(true)
+  }, [noteWarming])
+
   const signInFromGate = useCallback(async (email: string, password: string) => {
     setAuthGateError(null)
     try {
-      await pbShared.collection('users').authWithPassword(email, password)
+      await waitForBackendHealth(() => pbShared.health.check(), { onWait: noteWarming })
+      await waitForBackendHealth(() => pbLandnam.health.check(), { onWait: noteWarming })
+      setAuthGateError(null)
+      const authResult = await retryTransient(
+        () => pbShared.collection('users').authWithPassword(email, password),
+        { onWait: noteWarming },
+      )
+      await openSession(authResult.record.id)
       setAuthGateOpen(false)
       landOnHubUnlessResumable()
     } catch (e) {
       const raw = authErrorMessage(e, 'Sign in failed')
-      const msg = /^failed to authenticate\.?$/i.test(raw)
-        ? 'Sign in failed. Check your email and password.'
-        : raw
+      const msg = signInGateMessage(raw, e)
       setAuthGateError(msg)
       throw new Error(msg)
     }
-  }, [landOnHubUnlessResumable])
+  }, [landOnHubUnlessResumable, noteWarming, openSession])
 
   const createAccountFromGate = useCallback(async (email: string, password: string) => {
     setAuthGateError(null)
     try {
-      await pbShared.collection('users').create({ email, password, passwordConfirm: password, name: '' })
-      const authResult = await pbShared.collection('users').authWithPassword(email, password)
+      await waitForBackendHealth(() => pbShared.health.check(), { onWait: noteWarming })
+      await waitForBackendHealth(() => pbLandnam.health.check(), { onWait: noteWarming })
+      setAuthGateError(null)
+      // A timed-out create can still commit on the server. Only then is a
+      // following unique-constraint a reason to sign in with this password,
+      // rather than telling the player the email is taken.
+      let createInterrupted = false
+      try {
+        await retryTransient(
+          () => pbShared.collection('users').create({ email, password, passwordConfirm: password, name: '' }),
+          { onWait: () => { createInterrupted = true; noteWarming() } },
+        )
+      } catch (e) {
+        if (!(isUniqueConstraintError(e) && createInterrupted)) throw e
+      }
+      const authResult = await retryTransient(
+        () => pbShared.collection('users').authWithPassword(email, password),
+        { onWait: noteWarming },
+      )
       // Brand-new account: discard any local guest/dev state so the player
       // starts from scratch with the intro tutorial.
       localStorage.removeItem(storageKey)
@@ -704,25 +754,28 @@ export function useAuthSync({
       // ownership rules require @request.auth to be populated (see
       // pb-landnam.ts / landnam_auth.go), and this synchronous flow can't
       // wait for the background exchange effect to catch up.
-      const { token, record: landnamRecord } = await exchangeLandnamAuth(pbShared.authStore.token)
-      pbLandnam.authStore.save(token, landnamRecord)
+      await openSession(authResult.record.id)
       // Create the Landnam game_states record synchronously here, before the
       // gate closes — otherwise it only exists once the debounced persist
       // effect fires, and closing the tab before then leaves no record at all.
-      await saveRemoteState(authResult.record.id, DEFAULT_STATE)
+      await retryTransient(
+        () => saveRemoteState(authResult.record.id, DEFAULT_STATE),
+        { onWait: noteWarming },
+      )
       backendLoadedFor.current = authResult.record.id
-      landnamAuthAttemptedFor.current = authResult.record.id
-      setLandnamAuthAttempted(true)
       setBackendReady(true)
+      setAuthGateError(null)
       setAuthGateOpen(false)
     } catch (e) {
       const msg = isUniqueConstraintError(e)
         ? 'An account already exists for this email. Use Sign In.'
-        : authErrorMessage(e, 'Account creation failed')
+        : isTransientAuthFailure(e)
+          ? WARMING_GAVE_UP
+          : authErrorMessage(e, 'Account creation failed')
       setAuthGateError(msg)
       throw new Error(msg)
     }
-  }, [saveRemoteState, setState, storageKey])
+  }, [noteWarming, openSession, saveRemoteState, setState, storageKey])
 
   const resetGame = useCallback(async (defaultState: GameState) => {
     beforeReset()
