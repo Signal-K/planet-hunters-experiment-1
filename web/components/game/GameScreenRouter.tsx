@@ -47,6 +47,13 @@ import {
   markInstrumentDigestNotified,
 } from '@/lib/systems/InstrumentFeedSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
+import { missionRunsFor } from '@/lib/mission-runs'
+import { surfaceForScreen } from '@/lib/screen-layouts'
+import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
+import { FrameSlot } from '@/components/layout/frame/FrameSlot'
+import LaunchShell from '@/components/layout/frame/shells/LaunchShell'
+import MissionSwitch from '@/components/layout/frame/shells/MissionSwitch'
+import SceneTransition from '@/components/game/SceneTransition'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
@@ -85,6 +92,31 @@ export function ScreenContent({
     setLaunchPending(false)
     game.onLaunch()
   }, [game.onLaunch])
+  const launching = launchPending && screen === 'fab' && !!game.mission && !!game.target
+  const sceneKey = launching ? 'launch' : screen
+  const rocketDisplay = rocketDisplayForConfig(game.rocket)
+  return (
+    <SceneTransition sceneKey={sceneKey}>
+      {launching && game.target ? (
+        <SurfaceLayout surface="launch">
+          <LaunchShell rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={game.target.name} onComplete={handleLaunchComplete} />
+        </SurfaceLayout>
+      ) : (
+        <SurfaceLayout surface={surfaceForScreen(screen)}>
+          <ScreenBody {...props} onLaunch={handleLaunch} />
+        </SurfaceLayout>
+      )}
+    </SceneTransition>
+  )
+}
+
+function ScreenBody({
+  screen,
+  game,
+  hasCoach,
+  onLaunch,
+}: ScreenContentProps & { onLaunch: () => void }) {
+  const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
   const rocketDisplay = rocketDisplayForConfig(game.rocket)
   const transitTarget = game.player.headingToDelivery && game.deliveryTargetId
     ? game.catalog.targets.find(t => t.id === game.deliveryTargetId) ?? game.target

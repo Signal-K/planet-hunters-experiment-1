@@ -777,17 +777,24 @@
   .primary { min-height: 40px; padding: 7px 12px; border-width: 2px; font-size: 9px; box-shadow: 0 3px 0 color-mix(in srgb, var(--mission-ink) 72%, transparent); }
 }
 
-/* SSL-417: below ~720px wide in landscape there is no free pocket left for the
-   Prospector artwork between the cargo block, facts and accept button. */
-@media (orientation: landscape) and (max-width: 720px) {
-  .contractRocket { display: none; }
-  .contractCopy, .contractFacts { left: 9%; }
-  /* The facts row ran under the accept button here and hid MISSION TIER. */
-  .contractFacts { gap: 8px; }
-  .contractFacts > div { min-width: 0; }
-  .contractFacts span { font-size: 7px; letter-spacing: .12em; }
-  .contractFacts strong { font-size: 12px; }
-  .contractSlide > .primary { min-width: 0; width: 28%; font-size: 10px; letter-spacing: .06em; }
+/* SSL-441: on phone and compact landscape the coach is a full-width band.
+   The map brief, blueprint title, and hangar title sit under that band
+   unless they are pushed below it. The confirm controls stay at the bottom. */
+@media (max-width: 720px), (max-height: 520px), (orientation: portrait) {
+  .root[data-step='2'][data-coach='true'] .filterRibbon {
+    top: 176px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+  }
+  .root[data-step='3'][data-coach='true'] .blueprintHeading { top: 176px; }
+  .root[data-step='4'][data-coach='true'] .hangarBayHeading { top: 176px; }
+}
+
+@media (orientation: landscape) and (min-width: 1024px) {
+  .root[data-step='2'][data-coach='true'] .filterRibbon { top: 200px; }
+  .root[data-step='3'][data-coach='true'] .blueprintHeading { top: 200px; }
+  .root[data-step='4'][data-coach='true'] .hangarBayHeading { top: 200px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
