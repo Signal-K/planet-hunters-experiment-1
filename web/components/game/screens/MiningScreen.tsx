@@ -307,6 +307,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const orderFilled = Object.entries(mission.requires.minerals).every(
     ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
   )
+  const stillNeeded = unitsStillNeeded(mission.requires.minerals, cargo)
+  // 4 charges left on a 3/5 platinum order cannot reliably land the last two
+  // hits. Recharge refills the magazine and keeps the cargo already collected.
+  const needsRecharge = miningNeedsRecharge(laserCharges, stillNeeded)
 
   const stillNeeded = unitsStillNeeded(mission.requires.minerals, cargo)
   // A magazine that cannot reliably cover the remaining units offers a recharge
@@ -417,6 +421,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       .filter(m => m.left > 0)
       .map(m => `${m.left} more ${minerals[m.id]?.name ?? m.id}`)
     addToast?.(`Order not filled yet: mine ${missing.join(' and ')}`, 'warn')
+  }
+
+  function handleRecharge() {
+    setLaserCharges(MAX_CHARGES)
   }
 
   // Local-dev-only shortcut: fills the order instantly so testing later
@@ -673,7 +681,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       {activeOverlay === 'warning' && (
         <div className="mining-charge-warning" style={{ position: 'absolute', top: 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
           <div>
-            {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining, recharge to keep this cargo
+            {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — recharge to keep this cargo
           </div>
         </div>
       )}
@@ -874,7 +882,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <button
             className="mining-command mining-command--return"
             type="button"
-            aria-disabled={(!orderFilled && laserCharges > 0 && !needsRecharge) || undefined}
+            disabled={!orderFilled && laserCharges > 0 && !needsRecharge}
             data-testid="return-home-btn"
             data-mode={needsRecharge && !orderFilled ? 'recharge' : 'return'}
             onClick={needsRecharge && !orderFilled ? handleRecharge : handleReturn}
