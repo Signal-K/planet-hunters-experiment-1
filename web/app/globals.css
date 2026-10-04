@@ -624,6 +624,117 @@ button { cursor: pointer; }
    per-screen paddingBottom hacks. */
 .game-screen-area { flex: 1; min-height: 0; position: relative; overflow: hidden; }
 
+.scene-transition { position: absolute; inset: 0; }
+.scene-transition-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background: var(--ln-void);
+  opacity: 0;
+}
+.scene-transition-veil[data-phase="out"] {
+  pointer-events: auto;
+  animation: scene-veil-cover 180ms ease forwards;
+}
+.scene-transition-veil[data-phase="in"] {
+  pointer-events: auto;
+  animation: scene-veil-reveal 200ms ease forwards;
+}
+@keyframes scene-veil-cover { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scene-veil-reveal { from { opacity: 1; } to { opacity: 0; } }
+
+.scene-transition-craft {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.scene-transition-rocket {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: 18px;
+  height: 64px;
+  margin-left: -9px;
+  background: var(--ln-cyan-bright);
+  clip-path: polygon(50% 0, 100% 22%, 82% 22%, 82% 100%, 18% 100%, 18% 22%, 0 22%);
+}
+.scene-transition-rocket::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 100%;
+  height: 16px;
+  background: var(--ln-cyan);
+  clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
+  opacity: 0.85;
+}
+.scene-transition-horizon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 62%;
+  height: 2px;
+  background: var(--ln-cyan);
+  opacity: 0;
+}
+.scene-transition-body {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  border: 2px solid var(--ln-cyan);
+  border-radius: 50%;
+  opacity: 0;
+}
+.scene-transition-veil[data-kind="climb"] .scene-transition-rocket {
+  animation: scene-rocket-climb 380ms ease-in forwards;
+}
+.scene-transition-veil[data-kind="debrief"] .scene-transition-rocket {
+  animation: scene-rocket-descend 380ms ease-in forwards;
+}
+.scene-transition-veil[data-kind="arrival"] .scene-transition-horizon,
+.scene-transition-veil[data-kind="arrival"] .scene-transition-body {
+  opacity: 1;
+}
+.scene-transition-veil[data-kind="arrival"] .scene-transition-horizon {
+  animation: scene-horizon-sweep 380ms ease-out forwards;
+}
+.scene-transition-veil[data-kind="arrival"] .scene-transition-body {
+  animation: scene-body-grow 380ms ease-out forwards;
+}
+.scene-transition-veil[data-kind="arrival"] .scene-transition-rocket { display: none; }
+.scene-transition-veil[data-kind="climb"] .scene-transition-horizon,
+.scene-transition-veil[data-kind="climb"] .scene-transition-body,
+.scene-transition-veil[data-kind="debrief"] .scene-transition-horizon,
+.scene-transition-veil[data-kind="debrief"] .scene-transition-body { display: none; }
+@keyframes scene-rocket-climb {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-70vh); opacity: 0; }
+}
+@keyframes scene-rocket-descend {
+  from { transform: translateY(-24vh); opacity: 0; }
+  40% { opacity: 1; }
+  to { transform: translateY(28vh); opacity: 0; }
+}
+@keyframes scene-horizon-sweep {
+  from { transform: scaleX(0.2); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+@keyframes scene-body-grow {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-transition-veil,
+  .scene-transition-rocket,
+  .scene-transition-horizon,
+  .scene-transition-body { animation: none !important; opacity: 0 !important; }
+}
+
 /* Mission Board owns a fixed StepFooter. End its scroll viewport above that
    rail so the board does not need artificial bottom padding or scroll past
    content that is already visible. */
@@ -864,16 +975,53 @@ button { cursor: pointer; }
 
 .toast-stack {
   position: absolute;
-  top: 8px;
-  right: 12px;
+  /* Below the back / help cluster. Top-right at 8px sat on the mining "?"
+     and the dev skip control. */
+  top: 72px;
+  left: 12px;
+  right: auto;
   z-index: 85;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 6px;
-  width: min(360px, calc(100% - 24px));
+  width: min(280px, calc(100% - 96px));
   pointer-events: none;
 }
+.portrait-canvas:has(.mining-screen) .toast-stack,
+.portrait-canvas:has(.transit-screen) .toast-stack,
+.portrait-canvas:has(.debrief-game) .toast-stack,
+.portrait-canvas:has([data-testid="rover-mining-screen"]) .toast-stack,
+.portrait-canvas:has([data-testid="delivery-screen"]) .toast-stack,
+.portrait-canvas:has([data-testid="launch-shell"]) .toast-stack {
+  top: auto;
+  bottom: 196px;
+  left: auto;
+  right: 16px;
+  align-items: flex-end;
+  width: min(220px, 38%);
+}
+.survey-sheet {
+  position: absolute;
+  z-index: 94;
+  right: 16px;
+  bottom: calc(var(--ln-nav-h, 72px) + 24px);
+  width: min(380px, calc(100% - 32px));
+  max-height: min(320px, calc(100% - 220px));
+  overflow: auto;
+  background: var(--ln-panel);
+  border: 2px solid var(--ln-cyan-border);
+  padding: 16px 16px 24px;
+  box-shadow: var(--ln-shadow-panel);
+}
+.portrait-canvas:has([data-layout="home"]) .survey-sheet {
+  top: 176px;
+  right: 16px;
+  bottom: auto;
+  width: min(320px, calc(100% - 32px));
+  max-height: min(280px, calc(100% - 280px));
+}
+
 .toast-item {
   display: flex;
   align-items: center;
@@ -894,6 +1042,14 @@ button { cursor: pointer; }
   font: 700 16px/1 var(--ln-font-body);
 }
 .toast-dismiss:hover { color: var(--ln-text); border-color: var(--ln-cyan-border); }
+
+@media (max-width: 1023px) {
+  .portrait-canvas:has(.bottom-tab-bar) .backend-status,
+  .portrait-canvas:has(.bottom-tab-bar) .sync-status {
+    bottom: calc(var(--ln-nav-h) + var(--ln-s-2));
+  }
+}
+
 /* Mining owns a variable-height bottom command rail. The global status chips
    cannot use the ordinary viewport-bottom anchor here: that puts NOT SYNCED
    directly on top of FIRE LASER whenever the rail grows on a small viewport.
@@ -1689,6 +1845,51 @@ button { cursor: pointer; }
 }
 
 .mining-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-void); display: flex; flex-direction: column; }
+.mining-stage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+/* The field is edge-to-edge (viewport is absolute). The guide is a right-hand
+   dock above the floating command bar, clear of the ship at x≈80 and of
+   FIRE LASER / FILL ORDER / SCROLL. */
+.mining-guide-dock {
+  position: absolute;
+  z-index: 8;
+  top: 72px;
+  right: 12px;
+  width: min(280px, calc(100% - 168px));
+  max-height: min(168px, calc(100% - 72px - 180px));
+  margin: 0;
+  overflow: auto;
+}
+.mining-guide-row {
+  display: grid;
+  grid-template-columns: minmax(0, 112px) minmax(0, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.mining-guide-row strong {
+  color: var(--ln-cyan);
+  font: 800 10px/1.3 var(--ln-font-display);
+  letter-spacing: 0.08em;
+}
+.mining-guide-row span {
+  color: var(--ln-text-dim);
+  font: 12px/1.4 var(--ln-font-body);
+}
+.mining-guide-dock button {
+  position: sticky;
+  bottom: 0;
+  background: var(--ln-panel);
+}
+@media (min-width: 1100px) {
+  .mining-guide-dock {
+    width: min(280px, calc(100% - 168px));
+  }
+}
 .mining-viewport {
   position: relative; flex: 1; overflow: hidden; min-height: 0;
   background: radial-gradient(ellipse at 70% 10%, #12203d, transparent 50%), linear-gradient(180deg, #090e1a 0%, var(--ln-void) 60%, #000000 100%);
@@ -3174,12 +3375,3 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* SSL-441: short landscape viewports have no room under the docked coach card,
    so the coached mining guide moves to the free left column instead of
    covering the card, the ore lane and the bottom control rail. */
-@media (max-height: 500px) and (orientation: landscape) {
-  .mining-guide-overlay--coached {
-    right: auto !important;
-    left: 16px !important;
-    top: 64px !important;
-    width: 240px !important;
-    max-height: calc(100% - 64px - 170px) !important;
-  }
-}
