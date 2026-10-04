@@ -396,12 +396,19 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // SSL-333: open the guide once, unprompted, on the player's first-ever
   // mining run. After that it's opt-in via the "?" button same as before.
   useEffect(() => {
-    if (!localStorage.getItem(HUD_GUIDE_ACK_KEY)) {
-      setGuideOpen(true)
-      localStorage.setItem(HUD_GUIDE_ACK_KEY, '1')
+    // The tutorial coach already explains the shot. Opening this guide on
+    // top of it is what put both cards over the ore and the fire controls.
+    if (hasCoach) {
+      try { localStorage.setItem(HUD_GUIDE_ACK_KEY, '1') } catch { /* ignore */ }
+      return
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    try {
+      if (!localStorage.getItem(HUD_GUIDE_ACK_KEY)) {
+        setGuideOpen(true)
+        localStorage.setItem(HUD_GUIDE_ACK_KEY, '1')
+      }
+    } catch { /* localStorage unavailable */ }
+  }, [hasCoach])
 
   const isFreeOps = !mission.client
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
@@ -424,7 +431,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       : null
 
   return (
-    <div className="game-screen mining-screen theme-deep">
+    <div className="game-screen mining-screen theme-deep" data-has-coach={hasCoach ? 'true' : 'false'}>
       <TopBar
         eyebrow={`${target.name.toUpperCase()} · SURFACE`}
         title="Mining Run"
@@ -559,44 +566,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         ?
       </button>
 
-      {activeOverlay === 'guide' && (
-        // SSL-330/SSL-331: this panel used to anchor from the bottom via
-        // var(--ln-nav-h, 64px), a fallback built for a bottom nav bar. The
-        // mining screen has none; its actual bottom rail is .mining-controls,
-        // whose real height (caption, stats, progress bar, action row) runs
-        // well past 64px, so the panel's own bottom edge sat on top of the
-        // charge meter and action buttons instead of clearing them (visible
-        // live at 2026-09-23 with the default onboarding save). Anchoring
-        // from the top below TopBar, with a capped scrollable height, avoids
-        // needing to measure that variable-height rail at all, and also
-        // means a longer guide list never gets clipped with no way to see
-        // the rest of it. Wrapped in the shared Panel component (like the
-        // success/failure overlays on this same screen) instead of the old
-        // bare, unstyled div, so it reads as the same chrome as the rest of
-        // the mining HUD rather than floating text with no card behind it.
-        <aside className="mining-guide-overlay" aria-label="Mining controls" style={{ position: 'absolute', right: 16, top: 64, zIndex: 70, width: 'min(360px, calc(100% - 32px))', maxHeight: 'calc(100% - 220px)', overflowY: 'auto' }}>
-          <Panel accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
-            {miningGuide(deliveryTargetName).map(item => (
-              <div key={item.label} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', color: 'var(--ln-cyan)', whiteSpace: 'nowrap', minWidth: 90 }}>{item.label}</span>
-                <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.4 }}>{item.desc}</span>
-              </div>
-            ))}
-            <button
-              onClick={() => setGuideOpen(false)}
-              style={{
-                width: '100%', marginTop: 4, padding: '8px 0', borderRadius: 8,
-                border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
-                color: 'var(--ln-cyan)', font: '800 10px var(--ln-font-display)',
-                letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
-              }}
-            >
-              Close
-            </button>
-          </Panel>
-        </aside>
-      )}
+      {/* Guide is rendered inside .mining-stage so it takes layout space
+          instead of covering the ore field or the fire/return buttons. */}
 
       {activeOverlay === 'success' && (
         <div className="mining-success-overlay" data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'flex', alignItems: 'flex-end', padding: 16 }}>
@@ -655,6 +626,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         </div>
       )}
 
+      <div className="mining-stage">
       {aimCoach.visible && !hasCoach && !gateOpen && activeOverlay === null && sceneStatus === 'ready' && (
         <MiningAimCoach onDismiss={aimCoach.dismiss} />
       )}
@@ -686,6 +658,32 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             )}
           </div>
         )}
+      </div>
+
+      {activeOverlay === 'guide' && (
+        <aside className="mining-guide-dock" aria-label="Mining controls">
+          <Panel accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
+            {miningGuide(deliveryTargetName).map(item => (
+              <div key={item.label} className="mining-guide-row">
+                <strong>{item.label}</strong>
+                <span>{item.desc}</span>
+              </div>
+            ))}
+            <button
+              onClick={() => setGuideOpen(false)}
+              style={{
+                width: '100%', marginTop: 4, padding: '8px 0', borderRadius: 8,
+                border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
+                color: 'var(--ln-cyan)', font: '800 10px var(--ln-font-display)',
+                letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
+              }}
+            >
+              Close
+            </button>
+          </Panel>
+        </aside>
+      )}
       </div>
 
       <div className="mining-controls">
