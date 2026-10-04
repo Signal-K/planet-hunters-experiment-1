@@ -3,6 +3,7 @@
 // for any write that must survive being offline.
 
 import { ClientResponseError } from 'pocketbase'
+import { landnamPbUrl } from '@/lib/pb-config'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { createOutbox, browserStore, memoryStore, newRecordId, type Outbox, type OutboxFailure, type OutboxOp } from './outbox'
 
@@ -25,7 +26,7 @@ export function classifyPbError(op: OutboxOp, error: unknown): OutboxFailure {
 }
 
 function landnamBaseUrl(): string {
-  return (process.env.NEXT_PUBLIC_LANDNAM_PB_URL || 'http://localhost:8093').replace(/\/$/, '')
+  return landnamPbUrl().replace(/\/$/, '')
 }
 
 async function executeHttp(op: Extract<OutboxOp, { type: 'http' }>): Promise<OutboxFailure | null> {
