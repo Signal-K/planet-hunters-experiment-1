@@ -72,6 +72,11 @@ function HistoryGlyph() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 5h16v14H4z" /><path d="M8 9h8M8 13h6M8 17h4" /></svg>
   )
 }
+function MarketGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 9h16v11H4z" /><path d="M3 9l2-5h14l2 5M8 13h8M8 17h5" /></svg>
+  )
+}
 /**
  * Docked bottom sheet, rebuilt 2026-08-21 (KES-226) — replaces the
  * floating `flexWrap` pill row (`.hub-action-rail`), which wrapped onto
@@ -182,11 +187,12 @@ interface HubScreenProps {
   onExcavateSubsurfaceUnavailable?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
+  onOpenMarket?: () => void
   subsurface?: boolean
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onUpgradeLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -290,6 +296,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       buildStartedAt: startedAt,
     }]
   })
+  // The exchange is a permanent Earth Base facility, not a menu destination.
+  // It deliberately has its own scene object even before the player has ore.
+  hubBuildings.push({ kind: 'market', plotX: 338, w: 84, status: 'ok' })
   const launchpadPlot = hubBuildings.find(building => building.kind === 'launchpad')
   // The launchpad speaks only while the Base has no live run. Progression is
   // now exposed through contextual buildings and the persistent chrome rather
@@ -491,6 +500,18 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
                 return <Building key={kind} {...building} hitH={HIT_H[kind] ?? 60} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
               })}
+              <Building
+                kind="market"
+                label="Commodity Exchange"
+                sub="SELL CARGO"
+                status="ok"
+                w={84}
+                hitH={72}
+                active={activeBuilding === 'market'}
+                onActiveChange={active => setActiveBuilding(active ? 'market' : null)}
+                onClick={() => onFocusBuilding('market')}
+                style={{ left: `clamp(62px, ${sceneXPercent(338, EARTH_BASE_STRUCTURE_SIZES.market.width / 6.4)}%, calc(100% - 62px))`, bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`, transform: 'translateX(-50%)' }}
+              />
             </div>
           </div>
 
@@ -511,6 +532,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
             onExcavateUnavailable={onExcavateSubsurfaceUnavailable}
             onBuildRoom={onBuildSubsurfaceRoom}
             onFocusResources={onFocusResources}
+            onOpenMarket={onOpenMarket}
           />
         </div>
 
@@ -630,6 +652,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                   )}
                   <DockIconBtn testId="hub-subsurface-btn" icon={<SubsurfaceGlyph />} label="Subsurface" onClick={() => setSubsurface(true)} />
                   <DockIconBtn testId="hub-mission-log-btn" icon={<HistoryGlyph />} label="Mission Log" onClick={() => onOpenScene('mission-history')} />
+                  <DockIconBtn testId="hub-market-btn" icon={<MarketGlyph />} label="Market" onClick={() => onOpenMarket?.()} />
                   {player.freeOperations && (
                     <DockIconBtn testId="hub-surface-ops" icon={<SurfaceGlyph />} label="Sites" onClick={() => onOpenScene('surface-ops')} />
                   )}

@@ -34,6 +34,7 @@ export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height:
   command: { width: 150, height: 97 },
   'deep-space-telescope': { width: 150, height: 97 },
   'astronaut-academy': { width: 150, height: 97 },
+  market: { width: 132, height: 88 },
 }
 
 type SpriteName = keyof typeof SPRITES
@@ -113,6 +114,16 @@ function StructureSprite({ kind, active, buildStartedAt }: { kind: string; activ
 
   const name: SpriteName | null = kind === 'launchpad' || kind === 'surface-silo' || kind === 'hangar' ? kind : null
   if (!name) {
+    if (kind === 'market') {
+      return <span aria-hidden="true" style={{ display: 'grid', gridTemplateRows: '18% 1fr', width: '100%', height: '100%', border: '3px solid var(--ln-cyan)', background: 'var(--ln-panel)', boxShadow: active ? '8px 8px 0 var(--ln-cyan)' : '6px 6px 0 var(--ln-hairline)' }}>
+        <span style={{ display: 'block', background: 'var(--ln-cyan)', borderBottom: '3px solid var(--ln-text)' }} />
+        <span style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, padding: 8 }}>
+          <i style={{ display: 'block', border: '3px solid var(--ln-text-muted)' }} />
+          <i style={{ display: 'block', border: '3px solid var(--ln-text-muted)' }} />
+          <i style={{ display: 'block', border: '3px solid var(--ln-text-muted)' }} />
+        </span>
+      </span>
+    }
     // No base art exists yet for this kind (command/refinery/deep-space-telescope/
     // astronaut-academy) — only ever show the construction rig while it's
     // actively building; once done, render nothing, same as before this

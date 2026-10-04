@@ -228,6 +228,7 @@ function ScreenBody({
           onFocusBuilding={building => {
             if (building === 'build') return game.go('build')
             if (building === 'refinery') return game.go('refinery')
+            if (building === 'market') return game.go('market')
             if (building === 'hangar') return game.go('hangar')
             if (building === 'skills') return game.go('skills')
             if (building === 'deep-space-telescope') return game.go('asteroid-discovery')
@@ -267,6 +268,7 @@ function ScreenBody({
             game.addToast(`Cannot excavate: need ${missing.join(' and ')}`, 'warn')
           }}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
+          onOpenMarket={() => game.go('market')}
           onFocusResources={(label, minerals) => {
             game.setPlayer(player => ({ ...player, resourceFocus: { label, minerals } }))
             game.addToast(`${label} added to focus`, 'info')

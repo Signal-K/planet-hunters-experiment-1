@@ -13,7 +13,7 @@ import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
-import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyPurchaseRocket, applyRemoteHaulDisposition, applyRocketStageRecovery, earthStorageBuilt, hasOperationalRemoteSilo } from '@/lib/systems/EconomySystem'
+import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyPurchaseRocket, applyRemoteHaulDisposition, applyRocketStageRecovery, earthStorageBuilt, hasOperationalRemoteSilo, rocketPurchaseRefusal } from '@/lib/systems/EconomySystem'
 import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { loanOutstanding, repayBankruptcyLoan } from '@/lib/systems/TreasurySystem'
@@ -29,7 +29,7 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
-import { completeFlightPlanEvent } from '@/lib/systems/FlightPlanSystem'
+import { completeFlightPlanEvent, currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 
@@ -315,18 +315,37 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [catalog.missions, catalog.parts, catalog.targets, setState])
 
   const onPurchaseRocket = useCallback((rocketId: string) => {
+    const rocket = ROCKET_MODELS.find(candidate => candidate.id === rocketId)
+    if (!rocket) {
+      addToast('That rocket blueprint is no longer available.', 'warn')
+      return
+    }
+    const current = stateRef.current
+    const refusal = rocketPurchaseRefusal(current, rocket)
+    if (refusal) {
+      addToast(refusal, 'warn')
+      return
+    }
+    const currentMission = catalog.missions.find(m => m.id === current.missionId)
+      ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
+      ?? null
+    if (currentMission && !rocketCompatibleWithMission(rocket, currentMission)) {
+      addToast('This rocket cannot carry the selected client contract.', 'warn')
+      return
+    }
     setState(s => {
-      if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
-      const rocket = ROCKET_MODELS.find(r => r.id === rocketId)
-      if (!rocket) return s
+      const guardedRefusal = rocketPurchaseRefusal(s, rocket)
+      if (guardedRefusal) return s
       const mission = catalog.missions.find(m => m.id === s.missionId)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
         ?? null
-      if (mission && !rocketCompatibleWithMission(rocket, mission)) return s
+      if (mission && !rocketCompatibleWithMission(rocket, mission)) {
+        return s
+      }
       const next = applyPurchaseRocket(s, rocket)
       return { ...next, doneSteps: { ...next.doneSteps, 8: true } }
     })
-  }, [catalog.missions, setState])
+  }, [addToast, catalog.missions, setState, stateRef])
 
   const onMoveStagedRocket = useCallback((stagedRocketId: string) => {
     setState(s => {
@@ -621,6 +640,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
     setState(s => {
       const existing = s.player.tessClassifications?.[subjectId]
+      // The training candidate is deliberately available before Free Ops. Once
+      // it is classified, Galaxy would immediately re-render as its normal
+      // locked Telescope gate because the active try has advanced to Part.
+      // Hand the player directly to that next try instead of leaving them on a
+      // screen which says the activity they just completed is unavailable.
+      const completedTrainingScan = subjectId.startsWith(TRAINING_ID_PREFIX)
+        && currentTrainingTry(s.player.flightPlan) === 'scan'
       const showArtifactNarrative = artifactNarrativeEligible({
         transitSatelliteLevel: s.player.transitSatelliteLevel,
         verdict,
@@ -629,6 +655,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       })
       const next: GameState = {
         ...s,
+        screen: completedTrainingScan ? 'hangar' : s.screen,
         player: {
           ...s.player,
           researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,

@@ -390,7 +390,12 @@ export function buildLaunchScene(
       hookSchedule = buildHookSchedule(sheets.meta, T)
       padFx = new FxLayer(sheets)
       sepFx = new FxLayer(sheets)
-      const at = app.stage.getChildIndex(rocketRoot) + 1
+      // Sprite sheets resolve asynchronously. Cypress can advance away from
+      // the launch scene before this continuation runs, which removes the
+      // root from the stage and made getChildIndex throw during M1/visual QA.
+      const rootIndex = app.stage.children.indexOf(rocketRoot)
+      if (rootIndex < 0) return
+      const at = rootIndex + 1
       app.stage.addChildAt(padFx.container, at)
       app.stage.addChildAt(sepFx.container, at + 1)
     }

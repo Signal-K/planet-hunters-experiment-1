@@ -348,6 +348,20 @@ export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameStat
   }
 }
 
+/**
+ * Keep the refusal explanation beside the authoritative purchase guard.  The
+ * blueprint screen is allowed to be optimistic while saves hydrate, but it
+ * must never turn a rejected build into an unexplained no-op.
+ */
+export function rocketPurchaseRefusal(s: GameState, rocket: RocketModel): string | null {
+  if (s.screen !== 'rocket-buy') return 'Return to the rocket blueprint before building.'
+  if (!s.missionId || !s.targetId) return 'Choose a contract destination before building a rocket.'
+  if (s.player.francs < rocket.costFrancs) {
+    return `Need ${rocket.costFrancs - s.player.francs} more francs to build this rocket.`
+  }
+  return null
+}
+
 /** Fabricate one physical rocket component from materials actually held in an
  * Earth silo. The component ledger is separate from ore so Hangar assembly can
  * consume an explicitly built vehicle rather than magic a whole rocket into

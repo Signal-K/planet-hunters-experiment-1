@@ -38,6 +38,7 @@ interface HubSubsurfaceViewProps {
   onExcavateUnavailable?: () => void
   onBuildRoom?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
+  onOpenMarket?: () => void
 }
 
 interface StoredMineral {
@@ -248,7 +249,7 @@ function StorageSilo({ minerals, capacity }: { minerals: StoredMineral[]; capaci
   )
 }
 
-function MineralVault({ minerals, capacity }: { minerals: StoredMineral[]; capacity: number }) {
+function MineralVault({ minerals, capacity, onOpenMarket }: { minerals: StoredMineral[]; capacity: number; onOpenMarket?: () => void }) {
   const totalUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
   return (
     <div className={styles.detailPanel} data-testid="subsurface-mineral-vault">
@@ -265,6 +266,9 @@ function MineralVault({ minerals, capacity }: { minerals: StoredMineral[]; capac
         <span className={styles.status}>{minerals.length} species catalogued</span>
       </div>
       <StorageSilo minerals={minerals} capacity={capacity} />
+      <PrimaryBtn testId="subsurface-silo-sell" full={false} onClick={onOpenMarket}>
+        Sell cargo at market
+      </PrimaryBtn>
       <div className={styles.inventoryList}>
         {minerals.length > 0 ? minerals.map(mineral => (
           <div className={styles.inventoryRow} key={mineral.id}>
@@ -453,6 +457,7 @@ export function HubSubsurfaceView({
   onExcavateUnavailable,
   onBuildRoom,
   onFocusResources,
+  onOpenMarket,
 }: HubSubsurfaceViewProps) {
   const [activeRoom, setActiveRoom] = useState<SubsurfaceRoomId | null>(null)
   const minerals = storedMinerals(stash)
@@ -519,7 +524,7 @@ export function HubSubsurfaceView({
             ) : !builtSet.has(activeRoom) ? (
               <RoomBuildPrompt room={activeDefinition} francs={francs} stash={stash} onBuild={onBuildRoom} onFocusResources={onFocusResources} />
             ) : activeRoom === 'mineral-vault' || activeRoom === 'deep-mineral-vault' ? (
-              <MineralVault minerals={minerals} capacity={activeRoom === 'deep-mineral-vault' ? DEEP_MINERAL_SILO_CAPACITY : MINERAL_SILO_CAPACITY} />
+              <MineralVault minerals={minerals} capacity={activeRoom === 'deep-mineral-vault' ? DEEP_MINERAL_SILO_CAPACITY : MINERAL_SILO_CAPACITY} onOpenMarket={onOpenMarket} />
             ) : (
               <PartsLocker parts={parts} />
             )}
@@ -529,7 +534,7 @@ export function HubSubsurfaceView({
             <div className={styles.deckHeader}>
               <div>
                 <div className={styles.eyebrow}>SUBSURFACE LEVEL 01 · 24 M BELOW GRADE</div>
-                <h2 className={styles.deckTitle}>Storage &amp; habitat deck</h2>
+                <h2 className={styles.deckTitle}>Build storage below the fixed surface base</h2>
               </div>
               <div className={styles.deckSummary}>
                 {totalMineralUnits} mineral units · {parts.length} registered parts

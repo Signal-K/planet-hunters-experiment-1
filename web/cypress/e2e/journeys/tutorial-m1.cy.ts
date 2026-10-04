@@ -102,6 +102,28 @@ function visitHub(overrides: Record<string, unknown> = {}) {
   })
 }
 
+function visitScanTry() {
+  cy.visit('/game/galaxy', {
+    onBeforeLoad(win) {
+      win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        screen: 'galaxy',
+        player: basePlayer({
+          flightPlan: { completed: { mining: true }, hidden: false },
+        }),
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null,
+        tutorial: true,
+        doneSteps: {},
+        popup: null,
+        menuOpen: false,
+      }))
+      suppressSurveys(win)
+    },
+  })
+}
+
 // ─── Home-chrome navigation helper ───────────────────────────────────────────
 //
 // The persistent Home chrome replaces the retired breakpoint-specific bottom
@@ -342,6 +364,18 @@ if (!MISSION_FILTER || MISSION_FILTER === 'M2') viewportsToRun.forEach(({ label,
         player: basePlayer({ missionsDone: 1, missionCount: 1, flightPlan: { completed: { mining: true }, hidden: false } }),
       })
       playScanTryHandoff()
+    })
+
+    it('hands a completed scan straight to the part try instead of the locked telescope gate', () => {
+      visitScanTry()
+
+      cy.get('[data-testid="tess-discovery-screen"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="tess-verdict-unsure"]').should('be.visible').click()
+
+      cy.location('pathname', { timeout: 10000 }).should('eq', '/game/hangar')
+      cy.get('[data-testid="hangar-screen"]').should('be.visible')
+      expectCoach('Fit a module in each ship stage')
+      cy.contains('Free Operations Required').should('not.exist')
     })
   })
 })
