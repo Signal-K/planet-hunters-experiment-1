@@ -1,3 +1,4 @@
+import { landnamPbUrl } from '@/lib/pb-config'
 import { pbLandnam } from '@/lib/pb-landnam'
 
 export interface FriendPublicUser {
@@ -48,7 +49,7 @@ class FriendsApiError extends Error {
 }
 
 function baseUrl(): string {
-  return (process.env.NEXT_PUBLIC_LANDNAM_PB_URL || 'http://localhost:8093').replace(/\/$/, '')
+  return landnamPbUrl().replace(/\/$/, '')
 }
 
 async function friendsFetch<T>(path: string, init?: RequestInit): Promise<T> {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import PocketBase from 'pocketbase'
+import { landnamPbUrl } from '@/lib/pb-config'
 import { withPbRetry } from '@/lib/pbRetry'
 
 export async function POST(req: NextRequest) {
@@ -8,7 +9,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'missing required fields' }, { status: 400 })
   }
 
-  const pb = new PocketBase(process.env.NEXT_PUBLIC_LANDNAM_PB_URL)
+  const pb = new PocketBase(landnamPbUrl())
 
   try {
     await withPbRetry(async () => {

@@ -15,11 +15,21 @@
   "observability": {
     "enabled": true
   },
+  "vars": {
+    "NEXT_PUBLIC_SHARED_PB_URL": "https://signal-k-starsailors.fly.dev",
+    "NEXT_PUBLIC_LANDNAM_PB_URL": "https://signal-k-landnam.fly.dev",
+    "NEXT_PUBLIC_LANDNAM_ENV": "production"
+  },
   "env": {
     "staging": {
       "name": "landnam-web-staging",
       "workers_dev": true,
-      "routes": []
+      "routes": [],
+      "vars": {
+        "NEXT_PUBLIC_SHARED_PB_URL": "https://signal-k-starsailors.fly.dev",
+        "NEXT_PUBLIC_LANDNAM_PB_URL": "https://signal-k-landnam.fly.dev",
+        "NEXT_PUBLIC_LANDNAM_ENV": "staging"
+      }
     }
   }
 }
