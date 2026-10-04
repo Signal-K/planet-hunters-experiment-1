@@ -271,6 +271,7 @@
 
   --ln-bp-green:      #1f8f57;
   --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
+  --ln-bp-shadow:     rgba(15, 36, 54, 0.16);
 
   --ln-void:      var(--ln-bp-bg);
   --ln-bg:        var(--ln-bp-bg);
@@ -1302,6 +1303,93 @@ button { cursor: pointer; }
 .auth-gate__primary { width: 100%; padding: var(--ln-s-4); margin-top: var(--ln-s-1); color: var(--ln-void); background: var(--ln-cyan); border: 0; border-radius: var(--ln-r-md); cursor: pointer; font: 800 13px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; box-shadow: 0 3px 0 rgba(0,0,0,.28); }
 .auth-gate__primary:hover { background: var(--ln-cyan-bright); }
 .auth-gate__primary:disabled { cursor: not-allowed; opacity: .55; }
+
+/* SSL-423 — Account access is the first route a new player sees, so it uses
+   the same light blueprint language as the Cycle 4 loop.  Scope this rather
+   than changing the shell tokens: the remaining routes are migrated in their
+   own slices. */
+.auth-gate.theme-blueprint {
+  align-items: center;
+  background-color: var(--ln-bp-bg);
+  background-image:
+    repeating-linear-gradient(0deg, var(--ln-bp-line) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, var(--ln-bp-line) 0 1px, transparent 1px 24px);
+}
+.auth-gate.theme-blueprint .auth-gate__scrim { display: none; }
+.auth-gate.theme-blueprint .auth-gate__panel {
+  background: var(--ln-bp-paper);
+  border: 2px solid var(--ln-bp-ink);
+  border-radius: var(--ln-r-lg);
+  box-shadow: 8px 8px 0 var(--ln-bp-blue), 0 12px 28px var(--ln-bp-shadow);
+}
+.auth-gate.theme-blueprint .auth-gate__scene {
+  background-color: var(--ln-bp-paper-2);
+  background-image:
+    repeating-linear-gradient(0deg, var(--ln-bp-line) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, var(--ln-bp-line) 0 1px, transparent 1px 24px);
+  border-right: 2px solid var(--ln-bp-ink);
+}
+.auth-gate.theme-blueprint .auth-gate__scene::after { display: none; }
+.auth-gate.theme-blueprint .auth-gate__eyebrow,
+.auth-gate.theme-blueprint .auth-gate__scene-title { color: var(--ln-bp-ink); }
+.auth-gate.theme-blueprint .auth-gate__scene-status { color: var(--ln-bp-green); }
+.auth-gate.theme-blueprint .auth-gate__scene-status i {
+  background: var(--ln-bp-green);
+  box-shadow: none;
+}
+.auth-gate.theme-blueprint .auth-gate__orbit { border: 2px solid var(--ln-bp-blue); }
+.auth-gate.theme-blueprint .auth-gate__orbit--inner { border-color: var(--ln-bp-green); }
+.auth-gate.theme-blueprint .auth-gate__planet {
+  background: var(--ln-bp-blue-soft);
+  border: 3px solid var(--ln-bp-blue);
+  box-shadow: 5px 5px 0 var(--ln-bp-ink);
+}
+.auth-gate.theme-blueprint .auth-gate__ship { filter: none; }
+.auth-gate.theme-blueprint .auth-gate__telemetry { color: var(--ln-bp-ink-dim); }
+.auth-gate.theme-blueprint .auth-gate__telemetry strong { color: var(--ln-bp-ink); }
+.auth-gate.theme-blueprint .auth-gate__heading { color: var(--ln-bp-ink); }
+.auth-gate.theme-blueprint .auth-gate__intro { color: var(--ln-bp-ink-dim); }
+.auth-gate.theme-blueprint .auth-gate__tab {
+  color: var(--ln-bp-ink-dim);
+  border: 2px solid var(--ln-bp-line-strong);
+  border-radius: var(--ln-r-sm);
+}
+.auth-gate.theme-blueprint .auth-gate__tab.is-active {
+  color: var(--ln-bp-ink);
+  background: var(--ln-bp-blue-soft);
+  border-color: var(--ln-bp-blue);
+}
+.auth-gate.theme-blueprint .auth-gate__input {
+  color: var(--ln-bp-ink);
+  background: var(--ln-bp-paper);
+  border: 2px solid var(--ln-bp-ink);
+  border-radius: var(--ln-r-sm);
+}
+.auth-gate.theme-blueprint .auth-gate__input:focus {
+  border-color: var(--ln-bp-blue);
+  box-shadow: 4px 4px 0 var(--ln-bp-blue-soft);
+}
+.auth-gate.theme-blueprint .auth-gate__input::placeholder { color: var(--ln-bp-ink-dim); }
+.auth-gate.theme-blueprint .auth-gate__error {
+  color: var(--ln-crimson);
+  background: var(--ln-bp-paper-2);
+  border: 2px solid var(--ln-crimson);
+  border-radius: var(--ln-r-sm);
+}
+.auth-gate.theme-blueprint .auth-gate__primary {
+  color: var(--ln-bp-paper);
+  background: var(--ln-bp-blue);
+  border: 2px solid var(--ln-bp-ink);
+  border-radius: var(--ln-r-sm);
+  box-shadow: 4px 4px 0 var(--ln-bp-ink);
+}
+.auth-gate.theme-blueprint .auth-gate__primary:hover { background: var(--ln-cyan-press); }
+body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
+
+@media (max-width: 759px) {
+  .auth-gate.theme-blueprint .auth-gate__panel { box-shadow: 6px 6px 0 var(--ln-bp-blue); }
+  .auth-gate.theme-blueprint .auth-gate__scene { border-right: 2px solid var(--ln-bp-ink); }
+}
 
 /* After the base auth-gate rules so compact-landscape stretch/scroll wins
    over `.auth-gate__content { align-self: center }` and the 520px scene

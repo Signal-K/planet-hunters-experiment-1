@@ -13,6 +13,22 @@ function setValue(input: HTMLInputElement, value: string) {
 }
 
 describe('AuthGateSheet', () => {
+  it('uses the blueprint surface for account access', async () => {
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<AuthGateSheet error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={vi.fn(async () => {})} />)
+    })
+
+    expect(host.querySelector('.auth-gate')?.classList.contains('theme-blueprint')).toBe(true)
+    expect(host.textContent).toContain('PROGRAM MAP')
+    expect(host.textContent).not.toContain('command deck')
+
+    await act(async () => root.unmount())
+  })
+
   it('requires a matching user-chosen password before creating an account', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
