@@ -3375,12 +3375,3 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* SSL-441: short landscape viewports have no room under the docked coach card,
    so the coached mining guide moves to the free left column instead of
    covering the card, the ore lane and the bottom control rail. */
-@media (max-height: 500px) and (orientation: landscape) {
-  .mining-guide-overlay--coached {
-    right: auto !important;
-    left: 16px !important;
-    top: 64px !important;
-    width: 240px !important;
-    max-height: calc(100% - 64px - 170px) !important;
-  }
-}
