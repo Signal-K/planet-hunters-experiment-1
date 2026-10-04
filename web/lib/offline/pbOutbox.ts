@@ -22,7 +22,10 @@ export function classifyPbError(op: OutboxOp, error: unknown): OutboxFailure {
     const body = error.response as PbErrorBody
     if (body?.data?.id?.code === 'validation_not_unique') return { kind: 'already-applied' }
   }
-  return { kind: 'rejected', message: `${error.status} ${error.message}` }
+  const message = `${error.status} ${error.message} ${JSON.stringify(error.response?.data ?? {})}`
+  // A validation failure is deterministic: replaying the same payload cannot succeed.
+  if (error.status === 400) return { kind: 'invalid', message }
+  return { kind: 'rejected', message }
 }
 
 function landnamBaseUrl(): string {
@@ -49,6 +52,7 @@ async function executeHttp(op: Extract<OutboxOp, { type: 'http' }>): Promise<Out
 export function classifyHttpStatus(status: number): OutboxFailure | null {
   if (status >= 200 && status < 300) return null
   if (status === 401 || status === 403 || status === 408 || status === 429 || status >= 502) return { kind: 'offline' }
+  if (status === 400) return { kind: 'invalid', message: `${status}` }
   return { kind: 'rejected', message: `${status}` }
 }
 

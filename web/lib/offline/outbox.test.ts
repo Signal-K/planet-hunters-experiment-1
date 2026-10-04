@@ -64,7 +64,8 @@ describe('outbox', () => {
     expect(classifyHttpStatus(200)).toBeNull()
     expect(classifyHttpStatus(401)).toEqual({ kind: 'offline' })
     expect(classifyHttpStatus(503)).toEqual({ kind: 'offline' })
-    expect(classifyHttpStatus(400)).toMatchObject({ kind: 'rejected' })
+    expect(classifyHttpStatus(400)).toMatchObject({ kind: 'invalid' })
+    expect(classifyHttpStatus(500)).toMatchObject({ kind: 'rejected' })
   })
 
   it('replays queued writes in the order they were made', async () => {
@@ -92,6 +93,17 @@ describe('outbox', () => {
     await h.outbox.enqueue(create)
     await h.outbox.flush()
     expect(h.outbox.snapshot().waiting).toBe(0)
+  })
+
+  it('drops a write the server rejected as invalid so the banners can clear (SSL-402)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const h = harness([{ kind: 'invalid', message: '400 validation_required' }])
+    await h.outbox.enqueue(create)
+    await h.outbox.enqueue(update)
+    await h.outbox.flush()
+    expect(h.calls).toHaveLength(2)
+    expect(h.outbox.snapshot()).toMatchObject({ waiting: 0, failed: 0 })
+    warn.mockRestore()
   })
 
   it('backs off a rejected item, keeps replaying later ones, and surfaces it after max attempts', async () => {
