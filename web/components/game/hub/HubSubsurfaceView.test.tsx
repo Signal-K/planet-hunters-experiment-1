@@ -42,7 +42,7 @@ describe('HubSubsurfaceView', () => {
     )
 
     expect(markup).toContain('data-testid="subsurface-facility-cutaway"')
-    expect(markup).toContain('Storage &amp; habitat deck')
+    expect(markup).toContain('Build storage below the fixed surface base')
     expect(markup).toContain('data-testid="subsurface-room-mineral-vault"')
     expect(markup).toContain('data-testid="subsurface-room-parts-locker"')
     expect(markup).toContain('data-testid="subsurface-room-habitat-training"')
@@ -103,6 +103,7 @@ describe('HubSubsurfaceView', () => {
     })
     expect(host.querySelector('[data-testid="subsurface-mineral-vault"]')).not.toBeNull()
     expect(host.textContent).toContain('4 U')
+    expect(host.querySelector('[data-testid="subsurface-silo-sell"]')).not.toBeNull()
 
     const back = host.querySelector<HTMLButtonElement>('[data-testid="subsurface-room-back"]')
     await act(async () => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
 import { normalizeAndRepair, type PartialSave } from '@/lib/game-state'
 import { MINERAL_META, CLIENT_SLOTS, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, STRUCTURES, customizerPartById } from '@/lib/data'
-import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
+import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, rocketPurchaseRefusal, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 
@@ -58,6 +58,18 @@ describe('openMarketSellPrice', () => {
 })
 
 describe('applyPurchaseRocket', () => {
+  it('accepts a first client rocket build when its exact cost is available', () => {
+    const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
+    const state = { ...makeState({ francs: rocket.costFrancs }), screen: 'rocket-buy' as const, missionId: 'm1', targetId: 'mars' }
+    expect(rocketPurchaseRefusal(state, rocket)).toBeNull()
+    expect(applyPurchaseRocket(state, rocket).screen).toBe('fab')
+  })
+
+  it('explains each authoritative purchase refusal', () => {
+    const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
+    expect(rocketPurchaseRefusal(makeState({ francs: 0 }), rocket)).toBe('Return to the rocket blueprint before building.')
+  })
+
   it('persists each built vehicle separately so a second preparation has its own charge', () => {
     const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
     const s = makeState({ francs: rocket.costFrancs * 2 + 100 })

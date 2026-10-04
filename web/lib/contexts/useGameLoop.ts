@@ -13,7 +13,7 @@ import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
-import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyPurchaseRocket, applyRemoteHaulDisposition, applyRocketStageRecovery, earthStorageBuilt, hasOperationalRemoteSilo } from '@/lib/systems/EconomySystem'
+import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyPurchaseRocket, applyRemoteHaulDisposition, applyRocketStageRecovery, earthStorageBuilt, hasOperationalRemoteSilo, rocketPurchaseRefusal } from '@/lib/systems/EconomySystem'
 import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { loanOutstanding, repayBankruptcyLoan } from '@/lib/systems/TreasurySystem'
@@ -315,18 +315,37 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [catalog.missions, catalog.parts, catalog.targets, setState])
 
   const onPurchaseRocket = useCallback((rocketId: string) => {
+    const rocket = ROCKET_MODELS.find(candidate => candidate.id === rocketId)
+    if (!rocket) {
+      addToast('That rocket blueprint is no longer available.', 'warn')
+      return
+    }
+    const current = stateRef.current
+    const refusal = rocketPurchaseRefusal(current, rocket)
+    if (refusal) {
+      addToast(refusal, 'warn')
+      return
+    }
+    const currentMission = catalog.missions.find(m => m.id === current.missionId)
+      ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
+      ?? null
+    if (currentMission && !rocketCompatibleWithMission(rocket, currentMission)) {
+      addToast('This rocket cannot carry the selected client contract.', 'warn')
+      return
+    }
     setState(s => {
-      if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
-      const rocket = ROCKET_MODELS.find(r => r.id === rocketId)
-      if (!rocket) return s
+      const guardedRefusal = rocketPurchaseRefusal(s, rocket)
+      if (guardedRefusal) return s
       const mission = catalog.missions.find(m => m.id === s.missionId)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
         ?? null
-      if (mission && !rocketCompatibleWithMission(rocket, mission)) return s
+      if (mission && !rocketCompatibleWithMission(rocket, mission)) {
+        return s
+      }
       const next = applyPurchaseRocket(s, rocket)
       return { ...next, doneSteps: { ...next.doneSteps, 8: true } }
     })
-  }, [catalog.missions, setState])
+  }, [addToast, catalog.missions, setState, stateRef])
 
   const onMoveStagedRocket = useCallback((stagedRocketId: string) => {
     setState(s => {
