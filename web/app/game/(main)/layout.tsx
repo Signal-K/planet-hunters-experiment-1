@@ -32,6 +32,7 @@ import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
+import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
@@ -41,6 +42,8 @@ function GameChrome({ children }: { children: ReactNode }) {
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [communityOpen, setCommunityOpen] = useState(false)
   const { phase: backdropSkyPhase } = useTimeOfDay()
+
+  useCoreLoopAnalytics(game.screen, game.player.flightPlan)
 
   // Keep third-party analytics script injection out of React hydration. See
   // GameApp's equivalent effect for the legacy route shell.

@@ -28,6 +28,7 @@ import CommunityButton from '@/components/game/CommunityButton'
 import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 
 function GameCanvas() {
   const game = useGame()
@@ -38,6 +39,8 @@ function GameCanvas() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [hubOpen, setHubOpen] = useState(false)
+
+  useCoreLoopAnalytics(game.screen, game.player.flightPlan)
 
   // PostHog injects recorder/survey scripts. Initialising during module
   // evaluation can let those scripts mutate the document while React is
