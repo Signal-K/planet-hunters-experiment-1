@@ -1971,7 +1971,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 }
 .mining-viewport {
   position: relative; flex: 1; overflow: hidden; min-height: 0;
-  background: radial-gradient(ellipse at 70% 10%, #12203d, transparent 50%), linear-gradient(180deg, #090e1a 0%, var(--ln-void) 60%, #000000 100%);
+  background: radial-gradient(ellipse at 70% 10%, color-mix(in srgb, var(--ln-blueprint-blue) 18%, transparent), transparent 50%), linear-gradient(180deg, var(--ln-blueprint-paper) 0%, var(--ln-blueprint-bg) 60%, var(--ln-blueprint-paper-2) 100%);
 }
 .mining-canvas { position: absolute; inset: 0; z-index: 1; }
 .mining-scene-status {
@@ -2329,9 +2329,9 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   bottom: 0;
   z-index: 12;
   padding: var(--ln-s-3) var(--ln-s-4) var(--ln-s-4);
-  background: rgba(6, 14, 26, 0.88);
-  border-top: 1px solid var(--ln-cyan-border);
-  box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.3);
+  background: color-mix(in srgb, var(--ln-panel) 94%, transparent);
+  border-top: 2px solid var(--ln-border);
+  box-shadow: 0 -8px 0 color-mix(in srgb, var(--ln-blueprint-blue) 24%, transparent);
   color: var(--ln-text);
 }
 /* The shared command rail stays available during a live operation, but the
@@ -2349,9 +2349,9 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   background: var(--ln-void);
 }
 .theme-deep.mining-screen .mining-controls {
-  background: rgba(6, 14, 26, 0.88);
-  border-top-color: var(--ln-cyan-border);
-  box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.3);
+  background: var(--ln-blueprint-paper) !important;
+  border-top-color: var(--ln-border);
+  box-shadow: 0 -8px 0 color-mix(in srgb, var(--ln-blueprint-blue) 24%, transparent);
 }
 .theme-deep.mining-screen .mining-controls .ln-section-label,
 .theme-deep.mining-screen .mining-controls .mineral-stat {
@@ -2365,10 +2365,10 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   min-width: 0;
   min-height: 44px;
   padding: 8px 14px;
-  border: 1px solid var(--ln-cyan-border);
+  border: 2px solid var(--ln-border);
   border-radius: var(--ln-r-md);
-  background: rgba(18, 34, 54, 0.72) !important;
-  color: var(--ln-cyan) !important;
+  background: var(--ln-blueprint-paper) !important;
+  color: var(--ln-text) !important;
   box-shadow: none !important;
   font: 800 11px var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
@@ -2377,19 +2377,19 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 }
 .theme-deep.mining-screen .mining-command--fire {
   border-color: var(--ln-cyan);
-  background: rgba(63, 169, 255, 0.12) !important;
+  background: color-mix(in srgb, var(--ln-cyan) 14%, var(--ln-blueprint-paper)) !important;
 }
 .theme-deep.mining-screen .mining-command--return {
   border-color: var(--ln-ok);
   color: var(--ln-ok) !important;
 }
 .theme-deep.mining-screen .mining-command:active:not(:disabled) {
-  background: rgba(63, 169, 255, 0.24) !important;
+  background: color-mix(in srgb, var(--ln-cyan) 24%, var(--ln-panel)) !important;
 }
 .theme-deep.mining-screen .mining-command:disabled,
 .theme-deep.mining-screen .mining-command[aria-disabled="true"] {
   border-color: var(--ln-hairline);
-  background: rgba(18, 34, 54, 0.42) !important;
+  background: var(--ln-surface-2) !important;
   color: var(--ln-text-muted) !important;
   cursor: not-allowed;
 }

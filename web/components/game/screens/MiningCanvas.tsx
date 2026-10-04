@@ -22,7 +22,7 @@ const GENERIC_ORE_TEXTURE_ID = 'iron'
 // Tile width must be a multiple of 16 (ridgeH period) for seamless wrapping
 const SURFACE_TILE_W = 320
 
-const SKY_COLOR = 0x03060c
+const SKY_COLOR = 0xdfe9f3
 
 // Minimum gap between shots: long enough that a mashed tap reads as
 // deliberately ignored (not dropped input), short enough not to feel laggy.
@@ -38,27 +38,27 @@ function buildStars(worldW: number, surfaceY: number): Graphics {
     [0.28, 0.30, 0.8, 0.16], [0.68, 0.62, 1.2, 0.18], [0.04, 0.75, 1.0, 0.12],
   ]
   for (const [fx, fy, r, alpha] of stars) {
-    g.circle(fx * worldW, fy * (surfaceY - 8), r).fill({ color: 0xffffff, alpha })
+    g.circle(fx * worldW, fy * (surfaceY - 8), r).fill({ color: 0x0f2436, alpha })
   }
   return g
 }
 
 function buildSurfaceTile(tileH: number): Graphics {
   const g = new Graphics()
-  g.rect(0, 6, SURFACE_TILE_W, tileH - 6).fill(0x1a1006)
+  g.rect(0, 6, SURFACE_TILE_W, tileH - 6).fill(0x9fc8e2)
   const ridgeH = [0, -10, -14, -7, -18, -11, -5, -16, -12, -8, -15, -9, -19, -6, -13, -10, -17, -4, -11, -8]
   const edge: number[] = [0, tileH]
   for (let i = 0; i <= SURFACE_TILE_W; i += 16) {
     edge.push(i, 6 + ridgeH[Math.floor(i / 16) % ridgeH.length])
   }
   edge.push(SURFACE_TILE_W, tileH)
-  g.poly(edge).fill(0x2d1e0c)
+  g.poly(edge).fill(0x7aabc9)
   const patches: [number, number][] = [
     [32, 14], [85, 22], [140, 10], [195, 18], [248, 12], [295, 20],
     [60, 8],  [125, 26], [175, 9],  [230, 16], [275, 24], [310, 11],
   ]
   for (const [px, pr] of patches) {
-    g.circle(px, 22, pr).fill({ color: 0x110c04, alpha: 0.6 })
+    g.circle(px, 22, pr).fill({ color: 0x5d8fac, alpha: 0.32 })
   }
   return g
 }
@@ -66,7 +66,7 @@ function buildSurfaceTile(tileH: number): Graphics {
 function buildAimGuide(shipY: number, surfaceY: number): Graphics {
   const g = new Graphics()
   for (let y = shipY + 22; y < surfaceY - 10; y += 11) {
-    g.circle(SHIP_X, y, 1.2).fill({ color: 0x9becff, alpha: 0.18 })
+    g.circle(SHIP_X, y, 1.2).fill({ color: 0x1f78c1, alpha: 0.22 })
   }
   return g
 }
