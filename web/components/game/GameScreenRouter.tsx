@@ -47,12 +47,6 @@ import {
   markInstrumentDigestNotified,
 } from '@/lib/systems/InstrumentFeedSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
-import { missionRunsFor } from '@/lib/mission-runs'
-import { surfaceForScreen } from '@/lib/screen-layouts'
-import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
-import { FrameSlot } from '@/components/layout/frame/FrameSlot'
-import LaunchShell from '@/components/layout/frame/shells/LaunchShell'
-import MissionSwitch from '@/components/layout/frame/shells/MissionSwitch'
 import SceneTransition from '@/components/game/SceneTransition'
 
 export const VALID_SCREENS = new Set<Screen>([
@@ -72,40 +66,19 @@ export const VALID_SCREENS = new Set<Screen>([
 // component renders for game.screen". Used by both the URL-synced
 // (main)/[screen] route and the standalone ship-customizer dev route, which
 // otherwise diverged silently (each bugfix had to be ported twice).
-export function ScreenContent({
-  screen,
-  game,
-  hasCoach,
-  onBackFromHangar,
-}: {
+type ScreenContentProps = {
   screen: Screen
   game: ReturnType<typeof useGame>
   hasCoach: boolean
   /** Overrides HangarScreen's onBack; falls back to the remembered entry scene. */
   onBackFromHangar?: () => void
-}) {
-  // Launch sequence state lives here so it's scoped to the fab screen
-  const [launchPending, setLaunchPending] = useState(false)
-  const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
-  const handleLaunch = useCallback(() => setLaunchPending(true), [])
-  const handleLaunchComplete = useCallback(() => {
-    setLaunchPending(false)
-    game.onLaunch()
-  }, [game.onLaunch])
-  const launching = launchPending && screen === 'fab' && !!game.mission && !!game.target
-  const sceneKey = launching ? 'launch' : screen
-  const rocketDisplay = rocketDisplayForConfig(game.rocket)
+}
+
+// SSL-441: every scene change fades through a void veil instead of hard-cutting.
+export function ScreenContent(props: ScreenContentProps) {
   return (
-    <SceneTransition sceneKey={sceneKey}>
-      {launching && game.target ? (
-        <SurfaceLayout surface="launch">
-          <LaunchShell rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={game.target.name} onComplete={handleLaunchComplete} />
-        </SurfaceLayout>
-      ) : (
-        <SurfaceLayout surface={surfaceForScreen(screen)}>
-          <ScreenBody {...props} onLaunch={handleLaunch} />
-        </SurfaceLayout>
-      )}
+    <SceneTransition sceneKey={props.screen}>
+      <ScreenBody {...props} />
     </SceneTransition>
   )
 }
@@ -114,9 +87,16 @@ function ScreenBody({
   screen,
   game,
   hasCoach,
-  onLaunch,
-}: ScreenContentProps & { onLaunch: () => void }) {
+  onBackFromHangar,
+}: ScreenContentProps) {
+  // Launch sequence state lives here so it's scoped to the fab screen
+  const [launchPending, setLaunchPending] = useState(false)
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
+  const handleLaunch = useCallback(() => setLaunchPending(true), [])
+  const handleLaunchComplete = useCallback(() => {
+    setLaunchPending(false)
+    game.onLaunch()
+  }, [game.onLaunch])
   const rocketDisplay = rocketDisplayForConfig(game.rocket)
   const transitTarget = game.player.headingToDelivery && game.deliveryTargetId
     ? game.catalog.targets.find(t => t.id === game.deliveryTargetId) ?? game.target

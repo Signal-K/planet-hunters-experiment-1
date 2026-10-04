@@ -42,13 +42,13 @@ describe('MiningScreen guide', () => {
       )
     })
 
-    expect(host.querySelector('.mining-guide-overlay')).toBeNull()
+    expect(host.querySelector('.mining-guide-dock')).toBeNull()
     expect(values.ln_mining_hud_guide_ack).toBeUndefined()
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="mining-guide-btn"]')?.click()
     })
-    expect(host.querySelector('.mining-guide-overlay')).not.toBeNull()
+    expect(host.querySelector('.mining-guide-dock')).not.toBeNull()
 
     await act(async () => root.unmount())
   })

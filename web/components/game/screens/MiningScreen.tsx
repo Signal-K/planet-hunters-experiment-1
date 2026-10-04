@@ -307,10 +307,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const orderFilled = Object.entries(mission.requires.minerals).every(
     ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
   )
-  const stillNeeded = unitsStillNeeded(mission.requires.minerals, cargo)
-  // 4 charges left on a 3/5 platinum order cannot reliably land the last two
-  // hits. Recharge refills the magazine and keeps the cargo already collected.
-  const needsRecharge = miningNeedsRecharge(laserCharges, stillNeeded)
 
   const stillNeeded = unitsStillNeeded(mission.requires.minerals, cargo)
   // A magazine that cannot reliably cover the remaining units offers a recharge
@@ -423,10 +419,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     addToast?.(`Order not filled yet: mine ${missing.join(' and ')}`, 'warn')
   }
 
-  function handleRecharge() {
-    setLaserCharges(MAX_CHARGES)
-  }
-
   // Local-dev-only shortcut: fills the order instantly so testing later
   // screens doesn't require playing the mining minigame by hand each time.
   function handleDevSkip() {
@@ -456,8 +448,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // the Fire Laser training try now, so the guide remains opt-in there and
   // never covers the seam it asks the player to watch.
   useEffect(() => {
-    // The tutorial coach already explains the shot. Opening this guide on
-    // top of it is what put both cards over the ore and the fire controls.
+    // The tutorial coach already explains the shot; the guide on top of it put
+    // both cards over the ore and the fire controls (SSL-441).
+    if (trainingMiningTry) return
     if (hasCoach) {
       try { localStorage.setItem(HUD_GUIDE_ACK_KEY, '1') } catch { /* ignore */ }
       return
@@ -468,7 +461,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         localStorage.setItem(HUD_GUIDE_ACK_KEY, '1')
       }
     } catch { /* localStorage unavailable */ }
-  }, [hasCoach])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasCoach, trainingMiningTry])
 
   const isFreeOps = !mission.client
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
@@ -626,9 +620,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         ?
       </button>
 
-      {/* Guide is rendered inside .mining-stage so it takes layout space
-          instead of covering the ore field or the fire/return buttons. */}
-
       {activeOverlay === 'success' && (
         <div className="mining-success-overlay" data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'flex', alignItems: 'flex-end', padding: 16 }}>
           <Panel className="mining-success-panel" accent="var(--ln-ok)" surface="glass" style={{ padding: 14, width: '100%' }}>
@@ -681,16 +672,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       {activeOverlay === 'warning' && (
         <div className="mining-charge-warning" style={{ position: 'absolute', top: 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
           <div>
-            {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — recharge to keep this cargo
+            {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining, recharge to keep this cargo
           </div>
         </div>
       )}
-
       <div className="mining-stage">
-      {aimCoach.visible && !hasCoach && !gateOpen && activeOverlay === null && sceneStatus === 'ready' && (
-        <MiningAimCoach onDismiss={aimCoach.dismiss} />
-      )}
-
       <div className="mining-viewport">
         <div className="mining-stars" />
         <MiningCanvas
@@ -748,7 +734,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       )}
       </div>
 
-      <div className="mining-controls">
+      <div className="mining-controls" data-testid="mining-controls">
         {/* Caption — clarifies the fractions below are mission-order fulfillment, not cargo capacity */}
         <div style={{
           fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700,
@@ -882,7 +868,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <button
             className="mining-command mining-command--return"
             type="button"
-            disabled={!orderFilled && laserCharges > 0 && !needsRecharge}
+            aria-disabled={(!orderFilled && laserCharges > 0 && !needsRecharge) || undefined}
             data-testid="return-home-btn"
             data-mode={needsRecharge && !orderFilled ? 'recharge' : 'return'}
             onClick={needsRecharge && !orderFilled ? handleRecharge : handleReturn}
