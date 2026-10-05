@@ -152,8 +152,9 @@ export default function ShipInteriorPreview({
       </div>
 
       {/* ── SHIP DIAGRAM (PixiJS, glass-framed with corner brackets) ── */}
-      <div style={{ flex: 'none', maxHeight: '28%', padding: 6 }}>
-        <Panel surface="glass" style={{ padding: 0, overflow: 'hidden' }}>
+      <div style={{ flex: 'none', height: '28%', minHeight: 0, overflow: 'hidden', padding: 6 }}>
+        {/* SSL-472: bounded height, otherwise the canvas panel grows past this box and sits over the module cards. */}
+        <Panel surface="glass" style={{ padding: 0, overflow: 'hidden', height: '100%' }}>
           <ErrorBoundary fallback={<div style={{ height: 80, background: 'var(--ln-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
             <ShipCustomizerCanvas
               layout={layout}
