@@ -151,8 +151,7 @@ describe('Tutorial rail regression', () => {
         openContracts()
         cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
 
-        cy.get('[data-testid="flight-plan"]').should('contain', 'Choose the highlighted target')
-        cy.get('[data-testid="continue-build-btn"]').should('be.visible')
+        cy.get('[data-testid="prepare-launch-btn"], [data-testid="launch-btn"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
 
@@ -214,7 +213,7 @@ describe('Tutorial rail regression', () => {
         // The shared loop switch is the way into contracts at every width.
         cy.get('[data-testid="home-bar-switch"]').click()
         cy.get('[data-testid^="mission-accept-"]').first().should('be.visible').click()
-        cy.get('[data-testid="continue-build-btn"]').should('be.visible')
+        cy.get('[data-testid="prepare-launch-btn"], [data-testid="launch-btn"]').should('be.visible')
       })
     })
   }

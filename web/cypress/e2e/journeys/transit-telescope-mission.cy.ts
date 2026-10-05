@@ -65,8 +65,8 @@ function visitHubWithState(playerOverrides: Partial<GameState['player']>) {
 
 /** The telescope rides a Prospector; setup lands on the vehicle blueprint. */
 function expectTelescopeBlueprint() {
-  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
-  cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'PROSPECTOR')
+  cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="prepare-launch-btn"], [data-testid="launch-btn"]').should('contain', 'PROSPECTOR')
 }
 
 describe('Telescope construction/launch mission (STS-138)', () => {

@@ -167,26 +167,17 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
     cy.screenshot('05-mission-board')
 
-    // Open first mission → target picker
+    // Accept the first mission → single launch review (target and vehicle inline)
     cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]')
       .should('be.visible')
       .click({ force: true })
-    cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
-    cy.screenshot('06-target-picker')
-
-    // Select Eros
-    cy.get('[data-testid="target-eros"]').click({ force: true })
-    cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
-
-    // Rocket/fab screen
-    cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
-    cy.screenshot('07-rocket-picker')
-    cy.contains('button', /BUILD EXPLORER/).click()
-
-    // Newly built vehicles are a physical Hangar asset. Roll the cleared
-    // vehicle out to the launchpad before the actual launch confirmation.
-    cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('have.attr', 'data-location', 'hangar')
-    cy.get('[data-testid="transfer-to-launchpad-btn"]').should('be.visible').click({ force: true })
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
+    cy.screenshot('06-launch-review')
+    cy.get('body').then($body => {
+      if ($body.find('[data-testid="prepare-launch-btn"]').length) {
+        cy.get('[data-testid="prepare-launch-btn"]').click({ force: true })
+      }
+    })
 
     // Launch confirmation
     cy.get('[data-testid="launch-btn"]', { timeout: 10000 }).should('be.visible')
@@ -296,42 +287,32 @@ describe('Visual QA — game screens and mining canvas', () => {
   })
 
   // ── 3. Target picker orbital animation renders ─────────────────────────────
-  it('target picker — orbital animation visible, targets selectable', () => {
+  it('launch review — destination and vehicle shown inline', () => {
     cy.viewport(390, 844)
 
     const FAB_STATE = {
-      screen: 'targets',
+      screen: 'fab',
       player: { ...BASE_PLAYER, missionsDone: 0 },
       tutorial: true,
       doneSteps: { 0: true, 1: true, 2: true },
       missionId: 'generated-s1-starter-bulk-1',
-      targetId: null,
+      targetId: 'eros',
       rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
       lastCargo: null,
       popup: null,
     }
 
-    cy.visit('/game/targets', {
+    cy.visit('/game/fab', {
       onBeforeLoad(win) {
         loadPreset(win, FAB_STATE)
       },
     })
 
     skipAuthGateIfShown()
-    cy.get('[data-testid="mission-target-map"]', { timeout: 12000 }).should('be.visible')
-    cy.wait(1000) // let orbital animation start
-    cy.screenshot('target-picker-orbital-animation')
-
-    // Targets must be present and clickable
-    cy.get('[data-testid="target-eros"]').should('exist')
-    cy.screenshot('target-picker-targets-visible')
-
-    cy.get('[data-testid="target-eros"]').click({ force: true })
-    cy.wait(500)
-    cy.screenshot('target-picker-eros-selected')
-
-    cy.get('[data-testid="continue-build-btn"]').should('be.visible')
-    cy.screenshot('target-picker-continue-enabled')
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 12000 }).should('be.visible')
+    cy.screenshot('launch-review-inline-choices')
+    cy.get('[data-testid="prepare-launch-btn"], [data-testid="launch-btn"]').should('be.visible')
+    cy.screenshot('launch-review-action')
   })
 
   // ── 4. Hub buildings visible in correct positions ──────────────────────────
@@ -344,7 +325,7 @@ describe('Visual QA — game screens and mining canvas', () => {
       tutorial: true,
       doneSteps: { 0: true },
       missionId: null,
-      targetId: null,
+      targetId: 'eros',
       rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
       lastCargo: null,
       popup: null,

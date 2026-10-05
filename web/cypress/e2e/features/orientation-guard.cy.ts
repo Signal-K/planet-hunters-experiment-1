@@ -103,7 +103,7 @@ describe('Compact landscape play path (SSL-326)', () => {
 
     cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
     assertNoRotateWall()
-    cy.get('[data-testid="mission-target-map"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 15000 }).should('be.visible')
     cy.screenshot('mobile-landscape-target-picker')
   })
 

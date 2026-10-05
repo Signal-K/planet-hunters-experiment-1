@@ -30,18 +30,14 @@ describe('Rocket setup visual contract', () => {
     visitRocket()
     // Vehicle selection is the Blueprint step of the mission-setup scene: a
     // schematic plus its fixed room manifest.
-    cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
-    cy.get('[aria-label$=" schematic"]').should('be.visible')
-    cy.contains('ROOM SLOTS').scrollIntoView().should('be.visible')
-    cy.get('[data-testid="purchase-rocket-btn"]').scrollIntoView().should('be.visible')
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="prepare-launch-btn"], [data-testid="launch-btn"]').scrollIntoView().should('be.visible')
     cy.screenshot('sprint-13-rocket-setup-mobile')
 
     cy.viewport(1440, 900)
     visitRocket()
-    cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
-    cy.get('[aria-label$=" schematic"]').should('be.visible')
-    cy.contains('ROOM SLOTS').should('be.visible')
-    cy.get('[data-testid="purchase-rocket-btn"]').should('be.visible')
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="prepare-launch-btn"], [data-testid="launch-btn"]').should('be.visible')
     cy.screenshot('sprint-13-rocket-setup-desktop')
   })
 })

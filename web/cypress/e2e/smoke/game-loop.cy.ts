@@ -149,14 +149,14 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
 
-    it('target map highlights compatible targets for M1', () => {
+    it('launch review shows the M1 contract destination', () => {
       visitWithState(fullState({
         screen: 'targets',
         missionId: 'generated-s1-starter-bulk-1',
+        targetId: 'eros',
         doneSteps: { 1: true, 2: true },
       }))
-      cy.get('[data-testid="mission-target-map"]').should('be.visible')
-      cy.contains('MISSION FILTER').should('be.visible')
+      cy.get('[data-testid="mission-launch-review"]').should('be.visible')
     })
   })
 
@@ -169,7 +169,7 @@ describe('Full Game Loop — Landnam', () => {
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: false },
       }))
-      cy.get('[data-testid="assembly-selected-rocket"]').should('have.text', 'Explorer')
+      cy.get('[data-testid="mission-launch-review"]').should('contain', 'Explorer')
       cy.contains('ALL PARAMETERS PASS').should('be.visible')
       cy.get('[data-testid="launch-btn"]').should('be.visible').and('not.be.disabled')
     })
@@ -614,7 +614,7 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.get('[data-testid="assembly-selected-rocket"]').should('have.text', 'Prospector')
+      cy.get('[data-testid="mission-launch-review"]').should('contain', 'Prospector')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
   })

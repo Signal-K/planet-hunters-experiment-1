@@ -144,20 +144,20 @@ function assertTransactionalScreenZones() {
 /** Mission setup (map, blueprint, launch review) is one routed scene whose
  *  steps carry their primary action inline in the step panel rather than in
  *  a bottom-actions strip, so the action itself is what global UI must avoid. */
-function assertMissionSetupActionClear(actionTestId: string) {
-  cy.get(`[data-testid="${actionTestId}"]`).should('be.visible')
+function assertMissionSetupActionClear(actionSelector: string) {
+  cy.get(actionSelector).should('be.visible')
   assertKnownZonesOnly()
   assertNoZone('ambient-prompt')
   assertNoZone('feedback-launcher')
-  cy.get(`[data-testid="${actionTestId}"]`).then($action => {
+  cy.get(actionSelector).then($action => {
     const actionRect = $action[0].getBoundingClientRect()
     cy.document().then(doc => {
       // The Home dock is in-flow shell chrome on every screen; it must not sit on the action.
       doc.querySelectorAll('[data-ui-zone="bottom-nav"]').forEach(nav => {
-        expect(rectsIntersect(nav.getBoundingClientRect(), actionRect), `bottom-nav must not overlap ${actionTestId}`).to.equal(false)
+        expect(rectsIntersect(nav.getBoundingClientRect(), actionRect), `bottom-nav must not overlap ${actionSelector}`).to.equal(false)
       })
       doc.querySelectorAll('[data-ui-zone="toast-stack"]').forEach(toast => {
-        expect(rectsIntersect(toast.getBoundingClientRect(), actionRect), `toast-stack must not overlap ${actionTestId}`).to.equal(false)
+        expect(rectsIntersect(toast.getBoundingClientRect(), actionRect), `toast-stack must not overlap ${actionSelector}`).to.equal(false)
       })
     })
   })
@@ -265,17 +265,6 @@ describe('UI zone contract', () => {
         assertKnownZonesOnly()
       })
 
-      it('keeps target picker continue actions free of global nav, prompts, and feedback', () => {
-        visitWithState({
-          screen: 'targets',
-          missionId: 'generated-s1-starter-bulk-1',
-          targetId: null,
-          player: { missionsDone: 0 },
-        })
-
-        assertMissionSetupActionClear('continue-build-btn')
-      })
-
       it('keeps rocket purchase actions free of global nav, prompts, and feedback', () => {
         visitWithState({
           screen: 'rocket-buy',
@@ -284,7 +273,7 @@ describe('UI zone contract', () => {
           player: { missionsDone: 0 },
         })
 
-        assertMissionSetupActionClear('purchase-rocket-btn')
+        assertMissionSetupActionClear('[data-testid="prepare-launch-btn"], [data-testid="launch-btn"]')
       })
 
       it('keeps assembly launch actions free of global nav, prompts, and feedback', () => {
@@ -295,7 +284,7 @@ describe('UI zone contract', () => {
           player: { missionsDone: 0 },
         })
 
-        assertMissionSetupActionClear('launch-btn')
+        assertMissionSetupActionClear('[data-testid="prepare-launch-btn"], [data-testid="launch-btn"]')
       })
 
       it('keeps transit actions free of global nav, prompts, and feedback', () => {
@@ -358,7 +347,6 @@ describe('UI zone contract', () => {
           { screen: 'hub', tutorial: false, menuOpen: true, player: { freeOperations: true, missionsDone: 3 } },
           { screen: 'build', tutorial: false, player: { placed: [], placementPlots: {}, freeOperations: true } },
           { screen: 'missions', tutorial: false, player: { missionsDone: 0 } },
-          { screen: 'targets', missionId: 'generated-s1-starter-bulk-1', targetId: null, tutorial: false, player: { missionsDone: 0 } },
           { screen: 'rocket-buy', missionId: 'generated-s1-starter-bulk-1', targetId: 'mars', tutorial: false, player: { missionsDone: 0 } },
           { screen: 'fab', missionId: 'generated-s1-starter-bulk-1', targetId: 'mars', tutorial: false, player: { missionsDone: 0 } },
           {
@@ -425,14 +413,6 @@ describe('UI zone contract', () => {
             screen: 'missions',
             tutorial: true,
             doneSteps: { 0: true, 1: true },
-            player: { missionsDone: 0 },
-          },
-          {
-            screen: 'targets',
-            missionId: 'generated-s1-starter-bulk-1',
-            targetId: null,
-            tutorial: true,
-            doneSteps: { 0: true, 1: true, 2: true },
             player: { missionsDone: 0 },
           },
           {

@@ -119,19 +119,17 @@ describe('Interaction order hardening', () => {
     visitWithState({ screen: 'hub', player: { missionsDone: 1, missionCount: 2 } })
     cy.get('[data-testid="home-bar-switch"]').click()
     cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').click()
-    cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
+    cy.get('[data-testid="mission-launch-review"]').should('be.visible')
     cy.get('[data-testid="mission-target-map"]').should('not.exist')
   })
 
-  it('backs out of fixed-target rocket purchase to its fixed target, never an empty target picker', () => {
+  it('backs out of a fixed-target launch review to the contract board', () => {
     visitWithState({ screen: 'hub', player: { missionsDone: 1, missionCount: 2 } })
     cy.get('[data-testid="home-bar-switch"]').click()
     cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').click()
-    cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
+    cy.get('[data-testid="mission-launch-review"]').should('contain', '101955 Bennu')
     cy.get('[data-testid="mission-setup-scaffold"] button[aria-label="Back"]').click()
-    // Back steps to the map with the mission's fixed target already selected.
-    cy.get('[data-testid="target-selection-summary"]').should('contain', '101955 Bennu')
-    cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled')
+    cy.get('[data-testid="mission-board-section-client"]', { timeout: 8000 }).should('be.visible')
   })
 
   it('drops the retired emergency-loan popup from an old save instead of offering it', () => {

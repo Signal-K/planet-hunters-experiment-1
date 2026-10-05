@@ -138,7 +138,7 @@ describe('Parallel mission runs (replaces the STS-487 single-mission guard)', ()
     cy.get('[data-testid^="mission-accept-"]', { timeout: 10000 }).first().then($accept => {
       const acceptedId = $accept.attr('data-testid')!.replace('mission-accept-', '')
       cy.wrap($accept).click()
-      cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
       savedState().should(state => {
         expect(state.missionId).to.eq(acceptedId)
         expect(state.player.activeMission ?? null).to.eq(null)

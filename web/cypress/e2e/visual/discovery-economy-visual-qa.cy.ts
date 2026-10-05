@@ -270,20 +270,20 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.get('[data-testid="launchpad-mining-sell-btn"]', { timeout: 10000 }).click()
     cy.screenshot('discovery-04-own-program-survey-flight')
 
-    // The aggregate action selects the first available own-program mission;
-    // this ordinary mission -> target-picker path is what proves the newly
-    // discovered target is usable outside the fixed-target survey flight.
-    cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
-
-    cy.get(`[data-testid="target-${discovered.id}"]`).click({ force: true })
-    cy.contains(discovered.name).should('be.visible')
-    cy.screenshot('discovery-05-target-picker-real-minerals')
-
-    // The current orbital map is intentionally an atlas rather than a second
-    // mineral-card surface. Its selection reticle plus the adjacent mission
-    // action prove this discovered body is eligible and can advance through
-    // the ordinary target-picker flow.
-    cy.contains('SELECTED · ORBIT', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="continue-build-btn"]').should('be.enabled')
+    // The aggregate action selects the first available own-program mission and
+    // opens the launch review, where the destination is changed inline. Step
+    // through compatible destinations until the discovered body is selected.
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
+    const reachDiscovered = (left: number): void => {
+      cy.get('[data-testid="mission-launch-review"]').then($review => {
+        if ($review.text().includes(discovered.name) || left <= 0) return
+        cy.get('button[aria-label="Next destination"]').click()
+        reachDiscovered(left - 1)
+      })
+    }
+    reachDiscovered(12)
+    cy.get('[data-testid="mission-launch-review"]').should('contain', discovered.name)
+    cy.screenshot('discovery-05-launch-review-real-minerals')
+    cy.get('[data-testid="prepare-launch-btn"], [data-testid="launch-btn"]').should('be.enabled')
   })
 })

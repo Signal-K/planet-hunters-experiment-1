@@ -89,7 +89,7 @@ describe('Deep Space Telescope launch on-ramp (SSL-392)', () => {
       .and('contain.text', 'Launch Deep Space Telescope')
     cy.screenshot('ssl-392-instrument-choices')
     cy.get('[data-testid="launchpad-prepare-instrument-deep-space-telescope"]').click()
-    cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
   })
 })
 

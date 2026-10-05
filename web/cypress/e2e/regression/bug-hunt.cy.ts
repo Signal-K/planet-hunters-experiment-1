@@ -172,7 +172,7 @@ describe('Bug hunt — edge cases', () => {
     })
     openContracts()
     cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
-    cy.get('[data-testid="mission-target-map"]', { timeout: 8000 }).should('be.visible')
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 8000 }).should('be.visible')
     cy.get('[data-testid="mission-setup-scaffold"] button[aria-label="Back"]').click()
     cy.get(CONTRACT_STEP, { timeout: 8000 }).should('be.visible')
     // Mission should still be selectable after back navigation
@@ -259,7 +259,7 @@ describe('Bug hunt — edge cases', () => {
     // Double-click the same contract
     cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').dblclick({ force: true })
     // Should still navigate correctly (not crash or go to wrong screen)
-    cy.get('[data-testid="mission-target-map"]', { timeout: 8000 }).should('be.visible')
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 8000 }).should('be.visible')
   })
 
   // ─── 9. Screen guard: mining screen without mission context redirects ─────────

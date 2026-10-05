@@ -32,7 +32,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
     key: 'transport-fab',
     assertion: () => {
       cy.location('pathname').should('eq', '/game/missions')
-      cy.get('[data-testid="assembly-selected-rocket"]').should('contain', 'Prospector')
+      cy.get('[data-testid="mission-launch-review"]').should('contain', 'Prospector')
     },
   },
   {
