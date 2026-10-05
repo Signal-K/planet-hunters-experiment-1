@@ -57,6 +57,10 @@ export function classifyHttpStatus(status: number): OutboxFailure | null {
 }
 
 async function executeOnPocketBase(op: OutboxOp): Promise<OutboxFailure | null> {
+  // No Landnam session yet (shared-to-Landnam exchange pending). PocketBase
+  // answers an unauthenticated create with 400 "create rule failure", which
+  // would be classed as invalid and dropped, losing the write. Wait instead.
+  if (!pbLandnam.authStore.token) return { kind: 'offline' }
   try {
     if (op.type === 'http') return await executeHttp(op)
     if (op.type === 'upsert') {

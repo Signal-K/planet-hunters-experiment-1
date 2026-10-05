@@ -270,7 +270,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           <div
             data-testid="tess-data-provenance"
             style={{
-              fontFamily: 'var(--ln-font-mono)', fontSize: 8, letterSpacing: '0.06em', color: 'var(--ln-text-dim)',
+              fontFamily: 'var(--ln-font-mono)', fontSize: 12, lineHeight: 1.35, letterSpacing: '0.04em', color: 'var(--ln-text-dim)',
               textTransform: 'uppercase', marginBottom: 8, marginTop: -4,
             }}
           >

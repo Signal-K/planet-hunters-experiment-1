@@ -375,6 +375,8 @@ export function useAuthSync({
         .then(({ token, record }) => {
         if (!active) return
         pbLandnam.authStore.save(token, record)
+        // Writes queued before the session existed were held back; send them now.
+        void getOutbox().flush()
         finish(true)
         })
         .catch(() => {
