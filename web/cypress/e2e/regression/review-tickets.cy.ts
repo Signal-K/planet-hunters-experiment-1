@@ -255,7 +255,7 @@ describe('Mining pause/resume (STS-488)', () => {
 
     cy.contains('Mining Run', { timeout: 10000 }).should('be.visible')
     cy.contains('2/').should('be.visible')
-    cy.get('[data-testid="top-bar-back"]').click()
+    cy.get('[data-testid="rover-field-hotbar"] button').click()
 
     savedState().then(paused => {
       expect(paused.screen).to.eq('hub')
@@ -297,7 +297,7 @@ describe('Rover pause/resume (KES-205)', () => {
     cy.visit('/game/rover-mining')
     cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 10000 }).click()
     cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="rover-cargo-order"]').should('be.visible')
+    cy.get('[data-testid="rover-drill-readout"]').should('be.visible')
   })
 })
 
@@ -316,6 +316,28 @@ describe('Live rover field migration (KES-205)', () => {
     cy.get('[data-testid="rover-mining-screen"] canvas[aria-label="Surface operations on ironrock"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="rover-scouting-classification"]').should('not.exist')
     cy.get('[data-testid="rover-return-to-ship"]').should('be.disabled')
+  })
+})
+
+describe('Rover prospecting loop (SSL-471, SSL-484, SSL-486, SSL-487)', () => {
+  it('turns exposed ore into a mine site and first construction within three drills', () => {
+    cy.viewport(844, 390)
+    visitGame('/game/rover-mining', {
+      screen: 'rover-mining',
+      missionId: 'generated-s1-starter-bulk-1',
+      targetId: 'eros',
+      player: {
+        activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Rover landing -> Eros' },
+      },
+    })
+
+    cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="rover-field-hotbar"]').should('be.visible')
+    cy.get('[data-testid="rover-ore-ore-a"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="rover-drill-action"]').should('be.enabled').click().click().click()
+    cy.get('[data-testid="rover-drill-readout"] li[data-kind="mine-site"]').should('be.visible')
+    cy.get('[data-testid="rover-mine-site-construction"]').click()
+    cy.get('[data-testid="rover-return-to-ship"]').should('be.enabled')
   })
 })
 

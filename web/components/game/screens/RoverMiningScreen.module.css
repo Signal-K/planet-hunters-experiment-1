@@ -1,62 +1,65 @@
-.screen { display: flex; flex-direction: column; overflow: hidden; }
-.content { position: relative; flex: 1; min-height: 0; padding-top: 68px; overflow: hidden; }
-.scenePanel { position: absolute; inset: 68px 0 0; overflow: hidden; background: var(--ln-void); }
+.screen { --ln-bp-bg: var(--ln-void); --ln-bp-paper: var(--ln-panel); --ln-bp-paper-2: var(--ln-surface-2); --ln-bp-ink: var(--ln-text); --ln-bp-muted: var(--ln-text-dim); --ln-bp-line: var(--ln-hairline); --ln-bp-line-strong: var(--ln-hairline-strong); --ln-bp-blue: var(--ln-cyan); --ln-bp-green: var(--ln-ok); display: flex; min-height: 0; overflow: hidden; }
+.content { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.scenePanel { position: absolute; inset: 0; overflow: hidden; background: var(--ln-bp-bg); }
 .takeonMount { position: absolute; inset: 0; }
-.landingHandoff { position: absolute; inset: 0; z-index: 3; display: grid; grid-template-columns: minmax(240px, 1fr) minmax(320px, 520px); align-items: end; gap: 32px; padding: 32px; pointer-events: none; }
-.landingHandoff::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, transparent 0 32%, color-mix(in srgb, var(--ln-void) 90%, transparent) 72%); }
-.landingHandoff img { width: min(42vw, 460px); max-height: 65vh; object-fit: contain; justify-self: center; filter: drop-shadow(0 20px 28px rgba(0,0,0,.6)); }
-.landingHandoff > div { display: grid; gap: 12px; align-self: center; padding: 24px; border-left: 3px solid var(--ln-cyan); background: color-mix(in srgb, var(--ln-panel) 94%, transparent); pointer-events: auto; }
-.landingHandoff h2 { margin: 0; color: var(--ln-text); font: 800 clamp(22px, 3vw, 34px)/1.05 var(--ln-font-display); text-transform: uppercase; }
-.landingHandoff p { margin: 0; color: var(--ln-text-dim); font: 500 13px/1.55 var(--ln-font-body); }
-.eyebrow,
-.kicker { color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .18em; text-transform: uppercase; }
-/* Drive pad (SSL-316): top-left on every layout so it never fights the cargo HUD (bottom-right) or the build dock (bottom-left). */
-.controls { position: absolute; left: 16px; top: 16px; z-index: 2; }
-.hud { position: absolute; z-index: 4; right: 16px; bottom: 16px; width: min(380px, calc(100% - 32px)); display: grid; gap: 10px; padding: 14px; border: 1px solid var(--ln-cyan-border); border-radius: 10px; background: color-mix(in srgb, var(--ln-panel) 94%, transparent); box-shadow: var(--ln-shadow-card); }
-.statusHeader,
-.orderRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.statusHeader { align-items: flex-start; }
-.statusHeader > div { display: grid; gap: 3px; min-width: 0; }
-.statusHeader strong { overflow: hidden; color: var(--ln-text); font: 800 12px var(--ln-font-display); text-overflow: ellipsis; white-space: nowrap; }
-.statusPill { padding: 5px 8px; border: 1px solid var(--ln-cyan-border); border-radius: 999px; color: var(--ln-cyan); font: 800 8px var(--ln-font-display); letter-spacing: .1em; white-space: nowrap; }
-.statusPill[data-ready='true'] { border-color: var(--ln-ok); color: var(--ln-ok); }
-.orderList { display: flex; flex-wrap: wrap; gap: 6px; }
-.orderRow { flex: 1 1 140px; min-height: 34px; padding: 7px 9px; border: 1px solid var(--ln-hairline); border-radius: 6px; background: var(--ln-surface-2); color: var(--ln-text-dim); font: 600 10px var(--ln-font-body); }
-.orderRow strong { color: var(--ln-text); font: 700 10px var(--ln-font-mono); }
-.mineralIdentity { display: inline-flex; align-items: center; gap: 8px; }
-.mineralDot { width: 8px; height: 8px; border-radius: 2px; }
-.primaryAction { min-height: 44px; padding: 10px 14px; border: 1px solid var(--ln-cyan); border-radius: 8px; background: var(--ln-cyan); color: var(--ln-text-on-cyan); font: 800 10px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
+
+.fieldHotbar { position: absolute; right: 16px; bottom: 16px; left: 16px; z-index: 4; display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln-bp-line); background: color-mix(in srgb, var(--ln-bp-paper) 94%, transparent); box-shadow: var(--ln-shadow-card); color: var(--ln-bp-ink); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.fieldHotbar button { min-height: 28px; padding: 4px 8px; border: 1px solid var(--ln-bp-line-strong); background: transparent; color: var(--ln-bp-blue); font: inherit; cursor: pointer; }
+.fieldHotbar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fieldHotbar strong { margin-left: auto; color: var(--ln-bp-green); font: inherit; white-space: nowrap; }
+
+.landingHandoff { position: absolute; inset: 0; z-index: 5; display: grid; grid-template-columns: minmax(240px, 1fr) minmax(320px, 520px); align-items: end; gap: 32px; padding: 32px; pointer-events: none; }
+.landingHandoff::before { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, transparent 0 32%, color-mix(in srgb, var(--ln-bp-paper) 96%, transparent) 72%); content: ''; }
+.landingHandoff img { width: min(42vw, 460px); max-height: 65vh; object-fit: contain; justify-self: center; filter: drop-shadow(0 16px 24px color-mix(in srgb, var(--ln-bp-blue) 28%, transparent)); }
+.landingHandoff > div { display: grid; gap: 12px; align-self: center; padding: 24px; border-left: 4px solid var(--ln-bp-blue); background: color-mix(in srgb, var(--ln-bp-paper) 96%, transparent); pointer-events: auto; }
+.landingHandoff h2 { margin: 0; color: var(--ln-bp-ink); font: 800 clamp(22px, 3vw, 34px)/1.05 var(--ln-font-display); text-transform: uppercase; }
+.landingHandoff p { margin: 0; color: var(--ln-bp-muted); font: 500 13px/1.55 var(--ln-font-body); }
+.eyebrow, .kicker { color: var(--ln-bp-blue); font: 800 9px var(--ln-font-display); letter-spacing: .18em; text-transform: uppercase; }
+
+.primaryAction { min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln-bp-blue); background: var(--ln-bp-blue); color: var(--ln-bp-paper); font: 800 10px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
 .primaryAction:disabled { opacity: .45; cursor: not-allowed; }
-.buildToggle { display: inline-flex; flex: 1 1 auto; align-items: center; justify-content: center; min-height: 36px; padding: 0 8px; border: 1px solid var(--ln-cyan-border); border-radius: 6px; background: transparent; color: var(--ln-cyan); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
-.buildToggle[aria-pressed='true'] { border-color: var(--ln-ok); color: var(--ln-ok); }
-/* Build mode docks the sandbox controls bottom-left so the cargo HUD (bottom-right) stays visible. */
-.sandboxDock { position: absolute; left: 16px; bottom: 16px; z-index: 4; width: min(440px, calc(100% - 32px)); max-height: calc(100% - 96px); overflow: auto; }
+
+.controls { position: absolute; top: 16px; left: 16px; z-index: 4; display: grid; gap: 8px; width: min(224px, calc(100% - 32px)); }
+.objectControls { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--ln-bp-line-strong); background: color-mix(in srgb, var(--ln-bp-paper) 94%, transparent); box-shadow: var(--ln-shadow-card); }
+.buildToggle { display: inline-flex; flex: 1 1 auto; align-items: center; justify-content: center; min-height: 36px; padding: 0 8px; border: 1px solid var(--ln-bp-line-strong); background: transparent; color: var(--ln-bp-blue); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
+.buildToggle[aria-pressed='true'] { border-color: var(--ln-bp-green); color: var(--ln-bp-green); }
+.sandboxDock { position: absolute; bottom: 72px; left: 16px; z-index: 6; width: min(440px, calc(100% - 32px)); max-height: calc(100% - 96px); overflow: auto; }
+
+.oreMarker, .mineSiteControl { position: absolute; z-index: 3; display: inline-flex; align-items: center; gap: 8px; transform: translate(-50%, -50%); border: 1px solid var(--ln-bp-line-strong); background: color-mix(in srgb, var(--ln-bp-paper) 92%, transparent); box-shadow: var(--ln-shadow-card); color: var(--ln-bp-ink); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
+.oreMarker { min-height: 32px; padding: 4px 8px; }
+.oreMarker i { display: block; width: 16px; height: 16px; border: 4px solid var(--ln-bp-blue); transform: rotate(45deg); }
+.oreMarkerSelected { border-color: var(--ln-bp-blue); outline: 4px solid color-mix(in srgb, var(--ln-bp-blue) 24%, transparent); }
+.oreMarkerClaimed { border-color: var(--ln-bp-green); color: var(--ln-bp-green); }
+.oreMarkerClaimed i { border-color: var(--ln-bp-green); }
+.mineSiteControl { min-height: 36px; padding: 8px 12px; border-color: var(--ln-bp-green); color: var(--ln-bp-green); }
+
+.drillReadout { position: absolute; top: 64px; right: 16px; z-index: 4; display: grid; gap: 12px; width: min(360px, calc(100% - 272px)); padding: 16px; border: 1px solid var(--ln-bp-line-strong); background: color-mix(in srgb, var(--ln-bp-paper) 95%, transparent); box-shadow: var(--ln-shadow-card); color: var(--ln-bp-ink); }
+.readoutHeading { display: grid; gap: 4px; }
+.readoutHeading strong { color: var(--ln-bp-ink); font: 800 14px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.drillReadout p { margin: 0; color: var(--ln-bp-muted); font: 600 12px/1.5 var(--ln-font-body); }
+.drillReadout ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.drillReadout li { padding: 8px; border-left: 4px solid var(--ln-bp-blue); background: var(--ln-bp-paper-2); color: var(--ln-bp-ink); font: 800 10px/1.4 var(--ln-font-mono); letter-spacing: .04em; }
+.drillReadout li[data-kind='mine-site'] { border-left-color: var(--ln-bp-green); color: var(--ln-bp-green); }
+.mineSiteStatus { color: var(--ln-bp-green) !important; }
 
 @media (max-width: 760px) {
-  /* .hud goes full-width and bottom-anchored at this breakpoint too (below)
-     — bottom padding here keeps the deploy card clear of it instead of the
-     two stacking on top of each other (KES-352). */
-  .landingHandoff { grid-template-columns: 1fr; align-content: end; gap: 8px; padding: 12px; padding-bottom: 200px; }
-  .landingHandoff::before { background: linear-gradient(180deg, transparent 10%, color-mix(in srgb, var(--ln-void) 94%, transparent) 64%); }
+  .landingHandoff { grid-template-columns: 1fr; align-content: end; gap: 8px; padding: 16px; padding-bottom: 72px; }
+  .landingHandoff::before { background: linear-gradient(180deg, transparent 10%, color-mix(in srgb, var(--ln-bp-paper) 96%, transparent) 64%); }
   .landingHandoff img { width: min(54vw, 280px); max-height: 34vh; align-self: end; }
-  .landingHandoff > div { padding: 14px; }
-  .controls { left: 12px; top: 12px; }
-  .hud { right: 12px; bottom: 12px; left: 12px; width: auto; }
-  /* Build mode replaces the cargo HUD's slot on a narrow canvas; the toggle closes it again. */
-  .sandboxDock { left: 12px; right: 12px; bottom: 12px; width: auto; max-height: 38%; z-index: 5; }
-  /* SSL-401: the open drawer replaces the cargo HUD on a phone instead of stacking over it. */
-  .scenePanel[data-build-mode='true'] ~ .hud { display: none; }
+  .landingHandoff > div { padding: 16px; }
+  .controls { top: 12px; left: 12px; width: min(208px, calc(100% - 24px)); }
+  .drillReadout { top: 12px; right: 12px; width: min(240px, calc(100% - 244px)); padding: 12px; }
+  .sandboxDock { right: 12px; bottom: 64px; left: 12px; width: auto; max-height: 38%; }
+  .fieldHotbar { right: 8px; bottom: 8px; left: 8px; gap: 8px; }
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
-  .landingHandoff { grid-template-columns: minmax(240px, .9fr) minmax(240px, 1.1fr); align-items: start; padding: 12px; }
+  .landingHandoff { grid-template-columns: minmax(240px, .9fr) minmax(240px, 1.1fr); align-items: start; padding: 16px; }
   .landingHandoff img { grid-column: 2; grid-row: 1; max-height: 54vh; }
-  .landingHandoff > div { grid-column: 1; grid-row: 1; }
-  .landingHandoff > div { padding: 12px; gap: 7px; }
+  .landingHandoff > div { grid-column: 1; grid-row: 1; padding: 12px; gap: 8px; }
   .landingHandoff p { font-size: 11px; }
-  .controls { left: 8px; top: 8px; }
-  .hud { right: 8px; bottom: 8px; width: min(320px, 40vw); gap: 8px; padding: 8px; }
-  .sandboxDock { left: 8px; bottom: 8px; width: min(400px, 55vw); max-height: calc(100% - 64px); }
-  .orderRow { min-height: 28px; padding: 4px 8px; }
-  .statusPill { padding: 4px 8px; }
+  .controls { top: 8px; left: 8px; }
+  .drillReadout { top: 8px; right: 8px; width: min(304px, 40vw); gap: 8px; padding: 8px; }
+  .sandboxDock { bottom: 64px; left: 8px; width: min(400px, 55vw); max-height: calc(100% - 64px); }
+  .fieldHotbar { right: 8px; bottom: 8px; left: 8px; }
 }

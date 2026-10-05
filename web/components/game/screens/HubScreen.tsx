@@ -184,7 +184,6 @@ interface HubScreenProps {
   onDismissHubPrompt?: (key: HubPromptKey) => void
   onUpgradeLaunchpad?: () => void
   onExcavateSubsurface?: () => void
-  onExcavateSubsurfaceUnavailable?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
   onOpenMarket?: () => void
@@ -192,7 +191,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -529,7 +528,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             subsurfaceExcavated={player.subsurfaceExcavated}
             subsurfaceBuilt={player.subsurfaceBuilt}
             onExcavate={onExcavateSubsurface}
-            onExcavateUnavailable={onExcavateSubsurfaceUnavailable}
             onBuildRoom={onBuildSubsurfaceRoom}
             onFocusResources={onFocusResources}
             onOpenMarket={onOpenMarket}

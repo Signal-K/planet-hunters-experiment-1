@@ -187,8 +187,10 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
           exteriorSprite = new Sprite(exTex)
           exteriorSprite.width = W
           exteriorSprite.height = H
-          exteriorSprite.eventMode = 'static'
-          exteriorSprite.cursor = 'pointer'
+          // This is a presentational reveal layer. Keeping it interactive
+          // placed an invisible hit target above the fitter after the fade,
+          // which swallowed pointer selection on the module cards (SSL-472).
+          exteriorSprite.eventMode = 'none'
         }
       } catch { /* missing exterior art — skip straight to the interior view */ }
 
@@ -310,12 +312,6 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
       // it out — see the `revealElapsed` block in the ticker below.
       if (exteriorSprite) {
         world.addChild(exteriorSprite)
-        exteriorSprite.on('pointerdown', () => {
-          // Re-reveal on demand: jump back to fully opaque and let the
-          // ticker's reveal timer play the fade out again.
-          revealElapsed = 0
-          if (exteriorSprite) { exteriorSprite.visible = true; exteriorSprite.alpha = 1 }
-        })
       }
 
       let prevInstalledHash = ''

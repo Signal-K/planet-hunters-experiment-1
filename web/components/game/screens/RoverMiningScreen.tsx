@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { defaultSpec, type MissionState, type ResourceKey } from '@takeon/engine'
 import type { Mission, SurfaceTarget, Target } from '@/lib/data'
-import { MINERAL_META, lifeStageForTarget } from '@/lib/data'
+import { lifeStageForTarget } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import type { FieldBuildInput, FieldIdentity } from '@/lib/systems/SandboxSystem'
 import { UI_ZONES } from '@/lib/ui-zones'
@@ -13,7 +13,6 @@ import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnM
 import SandboxFieldControls from '@/components/takeon/SandboxFieldControls'
 import RoverDrivePad from '@/components/takeon/RoverDrivePad'
 import { shareFieldCreation } from '@/lib/community/shareField'
-import TopBar from '@/components/ui/TopBar'
 import { captureGameEvent } from '@/lib/posthog'
 import styles from './RoverMiningScreen.module.css'
 
@@ -70,6 +69,44 @@ export function landnamCargoFromTakeon(
   return result
 }
 
+export interface ExposedOreMarker {
+  id: string
+  label: string
+  mineral: string
+  x: number
+  y: number
+  /** Stable visual anchor over the field; the engine receives x/y above. */
+  left: string
+  top: string
+}
+
+export interface DrillFinding {
+  attempt: number
+  markerId: string
+  label: string
+  kind: 'trace' | 'vein' | 'mine-site'
+}
+
+/**
+ * A fresh rover run always has three nearby exposed outcrops. The engine owns
+ * the terrain and route; Landnam owns the readable prospecting objective.
+ */
+export function exposedOreMarkers(spawn: { x: number; y: number }): ExposedOreMarker[] {
+  const boundedCoordinate = (coordinate: number) => Math.max(1, Math.min(30, coordinate))
+  return [
+    { id: 'ore-a', label: 'OUTCROP A', mineral: 'iron', x: boundedCoordinate(spawn.x + 3), y: boundedCoordinate(spawn.y), left: '62%', top: '43%' },
+    { id: 'ore-b', label: 'OUTCROP B', mineral: 'copper', x: boundedCoordinate(spawn.x - 2), y: boundedCoordinate(spawn.y + 2), left: '38%', top: '31%' },
+    { id: 'ore-c', label: 'OUTCROP C', mineral: 'aluminium', x: boundedCoordinate(spawn.x + 1), y: boundedCoordinate(spawn.y - 3), left: '76%', top: '24%' },
+  ]
+}
+
+/** The third drill is the deterministic discovery guarantee for SSL-471. */
+export function drillFinding(attempt: number, marker: ExposedOreMarker): DrillFinding {
+  if (attempt >= 3) return { attempt, markerId: marker.id, label: 'MINE SITE LOCATED · CLAIM STAKED', kind: 'mine-site' }
+  if (attempt === 2) return { attempt, markerId: marker.id, label: 'VEIN CONFIRMED · ONE MORE DRILL WILL OPEN THE SITE', kind: 'vein' }
+  return { attempt, markerId: marker.id, label: `TRACE ${marker.mineral.toUpperCase()} · CONTINUE PROSPECTING`, kind: 'trace' }
+}
+
 interface RoverMiningScreenProps {
   mission: Mission
   target: Target
@@ -101,14 +138,16 @@ export default function RoverMiningScreen({
   const [deployed, setDeployed] = useState(false)
   const [buildMode, setBuildMode] = useState(false)
   const [fieldNotice, setFieldNotice] = useState<string | null>(null)
+  const [markers, setMarkers] = useState<ExposedOreMarker[]>([])
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
+  const [drillings, setDrillings] = useState<DrillFinding[]>([])
+  const [mineSite, setMineSite] = useState<ExposedOreMarker | null>(null)
+  const [constructionStarted, setConstructionStarted] = useState(false)
   const takeonHandle = useRef<TakeOnMountHandle | null>(null)
   const fieldIdentity = useMemo<FieldIdentity>(() => ({ targetId: target.id }), [target.id])
   const lifeStage = lifeStageForTarget(target, player?.biosphereSeeds?.[target.id])
   const sandboxEnabled = !!player && !!onFieldBuild
-
-  const cargoReady = Object.entries(requirements).every(
-    ([mineral, amount]) => (cargo[mineral] ?? 0) >= amount
-  )
+  const selectedMarker = markers.find(marker => marker.id === selectedMarkerId) ?? null
 
   const handleTakeonEvent = useCallback((event: TakeonHostEvent) => {
     if (event.type === 'built') {
@@ -143,6 +182,7 @@ export default function RoverMiningScreen({
 
   const handleReady = useCallback((state: MissionState) => {
     setCargo(landnamCargoFromTakeon(state.rover.cargo, requirements))
+    setMarkers(current => current.length > 0 ? current : exposedOreMarkers(state.rover.pos))
     setTakeonReady(true)
   }, [requirements])
 
@@ -158,18 +198,30 @@ export default function RoverMiningScreen({
     onComplete(requirements)
   }, [onComplete, requirements])
 
-  const status = !deployed
-    ? 'AWAITING ROVER DEPLOYMENT'
-    : !takeonReady
-      ? 'CONNECTING TO SURFACE SIM'
-      : cargoReady
-        ? 'MISSION CARGO READY'
-        : 'ROVER ACTIVE · MINE THE ORDER'
+  const beginDrill = useCallback(() => {
+    if (!selectedMarker || mineSite) return
+    const attempt = drillings.length + 1
+    const finding = drillFinding(attempt, selectedMarker)
+    takeonHandle.current?.orderMine(selectedMarker.x, selectedMarker.y)
+    setRouteSteps(takeonHandle.current?.plannedRouteLength() ?? 0)
+    setDrillings(previous => [...previous, finding])
+    if (finding.kind === 'mine-site') setMineSite(selectedMarker)
+    captureGameEvent('rover_exposed_ore_drilled', {
+      target_id: target.id,
+      marker_id: selectedMarker.id,
+      drill_attempt: attempt,
+      result: finding.kind,
+    })
+  }, [drillings.length, mineSite, selectedMarker, target.id])
+
+  const selectMarker = useCallback((marker: ExposedOreMarker) => {
+    setSelectedMarkerId(marker.id)
+    takeonHandle.current?.orderMine(marker.x, marker.y)
+    setRouteSteps(takeonHandle.current?.plannedRouteLength() ?? 0)
+  }, [])
 
   return (
     <div className={`game-screen theme-deep ln-scene-takeon ${styles.screen}`} data-testid="rover-mining-screen">
-      <TopBar eyebrow={`SURFACE OPS · ${target.name.toUpperCase()}`} title="Field Rover" onBack={onBack} />
-
       <main className={styles.content} data-ui-zone={UI_ZONES.screenContent}>
         <section className={styles.scenePanel} aria-label="TakeOn rover field" data-build-mode={buildMode && sandboxEnabled}>
           <TakeOnMount
@@ -184,8 +236,14 @@ export default function RoverMiningScreen({
             onEvent={handleTakeonEvent}
             onReady={handleReady}
             onRouteChange={handleRouteChange}
+            startView="iso"
             className={styles.takeonMount}
           />
+          <div className={styles.fieldHotbar} data-testid="rover-field-hotbar">
+            <button type="button" onClick={onBack}>EXIT FIELD</button>
+            <span>PROSPECTOR · {target.name.toUpperCase()}</span>
+            <strong>{mineSite ? 'MINE SITE ACTIVE' : `${Math.max(0, 3 - drillings.length)} DRILLS TO GUARANTEED SITE`}</strong>
+          </div>
           {!deployed && (
             <div className={styles.landingHandoff} data-testid="deploy-surface-ops-handoff">
               {rocketImageSrc && <img src={rocketImageSrc} alt="Prospector rocket landed on the surface" />}
@@ -214,6 +272,18 @@ export default function RoverMiningScreen({
                   </button>
                 ) : null}
               />
+              <section className={styles.objectControls} data-testid="rover-object-controls">
+                <span className={styles.eyebrow}>{selectedMarker ? `${selectedMarker.label} SELECTED` : 'SELECT EXPOSED ORE'}</span>
+                <button
+                  type="button"
+                  className={styles.primaryAction}
+                  disabled={!selectedMarker || !!mineSite || !takeonReady}
+                  onClick={beginDrill}
+                  data-testid="rover-drill-action"
+                >
+                  {mineSite ? 'MINE SITE OPEN' : 'DRILL EXPOSED ORE'}
+                </button>
+              </section>
             </div>
           )}
           {deployed && sandboxEnabled && buildMode && player && (
@@ -233,22 +303,53 @@ export default function RoverMiningScreen({
               />
             </div>
           )}
+          {deployed && markers.map(marker => (
+            <button
+              key={marker.id}
+              type="button"
+              className={`${styles.oreMarker} ${selectedMarkerId === marker.id ? styles.oreMarkerSelected : ''} ${mineSite?.id === marker.id ? styles.oreMarkerClaimed : ''}`}
+              style={{ left: marker.left, top: marker.top }}
+              onClick={() => selectMarker(marker)}
+              data-testid={`rover-ore-${marker.id}`}
+              aria-pressed={selectedMarkerId === marker.id}
+            >
+              <i aria-hidden="true" />
+              <span>{mineSite?.id === marker.id ? 'MINE SITE' : marker.label}</span>
+            </button>
+          ))}
+          {deployed && mineSite && (
+            <button
+              type="button"
+              className={styles.mineSiteControl}
+              style={{ left: mineSite.left, top: mineSite.top }}
+              onClick={() => {
+                setConstructionStarted(true)
+                captureGameEvent('rover_mine_site_construction_started', { target_id: target.id, marker_id: mineSite.id })
+              }}
+              data-testid="rover-mine-site-construction"
+            >
+              {constructionStarted ? 'FIRST MINE RIG · STARTED' : 'START FIRST MINE RIG'}
+            </button>
+          )}
         </section>
 
-        <aside className={styles.hud} aria-label="Mission cargo order">
-          <div className={styles.statusHeader}>
-            <div><span className={styles.kicker}>{clientName ? `${clientName} · CLIENT ORDER` : 'MISSION ORDER'}</span><strong>{mission.title}</strong></div>
-            <span className={styles.statusPill} data-ready={cargoReady}>{status}</span>
+        {deployed && <aside className={styles.drillReadout} aria-label="Drill results" data-testid="rover-drill-readout">
+          <div className={styles.readoutHeading}>
+            <span className={styles.kicker}>DRILL RESULTS · {clientName ?? 'PROSPECTOR'}</span>
+            <strong>{mineSite ? 'SITE LOCATED' : 'PROSPECTING'}</strong>
           </div>
-          <div className={styles.orderList} data-testid="rover-cargo-order">
-            {Object.entries(requirements).map(([mineral, amount]) => {
-              const loaded = Math.min(amount, cargo[mineral] ?? 0)
-              const meta = MINERAL_META[mineral]
-              return <div className={styles.orderRow} key={mineral}><span className={styles.mineralIdentity}><span className={styles.mineralDot} style={{ background: meta?.color ?? 'var(--ln-text-muted)' }} />{meta?.name ?? mineral}</span><strong>{loaded} / {amount} U</strong></div>
-            })}
-          </div>
-          <button type="button" className={styles.primaryAction} disabled={!takeonReady || !cargoReady} onClick={() => { captureGameEvent('rover_returned_to_ship', { target_id: target.id }); onComplete(cargo) }} data-testid="rover-return-to-ship">RETURN MULE TO PROSPECTOR</button>
-        </aside>
+          {drillings.length === 0 ? (
+            <p>Select an exposed ore marker, drive into range, then use the drill. A mine site is guaranteed by drill three.</p>
+          ) : (
+            <ol>
+              {drillings.map(finding => <li key={`${finding.markerId}-${finding.attempt}`} data-kind={finding.kind}>DRILL {finding.attempt} · {finding.label}</li>)}
+            </ol>
+          )}
+          {mineSite && (
+            <p className={styles.mineSiteStatus}>{constructionStarted ? 'FIRST MINE RIG IS STAKED ON THE FIELD.' : 'SELECT THE MINE SITE ON THE FIELD TO START THE FIRST RIG.'}</p>
+          )}
+          <button type="button" className={styles.primaryAction} disabled={!constructionStarted} onClick={() => { captureGameEvent('rover_returned_to_ship', { target_id: target.id }); onComplete(cargo) }} data-testid="rover-return-to-ship">RETURN PROSPECTOR</button>
+        </aside>}
       </main>
 
       {process.env.NODE_ENV === 'development' && (

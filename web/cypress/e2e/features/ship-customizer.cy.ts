@@ -110,6 +110,19 @@ describe('Ship Customiser staged build', () => {
     cy.get('[data-testid="ship-customizer-loadout-summary"]').should('contain', '4/4 modules fitted')
   })
 
+  it('fits modules with a real pointer click at desktop and compact-landscape sizes', () => {
+    ;([[1440, 900], [844, 390]] as Array<[number, number]>).forEach(([width, height]) => {
+      cy.viewport(width, height)
+      visitCustomizer()
+      openCustomizer()
+      cy.get('[data-testid="choose-ion-thruster-t1"]')
+        .scrollIntoView()
+        .should('be.visible')
+        .click()
+      cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '1')
+    })
+  })
+
   it('keeps the light-theme Hangar legible and unclipped across supported viewports', () => {
     const viewports: Array<[number, number]> = [[844, 390], [926, 428], [390, 844], [1440, 900]]
 

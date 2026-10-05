@@ -35,7 +35,6 @@ interface HubSubsurfaceViewProps {
   subsurfaceExcavated?: boolean
   subsurfaceBuilt?: string[]
   onExcavate?: () => void
-  onExcavateUnavailable?: () => void
   onBuildRoom?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
   onOpenMarket?: () => void
@@ -402,16 +401,22 @@ function ExcavatePrompt({
   francs,
   stash,
   onExcavate,
-  onExcavateUnavailable,
   onFocusResources,
 }: {
   francs: number
   stash?: Record<string, number>
   onExcavate?: () => void
-  onExcavateUnavailable?: () => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
 }) {
   const affordable = canAffordSubsurface(SUBSURFACE_EXCAVATE_COST, { francs, stash })
+  const missingFrancs = Math.max(0, SUBSURFACE_EXCAVATE_COST.cost - francs)
+  const requiredAluminium = SUBSURFACE_EXCAVATE_COST.costMaterials.aluminium ?? 0
+  const availableAluminium = stash?.aluminium ?? 0
+  const missingAluminium = Math.max(0, requiredAluminium - availableAluminium)
+  const missing = [
+    missingFrancs > 0 ? formatCurrency(missingFrancs) : null,
+    missingAluminium > 0 ? `${missingAluminium} aluminium (you have ${availableAluminium})` : null,
+  ].filter((entry): entry is string => !!entry)
   return (
     <div className={styles.trainingPanel} data-testid="subsurface-excavate-prompt">
       <div>
@@ -428,14 +433,16 @@ function ExcavatePrompt({
         <p className={styles.trainingCopy}>
           Excavation cost: <strong>{formatRoomCost(SUBSURFACE_EXCAVATE_COST)}</strong>
         </p>
+        {!affordable && (
+          <p className={styles.trainingCopy} data-testid="subsurface-excavate-lock-copy">
+            Need {missing.join(' and ')}. Aluminium is delivered to Base Storage with aluminium-bearing client mineral cargo.
+          </p>
+        )}
         <div style={{ marginTop: 12, maxWidth: 320, marginInline: 'auto' }}>
           <PrimaryBtn
             testId="subsurface-excavate-cta"
-            onClick={() => {
-              if (affordable) onExcavate?.()
-              else onExcavateUnavailable?.()
-            }}
-            ariaDisabled={!affordable}
+            onClick={onExcavate}
+            disabled={!affordable}
           >
             Excavate deck
           </PrimaryBtn>
@@ -454,7 +461,6 @@ export function HubSubsurfaceView({
   subsurfaceExcavated = false,
   subsurfaceBuilt = [],
   onExcavate,
-  onExcavateUnavailable,
   onBuildRoom,
   onFocusResources,
   onOpenMarket,
@@ -501,7 +507,7 @@ export function HubSubsurfaceView({
                 <h2 className={styles.deckTitle}>Unexcavated</h2>
               </div>
             </div>
-            <ExcavatePrompt francs={francs} stash={stash} onExcavate={onExcavate} onExcavateUnavailable={onExcavateUnavailable} onFocusResources={onFocusResources} />
+            <ExcavatePrompt francs={francs} stash={stash} onExcavate={onExcavate} onFocusResources={onFocusResources} />
           </div>
         ) : activeRoom && activeDefinition ? (
           <div className={styles.detailView}>
