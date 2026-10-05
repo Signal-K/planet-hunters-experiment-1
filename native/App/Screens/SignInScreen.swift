@@ -7,6 +7,8 @@ import LandnamCore
 struct SignInScreen: View {
     @Environment(AuthModel.self) private var auth
     @State private var nonce = Self.makeNonce()
+    @State private var email = ""
+    @State private var password = ""
 
     var body: some View {
         ZStack {
@@ -28,6 +30,20 @@ struct SignInScreen: View {
                 .signInWithAppleButtonStyle(.black)
                 .frame(height: 48).frame(maxWidth: 320)
                 .disabled(auth.isWorking)
+                VStack(spacing: 10) {
+                    Text("OR USE EMAIL").font(AppFont.display(10, "Bold")).tracking(1.8).foregroundStyle(Theme.textMuted)
+                    TextField("Email", text: $email)
+                        .textContentType(.username).autocorrectionDisabled()
+                        #if os(iOS)
+                        .keyboardType(.emailAddress).textInputAutocapitalization(.never)
+                        #endif
+                        .textFieldStyle(.roundedBorder)
+                    SecureField("Password", text: $password)
+                        .textContentType(.password).textFieldStyle(.roundedBorder)
+                        .onSubmit(submitPassword)
+                    PrimaryButton(title: "Sign in", enabled: !auth.isWorking && !email.isEmpty && !password.isEmpty, action: submitPassword)
+                }
+                .frame(maxWidth: 320)
                 if let message = auth.errorMessage {
                     Text(message).font(AppFont.body(12)).foregroundStyle(Theme.crimson).multilineTextAlignment(.center)
                 }
@@ -35,6 +51,12 @@ struct SignInScreen: View {
             }
             .padding(24)
         }
+    }
+
+    private func submitPassword() {
+        guard !email.isEmpty, !password.isEmpty else { return }
+        let e = email, p = password
+        Task { await auth.signInWithPassword(email: e, password: p) }
     }
 
     private func handle(_ result: Result<ASAuthorization, Error>) {

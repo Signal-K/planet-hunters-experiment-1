@@ -37,6 +37,31 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
         #expect(store.load() == session)
     }
 
+    @Test func passwordSignInAuthsSharedThenExchanges() async {
+        StubProtocol.handler = { req in
+            if req.url?.path == "/api/collections/users/auth-with-password" {
+                let body = try! JSONSerialization.jsonObject(with: req.bodyStreamData()) as! [String: String]
+                #expect(body["identity"] == "a@b.co" && body["password"] == "pw")
+                return (200, Data(#"{"token":"SHARED","record":{"id":"s1"}}"#.utf8))
+            }
+            #expect(req.url?.path == "/api/landnam-auth/exchange")
+            #expect(req.value(forHTTPHeaderField: "Authorization") == "Bearer SHARED")
+            return (200, Data(#"{"token":"L","record":{"id":"u1","email":"a@b.co"}}"#.utf8))
+        }
+        let store = InMemorySessionStore()
+        let model = await AuthModel(api: api(), store: store)
+        await model.signInWithPassword(email: " a@b.co ", password: "pw")
+        #expect(await model.session == AuthSession(token: "L", userId: "u1", email: "a@b.co", displayName: nil))
+    }
+
+    @Test func wrongPasswordShowsMessageAndStaysSignedOut() async {
+        StubProtocol.handler = { _ in (400, Data(#"{"message":"Failed to authenticate."}"#.utf8)) }
+        let model = await AuthModel(api: api(), store: InMemorySessionStore())
+        await model.signInWithPassword(email: "a@b.co", password: "bad")
+        #expect(await model.session == nil)
+        #expect(await model.errorMessage == "Email or password is incorrect.")
+    }
+
     @Test func rejectedTokenLeavesPlayerSignedOut() async {
         StubProtocol.handler = { _ in (401, Data(#"{"error":"x"}"#.utf8)) }
         let model = await AuthModel(api: api(), store: InMemorySessionStore())

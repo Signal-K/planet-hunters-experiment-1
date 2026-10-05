@@ -30,6 +30,19 @@ public final class AuthModel {
         }
     }
 
+    public func signInWithPassword(email: String, password: String) async {
+        isWorking = true; errorMessage = nil
+        defer { isWorking = false }
+        do {
+            let s = try await api.signInWithPassword(email: email.trimmingCharacters(in: .whitespaces), password: password)
+            store.save(s); session = s
+        } catch AuthError.rejected {
+            errorMessage = "Email or password is incorrect."
+        } catch {
+            errorMessage = "Could not reach Landnam. Check your connection and try again."
+        }
+    }
+
     public func fail(_ message: String) { errorMessage = message }
 
     public func signOut() { store.clear(); session = nil }

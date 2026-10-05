@@ -26,16 +26,64 @@ public enum AuthError: Error, Equatable, Sendable {
 /// Apple identity is required.
 public struct AuthAPI: Sendable {
     public var baseURL: URL
+    /// Shared PocketBase that owns the email/password `users` accounts (same as the web).
+    public var sharedURL: URL
     public var session: URLSession
 
-    public init(baseURL: URL, session: URLSession = .shared) {
-        self.baseURL = baseURL; self.session = session
+    public init(baseURL: URL, sharedURL: URL? = nil, session: URLSession = .shared) {
+        self.baseURL = baseURL; self.sharedURL = sharedURL ?? baseURL; self.session = session
     }
 
-    /// `LANDNAM_PB_URL` env wins, else the local dev instance (web `.env.local`).
+    /// `LANDNAM_PB_URL` / `LANDNAM_SHARED_PB_URL` env win. Otherwise debug builds use the
+    /// local dev instances and release builds use the deployed ones.
     public static func fromEnvironment(session: URLSession = .shared) -> AuthAPI {
-        let raw = ProcessInfo.processInfo.environment["LANDNAM_PB_URL"] ?? "http://localhost:8091"
-        return AuthAPI(baseURL: URL(string: raw)!, session: session)
+        let env = ProcessInfo.processInfo.environment
+        #if DEBUG
+        let landnam = env["LANDNAM_PB_URL"] ?? "http://localhost:8091"
+        let shared = env["LANDNAM_SHARED_PB_URL"] ?? "http://localhost:8090"
+        #else
+        let landnam = env["LANDNAM_PB_URL"] ?? "https://signal-k-landnam.fly.dev"
+        let shared = env["LANDNAM_SHARED_PB_URL"] ?? "https://signal-k-starsailors.fly.dev"
+        #endif
+        return AuthAPI(baseURL: URL(string: landnam)!, sharedURL: URL(string: shared)!, session: session)
+    }
+
+    /// Email/password: authenticate against the shared `users` collection, then exchange
+    /// that token for a Landnam session (mirrors web `signInFromGate`).
+    public func signInWithPassword(email: String, password: String) async throws -> AuthSession {
+        var login = URLRequest(url: sharedURL.appendingPathComponent("api/collections/users/auth-with-password"))
+        login.httpMethod = "POST"
+        login.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        login.httpBody = try JSONEncoder().encode(["identity": email, "password": password])
+        let (data, _) = try await send(login)
+        struct Shared: Decodable { var token: String }
+        guard let shared = try? JSONDecoder().decode(Shared.self, from: data) else { throw AuthError.malformed }
+
+        var exchange = URLRequest(url: baseURL.appendingPathComponent("api/landnam-auth/exchange"))
+        exchange.httpMethod = "POST"
+        exchange.setValue("Bearer \(shared.token)", forHTTPHeaderField: "Authorization")
+        let (xdata, _) = try await send(exchange)
+        return try Self.decodeSession(xdata)
+    }
+
+    private func send(_ req: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        let data: Data, resp: URLResponse
+        do { (data, resp) = try await session.data(for: req) }
+        catch { throw AuthError.unreachable(error.localizedDescription) }
+        guard let http = resp as? HTTPURLResponse else { throw AuthError.malformed }
+        if [400, 401, 403].contains(http.statusCode) { throw AuthError.rejected }
+        guard (200..<300).contains(http.statusCode) else { throw AuthError.unreachable("HTTP \(http.statusCode)") }
+        return (data, http)
+    }
+
+    private static func decodeSession(_ data: Data) throws -> AuthSession {
+        struct Reply: Decodable {
+            struct Record: Decodable { var id: String; var email: String?; var displayName: String? }
+            var token: String; var record: Record
+        }
+        guard let reply = try? JSONDecoder().decode(Reply.self, from: data) else { throw AuthError.malformed }
+        return AuthSession(token: reply.token, userId: reply.record.id,
+                           email: reply.record.email?.nilIfEmpty, displayName: reply.record.displayName?.nilIfEmpty)
     }
 
     public func signInWithApple(identityToken: String, nonce: String, fullName: String? = nil) async throws -> AuthSession {
