@@ -234,8 +234,8 @@ function playM1() {
 
   // Collecting the M1 reward completes the mining try; the Flight Plan hands
   // over to the scan try on the Galaxy screen.
+  // The scan try opens on the transit inspector, not the Base scene.
   cy.location('pathname', { timeout: 15000 }).should('eq', '/game/galaxy')
-  assertOnHome(10000)
   expectCoach('Classify the transit candidate')
 }
 
