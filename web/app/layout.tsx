@@ -28,11 +28,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <Script id="pwa-standalone" strategy="afterInteractive">{`
           // body[data-pwa="standalone"] drives the installed-app layout rules.

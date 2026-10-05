@@ -542,13 +542,14 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid^="mission-accept-generated-s2-"]').should('not.exist')
     })
 
-    it('Transport rocket selection shows the two-stop route coach step', () => {
+    it('Transport launch review names the Prospector and keeps the Flight Plan up', () => {
       visitWithState(fullState({
-        screen: 'rocket-buy',
+        screen: 'fab',
         missionId: 'lnm_m3_relay_bennu_vesta',
         targetId: 'bennu',
         deliveryTargetId: 'vesta',
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 30: true },
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         player: {
           francs: 9_000_000_000,
           activeMission: null,
@@ -571,7 +572,7 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: true,
       }))
-      cy.contains('Prospector').should('be.visible')
+      cy.get('[data-testid="mission-launch-review"]').should('contain', 'Prospector')
       // SSL-405: the Two-Stop Route lesson is retired; the Flight Plan strip
       // stays up with the active try's objective.
       cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Open client contracts')
