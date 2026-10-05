@@ -13,41 +13,44 @@ struct SignInScreen: View {
     var body: some View {
         ZStack {
             TerrainScene(composition: .earthBasePad, ground: 0.28).ignoresSafeArea()
-            VStack(spacing: 18) {
+            VStack {
                 Spacer()
-                VStack(spacing: 6) {
-                    Eyebrow(text: "Earth Base")
-                    Text("Landnam").font(AppFont.display(36)).foregroundStyle(Theme.ink)
-                    Text("Run a small space agency. Take contracts, mine, return, get paid.")
-                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center)
+                Panel {
+                    VStack(spacing: 14) {
+                        VStack(spacing: 6) {
+                            Eyebrow(text: "Earth Base")
+                            Text("Landnam").font(AppFont.display(36)).foregroundStyle(Theme.ink)
+                            Text("Run a small space agency. Take contracts, mine, return, get paid.")
+                                .font(AppFont.body(14)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center)
+                        }
+                        SignInWithAppleButton(.continue) { request in
+                            request.requestedScopes = [.fullName, .email]
+                            request.nonce = nonce
+                        } onCompletion: { result in
+                            handle(result)
+                        }
+                        .signInWithAppleButtonStyle(.black)
+                        .frame(height: 48)
+                        .disabled(auth.isWorking)
+                        Text("OR USE EMAIL").font(AppFont.display(11, "Bold")).tracking(1.8).foregroundStyle(Theme.textDim)
+                        TextField("Email", text: $email)
+                            .textContentType(.username).autocorrectionDisabled()
+                            #if os(iOS)
+                            .keyboardType(.emailAddress).textInputAutocapitalization(.never)
+                            #endif
+                            .textFieldStyle(.roundedBorder)
+                        SecureField("Password", text: $password)
+                            .textContentType(.password).textFieldStyle(.roundedBorder)
+                            .onSubmit(submitPassword)
+                        PrimaryButton(title: "Sign in", enabled: !auth.isWorking && !email.isEmpty && !password.isEmpty, action: submitPassword)
+                        if let message = auth.errorMessage {
+                            Text(message).font(AppFont.body(13)).foregroundStyle(Theme.crimson).multilineTextAlignment(.center)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                SignInWithAppleButton(.continue) { request in
-                    request.requestedScopes = [.fullName, .email]
-                    request.nonce = nonce
-                } onCompletion: { result in
-                    handle(result)
-                }
-                .signInWithAppleButtonStyle(.black)
-                .frame(height: 48).frame(maxWidth: 320)
-                .disabled(auth.isWorking)
-                VStack(spacing: 10) {
-                    Text("OR USE EMAIL").font(AppFont.display(10, "Bold")).tracking(1.8).foregroundStyle(Theme.textMuted)
-                    TextField("Email", text: $email)
-                        .textContentType(.username).autocorrectionDisabled()
-                        #if os(iOS)
-                        .keyboardType(.emailAddress).textInputAutocapitalization(.never)
-                        #endif
-                        .textFieldStyle(.roundedBorder)
-                    SecureField("Password", text: $password)
-                        .textContentType(.password).textFieldStyle(.roundedBorder)
-                        .onSubmit(submitPassword)
-                    PrimaryButton(title: "Sign in", enabled: !auth.isWorking && !email.isEmpty && !password.isEmpty, action: submitPassword)
-                }
-                .frame(maxWidth: 320)
-                if let message = auth.errorMessage {
-                    Text(message).font(AppFont.body(12)).foregroundStyle(Theme.crimson).multilineTextAlignment(.center)
-                }
-                Spacer().frame(height: 48)
+                .frame(maxWidth: 380)
+                Spacer().frame(height: 40)
             }
             .padding(24)
         }
