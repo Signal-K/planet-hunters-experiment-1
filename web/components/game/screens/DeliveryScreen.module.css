@@ -56,13 +56,13 @@
 .fee span,
 .holdState span {
   color: var(--ln-text-muted);
-  font: 700 9px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .18em;
 }
 
 .targetLabel strong {
   color: var(--ln-cyan);
-  font: 800 12px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .1em;
   text-transform: uppercase;
 }
@@ -97,7 +97,7 @@
 .contract {
   margin-top: 3px;
   color: var(--ln-text);
-  font: 700 13px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
 }
 
 .timer {
@@ -107,7 +107,7 @@
 
 .progressMeta strong {
   color: var(--ln-cyan);
-  font: 700 12px var(--ln-font-mono);
+  font: 700 var(--ln-fs-micro) var(--ln-font-mono);
 }
 
 .track {
@@ -139,14 +139,14 @@
   border-radius: 6px;
   background: var(--ln-panel-2);
   color: var(--ln-text-dim);
-  font: 600 10px var(--ln-font-display);
+  font: 600 var(--ln-fs-micro) var(--ln-font-display);
 }
 
 .cargoRow strong,
 .holdState strong {
   margin-left: auto;
   color: var(--ln-text);
-  font: 700 11px var(--ln-font-mono);
+  font: 700 var(--ln-fs-micro) var(--ln-font-mono);
 }
 
 .swatch {
@@ -180,7 +180,7 @@
 
 .fee small {
   color: var(--ln-text-muted);
-  font: 10px var(--ln-font-body);
+  font: var(--ln-fs-micro) var(--ln-font-body);
 }
 
 .fee strong {
@@ -194,7 +194,7 @@
   border-radius: 6px;
   background: rgba(255, 179, 71, .08);
   color: var(--ln-warn);
-  font: 700 10px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .12em;
   text-align: center;
 }
@@ -204,7 +204,7 @@
   border-left: 2px solid var(--ln-ok);
   background: color-mix(in srgb, var(--ln-ok) 8%, transparent);
   color: var(--ln-text-dim);
-  font: 600 10px/1.4 var(--ln-font-body);
+  font: 600 var(--ln-fs-micro)/1.4 var(--ln-font-body);
 }
 
 @media (max-height: 720px) {
@@ -240,7 +240,7 @@
 
   .contract,
   .timer {
-    font-size: 12px;
+    font-size: var(--ln-fs-micro);
   }
 
   .cargoRow,

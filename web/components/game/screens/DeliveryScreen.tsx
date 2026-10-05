@@ -142,7 +142,7 @@ export default function DeliveryScreen({
 
   if (useTakeonDropoff) {
     return (
-      <div className={`game-screen theme-deep ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
+      <div className={`game-screen theme-blueprint ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
         <TopBar
           eyebrow={`DELIVERY TARGET · ${target.name.toUpperCase()}`}
           title="Cargo Transfer"
@@ -225,7 +225,7 @@ export default function DeliveryScreen({
   }
 
   return (
-    <div className={`game-screen theme-deep ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
+    <div className={`game-screen theme-blueprint ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
       <TopBar
         eyebrow={`DELIVERY TARGET · ${target.name.toUpperCase()}`}
         title="Cargo Transfer"

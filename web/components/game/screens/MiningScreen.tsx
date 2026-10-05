@@ -477,7 +477,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       : null
 
   return (
-    <div className="game-screen mining-screen theme-deep" data-training-active={trainingMiningTry ? 'true' : 'false'}>
+    <div className="game-screen mining-screen theme-blueprint" data-training-active={trainingMiningTry ? 'true' : 'false'}>
       <TopBar
         eyebrow={`${target.name.toUpperCase()} · SURFACE`}
         title="Mining Run"

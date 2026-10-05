@@ -1,0 +1,83 @@
+/* SSL-453 / SSL-430: the six loop screens (mission setup/launchpad, transit,
+   landing, mining, delivery, debrief) sit on the light blueprint theme with a
+   14px text floor, 4.5:1 contrast and 44px tap targets.
+
+   Scenes (canvases, starfields) stay dark: only the panels, HUD cards and
+   docks that carry text move to blueprint paper. Mining's action bar and the
+   help button/sheet are owned by SSL-411 and SSL-432 and are not touched.
+   scripts/loop-text-floor.mjs enforces the font floor in CI. */
+
+/* Accent colours that read on paper (the deep-space cyan/amber/crimson are
+   tuned for dark and fall under 4.5:1 on white). */
+.theme-blueprint.transit-screen,
+.theme-blueprint.debrief-game,
+.theme-blueprint.ln-scene-landing,
+.theme-blueprint.ln-scene-delivery {
+  --ln-cyan: #175f9b;
+  --ln-cyan-bright: #124d80;
+  --ln-cyan-border: rgba(23, 95, 155, 0.45);
+  --ln-crimson: #a8203a;
+  --ln-crimson-border: rgba(168, 32, 58, 0.5);
+  --ln-ok: #17703f;
+  --ln-amber: #8a5300;
+}
+
+/* Shared chrome while a loop screen is up: paper bar, 44px taps. */
+.portrait-canvas:has(.theme-blueprint) .game-chrome-bottom {
+  background: var(--ln-blueprint-paper);
+  border-top-color: var(--ln-blueprint-line-strong);
+}
+.portrait-canvas:has(.theme-blueprint) .game-chrome-bottom button {
+  color: var(--ln-blueprint-ink);
+}
+.portrait-canvas:has(.theme-blueprint) .game-chrome-bottom__readout,
+.portrait-canvas:has(.theme-blueprint) .game-chrome-bottom__training-chip {
+  color: #175f9b;
+}
+.portrait-canvas:has(.theme-blueprint) .game-chrome-bottom button[aria-current="page"],
+.portrait-canvas:has(.theme-blueprint) .game-chrome-bottom button:hover {
+  color: #124d80;
+  border-color: rgba(23, 95, 155, 0.45);
+  background: rgba(31, 120, 193, 0.08);
+}
+.game-chrome-bottom { padding-block: 2px; }
+.game-chrome-bottom button { min-height: 44px; min-width: 44px; }
+.backend-status { color: var(--ln-text-dim); }
+
+/* Transit: scene stays dark; every card over it is paper. */
+.theme-blueprint.transit-screen,
+.theme-blueprint .transit-flight-scene { background: #0a1018; }
+.theme-blueprint .transit-destination-chip,
+.theme-blueprint .transit-mission-card,
+.theme-blueprint .transit-flight-hud,
+.theme-blueprint .transit-approach {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: var(--ln-blueprint-line-strong);
+  color: var(--ln-blueprint-ink);
+}
+.theme-blueprint .transit-waypoint-label--passed { color: #124d80; }
+.theme-blueprint .transit-waypoint-label { text-shadow: none; }
+.theme-blueprint .transit-command-dock { background: var(--ln-blueprint-paper); border-top-color: var(--ln-blueprint-line-strong); }
+.theme-blueprint .transit-command-btn { min-height: 44px; min-width: 44px; background: var(--ln-blueprint-paper); }
+.theme-blueprint .transit-command-btn:hover:not(:disabled) { background: rgba(31, 120, 193, 0.1); }
+.theme-blueprint .transit-command-btn:disabled { color: #566879; border-color: var(--ln-blueprint-line-strong); }
+.theme-blueprint .transit-progress-track { background: rgba(15, 36, 54, 0.14); }
+
+/* Debrief: paper content over the arrival scene. */
+.theme-blueprint.debrief-game { background: var(--ln-blueprint-bg); }
+.theme-blueprint .debrief-mission-strip,
+.theme-blueprint .debrief-client-panel,
+.theme-blueprint .debrief-delivery-panel,
+.theme-blueprint .debrief-command-dock {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: var(--ln-blueprint-line-strong);
+  color: var(--ln-blueprint-ink);
+}
+.theme-blueprint .debrief-hud-header,
+.theme-blueprint .debrief-arrival-board__copy { color: #fff; }
+.theme-blueprint [data-testid="resolve-cargo-btn"],
+.theme-blueprint [resolve-cargo-btn] { min-height: 44px; }
+
+/* Top bar back control and any loop button: 44px floor. */
+.theme-blueprint button { min-height: 44px; }
+.theme-blueprint .top-bar button { min-width: 44px; }

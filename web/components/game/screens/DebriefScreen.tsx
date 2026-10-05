@@ -110,7 +110,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const willStore = isFreeHaul && disposition === 'store' && !!hasEarthStorage
 
   return (
-    <div className="game-screen debrief-game">
+    <div className="game-screen theme-blueprint debrief-game">
       <DebriefCanvas rocketImageSrc={rocketDisplay.img} />
       <div className="debrief-game__world-shade" aria-hidden="true" />
 

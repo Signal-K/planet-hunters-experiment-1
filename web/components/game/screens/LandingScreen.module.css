@@ -36,13 +36,13 @@
 .kicker,
 .progressMeta {
   color: var(--ln-text-muted);
-  font: 700 9px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .18em;
 }
 
 .targetLabel strong {
   color: var(--ln-cyan);
-  font: 800 12px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .1em;
   text-transform: uppercase;
 }
@@ -74,7 +74,7 @@
 .contract {
   margin-top: 3px;
   color: var(--ln-text);
-  font: 700 13px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
 }
 
 .timer {
@@ -84,7 +84,7 @@
 
 .progressMeta strong {
   color: var(--ln-cyan);
-  font: 700 12px var(--ln-font-mono);
+  font: 700 var(--ln-fs-micro) var(--ln-font-mono);
 }
 
 .track {
@@ -132,7 +132,7 @@
 
   .contract,
   .timer {
-    font-size: 12px;
+    font-size: var(--ln-fs-micro);
   }
 
   .progressMeta {

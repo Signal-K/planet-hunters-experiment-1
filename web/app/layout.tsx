@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
 import './globals.css'
+import './loop-screens.css'
 
 export const metadata: Metadata = {
   title: PRODUCT_NAME,

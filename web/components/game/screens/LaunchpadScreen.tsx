@@ -213,7 +213,7 @@ export default function LaunchpadScreen({
 
   return (
     <div
-      className="game-screen theme-deep ln-scene-launchpad"
+      className="game-screen theme-blueprint ln-scene-launchpad"
       data-testid="launchpad-focus-screen"
       data-game-hydrated={hydrated ? 'true' : 'false'}
     >

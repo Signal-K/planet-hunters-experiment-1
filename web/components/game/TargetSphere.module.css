@@ -19,7 +19,7 @@
 
 .eyebrow {
   color: var(--ln-cyan);
-  font: 800 9px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
 }
@@ -31,12 +31,12 @@
 
 .owner strong {
   color: var(--ln-text);
-  font: 800 12px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
 }
 
 .sub {
   color: var(--ln-text-muted);
-  font: 700 9px var(--ln-font-mono);
+  font: 700 var(--ln-fs-micro) var(--ln-font-mono);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -60,7 +60,7 @@
   padding: 0;
   list-style: none;
   color: var(--ln-text-dim);
-  font: 700 9px var(--ln-font-mono);
+  font: 700 var(--ln-fs-micro) var(--ln-font-mono);
   letter-spacing: .04em;
   text-transform: uppercase;
 }
@@ -94,4 +94,4 @@
 }
 
 .compact { padding: var(--ln-s-2); gap: var(--ln-s-1); }
-.compact .name { font-size: 12px; }
+.compact .name { font-size: var(--ln-fs-micro); }

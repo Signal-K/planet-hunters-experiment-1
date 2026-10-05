@@ -139,7 +139,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   const targetKind = target.type === 'asteroid' ? 'asteroid' : 'planet'
 
   return (
-    <div className="game-screen transit-screen">
+    <div className="game-screen theme-blueprint transit-screen">
       <TopBar eyebrow={`${legLabel} LEG · MISSION TRANSIT`} title={destinationName} onBack={onBack} glass />
 
       <main className="transit-flight-scene" aria-label={`Flight to ${destinationName}`}>
