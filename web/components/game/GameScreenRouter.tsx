@@ -46,6 +46,8 @@ import {
   markInstrumentDigestNotified,
 } from '@/lib/systems/InstrumentFeedSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
+import { surfaceForScreen } from '@/lib/screen-layouts'
+import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
 
 export const VALID_SCREENS = new Set<Screen>([
@@ -77,7 +79,11 @@ type ScreenContentProps = {
 export function ScreenContent(props: ScreenContentProps) {
   return (
     <SceneTransition sceneKey={props.screen}>
-      <ScreenBody {...props} />
+      {/* SSL-35 / SSL-452: every screen renders inside the shared frame,
+          labelled with the layout type its route maps to in GAME_ROUTES. */}
+      <SurfaceLayout surface={surfaceForScreen(props.screen)}>
+        <ScreenBody {...props} />
+      </SurfaceLayout>
     </SceneTransition>
   )
 }
@@ -310,13 +316,13 @@ function ScreenBody({
           onOpenProgram={game.openLaunchpad}
           onSubmit={game.submitTessClassification}
           onChooseTarget={game.chooseSatelliteTarget}
+          onReplayTraining={currentTrainingTry(game.player.flightPlan) === 'scan' ? () => game.replayTrainingTry('scan') : undefined}
         />
       )
 
     case 'asteroid-discovery':
       return (
         <AsteroidDiscoveryScreen
-          onReplayTraining={currentTrainingTry(game.player.flightPlan) === 'scan' ? () => game.replayTrainingTry('scan') : undefined}
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'deep-space' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}

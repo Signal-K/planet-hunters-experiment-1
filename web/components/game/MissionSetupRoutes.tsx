@@ -15,6 +15,7 @@ import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { useHelp } from '@/components/ui/useHelp'
 import styles from './MissionSetupRoutes.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -56,7 +57,9 @@ function LaunchGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c4 3 6 7 6 12l-6 7-6-7c0-5 2-9 6-12Z" /><circle cx="12" cy="10" r="2" /></svg>
 }
 
-function SetupFrame({ title, onBack, children }: { title: string; onBack: () => void; children: ReactNode }) {
+function SetupFrame({ title, screen, onBack, children }: { title: string; screen: Screen; onBack: () => void; children: ReactNode }) {
+  // SSL-432: shared "?" slot. Renders nothing until this screen has a help topic.
+  const help = useHelp(screen)
   return <div className={`game-screen ${styles.root}`} data-testid="mission-setup-scaffold">
     <div className={styles.landscape} data-testid="mission-setup-landscape" aria-hidden="true">
       <HubWorldBackground phase="day" composition="earth-base-wide" />
@@ -66,7 +69,9 @@ function SetupFrame({ title, onBack, children }: { title: string; onBack: () => 
     <header className={styles.header} data-dev-launcher={isDevLauncherEnabled()}>
       <button type="button" className={styles.back} onClick={onBack} aria-label="Back"><ArrowGlyph direction="previous" /></button>
       <div className={styles.title}><span>CONTRACT → LAUNCH</span><h1>{title}</h1></div>
+      {help.button && <div className={styles.help}>{help.button}</div>}
     </header>
+    {help.layer}
     <main className={styles.stage} data-testid="mission-setup-stage">{children}</main>
   </div>
 }
@@ -89,7 +94,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
     const client = model?.client
     const clientJobs = client ? game.player.clientMissions[client.id] ?? 0 : 0
     const clientLevel = client ? clientAffinityLevel(clientJobs) : 0
-    return <SetupFrame title="Choose a contract" onBack={() => game.goBack()}>
+    return <SetupFrame title="Choose a contract" screen="missions" onBack={() => game.goBack()}>
       <section className={styles.contractGallery} data-testid="mission-board-section-client" style={{ '--client-accent': client?.color ?? 'var(--ln-ok)' } as CSSProperties}>
         {model ? <>
           <button type="button" className={`${styles.carouselArrow} ${styles.previous}`} onClick={() => relay.selectRelativeSignal(-1)} disabled={relay.cardModels.length < 2} aria-label="Previous contract"><ArrowGlyph direction="previous" /></button>
@@ -122,7 +127,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const preparationLabel = selectedRocket.costFrancs === 0 ? `PREPARE ${selectedRocket.name.toUpperCase()}` : `BUILD ${selectedRocket.name.toUpperCase()} · ${formatCurrency(selectedRocket.costFrancs, { compact: true })}`
 
   return <>
-    <SetupFrame title="Launch review" onBack={() => game.go('missions')}>
+    <SetupFrame title="Launch review" screen={screen} onBack={() => game.go('missions')}>
       <section className={styles.review} data-testid="mission-launch-review">
         <div className={styles.launchScene}><div className={styles.launchTower} aria-hidden="true"><i /><i /><i /></div><img src={rocketDisplay.img} alt={`${selectedRocket.name} on the launchpad`} /><div className={styles.launchCaption}><span>LAUNCHPAD · READY FOR DEPARTURE</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
         <aside className={styles.reviewBrief}>
