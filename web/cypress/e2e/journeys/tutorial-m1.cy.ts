@@ -141,27 +141,6 @@ function expectCoach(title: string) {
     .should('contain', title)
 }
 
-/** Tap a body on the target map at its own touch circle, as a finger would. */
-function pickTarget(targetId: string) {
-  cy.get(`[data-testid="target-${targetId}"]`).then($body => {
-    const group = $body[0].getBoundingClientRect()
-    const hit = $body.find('circle')[0].getBoundingClientRect()
-    cy.wrap($body).click(hit.left + hit.width / 2 - group.left, hit.top + hit.height / 2 - group.top)
-  })
-}
-
-/** Hangar assembly → roll out → launch → (dev) skip the Pixi launch scene. */
-function rollOutAndLaunch() {
-  cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('have.attr', 'data-location', 'hangar')
-  cy.get('[data-testid="transfer-to-launchpad-btn"]').should('be.visible').click()
-  cy.get('[data-testid="mission-launch-review"]').should('have.attr', 'data-location', 'launchpad')
-  cy.get('[data-testid="launch-btn"]').should('be.visible').click()
-  // DEV-only skip for the Pixi launch sequence (same trade-off as mining below).
-  cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 }).click()
-  cy.location('pathname', { timeout: 15000 }).should('eq', '/game/transit')
-  cy.contains(/MISSION TRANSIT/i).should('be.visible')
-}
-
 // ─── Mining play-through (same on mobile/desktop) ─────────────────────────────
 
 // `mineReal=true` (CYPRESS_mineReal env var) plays the actual firing
@@ -234,23 +213,21 @@ function playM1() {
   expectCoach('Accept a mining contract')
   cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').click()
 
-  // Step 3: pick a target on the map
-  cy.get('[data-testid="mission-target-map"]', { timeout: 8000 }).should('be.visible')
-  expectCoach('Choose the highlighted target')
-  pickTarget('eros')
-  cy.get('[data-testid="target-selection-summary"]').should('contain', '433 Eros')
-  cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
-
-  // Step 4: vehicle blueprint — the Explorer is free during onboarding.
-  // The strip stays up (the try has no blueprint-specific step) and the
-  // Flight Plan has no manual Continue button on a try step.
-  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="flight-plan"]').should('be.visible')
-  cy.get('[data-testid="flight-plan-continue"]').should('not.exist')
-  cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'BUILD EXPLORER').click()
-
-  // Step 5: hangar assembly, then roll out and launch
-  rollOutAndLaunch()
+  // Step 3: SSL-450 collapsed target, blueprint and hangar into one Launch
+  // review. The contract's target is preselected; the free Explorer is
+  // prepared in place, then Launch starts the sequence.
+  cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="mission-launch-review"]').should('contain', '433 Eros')
+  cy.get('body').then($body => {
+    if ($body.find('[data-testid="prepare-launch-btn"]').length) {
+      cy.get('[data-testid="prepare-launch-btn"]').should('contain', 'PREPARE EXPLORER').click()
+    }
+  })
+  cy.get('[data-testid="launch-btn"]', { timeout: 10000 }).should('be.visible').and('not.be.disabled').click()
+  // DEV-only skip for the Pixi launch sequence (same trade-off as mining below).
+  cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 }).click()
+  cy.location('pathname', { timeout: 15000 }).should('eq', '/game/transit')
+  cy.contains(/MISSION TRANSIT/i).should('be.visible')
 
   completeMining()
   completeDebrief()
