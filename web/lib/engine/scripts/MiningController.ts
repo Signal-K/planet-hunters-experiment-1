@@ -6,6 +6,7 @@ import { GameObject } from '../GameObject'
 import type { RuntimeContext } from '../RuntimeContext'
 import type { EntityBounds } from '../InputManager'
 import { devMiningSpeedMultiplier } from '@/lib/devMiningSpeed'
+import { hitStopSeconds, pickupPosition, stepHitStop, type HitKind } from '../miningJuice'
 
 export const SCROLL_SPEED = 48
 export const SCROLL_SPEED_MIN = 16
@@ -91,6 +92,8 @@ export interface MiningControllerOptions {
    * Omit (or leave `current` null) to flash for any ore, regardless of mineral.
    */
   neededMineralsRef?: { current: Set<string> | null }
+  /** Skip hit-stop freezes when the player prefers reduced motion. */
+  reducedMotion?: boolean
 }
 
 interface OreEntity {
@@ -111,6 +114,12 @@ interface LaserEntity {
   prevY: number
 }
 
+interface Pickup {
+  g: Graphics
+  from: { x: number; y: number }
+  t: number
+}
+
 interface Particle {
   g: Graphics
   vx: number
@@ -129,6 +138,8 @@ export class MiningController extends ScriptBehaviour {
   private ores: OreEntity[] = []
   private lasers: LaserEntity[] = []
   private particles: Particle[] = []
+  private pickups: Pickup[] = []
+  private hitStop = 0
   private oreCounter = 0
   private requiredMineralQueue: string[] = []
   private laserCounter = 0
@@ -171,7 +182,11 @@ export class MiningController extends ScriptBehaviour {
     }
   }
 
-  update(dt: number): void {
+  update(realDt: number): void {
+    const stepped = stepHitStop(this.hitStop, realDt)
+    this.hitStop = stepped.remaining
+    const dt = stepped.simDt
+    if (this.hitStop > 0) return // frozen: the whole scene holds for the impact
     const dx = this.scrollSpeed * this.devSpeed * dt
     this.totalScrollX += dx
 
@@ -203,6 +218,7 @@ export class MiningController extends ScriptBehaviour {
     this.resolveCollisions()
     this.removeOffscreen()
     this.updateParticles(dt)
+    this.updatePickups(dt)
 
     this.opts.onScroll?.(this.totalScrollX)
 
@@ -333,12 +349,14 @@ export class MiningController extends ScriptBehaviour {
         ore.hp -= 1
         laser.go.active = false
         this.opts.onHit?.()
+        this.freeze(ore.hp <= 0 ? 'collect' : 'hit')
 
         if (ore.hp <= 0) {
           ore.go.active = false
           if (ore.sprite) ore.sprite.visible = false
           if (ore.label) ore.label.visible = false
           this.spawnParticleBurst(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor, ore.radius)
+          this.spawnPickup(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor)
           this.opts.onCollect(ore.mineral)
         } else {
           ore.flashTimer = FLASH_DURATION
@@ -400,6 +418,38 @@ export class MiningController extends ScriptBehaviour {
       const life = 0.3 + Math.random() * 0.15
       this.particles.push({ g, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life, maxLife: life })
     }
+  }
+
+  private freeze(kind: HitKind): void {
+    this.hitStop = Math.max(this.hitStop, hitStopSeconds(kind, !!this.opts.reducedMotion))
+  }
+
+  /** A chunky chip pops off a mined ore and flies to the ship's hold. */
+  private spawnPickup(x: number, y: number, color: number): void {
+    const g = new Graphics()
+    g.rect(-4, -4, 8, 8).fill({ color, alpha: 1 })
+    g.rect(-4, -4, 8, 8).stroke({ color: 0x0f2436, alpha: 0.55, width: 1.5 })
+    g.x = x
+    g.y = y
+    this.opts.container.addChild(g)
+    this.pickups.push({ g, from: { x, y }, t: 0 })
+  }
+
+  private updatePickups(dt: number): void {
+    const home = { x: SHIP_X, y: this.opts.shipY ?? SHIP_Y }
+    this.pickups = this.pickups.filter(p => {
+      p.t += dt / 0.55
+      if (p.t >= 1) {
+        this.opts.container.removeChild(p.g)
+        p.g.destroy()
+        return false
+      }
+      const pos = pickupPosition(p.from, home, p.t)
+      p.g.x = pos.x
+      p.g.y = pos.y
+      p.g.alpha = p.t > 0.8 ? (1 - p.t) / 0.2 : 1
+      return true
+    })
   }
 
   private updateParticles(dt: number): void {

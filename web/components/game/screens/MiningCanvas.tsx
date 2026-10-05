@@ -8,6 +8,8 @@ import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
 import type { MineralMeta } from '@/lib/data'
 import { ROCKET_ASSETS } from '@/lib/rocket-assets'
+import { prefersReducedMotion } from '@/lib/pixi/launchSpriteAnim'
+import { recoilOffset } from '@/lib/engine/miningJuice'
 
 // Keep every mineral visibly grounded in the mining scene. The authored set
 // covers the most common late-game ores; the neutral iron crystal is a
@@ -284,6 +286,7 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
           },
           onOreNearby: (near) => { oreNearRef?.current?.(near) },
           neededMineralsRef,
+          reducedMotion: prefersReducedMotion(),
         })
 
         app.ticker.add(ticker => {
@@ -307,12 +310,14 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         // oreNearRef pushes ore-proximity — the screen just mirrors it, it
         // never owns the timer.
         let isCharging = false
+        let lastFireAt = -1
         const attemptFire = () => {
           if (isCharging) {
             onTapAckRef.current?.()
             return
           }
           controller.fireLaser()
+          lastFireAt = performance.now()
           isCharging = true
           chargingRef?.current?.(true)
           if (chargeTimer) clearTimeout(chargeTimer)
@@ -357,6 +362,10 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
             const pulse = 0.92 + Math.sin(plumePhase * 18) * 0.08
             plume.scale.set(pulse, 0.94 + Math.sin(plumePhase * 13) * 0.06)
             plume.alpha = 0.84 + Math.sin(plumePhase * 11) * 0.10
+            // Recoil kick on each shot; the plume rides with the hull.
+            const kick = prefersReducedMotion() || lastFireAt < 0 ? 0 : recoilOffset((performance.now() - lastFireAt) / 1000)
+            ship.y = shipY + kick
+            plume.y = shipY + kick
           })
         }
 

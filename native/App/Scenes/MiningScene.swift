@@ -9,6 +9,19 @@ final class MiningScene: SKScene {
     private(set) var field: MiningField
     var onChange: ((MiningField) -> Void)?
     var onFeedback: ((String) -> Void)?
+    var onDash: ((Double) -> Void)?       // dash recharge 0...1 for the HUD
+    var reducedMotion = false
+
+    private var motion = RoverMotion(x: 0, minX: 40, maxX: 360)
+    private var driveInput = 0.0
+    private var wantsDash = false
+    private var facing: CGFloat = 1
+    private var holdRemaining = 0.0
+    private var lastShot: TimeInterval = -1
+    private var lastDashEmit = -1.0
+    private var dustTimer = 0.0
+    private var clock: TimeInterval = 0
+    private var lastTime: TimeInterval?
 
     private var nodeSprites: [Int: SKSpriteNode] = [:]
     private let world = SKNode()
@@ -114,10 +127,10 @@ final class MiningScene: SKScene {
     private func buildRover() {
         rover = SKSpriteNode(texture: SK.texture("actors/rover.png"), size: CGSize(width: 96, height: 72))
         rover.anchorPoint = CGPoint(x: 0.5, y: 0.1)
-        rover.position = CGPoint(x: size.width / 2, y: groundY - 6); rover.zPosition = 20
+        let startX = motion.x == 0 ? Double(size.width / 2) : min(max(motion.x, 40), Double(size.width) - 40)
+        motion = RoverMotion(x: startX, minX: 40, maxX: Double(size.width) - 40)
+        rover.position = CGPoint(x: CGFloat(motion.x), y: groundY - 6); rover.zPosition = 20
         world.addChild(rover)
-        let idle = SKAction.moveBy(x: 0, y: 2, duration: 0.5)
-        rover.run(.repeatForever(.sequence([idle, idle.reversed()])))
     }
 
     // MARK: input
@@ -125,15 +138,18 @@ final class MiningScene: SKScene {
 
     func fire(at p: CGPoint) {
         let hit = nodeSprites.first { $0.value.frame.insetBy(dx: -10, dy: -10).contains(p) }
-        let outcome = field.strike(nodeId: hit?.key)
+        let outcome = field.strike(nodeId: hit?.key, roverX: motion.x / Double(size.width))
         let muzzle = CGPoint(x: rover.position.x, y: rover.position.y + 52)
         switch outcome {
         case .noCharge: onFeedback?("Laser charging"); shake()
         case .cargoFull: onFeedback?("Cargo hold full")
         case .tooHard(let tier): onFeedback?("Needs a tier \(tier) laser"); shake(hit?.value)
+        case .outOfRange:
+            onFeedback?("Out of range, drive closer")
+            if let sp = hit?.value { shootBeam(from: muzzle, to: CGPoint(x: muzzle.x + (sp.position.x - muzzle.x) * 0.35, y: muzzle.y + (sp.position.y - muzzle.y) * 0.35), hit: false) }
         case .miss: shootBeam(from: muzzle, to: p, hit: false)
-        case .hit(let id, _): if let sp = nodeSprites[id] { shootBeam(from: muzzle, to: sp.position, hit: true); crack(sp, id: id) }
-        case .mined(let id, let mineral): if let sp = nodeSprites[id] { shootBeam(from: muzzle, to: sp.position, hit: true); pop(sp, id: id, mineral: mineral) }
+        case .hit(let id, _): if let sp = nodeSprites[id] { shootBeam(from: muzzle, to: sp.position, hit: true); crack(sp, id: id); impact(.hit, toward: sp.position) }
+        case .mined(let id, let mineral): if let sp = nodeSprites[id] { shootBeam(from: muzzle, to: sp.position, hit: true); pop(sp, id: id, mineral: mineral); impact(.collect, toward: sp.position) }
         }
         onChange?(field)
     }
@@ -145,7 +161,7 @@ final class MiningScene: SKScene {
         beam.removeAllActions(); beam.alpha = 1
         beam.run(.fadeOut(withDuration: 0.12))
         if hit { SK.burst(at: b, color: Theme.blueBright.sk, count: 4, speed: 40, in: world) }
-        rover.run(.sequence([.scaleX(to: 1.06, duration: 0.04), .scaleX(to: 1, duration: 0.06)]))
+        lastShot = clock
     }
 
     private func crack(_ sp: SKSpriteNode, id: Int) {
@@ -178,15 +194,95 @@ final class MiningScene: SKScene {
         target.run(.sequence([.moveBy(x: 5, y: 0, duration: 0.03), .moveBy(x: -10, y: 0, duration: 0.06), .moveBy(x: 5, y: 0, duration: 0.03)]))
     }
 
-    override func update(_ currentTime: TimeInterval) {
-        if currentTime - lastRecharge > 0.6 { lastRecharge = currentTime; if field.charge < field.chargeCap { field.recharge(); onChange?(field) } }
+    // MARK: juice
+    /// Hit-pause plus a small camera kick toward the impact, like Crashlands' chunky strikes.
+    private func impact(_ kind: Juice.HitKind, toward p: CGPoint) {
+        let hold = Juice.hitStopSeconds(kind, reducedMotion: reducedMotion)
+        guard hold > 0 else { return }
+        holdRemaining = hold
+        world.isPaused = true
+        let k: CGFloat = kind == .collect ? 6 : 3
+        let dx = p.x - rover.position.x, dy = p.y - rover.position.y
+        let len = max(1, hypot(dx, dy))
+        world.removeAction(forKey: "kick")
+        world.position = .zero
+        world.run(.sequence([.moveBy(x: dx / len * k, y: dy / len * k, duration: 0.03), .move(to: .zero, duration: 0.12)]), withKey: "kick")
     }
+
+    func drive(_ input: Double) { driveInput = max(-1, min(1, input)) }
+    func dash() { wantsDash = true }
+
+    override func update(_ currentTime: TimeInterval) {
+        let dt = min(0.05, lastTime.map { currentTime - $0 } ?? 0)
+        lastTime = currentTime; clock += dt
+
+        let step = Juice.stepHitStop(remaining: holdRemaining, dt: dt)
+        holdRemaining = step.remaining
+        if holdRemaining <= 0, world.isPaused { world.isPaused = false }
+        let simDt = step.simDt
+
+        if simDt > 0 {
+            let started = motion.step(dt: simDt, input: driveInput, wantsDash: wantsDash)
+            wantsDash = false
+            if started { dashBurst() }
+            if abs(motion.velocity) > 8 { facing = motion.velocity > 0 ? 1 : -1 }
+            dustTimer += simDt
+            if abs(motion.velocity) > 60, dustTimer > (motion.isDashing ? 0.025 : 0.12) {
+                dustTimer = 0
+                SK.burst(at: CGPoint(x: rover.position.x - facing * 30, y: groundY + 2), color: Theme.hex(0xFFFFFF, 0.8).sk, count: motion.isDashing ? 3 : 1, speed: 26, in: world, z: 19)
+            }
+        }
+        let stretch: CGFloat = motion.isDashing ? 1.22 : 1
+        rover.xScale = facing * stretch
+        rover.yScale = motion.isDashing ? 0.9 : 1
+        let recoil = CGFloat(Juice.recoil(at: clock - lastShot, kick: reducedMotion ? 0 : 5))
+        rover.position.x = CGFloat(motion.x) - facing * recoil
+        rover.position.y = groundY - 6 + (abs(motion.velocity) > 20 ? CGFloat(abs(sin(clock * 22))) * 1.5 : CGFloat(sin(clock * 4)))
+
+        if clock - lastDashEmit > 0.05 { lastDashEmit = clock; onDash?(motion.dashCharge) }
+        if simDt > 0, currentTime - lastRecharge > 0.6 { lastRecharge = currentTime; if field.charge < field.chargeCap { field.recharge(); onChange?(field) } }
+    }
+
+    private func dashBurst() {
+        SK.burst(at: CGPoint(x: rover.position.x - facing * 34, y: groundY + 4), color: Theme.hex(0xFFFFFF, 0.9).sk, count: reducedMotion ? 3 : 9, speed: 70, in: world, z: 19)
+        guard !reducedMotion else { return }
+        world.removeAction(forKey: "kick")
+        world.run(.sequence([.moveBy(x: -facing * 4, y: 0, duration: 0.04), .move(to: .zero, duration: 0.14)]), withKey: "kick")
+    }
+
+    /// The ground strip steers the rover (analog, toward the finger); anything above fires.
+    private func isDriveZone(_ p: CGPoint) -> Bool { p.y < groundY + 30 }
+    private func steer(to p: CGPoint) { drive((p.x - CGFloat(motion.x)) / 70) }
 
     #if canImport(UIKit)
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if let t = touches.first { fire(at: t.location(in: world)) }
+        guard let t = touches.first else { return }
+        let p = t.location(in: world)
+        if isDriveZone(p) { steer(to: p) } else { fire(at: p) }
     }
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let t = touches.first else { return }
+        let p = t.location(in: world)
+        if isDriveZone(p) { steer(to: p) }
+    }
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) { drive(0) }
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { drive(0) }
     #else
-    override func mouseDown(with event: NSEvent) { fire(at: event.location(in: world)) }
+    private var keys = Set<UInt16>()
+    override func mouseDown(with event: NSEvent) {
+        let p = event.location(in: world)
+        if isDriveZone(p) { steer(to: p) } else { fire(at: p) }
+    }
+    override func mouseDragged(with event: NSEvent) { let p = event.location(in: world); if isDriveZone(p) { steer(to: p) } }
+    override func mouseUp(with event: NSEvent) { drive(0) }
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == 49 || event.keyCode == 56 { dash(); return }   // space, shift
+        keys.insert(event.keyCode); syncKeys()
+    }
+    override func keyUp(with event: NSEvent) { keys.remove(event.keyCode); syncKeys() }
+    private func syncKeys() {
+        let left = keys.contains(123) || keys.contains(0), right = keys.contains(124) || keys.contains(2)
+        drive(right ? 1 : left ? -1 : 0)
+    }
     #endif
 }

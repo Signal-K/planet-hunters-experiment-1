@@ -53,7 +53,19 @@ struct RocketBuyScreen: View {
 
 struct LaunchScreen: View {
     @Environment(GameStore.self) private var store
+    @State private var launching = false
+    private var variant: String {
+        store.player.stagedRockets.first { $0.location == .launchpad }?.rocketId.contains("explorer") == true ? "explorer" : "prospector"
+    }
     var body: some View {
+        if launching {
+            LaunchSequenceScreen(variant: variant) { store.launch() }
+        } else {
+            pad
+        }
+    }
+
+    private var pad: some View {
         ScreenFrame(title: "Launchpad", back: { store.go(.hub) }) {
             if let m = store.mission {
                 Panel { Text(m.title).font(.headline); Text("Target: \(store.target?.name ?? "none")") }
@@ -64,7 +76,7 @@ struct LaunchScreen: View {
                     if r.location == .hangar { PrimaryButton(title: "Roll out to pad") { store.rollOutToPad() } }
                 }
             }
-            PrimaryButton(title: "Launch", enabled: store.player.stagedRockets.contains { $0.location == .launchpad }) { store.launch() }
+            PrimaryButton(title: "Launch", enabled: store.player.stagedRockets.contains { $0.location == .launchpad }) { launching = true }
             Button("Abandon contract", role: .destructive) { store.abandonMission() }
         }
     }

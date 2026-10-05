@@ -34,13 +34,15 @@ public struct MiningField: Equatable, Sendable {
     public let cargoCapacity: Int
     public let laserTier: Int
     public let required: Cargo
+    /// How far (normalised x) the rover's laser reaches either side of it; driving closer is the point.
+    public static let reach = 0.34
 
     public var cargoUnits: Int { cargo.values.reduce(0, +) }
     public var isFull: Bool { cargoUnits >= cargoCapacity }
     public var isComplete: Bool { required.allSatisfy { cargo[$0.key, default: 0] >= $0.value } }
 
     public enum Outcome: Equatable, Sendable {
-        case noCharge, miss, tooHard(minTier: Int), cargoFull
+        case noCharge, miss, tooHard(minTier: Int), cargoFull, outOfRange
         case hit(nodeId: Int, remaining: Int)
         case mined(nodeId: Int, mineralId: String)
     }
@@ -74,12 +76,13 @@ public struct MiningField: Equatable, Sendable {
     }
 
     /// One laser strike on a node. Costs one charge; progress is hp damage equal to laser tier.
-    public mutating func strike(nodeId: Int?) -> Outcome {
+    public mutating func strike(nodeId: Int?, roverX: Double? = nil) -> Outcome {
         guard charge > 0 else { return .noCharge }
         guard let id = nodeId, let i = nodes.firstIndex(where: { $0.id == id && !$0.isDepleted }) else {
             charge -= 1
             return .miss
         }
+        if let roverX, abs(nodes[i].x - roverX) > Self.reach { return .outOfRange }   // refused hits cost nothing
         let tierNeeded = Minerals.byId[nodes[i].mineralId]?.laserAccess ?? 1
         if laserTier < tierNeeded { return .tooHard(minTier: tierNeeded) }
         if isFull { return .cargoFull }

@@ -84,6 +84,8 @@ struct MiningScreen: View {
     @State private var scene: MiningScene?
     @State private var field: MiningField?
     @State private var toast: String?
+    @State private var dashCharge = 1.0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { geo in
@@ -112,6 +114,12 @@ struct MiningScreen: View {
                         Spacer()
                         if let toast { Text(toast.uppercased()).font(AppFont.display(11)).tracking(1.4).foregroundStyle(Theme.crimson)
                             .padding(.horizontal, 10).padding(.vertical, 6).background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.crimson, lineWidth: 1.5)) }
+                        HStack(alignment: .bottom) {
+                            Text("DRAG THE GROUND TO DRIVE · TAP ORE TO FIRE").font(AppFont.display(9, "Bold")).tracking(1.2).foregroundStyle(Theme.textDim)
+                                .padding(.horizontal, 8).padding(.vertical, 5).background(Theme.paper.opacity(0.85), in: Capsule())
+                            Spacer()
+                            DashButton(charge: dashCharge) { scene?.dash() }
+                        }
                         Panel {
                             HStack {
                                 Eyebrow(text: "Laser charge")
@@ -140,7 +148,77 @@ struct MiningScreen: View {
         let f = MiningField(target: target, required: mission.requires.minerals, cargoCapacity: cap, laserTier: tier, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 })
         let s = MiningScene(field: f, size: size)
         s.onChange = { field = $0 }
+        s.reducedMotion = reduceMotion
+        s.onDash = { dashCharge = $0 }
         s.onFeedback = { msg in toast = msg; Task { try? await Task.sleep(for: .seconds(1.4)); if toast == msg { toast = nil } } }
         field = f; scene = s
+    }
+}
+
+/// Round dash button with a recharge ring, bottom-right of the mining HUD.
+struct DashButton: View {
+    let charge: Double
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle().fill(Theme.paper)
+                Circle().trim(from: 0, to: charge).stroke(charge >= 1 ? Theme.teal : Theme.blue, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .rotationEffect(.degrees(-90)).padding(3)
+                Image(systemName: "bolt.fill").font(.system(size: 20, weight: .bold)).foregroundStyle(charge >= 1 ? Theme.teal : Theme.textMuted)
+            }
+            .frame(width: 58, height: 58)
+            .overlay(Circle().stroke(Theme.border, lineWidth: 1.5))
+            .background(Circle().fill(Theme.blue).offset(x: 3, y: 3))
+        }
+        .buttonStyle(.plain).disabled(charge < 1)
+        .keyboardShortcut(.space, modifiers: [])
+        .accessibilityLabel("Dash")
+    }
+}
+
+/// The launch cinematic: SpriteKit scene under a Landnam-styled telemetry HUD. Skippable.
+struct LaunchSequenceScreen: View {
+    let variant: String
+    let onFinish: () -> Void
+    @State private var scene: LaunchScene?
+    @State private var telemetry = LaunchTelemetry(elapsed: 0)
+    @State private var done = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .top) {
+                if let scene { SpriteView(scene: scene).ignoresSafeArea() }
+                VStack(spacing: 8) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Eyebrow(text: telemetry.event.label)
+                            Text(telemetry.clock).font(AppFont.display(34)).foregroundStyle(Theme.ink)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 6) {
+                            RailCard(symbol: "arrow.up") { Text("\(telemetry.altitudeKm) KM").font(AppFont.mono(12)).foregroundStyle(Theme.ink) }
+                            RailCard(symbol: "speedometer") { Text("\(telemetry.speedMs) M/S").font(AppFont.mono(12)).foregroundStyle(Theme.ink) }
+                        }.padding(.trailing, 4)
+                    }
+                    ProgressTrack(value: telemetry.progress)
+                    Spacer()
+                    Button { scene?.skip() } label: {
+                        Text("SKIP").font(AppFont.display(11)).tracking(1.6).foregroundStyle(Theme.blue)
+                            .padding(.horizontal, 14).padding(.vertical, 7).background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 1.5))
+                    }.buttonStyle(.plain)
+                }.padding(16)
+            }
+            .onAppear {
+                guard scene == nil else { return }
+                let s = LaunchScene(size: geo.size, variant: variant)
+                s.reducedMotion = reduceMotion
+                s.onTelemetry = { telemetry = $0 }
+                s.onComplete = { if !done { done = true; onFinish() } }
+                scene = s
+            }
+        }
+        .background(Theme.bg)
     }
 }

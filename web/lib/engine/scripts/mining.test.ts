@@ -174,6 +174,28 @@ describe('MiningController', () => {
     expect(onCollect.mock.calls[0][0]).toBe('iron')
   })
 
+  it('freezes the scene briefly on a collect, then resumes (hit-stop)', () => {
+    const { controller, host } = makeController(vi.fn())
+    controller.start()
+    const ore = host.children.find(c => c.id === 'ore-0')!
+    ore.transform.position.x = 80
+    ore.transform.position.y = 190
+    for (let i = 0; i < 4; i++) {
+      controller.fireLaser()
+      const laser = host.children.find(c => c.id.startsWith('laser-') && c.active)
+      if (!laser) break
+      laser.transform.position.x = 80
+      laser.transform.position.y = 190
+      controller.update(0)
+    }
+    const other = host.children.find(c => c.id === 'ore-1')!
+    const x0 = other.transform.position.x
+    controller.update(0.03) // inside the freeze: nothing scrolls
+    expect(other.transform.position.x).toBe(x0)
+    controller.update(0.2) // past the freeze: scrolling resumes
+    expect(other.transform.position.x).toBeLessThan(x0)
+  })
+
   it('calls onHit on every collision, including a partial hit that does not destroy the ore', () => {
     const onHit = vi.fn()
     const { controller, host } = makeController(vi.fn(), { onHit })

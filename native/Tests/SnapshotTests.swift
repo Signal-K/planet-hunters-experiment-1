@@ -70,3 +70,25 @@ struct SceneSnapshotTests {
         try write(scene, name: "flight-phone")
     }
 }
+
+@MainActor
+struct LaunchSnapshotTests {
+    @Test func launchBeats() throws {
+        AppFont.register()
+        for (name, t) in [("launch-ignition", 3.2), ("launch-liftoff", 5.5), ("launch-separation", 7.0), ("launch-space", 11.5)] {
+            let scene = LaunchScene(size: CGSize(width: 402, height: 780))
+            let view = SKView(frame: CGRect(origin: .zero, size: scene.size))
+            view.presentScene(scene)
+            scene.seek(to: t)
+            let tex = try #require(view.texture(from: scene))
+            let cg = tex.cgImage()
+            #if canImport(UIKit)
+            let data = UIImage(cgImage: cg).pngData()
+            #else
+            let data = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])
+            #endif
+            let dir = ProcessInfo.processInfo.environment["SNAPSHOT_DIR"] ?? NSTemporaryDirectory()
+            try #require(data).write(to: URL(fileURLWithPath: dir).appendingPathComponent("\(name)-phone.png"))
+        }
+    }
+}
