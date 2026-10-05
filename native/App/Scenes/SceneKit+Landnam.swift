@@ -40,6 +40,25 @@ enum SK {
         return SKTexture()
     }
 
+    /// Shaded planet: lit sphere with a terminator, rim line and soft atmosphere halo.
+    static func planet(radius r: CGFloat, color: Color) -> SKTexture {
+        let d = r * 2 + 44
+        let view = ZStack {
+            Circle().fill(color.opacity(0.25)).frame(width: r * 2 + 12, height: r * 2 + 12).blur(radius: 7)
+            Circle().fill(RadialGradient(colors: [Theme.hex(0xFFFFFF), color, Theme.ink.opacity(0.85)], center: UnitPoint(x: 0.32, y: 0.3), startRadius: 0, endRadius: r * 1.7))
+                .frame(width: r * 2, height: r * 2)
+            Circle().stroke(Theme.ink.opacity(0.55), lineWidth: 2).frame(width: r * 2, height: r * 2)
+        }.frame(width: d, height: d)
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2
+        #if canImport(UIKit)
+        if let img = renderer.uiImage { return SKTexture(image: img) }
+        #else
+        if let img = renderer.nsImage { return SKTexture(image: img) }
+        #endif
+        return SKTexture()
+    }
+
     /// Chunky square spark burst used for hits, pops and engine puffs.
     static func burst(at p: CGPoint, color: PlatformColor, count: Int = 8, speed: CGFloat = 70, in parent: SKNode, z: CGFloat = 50) {
         for _ in 0..<count {

@@ -38,7 +38,7 @@ final class MiningScene: SKScene {
     required init?(coder: NSCoder) { fatalError() }
 
     override func didMove(to view: SKView) {
-        removeAllChildren(); world.removeAllChildren(); nodeSprites = [:]
+        removeAllChildren(); world.removeAllChildren(); nodeSprites = [:]; parallaxLayers = []
         addChild(world)
         buildBackdrop(); buildNodes(); buildRover()
         beam.strokeColor = Theme.blueBright.sk; beam.lineWidth = 4; beam.lineCap = .round; beam.zPosition = 30; beam.alpha = 0
@@ -51,7 +51,8 @@ final class MiningScene: SKScene {
     }
 
     // MARK: layout
-    private var groundY: CGFloat { size.height * 0.18 }
+    private var groundY: CGFloat { max(size.height * 0.30, 200) }
+    private var parallaxLayers: [(node: SKNode, base: CGFloat, factor: CGFloat)] = []
 
     private func buildBackdrop() {
         let sky = SKSpriteNode(texture: SK.gradient(top: Theme.skyTop, bottom: Theme.horizon))
@@ -74,16 +75,38 @@ final class MiningScene: SKScene {
             sp.zPosition = -8 + CGFloat(i) * 0.1
             sp.color = Theme.mix(0.5).sk; sp.colorBlendFactor = r.haze
             world.addChild(sp)
+            parallaxLayers.append((sp, sp.position.x, r.haze < 0.4 ? 0.12 : 0.05))
         }
-        let ground = SKSpriteNode(color: Theme.groundNear.sk, size: CGSize(width: size.width, height: groundY))
-        ground.anchorPoint = .zero; ground.zPosition = -5
+        let ground = SKSpriteNode(texture: SK.gradient(top: Theme.groundFar, bottom: Theme.groundNear))
+        ground.size = CGSize(width: size.width, height: groundY); ground.anchorPoint = .zero; ground.zPosition = -5
         world.addChild(ground)
+        // Ground props scroll faster than the mountains, so driving reads as real travel.
+        let props = ["rock_boulder", "rock_cluster", "scree", "shrub", "rock_boulder", "scree"]
+        for (i, id) in props.enumerated() {
+            guard let tex = SK.texture("terrain/\(id).png") else { continue }
+            let k = TerrainKit.size[id] ?? (40, 30)
+            let w = CGFloat(k.w) * (1.4 + CGFloat(i % 3) * 0.5)
+            let sp = SKSpriteNode(texture: tex, size: CGSize(width: w, height: w * CGFloat(k.h / k.w)))
+            sp.anchorPoint = CGPoint(x: 0.5, y: 0)
+            let y = groundY - 6 - CGFloat(i % 3) * groundY * 0.22
+            sp.position = CGPoint(x: size.width * (0.08 + CGFloat(i) * 0.17), y: y)
+            sp.zPosition = -3 + CGFloat(i % 3) * 0.1 - y / 1000
+            sp.color = Theme.mix(0.6).sk; sp.colorBlendFactor = 0.25
+            world.addChild(sp)
+            parallaxLayers.append((sp, sp.position.x, 0.25 + CGFloat(i % 3) * 0.12))
+        }
         let lip = SKSpriteNode(color: Theme.groundLip.sk, size: CGSize(width: size.width, height: 4))
         lip.anchorPoint = .zero; lip.position = CGPoint(x: 0, y: groundY); lip.zPosition = -4
         world.addChild(lip)
     }
 
-    private func spriteY(_ ny: Double) -> CGFloat { size.height - CGFloat(ny) * (size.height - groundY - 40) - 40 }
+    private func spriteY(_ ny: Double) -> CGFloat {
+        let top = size.height - 110, bottom = groundY + 60
+        let ys = field.nodes.map(\.y)
+        let lo = ys.min() ?? 0, hi = ys.max() ?? 1
+        let t = hi > lo ? (ny - lo) / (hi - lo) : 0.5
+        return top - CGFloat(t) * max(60, top - bottom)
+    }
 
     private func buildNodes() {
         for n in field.nodes where !n.isDepleted {
@@ -102,7 +125,7 @@ final class MiningScene: SKScene {
         let artName = ["iron", "carbon", "cobalt", "gold", "ice", "nickel", "rare", "silicon"].contains(n.mineralId) ? n.mineralId : nil
         let sp: SKSpriteNode
         if let artName, let tex = SK.texture("ores/ore_\(artName).png") {
-            sp = SKSpriteNode(texture: tex, size: CGSize(width: 46, height: 46))
+            sp = SKSpriteNode(texture: tex, size: CGSize(width: 48, height: 48))
         } else {
             // Minerals without bespoke art get their web mineral shape in their colour.
             let path = CGMutablePath()
@@ -125,7 +148,7 @@ final class MiningScene: SKScene {
     }
 
     private func buildRover() {
-        rover = SKSpriteNode(texture: SK.texture("actors/rover.png"), size: CGSize(width: 96, height: 72))
+        rover = SKSpriteNode(texture: SK.texture("actors/rover.png"), size: CGSize(width: 132, height: 99))
         rover.anchorPoint = CGPoint(x: 0.5, y: 0.1)
         let startX = motion.x == 0 ? Double(size.width / 2) : min(max(motion.x, 40), Double(size.width) - 40)
         motion = RoverMotion(x: startX, minX: 40, maxX: Double(size.width) - 40)
@@ -139,7 +162,7 @@ final class MiningScene: SKScene {
     func fire(at p: CGPoint) {
         let hit = nodeSprites.first { $0.value.frame.insetBy(dx: -10, dy: -10).contains(p) }
         let outcome = field.strike(nodeId: hit?.key, roverX: motion.x / Double(size.width))
-        let muzzle = CGPoint(x: rover.position.x, y: rover.position.y + 52)
+        let muzzle = CGPoint(x: rover.position.x, y: rover.position.y + 72)
         switch outcome {
         case .noCharge: onFeedback?("Laser charging"); shake()
         case .cargoFull: onFeedback?("Cargo hold full")
@@ -187,6 +210,14 @@ final class MiningScene: SKScene {
             .removeFromParent(),
         ]))
         sp.run(.sequence([.group([.scale(to: 1.5, duration: 0.12), .fadeOut(withDuration: 0.12)]), .removeFromParent()]))
+        let tag = SKLabelNode(text: "+1 \(Minerals.byId[mineral]?.symbol ?? "")")
+        tag.fontName = "Oxanium-ExtraBold"; tag.fontSize = 17; tag.fontColor = tint
+        tag.position = CGPoint(x: sp.position.x, y: sp.position.y + 20); tag.zPosition = 60
+        let outline = SKLabelNode(text: tag.text); outline.fontName = tag.fontName; outline.fontSize = 17; outline.fontColor = Theme.ink.sk
+        outline.position = CGPoint(x: 1.5, y: -1.5); outline.zPosition = -1; tag.addChild(outline)
+        world.addChild(tag)
+        tag.setScale(0.4)
+        tag.run(.sequence([.scale(to: 1.15, duration: 0.1), .group([.moveBy(x: 0, y: 36, duration: 0.7), .sequence([.wait(forDuration: 0.4), .fadeOut(withDuration: 0.3)])]), .removeFromParent()]))
     }
 
     private func shake(_ n: SKNode? = nil) {
@@ -239,6 +270,9 @@ final class MiningScene: SKScene {
         rover.position.x = CGFloat(motion.x) - facing * recoil
         rover.position.y = groundY - 6 + (abs(motion.velocity) > 20 ? CGFloat(abs(sin(clock * 22))) * 1.5 : CGFloat(sin(clock * 4)))
 
+        // Parallax: layers slide opposite the rover so travel has depth.
+        let mid = size.width / 2
+        for l in parallaxLayers { l.node.position.x = l.base - (CGFloat(motion.x) - mid) * l.factor }
         if clock - lastDashEmit > 0.05 { lastDashEmit = clock; onDash?(motion.dashCharge) }
         if simDt > 0, currentTime - lastRecharge > 0.6 { lastRecharge = currentTime; if field.charge < field.chargeCap { field.recharge(); onChange?(field) } }
     }

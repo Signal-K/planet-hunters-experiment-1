@@ -12,8 +12,8 @@ final class FlightScene: SKScene {
     let shipArt: String
 
     private let ship = SKNode()
-    private let origin = SKShapeNode(circleOfRadius: 70)
-    private let dest = SKShapeNode(circleOfRadius: 70)
+    private let origin = SKNode()
+    private let dest = SKNode()
     private var streaks: [SKSpriteNode] = []
     private var puffTimer: TimeInterval = 0
 
@@ -53,21 +53,31 @@ final class FlightScene: SKScene {
             addChild(c); streaks.append(c)
         }
 
-        for (node, fill) in [(origin, Theme.mix(0.5)), (dest, Theme.teal.opacity(0.65))] {
-            node.fillColor = fill.sk; node.strokeColor = Theme.ink.sk.withAlphaComponent(0.5); node.lineWidth = 2; node.zPosition = -12
+        for (node, color) in [(origin, Theme.blue), (dest, Theme.teal)] {
+            let planet = SKSpriteNode(texture: SK.planet(radius: 70, color: color))
+            planet.size = CGSize(width: 164, height: 164)
+            node.addChild(planet); node.zPosition = -12
             addChild(node)
+            planet.run(.repeatForever(.sequence([.moveBy(x: 0, y: 4, duration: 3), .moveBy(x: 0, y: -4, duration: 3)])))
         }
         let label = SKLabelNode(text: targetName.uppercased())
         label.fontName = "Oxanium-Bold"; label.fontSize = 10; label.fontColor = Theme.ink.sk
         label.position = CGPoint(x: 0, y: -92); dest.addChild(label)
 
         ship.zPosition = 5
-        let body = SKSpriteNode(texture: SK.texture(shipArt), size: CGSize(width: 192, height: 72))
+        let body = SKSpriteNode(texture: SK.texture(shipArt), size: CGSize(width: 132, height: 50))
         ship.addChild(body)
+        // Engine flame flickers behind the nozzle; scales with a quick random pulse.
+        let flame = SKShapeNode(path: { let p = CGMutablePath(); p.move(to: .zero); p.addLine(to: CGPoint(x: 34, y: 7)); p.addLine(to: CGPoint(x: 34, y: -7)); p.closeSubpath(); return p }())
+        flame.fillColor = Theme.hex(0xFFB347).sk; flame.strokeColor = .white; flame.lineWidth = 1.5
+        flame.position = CGPoint(x: 64, y: 0); flame.zPosition = -1
+        flame.run(.repeatForever(.sequence([.scaleX(to: 1.35, duration: 0.07), .scaleX(to: 0.8, duration: 0.09), .scaleX(to: 1.1, duration: 0.06)])))
+        body.addChild(flame)
         addChild(ship)
         let bob = SKAction.moveBy(x: 0, y: 5, duration: 1.1); bob.timingMode = .easeInEaseOut
         body.run(.repeatForever(.sequence([bob, bob.reversed()])))
-        ship.xScale = returning ? -1 : 1
+        // Art faces left; outbound flies right toward the destination.
+        ship.xScale = returning ? 1 : -1
         applyProgress()
     }
 
@@ -78,7 +88,7 @@ final class FlightScene: SKScene {
         // Origin recedes left and shrinks; destination rises from the right and grows.
         let (a, b) = returning ? (dest, origin) : (origin, dest)
         a.position = CGPoint(x: size.width * (0.1 - 0.5 * p), y: size.height * (0.3 - 0.05 * p)); a.setScale(1.2 - 1.0 * p)
-        b.position = CGPoint(x: size.width * (1.45 - 0.75 * p), y: size.height * (0.78 - 0.18 * p)); b.setScale(0.2 + 1.25 * p)
+        b.position = CGPoint(x: size.width * (1.12 - 0.45 * p), y: size.height * (0.78 - 0.14 * p)); b.setScale(0.3 + 1.1 * p)
     }
 
     override func didChangeSize(_ oldSize: CGSize) { if view != nil, oldSize != size, oldSize != .zero { didMove(to: view!) } }
@@ -96,7 +106,7 @@ final class FlightScene: SKScene {
         if puffTimer > 0.07 {
             puffTimer = 0
             let dir: CGFloat = returning ? 1 : -1
-            let p = CGPoint(x: ship.position.x + dir * 92, y: ship.position.y + .random(in: -4...4))
+            let p = CGPoint(x: ship.position.x + dir * 70, y: ship.position.y + .random(in: -4...4))
             SK.burst(at: p, color: [Theme.blueBright.sk, .white, Theme.teal.sk].randomElement()!, count: 1, speed: 30, in: self, z: 4)
         }
     }
