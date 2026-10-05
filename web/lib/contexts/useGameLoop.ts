@@ -365,8 +365,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const onPickTarget = useCallback((id: string) => {
     setState(s => {
-      if (s.screen !== 'targets' || !s.missionId) return s
-      return finishQuickSetup(pickTargetState(s, catalog, id), catalog)
+      // R1 keeps target changes inline on the launch review. Treat the old
+      // internal setup states as one operation so a change never reopens a
+      // separate map screen or strands the player midway through setup.
+      if (!['targets', 'rocket-buy', 'fab'].includes(s.screen) || !s.missionId) return s
+      return finishQuickSetup(pickTargetState({ ...s, screen: 'targets' }, catalog, id), catalog)
     })
   }, [catalog, setState])
 
@@ -406,18 +409,22 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const onMoveStagedRocket = useCallback((stagedRocketId: string) => {
     setState(s => {
-      if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
+      if (!['rocket-buy', 'fab'].includes(s.screen) || !s.missionId || !s.targetId) return s
       const mission = catalog.missions.find(candidate => candidate.id === s.missionId)
         ?? s.player.dailyClientPool?.missions.find(candidate => candidate.id === s.missionId)
       const target = catalog.targets.find(candidate => candidate.id === s.targetId)
       const vehicle = s.player.stagedRockets?.find(candidate => candidate.id === stagedRocketId)
       if (!mission || !target || !vehicle || !stagedRocketSupportsMission(vehicle, s, mission, target, catalog)) return s
       const reassigned = { ...vehicle, missionId: mission.id, targetId: target.id, deliveryTargetId: s.deliveryTargetId }
-      return selectStagedRocket({
+      const reassignedState = selectStagedRocket({
         ...s,
         screen: 'fab',
         player: { ...s.player, stagedRockets: (s.player.stagedRockets ?? []).map(candidate => candidate.id === vehicle.id ? reassigned : candidate) },
       }, reassigned)
+      // A reassigned compatible vehicle is ready for launch immediately.
+      // The previous extra Hangar-to-pad tap made the same contract diverge
+      // based on which order the player explored setup controls.
+      return rollOutToPad(reassignedState) ?? reassignedState
     })
   }, [catalog.missions, catalog.parts, catalog.targets, setState])
 

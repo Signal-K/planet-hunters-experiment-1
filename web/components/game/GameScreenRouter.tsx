@@ -333,7 +333,6 @@ function ScreenBody({
         <MissionSetupRoutes
           screen={screen}
           game={game}
-          deliveryTargetName={deliveryTargetName}
           rocketDisplay={rocketDisplay}
           launchPending={launchPending}
           onTransferToLaunchpad={game.onTransferToLaunchpad}

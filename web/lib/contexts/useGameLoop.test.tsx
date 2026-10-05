@@ -39,7 +39,7 @@ function LoopHarness({ initial, onReady }: { initial: GameState; onReady: (handl
 }
 
 describe('useGameLoop concurrent mission runs', () => {
-  it('reassigns a compatible staged vehicle without another purchase, then requires launchpad transfer', async () => {
+  it('reassigns a compatible staged vehicle and rolls it out without another tap', async () => {
     const stagedState: GameState = {
       ...DEFAULT_STATE,
       screen: 'missions',
@@ -66,11 +66,9 @@ describe('useGameLoop concurrent mission runs', () => {
     await act(async () => { handleRef.current?.onMoveStagedRocket('prospector-old') })
     expect(handleRef.current?.state.screen).toBe('fab')
     expect(handleRef.current?.state.player.pendingRocketId).toBe('prospector')
-    expect(handleRef.current?.state.player.pendingRocketLocation).toBe('hangar')
+    expect(handleRef.current?.state.player.pendingRocketLocation).toBe('launchpad')
     expect(handleRef.current?.state.player.francs).toBe(stagedState.player.francs)
 
-    await act(async () => { handleRef.current?.onTransferToLaunchpad() })
-    expect(handleRef.current?.state.player.pendingRocketLocation).toBe('launchpad')
     await act(async () => root.unmount())
   })
 
