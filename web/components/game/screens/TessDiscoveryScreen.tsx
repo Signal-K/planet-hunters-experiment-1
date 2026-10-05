@@ -456,8 +456,10 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
             </div>
           )}
           <div data-testid="tess-discovery-desktop-grid" style={{ flex: '1 1 0px', minHeight: 0, display: 'grid', gridTemplateColumns: '55% 45%', gridTemplateRows: 'minmax(0, 1fr)', gap: 16 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 0, overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
-              {chartPanel(false)}
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
+              {/* Auto margins centre the panel when it fits and start-align it when it
+                  overflows; justify-content:center would clip the top out of reach. */}
+              <div style={{ margin: 'auto 0' }}>{chartPanel(false)}</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: '1 1 0px', minHeight: 0, overflowY: 'auto' }}>

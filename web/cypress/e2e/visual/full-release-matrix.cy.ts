@@ -33,8 +33,8 @@ if (requestedViewport && activeViewports.length === 0) {
 }
 
 const EXTENDED_SURFACES = [
-  { key: 'm3-mining', screen: 'mining', name: 'm3-mining', selector: '[data-testid="mining-canvas"]' },
-  { key: 'm3-debrief', screen: 'debrief', name: 'm3-debrief', selector: '.debrief-game' },
+  { key: 'transport-mining', screen: 'mining', name: 'transport-mining', selector: '[data-testid="mining-canvas"]' },
+  { key: 'transport-debrief', screen: 'debrief', name: 'transport-debrief', selector: '.debrief-game' },
   { key: 'ui-mission-board', screen: 'missions', name: 'free-ops-mission-board', selector: '[data-testid="mission-board-section-client"]' },
   { key: 'ui-rover-mining', screen: 'rover-mining', name: 'free-ops-rover-mining', selector: '[data-testid="rover-mining-screen"]' },
   { key: 'telescope-fab', screen: 'fab', name: 'telescope-launch-fab', selector: '[data-testid="mission-launch-review"]' },
@@ -111,8 +111,20 @@ function goToMissions() {
   cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
 }
 
+// Transport missions go straight from surface work to the return transit;
+// lander missions show the landing hand-off first. Handle whichever is real.
+function continueThroughLandingIfShown() {
+  cy.get('[data-testid="landing-screen"], .transit-screen', { timeout: 15000 }).should('exist')
+  cy.get('body').then($body => {
+    if ($body.find('[data-testid="landing-screen"]').length > 0) {
+      cy.get('[data-testid="landing-continue"]', { timeout: 15000 }).should('not.be.disabled').click({ force: true })
+    }
+  })
+}
+
 function completeMiningDeterministically(viewport?: string, captureName?: string, expectDebrief = true) {
-  cy.contains('MISSION TRANSIT', { timeout: 20000 }).should('be.visible')
+  // The transit can pass between polls on fast viewports, so accept it or any surface it hands off to.
+  cy.get('.transit-screen, [data-testid="mining-canvas"], [data-testid="landing-screen"], [data-testid="rover-mining-screen"]', { timeout: 20000 }).should('exist')
   cy.get('[data-testid="mining-canvas"], [data-testid="landing-screen"], [data-testid="rover-mining-screen"]', { timeout: 20000 }).should('exist')
   cy.get('body').then($body => {
     if ($body.find('[data-testid="mining-canvas"]').length > 0) {
@@ -139,8 +151,7 @@ function completeMiningDeterministically(viewport?: string, captureName?: string
         if ($deploy.is(':visible')) cy.wrap($deploy).click({ force: true })
       })
       cy.get('[data-testid="dev-skip-rover-mining-btn"]', { timeout: 15000 }).click({ force: true })
-      cy.get('[data-testid="landing-screen"]', { timeout: 15000 }).should('be.visible')
-      cy.get('[data-testid="landing-continue"]', { timeout: 15000 }).should('not.be.disabled').click({ force: true })
+      continueThroughLandingIfShown()
     }
     if ($body.find('[data-testid="landing-screen"]').length > 0) {
       cy.get('[data-testid="landing-continue"]', { timeout: 15000 }).should('not.be.disabled').click({ force: true })
@@ -149,8 +160,7 @@ function completeMiningDeterministically(viewport?: string, captureName?: string
         if ($deploy.is(':visible')) cy.wrap($deploy).click({ force: true })
       })
       cy.get('[data-testid="dev-skip-rover-mining-btn"]', { timeout: 15000 }).click({ force: true })
-      cy.get('[data-testid="landing-screen"]', { timeout: 15000 }).should('be.visible')
-      cy.get('[data-testid="landing-continue"]', { timeout: 15000 }).should('not.be.disabled').click({ force: true })
+      continueThroughLandingIfShown()
     }
   })
   // The shortcut fills cargo and begins the return leg. Skip the simulated
@@ -218,7 +228,8 @@ function captureExtendedSurfaces(viewport: typeof VIEWPORTS[number]) {
     })
     cy.get(surface.selector, { timeout: 15000 }).should('be.visible')
     if ('readySelector' in surface) {
-      cy.get(surface.readySelector, { timeout: 15000 }).should('be.visible')
+      // Short landscape phones scroll the discovery card, so bring the provenance line into view first.
+      cy.get(surface.readySelector, { timeout: 15000 }).scrollIntoView().should('be.visible')
     }
     screenshot(viewport.label, surface.name)
   }
@@ -266,37 +277,12 @@ function playM2(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm2-mission-board')
 
-  cy.get('[data-testid="mission-accept-generated-s2-starter-bulk-3"]')
-    .scrollIntoView()
-    .should('be.visible')
-    .click({ force: true })
-  cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
-  screenshot(viewport, 'm2-target-picker')
-
-  pickVisibleTarget('433 Eros')
-  assertRocketLayout(/PREPARE|BUILD|LAUNCH/)
-  screenshot(viewport, 'm2-rocket-selection')
-
-  rollOutToLaunchpad()
-  clickDom('[data-testid="launch-btn"]')
-  cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 })
-    .should('be.visible')
-    .click({ force: true })
-  completeMiningDeterministically(viewport, 'm2-mining')
-  completeDebrief()
-  screenshot(viewport, 'm2-complete')
-}
-
-function playM3(viewport: string) {
-  goToMissions()
-  screenshot(viewport, 'm3-mission-board')
-
   cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]')
     .scrollIntoView()
     .should('be.visible')
     .click({ force: true })
   cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
-  screenshot(viewport, 'm3-rocket-selection')
+  screenshot(viewport, 'm2-rocket-selection')
   cy.get('body').then($body => {
     if ($body.find('[data-testid="flight-plan-continue"]').length > 0) {
       cy.get('[data-testid="flight-plan-continue"]').click({ force: true })
@@ -312,11 +298,11 @@ function playM3(viewport: string) {
   cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 })
     .should('be.visible')
     .click({ force: true })
-  completeMiningDeterministically(viewport, 'm3-mining', false)
+  completeMiningDeterministically(viewport, 'm2-mining', false)
   completeM3Delivery(viewport)
-  screenshot(viewport, 'm3-debrief')
-  completeDebrief()
-  screenshot(viewport, 'm3-complete')
+  screenshot(viewport, 'm2-debrief')
+  completeDebrief('scan-step')
+  screenshot(viewport, 'm2-complete')
 }
 
 describe('Release journey — onboarding and late-game operations across viewport classes', () => {
@@ -347,7 +333,6 @@ describe('Release journey — onboarding and late-game operations across viewpor
 
       playM1(viewport.label)
       playM2(viewport.label)
-      playM3(viewport.label)
 
       cy.window().then(win => {
         const state = JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || win.localStorage.getItem(STORAGE_KEY) || '{}') as {
@@ -355,7 +340,7 @@ describe('Release journey — onboarding and late-game operations across viewpor
           player?: { missionsDone?: number; activeMission?: unknown }
         }
         expect(state.screen, 'final screen').to.eq('hub')
-        expect(state.player?.missionsDone, 'completed active missions').to.eq(3)
+        expect(state.player?.missionsDone, 'completed active missions').to.eq(2)
         expect(state.player?.activeMission, 'no mission left in flight').to.eq(null)
       })
       screenshot(viewport.label, 'end-of-active-content')

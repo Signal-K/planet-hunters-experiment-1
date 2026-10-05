@@ -3339,6 +3339,40 @@ button.hub-orbital-network__status:disabled { cursor: default; }
      104px reserve left a visible blank band before the in-flow Home nav. */
   bottom: 76px !important;
 }
+/* Short landscape phones: the structure cards sit at the same height as the
+   plot buttons (ground line at 42%), so the card strip covered plot 1 and the
+   player could not tap it. Collapse the strip to one compact row (name + cost,
+   locked cards show the name only) so the plots stay reachable. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .build-place-screen .build-structure-strip > div {
+    padding: 0 12px !important;
+  }
+  .build-place-screen .build-structure-strip > div > div {
+    padding-bottom: 0 !important;
+  }
+  .build-place-screen .build-structure-strip button {
+    padding: 3px 10px !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+  .build-place-screen .build-structure-strip button > div {
+    align-items: center;
+  }
+  .build-place-screen .build-structure-strip button > div > div {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .build-place-screen .build-structure-strip button > div > div > div {
+    white-space: nowrap !important;
+    margin-top: 0 !important;
+  }
+  .build-place-screen .build-structure-strip button[aria-disabled="true"] [data-testid^="build-structure-card-cost-"] {
+    display: none;
+  }
+}
 .build-place-screen .build-structure-strip button {
   background: var(--ln-surface);
   border-color: var(--ln-cyan-border);
