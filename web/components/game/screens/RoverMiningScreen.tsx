@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { defaultSpec, type MissionState, type ResourceKey } from '@takeon/engine'
 import type { Mission, SurfaceTarget, Target } from '@/lib/data'
 import { lifeStageForTarget } from '@/lib/data'
@@ -137,6 +137,14 @@ export default function RoverMiningScreen({
   const [takeonReady, setTakeonReady] = useState(false)
   const [deployed, setDeployed] = useState(false)
   const [buildMode, setBuildMode] = useState(false)
+  const [narrow, setNarrow] = useState(false)
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 760px)')
+    const sync = () => setNarrow(query.matches)
+    sync()
+    query.addEventListener('change', sync)
+    return () => query.removeEventListener('change', sync)
+  }, [])
   const [fieldNotice, setFieldNotice] = useState<string | null>(null)
   const [markers, setMarkers] = useState<ExposedOreMarker[]>([])
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
@@ -259,7 +267,7 @@ export default function RoverMiningScreen({
             <div className={styles.controls} data-testid="rover-control-guide" data-route-steps={routeSteps}>
               <RoverDrivePad
                 handle={takeonHandle}
-                compact={buildMode}
+                compact={buildMode || narrow}
                 trailing={sandboxEnabled ? (
                   <button
                     type="button"

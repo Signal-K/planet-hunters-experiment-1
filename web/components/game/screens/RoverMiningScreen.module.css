@@ -47,8 +47,16 @@
   .landingHandoff::before { background: linear-gradient(180deg, transparent 10%, color-mix(in srgb, var(--ln-bp-paper) 96%, transparent) 64%); }
   .landingHandoff img { width: min(54vw, 280px); max-height: 34vh; align-self: end; }
   .landingHandoff > div { padding: 16px; }
-  .controls { top: 12px; left: 12px; width: min(208px, calc(100% - 24px)); }
-  .drillReadout { top: 12px; right: 12px; width: min(240px, calc(100% - 244px)); padding: 12px; }
+  /* Phone: scene-first. Drive pad + drill action dock above the hotbar, and the
+     readout shrinks to a one-finding strip under the status chips. */
+  .controls { top: auto; right: 8px; bottom: 68px; left: 8px; width: auto; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .controls > div { width: auto; }
+  .objectControls { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 6px 8px; }
+  .objectControls .primaryAction { min-height: 40px; }
+  .drillReadout { top: 44px; right: 8px; left: 8px; width: auto; gap: 6px; padding: 8px 10px; }
+  .drillReadout .kicker, .drillReadout p:not(.mineSiteStatus), .drillReadout li:not(:last-child) { display: none; }
+  .drillReadout li { padding: 6px 8px; }
+  .readoutHeading strong { font-size: 12px; }
   .sandboxDock { right: 12px; bottom: 64px; left: 12px; width: auto; max-height: 38%; }
   .fieldHotbar { right: 8px; bottom: 8px; left: 8px; gap: 8px; }
 }

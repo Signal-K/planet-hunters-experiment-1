@@ -11,10 +11,11 @@ type GameChromeBarsProps = {
   trainingProgress?: number
 }
 
-/** The shared bar mounts on every screen except the intro, and stays out of the
- * way while the auth gate owns the page. */
+/** The shared bar mounts on every screen except the intro and the full-screen
+ * rover field (SSL-485: scene plus hotbar only), and stays out of the way while
+ * the auth gate owns the page. */
 export function mountsSharedChrome(screen: Screen, authGateOpen: boolean): boolean {
-  return screen !== 'intro' && !authGateOpen
+  return screen !== 'intro' && screen !== 'rover-mining' && !authGateOpen
 }
 
 /**

@@ -24,7 +24,7 @@ describe('GameChromeBars', () => {
       'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining',
       'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'instrument-hub', 'mission-history', 'narrative-ledger',
     ]
-    expect(screens.filter(screen => mountsSharedChrome(screen, false))).toEqual(screens.filter(screen => screen !== 'intro'))
+    expect(screens.filter(screen => mountsSharedChrome(screen, false))).toEqual(screens.filter(screen => screen !== 'intro' && screen !== 'rover-mining'))
     expect(mountsSharedChrome('transit', true)).toBe(false)
   })
 })
