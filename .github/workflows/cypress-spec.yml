@@ -35,6 +35,11 @@ jobs:
           - { profile: responsive, spec: cypress/e2e/responsive/critical-screens-matrix.cy.ts }
           - { profile: journeys, spec: cypress/e2e/journeys/tutorial-m1.cy.ts }
           - { profile: full, spec: cypress/e2e/regression/game-state-save-race.cy.ts }
+          # TEMP (SSL-450 verify): rewritten specs that CI never ran
+          - { profile: full, spec: "cypress/e2e/features/{rocket-setup-visual,interaction-order,asteroid-discovery-mission,ui-zones}.cy.ts" }
+          - { profile: full, spec: "cypress/e2e/features/{pending-rocket-resume,tutorial-rail,orientation-guard}.cy.ts,cypress/e2e/journeys/transit-telescope-mission.cy.ts" }
+          - { profile: full, spec: "cypress/e2e/smoke/{game-loop,dev-shortcuts}.cy.ts,cypress/e2e/regression/{bug-hunt,review-tickets}.cy.ts" }
+          - { profile: full, spec: "cypress/e2e/visual/{visual-qa,discovery-economy-visual-qa,full-release-matrix}.cy.ts" }
     env:
       NEXT_PUBLIC_FEATURE_SCAN_STATION: "true"
       NEXT_PUBLIC_E2E_AUTH_AUTO_CONTINUE: "true"
