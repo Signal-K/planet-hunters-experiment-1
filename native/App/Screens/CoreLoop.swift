@@ -70,38 +70,6 @@ struct LaunchScreen: View {
     }
 }
 
-struct TransitScreen: View {
-    @Environment(GameStore.self) private var store
-    var body: some View {
-        TimelineView(.periodic(from: .now, by: 0.5)) { ctx in
-            let start = store.player.transitStartedAt ?? store.now
-            let end = store.player.arrivalAt ?? start
-            let p = end > start ? min(1, max(0, (ctx.date.timeIntervalSince1970 * 1000 - start) / (end - start))) : 1
-            ScreenFrame(title: store.player.returningToEarth ? "Returning to Earth" : "In transit") {
-                Panel { ProgressView(value: p); Text("\(Int(p * 100))%") }
-                PrimaryButton(title: "Arrive", enabled: p >= 1) { store.transitArrived() }
-            }
-        }
-    }
-}
-
-struct MiningScreen: View {
-    @Environment(GameStore.self) private var store
-    @State private var cargo: Cargo = [:]
-    var body: some View {
-        let need = store.mission?.requires.minerals ?? [:]
-        ScreenFrame(title: "Mining at \(store.target?.name ?? "target")") {
-            Panel {
-                ForEach(need.keys.sorted(), id: \.self) { id in
-                    Text("\(id): \(cargo[id, default: 0]) / \(need[id] ?? 0)")
-                    Button("Mine \(id)") { cargo[id, default: 0] += 1 }
-                }
-            }
-            PrimaryButton(title: "Return to Earth", enabled: !cargo.isEmpty) { store.miningDone(cargo) }
-        }
-    }
-}
-
 struct DeliveryScreen: View {
     @Environment(GameStore.self) private var store
     var body: some View {
