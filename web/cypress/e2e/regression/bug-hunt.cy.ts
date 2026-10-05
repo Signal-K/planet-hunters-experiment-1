@@ -1,4 +1,4 @@
-import { assertOnHome } from '../../support/home-helpers'
+import { assertOnHome, readyLaunch } from '../../support/home-helpers'
 /**
  * Bug-hunt: edge cases and break scenarios from manual-play simulation.
  * Each test targets a realistic failure mode that basic smoke tests miss.
@@ -10,7 +10,7 @@ import { seedFixtureSession } from '../../support/authenticated-fixture'
 const STORAGE_KEY = 'landnam-game-state-v1'
 // A signed-in player's save lives in the account slot (seedFixtureSession's user).
 const ACCOUNT_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-fixture-user`
-const CONTRACT_STEP = '[data-testid="mission-setup-scaffold"][data-step="1"]'
+const CONTRACT_STEP = '[data-testid="mission-board-section-client"]'
 const HUB_TITLE = /^(Base|Earth Base)$/
 
 /** A signed-in reload always lands on Earth Base (initial-route.ts); open
@@ -115,7 +115,8 @@ describe('Bug hunt — edge cases', () => {
     teardownVehicle()
     // Nothing is paid for an incomplete order, but the player can still leave.
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible').click()
-    assertOnHome(8000)
+    // After a debrief the player lands on Earth Base or the transit inspector (/game/galaxy).
+    cy.location('pathname', { timeout: 8000 }).should('match', /\/game\/(hub|galaxy)$/)
   })
 
   // ─── 2. Loan system: player in debt clears it from debrief payout ────────────
@@ -139,7 +140,8 @@ describe('Bug hunt — edge cases', () => {
     })
     teardownVehicle()
     cy.get('[data-testid="collect-reward-btn"]').click()
-    assertOnHome(8000)
+    // After a debrief the player lands on Earth Base or the transit inspector (/game/galaxy).
+    cy.location('pathname', { timeout: 8000 }).should('match', /\/game\/(hub|galaxy)$/)
     // Should not crash and state should not have negative francs
     cy.window().then(win => {
       const state = JSON.parse(win.localStorage.getItem(ACCOUNT_STORAGE_KEY) || '{}') as GameState
@@ -159,7 +161,7 @@ describe('Bug hunt — edge cases', () => {
       }) }),
     })
     cy.get('[data-testid="flight-plan"]', { timeout: 8000 }).should('be.visible')
-    cy.get('[data-testid="launch-btn"]').should('be.visible').and('not.be.disabled')
+    readyLaunch()
   })
 
   // ─── 4. Back navigation from targets → missions without state corruption ──────

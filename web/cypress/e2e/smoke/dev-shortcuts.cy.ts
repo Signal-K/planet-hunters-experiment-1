@@ -85,7 +85,8 @@ describe('Dev preset URL param (?preset=)', () => {
 
 describe('DEV panel UI', () => {
   beforeEach(() => {
-    cy.visit('/game')
+    // The auth gate hides the DEV panel, so sign in with a fixture session first.
+    cy.visit('/game', { onBeforeLoad: win => seedFixtureSession(win) })
   })
 
   it('renders the DEV toggle button', () => {

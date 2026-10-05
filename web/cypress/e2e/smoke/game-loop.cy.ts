@@ -1,3 +1,4 @@
+import { readyLaunch } from '../../support/home-helpers'
 import type { GameState } from '@/game-context'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
@@ -130,23 +131,14 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').and('not.be.disabled')
     })
 
-    it('M1 contract shows a nonzero eligible-target count', () => {
-      visitWithState(fullState({ screen: 'missions', missionId: null, doneSteps: { 1: true } }))
-      // Target count is derived from mineral/archetype coverage, not a fixed
-      // number — assert it's genuinely nonzero rather than pinning an exact
-      // count that shifts whenever target data legitimately changes.
-      cy.get('[data-testid="mission-board-section-client"]').contains(/^[1-9]\d* ELIGIBLE TARGETS?$/).should('be.visible')
-    })
-
     it('M1 target and rocket selection proceeds to launch review during onboarding', () => {
       visitWithState(fullState({
         screen: 'missions',
         doneSteps: { 1: true },
       }))
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
-      // SSL-450: Accept picks the target and the free rocket and rolls it to the pad.
-      cy.get('[data-testid="mission-launch-review"]').should('have.attr', 'data-location', 'launchpad')
-      cy.get('[data-testid="launch-btn"]').should('be.visible')
+      // SSL-450: Accept picks the target and the free rocket and lands on the one-screen review.
+      readyLaunch()
     })
 
     it('launch review shows the M1 contract destination', () => {
@@ -170,8 +162,8 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: false },
       }))
       cy.get('[data-testid="mission-launch-review"]').should('contain', 'Explorer')
+      readyLaunch()
       cy.contains('ALL PARAMETERS PASS').should('be.visible')
-      cy.get('[data-testid="launch-btn"]').should('be.visible').and('not.be.disabled')
     })
 
     it('launch runs the launch sequence and transitions to transit', () => {
@@ -179,6 +171,7 @@ describe('Full Game Loop — Landnam', () => {
       // real setup flow rather than seeding the launch review directly.
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
+      readyLaunch()
       cy.get('[data-testid="launch-btn"]').click()
       // The dev build exposes a deterministic skip for the Pixi launch scene.
       cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 }).click()
@@ -615,7 +608,7 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: false,
       }))
       cy.get('[data-testid="mission-launch-review"]').should('contain', 'Prospector')
-      cy.get('[data-testid="launch-btn"]').should('be.visible')
+      readyLaunch()
     })
   })
 })

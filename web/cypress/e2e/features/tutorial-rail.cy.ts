@@ -1,4 +1,4 @@
-import { assertOnHome } from '../../support/home-helpers'
+import { assertOnHome, readyLaunch } from '../../support/home-helpers'
 import type { GameState } from '@/game-context'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
@@ -185,7 +185,7 @@ describe('Tutorial rail regression', () => {
         }))
 
         cy.get('[data-testid="flight-plan"]').should('contain', 'Open client contracts')
-        cy.get('[data-testid="launch-btn"]').should('be.visible')
+        readyLaunch()
         assertGameplayButtonsAvoidCoachBlock()
       })
 
