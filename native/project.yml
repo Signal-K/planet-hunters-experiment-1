@@ -1,6 +1,6 @@
 name: Landnam
 options:
-  bundleIdPrefix: tech.skinetics
+  bundleIdPrefix: com.atlasskyventures
   deploymentTarget: { macOS: "14.0", iOS: "17.0" }
 packages:
   LandnamCore: { path: LandnamCore }
@@ -19,7 +19,7 @@ targets:
       base:
         SWIFT_VERSION: 6.0
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: tech.skinetics.landnam
+        PRODUCT_BUNDLE_IDENTIFIER: com.atlasskyventures.sslandnam
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         CODE_SIGN_ENTITLEMENTS: App/Landnam.entitlements
   LandnamTests:
@@ -31,7 +31,7 @@ targets:
       base:
         SWIFT_VERSION: 6.0
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: tech.skinetics.landnam.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.atlasskyventures.sslandnam.tests
 schemes:
   Landnam:
     build: { targets: { Landnam: all, LandnamTests: [test] } }

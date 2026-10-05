@@ -2,12 +2,12 @@ import Foundation
 
 /// Game Center ids. Must match App Store Connect (see SSL-488 handoff).
 public enum GameCenterID {
-    public static let leaderboardMissions = "tech.skinetics.landnam.lb.missions"
-    public static let leaderboardFrancs = "tech.skinetics.landnam.lb.francs"
-    public static let firstLaunch = "tech.skinetics.landnam.ach.first_launch"
-    public static let tenMissions = "tech.skinetics.landnam.ach.ten_missions"
-    public static let fiftyMissions = "tech.skinetics.landnam.ach.fifty_missions"
-    public static let thousandFrancs = "tech.skinetics.landnam.ach.thousand_francs"
+    public static let leaderboardMissions = "com.atlasskyventures.sslandnam.lb.missions"
+    public static let leaderboardFrancs = "com.atlasskyventures.sslandnam.lb.francs"
+    public static let firstLaunch = "com.atlasskyventures.sslandnam.ach.first_launch"
+    public static let tenMissions = "com.atlasskyventures.sslandnam.ach.ten_missions"
+    public static let fiftyMissions = "com.atlasskyventures.sslandnam.ach.fifty_missions"
+    public static let thousandFrancs = "com.atlasskyventures.sslandnam.ach.thousand_francs"
 }
 
 /// Pure progress rules: achievement percent complete (0...100) for a player.

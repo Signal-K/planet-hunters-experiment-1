@@ -83,7 +83,7 @@ public final class InMemorySessionStore: SessionStore, @unchecked Sendable {
 /// Keychain-backed storage; the token never touches the save file.
 public struct KeychainSessionStore: SessionStore {
     private let service: String
-    public init(service: String = "tech.skinetics.landnam.session") { self.service = service }
+    public init(service: String = "com.atlasskyventures.sslandnam.session") { self.service = service }
 
     private var query: [String: Any] {
         [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: "session"]

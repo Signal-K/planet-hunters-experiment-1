@@ -44,7 +44,7 @@ func sign(t *testing.T, key *rsa.PrivateKey, claims jwt.MapClaims) string {
 }
 
 func claims(extra jwt.MapClaims) jwt.MapClaims {
-	c := jwt.MapClaims{"iss": "https://appleid.apple.com", "aud": "tech.skinetics.landnam", "sub": "001.abc", "exp": time.Now().Add(time.Hour).Unix(), "email": "a@b.co", "email_verified": "true", "nonce": "n1"}
+	c := jwt.MapClaims{"iss": "https://appleid.apple.com", "aud": "com.atlasskyventures.sslandnam", "sub": "001.abc", "exp": time.Now().Add(time.Hour).Unix(), "email": "a@b.co", "email_verified": "true", "nonce": "n1"}
 	for k, v := range extra {
 		c[k] = v
 	}
@@ -52,7 +52,7 @@ func claims(extra jwt.MapClaims) jwt.MapClaims {
 }
 
 func TestOIDCAcceptsValidToken(t *testing.T) {
-	v, key := testVerifier(t, "tech.skinetics.landnam")
+	v, key := testVerifier(t, "com.atlasskyventures.sslandnam")
 	id, err := v.Verify(context.Background(), sign(t, key, claims(nil)), "n1")
 	if err != nil || id.Subject != "001.abc" || !id.EmailVerified || id.Email != "a@b.co" {
 		t.Fatalf("got %+v, %v", id, err)
@@ -60,7 +60,7 @@ func TestOIDCAcceptsValidToken(t *testing.T) {
 }
 
 func TestOIDCRejects(t *testing.T) {
-	v, key := testVerifier(t, "tech.skinetics.landnam")
+	v, key := testVerifier(t, "com.atlasskyventures.sslandnam")
 	other, _ := rsa.GenerateKey(rand.Reader, 2048)
 	cases := map[string]string{
 		"expired":     sign(t, key, claims(jwt.MapClaims{"exp": time.Now().Add(-time.Hour).Unix()})),

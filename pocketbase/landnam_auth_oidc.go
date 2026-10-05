@@ -24,10 +24,10 @@ import (
 // token, exactly like /api/landnam-auth/exchange does for the web session.
 // There is no guest path: a verified provider identity is required.
 //
-// Env: APPLE_BUNDLE_IDS (comma list, default tech.skinetics.landnam),
+// Env: APPLE_BUNDLE_IDS (comma list, default com.atlasskyventures.sslandnam),
 // CLERK_ISSUER (e.g. https://clerk.example.com; unset disables the Clerk route).
 func registerLandnamOIDCAuth(app core.App) {
-	bundleIDs := []string{"tech.skinetics.landnam"}
+	bundleIDs := []string{"com.atlasskyventures.sslandnam"}
 	if env := strings.TrimSpace(os.Getenv("APPLE_BUNDLE_IDS")); env != "" {
 		bundleIDs = strings.Split(env, ",")
 	}
