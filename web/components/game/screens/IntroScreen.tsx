@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { PRODUCT_OPERATIONS_LABEL, PRODUCT_WORDMARK } from '@/lib/brand'
 import { formatCurrency } from '@/lib/format'
 
@@ -20,16 +19,7 @@ export default function IntroScreen({
   awaitingRemoteState = false,
 }: IntroScreenProps) {
   return (
-    <div className="game-screen intro-screen">
-      <Image
-        src="/earth-dusk.webp"
-        alt="Earth from orbit"
-        fill
-        className="intro-earth"
-        priority
-        style={{ objectFit: 'cover' }}
-      />
-      <div className="intro-overlay" />
+    <div className="game-screen intro-screen theme-blueprint">
 
       {awaitingRemoteState ? (
         <div className="intro-content">
