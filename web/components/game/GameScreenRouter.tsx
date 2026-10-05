@@ -316,6 +316,7 @@ function ScreenBody({
     case 'asteroid-discovery':
       return (
         <AsteroidDiscoveryScreen
+          onReplayTraining={currentTrainingTry(game.player.flightPlan) === 'scan' ? () => game.replayTrainingTry('scan') : undefined}
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'deep-space' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}

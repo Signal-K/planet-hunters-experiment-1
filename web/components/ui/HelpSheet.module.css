@@ -1,0 +1,131 @@
+/* SSL-432: bottom sheet on phones, right-hand panel on desktop. Light
+   blueprint surfaces only. Every text size is 14px or larger and every
+   control is at least 44px tall. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(15, 36, 54, 0.32);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet {
+  width: 100%;
+  max-height: min(82dvh, 640px);
+  display: flex;
+  flex-direction: column;
+  background: var(--ln-blueprint-paper, #fff);
+  color: var(--ln-text);
+  border: 2px solid var(--ln-cyan-border);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -8px 0 var(--ln-blueprint-blue, #1f78c1);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ln-cyan-border);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--ln-font-display);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.close,
+.action {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  cursor: pointer;
+  border-radius: var(--ln-r-md);
+  border: 2px solid var(--ln-cyan-border);
+  background: var(--ln-panel);
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.primary {
+  background: var(--ln-cyan-soft);
+  color: var(--ln-cyan-bright);
+}
+
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.card {
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-panel);
+  padding: 12px;
+}
+
+.card h3 {
+  margin: 0 0 4px;
+  font-family: var(--ln-font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ln-text);
+}
+
+.card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 8px;
+  border-radius: var(--ln-r-md);
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--ln-cyan-border);
+}
+
+.note {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ln-text-muted);
+}
+
+@media (min-width: 1024px) {
+  .scrim { align-items: stretch; justify-content: flex-end; }
+  .sheet {
+    width: 420px;
+    max-height: none;
+    height: 100%;
+    border: 0;
+    border-left: 2px solid var(--ln-cyan-border);
+    border-radius: 0;
+    box-shadow: -8px 0 0 var(--ln-blueprint-blue, #1f78c1);
+  }
+}

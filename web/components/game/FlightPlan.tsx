@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { TutorialStep, TrainingTryStep } from '@/lib/data'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { useHelpOpen } from '@/lib/help/open-state'
 
 interface FlightPlanProps {
   stepIndex: number
@@ -25,6 +26,8 @@ interface FlightPlanProps {
  */
 export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: persistedHidden, onHiddenChange, hint }: FlightPlanProps) {
   const isDesktop = useIsDesktop()
+  // SSL-432: the beacon outline pauses while help is on screen.
+  const helpOpen = useHelpOpen()
   const [expanded, setExpanded] = useState(false)
   const [hidden, setHidden] = useState(false)
   const stripRef = useRef<HTMLElement>(null)
@@ -41,11 +44,11 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
   useEffect(() => { setExpanded(false) }, [step.id, step.screen])
 
   useEffect(() => {
-    if (hidden || !targetId) return
+    if (hidden || !targetId || helpOpen) return
     const html = document.documentElement
     html.setAttribute('data-flight-target', targetId.split('|').join(' '))
     return () => { html.removeAttribute('data-flight-target') }
-  }, [hidden, targetId])
+  }, [hidden, targetId, helpOpen])
 
   // Publish the strip's height so bottom-anchored status pills (the sync note)
   // sit above it instead of on top of its text.

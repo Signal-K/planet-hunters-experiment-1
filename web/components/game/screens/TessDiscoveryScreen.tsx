@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Radio, Satellite } from 'lucide-react'
 import TopBar from '@/components/ui/TopBar'
+import { useHelp } from '@/components/ui/useHelp'
 import StatCard from '@/components/ui/StatCard'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
@@ -34,6 +35,8 @@ interface TessDiscoveryScreenProps {
   onOpenProgram: () => void
   onSubmit: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   onChooseTarget: (subjectId: string) => void
+  /** Set while a training try is active, so the help sheet can point at Menu > Training. */
+  onReplayTraining?: () => void
 }
 
 // Direct-action verdict buttons (tap = submit immediately), matching the
@@ -47,7 +50,9 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
   { id: 'unsure', label: 'Skip', requiresMark: false, kind: 'ghost' },
 ]
 
-export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onBuildStation, onOpenProgram, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
+export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onBuildStation, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining }: TessDiscoveryScreenProps) {
+  // SSL-432: shared "?" help. Nothing opens unprompted.
+  const help = useHelp('galaxy', { onReplayTraining })
   // Stabilize the fallback — see the identical comment on
   // AsteroidDiscoveryScreen's classifications memo (STS-622 review found
   // this pattern first here; a fresh `{}` every render when the field is
@@ -340,11 +345,11 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
                 />
               )
             ) : (
-              <div className={visualCandidate ? 'tess-training-dip-band' : undefined}>
+              <div className={visualCandidate ? 'tess-training-dip-band' : undefined} data-coach-target="tess-chart">
                 <ObservatoryChart
                   points={sectorPoints}
                   ranges={activeRanges}
-                  onRange={(x1, x2) => setRanges(prev => [...prev, { x1, x2 }])}
+                  onRange={(x1, x2) => { setRanges(prev => [...prev, { x1, x2 }]); help.reportAction('mark') }}
                   onRemoveRange={index => setRanges(prev => prev.filter((_, current) => current !== index))}
                   locked={false}
                   height={280}
@@ -394,7 +399,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       </div>
     ) : (
       <>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+        <div data-coach-target="tess-verdicts" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
           {VERDICT_ACTIONS.map(action => (
             <VerdictButton
               key={action.id}
@@ -435,7 +440,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
 
   return (
     <div className="game-screen theme-deep ln-scene-tess-discovery" data-testid="tess-discovery-screen">
-      <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.toi} onBack={onBack} />
+      <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.toi} onBack={onBack} right={help.button} />
+      {help.layer}
       {isDesktop || isCompactLandscape ? (
         /* SSL-300: the DEV day-skip bar used to be absolutely positioned over
            the grid, so its height was never subtracted from the space the

@@ -32,6 +32,7 @@ import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
+import { useHelpOpen } from '@/lib/help/open-state'
 import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 
 function GameChrome({ children }: { children: ReactNode }) {
@@ -136,12 +137,16 @@ function GameChrome({ children }: { children: ReactNode }) {
   const coachIndex = activeTry ? ['mining', 'scan', 'part'].indexOf(activeTry) : -1
   const onboardingActive = !!coach
 
+  // SSL-432: the 8s hint waits while a help sheet or "Show me" run is open and
+  // restarts its clock when help closes.
+  const helpOpen = useHelpOpen()
   useEffect(() => {
     if (!coach) return
     game.startFlightPlan()
+    if (helpOpen) return
     const timer = window.setTimeout(() => game.showFlightPlanHint(), 8_000)
     return () => window.clearTimeout(timer)
-  }, [coach?.id, currentScreen])
+  }, [coach?.id, currentScreen, helpOpen])
 
   // SSL-342: per-step training analytics for the live shell (mirrors GameApp).
   // Fires only when the active step itself changes.
