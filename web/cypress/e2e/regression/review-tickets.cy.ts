@@ -255,7 +255,7 @@ describe('Mining pause/resume (STS-488)', () => {
 
     cy.contains('Mining Run', { timeout: 10000 }).should('be.visible')
     cy.contains('2/').should('be.visible')
-    cy.get('[data-testid="rover-field-hotbar"] button').click()
+    cy.get('[data-testid="top-bar-back"]').click()
 
     savedState().then(paused => {
       expect(paused.screen).to.eq('hub')
@@ -285,7 +285,7 @@ describe('Rover pause/resume (KES-205)', () => {
     cy.get('[data-testid="rover-mining-screen"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 10000 }).click()
     cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="top-bar-back"]').click()
+    cy.get('[data-testid="rover-field-hotbar"] button').click()
 
     savedState().then(paused => {
       expect(paused.screen).to.eq('hub')

@@ -355,7 +355,8 @@ export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameStat
  * must never turn a rejected build into an unexplained no-op.
  */
 export function rocketPurchaseRefusal(s: GameState, rocket: RocketModel): string | null {
-  if (s.screen !== 'rocket-buy') return 'Return to the rocket blueprint before building.'
+  // SSL-450: the launch review (screen 'fab') is where a vehicle is prepared.
+  if (s.screen !== 'rocket-buy' && s.screen !== 'fab') return 'Return to the launch review before building.'
   if (!s.missionId || !s.targetId) return 'Choose a contract destination before building a rocket.'
   if (s.player.francs < rocket.costFrancs) {
     return `Need ${rocket.costFrancs - s.player.francs} more francs to build this rocket.`

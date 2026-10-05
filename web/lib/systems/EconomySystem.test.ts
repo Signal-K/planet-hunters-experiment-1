@@ -65,9 +65,15 @@ describe('applyPurchaseRocket', () => {
     expect(applyPurchaseRocket(state, rocket).screen).toBe('fab')
   })
 
+  it('accepts a build from the launch review (SSL-450 screen fab)', () => {
+    const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
+    const state = { ...makeState({ francs: rocket.costFrancs }), screen: 'fab' as const, missionId: 'm1', targetId: 'mars' }
+    expect(rocketPurchaseRefusal(state, rocket)).toBeNull()
+  })
+
   it('explains each authoritative purchase refusal', () => {
     const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
-    expect(rocketPurchaseRefusal(makeState({ francs: 0 }), rocket)).toBe('Return to the rocket blueprint before building.')
+    expect(rocketPurchaseRefusal(makeState({ francs: 0 }), rocket)).toBe('Return to the launch review before building.')
   })
 
   it('persists each built vehicle separately so a second preparation has its own charge', () => {

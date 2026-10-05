@@ -101,16 +101,17 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     visitWithState('/game/missions', 'missions', {
       transitSatelliteLaunchedAt: undefined,
     })
-    // The current client board is the Contract stage of the continuous
-    // mission-setup scene, not the retired standalone Mission Dispatch view.
-    cy.get('[data-testid="mission-setup-scaffold"]', { timeout: 10000 }).should('have.attr', 'data-step', '1')
-    cy.contains('h1', 'Contract').should('be.visible')
+    // The client board is the contract gallery of the mission-setup scene
+    // (SSL-450 removed the stepped scaffold).
+    cy.get('[data-testid="mission-setup-scaffold"]', { timeout: 10000 }).should('exist')
+    cy.get('[data-testid="mission-board-section-client"]').should('be.visible')
+    cy.contains('h1', 'Choose a contract').should('be.visible')
     // The board is a one-contract carousel: walk every contract.
-    cy.contains(/^CONTRACT 1 \/ \d+$/).invoke('text').then(text => {
+    cy.contains(/^CLIENT CONTRACT 1 \/ \d+$/).invoke('text').then(text => {
       const total = Number(text.split('/')[1])
       for (let i = 0; i < total; i++) {
         cy.get('[data-testid="mission-accept-story-transit-telescope-launch"]').should('not.exist')
-        cy.contains(`CONTRACT ${i + 1} / ${total}`).should('exist')
+        cy.contains(`CLIENT CONTRACT ${i + 1} / ${total}`).should('exist')
         if (i < total - 1) cy.get('button[aria-label="Next contract"]').click()
       }
     })
