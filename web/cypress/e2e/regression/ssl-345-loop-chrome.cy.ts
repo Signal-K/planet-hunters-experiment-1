@@ -71,7 +71,12 @@ describe('SSL-345 one chrome across the loop screens', () => {
         cy.get('.debrief-hud-header').should('not.exist')
         cy.get('[data-testid="resolve-cargo-btn"]').scrollIntoView().then($btn => {
           cy.get('[data-testid="home-bottom-bar"]').then($bar => {
-            expect($btn[0].getBoundingClientRect().bottom).to.be.at.most($bar[0].getBoundingClientRect().top + 1)
+            // The bar is a bottom row in portrait and a side rail on compact
+            // landscape, so the control must clear it on one axis or the other.
+            const b = $btn[0].getBoundingClientRect()
+            const r = $bar[0].getBoundingClientRect()
+            const overlaps = b.left < r.right - 1 && b.right > r.left + 1 && b.top < r.bottom - 1 && b.bottom > r.top + 1
+            expect(overlaps, 'primary control overlaps the shared bar').to.eq(false)
           })
         })
       })

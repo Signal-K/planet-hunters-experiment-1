@@ -122,10 +122,7 @@ describe('Base trays and shared bar', () => {
         cy.get('[data-testid="mission-history-tray"]').should('not.exist')
       })
 
-      // SSL-372 product gap: at 1440 the Base is 1316px wide with Mission Log
-      // open versus 1440 without it (390 is unchanged), so the tray re-frames
-      // the landscape instead of sitting over a still Base. Left failing on
-      // purpose until the product gap is fixed.
+      // Mission Log is a tray over a still Base: the Base keeps its size.
       it('keeps the Base the same size while Mission Log is open', () => {
         visitTray('/game/hub')
         cy.get('[data-testid="hub-mission-log-btn"]').should('be.visible')
@@ -143,10 +140,7 @@ describe('Base trays and shared bar', () => {
         })
       })
 
-      // SSL-372 product gap: Market and Subsurface keep their URL on a cold
-      // load (TRAY_ROUTE_SCREENS in lib/game-route.ts) but Mission Log does
-      // not, so a reload of /game/mission-history lands on the Base. Left
-      // failing on purpose until the product gap is fixed.
+      // Mission Log keeps its URL on a cold load, like Market and Subsurface.
       it('keeps the Mission Log URL on a cold load', () => {
         visitTray('/game/mission-history')
         cy.location('pathname').should('eq', '/game/mission-history')

@@ -117,6 +117,9 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'galaxy',
   'asteroid-discovery',
   'instrument-hub',
+  // Mission Log is a tray over the still-mounted Base (SSL-347), so the Base
+  // must keep its full-viewport frame while the tray is open.
+  'mission-history',
 ])
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'

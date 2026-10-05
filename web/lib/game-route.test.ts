@@ -31,6 +31,7 @@ describe('trayScreenFromPath', () => {
     const { trayScreenFromPath } = await import('./game-route')
     expect(trayScreenFromPath('/game/market')).toBe('market')
     expect(trayScreenFromPath('/game/hub-subsurface/')).toBe('hub-subsurface')
+    expect(trayScreenFromPath('/game/mission-history')).toBe('mission-history')
     expect(trayScreenFromPath('/game/missions')).toBeNull()
     expect(trayScreenFromPath('/game/hub')).toBeNull()
   })
