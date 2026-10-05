@@ -187,7 +187,7 @@ function completeM3Delivery(viewport: string) {
   cy.get('.debrief-game', { timeout: 15000 }).should('be.visible')
 }
 
-function completeDebrief() {
+function completeDebrief(destination: 'home' | 'scan-step' = 'home') {
   // Debrief is an explicit player recovery step before rewards can be
   // collected. This keeps the visual journey aligned with the live cargo
   // teardown rather than assuming the retired auto-resolve behavior.
@@ -199,6 +199,12 @@ function completeDebrief() {
     .click({ force: true })
   cy.contains('Ledger').scrollIntoView().should('be.visible')
   clickDom('[data-testid="collect-reward-btn"]')
+  if (destination === 'scan-step') {
+    // SSL-408: after the first mining debrief the scan try is next, so the
+    // player lands on the Flight Plan scan step rather than Base.
+    cy.location('pathname', { timeout: 10000 }).should('include', '/game/galaxy')
+    cy.visit('/game/hub')
+  }
   assertOnHome(10000)
 }
 
@@ -252,7 +258,7 @@ function playM1(viewport: string) {
     .should('be.visible')
     .click({ force: true })
   completeMiningDeterministically(viewport, 'm1-mining')
-  completeDebrief()
+  completeDebrief('scan-step')
   screenshot(viewport, 'm1-complete')
 }
 

@@ -218,12 +218,12 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).should('be.visible').click()
     cy.get('[data-testid="collect-reward-btn"]', { timeout: 10000 }).should('be.visible').click()
 
-    // Flight Plan records the mining try after M1, then returns the player to
-    // Base. The retired Transport coach must not be asserted here: scan and
-    // part tries appear only at their own relevant loop steps.
-    cy.get('h1', { timeout: 10000 }).invoke('text').should('match', /^(Base|Earth Base)$/)
-    cy.get('[data-testid="hub-terrain-fallback"]').should('exist')
-    cy.screenshot('12-hub-post-mission')
+    // Flight Plan records the mining try after M1 and, because the scan try is
+    // next (SSL-408), onDebriefDone sends the player to the scan step rather
+    // than Base. Base itself is covered by the hub screen test below.
+    cy.location('pathname', { timeout: 10000 }).should('include', '/game/galaxy')
+    cy.contains(/FLIGHT PLAN\s*·\s*SCAN/i).should('be.visible')
+    cy.screenshot('12-scan-step-post-mission')
 
     // Final state assertion
     cy.window().then(win => {

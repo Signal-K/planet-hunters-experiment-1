@@ -1,5 +1,5 @@
 import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
-import { TESS_SETTLED_LABELS, recordHasOpenConsensus } from '@/lib/citizen-science/open-anomaly'
+import { TESS_SETTLED_LABELS, recordHasOpenConsensus } from '../citizen-science/open-anomaly'
 import { mineralsForArchetype, type TargetArchetype } from './target-archetypes'
 
 export type TessVerdict = 'planet' | 'not_planet' | 'unsure'
