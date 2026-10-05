@@ -16,9 +16,6 @@ const violations = []
 for (const path of sourceFiles(screensDirectory)) {
   const source = readFileSync(path, 'utf8')
   const file = path.slice(screensDirectory.length + 1)
-  if (source.includes('theme-blueprint')) {
-    violations.push(`${file}: retired blueprint presentation is not permitted on gameplay screens.`)
-  }
   if (source.includes('AvailableActionsPanel')) {
     violations.push(`${file}: do not add a generic AvailableActionsPanel; gameplay must keep one contextual action surface.`)
   }

@@ -31,7 +31,7 @@ export default function HelpSheet({ topic, onClose, onShowMe, onReplayTraining }
 
   return (
     <div className={styles.scrim} data-testid="help-scrim" onClick={event => { if (event.target === event.currentTarget) onClose() }}>
-      <section className={styles.sheet} role="dialog" aria-modal="true" aria-label={topic.title} data-testid="help-sheet">
+      <section className={styles.sheet} role="complementary" aria-label={topic.title} data-testid="help-sheet">
         <header className={styles.head}>
           <h2 className={styles.title}>{topic.title}</h2>
           <button ref={closeRef} type="button" className={styles.close} data-testid="help-close" onClick={onClose}>Close</button>

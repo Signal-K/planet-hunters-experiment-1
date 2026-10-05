@@ -2414,7 +2414,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 .mining-overflow { position: relative; display: flex; min-width: 0; }
 .mining-overflow__btn { appearance: none; width: 44px; min-height: 44px; align-self: center; padding: 0; border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-md); background: rgba(18, 34, 54, 0.72); color: var(--ln-cyan); font: 800 22px/1 var(--ln-font-display); cursor: pointer; }
 .mining-overflow__menu { position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 5; display: flex; flex-direction: column; gap: 12px; width: min(260px, 72vw); padding: 12px; border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-md); background: rgba(6, 14, 26, 0.97); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
-.mining-overflow__scrub { appearance: none; min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln-crit); border-radius: var(--ln-r-md); background: transparent; color: var(--ln-crit); font: 800 12px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
+.mining-overflow__scrub { appearance: none; min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln-crit); border-radius: var(--ln-r-md); background: transparent; color: var(--ln-crit); font: 800 14px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
 @media (orientation: landscape) and (max-height: 520px) {
   .mining-action-row { gap: 12px; }
   .theme-deep.mining-screen .mining-command { min-height: 52px; padding: 6px 10px; }
