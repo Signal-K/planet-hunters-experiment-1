@@ -6,6 +6,7 @@ import { calibrateOnboardingPayout, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMissio
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
+import TopBar from '@/components/ui/TopBar'
 import StatusPill from '@/components/ui/StatusPill'
 import MineralChip from '@/components/game/MineralChip'
 import CostSummaryRow from '@/components/game/CostSummaryRow'
@@ -113,13 +114,12 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       <DebriefCanvas rocketImageSrc={rocketDisplay.img} />
       <div className="debrief-game__world-shade" aria-hidden="true" />
 
-      <header className="debrief-hud-header" data-ui-zone={UI_ZONES.topChrome}>
-        <div>
-          <span>MISSION COMPLETE</span>
-          <h1>{isOrbitalInstrumentDeployment ? 'DEPLOYMENT' : 'DEBRIEF'}</h1>
-        </div>
-        <span className="debrief-hud-header__location">{isOrbitalInstrumentDeployment ? 'EARTH ORBIT · INSTRUMENT ONLINE' : 'EARTH RECEIVING BERTH · 01'}</span>
-      </header>
+      <TopBar
+        scene
+        eyebrow="MISSION COMPLETE"
+        title={isOrbitalInstrumentDeployment ? 'DEPLOYMENT' : 'DEBRIEF'}
+        right={<span className="debrief-hud-header__location">{isOrbitalInstrumentDeployment ? 'EARTH ORBIT · INSTRUMENT ONLINE' : 'EARTH RECEIVING BERTH · 01'}</span>}
+      />
 
       <div className={`debrief-game__content screen-scroll`} data-ui-zone={UI_ZONES.screenContent}>
         <section className="debrief-mission-strip" aria-label="Mission result">

@@ -2534,35 +2534,6 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
     linear-gradient(180deg, rgba(2, 7, 17, .58) 0%, rgba(2, 7, 17, .06) 27%, rgba(2, 7, 17, .06) 58%, rgba(2, 7, 17, .46) 100%),
     radial-gradient(ellipse at 50% 72%, transparent 0%, rgba(2, 7, 17, .24) 72%, rgba(2, 7, 17, .56) 100%);
 }
-.debrief-hud-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 18px 18px 18px 76px;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(2, 7, 17, .8), rgba(2, 7, 17, 0));
-}
-.debrief-hud-header span:first-child {
-  display: block;
-  color: var(--ln-cyan);
-  font: 800 10px var(--ln-font-display);
-  letter-spacing: .2em;
-  text-transform: uppercase;
-}
-.debrief-hud-header h1 {
-  margin-top: 3px;
-  color: var(--ln-text);
-  font: 800 28px/1 var(--ln-font-display);
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  text-shadow: 0 3px 12px rgba(0, 0, 0, .6);
-}
 .debrief-hud-header__location {
   margin-top: 6px;
   color: var(--ln-text-muted);
@@ -2704,11 +2675,6 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 }
 
 @media (max-width: 620px) {
-  .debrief-hud-header {
-    gap: 12px;
-    padding-left: 68px;
-  }
-  .debrief-hud-header h1 { font-size: 22px; }
   .debrief-hud-header__location {
     max-width: 124px;
     font-size: 8px;

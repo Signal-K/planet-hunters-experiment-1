@@ -76,7 +76,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
       background: scene
         ? 'color-mix(in srgb, var(--ln-blueprint-paper) 90%, var(--ln-cyan))'
         : glass
-        ? 'linear-gradient(180deg, rgba(6,14,26,0.58) 0%, rgba(6,14,26,0.28) 72%, transparent 100%)'
+        ? 'linear-gradient(180deg, color-mix(in srgb, var(--ln-blueprint-paper) 86%, transparent) 0%, color-mix(in srgb, var(--ln-blueprint-paper) 60%, transparent) 72%, transparent 100%)'
         : solid
           ? 'var(--ln-shell)'
           : 'linear-gradient(180deg, var(--ln-shell) 0%, color-mix(in srgb, var(--ln-shell) 50%, transparent) 70%, transparent 100%)',
