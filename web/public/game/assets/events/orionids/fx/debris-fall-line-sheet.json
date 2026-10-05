@@ -1,0 +1,294 @@
+{
+ "frames": {
+  "fx/debris-fall-line/00": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 140
+   },
+   "anchor": {
+    "x": 0.6438,
+    "y": 0.6286
+   },
+   "anchorPx": {
+    "x": 103,
+    "y": 88
+   }
+  },
+  "fx/debris-fall-line/01": {
+   "frame": {
+    "x": 160,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 140
+   },
+   "anchor": {
+    "x": 0.6438,
+    "y": 0.6286
+   },
+   "anchorPx": {
+    "x": 103,
+    "y": 88
+   }
+  },
+  "fx/debris-fall-line/02": {
+   "frame": {
+    "x": 320,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 140
+   },
+   "anchor": {
+    "x": 0.6438,
+    "y": 0.6286
+   },
+   "anchorPx": {
+    "x": 103,
+    "y": 88
+   }
+  },
+  "fx/debris-fall-line/03": {
+   "frame": {
+    "x": 480,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 140
+   },
+   "anchor": {
+    "x": 0.6438,
+    "y": 0.6286
+   },
+   "anchorPx": {
+    "x": 103,
+    "y": 88
+   }
+  },
+  "fx/debris-fall-line/04": {
+   "frame": {
+    "x": 640,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 140
+   },
+   "anchor": {
+    "x": 0.6438,
+    "y": 0.6286
+   },
+   "anchorPx": {
+    "x": 103,
+    "y": 88
+   }
+  },
+  "fx/debris-fall-line/05": {
+   "frame": {
+    "x": 800,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 140
+   },
+   "anchor": {
+    "x": 0.6438,
+    "y": 0.6286
+   },
+   "anchorPx": {
+    "x": 103,
+    "y": 88
+   }
+  },
+  "fx/debris-fall-line/06": {
+   "frame": {
+    "x": 960,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 140
+   },
+   "anchor": {
+    "x": 0.6438,
+    "y": 0.6286
+   },
+   "anchorPx": {
+    "x": 103,
+    "y": 88
+   }
+  },
+  "fx/debris-fall-line/07": {
+   "frame": {
+    "x": 1120,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 140
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 140
+   },
+   "anchor": {
+    "x": 0.6438,
+    "y": 0.6286
+   },
+   "anchorPx": {
+    "x": 103,
+    "y": 88
+   }
+  }
+ },
+ "meta": {
+  "app": "landnam orionids-2026 (SSL-475)",
+  "image": "debris-fall-line-sheet.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1280,
+   "h": 140
+  },
+  "scale": "1"
+ },
+ "animations": {
+  "fx/debris-fall-line": [
+   "fx/debris-fall-line/00",
+   "fx/debris-fall-line/01",
+   "fx/debris-fall-line/02",
+   "fx/debris-fall-line/03",
+   "fx/debris-fall-line/04",
+   "fx/debris-fall-line/05",
+   "fx/debris-fall-line/06",
+   "fx/debris-fall-line/07"
+  ],
+  "fx/debris-fall-line/fall": [
+   "fx/debris-fall-line/00",
+   "fx/debris-fall-line/01",
+   "fx/debris-fall-line/02",
+   "fx/debris-fall-line/03",
+   "fx/debris-fall-line/04",
+   "fx/debris-fall-line/05"
+  ],
+  "fx/debris-fall-line/land": [
+   "fx/debris-fall-line/06",
+   "fx/debris-fall-line/07"
+  ]
+ },
+ "landnam": {
+  "fps": 24,
+  "loop": false,
+  "durationSec": 0.333,
+  "blend": "normal",
+  "theme": "blueprint",
+  "use": "debris-01 falling with streak tail (slight -14deg->0 rotation), then 2 impact frames. Runtime translates the sprite along the fall path; loop \"fall\" until the anchor reaches the seam line, play \"land\", then swap to the static debris-01 sprite (rotation already 0).",
+  "animations": {
+   "fx/debris-fall-line/fall": {
+    "frames": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loop": true
+   },
+   "fx/debris-fall-line/land": {
+    "frames": [
+     6,
+     7
+    ],
+    "loop": false
+   }
+  },
+  "groundContact": {
+   "x": 0.6438,
+   "y": 0.775
+  }
+ }
+}
