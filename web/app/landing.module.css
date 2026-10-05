@@ -29,11 +29,11 @@
 
 .eyebrow {
   font-family: var(--ln-font-display);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ln-cyan);
+  color: #17639f;
 }
 
 .title {
@@ -67,9 +67,9 @@
   place-items: center;
   border-radius: 6px;
   font-family: var(--ln-font-display);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   text-decoration: none;
 }
@@ -83,7 +83,7 @@
 .secondary {
   border: 1px solid var(--ln-cyan-border);
   background: transparent;
-  color: var(--ln-cyan);
+  color: #17639f;
 }
 
 .primary:hover,
@@ -94,8 +94,8 @@
 }
 
 .note {
-  color: var(--ln-text-muted);
-  font: 600 12px/1.5 var(--ln-font-body);
+  color: var(--ln-text-dim);
+  font: 600 14px/1.5 var(--ln-font-body);
 }
 
 .yard {
@@ -189,16 +189,18 @@
 .progress {
   position: absolute;
   z-index: 2;
+  top: 16px;
+  left: 16px;
   right: 16px;
-  bottom: 16px;
-  display: grid;
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
   list-style: none;
   color: var(--ln-text-dim);
-  font: 800 10px var(--ln-font-display);
-  letter-spacing: .12em;
+  font: 800 14px var(--ln-font-display);
+  letter-spacing: .08em;
 }
-.progress span { color: var(--ln-cyan); font-family: var(--ln-font-mono); }
+.progress span { color: #17639f; font-family: var(--ln-font-mono); }
 
 @keyframes establish {
   0%, 8% { opacity: 0; transform: scaleY(.12); }
@@ -228,7 +230,7 @@
 
 @media (max-width: 480px) {
   .page { display: block; padding: 0; }
-  .intro { min-height: 100svh; border: 0; border-radius: 0; }
+  .intro { min-height: 100svh; gap: 0; border: 0; border-radius: 0; }
   .copyPanel { min-height: 52svh; padding: 24px 16px; }
   .yard { min-height: 48svh; }
   .title { font-size: 32px; }
