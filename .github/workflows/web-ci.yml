@@ -60,6 +60,9 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      - name: Loop screen text, contrast and tap-target floor
+        run: npm run verify:loop-text-floor
+
       - name: Validate PB migration files
         working-directory: .
         run: |

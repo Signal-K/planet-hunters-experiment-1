@@ -11,6 +11,7 @@
     "start": "next start -p 3001",
     "typecheck": "tsc --noEmit",
     "verify:scene-surfaces": "node scripts/verify-scene-surfaces.mjs",
+    "verify:loop-text-floor": "node scripts/loop-text-floor.mjs",
     "test:unit": "npm run verify:scene-surfaces && vitest run",
     "missions:emit": "node --experimental-strip-types scripts/generate-missions.ts",
     "ingest:shared-subjects": "node --experimental-strip-types scripts/run-shared-subject-ingest.ts",
