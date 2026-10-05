@@ -44,6 +44,7 @@ func main() {
 	})
 
 	registerLandnamAuthExchange(app, sharedAuth)
+	registerLandnamOIDCAuth(app)
 	registerLandnamOwnerAlerts(app)
 	registerFriendsRoutes(app)
 	registerCommunityRoutes(app)
@@ -67,6 +68,11 @@ func ensureCollections(app core.App) {
 		// uniqueness itself (case-insensitive) before writing, since two
 		// players racing the same name is a 409 we want to word ourselves.
 		users.Fields.Add(&core.TextField{Name: "username", Max: 24})
+		// SSL-488: Sign in with Apple / Clerk provider subjects.
+		users.Fields.Add(&core.TextField{Name: "appleSub", Max: 128})
+		users.Fields.Add(&core.TextField{Name: "clerkId", Max: 128})
+		users.AddIndex("idx_users_apple_sub", true, "appleSub", "appleSub != ''")
+		users.AddIndex("idx_users_clerk_id", true, "clerkId", "clerkId != ''")
 		if err := app.Save(users); err != nil {
 			log.Printf("failed to save users collection: %v", err)
 		}
@@ -662,6 +668,12 @@ func migrateUsers(app core.App) {
 	if col.Fields.GetByName("username") == nil {
 		col.Fields.Add(&core.TextField{Name: "username", Max: 24})
 		changed = true
+	}
+	for _, name := range []string{"appleSub", "clerkId"} {
+		if col.Fields.GetByName(name) == nil {
+			col.Fields.Add(&core.TextField{Name: name, Max: 128})
+			changed = true
+		}
 	}
 
 	if changed {

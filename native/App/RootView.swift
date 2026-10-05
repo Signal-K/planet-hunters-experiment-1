@@ -5,12 +5,16 @@ import LandnamCore
 /// show a staged placeholder until their systems are ported (see README).
 struct RootView: View {
     @Environment(GameStore.self) private var store
+    @Environment(AuthModel.self) private var auth
 
     var body: some View {
+        if auth.session == nil { SignInScreen() } else { game }
+    }
+
+    private var game: some View {
         Group {
             switch store.screen {
-            case .intro: IntroScreen()
-            case .hub, .hubSubsurface: HubScreen()
+            case .intro, .hub, .hubSubsurface: HubScreen()
             case .missions: MissionsScreen()
             case .targets: TargetsScreen()
             case .rocketBuy: RocketBuyScreen()

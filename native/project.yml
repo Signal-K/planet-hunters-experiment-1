@@ -8,7 +8,12 @@ targets:
   Landnam:
     type: application
     supportedDestinations: [macOS, iOS]
-    sources: [App]
+    sources:
+      - path: App
+        excludes: ["Resources/Art/**"]
+      - path: App/Resources/Art
+        type: folder
+        buildPhase: resources
     dependencies: [{ package: LandnamCore }]
     settings:
       base:
@@ -16,3 +21,18 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: tech.skinetics.landnam
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        CODE_SIGN_ENTITLEMENTS: App/Landnam.entitlements
+  LandnamTests:
+    type: bundle.unit-test
+    supportedDestinations: [iOS, macOS]
+    sources: [Tests]
+    dependencies: [{ target: Landnam }]
+    settings:
+      base:
+        SWIFT_VERSION: 6.0
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: tech.skinetics.landnam.tests
+schemes:
+  Landnam:
+    build: { targets: { Landnam: all, LandnamTests: [test] } }
+    test: { targets: [LandnamTests] }

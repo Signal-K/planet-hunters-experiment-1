@@ -3,35 +3,6 @@ import LandnamCore
 
 private func francs(_ n: Int) -> String { Economy.format(francs: n) }
 
-struct IntroScreen: View {
-    @Environment(GameStore.self) private var store
-    var body: some View {
-        ScreenFrame(title: "Landnam") {
-            Panel { Text("Run a small space agency. Take client contracts, mine, return, get paid.") }
-            PrimaryButton(title: "Begin") { store.go(.hub) }
-        }
-    }
-}
-
-struct HubScreen: View {
-    @Environment(GameStore.self) private var store
-    var body: some View {
-        ScreenFrame(title: "Hub") {
-            Panel {
-                Text("Funds: \(francs(store.player.francs))").font(.headline)
-                Text("Contracts completed: \(store.player.missionsDone)")
-            }
-            PrimaryButton(title: "Mission board") { store.go(.missions) }
-            PrimaryButton(title: "Market") { store.go(.market) }
-            Menu("All scenes") {
-                ForEach(Screen.allCases.filter { !$0.needsMissionContext }, id: \.self) { s in
-                    Button(s.rawValue) { store.go(s) }
-                }
-            }
-        }
-    }
-}
-
 struct MissionsScreen: View {
     @Environment(GameStore.self) private var store
     var body: some View {
