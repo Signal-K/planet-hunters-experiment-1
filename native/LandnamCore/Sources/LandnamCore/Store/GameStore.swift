@@ -9,6 +9,8 @@ public final class GameStore {
     public let catalog: Catalog
     private let saveURL: URL?
     private let clock: @Sendable () -> Double
+    /// Called after every persisted change; the app wires cloud sync and Game Center here.
+    public var onChange: ((GameState) -> Void)?
 
     public init(state: GameState = GameState(), catalog: Catalog = Catalog(), saveURL: URL? = nil,
                 clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 * 1000 }) {
@@ -38,6 +40,7 @@ public final class GameStore {
         n.updatedAt = clock()
         state = n
         persist()
+        onChange?(n)
     }
 
     private func persist() {

@@ -32,6 +32,13 @@ import Foundation
         await outbox.flush()
         #expect(await outbox.snapshot().waiting == 0)
 
+        // Full CloudSync path with a real GameState.
+        let sync = CloudSync(outbox: Outbox(store: MemoryOutboxStore(), execute: pb.executor))
+        await sync.setUser(uid)
+        var gs = GameState(); gs.player.missionsDone = 7
+        await sync.save(gs)
+        #expect(await sync.snapshot() == OutboxSnapshot(waiting: 0, failed: 0))
+
         // Server unreachable: waits, does not burn attempts.
         let dead = PocketBaseExecutor(baseURL: URL(string: "http://localhost:1")!, token: { token })
         let off = Outbox(store: MemoryOutboxStore(), execute: dead.executor)
