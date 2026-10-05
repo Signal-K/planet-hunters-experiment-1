@@ -7,8 +7,6 @@ import { miningNeedsRecharge, unitsStillNeeded } from '@/lib/systems/mining-char
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
-import IconBadge from '@/components/ui/IconBadge'
-import SegmentedBar from '@/components/ui/SegmentedBar'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
 
@@ -21,12 +19,6 @@ function LaserBoltIcon({ size = 14 }: { size?: number }) {
     </svg>
   )
 }
-
-// Fixed pip counts for the HUD segmented bars — decoupled from MAX_CHARGES /
-// totalNeeded so the bar reads as a clean meter instead of one pip per unit
-// (which would sprawl to 30+ pips on post-onboarding runs).
-const CHARGE_SEGMENTS = 10
-const ORDER_SEGMENTS = 12
 
 // First-time-entering-Free-Ops-mining explainer — dismiss-once, same
 // localStorage-ack pattern as MissionBoardScreen's EXPLAINER_ACK_KEY, but
@@ -68,55 +60,6 @@ function useFreeOpsFirstSuccessAck() {
   return { dismissed, dismiss }
 }
 
-// SSL-334: the design-language doc (landnam-ui-design-language-style-prompt)
-// specifies flat color fills with 2-3 discrete facets (lit top, shaded side)
-// for chunky cel-shaded style, everywhere in the game. These icons were a
-// single flat fill with no faceting at all, which read as plain next to
-// faceted rocket/structure art elsewhere. shadeHex only touches hex colors;
-// non-hex inputs (the muted "done" state uses a CSS var) fall back to the
-// prior flat single-color render rather than risk a malformed fill.
-function shadeHex(hex: string, amount: number): string | null {
-  if (!hex.startsWith('#')) return null
-  const n = parseInt(hex.slice(1), 16)
-  const r = Math.min(255, Math.max(0, ((n >> 16) & 0xff) + amount))
-  const g = Math.min(255, Math.max(0, ((n >> 8) & 0xff) + amount))
-  const b = Math.min(255, Math.max(0, (n & 0xff) + amount))
-  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
-}
-
-function OreShapeIcon({ id, color, size = 14, minerals }: { id: string; color: string; size?: number; minerals: Record<string, MineralMeta> }) {
-  const shape = minerals[id]?.shape ?? 'circle'
-  const lit = shadeHex(color, 30) ?? color
-  const dark = shadeHex(color, -35) ?? color
-  if (shape === 'diamond')
-    return (
-      <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
-        <polygon points="7,1 13,7 7,13 1,7" fill={dark} />
-        <polygon points="7,1 13,7 7,7 1,7" fill={lit} />
-      </svg>
-    )
-  if (shape === 'rect')
-    return (
-      <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
-        <rect x="2" y="3" width="10" height="8" rx="1" fill={dark} />
-        <rect x="2" y="3" width="10" height="4" fill={lit} />
-      </svg>
-    )
-  if (shape === 'triangle')
-    return (
-      <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
-        <polygon points="7,1 13,13 1,13" fill={dark} />
-        <polygon points="7,1 13,13 7,13" fill={lit} />
-      </svg>
-    )
-  return (
-    <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
-      <circle cx="7" cy="7" r="6" fill={dark} />
-      <path d="M7 1 A6 6 0 0 1 13 7 L7 7 Z" fill={lit} />
-    </svg>
-  )
-}
-
 // Horizontal drag track — left = slow, center = normal, right = fast forward
 // Thumb snaps back to center on release
 function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.MutableRefObject<((dx: number) => void) | null>; disabled?: boolean }) {
@@ -150,7 +93,7 @@ function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.Mutable
       <div
         ref={trackRef}
         style={{
-          position: 'relative', flex: 1, height: 36, borderRadius: 8,
+          position: 'relative', flex: 1, height: 44, borderRadius: 8,
           background: 'var(--ln-mining-control-fill)',
           border: `1px solid ${active ? 'var(--ln-cyan-border)' : 'var(--ln-hairline)'}`,
           cursor: disabled ? 'not-allowed' : 'pointer', touchAction: 'none',
@@ -191,9 +134,9 @@ function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.Mutable
 function miningGuide(deliveryTargetName?: string) {
   return [
     { label: 'FIRE LASER', desc: 'Fires your mining laser at the asteroid. Collect ore by hitting ore veins (Space/F).' },
-    { label: 'CHARGE METER', desc: 'The laser bolt readout in the stats strip, showing how many shots you have left. Runs out and the order isn\'t filled, the run fails.' },
-    { label: 'ORDER PROGRESS', desc: 'The bar under your mineral counts, showing how much of this order you\'ve mined so far. Fills as your collected minerals meet what\'s required.' },
-    { label: 'SCROLL', desc: 'Drag the scroll track left to slow down, right to fast-forward camera movement.' },
+    { label: 'CHARGE METER', desc: 'Printed inside FIRE LASER, showing how many shots you have left. Runs out and the order isn\'t filled, the run fails.' },
+    { label: 'ORDER PROGRESS', desc: 'Printed inside the return button with a fill bar, showing how much of this order you\'ve mined so far.' },
+    { label: 'SCROLL', desc: 'Drag the field left to speed up or right to slow down. The more menu also has a scroll track and Scrub Mission.' },
     { label: 'INVENTORY', desc: 'Shows collected vs. required per mineral. Fill all slots to unlock return.' },
     { label: 'MISSION GOALS', desc: 'Combined ore progress and value context for the current contract.' },
     deliveryTargetName
@@ -212,7 +155,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   onAbandon?: () => void
   minerals: Record<string, MineralMeta>
   laserChargeCap?: number
-  /** SSL-462: extra laser charges from the installed Laser Capacitor. */
+  /** Extra charges from the installed Laser Capacitor (SSL-462). Skipped on the onboarding tries. */
   laserBonusCharges?: number
   /** Equipped drill/laser part tier (1-3). Gates how deep ore is reachable — deeper veins tease an upgrade. */
   laserTier?: number
@@ -441,6 +384,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   )
   const [guideOpen, setGuideOpen] = useState(false)
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
+  const [overflowOpen, setOverflowOpen] = useState(false)
 
   // SSL-333 opened the guide once on a first mining run. The Flight Plan owns
   // the Fire Laser training try now, so the guide remains opt-in there and
@@ -596,10 +540,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           top: 8,
           right: process.env.NODE_ENV === 'development' ? 92 : 8,
           zIndex: 90,
-          width: 24,
-          height: 24,
+          width: 44,
+          height: 44,
           padding: 0,
-          borderRadius: 6,
+          borderRadius: 8,
           border: '1px solid var(--ln-cyan-border)',
           background: 'var(--ln-cyan-soft)',
           color: 'var(--ln-cyan)',
@@ -729,87 +673,13 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       </div>
 
       <div className="mining-controls" data-testid="mining-controls">
-        {/* Caption — clarifies the fractions below are mission-order fulfillment, not cargo capacity */}
-        <div style={{
-          fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700,
-          letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ln-text-muted)',
-          marginBottom: 4,
-        }}>
-          Order Progress
-        </div>
-
-        {/* ── Stats + charge strip ──────────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 28, flexWrap: 'wrap' }}>
-          {/* Mineral counts — bordered icon-badge tile per Out There: Omega icon language */}
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
-            {Object.entries(mission.requires.minerals).map(([id, amount]) => {
-              const collected = Math.min(cargo[id] ?? 0, amount)
-              const done = collected >= amount
-              const color = minerals[id]?.color ?? '#fff'
-              const badgeColor = done ? 'var(--ln-text-muted)' : color
-              return (
-                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {/* The shape glyph is aria-hidden and the name/fraction are
-                      separate spans, so AT would otherwise announce a bare
-                      "PLATINUM 2 / 5". One sentence carries the whole readout;
-                      the visual fragments are hidden from AT to avoid a double
-                      announcement. */}
-                  <span className="ln-sr-only">
-                    {`${minerals[id]?.name ?? id}: ${collected} of ${amount} collected`}
-                  </span>
-                  <span aria-hidden="true" style={{ display: 'contents' }}>
-                    <IconBadge
-                      size={20}
-                      icon={<OreShapeIcon id={id} color={badgeColor} size={11} minerals={minerals} />}
-                      active={!done}
-                      style={{ borderColor: badgeColor, boxShadow: 'none' }}
-                    />
-                    <span style={{
-                      fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
-                      letterSpacing: '0.06em', textTransform: 'uppercase',
-                      color: badgeColor,
-                    }}>
-                      {minerals[id]?.name ?? id}
-                    </span>
-                    <span style={{
-                      fontFamily: 'var(--ln-font-mono)', fontSize: 10,
-                      color: done ? 'var(--ln-text-muted)' : 'var(--ln-text)',
-                    }}>
-                      {collected}/{amount}
-                    </span>
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-          {/* Total */}
-          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-cyan-bright)', flexShrink: 0 }}>
-            {totalCollected}/{totalNeeded}
-          </span>
-          {/* Charge meter — bordered laser badge + segmented bar, Out There: Omega chrome */}
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-            <IconBadge size={20} icon={<LaserBoltIcon size={11} />} tone="cyan" active={laserCharges > 0} />
-            <SegmentedBar
-              segments={CHARGE_SEGMENTS}
-              filled={(laserCharges / MAX_CHARGES) * CHARGE_SEGMENTS}
-              tone={laserCharges > 0 ? 'cyan' : 'crit'}
-              height={7}
-              style={{ width: 60 }}
-            />
-            <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9.5, color: 'var(--ln-text-dim)' }}>
-              {laserCharges}/{MAX_CHARGES}
-            </span>
-          </div>
-        </div>
-
-        {/* Order progress — segmented bar, Out There: Omega chrome */}
-        <SegmentedBar
-          segments={ORDER_SEGMENTS}
-          filled={(totalCollected / totalNeeded) * ORDER_SEGMENTS}
-          tone="cyan"
-          height={6}
-          style={{ marginTop: 6, marginBottom: 6 }}
-        />
+        {/* SSL-411: the stat row is gone. Per-mineral progress is kept for
+            assistive tech; charges live inside FIRE LASER and order progress
+            inside the return button. */}
+        <span className="ln-sr-only" data-testid="mining-order-readout">
+          {Object.entries(mission.requires.minerals).map(([id, amount]) =>
+            `${minerals[id]?.name ?? id}: ${Math.min(cargo[id] ?? 0, amount)} of ${amount} collected. `).join('')}
+        </span>
 
         {remoteSiloAvailable && (orderFilled || laserCharges <= 0) && (
           <Panel accent="var(--ln-cyan)" surface="glass" style={{ marginBottom: 8, padding: 10 }}>
@@ -824,20 +694,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </Panel>
         )}
 
-        {/* ── Action row: Fire · Fill/Return · Scroll ───────────────────────── */}
-        {/* minWidth: 0 on every grid item overrides <button>'s default
-            min-width:auto (sized to its longest unbreakable word) — without
-            it, "FILL ORDER TO RETURN"/"DELIVER TO <target>" refuses to
-            shrink below its own min-content width and the row overflows
-            past the container on narrow mobile viewports, pushing
-            ScrollTrack half off-screen instead of the whole row fitting. */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px', gap: 8, alignItems: 'stretch', minWidth: 0 }}>
-          <div
-            data-ore-near={oreNear}
-            style={{
-              minWidth: 0,
-              borderRadius: 10,
-            }}>
+        {/* ── Action row: Fire · Fill/Return · overflow ─────────────────────── */}
+        <div className="mining-action-row" data-ore-near={oreNear}>
           <button
             className={[
               'mining-command mining-command--fire',
@@ -855,10 +713,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             onPointerCancel={endFireHold}
             onClick={e => { if (e.detail === 0) fireLaser() }}
           >
-            {laserCharges <= 0 ? 'DEPLETED' : isCharging ? 'CHARGING' : 'FIRE LASER'}
+            <span className="mining-command__label">{laserCharges <= 0 ? 'DEPLETED' : isCharging ? 'CHARGING' : 'FIRE LASER'}</span>
+            <span className="mining-command__meta" data-testid="mining-charges">
+              <LaserBoltIcon size={11} /> {laserCharges}/{MAX_CHARGES} charges
+            </span>
           </button>
-          </div>
-          <div style={{ minWidth: 0 }}>
           <button
             className="mining-command mining-command--return"
             type="button"
@@ -867,15 +726,39 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             data-mode={needsRecharge && !orderFilled ? 'recharge' : 'return'}
             onClick={needsRecharge && !orderFilled ? handleRecharge : handleReturn}
           >
-            {(() => {
-              const destination = deliveryTargetName ? `DELIVER TO ${deliveryTargetName.toUpperCase()}` : 'RETURN TO EARTH'
-              if (needsRecharge && !orderFilled) return 'RECHARGE LASER'
-              return orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
-            })()}
+            <span className="mining-command__label">
+              {(() => {
+                const destination = deliveryTargetName ? `DELIVER TO ${deliveryTargetName.toUpperCase()}` : 'RETURN TO EARTH'
+                if (needsRecharge && !orderFilled) return 'RECHARGE LASER'
+                return orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
+              })()}
+            </span>
+            <span className="mining-command__meta" data-testid="mining-order-progress">Order {totalCollected}/{totalNeeded}</span>
+            <span className="mining-command__fill" aria-hidden="true">
+              <span style={{ width: `${totalNeeded > 0 ? Math.min(100, (totalCollected / totalNeeded) * 100) : 0}%` }} />
+            </span>
           </button>
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <ScrollTrack scrollRef={scrollRef} disabled={sceneStatus !== 'ready'} />
+          <div className="mining-overflow">
+            <button
+              type="button"
+              className="mining-overflow__btn"
+              data-testid="mining-overflow-btn"
+              aria-label="More controls"
+              aria-expanded={overflowOpen}
+              onClick={() => setOverflowOpen(o => !o)}
+            >
+              {'\u22EF'}
+            </button>
+            {overflowOpen && (
+              <div className="mining-overflow__menu" data-testid="mining-overflow-menu" role="group" aria-label="More controls">
+                <ScrollTrack scrollRef={scrollRef} disabled={sceneStatus !== 'ready'} />
+                {onAbandon && (
+                  <button type="button" className="mining-overflow__scrub" data-testid="mining-scrub-btn" onClick={() => { setOverflowOpen(false); setConfirmingAbandon(true) }}>
+                    Scrub Mission
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

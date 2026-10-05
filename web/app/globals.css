@@ -887,7 +887,7 @@ button { cursor: pointer; }
 
 /* SSL-346: shell-owned controls are available on every live surface. */
 .game-chrome-bottom { position:relative; z-index:70; flex:0 0 auto; display:flex; align-items:stretch; justify-content:center; gap:4px; padding:4px 8px; border-top:1px solid var(--ln-hairline); background:var(--ln-void); }
-.game-chrome-bottom button { flex:1 1 0; min-width:0; max-width:128px; min-height:44px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 14px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
+.game-chrome-bottom button { flex:1 1 0; min-width:0; max-width:128px; min-height:48px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 14px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
 .game-chrome-bottom button[aria-current="page"], .game-chrome-bottom button:hover { border-color:var(--ln-cyan-border); background:var(--ln-cyan-soft); color:var(--ln-cyan-bright); }
 /* Landscape phones: every screen's title bar shrinks to one 48px line. */
 @media (orientation:landscape) and (max-height:500px) {
@@ -907,8 +907,8 @@ button { cursor: pointer; }
    rail and the game keeps the full height. */
 @media (orientation:landscape) and (max-height:500px) {
   .portrait-canvas { flex-direction:row; }
-  .game-chrome-bottom { order:-1; flex-direction:column; justify-content:flex-start; align-items:stretch; width:72px; padding:8px 4px; border-top:0; border-right:1px solid var(--ln-hairline); }
-  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:44px; padding:4px; font-size:14px; letter-spacing:.06em; }
+  .game-chrome-bottom { order:-1; flex-direction:column; justify-content:flex-start; align-items:stretch; width:84px; padding:8px 4px; border-top:0; border-right:1px solid var(--ln-hairline); }
+  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:48px; padding:4px; font-size:14px; letter-spacing:.02em; }
 }
 
 .hub-sky-craft-control { position:absolute; z-index:11; top:96px; right:16px; display:flex; align-items:center; gap:8px; min-height:40px; padding:8px 12px; border:1px solid var(--ln-cyan-border); border-radius:8px; background:color-mix(in srgb, var(--ln-void) 74%, transparent); color:var(--ln-cyan-bright); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
@@ -2360,9 +2360,9 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 .theme-deep.mining-screen .mining-command {
   appearance: none;
   min-width: 0;
-  min-height: 44px;
-  padding: 8px 14px;
-  border: 2px solid var(--ln-border);
+  min-height: 64px;
+  padding: 8px 12px;
+  border: 1px solid var(--ln-cyan-border);
   border-radius: var(--ln-r-md);
   background: var(--ln-blueprint-paper) !important;
   color: var(--ln-text) !important;
@@ -2402,6 +2402,25 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 .theme-deep.mining-screen .mining-command--tap-denied {
   animation: ln-mining-tap-denied 160ms ease-out;
 }
+/* SSL-411: action bar. Fire and Return are 64px tall (52px landscape) with
+   12px gaps; charges sit inside Fire, order progress and a fill bar inside
+   Return. The 44px overflow holds the scroll track and Scrub. */
+.mining-action-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px; gap: 12px; align-items: stretch; min-width: 0; }
+.mining-command { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; line-height: 1.15; }
+.mining-command__label { font: 800 13px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; overflow-wrap: anywhere; }
+.mining-command__meta { display: inline-flex; align-items: center; gap: 4px; font: 700 11px var(--ln-font-mono); letter-spacing: 0; text-transform: none; opacity: .85; }
+.mining-command__fill { align-self: stretch; height: 5px; margin-top: 3px; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; }
+.mining-command__fill > span { display: block; height: 100%; border-radius: 3px; background: currentColor; transition: width 120ms linear; }
+.mining-overflow { position: relative; display: flex; min-width: 0; }
+.mining-overflow__btn { appearance: none; width: 44px; min-height: 44px; align-self: center; padding: 0; border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-md); background: rgba(18, 34, 54, 0.72); color: var(--ln-cyan); font: 800 22px/1 var(--ln-font-display); cursor: pointer; }
+.mining-overflow__menu { position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 5; display: flex; flex-direction: column; gap: 12px; width: min(260px, 72vw); padding: 12px; border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-md); background: rgba(6, 14, 26, 0.97); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
+.mining-overflow__scrub { appearance: none; min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln-crit); border-radius: var(--ln-r-md); background: transparent; color: var(--ln-crit); font: 800 12px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .mining-action-row { gap: 12px; }
+  .theme-deep.mining-screen .mining-command { min-height: 52px; padding: 6px 10px; }
+  .mining-command__label { font-size: 12px; }
+}
+
 @keyframes ln-mining-charge-pulse {
   0% { box-shadow: 0 0 0 0 rgba(63, 169, 255, 0.55) !important; }
   100% { box-shadow: 0 0 0 6px rgba(63, 169, 255, 0) !important; }

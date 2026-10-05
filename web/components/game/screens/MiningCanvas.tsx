@@ -328,13 +328,38 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         }
 
         input = new InputManager(canvas, worldW, worldH)
+        // SSL-411: a tap fires, a horizontal drag scrolls the field. The shot
+        // is decided on release so a drag never spends a charge. Dragging left
+        // pulls the field forward (fast), dragging right slows it, and the
+        // field returns to normal speed on release.
+        canvas.style.touchAction = 'none'
+        let dragStartX: number | null = null
+        let dragging = false
+        const DRAG_THRESHOLD_PX = 10
+        const DRAG_FULL_SPEED_PX = 120
+        const endDrag = () => {
+          if (dragging) scrollRef.current?.(0)
+          dragStartX = null
+          dragging = false
+        }
         input.onAny(event => {
-          // A direct canvas tap must go through the screen's fireLaser(), not
-          // straight to attemptFire() — otherwise it fires for real without
-          // ever consuming a laser charge, bypassing the charge-budget gate
-          // that fireLaser() owns (laserCharges, gateOpen, sceneStatus).
-          if (event.type === 'pointerdown') onFireRequestRef.current?.()
+          if (event.type === 'pointerdown') {
+            dragStartX = event.screen.x
+            dragging = false
+          } else if (event.type === 'pointermove' && dragStartX !== null) {
+            const delta = event.screen.x - dragStartX
+            if (!dragging && Math.abs(delta) >= DRAG_THRESHOLD_PX) dragging = true
+            if (dragging) scrollRef.current?.(Math.max(-1, Math.min(1, -delta / DRAG_FULL_SPEED_PX)))
+          } else if (event.type === 'pointerup') {
+            const wasDrag = dragging
+            endDrag()
+            // A direct canvas tap must go through the screen's fireLaser(), not
+            // straight to attemptFire(), so the charge-budget and gate checks
+            // it owns are not bypassed.
+            if (!wasDrag) onFireRequestRef.current?.()
+          }
         })
+        canvas.addEventListener('pointercancel', endDrag)
         fireRef.current = attemptFire
         scrollRef.current = (dx: number) => {
           const speed = SCROLL_SPEED + dx * (dx > 0 ? SCROLL_SPEED_MAX - SCROLL_SPEED : SCROLL_SPEED - SCROLL_SPEED_MIN)
