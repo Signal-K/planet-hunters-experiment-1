@@ -142,7 +142,9 @@ describe('useGameLoop concurrent mission runs', () => {
       missionPhase: 'transit',
     })
     expect(handleRef.current?.state.missionId).toBe('freeops-self-directed-mining')
-    expect(handleRef.current?.state.screen).toBe('targets')
+    // SSL-450: the recommended target is picked for the player, so setup lands on the rocket step.
+    expect(handleRef.current?.state.screen).toBe('rocket-buy')
+    expect(handleRef.current?.state.targetId).toBeTruthy()
 
     const parkedKey = handleRef.current?.state.player.pausedMissionRuns?.[0]?.key
     expect(parkedKey).toBeTruthy()

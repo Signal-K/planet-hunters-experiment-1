@@ -144,18 +144,7 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true },
       }))
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
-      cy.get('[data-testid="mission-target-map"]').should('be.visible')
-      cy.get('[data-testid=\"flight-plan-objective\"]').click()
-      cy.get('[data-testid=\"flight-plan-skip\"]').click()
-      // The only compatible target is auto-selected, so the summary shows its orbit
-      // rather than the "N ELIGIBLE" count.
-      cy.get('[data-testid="target-selection-summary"]').should('contain', 'ORBIT')
-      cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled').click()
-      cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
-      cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'BUILD EXPLORER').click()
-      // A newly built vehicle is assembled in the Hangar, then rolled out.
-      cy.get('[data-testid="mission-launch-review"]').should('have.attr', 'data-location', 'hangar')
-      cy.get('[data-testid="transfer-to-launchpad-btn"]').click()
+      // SSL-450: Accept picks the target and the free rocket and rolls it to the pad.
       cy.get('[data-testid="mission-launch-review"]').should('have.attr', 'data-location', 'launchpad')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
@@ -190,11 +179,6 @@ describe('Full Game Loop — Landnam', () => {
       // real setup flow rather than seeding the launch review directly.
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
-      cy.get('[data-testid=\"flight-plan-objective\"]').click()
-      cy.get('[data-testid=\"flight-plan-skip\"]').click()
-      cy.get('[data-testid="continue-build-btn"]').click()
-      cy.get('[data-testid="purchase-rocket-btn"]').click()
-      cy.get('[data-testid="transfer-to-launchpad-btn"]').click()
       cy.get('[data-testid="launch-btn"]').click()
       // The dev build exposes a deterministic skip for the Pixi launch scene.
       cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 }).click()

@@ -421,8 +421,8 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
           <aside className={styles.reviewBrief}>
             <div className={styles.reviewHeading}><span>{vehicleInHangar ? 'MISSION VEHICLE' : 'MISSION REVIEW'}</span><h2>{game.mission.title}</h2></div>
             <dl className={styles.reviewFacts}>
-              <div><dt>{targetTypeLabel(game.target.type)} · DESTINATION</dt><dd>{game.target.name}</dd></div>
-              <div><dt>VEHICLE</dt><dd data-testid="assembly-selected-rocket">{rocket.name}</dd></div>
+              <div><dt>{targetTypeLabel(game.target.type)} · DESTINATION</dt><dd>{game.target.name} {!vehicleInHangar && <button type="button" className={styles.changeLink} data-testid="change-target-btn" onClick={() => game.go('targets')}>CHANGE</button>}</dd></div>
+              <div><dt>VEHICLE</dt><dd data-testid="assembly-selected-rocket">{rocket.name} {!vehicleInHangar && <button type="button" className={styles.changeLink} data-testid="change-rocket-btn" onClick={() => game.go('rocket-buy')}>CHANGE</button>}</dd></div>
               <div><dt>ROOMS</dt><dd>{reviewRooms.map(room => room.label).join(' · ')}</dd></div>
               <div><dt>REQUIRED CARGO</dt><dd><RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} /></dd></div>
             </dl>
@@ -433,7 +433,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
             </div>
           {vehicleInHangar
             ? <button type="button" className={styles.primary} data-testid="transfer-to-launchpad-btn" disabled={!launchReady} onClick={onTransferToLaunchpad}><StepGlyph step={4} /> MOVE TO LAUNCHPAD</button>
-            : <button type="button" className={styles.primary} data-testid="launch-btn" disabled={!launchReady} onClick={onLaunch}><StepGlyph step={4} /> ACCEPT &amp; PREPARE LAUNCH</button>}
+            : <button type="button" className={styles.primary} data-testid="launch-btn" disabled={!launchReady} onClick={onLaunch}><StepGlyph step={4} /> LAUNCH</button>}
           </aside>
         </section>
       </SetupFrame>

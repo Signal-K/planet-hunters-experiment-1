@@ -2,7 +2,7 @@ import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
   getLaserChargeCap, rocketModelForConfig, travelDurationMs, suggestBuild,
-  feasibleTargetsFor, validateBuild,
+  feasibleTargetsFor, validateBuild, rocketConfigForModel,
   isOwnProgramMission,
   isFreeHaulMission,
   artifactNarrativeEligible,
@@ -14,7 +14,7 @@ import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
 import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyPurchaseRocket, applyRemoteHaulDisposition, applyRocketStageRecovery, earthStorageBuilt, hasOperationalRemoteSilo, rocketPurchaseRefusal } from '@/lib/systems/EconomySystem'
-import { rocketCompatibleWithMission } from '@/lib/rockets'
+import { getRequiredRocketModel, rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { loanOutstanding, repayBankruptcyLoan } from '@/lib/systems/TreasurySystem'
 import { TREASURY_PLAYER_ID } from '@/lib/systems/ProgressionSystem'
@@ -108,6 +108,75 @@ function selectStagedRocket(state: GameState, vehicle: StagedRocket): GameState 
       selectedStagedRocketId: vehicle.id,
     },
   }
+}
+
+function missionById(s: GameState, catalog: Catalog, id: string | null): Mission | null {
+  if (!id) return null
+  return catalog.missions.find(m => m.id === id) ?? s.player.dailyClientPool?.missions.find(m => m.id === id) ?? null
+}
+
+/** Shared by the Map step and the one-screen setup: lock a target in and move on to the rocket. */
+function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState {
+  const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
+  const target = catalog.targets.find(t => t.id === id) ?? null
+  if (!mission || !target) return s
+  if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, s.player.unlockedSkillNodes ?? []).some(item => item.id === id)) return s
+  const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
+  // SSL-450: switching target releases a free (F0) vehicle built for the old one, so Change never strands a rocket.
+  const freeIds = new Set(ROCKET_MODELS.filter(model => model.costFrancs === 0).map(model => model.id))
+  const stagedRockets = (s.player.stagedRockets ?? []).filter(vehicle =>
+    !(vehicle.missionId === mission.id && vehicle.targetId !== target.id && freeIds.has(vehicle.rocketId)))
+  const base = { ...s, player: { ...s.player, stagedRockets } }
+  const stagedVehicle = stagedRocketForMission(base, mission.id, target.id)
+  const setup = {
+    ...base,
+    targetId: id,
+    rocket: stagedVehicle?.rocket ?? next,
+    screen: stagedVehicle ? ('fab' as const) : ('rocket-buy' as const),
+    doneSteps: { ...s.doneSteps, 3: true },
+  }
+  return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : setup
+}
+
+/**
+ * SSL-450: Accept Contract lands straight on the launch review. The
+ * recommended target and default rocket are chosen for the player, a free
+ * (F0) rocket is built and rolled out to the pad, and anything that costs
+ * francs stops at the Blueprint so spending stays an explicit tap.
+ */
+function finishQuickSetup(s: GameState, catalog: Catalog): GameState {
+  let next = s
+  if (next.screen === 'targets' && next.missionId) {
+    const mission = missionById(next, catalog, next.missionId)
+    if (!mission) return next
+    const feasible = feasibleTargetsFor(mission, catalog.targets, catalog.parts, next.player.missionsDone, next.player.launchpadUpgraded, next.player.unlockedSkillNodes ?? [])
+    const pick = feasible.find(target => target.recommended) ?? feasible[0]
+    if (!pick) return next
+    next = pickTargetState(next, catalog, pick.id)
+  }
+  if (next.screen !== 'rocket-buy' || !next.missionId || !next.targetId) return next
+  const mission = missionById(next, catalog, next.missionId)
+  const target = catalog.targets.find(t => t.id === next.targetId)
+  if (!mission || !target) return next
+  const required = getRequiredRocketModel(next.player.missionsDone)
+  const options = ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= next.player.missionsDone).filter(model => validateBuild({
+    mission, target, rocket: rocketConfigForModel(model), parts: catalog.parts, unlockedSkillNodes: next.player.unlockedSkillNodes ?? [],
+  }).ok)
+  const rocket = options.find(model => model.id === required.id) ?? options[0]
+  if (!rocket || rocket.costFrancs !== 0 || !rocketCompatibleWithMission(rocket, mission) || rocketPurchaseRefusal(next, rocket)) return next
+  return rollOutToPad({ ...applyPurchaseRocket(next, rocket) }) ?? next
+}
+
+/** Moves the selected hangar vehicle to the launchpad; null when there is nothing to move. */
+function rollOutToPad(s: GameState): GameState | null {
+  const vehicle = s.player.stagedRockets?.find(candidate => candidate.id === s.player.selectedStagedRocketId)
+  if (!vehicle) return null
+  const onPad = { ...vehicle, location: 'launchpad' as const }
+  return selectStagedRocket({
+    ...s,
+    doneSteps: { ...s.doneSteps, 8: true },
+    player: { ...s.player, stagedRockets: s.player.stagedRockets?.map(candidate => candidate.id === vehicle.id ? onPad : candidate) },
+  }, onPad)
 }
 
 function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot): GameState {
@@ -281,38 +350,25 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           screen: stagedVehicle ? ('fab' as const) : ('rocket-buy' as const),
           doneSteps: { ...s.doneSteps, 2: true, 3: true },
         }
-        return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : setup
+        return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : finishQuickSetup(setup, catalog)
       }
-      return {
+      return finishQuickSetup({
         ...base,
         missionId: id,
         targetId: null,
         deliveryTargetId: mission.deliveryTargetId ?? null,
         screen: 'targets',
         doneSteps: { ...s.doneSteps, 2: true },
-      }
+      }, catalog)
     })
-  }, [catalog.missions, catalog.parts, catalog.targets, setState])
+  }, [catalog, setState])
 
   const onPickTarget = useCallback((id: string) => {
     setState(s => {
       if (s.screen !== 'targets' || !s.missionId) return s
-      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
-      const target = catalog.targets.find(t => t.id === id) ?? null
-      if (!mission || !target) return s
-      if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, s.player.unlockedSkillNodes ?? []).some(item => item.id === id)) return s
-      const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
-      const stagedVehicle = stagedRocketForMission(s, mission.id, target.id)
-      const setup = {
-        ...s,
-        targetId: id,
-        rocket: stagedVehicle?.rocket ?? next,
-        screen: stagedVehicle ? ('fab' as const) : ('rocket-buy' as const),
-        doneSteps: { ...s.doneSteps, 3: true },
-      }
-      return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : setup
+      return finishQuickSetup(pickTargetState(s, catalog, id), catalog)
     })
-  }, [catalog.missions, catalog.parts, catalog.targets, setState])
+  }, [catalog, setState])
 
   const onPurchaseRocket = useCallback((rocketId: string) => {
     const rocket = ROCKET_MODELS.find(candidate => candidate.id === rocketId)
@@ -343,7 +399,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         return s
       }
       const next = applyPurchaseRocket(s, rocket)
-      return { ...next, doneSteps: { ...next.doneSteps, 8: true } }
+      // SSL-450: no separate Hangar-to-pad tap; the built vehicle rolls out on its own.
+      return rollOutToPad(next) ?? { ...next, doneSteps: { ...next.doneSteps, 8: true } }
     })
   }, [addToast, catalog.missions, setState, stateRef])
 

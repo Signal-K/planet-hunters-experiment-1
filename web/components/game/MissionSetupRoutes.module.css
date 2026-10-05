@@ -920,3 +920,17 @@
 @media (orientation: portrait) and (max-width: 360px) {
   .reviewFacts { grid-template-columns: minmax(0, 1fr); }
 }
+
+.changeLink {
+  margin-left: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--ln-cyan);
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  cursor: pointer;
+}
