@@ -12,13 +12,14 @@ import MineralChip from '@/components/game/MineralChip'
 import CostSummaryRow from '@/components/game/CostSummaryRow'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { ScrapSequenceCanvas } from '@/components/game/ScrapSequenceCanvas'
+import LaserCapacitorPanel from '@/components/game/screens/LaserCapacitorPanel'
 import DebriefCanvas from '@/components/game/screens/DebriefCanvas'
 import { formatCurrency } from '@/lib/format'
 import { rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import StatRow from '@/components/ui/StatRow'
 import { captureGameEvent } from '@/lib/posthog'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0 }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -53,6 +54,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
    *  Seeds this screen's toggle so it reads as a confirmation of that choice
    *  rather than asking the player again from scratch. */
   initialDisposition?: 'store' | 'sell'
+  /** SSL-462: spend hauled ore on the next Laser Capacitor level. */
+  onBuyLaserCapacitor?: (expectedLevel: number, reservedUnits: number) => void
+  laserCapacitorLevel?: number
+  /** Ore units in the Earth stash right now, including this run's haul. */
+  stashUnits?: number
 }) {
   // A self-directed haul the player owns outright gets a store-vs-sell choice
   // here instead of a fixed contract payout (KES-271). Storing needs a built
@@ -108,6 +114,13 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
     : delivered ? 'var(--ln-ok)' : 'var(--ln-crimson)'
   const cargoEntries = Object.entries(cargo).filter(([, units]) => units > 0)
   const willStore = isFreeHaul && disposition === 'store' && !!hasEarthStorage
+  // SSL-462: the haul funds the next build. Ore a client is still owed, or a
+  // free haul that is about to be sold, is not spare.
+  const clientOwedUnits = !isFreeHaul && !isTwoLegJob && delivered
+    ? Object.values(requiredMaterials).reduce((sum, n) => sum + Math.max(0, n), 0)
+    : 0
+  const showLaserCapacitor = !!onBuyLaserCapacitor && !isEarlyMission && !isProgramOperation
+    && (!isFreeHaul || willStore) && (cargoEntries.length > 0 || stashUnits > 0)
 
   return (
     <div className="game-screen theme-blueprint debrief-game">
@@ -265,6 +278,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               </div>
             </Panel>
           ) : null
+        )}
+        {resolved && showLaserCapacitor && onBuyLaserCapacitor && (
+          <LaserCapacitorPanel
+            level={laserCapacitorLevel}
+            haulUnits={haulUnits}
+            spareUnits={Math.max(0, stashUnits - clientOwedUnits)}
+            onInstall={() => onBuyLaserCapacitor(laserCapacitorLevel, clientOwedUnits)}
+          />
         )}
         {resolved && !isOrbitalInstrumentDeployment && (
           <Panel accent={hasEarthStorage ? 'var(--ln-ok)' : 'var(--ln-cyan)'} surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>

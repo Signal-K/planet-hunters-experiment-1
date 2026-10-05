@@ -265,6 +265,8 @@ export interface Player {
   missionsDone: number
   skillPoints?: number
   unlockedSkillNodes?: string[]
+  /** Installed Laser Capacitor level (SSL-462), bought with hauled ore at Debrief. */
+  laserCapacitorLevel?: number
   freeOperations: boolean
   /** Durable three-try onboarding state, persisted and synced with the save. */
   flightPlan?: FlightPlanProgress
@@ -538,6 +540,8 @@ export interface GameActions {
   onDeliveryArrived: () => void
   onDeliveryUnloadComplete: () => void
   onReturnArrived: () => void
+  /** Spend hauled ore on the next Laser Capacitor level; no-ops unless the player is still at `expectedLevel` and has the ore spare beyond `reservedUnits`. */
+  onBuyLaserCapacitor: (expectedLevel: number, reservedUnits: number) => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell') => void
   startFlightPlan: () => void
   completeFlightPlan: (event: FlightPlanEvent) => void

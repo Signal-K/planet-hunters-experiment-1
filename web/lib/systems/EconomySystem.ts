@@ -6,6 +6,7 @@ import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, Sub
 import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
+import { nextLaserCapacitorTier, spendOreUnits } from '@/lib/data/mining-upgrades'
 import { structureIsStaffed } from './AcademySystem'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
 import { freeOperationsUnlocked } from './AgencyOnboardingSystem'
@@ -485,6 +486,19 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
         : s.player.crewUpkeepSettledDate,
     },
   }
+}
+
+/** SSL-462: spend hauled ore on the next Laser Capacitor level. `expectedLevel`
+ *  makes a double tap a no-op; `reservedUnits` keeps ore a client is still owed
+ *  out of the spend. */
+export function applyBuyLaserCapacitor(s: GameState, expectedLevel: number, reservedUnits = 0): GameState {
+  if ((s.player.laserCapacitorLevel ?? 0) !== expectedLevel) return s
+  const tier = nextLaserCapacitorTier(expectedLevel)
+  if (!tier) return s
+  if (storedUnits(s.player.stash) - Math.max(0, reservedUnits) < tier.costUnits) return s
+  const stash = spendOreUnits(s.player.stash, tier.costUnits)
+  if (!stash) return s
+  return { ...s, player: { ...s.player, stash, laserCapacitorLevel: tier.level } }
 }
 
 export function applyExcavateSubsurface(s: GameState): GameState {

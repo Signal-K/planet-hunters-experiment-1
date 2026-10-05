@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
 import { normalizeAndRepair, type PartialSave } from '@/lib/game-state'
 import { MINERAL_META, CLIENT_SLOTS, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, STRUCTURES, customizerPartById } from '@/lib/data'
-import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, rocketPurchaseRefusal, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
+import { applyBuyLaserCapacitor, applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, rocketPurchaseRefusal, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 
@@ -465,5 +465,21 @@ describe('sell quote and sale agree', () => {
     const { price, base, premiumApplied } = sellUnitPrice(unwanted, s.player, premiumClient.id)
     expect(premiumApplied).toBe(false)
     expect(price).toBe(base)
+  })
+})
+
+describe('applyBuyLaserCapacitor (SSL-462)', () => {
+  it('spends hauled ore and raises the level, once', () => {
+    const s = makeState({ stash: { copper: 5, aluminium: 4 } })
+    const bought = applyBuyLaserCapacitor(s, 0, 0)
+    expect(bought.player.laserCapacitorLevel).toBe(1)
+    expect(storedUnits(bought.player.stash)).toBe(3)
+    expect(applyBuyLaserCapacitor(bought, 0, 0)).toBe(bought)
+  })
+
+  it('refuses when ore is short or owed to a client', () => {
+    const s = makeState({ stash: { copper: 7 } })
+    expect(applyBuyLaserCapacitor(s, 0, 2)).toBe(s)
+    expect(applyBuyLaserCapacitor(makeState({ stash: { copper: 3 } }), 0, 0).player.laserCapacitorLevel).toBeUndefined()
   })
 })

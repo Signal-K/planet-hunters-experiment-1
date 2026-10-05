@@ -3,7 +3,7 @@
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
-import { isFreeHaulMission, isOwnProgramMission, rocketDisplayForConfig } from '@/lib/data'
+import { isFreeHaulMission, isOwnProgramMission, laserCapacitorBonus, rocketDisplayForConfig } from '@/lib/data'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
@@ -188,6 +188,7 @@ export default function MissionOperationRoutes({
           }}
           minerals={game.catalog.minerals}
           laserChargeCap={game.laserChargeCap}
+          laserBonusCharges={laserCapacitorBonus(game.player.laserCapacitorLevel)}
           laserTier={game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1}
           trainingMiningTry={trainingMiningTry}
           deliveryTargetName={deliveryTargetName}
@@ -259,6 +260,9 @@ export default function MissionOperationRoutes({
           originTargetName={originTargetName}
           cargo={debriefCargo}
           onDone={game.onDebriefDone}
+          onBuyLaserCapacitor={game.onBuyLaserCapacitor}
+          laserCapacitorLevel={game.player.laserCapacitorLevel ?? 0}
+          stashUnits={storedUnits(game.player.stash)}
           minerals={game.catalog.minerals}
           clients={game.catalog.clients}
           clientMissions={game.player.clientMissions}

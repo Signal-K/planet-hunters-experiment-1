@@ -202,7 +202,7 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
@@ -212,6 +212,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   onAbandon?: () => void
   minerals: Record<string, MineralMeta>
   laserChargeCap?: number
+  /** SSL-462: extra laser charges from the installed Laser Capacitor. */
+  laserBonusCharges?: number
   /** Equipped drill/laser part tier (1-3). Gates how deep ore is reachable — deeper veins tease an upgrade. */
   laserTier?: number
   trainingMiningTry?: boolean
@@ -259,7 +261,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const isOnboarding = typeof mission.sequence === 'number' && mission.sequence <= FREE_OPS_START_MISSIONS_DONE
   const MAX_CHARGES = isOnboarding
     ? Math.max(80, totalOreNeeded * 16)
-    : Math.max(laserChargeCap ?? 5, totalOreNeeded * 4)
+    : Math.max(laserChargeCap ?? 5, totalOreNeeded * 4) + laserBonusCharges
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>(initialCargo ?? {})
   const [cargo, setCargo] = useState<Record<string, number>>(initialCargo ?? {})

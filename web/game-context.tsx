@@ -315,6 +315,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onLandingTouchdown: loop.onLandingTouchdown,
       onRedockComplete: loop.onRedockComplete,
       onDebriefDone: loop.onDebriefDone,
+      onBuyLaserCapacitor: loop.onBuyLaserCapacitor,
       gainResearchXP: loop.gainResearchXP,
       upgradeLicenseGrade: loop.upgradeLicenseGrade,
       unlockBlueprint: loop.unlockBlueprint,
