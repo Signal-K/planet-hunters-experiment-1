@@ -1,7 +1,6 @@
-// E2E coverage for kkhyll's desktop two-column TessDiscoveryScreen layout —
-// see z9cjo7-implement-kkhyll-desktop-two-column-layout. Mobile portrait
-// stays single-column (unchanged); desktop (>=1024px) splits into a 55%
-// lightcurve column and a 45% metadata + actions column.
+// SSL-497: one instrument console. Desktop and mobile landscape put the
+// viewport in the centre with controls on the left and answers on the right.
+// Mobile portrait stacks the viewport, one control strip, and the answer row.
 
 import type { GameState } from '@/game-context'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
@@ -89,43 +88,70 @@ function visitGalaxyScreen() {
   cy.wait('@subjects')
 }
 
-describe('TessDiscoveryScreen — desktop two-column layout', () => {
+function expectSideLayout() {
+  cy.get('[data-testid="instrument-viewport"]').then($viewport => {
+    const view = $viewport[0].getBoundingClientRect()
+    cy.get('[data-testid="instrument-controls"]').then($controls => {
+      expect($controls[0].getBoundingClientRect().right, 'controls sit left of the viewport').to.be.at.most(view.left + 2)
+    })
+    cy.get('[data-testid="tess-verdict-planet"]').then($answer => {
+      expect($answer[0].getBoundingClientRect().left, 'answers sit right of the viewport').to.be.at.least(view.right - 2)
+    })
+  })
+}
+
+describe('TessDiscoveryScreen — shared instrument viewport', () => {
   it('keeps the compact landscape verdict rail in the viewport', () => {
     cy.viewport(844, 390)
     visitGalaxyScreen()
-    cy.get('[data-testid="tess-discovery-desktop-grid"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="instrument-stage"]', { timeout: 10000 }).should('be.visible')
+    expectSideLayout()
     cy.get('[data-testid="tess-verdict-planet"]').then($button => {
       const rect = $button[0].getBoundingClientRect()
       expect(rect.height, 'verdict hit area').to.be.at.least(44)
       expect(rect.top, 'verdict top edge').to.be.at.least(0)
       expect(rect.bottom, 'verdict bottom edge').to.be.at.most(390)
     })
-    cy.get('[data-testid="tess-discovery-desktop-grid"]').should($grid => {
-      expect($grid[0].scrollHeight, 'stage scroll height').to.be.at.most($grid[0].clientHeight + 1)
+    cy.get('[data-testid="instrument-stage"]').should($stage => {
+      expect($stage[0].scrollHeight, 'stage scroll height').to.be.at.most($stage[0].clientHeight + 1)
     })
   })
 
-  it('renders a single-column stack on mobile (unchanged)', () => {
+  it('stacks the viewport, controls and answers on mobile portrait', () => {
     cy.viewport(390, 844)
     visitGalaxyScreen()
-    // STS-582 renamed this screen's header copy from "TESS Anomaly" to the
-    // instrument-feed framing (TopBar eyebrow + the candidate's own TOI id).
+    cy.window().its('innerWidth').should('be.lt', 500)
     cy.contains('INSTRUMENT DATA FEED', { timeout: 10000 }).should('be.visible')
     cy.contains('TOI 1000.01').should('be.visible')
-    cy.get('[data-testid="tess-discovery-desktop-grid"]').should('not.exist')
-    cy.get('[data-testid="tess-verdict-planet"]').should('exist')
+    cy.get('[data-testid="instrument-viewport"]').then($viewport => {
+      const view = $viewport[0].getBoundingClientRect()
+      cy.get('[data-testid="instrument-controls"]').then($controls => {
+        expect($controls[0].getBoundingClientRect().top, 'controls sit under the viewport').to.be.at.least(view.bottom - 2)
+      })
+      cy.get('[data-testid="tess-verdict-planet"]').then($answer => {
+        expect($answer[0].getBoundingClientRect().top, 'answers sit under the controls').to.be.at.least($viewport[0].getBoundingClientRect().bottom - 2)
+      })
+    })
+    cy.get('[data-testid="instrument-terminal-toggle"]').should('be.visible')
+    cy.get('[data-testid="tess-drag-dip"]').should('exist')
   })
 
-  it('renders a two-column grid on desktop (>=1024px)', () => {
+  it('centres the viewport between controls and answers on desktop', () => {
     cy.viewport(1280, 800)
     visitGalaxyScreen()
-    // STS-582 renamed this screen's header copy from "TESS Anomaly" to the
-    // instrument-feed framing (TopBar eyebrow + the candidate's own TOI id).
     cy.contains('INSTRUMENT DATA FEED', { timeout: 10000 }).should('be.visible')
     cy.contains('TOI 1000.01').should('be.visible')
-    cy.get('[data-testid="tess-discovery-desktop-grid"]').should('be.visible').then($grid => {
-      expect($grid.css('display')).to.eq('grid')
-    })
+    cy.get('[data-testid="instrument-stage"]').should('be.visible')
+    expectSideLayout()
     cy.get('[data-testid="tess-verdict-planet"]').should('be.visible')
+    cy.window().then(win => {
+      cy.get('[data-testid="instrument-zoom"]').then($el => {
+        const el = $el[0] as HTMLInputElement
+        const setter = Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value')?.set
+        setter?.call(el, '2.2')
+        el.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+    })
+    cy.get('[data-testid="instrument-optics"]').should('have.attr', 'data-zoom', '2.2')
   })
 })

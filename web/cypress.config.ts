@@ -181,6 +181,18 @@ export default defineConfig({
   e2e: {
     ...active,
     supportFile: 'cypress/support/e2e.ts',
+    setupNodeEvents(on) {
+      // Headless Chrome otherwise keeps a short default window, and a
+      // requested viewport taller than that window never reaches the page.
+      on('before:browser:launch', (browser, launchOptions) => {
+        if (browser.family === 'chromium') {
+          launchOptions.args = launchOptions.args.filter(arg => !arg.startsWith('--window-size'))
+          launchOptions.args.push('--window-size=1440,1200')
+          launchOptions.args.push('--force-device-scale-factor=1')
+        }
+        return launchOptions
+      })
+    },
     // CYPRESS_VIEWPORT always wins over the profile's own dimensions — every
     // profile's viewportWidth/viewportHeight above is just its "mobile" default.
     viewportWidth: viewportOverride.viewportWidth,

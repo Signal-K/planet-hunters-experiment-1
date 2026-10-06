@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Radio, Telescope } from 'lucide-react'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
-import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn } from '@/components/ui/Button'
-import CommentsPanel from '@/components/game/CommentsPanel'
 import NebulaBackdrop from '@/components/game/NebulaBackdrop'
+import InstrumentViewport, { InstrumentAnswerRow, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
+import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import {
   SATURN_QUESTION,
   type SaturnCandidate,
@@ -16,7 +16,6 @@ import {
 import { fetchReviewableSaturnCandidates } from '@/lib/saturn-subjects'
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
-import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedSaturnInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
 interface SaturnStormSearchScreenProps {
@@ -27,19 +26,24 @@ interface SaturnStormSearchScreenProps {
   onSubmit: (candidateId: string, verdict: SaturnVerdict) => void
 }
 
-// Copy of the asteroid verdict screen with the sky plot replaced by the
-// Cassini frame. Yes / No / Maybe maps onto the shared classification flow.
-const VERDICT_ACTIONS: Array<{ id: SaturnVerdict; label: string }> = [
-  { id: 'yes', label: 'Yes' },
-  { id: 'no', label: 'No' },
-  { id: 'maybe', label: 'Maybe' },
+const VERDICT_ACTIONS: Array<{ id: SaturnVerdict; label: string; mark: string }> = [
+  { id: 'yes', label: 'Yes', mark: 'Y' },
+  { id: 'no', label: 'No', mark: 'N' },
+  { id: 'maybe', label: 'Maybe', mark: 'M' },
 ]
+
+type CellState = { answer: SaturnVerdict | null; storm: boolean }
+
+function emptyCells(): CellState[] {
+  return Array.from({ length: 9 }, () => ({ answer: null, storm: false }))
+}
 
 export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBack, onLaunchImager, onSubmit }: SaturnStormSearchScreenProps) {
   const classifications = useMemo(() => player.saturnClassifications ?? {}, [player.saturnClassifications])
   const [candidate, setCandidate] = useState<SaturnCandidate | null>(null)
   const [loading, setLoading] = useState(true)
-  const isDesktop = useIsDesktop()
+  const [selected, setSelected] = useState(2)
+  const [cells, setCells] = useState<CellState[]>(emptyCells)
 
   useEffect(() => {
     if (!player.freeOperations || !player.saturnImagerLaunchedAt) {
@@ -57,11 +61,15 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       .catch(() => { if (!cancelled) setCandidate(null) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-    // `classifications` is deliberately not a dependency: submitting must not
-    // clear the frame before the "saved" confirmation renders (see KES-116 in
-    // AsteroidDiscoveryScreen).
+    // Classifications stay out of the dependency list so a submission does not
+    // clear the frame before the saved state can render (KES-116).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inspectSubjectId, player.freeOperations, player.saturnImagerLaunchedAt])
+
+  useEffect(() => {
+    setSelected(2)
+    setCells(emptyCells())
+  }, [candidate?.id])
 
   if (!player.freeOperations) {
     return (
@@ -107,101 +115,80 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
   }
 
   const classification = classifications[candidate.id]
+  const locked = classification != null
 
-  const dataPanel = (
-    <Panel accent="var(--ln-cyan)" style={{ padding: 12, marginTop: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: 'var(--ln-text)' }}>{candidate.opusId.toUpperCase()}</div>
-          <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 4 }}>
-            Cassini ISS · subject {candidate.subjectId}
-          </div>
-        </div>
-        <StatusPill kind={classification ? 'ok' : 'info'}>
-          {classification ? classification.verdict.toUpperCase() : 'REVIEW'}
-        </StatusPill>
-      </div>
+  const paint = (answer: SaturnVerdict) => {
+    if (locked) return
+    setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, answer } : cell))
+    onSubmit(candidate.id, answer)
+  }
 
-      <div
-        data-testid="saturn-data-provenance"
-        style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-text-dim)', marginBottom: 12 }}
-      >
-        Real Cassini imaging data · Zooniverse Saturn Thunderstorm Search
-      </div>
-
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        data-testid="saturn-frame"
-        src={candidate.imageUrl}
-        alt={`Cassini frame ${candidate.opusId}`}
-        style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 8, border: '1px solid var(--ln-hairline-strong)', background: 'var(--ln-bg)' }}
-      />
-
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 16, color: 'var(--ln-text)', marginTop: 16 }} data-testid="saturn-question">
-        {SATURN_QUESTION}
-      </div>
-    </Panel>
-  )
-
-  const verdictActions = classification ? (
-    <div style={{ textAlign: 'center' }}>
-      <StatusPill kind="ok">ANNOTATION SAVED</StatusPill>
-    </div>
-  ) : (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
-      {VERDICT_ACTIONS.map(action => (
-        <button
-          key={action.id}
-          data-testid={`saturn-verdict-${action.id}`}
-          onClick={() => onSubmit(candidate.id, action.id)}
-          style={{
-            minHeight: 48, borderRadius: 10, border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
-            color: 'var(--ln-cyan-bright)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14,
-            letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
-          }}
-        >
-          {action.label}
-        </button>
-      ))}
-    </div>
-  )
-
-  const payoffPanel = classification ? (
-    <Panel accent="var(--ln-ok)" style={{ padding: 12 }}>
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.12em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 8 }}>
-        Annotation Logged
-      </div>
-      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
-        Your call was saved. Cassini storm-cloud searches rely on many independent classifications of each frame before it is retired from the queue.
-      </div>
-    </Panel>
-  ) : null
+  const markStorm = () => {
+    if (locked) return
+    setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, storm: !cell.storm, answer: cell.storm ? cell.answer : (cell.answer ?? 'yes') } : cell))
+  }
 
   return (
-    <div className="game-screen theme-deep ln-scene-asteroid-discovery" data-testid="saturn-storm-search-screen">
-      <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.opusId.toUpperCase()} onBack={onBack} />
-      {isDesktop ? (
-        <div style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
-          <div style={{ overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>{dataPanel}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
-            {payoffPanel}
-            <CommentsPanel recordType="classification" recordId={candidate.id} />
-            <div data-ui-zone={UI_ZONES.bottomActions}>{verdictActions}</div>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
-            {dataPanel}
-            {payoffPanel && <div style={{ marginTop: 12 }}>{payoffPanel}</div>}
-            <div style={{ marginTop: 12, paddingBottom: 64 }}>
-              <CommentsPanel recordType="classification" recordId={candidate.id} />
-            </div>
-          </div>
-          <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>{verdictActions}</div>
-        </>
+    <InstrumentViewport
+      testId="saturn-storm-search-screen"
+      sceneClassName="ln-scene-asteroid-discovery"
+      eyebrow="INSTRUMENT DATA FEED · SATURN DOWNLINK"
+      title={candidate.opusId.toUpperCase()}
+      onBack={onBack}
+      status={classification ? 'ANNOTATION SAVED' : 'REVIEW'}
+      caption={(
+        <p className={viewportStyles.caption} data-testid="saturn-question">{SATURN_QUESTION}</p>
       )}
-    </div>
+      viewport={(
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className={viewportStyles.frameImage}
+          data-testid="saturn-frame"
+          src={candidate.imageUrl}
+          alt={`Cassini frame ${candidate.opusId}`}
+        />
+      )}
+      overlay={(
+        <div className={viewportStyles.saturnGrid} data-testid="saturn-grid">
+          {cells.map((cell, index) => (
+            <button
+              key={index}
+              type="button"
+              className={viewportStyles.saturnCell}
+              data-testid={`saturn-cell-${index}`}
+              aria-pressed={selected === index}
+              aria-label={`Square ${index + 1}${cell.storm ? ', storm marked' : ''}${cell.answer ? `, ${cell.answer}` : ''}`}
+              disabled={locked}
+              onClick={() => setSelected(index)}
+            >
+              {cell.answer && <span className={viewportStyles.cellTag}>{VERDICT_ACTIONS.find(action => action.id === cell.answer)?.mark}</span>}
+              {cell.storm && <span className={viewportStyles.stormMark} data-testid={`saturn-storm-${index}`} />}
+            </button>
+          ))}
+        </div>
+      )}
+      answers={classification ? (
+        <div className={viewportStyles.saved}>Annotation saved</div>
+      ) : (
+        <InstrumentAnswerRow
+          actions={VERDICT_ACTIONS.map(action => ({
+            id: action.id,
+            label: action.label,
+            testId: `saturn-verdict-${action.id}`,
+            onClick: () => paint(action.id),
+          }))}
+        />
+      )}
+      tool={(
+        <InstrumentToolButton
+          testId="saturn-mark-storm"
+          label="Mark storm"
+          pressed={cells[selected]?.storm}
+          disabled={locked}
+          onClick={markStorm}
+        />
+      )}
+    />
   )
 }
 

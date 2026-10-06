@@ -78,7 +78,9 @@ export function parseNeocpRows(payload: unknown): NeocpSourceRow[] {
       score: asNumber(record.Score ?? record.score),
       discoveryDate,
       ra: asNumber(record['R.A.'] ?? record.ra),
-      decl: asNumber(record.Decl ?? record.decl),
+      // Live MPC NEOCP JSON names the column "Decl." (same trailing dot as "R.A.").
+      // `Decl` without the dot is kept so older fixtures still parse.
+      decl: asNumber(record['Decl.'] ?? record.Decl ?? record.decl),
       vMag: asNumber(record.V ?? record.v_mag),
       hMag: asNumber(record.H ?? record.h_mag),
       nObs: asNumber(record.NObs ?? record.n_obs),
