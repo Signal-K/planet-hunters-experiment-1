@@ -17,11 +17,11 @@ struct HubScreen: View {
             let groundY = h * (1 - ground)
             ZStack(alignment: .topLeading) {
                 TerrainScene(composition: .earthBaseWide, ground: ground)
-                building("Launchpad", sprite: "base/launchpad_flat.png", aspect: 774.0 / 531, width: 172 * k * 0.62,
+                building("Launchpad", sprite: "base/launchpad_flat.png", aspect: 192.0 / 318, width: 84 * k * 0.62,
                          x: w * xs[0], groundY: groundY + 2 * k) { store.go(.launchpad) }
-                building("Hangar", sprite: "base/hangar_flat.png", aspect: 1017.0 / 522, width: 226 * k * 0.62,
+                building("Hangar", sprite: "base/hangar_flat.png", aspect: 182.0 / 155, width: 176 * k * 0.62,
                          x: w * xs[1], groundY: groundY + 2 * k) { store.go(.hangar) }
-                building("Exchange", sprite: "base/surface_silo_flat.png", aspect: 1.5, width: 120 * k * 0.62,
+                building("Exchange", sprite: "base/exchange_flat.png", aspect: 1153.0 / 461, width: 210 * k * 0.62,
                          x: w * xs[2], groundY: groundY + 2 * k) { store.go(.market) }
                 topHud
                 dock.frame(maxHeight: .infinity, alignment: .bottom)
