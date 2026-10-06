@@ -250,8 +250,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               {crewArrivalBonus > 0 && <PayRow label={`First astronaut at ${target.name}`} value={crewArrivalBonus} />}
               <CostSummaryRow
                 label={rocketSource === 'fabricated' ? `Vehicle cost · ${starterRocket.name} · silo fabrication` : `Vehicle cost · ${starterRocket.name}`}
-                value={rocketSource === 'fabricated' ? 'Minerals committed' : formatCurrency(-vehicleCost, { signed: true })}
-                color={rocketSource === 'fabricated' ? 'var(--ln-cyan)' : 'var(--ln-crimson)'}
+                value={rocketSource === 'fabricated' ? 'Minerals committed' : vehicleCost === 0 ? formatCurrency(0) : formatCurrency(-vehicleCost, { signed: true })}
+                color={rocketSource === 'fabricated' ? 'var(--ln-cyan)' : vehicleCost === 0 ? 'var(--ln-text-dim)' : 'var(--ln-crimson)'}
                 last={loanRepayment === 0}
               />
               {loanRepayment > 0 && (

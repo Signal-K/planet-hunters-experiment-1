@@ -204,7 +204,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
       </div>
 
       {customizerOpen && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
+        <div data-testid="hangar-customizer-overlay" style={{ position: 'absolute', inset: 0, top: 'var(--ln-topbar-h, 76px)', zIndex: 10 }}>
           <ShipInteriorPreview
             rocketId="explorer"
             startingFrancs={francs}

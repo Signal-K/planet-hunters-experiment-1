@@ -547,7 +547,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         style={{
           position: 'absolute',
           top: 8,
-          right: process.env.NODE_ENV === 'development' ? 92 : 8,
+          right: process.env.NODE_ENV === 'development' ? 108 : 8,
           zIndex: 90,
           width: 44,
           height: 44,
@@ -659,7 +659,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
       {activeOverlay === 'guide' && (
         <aside className="mining-guide-dock" aria-label="Mining controls">
-          <Panel accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
+          <Panel className="mining-guide-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
             {miningGuide(deliveryTargetName).map(item => (
               <div key={item.label} className="mining-guide-row">
@@ -668,13 +668,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               </div>
             ))}
             <button
+              className="mining-guide-close"
               onClick={() => setGuideOpen(false)}
-              style={{
-                width: '100%', marginTop: 4, padding: '8px 0', borderRadius: 8,
-                border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
-                color: 'var(--ln-cyan)', font: '800 10px var(--ln-font-display)',
-                letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
-              }}
             >
               Close
             </button>

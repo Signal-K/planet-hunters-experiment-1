@@ -198,6 +198,15 @@
   -webkit-backdrop-filter: var(--ln-glass-blur);
 }
 
+/* The ship customiser sits in the light blueprint game; its glass panels were
+   dark with dark text (option cards unreadable). Keep them on paper. */
+[data-testid^="ship-interior-"] .ln-glass-panel {
+  background: #ffffff;
+  border-color: var(--ln-bp-line-strong, rgba(21, 94, 150, 0.35));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 /* Mission Board two-column "canvas + Contract Detail" layout — ported from
    the OD "Full Panel Re-skin" mission-board mockup's `.body-layout`. Keep the
    inspector beside the choices on compact desktop/browser widths too. */
@@ -1830,7 +1839,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 }
 .transit-flight-hud__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .transit-flight-hud__heading strong { color: var(--ln-text); font: 800 18px var(--ln-font-mono); }
-.transit-progress-wrap { position: relative; margin-top: 8px; padding: 4px 0; }
+.transit-progress-wrap { position: relative; margin-top: 8px; padding: 4px 0 22px; }
 .transit-progress-track { position: relative; height: 6px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.12); }
 .transit-progress-track span { display: block; height: 100%; border-radius: inherit; background: var(--ln-cyan); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
 .transit-waypoint {
@@ -1860,7 +1869,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 .transit-waypoint-label--passed { color: var(--ln-cyan); }
 .transit-telemetry { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
 .transit-telemetry div { display: grid; gap: 2px; min-width: 0; }
-.transit-telemetry span { color: var(--ln-text-muted); font: 700 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.transit-telemetry span { overflow: hidden; color: var(--ln-text-muted); font: 700 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .14em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 .transit-telemetry strong { overflow: hidden; color: var(--ln-text); font: 800 var(--ln-fs-micro) var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .transit-cargo-strip { display: flex; align-items: baseline; gap: 10px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--ln-hairline); }
 .transit-cargo-strip strong { overflow: hidden; color: var(--ln-text); font: 700 var(--ln-fs-micro) var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
@@ -1900,18 +1909,19 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   .transit-flight-scene { padding-top: 68px; }
   /* top clears the global .game-menu-button (top:56 + height:36 = bottom 92,
      a fixed-position sibling this stylesheet section can't otherwise see). */
-  .transit-destination-chip { top: 96px; right: 12px; min-width: 0; max-width: 48%; padding: 8px 10px; }
+  .transit-destination-chip { top: 96px; right: 12px; min-width: 0; max-width: calc(50% - 18px); padding: 8px 10px; }
   .transit-destination-chip strong { font-size: 14px; }
   .transit-destination-chip > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .transit-mission-card { top: 80px; left: 12px; width: 48%; padding: 9px 10px; }
+  .transit-mission-card { top: 80px; left: 12px; width: calc(50% - 18px); padding: 9px 10px; }
   .transit-mission-card > strong { font-size: var(--ln-fs-micro); }
   .transit-mission-card p { display: none; }
   .transit-flight-hud { left: 12px; bottom: 12px; width: calc(100% - 24px); padding: 10px; }
   /* Phones: the sphere stays compact so the HUD below it is never covered. */
-  .transit-approach, .transit-approach--close { top: 168px; right: 12px; width: 136px; }
+  .transit-approach, .transit-approach--close { top: 184px; right: 12px; width: 136px; }
   .transit-approach canvas { width: 88px !important; height: 88px !important; }
   .transit-approach ul { display: none; }
   .transit-telemetry { gap: 8px; }
+  .transit-telemetry span { letter-spacing: .06em; }
   .transit-telemetry strong { font-size: var(--ln-fs-micro); }
   .transit-cargo-strip { display: block; }
   .transit-cargo-strip strong { display: block; margin-top: 3px; }
@@ -1956,6 +1966,12 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   color: var(--ln-text-dim);
   font: 12px/1.4 var(--ln-font-body);
 }
+/* Panel clips overflow, which stops the sticky Close from tracking the dock's
+   scroll; let the dock be the only scroller. */
+.mining-guide-dock > .mining-guide-panel { overflow: visible; }
+.theme-blueprint.mining-screen .mining-guide-dock .mining-guide-close {
+  background: linear-gradient(var(--ln-cyan-soft), var(--ln-cyan-soft)) #ffffff;
+}
 .mining-guide-dock button {
   position: sticky;
   bottom: 0;
@@ -1965,6 +1981,16 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   .mining-guide-dock {
     width: min(280px, calc(100% - 168px));
   }
+}
+/* Phones: the right-hand dock is too narrow for a two-column row, so use the
+   full width, stack label over description, and let the list scroll. */
+@media (max-width: 600px) {
+  .mining-guide-dock {
+    left: 12px;
+    width: auto;
+    max-height: calc(100% - 72px - 180px);
+  }
+  .mining-guide-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
 .mining-viewport {
   position: relative; flex: 1; overflow: hidden; min-height: 0;
@@ -2820,7 +2846,9 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 .flight-plan-radio p { margin: 0; font-size: 14px; line-height: 1.4; color: var(--ln-text-muted, #b4c4d8); max-width: 760px; }
 .flight-plan-radio .flight-plan-hint { color: var(--ln-cyan); }
 .flight-plan-skip { align-self: flex-start; margin-top: 4px; }
-.flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-panel-2, #101722); }
+/* In flow (not absolute) so the collapsed chip never covers the screen's own
+   bottom actions such as Confirm Configuration. */
+.flight-plan-chip { align-self: flex-end; margin: 4px 8px; background: var(--ln-panel-2, #101722); }
 .game-chrome-bottom__training-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 999px; background: var(--ln-cyan); }
 .game-chrome-bottom__training-chip { margin-left: 4px; font-size: 14px; color: var(--ln-cyan); }
 /* Phone widths: MENU + dot + "0/3" is wider than its slot and spilled past the
