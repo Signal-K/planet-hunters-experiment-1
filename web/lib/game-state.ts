@@ -20,12 +20,12 @@ import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'instrument-hub', 'mission-history', 'narrative-ledger']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'saturn-storm-search', 'instrument-hub', 'mission-history', 'narrative-ledger']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
-const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey'])
-const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope'])
+const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch'])
+const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager'])
 
 export const DEFAULT_STATE: GameState = {
   screen: 'intro',
@@ -68,6 +68,8 @@ export const DEFAULT_STATE: GameState = {
     tessClassifications: {},
     artifactNarrativeSeenAt: null,
     asteroidClassifications: {},
+    saturnClassifications: {},
+    saturnImagerLaunchedAt: null,
     instrumentDigestNotifiedOn: {},
     dismissedHubPrompts: {},
     discoveredExoplanetTargets: {},
@@ -184,6 +186,9 @@ export function normalizeState(input: PartialSave): GameState {
   const asteroidClassifications = player.asteroidClassifications && typeof player.asteroidClassifications === 'object'
     ? player.asteroidClassifications
     : DEFAULT_STATE.player.asteroidClassifications
+  const saturnClassifications = player.saturnClassifications && typeof player.saturnClassifications === 'object'
+    ? player.saturnClassifications
+    : DEFAULT_STATE.player.saturnClassifications
   const roverTerrainClassifications = player.roverTerrainClassifications && typeof player.roverTerrainClassifications === 'object'
     ? player.roverTerrainClassifications
     : DEFAULT_STATE.player.roverTerrainClassifications
@@ -301,7 +306,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.

@@ -85,6 +85,9 @@ export default function MissionOperationRoutes({
                 deepSpaceTelescopeLaunchedAt: game.mission?.payload?.instrumentId === 'deep-space-telescope'
                   ? (player.deepSpaceTelescopeLaunchedAt ?? Date.now())
                   : player.deepSpaceTelescopeLaunchedAt,
+                saturnImagerLaunchedAt: game.mission?.payload?.instrumentId === 'saturn-imager'
+                  ? (player.saturnImagerLaunchedAt ?? Date.now())
+                  : player.saturnImagerLaunchedAt,
               }))
               game.setLastCargo({})
               game.go('debrief')

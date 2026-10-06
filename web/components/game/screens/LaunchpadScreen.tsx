@@ -125,6 +125,7 @@ export default function LaunchpadScreen({
   const launchedSatellites = [
     player.transitSatelliteLaunchedAt,
     player.deepSpaceTelescopeLaunchedAt || player.deepSpaceTelescopeBuilt || player.placed.includes('deep-space-telescope'),
+    player.saturnImagerLaunchedAt,
   ].filter(Boolean).length
   const { own } = partitionByOwner(catalog.missions, mission => mission)
   const sequence = missionsDone + 1

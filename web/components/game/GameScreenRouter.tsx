@@ -29,6 +29,7 @@ const SkillTreeScreen = dynamic(() => import('@/components/game/screens/SkillTre
 const LaunchpadScreen = dynamic(() => import('@/components/game/screens/LaunchpadScreen'), { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(() => import('@/components/game/screens/InstrumentHubScreen'), { loading: ScreenLoading })
 const TessDiscoveryScreen = dynamic(() => import('@/components/game/screens/TessDiscoveryScreen'), { loading: ScreenLoading })
+const SaturnStormSearchScreen = dynamic(() => import('@/components/game/screens/SaturnStormSearchScreen'), { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(() => import('@/components/game/screens/AsteroidDiscoveryScreen'), { loading: ScreenLoading })
 const SurfaceOpsScreen = dynamic(() => import('@/components/game/screens/SurfaceOpsScreen'), { loading: ScreenLoading })
 const AcademyScreen = dynamic(() => import('@/components/game/screens/AcademyScreen'), { loading: ScreenLoading })
@@ -41,6 +42,7 @@ import { dismissHubPrompt } from '@/lib/hub-prompts'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import {
   DEEP_SPACE_TELESCOPE_INSTRUMENT_ID,
+  SATURN_IMAGER_INSTRUMENT_ID,
   TRANSIT_TELESCOPE_INSTRUMENT_ID,
   instrumentDigestDateKey,
   markInstrumentDigestNotified,
@@ -58,6 +60,7 @@ export const VALID_SCREENS = new Set<Screen>([
   'surface-ops',
   'academy',
   'asteroid-discovery',
+  'saturn-storm-search',
   'instrument-hub',
   'mission-history',
   'narrative-ledger',
@@ -293,8 +296,12 @@ function ScreenBody({
           onSnoozePing={() => {
             const dateKey = instrumentDigestDateKey()
             game.setPlayer(player => markInstrumentDigestNotified(
-              markInstrumentDigestNotified(player, TRANSIT_TELESCOPE_INSTRUMENT_ID, dateKey),
-              DEEP_SPACE_TELESCOPE_INSTRUMENT_ID,
+              markInstrumentDigestNotified(
+                markInstrumentDigestNotified(player, TRANSIT_TELESCOPE_INSTRUMENT_ID, dateKey),
+                DEEP_SPACE_TELESCOPE_INSTRUMENT_ID,
+                dateKey,
+              ),
+              SATURN_IMAGER_INSTRUMENT_ID,
               dateKey,
             ))
           }}
@@ -329,6 +336,17 @@ function ScreenBody({
           onBack={() => game.goBack()}
           onLaunchTelescope={() => game.go('launchpad')}
           onSubmit={game.submitAsteroidClassification}
+        />
+      )
+
+    case 'saturn-storm-search':
+      return (
+        <SaturnStormSearchScreen
+          player={game.player}
+          inspectSubjectId={inspectSignal?.kind === 'saturn' ? inspectSignal.id : undefined}
+          onBack={() => game.goBack()}
+          onLaunchImager={() => game.go('launchpad')}
+          onSubmit={game.submitSaturnClassification}
         />
       )
 

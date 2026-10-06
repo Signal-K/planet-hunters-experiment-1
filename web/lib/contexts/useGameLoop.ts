@@ -22,7 +22,8 @@ import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
-import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict } from '@/lib/data'
+import { resolveSaturnBadgeTier } from '@/lib/data'
+import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
 import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
 import { pbShared } from '@/lib/pb'
@@ -821,6 +822,28 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
   }, [setState])
 
+  // Saturn imager (SSL-492): local record only. The shared pool that would
+  // receive these calls (SSC-43) does not exist yet, so nothing is sent to
+  // the backend. Badge tier is the SSL-491 hook and stays null here.
+  const submitSaturnClassification = useCallback((candidateId: string, verdict: SaturnVerdict) => {
+    const submittedAt = Date.now()
+    setState(s => {
+      const existing = s.player.saturnClassifications?.[candidateId]
+      if (existing) return s
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          researchAnnotations: s.player.researchAnnotations + 1,
+          saturnClassifications: {
+            ...(s.player.saturnClassifications ?? {}),
+            [candidateId]: { candidateId, verdict, submittedAt, badgeTier: resolveSaturnBadgeTier(submittedAt) },
+          },
+        },
+      }
+    })
+  }, [setState])
+
   // Player picks where the satellite points for the *next* daily downlink
   // (see PixiGalaxyStarMap / TessDiscoveryScreen) — this doesn't change today's
   // candidate, just what dailyTessCandidates prefers once today's is done.
@@ -1045,6 +1068,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           deepSpaceTelescopeLaunchedAt: mission?.payload?.instrumentId === 'deep-space-telescope'
             ? (s.player.deepSpaceTelescopeLaunchedAt ?? Date.now())
             : s.player.deepSpaceTelescopeLaunchedAt,
+          saturnImagerLaunchedAt: mission?.payload?.instrumentId === 'saturn-imager'
+            ? (s.player.saturnImagerLaunchedAt ?? Date.now())
+            : s.player.saturnImagerLaunchedAt,
         },
         lastCargo: null,
         deliveredCargo: null,
@@ -1178,6 +1204,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
-    submitAsteroidClassification,
+    submitAsteroidClassification, submitSaturnClassification,
   }
 }

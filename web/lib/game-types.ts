@@ -1,7 +1,7 @@
 // Landnam game — shared type definitions
 // Extracted from game-context.tsx so they can be imported without pulling in React context.
 
-import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
+import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict, SaturnClassification, SaturnVerdict } from '@/lib/data'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import type { RoverSpec } from '@takeon/engine'
 import type { SceneScope } from './scene-scope'
@@ -87,6 +87,7 @@ export type Screen =
   | 'surface-ops'
   | 'academy'
   | 'asteroid-discovery'
+  | 'saturn-storm-search'
   | 'instrument-hub'
   | 'mission-history'
   | 'narrative-ledger'
@@ -116,6 +117,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'surface-ops',
   'galaxy',
   'asteroid-discovery',
+  'saturn-storm-search',
   'instrument-hub',
   // Mission Log is a tray over the still-mounted Base (SSL-347), so the Base
   // must keep its full-viewport frame while the tray is open.
@@ -367,6 +369,10 @@ export interface Player {
   // asteroid_candidates record id, but a separate map since it's a
   // genuinely second instrument, not a variant of the transit feed.
   asteroidClassifications?: Record<string, AsteroidClassification>
+  // Saturn imager (SSL-492): a third launched instrument. It has no hub
+  // building or level; launching it opens the Cassini storm-cloud feed.
+  saturnImagerLaunchedAt?: number | null
+  saturnClassifications?: Record<string, SaturnClassification>
   // Player's satellite-pointing choice for the *next* daily downlink,
   // picked from the PixiGalaxyStarMap after classifying today's candidate.
   // Consumed (cleared) once that candidate becomes today's daily pick.
@@ -570,6 +576,7 @@ export interface GameActions {
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   chooseSatelliteTarget: (subjectId: string) => void
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
+  submitSaturnClassification: (candidateId: string, verdict: SaturnVerdict) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void

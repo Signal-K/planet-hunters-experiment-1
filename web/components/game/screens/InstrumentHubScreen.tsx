@@ -56,7 +56,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect }: Instr
       ambient="observatory"
       className={`game-screen theme-deep ${styles.screen}`}
       data-testid="instrument-hub-screen"
-      scene={<ControlRoomBackdrop phase="day" windowLabel={transitOnline ? 'COURTYARD / TESS LINK' : deepSpaceOnline ? 'COURTYARD / NEOCP LINK' : 'COURTYARD / RECEIVER STANDBY'} />}
+      scene={<ControlRoomBackdrop phase="day" windowLabel={transitOnline ? 'COURTYARD / TESS LINK' : deepSpaceOnline ? 'COURTYARD / NEOCP LINK' : player.saturnImagerLaunchedAt ? 'COURTYARD / CASSINI LINK' : 'COURTYARD / RECEIVER STANDBY'} />}
     >
       <TopBar eyebrow="ORBITAL OBSERVATORY / DATA LINK" title="Instrument Hub" onBack={onBack} glass />
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
@@ -68,4 +68,4 @@ export default function InstrumentHubScreen({ player, onBack, onInspect }: Instr
   )
 }
 
-export type InstrumentHubInspectScreen = Extract<import('@/lib/game-types').Screen, 'galaxy' | 'asteroid-discovery'>
+export type InstrumentHubInspectScreen = Extract<import('@/lib/game-types').Screen, 'galaxy' | 'asteroid-discovery' | 'saturn-storm-search'>

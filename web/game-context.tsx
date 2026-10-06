@@ -335,6 +335,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       submitTessClassification: loop.submitTessClassification,
       chooseSatelliteTarget: loop.chooseSatelliteTarget,
       submitAsteroidClassification: loop.submitAsteroidClassification,
+      submitSaturnClassification: loop.submitSaturnClassification,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,

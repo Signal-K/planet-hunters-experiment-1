@@ -12,7 +12,7 @@ interface DownlinkControlDeskProps {
 }
 
 function sourceLabel(kind: InstrumentSignal['kind']): string {
-  return kind === 'transit' ? 'TRANSIT TELESCOPE' : 'DEEP SPACE TELESCOPE'
+  return kind === 'transit' ? 'TRANSIT TELESCOPE' : kind === 'saturn' ? 'SATURN IMAGER' : 'DEEP SPACE TELESCOPE'
 }
 
 export function DownlinkControlDesk({ signals, loading = false, onInspect, previewControls }: DownlinkControlDeskProps) {

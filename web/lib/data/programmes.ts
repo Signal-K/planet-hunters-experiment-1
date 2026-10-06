@@ -159,6 +159,27 @@ const NEOCP_ASTEROID_CONFIRMATION: ProgrammeDefinition = {
   live: true,
 }
 
+const SATURN_STORM_SEARCH: ProgrammeDefinition = {
+  id: 'saturn-storm-search',
+  kind: 'citizen-science',
+  verb: 'classify',
+  title: 'Saturn storm search',
+  question: 'Is there a storm cloud in the image?',
+  dataset: 'Cassini ISS archive frames (Zooniverse project 24787)',
+  provenance: 'Real Cassini imaging data · NASA/JPL/Space Science Institute via Zooniverse',
+  source: { kind: 'instrument', instrumentId: 'saturn-imager' },
+  cadence: 'daily',
+  stages: ['observe', 'contribute', 'review', 'accepted', 'shared'],
+  consensus: { agreeing: 15, reviewer: 'peers' },
+  recipient: { name: 'Zooniverse Saturn Thunderstorm Search', url: 'https://www.zooniverse.org/projects/24787', receives: 'Yes / No / Maybe storm-cloud classifications per Cassini frame' },
+  sharing: { hubChannel: 'discoveries', defaultVisibility: 'public', discussion: false },
+  reward: { francs: false, progression: 'discovery-record' },
+  framing: 'none',
+  events: { contribute: 'saturn_classification', accepted: 'saturn_frame_retired' },
+  surfaces: ['SaturnStormSearchScreen', 'InstrumentFeedSystem'],
+  live: true,
+}
+
 const FIELD_ANOMALY_SURVEY: ProgrammeDefinition = {
   id: 'field-anomaly-survey',
   kind: 'citizen-science',
@@ -248,6 +269,7 @@ const BIOSPHERE_SEEDING: ProgrammeDefinition = {
 export const PROGRAMMES: readonly ProgrammeDefinition[] = [
   TESS_TRANSIT_SEARCH,
   NEOCP_ASTEROID_CONFIRMATION,
+  SATURN_STORM_SEARCH,
   FIELD_ANOMALY_SURVEY,
   SURFACE_BUILDS,
   BASE_SHOWCASE,

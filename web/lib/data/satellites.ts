@@ -28,4 +28,9 @@ export const SATELLITE_MODELS: SatelliteModel[] = [
     name: 'Deep Space Telescope',
     unlockHint: 'Reach Free Operations',
   },
+  {
+    id: 'saturn-imager',
+    name: 'Saturn Imager',
+    unlockHint: 'Reach Free Operations',
+  },
 ]

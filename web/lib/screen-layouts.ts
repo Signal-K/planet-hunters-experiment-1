@@ -104,6 +104,7 @@ export const GAME_ROUTES = [
   { path: '/game/instrument-hub', screen: 'instrument-hub', surface: 'instrument' },
   { path: '/game/galaxy', screen: 'galaxy', surface: 'instrument' },
   { path: '/game/asteroid-discovery', screen: 'asteroid-discovery', surface: 'instrument' },
+  { path: '/game/saturn-storm-search', screen: 'saturn-storm-search', surface: 'instrument' },
   { path: '/game/hangar', screen: 'hangar', surface: 'instrument' },
   { path: '/game/academy', screen: 'academy', surface: 'instrument' },
   { path: '/game/refinery', screen: 'refinery', surface: 'instrument' },

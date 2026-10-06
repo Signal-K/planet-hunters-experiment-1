@@ -33,6 +33,21 @@ export const DEEP_SPACE_TELESCOPE_TARGET: Target = {
   minerals: [],
 }
 
+// SSL-492: the Saturn imager reuses the same launch -> flight -> debrief ->
+// Instrument Hub path as the telescopes. No payout; real Cassini frames.
+export const SATURN_IMAGER_TARGET_ID = 'earth-orbit-saturn-imager'
+export const SATURN_IMAGER_MISSION_ID = 'story-saturn-imager-launch'
+
+export const SATURN_IMAGER_TARGET: Target = {
+  id: SATURN_IMAGER_TARGET_ID,
+  name: 'Earth Orbit',
+  type: 'planet',
+  orbit: 1,
+  difficulty: 'L1',
+  brief: 'Orbital lane for a Saturn imager that downlinks archived Cassini frames for storm-cloud review.',
+  minerals: [],
+}
+
 interface RuntimeCatalogOpts {
   catalog: Catalog
   discoveredTargets?: Record<string, Target>
@@ -64,11 +79,15 @@ export function buildRuntimeCatalog({
     && !player?.placed?.includes('deep-space-telescope')
   const hasActiveDeepSpaceTelescopeMission = missionId === DEEP_SPACE_TELESCOPE_MISSION_ID || targetId === DEEP_SPACE_TELESCOPE_TARGET_ID
   const shouldIncludeDeepSpaceTelescopeMission = shouldOfferDeepSpaceTelescopeMission || hasActiveDeepSpaceTelescopeMission
+  const shouldOfferSaturnImagerMission = freeOperations && !player?.saturnImagerLaunchedAt
+  const hasActiveSaturnImagerMission = missionId === SATURN_IMAGER_MISSION_ID || targetId === SATURN_IMAGER_TARGET_ID
+  const shouldIncludeSaturnImagerMission = shouldOfferSaturnImagerMission || hasActiveSaturnImagerMission
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
   const mergedTargets = [
     ...catalog.targets,
     ...(shouldIncludeTransitTelescopeMission && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
     ...(shouldIncludeDeepSpaceTelescopeMission && !existingTargetIds.has(DEEP_SPACE_TELESCOPE_TARGET.id) ? [DEEP_SPACE_TELESCOPE_TARGET] : []),
+    ...(shouldIncludeSaturnImagerMission && !existingTargetIds.has(SATURN_IMAGER_TARGET.id) ? [SATURN_IMAGER_TARGET] : []),
     ...discoveredTargetList.filter(target => !existingTargetIds.has(target.id)),
   ]
   // A client contract pays its stated fee. The prior academy/diplomacy
@@ -159,6 +178,36 @@ export function buildRuntimeCatalog({
         payout: { francs: 0, affinity: 0 },
       }]
     : []
+  const saturnImagerMission: Mission[] = shouldIncludeSaturnImagerMission && !existingMissionIds.has(SATURN_IMAGER_MISSION_ID)
+    ? [{
+        id: SATURN_IMAGER_MISSION_ID,
+        title: 'Launch Saturn Imager',
+        brief: 'Deploy a Saturn imager into Earth orbit. Its daily feed delivers real Cassini frames to check for storm clouds.',
+        tag: 'STORY',
+        difficulty: 'L1',
+        locked: false,
+        sequence: missionsDone + 1,
+        unlockAt: 'Reach Free Operations',
+        targetId: SATURN_IMAGER_TARGET_ID,
+        payload: {
+          type: 'satellite',
+          name: 'Saturn Imager',
+          cargoCost: 0,
+          instrumentId: 'saturn-imager',
+        },
+        requires: {
+          minerals: {},
+          cargo_min: 0,
+          drill_tier: 1,
+          max_orbit: 1,
+        },
+        programReward: {
+          researchXP: 0,
+          outcome: 'Saturn imager online · Cassini storm-cloud feed unlocked',
+        },
+        payout: { francs: 0, affinity: 0 },
+      }]
+    : []
   const surveyMissions: Mission[] = discoveredTargetList
     .map(target => ({
       id: `exo-survey-${target.id}`,
@@ -216,6 +265,6 @@ export function buildRuntimeCatalog({
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: [...relationshipMissions, ...transitTelescopeMission, ...deepSpaceTelescopeMission, ...surveyMissions, ...jointMissions, ...resourceFocusMissions],
+    missions: [...relationshipMissions, ...transitTelescopeMission, ...deepSpaceTelescopeMission, ...saturnImagerMission, ...surveyMissions, ...jointMissions, ...resourceFocusMissions],
   }
 }

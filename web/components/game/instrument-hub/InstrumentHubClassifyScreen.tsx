@@ -47,7 +47,7 @@ export function InstrumentHubClassifyScreen({
       {!loading && signal && (
         <>
           <div className={styles.meta}>
-            <span className={styles.kind}>{signal.kind === 'transit' ? 'TESS CADENCE' : 'NEOCP TRACK'}</span>
+            <span className={styles.kind}>{signal.kind === 'transit' ? 'TESS CADENCE' : signal.kind === 'saturn' ? 'CASSINI FRAME' : 'NEOCP TRACK'}</span>
             <strong className={styles.title}>{signal.title}</strong>
             <span className={styles.subtitle}>{signal.subtitle}</span>
           </div>
