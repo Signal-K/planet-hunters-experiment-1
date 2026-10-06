@@ -1,8 +1,11 @@
 import { dailyTessCandidates, dailyAsteroidCandidates, dailySaturnCandidates, type TessCandidate, type AsteroidCandidate, type SaturnCandidate } from '@/lib/data'
+import { isNewMoonDay } from '@/lib/data/sky-events'
 import type { Player } from '@/lib/game-types'
 
 export const TRANSIT_TELESCOPE_INSTRUMENT_ID = 'transit-telescope'
 export const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
+
+export const NEW_MOON_EXTRA_ASTEROID_CANDIDATES = 1
 
 export const SATURN_IMAGER_INSTRUMENT_ID = 'saturn-imager'
 
@@ -94,7 +97,10 @@ export function deepSpaceInstrumentDigest(
   player: DeepSpaceInstrumentFeedPlayer,
   dateKey: string
 ): AsteroidCandidate[] {
-  return dailyAsteroidCandidates(candidates, dateKey, deepSpaceInstrumentLevel(player))
+  // SSL-491: on the UTC day of a new moon (monthly) the dark sky serves one
+  // extra asteroid candidate. Deterministic: same dateKey, same digest.
+  const extra = isNewMoonDay(dateKey) ? NEW_MOON_EXTRA_ASTEROID_CANDIDATES : 0
+  return dailyAsteroidCandidates(candidates, dateKey, deepSpaceInstrumentLevel(player) + extra)
 }
 
 export function unresolvedDeepSpaceInstrumentDigest(

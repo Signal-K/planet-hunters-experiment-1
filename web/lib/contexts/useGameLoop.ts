@@ -21,8 +21,9 @@ import { TREASURY_PLAYER_ID } from '@/lib/systems/ProgressionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import type { Catalog } from '@/lib/catalog'
-import type { GameState, LicenseGrade, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
-import { resolveSaturnBadgeTier } from '@/lib/data'
+import type { GameState, LicenseGrade, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
+import { resolveSaturnBadgeTier, grantBadgesForActivity, skyEventNow, type SkyActivityKind } from '@/lib/data'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
 import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
@@ -212,6 +213,20 @@ function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot):
       shipDestroyed: snapshot.shipDestroyed,
     },
   }
+}
+
+// SSL-491: grant sky-event badges for an activity. Time comes from
+// skyEventNow so dev/staging can override the date; production uses the clock.
+const reportedBadges = new Set<string>()
+function grantSkyBadges(player: Player, kind: SkyActivityKind, at: number): Player {
+  const { player: next, granted } = grantBadgesForActivity(player, kind, at)
+  for (const badge of granted) {
+    const key = `${badge.eventId}:${badge.tier}`
+    if (reportedBadges.has(key)) continue
+    reportedBadges.add(key)
+    captureGameEvent('badge_earned', { event_id: badge.eventId, tier: badge.tier, activity: kind })
+  }
+  return next
 }
 
 export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopOpts) {
@@ -791,14 +806,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   // ranges/discoveredTarget/satelliteTargetId to thread through, just the
   // verdict record itself.
   const submitAsteroidClassification = useCallback((candidateId: string, verdict: AsteroidVerdict) => {
-    const submittedAt = Date.now()
+    const submittedAt = skyEventNow(isDevLauncherEnabled())
 
     setState(s => {
       const existing = s.player.asteroidClassifications?.[candidateId]
       const next: GameState = {
         ...s,
         player: {
-          ...s.player,
+          ...(existing ? s.player : grantSkyBadges(s.player, 'asteroid-classification', submittedAt)),
           researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,
           asteroidClassifications: {
             ...(s.player.asteroidClassifications ?? {}),
@@ -824,16 +839,16 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   // Saturn imager (SSL-492): local record only. The shared pool that would
   // receive these calls (SSC-43) does not exist yet, so nothing is sent to
-  // the backend. Badge tier is the SSL-491 hook and stays null here.
+  // the backend. Badge tier comes from the SSL-491 sky event config.
   const submitSaturnClassification = useCallback((candidateId: string, verdict: SaturnVerdict) => {
-    const submittedAt = Date.now()
+    const submittedAt = skyEventNow(isDevLauncherEnabled())
     setState(s => {
       const existing = s.player.saturnClassifications?.[candidateId]
       if (existing) return s
       return {
         ...s,
         player: {
-          ...s.player,
+          ...grantSkyBadges(s.player, 'saturn-classification', submittedAt),
           researchAnnotations: s.player.researchAnnotations + 1,
           saturnClassifications: {
             ...(s.player.saturnClassifications ?? {}),
@@ -1027,7 +1042,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const next: GameState = {
         ...s,
         player: {
-          ...constructionPlayer,
+          ...grantSkyBadges(constructionPlayer, 'launch', skyEventNow(isDevLauncherEnabled())),
           francs,
           activeMission: null,
           missionRunId: undefined,

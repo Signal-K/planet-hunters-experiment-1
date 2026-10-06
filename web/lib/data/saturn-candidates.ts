@@ -25,15 +25,10 @@ export interface SaturnClassification {
   verdict: SaturnVerdict
   submittedAt: number
   /**
-   * SSL-491 hook: gold during an event period, silver otherwise. SSL-491
-   * implements badges and fills this in; SSL-492 always records null.
+   * SSL-491: gold during the Saturn event period, silver after, null before
+   * (see resolveSaturnBadgeTier in sky-events.ts).
    */
   badgeTier: 'gold' | 'silver' | null
-}
-
-/** SSL-491 hook. Returns null until the badge ticket implements tiers. */
-export function resolveSaturnBadgeTier(_submittedAt: number): 'gold' | 'silver' | null {
-  return null
 }
 
 /** Fixed single-frame-per-day digest; the Saturn imager has no level scaling. */

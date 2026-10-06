@@ -19,6 +19,7 @@ import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import styles from './InstrumentHubScreen.module.css'
 import { ControlRoomBackdrop } from './ControlRoomBackdrop'
 import { DownlinkControlDesk } from './DownlinkControlDesk'
+import { SkyBadgeRow } from './SkyBadgeRow'
 
 interface InstrumentHubScreenProps {
   player: Player
@@ -63,6 +64,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect }: Instr
         {!loading && signals.length === 0 && <span className={styles.srOnly} data-testid="instrument-hub-empty">No unresolved instrument data.</span>}
         {signals.map(signal => <span key={`${signal.kind}:${signal.id}`} className={styles.srOnly} data-testid="instrument-signal">{signal.title}</span>)}
         <DownlinkControlDesk signals={signals} loading={loading} onInspect={onInspect} />
+        <SkyBadgeRow badges={player.badges} />
       </div>
     </ScenePanel>
   )

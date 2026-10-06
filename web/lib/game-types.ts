@@ -373,6 +373,8 @@ export interface Player {
   // building or level; launching it opens the Cassini storm-cloud feed.
   saturnImagerLaunchedAt?: number | null
   saturnClassifications?: Record<string, SaturnClassification>
+  // Sky event badges (SSL-491), keyed by event id. Gold/silver by date played.
+  badges?: Record<string, import('@/lib/data/sky-events').PlayerBadge>
   // Player's satellite-pointing choice for the *next* daily downlink,
   // picked from the PixiGalaxyStarMap after classifying today's candidate.
   // Consumed (cleared) once that candidate becomes today's daily pick.

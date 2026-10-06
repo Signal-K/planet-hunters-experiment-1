@@ -36,8 +36,9 @@ describe('saturn candidates', () => {
       .toEqual({ id: 'rec1', subjectId: '42', opusId: 'co-iss-n1', imageUrl: 'https://x/y.png' })
   })
 
-  it('leaves the badge tier for SSL-491', () => {
-    expect(resolveSaturnBadgeTier(Date.now())).toBeNull()
+  it('tiers the badge by date played (SSL-491)', () => {
+    expect(resolveSaturnBadgeTier(Date.parse('2026-10-07T12:00:00Z'))).toBe('gold')
+    expect(resolveSaturnBadgeTier(Date.parse('2026-10-11T00:00:00Z'))).toBe('silver')
   })
 })
 
