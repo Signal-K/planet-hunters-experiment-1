@@ -10,6 +10,7 @@ import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { UI_ZONES } from '@/lib/ui-zones'
 import type { Player } from '@/lib/game-types'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
+import { SkyBadgeRow } from './SkyBadgeRow'
 import styles from './InstrumentHubScreen.module.css'
 
 interface InstrumentHubScreenProps {
@@ -55,6 +56,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect }: Instr
       {help.layer}
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
         <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} />
+        <SkyBadgeRow badges={player.badges} />
       </div>
     </ScenePanel>
   )

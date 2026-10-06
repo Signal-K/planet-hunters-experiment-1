@@ -94,6 +94,16 @@ function visitWithState(state: StateOverride) {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(fullState(state)))
       seedFixtureSession(win)
+      // PushOptIn renders nothing when the browser reports push as unsupported
+      // or the permission as denied (headless Electron reports denied), which
+      // would leave the ambient-prompt zone empty. Present an undecided,
+      // supported browser so the prompt is exercised.
+      if (win.Notification) {
+        Object.defineProperty(win.Notification, 'permission', { configurable: true, get: () => 'default' })
+      }
+      if (!('PushManager' in win)) {
+        Object.defineProperty(win, 'PushManager', { configurable: true, value: function PushManager() {} })
+      }
     },
   })
 }

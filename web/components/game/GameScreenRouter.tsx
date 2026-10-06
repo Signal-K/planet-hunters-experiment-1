@@ -3,10 +3,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
-import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
+import { formatCurrency } from '@/lib/format'
 import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 // IntroScreen and HubScreen are the two most likely first paints (cold start
 // and post-onboarding default), so they stay in the main bundle. Every other
@@ -255,6 +256,17 @@ function ScreenBody({
           }}
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
           onExcavateSubsurface={() => game.excavateSubsurface()}
+          onExcavateSubsurfaceUnavailable={() => {
+            const cost = SUBSURFACE_EXCAVATE_COST
+            const missing = [
+              ...(game.player.francs < cost.cost ? [`${formatCurrency(cost.cost - game.player.francs)} more`] : []),
+              ...Object.entries(cost.costMaterials)
+                .map(([mineral, amount]) => ({ mineral, amount: amount - (game.player.stash?.[mineral] ?? 0) }))
+                .filter(({ amount }) => amount > 0)
+                .map(({ mineral, amount }) => `${amount} more ${mineral}`),
+            ]
+            game.addToast(`Cannot excavate: need ${missing.join(' and ')}`, 'warn')
+          }}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
           onOpenMarket={() => game.go('market')}
           onFocusResources={(label, minerals) => {

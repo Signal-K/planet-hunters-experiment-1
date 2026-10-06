@@ -159,14 +159,20 @@ describe('HubSubsurfaceView', () => {
     await act(async () => root.unmount())
   })
 
-  it('disables excavation until both francs and aluminium are available, with the missing amounts explained', async () => {
+  it('keeps an unaffordable excavation tappable (aria-disabled) until both francs and aluminium are available, with the missing amounts explained', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
+    let unavailable = 0
     await act(async () => {
-      root.render(<HubSubsurfaceView francs={0} stash={{}} />)
+      root.render(<HubSubsurfaceView francs={0} stash={{}} onExcavateUnavailable={() => { unavailable += 1 }} />)
     })
     const cta = host.querySelector<HTMLButtonElement>('[data-testid="subsurface-excavate-cta"]')
-    expect(cta?.disabled).toBe(true)
+    expect(cta?.disabled).toBe(false)
+    expect(cta?.getAttribute('aria-disabled')).toBe('true')
+    await act(async () => {
+      cta?.click()
+    })
+    expect(unavailable).toBe(1)
     expect(host.querySelector('[data-testid="subsurface-excavate-lock-copy"]')?.textContent)
       .toContain('10 aluminium (you have 0)')
     expect(host.textContent).toContain('client mineral cargo')

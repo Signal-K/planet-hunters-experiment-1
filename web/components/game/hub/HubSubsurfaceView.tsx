@@ -35,6 +35,7 @@ interface HubSubsurfaceViewProps {
   subsurfaceExcavated?: boolean
   subsurfaceBuilt?: string[]
   onExcavate?: () => void
+  onExcavateUnavailable?: () => void
   onBuildRoom?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
   onOpenMarket?: () => void
@@ -401,11 +402,13 @@ function ExcavatePrompt({
   francs,
   stash,
   onExcavate,
+  onExcavateUnavailable,
   onFocusResources,
 }: {
   francs: number
   stash?: Record<string, number>
   onExcavate?: () => void
+  onExcavateUnavailable?: () => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
 }) {
   const affordable = canAffordSubsurface(SUBSURFACE_EXCAVATE_COST, { francs, stash })
@@ -441,8 +444,11 @@ function ExcavatePrompt({
         <div style={{ marginTop: 12, maxWidth: 320, marginInline: 'auto' }}>
           <PrimaryBtn
             testId="subsurface-excavate-cta"
-            onClick={onExcavate}
-            disabled={!affordable}
+            onClick={() => {
+              if (affordable) onExcavate?.()
+              else onExcavateUnavailable?.()
+            }}
+            ariaDisabled={!affordable}
           >
             Excavate deck
           </PrimaryBtn>
@@ -461,6 +467,7 @@ export function HubSubsurfaceView({
   subsurfaceExcavated = false,
   subsurfaceBuilt = [],
   onExcavate,
+  onExcavateUnavailable,
   onBuildRoom,
   onFocusResources,
   onOpenMarket,
@@ -507,7 +514,7 @@ export function HubSubsurfaceView({
                 <h2 className={styles.deckTitle}>Unexcavated</h2>
               </div>
             </div>
-            <ExcavatePrompt francs={francs} stash={stash} onExcavate={onExcavate} onFocusResources={onFocusResources} />
+            <ExcavatePrompt francs={francs} stash={stash} onExcavate={onExcavate} onExcavateUnavailable={onExcavateUnavailable} onFocusResources={onFocusResources} />
           </div>
         ) : activeRoom && activeDefinition ? (
           <div className={styles.detailView}>

@@ -168,7 +168,7 @@ describe('Earth Base — redesigned scene', () => {
     cy.contains('button', 'Subsurface').click({ scrollBehavior: false })
     cy.get('[data-testid="subsurface-facility-cutaway"]', { timeout: 10000 })
       .should('be.visible')
-    cy.contains('Storage & habitat deck').should('be.visible')
+    cy.contains('Build storage below the fixed surface base').should('be.visible')
     cy.contains('Mineral Vault').should('be.visible')
     cy.contains('Parts Stores').should('be.visible')
     // The portrait room grid is its own scroll container; the fourth card is

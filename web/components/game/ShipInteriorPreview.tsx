@@ -255,7 +255,9 @@ export default function ShipInteriorPreview({
 
         {/* Part cards — flex 1, fill space. Glass-HUD variant cards: cyan
             border by default, lime border + "Installed" state when selected. */}
-        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 6 }}>
+        {/* Scrolls internally: in a short landscape viewport the cards would otherwise
+            spill under the footer controls, where a real pointer cannot reach them. */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridAutoRows: 'minmax(min-content, 1fr)', gap: 6 }}>
           {availableParts.map(part => {
             const selected = buildState.installed[step.kind] === part.id
             const swapCost = currentInstalled && currentInstalled.id !== part.id ? currentInstalled.price : 0
