@@ -106,7 +106,7 @@ export default function ShipInteriorPreview({
     // Full-screen overlay — caller must position this (position: absolute; inset: 0)
     <div
       data-testid={`ship-interior-${rocketId}`}
-      className="ln-starfield"
+      className="ln-starfield theme-blueprint ship-interior-preview"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -268,7 +268,7 @@ export default function ShipInteriorPreview({
                 data-testid={`choose-${part.id}`}
                 disabled={buildState.confirmed || !affordable}
                 onClick={() => choosePart(part)}
-                className={selected ? undefined : 'ln-glass-panel'}
+                className={selected ? 'ship-part-option ship-part-option--selected' : 'ln-glass-panel ship-part-option'}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',

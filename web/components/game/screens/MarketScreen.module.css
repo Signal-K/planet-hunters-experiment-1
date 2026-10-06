@@ -29,6 +29,13 @@
   border-bottom: 1px solid var(--ln-hairline-strong);
 }
 
+/* The development launcher is a fixed 40px badge at the top-left. Market
+   owns its header instead of TopBar, so reserve the badge's full footprint
+   here rather than letting its back control become an overlapping target. */
+.header[data-dev-launcher='true'] {
+  padding-left: max(64px, 4vw);
+}
+
 .backButton,
 .sellButton,
 .primaryButton {

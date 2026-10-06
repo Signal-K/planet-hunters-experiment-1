@@ -17,6 +17,7 @@ import { sellUnitPrice, sellQuote } from '@/lib/systems/EconomySystem'
 import { formatCurrency } from '@/lib/format'
 import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
 import { captureGameEvent } from '@/lib/posthog'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
 import styles from './MarketScreen.module.css'
 
 interface MarketScreenProps {
@@ -66,7 +67,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
 
   return (
     <div className={`theme-light market-screen ${styles.screen}`}>
-      <header className={styles.header}>
+      <header className={styles.header} data-dev-launcher={isDevLauncherEnabled() || undefined}>
         <button className={styles.backButton} onClick={onBack} aria-label="Back to previous screen" type="button" data-testid="market-back-btn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M15 18l-6-6 6-6" />

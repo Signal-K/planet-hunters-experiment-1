@@ -198,6 +198,29 @@
   -webkit-backdrop-filter: var(--ln-glass-blur);
 }
 
+/* The fitter is a loop screen, not a legacy dark overlay. Keep every card
+   readable against blueprint paper, including unselected part options. */
+.ship-interior-preview {
+  background-color: var(--ln-bp-bg);
+  background-image:
+    linear-gradient(var(--ln-bp-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ln-bp-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.ship-interior-preview .ln-glass-panel,
+.ship-interior-preview .ship-part-option {
+  border: 2px solid var(--ln-bp-line-strong);
+  background: var(--ln-bp-paper);
+  box-shadow: 3px 3px 0 var(--ln-bp-line-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.ship-interior-preview .ship-part-option--selected {
+  border: 2px solid var(--ln-bp-green);
+  background: var(--ln-bp-green-soft);
+  box-shadow: 3px 3px 0 var(--ln-bp-line-strong);
+}
+
 /* Mission Board two-column "canvas + Contract Detail" layout — ported from
    the OD "Full Panel Re-skin" mission-board mockup's `.body-layout`. Keep the
    inspector beside the choices on compact desktop/browser widths too. */
@@ -1759,10 +1782,10 @@ button { cursor: pointer; }
   .transit-flight-scene { padding-top: 68px; }
   /* top clears the global .game-menu-button (top:56 + height:36 = bottom 92,
      a fixed-position sibling this stylesheet section can't otherwise see). */
-  .transit-destination-chip { top: 96px; right: 12px; min-width: 0; max-width: 48%; padding: 8px 10px; }
+  .transit-destination-chip { top: 96px; right: 12px; min-width: 0; max-width: calc(50% - 18px); padding: 8px 10px; }
   .transit-destination-chip strong { font-size: 14px; }
   .transit-destination-chip > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .transit-mission-card { top: 80px; left: 12px; width: 48%; padding: 9px 10px; }
+  .transit-mission-card { top: 96px; left: 12px; width: calc(50% - 18px); padding: 9px 10px; }
   .transit-mission-card > strong { font-size: 13px; }
   .transit-mission-card p { display: none; }
   .transit-flight-hud { left: 12px; bottom: 12px; width: calc(100% - 24px); padding: 10px; }
@@ -1770,7 +1793,10 @@ button { cursor: pointer; }
   .transit-approach, .transit-approach--close { top: 168px; right: 12px; width: 136px; }
   .transit-approach canvas { width: 88px !important; height: 88px !important; }
   .transit-approach ul { display: none; }
-  .transit-telemetry { gap: 8px; }
+  /* Waypoint labels occupy their own row before telemetry. At 390–402px,
+     four narrow columns made both the labels and DESTINATION unreadable. */
+  .transit-progress-wrap { margin-bottom: 14px; }
+  .transit-telemetry { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .transit-telemetry strong { font-size: 9px; }
   .transit-cargo-strip { display: block; }
   .transit-cargo-strip strong { display: block; margin-top: 3px; }
@@ -1991,6 +2017,73 @@ button { cursor: pointer; }
 .mining-progress-track { height: 6px; margin-top: 6px; overflow: hidden; border-radius: 3px; background: rgba(255,255,255,.08); }
 .mining-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); transition: width 120ms linear; }
 .mining-actions { display: grid; gap: var(--ln-s-2); }
+
+/* The primary mining actions are a compact rail, never a line of loose text.
+   Explicit cells keep the order label, count, and overflow control from
+   collapsing into one another at 390–402px. */
+.mining-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) 44px;
+  gap: var(--ln-s-2);
+  min-width: 0;
+  align-items: stretch;
+}
+.mining-command {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 56px;
+  padding: var(--ln-s-2) var(--ln-s-3);
+  text-align: left;
+}
+.mining-command__label {
+  overflow: hidden;
+  font: 800 10px/1.2 var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+.mining-command__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin-top: 4px;
+  color: var(--ln-text-muted);
+  font: 700 10px/1.1 var(--ln-font-mono);
+  white-space: nowrap;
+}
+.mining-command--return { padding-bottom: 12px; }
+.mining-command__fill {
+  position: absolute;
+  right: var(--ln-s-3);
+  bottom: 5px;
+  left: var(--ln-s-3);
+  height: 3px;
+  overflow: hidden;
+  background: var(--ln-hairline);
+}
+.mining-command__fill > span {
+  display: block;
+  height: 100%;
+  background: currentColor;
+}
+.mining-overflow { position: relative; min-width: 0; }
+.mining-overflow__btn {
+  width: 44px;
+  min-height: 56px;
+  padding: 0;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-cyan-soft);
+  color: var(--ln-cyan);
+  font: 800 18px/1 var(--ln-font-display);
+  cursor: pointer;
+}
+@media (max-width: 600px) {
+  .mining-command__label { font-size: 9px; letter-spacing: .08em; }
+  .mining-command__meta { font-size: 9px; }
+}
 
 /* KES-219 — keep the mining field atmospheric, but bring the persistent
    operator surface into the light blueprint language used by Launchpad and
