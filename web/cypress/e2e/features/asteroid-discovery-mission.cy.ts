@@ -127,7 +127,7 @@ const LANDSCAPE_VIEWPORTS = [
 
 describe('Asteroid Discovery compact-landscape visualization (KES-342)', () => {
   LANDSCAPE_VIEWPORTS.forEach(({ key, width, height }) => {
-    it(`[${key}] reduces to the primary readouts by default, with the rest behind More Data`, () => {
+    it(`[${key}] shows the RA/Dec chart in the shared viewport with verdicts in reach`, () => {
       cy.viewport(width, height)
       interceptCandidates()
       visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
@@ -136,11 +136,16 @@ describe('Asteroid Discovery compact-landscape visualization (KES-342)', () => {
       })
       cy.visit('/game/asteroid-discovery')
       cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
-      // Compact landscape scrolls the readout column; reachable is the contract.
-      cy.contains('NEO Score').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="asteroid-sky-plot"]').should('be.visible')
+      cy.get('[data-testid="neocp-data-provenance"]').should('be.visible')
+      cy.get('[data-testid="instrument-empty-tool"]').should('contain', 'No tool')
       cy.contains('H Mag').should('not.exist')
-      cy.get('[data-testid="neocp-more-data-toggle"]').click()
-      cy.contains('H Mag').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="neocp-more-data-toggle"]').should('not.exist')
+      cy.get('[data-testid="neocp-verdict-likely_real"]').then($button => {
+        const rect = $button[0].getBoundingClientRect()
+        expect(rect.bottom, 'verdict bottom edge').to.be.at.most(height)
+        expect(rect.height, 'verdict hit area').to.be.at.least(44)
+      })
     })
 
     it(`[${key}] reaches the verdict-ready state after casting a call`, () => {

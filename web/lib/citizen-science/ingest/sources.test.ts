@@ -41,7 +41,7 @@ describe('citizen-science ingest sources', () => {
         Discovery_month: 9,
         Discovery_day: 18.8,
         'R.A.': 23.0744,
-        Decl: -7.4002,
+        'Decl.': -7.4002,
         V: 19.8,
         NObs: 3,
         Arc: 0.01,
@@ -61,6 +61,11 @@ describe('citizen-science ingest sources', () => {
       arcDays: 0.01,
       lastSeenDays: 0.278,
     })
+  })
+
+  it('still reads a Decl field that omits the trailing dot', () => {
+    const rows = parseNeocpRows([{ Temp_Desig: 'LEGACY1', Decl: -3.5, 'R.A.': 1 }])
+    expect(rows[0].decl).toBe(-3.5)
   })
 
   it('fails closed when the public source HTTP status is not ok', async () => {
