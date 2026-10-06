@@ -168,6 +168,25 @@ describe('game state hydration normalization', () => {
     expect(normalized.targetId).toBeNull()
   })
 
+  it('keeps the bare Free Ops Build screen on hydration but not for onboarding players', () => {
+    const freeOps = normalizeAndRepair({
+      screen: 'fab',
+      missionId: null,
+      targetId: null,
+      player: { missionsDone: 4 },
+    })
+    expect(freeOps.player.freeOperations).toBe(true)
+    expect(freeOps.screen).toBe('fab')
+
+    const onboarding = normalizeAndRepair({
+      screen: 'fab',
+      missionId: null,
+      targetId: null,
+      player: { missionsDone: 0 },
+    })
+    expect(onboarding.screen).not.toBe('fab')
+  })
+
   it('keeps TESS Atlas behind Free Operations on hydration', () => {
     const normalized = normalizeAndRepair({
       screen: 'galaxy',

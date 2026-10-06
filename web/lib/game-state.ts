@@ -394,10 +394,15 @@ function repairStateRoute(rawInput: GameState): GameState {
   const hasRuntimeMission = !!input.missionId && RUNTIME_MISSION_IDS.has(input.missionId)
   const target = input.targetId ? TARGETS.find(t => t.id === input.targetId) ?? null : null
   const hasRuntimeTarget = !!input.targetId && RUNTIME_TARGET_IDS.has(input.targetId)
-  if (MISSION_CONTEXT_SCREENS.has(input.screen) && !mission && !hasRuntimeMission) {
+  // A Free Ops player's bare /game/fab (no mission, no target) is the Free Ops
+  // Build objective screen, which owns that route (see canonicalGameRoute). It
+  // is not a lost mission context, so it must survive a cold load.
+  const isBareFreeOpsBuild = input.screen === 'fab' && input.player.freeOperations
+    && !input.missionId && !input.targetId
+  if (!isBareFreeOpsBuild && MISSION_CONTEXT_SCREENS.has(input.screen) && !mission && !hasRuntimeMission) {
     return { ...input, screen: 'missions', missionId: null, targetId: null }
   }
-  if (TARGET_CONTEXT_SCREENS.has(input.screen) && !target && !hasRuntimeTarget) {
+  if (!isBareFreeOpsBuild && TARGET_CONTEXT_SCREENS.has(input.screen) && !target && !hasRuntimeTarget) {
     return { ...input, screen: mission ? 'targets' : 'missions', targetId: null }
   }
   // A bare onboarding fab route is not a valid entry point. The Build tab is

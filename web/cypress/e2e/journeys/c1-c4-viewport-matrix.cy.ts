@@ -119,7 +119,9 @@ describe('C1–C4 screen contracts across viewport classes', () => {
           .scrollIntoView().should('be.visible')
 
         visit('/game/missions', stateWith('missions'))
-        cy.get('[data-testid="mission-setup-scaffold"]', { timeout: 10000 }).should('have.attr', 'data-step', '1')
+        // SSL-450: mission setup is two states on one scene (contract, then
+        // launch review); the contract gallery is the board.
+        cy.get('[data-testid="mission-setup-scaffold"]', { timeout: 10000 }).should('be.visible')
         cy.get('[data-testid="mission-board-section-client"]')
           .scrollIntoView().should('be.visible')
 
@@ -191,11 +193,29 @@ describe('C1–C4 screen contracts across viewport classes', () => {
       })
 
       it('keeps the Scene 4 setup borders above the fixed action bar', () => {
+        // SSL-450: the launch review prepares the vehicle and rolls it onto
+        // the pad itself; seed the vehicle already on the pad so the review
+        // shows its LAUNCH control (an unprepared vehicle shows PREPARE).
+        const explorer = { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' }
         visit('/game/fab', stateWith('fab', {
           missionId: 'generated-s1-starter-bulk-1',
           targetId: 'eros',
-          player: basePlayer({ missionsDone: 0, freeOperations: false }),
-        }))
+          rocket: explorer,
+          player: basePlayer({
+            missionsDone: 0,
+            freeOperations: false,
+            selectedStagedRocketId: 'explorer-pad-1',
+            stagedRockets: [{
+              id: 'explorer-pad-1',
+              rocketId: 'explorer',
+              rocket: explorer,
+              location: 'launchpad',
+              source: 'company',
+              missionId: 'generated-s1-starter-bulk-1',
+              targetId: 'eros',
+            }],
+          } as Partial<GameState['player']>),
+        } as Partial<GameState>))
         // Scene 4 is the Launch review step of the mission-setup scene. It
         // owns the launch CTA inside the step rather than a separate bottom
         // action rail: the review frame and its launch control both fit.
@@ -232,10 +252,12 @@ describe('C1–C3 persisted mission edge states', () => {
         miningCargoInProgress: { platinum: 2 },
       }),
     }))
-    cy.get('[data-testid="mission-setup-scaffold"]', { timeout: 10000 }).should('have.attr', 'data-step', '1')
+    // SSL-450: mission setup is two states on one scene (contract, then
+    // launch review); the contract gallery is the board.
+    cy.get('[data-testid="mission-setup-scaffold"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="mission-board-section-client"]')
       .scrollIntoView().should('be.visible')
-    cy.contains('button', 'ACCEPT CONTRACT').click({ force: true })
+    cy.contains('button', 'ACCEPT & PREPARE').click({ force: true })
     cy.window().then(win => {
       const saved = JSON.parse(win.localStorage.getItem(`${STORAGE_KEY}:user:e2e-fixture-user`) || '{}') as GameState
       expect(saved.player.activeMission?.id).to.eq('generated-s1-starter-bulk-1')

@@ -11,6 +11,18 @@ describe('Launch preflight visual contract', () => {
           tutorial: false,
           rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
           player: {
+            // SSL-450: the vehicle is already rolled onto the pad, so the
+            // review reports clearance and offers LAUNCH (not PREPARE).
+            selectedStagedRocketId: 'explorer-pad-1',
+            stagedRockets: [{
+              id: 'explorer-pad-1',
+              rocketId: 'explorer',
+              rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+              location: 'launchpad',
+              source: 'company',
+              missionId: 'generated-s1-starter-bulk-1',
+              targetId: 'eros',
+            }],
             missionsDone: 0,
             francs: 20_000_000,
             pendingLaunch: false,
@@ -37,7 +49,7 @@ describe('Launch preflight visual contract', () => {
     cy.viewport(1440, 900)
     visitPreflight()
     cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
-    cy.contains('MISSION REVIEW').should('be.visible')
+    cy.contains('Launch review').should('be.visible')
     cy.get('[data-testid="launch-btn"]').should('be.visible')
     cy.screenshot('sprint-13-launch-preflight-desktop')
   })

@@ -1,32 +1,6 @@
 import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
 describe('Smoke — Landnam', () => {
-  const dailyPoolMission = (
-    client: string,
-    mineral: string,
-    amount: number,
-    title: string,
-  ) => ({
-    id: `dcp-e2e-${client}`,
-    title,
-    brief: `${title} fixture for the Free Ops mission board smoke test.`,
-    client,
-    tag: 'STARTER',
-    difficulty: 'L1',
-    locked: false,
-    sequence: 4,
-    requires: {
-      minerals: { [mineral]: amount },
-      cargo_min: amount,
-      drill_tier: 1,
-      max_orbit: 4,
-    },
-    payout: {
-      francs: 750_000,
-      affinity: 8,
-    },
-  })
-
   const visitWithState = (state: Record<string, unknown>) => {
     const screen = typeof state.screen === 'string' ? state.screen : 'hub'
     cy.visit(`/game/${screen}`, {
@@ -36,8 +10,12 @@ describe('Smoke — Landnam', () => {
     })
   }
 
-  it('root redirects to /game', () => {
+  it('root opens the landing briefing and enters /game', () => {
+    // SSL-292: `/` is now the Earth Base landing page, not a redirect. Its
+    // CONTINUE action is the way into the game and must land on /game.
     cy.visit('/')
+    cy.contains('Run your space agency', { matchCase: false }).should('be.visible')
+    cy.contains('a, button', 'Continue').click()
     cy.url().should('include', '/game')
   })
 
@@ -80,29 +58,35 @@ describe('Smoke — Landnam', () => {
       screen: 'debrief',
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'mars',
-      lastCargo: { iron: 4 },
+      lastCargo: { platinum: 5 },
       tutorial: false,
       player: { missionsDone: 3 },
     })
 
     cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
     cy.get('[data-testid="resolve-cargo-btn"]').click()
-    cy.contains('Francs Earned').should('be.visible')
+    // The vehicle teardown plays before the ledger and reward appear.
+    cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).click()
+    cy.contains('Ledger').should('be.visible')
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
   })
 
-  it('auto-resolves cargo for onboarding missions, requiring only one tap to collect', () => {
+  it('requires the vehicle teardown before collecting for onboarding missions too', () => {
+    // Debrief no longer auto-resolves for onboarding missions: every debrief
+    // starts with the explicit teardown, then offers the reward.
     visitWithState({
       screen: 'debrief',
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'mars',
-      lastCargo: { iron: 4 },
+      lastCargo: { platinum: 5 },
       tutorial: false,
       player: { missionsDone: 0 },
     })
 
-    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
-    cy.contains('Francs Earned').should('be.visible')
+    cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
+    cy.get('[data-testid="resolve-cargo-btn"]').click()
+    cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).click()
+    cy.contains('Ledger').should('be.visible')
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
   })
 
@@ -118,9 +102,9 @@ describe('Smoke — Landnam', () => {
 
     // The Skill Tree was a "Coming Soon" placeholder when this test was
     // written; STS-394/STS-492 replaced it with real nodes and the License
-    // Grade ladder, so assert on what actually ships.
+    // Authority ladder (labelled Flight Authority), so assert on what actually ships.
     cy.contains('Skill Tree').should('be.visible')
-    cy.contains('License Grade').should('be.visible')
+    cy.contains('FLIGHT AUTHORITY').should('be.visible')
     cy.contains('Skill Nodes').should('be.visible')
     cy.contains('Laser Charge I').should('be.visible')
     cy.reload()
@@ -129,8 +113,8 @@ describe('Smoke — Landnam', () => {
   })
 
   it('shows Free Ops client missions after M3', () => {
-    const date = new Date()
-    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+    // The board lists the catalog's client contracts (the daily pool is no
+    // longer surfaced there) as a one-at-a-time carousel with arrows.
     visitWithState({
       screen: 'missions',
       tutorial: false,
@@ -139,28 +123,22 @@ describe('Smoke — Landnam', () => {
         freeOperations: true,
         clientMissions: {},
         clientCooldowns: {},
-        dailyClientPool: {
-          date: dateKey,
-          acceptedId: null,
-          completedIds: [],
-          missions: [
-            dailyPoolMission('helios-propulsion-depot', 'platinum', 5, 'Helios Propulsion Depot starter contract'),
-            dailyPoolMission('arcturus-battery-systems', 'palladium', 5, 'Arcturus Battery Systems starter contract'),
-            dailyPoolMission('ferrum-orbital-construction', 'platinum', 5, 'Ferrum Orbital Construction starter contract'),
-          ],
-        },
       },
     })
 
-    cy.contains('EARTH BASE · FREE OPS').should('be.visible')
-    cy.get('[data-testid^="mission-card-dcp-e2e-"]').should('have.length.at.least', 3)
-    cy.contains('Helios Propulsion Depot').should('exist')
-    cy.contains('Arcturus Battery Systems').scrollIntoView().should('exist')
+    cy.contains('Choose a contract').should('be.visible')
+    cy.get('[data-testid="mission-board-section-client"]').should('contain', 'CLIENT CONTRACT 1 /')
+    cy.get('button[aria-label="Next contract"]').should('not.be.disabled')
+    cy.get('[data-testid^="mission-accept-"]').should('be.visible')
+    cy.get('button[aria-label="Next contract"]').click()
+    cy.get('[data-testid="mission-board-section-client"]').should('contain', 'CLIENT CONTRACT 2 /')
   })
 
   it('places a refinery from the Build screen in Free Ops', () => {
+    // A saved Build screen is not a resume destination once the base is
+    // operational (it hydrates to the Hub); enter it from an empty plot.
     visitWithState({
-      screen: 'build',
+      screen: 'hub',
       tutorial: false,
       player: {
         francs: 1_000_000_000,
@@ -174,6 +152,9 @@ describe('Smoke — Landnam', () => {
       },
     })
 
+    cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="build-plot-1"]').click()
+    cy.location('pathname', { timeout: 10000 }).should('eq', '/game/build')
     cy.contains('Refinery').should('be.visible')
     cy.contains('8,000,000').should('be.visible')
     cy.contains('20 aluminium').should('be.visible')

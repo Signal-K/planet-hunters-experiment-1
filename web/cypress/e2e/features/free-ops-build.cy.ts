@@ -73,7 +73,7 @@ describe('Free Ops Build screen', () => {
     visitFab({})
     cy.get('[data-testid="free-ops-build-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('Choose Mining').click()
-    cy.get('[data-testid="mission-setup-scaffold"][data-step="1"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-setup-scaffold"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="mission-board-section-client"]').should('be.visible')
   })
 
