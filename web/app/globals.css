@@ -21,7 +21,7 @@
 @font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-Bold.woff2")       format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
 @font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-ExtraBold.woff2")  format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
 
-/* ─── Root tokens (Cycle 4 light-blueprint default) ─────── */
+/* ─── Root tokens (deep-space default) ──────────────────── */
 /* Superseded 2026-07-31 — the 2026-07-23 navy palette below read as a heavy
    saturated dark-blue wash that stayed legible only in dim rooms and
    actively hurt contrast/eye comfort in bright ones (Liam feedback,
@@ -41,25 +41,25 @@
   --ln-blueprint-ink: #0f2436;
   --ln-blueprint-blue: #1f78c1;
   --ln-blueprint-line-strong: rgba(15, 36, 54, 0.30);
-  --ln-void:        var(--ln-blueprint-bg);
-  --ln-bg:          var(--ln-blueprint-bg);
-  --ln-bg-grid:     var(--ln-blueprint-paper-2);
-  --ln-surface:     var(--ln-blueprint-paper);
-  --ln-surface-2:   var(--ln-blueprint-paper-2);
-  --ln-surface-3:   var(--ln-blueprint-paper-2);
-  --ln-overlay:     rgba(238, 243, 248, 0.86);
+  --ln-void:        #0a0a0c;
+  --ln-bg:          #131316;
+  --ln-bg-grid:     #1a1a1e;
+  --ln-surface:     #1c1c20;
+  --ln-surface-2:   #25252a;
+  --ln-surface-3:   #303036;
+  --ln-overlay:     rgba(10, 10, 12, 0.75);
 
-  --ln-cyan:        var(--ln-blueprint-blue);
-  --ln-cyan-bright: #42a6df;
-  --ln-cyan-press:  #17639f;
-  --ln-cyan-soft:   rgba(31, 120, 193, 0.10);
-  --ln-cyan-border: rgba(15, 36, 54, 0.30);
+  --ln-cyan:        #70d9ea;
+  --ln-cyan-bright: #a3ecf5;
+  --ln-cyan-press:  #3fb8cc;
+  --ln-cyan-soft:   rgba(112, 217, 234, 0.16);
+  --ln-cyan-border: rgba(112, 217, 234, 0.4);
 
-  --ln-amber:        #168a80;
-  --ln-amber-bright: #39a89e;
-  --ln-amber-press:  #0d625c;
-  --ln-amber-soft:   rgba(22, 138, 128, 0.12);
-  --ln-amber-border: rgba(22, 138, 128, 0.45);
+  --ln-amber:        #f5a623;
+  --ln-amber-bright: #ffc25c;
+  --ln-amber-press:  #d68a0d;
+  --ln-amber-soft:   rgba(245, 166, 35, 0.14);
+  --ln-amber-border: rgba(245, 166, 35, 0.55);
 
   --ln-crimson:        #c8293e;
   --ln-crimson-bright: #e83a52;
@@ -83,32 +83,32 @@
   --ln-mineral-gold:    #ffd166;
   --ln-mineral-rare:    #c084ff;
 
-  --ln-text:       var(--ln-blueprint-ink);
-  --ln-text-dim:   #48596a;
-  --ln-text-muted: #60778e;
-  --ln-text-ghost: rgba(15, 36, 54, 0.35);
-  --ln-text-on-cyan:  #ffffff;
+  --ln-text:       #e9e9ec;
+  --ln-text-dim:   #b4b4bc;
+  --ln-text-muted: #7c7c86;
+  --ln-text-ghost: rgba(233, 233, 236, 0.35);
+  --ln-text-on-cyan:  #0a1418;
   --ln-text-on-amber: #1a1304;
   --ln-text-inverse:  #0a0a0c;
 
-  --ln-hairline:        rgba(15, 36, 54, 0.14);
-  --ln-hairline-strong: rgba(15, 36, 54, 0.30);
-  --ln-divider:         rgba(15, 36, 54, 0.14);
+  --ln-hairline:        rgba(255, 255, 255, 0.14);
+  --ln-hairline-strong: rgba(255, 255, 255, 0.30);
+  --ln-divider:         rgba(255, 255, 255, 0.10);
 
   /* Shell/panel/border tokens — neutral charcoal family, translucent-white
      glass for elevated surfaces rather than an opaque navy fill.
      --ln-panel-2 is the next charcoal step up from --ln-panel. */
-  --ln-shell:        var(--ln-blueprint-bg);
-  --ln-panel:        var(--ln-blueprint-paper);
-  --ln-panel-2:      var(--ln-blueprint-paper-2);
-  --ln-border:       rgba(15, 36, 54, 0.30);
-  --ln-payout:       #168a80;
-  --ln-play:         var(--ln-blueprint-blue);
-  --ln-purple-depth: var(--ln-blueprint-paper-2);
+  --ln-shell:        #0a0a0c;
+  --ln-panel:        #1c1c20;
+  --ln-panel-2:      #25252a;
+  --ln-border:       rgba(255, 255, 255, 0.22);
+  --ln-payout:       #d8ff55;
+  --ln-play:         #fa49ca;
+  --ln-purple-depth: #25123d;
 
-  --ln-shadow-card:   5px 5px 0 var(--ln-blueprint-blue), 0 4px 12px rgba(15,36,54,0.12);
-  --ln-shadow-modal:  8px 8px 0 var(--ln-blueprint-blue), 0 24px 48px rgba(15,36,54,0.20);
-  --ln-glow-cyan:     0 0 0 2px var(--ln-blueprint-blue);
+  --ln-shadow-card:   0 2px 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.10), 0 8px 24px rgba(0,0,0,0.5);
+  --ln-shadow-modal:  0 24px 64px rgba(0,0,0,0.7);
+  --ln-glow-cyan:     0 0 0 1px rgba(112,217,234,0.6), 0 0 18px rgba(112,217,234,0.35);
   --ln-glow-amber:    0 0 0 1px rgba(245,166,35,0.7), 0 0 18px rgba(245,166,35,0.4);
   --ln-glow-ok:       0 0 12px rgba(90,208,126,0.7);
 
@@ -143,7 +143,7 @@
   --ln-fs-body:     22px;
   --ln-fs-button:   20px;
   --ln-fs-label:    16px;
-  --ln-fs-micro:    14px;
+  --ln-fs-micro:    13px;
 
   --ln-tr-tight:   -0.01em;
   --ln-tr-normal:   0em;
@@ -196,15 +196,6 @@
   border: 1px solid var(--ln-glass-border);
   backdrop-filter: var(--ln-glass-blur);
   -webkit-backdrop-filter: var(--ln-glass-blur);
-}
-
-/* The ship customiser sits in the light blueprint game; its glass panels were
-   dark with dark text (option cards unreadable). Keep them on paper. */
-[data-testid^="ship-interior-"] .ln-glass-panel {
-  background: #ffffff;
-  border-color: var(--ln-bp-line-strong, rgba(21, 94, 150, 0.35));
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 /* Mission Board two-column "canvas + Contract Detail" layout — ported from
@@ -266,7 +257,7 @@
 
   --ln-bp-ink:      #0f2436;
   --ln-bp-ink-dim:  #48596a;
-  --ln-bp-ink-mute: #566879;
+  --ln-bp-ink-mute: #7c8ea0;
 
   --ln-bp-line:        rgba(15, 36, 54, 0.14);
   --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
@@ -280,7 +271,6 @@
 
   --ln-bp-green:      #1f8f57;
   --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
-  --ln-bp-shadow:     rgba(15, 36, 54, 0.16);
 
   --ln-void:      var(--ln-bp-bg);
   --ln-bg:        var(--ln-bp-bg);
@@ -375,7 +365,7 @@ body:has(.theme-blueprint) {
 
   --ln-bp-ink:      #0f2436;
   --ln-bp-ink-dim:  #48596a;
-  --ln-bp-ink-mute: #566879;
+  --ln-bp-ink-mute: #7c8ea0;
 
   --ln-bp-line:        rgba(15, 36, 54, 0.14);
   --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
@@ -896,8 +886,10 @@ button { cursor: pointer; }
 
 /* SSL-346: shell-owned controls are available on every live surface. */
 .game-chrome-bottom { position:relative; z-index:70; flex:0 0 auto; display:flex; align-items:stretch; justify-content:center; gap:4px; padding:4px 8px; border-top:1px solid var(--ln-hairline); background:var(--ln-void); }
-.game-chrome-bottom button { flex:1 1 0; min-width:0; max-width:128px; min-height:48px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 14px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
+.game-chrome-bottom__readout { display:none; align-items:center; padding:0 12px; color:var(--ln-cyan); font:800 12px var(--ln-font-display); letter-spacing:.12em; text-transform:uppercase; white-space:nowrap; }
+.game-chrome-bottom button { flex:1 1 0; min-width:0; max-width:128px; min-height:40px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
 .game-chrome-bottom button[aria-current="page"], .game-chrome-bottom button:hover { border-color:var(--ln-cyan-border); background:var(--ln-cyan-soft); color:var(--ln-cyan-bright); }
+@media (min-width:600px) { .game-chrome-bottom__readout { display:inline-flex; } }
 /* Landscape phones: every screen's title bar shrinks to one 48px line. */
 @media (orientation:landscape) and (max-height:500px) {
   .top-bar { padding-top:8px !important; padding-bottom:8px !important; }
@@ -916,8 +908,9 @@ button { cursor: pointer; }
    rail and the game keeps the full height. */
 @media (orientation:landscape) and (max-height:500px) {
   .portrait-canvas { flex-direction:row; }
-  .game-chrome-bottom { order:-1; flex-direction:column; justify-content:flex-start; align-items:stretch; width:84px; padding:8px 4px; border-top:0; border-right:1px solid var(--ln-hairline); }
-  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:48px; padding:4px; font-size:14px; letter-spacing:.02em; }
+  .game-chrome-bottom { order:-1; flex-direction:column; justify-content:flex-start; align-items:stretch; width:72px; padding:8px 4px; border-top:0; border-right:1px solid var(--ln-hairline); }
+  .game-chrome-bottom__readout { display:inline-flex; justify-content:center; padding:4px 0 8px; font-size:10px; }
+  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:32px; padding:4px; font-size:10px; letter-spacing:.06em; }
 }
 
 .hub-sky-craft-control { position:absolute; z-index:11; top:96px; right:16px; display:flex; align-items:center; gap:8px; min-height:40px; padding:8px 12px; border:1px solid var(--ln-cyan-border); border-radius:8px; background:color-mix(in srgb, var(--ln-void) 74%, transparent); color:var(--ln-cyan-bright); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
@@ -946,7 +939,7 @@ button { cursor: pointer; }
   align-items: center;
   gap: var(--ln-s-1);
   color: var(--ln-text-muted);
-  font: 700 var(--ln-fs-micro) var(--ln-font-display);
+  font: 700 8px var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
   pointer-events: none;
@@ -1310,93 +1303,6 @@ button { cursor: pointer; }
 .auth-gate__primary:hover { background: var(--ln-cyan-bright); }
 .auth-gate__primary:disabled { cursor: not-allowed; opacity: .55; }
 
-/* SSL-423 — Account access is the first route a new player sees, so it uses
-   the same light blueprint language as the Cycle 4 loop.  Scope this rather
-   than changing the shell tokens: the remaining routes are migrated in their
-   own slices. */
-.auth-gate.theme-blueprint {
-  align-items: center;
-  background-color: var(--ln-bp-bg);
-  background-image:
-    repeating-linear-gradient(0deg, var(--ln-bp-line) 0 1px, transparent 1px 24px),
-    repeating-linear-gradient(90deg, var(--ln-bp-line) 0 1px, transparent 1px 24px);
-}
-.auth-gate.theme-blueprint .auth-gate__scrim { display: none; }
-.auth-gate.theme-blueprint .auth-gate__panel {
-  background: var(--ln-bp-paper);
-  border: 2px solid var(--ln-bp-ink);
-  border-radius: var(--ln-r-lg);
-  box-shadow: 8px 8px 0 var(--ln-bp-blue), 0 12px 28px var(--ln-bp-shadow);
-}
-.auth-gate.theme-blueprint .auth-gate__scene {
-  background-color: var(--ln-bp-paper-2);
-  background-image:
-    repeating-linear-gradient(0deg, var(--ln-bp-line) 0 1px, transparent 1px 24px),
-    repeating-linear-gradient(90deg, var(--ln-bp-line) 0 1px, transparent 1px 24px);
-  border-right: 2px solid var(--ln-bp-ink);
-}
-.auth-gate.theme-blueprint .auth-gate__scene::after { display: none; }
-.auth-gate.theme-blueprint .auth-gate__eyebrow,
-.auth-gate.theme-blueprint .auth-gate__scene-title { color: var(--ln-bp-ink); }
-.auth-gate.theme-blueprint .auth-gate__scene-status { color: var(--ln-bp-green); }
-.auth-gate.theme-blueprint .auth-gate__scene-status i {
-  background: var(--ln-bp-green);
-  box-shadow: none;
-}
-.auth-gate.theme-blueprint .auth-gate__orbit { border: 2px solid var(--ln-bp-blue); }
-.auth-gate.theme-blueprint .auth-gate__orbit--inner { border-color: var(--ln-bp-green); }
-.auth-gate.theme-blueprint .auth-gate__planet {
-  background: var(--ln-bp-blue-soft);
-  border: 3px solid var(--ln-bp-blue);
-  box-shadow: 5px 5px 0 var(--ln-bp-ink);
-}
-.auth-gate.theme-blueprint .auth-gate__ship { filter: none; }
-.auth-gate.theme-blueprint .auth-gate__telemetry { color: var(--ln-bp-ink-dim); }
-.auth-gate.theme-blueprint .auth-gate__telemetry strong { color: var(--ln-bp-ink); }
-.auth-gate.theme-blueprint .auth-gate__heading { color: var(--ln-bp-ink); }
-.auth-gate.theme-blueprint .auth-gate__intro { color: var(--ln-bp-ink-dim); }
-.auth-gate.theme-blueprint .auth-gate__tab {
-  color: var(--ln-bp-ink-dim);
-  border: 2px solid var(--ln-bp-line-strong);
-  border-radius: var(--ln-r-sm);
-}
-.auth-gate.theme-blueprint .auth-gate__tab.is-active {
-  color: var(--ln-bp-ink);
-  background: var(--ln-bp-blue-soft);
-  border-color: var(--ln-bp-blue);
-}
-.auth-gate.theme-blueprint .auth-gate__input {
-  color: var(--ln-bp-ink);
-  background: var(--ln-bp-paper);
-  border: 2px solid var(--ln-bp-ink);
-  border-radius: var(--ln-r-sm);
-}
-.auth-gate.theme-blueprint .auth-gate__input:focus {
-  border-color: var(--ln-bp-blue);
-  box-shadow: 4px 4px 0 var(--ln-bp-blue-soft);
-}
-.auth-gate.theme-blueprint .auth-gate__input::placeholder { color: var(--ln-bp-ink-dim); }
-.auth-gate.theme-blueprint .auth-gate__error {
-  color: var(--ln-crimson);
-  background: var(--ln-bp-paper-2);
-  border: 2px solid var(--ln-crimson);
-  border-radius: var(--ln-r-sm);
-}
-.auth-gate.theme-blueprint .auth-gate__primary {
-  color: var(--ln-bp-paper);
-  background: var(--ln-bp-blue);
-  border: 2px solid var(--ln-bp-ink);
-  border-radius: var(--ln-r-sm);
-  box-shadow: 4px 4px 0 var(--ln-bp-ink);
-}
-.auth-gate.theme-blueprint .auth-gate__primary:hover { background: var(--ln-cyan-press); }
-body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
-
-@media (max-width: 759px) {
-  .auth-gate.theme-blueprint .auth-gate__panel { box-shadow: 6px 6px 0 var(--ln-bp-blue); }
-  .auth-gate.theme-blueprint .auth-gate__scene { border-right: 2px solid var(--ln-bp-ink); }
-}
-
 /* After the base auth-gate rules so compact-landscape stretch/scroll wins
    over `.auth-gate__content { align-self: center }` and the 520px scene
    min-height (SSL-326 / overlaps SSL-299). */
@@ -1471,7 +1377,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 }
 .assembly-scroll { display: flex; flex-direction: column; gap: var(--ln-s-3); }
 .ln-section-label, .ln-micro, .reward-label {
-  font-family: var(--ln-font-display); font-size: var(--ln-fs-micro); font-weight: 700;
+  font-family: var(--ln-font-display); font-size: 10px; font-weight: 700;
   letter-spacing: var(--ln-tr-loose); text-transform: uppercase; color: var(--ln-text-muted);
 }
 .ln-section-label { margin-bottom: var(--ln-s-2); }
@@ -1544,6 +1450,15 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   [data-testid="tess-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] button,
   [data-testid="asteroid-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] button {
     min-height: 44px !important;
+  }
+
+  [data-testid="observatory-coach"],
+  [data-testid="asteroid-discovery-coach"] {
+    top: 76px !important;
+    right: auto !important;
+    width: min(44vw, 360px) !important;
+    max-height: 112px;
+    overflow-y: auto;
   }
 
   [data-testid="tess-discovery-desktop-grid"] .screen-scroll,
@@ -1770,7 +1685,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 .transit-command-dock__status span,
 .transit-cargo-strip span {
   color: var(--ln-cyan);
-  font: 800 var(--ln-fs-micro) var(--ln-font-display);
+  font: 800 9px var(--ln-font-display);
   letter-spacing: .16em;
   text-transform: uppercase;
 }
@@ -1780,7 +1695,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 }
 .transit-destination-chip > span:last-child {
   color: var(--ln-text-muted);
-  font: 700 var(--ln-fs-micro) var(--ln-font-mono);
+  font: 700 9px var(--ln-font-mono);
   letter-spacing: .08em;
 }
 .transit-mission-card {
@@ -1801,7 +1716,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   display: block;
   margin-top: 4px;
   color: var(--ln-text-dim);
-  font: 700 var(--ln-fs-micro) var(--ln-font-display);
+  font: 700 10px var(--ln-font-display);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -1809,7 +1724,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 .transit-mission-card p {
   margin: 6px 0 0;
   color: var(--ln-text-muted);
-  font: 400 var(--ln-fs-micro)/1.35 var(--ln-font-body);
+  font: 400 12px/1.35 var(--ln-font-body);
 }
 .transit-flight-hud {
   left: 16px;
@@ -1839,7 +1754,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 }
 .transit-flight-hud__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .transit-flight-hud__heading strong { color: var(--ln-text); font: 800 18px var(--ln-font-mono); }
-.transit-progress-wrap { position: relative; margin-top: 8px; padding: 4px 0 22px; }
+.transit-progress-wrap { position: relative; margin-top: 8px; padding: 4px 0; }
 .transit-progress-track { position: relative; height: 6px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.12); }
 .transit-progress-track span { display: block; height: 100%; border-radius: inherit; background: var(--ln-cyan); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
 .transit-waypoint {
@@ -1861,7 +1776,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   margin-top: 4px;
   transform: translateX(-50%);
   color: var(--ln-text-muted);
-  font: 700 var(--ln-fs-micro) var(--ln-font-display);
+  font: 700 7px var(--ln-font-display);
   letter-spacing: .12em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1869,10 +1784,10 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 .transit-waypoint-label--passed { color: var(--ln-cyan); }
 .transit-telemetry { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
 .transit-telemetry div { display: grid; gap: 2px; min-width: 0; }
-.transit-telemetry span { overflow: hidden; color: var(--ln-text-muted); font: 700 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .14em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
-.transit-telemetry strong { overflow: hidden; color: var(--ln-text); font: 800 var(--ln-fs-micro) var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.transit-telemetry span { color: var(--ln-text-muted); font: 700 8px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.transit-telemetry strong { overflow: hidden; color: var(--ln-text); font: 800 11px var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .transit-cargo-strip { display: flex; align-items: baseline; gap: 10px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--ln-hairline); }
-.transit-cargo-strip strong { overflow: hidden; color: var(--ln-text); font: 700 var(--ln-fs-micro) var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.transit-cargo-strip strong { overflow: hidden; color: var(--ln-text); font: 700 10px var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .transit-command-dock {
   z-index: 10;
   display: flex;
@@ -1886,7 +1801,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   background: var(--ln-shell);
 }
 .transit-command-dock__status { display: grid; gap: 3px; min-width: 0; }
-.transit-command-dock__status strong { overflow: hidden; color: var(--ln-text); font: 700 var(--ln-fs-micro) var(--ln-font-display); text-overflow: ellipsis; white-space: nowrap; }
+.transit-command-dock__status strong { overflow: hidden; color: var(--ln-text); font: 700 13px var(--ln-font-display); text-overflow: ellipsis; white-space: nowrap; }
 .transit-command-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .transit-command-btn {
   min-height: 42px;
@@ -1895,7 +1810,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   border-radius: 8px;
   background: transparent;
   color: var(--ln-cyan);
-  font: 800 var(--ln-fs-micro) var(--ln-font-display);
+  font: 800 10px var(--ln-font-display);
   letter-spacing: .12em;
   text-transform: uppercase;
   cursor: pointer;
@@ -1909,25 +1824,24 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   .transit-flight-scene { padding-top: 68px; }
   /* top clears the global .game-menu-button (top:56 + height:36 = bottom 92,
      a fixed-position sibling this stylesheet section can't otherwise see). */
-  .transit-destination-chip { top: 96px; right: 12px; min-width: 0; max-width: calc(50% - 18px); padding: 8px 10px; }
+  .transit-destination-chip { top: 96px; right: 12px; min-width: 0; max-width: 48%; padding: 8px 10px; }
   .transit-destination-chip strong { font-size: 14px; }
   .transit-destination-chip > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .transit-mission-card { top: 80px; left: 12px; width: calc(50% - 18px); padding: 9px 10px; }
-  .transit-mission-card > strong { font-size: var(--ln-fs-micro); }
+  .transit-mission-card { top: 80px; left: 12px; width: 48%; padding: 9px 10px; }
+  .transit-mission-card > strong { font-size: 13px; }
   .transit-mission-card p { display: none; }
   .transit-flight-hud { left: 12px; bottom: 12px; width: calc(100% - 24px); padding: 10px; }
   /* Phones: the sphere stays compact so the HUD below it is never covered. */
-  .transit-approach, .transit-approach--close { top: 184px; right: 12px; width: 136px; }
+  .transit-approach, .transit-approach--close { top: 168px; right: 12px; width: 136px; }
   .transit-approach canvas { width: 88px !important; height: 88px !important; }
   .transit-approach ul { display: none; }
   .transit-telemetry { gap: 8px; }
-  .transit-telemetry span { letter-spacing: .06em; }
-  .transit-telemetry strong { font-size: var(--ln-fs-micro); }
+  .transit-telemetry strong { font-size: 9px; }
   .transit-cargo-strip { display: block; }
   .transit-cargo-strip strong { display: block; margin-top: 3px; }
   .transit-command-dock { align-items: stretch; flex-direction: column; gap: 10px; padding: 10px 12px; }
   .transit-command-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .transit-command-btn { min-width: 0; padding-inline: 8px; font-size: var(--ln-fs-micro); }
+  .transit-command-btn { min-width: 0; padding-inline: 8px; font-size: 9px; }
 }
 
 .mining-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-void); display: flex; flex-direction: column; }
@@ -1966,12 +1880,6 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   color: var(--ln-text-dim);
   font: 12px/1.4 var(--ln-font-body);
 }
-/* Panel clips overflow, which stops the sticky Close from tracking the dock's
-   scroll; let the dock be the only scroller. */
-.mining-guide-dock > .mining-guide-panel { overflow: visible; }
-.theme-blueprint.mining-screen .mining-guide-dock .mining-guide-close {
-  background: linear-gradient(var(--ln-cyan-soft), var(--ln-cyan-soft)) #ffffff;
-}
 .mining-guide-dock button {
   position: sticky;
   bottom: 0;
@@ -1982,19 +1890,9 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
     width: min(280px, calc(100% - 168px));
   }
 }
-/* Phones: the right-hand dock is too narrow for a two-column row, so use the
-   full width, stack label over description, and let the list scroll. */
-@media (max-width: 600px) {
-  .mining-guide-dock {
-    left: 12px;
-    width: auto;
-    max-height: calc(100% - 72px - 180px);
-  }
-  .mining-guide-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
-}
 .mining-viewport {
   position: relative; flex: 1; overflow: hidden; min-height: 0;
-  background: radial-gradient(ellipse at 70% 10%, color-mix(in srgb, var(--ln-blueprint-blue) 18%, transparent), transparent 50%), linear-gradient(180deg, var(--ln-blueprint-paper) 0%, var(--ln-blueprint-bg) 60%, var(--ln-blueprint-paper-2) 100%);
+  background: radial-gradient(ellipse at 70% 10%, #12203d, transparent 50%), linear-gradient(180deg, #090e1a 0%, var(--ln-void) 60%, #000000 100%);
 }
 .mining-canvas { position: absolute; inset: 0; z-index: 1; }
 .mining-scene-status {
@@ -2014,12 +1912,12 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 }
 .mining-scene-status__eyebrow {
   color: var(--ln-cyan);
-  font: 800 var(--ln-fs-micro)/1.2 var(--ln-font-display);
+  font: 800 9px/1.2 var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
 }
 .mining-scene-status strong {
   color: var(--ln-text);
-  font: 700 var(--ln-fs-micro)/1.4 var(--ln-font-mono);
+  font: 700 11px/1.4 var(--ln-font-mono);
   letter-spacing: .08em;
 }
 .mining-scene-status__retry {
@@ -2027,7 +1925,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   border: 1px solid var(--ln-cyan-border);
   background: var(--ln-cyan-soft);
   color: var(--ln-cyan);
-  font: 800 var(--ln-fs-micro)/1 var(--ln-font-display);
+  font: 800 10px/1 var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   cursor: pointer;
 }
@@ -2252,7 +2150,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   width: 100%;
   padding: var(--ln-s-3) 0;
   border-radius: var(--ln-r-md);
-  font: 800 var(--ln-fs-micro) var(--ln-font-display);
+  font: 800 11px var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
   cursor: pointer;
@@ -2278,7 +2176,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   width: 100%;
   padding: var(--ln-s-3) 0;
   border-radius: var(--ln-r-md);
-  font: 800 var(--ln-fs-micro) var(--ln-font-display);
+  font: 800 11px var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
   cursor: pointer;
@@ -2352,9 +2250,9 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   bottom: 0;
   z-index: 12;
   padding: var(--ln-s-3) var(--ln-s-4) var(--ln-s-4);
-  background: color-mix(in srgb, var(--ln-panel) 94%, transparent);
-  border-top: 2px solid var(--ln-border);
-  box-shadow: 0 -8px 0 color-mix(in srgb, var(--ln-blueprint-blue) 24%, transparent);
+  background: rgba(6, 14, 26, 0.88);
+  border-top: 1px solid var(--ln-cyan-border);
+  box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.3);
   color: var(--ln-text);
 }
 /* The shared command rail stays available during a live operation, but the
@@ -2372,9 +2270,9 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   background: var(--ln-void);
 }
 .theme-deep.mining-screen .mining-controls {
-  background: var(--ln-blueprint-paper) !important;
-  border-top-color: var(--ln-border);
-  box-shadow: 0 -8px 0 color-mix(in srgb, var(--ln-blueprint-blue) 24%, transparent);
+  background: rgba(6, 14, 26, 0.88);
+  border-top-color: var(--ln-cyan-border);
+  box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.3);
 }
 .theme-deep.mining-screen .mining-controls .ln-section-label,
 .theme-deep.mining-screen .mining-controls .mineral-stat {
@@ -2386,12 +2284,12 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 .theme-deep.mining-screen .mining-command {
   appearance: none;
   min-width: 0;
-  min-height: 64px;
-  padding: 8px 12px;
+  min-height: 44px;
+  padding: 8px 14px;
   border: 1px solid var(--ln-cyan-border);
   border-radius: var(--ln-r-md);
-  background: var(--ln-blueprint-paper) !important;
-  color: var(--ln-text) !important;
+  background: rgba(18, 34, 54, 0.72) !important;
+  color: var(--ln-cyan) !important;
   box-shadow: none !important;
   font: 800 11px var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
@@ -2400,19 +2298,19 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 }
 .theme-deep.mining-screen .mining-command--fire {
   border-color: var(--ln-cyan);
-  background: color-mix(in srgb, var(--ln-cyan) 14%, var(--ln-blueprint-paper)) !important;
+  background: rgba(63, 169, 255, 0.12) !important;
 }
 .theme-deep.mining-screen .mining-command--return {
   border-color: var(--ln-ok);
   color: var(--ln-ok) !important;
 }
 .theme-deep.mining-screen .mining-command:active:not(:disabled) {
-  background: color-mix(in srgb, var(--ln-cyan) 24%, var(--ln-panel)) !important;
+  background: rgba(63, 169, 255, 0.24) !important;
 }
 .theme-deep.mining-screen .mining-command:disabled,
 .theme-deep.mining-screen .mining-command[aria-disabled="true"] {
   border-color: var(--ln-hairline);
-  background: var(--ln-surface-2) !important;
+  background: rgba(18, 34, 54, 0.42) !important;
   color: var(--ln-text-muted) !important;
   cursor: not-allowed;
 }
@@ -2428,25 +2326,6 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 .theme-deep.mining-screen .mining-command--tap-denied {
   animation: ln-mining-tap-denied 160ms ease-out;
 }
-/* SSL-411: action bar. Fire and Return are 64px tall (52px landscape) with
-   12px gaps; charges sit inside Fire, order progress and a fill bar inside
-   Return. The 44px overflow holds the scroll track and Scrub. */
-.mining-action-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px; gap: 12px; align-items: stretch; min-width: 0; }
-.mining-command { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; line-height: 1.15; }
-.mining-command__label { font: 800 13px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; overflow-wrap: anywhere; }
-.mining-command__meta { display: inline-flex; align-items: center; gap: 4px; font: 700 11px var(--ln-font-mono); letter-spacing: 0; text-transform: none; opacity: .85; }
-.mining-command__fill { align-self: stretch; height: 5px; margin-top: 3px; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; }
-.mining-command__fill > span { display: block; height: 100%; border-radius: 3px; background: currentColor; transition: width 120ms linear; }
-.mining-overflow { position: relative; display: flex; min-width: 0; }
-.mining-overflow__btn { appearance: none; width: 44px; min-height: 44px; align-self: center; padding: 0; border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-md); background: rgba(18, 34, 54, 0.72); color: var(--ln-cyan); font: 800 22px/1 var(--ln-font-display); cursor: pointer; }
-.mining-overflow__menu { position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 5; display: flex; flex-direction: column; gap: 12px; width: min(260px, 72vw); padding: 12px; border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-md); background: rgba(6, 14, 26, 0.97); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
-.mining-overflow__scrub { appearance: none; min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln-crit); border-radius: var(--ln-r-md); background: transparent; color: var(--ln-crit); font: 800 14px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
-@media (orientation: landscape) and (max-height: 520px) {
-  .mining-action-row { gap: 12px; }
-  .theme-deep.mining-screen .mining-command { min-height: 52px; padding: 6px 10px; }
-  .mining-command__label { font-size: 12px; }
-}
-
 @keyframes ln-mining-charge-pulse {
   0% { box-shadow: 0 0 0 0 rgba(63, 169, 255, 0.55) !important; }
   100% { box-shadow: 0 0 0 6px rgba(63, 169, 255, 0) !important; }
@@ -2484,24 +2363,24 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 .debrief-arrival-canvas { position: absolute; inset: 0; }
 .debrief-arrival-canvas canvas { display: block; width: 100%; height: 100%; }
 .debrief-arrival-board__copy { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; text-align: left; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
-.debrief-arrival-board__status { display: flex; align-items: center; gap: 7px; color: var(--ln-cyan); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.debrief-arrival-board__status { display: flex; align-items: center; gap: 7px; color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
 .debrief-arrival-board__status span { width: 7px; height: 7px; border-radius: 50%; background: var(--ln-ok); box-shadow: 0 0 10px var(--ln-ok); }
 .debrief-arrival-board h2 { margin: 5px 0 2px; color: var(--ln-text); font: 800 24px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
-.debrief-arrival-board p { margin: 0; color: var(--ln-text-muted); font: var(--ln-fs-micro) var(--ln-font-mono); letter-spacing: .1em; text-transform: uppercase; }
+.debrief-arrival-board p { margin: 0; color: var(--ln-text-muted); font: 10px var(--ln-font-mono); letter-spacing: .1em; text-transform: uppercase; }
 
-.intro-screen { position: relative; width: 100%; height: 100%; overflow: hidden; }
-.intro-earth { position: absolute; inset: 0; }
-.intro-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(238,243,248,0.9) 0%, rgba(238,243,248,0.94) 50%, rgba(238,243,248,0.98) 100%); }
+.intro-screen { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--ln-bp-bg); }
 .intro-content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px; text-align: center; z-index: 1; }
-.intro-badge { color: #17639f; font: 700 14px var(--ln-font-mono); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px; }
+.intro-badge { color: var(--ln-bp-ink-dim); font: 700 14px var(--ln-font-mono); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 12px; }
 .intro-logo-mark { width: 104px; height: 104px; margin: 0 0 8px; }
-.intro-title { color: var(--ln-text); font: 800 52px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 10px; }
-.intro-welcome { color: var(--ln-text); font: 700 16px var(--ln-font-display); letter-spacing: 0.08em; margin: 0 0 8px; }
-.intro-subtitle { color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); max-width: 300px; margin: 0 0 36px; }
-.intro-begin-btn { min-height: 44px; padding: 10px 18px; background: var(--ln-cyan); color: var(--ln-text-on-cyan); font-family: var(--ln-font-display); font-weight: 800; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--ln-cyan-border); border-radius: 8px; cursor: pointer; transition: background 120ms ease-out, transform 100ms; }
+.intro-title { color: var(--ln-bp-ink); font: 800 52px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 10px; }
+.intro-welcome { color: var(--ln-bp-ink); font: 700 16px var(--ln-font-display); letter-spacing: 0.08em; margin: 0 0 8px; }
+.intro-subtitle { color: var(--ln-bp-ink-dim); font: 400 14px/1.5 var(--ln-font-body); max-width: 280px; margin: 0 0 36px; }
+.intro-begin-btn { min-height: 48px; min-width: 44px; padding: 10px 24px; background: var(--ln-bp-blue); color: var(--ln-bp-paper); font-family: var(--ln-font-display); font-weight: 800; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--ln-bp-blue); border-radius: 8px; cursor: pointer; transition: background 120ms ease-out, transform 100ms; }
+.intro-begin-btn:hover { background: var(--ln-bp-ink); border-color: var(--ln-bp-ink); }
+.intro-begin-btn:focus-visible { outline: 3px solid var(--ln-bp-ink); outline-offset: 2px; }
 .intro-begin-btn:active { transform: translateY(2px); }
 .intro-reconnecting-indicator { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 4px; }
-.intro-reconnecting-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--ln-cyan); opacity: 0.3; animation: ln-pulse 1.2s ease-in-out infinite; }
+.intro-reconnecting-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--ln-bp-blue); opacity: 0.3; animation: ln-pulse 1.2s ease-in-out infinite; }
 .intro-reconnecting-indicator span:nth-child(2) { animation-delay: 0.2s; }
 .intro-reconnecting-indicator span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes ln-pulse { 0%, 100% { opacity: 0.2; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1); } }
@@ -2542,7 +2421,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   }
 }
 .debrief-scroll h2 { color: var(--ln-text); font: 800 28px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
-.debrief-scroll p { color: var(--ln-text-dim); font: var(--ln-fs-micro) var(--ln-font-mono); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.debrief-scroll p { color: var(--ln-text-dim); font: 11px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
 .success-mark { width: 88px; height: 88px; margin: 0 auto; display: grid; place-items: center; border-radius: 50%; color: var(--ln-text-on-cyan); background: radial-gradient(circle at 30% 30%, #a9ffc8, var(--ln-ok) 70%, #02180c); box-shadow: var(--ln-glow-ok); font: 800 44px var(--ln-font-display); animation: glow-anim 2s ease-in-out infinite; }
 .reward-label { color: var(--ln-text-dim); }
 .reward-total { margin-top: var(--ln-s-1); color: var(--ln-amber); font: 800 32px var(--ln-font-display); }
@@ -2579,10 +2458,39 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
     linear-gradient(180deg, rgba(2, 7, 17, .58) 0%, rgba(2, 7, 17, .06) 27%, rgba(2, 7, 17, .06) 58%, rgba(2, 7, 17, .46) 100%),
     radial-gradient(ellipse at 50% 72%, transparent 0%, rgba(2, 7, 17, .24) 72%, rgba(2, 7, 17, .56) 100%);
 }
+.debrief-hud-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 18px 18px 76px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(2, 7, 17, .8), rgba(2, 7, 17, 0));
+}
+.debrief-hud-header span:first-child {
+  display: block;
+  color: var(--ln-cyan);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+.debrief-hud-header h1 {
+  margin-top: 3px;
+  color: var(--ln-text);
+  font: 800 28px/1 var(--ln-font-display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, .6);
+}
 .debrief-hud-header__location {
   margin-top: 6px;
   color: var(--ln-text-muted);
-  font: 700 var(--ln-fs-micro) var(--ln-font-mono);
+  font: 700 9px var(--ln-font-mono);
   letter-spacing: .14em;
   text-align: right;
   text-transform: uppercase;
@@ -2616,7 +2524,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   align-items: center;
   gap: 7px;
   color: var(--ln-ok);
-  font: 800 var(--ln-fs-micro) var(--ln-font-display);
+  font: 800 9px var(--ln-font-display);
   letter-spacing: .16em;
   text-transform: uppercase;
 }
@@ -2640,7 +2548,7 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 .debrief-mission-strip__route span {
   display: block;
   color: var(--ln-text-muted);
-  font: 700 var(--ln-fs-micro) var(--ln-font-display);
+  font: 700 8px var(--ln-font-display);
   letter-spacing: .18em;
   text-transform: uppercase;
 }
@@ -2720,9 +2628,14 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
 }
 
 @media (max-width: 620px) {
+  .debrief-hud-header {
+    gap: 12px;
+    padding-left: 68px;
+  }
+  .debrief-hud-header h1 { font-size: 22px; }
   .debrief-hud-header__location {
     max-width: 124px;
-    font-size: var(--ln-fs-micro);
+    font-size: 8px;
     line-height: 1.3;
   }
   .debrief-game__content { padding: 86px 12px 104px; }
@@ -2791,6 +2704,50 @@ body:has(.auth-gate.theme-blueprint) .dev-shortcuts { display: none; }
   }
 }
 
+@keyframes coach-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes coach-spot {
+  0%,100% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 0 0 rgba(245,166,35,0); }
+  50% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 18px 3px rgba(245,166,35,0.6); }
+}
+@keyframes coach-spot-pulse {
+  0%,100% { border-color: rgba(255,255,255,0.28); box-shadow: 0 0 8px rgba(112,217,234,0.15); }
+  50% { border-color: rgba(112,217,234,0.9); box-shadow: 0 0 20px rgba(112,217,234,0.45); }
+}
+@keyframes coach-glow-fade {
+  0%,100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+/* Cyan pulse ring. Sits over its positioned parent (or fills a highlight
+   overlay); never paints text, so animating the whole layer's opacity is safe.
+   Was amber (rgba(245,166,35,...)) until KES-192 — TutorialHighlight wraps
+   whole content panels (Target Picker, Rocket Buy, Launch Preflight, Debrief)
+   whenever hasCoach is true, so that amber was a panel accent on every
+   onboarding screen, not the small payout-emphasis use the standing amber
+   rule allows. Cyan matches TutorialCoach's own instruction-card border. */
+.coach-glow-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(112,217,234,1);
+  border-radius: inherit;
+  box-shadow: 0 0 20px 5px rgba(112,217,234,0.45);
+  pointer-events: none;
+  will-change: opacity;
+  animation: coach-glow-fade 1.6s ease-in-out infinite;
+}
+@keyframes coach-point { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+@keyframes coach-arrow-bounce {
+  0%,100% { transform: translateY(0); opacity: 0.7; }
+  40% { transform: translateY(10px); opacity: 1; }
+  60% { transform: translateY(8px); opacity: 1; }
+}
+
+/* Coach element highlight ring animation */
+@keyframes coach-ring-pulse {
+  0%, 100% { opacity: 0.65; box-shadow: 0 0 0 3px rgba(112,217,234,0.12), 0 0 14px rgba(112,217,234,0.3); }
+  50% { opacity: 1; box-shadow: 0 0 0 5px rgba(112,217,234,0.22), 0 0 26px rgba(112,217,234,0.55); }
+}
+
 /* SSL-395 beacon: Flight Plan sets data-flight-target (space-separated ids) on
    <html>; the real control pulses its own outline. Nothing is drawn on top. */
 @keyframes flight-beacon-pulse {
@@ -2846,16 +2803,14 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 .flight-plan-radio p { margin: 0; font-size: 14px; line-height: 1.4; color: var(--ln-text-muted, #b4c4d8); max-width: 760px; }
 .flight-plan-radio .flight-plan-hint { color: var(--ln-cyan); }
 .flight-plan-skip { align-self: flex-start; margin-top: 4px; }
-/* In flow (not absolute) so the collapsed chip never covers the screen's own
-   bottom actions such as Confirm Configuration. */
-.flight-plan-chip { align-self: flex-end; margin: 4px 8px; background: var(--ln-panel-2, #101722); }
+.flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-panel-2, #101722); }
 .game-chrome-bottom__training-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 999px; background: var(--ln-cyan); }
-.game-chrome-bottom__training-chip { margin-left: 4px; font-size: 14px; color: var(--ln-cyan); }
+.game-chrome-bottom__training-chip { margin-left: 4px; font-size: 10px; color: var(--ln-cyan); }
 /* Phone widths: MENU + dot + "0/3" is wider than its slot and spilled past the
    bar edge. The chip already carries the state, so drop the dot there. */
 @media (max-width: 600px), (max-height: 500px) {
   .game-chrome-bottom__training-dot { display: none; }
-  .game-chrome-bottom__training-chip { margin-left: 3px; font-size: 14px; letter-spacing: 0; }
+  .game-chrome-bottom__training-chip { margin-left: 3px; font-size: 9px; letter-spacing: 0; }
 }
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
 
@@ -2885,33 +2840,30 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 :root {
   /* Scene-local accents. Kept as hub-scoped tokens rather than overriding
      the global --ln-cyan/--ln-ok, which other screens already tune against. */
-  --hub-mint:       color-mix(in srgb, var(--ln-blueprint-blue) 62%, var(--ln-blueprint-paper));
-  --hub-cyan:       var(--ln-blueprint-blue);
+  --hub-mint:       #5ad07e;
+  --hub-cyan:       #70d9ea;
   /* Chalky, slightly desaturated sage green — replaces the earlier hot-pink
      interactive accent (2026-08-23) across the Hub's clickable chrome (Jobs
      chip, Edit/Build CTA, active dock icons). The atmospheric dusk-horizon
      pink below is a separate, still-standing decision (KES-228) and is left
      alone — it's backdrop color, not interactive UI. */
-  --hub-chalk:       color-mix(in srgb, var(--ln-blueprint-blue) 18%, var(--ln-blueprint-paper));
-  --hub-chalk-soft:  color-mix(in srgb, var(--ln-blueprint-blue) 12%, transparent);
-  --hub-outline:    var(--ln-blueprint-line-strong);
-  --hub-panel:      var(--ln-blueprint-paper);
-  --hub-panel-deep: var(--ln-blueprint-paper-2);
-  /* Daylight blueprint scene: the Base is a physical place, not a dark HUD. */
-  --hub-void:       var(--ln-blueprint-bg);
-  --hub-bg:         var(--ln-blueprint-bg);
-  --hub-sky-top:    color-mix(in srgb, var(--ln-blueprint-blue) 14%, var(--ln-blueprint-paper));
-  --hub-sky-mid:    color-mix(in srgb, var(--ln-blueprint-blue) 28%, var(--ln-blueprint-paper));
-  --hub-horizon:    color-mix(in srgb, var(--ln-blueprint-blue) 46%, var(--ln-blueprint-paper));
-  --hub-horizon-glow: color-mix(in srgb, var(--ln-blueprint-blue) 14%, transparent);
+  --hub-chalk:       #9bc98a;
+  --hub-chalk-soft:  rgba(155, 201, 138, 0.16);
+  --hub-outline:    rgba(177, 198, 229, 0.4);
+  --hub-panel:      #04101f;
+  --hub-panel-deep: #020a16;
+  /* Dusk sky — deep navy overhead, warming toward the horizon. */
+  --hub-void:       #00040a;
+  --hub-bg:         #000d1f;
+  --hub-sky-top:    #050d1f;
+  --hub-sky-mid:    #12213f;
+  --hub-horizon:    #d9527e;
+  --hub-horizon-glow: rgba(227, 95, 160, 0.22);
   /* Parallax hill silhouettes, far to near. */
-  --hub-hill-far:   color-mix(in srgb, var(--ln-blueprint-blue) 36%, var(--ln-blueprint-paper));
-  --hub-hill-mid:   color-mix(in srgb, var(--ln-blueprint-blue) 50%, var(--ln-blueprint-paper));
-  --hub-hill-near:  color-mix(in srgb, var(--ln-blueprint-blue) 62%, var(--ln-blueprint-paper));
-  --hub-skyline:    color-mix(in srgb, var(--ln-blueprint-ink) 54%, var(--ln-blueprint-paper));
-  --hub-ground-far: color-mix(in srgb, var(--ln-blueprint-blue) 34%, var(--ln-blueprint-paper));
-  --hub-ground-near: color-mix(in srgb, var(--ln-blueprint-blue) 48%, var(--ln-blueprint-paper));
-  --hub-ground-lip: color-mix(in srgb, var(--ln-blueprint-ink) 34%, var(--ln-blueprint-paper));
+  --hub-hill-far:   #16233f;
+  --hub-hill-mid:   #0f1b34;
+  --hub-hill-near:  #0a1428;
+  --hub-skyline:    #0a1626;
   /* Ground contact line — 22% from the bottom. Keep this aligned with the DOM
      plot positions in HubScreen/BuildPlaceScreen, which derive from the same
      scene-local baseline. */
@@ -3367,40 +3319,6 @@ button.hub-orbital-network__status:disabled { cursor: default; }
      104px reserve left a visible blank band before the in-flow Home nav. */
   bottom: 76px !important;
 }
-/* Short landscape phones: the structure cards sit at the same height as the
-   plot buttons (ground line at 42%), so the card strip covered plot 1 and the
-   player could not tap it. Collapse the strip to one compact row (name + cost,
-   locked cards show the name only) so the plots stay reachable. */
-@media (max-height: 520px) and (orientation: landscape) {
-  .build-place-screen .build-structure-strip > div {
-    padding: 0 12px !important;
-  }
-  .build-place-screen .build-structure-strip > div > div {
-    padding-bottom: 0 !important;
-  }
-  .build-place-screen .build-structure-strip button {
-    padding: 3px 10px !important;
-    min-width: 0 !important;
-    max-width: none !important;
-  }
-  .build-place-screen .build-structure-strip button > div {
-    align-items: center;
-  }
-  .build-place-screen .build-structure-strip button > div > div {
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
-    gap: 8px;
-    white-space: nowrap;
-  }
-  .build-place-screen .build-structure-strip button > div > div > div {
-    white-space: nowrap !important;
-    margin-top: 0 !important;
-  }
-  .build-place-screen .build-structure-strip button[aria-disabled="true"] [data-testid^="build-structure-card-cost-"] {
-    display: none;
-  }
-}
 .build-place-screen .build-structure-strip button {
   background: var(--ln-surface);
   border-color: var(--ln-cyan-border);
@@ -3457,12 +3375,3 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* SSL-441: short landscape viewports have no room under the docked coach card,
    so the coached mining guide moves to the free left column instead of
    covering the card, the ore lane and the bottom control rail. */
-
-/* Sky event overlay (SSL-475): placeholder meteor streaks until Ink's art lands. */
-.sky-event-overlay { position: absolute; top: 0; left: 0; width: 160px; height: 96px; pointer-events: none; overflow: hidden; }
-.sky-event-overlay i { position: absolute; width: 32px; height: 2px; background: linear-gradient(90deg, transparent, var(--ln-cyan)); transform: rotate(24deg); opacity: 0; animation: sky-event-streak 3.2s linear infinite; }
-.sky-event-overlay i:nth-child(1) { top: 8px; left: 100px; }
-.sky-event-overlay i:nth-child(2) { top: 24px; left: 140px; animation-delay: 1.1s; }
-.sky-event-overlay i:nth-child(3) { top: 4px; left: 60px; animation-delay: 2.2s; }
-@keyframes sky-event-streak { 0% { opacity: 0; transform: translate(0, 0) rotate(24deg); } 10% { opacity: 0.9; } 40% { opacity: 0; transform: translate(-72px, 32px) rotate(24deg); } 100% { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .sky-event-overlay i { animation: none; } }
