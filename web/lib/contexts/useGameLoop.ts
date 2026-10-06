@@ -22,7 +22,7 @@ import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
-import { resolveSaturnBadgeTier, grantBadgesForActivity, skyEventNow, type SkyActivityKind } from '@/lib/data'
+import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, type SkyActivityKind } from '@/lib/data'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
@@ -837,9 +837,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
   }, [setState])
 
-  // Saturn imager (SSL-492): local record only. The shared pool that would
-  // receive these calls (SSC-43) does not exist yet, so nothing is sent to
-  // the backend. Badge tier comes from the SSL-491 sky event config.
+  // Saturn imager (SSL-492): local record first (offline-safe), then a pool
+  // classification (SSC-43) when the frame came from the shared pool. Badge
+  // tier comes from the SSL-491 sky event config.
   const submitSaturnClassification = useCallback((candidateId: string, verdict: SaturnVerdict) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
     setState(s => {
@@ -857,6 +857,18 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         },
       }
     })
+
+    const userId = pbShared.authStore.record?.id
+    if (userId && isSaturnPoolCandidateId(candidateId)) {
+      pbShared.collection('ss_saturn_storm_classifications').create({
+        user: userId,
+        frame: candidateId,
+        answer: verdict,
+      }).catch(error => {
+        console.warn('[Saturn] classification submit failed', error)
+        addToast('Saved locally — could not reach the shared classification feed', 'warn')
+      })
+    }
   }, [setState])
 
   // Player picks where the satellite points for the *next* daily downlink

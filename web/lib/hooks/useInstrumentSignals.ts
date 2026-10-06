@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { Player } from '@/lib/game-types'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
-import { fetchReviewableSaturnCandidates } from '@/lib/data'
+import { fetchReviewableSaturnCandidates } from '@/lib/saturn-subjects'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import {
   collectInstrumentSignals,

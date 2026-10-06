@@ -2,10 +2,9 @@
 // Zooniverse "Saturn Thunderstorm Search" project (project 24787, subject set
 // 124285). Mirrors asteroid-candidates.ts as a third, independent instrument.
 //
-// The shared science pool (SSC-43) is not built yet, so this module ships a
-// static fallback seed of real subjects (subject id, OPUS ID, image URL) pulled
-// from the public Panoptes API. `toSaturnCandidate` accepts the future pool
-// record shape so the feed can switch over without touching the screen.
+// Frames come from the shared science pool (SSC-43, lib/saturn-subjects.ts);
+// this module ships a static seed of real subjects (subject id, OPUS ID, image
+// URL) from the public Panoptes API as the offline fallback.
 
 export type SaturnVerdict = 'yes' | 'no' | 'maybe'
 
@@ -89,8 +88,7 @@ export function dailySaturnCandidates(
   return picked
 }
 
-// Future shared-pool record (SSC-43). Field names are the expected shape and
-// must be re-checked against the real schema when the pool lands.
+// Shared-pool record (SSC-43): ss_saturn_storm_frames in the shared backend.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toSaturnCandidate(record: any): SaturnCandidate {
   const subjectId = String(record.subject_id ?? record.subjectId ?? record.id ?? '')
@@ -102,8 +100,12 @@ export function toSaturnCandidate(record: any): SaturnCandidate {
   }
 }
 
-// Resolves the frame pool. Swap the body for a pool collection fetch once
-// SSC-43 exists; callers already treat it as async and fallible.
-export async function fetchReviewableSaturnCandidates(): Promise<SaturnCandidate[]> {
+/** Offline fallback for the pool feed (see lib/saturn-subjects.ts). */
+export function getSaturnFallbackCandidates(): SaturnCandidate[] {
   return SATURN_FALLBACK_CANDIDATES
+}
+
+/** True when the id is a shared-pool record id, not a static fallback seed id. */
+export function isSaturnPoolCandidateId(id: string): boolean {
+  return id !== '' && !id.startsWith('saturn-')
 }

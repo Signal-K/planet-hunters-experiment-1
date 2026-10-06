@@ -10,10 +10,10 @@ import CommentsPanel from '@/components/game/CommentsPanel'
 import NebulaBackdrop from '@/components/game/NebulaBackdrop'
 import {
   SATURN_QUESTION,
-  fetchReviewableSaturnCandidates,
   type SaturnCandidate,
   type SaturnVerdict,
 } from '@/lib/data'
+import { fetchReviewableSaturnCandidates } from '@/lib/saturn-subjects'
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'

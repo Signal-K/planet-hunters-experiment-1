@@ -8,6 +8,7 @@ import {
   dailySaturnCandidates,
   resolveSaturnBadgeTier,
   toSaturnCandidate,
+  isSaturnPoolCandidateId,
 } from './data'
 import { collectInstrumentSignals } from './systems/InstrumentFeedSystem'
 
@@ -87,5 +88,13 @@ describe('saturn state and feed', () => {
       },
     })
     expect(done.some(s => s.id === online[0].id)).toBe(false)
+  })
+})
+
+describe('saturn pool ids', () => {
+  it('distinguishes pool record ids from static seed ids', () => {
+    expect(isSaturnPoolCandidateId('yw1xzyv6e20lm4d')).toBe(true)
+    expect(isSaturnPoolCandidateId(SATURN_FALLBACK_CANDIDATES[0].id)).toBe(false)
+    expect(isSaturnPoolCandidateId('')).toBe(false)
   })
 })
