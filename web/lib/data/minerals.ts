@@ -34,6 +34,9 @@ export const MINERAL_META: Record<string, MineralMeta> = {
   aluminium: { name: 'Aluminium', sym: 'Al', color: '#c7d0dc', price: MINERAL_VALUE.common, rarity: 'common',   constructionUse: 'Lightweight frames, tanks, trusses',      laserAccess: 1, earthAbundant: true, shape: 'rect' },
   hydrogen:  { name: 'Hydrogen',  sym: 'H',  color: '#9becff', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Propellant, reactor feedstock',           laserAccess: 1, shape: 'triangle' },
   uranium:   { name: 'Uranium',   sym: 'U',  color: '#8fd16a', price: MINERAL_VALUE.rare, rarity: 'rare',     constructionUse: 'Compact power systems, shielding',        laserAccess: 2, shape: 'triangle' },
+  // ── Sky-event debris (SSL-475/491) — only ever spawns during its event, sells at spot ─
+  orionid_debris:  { name: 'Orionid Debris',  sym: 'Od', color: '#7fd8ff', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'diamond' },
+  draconid_debris: { name: 'Draconid Debris', sym: 'Dd', color: '#c7a6ff', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'triangle' },
 }
 
 /** Rarity band per mineral, for anything pricing against MINERAL_VALUE. */
@@ -58,6 +61,8 @@ export const MINERAL_COLORS: Record<string, string> = {
   aluminium: '#c7d0dc',
   hydrogen:  '#9becff',
   uranium:   '#8fd16a',
+  orionid_debris:  '#7fd8ff',
+  draconid_debris: '#c7a6ff',
 }
 
 export function sellCargo(cargo: Record<string, number>, minerals: Record<string, MineralMeta> = MINERAL_META): number {

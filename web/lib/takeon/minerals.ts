@@ -19,6 +19,8 @@ export const LANDNAM_TO_TAKEON_MINERAL: Record<string, ResourceKey> = {
   iridium: 'crystal',
   rhodium: 'crystal',
   gold: 'crystal',
+  orionid_debris: 'crystal',
+  draconid_debris: 'crystal',
   // Added (KES-231): missing entries here silently dropped these minerals
   // from a seeded Takeon scene's cargo — for the M3 delivery tutorial, a
   // player carrying only one of these (e.g. a nickel-only "Nickel Line

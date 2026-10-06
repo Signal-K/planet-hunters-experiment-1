@@ -3429,3 +3429,12 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* SSL-441: short landscape viewports have no room under the docked coach card,
    so the coached mining guide moves to the free left column instead of
    covering the card, the ore lane and the bottom control rail. */
+
+/* Sky event overlay (SSL-475): placeholder meteor streaks until Ink's art lands. */
+.sky-event-overlay { position: absolute; top: 0; left: 0; width: 160px; height: 96px; pointer-events: none; overflow: hidden; }
+.sky-event-overlay i { position: absolute; width: 32px; height: 2px; background: linear-gradient(90deg, transparent, var(--ln-cyan)); transform: rotate(24deg); opacity: 0; animation: sky-event-streak 3.2s linear infinite; }
+.sky-event-overlay i:nth-child(1) { top: 8px; left: 100px; }
+.sky-event-overlay i:nth-child(2) { top: 24px; left: 140px; animation-delay: 1.1s; }
+.sky-event-overlay i:nth-child(3) { top: 4px; left: 60px; animation-delay: 2.2s; }
+@keyframes sky-event-streak { 0% { opacity: 0; transform: translate(0, 0) rotate(24deg); } 10% { opacity: 0.9; } 40% { opacity: 0; transform: translate(-72px, 32px) rotate(24deg); } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sky-event-overlay i { animation: none; } }

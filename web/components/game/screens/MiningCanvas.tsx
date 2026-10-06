@@ -10,6 +10,8 @@ import type { MineralMeta } from '@/lib/data'
 import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 import { prefersReducedMotion } from '@/lib/pixi/launchSpriteAnim'
 import { recoilOffset } from '@/lib/engine/miningJuice'
+import { debrisRatePerMinute, type DebrisEventPreset } from '@/lib/data/sky-events'
+import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 
 // Keep every mineral visibly grounded in the mining scene. The authored set
 // covers the most common late-game ores; the neutral iron crystal is a
@@ -107,10 +109,14 @@ interface MiningCanvasProps {
   /** Pushed true immediately after a shot fires, false once the cooldown clears. Mirrors the oreNearRef push pattern so the screen can show ready/charging state without owning the timer. */
   chargingRef?: React.MutableRefObject<((charging: boolean) => void) | null>
   trainingMiningTry?: boolean
+  /** SSL-475: sky-event debris. Omit (or event inactive) for the unchanged scene. */
+  debrisPreset?: DebrisEventPreset | null
 }
 
-export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false }: MiningCanvasProps) {
+export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const debrisPresetRef = useRef(debrisPreset)
+  debrisPresetRef.current = debrisPreset
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
   const onFireRequestRef = useRef(onFireRequest)
@@ -287,6 +293,17 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
           onOreNearby: (near) => { oreNearRef?.current?.(near) },
           neededMineralsRef,
           reducedMotion: prefersReducedMotion(),
+          debris: {
+            getSpawn: () => {
+              const preset = debrisPresetRef.current
+              if (!preset) return null
+              return {
+                mineral: preset.resourceId,
+                speedFactor: preset.speedFactor,
+                ratePerMinute: debrisRatePerMinute(preset, debrisNow()),
+              }
+            },
+          },
         })
 
         app.ticker.add(ticker => {

@@ -14,6 +14,11 @@ import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUni
 import { TRANSPORT_LESSON_MISSIONS_DONE } from '@/lib/systems/AgencyOnboardingSystem'
 import { ownershipIdentity } from '@/lib/systems/SandboxSystem'
 import { isFreeHaulEligibleMission } from '@/lib/data'
+import { DEBRIS_PRESETS, applyDebrisMined, skyEventNow } from '@/lib/data/sky-events'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { captureGameEvent } from '@/lib/posthog'
+
+const reportedDebrisBadges = new Set<string>()
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
@@ -209,6 +214,21 @@ export default function MissionOperationRoutes({
           isFreeHaulEligible={isFreeHaulEligibleMission(game.mission)}
           hasEarthStorage={earthStorageBuilt(game.player)}
           initialEarthDisposition={game.player.freeHaulDisposition}
+          onDebrisMined={resourceId => {
+            const now = skyEventNow(isDevLauncherEnabled())
+            const preset = DEBRIS_PRESETS.find(p => p.resourceId === resourceId)
+            if (!preset) return
+            captureGameEvent('sky_event_debris_mined', { event_id: preset.eventId, resource: resourceId })
+            // State update is pure and idempotent; the toast/analytics side effects
+            // are deduped per event so a re-run updater or fast second chunk can't repeat them.
+            const { badge } = applyDebrisMined(game.player, preset, now)
+            if (badge && !reportedDebrisBadges.has(badge.eventId)) {
+              reportedDebrisBadges.add(badge.eventId)
+              captureGameEvent('badge_earned', { event_id: badge.eventId, tier: badge.tier, activity: 'debris-mining' })
+              game.addToast(`${preset.label} badge earned`, 'ok')
+            }
+            game.setPlayer(player => applyDebrisMined(player, preset, now).player)
+          }}
         />
       )
 

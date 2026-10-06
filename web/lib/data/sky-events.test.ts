@@ -7,7 +7,14 @@ import {
   resolveSaturnBadgeTier,
   sanitizeBadges,
   DRACONIDS_DEBRIS_PRESET,
+  ORIONIDS_DEBRIS_PRESET,
+  activeDebrisPreset,
+  applyDebrisMined,
+  debrisRatePerMinute,
+  isDebrisEventActive,
+  isLocalNight,
 } from './sky-events'
+import { MINERAL_META } from './minerals'
 
 import type { Player } from '@/lib/game-types'
 const blank = (): Pick<Player, 'badges'> => ({})
@@ -99,5 +106,86 @@ describe('Draconids preset', () => {
   it('is slow and low-rate', () => {
     expect(DRACONIDS_DEBRIS_PRESET.speedFactor).toBeLessThan(1)
     expect(DRACONIDS_DEBRIS_PRESET.peakRatePerMinute).toBeLessThanOrEqual(5)
+  })
+})
+
+// Local-time constructors keep these independent of the CI timezone.
+const local = (m: number, d: number, h: number, min = 0) => new Date(2026, m - 1, d, h, min).getTime()
+
+describe('isLocalNight', () => {
+  it('is 22:00 inclusive to 06:00 exclusive', () => {
+    expect(isLocalNight(local(10, 25, 21, 59))).toBe(false)
+    expect(isLocalNight(local(10, 25, 22, 0))).toBe(true)
+    expect(isLocalNight(local(10, 25, 23, 59))).toBe(true)
+    expect(isLocalNight(local(10, 26, 0, 0))).toBe(true)
+    expect(isLocalNight(local(10, 26, 5, 59))).toBe(true)
+    expect(isLocalNight(local(10, 26, 6, 0))).toBe(false)
+    expect(isLocalNight(local(10, 26, 13, 0))).toBe(false)
+  })
+})
+
+describe('isDebrisEventActive (Orionids)', () => {
+  const p = ORIONIDS_DEBRIS_PRESET
+  it('is active mid-window at night, inactive by day', () => {
+    expect(isDebrisEventActive(p, local(10, 28, 23))).toBe(true)
+    expect(isDebrisEventActive(p, local(10, 28, 12))).toBe(false)
+  })
+  it('is inactive before the window and after it, even at night', () => {
+    expect(isDebrisEventActive(p, local(10, 10, 23))).toBe(false)
+    expect(isDebrisEventActive(p, local(11, 12, 23))).toBe(false)
+  })
+  it('covers the 7 Nov end and the 21-22 Oct peak night', () => {
+    expect(isDebrisEventActive(p, local(11, 7, 23))).toBe(true)
+    expect(isDebrisEventActive(p, local(10, 21, 23))).toBe(true)
+    expect(isDebrisEventActive(p, local(10, 22, 1))).toBe(true)
+  })
+  it('rejects non-finite input', () => {
+    expect(isDebrisEventActive(p, Number.NaN)).toBe(false)
+  })
+  it('activeDebrisPreset resolves the matching preset only', () => {
+    expect(activeDebrisPreset(local(10, 28, 23))?.eventId).toBe('orionids-2026')
+    expect(activeDebrisPreset(local(10, 8, 23))?.eventId).toBe('draconids-2026')
+    expect(activeDebrisPreset(local(10, 15, 23))).toBeNull()
+    expect(activeDebrisPreset(local(10, 28, 12))).toBeNull()
+  })
+})
+
+describe('debrisRatePerMinute', () => {
+  it('is zero outside the event and ramps to the peak rate', () => {
+    expect(debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, local(10, 28, 12))).toBe(0)
+    const peak = debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, Date.parse('2026-10-22T00:00:00Z') + 0)
+    const later = debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, local(11, 6, 23))
+    if (peak > 0) expect(peak).toBeGreaterThan(later)
+    expect(later).toBeGreaterThanOrEqual(ORIONIDS_DEBRIS_PRESET.baseRatePerMinute)
+    expect(later).toBeLessThan(ORIONIDS_DEBRIS_PRESET.peakRatePerMinute)
+  })
+  it('Draconids stay slower than Orionids', () => {
+    expect(DRACONIDS_DEBRIS_PRESET.peakRatePerMinute).toBeLessThan(ORIONIDS_DEBRIS_PRESET.baseRatePerMinute)
+  })
+})
+
+describe('applyDebrisMined badge', () => {
+  it('grants gold on the first debris mined in the window, once', () => {
+    const at = local(10, 28, 23)
+    const first = applyDebrisMined(blank(), ORIONIDS_DEBRIS_PRESET, at)
+    expect(first.badge?.eventId).toBe('orionids-2026')
+    expect(first.badge?.tier).toBe('gold')
+    const second = applyDebrisMined(first.player, ORIONIDS_DEBRIS_PRESET, at + 60_000)
+    expect(second.badge).toBeNull()
+    expect(second.player).toBe(first.player)
+  })
+  it('does not grant the Draconids badge for Orionid debris', () => {
+    const r = applyDebrisMined(blank(), ORIONIDS_DEBRIS_PRESET, local(10, 28, 23))
+    expect(r.player.badges?.['draconids-2026']).toBeUndefined()
+  })
+})
+
+describe('debris resources', () => {
+  it('are registered and priced from the shared rarity bands', () => {
+    for (const preset of [ORIONIDS_DEBRIS_PRESET, DRACONIDS_DEBRIS_PRESET]) {
+      const meta = MINERAL_META[preset.resourceId]
+      expect(meta).toBeDefined()
+      expect(meta.price).toBeGreaterThan(0)
+    }
   })
 })

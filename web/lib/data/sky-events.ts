@@ -58,6 +58,13 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     activities: ['debris-mining'],
   },
   {
+    id: 'orionids-2026',
+    name: 'Orionids',
+    startUtc: '2026-10-20T00:00:00Z',
+    endUtc: '2026-11-08T00:00:00Z',
+    activities: ['debris-mining'],
+  },
+  {
     id: 'new-moon-hunt-2026-10',
     name: 'New Moon Asteroid Hunt',
     startUtc: '2026-10-10T00:00:00Z',
@@ -113,10 +120,13 @@ export function grantBadgesForActivity<T extends BadgePlayer>(
   player: T,
   kind: SkyActivityKind,
   at: Date | number,
+  /** Restrict to one event (debris showers share the activity kind). */
+  onlyEventId?: string,
 ): { player: T; granted: PlayerBadge[] } {
   let next = player
   const granted: PlayerBadge[] = []
   for (const event of eventsForActivity(kind)) {
+    if (onlyEventId && event.id !== onlyEventId) continue
     const before = next
     next = grantBadge(next, event.id, at)
     if (next !== before) granted.push(next.badges![event.id])
@@ -143,21 +153,45 @@ export function sanitizeBadges(raw: unknown): Record<string, PlayerBadge> {
   return out
 }
 
-// ---- Draconids "dragon dust" preset (blocked on SSL-475) -------------------
-// SSL-475 (Orionids debris event) has no code yet. Only the typed preset data
-// exists here so the debris event can adopt it; no mining mechanic is built.
+// ---- Debris events (SSL-475 Orionids, SSL-491 Draconids) -------------------
+// One engine, driven by presets. A preset is only "active" inside its UTC
+// window AND during the player's local night, so outside it the mining scene
+// is exactly the pre-event scene.
 export interface DebrisEventPreset {
   eventId: string
   /** Shower window, UTC. */
   startUtc: string
   endUtc: string
   peakUtc: string
-  /** Particles per minute at peak: deliberately slow and low. */
+  /** Particles per minute at peak. */
   peakRatePerMinute: number
+  /** Particles per minute at the window edges. */
   baseRatePerMinute: number
   /** Relative particle speed vs the Orionids baseline (1 = Orionids). */
   speedFactor: number
   label: string
+  /** Sellable resource id (registered in MINERAL_META). */
+  resourceId: string
+  /** Chip text. */
+  chipLabel: string
+}
+
+/** Local night: 22:00 until dawn (06:00). */
+export const NIGHT_START_HOUR = 22
+export const NIGHT_END_HOUR = 6
+
+export const ORIONIDS_DEBRIS_PRESET: DebrisEventPreset = {
+  eventId: 'orionids-2026',
+  startUtc: '2026-10-20T00:00:00Z',
+  endUtc: '2026-11-08T00:00:00Z',
+  // Peak night 21-22 Oct.
+  peakUtc: '2026-10-22T00:00:00Z',
+  peakRatePerMinute: 12,
+  baseRatePerMinute: 4,
+  speedFactor: 1,
+  label: 'Orionid debris',
+  resourceId: 'orionid_debris',
+  chipLabel: 'Orionids active',
 }
 
 export const DRACONIDS_DEBRIS_PRESET: DebrisEventPreset = {
@@ -169,6 +203,62 @@ export const DRACONIDS_DEBRIS_PRESET: DebrisEventPreset = {
   baseRatePerMinute: 0.5,
   speedFactor: 0.4,
   label: 'Dragon dust',
+  resourceId: 'draconid_debris',
+  chipLabel: 'Draconids active',
+}
+
+export const DEBRIS_PRESETS: ReadonlyArray<DebrisEventPreset> = [ORIONIDS_DEBRIS_PRESET, DRACONIDS_DEBRIS_PRESET]
+
+/** Resource ids that only exist during a debris event. */
+export const DEBRIS_RESOURCE_IDS: ReadonlyArray<string> = DEBRIS_PRESETS.map(p => p.resourceId)
+
+/** True between 22:00 and 06:00 in the runtime's local timezone. */
+export function isLocalNight(at: Date | number): boolean {
+  const t = toMs(at)
+  if (!Number.isFinite(t)) return false
+  const hour = new Date(t).getHours()
+  return hour >= NIGHT_START_HOUR || hour < NIGHT_END_HOUR
+}
+
+/** Window (UTC, start inclusive / end exclusive) AND local night. Pure. */
+export function isDebrisEventActive(preset: DebrisEventPreset, now: Date | number): boolean {
+  const t = toMs(now)
+  if (!Number.isFinite(t)) return false
+  if (t < Date.parse(preset.startUtc) || t >= Date.parse(preset.endUtc)) return false
+  return isLocalNight(t)
+}
+
+/** First active preset, or null. Windows do not overlap. */
+export function activeDebrisPreset(now: Date | number): DebrisEventPreset | null {
+  return DEBRIS_PRESETS.find(preset => isDebrisEventActive(preset, now)) ?? null
+}
+
+/** Particles per minute now: 0 when inactive, else a linear ramp base -> peak -> base. */
+export function debrisRatePerMinute(preset: DebrisEventPreset, now: Date | number): number {
+  if (!isDebrisEventActive(preset, now)) return 0
+  const t = toMs(now)
+  const start = Date.parse(preset.startUtc)
+  const end = Date.parse(preset.endUtc)
+  const peak = Date.parse(preset.peakUtc)
+  const half = Math.max(peak - start, end - peak, 1)
+  const closeness = Math.max(0, 1 - Math.abs(t - peak) / half)
+  return preset.baseRatePerMinute + (preset.peakRatePerMinute - preset.baseRatePerMinute) * closeness
+}
+
+/** Resource units granted for one mined debris chunk. */
+export const DEBRIS_UNITS_PER_CHUNK = 1
+
+/**
+ * First debris mined during a preset's event: grants that event's badge via
+ * the shared 'debris-mining' hook. Idempotent (badge shows once).
+ */
+export function applyDebrisMined<T extends BadgePlayer>(
+  player: T,
+  preset: DebrisEventPreset,
+  at: Date | number,
+): { player: T; badge: PlayerBadge | null } {
+  const { player: next, granted } = grantBadgesForActivity(player, 'debris-mining', at, preset.eventId)
+  return { player: next, badge: granted[0] ?? null }
 }
 
 // ---- New Moon --------------------------------------------------------------

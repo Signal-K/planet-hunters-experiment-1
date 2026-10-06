@@ -9,6 +9,9 @@ import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
+import SkyEventChip from '@/components/game/SkyEventChip'
+import { useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
+import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
 
 // Out There: Omega Edition bolt glyph — used inside the charge-meter IconBadge.
 // Kept local since it's a one-off HUD glyph, not a shared icon set yet.
@@ -145,7 +148,7 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
@@ -180,7 +183,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   /** Destination already chosen before a prior "Back to hub" pause on this
    *  same mission — resuming must not ask again. */
   initialEarthDisposition?: 'store' | 'sell'
+  /** SSL-475: fired for every sky-event debris chunk mined (first one earns the badge). */
+  onDebrisMined?: (resourceId: string) => void
 }) {
+  const debrisPreset = useDebrisEvent()
   // Charge count is mission-aware, not coach-aware.
   // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 16× the ore required,
   // minimum 80, so the player can never be softlocked by low charges regardless of coach state.
@@ -274,7 +280,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     setTapDenied(false)
   }
 
+  const onDebrisMinedRef = useRef(onDebrisMined)
+  onDebrisMinedRef.current = onDebrisMined
   const collectMineral = useCallback((mineral: string) => {
+    if (DEBRIS_RESOURCE_IDS.includes(mineral)) onDebrisMinedRef.current?.(mineral)
     cargoRef.current = {
       ...cargoRef.current,
       [mineral]: (cargoRef.current[mineral] ?? 0) + 1,
@@ -634,7 +643,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           neededMineralsRef={neededMineralsRef}
           chargingRef={chargingRef}
           trainingMiningTry={trainingMiningTry}
+          debrisPreset={debrisPreset}
         />
+        <SkyEventChip surface="mining" />
         {sceneStatus !== 'ready' && (
           <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">
             <span className="mining-scene-status__eyebrow">{sceneStatus === 'failed' ? 'FIELD OFFLINE' : 'PREPARING MINING FIELD'}</span>
