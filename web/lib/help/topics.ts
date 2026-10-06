@@ -38,6 +38,20 @@ export const MAX_HELP_CARDS = 4
  * unprompted: a topic only shows when the player taps the "?".
  */
 export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
+  'instrument-hub': {
+    id: 'control-station',
+    title: 'Control Station',
+    cards: [
+      {
+        title: 'Where things are',
+        body: 'The map shows each telescope and satellite you operate. A number means that equipment has items ready to classify.',
+      },
+      {
+        title: 'Open a project',
+        body: 'Filter by place, then open a row that has a count. That opens the review for those items.',
+      },
+    ],
+  },
   // The TESS transit review screen.
   galaxy: {
     id: 'tess',

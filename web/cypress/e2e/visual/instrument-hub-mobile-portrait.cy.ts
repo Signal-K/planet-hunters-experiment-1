@@ -53,8 +53,8 @@ function interceptFeeds() {
   })
 }
 
-describe('instrument hub mobile portrait layout', () => {
-  it('captures the live-base viewport and tall classify workspace', () => {
+describe('control station mobile portrait layout', () => {
+  it('captures the system map, location filters, and equipment rows', () => {
     interceptFeeds()
     cy.viewport(390, 844)
     cy.visit('/game/instrument-hub?preset=ui-instrument-hub', {
@@ -67,10 +67,9 @@ describe('instrument hub mobile portrait layout', () => {
       },
     })
     cy.get('[data-testid="instrument-hub-screen"]', { timeout: 20_000 }).should('be.visible')
-    cy.get('[data-testid="instrument-hub-earth-viewport"]', { timeout: 20_000 }).should('be.visible')
-    cy.get('[data-testid="hub-terrain-fallback"]', { timeout: 20_000 }).should('be.visible')
-    cy.get('[data-testid="instrument-hub-classify-screen"]', { timeout: 20_000 }).should('be.visible')
-    cy.get('[data-testid="instrument-control-filter"]').should('be.visible')
-    cy.screenshot('instrument-hub-mobile-portrait', { capture: 'viewport' })
+    cy.get('[data-testid="control-station-map"]', { timeout: 20_000 }).should('be.visible')
+    cy.get('[data-testid="control-station-row"]').should('have.length.at.least', 3)
+    cy.get('[data-testid="instrument-signal-inspect"]', { timeout: 20_000 }).should('be.visible')
+    cy.screenshot('control-station-mobile-portrait', { capture: 'viewport' })
   })
 })
