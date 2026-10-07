@@ -1,3 +1,4 @@
+import SwiftUI
 import SpriteKit
 import LandnamCore
 
@@ -68,27 +69,45 @@ final class LaunchScene: SKScene {
         }
     }
 
+    /// Layered outlined parts (blueprint style): ice hills, paper ground, ink outlines, offset shade.
     private func buildGround() {
         mountains = SKNode(); ground = SKNode()
         world.addChild(mountains); world.addChild(ground)
         let gh = CGFloat(layout.groundHeight)
-        let ranges: [(String, CGFloat, CGFloat)] = [("mtn_peak_broad", 0.14, 1.3), ("mtn_horn", 0.42, 1.0), ("mtn_peak_tall", 0.7, 1.2), ("mtn_saw_ridge", 0.95, 1.1)]
-        for (i, r) in ranges.enumerated() {
-            guard let tex = SK.texture("terrain/\(r.0).png") else { continue }
-            let k = TerrainKit.size[r.0] ?? (100, 80)
-            let sp = SKSpriteNode(texture: tex)
-            let w = CGFloat(k.w) * r.2 * max(1, size.width / 600)
-            sp.size = CGSize(width: w, height: w * CGFloat(k.h / k.w)); sp.anchorPoint = CGPoint(x: 0.5, y: 0)
-            sp.position = CGPoint(x: size.width * r.1, y: gh - 4); sp.zPosition = -8 + CGFloat(i) * 0.1
-            sp.color = Theme.mix(0.5).sk; sp.colorBlendFactor = 0.5
-            mountains.addChild(sp)
+        func ridge(_ heights: [CGFloat], fill: Color, z: CGFloat, line: CGFloat) {
+            let path = CGMutablePath()
+            path.move(to: CGPoint(x: 0, y: gh - 4))
+            for (i, h) in heights.enumerated() {
+                path.addLine(to: CGPoint(x: size.width * CGFloat(i) / CGFloat(heights.count - 1), y: gh - 4 + h * size.height))
+            }
+            path.addLine(to: CGPoint(x: size.width, y: gh - 4))
+            let n = SKShapeNode(path: path)
+            n.fillColor = fill.sk; n.strokeColor = Theme.ink.sk; n.lineWidth = line; n.lineJoin = .round
+            n.zPosition = z; mountains.addChild(n)
         }
-        let g = SKSpriteNode(color: Theme.groundNear.sk, size: CGSize(width: size.width, height: gh))
+        ridge([0.09, 0.19, 0.07, 0.22, 0.12, 0.17, 0.08, 0.14, 0.1], fill: Theme.paper2, z: -9, line: 2)
+        ridge([0.05, 0.11, 0.04, 0.13, 0.07, 0.1, 0.05], fill: Theme.blueBright.opacity(0.35), z: -8, line: 2.5)
+        let g = SKSpriteNode(color: Theme.paper.sk, size: CGSize(width: size.width, height: gh))
         g.anchorPoint = .zero; g.zPosition = -5; ground.addChild(g)
-        let lip = SKSpriteNode(color: Theme.groundLip.sk, size: CGSize(width: size.width, height: 4))
-        lip.anchorPoint = .zero; lip.position = CGPoint(x: 0, y: gh); lip.zPosition = -4; ground.addChild(lip)
-        let pad = SKSpriteNode(color: Theme.ink.sk.withAlphaComponent(0.55), size: CGSize(width: 150 * CGFloat(layout.rocketScale + 0.4), height: 10))
-        pad.position = CGPoint(x: size.width / 2, y: padY - 5); pad.zPosition = -3; ground.addChild(pad)
+        let lip = SKSpriteNode(color: Theme.ink.sk, size: CGSize(width: size.width, height: 3))
+        lip.anchorPoint = .zero; lip.position = CGPoint(x: 0, y: gh - 1); lip.zPosition = -4; ground.addChild(lip)
+        let k = CGFloat(layout.rocketScale + 0.4)
+        func part(_ w: CGFloat, _ h: CGFloat, x: CGFloat, y: CGFloat, fill: Color, line: CGFloat = 2.5, z: CGFloat) {
+            let shade = SKShapeNode(rect: CGRect(x: x - w / 2 + 3, y: y - 3, width: w, height: h))
+            shade.fillColor = Theme.blue.opacity(0.4).sk; shade.strokeColor = .clear; shade.zPosition = z - 0.05
+            let n = SKShapeNode(rect: CGRect(x: x - w / 2, y: y, width: w, height: h))
+            n.fillColor = fill.sk; n.strokeColor = Theme.ink.sk; n.lineWidth = line; n.zPosition = z
+            ground.addChild(shade); ground.addChild(n)
+        }
+        let cx = size.width / 2
+        part(190 * k, 12, x: cx, y: padY - 12, fill: Theme.paper, z: -3)
+        part(220 * k, 8, x: cx, y: padY - 20, fill: Theme.paper2, z: -3.2)
+        for side: CGFloat in [-1, 1] {
+            let tx = cx + side * 88 * k
+            part(10, 120 * k, x: tx, y: padY - 12, fill: Theme.paper2, line: 2, z: -3.1)
+            for i in 1...4 { part(26, 3, x: tx, y: padY - 12 + CGFloat(i) * 30 * k, fill: Theme.blueBright, line: 1.5, z: -3.0) }
+            part(36, 5, x: tx - side * 18, y: padY - 12 + 95 * k, fill: Theme.paper2, line: 1.5, z: -3.0)
+        }
     }
 
     private func buildRocket() {
