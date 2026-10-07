@@ -14,10 +14,18 @@ struct RootView: View {
     private var game: some View {
         Group {
             switch store.screen {
-            case .intro, .hub, .hubSubsurface: HubScreen()
+            case .intro: IntroScreen()
+            case .hub, .hubSubsurface: HubScreen()
+            case .refinery: RefineryScreen()
+            case .skills: SkillTreeScreen()
+            case .academy: AcademyScreen()
+            case .missionHistory: MissionHistoryScreen()
+            case .narrativeLedger: NarrativeLedgerScreen()
             case .missions: MissionsScreen()
             case .targets, .rocketBuy, .fab, .launchpad: LaunchReviewScreen()
-            case .hangar, .build: LaunchScreen()
+            case .hangar: LaunchScreen()
+            case .build: BuildScreen()
+            case .surfaceOps: SurfaceOpsScreen()
             case .transit: TransitScreen()
             case .roverMining: RoverFieldScreen()
             case .mining, .landing: MiningScreen()

@@ -69,6 +69,7 @@ struct Panel<Content: View>: View {
     var body: some View {
         content
             .font(AppFont.body(14))
+            .fixedSize(horizontal: false, vertical: true)
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.paper, in: RoundedRectangle(cornerRadius: 9))
@@ -148,5 +149,18 @@ struct ScreenFrame<Content: View>: View {
 
     @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
         if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
+    }
+}
+
+/// Outlined progress bar (ProgressView renders as a placeholder in headless snapshots and ignores the blueprint outline).
+struct Bar: View {
+    let value: Double
+    var body: some View {
+        GeometryReader { g in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Theme.paper2)
+                Capsule().fill(Theme.blue).frame(width: g.size.width * min(1, max(0, value)))
+            }.overlay(Capsule().stroke(Theme.ink, lineWidth: 1.5))
+        }.frame(height: 10).accessibilityValue("\(Int(min(1, max(0, value)) * 100)) percent")
     }
 }

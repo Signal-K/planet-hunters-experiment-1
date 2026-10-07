@@ -24,6 +24,11 @@ struct HubScreen: View {
                          x: w * xs[1], groundY: groundY + 2 * k) { store.go(.hangar) }
                 building("Exchange", sprite: "base/exchange_flat.png", aspect: 1153.0 / 461, width: 210 * k * 0.62,
                          x: w * xs[2], groundY: groundY + 2 * k) { store.go(.market) }
+                if let plot = store.player.placementPlots["surface-silo"], store.player.placed.contains("surface-silo") {
+                    let frac: [CGFloat] = [0.15, 0.38, 0.62, 0.85]
+                    building("Silo", sprite: "base/surface_silo_flat.png", aspect: 192.0 / 205, width: 62 * k * 0.62,
+                             x: w * frac[min(max(plot, 0), 3)], groundY: groundY + 34 * k) { store.go(.market) }
+                }
                 BaseTraffic(width: w, groundY: groundY, k: k).allowsHitTesting(false)
                 skyCraft(width: w, height: h)
                 topHud

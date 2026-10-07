@@ -151,6 +151,10 @@ public struct CompletedMissionRecord: Codable, Equatable, Sendable {
     public var completedAt: Double
     public var runId: String?
     public var kind: Kind?
+    public init(id: String, title: String, targetId: String? = nil, clientName: String? = nil, targetName: String? = nil, completedAt: Double, runId: String? = nil, kind: Kind? = nil) {
+        self.id = id; self.title = title; self.targetId = targetId; self.clientName = clientName; self.targetName = targetName
+        self.completedAt = completedAt; self.runId = runId; self.kind = kind
+    }
 }
 
 public struct ActiveMission: Codable, Equatable, Sendable {

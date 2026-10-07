@@ -119,5 +119,32 @@ public final class GameStore {
     }
     public func buyLaserCapacitor(expectedLevel: Int, reservedUnits: Int = 0) { apply(LaserCapacitor.applyBuy(state, expectedLevel: expectedLevel, reservedUnits: reservedUnits)) }
     public func abandonMission() { apply(Loop.abandonMission(state)) }
+    public func openAcademy() { apply(Academy.settleEconomy(Academy.migrate(state, now: now), now: now)) }
+    public func researchAcademy() { apply(Academy.applyResearchAcademy(state)) }
+    public func setAcademyFunding(_ funded: Bool) { apply(Academy.applySetFunding(state, funded: funded)) }
+    public func hireCrew(_ sourceId: String) { apply(Academy.applyHire(state, sourceId: sourceId, now: now)) }
+    public func rehireCrew(_ id: String) { apply(Academy.applyRehire(state, crewId: id, now: now)) }
+    public func trainCrew(_ id: String, branch: String) { apply(Academy.applyStartTraining(state, crewId: id, branch: branch, now: now)) }
+    public func trainCandidate(branch: String) { apply(Academy.applyStartCandidate(state, branch: branch, now: now)) }
+    public func collectTraining(_ id: String) { apply(Academy.applyCollectTraining(state, sessionId: id, now: now)) }
+    public func researchCrewModule() { apply(Academy.applyResearchCrewModule(state)) }
+    public func assignCrew(_ structureId: String, crewId: String?) { apply(Academy.applyAssign(state, structureId: structureId, crewId: crewId)) }
+    @discardableResult public func place(_ kind: String, plot: Int) -> Bool {
+        let next = Construction.applyPlace(state, kind: kind, plot: plot, now: now)
+        guard next != state else { return false }
+        apply(next); return true
+    }
+    public func purchaseSiteAccess(_ id: String) { apply(SurfaceOps.applyPurchaseAccess(state, id, now: now)) }
+    public func buildSettlementPad(_ id: String, pad: Int) { apply(SurfaceOps.applyBuildPad(state, id, pad: pad, now: now)) }
+    public func recordSurfaceMined(_ id: String, mineral: String, amount: Int) { apply(SurfaceOps.applyMined(state, id, mineral: mineral, amount: amount)) }
+    public func dispatchFerry(_ id: String) { apply(SurfaceOps.applyDispatch(state, id, now: now)) }
+    public func retryFerry(_ id: String) { apply(SurfaceOps.applyRetry(state, id, now: now)) }
+    public func reconcileFerry(_ id: String) { apply(SurfaceOps.applyReconcile(state, id, now: now)) }
+    public func acknowledgeFerry(_ id: String) { apply(SurfaceOps.applyAcknowledge(state, id)) }
+    public func unlockSkill(_ id: String) { apply(Progression.applyUnlock(state, nodeId: id)) }
+    public func upgradeLicense(to grade: LicenseGrade) { apply(Progression.applyUpgrade(state, to: grade)) }
+    public func startRefine(_ recipeId: String) { apply(Refinery.applyStart(state, recipeId: recipeId, now: now)) }
+    public func collectRefined(_ recipeId: String) { apply(Refinery.applyCollect(state, recipeId: recipeId, now: now)) }
+    public func sellRefined(_ recipeId: String, amount: Int) { apply(Refinery.applySell(state, recipeId: recipeId, amount: amount)) }
     public func sell(_ mineralId: String, amount: Int) { apply(Market.applySell(state, mineralId: mineralId, amount: amount, now: now)) }
 }

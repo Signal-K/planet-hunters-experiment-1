@@ -56,7 +56,7 @@ import Foundation
     @Test func webSaveRoundTripsAndKeepsUnportedFields() throws {
         let json = """
         {"screen":"hub","player":{"francs":1234,"missionsDone":2,"seen_planets":["eros"],
-         "stash":{"iron":3},"crew":[{"id":"c1"}],"licenseGrade":"Grade II"},
+         "stash":{"iron":3},"roverDeployments":[{"roverId":"r1"}],"licenseGrade":"Grade II"},
          "rocket":{"chassis":"hull-mk2","propulsion":"fusion-b2","drill":"laser-t2"},
          "tutorial":false,"doneSteps":{"2":true},"futureField":{"a":[1,2]}}
         """.data(using: .utf8)!
@@ -65,14 +65,14 @@ import Foundation
         #expect(state.player.francs == 1234)
         #expect(state.player.seenPlanets == ["eros"])
         #expect(state.player.licenseGrade == .two)
-        #expect(state.player.extras["crew"] != nil)
+        #expect(state.player.extras["roverDeployments"] != nil)
         let out = try JSONEncoder().encode(state)
         let back = try JSONDecoder().decode(GameState.self, from: out)
         #expect(back == state)
         let raw = try JSONSerialization.jsonObject(with: out) as! [String: Any]
         #expect(raw["futureField"] != nil)
         #expect((raw["player"] as! [String: Any])["seen_planets"] != nil)
-        #expect((raw["player"] as! [String: Any])["crew"] != nil)
+        #expect((raw["player"] as! [String: Any])["roverDeployments"] != nil)
     }
 
     @Test func emptyAndMalformedPlayerFieldsFallBackToDefaults() throws {

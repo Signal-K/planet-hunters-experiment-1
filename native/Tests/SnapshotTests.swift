@@ -133,6 +133,67 @@ struct SnapshotTests {
         try render(HubScreen().environment(GameStore(state: gs)), size: CGSize(width: 402, height: 874), name: "hub-skycraft-phone")
     }
 
+    // MARK: base screens (refinery, skills, academy, build, surface ops, logs)
+
+    private func basePlayer() -> GameState {
+        var gs = GameState()
+        gs.player.freeOperations = true; gs.player.missionsDone = 4; gs.player.francs = 60_000_000
+        gs.player.placed = ["launchpad", "surface-silo", "refinery", "astronaut-academy"]
+        gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1, "refinery": 2, "astronaut-academy": 3]
+        gs.player.stash = ["copper": 6, "gold": 3, "aluminium": 30, "silicon": 12]
+        gs.player.clientMissions = ["vulcan": 6, "helios": 11]
+        gs.player.academyResearched = true; gs.player.academyFunded = true; gs.player.researchXP = 180; gs.player.skillPoints = 2
+        return gs
+    }
+    private let t0: Double = 1_760_000_000_000
+
+    @Test func refineryPhone() throws {
+        var gs = basePlayer()
+        gs = Refinery.applyStart(gs, recipeId: "refined-gold", now: t0 - 400_000)
+        gs.player.refinedGoods = ["refined-copper": 2]
+        try render(RefineryScreen(at: t0).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true),
+                   size: CGSize(width: 402, height: 1100), name: "refinery-phone")
+    }
+
+    @Test func skillTreePhone() throws {
+        var gs = basePlayer(); gs.player.unlockedSkillNodes = ["laser-charge-1"]; gs.player.tessClassifications = ["t": TessClassification(subjectId: "t", verdict: .planet, ranges: [], submittedAt: 1)]
+        try render(SkillTreeScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true), size: CGSize(width: 402, height: 1300), name: "skill-tree-phone")
+    }
+
+    @Test func academyPhone() throws {
+        let gs = Academy.migrate(basePlayer(), now: t0)
+        let st = GameStore(state: Academy.applyHire(gs, sourceId: "nasa", now: t0), clock: { 1_760_000_000_000 })
+        try render(AcademyScreen(at: t0).environment(st).environment(\.flatLayout, true), size: CGSize(width: 402, height: 1000), name: "academy-phone")
+    }
+
+    @Test func buildPhone() throws {
+        var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.placementPlots = ["launchpad": 0]
+        try render(BuildScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true), size: CGSize(width: 402, height: 900), name: "build-phone")
+    }
+
+    @Test func surfaceOpsPhone() throws {
+        var gs = basePlayer(); gs.player.stash = ["aluminium": 4, "silicon": 6]
+        gs = SurfaceOps.applyPurchaseAccess(gs, "moon-south-pole", now: t0 - 3_000_000)
+        gs = SurfaceOps.applyBuildPad(gs, "moon-south-pole", pad: 1, now: t0 - 2_000_000)
+        gs = SurfaceOps.applyMined(gs, "moon-south-pole", mineral: "iron", amount: 12)
+        try render(SurfaceOpsScreen(at: t0).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true), size: CGSize(width: 402, height: 1400), name: "surface-ops-phone")
+    }
+
+    @Test func missionLogPhone() throws {
+        var gs = basePlayer()
+        gs.player.completedMissions = [CompletedMissionRecord(id: "m1", title: "Iron for the pad", targetId: "ceres", clientName: "Vulcan", targetName: "Ceres", completedAt: t0, runId: "r1", kind: .client),
+                                       CompletedMissionRecord(id: "m2", title: "Own survey run", targetId: "eros", clientName: nil, targetName: "Eros", completedAt: t0 - 86_400_000, runId: "r2", kind: .program)]
+        try render(MissionHistoryScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true), size: CGSize(width: 402, height: 640), name: "mission-log-phone")
+    }
+
+    @Test func ledgerPhone() throws {
+        try render(NarrativeLedgerScreen().environment(GameStore(state: GameState())).environment(\.flatLayout, true), size: CGSize(width: 402, height: 1900), name: "ledger-phone")
+    }
+
+    @Test func introPhone() throws {
+        try render(IntroScreen().environment(GameStore(state: GameState())), size: CGSize(width: 402, height: 700), name: "intro-phone")
+    }
+
     @Test func hubDesktop() throws {
         try render(HubScreen().environment(store()), size: CGSize(width: 1000, height: 680), name: "hub-desktop")
     }

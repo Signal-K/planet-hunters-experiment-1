@@ -68,6 +68,25 @@ public struct Player: Codable, Equatable, Sendable {
     public var refineryBuilt: Bool = false
     public var refineryUnlocked: Bool = false
     public var refinedGoods: Cargo = [:]
+    public var crew: [CrewMember] = []
+    public var formerCrew: [CrewRehireOffer] = []
+    public var crewTraining: [CrewTrainingSession] = []
+    public var academyResearched: Bool = false
+    public var academyFunded: Bool = false
+    public var academyXP: Int = 0
+    public var crewHiresLifetime: Int = 0
+    public var crewHiresThisWeek: Int = 0
+    public var crewHireWeek: String?
+    public var trainingDate: String?
+    public var trainingSessionsUsedToday: Int = 0
+    public var crewUpkeepSettledDate: String?
+    public var crewModuleResearched: Bool = false
+    public var sharedChartsByClient: [String: Int] = [:]
+    public var underConstruction: [String: Double] = [:]
+    public var surfaceOps: SurfaceOpsState = SurfaceOpsState()
+    public var refineryQueue: [RefineryJob] = []
+    public var refineryLastStartedAt: Double?
+    public var structureCrewAssignments: [String: String] = [:]
     public var launchpadUpgraded: Bool = false
     public var lastClient: String?
     public var loanDebt: Int = 0
@@ -122,6 +141,14 @@ public struct Player: Codable, Equatable, Sendable {
         get("completedMissions", &completedMissions); get("clientStreaks", &clientStreaks)
         get("clientCooldowns", &clientCooldowns); get("researchAnnotations", &researchAnnotations); get("saturnClassifications", &saturnClassifications); get("tessClassifications", &tessClassifications); get("badges", &badges); get("asteroidClassifications", &asteroidClassifications)
         get("refineryBuilt", &refineryBuilt); get("refineryUnlocked", &refineryUnlocked); get("refinedGoods", &refinedGoods)
+        get("crew", &crew); get("formerCrew", &formerCrew); get("crewTraining", &crewTraining)
+        get("academyResearched", &academyResearched); get("academyFunded", &academyFunded); get("academyXP", &academyXP)
+        get("crewHiresLifetime", &crewHiresLifetime); get("crewHiresThisWeek", &crewHiresThisWeek); getOpt("crewHireWeek", &crewHireWeek)
+        getOpt("trainingDate", &trainingDate); get("trainingSessionsUsedToday", &trainingSessionsUsedToday)
+        getOpt("crewUpkeepSettledDate", &crewUpkeepSettledDate); get("crewModuleResearched", &crewModuleResearched)
+        get("sharedChartsByClient", &sharedChartsByClient)
+        get("underConstruction", &underConstruction); get("surfaceOps", &surfaceOps)
+        get("refineryQueue", &refineryQueue); getOpt("refineryLastStartedAt", &refineryLastStartedAt); get("structureCrewAssignments", &structureCrewAssignments)
         get("launchpadUpgraded", &launchpadUpgraded); getOpt("lastClient", &lastClient); get("loanDebt", &loanDebt)
         get("loanOffered", &loanOffered); getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
         get("seenPlanets", &seenPlanets); get("researchXP", &researchXP); get("subsurfaceExcavated", &subsurfaceExcavated)
@@ -157,6 +184,14 @@ public struct Player: Codable, Equatable, Sendable {
         try put("completedMissions", completedMissions); try put("clientStreaks", clientStreaks)
         try put("clientCooldowns", clientCooldowns); try put("researchAnnotations", researchAnnotations); try put("saturnClassifications", saturnClassifications); try put("tessClassifications", tessClassifications); try put("badges", badges); try put("asteroidClassifications", asteroidClassifications)
         try put("refineryBuilt", refineryBuilt); try put("refineryUnlocked", refineryUnlocked); try put("refinedGoods", refinedGoods)
+        try put("crew", crew); try put("formerCrew", formerCrew); try put("crewTraining", crewTraining)
+        try put("academyResearched", academyResearched); try put("academyFunded", academyFunded); try put("academyXP", academyXP)
+        try put("crewHiresLifetime", crewHiresLifetime); try put("crewHiresThisWeek", crewHiresThisWeek); try putOpt("crewHireWeek", crewHireWeek)
+        try putOpt("trainingDate", trainingDate); try put("trainingSessionsUsedToday", trainingSessionsUsedToday)
+        try putOpt("crewUpkeepSettledDate", crewUpkeepSettledDate); try put("crewModuleResearched", crewModuleResearched)
+        try put("sharedChartsByClient", sharedChartsByClient)
+        try put("underConstruction", underConstruction); try put("surfaceOps", surfaceOps)
+        try put("refineryQueue", refineryQueue); try putOpt("refineryLastStartedAt", refineryLastStartedAt); try put("structureCrewAssignments", structureCrewAssignments)
         try put("launchpadUpgraded", launchpadUpgraded); try putOpt("lastClient", lastClient); try put("loanDebt", loanDebt)
         try put("loanOffered", loanOffered); try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
         try put("seenPlanets", seenPlanets); try put("researchXP", researchXP); try put("subsurfaceExcavated", subsurfaceExcavated)

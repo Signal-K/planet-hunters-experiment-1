@@ -167,7 +167,7 @@ struct RoverFieldScreen: View {
 }
 
 /// Full-bleed blueprint surface: pale sky, outlined ridge, a ground that runs off every edge so the field never reads flat.
-private struct RoverTerrain: View {
+struct RoverTerrain: View {
     var body: some View {
         Canvas { ctx, size in
             ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(
