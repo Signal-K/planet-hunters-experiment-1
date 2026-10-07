@@ -30,9 +30,9 @@ export interface RoverScene {
 }
 
 const SURFACE_COLOR = 0x2a1e0a
-const SURFACE_RIDGE_COLOR = 0x3d2d10
+const SURFACE_RIDGE_COLOR = 0x10353d
 const SKY_COLOR = 0x010408
-const DUST_COLOR = 0x8b6030
+const DUST_COLOR = 0x30858b
 
 interface DustParticle {
   x: number
@@ -59,8 +59,8 @@ function buildStarfield(W: number, H: number, surfaceY: number): Graphics {
 function buildHorizonGlow(W: number, surfaceY: number): Graphics {
   const g = new Graphics()
   // Subtle horizon haze
-  g.rect(0, surfaceY - 18, W, 18).fill({ color: 0x3d2010, alpha: 0.4 })
-  g.rect(0, surfaceY - 8, W, 8).fill({ color: 0x5a3015, alpha: 0.5 })
+  g.rect(0, surfaceY - 18, W, 18).fill({ color: 0x103d39, alpha: 0.4 })
+  g.rect(0, surfaceY - 8, W, 8).fill({ color: 0x155a56, alpha: 0.5 })
   return g
 }
 
@@ -116,7 +116,7 @@ function drawFallbackRover(g: Graphics, x: number, y: number, speed: number, ela
   g.rect(x - 10, y - 20, 20, 1).fill({ color: 0x88ccff, alpha: 0.4 })
 
   // Status light
-  g.circle(x + 10, y - 6, 2).fill({ color: done ? 0x4ade80 : 0xffaa00, alpha: 0.9 })
+  g.circle(x + 10, y - 6, 2).fill({ color: done ? 0x4ade80 : 0x20b8df, alpha: 0.9 })
 
   // Drill arm (extends down when drilling, i.e. not moving much)
   if (Math.abs(speed) < 0.1) {

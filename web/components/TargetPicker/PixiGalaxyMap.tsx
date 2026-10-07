@@ -10,7 +10,7 @@ import type { EntityData } from '@/lib/engine/types'
 
 // ── Design token colours ─────────────────────────────────────────────────────
 const LN_CYAN  = 0x3fa9ff
-const LN_AMBER = 0xf5a623
+const LN_AMBER = 0x36c6e2
 
 // ── Body classification ──────────────────────────────────────────────────────
 const PLANET_IDS    = new Set(['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'neptune'])
@@ -43,18 +43,18 @@ const BELT_MID_ORBIT_R = (RADII[3] + RADII[5]) / 2 // 108 — midpoint of belt z
 // per-id map — the two can no longer drift out of sync.
 const SPECTRAL_PALETTE: Record<TargetArchetype, { fill: number; low: number; stroke: number; mark: number }> = {
   C: { fill: 0x3c3a36, low: 0x1e1c1a, stroke: 0x5a5450, mark: 0x7a7268 },
-  S: { fill: 0x8a6040, low: 0x4a3020, stroke: 0xaa8060, mark: 0xd0a880 },
+  S: { fill: 0x408a88, low: 0x204a47, stroke: 0x60aaa8, mark: 0x80cdd0 },
   M: { fill: 0x8090a0, low: 0x3c4a56, stroke: 0xa8bccc, mark: 0xd0e0ec },
   icy: { fill: 0x7ec8dc, low: 0x2e4a54, stroke: 0x9ee0f0, mark: 0xd4f4fa },
-  'gas-giant': { fill: 0xc8a060, low: 0x6f4f2a, stroke: 0xe0b870, mark: 0xf2d39a },
+  'gas-giant': { fill: 0x60b8c8, low: 0x2a6a6f, stroke: 0x70cce0, mark: 0x9be1f1 },
 }
 const PLANET_COLORS: Record<string, { fill: number; low: number; stroke: number; mark: number }> = {
   mercury: { fill: 0x8a7060, low: 0x4d4038, stroke: 0xa08070, mark: 0xc1a292 },
-  venus:   { fill: 0xe8c870, low: 0x9f7434, stroke: 0xd4a840, mark: 0xfff0a8 },
+  venus:   { fill: 0x70c8e8, low: 0x34909f, stroke: 0x40b1d4, mark: 0xfff0a8 },
   earth:   { fill: 0x2a6ea4, low: 0x123152, stroke: 0x4a9ec4, mark: 0x54b36a },
-  mars:    { fill: 0xc1440e, low: 0x5e2414, stroke: 0xe05020, mark: 0xf08a45 },
-  jupiter: { fill: 0xc8a060, low: 0x6f4f2a, stroke: 0xe0b870, mark: 0xf2d39a },
-  saturn:  { fill: 0xe0c880, low: 0x8a7145, stroke: 0xc8a860, mark: 0xfff2b8 },
+  mars:    { fill: 0x1ab59e, low: 0x145e4d, stroke: 0x21dfb9, mark: 0x4fe6de },
+  jupiter: { fill: 0x60b8c8, low: 0x2a6a6f, stroke: 0x70cce0, mark: 0x9be1f1 },
+  saturn:  { fill: 0x80c5e0, low: 0x457e8a, stroke: 0x60b0c8, mark: 0xfff2b8 },
   neptune: { fill: 0x2040c0, low: 0x091d66, stroke: 0x4060e0, mark: 0x79a2ff },
 }
 
@@ -71,19 +71,19 @@ const ASTEROID_SILHOUETTES: [number, number][][] = [
 // which taught players a distance-to-reward mapping the game does not use.
 function orbitRingColor(orbit: number, reachable: boolean): { color: number; alpha: number } {
   if (!reachable) return { color: 0xff5a6a, alpha: 0.22 }
-  if (orbit < RARE_TIER_MIN_ORBIT) return { color: 0xc8a060, alpha: 0.18 }
+  if (orbit < RARE_TIER_MIN_ORBIT) return { color: 0x60b8c8, alpha: 0.18 }
   if (orbit < EXOTIC_TIER_MIN_ORBIT) return { color: LN_CYAN, alpha: 0.14 }
   return { color: 0x4060c0, alpha: 0.16 }
 }
 
 function hashId(id: string): number {
-  let h = 0x811c9dc5
+  let h = 0x1c5a9dc5
   for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = (Math.imul(h, 0x01000193) >>> 0) }
   return h >>> 0
 }
 
 function seededFloat(seed: number, index: number): number {
-  let h = seed ^ (index * 0x9e3779b9)
+  let h = seed ^ (index * 0x374b9eb9)
   h = ((h >> 16) ^ h) * 0x45d9f3b; h = ((h >> 16) ^ h) * 0x45d9f3b; h = (h >> 16) ^ h
   return (h >>> 0) / 0xffffffff
 }
@@ -141,7 +141,7 @@ function drawOrbits(layer: Container, props: PixiGalaxyMapProps, cx: number, cy:
   const maxR = (RADII[props.mission.requires.max_orbit] ?? 132) * scale + 12
   g.circle(cx, cy, maxR).stroke({ width: 1, color: LN_AMBER, alpha: 0.4 })
   const sun = new Graphics()
-  sun.circle(cx, cy, 22).fill(0xffe1a8)
+  sun.circle(cx, cy, 22).fill(0xb3e8f4)
   sun.circle(cx, cy, 28).stroke({ width: 1.5, color: LN_AMBER, alpha: 0.5 })
   layer.addChild(g, sun)
 }
@@ -227,7 +227,7 @@ function drawScene(
     const beltMidR = BELT_MID_ORBIT_R * scale
     const beltBandW = (RADII[5] - RADII[3]) * scale
     const zone = new Graphics()
-    zone.circle(cx, cy, beltMidR).stroke({ width: beltBandW, color: 0x5a4a2a, alpha: 0.18 * planetAlpha })
+    zone.circle(cx, cy, beltMidR).stroke({ width: beltBandW, color: 0x2a505a, alpha: 0.18 * planetAlpha })
     const microSeeds = [[0.18,0.34],[0.55,0.78],[0.82,0.12],[0.27,0.61],[0.71,0.45],[0.44,0.89],[0.93,0.27],[0.12,0.70],[0.63,0.15],[0.38,0.52]]
     for (const [a, r] of microSeeds) {
       const ang = a * Math.PI * 2

@@ -107,7 +107,7 @@ export const BIOME_META: Record<BiomeId, BiomeMeta> = {
   'iron-dunes': { id: 'iron-dunes', label: 'Iron dunes', color: '#b8442e', shade: '#7a2b1c', help: 'Rust-red hematite sand heaped into long dunes.', lifeCapacity: 0 },
   'glacier-shelf': { id: 'glacier-shelf', label: 'Glacier shelf', color: '#7fc3e6', shade: '#3f7ea3', help: 'Deep blue glacial ice, calving into crevasse fields.', lifeCapacity: 0 },
   'geyser-basin': { id: 'geyser-basin', label: 'Geyser basin', color: '#5fd3c8', shade: '#2d8a86', help: 'Turquoise mineral pools and steaming vent cones.', lifeCapacity: 1, bloomsInto: 'lumen-marsh' },
-  'crystal-caverns': { id: 'crystal-caverns', label: 'Crystal caverns', color: '#78c2e8', shade: '#5e3f9c', help: 'Violet quartz spires growing out of collapsed cave roofs.', lifeCapacity: 0 },
+  'crystal-caverns': { id: 'crystal-caverns', label: 'Crystal caverns', color: '#78c2e8', shade: '#3f779c', help: 'Violet quartz spires growing out of collapsed cave roofs.', lifeCapacity: 0 },
   'methane-lakes': { id: 'methane-lakes', label: 'Methane lakes', color: '#3ab5c9', shade: '#20707a', help: 'Amber hydrocarbon lakes under an orange haze.', lifeCapacity: 0 },
   'storm-bands': { id: 'storm-bands', label: 'Storm bands', color: '#69ced9', shade: '#3a8a86', help: 'Cream and ochre cloud bands whipped into vortices.', lifeCapacity: 0 },
 

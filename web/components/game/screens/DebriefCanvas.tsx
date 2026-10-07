@@ -117,7 +117,7 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
           berth.ellipse(berthX, berthY, Math.min(150, nextWidth * 0.2), 18).stroke({ color: 0x70d9ea, alpha: 0.46, width: 2 })
           berth.ellipse(berthX, berthY, Math.min(96, nextWidth * 0.13), 10).stroke({ color: 0x5ad07e, alpha: 0.55, width: 1 })
           for (let i = -3; i <= 3; i++) {
-            berth.circle(berthX + i * Math.min(34, nextWidth * 0.045), berthY, 2.5).fill({ color: i === 0 ? 0xf5a623 : 0x70d9ea, alpha: 0.85 })
+            berth.circle(berthX + i * Math.min(34, nextWidth * 0.045), berthY, 2.5).fill({ color: i === 0 ? 0x36c6e2 : 0x70d9ea, alpha: 0.85 })
           }
 
           if (ship) {

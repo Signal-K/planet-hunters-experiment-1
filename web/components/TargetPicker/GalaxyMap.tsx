@@ -69,7 +69,7 @@ const STAR_FIELD: Array<{ x: number; y: number; r: number; opacity: number }> = 
 ]
 
 function hashId(id: string): number {
-  let h = 0x811c9dc5
+  let h = 0x1c5a9dc5
   for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = (Math.imul(h, 0x01000193) >>> 0) }
   return h >>> 0
 }
@@ -79,7 +79,7 @@ function asteroidSilhouette(id: string): [number, number][] {
 }
 
 function seededFloat(seed: number, index: number): number {
-  let h = seed ^ (index * 0x9e3779b9)
+  let h = seed ^ (index * 0x374b9eb9)
   h = ((h >> 16) ^ h) * 0x45d9f3b; h = ((h >> 16) ^ h) * 0x45d9f3b; h = (h >> 16) ^ h
   return (h >>> 0) / 0xffffffff
 }

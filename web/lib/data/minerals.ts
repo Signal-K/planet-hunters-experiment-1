@@ -14,7 +14,7 @@ import { MINERAL_VALUE, type MineralRarity } from './economy'
 export const MINERAL_META: Record<string, MineralMeta> = {
   // ── Early game (M1-M3) — platinum-group metals, genuinely rare on Earth ──────
   platinum:  { name: 'Platinum',  sym: 'Pt', color: '#e8e4d8', price: MINERAL_VALUE.rare, rarity: 'rare',   constructionUse: 'Catalytic nozzle coatings, fuel cells',      laserAccess: 1, shape: 'diamond' },
-  palladium: { name: 'Palladium', sym: 'Pd', color: '#d4cce8', price: MINERAL_VALUE.rare, rarity: 'rare',   constructionUse: 'Hydrogen fuel cells, electronics',           laserAccess: 1, shape: 'circle' },
+  palladium: { name: 'Palladium', sym: 'Pd', color: '#ccdde8', price: MINERAL_VALUE.rare, rarity: 'rare',   constructionUse: 'Hydrogen fuel cells, electronics',           laserAccess: 1, shape: 'circle' },
   iridium:   { name: 'Iridium',   sym: 'Ir', color: '#b8b4cc', price: MINERAL_VALUE.rare, rarity: 'rare',   constructionUse: 'High-temp alloys, ignition components',      laserAccess: 2, shape: 'triangle' },
   rhodium:   { name: 'Rhodium',   sym: 'Rh', color: '#d4e9f0', price: MINERAL_VALUE.exotic, rarity: 'exotic', constructionUse: 'Thruster lining, radiation-hard optics',     laserAccess: 2, shape: 'rect' },
   // ── Transition / M3+ ──────────────────────────────────────────────────────────
@@ -36,7 +36,7 @@ export const MINERAL_META: Record<string, MineralMeta> = {
   uranium:   { name: 'Uranium',   sym: 'U',  color: '#8fd16a', price: MINERAL_VALUE.rare, rarity: 'rare',     constructionUse: 'Compact power systems, shielding',        laserAccess: 2, shape: 'triangle' },
   // ── Sky-event debris (SSL-475/491) — only ever spawns during its event, sells at spot ─
   orionid_debris:  { name: 'Orionid Debris',  sym: 'Od', color: '#7fd8ff', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'diamond' },
-  draconid_debris: { name: 'Draconid Debris', sym: 'Dd', color: '#c7a6ff', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'triangle' },
+  draconid_debris: { name: 'Draconid Debris', sym: 'Dd', color: '#b1d8f4', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'triangle' },
 }
 
 /** Rarity band per mineral, for anything pricing against MINERAL_VALUE. */
@@ -46,7 +46,7 @@ export const MINERAL_RARITY: Record<string, MineralRarity> = Object.fromEntries(
 
 export const MINERAL_COLORS: Record<string, string> = {
   platinum:  '#e8e4d8',
-  palladium: '#d4cce8',
+  palladium: '#ccdde8',
   iridium:   '#b8b4cc',
   rhodium:   '#d4e9f0',
   gold:      '#79d1ec',
@@ -62,7 +62,7 @@ export const MINERAL_COLORS: Record<string, string> = {
   hydrogen:  '#9becff',
   uranium:   '#8fd16a',
   orionid_debris:  '#7fd8ff',
-  draconid_debris: '#c7a6ff',
+  draconid_debris: '#b1d8f4',
 }
 
 export function sellCargo(cargo: Record<string, number>, minerals: Record<string, MineralMeta> = MINERAL_META): number {

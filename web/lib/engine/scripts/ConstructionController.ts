@@ -5,11 +5,11 @@ import type { RuntimeContext } from '../RuntimeContext'
 export type ConstructionState = 'placing' | 'constructing' | 'operational'
 
 const PAD_CYAN  = 0x3fa9ff
-const PAD_AMBER = 0xf5a623
+const PAD_AMBER = 0x36c6e2
 const SCAFFOLD  = 0x6cc2ff
 const STRUCT_BODY = 0x0d1828
 const ROCK_BASE   = 0x1a1410
-const ROCK_RIDGE  = 0x2a1e14
+const ROCK_RIDGE  = 0x142a2a
 
 export interface ConstructionPadConfig {
   x: number

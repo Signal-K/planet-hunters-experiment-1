@@ -54,7 +54,7 @@ const C = {
   cyan: 0x70d9ea,
   cyanBright: 0xa3ecf5,
   cyanPress: 0x3fb8cc,
-  amber: 0xf5a623,
+  amber: 0x36c6e2,
   text: 0xe8e8ed,
   hull: 0xd5dde8,
   hullShade: 0x8a96a8,

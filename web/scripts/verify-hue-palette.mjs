@@ -4,10 +4,10 @@
  *
  * The light blueprint theme is cyan / teal / ice only: no orange, no purple.
  * Fails on any hex or rgb()/rgba() colour whose hue falls in 12-48 deg
- * (orange/amber) or 265-325 deg (purple/magenta) and that is saturated enough
+ * (orange/amber) or 250-325 deg (purple/magenta) and that is saturated enough
  * to read as a hue (greys, creams and near-white/black are ignored).
  *
- * Scans tokens, CSS, SVG and canvas palettes in TS/TSX/JS sources.
+ * Scans tokens, CSS, SVG and canvas palettes (#rrggbb, 0xrrggbb, rgb()) in TS/TSX/JS sources.
  * Run: npm run verify:hue-palette
  */
 import fs from 'fs'
@@ -18,12 +18,12 @@ const WEB_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const SCAN_DIRS = ['app', 'components', 'lib', 'public']
 const EXTENSIONS = /\.(css|tsx?|svg|mjs)$/
 const SKIP = /node_modules|\.next|\.test\.|\.spec\.|__tests__|design-reference/
-const BANNED_HUES = [[12, 48], [265, 325]]
+const BANNED_HUES = [[12, 48], [250, 325]]
 const MIN_SATURATION = 0.3
 const MIN_LIGHTNESS = 0.12
 const MAX_LIGHTNESS = 0.92
 
-const COLOR_REGEX = /#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b|rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/g
+const COLOR_REGEX = /(?:#|0x)([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b|rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/g
 
 export function hslOf(r, g, b) {
   r /= 255; g /= 255; b /= 255
@@ -52,6 +52,7 @@ export function scanText(text) {
   const hits = []
   text.split('\n').forEach((line, i) => {
     const trimmed = line.trim()
+    if (line.includes("hue-check-ignore")) return
     if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) return
     for (const m of line.matchAll(COLOR_REGEX)) {
       let r, g, b

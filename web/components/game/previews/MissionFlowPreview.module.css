@@ -7,14 +7,14 @@
 
 .wrap {
   --ink: #130b20;
-  --void: #1b1130;
+  --void: #112430;
   --void-2: #133546;
-  --panel: #2b1748;
+  --panel: #173348;
   --panel-2: #20495e;
   --panel-3: #325b76;
   --line: #4b7b9a;
   --text: #fff7dc;
-  --soft: #d8c9ff;
+  --soft: #d0e9f8;
   --muted: #8db7cc;
   --cyan: #35d7df;
   --lime: #bcf750;
@@ -26,7 +26,7 @@
   --stone: #8e94b2;
   --space: #0c1439;
   --space-2: #182764;
-  --market: #33204e;
+  --market: #203a4e;
   --metal: #39324f;
   /* This development-only preview must remain deploy-build safe. The app
      already bundles Oxanium, so do not pull a Google font just for it. */
@@ -236,12 +236,12 @@
 .biomeMetal .playfield {
   background:
     radial-gradient(circle at 70% 24%, rgba(53, 215, 223, 0.2), transparent 20%),
-    linear-gradient(155deg, var(--metal) 0%, #31475f 48%, #1d1230 100%);
+    linear-gradient(155deg, var(--metal) 0%, #31475f 48%, #122430 100%);
 }
 .biomeMarket .playfield {
   background:
     radial-gradient(circle at 72% 24%, rgba(91, 125, 232, 0.22), transparent 20%),
-    linear-gradient(155deg, var(--market) 0%, #2b1748 52%, #160d25 100%);
+    linear-gradient(155deg, var(--market) 0%, #173348 52%, #160d25 100%);
 }
 .biomeSpace .playfield {
   background:
@@ -274,7 +274,7 @@
 .tileBlock { background: #214864; border-radius: 8px; }
 .tileStone { background: var(--stone); border-radius: 8px; }
 .biomeSpace .tileGrid { opacity: 0.1; }
-.biomeSpace .tile { background: transparent; border-color: rgba(216, 201, 255, 0.12); box-shadow: none; }
+.biomeSpace .tile { background: transparent; border-color: rgba(208, 233, 248, 0.12); box-shadow: none; }
 .biomeMetal .tileR { background: #4b405e; }
 .biomeMetal .tileBlock { background: #767b94; }
 .biomeMarket .tileR { background: #2b4463; }
@@ -454,7 +454,7 @@
   padding: 8px;
   border: 3px solid var(--ink);
   border-radius: var(--radius);
-  background: rgba(27, 17, 48, 0.92);
+  background: rgba(17, 36, 48, 0.92);
   box-shadow: var(--shadow-hard);
 }
 .mapNote strong {

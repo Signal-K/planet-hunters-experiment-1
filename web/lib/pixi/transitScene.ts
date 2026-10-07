@@ -83,7 +83,7 @@ export function drawPlanet(g: Graphics, cx: number, cy: number, r: number, kind:
 
   // body — deep ocean base with a lighter mid-tone band so the sphere reads
   // as lit rather than a flat disc
-  const bodyColor = kind === 'asteroid' ? 0x3d3020 : kind === 'moon' ? 0x5a6070 : kind === 'earth' ? 0x0f4c85 : 0x1b4e70
+  const bodyColor = kind === 'asteroid' ? 0x203a3d : kind === 'moon' ? 0x5a6070 : kind === 'earth' ? 0x0f4c85 : 0x1b4e70
   g.circle(cx, cy, r).fill(bodyColor)
 
   if (kind === 'earth' && r > 6) {
@@ -123,7 +123,7 @@ export function drawPlanet(g: Graphics, cx: number, cy: number, r: number, kind:
   }
 
   if (kind === 'asteroid' && r > 10) {
-    g.ellipse(cx + r * 0.1, cy, r * 0.9, r * 0.55).fill(0x3d3020)
+    g.ellipse(cx + r * 0.1, cy, r * 0.9, r * 0.55).fill(0x203a3d)
     const craters: [number, number, number][] = [[0.3, 0.2, 0.14], [-0.28, -0.08, 0.1], [0.05, 0.38, 0.08]]
     for (const [fx, fy, fr] of craters) {
       g.circle(cx + r * fx, cy + r * fy, r * fr).fill({ color: 0x1e1508, alpha: 0.65 })
@@ -149,7 +149,7 @@ function drawRocket(g: Graphics, rx: number, ry: number, flicker: number) {
   g.rect(rx - 4, ry + 10, 8, 5).fill(0x8899bb)
   // plume
   const plumeH = 10 + flicker * 5
-  g.poly([rx - 3, ry + 15, rx + 3, ry + 15, rx + 2, ry + 15 + plumeH, rx - 2, ry + 15 + plumeH]).fill({ color: 0xff7700, alpha: 0.85 })
+  g.poly([rx - 3, ry + 15, rx + 3, ry + 15, rx + 2, ry + 15 + plumeH, rx - 2, ry + 15 + plumeH]).fill({ color: 0x20dddf, alpha: 0.85 })
   g.poly([rx - 1, ry + 15, rx + 1, ry + 15, rx, ry + 18 + plumeH]).fill({ color: 0xffee55, alpha: 0.9 })
 }
 
@@ -258,7 +258,7 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
       const px = rx - Math.sin(angle) * 18
       const py = ry + Math.cos(angle) * 22
       plumeG
-        .circle(px, py, 10 + flicker * 4).fill({ color: 0xf5a623, alpha: 0.35 })
+        .circle(px, py, 10 + flicker * 4).fill({ color: 0x36c6e2, alpha: 0.35 })
         .circle(px, py + 6, 6).fill({ color: 0xa3ecf5, alpha: 0.55 })
         .poly([
           px - 4, py,

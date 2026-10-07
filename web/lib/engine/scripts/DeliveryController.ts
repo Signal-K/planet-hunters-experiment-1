@@ -2,7 +2,7 @@ import { Container, Graphics } from 'pixi.js'
 import { ScriptBehaviour } from '../components/ScriptBehaviour'
 import type { RuntimeContext } from '../RuntimeContext'
 
-const AMBER = 0xf5a623
+const AMBER = 0x36c6e2
 const CYAN = 0x3fa9ff
 const STEEL = 0x31445f
 const DEEP = 0x07101c
@@ -123,7 +123,7 @@ export class DeliveryController extends ScriptBehaviour {
       const x = railStart + (railEnd - railStart) * local
       const bob = Math.sin(this.phase * 3 + i) * 1.4
       g.rect(x - 8, railY - 12 + bob, 16, 14)
-        .fill({ color: local >= 1 ? 0x26384f : 0x9f671d })
+        .fill({ color: local >= 1 ? 0x26384f : 0x1d919f })
         .stroke({ color: local >= 1 ? CYAN : AMBER, width: 1 })
       g.moveTo(x - 7, railY - 5 + bob).lineTo(x + 7, railY - 5 + bob)
         .stroke({ color: 0x07101c, width: 1, alpha: .7 })

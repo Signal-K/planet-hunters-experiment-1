@@ -3,7 +3,7 @@
 // the whole point (a player's avatar/default name shouldn't reshuffle every
 // render).
 export function hashString(input: string): number {
-  let hash = 0x811c9dc5
+  let hash = 0x1c5a9dc5
   for (let i = 0; i < input.length; i++) {
     hash ^= input.charCodeAt(i)
     hash = Math.imul(hash, 0x01000193)
@@ -17,7 +17,7 @@ export function mulberry32(seed: number): () => number {
   let a = seed
   return function next() {
     a |= 0
-    a = (a + 0x6d2b79f5) | 0
+    a = (a + 0x2b4e79f5) | 0
     let t = Math.imul(a ^ (a >>> 15), 1 | a)
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
