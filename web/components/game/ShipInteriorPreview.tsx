@@ -106,16 +106,12 @@ export default function ShipInteriorPreview({
     // Full-screen overlay — caller must position this (position: absolute; inset: 0)
     <div
       data-testid={`ship-interior-${rocketId}`}
-      className="ln-starfield theme-blueprint ship-interior-preview"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-      }}
+      className="ln-starfield theme-blueprint ship-interior-preview sip-root"
+      style={{ height: '100%' }}
     >
       {/* ── HEADER (glass topbar) ─────────────────────────────────── */}
       <div className="ln-glass-panel" style={{
-        flex: 'none',
+        gridArea: 'head',
         display: 'grid',
         gridTemplateColumns: '1fr auto',
         alignItems: 'center',
@@ -152,7 +148,7 @@ export default function ShipInteriorPreview({
       </div>
 
       {/* ── SHIP DIAGRAM (PixiJS, glass-framed with corner brackets) ── */}
-      <div style={{ flex: 'none', height: '28%', minHeight: 0, overflow: 'hidden', padding: 6 }}>
+      <div className="sip-ship" style={{ gridArea: 'ship', minHeight: 0, overflow: 'hidden', padding: 6 }}>
         {/* SSL-472: bounded height, otherwise the canvas panel grows past this box and sits over the module cards. */}
         <Panel surface="glass" style={{ padding: 0, overflow: 'hidden', height: '100%' }}>
           <ErrorBoundary fallback={<div style={{ height: 80, background: 'var(--ln-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-bp-ink-dim)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
@@ -182,12 +178,12 @@ export default function ShipInteriorPreview({
       </div>
 
       {/* ── STEP TABS (pill row, cyan current / lime done) ──────────── */}
-      <div style={{
-        flex: 'none',
-        display: 'grid',
-        gridTemplateColumns: `repeat(${buildSteps.length}, minmax(0, 1fr))`,
-        gap: 4,
-        padding: '8px 8px',
+      <div className="sip-tabs" style={{
+        gridArea: 'tabs',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 6,
+        padding: '4px 8px 8px',
       }}>
         {buildSteps.map((item, index) => {
           const active = index === stepIndex
@@ -199,7 +195,9 @@ export default function ShipInteriorPreview({
               onClick={() => setStepIndex(index)}
               disabled={buildState.confirmed}
               style={{
-                minHeight: 28,
+                flex: '1 1 auto',
+                minHeight: 36,
+                padding: '0 12px',
                 borderRadius: 999,
                 border: `1px solid ${active ? 'var(--ln-bp-blue)' : done ? '#1d8a82' : 'var(--ln-glass-border)'}`,
                 background: active ? 'var(--ln-cyan)' : done ? 'rgba(29, 138, 130, 0.14)' : 'var(--ln-hairline)',
@@ -220,7 +218,7 @@ export default function ShipInteriorPreview({
       </div>
 
       {/* ── STEP CONTENT (fills remaining) ───────────────────────────── */}
-      <div data-testid="ship-build-step" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '8px 8px 8px' }}>
+      <div data-testid="ship-build-step" className="sip-side" style={{ gridArea: 'side', minHeight: 0, display: 'flex', flexDirection: 'column', padding: '8px 8px 8px' }}>
         {/* Step title + desc, with the room's full interior diorama as a
             detail preview — the walls/floor/furniture art that's too
             low-contrast to read at grid-cell scale gets real screen space
@@ -230,10 +228,9 @@ export default function ShipInteriorPreview({
             src={getRoomDetailArt(step.kind, buildState.installed[step.kind])}
             alt={`${step.title} interior preview`}
             data-testid="ship-step-detail-image"
+            className="sip-detail"
             style={{
               flex: 'none',
-              width: 56,
-              height: 56,
               borderRadius: 8,
               border: '1px solid var(--ln-glass-border)',
               background: 'var(--ln-overlay)',
@@ -307,7 +304,7 @@ export default function ShipInteriorPreview({
 
       {/* ── FOOTER (glass) ──────────────────────────────────────────── */}
       <div className="ln-glass-panel" style={{
-        flex: 'none',
+        gridArea: 'foot',
         borderLeft: 'none',
         borderRight: 'none',
         borderBottom: 'none',

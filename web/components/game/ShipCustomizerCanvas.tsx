@@ -302,6 +302,9 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
         world.addChild(exteriorSprite)
       }
 
+      // Dev-only: lets QA step the ticker in a hidden tab, where rAF never fires.
+      if (process.env.NODE_ENV !== 'production') (window as unknown as { __customiserApp?: Application }).__customiserApp = app
+
       let prevInstalledHash = ''
 
       // Exterior → interior reveal timing. Hold fully opaque briefly so the
@@ -404,8 +407,8 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
             vis.border
               .roundRect(px, py, pw, ph, BADGE_RADIUS)
               .fill({
-                color: isActive ? C_ACTIVE_FILL : isDone ? C_DONE_FILL : C_EMPTY_FILL,
-                alpha: isActive ? 0.45 : isDone ? 0.2 : 0.22,
+                color: isActive ? C_ACTIVE_FILL : isDone ? 0xeaf6f3 : C_EMPTY_FILL,
+                alpha: isActive ? 0.45 : isDone ? 0.95 : 0.22,
               })
               .stroke({
                 color: vis.anim.flashAlpha > 0
@@ -460,7 +463,8 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
               // fits inside the cell, centered, so proportions stay correct
               // at the cost of some empty margin in non-square cells.
               if (hashChanged) vis.partSprite.texture = roomTex
-              const fitScale = Math.min(pw / roomTex.width, ph / roomTex.height)
+              // 0.78: the sprite sits inside the room's light plate instead of filling it edge to edge
+              const fitScale = Math.min(pw / roomTex.width, ph / roomTex.height) * 0.78
               vis.partSprite.eventMode = confirmed ? 'none' : 'static'
               vis.partSprite.cursor = confirmed ? 'default' : 'grab'
               if (!vis.dragging) {

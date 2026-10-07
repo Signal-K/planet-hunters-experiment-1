@@ -3444,3 +3444,13 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   text-transform: uppercase;
   cursor: pointer;
 }
+
+/* SSL-427: hangar customiser panel. Landscape puts the ship big on the left and the
+   active step plus part cards on the right; portrait stacks them. */
+.sip-root{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(170px,34%) auto minmax(0,1fr) auto;grid-template-areas:"head" "ship" "tabs" "side" "foot"}
+@media (orientation:landscape){
+  .sip-root{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"head head" "ship side" "tabs side" "foot foot"}
+  .sip-ship{padding:8px !important}
+  .sip-detail{width:132px !important;height:132px !important}
+}
+.sip-detail{width:72px;height:72px}
