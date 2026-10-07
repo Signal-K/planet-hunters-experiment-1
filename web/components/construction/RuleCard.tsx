@@ -24,7 +24,7 @@ export default function RuleCard({ index, active, cond, test, act, onToggle }: R
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ font: '700 10px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: active ? 'var(--ln-cyan)' : 'var(--ln-text-muted)' }}>
+        <span style={{ font: '700 14px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: active ? 'var(--ln-cyan)' : 'var(--ln-text-muted)' }}>
           {`rule 0${index} · ${active ? 'active' : 'paused'}`}
         </span>
         <span
@@ -54,7 +54,7 @@ export default function RuleCard({ index, active, cond, test, act, onToggle }: R
           />
         </span>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, font: '700 10.5px var(--ln-font-display)' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, font: '700 14px var(--ln-font-display)' }}>
         <span style={{ color: 'var(--ln-text-muted)', textTransform: 'uppercase', fontSize: 9 }}>if</span>
         <span style={{ padding: '5px 9px', borderRadius: 4, background: 'var(--ln-cyan-soft)', border: '1px solid var(--ln-cyan-border)', color: 'var(--ln-cyan)' }}>{cond}</span>
         <span style={{ color: 'var(--ln-text-dim)' }}>{test}</span>

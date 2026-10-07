@@ -78,10 +78,10 @@ const CALLOUT_W = 208
 const CALLOUT_TAIL_INSET = 26
 
 const STATUS_COLOR: Record<BuildingProps['status'], string> = {
-  ok:   'var(--hub-mint)',
+  ok:   'var(--ln-ok)',
   warn: 'var(--ln-warn)',
-  info: 'var(--hub-cyan)',
-  building: 'var(--hub-cyan)',
+  info: 'var(--ln-cyan)',
+  building: 'var(--ln-cyan)',
 }
 
 function BellGlyph() {
@@ -192,7 +192,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px',
                 borderRadius: 999, background: 'var(--hub-mint)', border: '2px solid var(--ln-panel-2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, color: 'var(--ln-text)',
+                fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: 'var(--ln-text)',
                 boxShadow: '0 0 8px var(--ln-ok-soft)',
               }}
             >
@@ -208,12 +208,12 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
           border: '1.5px solid var(--hub-outline)',
           borderRadius: 999, padding: 'var(--ln-s-1) var(--ln-s-3)', whiteSpace: 'nowrap',
         }}>
-          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>
+          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>
             {label}
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{ width: 4, height: 4, borderRadius: 999, background: color, boxShadow: `0 0 8px ${color}` }} />
-            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color }}>
+            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, letterSpacing: '0.14em', textTransform: 'uppercase', color }}>
               {displaySub}
             </span>
           </span>
@@ -265,7 +265,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
-              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.06em', color: 'var(--ln-text)' }}>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.06em', color: 'var(--ln-text)' }}>
                 {callout.title}
               </span>
               <button
@@ -275,13 +275,13 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 style={{
                   flexShrink: 0, width: 16, height: 16, borderRadius: '50%', border: 'none', cursor: 'pointer',
                   background: 'var(--ln-hairline)', color: 'var(--ln-text-dim)',
-                  fontSize: 10, lineHeight: 1, display: 'grid', placeItems: 'center', padding: 0,
+                  fontSize: 14, lineHeight: 1, display: 'grid', placeItems: 'center', padding: 0,
                 }}
               >
                 ×
               </button>
             </div>
-            <div style={{ fontSize: 11, lineHeight: 1.45, color: 'var(--ln-text-dim)', marginTop: 4 }}>
+            <div style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--ln-text-dim)', marginTop: 4 }}>
               {callout.body}
             </div>
             <button
@@ -290,7 +290,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 9,
                 background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
-                fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 9.5,
+                fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
                 letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--hub-mint)',
               }}
             >
@@ -304,7 +304,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 style={{
                   display: 'inline-flex', marginTop: 9, marginLeft: 12, padding: 0, cursor: 'pointer',
                   background: 'transparent', border: 'none',
-                  fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 9.5,
+                  fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
                   letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)',
                 }}
               >
@@ -357,7 +357,7 @@ export function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?
       </div>
       <div style={{
         background: 'var(--hub-panel-deep)', border: '1px solid var(--hub-outline)', borderRadius: 999,
-        padding: 'var(--ln-s-1) var(--ln-s-2)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 8,
+        padding: 'var(--ln-s-1) var(--ln-s-2)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14,
         letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--hub-cyan)', whiteSpace: 'nowrap',
       }}>
         Build

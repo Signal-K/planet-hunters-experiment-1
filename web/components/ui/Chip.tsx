@@ -19,7 +19,7 @@ export default function Chip({ children, amber }: ChipProps) {
       border: `1px solid ${amber ? 'rgba(54,198,226,0.55)' : 'rgba(112,217,234,0.35)'}`,
       borderRadius: 999,
       fontFamily: 'var(--ln-font-display)',
-      fontSize: 11,
+      fontSize: 14,
       fontWeight: 700,
       letterSpacing: '0.14em',
       color: amber ? '#36c6e2' : '#cde4ff',

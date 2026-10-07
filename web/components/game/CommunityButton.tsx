@@ -17,12 +17,12 @@ export default function CommunityButton({ onClick }: CommunityButtonProps) {
       style={{
         // Friends pill occupies right 96px..~196px; this sits just left of it.
         position: 'absolute', top: 56, right: 204, zIndex: 22,
-        minHeight: 34, borderRadius: 999, cursor: 'pointer',
+        minHeight: 44, borderRadius: 999, cursor: 'pointer',
         display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px',
         background: 'var(--ln-panel)',
         border: '1px solid var(--ln-hairline)',
         color: 'var(--ln-cyan)',
-        fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800,
+        fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
         letterSpacing: '0.12em',
       }}
     >

@@ -605,7 +605,7 @@
 }
 :global(.theme-blueprint) .tagTwostop {
   color: var(--ln-bp-green);
-  border-color: rgba(31, 143, 87, 0.32);
+  border-color: rgba(23, 112, 63, 0.32);
   background: var(--ln-bp-green-soft);
 }
 
@@ -657,7 +657,7 @@
 }
 :global(.theme-blueprint) .detailChipAff {
   color: var(--ln-bp-green);
-  border-color: rgba(31, 143, 87, 0.32);
+  border-color: rgba(23, 112, 63, 0.32);
   background: var(--ln-bp-green-soft);
 }
 :global(.theme-blueprint) .detailCta:disabled {

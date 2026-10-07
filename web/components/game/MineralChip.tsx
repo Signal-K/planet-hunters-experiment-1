@@ -30,11 +30,11 @@ export default function MineralChip({ mineral, meta: metaProp, count, variant = 
       <div style={{
         width: size, height: size, borderRadius: 8,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: Math.round(size * 0.44), fontWeight: 800,
+        fontSize: Math.max(14, Math.round(size * 0.44)), fontWeight: 800,
         fontFamily: 'var(--ln-font-mono)',
-        background: `${meta.color}22`,
-        border: `1px solid ${meta.color}`,
-        color: meta.color,
+        background: `${meta.color}33`,
+        border: `2px solid ${meta.color}`,
+        color: 'var(--ln-text)',
         flex: 'none',
       }}>
         {meta.sym}
@@ -54,9 +54,9 @@ export default function MineralChip({ mineral, meta: metaProp, count, variant = 
     }}>
       <span style={{
         fontFamily: 'var(--ln-font-mono)',
-        fontSize: 10,
+        fontSize: 14,
         fontWeight: 800,
-        color: meta.color,
+        color: 'var(--ln-text)',
         letterSpacing: '0.04em',
       }}>
         {meta.sym}
@@ -64,18 +64,17 @@ export default function MineralChip({ mineral, meta: metaProp, count, variant = 
       {count !== undefined && (
         <span style={{
           fontFamily: 'var(--ln-font-display)',
-          fontSize: 11,
+          fontSize: 14,
           fontWeight: 800,
-          color: meta.color,
+          color: 'var(--ln-text)',
         }}>
           ×{count}
         </span>
       )}
       <span style={{
         fontFamily: 'var(--ln-font-display)',
-        fontSize: 10,
-        color: meta.color,
-        opacity: 0.8,
+        fontSize: 14,
+        color: 'var(--ln-text)',
       }}>
         {meta.name}
       </span>

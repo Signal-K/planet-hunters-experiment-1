@@ -87,7 +87,7 @@ function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.Mutable
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       <div style={{
-        fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800,
+        fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
         letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase',
         textAlign: 'center',
       }}>
@@ -115,8 +115,8 @@ function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.Mutable
         onPointerCancel={release}
       >
         {/* End labels */}
-        <span style={{ position: 'absolute', left: 6, fontSize: 9, color: 'var(--ln-text-muted)', lineHeight: 1 }}>◀</span>
-        <span style={{ position: 'absolute', right: 6, fontSize: 9, color: 'var(--ln-text-muted)', lineHeight: 1 }}>▶</span>
+        <span style={{ position: 'absolute', left: 6, fontSize: 14, color: 'var(--ln-text-muted)', lineHeight: 1 }}>◀</span>
+        <span style={{ position: 'absolute', right: 6, fontSize: 14, color: 'var(--ln-text-muted)', lineHeight: 1 }}>▶</span>
         {/* Center tick */}
         <div style={{ position: 'absolute', top: '30%', bottom: '30%', left: '50%', width: 1, background: 'var(--ln-divider)' }} />
         {/* Thumb */}
@@ -448,10 +448,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       {gateOpen && (
         <div className="mining-storage-gate-overlay" style={{ position: 'absolute', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(4, 10, 20, 0.72)' }}>
           <Panel accent="var(--ln-cyan)" surface="solid" style={{ padding: 16, width: '100%', maxWidth: 340 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 8 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 8 }}>
               Choose Storage Destination
             </div>
-            <p style={{ margin: '0 0 14px', fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
+            <p style={{ margin: '0 0 14px', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
               No client is owed this haul. Pick where whatever you mine on this run goes before you start drilling.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -464,8 +464,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                   border: '1.5px solid var(--ln-hairline)', background: 'var(--ln-surface-2)',
                 }}
               >
-                <div style={{ font: '800 12px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>Sell On Earth</div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>At market price</div>
+                <div style={{ font: '800 14px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>Sell On Earth</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 2 }}>At market price</div>
               </button>
               <button
                 type="button"
@@ -478,8 +478,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                   opacity: hasEarthStorage ? 1 : 0.5,
                 }}
               >
-                <div style={{ font: '800 12px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>Store On Earth</div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>{hasEarthStorage ? 'Into the silo' : 'Needs a silo or vault'}</div>
+                <div style={{ font: '800 14px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>Store On Earth</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 2 }}>{hasEarthStorage ? 'Into the silo' : 'Needs a silo or vault'}</div>
               </button>
             </div>
           </Panel>
@@ -497,15 +497,15 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               style={{
                 position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 6,
                 border: '1px solid var(--ln-hairline-strong)', background: 'var(--ln-mining-control-fill)',
-                color: 'var(--ln-amber)', fontSize: 12, lineHeight: 1, cursor: 'pointer',
+                color: 'var(--ln-amber)', fontSize: 14, lineHeight: 1, cursor: 'pointer',
               }}
             >
               ×
             </button>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 6 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 6 }}>
               No Client On This Run
             </div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45, paddingRight: 20 }}>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45, paddingRight: 20 }}>
               You picked the target and the order. No daily limit — mine what looks valuable, then sell the haul yourself at market price instead of a fixed client payout.
             </div>
           </Panel>
@@ -524,7 +524,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             borderRadius: 6,
             color: 'var(--ln-bp-green)',
             fontFamily: 'var(--ln-font-mono)',
-            fontSize: 10,
+            fontSize: 14,
             fontWeight: 700,
             letterSpacing: '0.12em',
             cursor: 'pointer',
@@ -553,15 +553,15 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           height: 44,
           padding: 0,
           borderRadius: 8,
-          border: '1px solid var(--ln-cyan-border)',
-          background: 'var(--ln-cyan-soft)',
-          color: 'var(--ln-cyan)',
+          border: '2px solid var(--ln-bp-ink, #0f2436)',
+          background: 'var(--ln-bp-paper, #fff)',
+          color: 'var(--ln-bp-ink, #0f2436)',
+          boxShadow: '2px 2px 0 var(--ln-bp-blue, #42a6df)',
           fontFamily: 'var(--ln-font-display)',
-          fontSize: 11,
+          fontSize: 16,
           fontWeight: 800,
           lineHeight: 1,
           cursor: 'pointer',
-          opacity: 0.85,
         }}
       >
         ?
@@ -570,10 +570,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       {activeOverlay === 'success' && (
         <div className="mining-success-overlay" data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'flex', alignItems: 'flex-end', padding: 16 }}>
           <Panel className="mining-success-panel" accent="var(--ln-ok)" surface="glass" style={{ padding: 14, width: '100%' }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 6 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 6 }}>
               First Free Ops Haul Secured
             </div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
               This cargo is yours. Return to Earth, recover the ship, then sell the haul on the open market instead of handing it to a client.
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
@@ -597,9 +597,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       {/* Laser depleted without filling order — highest-priority overlay, always wins */}
       {activeOverlay === 'failure' && (
         <div className="mining-failure-overlay" style={{ position: 'absolute', inset: 0, zIndex: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-crit)', textTransform: 'uppercase' }}>Laser Depleted</div>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-crit)', textTransform: 'uppercase' }}>Laser Depleted</div>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-text)', textAlign: 'center', lineHeight: 1.2 }}>Order Not Filled</div>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', textAlign: 'center', lineHeight: 1.5 }}>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', textAlign: 'center', lineHeight: 1.5 }}>
             {totalCollected}/{totalNeeded} units collected. Recharge keeps this cargo. Each new shot still has to hit a deposit.
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 280, marginTop: 8 }}>
@@ -660,7 +660,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       {activeOverlay === 'guide' && (
         <aside className="mining-guide-dock" aria-label="Mining controls">
           <Panel className="mining-guide-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
             {miningGuide(deliveryTargetName).map(item => (
               <div key={item.label} className="mining-guide-row">
                 <strong>{item.label}</strong>
@@ -689,13 +689,13 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
         {remoteSiloAvailable && (orderFilled || laserCharges <= 0) && (
           <Panel accent="var(--ln-cyan)" surface="glass" style={{ marginBottom: 8, padding: 10 }}>
-            <div style={{ font: '800 9px var(--ln-font-display)', letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>Arrival settlement</div>
-            <div style={{ font: '12px var(--ln-font-body)', color: 'var(--ln-text-dim)', lineHeight: 1.4, marginTop: 4 }}>
+            <div style={{ font: '800 14px var(--ln-font-display)', letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>Arrival settlement</div>
+            <div style={{ font: '14px var(--ln-font-body)', color: 'var(--ln-text-dim)', lineHeight: 1.4, marginTop: 4 }}>
               Remote Mineral Silo online · {remoteSiloUsed} / {REMOTE_MINERAL_SILO_CAPACITY} U. Choose where this haul goes before the return leg.
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
-              <button type="button" onClick={() => setRemoteDisposition('store')} style={{ padding: '8px 6px', borderRadius: 6, border: `1px solid ${remoteDisposition === 'store' ? 'var(--ln-cyan)' : 'var(--ln-hairline)'}`, background: remoteDisposition === 'store' ? 'var(--ln-cyan-soft)' : 'transparent', color: 'var(--ln-text)', font: '700 10px var(--ln-font-display)' }}>PLACE IN SILO</button>
-              <button type="button" onClick={() => setRemoteDisposition('sell')} style={{ padding: '8px 6px', borderRadius: 6, border: `1px solid ${remoteDisposition === 'sell' ? 'var(--ln-amber)' : 'var(--ln-hairline)'}`, background: remoteDisposition === 'sell' ? 'var(--ln-amber-soft)' : 'transparent', color: 'var(--ln-text)', font: '700 10px var(--ln-font-display)' }}>SELL AT MARKET</button>
+              <button type="button" onClick={() => setRemoteDisposition('store')} style={{ padding: '8px 6px', borderRadius: 6, border: `1px solid ${remoteDisposition === 'store' ? 'var(--ln-cyan)' : 'var(--ln-hairline)'}`, background: remoteDisposition === 'store' ? 'var(--ln-cyan-soft)' : 'transparent', color: 'var(--ln-text)', font: '700 14px var(--ln-font-display)' }}>PLACE IN SILO</button>
+              <button type="button" onClick={() => setRemoteDisposition('sell')} style={{ padding: '8px 6px', borderRadius: 6, border: `1px solid ${remoteDisposition === 'sell' ? 'var(--ln-amber)' : 'var(--ln-hairline)'}`, background: remoteDisposition === 'sell' ? 'var(--ln-amber-soft)' : 'transparent', color: 'var(--ln-text)', font: '700 14px var(--ln-font-display)' }}>SELL AT MARKET</button>
             </div>
           </Panel>
         )}

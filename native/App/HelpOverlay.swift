@@ -88,7 +88,7 @@ struct HelpSheet: View {
             HStack {
                 Text(topic.title).font(AppFont.display(23)).foregroundStyle(Theme.ink)
                 Spacer()
-                Button("CLOSE", action: onClose).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.blue)
+                Button("CLOSE", action: onClose).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress)
                     .frame(minWidth: 44, minHeight: 44).buttonStyle(.plain)
             }
             ForEach(topic.cards, id: \.title) { card in
@@ -150,12 +150,12 @@ struct CoachMarks: View {
         let y: CGFloat = hole.map { below >= 170 ? $0.maxY + 12 + 75 : max(95, $0.minY - 12 - 75) } ?? size.height - 110
         let x = min(max(16 + w / 2, hole?.midX ?? size.width / 2), size.width - 16 - w / 2)
         return VStack(alignment: .leading, spacing: 8) {
-            Text("STEP \(index + 1) OF \(total)").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.blue)
+            Text("STEP \(index + 1) OF \(total)").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress)
             Text(step.hint).font(AppFont.body(15)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
             HStack {
                 Button("STOP", action: onStop).foregroundStyle(Theme.textDim)
                 Spacer()
-                Button(index + 1 >= total ? "DONE" : "NEXT", action: onNext).foregroundStyle(Theme.blue)
+                Button(index + 1 >= total ? "DONE" : "NEXT", action: onNext).foregroundStyle(Theme.bluePress)
             }
             .font(AppFont.display(14, "Bold")).tracking(1.4).buttonStyle(.plain)
             .frame(minHeight: 44)

@@ -56,13 +56,13 @@ export default function MissionTicker({ player, screen, onResume }: MissionTicke
       }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800,
+          fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
           letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase',
         }}>
           Mission In Progress
         </div>
         <div style={{
-          fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
+          fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
           color: '#e6efff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {player.activeMission.label}
@@ -73,7 +73,7 @@ export default function MissionTicker({ player, screen, onResume }: MissionTicke
         padding: '5px 10px', borderRadius: 8,
         background: 'rgba(112,217,234,0.15)', border: '1px solid rgba(112,217,234,0.5)',
         color: 'var(--ln-cyan)',
-        fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
+        fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
         letterSpacing: '0.12em', textTransform: 'uppercase',
       }}>
         Resume ›

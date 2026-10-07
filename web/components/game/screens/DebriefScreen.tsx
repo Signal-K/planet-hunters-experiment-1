@@ -156,14 +156,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                 width: 38, height: 38, borderRadius: 8, flexShrink: 0,
                 display: 'grid', placeItems: 'center',
                 fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15,
-                border: `1.5px solid ${client.color}`, background: 'var(--ln-surface-2)', color: client.color,
+                border: `2px solid ${client.color}`, background: 'var(--ln-surface-2)', color: 'var(--ln-text)',
               }}>
                 {client.initial}
               </div>
               <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.name}</div>
-                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>Client work complete</div>
+                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>Client work complete</div>
                 </div>
                 {affinityEarned > 0 && <strong style={{ color: 'var(--ln-cyan)', font: '800 14px var(--ln-font-mono)', whiteSpace: 'nowrap' }}>+{affinityEarned} CLIENT XP</strong>}
               </div>
@@ -175,7 +175,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             for a self-directed run the player owns. */}
         <Panel className="debrief-delivery-panel" accent={manifestAccent} surface="solid">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isTwoLegJob ? 10 : 4 }}>
-            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
+            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
               {isFreeHaul ? 'Cargo Hold' : mission.title}
             </span>
             {!isFreeHaul && !isProgramOperation && (
@@ -184,16 +184,16 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </div>
           {isTwoLegJob && deliveryTargetName && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', paddingBottom: 10 }}>
-              <span style={{ font: '600 9px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Route</span>
-              <span style={{ font: '700 10px var(--ln-font-display)', padding: '3px 10px', borderRadius: 4, background: 'rgba(112,217,234,0.06)', border: '1px solid rgba(112,217,234,0.12)', color: 'var(--ln-cyan)' }}>{originTargetName ?? target.name}</span>
-              <span style={{ color: 'var(--ln-text-muted)', fontSize: 9 }}>→</span>
-              <span style={{ font: '700 10px var(--ln-font-display)', padding: '3px 10px', borderRadius: 4, background: 'rgba(112,217,234,0.06)', border: '1px solid rgba(112,217,234,0.12)', color: 'var(--ln-cyan)' }}>{deliveryTargetName}</span>
+              <span style={{ font: '600 14px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Route</span>
+              <span style={{ font: '700 14px var(--ln-font-display)', padding: '3px 10px', borderRadius: 4, background: 'var(--ln-cyan-soft)', border: '2px solid var(--ln-cyan-border)', color: 'var(--ln-cyan)' }}>{originTargetName ?? target.name}</span>
+              <span style={{ color: 'var(--ln-text-muted)', fontSize: 14 }}>→</span>
+              <span style={{ font: '700 14px var(--ln-font-display)', padding: '3px 10px', borderRadius: 4, background: 'var(--ln-cyan-soft)', border: '2px solid var(--ln-cyan-border)', color: 'var(--ln-cyan)' }}>{deliveryTargetName}</span>
             </div>
           )}
           {isFreeHaul
             ? cargoEntries.map(([id, units]) => (
                 <ManifestRow key={id} id={id} name={minerals[id]?.name ?? id}>
-                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--ln-text)' }}>{units} U</span>
+                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 700, color: 'var(--ln-text)' }}>{units} U</span>
                 </ManifestRow>
               ))
             : Object.entries(mission.requires.minerals).map(([id, required]) => {
@@ -225,11 +225,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           ) : isProgramOperation && mission.programReward ? (
             <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
               <div className="ln-section-label" style={{ marginBottom: 8 }}>Program Outcome</div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, lineHeight: 1.5, color: 'var(--ln-text)' }}>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text)' }}>
                 {mission.programReward.outcome}
               </div>
-              {isOrbitalInstrumentDeployment ? <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', fontFamily: 'var(--ln-font-body)', fontSize: 13, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>The Transit Telescope remains in Earth orbit. Its sky-side status indicator shows when a daily downlink is ready to review.</div> : <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>Research</span>
+              {isOrbitalInstrumentDeployment ? <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>The Transit Telescope remains in Earth orbit. Its sky-side status indicator shows when a daily downlink is ready to review.</div> : <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>Research</span>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, color: 'var(--ln-cyan)', lineHeight: 1 }}>+{mission.programReward.researchXP} XP</span>
               </div>}
             </Panel>
@@ -264,14 +264,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               )}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0 2px', marginTop: 2, borderTop: '1px solid var(--ln-hairline)' }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: shipDestroyed ? 'var(--ln-crimson)' : 'var(--ln-ok)' }} />
-                <span style={{ fontFamily: 'var(--ln-font-body)', fontWeight: 500, fontSize: 11, color: 'var(--ln-text-dim)', lineHeight: 1.3 }}>
+                <span style={{ fontFamily: 'var(--ln-font-body)', fontWeight: 500, fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.3 }}>
                   {shipDestroyed
                     ? <><strong style={{ color: 'var(--ln-text)' }}>Hull lost</strong> · recovery crews are dismantling what remains</>
                     : <><strong style={{ color: 'var(--ln-text)' }}>Stage recovery scheduled</strong> · this single-use vehicle is dismantled after cargo clearance</>}
                 </span>
               </div>
               <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--ln-hairline-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Net</span>
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Net</span>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 26, fontWeight: 800, lineHeight: 1, color: netTotal >= 0 ? 'var(--ln-amber)' : 'var(--ln-crimson)' }}>
                   {formatCurrency(netTotal, { signed: true })}
                 </span>
@@ -290,7 +290,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {resolved && !isOrbitalInstrumentDeployment && (
           <Panel accent={hasEarthStorage ? 'var(--ln-ok)' : 'var(--ln-cyan)'} surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
             <div className="ln-section-label" style={{ marginBottom: 8 }}>Vehicle Recovery</div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
               {isEarlyMission && !hasEarthStorage
                 ? 'You can salvage parts once you build a silo.'
                 : hasEarthStorage
@@ -306,7 +306,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             pre- and post-resolve states, instead of two near-identical panels. */}
         {!isFreeHaul && !isProgramOperation && !delivered && (
           <Panel accent="var(--ln-crimson)" surface="solid">
-            <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.5, textAlign: 'left' }}>
+            <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.5, textAlign: 'left' }}>
               <strong style={{ color: 'var(--ln-text)' }}>Order incomplete</strong> — the fee is only paid on a full delivery. Return and mine the rest.
             </p>
           </Panel>
@@ -395,8 +395,8 @@ function ManifestRow({ id, name, meta, children }: { id: string; name: string; m
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderTop: '1px solid var(--ln-hairline)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
         <MineralChip mineral={id} variant="avatar" size={22} />
-        <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, fontWeight: 700, color: 'var(--ln-text)' }}>{name}</span>
-        {meta && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--ln-text-dim)' }}>{meta}</span>}
+        <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, fontWeight: 700, color: 'var(--ln-text)' }}>{name}</span>
+        {meta && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-text-dim)' }}>{meta}</span>}
       </div>
       {children}
     </div>
@@ -427,7 +427,7 @@ function CargoDispositionPanel({
   return (
     <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
       <div className="ln-section-label" style={{ marginBottom: 6 }}>Your ore · keep or sell</div>
-      <p style={{ margin: '0 0 12px', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
+      <p style={{ margin: '0 0 12px', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
         No client is owed this haul. Keep it in the silo to sell when the price is right or spend on your own builds, or sell the lot now at market.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -438,8 +438,8 @@ function CargoDispositionPanel({
         {store ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ font: '700 9px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Silo</span>
-              <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--ln-text-dim)' }}>{Math.min(storageUsed, storageCapacity)} / {storageCapacity} U</span>
+              <span style={{ font: '700 14px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Silo</span>
+              <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-text-dim)' }}>{Math.min(storageUsed, storageCapacity)} / {storageCapacity} U</span>
             </div>
             <div style={{ height: 12, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--ln-surface-2)', border: '1px solid var(--ln-hairline)' }} aria-hidden="true">
               {priorUnits > 0 && <span style={{ width: `${Math.min(100, (priorUnits / cap) * 100)}%`, background: 'var(--ln-cyan)', opacity: 0.5 }} />}
@@ -448,20 +448,20 @@ function CargoDispositionPanel({
               ))}
             </div>
             {overflowUnits > 0 && (
-              <p style={{ margin: '8px 0 0', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 11, lineHeight: 1.4, color: 'var(--ln-text-dim)' }}>
+              <p style={{ margin: '8px 0 0', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.4, color: 'var(--ln-text-dim)' }}>
                 Silo full — <strong style={{ color: 'var(--ln-text)' }}>{overflowUnits}</strong> units over capacity are sold automatically.
               </p>
             )}
           </>
         ) : (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span style={{ font: '700 10px var(--ln-font-display)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Sale value</span>
+            <span style={{ font: '700 14px var(--ln-font-display)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Sale value</span>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-amber)', lineHeight: 1 }}>{formatCurrency(haulMarketValue)}</span>
           </div>
         )}
       </div>
       {!hasEarthStorage && (
-        <p style={{ margin: '10px 0 0', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 11, lineHeight: 1.4, color: 'var(--ln-text-muted)' }}>
+        <p style={{ margin: '10px 0 0', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.4, color: 'var(--ln-text-muted)' }}>
           Build a Mineral Vault in the Subsurface or a Surface Silo after the tutorial. Underground vaults provide larger capacity; until then, ore is sold on return.
         </p>
       )}
@@ -490,8 +490,8 @@ function DispositionOption({ active, disabled, onClick, title, sub, testId }: {
         opacity: disabled ? 0.5 : 1,
       }}
     >
-      <div style={{ font: '800 12px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: active ? 'var(--ln-cyan)' : 'var(--ln-text)' }}>{title}</div>
-      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>{sub}</div>
+      <div style={{ font: '800 14px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: active ? 'var(--ln-cyan)' : 'var(--ln-text)' }}>{title}</div>
+      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 2 }}>{sub}</div>
     </button>
   )
 }

@@ -97,12 +97,12 @@ export default function MissionDetailPanel({
         </div>
       )}
 
-      {mission.brief && <div style={{ font: '400 12.5px/1.55 var(--ln-font-body)', color: 'var(--ln-text-dim)' }}>{mission.brief}</div>}
+      {mission.brief && <div style={{ font: '400 14px/1.55 var(--ln-font-body)', color: 'var(--ln-text-dim)' }}>{mission.brief}</div>}
 
       {client && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,.06)' }}>
-          <div style={{ font: '500 11px/1.4 var(--ln-font-display)', color: 'var(--ln-text-dim)' }}>{client.payoutNotes}</div>
-          <div style={{ font: '500 11px/1.4 var(--ln-font-display)', color: 'var(--ln-text-muted)' }}>{client.affinityNotes}</div>
+          <div style={{ font: '500 14px/1.4 var(--ln-font-display)', color: 'var(--ln-text-dim)' }}>{client.payoutNotes}</div>
+          <div style={{ font: '500 14px/1.4 var(--ln-font-display)', color: 'var(--ln-text-muted)' }}>{client.affinityNotes}</div>
         </div>
       )}
 

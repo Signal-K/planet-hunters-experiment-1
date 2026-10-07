@@ -278,7 +278,7 @@ struct LaunchSequenceScreen: View {
                     ProgressTrack(value: telemetry.progress)
                     Spacer()
                     Button { scene?.skip() } label: {
-                        Text("SKIP").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                        Text("SKIP").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.bluePress)
                             .padding(.horizontal, 14).padding(.vertical, 7).background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 1.5))
                     }.buttonStyle(.plain)
                 }.padding(16)

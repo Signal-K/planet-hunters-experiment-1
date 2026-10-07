@@ -25,7 +25,7 @@ export default function Slot({ state, label, glyph, blockedReason, onClick, onCl
           placeItems: 'center',
           textAlign: 'center',
           padding: '0 8px',
-          font: '700 9px var(--ln-font-display)',
+          font: '700 14px var(--ln-font-display)',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
           color: 'var(--ln-crit)',
@@ -53,7 +53,7 @@ export default function Slot({ state, label, glyph, blockedReason, onClick, onCl
       >
         <div style={{ textAlign: 'center' }}>
           <div style={{ font: '700 17px var(--ln-font-mono)', color: 'var(--ln-cyan)' }}>{glyph ?? '◇'}</div>
-          <div style={{ font: '800 9.5px var(--ln-font-display)', textTransform: 'uppercase', color: 'var(--ln-text)' }}>{label}</div>
+          <div style={{ font: '800 14px var(--ln-font-display)', textTransform: 'uppercase', color: 'var(--ln-text)' }}>{label}</div>
         </div>
         {onClear && (
           <button
@@ -69,7 +69,7 @@ export default function Slot({ state, label, glyph, blockedReason, onClick, onCl
               background: 'var(--ln-crit)',
               color: 'var(--ln-text-inverse)',
               border: 'none',
-              font: '400 11px var(--ln-font-mono)',
+              font: '400 14px var(--ln-font-mono)',
               lineHeight: '18px',
               cursor: 'pointer',
             }}
@@ -93,7 +93,7 @@ export default function Slot({ state, label, glyph, blockedReason, onClick, onCl
         background: active ? 'var(--ln-cyan-soft)' : 'transparent',
         display: 'grid',
         placeItems: 'center',
-        font: '700 9px var(--ln-font-display)',
+        font: '700 14px var(--ln-font-display)',
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
         color: active ? 'var(--ln-cyan)' : 'var(--ln-text-muted)',

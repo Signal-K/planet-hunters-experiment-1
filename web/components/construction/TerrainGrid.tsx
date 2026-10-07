@@ -42,7 +42,7 @@ export default function TerrainGrid({ cols, tiles, selected, onSelect }: Terrain
               background: FILL[t],
               cursor: onSelect ? 'pointer' : 'default',
               boxShadow: isSel ? 'var(--ln-glow-cyan)' : undefined,
-              font: '700 13px var(--ln-font-mono)',
+              font: '700 14px var(--ln-font-mono)',
               color: 'var(--ln-text-dim)',
               display: 'grid',
               placeItems: 'center',

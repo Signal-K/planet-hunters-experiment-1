@@ -285,7 +285,7 @@ body:has([data-screen="hub"]) {
 
   --ln-bp-ink:      #0f2436;
   --ln-bp-ink-dim:  #48596a;
-  --ln-bp-ink-mute: #7c8ea0;
+  --ln-bp-ink-mute: #566879;
 
   --ln-bp-line:        rgba(15, 36, 54, 0.14);
   --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
@@ -297,8 +297,8 @@ body:has([data-screen="hub"]) {
   --ln-bp-pink-soft:   rgba(200, 41, 62, 0.10);
   --ln-bp-pink-border: rgba(200, 41, 62, 0.4);
 
-  --ln-bp-green:      #1f8f57;
-  --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
+  --ln-bp-green:      #17703f;
+  --ln-bp-green-soft: rgba(23, 112, 63, 0.10);
 
   --ln-void:      var(--ln-bp-bg);
   --ln-bg:        var(--ln-bp-bg);
@@ -394,7 +394,7 @@ body:has([data-screen="hub"]) {
 
   --ln-bp-ink:      #0f2436;
   --ln-bp-ink-dim:  #48596a;
-  --ln-bp-ink-mute: #7c8ea0;
+  --ln-bp-ink-mute: #566879;
 
   --ln-bp-line:        rgba(15, 36, 54, 0.14);
   --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
@@ -406,8 +406,8 @@ body:has([data-screen="hub"]) {
   --ln-bp-pink-soft:   rgba(200, 41, 62, 0.10);
   --ln-bp-pink-border: rgba(200, 41, 62, 0.4);
 
-  --ln-bp-green:      #1f8f57;
-  --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
+  --ln-bp-green:      #17703f;
+  --ln-bp-green-soft: rgba(23, 112, 63, 0.10);
 
   --ln-void:      var(--ln-bp-bg);
   --ln-bg:        var(--ln-bp-bg);
@@ -2044,7 +2044,7 @@ button { cursor: pointer; }
 }
 .mining-command__label {
   overflow: hidden;
-  font: 800 10px/1.2 var(--ln-font-display);
+  font: 800 14px/1.2 var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   text-overflow: ellipsis;
   text-transform: uppercase;
@@ -2055,8 +2055,8 @@ button { cursor: pointer; }
   gap: 4px;
   min-width: 0;
   margin-top: 4px;
-  color: var(--ln-text-muted);
-  font: 700 10px/1.1 var(--ln-font-mono);
+  color: #ffffff;
+  font: 700 14px/1.1 var(--ln-font-mono);
   white-space: nowrap;
 }
 .mining-command--return { padding-bottom: 12px; }
@@ -2087,8 +2087,8 @@ button { cursor: pointer; }
   cursor: pointer;
 }
 @media (max-width: 600px) {
-  .mining-command__label { font-size: 9px; letter-spacing: .08em; }
-  .mining-command__meta { font-size: 9px; }
+  .mining-command__label { font-size: 14px; letter-spacing: .04em; }
+  .mining-command__meta { font-size: 14px; }
 }
 
 /* KES-219 — keep the mining field atmospheric, but bring the persistent
@@ -2488,9 +2488,7 @@ button { cursor: pointer; }
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(2, 7, 17, .58) 0%, rgba(2, 7, 17, .06) 27%, rgba(2, 7, 17, .06) 58%, rgba(2, 7, 17, .46) 100%),
-    radial-gradient(ellipse at 50% 72%, transparent 0%, rgba(2, 7, 17, .24) 72%, rgba(2, 7, 17, .56) 100%);
+  background: linear-gradient(180deg, rgba(238, 243, 248, .55) 0%, rgba(238, 243, 248, 0) 24%);
 }
 .debrief-hud-header {
   position: absolute;
@@ -2651,14 +2649,14 @@ button { cursor: pointer; }
 .debrief-command-dock [data-testid="collect-reward-btn"] {
   min-width: 176px;
   min-height: 44px;
-  background: rgba(6, 14, 26, .88) !important;
-  border-color: var(--ln-cyan) !important;
-  color: var(--ln-cyan) !important;
-  box-shadow: 0 0 18px rgba(112, 217, 234, .12) !important;
+  background: #175f9b !important;
+  border: 3px solid var(--ln-blueprint-ink) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 0 rgba(15, 36, 54, 0.72) !important;
 }
 .debrief-command-dock [data-testid="resolve-cargo-btn"]:hover,
 .debrief-command-dock [data-testid="collect-reward-btn"]:hover {
-  background: rgba(112, 217, 234, .12) !important;
+  background: #124d80 !important;
 }
 
 @media (max-width: 620px) {
@@ -2874,7 +2872,7 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 :root {
   /* Scene-local accents. Kept as hub-scoped tokens rather than overriding
      the global --ln-cyan/--ln-ok, which other screens already tune against. */
-  --hub-mint:       #1f8f57;
+  --hub-mint:       #17703f;
   --hub-cyan:       #175f9b;
   /* SSL-424: the Base scene is blueprint paper, not a navy dusk. Sage green
      is darkened so it holds 4.5:1 on paper. */
@@ -3144,8 +3142,9 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
    colliding with the adjacent plot's label. */
 .hub-building-status { text-align: center; }
 @media (max-width: 520px) {
-  .hub-building-status { max-width: 86px; white-space: normal !important; padding-inline: 7px !important; }
-  .hub-building-status > span:first-child { display: block; width: 72px; line-height: 1.05; overflow-wrap: anywhere; white-space: normal; }
+  .hub-building-status { width: max-content; max-width: 128px; align-self: center; white-space: normal !important; padding-inline: 10px !important; border-radius: 18px !important; }
+  .hub-building-status > span:first-child { display: block; width: auto; line-height: 1.1; letter-spacing: .04em !important; white-space: normal; }
+  .hub-building-status > span:last-child span:last-child { letter-spacing: .06em !important; }
 }
 
 @media (max-width: 1023px) {

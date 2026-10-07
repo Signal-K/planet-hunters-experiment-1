@@ -235,14 +235,14 @@ export default function ClientMark({
   const bespoke = clientId ? CLIENT_GLYPHS[clientId] : undefined
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute', inset: 0 }} aria-hidden="true">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute', inset: 0, opacity: 0.4 }} aria-hidden="true">
         {bespoke ? bespoke(color, size) : <RoleGlyph role={uiRole} color={color} size={size} />}
       </svg>
       <div style={{
         position: 'absolute', inset: 0,
         borderRadius: 999, border: `2px solid ${color}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        font: `700 ${Math.round(size * 0.36)}px var(--ln-font-display)`, color,
+        font: `800 ${Math.max(14, Math.round(size * 0.36))}px var(--ln-font-display)`, color: 'var(--ln-text)',
       }}>
         {initial}
       </div>

@@ -21,14 +21,14 @@ export default function FreeOpsBuildScreen({ onBack, onMissions, onInfrastructur
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 17, fontWeight: 800, color: 'var(--ln-text)' }}>
             Start with an objective
           </div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--ln-font-body)', fontSize: 13, lineHeight: 1.45, color: 'var(--ln-text-dim)' }}>
+          <div style={{ marginTop: 6, fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.45, color: 'var(--ln-text-dim)' }}>
             Build does not assume a mission. Choose what this launch is for, then assemble the rocket that fits it.
           </div>
         </Panel>
 
         <Panel accent="var(--ln-ok)" style={{ padding: 14 }}>
           <div className="ln-section-label">Your own operation</div>
-          <div style={{ margin: '6px 0 12px', fontFamily: 'var(--ln-font-body)', fontSize: 13, lineHeight: 1.45, color: 'var(--ln-text-dim)' }}>
+          <div style={{ margin: '6px 0 12px', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.45, color: 'var(--ln-text-dim)' }}>
             Launch infrastructure such as satellites, or run a self-directed mining mission and sell the haul yourself.
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -39,7 +39,7 @@ export default function FreeOpsBuildScreen({ onBack, onMissions, onInfrastructur
 
         <Panel accent="var(--ln-amber)" style={{ padding: 14 }}>
           <div className="ln-section-label">Client work</div>
-          <div style={{ margin: '6px 0 12px', fontFamily: 'var(--ln-font-body)', fontSize: 13, lineHeight: 1.45, color: 'var(--ln-text-dim)' }}>
+          <div style={{ margin: '6px 0 12px', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.45, color: 'var(--ln-text-dim)' }}>
             Find a client request first. Once you accept it, Build will show the selected target, mission, and the rocket needed to launch.
           </div>
           <PrimaryBtn kind="amber" onClick={onMissions}>Browse Client Missions</PrimaryBtn>

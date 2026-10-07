@@ -26,7 +26,7 @@ function mkStarLayer(W: number, H: number, count: number, layer: number): Graphi
     const y = Math.random() * H
     const r = 0.3 + Math.random() * (layer === 2 ? 1.2 : 0.6)
     const alpha = 0.18 + Math.random() * 0.65
-    g.circle(x, y, r).fill({ color: 0xffffff, alpha })
+    g.circle(x, y, r + 0.4).fill({ color: 0x1f78c1, alpha: alpha * 0.55 })
   }
   return g
 }
@@ -69,69 +69,43 @@ export function drawPlanet(g: Graphics, cx: number, cy: number, r: number, kind:
   g.clear()
   if (r < 1) return
 
-  // glow
-  if (kind === 'earth') {
-    g.circle(cx, cy, r + r * 0.42).fill({ color: 0x3fa9ff, alpha: 0.13 })
-    g.circle(cx, cy, r + r * 0.18).fill({ color: 0x6cc2ff, alpha: 0.24 })
-    g.circle(cx, cy, r + r * 0.05).fill({ color: 0xbfe8ff, alpha: 0.16 })
-  } else if (kind === 'planet') {
-    g.circle(cx, cy, r + r * 0.35).fill({ color: 0x0d5e8a, alpha: 0.12 })
-    g.circle(cx, cy, r + r * 0.15).fill({ color: 0x0b7ab8, alpha: 0.18 })
-  } else if (kind === 'moon') {
-    g.circle(cx, cy, r + r * 0.2).fill({ color: 0x556080, alpha: 0.1 })
-  }
-
-  // body — deep ocean base with a lighter mid-tone band so the sphere reads
-  // as lit rather than a flat disc
-  const bodyColor = kind === 'asteroid' ? 0x203a3d : kind === 'moon' ? 0x5a6070 : kind === 'earth' ? 0x0f4c85 : 0x1b4e70
+  // Light blueprint body (SSL-423): flat ice/cyan fill, offset shade, 3px ink outline.
+  const bodyColor = kind === 'asteroid' ? 0xa9bccd : kind === 'moon' ? 0xc6d3df : kind === 'earth' ? 0x42a6df : 0x6fb3d9
+  const outline = Math.max(2, Math.min(4, r * 0.06))
+  g.circle(cx + r * 0.08, cy + r * 0.08, r).fill({ color: 0x1f78c1, alpha: 0.35 })
   g.circle(cx, cy, r).fill(bodyColor)
 
   if (kind === 'earth' && r > 6) {
-    if (r > 10) {
-      g.circle(cx, cy, r).fill({ color: 0x2378c4, alpha: 0.4 })
-    }
     for (const feature of EARTH_CONTINENTS) {
-      drawGlobeFeature(g, cx, cy, r, feature, rotation, 0x3c8f4a, 0.9)
+      drawGlobeFeature(g, cx, cy, r, feature, rotation, 0x168a80, 0.9)
     }
     if (r > 8) {
-      // polar ice caps — fixed at the poles regardless of rotation
-      g.ellipse(cx, cy - r * 0.86, r * 0.5, r * 0.18).fill({ color: 0xf0f8ff, alpha: 0.8 })
-      g.ellipse(cx, cy + r * 0.86, r * 0.46, r * 0.16).fill({ color: 0xf0f8ff, alpha: 0.75 })
+      // polar ice caps stay fixed at the poles regardless of rotation
+      g.ellipse(cx, cy - r * 0.86, r * 0.5, r * 0.18).fill({ color: 0xffffff, alpha: 0.9 })
+      g.ellipse(cx, cy + r * 0.86, r * 0.46, r * 0.16).fill({ color: 0xffffff, alpha: 0.85 })
     }
     if (r > 18) {
       for (const cloud of EARTH_CLOUDS) {
-        drawGlobeFeature(g, cx, cy, r, cloud, rotation * 0.6, 0xffffff, 0.35)
+        drawGlobeFeature(g, cx, cy, r, cloud, rotation * 0.6, 0xffffff, 0.55)
       }
-    }
-    if (r > 14) {
-      // specular sun glint, offset toward the light source (top-left, matching the terminator below)
-      g.ellipse(cx - r * 0.32, cy - r * 0.3, r * 0.22, r * 0.14).fill({ color: 0xeaf6ff, alpha: 0.14 })
     }
   }
 
   if (kind === 'planet' && r > 16) {
-    // atmosphere bands
-    g.ellipse(cx, cy + r * 0.08, r * 0.78, r * 0.13).stroke({ color: 0x5ac4e8, alpha: 0.07, width: r * 0.07 })
-    g.ellipse(cx, cy - r * 0.18, r * 0.6, r * 0.09).stroke({ color: 0x8de8ff, alpha: 0.05, width: r * 0.05 })
+    g.ellipse(cx, cy + r * 0.08, r * 0.78, r * 0.13).stroke({ color: 0xffffff, alpha: 0.6, width: r * 0.07 })
+    g.ellipse(cx, cy - r * 0.18, r * 0.6, r * 0.09).stroke({ color: 0xffffff, alpha: 0.5, width: r * 0.05 })
   }
 
-  if (kind === 'moon' && r > 14) {
-    const craters: [number, number, number][] = [[0.28, 0.15, 0.12], [-0.22, 0.32, 0.09], [0.1, -0.28, 0.07]]
+  if ((kind === 'moon' || kind === 'asteroid') && r > 10) {
+    const craters: [number, number, number][] = [[0.28, 0.15, 0.14], [-0.22, 0.32, 0.1], [0.1, -0.28, 0.08]]
     for (const [fx, fy, fr] of craters) {
-      g.circle(cx + r * fx, cy + r * fy, r * fr).fill({ color: 0x3c4050, alpha: 0.55 })
+      g.circle(cx + r * fx, cy + r * fy, r * fr).fill({ color: 0x1f78c1, alpha: 0.28 })
     }
   }
 
-  if (kind === 'asteroid' && r > 10) {
-    g.ellipse(cx + r * 0.1, cy, r * 0.9, r * 0.55).fill(0x203a3d)
-    const craters: [number, number, number][] = [[0.3, 0.2, 0.14], [-0.28, -0.08, 0.1], [0.05, 0.38, 0.08]]
-    for (const [fx, fy, fr] of craters) {
-      g.circle(cx + r * fx, cy + r * fy, r * fr).fill({ color: 0x1e1508, alpha: 0.65 })
-    }
-  }
-
-  // terminator shadow
-  g.circle(cx + r * 0.22, cy + r * 0.05, r * 0.92).fill({ color: 0x000510, alpha: 0.55 })
+  // crescent shade on the side away from the light, then the ink outline
+  g.circle(cx + r * 0.22, cy + r * 0.05, r * 0.92).fill({ color: 0x1f78c1, alpha: 0.18 })
+  g.circle(cx, cy, r).stroke({ color: 0x0f2436, width: outline })
 }
 
 export { transitOriginEarthRadius, transitRocketScreenPos } from './transitFlight'
@@ -150,7 +124,7 @@ function drawRocket(g: Graphics, rx: number, ry: number, flicker: number) {
   // plume
   const plumeH = 10 + flicker * 5
   g.poly([rx - 3, ry + 15, rx + 3, ry + 15, rx + 2, ry + 15 + plumeH, rx - 2, ry + 15 + plumeH]).fill({ color: 0x20dddf, alpha: 0.85 })
-  g.poly([rx - 1, ry + 15, rx + 1, ry + 15, rx, ry + 18 + plumeH]).fill({ color: 0xffee55, alpha: 0.9 })
+  g.poly([rx - 1, ry + 15, rx + 1, ry + 15, rx, ry + 18 + plumeH]).fill({ color: 0xffffff, alpha: 0.95 })
 }
 
 export function buildTransitScene(app: Application, opts: TransitSceneOptions): TransitScene {
@@ -158,7 +132,7 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
   const H = app.screen.height
 
   const bg = new Graphics()
-  bg.rect(0, 0, W, H).fill(0x010508)
+  bg.rect(0, 0, W, H).fill(0xdfe9f3)
   app.stage.addChild(bg)
 
   const starContainers: Container[] = []
@@ -205,10 +179,10 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
   // Target name label (fades in as planet grows)
   const labelStyle = new TextStyle({
     fontFamily: 'Oxanium, monospace',
-    fontSize: 11,
-    fontWeight: '700',
-    fill: 0x9becff,
-    letterSpacing: 4,
+    fontSize: 14,
+    fontWeight: '800',
+    fill: 0x0f2436,
+    letterSpacing: 3,
   })
   const label = new Text({ text: opts.targetName.toUpperCase(), style: labelStyle })
   label.alpha = 0

@@ -11,7 +11,7 @@ interface StatusPillProps {
 }
 
 const TONES: Record<PillKind, { bg: string; fg: string }> = {
-  ok:    { bg: 'rgba(57,211,106,0.18)',  fg: '#39d36a' },
+  ok:    { bg: 'rgba(23,112,63,0.12)',  fg: '#17703f' },
   warn:  { bg: 'rgba(94,215,232,0.18)',  fg: '#5ed7e8' },
   crit:  { bg: 'rgba(255,90,106,0.18)',  fg: '#ff5a6a' },
   info:  { bg: 'rgba(112,217,234,0.18)', fg: '#7ec8ff' },
@@ -31,7 +31,7 @@ export default function StatusPill({ kind = 'ok', children, dim }: StatusPillPro
       background: t.bg,
       color: t.fg,
       fontFamily: 'var(--ln-font-display)',
-      fontSize: 10,
+      fontSize: 14,
       fontWeight: 700,
       letterSpacing: '0.18em',
       textTransform: 'uppercase',

@@ -71,24 +71,62 @@ body:has([data-screen="hub"]) {
 .game-chrome-bottom button { min-height: 44px; min-width: 44px; }
 .backend-status { color: var(--ln-text-dim); }
 
-/* Transit: scene stays dark; every card over it is paper. */
-.theme-blueprint.transit-screen,
-.theme-blueprint .transit-flight-scene { background: #0a1018; }
-.theme-blueprint .transit-destination-chip,
-.theme-blueprint .transit-mission-card,
-.theme-blueprint .transit-flight-hud,
-.theme-blueprint .transit-approach {
-  background: rgba(255, 255, 255, 0.96);
-  border-color: var(--ln-blueprint-line-strong);
-  color: var(--ln-blueprint-ink);
+/* Transit (SSL-423): light blueprint scene. Top to bottom: brief, open sky, telemetry,
+   command dock. Nothing floats over anything else. */
+.transit-screen.theme-blueprint { background: var(--ln-blueprint-bg); }
+.transit-screen.theme-blueprint .transit-flight-scene {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 12px;
+  padding: 104px 12px 12px; background: var(--ln-blueprint-paper-2);
 }
-.theme-blueprint .transit-waypoint-label--passed { color: #124d80; }
-.theme-blueprint .transit-waypoint-label { text-shadow: none; }
-.theme-blueprint .transit-command-dock { background: var(--ln-blueprint-paper); border-top-color: var(--ln-blueprint-line-strong); }
-.theme-blueprint .transit-command-btn { min-height: 44px; min-width: 44px; background: var(--ln-blueprint-paper); }
-.theme-blueprint .transit-command-btn:hover:not(:disabled) { background: rgba(31, 120, 193, 0.1); }
-.theme-blueprint .transit-command-btn:disabled { color: #566879; border-color: var(--ln-blueprint-line-strong); }
-.theme-blueprint .transit-progress-track { background: rgba(15, 36, 54, 0.14); }
+.transit-screen.theme-blueprint .transit-flight-vignette { display: none; }
+.transit-screen.theme-blueprint .transit-brief {
+  position: relative; z-index: 5; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start;
+}
+.transit-screen.theme-blueprint .transit-brief__text { display: grid; gap: 10px; min-width: 0; }
+.transit-screen.theme-blueprint .transit-destination-chip,
+.transit-screen.theme-blueprint .transit-mission-card,
+.transit-screen.theme-blueprint .transit-flight-hud {
+  position: relative; inset: auto; width: auto; max-width: none; min-width: 0; z-index: 5;
+  padding: 10px 12px; background: var(--ln-blueprint-paper); color: var(--ln-blueprint-ink);
+  border: 2px solid var(--ln-blueprint-ink); border-radius: 8px; box-shadow: 3px 3px 0 rgba(31, 120, 193, 0.35);
+}
+.transit-screen.theme-blueprint .transit-destination-chip__status,
+.transit-screen.theme-blueprint .transit-mission-card__eyebrow,
+.transit-screen.theme-blueprint .transit-flight-hud__heading span,
+.transit-screen.theme-blueprint .transit-command-dock__status span,
+.transit-screen.theme-blueprint .transit-cargo-strip span,
+.transit-screen.theme-blueprint .transit-telemetry span { color: #175f9b; font-size: 14px; letter-spacing: .1em; }
+.transit-screen.theme-blueprint .transit-destination-chip > span:last-child,
+.transit-screen.theme-blueprint .transit-mission-card p { color: var(--ln-blueprint-ink); font-size: 14px; white-space: normal; }
+.transit-screen.theme-blueprint .transit-destination-chip,
+.transit-screen.theme-blueprint .transit-mission-card p { display: none; }
+.transit-screen.theme-blueprint .transit-destination-chip strong,
+.transit-screen.theme-blueprint .transit-mission-card > strong { color: var(--ln-blueprint-ink); font-size: 16px; }
+.transit-screen.theme-blueprint .transit-mission-card__own { color: var(--ln-ok); }
+.transit-screen.theme-blueprint .transit-approach,
+.transit-screen.theme-blueprint .transit-approach--close { position: relative; inset: auto; width: 136px; }
+.transit-screen.theme-blueprint .transit-approach ul { display: none; }
+.transit-screen.theme-blueprint .transit-approach,
+.transit-screen.theme-blueprint .transit-approach--close { width: 124px; }
+.transit-screen.theme-blueprint .transit-flight-hud { margin-top: auto; }
+.transit-screen.theme-blueprint .transit-flight-hud__heading strong { color: var(--ln-blueprint-ink); font-size: 18px; }
+.transit-screen.theme-blueprint .transit-flight-hud__heading span { text-transform: none; letter-spacing: 0; font-weight: 700; }
+.transit-screen.theme-blueprint .transit-progress-track { height: 10px; background: rgba(15, 36, 54, 0.14); border: 2px solid var(--ln-blueprint-ink); }
+.transit-screen.theme-blueprint .transit-progress-track span { background: #175f9b; box-shadow: none; }
+.transit-screen.theme-blueprint .transit-waypoint { border-color: var(--ln-blueprint-ink); background: var(--ln-blueprint-paper); }
+.transit-screen.theme-blueprint .transit-waypoint--passed { background: #175f9b; box-shadow: none; }
+.transit-screen.theme-blueprint .transit-waypoint-label { display: none; }
+.transit-screen.theme-blueprint .transit-telemetry { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+.transit-screen.theme-blueprint .transit-telemetry strong,
+.transit-screen.theme-blueprint .transit-cargo-strip strong { color: var(--ln-blueprint-ink); font-size: 14px; }
+.transit-screen.theme-blueprint .transit-command-dock { background: var(--ln-blueprint-paper); border-top: 2px solid var(--ln-blueprint-line-strong); }
+.transit-screen.theme-blueprint .transit-command-dock__status strong { color: var(--ln-blueprint-ink); font-size: 14px; }
+.transit-screen.theme-blueprint .transit-command-btn { min-height: 44px; min-width: 44px; background: var(--ln-blueprint-paper); border: 2px solid #175f9b; color: #175f9b; }
+.transit-screen.theme-blueprint .transit-command-btn:hover:not(:disabled) { background: rgba(31, 120, 193, 0.1); }
+.transit-screen.theme-blueprint .transit-command-btn:disabled { color: #566879; border-color: var(--ln-blueprint-line-strong); opacity: 1; }
+.transit-screen.theme-blueprint .transit-command-btn--arrive:not(:disabled) { background: #175f9b; color: #ffffff; border-color: var(--ln-blueprint-ink); }
+.transit-screen.theme-blueprint .transit-command-btn--danger { border-color: #a8203a; color: #a8203a; }
+.transit-screen.theme-blueprint .transit-rocket-sprite { filter: drop-shadow(3px 3px 0 rgba(31, 120, 193, 0.35)); }
 
 /* Debrief: paper content over the arrival scene. */
 .theme-blueprint.debrief-game { background: var(--ln-blueprint-bg); }
@@ -101,7 +139,7 @@ body:has([data-screen="hub"]) {
   color: var(--ln-blueprint-ink);
 }
 .theme-blueprint .debrief-hud-header,
-.theme-blueprint .debrief-arrival-board__copy { color: #fff; }
+.theme-blueprint .debrief-arrival-board__copy { color: var(--ln-blueprint-ink); }
 .theme-blueprint [data-testid="resolve-cargo-btn"],
 .theme-blueprint [resolve-cargo-btn] { min-height: 44px; }
 

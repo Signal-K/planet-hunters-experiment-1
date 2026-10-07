@@ -372,7 +372,7 @@ export default function RoverMiningScreen({
             borderRadius: 6,
             color: 'var(--ln-bp-green)',
             fontFamily: 'var(--ln-font-mono)',
-            fontSize: 10,
+            fontSize: 14,
             fontWeight: 700,
             letterSpacing: '0.12em',
             cursor: 'pointer',

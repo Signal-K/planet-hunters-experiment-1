@@ -38,7 +38,7 @@ export default function FeedbackButton() {
           border: '2px solid var(--ln-border)',
           borderRadius: 4,
           color: 'var(--ln-text-dim)',
-          fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
+          fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 700,
           letterSpacing: '0.14em', textTransform: 'uppercase',
           cursor: 'pointer', boxShadow: '4px 4px 0 var(--ln-blueprint-blue)',
         }}
@@ -56,7 +56,7 @@ export default function FeedbackButton() {
             boxShadow: 'var(--ln-shadow-panel)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'var(--ln-text)', letterSpacing: '0.04em' }}>
+              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, color: 'var(--ln-text)', letterSpacing: '0.04em' }}>
                 Send Feedback
               </div>
               <button type="button" onClick={() => setOpen(false)} aria-label="Close feedback" style={{ border: 0, background: 'transparent', color: 'var(--ln-text-muted)', cursor: 'pointer' }}>CLOSE</button>
@@ -65,7 +65,7 @@ export default function FeedbackButton() {
             {sent ? (
               <div style={{
                 textAlign: 'center', padding: '20px 0',
-                fontFamily: 'var(--ln-font-display)', fontSize: 13,
+                fontFamily: 'var(--ln-font-display)', fontSize: 14,
                 color: 'var(--ln-cyan)', letterSpacing: '0.08em',
               }}>
                 Sent — thanks!
@@ -96,7 +96,7 @@ export default function FeedbackButton() {
                       ? 'var(--ln-cyan)'
                       : 'var(--ln-surface-2)',
                     color: text.trim() ? 'var(--ln-text-on-cyan)' : 'var(--ln-text-muted)',
-                    fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
+                    fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
                     letterSpacing: '0.14em', textTransform: 'uppercase',
                     cursor: text.trim() ? 'pointer' : 'not-allowed',
                     transition: 'background 150ms, color 150ms',

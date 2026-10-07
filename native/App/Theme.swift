@@ -15,10 +15,10 @@ enum Theme {
     static let blue = hex(0x1F78C1)
     static let blueBright = hex(0x42A6DF)
     static let bluePress = hex(0x17639F)
-    static let teal = hex(0x168A80)      // web --ln-amber / payout
-    static let crimson = hex(0xC8293E)
+    static let teal = hex(0x0E6F66)      // web --ln-amber / payout
+    static let crimson = hex(0xB8223A)
     static let textDim = hex(0x48596A)
-    static let textMuted = hex(0x60778E)
+    static let textMuted = hex(0x566879)
     static let hairline = ink.opacity(0.14)
     static let border = ink.opacity(0.30)
 
@@ -133,7 +133,7 @@ struct ScreenFrame<Content: View>: View {
                 HStack(alignment: .center, spacing: 12) {
                     if let back {
                         Button(action: back) {
-                            Text("‹ BASE").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                            Text("‹ BASE").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.bluePress)
                                 .frame(minWidth: 44, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                         }.buttonStyle(.plain).accessibilityLabel("Back to base")
                     }

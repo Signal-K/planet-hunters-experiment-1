@@ -132,7 +132,7 @@ function DockIconBtn({ icon, label, onClick, active, accent, pulse, testId }: {
         {icon}
       </span>
       <span style={{
-        fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 8,
+        fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
         letterSpacing: '0.06em', textTransform: 'uppercase', lineHeight: 1.1,
         color: on ? 'var(--hub-chalk)' : 'color-mix(in srgb, var(--ln-text) 92%, transparent)',
         whiteSpace: 'nowrap',
@@ -152,7 +152,7 @@ function DockPrimaryBtn({ children, onClick, testId, coachId, pulse }: { childre
       style={{
         flexShrink: 0, background: 'var(--hub-chalk-soft)',
         border: '4px solid var(--hub-chalk)', borderRadius: 14, padding: '8px 16px',
-        fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 10.5,
+        fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14,
         letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--hub-chalk)',
         cursor: 'pointer', boxShadow: '0 4px 16px color-mix(in srgb, var(--hub-chalk) 25%, transparent)',
         animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
@@ -506,7 +506,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
               })}
               <Building
                 kind="market"
-                label="Commodity Exchange"
+                label="Exchange"
                 sub="SELL CARGO"
                 status="ok"
                 w={84}
@@ -616,7 +616,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                     "Facility Tier · status" + primary-action row. */}
                 <div className="hub-bottom-dock-main" data-testid={player.activeMission ? 'hub-resume-mission-banner' : undefined} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--hub-cyan)' }}>
+                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--hub-cyan)' }}>
                       {player.activeMission ? 'Mission in progress' : 'Launchpad'}
                     </div>
                     <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: player.activeMission ? 11 : 14, fontWeight: 800, color: 'var(--ln-text)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

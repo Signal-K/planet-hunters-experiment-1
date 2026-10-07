@@ -99,7 +99,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
             border: '1px solid rgba(112,217,234,0.4)',
             background: 'rgba(112,217,234,0.08)',
             color: 'var(--ln-cyan)',
-            fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9,
+            fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14,
             letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap',
           }}>
             <ClockIcon /> {levelBadge}
@@ -110,7 +110,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
         {eyebrow && (
           <div className="top-bar__eyebrow" style={{
             fontFamily: 'var(--ln-font-display)',
-            fontSize: 9,
+            fontSize: 14,
             fontWeight: 700,
             letterSpacing: '0.24em',
             textTransform: 'uppercase',
@@ -142,7 +142,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
             border: '1px solid rgba(39,184,224,0.4)',
             background: 'rgba(39,184,224,0.08)',
             color: 'var(--ln-amber)',
-            fontFamily: 'var(--ln-font-mono)', fontWeight: 800, fontSize: 11,
+            fontFamily: 'var(--ln-font-mono)', fontWeight: 800, fontSize: 14,
             whiteSpace: 'nowrap',
           }}>
             FRANCS · {formatFrancs(francs, { compact: true })}

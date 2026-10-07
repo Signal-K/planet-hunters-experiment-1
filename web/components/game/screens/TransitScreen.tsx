@@ -152,33 +152,36 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
 
         <div className="transit-flight-vignette" aria-hidden="true" />
 
-        <div className="transit-destination-chip">
-          <span className="transit-destination-chip__status">COURSE LOCKED</span>
-          <strong>{destinationName}</strong>
-          <span>{returning ? 'EARTH RECOVERY VECTOR' : `${target.type.toUpperCase()} · ORBIT ${target.orbit}`}</span>
-        </div>
+        <div className="transit-brief">
+          <div className="transit-brief__text">
+            <div className="transit-destination-chip">
+              <span className="transit-destination-chip__status">COURSE LOCKED</span>
+              <strong>{destinationName}</strong>
+              <span>{returning ? 'EARTH RECOVERY VECTOR' : `${target.type.toUpperCase()} · ORBIT ${target.orbit}`}</span>
+            </div>
 
-        {!returning && ownership && (
-          <div className={`transit-approach${progress >= 70 ? ' transit-approach--close' : ''}`} data-testid="transit-approach" data-progress={progress}>
-            <TargetSphere
-              target={target}
-              lifeStage={bodyOwnership.lifeStage}
-              ownership={bodyOwnership}
-              size={progress >= 70 ? 152 : 112}
-              compact={progress < 70}
-              eyebrow={progress >= 70 ? 'ON APPROACH · DIVISIONS' : 'TARGET BODY'}
-            />
+            {mission && (
+              <section className="transit-mission-card" data-testid="transit-mission-context" aria-label="Mission context">
+                <div className="transit-mission-card__eyebrow">{legLabel} mission</div>
+                <strong>{mission.title}</strong>
+                {issuedBy && <span className={ownProgram ? 'transit-mission-card__own' : ''}>{ownProgram ? issuedBy : `Issued by ${issuedBy}`}</span>}
+                {legPurpose && <p>{legPurpose}</p>}
+              </section>
+            )}
           </div>
-        )}
-
-        {mission && (
-          <section className="transit-mission-card" data-testid="transit-mission-context" aria-label="Mission context">
-            <div className="transit-mission-card__eyebrow">{legLabel} mission</div>
-            <strong>{mission.title}</strong>
-            {issuedBy && <span className={ownProgram ? 'transit-mission-card__own' : ''}>{ownProgram ? issuedBy : `Issued by ${issuedBy}`}</span>}
-            {legPurpose && <p>{legPurpose}</p>}
-          </section>
-        )}
+          {!returning && ownership && (
+            <div className={`transit-approach${progress >= 70 ? ' transit-approach--close' : ''}`} data-testid="transit-approach" data-progress={progress}>
+              <TargetSphere
+                target={target}
+                lifeStage={bodyOwnership.lifeStage}
+                ownership={bodyOwnership}
+                size={112}
+                compact
+                eyebrow="TARGET BODY"
+              />
+            </div>
+          )}
+        </div>
 
         <section className="transit-flight-hud transit-readout" data-transit-progress={progress} aria-label="Flight telemetry">
           <div className="transit-flight-hud__heading">
