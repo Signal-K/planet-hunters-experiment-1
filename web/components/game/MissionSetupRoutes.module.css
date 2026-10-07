@@ -42,3 +42,11 @@
 
 /* SSL-450: destination and vehicle already sit in the choosers, so the facts list keeps only cargo. */
 .reviewFacts > div:nth-child(-n+2){display:none;}
+
+/* SSL-450: at 375x667 the contract card must show its accept button without scrolling, so drop the rocket art and blurb. */
+@media (orientation:portrait) and (max-height:760px){
+  .contractSlide { gap:8px; }
+  .contractRocket { display:none; }
+  .contractCopy p { display:none; }
+  .contractCopy h2 { font-size:22px; }
+}
