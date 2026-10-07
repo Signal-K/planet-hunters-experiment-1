@@ -69,7 +69,7 @@ final class FlightScene: SKScene {
         ship.addChild(body)
         // Engine flame flickers behind the nozzle; scales with a quick random pulse.
         let flame = SKShapeNode(path: { let p = CGMutablePath(); p.move(to: .zero); p.addLine(to: CGPoint(x: 34, y: 7)); p.addLine(to: CGPoint(x: 34, y: -7)); p.closeSubpath(); return p }())
-        flame.fillColor = Theme.hex(0xFFB347).sk; flame.strokeColor = .white; flame.lineWidth = 1.5
+        flame.fillColor = Theme.hex(0x36C6E2).sk; flame.strokeColor = Theme.ink.sk; flame.lineWidth = 1.5
         flame.position = CGPoint(x: 64, y: 0); flame.zPosition = -1
         flame.run(.repeatForever(.sequence([.scaleX(to: 1.35, duration: 0.07), .scaleX(to: 0.8, duration: 0.09), .scaleX(to: 1.1, duration: 0.06)])))
         body.addChild(flame)
