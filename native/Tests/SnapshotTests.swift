@@ -47,6 +47,14 @@ struct SnapshotTests {
                    size: CGSize(width: 402, height: 300), name: "debrief-capacitor-phone")
     }
 
+    @Test func miningActionRowPhone() throws {
+        let t = Targets.all.first { $0.type == .asteroid }!
+        var f = MiningField(target: t, required: ["iron": 2, "silicon": 1], cargoCapacity: 6, laserTier: 1, seed: 3)
+        for n in f.nodes.prefix(3) { for _ in 0..<4 { _ = f.strike(nodeId: n.id) } }
+        try render(MiningActionRow(field: f, onReturn: {}, onScrub: {}).padding(16).background(Theme.bg),
+                   size: CGSize(width: 402, height: 110), name: "mining-actionrow-phone")
+    }
+
     @Test func hubDesktop() throws {
         try render(HubScreen().environment(store()), size: CGSize(width: 1000, height: 680), name: "hub-desktop")
     }

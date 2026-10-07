@@ -85,7 +85,27 @@ struct MiningScreen: View {
     @State private var field: MiningField?
     @State private var toast: String?
     @State private var dashCharge = 1.0
+    @State private var confirmingScrub = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// SSL-411: Return stays tappable (a dead button reads as a bug) and says what is still missing.
+    private func handleReturn(_ f: MiningField) {
+        if f.isComplete || f.charge <= 0 {
+            guard f.cargoUnits > 0 else { say("Nothing mined yet"); return }
+            store.miningDone(f.cargo)
+            return
+        }
+        let missing = f.required.keys.sorted().compactMap { id -> String? in
+            let left = (f.required[id] ?? 0) - f.cargo[id, default: 0]
+            return left > 0 ? "\(left) more \(Minerals.byId[id]?.name ?? id)" : nil
+        }
+        say("Order not filled: mine \(missing.joined(separator: " and "))")
+    }
+
+    private func say(_ msg: String) {
+        toast = msg
+        Task { try? await Task.sleep(for: .seconds(2.2)); if toast == msg { toast = nil } }
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -120,23 +140,19 @@ struct MiningScreen: View {
                             Spacer()
                             DashButton(charge: dashCharge) { scene?.dash() }
                         }
-                        Panel {
-                            HStack {
-                                Eyebrow(text: "Laser charge")
-                                Spacer()
-                                Text("\(field.charge)/\(field.chargeCap)").font(AppFont.mono(14))
-                            }
-                            ProgressTrack(value: Double(field.charge) / Double(max(1, field.chargeCap)))
-                            PrimaryButton(title: field.isComplete ? "Contract filled · Return" : "Return to Earth", enabled: field.cargoUnits > 0) {
-                                store.miningDone(field.cargo)
-                            }
-                        }
+                        MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true })
                     }.padding(16)
                 }
             }
             .onAppear { if scene == nil { setup(geo.size) } }
         }
         .background(Theme.bg)
+        .confirmationDialog("Scrub mission?", isPresented: $confirmingScrub, titleVisibility: .visible) {
+            Button("Scrub mission", role: .destructive) { store.abandonMission() }
+            Button("Keep mining", role: .cancel) {}
+        } message: {
+            Text("\(field?.cargoUnits ?? 0) units collected will be lost.")
+        }
     }
 
     private func setup(_ size: CGSize) {
@@ -157,6 +173,52 @@ struct MiningScreen: View {
         s.onDash = { dashCharge = $0 }
         s.onFeedback = { msg in toast = msg; Task { try? await Task.sleep(for: .seconds(1.4)); if toast == msg { toast = nil } } }
         field = f; scene = s
+    }
+}
+
+/// SSL-411 action row: one Return button that carries order progress and laser charge, plus a ... menu for rare actions.
+struct MiningActionRow: View {
+    let field: MiningField
+    let onReturn: () -> Void
+    let onScrub: () -> Void
+
+    private var ready: Bool { field.isComplete || field.charge <= 0 }
+    private var need: Int { field.required.values.reduce(0, +) }
+    private var have: Int { field.required.reduce(0) { $0 + min($1.value, field.cargo[$1.key, default: 0]) } }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Button(action: onReturn) {
+                VStack(spacing: 4) {
+                    Text(ready ? (field.isComplete ? "CONTRACT FILLED · RETURN" : "OUT OF CHARGE · RETURN") : "FILL ORDER TO RETURN")
+                        .font(AppFont.display(14, "Bold")).tracking(1.0).lineLimit(1).minimumScaleFactor(0.9)
+                    HStack(spacing: 6) {
+                        Image(systemName: "bolt.fill").font(.system(size: 14))
+                        Text("\(field.charge)/\(field.chargeCap)").font(AppFont.mono(14))
+                        Text("· ORDER \(have)/\(need)").font(AppFont.mono(14))
+                    }
+                    ProgressTrack(value: need > 0 ? Double(have) / Double(need) : 0)
+                }
+                .foregroundStyle(ready ? Color.white : Theme.ink)
+                .padding(.horizontal, 12).padding(.vertical, 8)
+                .frame(maxWidth: .infinity, minHeight: 56)
+                .background(ready ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 2))
+                .background(RoundedRectangle(cornerRadius: 8).fill(Theme.blue).offset(x: 3, y: 3))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Return to Earth. Order \(have) of \(need). Laser charge \(field.charge) of \(field.chargeCap).")
+            Menu {
+                Button("Scrub mission", role: .destructive, action: onScrub)
+            } label: {
+                Image(systemName: "ellipsis").font(.system(size: 20, weight: .bold)).foregroundStyle(Theme.ink)
+                    .frame(width: 48, height: 56)
+                    .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 2))
+            }
+            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+            .accessibilityLabel("More controls")
+        }
     }
 }
 
