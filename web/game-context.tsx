@@ -27,6 +27,7 @@ import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
 import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
 import { canonicalGamePath, trayScreenFromPath } from '@/lib/game-route'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -237,6 +238,26 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       router.push(nextPath)
     }
   }, [state.screen, state.missionId, state.targetId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Dev-only QA bridge (never present when isDevLauncherEnabled() is false, so
+  // never in production). Lets a headless driver jump a real, signed-in
+  // session to any state without replaying the loop:
+  //   __landnam.get()                      current GameState
+  //   __landnam.patch({ francs: 5e6 })     merge into player
+  //   __landnam.goto('hangar', {missionId, targetId})
+  //   __landnam.skipTutorial()
+  useEffect(() => {
+    if (!isDevLauncherEnabled()) return
+    const w = window as unknown as { __landnam?: unknown }
+    w.__landnam = {
+      get: () => stateRef.current,
+      patch: (p: Partial<GameState['player']>) => setState(s => ({ ...s, player: { ...s.player, ...p } })),
+      goto: (screen: GameState['screen'], ids?: { missionId?: string | null; targetId?: string | null }) =>
+        setState(s => ({ ...s, screen, missionId: ids?.missionId ?? s.missionId, targetId: ids?.targetId ?? s.targetId })),
+      skipTutorial: () => tutorial.skipTutorial([0, 1, 2, 3, 4, 5, 6, 8, 9, 30, 31, 32, 33, 40, 41]),
+    }
+    return () => { delete w.__landnam }
+  })
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const mission = state.missionId
