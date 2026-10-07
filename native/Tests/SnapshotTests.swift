@@ -80,6 +80,13 @@ struct SnapshotTests {
                    size: CGSize(width: 402, height: 874), name: "control-station-phone")
     }
 
+    @Test func hubSkyCraftPhone() throws {
+        var gs = GameState()
+        gs.player.activeMission = ActiveMission(id: "m", label: "Ceres run")
+        gs.player.missionPhase = .mining
+        try render(HubScreen().environment(GameStore(state: gs)), size: CGSize(width: 402, height: 874), name: "hub-skycraft-phone")
+    }
+
     @Test func hubDesktop() throws {
         try render(HubScreen().environment(store()), size: CGSize(width: 1000, height: 680), name: "hub-desktop")
     }

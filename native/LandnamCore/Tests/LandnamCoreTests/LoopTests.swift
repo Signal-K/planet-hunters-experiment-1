@@ -238,3 +238,22 @@ import Foundation
         #expect(ControlStation.build(player: p, signals: [], bodyId: "mars").activeBodyId == "all")
     }
 }
+
+@Suite struct SkyCraftTests {
+    @Test func noCraftWhenIdle() {
+        #expect(SkyCraft.current(for: Player(), now: 0) == nil)
+    }
+    @Test func waitingOnPadOpensLaunchpad() {
+        var p = Player(); p.pendingLaunch = true
+        let c = SkyCraft.current(for: p, now: 0)
+        #expect(c?.state == .waiting && c?.opens == .launchpad)
+    }
+    @Test func flyingThenArrivedThenMining() {
+        var p = Player(); p.activeMission = ActiveMission(id: "m", label: "Job"); p.missionPhase = .transit; p.arrivalAt = 100
+        #expect(SkyCraft.current(for: p, now: 50)?.state == .transit)
+        #expect(SkyCraft.current(for: p, now: 150)?.state == .arrived)
+        p.missionPhase = .mining
+        let m = SkyCraft.current(for: p, now: 150)
+        #expect(m?.state == .mining && m?.opens == .mining)
+    }
+}

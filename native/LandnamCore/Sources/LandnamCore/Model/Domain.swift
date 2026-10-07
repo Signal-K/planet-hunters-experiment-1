@@ -156,6 +156,7 @@ public struct CompletedMissionRecord: Codable, Equatable, Sendable {
 public struct ActiveMission: Codable, Equatable, Sendable {
     public var id: String
     public var label: String
+    public init(id: String, label: String) { self.id = id; self.label = label }
 }
 
 public enum MissionPhase: String, Codable, Sendable { case transit, landing, mining, delivery, debrief }
