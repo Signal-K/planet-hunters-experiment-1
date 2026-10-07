@@ -14,14 +14,14 @@ const H = 300
 // the default/active accent, `--ln-ok` green for "done" segmented status —
 // not crimson, which the doc reserves for danger/destructive only.
 const BADGE_RADIUS      = 7
-const C_ACTIVE_BORDER = 0xa3ecf5  // --ln-cyan-bright
-const C_ACTIVE_BRIGHT = 0xa3ecf5
-const C_DONE_BORDER   = 0x5ad07e  // --ln-ok
-const C_EMPTY_BORDER  = 0x1a3a5e
-const C_GRID_LINE     = 0x123049
-const C_ACTIVE_FILL   = 0x0d2830
-const C_DONE_FILL     = 0x0a2015
-const C_EMPTY_FILL    = 0x00101c
+const C_ACTIVE_BORDER = 0x2a76bd  // blueprint blue
+const C_ACTIVE_BRIGHT = 0x0f2436  // ink
+const C_DONE_BORDER   = 0x1f8f86  // teal
+const C_EMPTY_BORDER  = 0x5b9bc9
+const C_GRID_LINE     = 0x5b9bc9
+const C_ACTIVE_FILL   = 0xd5ecf7
+const C_DONE_FILL     = 0xbdeede
+const C_EMPTY_FILL    = 0xffffff
 
 interface Props {
   layout: ShipInteriorLayout
@@ -107,7 +107,7 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
         canvas,
         width: W,
         height: H,
-        background: 0x06090f,
+        background: 0xeef5fa,
         antialias: false,
         autoDensity: true,
         resolution: capDpr(),
@@ -119,17 +119,15 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
       app.stage.addChild(world)
       app.stage.eventMode = 'static'
 
-      // Navy-to-black backdrop — the Out There: Omega mood anchor the
-      // design-language doc cites for the dark palette (`--ln-void` down to
-      // black), sitting behind the hull art rather than a flat fill.
+      // Light blueprint backdrop (SSL-423): paper to ice behind the hull art.
       const backdrop = new Graphics()
       const backdropGradient = new FillGradient({
         type: 'linear',
         start: { x: 0, y: 0 },
         end: { x: 0, y: 1 },
         colorStops: [
-          { offset: 0, color: 0x000d1f },
-          { offset: 1, color: 0x000000 },
+          { offset: 0, color: 0xeef5fa },
+          { offset: 1, color: 0xd5ecf7 },
         ],
       })
       backdrop.rect(0, 0, W, H).fill(backdropGradient)
@@ -210,7 +208,7 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
           fontFamily: '"Oxanium", "Turret Road", monospace',
           fontSize: 14,
           fontWeight: '800',
-          fill: 0xffffff,
+          fill: 0x0f2436,
           letterSpacing: 2,
         })
         const label = new Text({ text: slot.label.toUpperCase(), style: labelStyle })
@@ -500,8 +498,8 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
           vis.label.visible = !vis.dragging
           vis.label.x = px + pw / 2
           vis.label.y = py + ph / 2
-          vis.label.alpha = isDone ? 0 : isActive ? pulse * 0.9 : 0.38
-          vis.label.style.fill = isActive ? C_ACTIVE_BRIGHT : 0x6cc2ff
+          vis.label.alpha = isDone ? 0 : isActive ? 0.7 + pulse * 0.3 : 0.9
+          vis.label.style.fill = isActive ? C_ACTIVE_BRIGHT : 0x1c4f78
         }
 
         if (hashChanged) prevInstalledHash = installedHash

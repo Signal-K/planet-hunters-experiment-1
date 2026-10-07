@@ -126,14 +126,14 @@ export default function ShipInteriorPreview({
         borderTop: 'none',
       }}>
         <div>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.18em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.18em', color: 'var(--ln-bp-ink-dim)', textTransform: 'uppercase' }}>
             Build Config · Explorer
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 1 }}>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: 'var(--ln-text)' }} data-testid="ship-budget">
               {formatCurrency(buildState.balance, { compact: true })}
             </span>
-            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, color: 'var(--ln-text-muted)' }}>remaining</span>
+            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, color: 'var(--ln-bp-ink-dim)' }}>remaining</span>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -143,7 +143,7 @@ export default function ShipInteriorPreview({
           {onClose && (
             <button
               onClick={onClose}
-              style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--ln-glass-border)', background: 'transparent', color: 'var(--ln-text-dim)', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+              style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--ln-glass-border)', background: 'transparent', color: 'var(--ln-bp-ink-dim)', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
             >
               ✕
             </button>
@@ -155,7 +155,7 @@ export default function ShipInteriorPreview({
       <div style={{ flex: 'none', height: '28%', minHeight: 0, overflow: 'hidden', padding: 6 }}>
         {/* SSL-472: bounded height, otherwise the canvas panel grows past this box and sits over the module cards. */}
         <Panel surface="glass" style={{ padding: 0, overflow: 'hidden', height: '100%' }}>
-          <ErrorBoundary fallback={<div style={{ height: 80, background: 'var(--ln-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-text-muted)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
+          <ErrorBoundary fallback={<div style={{ height: 80, background: 'var(--ln-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-bp-ink-dim)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
             <ShipCustomizerCanvas
               layout={layout}
               activeKind={step.kind}
@@ -201,9 +201,9 @@ export default function ShipInteriorPreview({
               style={{
                 minHeight: 28,
                 borderRadius: 999,
-                border: `1px solid ${active ? 'var(--ln-cyan)' : done ? 'var(--ln-ok)' : 'var(--ln-glass-border)'}`,
-                background: active ? 'var(--ln-cyan)' : done ? 'var(--ln-ok-soft)' : 'var(--ln-hairline)',
-                color: active ? 'var(--ln-text-on-cyan)' : done ? 'var(--ln-ok)' : 'var(--ln-text-dim)',
+                border: `1px solid ${active ? 'var(--ln-bp-blue)' : done ? '#1d8a82' : 'var(--ln-glass-border)'}`,
+                background: active ? 'var(--ln-cyan)' : done ? 'rgba(29, 138, 130, 0.14)' : 'var(--ln-hairline)',
+                color: active ? 'var(--ln-text-on-cyan)' : done ? '#1d8a82' : 'var(--ln-bp-ink-dim)',
                 fontFamily: 'var(--ln-font-display)',
                 fontSize: 14,
                 fontWeight: active ? 900 : 700,
@@ -241,13 +241,13 @@ export default function ShipInteriorPreview({
             }}
           />
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.16em', color: 'var(--ln-bp-blue)', textTransform: 'uppercase' }}>
               Step {stepIndex + 1} / {buildSteps.length}
             </div>
             <h3 style={{ margin: '4px 0 4px', fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-text)', lineHeight: 1.1 }}>
               {step.title}
             </h3>
-            <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', lineHeight: 1.35 }}>
+            <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-bp-ink-dim)', lineHeight: 1.35 }}>
               {step.body}
             </p>
           </div>
@@ -275,8 +275,8 @@ export default function ShipInteriorPreview({
                   gap: 4,
                   padding: '8px 8px',
                   borderRadius: 8,
-                  border: selected ? '1px solid var(--ln-ok)' : undefined,
-                  background: selected ? 'var(--ln-ok-soft)' : undefined,
+                  border: selected ? '1px solid #1d8a82' : undefined,
+                  background: selected ? 'rgba(29, 138, 130, 0.14)' : undefined,
                   color: 'var(--ln-text)',
                   textAlign: 'left',
                   cursor: buildState.confirmed || !affordable ? 'not-allowed' : 'pointer',
@@ -288,14 +288,14 @@ export default function ShipInteriorPreview({
                 <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, lineHeight: 1.1, flex: 'none' }}>
                   {part.name}
                 </div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', lineHeight: 1.3, flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-bp-ink-dim)', lineHeight: 1.3, flex: 1, minHeight: 0, overflow: 'hidden' }}>
                   {part.description}
                 </div>
                 <div style={{ flex: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-cyan)' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-bp-blue)' }}>
                     {formatCurrency(part.price, { compact: true })}
                   </span>
-                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, color: selected ? 'var(--ln-ok)' : 'var(--ln-cyan)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, color: selected ? '#1d8a82' : 'var(--ln-bp-blue)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
                     {selected ? 'Installed' : `+${part.successBonus}%`}
                   </span>
                 </div>
@@ -314,7 +314,7 @@ export default function ShipInteriorPreview({
       }}>
         {/* Stage summary chips */}
         <div style={{ display: 'flex', gap: 3, padding: '4px 8px 0', overflowX: 'auto', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span data-testid="ship-review" data-installed={installedIds.length} data-total={buildSteps.length} style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, color: 'var(--ln-text-muted)', fontWeight: 700, letterSpacing: '0.08em', marginRight: 4 }}>
+          <span data-testid="ship-review" data-installed={installedIds.length} data-total={buildSteps.length} style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, color: 'var(--ln-bp-ink-dim)', fontWeight: 700, letterSpacing: '0.08em', marginRight: 4 }}>
             {buildState.confirmed ? 'Configuration confirmed' : `${installedIds.length}/${buildSteps.length} stages selected`}
           </span>
           {buildSteps.map(item => {
@@ -325,8 +325,8 @@ export default function ShipInteriorPreview({
                 flex: 'none',
                 padding: '4px 8px',
                 borderRadius: 4,
-                border: `1px solid ${active ? 'var(--ln-cyan)' : part ? 'var(--ln-ok)' : 'var(--ln-glass-border)'}`,
-                color: active ? 'var(--ln-cyan)' : part ? 'var(--ln-ok)' : 'var(--ln-text-muted)',
+                border: `1px solid ${active ? 'var(--ln-bp-blue)' : part ? '#1d8a82' : 'var(--ln-glass-border)'}`,
+                color: active ? 'var(--ln-bp-blue)' : part ? '#1d8a82' : 'var(--ln-bp-ink-dim)',
                 fontFamily: 'var(--ln-font-display)',
                 fontSize: 14,
                 fontWeight: 800,
@@ -348,7 +348,7 @@ export default function ShipInteriorPreview({
             style={{
               minHeight: 36, minWidth: 56, padding: '0 8px', borderRadius: 7,
               border: '1px solid var(--ln-glass-border)', background: 'var(--ln-hairline)',
-              color: isFirst || buildState.confirmed ? 'var(--ln-text-muted)' : 'var(--ln-text-dim)',
+              color: isFirst || buildState.confirmed ? 'var(--ln-bp-ink-dim)' : 'var(--ln-bp-ink-dim)',
               fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.1em',
               textTransform: 'uppercase', cursor: isFirst || buildState.confirmed ? 'not-allowed' : 'pointer',
               opacity: isFirst || buildState.confirmed ? 0.4 : 1,
@@ -368,7 +368,7 @@ export default function ShipInteriorPreview({
                   minHeight: 28, borderRadius: 6,
                   border: `1px solid ${currentInstalled ? 'var(--ln-crimson)' : 'var(--ln-hairline)'}`,
                   background: currentInstalled ? 'var(--ln-crimson-soft)' : 'transparent',
-                  color: currentInstalled ? 'var(--ln-crimson)' : 'var(--ln-text-muted)',
+                  color: currentInstalled ? 'var(--ln-crimson)' : 'var(--ln-bp-ink-dim)',
                   fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900,
                   letterSpacing: '0.1em', textTransform: 'uppercase',
                   cursor: currentInstalled ? 'pointer' : 'not-allowed',
@@ -386,9 +386,9 @@ export default function ShipInteriorPreview({
                 minHeight: 28, borderRadius: 6,
                 border: 'none',
                 background: readyToConfirm && !buildState.confirmed
-                  ? 'var(--ln-ok)'
-                  : 'var(--ln-ok-soft)',
-                color: readyToConfirm && !buildState.confirmed ? 'var(--ln-text-inverse)' : 'var(--ln-ok)',
+                  ? '#1d8a82'
+                  : 'rgba(29, 138, 130, 0.14)',
+                color: readyToConfirm && !buildState.confirmed ? 'var(--ln-text-inverse)' : '#1d8a82',
                 fontFamily: 'var(--ln-font-display)', fontSize: 14,
                 fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
                 cursor: readyToConfirm && !buildState.confirmed ? 'pointer' : 'not-allowed',
@@ -405,8 +405,8 @@ export default function ShipInteriorPreview({
             disabled={isLast || buildState.confirmed}
             style={{
               minHeight: 36, minWidth: 56, padding: '0 8px', borderRadius: 7,
-              border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
-              color: isLast || buildState.confirmed ? 'var(--ln-text-muted)' : 'var(--ln-cyan)',
+              border: '1px solid var(--ln-bp-blue)', background: 'var(--ln-bp-blue-soft)',
+              color: isLast || buildState.confirmed ? 'var(--ln-bp-ink-dim)' : 'var(--ln-bp-blue)',
               fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.1em',
               textTransform: 'uppercase', cursor: isLast || buildState.confirmed ? 'not-allowed' : 'pointer',
               opacity: isLast || buildState.confirmed ? 0.4 : 1,
