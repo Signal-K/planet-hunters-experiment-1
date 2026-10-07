@@ -293,9 +293,9 @@ body:has([data-screen="hub"]) {
   --ln-bp-blue:      #1f78c1;
   --ln-bp-blue-soft: rgba(31, 120, 193, 0.08);
 
-  --ln-bp-pink:        #c94a86;
-  --ln-bp-pink-soft:   rgba(201, 74, 134, 0.10);
-  --ln-bp-pink-border: rgba(201, 74, 134, 0.4);
+  --ln-bp-pink:        #c8293e;
+  --ln-bp-pink-soft:   rgba(200, 41, 62, 0.10);
+  --ln-bp-pink-border: rgba(200, 41, 62, 0.4);
 
   --ln-bp-green:      #1f8f57;
   --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
@@ -402,9 +402,9 @@ body:has([data-screen="hub"]) {
   --ln-bp-blue:      #1f78c1;
   --ln-bp-blue-soft: rgba(31, 120, 193, 0.08);
 
-  --ln-bp-pink:        #c94a86;
-  --ln-bp-pink-soft:   rgba(201, 74, 134, 0.10);
-  --ln-bp-pink-border: rgba(201, 74, 134, 0.4);
+  --ln-bp-pink:        #c8293e;
+  --ln-bp-pink-soft:   rgba(200, 41, 62, 0.10);
+  --ln-bp-pink-border: rgba(200, 41, 62, 0.4);
 
   --ln-bp-green:      #1f8f57;
   --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
