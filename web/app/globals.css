@@ -916,7 +916,7 @@ button { cursor: pointer; }
 /* SSL-346: shell-owned controls are available on every live surface. */
 .game-chrome-bottom { position:relative; z-index:70; flex:0 0 auto; display:flex; align-items:stretch; justify-content:center; gap:4px; padding:4px 8px; border-top:1px solid var(--ln-hairline); background:var(--ln-void); }
 .game-chrome-bottom__readout { display:none; align-items:center; padding:0 12px; color:var(--ln-cyan); font:800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing:.12em; text-transform:uppercase; white-space:nowrap; }
-.game-chrome-bottom button { flex:1 1 0; min-width:44px; max-width:128px; min-height:44px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
+.game-chrome-bottom button { flex:1 1 0; min-width:44px; max-width:128px; min-height:48px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
 .game-chrome-bottom button[aria-current="page"], .game-chrome-bottom button:hover { border-color:var(--ln-cyan-border); background:var(--ln-cyan-soft); color:var(--ln-cyan-bright); }
 @media (min-width:600px) { .game-chrome-bottom__readout { display:inline-flex; } }
 /* Landscape phones: every screen's title bar shrinks to one 48px line. */
@@ -937,9 +937,9 @@ button { cursor: pointer; }
    rail and the game keeps the full height. */
 @media (orientation:landscape) and (max-height:500px) {
   .portrait-canvas { flex-direction:row; }
-  .game-chrome-bottom { order:-1; flex-direction:column; justify-content:flex-start; align-items:stretch; width:72px; padding:8px 4px; border-top:0; border-right:1px solid var(--ln-hairline); }
+  .game-chrome-bottom { order:-1; flex-direction:column; justify-content:flex-start; align-items:stretch; width:84px; padding:8px 4px; border-top:0; border-right:1px solid var(--ln-hairline); }
   .game-chrome-bottom__readout { display:inline-flex; justify-content:center; padding:4px 0 8px; font-size:var(--ln-fs-micro); }
-  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:44px; padding:4px; font-size:var(--ln-fs-micro); letter-spacing:.06em; }
+  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:48px; padding:4px; font-size:14px; letter-spacing:.02em; }
 }
 
 .hub-sky-craft-control { position:absolute; z-index:11; top:96px; right:16px; display:flex; align-items:center; gap:8px; min-height:40px; padding:8px 12px; border:1px solid var(--ln-cyan-border); border-radius:8px; background:color-mix(in srgb, var(--ln-void) 74%, transparent); color:var(--ln-cyan-bright); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
@@ -2375,21 +2375,28 @@ button { cursor: pointer; }
    and give the playfield the remaining full height, so the whole terrain stays
    inside the viewport and the controls never overlap it. */
 @media (orientation: landscape) and (max-height: 520px) {
+  /* SSL-411: height is scarce, so the controls are a single 52px bar along
+     the bottom of the field instead of a tall side column. The "?" stays
+     top right, clear of the bar. */
   .mining-screen .mining-viewport,
-  .portrait-canvas--mining .mining-screen .mining-viewport { right: min(300px, 38vw); }
+  .portrait-canvas--mining .mining-screen .mining-viewport { right: 0; }
   .mining-screen .mining-controls,
   .portrait-canvas--mining .mining-controls {
-    left: auto;
+    left: 0;
     right: 0;
-    top: 0;
+    top: auto;
     bottom: 0;
-    width: min(300px, 38vw);
-    overflow-y: auto;
-    border-top: 0;
-    border-left: 1px solid var(--ln-cyan-border);
-    box-shadow: -12px 0 28px rgba(0, 0, 0, 0.3);
+    width: auto;
+    overflow: visible;
+    border-top: 1px solid var(--ln-cyan-border);
+    border-left: 0;
+    box-shadow: 0 -8px 20px rgba(15, 36, 54, 0.12);
     padding: var(--ln-s-2) var(--ln-s-3);
   }
+  .mining-screen .mining-command { min-height: 52px; padding: 6px var(--ln-s-3); }
+  .mining-screen .mining-command--return { padding-bottom: 10px; }
+  .mining-screen .mining-overflow__btn { min-height: 52px; }
+  .mining-screen .mining-command__label { white-space: nowrap; }
 }
 
 .debrief-screen { background: var(--ln-void); }
@@ -3409,3 +3416,31 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* SSL-441: short landscape viewports have no room under the docked coach card,
    so the coached mining guide moves to the free left column instead of
    covering the card, the ore lane and the bottom control rail. */
+
+/* SSL-411: the overflow menu floats above the bar so opening it never
+   resizes the action row. */
+.mining-overflow__menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--ln-s-2));
+  z-index: 20;
+  display: grid;
+  gap: var(--ln-s-2);
+  min-width: 220px;
+  padding: var(--ln-s-3);
+  border: 2px solid var(--ln-bp-ink);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-bp-paper);
+  box-shadow: 3px 3px 0 var(--ln-bp-blue);
+}
+.mining-overflow__scrub {
+  min-height: 44px;
+  border: 2px solid var(--ln-bp-ink);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-bp-paper);
+  color: var(--ln-bp-ink);
+  font: 800 14px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
