@@ -43,6 +43,38 @@ export function HubWorldBackground({
       style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden' }}
     >
       <TerrainScene composition={COMPOSITIONS[composition]} phase={phase} />
+      {composition === 'earth-base-wide' && <PlanetBackdrop />}
     </div>
+  )
+}
+
+/** Layer part: a huge outlined planet in the sky, same part as the native Hub (SSL-428). */
+function PlanetBackdrop() {
+  return (
+    <svg
+      data-testid="hub-planet-backdrop"
+      aria-hidden
+      viewBox="0 0 100 100"
+      style={{
+        position: 'absolute',
+        top: '16%',
+        right: '-12%',
+        width: 'min(50vw, 300px)',
+        height: 'min(50vw, 300px)',
+        pointerEvents: 'none',
+      }}
+    >
+      <defs>
+        <clipPath id="hub-planet-clip"><circle cx="50" cy="50" r="48" /></clipPath>
+      </defs>
+      <circle cx="53" cy="53" r="48" fill="var(--ln-bp-cyan, #1F78C1)" opacity="0.35" />
+      <circle cx="50" cy="50" r="48" fill="#DFE9F3" />
+      <g clipPath="url(#hub-planet-clip)">
+        <rect x="0" y="26" width="100" height="9" fill="#42A6DF" opacity="0.45" />
+        <rect x="0" y="43" width="100" height="9" fill="#168A80" opacity="0.45" />
+        <rect x="0" y="60" width="100" height="9" fill="#42A6DF" opacity="0.45" />
+      </g>
+      <circle cx="50" cy="50" r="48" fill="none" stroke="#0F2436" strokeWidth="1.2" />
+    </svg>
   )
 }

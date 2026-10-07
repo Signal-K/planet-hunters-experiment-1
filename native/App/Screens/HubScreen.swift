@@ -17,6 +17,7 @@ struct HubScreen: View {
             let groundY = h * (1 - ground)
             ZStack(alignment: .topLeading) {
                 TerrainScene(composition: .earthBaseWide, ground: ground)
+                PlanetBackdrop().frame(width: w, height: groundY).allowsHitTesting(false)
                 building("Launchpad", sprite: "base/launchpad_flat.png", aspect: 192.0 / 318, width: 84 * k * 0.62,
                          x: w * xs[0], groundY: groundY + 2 * k) { store.go(.launchpad) }
                 building("Hangar", sprite: "base/hangar_flat.png", aspect: 182.0 / 155, width: 176 * k * 0.62,
@@ -122,5 +123,31 @@ struct HubScreen: View {
         .padding(.horizontal, 10).frame(minWidth: 64, minHeight: 44)
         .background(accent ? Theme.blue : Theme.paper.opacity(0.88), in: RoundedRectangle(cornerRadius: 8))
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
+    }
+}
+
+/// Layer part: a huge outlined planet hanging in the sky behind the base
+/// (reference frame "side-on base"). Ink outline, offset shade, ice/cyan bands only.
+private struct PlanetBackdrop: View {
+    var body: some View {
+        GeometryReader { geo in
+            let d = min(geo.size.width * 0.62, geo.size.height * 0.5)
+            let c = CGPoint(x: geo.size.width * 0.70, y: geo.size.height * 0.34)
+            ZStack {
+                Circle().fill(Theme.blue.opacity(0.35)).frame(width: d, height: d).offset(x: 5, y: 5)
+                Circle().fill(Theme.paper2).frame(width: d, height: d)
+                ZStack {
+                    ForEach(0..<3, id: \.self) { i in
+                        Capsule().fill((i == 1 ? Theme.teal : Theme.blueBright).opacity(0.45))
+                            .frame(width: d, height: d * 0.09)
+                            .offset(y: d * (-0.18 + 0.17 * CGFloat(i)))
+                    }
+                }
+                .frame(width: d, height: d).clipShape(Circle())
+                Circle().stroke(Theme.ink, lineWidth: 3).frame(width: d, height: d)
+            }
+            .frame(width: d, height: d)
+            .position(c)
+        }
     }
 }
