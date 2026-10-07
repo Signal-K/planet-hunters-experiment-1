@@ -627,3 +627,16 @@
   .dial { width: 44px; height: 44px; }
   .knobRange { left: 0; width: 44px; height: 44px; }
 }
+
+/* Phone portrait: the ZOOM / FOCUS / EXPOSURE / STRETCH labels were wider than
+   their 48px knobs and ran into each other at ~400px (SSL-492 playtest). */
+@media (max-width: 600px) and (orientation: portrait) {
+  .knobLabel,
+  .switchLabel {
+    font-size: 10px;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+  .knobRow { gap: var(--ln-s-1); }
+  .knob { width: 52px; }
+}
