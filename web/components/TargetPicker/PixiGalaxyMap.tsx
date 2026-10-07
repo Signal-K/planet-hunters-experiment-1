@@ -9,8 +9,11 @@ import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 
 // ── Design token colours ─────────────────────────────────────────────────────
-const LN_CYAN  = 0x3fa9ff
-const LN_AMBER = 0x36c6e2
+// Light blueprint: paper ground, ink outlines, cyan/teal/ice accents only (SSL-426).
+const LN_CYAN  = 0x1f78c1
+const LN_AMBER = 0x42a6df
+const LN_INK   = 0x0f2436
+const LN_PAPER = 0xeef3f8
 
 // ── Body classification ──────────────────────────────────────────────────────
 const PLANET_IDS    = new Set(['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'neptune'])
@@ -70,10 +73,10 @@ const ASTEROID_SILHOUETTES: [number, number][][] = [
 // (rare at orbit >= 2, exotic at orbit >= 4). They previously broke at <=2/<=5,
 // which taught players a distance-to-reward mapping the game does not use.
 function orbitRingColor(orbit: number, reachable: boolean): { color: number; alpha: number } {
-  if (!reachable) return { color: 0xff5a6a, alpha: 0.22 }
-  if (orbit < RARE_TIER_MIN_ORBIT) return { color: 0x60b8c8, alpha: 0.18 }
-  if (orbit < EXOTIC_TIER_MIN_ORBIT) return { color: LN_CYAN, alpha: 0.14 }
-  return { color: 0x4060c0, alpha: 0.16 }
+  if (!reachable) return { color: LN_INK, alpha: 0.16 }
+  if (orbit < RARE_TIER_MIN_ORBIT) return { color: 0x42a6df, alpha: 0.5 }
+  if (orbit < EXOTIC_TIER_MIN_ORBIT) return { color: 0x1f78c1, alpha: 0.45 }
+  return { color: 0x168a80, alpha: 0.45 }
 }
 
 function hashId(id: string): number {
@@ -108,21 +111,11 @@ function computeScale(width: number, height: number, transition: number): number
 function drawBackground(layer: Container, w: number, h: number) {
   layer.removeChildren().forEach(c => c.destroy({ children: true }))
   const bg = new Graphics()
-  bg.rect(0, 0, w, h).fill(0x03060a)
-  bg.circle(w * 0.5, h * 0.5, Math.max(w, h) * 0.45).fill({ color: 0x0a1422, alpha: 0.88 })
+  bg.rect(0, 0, w, h).fill(LN_PAPER)
   layer.addChild(bg)
-  const stars = new Graphics()
-  const ss: [number, number, number, number][] = [
-    [0.08,0.12,1.0,0.45],[0.18,0.66,0.9,0.28],[0.27,0.25,1.3,0.34],
-    [0.38,0.82,1.0,0.22],[0.46,0.18,0.8,0.30],[0.58,0.30,1.4,0.42],
-    [0.69,0.72,1.0,0.28],[0.76,0.44,0.8,0.24],[0.84,0.76,1.1,0.32],
-    [0.91,0.18,1.0,0.25],[0.22,0.88,0.7,0.22],[0.79,0.92,0.9,0.28],
-  ]
-  for (const [x, y, r, a] of ss) stars.circle(x * w, y * h, r).fill({ color: 0xffffff, alpha: a })
-  layer.addChild(stars)
   const grid = new Graphics()
-  for (let x = 0; x <= w; x += 40) grid.moveTo(x, 0).lineTo(x, h).stroke({ width: 1, color: 0x87cffa, alpha: 0.06 })
-  for (let y = 0; y <= h; y += 40) grid.moveTo(0, y).lineTo(w, y).stroke({ width: 1, color: 0x87cffa, alpha: 0.06 })
+  for (let x = 0; x <= w; x += 40) grid.moveTo(x, 0).lineTo(x, h).stroke({ width: 1, color: LN_INK, alpha: 0.07 })
+  for (let y = 0; y <= h; y += 40) grid.moveTo(0, y).lineTo(w, y).stroke({ width: 1, color: LN_INK, alpha: 0.07 })
   layer.addChild(grid)
 }
 
@@ -136,13 +129,13 @@ function drawOrbits(layer: Container, props: PixiGalaxyMapProps, cx: number, cy:
     const reachable = hasTarget && orbit <= props.mission.requires.max_orbit
     const { color, alpha } = orbitRingColor(orbit, reachable)
     const adjAlpha = orbit > 5 ? alpha * Math.max(0, 1 - transition * 3) : alpha
-    g.circle(cx, cy, (RADII[orbit] ?? 84) * scale).stroke({ width: 1, color, alpha: adjAlpha })
+    g.circle(cx, cy, (RADII[orbit] ?? 84) * scale).stroke({ width: reachable ? 2 : 1, color, alpha: adjAlpha })
   }
   const maxR = (RADII[props.mission.requires.max_orbit] ?? 132) * scale + 12
-  g.circle(cx, cy, maxR).stroke({ width: 1, color: LN_AMBER, alpha: 0.4 })
+  g.circle(cx, cy, maxR).stroke({ width: 2, color: LN_AMBER, alpha: 0.7 })
   const sun = new Graphics()
-  sun.circle(cx, cy, 22).fill(0xb3e8f4)
-  sun.circle(cx, cy, 28).stroke({ width: 1.5, color: LN_AMBER, alpha: 0.5 })
+  sun.circle(cx, cy, 22).fill(0xdff1fa).stroke({ width: 2.5, color: LN_INK })
+  sun.circle(cx, cy, 28).stroke({ width: 1.5, color: LN_AMBER, alpha: 0.7 })
   layer.addChild(g, sun)
 }
 
@@ -159,49 +152,49 @@ function drawBody(
 ) {
   const marker = new Container()
   marker.x = sx; marker.y = sy
-  marker.alpha = alpha * (isCompatible ? 1 : 0.28)
+  marker.alpha = alpha * (isCompatible ? 1 : 0.5)
   marker.eventMode = 'none' // all click handling via native canvas listener
 
-  const radius = BELT_BODY_IDS.has(target.id) ? 14 : 13
+  const radius = BELT_BODY_IDS.has(target.id) ? 17 : 16
   const colors = bodyColors(target)
   const seed = hashId(target.id)
 
   if (isPicked) {
     const glow = new Graphics()
-    glow.circle(0, 0, radius + 9).fill({ color: LN_CYAN, alpha: 0.18 })
-    glow.circle(0, 0, radius + 5).stroke({ width: 2, color: LN_CYAN, alpha: 0.95 })
+    glow.circle(0, 0, radius + 10).fill({ color: LN_CYAN, alpha: 0.2 })
+    glow.circle(0, 0, radius + 6).stroke({ width: 3, color: LN_CYAN })
     marker.addChild(glow)
   } else if (isCompatible) {
     // Amber ring on compatible-but-not-yet-selected bodies so they're discoverable
     const ring = new Graphics()
-    ring.circle(0, 0, radius + 6).stroke({ width: 1.5, color: LN_AMBER, alpha: 0.7 })
-    ring.circle(0, 0, radius + 10).fill({ color: LN_AMBER, alpha: 0.06 })
+    ring.circle(0, 0, radius + 10).fill({ color: LN_AMBER, alpha: 0.22 })
+    ring.circle(0, 0, radius + 6).stroke({ width: 3, color: LN_AMBER })
     marker.addChild(ring)
   }
 
   const g = new Graphics()
   if (BELT_BODY_IDS.has(target.id)) {
     const sil = asteroidSilhouette(target.id)
-    g.poly(sil.flatMap(([x, y]) => [x * radius, y * radius])).fill(colors.fill).stroke({ width: 1.5, color: colors.stroke, alpha: 0.95 })
+    g.poly(sil.flatMap(([x, y]) => [x * radius, y * radius])).fill(colors.fill).stroke({ width: 2.5, color: LN_INK })
     g.circle((seededFloat(seed,1)-0.5)*radius*0.5, (seededFloat(seed,2)-0.5)*radius*0.5, seededFloat(seed,3)*radius*0.18+radius*0.08).fill({ color: colors.low, alpha: 0.52 })
     g.circle((seededFloat(seed,4)-0.5)*radius*0.7, (seededFloat(seed,5)-0.5)*radius*0.7, seededFloat(seed,6)*radius*0.12+radius*0.06).fill({ color: colors.mark, alpha: 0.36 })
   } else {
-    g.circle(0, 0, radius).fill(colors.fill).stroke({ width: 1.5, color: colors.stroke, alpha: 0.95 })
+    g.circle(0, 0, radius).fill(colors.fill).stroke({ width: 2.5, color: LN_INK })
     g.circle(-radius*0.25, -radius*0.28, radius*0.42).fill({ color: colors.mark, alpha: 0.28 })
     g.circle(radius*0.18, radius*0.22, radius*0.35).fill({ color: colors.low, alpha: 0.36 })
-    if (target.id === 'saturn') g.ellipse(0, 0, radius*1.65, radius*0.38).stroke({ width: 1.5, color: colors.stroke, alpha: 0.65 })
+    if (target.id === 'saturn') g.ellipse(0, 0, radius*1.65, radius*0.38).stroke({ width: 2.5, color: LN_INK, alpha: 0.8 })
   }
   marker.addChild(g)
 
-  const label = new Text({ text: target.name, style: { fontFamily: 'var(--ln-font-mono), ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 10, fill: isPicked ? LN_CYAN : 0xcde4ff, letterSpacing: 0.6 } })
+  const label = new Text({ text: target.name, style: { fontFamily: 'var(--ln-font-display), ui-sans-serif, system-ui, sans-serif', fontSize: 14, fontWeight: '700', fill: isPicked ? LN_CYAN : LN_INK, letterSpacing: 0.6 } })
   label.anchor.set(0.5, 0)
-  label.y = radius + 5
+  label.y = radius + 7
   const labelBg = new Graphics()
-  labelBg.roundRect(-(label.width + 10) / 2, radius + 3, label.width + 10, 15, 3).fill({ color: 0x080c16, alpha: 0.74 })
+  labelBg.roundRect(-(label.width + 14) / 2, radius + 4, label.width + 14, 22, 5).fill({ color: 0xffffff, alpha: 0.96 }).stroke({ width: 1.5, color: LN_INK, alpha: 0.5 })
   marker.addChild(labelBg, label)
   layer.addChild(marker)
 
-  hits.push({ id: target.id, x: sx, y: sy, r: (BELT_BODY_IDS.has(target.id) ? 14 : 13) + 10, compatible: isCompatible })
+  hits.push({ id: target.id, x: sx, y: sy, r: Math.max(22, radius + 8), compatible: isCompatible })
 }
 
 // ── Draw the full scene ───────────────────────────────────────────────────────
@@ -227,12 +220,12 @@ function drawScene(
     const beltMidR = BELT_MID_ORBIT_R * scale
     const beltBandW = (RADII[5] - RADII[3]) * scale
     const zone = new Graphics()
-    zone.circle(cx, cy, beltMidR).stroke({ width: beltBandW, color: 0x2a505a, alpha: 0.18 * planetAlpha })
+    zone.circle(cx, cy, beltMidR).stroke({ width: beltBandW, color: 0x42a6df, alpha: 0.1 * planetAlpha })
     const microSeeds = [[0.18,0.34],[0.55,0.78],[0.82,0.12],[0.27,0.61],[0.71,0.45],[0.44,0.89],[0.93,0.27],[0.12,0.70],[0.63,0.15],[0.38,0.52]]
     for (const [a, r] of microSeeds) {
       const ang = a * Math.PI * 2
       const rad = (beltMidR - beltBandW * 0.4) + r * beltBandW * 0.8
-      zone.circle(cx + Math.cos(ang) * rad, cy + Math.sin(ang) * rad, 1.2).fill({ color: 0x8a7a5a, alpha: 0.55 * planetAlpha })
+      zone.circle(cx + Math.cos(ang) * rad, cy + Math.sin(ang) * rad, 1.2).fill({ color: LN_INK, alpha: 0.4 * planetAlpha })
     }
     zone.eventMode = 'none'
     layer.addChild(zone)
@@ -297,6 +290,12 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
   const initialView = preferredView(props.compatibleIds)
   const [view, setView] = useState<MapView>(initialView)
   const [beltLabelPos, setBeltLabelPos] = useState<BeltLabelPos | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  useEffect(() => {
+    if (!notice) return
+    const id = window.setTimeout(() => setNotice(null), 3200)
+    return () => window.clearTimeout(id)
+  }, [notice])
   const transitionRef       = useRef(initialView === 'belt' ? 1 : 0)
   const transitionTargetRef = useRef(initialView === 'belt' ? 1 : 0)
   const redrawOrbitRef = useRef<((t?: number) => void) | null>(null)
@@ -355,7 +354,7 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
     ;(async () => {
       try {
         const dpr = capDpr()
-        await app.init({ canvas, width: w, height: h, background: 0x03060a, antialias: true, autoDensity: true, resolution: dpr })
+        await app.init({ canvas, width: w, height: h, background: LN_PAPER, antialias: true, autoDensity: true, resolution: dpr })
         if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 */ } canvas.remove(); return }
 
         app.stage.addChild(bgLayer, orbitLayer, bodyLayer)
@@ -385,8 +384,12 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
           const mx = (e.clientX - rect.left) * (w / rect.width)
           const my = (e.clientY - rect.top) * (h / rect.height)
           void dprLocal
-          const hit = hitsRef.current.find(b => b.compatible && Math.hypot(mx - b.x, my - b.y) <= b.r)
-          if (hit) propsRef.current.onPick(hit.id)
+          const hit = hitsRef.current.find(b => Math.hypot(mx - b.x, my - b.y) <= b.r)
+          if (!hit) return
+          if (hit.compatible) { propsRef.current.onPick(hit.id); setNotice(null); return }
+          const t = propsRef.current.targets.find(x => x.id === hit.id)
+          const tooFar = !!t && t.orbit > propsRef.current.mission.requires.max_orbit
+          setNotice(`${t?.name ?? 'That target'}: ${tooFar ? 'too far, needs more fuel' : 'does not fit this mission'}`)
         })
 
         Scene.load('/game/scenes/target-picker.scene.json')
@@ -435,15 +438,17 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
             transform: 'translate(-50%, -50%)',
             zIndex: 10,
             display: 'flex', alignItems: 'center', gap: 4,
-            padding: '4px 10px',
-            background: 'rgba(12,12,13,0.86)',
-            border: '1px solid rgba(176,160,112,0.5)',
-            borderRadius: 6,
+            padding: '0 14px',
+            minHeight: 44,
+            background: '#fff',
+            border: '2px solid #0f2436',
+            boxShadow: '3px 3px 0 #42a6df',
+            borderRadius: 8,
             cursor: 'pointer',
-            fontFamily: 'var(--ln-font-mono), ui-monospace, monospace',
-            fontSize: 10,
+            fontFamily: 'var(--ln-font-display), ui-sans-serif, system-ui, sans-serif',
+            fontSize: 14,
             fontWeight: 700,
-            color: '#b0a070',
+            color: '#0f2436',
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
             pointerEvents: 'auto',
@@ -463,23 +468,25 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
             left: 10,
             zIndex: 10,
             display: 'flex', alignItems: 'center', gap: 5,
-            padding: '5px 11px 5px 8px',
-            background: 'rgba(20,20,23,0.88)',
-            border: '1px solid rgba(112,217,234,0.3)',
+            padding: '0 14px 0 10px',
+            minHeight: 44,
+            background: '#fff',
+            border: '2px solid #0f2436',
+            boxShadow: '3px 3px 0 #42a6df',
             borderRadius: 8,
             cursor: 'pointer',
-            fontFamily: 'var(--ln-font-mono), ui-monospace, monospace',
-            fontSize: 10,
+            fontFamily: 'var(--ln-font-display), ui-sans-serif, system-ui, sans-serif',
+            fontSize: 14,
             fontWeight: 700,
-            color: '#87cffa',
+            color: '#0f2436',
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
             pointerEvents: 'auto',
           }}
         >
-          <span style={{ fontSize: 12 }}>‹</span> Solar System
+          <span style={{ fontSize: 16 }}>‹</span> Solar System
           {compatSolarCount > 0 && (
-            <span style={{ marginLeft: 4, background: 'rgba(54,198,226,0.2)', border: '1px solid rgba(54,198,226,0.5)', borderRadius: 4, padding: '1px 5px', color: '#36c6e2', fontSize: 9 }}>
+            <span style={{ marginLeft: 4, background: '#dff1fa', border: '1.5px solid #1f78c1', borderRadius: 4, padding: '1px 6px', color: '#17639f', fontSize: 14 }}>
               {compatSolarCount} target{compatSolarCount !== 1 ? 's' : ''} there
             </span>
           )}
@@ -494,20 +501,29 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
           left: 12,
           right: 12,
           zIndex: 10,
-          background: 'rgba(12,12,13,0.92)',
-          border: '1px solid rgba(54,198,226,0.3)',
+          background: '#fff',
+          border: '2px solid #0f2436',
+          boxShadow: '3px 3px 0 #42a6df',
           borderRadius: 10,
           padding: '10px 14px',
           fontFamily: 'var(--ln-font-body), system-ui, sans-serif',
-          fontSize: 12,
-          color: '#36c6e2',
+          fontSize: 14,
+          color: '#17639f',
           lineHeight: 1.4,
           pointerEvents: 'none',
         }}>
-          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>No targets here</span>
+          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14, letterSpacing: '0.1em', textTransform: 'uppercase' }}>No targets here</span>
           <br/>
-          <span style={{ color: '#a9b8ce' }}>This mission needs minerals not found in the asteroid belt. Return to the solar system to pick a compatible target.</span>
+          <span style={{ color: '#48596a' }}>This mission needs minerals not found in the asteroid belt. Return to the solar system to pick a compatible target.</span>
         </div>
+      )}
+      {notice && (
+        <div role="status" data-testid="map-blocked-reason" style={{
+          position: 'absolute', bottom: 16, left: 12, right: 12, zIndex: 11,
+          background: '#fff', border: '2px solid #0f2436', boxShadow: '3px 3px 0 #42a6df',
+          borderRadius: 10, padding: '12px 14px', fontFamily: 'var(--ln-font-body), system-ui, sans-serif',
+          fontSize: 14, fontWeight: 600, color: '#0f2436', pointerEvents: 'none',
+        }}>{notice}</div>
       )}
     </div>
   )
