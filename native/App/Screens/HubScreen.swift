@@ -12,7 +12,7 @@ struct HubScreen: View {
             let w = geo.size.width, h = geo.size.height
             let portrait = h > w * 1.3
             let ground = portrait ? 0.36 : 0.28
-            let xs: [CGFloat] = portrait ? [0.22, 0.58, 0.88] : [0.30, 0.64, 0.88]
+            let xs: [CGFloat] = portrait ? [0.17, 0.46, 0.79] : [0.30, 0.64, 0.88]
             let k = min(max(w / 402, 0.8), h / 874 * 1.25 + 0.6)
             let groundY = h * (1 - ground)
             ZStack(alignment: .topLeading) {
