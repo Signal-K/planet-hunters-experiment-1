@@ -172,7 +172,7 @@ export function toClient(r: any): Client {
     }),
     id: r.slug,
     name: (!hasPlaceholderName && rawName) ? rawName : (fallback?.name ?? rawName) || r.slug,
-    color: r.color ?? fallback?.color ?? '#87CFFA',
+    color: fallback?.color ?? r.color ?? '#87CFFA',
     initial: r.initial ?? fallback?.initial ?? String(r.name ?? r.slug).slice(0, 2).toUpperCase(),
     unlockTier: r.unlock_tier ?? fallback?.unlockTier ?? 1,
     projectType: r.project_type ?? fallback?.projectType ?? 'General contracting',
