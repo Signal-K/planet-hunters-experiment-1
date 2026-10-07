@@ -12,7 +12,8 @@
 .theme-blueprint.transit-screen,
 .theme-blueprint.debrief-game,
 .theme-blueprint.ln-scene-landing,
-.theme-blueprint.ln-scene-delivery {
+.theme-blueprint.ln-scene-delivery,
+.theme-blueprint.build-place-screen {
   --ln-cyan: #175f9b;
   --ln-cyan-bright: #124d80;
   --ln-cyan-border: rgba(23, 95, 155, 0.45);
@@ -21,6 +22,32 @@
   --ln-ok: #17703f;
   --ln-amber: #116a79;
 }
+
+/* Base (Hub): same paper-readable accents, applied on body because the top
+   pills, Flight Plan and dock render outside the Hub root. */
+body:has([data-screen="hub"]) {
+  --ln-cyan: #175f9b;
+  --ln-cyan-bright: #124d80;
+  --ln-cyan-border: rgba(23, 95, 155, 0.45);
+  --ln-crimson: #a8203a;
+  --ln-crimson-border: rgba(168, 32, 58, 0.5);
+  --ln-ok: #17703f;
+  --ln-amber: #116a79;
+}
+
+/* Flight Plan bar: paper with ink text on every loop screen and Base. */
+.portrait-canvas:has(.theme-blueprint) .flight-plan,
+.portrait-canvas:has(.theme-blueprint) .flight-plan-chip {
+  background: var(--ln-blueprint-paper);
+  border-top-color: var(--ln-blueprint-line-strong);
+  color: var(--ln-blueprint-ink);
+}
+.portrait-canvas:has(.theme-blueprint) .flight-plan-kicker,
+.portrait-canvas:has(.theme-blueprint) .flight-plan-btn,
+.portrait-canvas:has(.theme-blueprint) .flight-plan-skip,
+.portrait-canvas:has(.theme-blueprint) .flight-plan-chip { color: #175f9b; border-color: rgba(23, 95, 155, 0.45); }
+.portrait-canvas:has(.theme-blueprint) .flight-plan-btn.is-primary { background: #175f9b; color: #ffffff; }
+.portrait-canvas:has(.theme-blueprint) .flight-plan-radio p { color: var(--ln-blueprint-ink); }
 
 /* Shared chrome while a loop screen is up: paper bar, 44px taps. */
 .portrait-canvas:has(.theme-blueprint) .game-chrome-bottom {

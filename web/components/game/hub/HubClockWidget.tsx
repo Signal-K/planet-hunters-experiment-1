@@ -26,8 +26,8 @@ export function HubClockWidget() {
     >
       <span style={{ color: 'var(--hub-cyan)', display: 'flex' }}><ClockGlyph /></span>
       <span style={{
-        fontFamily: 'var(--ln-font-mono)', fontSize: 11, fontWeight: 700,
-        letterSpacing: '0.06em', color: 'rgba(234,241,248,0.85)',
+        fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 700,
+        letterSpacing: '0.06em', color: 'var(--ln-text)',
       }}>
         {label}
       </span>

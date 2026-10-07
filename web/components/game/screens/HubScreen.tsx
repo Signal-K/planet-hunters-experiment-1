@@ -414,7 +414,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   }
 
   return (
-    <div className={layoutStyles.root} data-screen="hub" style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
       {/* Base stays mounted at its authored camera frame while a tray is open.
           The former 200%-tall slider moved the whole world before revealing

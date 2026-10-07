@@ -277,7 +277,8 @@
   --ln-purple-depth: #d0e4f0;
   --ln-text-inverse: #f4f1ea;
 }
-.theme-blueprint {
+.theme-blueprint,
+body:has([data-screen="hub"]) {
   --ln-bp-bg:      #eef3f8;
   --ln-bp-paper:   #ffffff;
   --ln-bp-paper-2: #dfe9f3;
@@ -385,7 +386,8 @@ body:has(.theme-blueprint) {
    direction: pale blueprint paper, navy ink, and restrained technical
    accents. Keep it opt-in so unrelated operational scenes can retain their
    own surface treatment. */
-.theme-blueprint {
+.theme-blueprint,
+body:has([data-screen="hub"]) {
   --ln-bp-bg:      #eef3f8;
   --ln-bp-paper:   #ffffff;
   --ln-bp-paper-2: #dfe9f3;
@@ -828,7 +830,7 @@ button { cursor: pointer; }
   top: 56px;
   right: 96px;
   z-index: 22;
-  min-height: 34px;
+  min-height: 44px;
   border-radius: 999px;
   cursor: pointer;
   display: flex;
@@ -839,9 +841,9 @@ button { cursor: pointer; }
   border: 1px solid var(--ln-hairline);
   color: var(--ln-cyan);
   font-family: var(--ln-font-display);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -859,7 +861,7 @@ button { cursor: pointer; }
   /* MENU moved to the bottom bar, so this row no longer reserves its corner:
      at 196px from the right, HUB ran over the balance pill on phones. */
   .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { top: 66px !important; right: 12px !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 66px !important; right: 121px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 66px !important; right: 160px !important; }
   .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 110px; bottom: auto !important; left: 12px; height: max-content; }
   .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 110px !important; right: 12px !important; bottom: auto !important; min-height: 32px; }
   /* Third header row: [sync]  ...  [GARDEN][FEEDBACK]. The rail used to be a
@@ -2872,30 +2874,30 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 :root {
   /* Scene-local accents. Kept as hub-scoped tokens rather than overriding
      the global --ln-cyan/--ln-ok, which other screens already tune against. */
-  --hub-mint:       #5ad07e;
-  --hub-cyan:       #70d9ea;
-  /* Chalky, slightly desaturated sage green — replaces the earlier hot-pink
-     interactive accent (2026-08-23) across the Hub's clickable chrome (Jobs
-     chip, Edit/Build CTA, active dock icons). The atmospheric dusk-horizon
-     pink below is a separate, still-standing decision (KES-228) and is left
-     alone — it's backdrop color, not interactive UI. */
-  --hub-chalk:       #9bc98a;
-  --hub-chalk-soft:  rgba(155, 201, 138, 0.16);
-  --hub-outline:    rgba(177, 198, 229, 0.4);
-  --hub-panel:      #04101f;
-  --hub-panel-deep: #020a16;
-  /* Dusk sky — deep navy overhead, warming toward the horizon. */
-  --hub-void:       #00040a;
-  --hub-bg:         #000d1f;
-  --hub-sky-top:    #050d1f;
-  --hub-sky-mid:    #12213f;
-  --hub-horizon:    #d9527e;
-  --hub-horizon-glow: rgba(227, 95, 160, 0.22);
+  --hub-mint:       #1f8f57;
+  --hub-cyan:       #175f9b;
+  /* SSL-424: the Base scene is blueprint paper, not a navy dusk. Sage green
+     is darkened so it holds 4.5:1 on paper. */
+  --hub-chalk:       #2b7a4b;
+  --hub-chalk-soft:  rgba(43, 122, 75, 0.14);
+  --hub-outline:    rgba(15, 36, 54, 0.4);
+  --hub-panel:      #ffffff;
+  --hub-panel-deep: #dfe9f3;
+  /* Paper sky: pale ice overhead, warming to cyan-white at the horizon. */
+  --hub-void:       #eef3f8;
+  --hub-bg:         #eef3f8;
+  --hub-sky-top:    #d6e8f4;
+  --hub-sky-mid:    #e6f2f9;
+  --hub-horizon:    #bfe6ef;
+  --hub-horizon-glow: rgba(54, 198, 226, 0.22);
   /* Parallax hill silhouettes, far to near. */
-  --hub-hill-far:   #16233f;
-  --hub-hill-mid:   #0f1b34;
-  --hub-hill-near:  #0a1428;
-  --hub-skyline:    #0a1626;
+  --hub-hill-far:   #c5d9e7;
+  --hub-hill-mid:   #b2cade;
+  --hub-hill-near:  #9fbbd3;
+  --hub-skyline:    #8fb0c8;
+  --hub-ground-far:  #cfe0ec;
+  --hub-ground-near: #bcd2e3;
+  --hub-ground-lip:  #8fb0c8;
   /* Ground contact line — 22% from the bottom. Keep this aligned with the DOM
      plot positions in HubScreen/BuildPlaceScreen, which derive from the same
      scene-local baseline. */
@@ -3348,7 +3350,7 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   box-shadow: var(--ln-shadow-card);
 }
 .build-place-screen .build-structure-strip button:disabled {
-  opacity: 0.52;
+  opacity: 0.82;
 }
 .build-place-screen .build-structure-strip button div,
 .build-place-screen .build-structure-strip button div div {
