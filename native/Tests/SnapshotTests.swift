@@ -84,8 +84,27 @@ struct SnapshotTests {
         var gs = GameState()
         gs.player.freeOperations = true; gs.player.saturnImagerLaunchedAt = 1
         let c = Saturn.fallback[19]
-        try render(SaturnStormSearchScreen(candidate: c).environment(GameStore(state: gs)).environment(\.flatLayout, true),
+        try render(SaturnStormSearchScreen(candidate: c).environment(GameStore(state: gs)).environment(offlineFeed).environment(\.flatLayout, true),
                    size: CGSize(width: 402, height: 1020), name: "saturn-imager-phone")
+    }
+
+    private var offlineFeed: FeedModel { FeedModel(feed: SharedFeed(baseURL: URL(string: "http://127.0.0.1:1")!)) }
+
+    @Test func asteroidDiscoveryPhone() throws {
+        var gs = GameState()
+        gs.player.freeOperations = true; gs.player.deepSpaceTelescopeBuilt = true
+        let c = AsteroidCandidate(id: "a1", tempDesig: "P22Xk4Q", score: 87, ra: 14.3562, decl: -21.8044, vMag: 21.4, arcDays: 1.8, lastSeenDays: 0.4)
+        try render(AsteroidDiscoveryScreen(candidate: c).environment(GameStore(state: gs)).environment(offlineFeed).environment(\.flatLayout, true),
+                   size: CGSize(width: 402, height: 1020), name: "asteroid-discovery-phone")
+    }
+
+    @Test func tessDiscoveryPhone() throws {
+        var gs = GameState()
+        gs.player.freeOperations = true; gs.player.transitSatelliteLaunchedAt = 1
+        let c = TessCandidate(id: "tess-demo", ticId: "TIC 260004324", toi: "TOI 700.01", sector: "Sectors 1-3", periodDays: 3.4, transitEpoch: 1.1, depthPpm: 9000, signalToNoise: 14)
+        let marks = [TransitRange(x1: 0.95, x2: 1.25), TransitRange(x1: 4.35, x2: 4.65)]
+        try render(TessDiscoveryScreen(candidate: c, marks: marks).environment(GameStore(state: gs)).environment(offlineFeed).environment(\.flatLayout, true),
+                   size: CGSize(width: 402, height: 1080), name: "tess-discovery-phone")
     }
 
     @Test func hubSkyCraftPhone() throws {

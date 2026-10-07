@@ -68,6 +68,7 @@ public enum Instrument {
     public struct CommandResult: Equatable, Sendable {
         public let view: InstrumentView
         public let lines: [String]
+        public init(view: InstrumentView, lines: [String]) { self.view = view; self.lines = lines }
     }
 
     static let helpLines = ["> HELP", "POINT N|S|E|W|RESET", "ZOOM 1-3", "FOCUS 0-100", "EXPOSE 0.6-1.8",

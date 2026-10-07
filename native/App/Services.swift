@@ -51,37 +51,54 @@ final class GameCenter {
 final class Services {
     let gameCenter = GameCenter()
     private(set) var sync: CloudSync
+    let feed: FeedModel
+    private(set) var shared: Outbox
     private let token = TokenBox()
+    private let sharedToken = TokenBox()
+    private let sharedUser = TokenBox()
     private let monitor = NWPathMonitor()
 
     init() {
         let api = AuthAPI.fromEnvironment()
-        let box = token
+        let box = token, sbox = sharedToken
         let exec = PocketBaseExecutor(baseURL: api.baseURL, token: { box.value })
         sync = CloudSync(outbox: Outbox(store: FileOutboxStore(url: FileOutboxStore.defaultURL()), execute: exec.executor))
+        // Citizen-science verdicts go to the shared backend with the shared login, in their own queue
+        // so a slow shared backend never holds up the game save.
+        let sharedExec = PocketBaseExecutor(baseURL: api.sharedURL, token: { sbox.value })
+        shared = Outbox(store: FileOutboxStore(url: FileOutboxStore.defaultURL().deletingLastPathComponent().appendingPathComponent("shared-outbox.json")),
+                        execute: sharedExec.executor)
+        feed = FeedModel(feed: SharedFeed(baseURL: api.sharedURL, token: { sbox.value }))
     }
 
     func start(store: GameStore, auth: AuthModel) {
         gameCenter.authenticate()
         attach(auth.session)
-        let sync = sync, gc = gameCenter
+        let sync = sync, gc = gameCenter, shared = shared, user = sharedUser
         store.onChange = { state in
             Task { await sync.save(state) }
             Task { @MainActor in gc.report(state.player) }
         }
+        store.onClassified = { verdict in
+            // Local save already happened. Without a shared login (Apple sign-in) the verdict stays local.
+            guard let id = user.value, let op = verdict.op(sharedUserId: id) else { return }
+            Task { await shared.enqueue(op); await shared.flush() }
+        }
         monitor.pathUpdateHandler = { path in
-            if path.status == .satisfied { Task { await sync.flush() } }
+            if path.status == .satisfied { Task { await sync.flush(); await shared.flush() } }
         }
         monitor.start(queue: .global(qos: .utility))
     }
 
     func attach(_ session: AuthSession?) {
         token.value = session?.token
-        let sync = sync, id = session?.userId
-        Task { await sync.setUser(id); await sync.flush() }
+        sharedToken.value = session?.sharedToken
+        sharedUser.value = session?.sharedUserId
+        let sync = sync, id = session?.userId, shared = shared
+        Task { await sync.setUser(id); await sync.flush(); await shared.flush() }
     }
 
-    func flush() { let s = sync; Task { await s.flush() } }
+    func flush() { let s = sync, o = shared; Task { await s.flush(); await o.flush() } }
 }
 
 final class TokenBox: @unchecked Sendable {

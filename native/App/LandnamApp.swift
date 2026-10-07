@@ -14,7 +14,7 @@ struct LandnamApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView().environment(store).environment(auth)
+            RootView().environment(store).environment(auth).environment(services.feed)
                 .task { services.start(store: store, auth: auth) }
                 .onChange(of: auth.session) { _, s in services.attach(s) }
                 .onChange(of: scenePhase) { _, p in if p == .active { services.flush() } }

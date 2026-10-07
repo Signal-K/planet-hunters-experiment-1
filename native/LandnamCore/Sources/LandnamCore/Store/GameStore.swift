@@ -11,6 +11,8 @@ public final class GameStore {
     private let clock: @Sendable () -> Double
     /// Called after every persisted change; the app wires cloud sync and Game Center here.
     public var onChange: ((GameState) -> Void)?
+    /// Fires once per new citizen-science verdict, after the local save, so the app can queue the shared upload.
+    public var onClassified: ((SharedClassification) -> Void)?
 
     public init(state: GameState = GameState(), catalog: Catalog = Catalog(), saveURL: URL? = nil,
                 clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 * 1000 }) {
@@ -52,13 +54,40 @@ public final class GameStore {
     public func reset() { state = GameState(); persist() }
 
     // MARK: intents
-    /// Saturn imager: one verdict per frame, saved locally first (the pool upload goes through the outbox).
+    /// Research XP for the first classification of a TESS or NEOCP subject (mirrors web useGameLoop).
+    static let firstClassificationXP = 15
+
+    /// Saturn imager: one verdict per frame, saved locally first (the pool upload goes through `onClassified`).
     public func classifySaturn(_ candidateId: String, verdict: SaturnVerdict) {
         guard state.player.saturnClassifications[candidateId] == nil else { return }
         var n = state
         n.player.saturnClassifications[candidateId] = SaturnClassification(candidateId: candidateId, verdict: verdict, submittedAt: clock())
         n.player.researchAnnotations += 1
         apply(n)
+        onClassified?(.saturn(frame: candidateId, verdict: verdict))
+    }
+
+    /// Transit Telescope: one verdict per subject with the dip marks that justified it.
+    public func classifyTess(_ subjectId: String, verdict: TessVerdict, ranges: [TransitRange]) {
+        guard state.player.tessClassifications[subjectId] == nil else { return }
+        let marks = Tess.normalized(ranges)
+        var n = state
+        n.player.tessClassifications[subjectId] = TessClassification(subjectId: subjectId, verdict: verdict, ranges: marks, submittedAt: clock())
+        n.player.researchAnnotations += 1
+        n.player.researchXP += Self.firstClassificationXP
+        apply(n)
+        onClassified?(.tess(subject: subjectId, verdict: verdict, ranges: marks))
+    }
+
+    /// Deep Space Telescope: one NEOCP verdict per candidate.
+    public func classifyAsteroid(_ candidateId: String, verdict: AsteroidVerdict) {
+        guard state.player.asteroidClassifications[candidateId] == nil else { return }
+        var n = state
+        n.player.asteroidClassifications[candidateId] = AsteroidClassification(candidateId: candidateId, verdict: verdict, submittedAt: clock())
+        n.player.researchAnnotations += 1
+        n.player.researchXP += Self.firstClassificationXP
+        apply(n)
+        onClassified?(.asteroid(candidate: candidateId, verdict: verdict))
     }
     public func pickMission(_ id: String) { apply(Loop.pickMission(state, id: id, catalog: catalog)) }
     public func pickTarget(_ id: String) { apply(Loop.pickTarget(state, id: id, catalog: catalog)) }

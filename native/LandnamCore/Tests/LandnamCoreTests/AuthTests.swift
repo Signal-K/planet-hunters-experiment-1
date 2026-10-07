@@ -51,7 +51,7 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
         let store = InMemorySessionStore()
         let model = await AuthModel(api: api(), store: store)
         await model.signInWithPassword(email: " a@b.co ", password: "pw")
-        #expect(await model.session == AuthSession(token: "L", userId: "u1", email: "a@b.co", displayName: nil))
+        #expect(await model.session == AuthSession(token: "L", userId: "u1", email: "a@b.co", displayName: nil, sharedToken: "SHARED", sharedUserId: "s1"))
     }
 
     @Test func wrongPasswordShowsMessageAndStaysSignedOut() async {

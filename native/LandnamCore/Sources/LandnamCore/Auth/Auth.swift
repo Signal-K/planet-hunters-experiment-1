@@ -10,8 +10,13 @@ public struct AuthSession: Codable, Equatable, Sendable {
     public var userId: String
     public var email: String?
     public var displayName: String?
-    public init(token: String, userId: String, email: String? = nil, displayName: String? = nil) {
+    /// Shared science backend login (citizen-science feeds and classifications). Password sign-in only.
+    public var sharedToken: String?
+    public var sharedUserId: String?
+    public init(token: String, userId: String, email: String? = nil, displayName: String? = nil,
+                sharedToken: String? = nil, sharedUserId: String? = nil) {
         self.token = token; self.userId = userId; self.email = email; self.displayName = displayName
+        self.sharedToken = sharedToken; self.sharedUserId = sharedUserId
     }
 }
 
@@ -56,14 +61,16 @@ public struct AuthAPI: Sendable {
         login.setValue("application/json", forHTTPHeaderField: "Content-Type")
         login.httpBody = try JSONEncoder().encode(["identity": email, "password": password])
         let (data, _) = try await send(login)
-        struct Shared: Decodable { var token: String }
+        struct Shared: Decodable { struct Record: Decodable { var id: String }; var token: String; var record: Record? }
         guard let shared = try? JSONDecoder().decode(Shared.self, from: data) else { throw AuthError.malformed }
 
         var exchange = URLRequest(url: baseURL.appendingPathComponent("api/landnam-auth/exchange"))
         exchange.httpMethod = "POST"
         exchange.setValue("Bearer \(shared.token)", forHTTPHeaderField: "Authorization")
         let (xdata, _) = try await send(exchange)
-        return try Self.decodeSession(xdata)
+        var session = try Self.decodeSession(xdata)
+        session.sharedToken = shared.token; session.sharedUserId = shared.record?.id
+        return session
     }
 
     private func send(_ req: URLRequest) async throws -> (Data, HTTPURLResponse) {

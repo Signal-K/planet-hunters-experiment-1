@@ -5,15 +5,18 @@ import LandnamCore
 /// frame a day under a 3x3 grid; pick a square, answer Yes / No / Maybe, optionally mark a storm.
 struct SaturnStormSearchScreen: View {
     @Environment(GameStore.self) private var store
+    @Environment(FeedModel.self) private var feed
     /// Snapshot tests pass a candidate so no network is touched.
     var candidate: SaturnCandidate?
     @State private var selected = 2
     @State private var storms: Set<Int> = []
     @State private var answers: [Int: SaturnVerdict] = [:]
 
-    private var frame: SaturnCandidate? { candidate ?? Saturn.today(candidates: [], player: store.player, nowMs: store.now) }
+    private var frame: SaturnCandidate? { candidate ?? Saturn.today(candidates: feed.saturn, player: store.player, nowMs: store.now) }
 
-    var body: some View {
+    var body: some View { content.task { if candidate == nil { await feed.loadSaturn() } } }
+
+    @ViewBuilder private var content: some View {
         if !store.player.freeOperations {
             gate("Free Operations Required", "Saturn imager downlinks unlock after the starter contract arc.", action: nil)
         } else if store.player.saturnImagerLaunchedAt == nil {
