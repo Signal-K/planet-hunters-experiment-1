@@ -66,6 +66,14 @@ struct DebriefScreen: View {
         let payout = m.map { MissionGenerator.calibrateOnboardingPayout(raw: $0.payout.francs, missionsDone: store.player.missionsDone) } ?? 0
         ScreenFrame(title: "Debrief") {
             Panel { Text(m?.title ?? "Contract").font(.headline); Text("Payout: \(francs(payout))") }
+            if let m, !m.isOwnProgram, store.player.missionsDone >= 2, LaserCapacitor.units(store.player.stash) > 0 || !(store.state.lastCargo ?? [:]).isEmpty {
+                LaserCapacitorPanel(level: store.player.laserCapacitorLevel,
+                                    haulUnits: LaserCapacitor.units(store.state.lastCargo ?? [:]),
+                                    stashUnits: LaserCapacitor.units(store.player.stash),
+                                    reservedUnits: m.requires.minerals.values.reduce(0, +)) {
+                    store.buyLaserCapacitor(expectedLevel: store.player.laserCapacitorLevel, reservedUnits: m.requires.minerals.values.reduce(0, +))
+                }
+            }
             PrimaryButton(title: "Collect payout") {
                 store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: store.state.lastCargo ?? [:])
             }
@@ -86,6 +94,42 @@ struct MarketScreen: View {
                 }
             }
             if store.player.stash.isEmpty { Panel { Text("Nothing in storage.") } }
+        }
+    }
+}
+
+
+/// SSL-462: names the link between the haul and the next build and spends it on the Laser Capacitor
+/// (mirrors web LaserCapacitorPanel).
+struct LaserCapacitorPanel: View {
+    let level: Int
+    let haulUnits: Int
+    let stashUnits: Int
+    let reservedUnits: Int
+    let install: () -> Void
+
+    var body: some View {
+        let spare = max(0, stashUnits - reservedUnits)
+        if let next = LaserCapacitor.next(level) {
+            let canAfford = spare >= next.costUnits
+            Panel(accent: canAfford ? Theme.teal : Theme.blue) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Eyebrow(text: "Next build · \(next.name)")
+                    Text(canAfford
+                         ? "You brought \(haulUnits) ore, enough for \(next.name) (\(next.costUnits) ore). It adds \(next.bonusCharges - LaserCapacitor.bonus(level)) laser charges, so your next run lasts longer and brings home more."
+                         : "You brought \(haulUnits) ore. \(next.name) needs \(next.costUnits) spare ore and you hold \(spare). Keep firing after the order is filled to bring home the rest.")
+                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    PrimaryButton(title: canAfford ? "Install \(next.name) · \(next.costUnits) ore" : "Need \(next.costUnits - spare) more ore", enabled: canAfford, action: install)
+                }
+            }
+        } else {
+            Panel(accent: Theme.teal) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Eyebrow(text: "Next build · Laser Capacitor")
+                    Text("\(LaserCapacitor.tiers.last { $0.level == level }?.name ?? "Laser Capacitor") is installed: +\(LaserCapacitor.bonus(level)) laser charges on every run. Fully upgraded.")
+                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                }
+            }
         }
     }
 }

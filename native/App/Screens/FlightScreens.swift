@@ -145,7 +145,12 @@ struct MiningScreen: View {
         let parts = store.catalog.parts
         let cap = parts.chassis.first { $0.id == rocket.chassis }?.cargo ?? 6
         let tier = parts.drill.first { $0.id == rocket.drill }?.tier ?? 1
-        let f = MiningField(target: target, required: mission.requires.minerals, cargoCapacity: cap, laserTier: tier, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 })
+        // Same charge budget as web MiningScreen: onboarding runs are generous, later runs add the Laser Capacitor bonus (SSL-462).
+        let ore = mission.requires.minerals.values.reduce(0, +)
+        let charges = mission.sequence <= 2
+            ? max(80, ore * 16)
+            : max(Skills.laserChargeCap(store.player.unlockedSkillNodes), ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel)
+        let f = MiningField(target: target, required: mission.requires.minerals, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 })
         let s = MiningScene(field: f, size: size)
         s.onChange = { field = $0 }
         s.reducedMotion = reduceMotion

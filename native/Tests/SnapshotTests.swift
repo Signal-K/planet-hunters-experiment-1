@@ -38,6 +38,15 @@ struct SnapshotTests {
         #expect(st.mission != nil && st.target != nil)
     }
 
+    @Test func debriefCapacitorPhone() throws {
+        let st = store()
+        st.go(.missions)
+        let id = try #require(st.catalog.missions.first { !$0.locked && !$0.isOwnProgram }?.id)
+        st.pickMission(id)
+        try render(LaserCapacitorPanel(level: 0, haulUnits: 9, stashUnits: 9, reservedUnits: 0) {}.padding(16).environment(st),
+                   size: CGSize(width: 402, height: 300), name: "debrief-capacitor-phone")
+    }
+
     @Test func hubDesktop() throws {
         try render(HubScreen().environment(store()), size: CGSize(width: 1000, height: 680), name: "hub-desktop")
     }

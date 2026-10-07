@@ -179,3 +179,18 @@ import Foundation
         #expect(s.player.activeMission == nil && s.missionId == nil && s.screen == .hub)
     }
 }
+
+
+@Suite struct LaserCapacitorTests {
+    @Test func spendsLargestPilesAndGuardsDoubleTapAndReserve() {
+        var s = GameState()
+        s.player.stash = ["iron": 4, "nickel": 3, "platinum": 1]
+        // Short once the owed ore is reserved: 8 held, 3 reserved, cost 6.
+        #expect(LaserCapacitor.applyBuy(s, expectedLevel: 0, reservedUnits: 3).player.laserCapacitorLevel == 0)
+        let bought = LaserCapacitor.applyBuy(s, expectedLevel: 0)
+        #expect(bought.player.laserCapacitorLevel == 1)
+        #expect(LaserCapacitor.units(bought.player.stash) == 2)
+        #expect(LaserCapacitor.applyBuy(bought, expectedLevel: 0).player.laserCapacitorLevel == 1)
+        #expect(LaserCapacitor.bonus(1) == 4 && LaserCapacitor.bonus(3) == 12 && LaserCapacitor.bonus(0) == 0)
+    }
+}

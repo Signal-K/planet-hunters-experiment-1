@@ -133,3 +133,49 @@ public enum Market {
         return n
     }
 }
+
+/// SSL-462: the one resource sink that closes the mining loop. Ore hauled home is spent on the
+/// Laser Capacitor at Debrief and each level adds laser charges to every later mining run
+/// (mirrors web `mining-upgrades.ts` + `applyBuyLaserCapacitor`).
+public struct LaserCapacitorTier: Equatable, Sendable {
+    public let level: Int
+    public let name: String
+    public let costUnits: Int
+    public let bonusCharges: Int
+}
+
+public enum LaserCapacitor {
+    public static let tiers: [LaserCapacitorTier] = [
+        LaserCapacitorTier(level: 1, name: "Laser Capacitor I", costUnits: 6, bonusCharges: 4),
+        LaserCapacitorTier(level: 2, name: "Laser Capacitor II", costUnits: 12, bonusCharges: 8),
+        LaserCapacitorTier(level: 3, name: "Laser Capacitor III", costUnits: 20, bonusCharges: 12),
+    ]
+
+    public static func next(_ level: Int) -> LaserCapacitorTier? { tiers.first { $0.level == level + 1 } }
+    public static func bonus(_ level: Int) -> Int { tiers.last { $0.level <= level }?.bonusCharges ?? 0 }
+    public static func units(_ stash: Cargo) -> Int { stash.values.reduce(0) { $0 + max(0, $1) } }
+
+    /// Remove `units` of ore, largest piles first. Nil if short.
+    static func spend(_ stash: Cargo, units: Int) -> Cargo? {
+        var out = stash
+        var remaining = units
+        for id in out.keys.sorted(by: { (out[$0] ?? 0, $1) > (out[$1] ?? 0, $0) }) {
+            if remaining <= 0 { break }
+            let take = min(max(0, out[id] ?? 0), remaining)
+            out[id] = (out[id] ?? 0) - take
+            remaining -= take
+        }
+        return remaining > 0 ? nil : out
+    }
+
+    /// `expectedLevel` makes a double tap a no-op; `reservedUnits` keeps ore a client is still owed out of the spend.
+    public static func applyBuy(_ s: GameState, expectedLevel: Int, reservedUnits: Int = 0) -> GameState {
+        guard s.player.laserCapacitorLevel == expectedLevel, let tier = next(expectedLevel),
+              units(s.player.stash) - max(0, reservedUnits) >= tier.costUnits,
+              let stash = spend(s.player.stash, units: tier.costUnits) else { return s }
+        var n = s
+        n.player.stash = stash.filter { $0.value > 0 }
+        n.player.laserCapacitorLevel = tier.level
+        return n
+    }
+}

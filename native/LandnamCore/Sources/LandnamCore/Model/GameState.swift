@@ -73,6 +73,8 @@ public struct Player: Codable, Equatable, Sendable {
     public var subsurfaceBuilt: [String] = []
     public var landingResearched: Bool = false
     public var licenseGrade: LicenseGrade = .one
+    /// Installed Laser Capacitor level (SSL-462), bought with hauled ore at Debrief.
+    public var laserCapacitorLevel: Int = 0
     public var flightPlan: FlightPlanProgress = FlightPlanProgress()
     /// Unported save fields, preserved verbatim.
     public var extras: [String: JSONValue] = [:]
@@ -115,7 +117,7 @@ public struct Player: Codable, Equatable, Sendable {
         get("loanOffered", &loanOffered); getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
         get("seenPlanets", &seenPlanets); get("researchXP", &researchXP); get("subsurfaceExcavated", &subsurfaceExcavated)
         get("subsurfaceBuilt", &subsurfaceBuilt); get("landingResearched", &landingResearched)
-        get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan)
+        get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("laserCapacitorLevel", &laserCapacitorLevel)
         for key in c.allKeys where !consumed.contains(key.stringValue) {
             extras[key.stringValue] = try? c.decode(JSONValue.self, forKey: key)
         }
@@ -148,7 +150,7 @@ public struct Player: Codable, Equatable, Sendable {
         try put("loanOffered", loanOffered); try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
         try put("seenPlanets", seenPlanets); try put("researchXP", researchXP); try put("subsurfaceExcavated", subsurfaceExcavated)
         try put("subsurfaceBuilt", subsurfaceBuilt); try put("landingResearched", landingResearched)
-        try put("licenseGrade", licenseGrade); try put("flightPlan", flightPlan)
+        try put("licenseGrade", licenseGrade); try put("flightPlan", flightPlan); try put("laserCapacitorLevel", laserCapacitorLevel)
     }
 }
 
