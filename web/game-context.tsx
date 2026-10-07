@@ -6,7 +6,7 @@ import type { Screen, GameState, GameActions } from '@/lib/game-types'
 import { MISSIONS, TARGETS, getLaserChargeCap } from '@/lib/data'
 import { DEFAULT_STATE, loadState, normalizeAndRepair } from '@/lib/game-state'
 import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
-import { resolvePreset } from '@/lib/devPresets'
+import { resolvePreset, DEV_GROUPS } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { identifyUser } from '@/lib/posthog'
 import { enqueueSurvey } from '@/lib/surveys'
@@ -246,6 +246,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   //   __landnam.patch({ francs: 5e6 })     merge into player
   //   __landnam.goto('hangar', {missionId, targetId})
   //   __landnam.skipTutorial()
+  //   __landnam.scenario('ui-rover-mining')  load a DEV preset into this session
+  //   __landnam.scenarios()                  list preset keys
   useEffect(() => {
     if (!isDevLauncherEnabled()) return
     const w = window as unknown as { __landnam?: unknown }
@@ -255,6 +257,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       goto: (screen: GameState['screen'], ids?: { missionId?: string | null; targetId?: string | null }) =>
         setState(s => ({ ...s, screen, missionId: ids?.missionId ?? s.missionId, targetId: ids?.targetId ?? s.targetId })),
       skipTutorial: () => tutorial.skipTutorial([0, 1, 2, 3, 4, 5, 6, 8, 9, 30, 31, 32, 33, 40, 41]),
+      // Load any DEV preset (m1-mining, ui-rover-mining, ship-customizer, ...)
+      // into the live signed-in session. Returns false for an unknown key.
+      scenario: (name: string) => {
+        const p = resolvePreset(name)
+        if (!p) return false
+        setState(s => ({ ...s, ...p }))
+        return true
+      },
+      scenarios: () => DEV_GROUPS.flatMap(g => g.shots.map(sh => sh.key)),
     }
     return () => { delete w.__landnam }
   })
