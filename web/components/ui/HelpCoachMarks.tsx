@@ -30,14 +30,23 @@ function union(rects: DOMRect[]): Rect | null {
   return { top, left, width: right - left, height: bottom - top }
 }
 
-/** Keep the bubble outside the lit area so it never covers the control it names. */
-function placeBubble(hole: Rect, vw: number, vh: number, bubbleW: number): { top?: number; bottom?: number; left: number } {
+const SIDE_MIN_W = 200
+
+/** Keep the bubble outside the lit area so it never covers the control it names.
+ *  Above or below when there is room, else beside a tall target, else (nothing
+ *  fits) pinned to the bottom edge. */
+export function placeBubble(hole: Rect, vw: number, vh: number, bubbleW: number): { top?: number; bottom?: number; left: number; width: number } {
   const left = Math.max(GUTTER, Math.min(vw - GUTTER - bubbleW, hole.left + hole.width / 2 - bubbleW / 2))
   const below = vh - (hole.top + hole.height)
   const above = hole.top
-  if (below >= BUBBLE_H + HOLE_PAD) return { top: hole.top + hole.height + HOLE_PAD, left }
-  if (above >= BUBBLE_H + HOLE_PAD) return { bottom: vh - hole.top + HOLE_PAD, left }
-  return { bottom: GUTTER, left }
+  if (below >= BUBBLE_H + HOLE_PAD) return { top: hole.top + hole.height + HOLE_PAD, left, width: bubbleW }
+  if (above >= BUBBLE_H + HOLE_PAD) return { bottom: vh - hole.top + HOLE_PAD, left, width: bubbleW }
+  const right = vw - (hole.left + hole.width) - HOLE_PAD - GUTTER
+  const leftRoom = hole.left - HOLE_PAD - GUTTER
+  const top = Math.max(GUTTER, Math.min(vh - GUTTER - BUBBLE_H, hole.top))
+  if (right >= SIDE_MIN_W && right >= leftRoom) return { top, left: hole.left + hole.width + HOLE_PAD, width: Math.min(bubbleW, right) }
+  if (leftRoom >= SIDE_MIN_W) { const w = Math.min(bubbleW, leftRoom); return { top, left: hole.left - HOLE_PAD - w, width: w } }
+  return { bottom: GUTTER, left, width: bubbleW }
 }
 
 /**
@@ -108,7 +117,7 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
         aria-label={`Hint ${index + 1} of ${total}`}
         data-testid="help-coach-hint"
         style={{
-          position: 'absolute', width: bubbleW, ...pos, pointerEvents: 'auto',
+          position: 'absolute', ...pos, pointerEvents: 'auto',
           padding: 'var(--ln-s-3) var(--ln-s-4)', background: 'var(--ln-blueprint-paper, #fff)', color: 'var(--ln-text)',
           border: '2px solid var(--ln-cyan-border)', borderRadius: 'var(--ln-r-md)', boxShadow: '4px 4px 0 var(--ln-blueprint-blue, #1f78c1)',
         }}
