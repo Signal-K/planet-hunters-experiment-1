@@ -230,18 +230,22 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             aria-label={callout.title}
             onClick={e => { e.stopPropagation(); setSeen(true); setCalloutOpen(v => !v) }}
             style={{
-              position: 'absolute', top: -4, right: 2, zIndex: 4,
+              position: 'absolute', top: -16, right: -10, zIndex: 4,
+              width: 44, height: 44, background: 'transparent', border: 'none',
+              display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0,
+            }}
+          >
+            <span style={{
               width: 22, height: 22, borderRadius: '50%',
               background: seen ? 'var(--ln-hairline)' : 'var(--hub-mint)',
               border: '2px solid var(--hub-panel)',
-              display: 'grid', placeItems: 'center', cursor: 'pointer',
+              display: 'grid', placeItems: 'center',
               color: seen ? 'var(--ln-text-dim)' : 'var(--ln-text-inverse)',
               boxShadow: seen ? 'none' : '0 0 12px var(--ln-ok-soft)',
               animation: seen ? 'none' : 'hub-notify-pulse 1.8s ease-in-out infinite',
-              padding: 0,
-            }}
-          >
-            <BellGlyph />
+            }}>
+              <BellGlyph />
+            </span>
           </button>
 
           <div

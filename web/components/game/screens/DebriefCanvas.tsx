@@ -104,13 +104,16 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
           atmosphere.rect(0, nextHeight * 0.74, nextWidth, nextHeight * 0.26).fill({ color: 0xb4cde2, alpha: 1 })
           atmosphere.rect(0, nextHeight * 0.74, nextWidth, 3).fill({ color: 0x0f2436, alpha: 0.85 })
 
-          const hangarWidth = Math.min(nextWidth * 0.78, 680)
+          // Wide landscape: the rocket parks in the left third and the result cards take the right.
+          const wide = nextWidth >= 900 && nextWidth > nextHeight * 1.3
+          const cx = nextWidth * (wide ? 0.26 : 0.5)
+          const hangarWidth = wide ? Math.min(nextWidth * 0.44, 560) : Math.min(nextWidth * 0.78, 680)
           const hangarScale = hangarWidth / hangar.width
           hangarSprite.scale.set(hangarScale)
-          hangarSprite.x = nextWidth * 0.5
+          hangarSprite.x = cx
           hangarSprite.y = nextHeight * 0.96
 
-          const berthX = nextWidth * 0.5
+          const berthX = cx
           const berthY = nextHeight * 0.78
           berth.clear()
           berth.ellipse(berthX, berthY, Math.min(150, nextWidth * 0.2), 18).stroke({ color: 0x175f9b, alpha: 0.9, width: 3 })
@@ -122,7 +125,7 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
           if (ship) {
             const shipWidth = Math.min(nextWidth * 0.44, 330)
             ship.scale.set(shipWidth / Math.max(shipTexture?.width ?? 1, 1))
-            ship.x = nextWidth * 0.5
+            ship.x = cx
             ship.y = nextHeight * 0.68
           }
         }

@@ -33,7 +33,7 @@ export default function FeedbackButton() {
         onClick={() => setOpen(true)}
         style={{
           position: 'absolute', bottom: 12, right: 12, zIndex: 80,
-          padding: '6px 12px',
+          padding: '6px 12px', minHeight: 44,
           background: 'var(--ln-panel)',
           border: '2px solid var(--ln-border)',
           borderRadius: 4,

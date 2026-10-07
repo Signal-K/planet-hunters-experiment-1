@@ -37,7 +37,7 @@
 .titleBlock { min-width: 0; }
 .eyebrow {
   color: color-mix(in srgb, var(--ln-text) 70%, transparent);
-  font: 700 9.5px var(--ln-font-display);
+  font: 700 14px var(--ln-font-display);
   letter-spacing: .18em;
   text-transform: uppercase;
 }

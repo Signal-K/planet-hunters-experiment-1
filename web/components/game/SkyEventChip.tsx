@@ -36,7 +36,7 @@ export default function SkyEventChip({ surface, className }: { surface: 'base' |
         onClick={() => setOpen(o => !o)}
         style={{
           minHeight: 44, minWidth: 44, padding: '0 16px', borderRadius: 22,
-          border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-panel)', color: 'var(--ln-cyan)',
+          border: '2px solid var(--ln-ink, #0f2436)', background: 'var(--ln-panel)', color: 'var(--ln-text)',
           font: '700 14px var(--ln-font-display)', letterSpacing: '0.04em', cursor: 'pointer',
         }}
       >
