@@ -126,6 +126,13 @@ struct SnapshotTests {
         try render(RoverFieldScreen(initial: Prospecting(requirements: ["iron": 2])).environment(GameStore(state: GameState())), size: CGSize(width: 402, height: 874), name: "rover-touchdown-phone")
     }
 
+    @Test func hubStructuresPhone() throws {
+        var gs = GameState()
+        gs.player.placed = ["launchpad", "surface-silo", "refinery", "astronaut-academy"]
+        gs.player.placementPlots = ["surface-silo": 0, "refinery": 1, "astronaut-academy": 3]
+        try render(HubScreen().environment(GameStore(state: gs)), size: CGSize(width: 402, height: 874), name: "hub-structures-phone")
+    }
+
     @Test func hubSkyCraftPhone() throws {
         var gs = GameState()
         gs.player.activeMission = ActiveMission(id: "m", label: "Ceres run")

@@ -24,10 +24,10 @@ struct HubScreen: View {
                          x: w * xs[1], groundY: groundY + 2 * k) { store.go(.hangar) }
                 building("Exchange", sprite: "base/exchange_flat.png", aspect: 1153.0 / 461, width: 210 * k * 0.62,
                          x: w * xs[2], groundY: groundY + 2 * k) { store.go(.market) }
-                if let plot = store.player.placementPlots["surface-silo"], store.player.placed.contains("surface-silo") {
-                    let frac: [CGFloat] = [0.15, 0.38, 0.62, 0.85]
-                    building("Silo", sprite: "base/surface_silo_flat.png", aspect: 192.0 / 205, width: 62 * k * 0.62,
-                             x: w * frac[min(max(plot, 0), 3)], groundY: groundY + 34 * k) { store.go(.market) }
+                ForEach(["surface-silo", "refinery", "astronaut-academy"], id: \.self) { kind in
+                    if let plot = store.player.placementPlots[kind], store.player.placed.contains(kind) {
+                        placedStructure(kind, plot: plot, width: w, groundY: groundY, k: k)
+                    }
                 }
                 BaseTraffic(width: w, groundY: groundY, k: k).allowsHitTesting(false)
                 skyCraft(width: w, height: h)
@@ -83,6 +83,32 @@ struct HubScreen: View {
                 .position(x: width * 0.5, y: height * 0.34)
             }
         }
+    }
+
+    /// Player-placed structures stand on the four apron plots, nearer the camera than the main buildings.
+    @ViewBuilder private func placedStructure(_ kind: String, plot: Int, width w: CGFloat, groundY: CGFloat, k: CGFloat) -> some View {
+        let x = w * [0.15, 0.38, 0.62, 0.85][min(max(plot, 0), 3)], y = groundY + 92 * k
+        switch kind {
+        case "refinery":
+            structure("Refinery", art: StructureShape(kind: .refinery), width: 70 * k, x: x, groundY: y) { store.go(.refinery) }
+        case "astronaut-academy":
+            structure("Academy", art: StructureShape(kind: .academy), width: 70 * k, x: x, groundY: y) { store.go(.academy) }
+        default:
+            building("Silo", sprite: "base/surface_silo_flat.png", aspect: 192.0 / 205, width: 62 * k * 0.62, x: x, groundY: y) { store.go(.market) }
+        }
+    }
+
+    private func structure(_ name: String, art: StructureShape, width: CGFloat, x: CGFloat, groundY: CGFloat, tap: @escaping () -> Void) -> some View {
+        Button(action: tap) {
+            VStack(spacing: 4) {
+                art.frame(width: width, height: width * 0.8)
+                Text(name.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 1))
+            }
+        }
+        .buttonStyle(.plain)
+        .position(x: x, y: groundY - width * 0.4 + 18)
     }
 
     private func building(_ name: String, sprite: String, aspect: CGFloat, width: CGFloat, x: CGFloat, groundY: CGFloat, tap: @escaping () -> Void) -> some View {
@@ -180,5 +206,42 @@ private struct BaseTraffic: View {
                 }
             }
         }
+    }
+}
+
+/// Blueprint-outlined stand-ins for structures with no sprite (the web Hub draws none either):
+/// paper body, offset ice shade, 2.5pt ink outline.
+private struct StructureShape: View {
+    enum Kind { case refinery, academy }
+    let kind: Kind
+
+    var body: some View {
+        Canvas { ctx, size in
+            let w = size.width, h = size.height
+            func outlined(_ path: Path, fill: Color) {
+                ctx.fill(path.offsetBy(dx: 3, dy: 3), with: .color(Theme.blue.opacity(0.35)))
+                ctx.fill(path, with: .color(fill))
+                ctx.stroke(path, with: .color(Theme.ink), lineWidth: 2.5)
+            }
+            switch kind {
+            case .refinery:
+                outlined(Path(CGRect(x: 0, y: h * 0.45, width: w * 0.62, height: h * 0.55)), fill: Theme.paper)
+                outlined(Path(CGRect(x: w * 0.12, y: h * 0.08, width: w * 0.12, height: h * 0.4)), fill: Theme.paper2)
+                outlined(Path(CGRect(x: w * 0.36, y: h * 0.22, width: w * 0.1, height: h * 0.26)), fill: Theme.paper2)
+                outlined(Path(roundedRect: CGRect(x: w * 0.68, y: h * 0.4, width: w * 0.32, height: h * 0.6), cornerRadius: 8), fill: Theme.paper2)
+                ctx.fill(Path(CGRect(x: w * 0.06, y: h * 0.62, width: w * 0.5, height: h * 0.1)), with: .color(Theme.teal))
+            case .academy:
+                outlined(Path(CGRect(x: 0, y: h * 0.5, width: w, height: h * 0.5)), fill: Theme.paper)
+                var dome = Path()
+                dome.addArc(center: CGPoint(x: w * 0.5, y: h * 0.5), radius: w * 0.3, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+                dome.closeSubpath()
+                outlined(dome, fill: Theme.paper2)
+                var mast = Path(); mast.move(to: CGPoint(x: w * 0.5, y: h * 0.2)); mast.addLine(to: CGPoint(x: w * 0.5, y: h * 0.02))
+                ctx.stroke(mast, with: .color(Theme.ink), lineWidth: 2.5)
+                ctx.fill(Path(CGRect(x: w * 0.5, y: h * 0.02, width: w * 0.16, height: h * 0.1)), with: .color(Theme.teal))
+                for i in 0..<3 { ctx.fill(Path(CGRect(x: w * (0.14 + 0.28 * Double(i)), y: h * 0.68, width: w * 0.16, height: h * 0.18)), with: .color(Theme.blueBright.opacity(0.7))) }
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
