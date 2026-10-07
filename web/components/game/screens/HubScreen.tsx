@@ -16,6 +16,7 @@ import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
+import { CrewWalkers } from '@/components/game/hub/CrewWalkers'
 import { EARTH_BASE_WIDE } from '@/lib/scene/compositions'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
@@ -434,6 +435,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <HubWorldBackground phase={skyPhase} />
           <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
+          <CrewWalkers road={EARTH_BASE_WIDE.roadPaths?.[0]} />
           <SkyEventChip surface="base" />
 
           {/* Drifting ambient motes — replaces the old daylight cloud layer,

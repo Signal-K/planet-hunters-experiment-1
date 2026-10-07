@@ -24,6 +24,7 @@ struct HubScreen: View {
                          x: w * xs[1], groundY: groundY + 2 * k) { store.go(.hangar) }
                 building("Exchange", sprite: "base/exchange_flat.png", aspect: 1153.0 / 461, width: 210 * k * 0.62,
                          x: w * xs[2], groundY: groundY + 2 * k) { store.go(.market) }
+                BaseTraffic(width: w, groundY: groundY, k: k).allowsHitTesting(false)
                 skyCraft(width: w, height: h)
                 topHud
                 dock.frame(maxHeight: .infinity, alignment: .bottom)
@@ -148,6 +149,30 @@ private struct PlanetBackdrop: View {
             }
             .frame(width: d, height: d)
             .position(c)
+        }
+    }
+}
+
+/// Layer part: ambient base traffic. An outlined road rover loops along the apron and two staff
+/// figures pace between the buildings (mirrors web RoadRover + CrewWalkers).
+private struct BaseTraffic: View {
+    let width: CGFloat, groundY: CGFloat, k: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { ctx in
+            let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
+            let roverW = 56 * k, crewW = 14 * k
+            let drive = CGFloat(t.truncatingRemainder(dividingBy: 18) / 18)
+            ZStack(alignment: .topLeading) {
+                Art.view("actors/road_rover.png").resizable().aspectRatio(1.5, contentMode: .fit).frame(width: roverW)
+                    .position(x: -roverW + drive * (width + roverW * 2), y: groundY + 6 * k - roverW / 3)
+                ForEach(Array(zip([0.19, 0.63], [11.0, 15.0]).enumerated()), id: \.offset) { i, p in
+                    let phase = CGFloat(0.5 - 0.5 * cos(t / p.1 * 2 * .pi + Double(i) * 2))
+                    Art.view("actors/crew.png").resizable().aspectRatio(2.0 / 3, contentMode: .fit).frame(width: crewW)
+                        .position(x: width * (p.0 + 0.08 * phase), y: groundY + 12 * k - crewW * 0.75)
+                }
+            }
         }
     }
 }
