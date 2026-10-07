@@ -56,21 +56,22 @@ struct HubScreen: View {
     private func skyCraft(width: CGFloat, height: CGFloat) -> some View {
         TimelineView(.periodic(from: .now, by: 1)) { _ in
             if let craft = SkyCraft.current(for: store.player, now: store.now) {
-                Button { store.go(craft.opens) } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: craft.state == .waiting ? "arrow.up.circle" : "paperplane.fill").font(.system(size: 16, weight: .bold))
-                        Text(craft.label).font(AppFont.display(14)).tracking(1.2)
+                ZStack {
+                    Capsule().fill(Theme.blue.opacity(0.6)).offset(x: 3, y: 3)
+                    Button { store.go(craft.opens) } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: craft.state == .waiting ? "arrow.up.circle" : "paperplane.fill").font(.system(size: 16, weight: .bold))
+                            Text(craft.label).font(AppFont.display(14)).tracking(1.2)
+                        }
+                        .foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 14).frame(minHeight: 44)
+                        .background(Capsule().fill(Theme.paper))
+                        .overlay(Capsule().stroke(Theme.border, lineWidth: 2))
                     }
-                    .foregroundStyle(Theme.ink)
-                    .padding(.horizontal, 14).frame(minHeight: 44)
-                    .background {
-                        Capsule().fill(Theme.blue.opacity(0.6)).offset(x: 3, y: 3)
-                        Capsule().fill(Theme.paper)
-                    }
-                    .overlay(Capsule().stroke(Theme.border, lineWidth: 2))
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(craft.accessibilityLabel)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(craft.accessibilityLabel)
+                .fixedSize()
                 .position(x: width * 0.5, y: height * 0.34)
             }
         }
