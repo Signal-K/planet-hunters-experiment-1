@@ -69,7 +69,11 @@ struct ControlStationScreen: View {
     }
 
     private func open(_ s: InstrumentSignal) {
-        store.go(s.kind == .transit ? .galaxy : .asteroidDiscovery)
+        switch s.kind {
+        case .transit: store.go(.galaxy)
+        case .deepSpace: store.go(.asteroidDiscovery)
+        case .saturn: store.go(.saturnStormSearch)
+        }
     }
 }
 

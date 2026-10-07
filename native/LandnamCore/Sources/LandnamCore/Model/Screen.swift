@@ -14,6 +14,7 @@ public enum Screen: String, Codable, CaseIterable, Sendable {
     case surfaceOps = "surface-ops"
     case academy
     case asteroidDiscovery = "asteroid-discovery"
+    case saturnStormSearch = "saturn-storm-search"
     case instrumentHub = "instrument-hub"
     case missionHistory = "mission-history"
     case narrativeLedger = "narrative-ledger"
@@ -24,7 +25,7 @@ public enum Screen: String, Codable, CaseIterable, Sendable {
         switch self {
         case .hub, .hubSubsurface, .launchpad, .transit, .landing, .mining, .roverMining,
              .delivery, .refinery, .academy, .hangar, .surfaceOps, .galaxy,
-             .asteroidDiscovery, .instrumentHub:
+             .asteroidDiscovery, .saturnStormSearch, .instrumentHub:
             return true
         default:
             return false

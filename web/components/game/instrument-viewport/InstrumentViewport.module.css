@@ -315,8 +315,9 @@
   flex-direction: column;
   gap: var(--ln-s-1);
   min-height: 0;
-  background: var(--iv-ink);
-  color: var(--iv-paper);
+  background: var(--ln-bp-paper-2, var(--ln-surface-2));
+  color: var(--iv-ink);
+  border: 2px solid var(--iv-ink);
   border-radius: var(--ln-r-lg);
   padding: var(--ln-s-2);
 }
@@ -350,7 +351,7 @@
   min-height: 44px;
   border: 0;
   background: transparent;
-  color: var(--iv-paper);
+  color: var(--iv-ink);
   text-align: right;
   font: 14px/1.3 var(--ln-font-mono);
   letter-spacing: 0.04em;
@@ -368,7 +369,7 @@
 
 .promptMark {
   font: 800 16px/1 var(--ln-font-mono);
-  color: var(--iv-paper);
+  color: var(--iv-ink);
 }
 
 .commandInput {
@@ -376,16 +377,16 @@
   min-width: 0;
   min-height: 44px;
   border: 0;
-  border-bottom: 2px solid var(--iv-paper);
+  border-bottom: 2px solid var(--iv-ink);
   background: transparent;
-  color: var(--iv-paper);
+  color: var(--iv-ink);
   font: 16px/1.2 var(--ln-font-mono);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 0;
 }
 
-.commandInput::placeholder { color: var(--ln-bp-paper-2, var(--ln-surface-2)); }
+.commandInput::placeholder { color: var(--ln-bp-ink-mute, var(--ln-text-muted)); }
 
 .status {
   margin: 0;
@@ -442,8 +443,8 @@
 }
 
 .toolButton[aria-pressed="true"] {
-  background: var(--iv-ink);
-  color: var(--iv-paper);
+  background: var(--iv-blue);
+  color: #fff;
 }
 
 .toolButton:disabled {

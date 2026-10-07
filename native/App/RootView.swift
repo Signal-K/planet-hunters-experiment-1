@@ -24,6 +24,7 @@ struct RootView: View {
             case .debrief: DebriefScreen()
             case .market: MarketScreen()
             case .instrumentHub: ControlStationScreen()
+            case .saturnStormSearch: SaturnStormSearchScreen()
             default: StubScreen(screen: store.screen)
             }
         }

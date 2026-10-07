@@ -52,6 +52,14 @@ public final class GameStore {
     public func reset() { state = GameState(); persist() }
 
     // MARK: intents
+    /// Saturn imager: one verdict per frame, saved locally first (the pool upload goes through the outbox).
+    public func classifySaturn(_ candidateId: String, verdict: SaturnVerdict) {
+        guard state.player.saturnClassifications[candidateId] == nil else { return }
+        var n = state
+        n.player.saturnClassifications[candidateId] = SaturnClassification(candidateId: candidateId, verdict: verdict, submittedAt: clock())
+        n.player.researchAnnotations += 1
+        apply(n)
+    }
     public func pickMission(_ id: String) { apply(Loop.pickMission(state, id: id, catalog: catalog)) }
     public func pickTarget(_ id: String) { apply(Loop.pickTarget(state, id: id, catalog: catalog)) }
     public func finishQuickSetup() { apply(Loop.finishQuickSetup(state, catalog: catalog)) }

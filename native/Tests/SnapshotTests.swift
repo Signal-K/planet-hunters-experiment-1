@@ -80,6 +80,14 @@ struct SnapshotTests {
                    size: CGSize(width: 402, height: 874), name: "control-station-phone")
     }
 
+    @Test func saturnImagerPhone() throws {
+        var gs = GameState()
+        gs.player.freeOperations = true; gs.player.saturnImagerLaunchedAt = 1
+        let c = Saturn.fallback[19]
+        try render(SaturnStormSearchScreen(candidate: c).environment(GameStore(state: gs)).environment(\.flatLayout, true),
+                   size: CGSize(width: 402, height: 1020), name: "saturn-imager-phone")
+    }
+
     @Test func hubSkyCraftPhone() throws {
         var gs = GameState()
         gs.player.activeMission = ActiveMission(id: "m", label: "Ceres run")
