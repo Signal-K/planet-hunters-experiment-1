@@ -70,7 +70,7 @@ const C = {
   padLite: 0xdfe9f3,
   ink: 0x0f2436,
   shade: 0x42a6df,
-  skyTop: 0x4f9bda,
+  skyTop: 0x9fd0ee,
   skyHorizon: 0xd5ecf7,
 } as const
 
@@ -410,10 +410,11 @@ export function buildLaunchScene(
 
   const hudStyle = new TextStyle({
     fontFamily: '"Oxanium", "Turret Road", monospace',
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: '800',
-    fill: C.cyan,
-    letterSpacing: 2,
+    fill: C.ink,
+    stroke: { color: 0xffffff, width: 4 },
+    letterSpacing: 1.2,
   })
   const destLabel = new Text({ text: `TRANSIT → ${opts.targetName.toUpperCase()}`, style: hudStyle })
   destLabel.anchor.set(0.5, 0)
@@ -424,7 +425,7 @@ export function buildLaunchScene(
 
   const shipLabel = new Text({
     text: opts.rocketName.toUpperCase(),
-    style: new TextStyle({ ...hudStyle, fill: C.text, fontSize: 8, letterSpacing: 1.5 }),
+    style: new TextStyle({ ...hudStyle, fill: C.ink, fontSize: 14, letterSpacing: 1.2 }),
   })
   shipLabel.anchor.set(0.5, 1)
   shipLabel.x = W / 2
@@ -434,7 +435,7 @@ export function buildLaunchScene(
 
   const phaseLabel = new Text({
     text: 'AUTOMATED COUNTDOWN',
-    style: new TextStyle({ ...hudStyle, fill: C.text, fontSize: 9, letterSpacing: 1.8 }),
+    style: new TextStyle({ ...hudStyle, fill: C.ink, fontSize: 14, letterSpacing: 1.2 }),
   })
   phaseLabel.anchor.set(0.5, 0)
   phaseLabel.x = W / 2
@@ -442,8 +443,8 @@ export function buildLaunchScene(
   app.stage.addChild(phaseLabel)
 
   const automationLabel = new Text({
-    text: 'ATTITUDE  AUTO  ·  THROTTLE  AUTO  ·  STAGING  AUTO',
-    style: new TextStyle({ ...hudStyle, fill: C.text, fontSize: 7, letterSpacing: 1.1 }),
+    text: 'AUTO ATTITUDE · THROTTLE · STAGING',
+    style: new TextStyle({ ...hudStyle, fill: C.ink, fontSize: 14, letterSpacing: 0.4 }),
   })
   automationLabel.anchor.set(0.5, 0)
   automationLabel.x = W / 2

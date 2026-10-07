@@ -99,7 +99,9 @@ function ScreenBody({
   onBackFromHangar,
 }: ScreenContentProps) {
   // Launch sequence state lives here so it's scoped to the fab screen
-  const [launchPending, setLaunchPending] = useState(false)
+  // Dev-only: `?launchscene=1` mounts the launch sequence so it can be rendered headless.
+  const [launchPending, setLaunchPending] = useState(() =>
+    process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('launchscene'))
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
   const handleLaunch = useCallback(() => setLaunchPending(true), [])
   const handleLaunchComplete = useCallback(() => {

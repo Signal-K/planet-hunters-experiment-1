@@ -8,9 +8,9 @@ public enum Minerals {
     }
 
     public static let all: [MineralMeta] = [
-        m("platinum", "Platinum", "Pt", "#e8e4d8", .rare, "Catalytic nozzle coatings, fuel cells", laser: 1, shape: .diamond),
+        m("platinum", "Platinum", "Pt", "#e3eef5", .rare, "Catalytic nozzle coatings, fuel cells", laser: 1, shape: .diamond),
         m("palladium", "Palladium", "Pd", "#ccdde8", .rare, "Hydrogen fuel cells, electronics", laser: 1, shape: .circle),
-        m("iridium", "Iridium", "Ir", "#b8b4cc", .rare, "High-temp alloys, ignition components", laser: 2, shape: .triangle),
+        m("iridium", "Iridium", "Ir", "#a9c3dc", .rare, "High-temp alloys, ignition components", laser: 2, shape: .triangle),
         m("rhodium", "Rhodium", "Rh", "#d4e9f0", .exotic, "Thruster lining, radiation-hard optics", laser: 2, shape: .rect),
         m("gold", "Gold", "Au", "#79d1ec", .rare, "Circuitry, radiation shielding", laser: 2, shape: .circle),
         m("rare", "Xenon", "Xe", "#93cef0", .exotic, "Quantum sensors, ion propellant", laser: 3, shape: .diamond),

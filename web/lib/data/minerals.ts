@@ -13,9 +13,9 @@ import { MINERAL_VALUE, type MineralRarity } from './economy'
 // what made common ore worthless once rare ore was worth anything at all.
 export const MINERAL_META: Record<string, MineralMeta> = {
   // ── Early game (M1-M3) — platinum-group metals, genuinely rare on Earth ──────
-  platinum:  { name: 'Platinum',  sym: 'Pt', color: '#e8e4d8', price: MINERAL_VALUE.rare, rarity: 'rare',   constructionUse: 'Catalytic nozzle coatings, fuel cells',      laserAccess: 1, shape: 'diamond' },
+  platinum:  { name: 'Platinum',  sym: 'Pt', color: '#e3eef5', price: MINERAL_VALUE.rare, rarity: 'rare',   constructionUse: 'Catalytic nozzle coatings, fuel cells',      laserAccess: 1, shape: 'diamond' },
   palladium: { name: 'Palladium', sym: 'Pd', color: '#ccdde8', price: MINERAL_VALUE.rare, rarity: 'rare',   constructionUse: 'Hydrogen fuel cells, electronics',           laserAccess: 1, shape: 'circle' },
-  iridium:   { name: 'Iridium',   sym: 'Ir', color: '#b8b4cc', price: MINERAL_VALUE.rare, rarity: 'rare',   constructionUse: 'High-temp alloys, ignition components',      laserAccess: 2, shape: 'triangle' },
+  iridium:   { name: 'Iridium',   sym: 'Ir', color: '#a9c3dc', price: MINERAL_VALUE.rare, rarity: 'rare',   constructionUse: 'High-temp alloys, ignition components',      laserAccess: 2, shape: 'triangle' },
   rhodium:   { name: 'Rhodium',   sym: 'Rh', color: '#d4e9f0', price: MINERAL_VALUE.exotic, rarity: 'exotic', constructionUse: 'Thruster lining, radiation-hard optics',     laserAccess: 2, shape: 'rect' },
   // ── Transition / M3+ ──────────────────────────────────────────────────────────
   gold:    { name: 'Gold',    sym: 'Au', color: '#79d1ec', price: MINERAL_VALUE.rare, rarity: 'rare',   constructionUse: 'Circuitry, radiation shielding',               laserAccess: 2, shape: 'circle' },
@@ -45,9 +45,9 @@ export const MINERAL_RARITY: Record<string, MineralRarity> = Object.fromEntries(
 )
 
 export const MINERAL_COLORS: Record<string, string> = {
-  platinum:  '#e8e4d8',
+  platinum:  '#e3eef5',
   palladium: '#ccdde8',
-  iridium:   '#b8b4cc',
+  iridium:   '#a9c3dc',
   rhodium:   '#d4e9f0',
   gold:      '#79d1ec',
   rare:      '#93cef0',
