@@ -314,6 +314,50 @@ export function isNewMoonDay(dateKey: string): boolean {
 }
 
 // ---- Dev clock -------------------------------------------------------------
+const ORIONIDS_FORCE_KEY = 'landnam.forceOrionids'
+
+/**
+ * Local 21 Oct 2026, 23:00. Inside the Orionids window, on the peak night,
+ * and inside the 22:00–06:00 night gate in whatever timezone the player is in.
+ */
+export function orionidsForcedInstant(): number {
+  return new Date(2026, 9, 21, 23, 0, 0, 0).getTime()
+}
+
+/**
+ * Dev/staging force switch for the Orionids window.
+ * `?orionids=1` sticks for the session, `?orionids=0` clears it,
+ * `window.__LANDNAM_FORCE_ORIONIDS = true` forces it for this page.
+ * Callers must still gate this on the dev launcher so production ignores it.
+ */
+/**
+ * Persist `?orionids=1` / `?orionids=0` immediately.
+ * Game hydration replaces the URL (dropping the query) before the mining
+ * screen mounts, so the flag has to be stored on the first client render.
+ */
+export function captureOrionidsQueryFlag(): void {
+  if (typeof window === 'undefined') return
+  try {
+    const query = new URLSearchParams(window.location.search).get('orionids')
+    if (query === '1') window.localStorage.setItem(ORIONIDS_FORCE_KEY, '1')
+    else if (query === '0') window.localStorage.removeItem(ORIONIDS_FORCE_KEY)
+  } catch {
+    // Private mode: the page-local flag below still works.
+  }
+}
+
+export function orionidsDevForced(): boolean {
+  if (typeof window === 'undefined') return false
+  const flag = (window as unknown as { __LANDNAM_FORCE_ORIONIDS?: boolean }).__LANDNAM_FORCE_ORIONIDS
+  if (flag === true) return true
+  captureOrionidsQueryFlag()
+  try {
+    return window.localStorage.getItem(ORIONIDS_FORCE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 /**
  * Current time for badge grants. In dev/staging only, `window.__LANDNAM_DEV_NOW`
  * (ms or ISO string) overrides it so tiers can be tested without moving the

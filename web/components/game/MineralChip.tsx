@@ -2,6 +2,9 @@
 
 import React from 'react'
 import { MINERAL_META } from '@/lib/data'
+import { ORIONIDS_VARIANTS } from '@/lib/orionids/theme'
+
+const ORIONID_ICON = ORIONIDS_VARIANTS.blueprint.iconResource
 
 interface ChipMeta {
   name: string
@@ -26,6 +29,17 @@ export default function MineralChip({ mineral, meta: metaProp, count, variant = 
   if (!meta) return null
 
   if (variant === 'avatar') {
+    if (mineral === 'orionid_debris') {
+      return (
+        <img
+          src={ORIONID_ICON}
+          alt=""
+          width={size}
+          height={size}
+          style={{ width: size, height: size, flex: 'none', objectFit: 'contain' }}
+        />
+      )
+    }
     return (
       <div style={{
         width: size, height: size, borderRadius: 8,

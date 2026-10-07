@@ -13,6 +13,9 @@ import {
   debrisRatePerMinute,
   isDebrisEventActive,
   isLocalNight,
+  captureOrionidsQueryFlag,
+  orionidsDevForced,
+  orionidsForcedInstant,
 } from './sky-events'
 import { MINERAL_META } from './minerals'
 
@@ -174,9 +177,44 @@ describe('applyDebrisMined badge', () => {
     expect(second.badge).toBeNull()
     expect(second.player).toBe(first.player)
   })
+  it('grants silver after the window', () => {
+    const at = Date.parse('2026-11-20T12:00:00Z')
+    const r = applyDebrisMined(blank(), ORIONIDS_DEBRIS_PRESET, at)
+    expect(r.badge?.tier).toBe('silver')
+    expect(badgeTierFor('orionids-2026', at)).toBe('silver')
+  })
   it('does not grant the Draconids badge for Orionid debris', () => {
     const r = applyDebrisMined(blank(), ORIONIDS_DEBRIS_PRESET, local(10, 28, 23))
     expect(r.player.badges?.['draconids-2026']).toBeUndefined()
+  })
+})
+
+describe('orionids force clock', () => {
+  it('lands on peak night inside the window', () => {
+    const at = orionidsForcedInstant()
+    expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, at)).toBe(true)
+    expect(badgeTierFor('orionids-2026', at)).toBe('gold')
+    expect(activeDebrisPreset(at)?.eventId).toBe('orionids-2026')
+  })
+
+  it('keeps ?orionids=1 after the query string is gone', () => {
+    const store = new Map<string, string>()
+    const prev = globalThis.window
+    const win = {
+      location: { search: '?preset=m1-mining&orionids=1' },
+      localStorage: {
+        getItem: (k: string) => store.get(k) ?? null,
+        setItem: (k: string, v: string) => { store.set(k, v) },
+        removeItem: (k: string) => { store.delete(k) },
+      },
+    }
+    globalThis.window = win as unknown as Window & typeof globalThis
+    captureOrionidsQueryFlag()
+    win.location.search = ''
+    expect(orionidsDevForced()).toBe(true)
+    win.location.search = '?orionids=0'
+    expect(orionidsDevForced()).toBe(false)
+    globalThis.window = prev
   })
 })
 
