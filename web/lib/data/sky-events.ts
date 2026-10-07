@@ -60,7 +60,9 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
   {
     id: 'orionids-2026',
     name: 'Orionids',
-    startUtc: '2026-10-20T00:00:00Z',
+    // Gold opens at local midnight on 19 Oct, not this UTC instant.
+    // badgeTierFor reads orionidsLocalStartMs() for this id.
+    startUtc: '2026-10-19T00:00:00Z',
     endUtc: '2026-11-08T00:00:00Z',
     activities: ['debris-mining'],
   },
@@ -88,7 +90,8 @@ export function badgeTierFor(eventId: string, at: Date | number): BadgeTier | nu
   if (!event) return null
   const t = toMs(at)
   if (!Number.isFinite(t)) return null
-  if (t < Date.parse(event.startUtc)) return null
+  const open = event.id === 'orionids-2026' ? orionidsLocalStartMs() : Date.parse(event.startUtc)
+  if (t < open) return null
   return t < Date.parse(event.endUtc) ? 'gold' : 'silver'
 }
 
@@ -180,9 +183,23 @@ export interface DebrisEventPreset {
 export const NIGHT_START_HOUR = 22
 export const NIGHT_END_HOUR = 6
 
+/** Local calendar date the Orionids shower opens (midnight, player's zone). */
+export const ORIONIDS_LOCAL_START = { year: 2026, month: 10, day: 19 } as const
+/** Teaser is up from 7 Oct 2026 local until that midnight. */
+export const ORIONIDS_TEASER_OPEN = { year: 2026, month: 10, day: 7 } as const
+
+export function localMidnightMs(year: number, month: number, day: number): number {
+  return new Date(year, month - 1, day, 0, 0, 0, 0).getTime()
+}
+
+export function orionidsLocalStartMs(): number {
+  return localMidnightMs(ORIONIDS_LOCAL_START.year, ORIONIDS_LOCAL_START.month, ORIONIDS_LOCAL_START.day)
+}
+
 export const ORIONIDS_DEBRIS_PRESET: DebrisEventPreset = {
   eventId: 'orionids-2026',
-  startUtc: '2026-10-20T00:00:00Z',
+  // Real open instant is orionidsLocalStartMs(); this UTC stamp is not the gate.
+  startUtc: '2026-10-19T00:00:00Z',
   endUtc: '2026-11-08T00:00:00Z',
   // Peak night 21-22 Oct.
   peakUtc: '2026-10-22T00:00:00Z',
@@ -220,11 +237,17 @@ export function isLocalNight(at: Date | number): boolean {
   return hour >= NIGHT_START_HOUR || hour < NIGHT_END_HOUR
 }
 
-/** Window (UTC, start inclusive / end exclusive) AND local night. Pure. */
+/** Inclusive window open. Orionids uses local midnight on 19 Oct; other presets use UTC. */
+export function debrisWindowStartMs(preset: DebrisEventPreset): number {
+  if (preset.eventId === 'orionids-2026') return orionidsLocalStartMs()
+  return Date.parse(preset.startUtc)
+}
+
+/** Window (start inclusive / end exclusive) AND local night. Pure. */
 export function isDebrisEventActive(preset: DebrisEventPreset, now: Date | number): boolean {
   const t = toMs(now)
   if (!Number.isFinite(t)) return false
-  if (t < Date.parse(preset.startUtc) || t >= Date.parse(preset.endUtc)) return false
+  if (t < debrisWindowStartMs(preset) || t >= Date.parse(preset.endUtc)) return false
   return isLocalNight(t)
 }
 
@@ -237,7 +260,7 @@ export function activeDebrisPreset(now: Date | number): DebrisEventPreset | null
 export function debrisRatePerMinute(preset: DebrisEventPreset, now: Date | number): number {
   if (!isDebrisEventActive(preset, now)) return 0
   const t = toMs(now)
-  const start = Date.parse(preset.startUtc)
+  const start = debrisWindowStartMs(preset)
   const end = Date.parse(preset.endUtc)
   const peak = Date.parse(preset.peakUtc)
   const half = Math.max(peak - start, end - peak, 1)
@@ -247,6 +270,39 @@ export function debrisRatePerMinute(preset: DebrisEventPreset, now: Date | numbe
 
 /** Resource units granted for one mined debris chunk. */
 export const DEBRIS_UNITS_PER_CHUNK = 1
+
+/** True from 7 Oct 2026 local until the shower opens at local midnight on the 19th. */
+export function isOrionidsTeaserWindow(now: Date | number): boolean {
+  const t = toMs(now)
+  if (!Number.isFinite(t)) return false
+  const open = localMidnightMs(ORIONIDS_TEASER_OPEN.year, ORIONIDS_TEASER_OPEN.month, ORIONIDS_TEASER_OPEN.day)
+  return t >= open && t < orionidsLocalStartMs()
+}
+
+/** Whole local days and leftover hours until 19 Oct local midnight. */
+export function orionidsCountdown(now: Date | number): { days: number; hours: number } {
+  const remain = Math.max(0, orionidsLocalStartMs() - toMs(now))
+  const totalHours = Math.floor(remain / 3_600_000)
+  return { days: Math.floor(totalHours / 24), hours: totalHours % 24 }
+}
+
+/** Local calendar day, used so the teaser shows at most once per day. */
+export function orionidsTeaserDayKey(now: Date | number): string {
+  const d = new Date(toMs(now))
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${month}-${day}`
+}
+
+/**
+ * Show the Base teaser. `forced` skips the window and the once-per-day cap
+ * so a dev switch can open the coming-soon state on demand.
+ */
+export function shouldShowOrionidsTeaser(now: Date | number, seenDay: string | null, forced: boolean): boolean {
+  if (forced) return true
+  if (!isOrionidsTeaserWindow(now)) return false
+  return seenDay !== orionidsTeaserDayKey(now)
+}
 
 /**
  * First debris mined during a preset's event: grants that event's badge via
@@ -315,6 +371,8 @@ export function isNewMoonDay(dateKey: string): boolean {
 
 // ---- Dev clock -------------------------------------------------------------
 const ORIONIDS_FORCE_KEY = 'landnam.forceOrionids'
+const ORIONIDS_TEASER_FORCE_KEY = 'landnam.forceOrionidsTeaser'
+export const ORIONIDS_TEASER_SEEN_KEY = 'landnam.orionidsTeaserDay'
 
 /**
  * Local 21 Oct 2026, 23:00. Inside the Orionids window, on the peak night,
@@ -324,25 +382,33 @@ export function orionidsForcedInstant(): number {
   return new Date(2026, 9, 21, 23, 0, 0, 0).getTime()
 }
 
+/** Local 12 Oct 2026, 15:00. Inside the teaser window, before the shower opens. */
+export function orionidsTeaserForcedInstant(): number {
+  return new Date(2026, 9, 12, 15, 0, 0, 0).getTime()
+}
+
 /**
- * Dev/staging force switch for the Orionids window.
- * `?orionids=1` sticks for the session, `?orionids=0` clears it,
- * `window.__LANDNAM_FORCE_ORIONIDS = true` forces it for this page.
- * Callers must still gate this on the dev launcher so production ignores it.
- */
-/**
- * Persist `?orionids=1` / `?orionids=0` immediately.
- * Game hydration replaces the URL (dropping the query) before the mining
- * screen mounts, so the flag has to be stored on the first client render.
+ * Persist `?orionids=` before hydration strips the query.
+ * `1` forces the shower, `teaser` forces the coming-soon card, `0` clears both.
+ * `window.__LANDNAM_FORCE_ORIONIDS` and `__LANDNAM_FORCE_ORIONIDS_TEASER`
+ * force this page only. Callers still gate on the dev launcher.
  */
 export function captureOrionidsQueryFlag(): void {
   if (typeof window === 'undefined') return
   try {
     const query = new URLSearchParams(window.location.search).get('orionids')
-    if (query === '1') window.localStorage.setItem(ORIONIDS_FORCE_KEY, '1')
-    else if (query === '0') window.localStorage.removeItem(ORIONIDS_FORCE_KEY)
+    if (query === '1') {
+      window.localStorage.setItem(ORIONIDS_FORCE_KEY, '1')
+      window.localStorage.removeItem(ORIONIDS_TEASER_FORCE_KEY)
+    } else if (query === 'teaser') {
+      window.localStorage.setItem(ORIONIDS_TEASER_FORCE_KEY, '1')
+      window.localStorage.removeItem(ORIONIDS_FORCE_KEY)
+    } else if (query === '0') {
+      window.localStorage.removeItem(ORIONIDS_FORCE_KEY)
+      window.localStorage.removeItem(ORIONIDS_TEASER_FORCE_KEY)
+    }
   } catch {
-    // Private mode: the page-local flag below still works.
+    // Private mode: the page-local flags below still work.
   }
 }
 
@@ -353,6 +419,24 @@ export function orionidsDevForced(): boolean {
   captureOrionidsQueryFlag()
   try {
     return window.localStorage.getItem(ORIONIDS_FORCE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Dev/staging force switch for the coming-soon teaser.
+ * `?orionids=teaser` sticks until cleared, `?orionids=0` clears it,
+ * `window.__LANDNAM_FORCE_ORIONIDS_TEASER = true` forces this page.
+ * `?orionids=1` turns the shower on and this switch off.
+ */
+export function orionidsTeaserDevForced(): boolean {
+  if (typeof window === 'undefined') return false
+  const flag = (window as unknown as { __LANDNAM_FORCE_ORIONIDS_TEASER?: boolean }).__LANDNAM_FORCE_ORIONIDS_TEASER
+  if (flag === true) return true
+  captureOrionidsQueryFlag()
+  try {
+    return window.localStorage.getItem(ORIONIDS_TEASER_FORCE_KEY) === '1'
   } catch {
     return false
   }

@@ -30,6 +30,8 @@ describe('mining canvas variant', () => {
     expect(ORIONIDS_VARIANTS.dark.skyBlend).toBe('screen')
     expect(ORIONIDS_VARIANTS.dark.streakBlend).toBe('screen')
     expect(ORIONIDS_VARIANTS.dark.debris).toHaveLength(4)
+    expect(ORIONIDS_VARIANTS.dark.meteorIcon).toContain('icon-meteor.png')
+    expect(ORIONIDS_VARIANTS.blueprint.meteorIcon).toContain('icon-meteor-light.png')
     expect(ORIONIDS_VARIANTS.blueprint.fallFrame.fallCount).toBe(6)
   })
 })

@@ -14,8 +14,14 @@ import {
   isDebrisEventActive,
   isLocalNight,
   captureOrionidsQueryFlag,
+  isOrionidsTeaserWindow,
+  orionidsCountdown,
   orionidsDevForced,
   orionidsForcedInstant,
+  orionidsTeaserDayKey,
+  orionidsTeaserDevForced,
+  orionidsTeaserForcedInstant,
+  shouldShowOrionidsTeaser,
 } from './sky-events'
 import { MINERAL_META } from './minerals'
 
@@ -135,7 +141,15 @@ describe('isDebrisEventActive (Orionids)', () => {
   })
   it('is inactive before the window and after it, even at night', () => {
     expect(isDebrisEventActive(p, local(10, 10, 23))).toBe(false)
+    expect(isDebrisEventActive(p, local(10, 18, 23))).toBe(false)
     expect(isDebrisEventActive(p, local(11, 12, 23))).toBe(false)
+  })
+  it('opens at local midnight on 19 Oct', () => {
+    expect(isDebrisEventActive(p, local(10, 19, 0))).toBe(true)
+    expect(isDebrisEventActive(p, local(10, 19, 12))).toBe(false)
+    expect(isDebrisEventActive(p, local(10, 19, 23))).toBe(true)
+    expect(badgeTierFor('orionids-2026', local(10, 18, 23))).toBeNull()
+    expect(badgeTierFor('orionids-2026', local(10, 19, 23))).toBe('gold')
   })
   it('covers the 7 Nov end and the 21-22 Oct peak night', () => {
     expect(isDebrisEventActive(p, local(11, 7, 23))).toBe(true)
@@ -214,7 +228,45 @@ describe('orionids force clock', () => {
     expect(orionidsDevForced()).toBe(true)
     win.location.search = '?orionids=0'
     expect(orionidsDevForced()).toBe(false)
+    expect(orionidsTeaserDevForced()).toBe(false)
+    win.location.search = '?orionids=teaser'
+    expect(orionidsTeaserDevForced()).toBe(true)
+    expect(orionidsDevForced()).toBe(false)
+    win.location.search = '?orionids=1'
+    expect(orionidsDevForced()).toBe(true)
+    expect(orionidsTeaserDevForced()).toBe(false)
     globalThis.window = prev
+  })
+})
+
+describe('orionids teaser', () => {
+  it('runs from 7 Oct local until midnight on the 19th', () => {
+    expect(isOrionidsTeaserWindow(local(10, 6, 23))).toBe(false)
+    expect(isOrionidsTeaserWindow(local(10, 7, 0))).toBe(true)
+    expect(isOrionidsTeaserWindow(local(10, 18, 23))).toBe(true)
+    expect(isOrionidsTeaserWindow(local(10, 19, 0))).toBe(false)
+  })
+
+  it('counts whole days and hours to 19 Oct', () => {
+    expect(orionidsCountdown(local(10, 18, 12))).toEqual({ days: 0, hours: 12 })
+    expect(orionidsCountdown(local(10, 12, 15))).toEqual({ days: 6, hours: 9 })
+  })
+
+  it('shows at most once per local day, unless forced', () => {
+    const at = local(10, 12, 9)
+    const today = orionidsTeaserDayKey(at)
+    expect(shouldShowOrionidsTeaser(at, null, false)).toBe(true)
+    expect(shouldShowOrionidsTeaser(at, today, false)).toBe(false)
+    expect(shouldShowOrionidsTeaser(at, orionidsTeaserDayKey(local(10, 11, 9)), false)).toBe(true)
+    expect(shouldShowOrionidsTeaser(local(10, 20, 12), today, false)).toBe(false)
+    expect(shouldShowOrionidsTeaser(local(10, 20, 12), today, true)).toBe(true)
+  })
+
+  it('pins the teaser clock before the shower', () => {
+    const at = orionidsTeaserForcedInstant()
+    expect(isOrionidsTeaserWindow(at)).toBe(true)
+    expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, at)).toBe(false)
+    expect(orionidsCountdown(at)).toEqual({ days: 6, hours: 9 })
   })
 })
 

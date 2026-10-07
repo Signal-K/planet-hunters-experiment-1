@@ -32,6 +32,7 @@ export interface OrionidsVariant {
   chipOff: string
   badgeSmall: string
   iconResource: string
+  meteorIcon: string
 }
 
 const BLUEPRINT: OrionidsVariant = {
@@ -66,6 +67,7 @@ const BLUEPRINT: OrionidsVariant = {
   chipOff: `${ASSET}/ui/chip-orionids-active-dot-off.png`,
   badgeSmall: `${ASSET}/ui/badge-orionids-2026-light-128.png`,
   iconResource: `${ASSET}/ui/icon-orionid-debris.png`,
+  meteorIcon: `${ASSET}/ui/icon-meteor-light.png`,
 }
 
 const DARK: OrionidsVariant = {
@@ -100,6 +102,7 @@ const DARK: OrionidsVariant = {
   chipOff: `${ASSET}/ui/chip-orionids-active-dark-dot-off.png`,
   badgeSmall: `${ASSET}/ui/badge-orionids-2026-128.png`,
   iconResource: `${ASSET}/ui/icon-orionid-debris.png`,
+  meteorIcon: `${ASSET}/ui/icon-meteor.png`,
 }
 
 export const ORIONIDS_VARIANTS: Record<OrionidsVariantId, OrionidsVariant> = {
