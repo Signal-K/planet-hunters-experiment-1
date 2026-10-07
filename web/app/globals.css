@@ -894,11 +894,11 @@ button { cursor: pointer; }
    of the scene. */
 @media (orientation: landscape) and (max-height: 500px) {
   .portrait-canvas:has([data-screen="hub"]) .hub-friends-button,
-  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 8px !important; width: 32px; min-width: 32px; height: 32px; min-height: 32px; padding: 0 !important; justify-content: center; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 8px !important; width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0 !important; justify-content: center; }
   .portrait-canvas:has([data-screen="hub"]) .hub-friends-button span,
   .portrait-canvas:has([data-screen="hub"]) .hub-community-button span { display: none; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { right: 188px !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { right: 228px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { right: 252px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { right: 304px !important; }
   .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 8px; right: 108px; flex-direction: row; align-items: center; }
   .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none; }
   .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 8px !important; right: 12px !important; bottom: auto !important; min-height: 32px; }

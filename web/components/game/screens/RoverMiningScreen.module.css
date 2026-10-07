@@ -10,7 +10,7 @@
 .takeonMount { position: absolute; inset: 0; }
 
 .fieldHotbar { position: absolute; right: 16px; bottom: 16px; left: 16px; z-index: 4; display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln-bp-line); background: color-mix(in srgb, var(--ln-bp-paper) 94%, transparent); box-shadow: var(--ln-shadow-card); color: var(--ln-bp-ink); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
-.fieldHotbar button { min-height: 28px; padding: 4px 8px; border: 1px solid var(--ln-bp-line-strong); background: transparent; color: var(--ln-bp-blue); font: inherit; cursor: pointer; }
+.fieldHotbar button { min-height: 44px; min-width: 44px; padding: 4px 8px; border: 2px solid var(--ln-bp-ink); background: var(--ln-bp-paper); color: var(--ln-bp-ink); font: inherit; cursor: pointer; }
 .fieldHotbar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fieldHotbar strong { margin-left: auto; color: var(--ln-bp-green); font: inherit; white-space: nowrap; }
 
@@ -19,32 +19,32 @@
 .landingHandoff img { width: min(42vw, 460px); max-height: 65vh; object-fit: contain; justify-self: center; filter: drop-shadow(0 16px 24px color-mix(in srgb, var(--ln-bp-blue) 28%, transparent)); }
 .landingHandoff > div { display: grid; gap: 12px; align-self: center; padding: 24px; border-left: 4px solid var(--ln-bp-blue); background: color-mix(in srgb, var(--ln-bp-paper) 96%, transparent); pointer-events: auto; }
 .landingHandoff h2 { margin: 0; color: var(--ln-bp-ink); font: 800 clamp(22px, 3vw, 34px)/1.05 var(--ln-font-display); text-transform: uppercase; }
-.landingHandoff p { margin: 0; color: var(--ln-bp-muted); font: 500 13px/1.55 var(--ln-font-body); }
-.eyebrow, .kicker { color: var(--ln-bp-blue); font: 800 9px var(--ln-font-display); letter-spacing: .18em; text-transform: uppercase; }
+.landingHandoff p { margin: 0; color: var(--ln-bp-ink-dim); font: 500 14px/1.55 var(--ln-font-body); }
+.eyebrow, .kicker { color: var(--ln-bp-blue-press, #175f9b); font: 800 14px var(--ln-font-display); letter-spacing: .18em; text-transform: uppercase; }
 
-.primaryAction { min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln-bp-blue); background: var(--ln-bp-blue); color: var(--ln-bp-paper); font: 800 10px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
+.primaryAction { min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln-bp-blue); background: var(--ln-bp-blue); color: var(--ln-bp-paper); font: 800 14px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
 .primaryAction:disabled { opacity: .45; cursor: not-allowed; }
 
 .controls { position: absolute; top: 16px; left: 16px; z-index: 4; display: grid; gap: 8px; width: min(224px, calc(100% - 32px)); }
 .objectControls { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--ln-bp-line-strong); background: color-mix(in srgb, var(--ln-bp-paper) 94%, transparent); box-shadow: var(--ln-shadow-card); }
-.buildToggle { display: inline-flex; flex: 1 1 auto; align-items: center; justify-content: center; min-height: 36px; padding: 0 8px; border: 1px solid var(--ln-bp-line-strong); background: transparent; color: var(--ln-bp-blue); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
+.buildToggle { display: inline-flex; flex: 1 1 auto; align-items: center; justify-content: center; min-height: 44px; padding: 0 8px; border: 1px solid var(--ln-bp-line-strong); background: transparent; color: var(--ln-bp-blue); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
 .buildToggle[aria-pressed='true'] { border-color: var(--ln-bp-green); color: var(--ln-bp-green); }
 .sandboxDock { position: absolute; bottom: 72px; left: 16px; z-index: 6; width: min(440px, calc(100% - 32px)); max-height: calc(100% - 96px); overflow: auto; }
 
 .oreMarker, .mineSiteControl { position: absolute; z-index: 3; display: inline-flex; align-items: center; gap: 8px; transform: translate(-50%, -50%); border: 1px solid var(--ln-bp-line-strong); background: color-mix(in srgb, var(--ln-bp-paper) 92%, transparent); box-shadow: var(--ln-shadow-card); color: var(--ln-bp-ink); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
-.oreMarker { min-height: 32px; padding: 4px 8px; }
+.oreMarker { min-height: 44px; padding: 4px 8px; }
 .oreMarker i { display: block; width: 16px; height: 16px; border: 4px solid var(--ln-bp-blue); transform: rotate(45deg); }
 .oreMarkerSelected { border-color: var(--ln-bp-blue); outline: 4px solid color-mix(in srgb, var(--ln-bp-blue) 24%, transparent); }
 .oreMarkerClaimed { border-color: var(--ln-bp-green); color: var(--ln-bp-green); }
 .oreMarkerClaimed i { border-color: var(--ln-bp-green); }
-.mineSiteControl { min-height: 36px; padding: 8px 12px; border-color: var(--ln-bp-green); color: var(--ln-bp-green); }
+.mineSiteControl { min-height: 44px; padding: 8px 12px; border-color: var(--ln-bp-green); color: var(--ln-bp-green); }
 
 .drillReadout { position: absolute; top: 64px; right: 16px; z-index: 4; display: grid; gap: 12px; width: min(360px, calc(100% - 272px)); padding: 16px; border: 1px solid var(--ln-bp-line-strong); background: color-mix(in srgb, var(--ln-bp-paper) 95%, transparent); box-shadow: var(--ln-shadow-card); color: var(--ln-bp-ink); }
 .readoutHeading { display: grid; gap: 4px; }
 .readoutHeading strong { color: var(--ln-bp-ink); font: 800 14px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
-.drillReadout p { margin: 0; color: var(--ln-bp-muted); font: 600 12px/1.5 var(--ln-font-body); }
+.drillReadout p { margin: 0; color: var(--ln-bp-ink-dim); font: 600 14px/1.5 var(--ln-font-body); }
 .drillReadout ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.drillReadout li { padding: 8px; border-left: 4px solid var(--ln-bp-blue); background: var(--ln-bp-paper-2); color: var(--ln-bp-ink); font: 800 10px/1.4 var(--ln-font-mono); letter-spacing: .04em; }
+.drillReadout li { padding: 8px; border-left: 4px solid var(--ln-bp-blue); background: var(--ln-bp-paper-2); color: var(--ln-bp-ink); font: 800 14px/1.4 var(--ln-font-mono); letter-spacing: .04em; }
 .drillReadout li[data-kind='mine-site'] { border-left-color: var(--ln-bp-green); color: var(--ln-bp-green); }
 .mineSiteStatus { color: var(--ln-bp-green) !important; }
 
@@ -58,7 +58,7 @@
   .controls { top: auto; right: 8px; bottom: 68px; left: 8px; width: auto; grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .controls > div { width: auto; }
   .objectControls { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 6px 8px; }
-  .objectControls .primaryAction { min-height: 40px; }
+  .objectControls .primaryAction { min-height: 44px; }
   .drillReadout { top: 44px; right: 8px; left: 8px; width: auto; gap: 6px; padding: 8px 10px; }
   .drillReadout .kicker, .drillReadout p:not(.mineSiteStatus), .drillReadout li:not(:last-child) { display: none; }
   .drillReadout li { padding: 6px 8px; }
