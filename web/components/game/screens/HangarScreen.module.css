@@ -1,6 +1,10 @@
 .screen {
   background: var(--ln-bg);
-  --hangar-accent: var(--ln-cyan-press);
+  /* The hangar sits on light paper but resolves the default token set, whose cyan and grey are pale.
+     Pin the blueprint ink values here so every label clears 4.5:1 on paper and ice. */
+  --hangar-accent: #17639f;
+  --ln-text-muted: #48596a;
+  --ln-text-dim: #34475a;
 }
 
 .scroll {

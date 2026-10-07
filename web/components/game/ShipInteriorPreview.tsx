@@ -257,7 +257,7 @@ export default function ShipInteriorPreview({
             border by default, lime border + "Installed" state when selected. */}
         {/* Scrolls internally: in a short landscape viewport the cards would otherwise
             spill under the footer controls, where a real pointer cannot reach them. */}
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridAutoRows: 'minmax(min-content, 1fr)', gap: 6 }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridAutoRows: 'min-content', alignContent: 'start', gap: 6 }}>
           {availableParts.map(part => {
             const selected = buildState.installed[step.kind] === part.id
             const swapCost = currentInstalled && currentInstalled.id !== part.id ? currentInstalled.price : 0
@@ -292,7 +292,7 @@ export default function ShipInteriorPreview({
                   {part.description}
                 </div>
                 <div style={{ flex: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-bp-blue)' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 800, color: '#17639f' }}>
                     {formatCurrency(part.price, { compact: true })}
                   </span>
                   <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, color: selected ? '#1d8a82' : 'var(--ln-bp-blue)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
