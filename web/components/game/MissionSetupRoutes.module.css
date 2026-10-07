@@ -14,7 +14,7 @@
 @media (orientation:portrait) and (max-height:760px){.review{grid-template-rows:minmax(110px,22%) 1fr;}.launchScene{min-height:110px;}}
 @media (orientation:landscape) and (max-height:520px){.reviewBrief{overflow-y:auto;padding-bottom:0;}.reviewHeading h2{font-size:20px;}.reviewFacts > div{padding:3px 0;}.inlineChoices{grid-template-columns:1fr;}.reviewBrief > .primary{position:sticky;bottom:0;z-index:2;flex-shrink:0;margin-bottom:0;}.clearance{margin-top:8px;}}
 
-.reviewMap { position:relative; flex:none; height:168px; margin-top:8px; overflow:hidden; border:2px solid var(--mission-ink); background:var(--mission-paper); }
+.reviewMap { position:relative; flex:none; height:168px; margin-top:8px; overflow:hidden; border:2px solid var(--mission-ink); box-shadow:0 4px 0 color-mix(in srgb,var(--mission-ink) 42%,transparent); background:var(--mission-paper); }
 @media (orientation:landscape) and (max-height:520px){.reviewMap{display:none;}}
 
 /* SSL-423: contract gallery in portrait is a flow layout (no absolutely placed text), so client, cargo,

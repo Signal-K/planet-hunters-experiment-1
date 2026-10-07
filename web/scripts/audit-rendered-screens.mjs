@@ -27,7 +27,7 @@ const AUDIT = `(() => {
   const bad = (c, what) => { if (!c || c.a < 0.3) return null; const k = hsl(c); if (k.s < 0.22 || k.l < 0.08 || k.l > 0.95) return null
     if (k.h >= 12 && k.h <= 48) return what+':orange'; if (k.h >= 262 && k.h <= 335) return what+':purple'; return null }
   const bgOf = el => { for (let n = el; n; n = n.parentElement) { const c = parse(getComputedStyle(n).backgroundColor); if (c && c.a > 0.85) return c } return {r:255,g:255,b:255,a:1} }
-  const out = { dark: [], hue: [], small: [], taps: [], contrast: [] }
+  const out = { dark: [], hue: [], small: [], taps: [], contrast: [], panels: [] }
   const seen = new Set()
   const vis = el => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && +s.opacity > 0.05 && r.bottom > 0 && r.top < innerHeight*3 }
   const name = el => (el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\\s+/).join('.') : '') + ' < ' + (el.parentElement && typeof el.parentElement.className === 'string' ? el.parentElement.className.trim().split(/\\s+/).join('.') : '') + ':' + (el.innerText||el.getAttribute('aria-label')||'').trim().slice(0,28).replace(/\\s+/g,' '))
@@ -37,6 +37,7 @@ const AUDIT = `(() => {
     const bg = parse(s.backgroundColor)
     if (bg && bg.a > 0.6 && r.width*r.height > 6000) { const k = hsl(bg); if (k.l < 0.45) out.dark.push(name(el)+' '+s.backgroundColor); const hb = bad(bg,'bg'); if (hb) out.hue.push(hb+' '+name(el)+' '+s.backgroundColor)
       if (k.h >= 25 && k.h <= 60 && k.s > 0.12 && k.l > 0.8 && k.l < 0.97) out.dark.push('cream '+name(el)+' '+s.backgroundColor) }
+    if (bg && bg.a > 0.85 && r.width*r.height > 9000 && r.width < innerWidth*0.98 && r.height < innerHeight*0.9 && s.position !== 'static' || (bg && bg.a > 0.85 && r.width*r.height > 9000 && r.width < innerWidth*0.98 && r.height < innerHeight*0.9 && s.borderRadius !== '0px')) { const bw = parseFloat(s.borderTopWidth), sh = s.boxShadow !== 'none' && s.boxShadow.replace(/rgba?\\([^)]*\\)/g,'').split(',').some(part => { const n = (part.match(/-?[\\d.]+px/g)||[]).map(parseFloat); return n.length >= 2 && (n[0] !== 0 || n[1] !== 0) }); if (bw < 1.9 || !sh) out.panels.push((bw<1.9?'border '+bw+'px ':'')+(sh?'':'no-offset-shadow ')+name(el)) }
     for (const [prop,label] of [['color','text'],['borderTopColor','border'],['fill','fill'],['stroke','stroke']]) { const hv = bad(parse(s[prop]), label); if (hv && (label==='text' ? el.childNodes.length && [...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim()) : label==='border' ? parseFloat(s.borderTopWidth)>0 : el instanceof SVGElement)) out.hue.push(hv+' '+name(el)+' '+s[prop]) }
     const own = [...el.childNodes].filter(n => n.nodeType===3 && n.textContent.trim()).map(n=>n.textContent.trim()).join(' ')
     if (own) {

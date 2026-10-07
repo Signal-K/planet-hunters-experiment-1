@@ -39,7 +39,7 @@ interface PanelProps {
 
 export default function Panel({ children, className, style, accent = '#3fa9ff', variant = 'default', surface = 'solid', title }: PanelProps) {
   return (
-    <div title={title} className={[surface === 'glass' ? 'ln-glass-panel' : undefined, className].filter(Boolean).join(' ')} style={{
+    <div title={title} className={['ln-panel', surface === 'glass' ? 'ln-glass-panel' : undefined, className].filter(Boolean).join(' ')} style={{
       position: 'relative',
       background: surface === 'glass' ? undefined : 'var(--ln-panel-2)',
       border: surface === 'glass' ? undefined : `1px solid ${accent}40`,

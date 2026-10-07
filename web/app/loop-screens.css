@@ -135,7 +135,8 @@ body:has([data-screen="hub"]) {
 .theme-blueprint .debrief-delivery-panel,
 .theme-blueprint .debrief-command-dock {
   background: rgba(255, 255, 255, 0.96);
-  border-color: var(--ln-blueprint-line-strong);
+  border: 2px solid var(--ln-blueprint-ink);
+  box-shadow: 4px 4px 0 rgba(31, 120, 193, 0.28);
   color: var(--ln-blueprint-ink);
 }
 .theme-blueprint .debrief-hud-header,
@@ -146,3 +147,11 @@ body:has([data-screen="hub"]) {
 /* Top bar back control and any loop button: 44px floor. */
 .theme-blueprint button { min-height: 44px; }
 .theme-blueprint .top-bar button { min-width: 44px; }
+
+/* Shared Panel: the light blueprint card is a 2px ink outline with an offset
+   shadow on every screen. Panel sets its border inline, so this must win. */
+.theme-blueprint .ln-panel {
+  border: 2px solid var(--ln-blueprint-ink) !important;
+  border-radius: 4px !important;
+  box-shadow: 4px 4px 0 rgba(31, 120, 193, 0.28) !important;
+}
