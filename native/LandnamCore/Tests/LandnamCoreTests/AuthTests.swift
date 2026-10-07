@@ -24,17 +24,30 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
 
     @Test func appleSignInPostsTokenAndNonceAndStoresSession() async throws {
         StubProtocol.handler = { req in
-            #expect(req.url?.path == "/api/landnam-auth/apple")
             let body = try! JSONSerialization.jsonObject(with: req.bodyStreamData()) as! [String: String]
             #expect(body["identityToken"] == "jwt" && body["nonce"] == "n1")
+            if req.url?.path == "/auth/apple-exchange" {
+                return (200, Data(#"{"token":"SHARED","record":{"id":"s1"}}"#.utf8))
+            }
+            #expect(req.url?.path == "/api/landnam-auth/apple")
             return (200, Data(#"{"token":"T","record":{"id":"u1","email":"a@b.co","displayName":""}}"#.utf8))
         }
         let store = InMemorySessionStore()
         let model = await AuthModel(api: api(), store: store)
         await model.completeApple(identityToken: "jwt", nonce: "n1", fullName: nil)
         let session = await model.session
-        #expect(session == AuthSession(token: "T", userId: "u1", email: "a@b.co", displayName: nil))
+        #expect(session == AuthSession(token: "T", userId: "u1", email: "a@b.co", displayName: nil, sharedToken: "SHARED", sharedUserId: "s1"))
         #expect(store.load() == session)
+    }
+
+    @Test func appleSignInStillWorksWhenSharedExchangeFails() async {
+        StubProtocol.handler = { req in
+            if req.url?.path == "/auth/apple-exchange" { return (502, Data()) }
+            return (200, Data(#"{"token":"T","record":{"id":"u1"}}"#.utf8))
+        }
+        let model = await AuthModel(api: api(), store: InMemorySessionStore())
+        await model.completeApple(identityToken: "jwt", nonce: "n1", fullName: nil)
+        #expect(await model.session == AuthSession(token: "T", userId: "u1"))
     }
 
     @Test func passwordSignInAuthsSharedThenExchanges() async {

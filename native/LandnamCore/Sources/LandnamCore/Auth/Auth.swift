@@ -113,8 +113,26 @@ public struct AuthAPI: Sendable {
             var token: String; var record: Record
         }
         guard let reply = try? JSONDecoder().decode(Reply.self, from: data) else { throw AuthError.malformed }
-        return AuthSession(token: reply.token, userId: reply.record.id,
-                           email: reply.record.email?.nilIfEmpty, displayName: reply.record.displayName?.nilIfEmpty)
+        var session = AuthSession(token: reply.token, userId: reply.record.id,
+                                  email: reply.record.email?.nilIfEmpty, displayName: reply.record.displayName?.nilIfEmpty)
+        // Citizen-science uploads need a shared-backend login. If the exchange fails the player
+        // still signs in; verdicts stay local until a later sign-in succeeds.
+        if let shared = try? await exchangeAppleForShared(identityToken: identityToken, nonce: nonce) {
+            session.sharedToken = shared.token; session.sharedUserId = shared.userId
+        }
+        return session
+    }
+
+    /// `POST /auth/apple-exchange` on the shared backend: the Apple identity token is the only proof.
+    public func exchangeAppleForShared(identityToken: String, nonce: String) async throws -> (token: String, userId: String) {
+        var req = URLRequest(url: sharedURL.appendingPathComponent("auth/apple-exchange"))
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONEncoder().encode(["identityToken": identityToken, "nonce": nonce])
+        let (data, _) = try await send(req)
+        struct Reply: Decodable { struct Record: Decodable { var id: String }; var token: String; var record: Record }
+        guard let reply = try? JSONDecoder().decode(Reply.self, from: data) else { throw AuthError.malformed }
+        return (reply.token, reply.record.id)
     }
 }
 
