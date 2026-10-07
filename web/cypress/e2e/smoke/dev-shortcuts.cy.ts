@@ -133,8 +133,8 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-ui-academy"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-hangar-assembly"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-instrument-hub"]').should('exist')
-    // ui-tess-discovery is listed in two groups, so 26 presets render 27 buttons.
-    cy.get('[data-testid^="dev-shot-"]').should('have.length', 27)
+    // ui-tess-discovery is listed in two groups, so 27 presets render 28 buttons.
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 28)
   })
 
   it('clicking Transport Hub lands on the Hub with the Flight Plan objective', () => {
