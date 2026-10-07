@@ -19,38 +19,6 @@ struct MissionsScreen: View {
     }
 }
 
-struct TargetsScreen: View {
-    @Environment(GameStore.self) private var store
-    var body: some View {
-        ScreenFrame(title: "Pick a target", back: { store.go(.missions) }) {
-            ForEach(store.mission.map { Targets.compatible(with: $0, targets: store.catalog.targets) } ?? store.catalog.targets) { t in
-                Panel {
-                    Text(t.name).font(.headline)
-                    Text("Orbit \(t.orbit) · \(t.minerals.joined(separator: ", "))").font(.caption)
-                    PrimaryButton(title: "Select") { store.pickTarget(t.id) }
-                }
-            }
-        }
-    }
-}
-
-struct RocketBuyScreen: View {
-    @Environment(GameStore.self) private var store
-    var body: some View {
-        ScreenFrame(title: "Rocket yard", back: { store.go(.missions) }) {
-            ForEach(Rockets.models, id: \.id) { r in
-                let refusal = Market.purchaseRefusal(store.state, rocket: r)
-                Panel {
-                    Text(r.name).font(.headline)
-                    Text("\(francs(r.costFrancs)) · cargo \(r.cargo) · orbit \(r.maxOrbit)").font(.caption)
-                    if let refusal { Text(refusal).font(.caption) }
-                    PrimaryButton(title: "Buy", enabled: refusal == nil) { store.purchaseRocket(r.id) }
-                }
-            }
-        }
-    }
-}
-
 struct LaunchScreen: View {
     @Environment(GameStore.self) private var store
     @State private var launching = false

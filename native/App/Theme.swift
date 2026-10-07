@@ -115,12 +115,19 @@ struct RailCard<Label: View>: View {
     }
 }
 
+private struct FlatLayoutKey: EnvironmentKey { static let defaultValue = false }
+extension EnvironmentValues {
+    /// Snapshot tests set this because ImageRenderer draws nothing inside a ScrollView.
+    var flatLayout: Bool { get { self[FlatLayoutKey.self] } set { self[FlatLayoutKey.self] = newValue } }
+}
+
 struct ScreenFrame<Content: View>: View {
+    @Environment(\.flatLayout) private var flat
     let title: String
     var back: (() -> Void)?
     @ViewBuilder var content: Content
     var body: some View {
-        ScrollView {
+        scroller {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
                     if let back {
@@ -136,5 +143,9 @@ struct ScreenFrame<Content: View>: View {
         }
         .background(Theme.bg.ignoresSafeArea())
         .foregroundStyle(Theme.ink)
+    }
+
+    @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
+        if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
     }
 }

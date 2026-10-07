@@ -58,8 +58,11 @@ public enum Loop {
         return finishQuickSetup(base, catalog: catalog)
     }
 
+    /// Screens that show the one-screen launch review (the target and vehicle can be switched from any of them).
+    public static let reviewScreens: Set<Screen> = [.targets, .rocketBuy, .fab, .launchpad]
+
     public static func pickTarget(_ s: GameState, id: String, catalog: Catalog) -> GameState {
-        guard s.screen == .targets, s.missionId != nil else { return s }
+        guard Self.reviewScreens.contains(s.screen), s.missionId != nil else { return s }
         return finishQuickSetup(pickTargetState(s, id: id, catalog: catalog), catalog: catalog)
     }
 
@@ -115,7 +118,7 @@ public enum Loop {
     }
 
     public static func purchaseRocket(_ s: GameState, rocketId: String, catalog: Catalog) -> GameState {
-        guard s.screen == .rocketBuy, let rocket = Rockets.model(id: rocketId), !rocket.locked,
+        guard Self.reviewScreens.contains(s.screen), let rocket = Rockets.model(id: rocketId), !rocket.locked,
               let mission = catalog.mission(s.missionId), Rockets.compatible(rocket, with: mission),
               Market.purchaseRefusal(s, rocket: rocket) == nil else { return s }
         var n = Market.applyPurchaseRocket(s, rocket: rocket)

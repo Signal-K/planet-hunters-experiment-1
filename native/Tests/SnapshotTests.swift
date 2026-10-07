@@ -29,6 +29,15 @@ struct SnapshotTests {
         try render(HubScreen().environment(store()), size: CGSize(width: 402, height: 874), name: "hub-phone")
     }
 
+    @Test func launchReviewPhone() throws {
+        let st = store()
+        st.go(.missions)
+        let id = try #require(st.catalog.missions.first { !$0.locked }?.id)
+        st.pickMission(id)
+        try render(LaunchReviewScreen().environment(st).environment(\.flatLayout, true), size: CGSize(width: 402, height: 874), name: "launch-review-phone")
+        #expect(st.mission != nil && st.target != nil)
+    }
+
     @Test func hubDesktop() throws {
         try render(HubScreen().environment(store()), size: CGSize(width: 1000, height: 680), name: "hub-desktop")
     }

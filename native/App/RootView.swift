@@ -16,9 +16,8 @@ struct RootView: View {
             switch store.screen {
             case .intro, .hub, .hubSubsurface: HubScreen()
             case .missions: MissionsScreen()
-            case .targets: TargetsScreen()
-            case .rocketBuy: RocketBuyScreen()
-            case .fab, .launchpad, .hangar, .build: LaunchScreen()
+            case .targets, .rocketBuy, .fab, .launchpad: LaunchReviewScreen()
+            case .hangar, .build: LaunchScreen()
             case .transit: TransitScreen()
             case .mining, .roverMining, .landing: MiningScreen()
             case .delivery: DeliveryScreen()
