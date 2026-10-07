@@ -40,17 +40,55 @@ struct LaunchReviewScreen: View {
         } else if let mission, let target {
             review(mission, target)
         } else {
-            ScreenFrame(title: "Launch review", back: { store.go(.missions) }) {
-                Panel { Text("Pick a contract first.") }
+            operations
+        }
+    }
+
+    /// Launchpad with nothing queued: the owned operations (instrument launches, discovery surveys, self-directed mining).
+    private var operations: some View {
+        let p = store.player
+        let own = store.catalog.missions.filter { $0.isOwnProgram && !$0.locked && $0.construction == nil }
+        let instruments = own.filter { $0.payload?.type == .satellite }
+        let surveys = own.filter { $0.tag == "SCIENCE" }
+        let mining = own.filter { $0.tag == "FREE OPS" && $0.payload == nil }.prefix(4)
+        return ScreenFrame(title: "Launchpad", back: { store.go(.hub) }) {
+            Eyebrow(text: "Base · Operations")
+            if !p.freeOperations {
+                Panel { VStack(alignment: .leading, spacing: 8) {
+                    Text("Take a contract").font(AppFont.display(16))
+                    Text("Your own operations open with Free Operations. Until then, fly the contracts on the mission board.").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    PrimaryButton(title: "Open mission board") { store.go(.missions) }
+                } }
+            } else {
+                group("Instruments", "Launch an owned instrument. Its daily feed opens in the Control Station.", instruments)
+                group("Discovery surveys", "Follow up a confirmed transit with a survey flight.", surveys)
+                group("Self-directed mining", "No client and no daily limit. Sell the haul yourself.", Array(mining))
+                PrimaryButton(title: "Open mission board") { store.go(.missions) }
+            }
+        }
+    }
+
+    @ViewBuilder private func group(_ title: String, _ blurb: String, _ missions: [Mission]) -> some View {
+        if !missions.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Eyebrow(text: title)
+                Text(blurb).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                ForEach(missions) { m in
+                    Panel(accent: Theme.teal) { VStack(alignment: .leading, spacing: 6) {
+                        Text(m.title).font(AppFont.display(16))
+                        Text(m.programReward?.outcome ?? m.brief).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                        PrimaryButton(title: m.payload != nil ? "Plan launch" : "Plan run") { store.pickMission(m.id) }
+                    } }
+                }
             }
         }
     }
 
     private func review(_ mission: Mission, _ target: Target) -> some View {
-        ScreenFrame(title: "Launch review", back: { store.go(.missions) }) {
+        ScreenFrame(title: "Launch review", back: { store.go(mission.isOwnProgram ? .launchpad : .missions) }) {
             scene
             VStack(alignment: .leading, spacing: 4) {
-                Eyebrow(text: "Client contract")
+                Eyebrow(text: mission.isOwnProgram ? "Own operation" : "Client contract")
                 Text(mission.title).font(AppFont.display(23)).foregroundStyle(Theme.ink)
             }
             Panel { VStack(alignment: .leading, spacing: 10) {

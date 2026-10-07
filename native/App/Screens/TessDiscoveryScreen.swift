@@ -78,9 +78,9 @@ struct TessDiscoveryScreen: View {
                     Panel(accent: Theme.teal) { Text("Annotation saved").font(AppFont.display(16)) }
                 } else {
                     HStack(spacing: 10) {
-                        InstrumentAnswerButton(title: "Confirm transit", enabled: !ranges.isEmpty, primary: true) { store.classifyTess(c.id, verdict: .planet, ranges: ranges) }
-                        InstrumentAnswerButton(title: "Mark noise", enabled: !ranges.isEmpty) { store.classifyTess(c.id, verdict: .notPlanet, ranges: ranges) }
-                        InstrumentAnswerButton(title: "Skip") { store.classifyTess(c.id, verdict: .unsure, ranges: ranges) }
+                        InstrumentAnswerButton(title: "Confirm transit", enabled: !ranges.isEmpty, primary: true) { store.classifyTess(c.id, verdict: .planet, ranges: ranges, candidate: c) }
+                        InstrumentAnswerButton(title: "Mark noise", enabled: !ranges.isEmpty) { store.classifyTess(c.id, verdict: .notPlanet, ranges: ranges, candidate: c) }
+                        InstrumentAnswerButton(title: "Skip") { store.classifyTess(c.id, verdict: .unsure, ranges: ranges, candidate: c) }
                     }
                 }
             },
@@ -99,6 +99,7 @@ struct TessDiscoveryScreen: View {
                     }
                 }
             }
+            if saved || store.player.pendingRepick { pointing }
             if !saved {
                 InstrumentAnswerButton(title: ranges.isEmpty ? "Drag dip" : "Drag dip · \(ranges.count)", primary: dragArmed) { dragArmed.toggle() }
                 if !ranges.isEmpty {
@@ -110,6 +111,24 @@ struct TessDiscoveryScreen: View {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    /// Satellite pointing (web TARGET SELECT): the daily pick comes from the star you point at.
+    private var pointing: some View {
+        let pool = feed.tess.filter { store.player.tessClassifications[$0.id] == nil }
+        let chosen = store.player.satelliteTargetId
+        return Panel(accent: Theme.teal) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Eyebrow(text: "Point the satellite")
+                    Spacer()
+                    if store.player.pendingRepick { Text("RE-POINT NOW").font(AppFont.display(14)).tracking(1).foregroundStyle(Theme.crimson) }
+                }
+                Text(pool.isEmpty ? "No open candidates to point at yet." : "Tomorrow's downlink follows the star you pick. Candidates sit at stable positions, not real astrometry.")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                if !pool.isEmpty { StarMap(pool: pool, chosen: chosen) { store.chooseSatelliteTarget($0) } }
             }
         }
     }
@@ -191,5 +210,35 @@ private struct LightCurveChart: View {
         }
         .accessibilityElement()
         .accessibilityLabel("Light curve, \(marks.count) dips marked. Drag across a dip to mark it.")
+    }
+}
+
+
+/// Sky map of the open TESS candidates. Each star is a 44pt tap target over its deterministic sky position.
+private struct StarMap: View {
+    let pool: [TessCandidate]
+    let chosen: String?
+    let pick: (String) -> Void
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                Theme.paper2
+                ForEach(pool.prefix(24)) { c in
+                    let p = Instruments.skyPosition(c.id), on = c.id == chosen
+                    Button { pick(c.id) } label: {
+                        ZStack {
+                            Circle().fill(on ? Theme.teal : Theme.paper).frame(width: on ? 20 : 12, height: on ? 20 : 12)
+                                .overlay(Circle().stroke(Theme.ink, lineWidth: 2))
+                        }.frame(width: 44, height: 44).contentShape(Rectangle())
+                    }.buttonStyle(.plain)
+                    .position(x: 22 + (p.x + 1) / 2 * (geo.size.width - 44), y: 22 + (p.y + 1) / 2 * (geo.size.height - 44))
+                    .accessibilityLabel("Point at \(c.toi)\(on ? ", pointed" : "")")
+                }
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+        }
+        .frame(height: 220)
+        .clipShape(RoundedRectangle(cornerRadius: 10)).overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink, lineWidth: 2.5))
     }
 }

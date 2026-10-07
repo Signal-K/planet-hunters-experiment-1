@@ -83,6 +83,11 @@ public struct Player: Codable, Equatable, Sendable {
     public var crewModuleResearched: Bool = false
     public var sharedChartsByClient: [String: Int] = [:]
     public var underConstruction: [String: Double] = [:]
+    public var discoveredExoplanetTargets: [String: Target] = [:]
+    public var satelliteTargetId: String?
+    public var pendingRepick: Bool = false
+    public var transitSatelliteLevel: Int?
+    public var deepSpaceTelescopeLaunchedAt: Double?
     public var surfaceOps: SurfaceOpsState = SurfaceOpsState()
     public var refineryQueue: [RefineryJob] = []
     public var refineryLastStartedAt: Double?
@@ -147,7 +152,8 @@ public struct Player: Codable, Equatable, Sendable {
         getOpt("trainingDate", &trainingDate); get("trainingSessionsUsedToday", &trainingSessionsUsedToday)
         getOpt("crewUpkeepSettledDate", &crewUpkeepSettledDate); get("crewModuleResearched", &crewModuleResearched)
         get("sharedChartsByClient", &sharedChartsByClient)
-        get("underConstruction", &underConstruction); get("surfaceOps", &surfaceOps)
+        get("underConstruction", &underConstruction); get("discoveredExoplanetTargets", &discoveredExoplanetTargets)
+        getOpt("satelliteTargetId", &satelliteTargetId); get("pendingRepick", &pendingRepick); getOpt("transitSatelliteLevel", &transitSatelliteLevel); getOpt("deepSpaceTelescopeLaunchedAt", &deepSpaceTelescopeLaunchedAt); get("surfaceOps", &surfaceOps)
         get("refineryQueue", &refineryQueue); getOpt("refineryLastStartedAt", &refineryLastStartedAt); get("structureCrewAssignments", &structureCrewAssignments)
         get("launchpadUpgraded", &launchpadUpgraded); getOpt("lastClient", &lastClient); get("loanDebt", &loanDebt)
         get("loanOffered", &loanOffered); getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
@@ -190,7 +196,8 @@ public struct Player: Codable, Equatable, Sendable {
         try putOpt("trainingDate", trainingDate); try put("trainingSessionsUsedToday", trainingSessionsUsedToday)
         try putOpt("crewUpkeepSettledDate", crewUpkeepSettledDate); try put("crewModuleResearched", crewModuleResearched)
         try put("sharedChartsByClient", sharedChartsByClient)
-        try put("underConstruction", underConstruction); try put("surfaceOps", surfaceOps)
+        try put("underConstruction", underConstruction); try put("discoveredExoplanetTargets", discoveredExoplanetTargets)
+        try putOpt("satelliteTargetId", satelliteTargetId); try put("pendingRepick", pendingRepick); try putOpt("transitSatelliteLevel", transitSatelliteLevel); try putOpt("deepSpaceTelescopeLaunchedAt", deepSpaceTelescopeLaunchedAt); try put("surfaceOps", surfaceOps)
         try put("refineryQueue", refineryQueue); try putOpt("refineryLastStartedAt", refineryLastStartedAt); try put("structureCrewAssignments", structureCrewAssignments)
         try put("launchpadUpgraded", launchpadUpgraded); try putOpt("lastClient", lastClient); try put("loanDebt", loanDebt)
         try put("loanOffered", loanOffered); try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)

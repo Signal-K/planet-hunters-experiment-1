@@ -171,6 +171,28 @@ public enum Loop {
         if s.player.returningToEarth { return Transitions.applyReturnArrived(s) }
         if s.player.headingToDelivery { return Transitions.applyDeliveryArrived(s, now: now) }
         var n = s
+        let mission = catalog.mission(s.missionId)
+        if Instruments.isOrbitalOnly(mission: mission, target: catalog.target(s.targetId)) {
+            // Orbital deployments and survey flights end on arrival: the instrument comes online, nothing is mined.
+            switch mission?.payload?.instrumentId {
+            case "transit-telescope":
+                n.player.transitSatelliteLaunchedAt = s.player.transitSatelliteLaunchedAt ?? now
+                n.player.transitSatelliteLevel = max(1, s.player.transitSatelliteLevel ?? 1)
+            case "deep-space-telescope":
+                n.player.deepSpaceTelescopeBuilt = true
+                n.player.deepSpaceTelescopeLaunchedAt = s.player.deepSpaceTelescopeLaunchedAt ?? now
+            case "saturn-imager":
+                n.player.saturnImagerLaunchedAt = s.player.saturnImagerLaunchedAt ?? now
+            default: break
+            }
+            n.player.missionPhase = .debrief
+            n.player.arrivalAt = nil
+            n.player.transitStartedAt = nil
+            n.lastCargo = [:]
+            n.screen = .debrief
+            n.doneSteps["6"] = true
+            return n
+        }
         n.player.missionPhase = .mining
         n.screen = catalog.mission(s.missionId)?.requires.drillTier == 0 ? .roverMining : .mining
         return n
@@ -223,6 +245,7 @@ public enum Loop {
             }
         }
         n.player.francs += total
+        if let xp = mission?.programReward?.researchXP, xp > 0 { n.player.researchXP += xp }
         if let target = n.targetId, !n.player.seenPlanets.contains(target) { n.player.seenPlanets.append(target) }
         let runId = n.player.missionRunId ?? "\(missionId):\(s.player.missionsDone)"
         let targetName = catalog.target(mission?.targetId ?? n.targetId)
@@ -259,7 +282,16 @@ public enum Loop {
         n.deliveryTargetId = nil
         n.tutorial = !n.player.freeOperations
         n.doneSteps["9"] = true
-        n.screen = program ? .launchpad : ((n.tutorial || justFinishedOnboarding) ? .hub : .market)
+        n.screen = mission?.payload?.type == .satellite ? .instrumentHub : program ? .launchpad : ((n.tutorial || justFinishedOnboarding) ? .hub : .market)
+        return n
+    }
+
+    /// Back out of a contract that has not launched: nothing is spent, the setup is cleared.
+    public static func cancelSetup(_ s: GameState) -> GameState {
+        guard s.player.activeMission == nil, s.missionId != nil else { return s }
+        var n = s
+        n.missionId = nil; n.targetId = nil; n.deliveryTargetId = nil
+        n.screen = .launchpad
         return n
     }
 

@@ -194,6 +194,23 @@ struct SnapshotTests {
         try render(IntroScreen().environment(GameStore(state: GameState())), size: CGSize(width: 402, height: 700), name: "intro-phone")
     }
 
+    @Test func launchpadOperationsPhone() throws {
+        var gs = basePlayer(); gs.screen = .launchpad; gs.player.missionsDone = 3
+        try render(LaunchReviewScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true), size: CGSize(width: 402, height: 1300), name: "launchpad-ops-phone")
+    }
+
+    @Test func tessPointingPhone() throws {
+        var gs = GameState()
+        gs.player.freeOperations = true; gs.player.transitSatelliteLaunchedAt = 1
+        let c = TessCandidate(id: "tess-demo", ticId: "TIC 260004324", toi: "TOI 700.01", sector: "Sectors 1-3", periodDays: 3.4, transitEpoch: 1.1, depthPpm: 9000, signalToNoise: 14)
+        gs.player.tessClassifications = [c.id: TessClassification(subjectId: c.id, verdict: .planet, ranges: [TransitRange(x1: 0.95, x2: 1.25)], submittedAt: 1)]
+        gs.player.satelliteTargetId = "toi-2"
+        let feed = offlineFeed
+        feed.tess = (1...9).map { TessCandidate(id: "toi-\($0)", toi: "TOI \(100 + $0).01") }
+        try render(TessDiscoveryScreen(candidate: c).environment(GameStore(state: gs)).environment(feed).environment(\.flatLayout, true),
+                   size: CGSize(width: 402, height: 1300), name: "tess-pointing-phone")
+    }
+
     @Test func hubDesktop() throws {
         try render(HubScreen().environment(store()), size: CGSize(width: 1000, height: 680), name: "hub-desktop")
     }

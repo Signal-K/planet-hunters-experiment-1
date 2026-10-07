@@ -66,6 +66,10 @@ public struct Target: Codable, Equatable, Identifiable, Sendable {
     public var minerals: [String]
     public var archetype: TargetArchetype?
     public var recommended: Bool?
+    /// Exoplanet discoveries carry the measurements that classified them.
+    public var planetRadiusEarth: Double?
+    public var periodDays: Double?
+    public var starTeffK: Double?
 }
 
 public struct Client: Equatable, Identifiable, Sendable {
@@ -104,6 +108,19 @@ public struct MissionConstructionPlan: Codable, Equatable, Sendable {
     public var buildTimeMs: Int
 }
 
+public struct MissionPayload: Codable, Equatable, Sendable {
+    public enum Kind: String, Codable, Sendable { case rover, satellite, deepSpaceSurvey = "deep-space-survey" }
+    public var type: Kind
+    public var name: String
+    public var cargoCost: Int
+    public var instrumentId: String?
+}
+
+public struct ProgramReward: Codable, Equatable, Sendable {
+    public var researchXP: Int
+    public var outcome: String
+}
+
 public struct Mission: Codable, Equatable, Identifiable, Sendable {
     public var id: String
     public var title: String
@@ -119,6 +136,8 @@ public struct Mission: Codable, Equatable, Identifiable, Sendable {
     public var requires: MissionRequirements
     public var payout: MissionPayout
     public var construction: MissionConstructionPlan?
+    public var payload: MissionPayload?
+    public var programReward: ProgramReward?
     /// Player-owned operations pay no francs or affinity (no client).
     public var isOwnProgram: Bool { client == nil }
 }

@@ -7,7 +7,7 @@ final class FeedModel {
     enum Phase: Equatable { case idle, loading, ready, failed }
 
     private let feed: SharedFeed
-    private(set) var tess: [TessCandidate] = []
+    var tess: [TessCandidate] = []
     private(set) var tessPhase = Phase.idle
     private(set) var asteroids: [AsteroidCandidate] = []
     private(set) var asteroidPhase = Phase.idle

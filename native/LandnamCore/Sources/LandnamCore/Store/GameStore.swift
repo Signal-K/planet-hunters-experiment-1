@@ -6,7 +6,9 @@ import Observation
 @MainActor @Observable
 public final class GameStore {
     public private(set) var state: GameState
-    public let catalog: Catalog
+    public let baseCatalog: Catalog
+    /// The live catalog: the authored one plus instrument launches and discovered-planet surveys.
+    public var catalog: Catalog { Instruments.runtime(baseCatalog, player: state.player, missionId: state.missionId, targetId: state.targetId) }
     private let saveURL: URL?
     private let clock: @Sendable () -> Double
     /// Called after every persisted change; the app wires cloud sync and Game Center here.
@@ -16,7 +18,7 @@ public final class GameStore {
 
     public init(state: GameState = GameState(), catalog: Catalog = Catalog(), saveURL: URL? = nil,
                 clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 * 1000 }) {
-        self.catalog = catalog; self.saveURL = saveURL; self.clock = clock
+        self.baseCatalog = catalog; self.saveURL = saveURL; self.clock = clock
         if let saveURL, let data = try? Data(contentsOf: saveURL), let loaded = try? JSONDecoder().decode(GameState.self, from: data) {
             self.state = loaded
         } else {
@@ -70,10 +72,14 @@ public final class GameStore {
     }
 
     /// Transit Telescope: one verdict per subject with the dip marks that justified it.
-    public func classifyTess(_ subjectId: String, verdict: TessVerdict, ranges: [TransitRange]) {
+    public func classifyTess(_ subjectId: String, verdict: TessVerdict, ranges: [TransitRange], candidate: TessCandidate? = nil) {
         guard state.player.tessClassifications[subjectId] == nil else { return }
         let marks = Tess.normalized(ranges)
         var n = state
+        if verdict == .planet, let candidate {
+            let t = Instruments.exoplanetTarget(candidate, measuredPeriodDays: Tess.periodFromRanges(marks))
+            n.player.discoveredExoplanetTargets[t.id] = n.player.discoveredExoplanetTargets[t.id] ?? t
+        }
         n.player.tessClassifications[subjectId] = TessClassification(subjectId: subjectId, verdict: verdict, ranges: marks, submittedAt: clock())
         n.player.researchAnnotations += 1
         n.player.researchXP += Self.firstClassificationXP
@@ -118,7 +124,7 @@ public final class GameStore {
         apply(Loop.debriefDone(state, payout: payout, affinity: affinity, consumed: consumed, disposition: disposition, catalog: catalog, now: now))
     }
     public func buyLaserCapacitor(expectedLevel: Int, reservedUnits: Int = 0) { apply(LaserCapacitor.applyBuy(state, expectedLevel: expectedLevel, reservedUnits: reservedUnits)) }
-    public func abandonMission() { apply(Loop.abandonMission(state)) }
+    public func abandonMission() { apply(state.player.activeMission == nil ? Loop.cancelSetup(state) : Loop.abandonMission(state)) }
     public func openAcademy() { apply(Academy.settleEconomy(Academy.migrate(state, now: now), now: now)) }
     public func researchAcademy() { apply(Academy.applyResearchAcademy(state)) }
     public func setAcademyFunding(_ funded: Bool) { apply(Academy.applySetFunding(state, funded: funded)) }
@@ -141,6 +147,9 @@ public final class GameStore {
     public func retryFerry(_ id: String) { apply(SurfaceOps.applyRetry(state, id, now: now)) }
     public func reconcileFerry(_ id: String) { apply(SurfaceOps.applyReconcile(state, id, now: now)) }
     public func acknowledgeFerry(_ id: String) { apply(SurfaceOps.applyAcknowledge(state, id)) }
+    public func chooseSatelliteTarget(_ subjectId: String) {
+        var n = state; n.player.satelliteTargetId = subjectId; n.player.pendingRepick = false; apply(n)
+    }
     public func unlockSkill(_ id: String) { apply(Progression.applyUnlock(state, nodeId: id)) }
     public func upgradeLicense(to grade: LicenseGrade) { apply(Progression.applyUpgrade(state, to: grade)) }
     public func startRefine(_ recipeId: String) { apply(Refinery.applyStart(state, recipeId: recipeId, now: now)) }

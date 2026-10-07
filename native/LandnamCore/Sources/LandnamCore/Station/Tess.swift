@@ -25,10 +25,14 @@ public struct TessCandidate: Equatable, Identifiable, Sendable {
     public let depthPpm: Double
     public let signalToNoise: Double
     public let lightcurve: [LightcurvePoint]?
+    public let planetRadiusEarth: Double?
+    public let starTeffK: Double?
 
     public init(id: String, ticId: String = "TIC 0", toi: String, host: String? = nil, sector: String = "TESS sector",
                 constellation: String = "TESS field", periodDays: Double = 3, transitEpoch: Double = 0.7,
-                depthPpm: Double = 1000, signalToNoise: Double = 0, lightcurve: [LightcurvePoint]? = nil) {
+                depthPpm: Double = 1000, signalToNoise: Double = 0, lightcurve: [LightcurvePoint]? = nil,
+                planetRadiusEarth: Double? = nil, starTeffK: Double? = nil) {
+        self.planetRadiusEarth = planetRadiusEarth; self.starTeffK = starTeffK
         self.id = id; self.ticId = ticId; self.toi = toi; self.host = host ?? toi; self.sector = sector
         self.constellation = constellation; self.periodDays = periodDays; self.transitEpoch = transitEpoch
         self.depthPpm = depthPpm; self.signalToNoise = signalToNoise; self.lightcurve = lightcurve
@@ -49,7 +53,8 @@ public struct TessCandidate: Equatable, Identifiable, Sendable {
                   constellation: r.string("constellation") ?? "TESS field",
                   periodDays: period > 0 ? period : 3, transitEpoch: r.number("transit_epoch") ?? 0.7,
                   depthPpm: depth > 0 ? depth : 1000, signalToNoise: r.number("signal_to_noise") ?? r.number("snr") ?? 0,
-                  lightcurve: Tess.parsePoints(r["lightcurve_points"]))
+                  lightcurve: Tess.parsePoints(r["lightcurve_points"]),
+                  planetRadiusEarth: r.number("pl_rade") ?? r.number("planet_radius_earth"), starTeffK: r.number("st_teff") ?? r.number("star_teff_k"))
     }
 
     /// Reviewable: transit subject, no gold label, open consensus, not a known planet or false positive.
@@ -162,6 +167,7 @@ public enum Tess {
         let open = candidates.filter { player.tessClassifications[$0.id] == nil }
         guard !open.isEmpty else { return nil }
         if let inspect, let focused = open.first(where: { $0.id == inspect }) { return focused }
+        if let pointed = player.satelliteTargetId, let c = open.first(where: { $0.id == pointed }) { return c }
         return open[Int(Saturn.hash(dateKey)) % open.count]
     }
 

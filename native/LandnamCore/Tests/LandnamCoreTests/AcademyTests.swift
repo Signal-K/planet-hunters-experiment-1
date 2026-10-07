@@ -191,3 +191,67 @@ import Foundation
         #expect(String(decoding: out, as: UTF8.self).contains("\"fieldOperation\""))
     }
 }
+
+@MainActor @Suite struct InstrumentFlightTests {
+    let now: Double = 1_760_000_000_000
+    func freeOps() -> GameStore {
+        var gs = GameState(); gs.player.freeOperations = true; gs.player.missionsDone = 3; gs.screen = .launchpad
+        return GameStore(state: gs, clock: { 1_760_000_000_000 })
+    }
+
+    @Test func offersTheThreeInstrumentLaunchesOnlyInFreeOps() {
+        let on = freeOps().catalog
+        for id in [Instruments.transitMissionId, Instruments.deepSpaceMissionId, Instruments.saturnMissionId] { #expect(on.mission(id) != nil) }
+        #expect(GameStore().catalog.mission(Instruments.transitMissionId) == nil)
+    }
+
+    @Test func launchingTheTransitTelescopeBringsItOnlineAtDebrief() {
+        let st = freeOps()
+        st.pickMission(Instruments.transitMissionId)
+        #expect(st.target?.id == Instruments.transitTargetId)
+        var gs = st.state
+        gs.screen = .transit
+        gs.player.activeMission = ActiveMission(id: Instruments.transitMissionId, label: "x")
+        let arrived = Loop.transitArrived(gs, catalog: st.catalog, now: now)
+        #expect(arrived.screen == .debrief && arrived.player.transitSatelliteLaunchedAt == now && arrived.player.transitSatelliteLevel == 1)
+        let done = Loop.debriefDone(arrived, payout: 0, affinity: 0, catalog: st.catalog, now: now)
+        #expect(done.screen == .instrumentHub && done.player.activeMission == nil)
+        #expect(freeOps().catalog.mission(Instruments.transitMissionId) != nil)
+        #expect(Instruments.runtime(Catalog(), player: done.player, missionId: nil, targetId: nil).mission(Instruments.transitMissionId) == nil)
+    }
+
+    @Test func confirmedPlanetBecomesATargetWithASurveyFlightThatPaysXP() {
+        let st = freeOps()
+        let c = TessCandidate(id: "tess-1", toi: "TOI 700.01", periodDays: 3.4, signalToNoise: 16, starTeffK: 6400)
+        st.classifyTess("tess-1", verdict: .planet, ranges: [TransitRange(x1: 1, x2: 1.2), TransitRange(x1: 4.4, x2: 4.6)], candidate: c)
+        let t = st.player.discoveredExoplanetTargets["exo-tess-1"]!
+        #expect(t.type == .exoplanet && t.archetype == .M && t.difficulty == "L2" && t.periodDays != nil)
+        let survey = st.catalog.mission("exo-survey-exo-tess-1")!
+        #expect(survey.programReward?.researchXP == 25 && st.catalog.target(t.id) != nil)
+        st.classifyTess("tess-2", verdict: .notPlanet, ranges: [TransitRange(x1: 1, x2: 1.2)], candidate: c)
+        #expect(st.player.discoveredExoplanetTargets.count == 1)
+    }
+
+    @Test func archetypeFollowsPeriodAndHostHeat() {
+        #expect(Instruments.archetype(periodDays: 5, starTeffK: 6500) == .M)
+        #expect(Instruments.archetype(periodDays: 5, starTeffK: 5000) == .C)
+        #expect(Instruments.archetype(periodDays: 50, starTeffK: 6500) == .S)
+        #expect(Instruments.archetype(periodDays: 300, starTeffK: 5000) == .icy)
+        #expect(Instruments.archetype(periodDays: 300, starTeffK: 6500) == .gasGiant)
+    }
+
+    @Test func pointedSatelliteWinsTheDailyPick() {
+        var p = Player(); p.satelliteTargetId = "b"
+        let cs = ["a", "b", "c"].map { TessCandidate(id: $0, toi: "TOI \($0)") }
+        #expect(Tess.today(candidates: cs, player: p, dateKey: "2026-10-07")?.id == "b")
+    }
+}
+
+@Suite struct SkyPositionTests {
+    @Test func neighbouringIdsSpreadAcrossTheMap() {
+        let xs = (1...9).map { Instruments.skyPosition("toi-\($0)").x }
+        #expect((xs.max()! - xs.min()!) > 0.8)
+        #expect(Instruments.skyPosition("a") == Instruments.skyPosition("a"))
+        #expect(xs.allSatisfy { (-1...1).contains($0) })
+    }
+}

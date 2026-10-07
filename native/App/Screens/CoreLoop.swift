@@ -65,7 +65,11 @@ struct DebriefScreen: View {
         let m = store.mission
         let payout = m.map { MissionGenerator.calibrateOnboardingPayout(raw: $0.payout.francs, missionsDone: store.player.missionsDone) } ?? 0
         ScreenFrame(title: "Debrief") {
-            Panel { Text(m?.title ?? "Contract").font(.headline); Text("Payout: \(francs(payout))") }
+            Panel {
+                Text(m?.title ?? "Contract").font(.headline)
+                if let reward = m?.programReward { Text(reward.outcome).foregroundStyle(Theme.textDim) }
+                if m?.payload == nil { Text("Payout: \(francs(payout))") }
+            }
             if let m, !m.isOwnProgram, store.player.missionsDone >= 2, LaserCapacitor.units(store.player.stash) > 0 || !(store.state.lastCargo ?? [:]).isEmpty {
                 LaserCapacitorPanel(level: store.player.laserCapacitorLevel,
                                     haulUnits: LaserCapacitor.units(store.state.lastCargo ?? [:]),
@@ -74,7 +78,7 @@ struct DebriefScreen: View {
                     store.buyLaserCapacitor(expectedLevel: store.player.laserCapacitorLevel, reservedUnits: m.requires.minerals.values.reduce(0, +))
                 }
             }
-            PrimaryButton(title: "Collect payout") {
+            PrimaryButton(title: m?.payload?.type == .satellite ? "Open control station" : (m?.isOwnProgram == true && m?.client == nil && m?.programReward != nil ? "File report" : "Collect payout")) {
                 store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: store.state.lastCargo ?? [:])
             }
         }
