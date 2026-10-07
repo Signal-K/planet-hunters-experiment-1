@@ -29,10 +29,11 @@ export interface RoverScene {
   update(elapsed: number, dt: number): void
 }
 
-const SURFACE_COLOR = 0x2a1e0a
-const SURFACE_RIDGE_COLOR = 0x10353d
-const SKY_COLOR = 0x010408
-const DUST_COLOR = 0x30858b
+const INK = 0x0f2436
+const SURFACE_COLOR = 0xe9f1f8
+const SURFACE_RIDGE_COLOR = 0xbcd6ec
+const SKY_COLOR = 0xd5ecf7
+const DUST_COLOR = 0x42a6df
 
 interface DustParticle {
   x: number
@@ -51,7 +52,7 @@ function buildStarfield(W: number, H: number, surfaceY: number): Graphics {
     const y = Math.random() * (surfaceY - 20)
     const r = 0.3 + Math.random() * 0.9
     const alpha = 0.15 + Math.random() * 0.6
-    g.circle(x, y, r).fill({ color: 0xffffff, alpha })
+    g.circle(x, y, r).fill({ color: 0x42a6df, alpha: alpha * 0.5 })
   }
   return g
 }
@@ -59,8 +60,8 @@ function buildStarfield(W: number, H: number, surfaceY: number): Graphics {
 function buildHorizonGlow(W: number, surfaceY: number): Graphics {
   const g = new Graphics()
   // Subtle horizon haze
-  g.rect(0, surfaceY - 18, W, 18).fill({ color: 0x103d39, alpha: 0.4 })
-  g.rect(0, surfaceY - 8, W, 8).fill({ color: 0x155a56, alpha: 0.5 })
+  g.rect(0, surfaceY - 18, W, 18).fill({ color: 0xffffff, alpha: 0.5 })
+  g.rect(0, surfaceY - 8, W, 8).fill({ color: 0xffffff, alpha: 0.6 })
   return g
 }
 
@@ -72,51 +73,51 @@ function buildSurface(W: number, surfaceY: number, H: number): Graphics {
     pts.push(x, surfaceY + ridges[Math.floor(x / 24) % ridges.length])
   }
   pts.push(W, H)
-  g.poly(pts).fill(SURFACE_COLOR)
+  g.poly(pts).fill(SURFACE_COLOR).stroke({ width: 3, color: INK })
 
   // Ridge highlight layer
   const pts2: number[] = []
   for (let x = 0; x <= W; x += 24) {
     pts2.push(x, surfaceY + ridges[Math.floor(x / 24) % ridges.length] - 2)
   }
-  g.poly([...pts2, W, surfaceY, 0, surfaceY]).fill({ color: SURFACE_RIDGE_COLOR, alpha: 0.6 })
+  g.poly([...pts2, W, surfaceY, 0, surfaceY]).fill({ color: SURFACE_RIDGE_COLOR, alpha: 0.7 })
 
   // Surface rocks
   const rocks = [[40, -4, 6, 4], [110, -2, 4, 3], [190, -6, 8, 5], [260, -3, 5, 4], [320, -5, 7, 4]]
   for (const [rx, ry, rw, rh] of rocks) {
-    g.ellipse(rx, surfaceY + ry, rw, rh).fill({ color: 0x1e1206, alpha: 0.8 })
+    g.ellipse(rx, surfaceY + ry, rw, rh).fill(0xdfe9f3).stroke({ width: 2, color: INK })
   }
   return g
 }
 
 function drawFallbackRover(g: Graphics, x: number, y: number, speed: number, elapsed: number, done: boolean) {
   g.clear()
-  const color = done ? 0x4ade80 : 0x9becff
+  const color = done ? 0x168a80 : 0x42a6df
   const wheelBob = Math.sin(elapsed * 8 + x * 0.05) * (Math.abs(speed) > 0.05 ? 1.5 : 0)
 
   // Wheels
   const wRadius = 7
-  g.circle(x - 12, y + 4 + wheelBob, wRadius).fill({ color: 0x334455, alpha: 0.9 })
-  g.circle(x + 12, y + 4 - wheelBob, wRadius).fill({ color: 0x334455, alpha: 0.9 })
-  g.circle(x - 12, y + 4 + wheelBob, wRadius - 3).fill({ color: 0x556677, alpha: 0.6 })
-  g.circle(x + 12, y + 4 - wheelBob, wRadius - 3).fill({ color: 0x556677, alpha: 0.6 })
+  g.circle(x - 12, y + 4 + wheelBob, wRadius).fill({ color: 0xdfe9f3, alpha: 1 }).stroke({ width: 2, color: INK })
+  g.circle(x + 12, y + 4 - wheelBob, wRadius).fill({ color: 0xdfe9f3, alpha: 1 }).stroke({ width: 2, color: INK })
+  g.circle(x - 12, y + 4 + wheelBob, wRadius - 3).fill({ color: 0xbcd6ec, alpha: 0.6 })
+  g.circle(x + 12, y + 4 - wheelBob, wRadius - 3).fill({ color: 0xbcd6ec, alpha: 0.6 })
 
   // Axle
   g.rect(x - 12, y + 3, 24, 2).fill({ color: 0x4a5a6a, alpha: 0.8 })
 
   // Body
-  g.rect(x - 14, y - 10, 28, 14).fill(0x1a2a3a)
-  g.rect(x - 12, y - 8, 24, 10).fill(0x223344)
+  g.rect(x - 14, y - 10, 28, 14).fill(0xdfe9f3).stroke({ width: 2, color: INK })
+  g.rect(x - 12, y - 8, 24, 10).fill(0xffffff)
   // Body highlight
   g.rect(x - 11, y - 8, 22, 2).fill({ color: color, alpha: 0.2 })
 
   // Solar panel / scanner arm
   g.rect(x - 2, y - 18, 4, 10).fill(0x4a5a6a)
-  g.rect(x - 10, y - 20, 20, 4).fill({ color: done ? 0x4ade80 : 0x1155aa, alpha: 0.85 })
+  g.rect(x - 10, y - 20, 20, 4).fill({ color: done ? 0x168a80 : 0x1155aa, alpha: 0.85 })
   g.rect(x - 10, y - 20, 20, 1).fill({ color: 0x88ccff, alpha: 0.4 })
 
   // Status light
-  g.circle(x + 10, y - 6, 2).fill({ color: done ? 0x4ade80 : 0x20b8df, alpha: 0.9 })
+  g.circle(x + 10, y - 6, 2).fill({ color: done ? 0x168a80 : 0x20b8df, alpha: 0.9 })
 
   // Drill arm (extends down when drilling, i.e. not moving much)
   if (Math.abs(speed) < 0.1) {
@@ -150,8 +151,8 @@ export function buildRoverScene(app: Application, opts: RoverSceneOptions): Rove
     color: parseInt((opts.mineralColors[mineral] ?? '#888888').slice(1), 16),
   }))
   for (const ore of orePositions) {
-    oreG.circle(ore.x, surfaceY - 2, 4).fill({ color: ore.color, alpha: 0.7 })
-    oreG.circle(ore.x, surfaceY - 2, 6).stroke({ color: ore.color, alpha: 0.3, width: 1 })
+    oreG.circle(ore.x, surfaceY - 2, 5).fill(ore.color).stroke({ width: 2, color: INK })
+    oreG.circle(ore.x, surfaceY - 2, 9).stroke({ color: ore.color, alpha: 0.4, width: 1.5 })
   }
   app.stage.addChild(oreG)
 
@@ -236,7 +237,7 @@ export function buildRoverScene(app: Application, opts: RoverSceneOptions): Rove
 
       // Done glow
       if (done) {
-        roverG.circle(roverX, roverY - 6, 20).stroke({ color: 0x4ade80, alpha: 0.15 + Math.sin(elapsed * 3) * 0.08, width: 2 })
+        roverG.circle(roverX, roverY - 6, 20).stroke({ color: 0x168a80, alpha: 0.15 + Math.sin(elapsed * 3) * 0.08, width: 2 })
       }
     },
   }
