@@ -157,7 +157,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
     .find(rocket => !rocket.locked && missionsDone >= rocket.missionsRequired) ?? ROCKET_MODELS[0]
 
   return (
-    <div className={`game-screen theme-light ${styles.screen}`} data-testid="hangar-screen">
+    <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="hangar-screen">
       <TopBar eyebrow="BASE · HANGAR" title="Hangar" onBack={onBack} />
       <div className={`screen-scroll ${styles.scroll}`} data-ui-zone={UI_ZONES.screenContent}>
         <div className={styles.inner}>
