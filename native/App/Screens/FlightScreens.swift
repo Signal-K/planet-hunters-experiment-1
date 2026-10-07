@@ -7,9 +7,9 @@ private struct OrderChip: View {
     let symbol: String, have: Int, need: Int, color: Color
     var body: some View {
         HStack(spacing: 6) {
-            Text(symbol).font(AppFont.display(11)).foregroundStyle(Theme.ink)
+            Text(symbol).font(AppFont.display(14)).foregroundStyle(Theme.ink)
                 .frame(width: 26, height: 22).background(color.opacity(0.35), in: RoundedRectangle(cornerRadius: 5))
-            Text("\(min(have, need))/\(need)").font(AppFont.mono(12)).foregroundStyle(have >= need ? Theme.teal : Theme.ink)
+            Text("\(min(have, need))/\(need)").font(AppFont.mono(14)).foregroundStyle(have >= need ? Theme.teal : Theme.ink)
         }
         .padding(.vertical, 5).padding(.horizontal, 7)
         .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
@@ -45,7 +45,7 @@ struct TransitScreen: View {
                             HStack {
                                 Eyebrow(text: p >= 1 ? "Arrived" : "Transit")
                                 Spacer()
-                                Text("\(Int(p * 100))%").font(AppFont.mono(13)).foregroundStyle(Theme.ink)
+                                Text("\(Int(p * 100))%").font(AppFont.mono(14)).foregroundStyle(Theme.ink)
                             }
                             ProgressTrack(value: p)
                             PrimaryButton(title: p >= 1 ? "Arrive" : "In flight", enabled: p >= 1) { store.transitArrived() }
@@ -100,7 +100,7 @@ struct MiningScreen: View {
                             }
                             Spacer()
                             RailCard(symbol: "shippingbox") {
-                                Text("\(field.cargoUnits)/\(field.cargoCapacity)").font(AppFont.mono(12)).foregroundStyle(Theme.ink)
+                                Text("\(field.cargoUnits)/\(field.cargoCapacity)").font(AppFont.mono(14)).foregroundStyle(Theme.ink)
                             }
                         }
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -112,10 +112,10 @@ struct MiningScreen: View {
                             }.padding(.trailing, 4).padding(.bottom, 4)
                         }
                         Spacer()
-                        if let toast { Text(toast.uppercased()).font(AppFont.display(11)).tracking(1.4).foregroundStyle(Theme.crimson)
+                        if let toast { Text(toast.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.crimson)
                             .padding(.horizontal, 10).padding(.vertical, 6).background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.crimson, lineWidth: 1.5)) }
                         HStack(alignment: .bottom) {
-                            Text("DRAG THE GROUND TO DRIVE · TAP ORE TO FIRE").font(AppFont.display(9, "Bold")).tracking(1.2).foregroundStyle(Theme.textDim)
+                            Text("DRAG THE GROUND TO DRIVE · TAP ORE TO FIRE").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.textDim)
                                 .padding(.horizontal, 8).padding(.vertical, 5).background(Theme.paper.opacity(0.85), in: Capsule())
                             Spacer()
                             DashButton(charge: dashCharge) { scene?.dash() }
@@ -124,7 +124,7 @@ struct MiningScreen: View {
                             HStack {
                                 Eyebrow(text: "Laser charge")
                                 Spacer()
-                                Text("\(field.charge)/\(field.chargeCap)").font(AppFont.mono(12))
+                                Text("\(field.charge)/\(field.chargeCap)").font(AppFont.mono(14))
                             }
                             ProgressTrack(value: Double(field.charge) / Double(max(1, field.chargeCap)))
                             PrimaryButton(title: field.isComplete ? "Contract filled · Return" : "Return to Earth", enabled: field.cargoUnits > 0) {
@@ -198,14 +198,14 @@ struct LaunchSequenceScreen: View {
                         }
                         Spacer()
                         VStack(alignment: .trailing, spacing: 6) {
-                            RailCard(symbol: "arrow.up") { Text("\(telemetry.altitudeKm) KM").font(AppFont.mono(12)).foregroundStyle(Theme.ink) }
-                            RailCard(symbol: "speedometer") { Text("\(telemetry.speedMs) M/S").font(AppFont.mono(12)).foregroundStyle(Theme.ink) }
+                            RailCard(symbol: "arrow.up") { Text("\(telemetry.altitudeKm) KM").font(AppFont.mono(14)).foregroundStyle(Theme.ink) }
+                            RailCard(symbol: "speedometer") { Text("\(telemetry.speedMs) M/S").font(AppFont.mono(14)).foregroundStyle(Theme.ink) }
                         }.padding(.trailing, 4)
                     }
                     ProgressTrack(value: telemetry.progress)
                     Spacer()
                     Button { scene?.skip() } label: {
-                        Text("SKIP").font(AppFont.display(11)).tracking(1.6).foregroundStyle(Theme.blue)
+                        Text("SKIP").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.blue)
                             .padding(.horizontal, 14).padding(.vertical, 7).background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 1.5))
                     }.buttonStyle(.plain)
                 }.padding(16)

@@ -32,7 +32,7 @@ struct SignInScreen: View {
                         .signInWithAppleButtonStyle(.black)
                         .frame(height: 48)
                         .disabled(auth.isWorking)
-                        Text("OR USE EMAIL").font(AppFont.display(11, "Bold")).tracking(1.8).foregroundStyle(Theme.textDim)
+                        Text("OR USE EMAIL").font(AppFont.display(14, "Bold")).tracking(1.8).foregroundStyle(Theme.textDim)
                         TextField("Email", text: $email)
                             .textContentType(.username).autocorrectionDisabled()
                             #if os(iOS)
@@ -44,7 +44,7 @@ struct SignInScreen: View {
                             .onSubmit(submitPassword)
                         PrimaryButton(title: "Sign in", enabled: !auth.isWorking && !email.isEmpty && !password.isEmpty, action: submitPassword)
                         if let message = auth.errorMessage {
-                            Text(message).font(AppFont.body(13)).foregroundStyle(Theme.crimson).multilineTextAlignment(.center)
+                            Text(message).font(AppFont.body(14)).foregroundStyle(Theme.crimson).multilineTextAlignment(.center)
                         }
                     }
                     .frame(maxWidth: .infinity)

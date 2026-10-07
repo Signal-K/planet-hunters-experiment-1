@@ -62,6 +62,8 @@ jobs:
 
       - name: Blueprint palette hue check (no orange or purple)
         run: npm run verify:hue-palette
+      - name: Native 14pt text floor
+        run: npm run verify:native-text-floor
 
       - name: Loop screen text, contrast and tap-target floor
         run: npm run verify:loop-text-floor

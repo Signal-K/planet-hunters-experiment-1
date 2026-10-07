@@ -38,10 +38,10 @@ struct HubScreen: View {
                 Text("Landnam").font(AppFont.display(23)).foregroundStyle(Theme.ink)
             }
             RailCard(symbol: "circle.dashed") {
-                Text(Economy.format(francs: store.player.francs)).font(AppFont.mono(12)).foregroundStyle(Theme.ink)
+                Text(Economy.format(francs: store.player.francs)).font(AppFont.mono(14)).foregroundStyle(Theme.ink)
             }
             RailCard(symbol: "checkmark.seal", accent: Theme.teal) {
-                Text("\(store.player.missionsDone) CONTRACTS").font(AppFont.display(9)).tracking(1.4).foregroundStyle(Theme.ink)
+                Text("\(store.player.missionsDone) CONTRACTS").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.ink)
             }
         }
         .padding(.horizontal, 16).padding(.top, 16).padding(.bottom, 24)
@@ -53,7 +53,7 @@ struct HubScreen: View {
         Button(action: tap) {
             VStack(spacing: 4) {
                 Art.view(sprite).resizable().interpolation(.high).aspectRatio(aspect, contentMode: .fit).frame(width: width)
-                Text(name.uppercased()).font(AppFont.display(9)).tracking(1.4).foregroundStyle(Theme.ink)
+                Text(name.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.ink)
                     .padding(.horizontal, 8).padding(.vertical, 3)
                     .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 1))
             }
@@ -68,8 +68,6 @@ struct HubScreen: View {
             dockButton("Missions", "list.bullet.rectangle", accent: true) { store.go(.missions) }
             dockButton("Market", "cart") { store.go(.market) }
             dockButton("Hangar", "shippingbox") { store.go(.hangar) }
-            dockButton("Log", "doc.text") { store.go(.missionHistory) }
-            dockButton("Sites", "arrow.up.circle") { store.go(.surfaceOps) }
             Menu {
                 ForEach(Screen.allCases.filter { !$0.needsMissionContext }, id: \.self) { s in
                     Button(s.rawValue) { store.go(s) }
@@ -91,10 +89,10 @@ struct HubScreen: View {
     private func dockLabel(_ title: String, _ symbol: String, accent: Bool) -> some View {
         VStack(spacing: 4) {
             Image(systemName: symbol).font(.system(size: 14, weight: .semibold))
-            Text(title.uppercased()).font(AppFont.display(10)).tracking(1.1)
+            Text(title.uppercased()).font(AppFont.display(14)).tracking(0.6).lineLimit(1).fixedSize()
         }
         .foregroundStyle(accent ? Color.white : Theme.ink)
-        .frame(minHeight: 44).frame(maxWidth: 128)
+        .padding(.horizontal, 10).frame(minWidth: 64, minHeight: 44)
         .background(accent ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
     }

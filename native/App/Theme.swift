@@ -58,7 +58,7 @@ enum AppFont {
 struct Eyebrow: View {
     let text: String
     var body: some View {
-        Text(text.uppercased()).font(AppFont.display(10, "Bold")).tracking(1.8).foregroundStyle(Theme.textMuted)
+        Text(text.uppercased()).font(AppFont.display(14, "Bold")).tracking(1.8).foregroundStyle(Theme.textMuted)
     }
 }
 
@@ -102,7 +102,7 @@ struct RailCard<Label: View>: View {
     @ViewBuilder var label: Label
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: symbol).font(.system(size: 11, weight: .semibold)).foregroundStyle(accent)
+            Image(systemName: symbol).font(.system(size: 14, weight: .semibold)).foregroundStyle(accent)
                 .frame(width: 22, height: 22)
                 .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 6))
                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(accent, lineWidth: 1.5))
@@ -125,7 +125,7 @@ struct ScreenFrame<Content: View>: View {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
                     if let back {
                         Button(action: back) {
-                            Text("‹ BASE").font(AppFont.display(11)).tracking(1.6).foregroundStyle(Theme.blue)
+                            Text("‹ BASE").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.blue)
                         }.buttonStyle(.plain)
                     }
                     Text(title).font(AppFont.display(23)).foregroundStyle(Theme.ink)
