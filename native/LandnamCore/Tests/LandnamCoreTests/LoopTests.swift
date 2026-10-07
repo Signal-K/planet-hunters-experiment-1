@@ -194,3 +194,24 @@ import Foundation
         #expect(LaserCapacitor.bonus(1) == 4 && LaserCapacitor.bonus(3) == 12 && LaserCapacitor.bonus(0) == 0)
     }
 }
+
+@Suite struct HelpTests {
+    @Test func topicsHaveBoundedCardsAndResolvableAnchors() {
+        for (_, t) in Help.topics {
+            #expect((Help.minCards...Help.maxCards).contains(t.cards.count))
+            for s in t.coach { #expect(s.targets.contains(s.anchor)) }
+        }
+        #expect(Help.topic(for: .hub) == nil)
+    }
+
+    @Test func coachRunAdvancesOnlyOnItsAction() {
+        var run = CoachRun(topic: Help.topic(for: .galaxy))
+        #expect(!run.isActive)
+        run.complete(action: "mark"); #expect(!run.isActive)
+        run.start(); #expect(run.current?.id == "mark")
+        run.complete(action: "verdict"); #expect(run.current?.id == "mark")
+        run.complete(action: "mark"); #expect(run.current?.id == "verdict")
+        run.complete(action: "mark"); #expect(run.current?.id == "verdict")
+        run.advance(); #expect(!run.isActive)
+    }
+}

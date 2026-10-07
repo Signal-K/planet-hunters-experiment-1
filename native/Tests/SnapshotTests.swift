@@ -55,6 +55,22 @@ struct SnapshotTests {
                    size: CGSize(width: 402, height: 110), name: "mining-actionrow-phone")
     }
 
+    @Test func helpSheetPhone() throws {
+        let topic = try #require(Help.topic(for: .galaxy))
+        try render(HelpSheet(topic: topic, onShowMe: {}, onClose: {}), size: CGSize(width: 402, height: 640), name: "help-sheet-phone")
+    }
+
+    @Test func coachMarksPhone() throws {
+        let topic = try #require(Help.topic(for: .galaxy))
+        let chart = CGRect(x: 16, y: 150, width: 370, height: 220)
+        let view = ZStack(alignment: .topLeading) {
+            Theme.bg
+            RoundedRectangle(cornerRadius: 8).fill(Theme.paper).frame(width: chart.width, height: chart.height).offset(x: chart.minX, y: chart.minY)
+            CoachMarks(step: topic.coach[0], index: 0, total: 2, rects: [chart], size: CGSize(width: 402, height: 640), onNext: {}, onStop: {})
+        }
+        try render(view, size: CGSize(width: 402, height: 640), name: "coach-marks-phone")
+    }
+
     @Test func hubDesktop() throws {
         try render(HubScreen().environment(store()), size: CGSize(width: 1000, height: 680), name: "hub-desktop")
     }
