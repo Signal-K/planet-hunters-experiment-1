@@ -160,9 +160,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               }}>
                 {client.initial}
               </div>
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.name}</div>
+                  <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)', overflowWrap: 'anywhere' }}>{client.name}</div>
                   <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>Client work complete</div>
                 </div>
                 {affinityEarned > 0 && <strong style={{ color: 'var(--ln-cyan)', font: '800 14px var(--ln-font-mono)', whiteSpace: 'nowrap' }}>+{affinityEarned} CLIENT XP</strong>}
