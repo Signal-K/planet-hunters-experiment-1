@@ -24,6 +24,9 @@ public enum Minerals {
         m("aluminium", "Aluminium", "Al", "#c7d0dc", .common, "Lightweight frames, tanks, trusses", laser: 1, abundant: true, shape: .rect),
         m("hydrogen", "Hydrogen", "H", "#9becff", .uncommon, "Propellant, reactor feedstock", laser: 1, shape: .triangle),
         m("uranium", "Uranium", "U", "#8fd16a", .rare, "Compact power systems, shielding", laser: 2, shape: .triangle),
+        // Sky-event debris (SSL-475/491): only ever spawns during its shower, sells at spot.
+        m("orionid_debris", "Orionid Debris", "Od", "#7fd8ff", .uncommon, "Event debris; sell at market", laser: 1, shape: .diamond),
+        m("draconid_debris", "Draconid Debris", "Dd", "#b1d8f4", .uncommon, "Event debris; sell at market", laser: 1, shape: .triangle),
     ]
 
     public static let byId: [String: MineralMeta] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })

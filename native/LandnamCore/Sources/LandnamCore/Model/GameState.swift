@@ -62,6 +62,7 @@ public struct Player: Codable, Equatable, Sendable {
     public var clientCooldowns: [String: Double] = [:]
     public var researchAnnotations: Int = 0
     public var saturnClassifications: [String: SaturnClassification] = [:]
+    public var badges: [String: PlayerBadge] = [:]
     public var tessClassifications: [String: TessClassification] = [:]
     public var asteroidClassifications: [String: AsteroidClassification] = [:]
     public var refineryBuilt: Bool = false
@@ -119,7 +120,7 @@ public struct Player: Codable, Equatable, Sendable {
         get("headingToDelivery", &headingToDelivery); get("stash", &stash); get("marketSupply", &marketSupply)
         get("marketSupplyUpdatedAt", &marketSupplyUpdatedAt); get("clientMissions", &clientMissions)
         get("completedMissions", &completedMissions); get("clientStreaks", &clientStreaks)
-        get("clientCooldowns", &clientCooldowns); get("researchAnnotations", &researchAnnotations); get("saturnClassifications", &saturnClassifications); get("tessClassifications", &tessClassifications); get("asteroidClassifications", &asteroidClassifications)
+        get("clientCooldowns", &clientCooldowns); get("researchAnnotations", &researchAnnotations); get("saturnClassifications", &saturnClassifications); get("tessClassifications", &tessClassifications); get("badges", &badges); get("asteroidClassifications", &asteroidClassifications)
         get("refineryBuilt", &refineryBuilt); get("refineryUnlocked", &refineryUnlocked); get("refinedGoods", &refinedGoods)
         get("launchpadUpgraded", &launchpadUpgraded); getOpt("lastClient", &lastClient); get("loanDebt", &loanDebt)
         get("loanOffered", &loanOffered); getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
@@ -154,7 +155,7 @@ public struct Player: Codable, Equatable, Sendable {
         try put("headingToDelivery", headingToDelivery); try put("stash", stash); try put("marketSupply", marketSupply)
         try put("marketSupplyUpdatedAt", marketSupplyUpdatedAt); try put("clientMissions", clientMissions)
         try put("completedMissions", completedMissions); try put("clientStreaks", clientStreaks)
-        try put("clientCooldowns", clientCooldowns); try put("researchAnnotations", researchAnnotations); try put("saturnClassifications", saturnClassifications); try put("tessClassifications", tessClassifications); try put("asteroidClassifications", asteroidClassifications)
+        try put("clientCooldowns", clientCooldowns); try put("researchAnnotations", researchAnnotations); try put("saturnClassifications", saturnClassifications); try put("tessClassifications", tessClassifications); try put("badges", badges); try put("asteroidClassifications", asteroidClassifications)
         try put("refineryBuilt", refineryBuilt); try put("refineryUnlocked", refineryUnlocked); try put("refinedGoods", refinedGoods)
         try put("launchpadUpgraded", launchpadUpgraded); try putOpt("lastClient", lastClient); try put("loanDebt", loanDebt)
         try put("loanOffered", loanOffered); try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)

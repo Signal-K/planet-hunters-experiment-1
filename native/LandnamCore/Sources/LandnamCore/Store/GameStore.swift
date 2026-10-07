@@ -61,7 +61,9 @@ public final class GameStore {
     public func classifySaturn(_ candidateId: String, verdict: SaturnVerdict) {
         guard state.player.saturnClassifications[candidateId] == nil else { return }
         var n = state
-        n.player.saturnClassifications[candidateId] = SaturnClassification(candidateId: candidateId, verdict: verdict, submittedAt: clock())
+        let at = clock()
+        n.player.saturnClassifications[candidateId] = SaturnClassification(candidateId: candidateId, verdict: verdict, submittedAt: at, badgeTier: SkyEvents.saturnTier(at: at)?.rawValue)
+        SkyEvents.grant(&n.player.badges, activity: .saturnClassification, at: at)
         n.player.researchAnnotations += 1
         apply(n)
         onClassified?(.saturn(frame: candidateId, verdict: verdict))
@@ -84,6 +86,7 @@ public final class GameStore {
         guard state.player.asteroidClassifications[candidateId] == nil else { return }
         var n = state
         n.player.asteroidClassifications[candidateId] = AsteroidClassification(candidateId: candidateId, verdict: verdict, submittedAt: clock())
+        SkyEvents.grant(&n.player.badges, activity: .asteroidClassification, at: clock())
         n.player.researchAnnotations += 1
         n.player.researchXP += Self.firstClassificationXP
         apply(n)
@@ -95,7 +98,18 @@ public final class GameStore {
     public func purchaseRocket(_ id: String) { apply(Loop.purchaseRocket(state, rocketId: id, catalog: catalog)) }
     public func rollOutToPad() { if let n = Loop.rollOutToPad(state) { apply(n) } }
     public func transferToLaunchpad() { apply(Loop.transferToLaunchpad(state)) }
-    public func launch() { apply(Loop.launch(state, catalog: catalog, now: now)) }
+    public func launch() {
+        var n = Loop.launch(state, catalog: catalog, now: now)
+        if n != state { SkyEvents.grant(&n.player.badges, activity: .launch, at: now) }
+        apply(n)
+    }
+    /// First shower debris chunk of an event earns that event's badge (idempotent).
+    public func debrisMined(_ resourceId: String) {
+        guard let preset = SkyEvents.presets.first(where: { $0.resourceId == resourceId }) else { return }
+        var n = state
+        SkyEvents.grant(&n.player.badges, activity: .debrisMining, at: now, only: preset.eventId)
+        apply(n)
+    }
     public func transitArrived() { apply(Loop.transitArrived(state, catalog: catalog, now: now)) }
     public func miningDone(_ cargo: Cargo) { apply(Loop.miningDone(state, cargo: cargo, catalog: catalog, now: now)) }
     public func deliveryUnloadComplete() { apply(Loop.deliveryUnloadComplete(state, catalog: catalog, now: now)) }

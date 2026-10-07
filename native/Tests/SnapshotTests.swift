@@ -107,6 +107,15 @@ struct SnapshotTests {
                    size: CGSize(width: 402, height: 1080), name: "tess-discovery-phone")
     }
 
+    @Test func skyBadgesPhone() throws {
+        var gs = GameState()
+        gs.player.freeOperations = true; gs.player.deepSpaceTelescopeBuilt = true
+        gs.player.badges = ["saturn-night-2026": PlayerBadge(eventId: "saturn-night-2026", tier: .gold, earnedAt: 1),
+                            "rocket-revolution-2026": PlayerBadge(eventId: "rocket-revolution-2026", tier: .silver, earnedAt: 2)]
+        try render(ControlStationScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil)),
+                   size: CGSize(width: 402, height: 1000), name: "sky-badges-phone")
+    }
+
     @Test func hubSkyCraftPhone() throws {
         var gs = GameState()
         gs.player.activeMission = ActiveMission(id: "m", label: "Ceres run")

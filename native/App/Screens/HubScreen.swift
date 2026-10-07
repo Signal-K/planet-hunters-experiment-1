@@ -44,6 +44,7 @@ struct HubScreen: View {
                 RailCard(symbol: "checkmark.seal", accent: Theme.teal) {
                     Text("\(store.player.missionsDone) CONTRACTS").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.ink)
                 }
+                SkyEventChip()
             }
             Spacer(minLength: 0)
             Button { store.go(.instrumentHub) } label: { iconLabel("HUB", "scope", accent: false) }

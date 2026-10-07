@@ -25,6 +25,7 @@ struct ControlStationScreen: View {
                     ForEach(group.rows) { row in rowView(row) }
                 }
             }
+            SkyBadgeRow(badges: store.player.badges)
         }
         .helpable(.instrumentHub)
     }

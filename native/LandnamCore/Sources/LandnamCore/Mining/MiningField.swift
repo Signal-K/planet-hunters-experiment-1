@@ -49,7 +49,9 @@ public struct MiningField: Equatable, Sendable {
 
     /// Builds a field of ore nodes weighted toward the mission's required minerals so a
     /// contract is always completable, then sprinkled with the target's other minerals.
-    public init(target: Target, required: Cargo, cargoCapacity: Int, laserTier: Int, chargeCap: Int = 30, seed: UInt64) {
+    /// `debris` adds drifting shower particles of that resource on top of the normal field (SSL-475).
+    public init(target: Target, required: Cargo, cargoCapacity: Int, laserTier: Int, chargeCap: Int = 30, seed: UInt64,
+                debris: (resourceId: String, count: Int)? = nil) {
         var rng = SeededRandom(seed: seed)
         var nodes: [OreNode] = []
         var nextId = 0
@@ -70,6 +72,7 @@ public struct MiningField: Equatable, Sendable {
         }
         let extras = target.minerals.filter { required[$0] == nil }
         for mineral in extras { for _ in 0..<2 { place(mineral) } }
+        if let debris { for _ in 0..<max(0, debris.count) { place(debris.resourceId) } }
         self.nodes = nodes
         self.charge = chargeCap; self.chargeCap = chargeCap
         self.cargoCapacity = cargoCapacity; self.laserTier = laserTier; self.required = required

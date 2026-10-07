@@ -129,11 +129,12 @@ struct ScreenFrame<Content: View>: View {
     var body: some View {
         scroller {
             VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                HStack(alignment: .center, spacing: 12) {
                     if let back {
                         Button(action: back) {
                             Text("‹ BASE").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.blue)
-                        }.buttonStyle(.plain)
+                                .frame(minWidth: 44, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityLabel("Back to base")
                     }
                     Text(title).font(AppFont.display(23)).foregroundStyle(Theme.ink)
                 }

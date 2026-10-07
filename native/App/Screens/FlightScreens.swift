@@ -123,6 +123,7 @@ struct MiningScreen: View {
                                 Text("\(field.cargoUnits)/\(field.cargoCapacity)").font(AppFont.mono(14)).foregroundStyle(Theme.ink)
                             }
                         }
+                        SkyEventChip().frame(maxWidth: .infinity, alignment: .leading)
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
                                 ForEach(field.required.keys.sorted(), id: \.self) { id in
@@ -166,9 +167,14 @@ struct MiningScreen: View {
         let charges = mission.sequence <= 2
             ? max(80, ore * 16)
             : max(Skills.laserChargeCap(store.player.unlockedSkillNodes), ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel)
-        let f = MiningField(target: target, required: mission.requires.minerals, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 })
+        // Meteor-shower debris joins the field only inside its window and the player's local night (SSL-475).
+        let shower = SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now) / 2).rounded(.up)))) }
+        let f = MiningField(target: target, required: mission.requires.minerals, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower)
         let s = MiningScene(field: f, size: size)
-        s.onChange = { field = $0 }
+        s.onChange = { f in
+            field = f
+            for id in SkyEvents.debrisResourceIds where f.cargo[id, default: 0] > 0 { store.debrisMined(id) }
+        }
         s.reducedMotion = reduceMotion
         s.onDash = { dashCharge = $0 }
         s.onFeedback = { msg in toast = msg; Task { try? await Task.sleep(for: .seconds(1.4)); if toast == msg { toast = nil } } }

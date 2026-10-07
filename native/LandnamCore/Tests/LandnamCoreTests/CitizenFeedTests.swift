@@ -93,3 +93,59 @@ import Foundation
         #expect(back.player.tessClassifications == s.player.tessClassifications && back.player.asteroidClassifications == s.player.asteroidClassifications)
     }
 }
+
+@Suite struct SkyEventTests {
+    func ms(_ iso: String) -> Double { ISO8601DateFormatter().date(from: iso)!.timeIntervalSince1970 * 1000 }
+
+    @Test func goldInsideWindowSilverAfterNothingBefore() {
+        #expect(SkyEvents.badgeTier("saturn-night-2026", at: ms("2026-10-03T23:59:59Z")) == nil)
+        #expect(SkyEvents.badgeTier("saturn-night-2026", at: ms("2026-10-07T12:00:00Z")) == .gold)
+        #expect(SkyEvents.badgeTier("saturn-night-2026", at: ms("2026-10-11T00:00:00Z")) == .silver)
+    }
+
+    @Test func grantNeverDowngrades() {
+        var b: [String: PlayerBadge] = [:]
+        SkyEvents.grant(&b, eventId: "saturn-night-2026", at: ms("2026-10-08T00:00:00Z"))
+        SkyEvents.grant(&b, eventId: "saturn-night-2026", at: ms("2026-12-01T00:00:00Z"))
+        #expect(b["saturn-night-2026"]?.tier == .gold)
+    }
+
+    @Test func debrisNeedsWindowAndNight() {
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeZone(identifier: "UTC")!
+        let night = ms("2026-10-22T23:00:00Z"), day = ms("2026-10-22T12:00:00Z")
+        #expect(SkyEvents.activePreset(at: night, calendar: cal)?.resourceId == "orionid_debris")
+        #expect(SkyEvents.activePreset(at: day, calendar: cal) == nil)
+        #expect(SkyEvents.ratePerMinute(SkyEvents.orionids, at: ms("2026-10-22T00:30:00Z"), calendar: cal) > 11)
+        #expect(SkyEvents.activePreset(at: ms("2026-10-08T23:00:00Z"), calendar: cal)?.resourceId == "draconid_debris")
+        #expect(SkyEvents.ratePerMinute(SkyEvents.orionids, at: day, calendar: cal) == 0)
+    }
+
+    @Test func newMoonFallsOnTenOctober2026() {
+        #expect(SkyEvents.isNewMoonDay("2026-10-10"))
+        #expect(!SkyEvents.isNewMoonDay("2026-10-12"))
+    }
+
+    @Test func debrisNodesJoinTheFieldAndMineAtTierOne() {
+        let t = Target(id: "t", name: "T", type: .asteroid, orbit: 1, difficulty: "easy", brief: "", minerals: ["iron"])
+        var f = MiningField(target: t, required: ["iron": 1], cargoCapacity: 9, laserTier: 1, seed: 1, debris: ("orionid_debris", 3))
+        #expect(f.nodes.filter { $0.mineralId == "orionid_debris" }.count == 3)
+        let id = f.nodes.first { $0.mineralId == "orionid_debris" }!.id
+        for _ in 0..<3 { _ = f.strike(nodeId: id) }
+        #expect(f.cargo["orionid_debris"] == 1)
+        #expect(Minerals.byId["orionid_debris"]?.price == Economy.mineralValue[.uncommon])
+    }
+
+    @Test @MainActor func storeGrantsBadgesOnActivities() {
+        final class Tick: @unchecked Sendable { var v = 0.0 }
+        let now = Tick(); now.v = ms("2026-10-07T12:00:00Z")
+        let store = GameStore(clock: { now.v })
+        store.classifySaturn("pbrec", verdict: .yes)
+        #expect(store.player.badges["saturn-night-2026"]?.tier == .gold)
+        #expect(store.player.saturnClassifications["pbrec"]?.badgeTier == "gold")
+        store.debrisMined("draconid_debris")
+        #expect(store.player.badges["draconids-2026"]?.tier == .gold)
+        now.v = ms("2026-10-10T12:00:00Z")
+        store.classifyAsteroid("a1", verdict: .likelyReal)
+        #expect(store.player.badges["new-moon-hunt-2026-10"]?.tier == .gold)
+    }
+}
