@@ -58,6 +58,7 @@ struct LaunchReviewScreen: View {
                 fact("Vehicle", model.name)
                 fact("Required cargo", mission.requires.minerals.map { "\($0.value) \($0.key)" }.sorted().joined(separator: ", "))
             } }
+            RouteMap(targets: targets, pickedId: target.id, maxOrbit: mission.requires.maxOrbit) { store.pickTarget($0) }
             Panel { VStack(alignment: .leading, spacing: 8) {
                 chooser("Destination", target.name, count: targets.count) { step(-1, in: targets.map(\.id), current: target.id) { store.pickTarget($0) } }
                     next: { step(1, in: targets.map(\.id), current: target.id) { store.pickTarget($0) } }
