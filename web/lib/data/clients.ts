@@ -140,7 +140,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
   {
     id: 'vulcan-core-metallurgy',
     name: 'Vulcan Core Metallurgy',
-    color: '#e85d5d',
+    color: '#3b7fb8',
     initial: 'VC',
     unlockTier: 4,
     projectType: 'Deep metallic-core assay and platinum-group refinement',

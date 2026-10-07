@@ -19,6 +19,7 @@ import type {
 } from '@takeon/engine'
 import type { LifeStage, SurfaceTarget } from '@/lib/data'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
+import { createBlueprintHueFilter } from '@/lib/takeon/blueprintFilter'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
 import { installLandnamStructureGlyphs } from '@/lib/takeon/structureGlyphs'
 import {
@@ -308,6 +309,13 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           app.destroy()
           app = null
           return
+        }
+
+        // Hue guard: engine props with fixed warm or green colours land in the cyan/teal band.
+        try {
+          app.stage.filters = [createBlueprintHueFilter(PIXI) as import('pixi.js').Filter]
+        } catch (filterError) {
+          console.warn('[Takeon] blueprint hue filter unavailable', filterError)
         }
 
         mounted = mountRoverGame({

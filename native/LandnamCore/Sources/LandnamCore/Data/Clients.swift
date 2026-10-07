@@ -21,7 +21,7 @@ public enum Clients {
         c("helioforge-metals", "Helioforge Metals", "#79d1ec", "HF", 2, "Nickel, cobalt, and precious-metal assay", ["nickel", "cobalt", "gold"], 0.24, 0.03, .prospect, crew: false),
         c("kepler-materials", "Kepler Materials", "#70e070", "KM", 3, "Deep-core sampling and battery material reserves", ["nickel", "cobalt"], 0.22, 0.03, .prospect, crew: false),
         c("nightjar-systems", "Nightjar Systems", "#93cef0", "NS", 3, "Rare gas capture and ion drive reserves", ["rare", "hydrogen"], 0.28, 0.035, .command, crew: true),
-        c("vulcan-core-metallurgy", "Vulcan Core Metallurgy", "#e85d5d", "VC", 4, "Deep metallic-core assay and platinum-group refinement", ["platinum", "rhodium"], 0.26, 0.03, .prospect, crew: false),
+        c("vulcan-core-metallurgy", "Vulcan Core Metallurgy", "#3b7fb8", "VC", 4, "Deep metallic-core assay and platinum-group refinement", ["platinum", "rhodium"], 0.26, 0.03, .prospect, crew: false),
         c("solgrid-dynamics", "Solgrid Dynamics", "#5ae7de", "SD", 4, "Solar-grid expansion and high-purity silicon", ["silicon", "ice"], 0.24, 0.025, .command, crew: true),
     ]
 
