@@ -143,7 +143,7 @@
   --ln-fs-body:     22px;
   --ln-fs-button:   20px;
   --ln-fs-label:    16px;
-  --ln-fs-micro:    13px;
+  --ln-fs-micro:    14px;
 
   --ln-tr-tight:   -0.01em;
   --ln-tr-normal:   0em;
@@ -909,8 +909,8 @@ button { cursor: pointer; }
 
 /* SSL-346: shell-owned controls are available on every live surface. */
 .game-chrome-bottom { position:relative; z-index:70; flex:0 0 auto; display:flex; align-items:stretch; justify-content:center; gap:4px; padding:4px 8px; border-top:1px solid var(--ln-hairline); background:var(--ln-void); }
-.game-chrome-bottom__readout { display:none; align-items:center; padding:0 12px; color:var(--ln-cyan); font:800 12px var(--ln-font-display); letter-spacing:.12em; text-transform:uppercase; white-space:nowrap; }
-.game-chrome-bottom button { flex:1 1 0; min-width:0; max-width:128px; min-height:40px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
+.game-chrome-bottom__readout { display:none; align-items:center; padding:0 12px; color:var(--ln-cyan); font:800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing:.12em; text-transform:uppercase; white-space:nowrap; }
+.game-chrome-bottom button { flex:1 1 0; min-width:44px; max-width:128px; min-height:44px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
 .game-chrome-bottom button[aria-current="page"], .game-chrome-bottom button:hover { border-color:var(--ln-cyan-border); background:var(--ln-cyan-soft); color:var(--ln-cyan-bright); }
 @media (min-width:600px) { .game-chrome-bottom__readout { display:inline-flex; } }
 /* Landscape phones: every screen's title bar shrinks to one 48px line. */
@@ -932,8 +932,8 @@ button { cursor: pointer; }
 @media (orientation:landscape) and (max-height:500px) {
   .portrait-canvas { flex-direction:row; }
   .game-chrome-bottom { order:-1; flex-direction:column; justify-content:flex-start; align-items:stretch; width:72px; padding:8px 4px; border-top:0; border-right:1px solid var(--ln-hairline); }
-  .game-chrome-bottom__readout { display:inline-flex; justify-content:center; padding:4px 0 8px; font-size:10px; }
-  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:32px; padding:4px; font-size:10px; letter-spacing:.06em; }
+  .game-chrome-bottom__readout { display:inline-flex; justify-content:center; padding:4px 0 8px; font-size:var(--ln-fs-micro); }
+  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:44px; padding:4px; font-size:var(--ln-fs-micro); letter-spacing:.06em; }
 }
 
 .hub-sky-craft-control { position:absolute; z-index:11; top:96px; right:16px; display:flex; align-items:center; gap:8px; min-height:40px; padding:8px 12px; border:1px solid var(--ln-cyan-border); border-radius:8px; background:color-mix(in srgb, var(--ln-void) 74%, transparent); color:var(--ln-cyan-bright); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
@@ -962,7 +962,7 @@ button { cursor: pointer; }
   align-items: center;
   gap: var(--ln-s-1);
   color: var(--ln-text-muted);
-  font: 700 8px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
   pointer-events: none;
@@ -1400,7 +1400,7 @@ button { cursor: pointer; }
 }
 .assembly-scroll { display: flex; flex-direction: column; gap: var(--ln-s-3); }
 .ln-section-label, .ln-micro, .reward-label {
-  font-family: var(--ln-font-display); font-size: 10px; font-weight: 700;
+  font-family: var(--ln-font-display); font-size: var(--ln-fs-micro); font-weight: 700;
   letter-spacing: var(--ln-tr-loose); text-transform: uppercase; color: var(--ln-text-muted);
 }
 .ln-section-label { margin-bottom: var(--ln-s-2); }
@@ -1643,7 +1643,7 @@ button { cursor: pointer; }
 .transit-command-dock__status span,
 .transit-cargo-strip span {
   color: var(--ln-cyan);
-  font: 800 9px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .16em;
   text-transform: uppercase;
 }
@@ -1653,7 +1653,7 @@ button { cursor: pointer; }
 }
 .transit-destination-chip > span:last-child {
   color: var(--ln-text-muted);
-  font: 700 9px var(--ln-font-mono);
+  font: 700 var(--ln-fs-micro) var(--ln-font-mono);
   letter-spacing: .08em;
 }
 .transit-mission-card {
@@ -1674,7 +1674,7 @@ button { cursor: pointer; }
   display: block;
   margin-top: 4px;
   color: var(--ln-text-dim);
-  font: 700 10px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -1682,7 +1682,7 @@ button { cursor: pointer; }
 .transit-mission-card p {
   margin: 6px 0 0;
   color: var(--ln-text-muted);
-  font: 400 12px/1.35 var(--ln-font-body);
+  font: 400 var(--ln-fs-micro)/1.35 var(--ln-font-body);
 }
 .transit-flight-hud {
   left: 16px;
@@ -1734,7 +1734,7 @@ button { cursor: pointer; }
   margin-top: 4px;
   transform: translateX(-50%);
   color: var(--ln-text-muted);
-  font: 700 7px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .12em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1742,10 +1742,10 @@ button { cursor: pointer; }
 .transit-waypoint-label--passed { color: var(--ln-cyan); }
 .transit-telemetry { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
 .transit-telemetry div { display: grid; gap: 2px; min-width: 0; }
-.transit-telemetry span { color: var(--ln-text-muted); font: 700 8px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
-.transit-telemetry strong { overflow: hidden; color: var(--ln-text); font: 800 11px var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.transit-telemetry span { color: var(--ln-text-muted); font: 700 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.transit-telemetry strong { overflow: hidden; color: var(--ln-text); font: 800 var(--ln-fs-micro) var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .transit-cargo-strip { display: flex; align-items: baseline; gap: 10px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--ln-hairline); }
-.transit-cargo-strip strong { overflow: hidden; color: var(--ln-text); font: 700 10px var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.transit-cargo-strip strong { overflow: hidden; color: var(--ln-text); font: 700 var(--ln-fs-micro) var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .transit-command-dock {
   z-index: 10;
   display: flex;
@@ -1759,16 +1759,16 @@ button { cursor: pointer; }
   background: var(--ln-shell);
 }
 .transit-command-dock__status { display: grid; gap: 3px; min-width: 0; }
-.transit-command-dock__status strong { overflow: hidden; color: var(--ln-text); font: 700 13px var(--ln-font-display); text-overflow: ellipsis; white-space: nowrap; }
+.transit-command-dock__status strong { overflow: hidden; color: var(--ln-text); font: 700 var(--ln-fs-micro) var(--ln-font-display); text-overflow: ellipsis; white-space: nowrap; }
 .transit-command-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .transit-command-btn {
-  min-height: 42px;
+  min-height: 44px;
   padding: 9px 14px;
   border: 1px solid var(--ln-cyan-border);
   border-radius: 8px;
   background: transparent;
   color: var(--ln-cyan);
-  font: 800 10px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .12em;
   text-transform: uppercase;
   cursor: pointer;
@@ -1786,7 +1786,7 @@ button { cursor: pointer; }
   .transit-destination-chip strong { font-size: 14px; }
   .transit-destination-chip > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .transit-mission-card { top: 96px; left: 12px; width: calc(50% - 18px); padding: 9px 10px; }
-  .transit-mission-card > strong { font-size: 13px; }
+  .transit-mission-card > strong { font-size: var(--ln-fs-micro); }
   .transit-mission-card p { display: none; }
   .transit-flight-hud { left: 12px; bottom: 12px; width: calc(100% - 24px); padding: 10px; }
   /* Phones: the sphere stays compact so the HUD below it is never covered. */
@@ -1797,12 +1797,12 @@ button { cursor: pointer; }
      four narrow columns made both the labels and DESTINATION unreadable. */
   .transit-progress-wrap { margin-bottom: 14px; }
   .transit-telemetry { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .transit-telemetry strong { font-size: 9px; }
+  .transit-telemetry strong { font-size: var(--ln-fs-micro); }
   .transit-cargo-strip { display: block; }
   .transit-cargo-strip strong { display: block; margin-top: 3px; }
   .transit-command-dock { align-items: stretch; flex-direction: column; gap: 10px; padding: 10px 12px; }
   .transit-command-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .transit-command-btn { min-width: 0; padding-inline: 8px; font-size: 9px; }
+  .transit-command-btn { min-width: 0; padding-inline: 8px; font-size: var(--ln-fs-micro); }
 }
 
 .mining-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-void); display: flex; flex-direction: column; }
@@ -1873,12 +1873,12 @@ button { cursor: pointer; }
 }
 .mining-scene-status__eyebrow {
   color: var(--ln-cyan);
-  font: 800 9px/1.2 var(--ln-font-display);
+  font: 800 var(--ln-fs-micro)/1.2 var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
 }
 .mining-scene-status strong {
   color: var(--ln-text);
-  font: 700 11px/1.4 var(--ln-font-mono);
+  font: 700 var(--ln-fs-micro)/1.4 var(--ln-font-mono);
   letter-spacing: .08em;
 }
 .mining-scene-status__retry {
@@ -1886,7 +1886,7 @@ button { cursor: pointer; }
   border: 1px solid var(--ln-cyan-border);
   background: var(--ln-cyan-soft);
   color: var(--ln-cyan);
-  font: 800 10px/1 var(--ln-font-display);
+  font: 800 var(--ln-fs-micro)/1 var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   cursor: pointer;
 }
@@ -2178,7 +2178,7 @@ button { cursor: pointer; }
   width: 100%;
   padding: var(--ln-s-3) 0;
   border-radius: var(--ln-r-md);
-  font: 800 11px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
   cursor: pointer;
@@ -2204,7 +2204,7 @@ button { cursor: pointer; }
   width: 100%;
   padding: var(--ln-s-3) 0;
   border-radius: var(--ln-r-md);
-  font: 800 11px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
   cursor: pointer;
@@ -2391,10 +2391,10 @@ button { cursor: pointer; }
 .debrief-arrival-canvas { position: absolute; inset: 0; }
 .debrief-arrival-canvas canvas { display: block; width: 100%; height: 100%; }
 .debrief-arrival-board__copy { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; text-align: left; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
-.debrief-arrival-board__status { display: flex; align-items: center; gap: 7px; color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.debrief-arrival-board__status { display: flex; align-items: center; gap: 7px; color: var(--ln-cyan); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
 .debrief-arrival-board__status span { width: 7px; height: 7px; border-radius: 50%; background: var(--ln-ok); box-shadow: 0 0 10px var(--ln-ok); }
 .debrief-arrival-board h2 { margin: 5px 0 2px; color: var(--ln-text); font: 800 24px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
-.debrief-arrival-board p { margin: 0; color: var(--ln-text-muted); font: 10px var(--ln-font-mono); letter-spacing: .1em; text-transform: uppercase; }
+.debrief-arrival-board p { margin: 0; color: var(--ln-text-muted); font: var(--ln-fs-micro) var(--ln-font-mono); letter-spacing: .1em; text-transform: uppercase; }
 
 .intro-screen { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--ln-bp-bg); }
 .intro-content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px; text-align: center; z-index: 1; }
@@ -2449,7 +2449,7 @@ button { cursor: pointer; }
   }
 }
 .debrief-scroll h2 { color: var(--ln-text); font: 800 28px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
-.debrief-scroll p { color: var(--ln-text-dim); font: 11px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.debrief-scroll p { color: var(--ln-text-dim); font: var(--ln-fs-micro) var(--ln-font-mono); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
 .success-mark { width: 88px; height: 88px; margin: 0 auto; display: grid; place-items: center; border-radius: 50%; color: var(--ln-text-on-cyan); background: radial-gradient(circle at 30% 30%, #a9ffc8, var(--ln-ok) 70%, #02180c); box-shadow: var(--ln-glow-ok); font: 800 44px var(--ln-font-display); animation: glow-anim 2s ease-in-out infinite; }
 .reward-label { color: var(--ln-text-dim); }
 .reward-total { margin-top: var(--ln-s-1); color: var(--ln-amber); font: 800 32px var(--ln-font-display); }
@@ -2503,7 +2503,7 @@ button { cursor: pointer; }
 .debrief-hud-header span:first-child {
   display: block;
   color: var(--ln-cyan);
-  font: 800 10px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .2em;
   text-transform: uppercase;
 }
@@ -2518,7 +2518,7 @@ button { cursor: pointer; }
 .debrief-hud-header__location {
   margin-top: 6px;
   color: var(--ln-text-muted);
-  font: 700 9px var(--ln-font-mono);
+  font: 700 var(--ln-fs-micro) var(--ln-font-mono);
   letter-spacing: .14em;
   text-align: right;
   text-transform: uppercase;
@@ -2552,7 +2552,7 @@ button { cursor: pointer; }
   align-items: center;
   gap: 7px;
   color: var(--ln-ok);
-  font: 800 9px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .16em;
   text-transform: uppercase;
 }
@@ -2576,7 +2576,7 @@ button { cursor: pointer; }
 .debrief-mission-strip__route span {
   display: block;
   color: var(--ln-text-muted);
-  font: 700 8px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .18em;
   text-transform: uppercase;
 }
@@ -2663,7 +2663,7 @@ button { cursor: pointer; }
   .debrief-hud-header h1 { font-size: 22px; }
   .debrief-hud-header__location {
     max-width: 124px;
-    font-size: 8px;
+    font-size: var(--ln-fs-micro);
     line-height: 1.3;
   }
   .debrief-game__content { padding: 86px 12px 104px; }
@@ -2833,12 +2833,12 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 .flight-plan-skip { align-self: flex-start; margin-top: 4px; }
 .flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-panel-2, #101722); }
 .game-chrome-bottom__training-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 999px; background: var(--ln-cyan); }
-.game-chrome-bottom__training-chip { margin-left: 4px; font-size: 10px; color: var(--ln-cyan); }
+.game-chrome-bottom__training-chip { margin-left: 4px; font-size: var(--ln-fs-micro); color: var(--ln-cyan); }
 /* Phone widths: MENU + dot + "0/3" is wider than its slot and spilled past the
    bar edge. The chip already carries the state, so drop the dot there. */
 @media (max-width: 600px), (max-height: 500px) {
   .game-chrome-bottom__training-dot { display: none; }
-  .game-chrome-bottom__training-chip { margin-left: 3px; font-size: 9px; letter-spacing: 0; }
+  .game-chrome-bottom__training-chip { margin-left: 3px; font-size: var(--ln-fs-micro); letter-spacing: 0; }
 }
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
 

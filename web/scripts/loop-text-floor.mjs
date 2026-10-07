@@ -118,16 +118,6 @@ function scan(css, selective) {
   return { out, hits }
 }
 
-// Known tap-target debt (SSL-430 follow-up): compact short-phone layouts that
-// still use <44px buttons. They warn but do not fail CI; new ones fail. Remove
-// entries as they are fixed.
-const TAP_DEBT = [
-  '.roomManifest li button -> tap target min-height',
-  '.launchpad-guide-actions button -> tap target min-height',
-  '.game-chrome-bottom button -> tap target min-height',
-  '.transit-command-btn -> tap target min-height',
-]
-let debt = 0
 let total = 0
 for (const [files, selective] of [[WHOLE_FILES, false], [SELECTIVE_FILES, true]]) {
   for (const f of files) {
@@ -136,7 +126,7 @@ for (const [files, selective] of [[WHOLE_FILES, false], [SELECTIVE_FILES, true]]
     const css = fs.readFileSync(p, 'utf8')
     const scanned = scan(css, selective)
     const out = scanned.out
-    const hits = scanned.hits.filter(h => !(TAP_DEBT.some(d => h.startsWith(d)) && ++debt))
+    const hits = scanned.hits
     total += hits.length
     if (hits.length) {
       if (FIX) fs.writeFileSync(p, out)
@@ -146,4 +136,4 @@ for (const [files, selective] of [[WHOLE_FILES, false], [SELECTIVE_FILES, true]]
 }
 if (FIX) console.log(`rewrote ${total} font size(s) to var(--ln-fs-micro)`)
 else if (total) { console.error(`\nloop text floor: ${total} violation(s). Run with --fix or add loop-floor-exempt.`); process.exit(1) }
-else console.log(`loop text floor: ok (${FLOOR}px, ${MIN_CONTRAST}:1, ${MIN_TAP}px taps); ${debt} known tap-target debt warning(s)`)
+else console.log(`loop text floor: ok (${FLOOR}px, ${MIN_CONTRAST}:1, ${MIN_TAP}px taps)`)

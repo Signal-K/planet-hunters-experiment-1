@@ -403,7 +403,7 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-guide-progress i { width: 24px; height: 4px; border-radius: 2px; background: var(--ln-hairline-strong); }
 .launchpad-guide-progress i[data-active="true"] { background: var(--ln-cyan); }
 .launchpad-guide-actions { display: flex; gap: 8px; }
-.launchpad-guide-actions button { min-height: 32px; padding: 0 10px; border: 1px solid var(--ln-hairline); border-radius: 7px; background: transparent; color: var(--ln-text); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
+.launchpad-guide-actions button { min-height: 44px; padding: 0 10px; border: 1px solid var(--ln-hairline); border-radius: 7px; background: transparent; color: var(--ln-text); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
 .launchpad-guide-actions button.is-primary { border-color: var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-text-on-cyan); }
 
 /* The Hub dock is an action rail, not a floating modal. Keep its status and
