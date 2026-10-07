@@ -273,12 +273,13 @@ export async function fetchCatalog(): Promise<Catalog> {
       propulsion: parts.filter(p => p.part_type === 'propulsion').map(toPart),
       drill:      parts.filter(p => p.part_type === 'drill').map(toPart),
     },
+    // The static table owns mineral colours (blueprint palette); the seeded PocketBase rows still carry the old orange.
     // Merge static MINERAL_META first so any key not yet seeded in PocketBase
     // still resolves (avoids crashes when missions reference new minerals).
     minerals: {
       ...MINERAL_META,
       ...Object.fromEntries(
-        minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
+        minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: MINERAL_META[r.slug]?.color ?? r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
       ),
     },
     // Merge static CLIENTS first so clients not yet seeded in PocketBase
