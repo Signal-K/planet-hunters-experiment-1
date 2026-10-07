@@ -150,7 +150,8 @@ describe('DEV panel UI', () => {
   it('clicking Transport Fab shows fab screen with the Prospector staged', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shot-transport-fab"]').click()
-    cy.contains('Prospector').should('be.visible')
+    // SSL-450: the facts list no longer repeats the rocket; the vehicle chooser names it.
+    cy.contains('[class*="inlineChoices"] strong', 'Prospector').should('be.visible')
     cy.contains('LAUNCH').should('be.visible')
   })
 

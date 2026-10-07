@@ -50,3 +50,11 @@
   .contractCopy p { display:none; }
   .contractCopy h2 { font-size:22px; }
 }
+
+/* SSL-450: the stage ends above the Flight Plan rail (published as --flight-plan-h) so nothing sits under it,
+   and short phones trade map height for room. */
+@media (orientation:portrait){.stage{bottom:calc(24px + var(--flight-plan-h,0px));}}
+@media (orientation:portrait) and (max-height:700px){.reviewMap{height:96px;margin-top:4px;}.review{grid-template-rows:minmax(96px,18%) auto;}.launchScene{min-height:96px;}.reviewHeading span{display:none;}.launchCaption{margin:0 8px 8px;}.launchCaption span{display:none;}}
+
+/* SSL-450: at phone width the two choosers stack so labels never run under their arrows. */
+@media (max-width:480px){.inlineChoices{grid-template-columns:1fr;}.inlineChoices span,.inlineChoices strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.inlineChoices > div{grid-template-columns:minmax(0,1fr) auto;padding:4px 8px;}}
