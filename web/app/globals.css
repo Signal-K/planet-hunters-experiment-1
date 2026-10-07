@@ -55,11 +55,15 @@
   --ln-cyan-soft:   rgba(112, 217, 234, 0.16);
   --ln-cyan-border: rgba(112, 217, 234, 0.4);
 
-  --ln-amber:        #f5a623;
-  --ln-amber-bright: #ffc25c;
-  --ln-amber-press:  #d68a0d;
-  --ln-amber-soft:   rgba(245, 166, 35, 0.14);
-  --ln-amber-border: rgba(245, 166, 35, 0.55);
+  --ln-amber:        #36c6e2;
+  --ln-amber-bright: #70d7eb;
+  --ln-amber-press:  #1cabc7;
+  --ln-amber-soft:   rgba(54, 198, 226, 0.14);
+  --ln-amber-border: rgba(54, 198, 226, 0.55);
+
+  /* SSL-425: the Sun is ice-white with a cyan glow, never orange. */
+  --ln-map-sun:      #eefcff;
+  --ln-map-sun-soft: rgba(112, 217, 234, 0.35);
 
   --ln-crimson:        #c8293e;
   --ln-crimson-bright: #e83a52;
@@ -70,18 +74,18 @@
 
   --ln-ok:        #5ad07e;
   --ln-ok-soft:   rgba(90, 208, 126, 0.18);
-  --ln-warn:      #ffb347;
-  --ln-warn-soft: rgba(255, 179, 71, 0.18);
+  --ln-warn:      #5ed7e8;
+  --ln-warn-soft: rgba(94, 215, 232, 0.18);
   --ln-crit:      #ff5a6a;
   --ln-crit-soft: rgba(255, 90, 106, 0.18);
   --ln-info:      #70d9ea;
 
   --ln-mineral-silicon: #b9d8ff;
-  --ln-mineral-iron:    #d97150;
+  --ln-mineral-iron:    #50d9bc;
   --ln-mineral-ice:     #9becff;
   --ln-mineral-carbon:  #6a7280;
-  --ln-mineral-gold:    #ffd166;
-  --ln-mineral-rare:    #c084ff;
+  --ln-mineral-gold:    #79d1ec;
+  --ln-mineral-rare:    #93cef0;
 
   --ln-text:       #e9e9ec;
   --ln-text-dim:   #b4b4bc;
@@ -103,13 +107,13 @@
   --ln-panel-2:      #25252a;
   --ln-border:       rgba(255, 255, 255, 0.22);
   --ln-payout:       #d8ff55;
-  --ln-play:         #fa49ca;
-  --ln-purple-depth: #25123d;
+  --ln-play:         #5b7de8;
+  --ln-purple-depth: #122e3d;
 
   --ln-shadow-card:   0 2px 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.10), 0 8px 24px rgba(0,0,0,0.5);
   --ln-shadow-modal:  0 24px 64px rgba(0,0,0,0.7);
   --ln-glow-cyan:     0 0 0 1px rgba(112,217,234,0.6), 0 0 18px rgba(112,217,234,0.35);
-  --ln-glow-amber:    0 0 0 1px rgba(245,166,35,0.7), 0 0 18px rgba(245,166,35,0.4);
+  --ln-glow-amber:    0 0 0 1px rgba(54,198,226,0.7), 0 0 18px rgba(54,198,226,0.4);
   --ln-glow-ok:       0 0 12px rgba(90,208,126,0.7);
 
   --ln-r-xs: 2px;
@@ -187,7 +191,7 @@
     radial-gradient(1.5px 1.5px at 82% 30%, rgba(255,255,255,0.3), transparent),
     radial-gradient(ellipse at 28% 45%, rgba(112,217,234,0.05) 0%, transparent 50%),
     radial-gradient(ellipse at 72% 35%, rgba(90,208,126,0.03) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 70%, rgba(245,166,35,0.02) 0%, transparent 40%);
+    radial-gradient(ellipse at 50% 70%, rgba(54,198,226,0.02) 0%, transparent 40%);
   background-repeat: repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat;
 }
 
@@ -232,10 +236,10 @@
 .theme-light {
   --ln-void:        #f4f1ea;
   --ln-bg:          #faf8f3;
-  --ln-bg-grid:     #f0ecE2;
+  --ln-bg-grid:     #e2ecf0;
   --ln-surface:     #ffffff;
   --ln-surface-2:   #f2eee4;
-  --ln-surface-3:   #e8e2d3;
+  --ln-surface-3:   #d3e3e8;
   --ln-overlay:     rgba(244, 241, 234, 0.82);
 
   --ln-cyan:        #1c7fbf;
@@ -244,11 +248,11 @@
   --ln-cyan-soft:   rgba(28, 127, 191, 0.10);
   --ln-cyan-border: rgba(28, 127, 191, 0.32);
 
-  --ln-amber:        #b5730a;
-  --ln-amber-bright: #d68a0d;
-  --ln-amber-press:  #8f5a08;
-  --ln-amber-soft:   rgba(181, 115, 10, 0.12);
-  --ln-amber-border: rgba(181, 115, 10, 0.4);
+  --ln-amber:        #1891a7;
+  --ln-amber-bright: #1cabc7;
+  --ln-amber-press:  #137484;
+  --ln-amber-soft:   rgba(24, 145, 167, 0.12);
+  --ln-amber-border: rgba(24, 145, 167, 0.4);
 
   --ln-text:        #1c1a14;
   --ln-text-dim:    #4a4536;
@@ -269,7 +273,7 @@
   --ln-panel-2:      #f2eee4;
   --ln-border:       rgba(28, 26, 20, 0.28);
   --ln-payout:       #6a8a1a;
-  --ln-play:         #a0288f;
+  --ln-play:         #284da0;
   --ln-purple-depth: #d9d0f0;
   --ln-text-inverse: #f4f1ea;
 }
@@ -1306,7 +1310,7 @@ button { cursor: pointer; }
 .auth-gate__scene-status i { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--ln-ok); box-shadow: 0 0 12px var(--ln-ok); }
 .auth-gate__orbit { position: absolute; border: 1px solid rgba(63,169,255,.32); border-radius: 50%; transform: rotate(-24deg); }
 .auth-gate__orbit--outer { width: 390px; height: 180px; left: 2%; top: 42%; }
-.auth-gate__orbit--inner { width: 260px; height: 120px; left: 18%; top: 48%; border-color: rgba(245,166,35,.36); }
+.auth-gate__orbit--inner { width: 260px; height: 120px; left: 18%; top: 48%; border-color: rgba(54,198,226,.36); }
 .auth-gate__planet { position: absolute; width: 112px; height: 112px; left: 36%; top: 44%; border-radius: 50%; background: radial-gradient(circle at 32% 28%, var(--ln-cyan-bright), var(--ln-cyan-press) 46%, var(--ln-void) 78%); box-shadow: 0 0 42px rgba(63,169,255,.32); }
 .auth-gate__ship { position: absolute; width: 130px; left: 54%; top: 33%; transform: rotate(18deg); filter: drop-shadow(0 0 14px rgba(63,169,255,.55)); }
 .auth-gate__telemetry { position: absolute; bottom: var(--ln-s-6); left: var(--ln-s-6); display: grid; grid-template-columns: auto auto; gap: var(--ln-s-2) var(--ln-s-5); color: var(--ln-text-muted); font-size: 9px; }
@@ -2734,8 +2738,8 @@ button { cursor: pointer; }
 
 @keyframes coach-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 @keyframes coach-spot {
-  0%,100% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 0 0 rgba(245,166,35,0); }
-  50% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 18px 3px rgba(245,166,35,0.6); }
+  0%,100% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 0 0 rgba(54,198,226,0); }
+  50% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 18px 3px rgba(54,198,226,0.6); }
 }
 @keyframes coach-spot-pulse {
   0%,100% { border-color: rgba(255,255,255,0.28); box-shadow: 0 0 8px rgba(112,217,234,0.15); }
@@ -2748,7 +2752,7 @@ button { cursor: pointer; }
 
 /* Cyan pulse ring. Sits over its positioned parent (or fills a highlight
    overlay); never paints text, so animating the whole layer's opacity is safe.
-   Was amber (rgba(245,166,35,...)) until KES-192 — TutorialHighlight wraps
+   Was amber (rgba(54,198,226,...)) until KES-192 — TutorialHighlight wraps
    whole content panels (Target Picker, Rocket Buy, Launch Preflight, Debrief)
    whenever hasCoach is true, so that amber was a panel accent on every
    onboarding screen, not the small payout-emphasis use the standing amber
@@ -3090,7 +3094,7 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 
 .ln-scene-panel--industrial {
   background:
-    radial-gradient(140px 90px at 88% 6%, rgba(255, 197, 92, 0.16), transparent 70%),
+    radial-gradient(140px 90px at 88% 6%, rgba(112, 212, 235, 0.16), transparent 70%),
     linear-gradient(180deg, #142544 0%, #0e1c34 50%, #081222 100%);
 }
 
@@ -3311,17 +3315,8 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   .hub-orbital-network { top: 30%; right: 4%; transform: scale(0.82); transform-origin: top right; }
 }
 
-/* Corrected 2026-08-22 (KES-228): this block hardcoded a light "blueprint"
-   surface directly on `.build-place-screen` — unconditionally, with
-   `!important`, completely outside the `.theme-blueprint` opt-in class this
-   file's other blueprint passes use. Removing `theme-blueprint` from the
-   component's root (it was never applied here to begin with) did nothing,
-   because these rules never checked for it. Build placement sits directly
-   between two dark operations screens (Hub before it, Fab/Mining after) —
-   a light onboarding surface mid-flow read as broken, not migrated. Now
-   dark, matching the rest of the operations flow: `--ln-void` field,
-   `--ln-surface`/`--ln-panel-2` cards, cyan hairline grid instead of navy-
-   on-white. */
+/* The Build step belongs to the Cycle 4 blueprint loop. It inherits the
+   paper tokens from `.theme-blueprint` on its route root. */
 .build-place-screen {
   background: var(--ln-void);
   color: var(--ln-text);
@@ -3338,7 +3333,7 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   z-index: 0;
 }
 .build-place-screen .build-structure-strip > div {
-  background: linear-gradient(180deg, transparent, rgba(10, 10, 12, 0.75) 26%, var(--ln-void) 100%);
+  background: linear-gradient(180deg, transparent, var(--ln-blueprint-bg) 26%, var(--ln-blueprint-paper) 100%);
   border-top: 1px solid var(--ln-hairline-strong);
 }
 .build-place-screen .build-structure-strip {
@@ -3350,7 +3345,7 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 .build-place-screen .build-structure-strip button {
   background: var(--ln-surface);
   border-color: var(--ln-cyan-border);
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: var(--ln-shadow-card);
 }
 .build-place-screen .build-structure-strip button:disabled {
   opacity: 0.52;
@@ -3369,6 +3364,16 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   bottom: 0;
   background: var(--ln-surface);
   border-top: 1px solid var(--ln-cyan-border);
+}
+
+/* A compact landscape stage puts the picker across the authored ground line.
+   Move the contextual plot affordances one 8pt-grid step above it so the
+   first setup action stays directly tappable instead of sitting behind the
+   horizontal structure strip. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .build-place-screen .build-plot-button {
+    bottom: calc(42% + var(--ln-s-8)) !important;
+  }
 }
 
 /* Narrow screens need one continuous, reachable document rather than two

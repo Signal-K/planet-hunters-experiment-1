@@ -12,7 +12,7 @@ export default function ObservatoryReadout({ stats }: { stats: ObservatoryStats 
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
       <Stat label="Period" value={stats.periodDays != null ? `${stats.periodDays.toFixed(2)} d` : null} color="var(--ln-cyan-bright)" />
       <Stat label="Planet Radius" value={stats.radiusEarth != null ? `${stats.radiusEarth.toFixed(2)} R⊕` : null} color="var(--ln-amber)" />
-      <Stat label="Eq. Temp" value={stats.eqTempK != null ? `${Math.round(stats.eqTempK)} K` : null} color="#ff9a5c" />
+      <Stat label="Eq. Temp" value={stats.eqTempK != null ? `${Math.round(stats.eqTempK)} K` : null} color="#70ebe1" />
       <Stat label="Zone" value={stats.zone} color={zoneColor} />
     </div>
   )

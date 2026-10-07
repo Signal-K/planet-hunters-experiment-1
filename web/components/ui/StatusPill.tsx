@@ -12,10 +12,10 @@ interface StatusPillProps {
 
 const TONES: Record<PillKind, { bg: string; fg: string }> = {
   ok:    { bg: 'rgba(57,211,106,0.18)',  fg: '#39d36a' },
-  warn:  { bg: 'rgba(255,179,71,0.18)',  fg: '#ffb347' },
+  warn:  { bg: 'rgba(94,215,232,0.18)',  fg: '#5ed7e8' },
   crit:  { bg: 'rgba(255,90,106,0.18)',  fg: '#ff5a6a' },
   info:  { bg: 'rgba(112,217,234,0.18)', fg: '#7ec8ff' },
-  amber: { bg: 'rgba(245,166,35,0.18)',  fg: '#f5a623' },
+  amber: { bg: 'rgba(54,198,226,0.18)',  fg: '#36c6e2' },
   mute:  { bg: 'rgba(169,184,206,0.10)', fg: '#7a8294' },
 }
 

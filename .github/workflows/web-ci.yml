@@ -60,6 +60,9 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      - name: Blueprint palette hue check (no orange or purple)
+        run: npm run verify:hue-palette
+
       - name: Loop screen text, contrast and tap-target floor
         run: npm run verify:loop-text-floor
 

@@ -23,9 +23,9 @@ import { structureBuildMs } from '@/lib/systems/HubConstructionSystem'
 const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 
 const STRUCTURE_COLORS: Record<string, string> = {
-  launchpad: 'var(--ln-info)',
-  refinery: 'var(--ln-amber)', // structure identity exception
-  'deep-space-telescope': 'var(--ln-crit-soft)', // purple identity
+  launchpad: 'var(--ln-cyan)',
+  refinery: 'var(--ln-ok)',
+  'deep-space-telescope': 'var(--ln-cyan-bright)',
   'astronaut-academy': 'var(--ln-cyan-bright)',
 }
 
@@ -160,7 +160,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
     <div
       data-testid="build-place-screen"
       data-scene-loaded="true"
-      className="build-place-screen"
+      className="build-place-screen theme-blueprint"
       style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}
     >
       {/* Build field — corrected 2026-08-22 (KES-228): this was a flat CSS
@@ -189,7 +189,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
             const idx = readComponentNumber(entity, 'BuildPlot', 'index', 0)
             const on = cell === idx
             const taken = occupiedPlots.has(idx)
-            const color = STRUCTURE_COLORS[sel?.id ?? 'launchpad'] ?? '#3fa9ff'
+            const color = STRUCTURE_COLORS[sel?.id ?? 'launchpad'] ?? 'var(--ln-cyan)'
             if (taken) return null
             return (
               <button
@@ -225,9 +225,9 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  filter: on ? 'drop-shadow(0 0 12px rgba(245, 166, 35, 0.6))' : 'none',
+                  filter: on ? 'drop-shadow(0 0 12px var(--ln-cyan-soft))' : 'none',
                 }}>
-                  {on && sel && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={sel.id} size={44} /></span>}
+                  {on && sel && <span style={{ color: 'var(--ln-cyan)' }}><StructureIcon kind={sel.id} size={44} /></span>}
                 </div>
                 <div
                   data-beacon={idx === 0 ? 'build-plot-0' : idx === firstOpenPlot ? 'build-plot-open' : undefined}
@@ -237,9 +237,9 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                   borderRadius: '50% / 60%',
                   background: on
                     ? `radial-gradient(ellipse at 50% 35%, ${color}88, ${color}15 70%)`
-                    : 'radial-gradient(ellipse at 50% 35%, var(--ln-cyan-soft), rgba(112, 217, 234, 0.04) 70%)',
+                    : 'radial-gradient(ellipse at 50% 35%, var(--ln-cyan-soft), transparent 70%)',
                   border: `2px ${on ? 'solid' : 'dashed'} ${on ? color : 'var(--ln-cyan-border)'}`,
-                  boxShadow: on ? `0 0 24px ${color}66` : '0 2px 6px rgba(0,0,0,0.4)',
+                  boxShadow: on ? 'var(--ln-glow-cyan)' : 'var(--ln-shadow-card)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -288,7 +288,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
               const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, missionsDone: player.missionsDone, hasMiningSettlement: player.hasMiningSettlement })
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
-              const color = STRUCTURE_COLORS[c.id] ?? '#3fa9ff'
+              const color = STRUCTURE_COLORS[c.id] ?? 'var(--ln-cyan)'
               return (
                 <button
                   key={c.id}
@@ -320,10 +320,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                   style={{
                     flex: '0 0 auto',
                     scrollSnapAlign: 'start',
-                    background: on
-                      ? `linear-gradient(180deg, ${color}22, ${color}08)`
-                      : 'rgba(24,24,28,0.70)',
-                    border: `1px solid ${on ? color : 'rgba(112,217,234,0.12)'}`,
+                    background: on ? 'var(--ln-cyan-soft)' : 'var(--ln-panel)',
+                    border: `2px solid ${on ? color : 'var(--ln-hairline-strong)'}`,
                     borderRadius: 10,
                     padding: '6px 10px',
                     cursor: canSelect ? 'pointer' : 'default',
@@ -347,11 +345,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                       <div style={{
                         fontFamily: 'var(--ln-font-display)',
                         fontWeight: 800,
-                        // SSL-400: Build is used at phone width. Keep every
-                        // card datum at the shared 12px phone floor, then let
-                        // the card grow vertically rather than clipping a
-                        // name halfway through a glyph.
-                        fontSize: 12,
+                        fontSize: 'var(--ln-fs-micro)',
                         color: on ? color : 'var(--ln-text-dim)',
                         letterSpacing: '0.01em',
                         lineHeight: 1.25,
@@ -360,7 +354,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                       }} data-testid={`build-structure-card-name-${c.id}`}>{c.name}</div>
                       <div style={{
                         fontFamily: 'var(--ln-font-mono)',
-                        fontSize: 12,
+                        fontSize: 'var(--ln-fs-micro)',
                         color: on ? color : 'var(--ln-text-muted)',
                         marginTop: 1,
                         fontWeight: 700,
@@ -401,13 +395,13 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
               alignItems: 'center',
               gap: 6,
             }}>
-              <span style={{ color: STRUCTURE_COLORS[blockedStructure.id] ?? '#3fa9ff', flexShrink: 0 }}>
+              <span style={{ color: STRUCTURE_COLORS[blockedStructure.id] ?? 'var(--ln-cyan)', flexShrink: 0 }}>
                 <StructureIcon kind={blockedStructure.id} size={14} />
               </span>
               <span style={{
                 fontFamily: 'var(--ln-font-body)',
-                fontSize: 12,
-                color: 'var(--ln-warn)',
+                fontSize: 'var(--ln-fs-micro)',
+                color: 'var(--ln-crit)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -422,12 +416,12 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
             alignItems: 'center',
             gap: 6,
           }}>
-            <span style={{ color: STRUCTURE_COLORS[sel.id] ?? '#3fa9ff', flexShrink: 0 }}>
+            <span style={{ color: STRUCTURE_COLORS[sel.id] ?? 'var(--ln-cyan)', flexShrink: 0 }}>
               <StructureIcon kind={sel.id} size={14} />
             </span>
             <span style={{
               fontFamily: 'var(--ln-font-body)',
-              fontSize: 12,
+              fontSize: 'var(--ln-fs-micro)',
               color: 'var(--ln-text-muted)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -437,7 +431,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                 ? `Select a plot for the ${sel.name} · ${formatStructureCost(sel)} · Builds in ${Math.round(structureBuildMs(sel.id) / 1000)}s`
                 : `Place ${sel.name} here? · ${formatStructureCost(sel)} · Builds in ${Math.round(structureBuildMs(sel.id) / 1000)}s`}
             </span>
-          </div> : <div style={{ padding: '6px 2px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-muted)' }}>No structures are available yet. Complete your current mission to unlock the next build.</div>}
+          </div> : <div style={{ padding: '6px 2px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 'var(--ln-fs-micro)', color: 'var(--ln-text-muted)' }}>No structures are available yet. Complete your current mission to unlock the next build.</div>}
         </div>
       </div>
 
@@ -448,7 +442,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
         bottom: 44,
         height: 2,
         zIndex: 6,
-        background: 'linear-gradient(90deg, transparent, rgba(255,225,160,0.35) 15%, rgba(255,225,160,0.35) 85%, transparent)',
+        background: 'linear-gradient(90deg, transparent, var(--ln-cyan-border) 15%, var(--ln-cyan-border) 85%, transparent)',
       }} />
 
       <div

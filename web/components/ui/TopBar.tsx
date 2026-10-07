@@ -139,8 +139,8 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
           <span style={{
             display: 'flex', alignItems: 'center', gap: 4,
             padding: '4px 9px', borderRadius: 999,
-            border: '1px solid rgba(224,165,39,0.4)',
-            background: 'rgba(224,165,39,0.08)',
+            border: '1px solid rgba(39,184,224,0.4)',
+            background: 'rgba(39,184,224,0.08)',
             color: 'var(--ln-amber)',
             fontFamily: 'var(--ln-font-mono)', fontWeight: 800, fontSize: 11,
             whiteSpace: 'nowrap',

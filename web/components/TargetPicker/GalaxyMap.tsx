@@ -15,18 +15,18 @@ import type { Mission, Target, TargetArchetype } from '@/lib/data'
 // instead, so the body's own identity colour always shows through.
 const SPECTRAL_PALETTE: Record<TargetArchetype, { fill: string; low: string; stroke: string; mark: string }> = {
   C: { fill: '#3c3a36', low: '#1e1c1a', stroke: '#5a5450', mark: '#7a7268' },
-  S: { fill: '#8a6040', low: '#4a3020', stroke: '#aa8060', mark: '#d0a880' },
+  S: { fill: '#408a88', low: '#204a47', stroke: '#60aaa8', mark: '#80cdd0' },
   M: { fill: '#8090a0', low: '#3c4a56', stroke: '#a8bccc', mark: '#d0e0ec' },
   icy: { fill: '#7ec8dc', low: '#2e4a54', stroke: '#9ee0f0', mark: '#d4f4fa' },
-  'gas-giant': { fill: '#c8a060', low: '#6f4f2a', stroke: '#e0b870', mark: '#f2d39a' },
+  'gas-giant': { fill: '#60b8c8', low: '#2a6a6f', stroke: '#70cce0', mark: '#9be1f1' },
 }
 const PLANET_COLORS: Record<string, { fill: string; low: string; stroke: string; mark: string }> = {
   mercury: { fill: '#8a7060', low: '#4d4038', stroke: '#a08070', mark: '#c1a292' },
-  venus:   { fill: '#e8c870', low: '#9f7434', stroke: '#d4a840', mark: '#fff0a8' },
+  venus:   { fill: '#70c8e8', low: '#34909f', stroke: '#40b1d4', mark: '#fff0a8' },
   earth:   { fill: '#2a6ea4', low: '#123152', stroke: '#4a9ec4', mark: '#54b36a' },
-  mars:    { fill: '#c1440e', low: '#5e2414', stroke: '#e05020', mark: '#f08a45' },
-  jupiter: { fill: '#c8a060', low: '#6f4f2a', stroke: '#e0b870', mark: '#f2d39a' },
-  saturn:  { fill: '#e0c880', low: '#8a7145', stroke: '#c8a860', mark: '#fff2b8' },
+  mars:    { fill: '#8f6670', low: '#5a3d45', stroke: '#b58590', mark: '#d6b0b8' },
+  jupiter: { fill: '#60b8c8', low: '#2a6a6f', stroke: '#70cce0', mark: '#9be1f1' },
+  saturn:  { fill: '#80c5e0', low: '#457e8a', stroke: '#60b0c8', mark: '#fff2b8' },
   neptune: { fill: '#2040c0', low: '#091d66', stroke: '#4060e0', mark: '#79a2ff' },
 }
 
@@ -213,7 +213,7 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
           )
         })}
 
-        {/* The central body is the sun, not a black UI node. Keep it warm
+        {/* The central body is the sun, not a black UI node. Keep it ice-white
             and legible against the deep atlas field; reward amber rules do
             not apply to a celestial body. */}
         <circle cx={CENTER} cy={CENTER} r={42} fill="var(--ln-map-sun-soft, var(--ln-amber-soft))" />

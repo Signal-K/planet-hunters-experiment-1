@@ -43,7 +43,7 @@ const UNLOCKS: Record<string, {
     cta: 'Select Prospector',
   },
   loan: {
-    accent: '#ffb347',
+    accent: '#5ed7e8',
     eyebrow: 'Offer',
     title: 'EMERGENCY LOAN',
     body: 'Running low on Francs? The Foundry Guild offers a 5,000 F advance, repaid from your next two deliveries.',

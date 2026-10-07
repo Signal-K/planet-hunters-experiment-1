@@ -479,7 +479,7 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
         >
           <span style={{ fontSize: 12 }}>‹</span> Solar System
           {compatSolarCount > 0 && (
-            <span style={{ marginLeft: 4, background: 'rgba(245,166,35,0.2)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 4, padding: '1px 5px', color: '#f5a623', fontSize: 9 }}>
+            <span style={{ marginLeft: 4, background: 'rgba(54,198,226,0.2)', border: '1px solid rgba(54,198,226,0.5)', borderRadius: 4, padding: '1px 5px', color: '#36c6e2', fontSize: 9 }}>
               {compatSolarCount} target{compatSolarCount !== 1 ? 's' : ''} there
             </span>
           )}
@@ -495,12 +495,12 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
           right: 12,
           zIndex: 10,
           background: 'rgba(12,12,13,0.92)',
-          border: '1px solid rgba(245,166,35,0.3)',
+          border: '1px solid rgba(54,198,226,0.3)',
           borderRadius: 10,
           padding: '10px 14px',
           fontFamily: 'var(--ln-font-body), system-ui, sans-serif',
           fontSize: 12,
-          color: '#f5a623',
+          color: '#36c6e2',
           lineHeight: 1.4,
           pointerEvents: 'none',
         }}>

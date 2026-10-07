@@ -85,7 +85,7 @@ export interface BiomeMeta {
 export const BIOME_META: Record<BiomeId, BiomeMeta> = {
   // ── takeon built-ins ──
   'dust-basin': { id: 'dust-basin', label: 'Dust basin', color: '#a8a39a', shade: '#7f7b74', help: 'Fine wind-blown dust filling low ground.', lifeCapacity: 0 },
-  'redrock-desert': { id: 'redrock-desert', label: 'Redrock desert', color: '#c1683f', shade: '#8d4a2c', help: 'Oxidised regolith and drifted dust.', lifeCapacity: 0 },
+  'redrock-desert': { id: 'redrock-desert', label: 'Redrock desert', color: '#3fc1af', shade: '#2c8d7f', help: 'Oxidised regolith and drifted dust.', lifeCapacity: 0 },
   'crater-highlands': { id: 'crater-highlands', label: 'Crater highlands', color: '#8d8a86', shade: '#5e5c59', help: 'Older, impact-churned rubble.', lifeCapacity: 0 },
   'frozen-tundra': { id: 'frozen-tundra', label: 'Frozen tundra', color: '#d9e3ea', shade: '#9fb0bc', help: 'Snow-crusted ground over frozen regolith.', lifeCapacity: 1, bloomsInto: 'moss-meadow' },
   'grassland-plains': { id: 'grassland-plains', label: 'Grassland plains', color: '#7db35a', shade: '#557d3c', help: 'Open temperate ground cover.', lifeCapacity: 2 },
@@ -99,17 +99,17 @@ export const BIOME_META: Record<BiomeId, BiomeMeta> = {
   // ── sterile skins ──
   'salt-flats': { id: 'salt-flats', label: 'Salt flats', color: '#f1e4e8', shade: '#c9a9b6', help: 'Blinding pink-white evaporite crust where an ocean used to be.', lifeCapacity: 0 },
   'obsidian-shelf': { id: 'obsidian-shelf', label: 'Obsidian shelf', color: '#2b2438', shade: '#151021', help: 'Glassy black volcanic plate, shot through with violet fractures.', lifeCapacity: 0 },
-  'lava-fields': { id: 'lava-fields', label: 'Lava fields', color: '#ff6a2a', shade: '#8c2a10', help: 'Fresh basalt flows with glowing channels still open.', lifeCapacity: 0 },
+  'lava-fields': { id: 'lava-fields', label: 'Lava fields', color: '#45e4cc', shade: '#14896c', help: 'Fresh basalt flows with glowing channels still open.', lifeCapacity: 0 },
   'ash-plains': { id: 'ash-plains', label: 'Ash plains', color: '#6f6b70', shade: '#454247', help: 'Metres of fine grey ashfall, soft underfoot.', lifeCapacity: 0 },
   'sulfur-flats': { id: 'sulfur-flats', label: 'Sulfur flats', color: '#e8d24a', shade: '#a99424', help: 'Vivid yellow sulfur crust around dead fumaroles.', lifeCapacity: 0 },
   'basalt-columns': { id: 'basalt-columns', label: 'Basalt columns', color: '#3f4a5c', shade: '#26303f', help: 'Hexagonal columnar basalt stepping down into the dark.', lifeCapacity: 0 },
-  'mesa-badlands': { id: 'mesa-badlands', label: 'Mesa badlands', color: '#d98a4a', shade: '#8f4b7a', help: 'Banded orange and purple clay, cut into flat-topped mesas.', lifeCapacity: 0 },
+  'mesa-badlands': { id: 'mesa-badlands', label: 'Mesa badlands', color: '#4ad9d8', shade: '#4b5a8f', help: 'Banded orange and purple clay, cut into flat-topped mesas.', lifeCapacity: 0 },
   'iron-dunes': { id: 'iron-dunes', label: 'Iron dunes', color: '#b8442e', shade: '#7a2b1c', help: 'Rust-red hematite sand heaped into long dunes.', lifeCapacity: 0 },
   'glacier-shelf': { id: 'glacier-shelf', label: 'Glacier shelf', color: '#7fc3e6', shade: '#3f7ea3', help: 'Deep blue glacial ice, calving into crevasse fields.', lifeCapacity: 0 },
   'geyser-basin': { id: 'geyser-basin', label: 'Geyser basin', color: '#5fd3c8', shade: '#2d8a86', help: 'Turquoise mineral pools and steaming vent cones.', lifeCapacity: 1, bloomsInto: 'lumen-marsh' },
-  'crystal-caverns': { id: 'crystal-caverns', label: 'Crystal caverns', color: '#a878e8', shade: '#5e3f9c', help: 'Violet quartz spires growing out of collapsed cave roofs.', lifeCapacity: 0 },
-  'methane-lakes': { id: 'methane-lakes', label: 'Methane lakes', color: '#c9903a', shade: '#7a5320', help: 'Amber hydrocarbon lakes under an orange haze.', lifeCapacity: 0 },
-  'storm-bands': { id: 'storm-bands', label: 'Storm bands', color: '#d9a869', shade: '#8a5a3a', help: 'Cream and ochre cloud bands whipped into vortices.', lifeCapacity: 0 },
+  'crystal-caverns': { id: 'crystal-caverns', label: 'Crystal caverns', color: '#78c2e8', shade: '#5e3f9c', help: 'Violet quartz spires growing out of collapsed cave roofs.', lifeCapacity: 0 },
+  'methane-lakes': { id: 'methane-lakes', label: 'Methane lakes', color: '#3ab5c9', shade: '#20707a', help: 'Amber hydrocarbon lakes under an orange haze.', lifeCapacity: 0 },
+  'storm-bands': { id: 'storm-bands', label: 'Storm bands', color: '#69ced9', shade: '#3a8a86', help: 'Cream and ochre cloud bands whipped into vortices.', lifeCapacity: 0 },
 
   // ── latent (life could take hold) ──
   'aquifer-caverns': { id: 'aquifer-caverns', label: 'Aquifer caverns', color: '#3a5f8a', shade: '#1f3552', help: 'Subsurface caverns with briny liquid water. Shielded from radiation; life could take hold here.', lifeCapacity: 1, bloomsInto: 'glow-caverns', subsurface: true },
@@ -122,9 +122,9 @@ export const BIOME_META: Record<BiomeId, BiomeMeta> = {
   'glow-caverns': { id: 'glow-caverns', label: 'Glow caverns', color: '#3fd6e8', shade: '#1b7d8c', help: 'Bioluminescent cavern mats lighting the aquifers cyan.', lifeCapacity: 2, subsurface: true },
   'moss-meadow': { id: 'moss-meadow', label: 'Moss meadow', color: '#8fd35a', shade: '#578a33', help: 'Bright moss carpets and low cushion plants.', lifeCapacity: 2 },
   'coral-shallows': { id: 'coral-shallows', label: 'Coral shallows', color: '#ff8fa6', shade: '#3ca8b5', help: 'Pink reef structures in turquoise shallows.', lifeCapacity: 3 },
-  'spore-forest': { id: 'spore-forest', label: 'Spore forest', color: '#c56ee0', shade: '#6f3a85', help: 'Towering violet fungal caps drifting spores into the air.', lifeCapacity: 3 },
+  'spore-forest': { id: 'spore-forest', label: 'Spore forest', color: '#6ea6e0', shade: '#3a6185', help: 'Towering violet fungal caps drifting spores into the air.', lifeCapacity: 3 },
   'lumen-marsh': { id: 'lumen-marsh', label: 'Lumen marsh', color: '#7cf0c4', shade: '#2f9a78', help: 'Glowing wetland of reeds and drifting light.', lifeCapacity: 3 },
-  'savanna': { id: 'savanna', label: 'Savanna', color: '#d4b85a', shade: '#8e7a2e', help: 'Golden grassland dotted with broad trees.', lifeCapacity: 2 },
+  'savanna': { id: 'savanna', label: 'Savanna', color: '#5aafd4', shade: '#2e6f8e', help: 'Golden grassland dotted with broad trees.', lifeCapacity: 2 },
   'jungle-canopy': { id: 'jungle-canopy', label: 'Jungle canopy', color: '#1f8a4c', shade: '#0f4f2c', help: 'Dense, humid rainforest canopy.', lifeCapacity: 3 },
   'crimson-bloom': { id: 'crimson-bloom', label: 'Crimson bloom', color: '#e0405a', shade: '#8a1f33', help: 'Red-pigmented alien vegetation adapted to a dim host star.', lifeCapacity: 3 },
 }

@@ -169,7 +169,7 @@
 .fee {
   padding: 9px 10px;
   border-left: 2px solid var(--ln-amber);
-  background: rgba(245, 166, 35, .07);
+  background: rgba(54, 198, 226, .07);
 }
 
 .fee div {
@@ -190,9 +190,9 @@
 
 .dumpError {
   padding: 8px 10px;
-  border: 1px solid rgba(255, 179, 71, .36);
+  border: 1px solid rgba(94, 215, 232, .36);
   border-radius: 6px;
-  background: rgba(255, 179, 71, .08);
+  background: rgba(94, 215, 232, .08);
   color: var(--ln-warn);
   font: 700 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .12em;

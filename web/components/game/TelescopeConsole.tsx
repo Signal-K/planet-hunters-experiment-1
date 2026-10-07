@@ -62,7 +62,7 @@ export default function TelescopeConsole({
         <GaugeBox icon={<Gauge size={13} />} label="FOCUS" level={0.7} color="var(--ln-cyan)" />
         <GaugeBox icon={<Zap size={13} />} label="SIG" level={Math.max(0.05, Math.min(1, signal / 25))} color="var(--ln-amber)" />
         <GaugeBox icon={<Wifi size={13} />} label="LINK" level={0.9} color="var(--ln-ok)" />
-        <GaugeBox icon={<Cpu size={13} />} label="DATA" level={0.55} color="#c084ff" />
+        <GaugeBox icon={<Cpu size={13} />} label="DATA" level={0.55} color="#93cef0" />
       </div>
 
       {/* Bottom status strip */}
