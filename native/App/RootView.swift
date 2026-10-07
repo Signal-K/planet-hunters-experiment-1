@@ -23,6 +23,7 @@ struct RootView: View {
             case .delivery: DeliveryScreen()
             case .debrief: DebriefScreen()
             case .market: MarketScreen()
+            case .instrumentHub: ControlStationScreen()
             default: StubScreen(screen: store.screen)
             }
         }

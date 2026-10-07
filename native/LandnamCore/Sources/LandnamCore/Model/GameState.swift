@@ -44,6 +44,9 @@ public struct Player: Codable, Equatable, Sendable {
     public var skillPoints: Int = 0
     public var unlockedSkillNodes: [String] = []
     public var freeOperations: Bool = false
+    public var transitSatelliteLaunchedAt: Double?
+    public var deepSpaceTelescopeBuilt: Bool = false
+    public var saturnImagerLaunchedAt: Double?
     public var debriefPending: Bool = false
     public var cargoSettledOffworld: Bool = false
     public var freeHaulDisposition: HaulDisposition?
@@ -106,6 +109,8 @@ public struct Player: Codable, Equatable, Sendable {
         get("placed", &placed); get("placementPlots", &placementPlots); get("controlBuilt", &controlBuilt)
         get("missionsDone", &missionsDone); get("skillPoints", &skillPoints); get("unlockedSkillNodes", &unlockedSkillNodes)
         get("freeOperations", &freeOperations); get("debriefPending", &debriefPending)
+        getOpt("transitSatelliteLaunchedAt", &transitSatelliteLaunchedAt); get("deepSpaceTelescopeBuilt", &deepSpaceTelescopeBuilt)
+        getOpt("saturnImagerLaunchedAt", &saturnImagerLaunchedAt)
         get("cargoSettledOffworld", &cargoSettledOffworld); getOpt("freeHaulDisposition", &freeHaulDisposition)
         get("returningToEarth", &returningToEarth); get("shipDestroyed", &shipDestroyed)
         get("headingToDelivery", &headingToDelivery); get("stash", &stash); get("marketSupply", &marketSupply)
@@ -139,6 +144,8 @@ public struct Player: Codable, Equatable, Sendable {
         try put("placed", placed); try put("placementPlots", placementPlots); try put("controlBuilt", controlBuilt)
         try put("missionsDone", missionsDone); try put("skillPoints", skillPoints); try put("unlockedSkillNodes", unlockedSkillNodes)
         try put("freeOperations", freeOperations); try put("debriefPending", debriefPending)
+        try putOpt("transitSatelliteLaunchedAt", transitSatelliteLaunchedAt); try put("deepSpaceTelescopeBuilt", deepSpaceTelescopeBuilt)
+        try putOpt("saturnImagerLaunchedAt", saturnImagerLaunchedAt)
         try put("cargoSettledOffworld", cargoSettledOffworld); try putOpt("freeHaulDisposition", freeHaulDisposition)
         try put("returningToEarth", returningToEarth); try put("shipDestroyed", shipDestroyed)
         try put("headingToDelivery", headingToDelivery); try put("stash", stash); try put("marketSupply", marketSupply)

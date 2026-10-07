@@ -71,6 +71,15 @@ struct SnapshotTests {
         try render(view, size: CGSize(width: 402, height: 640), name: "coach-marks-phone")
     }
 
+    @Test func controlStationPhone() throws {
+        var gs = GameState()
+        gs.player.freeOperations = true; gs.player.deepSpaceTelescopeBuilt = true; gs.player.saturnImagerLaunchedAt = 1
+        let st = GameStore(state: gs)
+        let sigs = [InstrumentSignal(id: "n", kind: .deepSpace, title: "NEOCP"), InstrumentSignal(id: "s", kind: .saturn, title: "Frame")]
+        try render(ControlStationScreen(signals: sigs).environment(st).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil)),
+                   size: CGSize(width: 402, height: 874), name: "control-station-phone")
+    }
+
     @Test func hubDesktop() throws {
         try render(HubScreen().environment(store()), size: CGSize(width: 1000, height: 680), name: "hub-desktop")
     }

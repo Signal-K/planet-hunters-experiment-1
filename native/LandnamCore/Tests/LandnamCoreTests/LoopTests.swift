@@ -215,3 +215,26 @@ import Foundation
         run.advance(); #expect(!run.isActive)
     }
 }
+
+@Suite struct ControlStationTests {
+    @Test func listsNothingBeforeFreeOperations() {
+        let m = ControlStation.build(player: Player(), signals: [], bodyId: "all")
+        #expect(m.groups.isEmpty && m.emptyLabel == "Equipment links once Free Operations is open.")
+    }
+    @Test func groundTelescopesAreStandingAndReadDeepSpaceFeed() {
+        var p = Player(); p.freeOperations = true
+        let sig = InstrumentSignal(id: "a", kind: .deepSpace, title: "NEOCP")
+        var m = ControlStation.build(player: p, signals: [sig], bodyId: "all")
+        #expect(m.groups.count == 1 && m.groups[0].rows[0].status == "Standing by" && m.groups[0].rows[0].open == nil)
+        p.deepSpaceTelescopeBuilt = true
+        m = ControlStation.build(player: p, signals: [sig], bodyId: "all")
+        #expect(m.groups.flatMap(\.rows).filter { $0.open != nil }.count == 2)
+        #expect(m.filters.map(\.id) == ["all", "earth"])
+    }
+    @Test func saturnAppearsAfterLaunchAndFilters() {
+        var p = Player(); p.freeOperations = true; p.saturnImagerLaunchedAt = 5
+        let m = ControlStation.build(player: p, signals: [InstrumentSignal(id: "s", kind: .saturn, title: "Frame")], bodyId: "saturn")
+        #expect(m.groups.count == 1 && m.groups[0].rows[0].status == "Frame ready" && m.groups[0].rows[0].readyCount == 1)
+        #expect(ControlStation.build(player: p, signals: [], bodyId: "mars").activeBodyId == "all")
+    }
+}
