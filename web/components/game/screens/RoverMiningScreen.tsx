@@ -229,7 +229,7 @@ export default function RoverMiningScreen({
   }, [])
 
   return (
-    <div className={`game-screen theme-deep ln-scene-takeon ${styles.screen}`} data-testid="rover-mining-screen">
+    <div className={`game-screen theme-blueprint ln-scene-takeon ${styles.screen}`} data-testid="rover-mining-screen">
       <main className={styles.content} data-ui-zone={UI_ZONES.screenContent}>
         <section className={styles.scenePanel} aria-label="TakeOn rover field" data-build-mode={buildMode && sandboxEnabled}>
           <TakeOnMount

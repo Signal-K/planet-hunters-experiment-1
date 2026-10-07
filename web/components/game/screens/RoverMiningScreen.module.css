@@ -1,4 +1,10 @@
-.screen { --ln-bp-bg: var(--ln-void); --ln-bp-paper: var(--ln-panel); --ln-bp-paper-2: var(--ln-surface-2); --ln-bp-ink: var(--ln-text); --ln-bp-muted: var(--ln-text-dim); --ln-bp-line: var(--ln-hairline); --ln-bp-line-strong: var(--ln-hairline-strong); --ln-bp-blue: var(--ln-cyan); --ln-bp-green: var(--ln-ok); display: flex; min-height: 0; overflow: hidden; }
+.screen {
+  /* Cycle 4 is one blueprint surface. The TakeOn canvas still renders the
+     physical terrain, while every attached control stays on blueprint paper. */
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
 .content { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 .scenePanel { position: absolute; inset: 0; overflow: hidden; background: var(--ln-bp-bg); }
 .takeonMount { position: absolute; inset: 0; }
