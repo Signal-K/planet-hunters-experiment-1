@@ -61,7 +61,7 @@ struct BuildScreen: View {
         } label: {
             Panel(accent: on ? Theme.teal : Theme.blueBright) {
                 HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: b.id == "launchpad" ? "airplane.departure" : "building.columns").font(.system(size: 22, weight: .bold)).frame(width: 36)
+                    Image(systemName: b.id == "launchpad" ? "airplane.departure" : "building.columns").font(.system(size: 22, weight: .bold)).frame(minWidth: 44)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(b.name).font(AppFont.display(16))
                         Text(unlocked ? cost(b) : b.unlocksAt).font(AppFont.mono(14)).foregroundStyle(Theme.textDim)

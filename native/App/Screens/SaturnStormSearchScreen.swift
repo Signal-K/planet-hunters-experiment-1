@@ -69,7 +69,7 @@ struct SaturnStormSearchScreen: View {
             let w = geo.size.width / 3, h = geo.size.height / 3
             ForEach(0..<Saturn.gridCells, id: \.self) { i in
                 let r = CGFloat(i / 3), col = CGFloat(i % 3)
-                Button { selected = i } label: {
+                Button { selected = i } label: { // tap-floor-ignore: the 26pt ring is a marker inside a full grid cell
                     ZStack {
                         Rectangle().stroke(.white.opacity(0.55), lineWidth: 1)
                         if selected == i { Rectangle().stroke(Theme.blueBright, lineWidth: 4) }
