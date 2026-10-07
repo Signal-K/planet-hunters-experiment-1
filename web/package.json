@@ -16,6 +16,7 @@
     "verify:native-tap-targets": "node scripts/verify-native-tap-targets.mjs",
     "verify:native-contrast": "node scripts/verify-native-contrast.mjs",
     "verify:loop-text-floor": "node scripts/loop-text-floor.mjs",
+    "qa:scenes": "node scripts/qa-scenes.mjs",
     "test:unit": "npm run verify:scene-surfaces && vitest run",
     "missions:emit": "node --experimental-strip-types scripts/generate-missions.ts",
     "ingest:shared-subjects": "node --experimental-strip-types scripts/run-shared-subject-ingest.ts",
