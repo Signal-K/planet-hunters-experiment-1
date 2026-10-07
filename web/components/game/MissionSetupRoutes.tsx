@@ -131,7 +131,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   return <>
     <SetupFrame title="Launch review" screen={screen} onBack={() => game.go('missions')}>
       <section className={styles.review} data-testid="mission-launch-review">
-        <div className={styles.launchScene}><div className={styles.launchTower} aria-hidden="true"><i /><i /><i /></div><img src={rocketDisplay.img} alt={`${selectedRocket.name} on the launchpad`} /><div className={styles.launchCaption}><span>LAUNCHPAD · READY FOR DEPARTURE</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
+        <div className={styles.launchScene}><div className={styles.launchArt}><div className={styles.launchTower} aria-hidden="true"><i /><i /><i /></div><img src={rocketDisplay.img} alt={`${selectedRocket.name} on the launchpad`} /></div><div className={styles.launchCaption}><span>LAUNCHPAD · READY FOR DEPARTURE</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
         <aside className={styles.reviewBrief}>
           <div className={styles.reviewHeading}><span>CLIENT CONTRACT</span><h2>{game.mission.title}</h2></div>
           <dl className={styles.reviewFacts}><div><dt>DESTINATION</dt><dd>{target.name} · {targetTypeLabel(target.type)}</dd></div><div><dt>VEHICLE</dt><dd>{selectedRocket.name}</dd></div><div><dt>REQUIRED CARGO</dt><dd><RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} /></dd></div></dl>
