@@ -10,6 +10,7 @@ import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import { formatCurrency } from '@/lib/format'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import ClientMark from '@/components/ui/ClientMark'
+import PixiGalaxyMap from '@/components/TargetPicker/PixiGalaxyMap'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
@@ -121,6 +122,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const crewStatus = crewRequirementStatus(game.mission.requires.crew, game.player.crew ?? [])
   const launchReady = validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [] }).ok && (!game.mission.requires.crew || crewStatus.met)
 
+  const compatibleIds = new Set(compatibleTargets.map(candidate => candidate.id))
   const switchTarget = (offset: number) => compatibleTargets.length > 1 && game.onPickTarget(compatibleTargets[(targetIndex + offset + compatibleTargets.length) % compatibleTargets.length].id)
   const switchRocket = (offset: number) => selectableRockets.length > 1 && game.onPurchaseRocket(selectableRockets[(rocketIndex + offset + selectableRockets.length) % selectableRockets.length].id)
   const preparing = !selectedVehicle || selectedVehicle.location !== 'launchpad'
@@ -133,6 +135,9 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         <aside className={styles.reviewBrief}>
           <div className={styles.reviewHeading}><span>CLIENT CONTRACT</span><h2>{game.mission.title}</h2></div>
           <dl className={styles.reviewFacts}><div><dt>DESTINATION</dt><dd>{target.name} · {targetTypeLabel(target.type)}</dd></div><div><dt>VEHICLE</dt><dd>{selectedRocket.name}</dd></div><div><dt>REQUIRED CARGO</dt><dd><RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} /></dd></div></dl>
+          <div className={styles.reviewMap} data-testid="launch-review-map" aria-label={`Route to ${target.name}`}>
+            <PixiGalaxyMap mission={game.mission} targets={compatibleTargets} compatibleIds={compatibleIds} pickedId={target.id} onPick={game.onPickTarget} />
+          </div>
           <div className={styles.inlineChoices} aria-label="Change mission setup">
             <div><span>DESTINATION</span><strong>{target.name}</strong><nav><button type="button" onClick={() => switchTarget(-1)} disabled={compatibleTargets.length < 2} aria-label="Previous destination"><ArrowGlyph direction="previous" /></button><button type="button" onClick={() => switchTarget(1)} disabled={compatibleTargets.length < 2} aria-label="Next destination"><ArrowGlyph direction="next" /></button></nav></div>
             <div><span>VEHICLE</span><strong>{selectedRocket.name}</strong><nav><button type="button" onClick={() => switchRocket(-1)} disabled={selectableRockets.length < 2} aria-label="Previous vehicle"><ArrowGlyph direction="previous" /></button><button type="button" onClick={() => switchRocket(1)} disabled={selectableRockets.length < 2} aria-label="Next vehicle"><ArrowGlyph direction="next" /></button></nav></div>

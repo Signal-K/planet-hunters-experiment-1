@@ -13,7 +13,9 @@ describe('R1 mission setup', () => {
     expect(routes).toContain('DESTINATION')
     expect(routes).toContain('VEHICLE')
     expect(routes).toContain("'launch-btn'")
-    expect(routes).not.toContain('GalaxyMap')
+    // A single compact route map is part of the review (SSL-426); the full picker screen is not.
+    expect(routes).toContain('data-testid="launch-review-map"')
+    expect(routes).not.toContain('TargetPickerScreen')
     expect(routes).not.toContain('HangarAssembly')
     expect(routes).not.toContain('MOVE TO LAUNCHPAD')
     expect(routes).not.toContain('MISSION SETUP ·')
