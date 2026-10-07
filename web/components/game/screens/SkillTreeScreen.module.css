@@ -4,8 +4,8 @@
   min-height: 100%;
   flex-direction: column;
   overflow: hidden;
-  background: var(--ln-void);
-  color: var(--ln-text);
+  background: var(--ln-bp-bg);
+  color: var(--ln-bp-ink);
 }
 
 .sceneWash {
@@ -13,7 +13,7 @@
   z-index: 1;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 34%, transparent), color-mix(in srgb, var(--ln-void) 78%, transparent) 84%, var(--ln-void));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ln-bp-bg) 34%, transparent), color-mix(in srgb, var(--ln-bp-bg) 78%, transparent) 84%, var(--ln-bp-bg));
 }
 
 .blueprintGrid {
@@ -22,9 +22,9 @@
   inset: 0;
   pointer-events: none;
   opacity: .3;
-  background-image: linear-gradient(var(--ln-hairline) 1px, transparent 1px), linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px);
+  background-image: linear-gradient(var(--ln-bp-line-strong) 1px, transparent 1px), linear-gradient(90deg, var(--ln-bp-line-strong) 1px, transparent 1px);
   background-size: 32px 32px;
-  mask-image: linear-gradient(180deg, var(--ln-text) 0%, transparent 88%);
+  mask-image: linear-gradient(180deg, var(--ln-bp-ink) 0%, transparent 88%);
 }
 
 .content {
@@ -58,7 +58,7 @@
 .inspectorStatus,
 .xpReadout,
 .bottomRail {
-  font: 700 9px/1.25 var(--ln-font-display);
+  font: 700 14px/1.25 var(--ln-font-display);
   letter-spacing: .14em;
   text-transform: uppercase;
 }
@@ -66,12 +66,12 @@
 .kicker,
 .sectionLabel,
 .readoutLabel {
-  color: var(--ln-cyan);
+  color: #15598f;
 }
 
 .heading {
   margin: 4px 0 0;
-  color: var(--ln-text);
+  color: var(--ln-bp-ink);
   font: 800 clamp(24px, 3vw, 40px)/1.05 var(--ln-font-display);
   letter-spacing: .01em;
 }
@@ -79,31 +79,31 @@
 .subheading {
   max-width: 560px;
   margin: 8px 0 0;
-  color: var(--ln-text-dim);
-  font: 400 12px/1.45 var(--ln-font-body);
+  color: var(--ln-bp-ink-dim);
+  font: 400 14px/1.45 var(--ln-font-body);
 }
 
 .heroReadout {
   min-width: 152px;
   padding: 12px 14px;
-  border: 1px solid var(--ln-hairline);
-  background: color-mix(in srgb, var(--ln-panel) 86%, transparent);
+  border: 1px solid var(--ln-bp-line-strong);
+  background: color-mix(in srgb, var(--ln-bp-paper) 86%, transparent);
   text-align: right;
-  box-shadow: var(--ln-shadow-card);
+  box-shadow: 3px 3px 0 rgba(31,120,193,.28);
 }
 
 .heroReadout strong {
   display: block;
   margin-top: 3px;
-  color: var(--ln-text);
+  color: var(--ln-bp-ink);
   font: 800 25px/1 var(--ln-font-mono);
 }
 
 .readoutHint {
   display: block;
   margin-top: 5px;
-  color: var(--ln-text-muted);
-  font-size: 8px;
+  color: var(--ln-bp-ink-mute);
+  font-size: 14px;
 }
 
 .layout {
@@ -133,8 +133,8 @@
   gap: 8px;
   min-width: 0;
   padding: 9px;
-  border: 1px solid var(--ln-hairline);
-  background: color-mix(in srgb, var(--ln-panel) 86%, transparent);
+  border: 1px solid var(--ln-bp-line-strong);
+  background: color-mix(in srgb, var(--ln-bp-paper) 86%, transparent);
   width: 100%;
   min-height: 44px;
   color: inherit;
@@ -147,17 +147,17 @@
 .branchCard:hover,
 .branchCard:focus-visible,
 .branchCardActive {
-  border-color: var(--ln-cyan-border);
+  border-color: var(--ln-bp-line-strong);
 }
 
 .branchMark,
 .nodeCore {
   display: grid;
   place-items: center;
-  color: var(--ln-cyan);
-  border: 1px solid var(--ln-cyan-border);
-  background: color-mix(in srgb, var(--ln-cyan) 8%, transparent);
-  font: 800 9px/1 var(--ln-font-mono);
+  color: #15598f;
+  border: 1px solid var(--ln-bp-line-strong);
+  background: color-mix(in srgb, var(--ln-bp-blue) 8%, transparent);
+  font: 800 14px/1 var(--ln-font-mono);
 }
 
 .branchMark {
@@ -174,21 +174,21 @@
 
 .branchCopy strong {
   overflow: hidden;
-  color: var(--ln-text);
-  font: 700 10px/1.15 var(--ln-font-display);
+  color: var(--ln-bp-ink);
+  font: 700 14px/1.15 var(--ln-font-display);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .branchCopy small,
 .branchLegend {
-  color: var(--ln-text-muted);
-  font: 400 9px/1.3 var(--ln-font-body);
+  color: var(--ln-bp-ink-mute);
+  font: 400 14px/1.3 var(--ln-font-body);
 }
 
 .branchCount {
-  color: var(--ln-text-dim);
-  font: 700 9px var(--ln-font-mono);
+  color: var(--ln-bp-ink-dim);
+  font: 700 14px var(--ln-font-mono);
 }
 
 .branchLegend {
@@ -207,17 +207,17 @@
   height: 6px;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: var(--ln-cyan);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-cyan) 70%, transparent);
+  background: var(--ln-bp-blue);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-bp-blue) 70%, transparent);
 }
 
 .treePanel,
 .inspectorPanel,
 .licensePanel,
 .firstsPanel {
-  border: 1px solid var(--ln-hairline);
-  background: color-mix(in srgb, var(--ln-panel) 82%, transparent);
-  box-shadow: var(--ln-shadow-card);
+  border: 1px solid var(--ln-bp-line-strong);
+  background: color-mix(in srgb, var(--ln-bp-paper) 82%, transparent);
+  box-shadow: 3px 3px 0 rgba(31,120,193,.28);
 }
 
 .treePanel {
@@ -240,7 +240,7 @@
 .inspectorPanel h3,
 .firstsHeading h3 {
   margin: 4px 0 0;
-  color: var(--ln-text);
+  color: var(--ln-bp-ink);
   font: 800 17px/1.1 var(--ln-font-display);
 }
 
@@ -249,8 +249,8 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
-  color: var(--ln-text-muted);
-  font: 700 8px var(--ln-font-mono);
+  color: var(--ln-bp-ink-mute);
+  font: 700 14px var(--ln-font-mono);
 }
 
 .treeCanvas {
@@ -272,7 +272,7 @@
 }
 
 .treeLines line {
-  stroke: var(--ln-hairline-strong);
+  stroke: var(--ln-bp-ink);
   stroke-width: .7;
   vector-effect: non-scaling-stroke;
 }
@@ -288,18 +288,18 @@
 .nodeCard {
   min-width: 0;
   padding: 8px;
-  border: 1px solid var(--ln-hairline);
-  background: color-mix(in srgb, var(--ln-void) 72%, var(--ln-panel));
+  border: 1px solid var(--ln-bp-line-strong);
+  background: color-mix(in srgb, var(--ln-bp-bg) 72%, var(--ln-bp-paper));
   transition: border-color var(--ln-d-quick) var(--ln-ease-out), box-shadow var(--ln-d-quick) var(--ln-ease-out);
 }
 
 .nodeCardSelected {
-  border-color: var(--ln-cyan-border);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ln-cyan) 14%, transparent), 0 0 18px color-mix(in srgb, var(--ln-cyan) 16%, transparent);
+  border-color: var(--ln-bp-line-strong);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ln-bp-blue) 14%, transparent), 0 0 18px color-mix(in srgb, var(--ln-bp-blue) 16%, transparent);
 }
 
 .nodeCardUnlocked {
-  border-color: color-mix(in srgb, var(--ln-ok) 55%, transparent);
+  border-color: color-mix(in srgb, var(--ln-bp-green) 55%, transparent);
 }
 
 .nodeButton {
@@ -324,16 +324,16 @@
 }
 
 .nodeCardUnlocked .nodeCore {
-  color: var(--ln-ok);
-  border-color: color-mix(in srgb, var(--ln-ok) 55%, transparent);
-  background: color-mix(in srgb, var(--ln-ok) 10%, transparent);
+  color: var(--ln-bp-green);
+  border-color: color-mix(in srgb, var(--ln-bp-green) 55%, transparent);
+  background: color-mix(in srgb, var(--ln-bp-green) 10%, transparent);
 }
 
 .nodeTitle {
   overflow: hidden;
   width: 100%;
-  color: var(--ln-text);
-  font: 800 11px/1.2 var(--ln-font-display);
+  color: var(--ln-bp-ink);
+  font: 800 14px/1.2 var(--ln-font-display);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -341,8 +341,8 @@
 .nodeBranch {
   overflow: hidden;
   width: 100%;
-  color: var(--ln-text-muted);
-  font: 700 8px/1.2 var(--ln-font-display);
+  color: var(--ln-bp-ink-mute);
+  font: 700 14px/1.2 var(--ln-font-display);
   letter-spacing: .08em;
   text-overflow: ellipsis;
   text-transform: uppercase;
@@ -352,8 +352,8 @@
 .nodeDescription {
   min-height: 32px;
   margin: 9px 0;
-  color: var(--ln-text-dim);
-  font: 400 10px/1.35 var(--ln-font-body);
+  color: var(--ln-bp-ink-dim);
+  font: 400 14px/1.35 var(--ln-font-body);
 }
 
 .nodeFooter {
@@ -365,27 +365,30 @@
   align-items: center;
   gap: 5px;
   min-width: 0;
-  color: var(--ln-text-muted);
-  font: 700 8px var(--ln-font-mono);
+  color: var(--ln-bp-ink-mute);
+  font: 700 14px var(--ln-font-mono);
   text-transform: uppercase;
 }
 
 .nodeStatusUnlocked {
-  color: var(--ln-ok);
+  color: var(--ln-bp-green);
 }
 
 .nodeStatusUnlocked .statusDot {
-  background: var(--ln-ok);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-ok) 70%, transparent);
+  background: var(--ln-bp-green);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-bp-green) 70%, transparent);
 }
 
 .nodeAction,
 .installButton,
 .gradeButton {
-  border: 1px solid var(--ln-cyan-border);
-  background: color-mix(in srgb, var(--ln-cyan) 10%, transparent);
-  color: var(--ln-cyan);
-  font: 800 8px/1 var(--ln-font-display);
+  min-height: 44px;
+  min-width: 44px;
+  border: 2px solid var(--ln-bp-ink);
+  box-shadow: 3px 3px 0 rgba(31,120,193,.28);
+  background: var(--ln-bp-paper);
+  color: var(--ln-bp-ink);
+  font: 800 14px/1 var(--ln-font-display);
   letter-spacing: .1em;
   text-transform: uppercase;
   cursor: pointer;
@@ -414,19 +417,19 @@
 }
 
 .inspectorCode {
-  color: var(--ln-text-muted);
-  font: 700 8px var(--ln-font-mono);
+  color: var(--ln-bp-ink-mute);
+  font: 700 14px var(--ln-font-mono);
 }
 
 .inspectorStatus {
   padding: 4px 6px;
-  border: 1px solid color-mix(in srgb, var(--ln-crit) 55%, transparent);
-  color: var(--ln-crit);
+  border: 1px solid color-mix(in srgb, var(--ln-bp-pink) 55%, transparent);
+  color: var(--ln-bp-pink);
 }
 
 .inspectorStatusUnlocked {
-  border-color: color-mix(in srgb, var(--ln-ok) 55%, transparent);
-  color: var(--ln-ok);
+  border-color: color-mix(in srgb, var(--ln-bp-green) 55%, transparent);
+  color: var(--ln-bp-green);
 }
 
 .inspectorPanel h3 {
@@ -436,8 +439,8 @@
 
 .inspectorPanel p {
   margin: 8px 0 14px;
-  color: var(--ln-text-dim);
-  font: 400 11px/1.45 var(--ln-font-body);
+  color: var(--ln-bp-ink-dim);
+  font: 400 14px/1.45 var(--ln-font-body);
 }
 
 .specRow {
@@ -445,16 +448,16 @@
   justify-content: space-between;
   gap: 8px;
   padding: 8px 0;
-  border-top: 1px solid var(--ln-divider);
-  color: var(--ln-text-muted);
-  font: 700 8px var(--ln-font-display);
+  border-top: 1px solid var(--ln-bp-line-strong);
+  color: var(--ln-bp-ink-mute);
+  font: 700 14px var(--ln-font-display);
   letter-spacing: .1em;
   text-transform: uppercase;
 }
 
 .specRow strong {
-  color: var(--ln-text);
-  font: 700 9px var(--ln-font-mono);
+  color: var(--ln-bp-ink);
+  font: 700 14px var(--ln-font-mono);
   text-align: right;
 }
 
@@ -468,9 +471,9 @@
 .installedStamp {
   margin-top: 14px;
   padding: 9px;
-  border: 1px solid color-mix(in srgb, var(--ln-ok) 55%, transparent);
-  color: var(--ln-ok);
-  font: 800 8px var(--ln-font-display);
+  border: 1px solid color-mix(in srgb, var(--ln-bp-green) 55%, transparent);
+  color: var(--ln-bp-green);
+  font: 800 14px var(--ln-font-display);
   letter-spacing: .12em;
   text-align: center;
 }
@@ -481,9 +484,9 @@
 
 .gradePill {
   padding: 4px 6px;
-  border: 1px solid var(--ln-cyan-border);
-  color: var(--ln-cyan);
-  font: 800 9px var(--ln-font-mono);
+  border: 1px solid var(--ln-bp-line-strong);
+  color: #15598f;
+  font: 800 14px var(--ln-font-mono);
 }
 
 .gradeTrack {
@@ -496,18 +499,18 @@
 .gradeSegment,
 .gradeSegmentActive {
   height: 5px;
-  background: var(--ln-surface-2);
+  background: var(--ln-bp-paper-2);
 }
 
 .gradeSegmentActive {
-  background: var(--ln-cyan);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-cyan) 55%, transparent);
+  background: var(--ln-bp-blue);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-bp-blue) 55%, transparent);
 }
 
 .xpReadout {
   margin-top: 8px;
-  color: var(--ln-text-muted);
-  font: 700 8px var(--ln-font-mono);
+  color: var(--ln-bp-ink-mute);
+  font: 700 14px var(--ln-font-mono);
 }
 
 .firstsPanel {
@@ -531,30 +534,30 @@
   align-items: center;
   gap: 7px;
   min-width: 0;
-  color: var(--ln-text-dim);
-  font: 400 10px/1.2 var(--ln-font-body);
+  color: var(--ln-bp-ink-dim);
+  font: 400 14px/1.2 var(--ln-font-body);
 }
 
 .firstRow strong {
-  color: var(--ln-text-muted);
-  font: 800 8px var(--ln-font-mono);
+  color: var(--ln-bp-ink-mute);
+  font: 800 14px var(--ln-font-mono);
 }
 
 .firstMarker {
   width: 7px;
   height: 7px;
-  border: 1px solid var(--ln-text-muted);
+  border: 1px solid var(--ln-bp-ink-mute);
   transform: rotate(45deg);
 }
 
 .firstMarkerDone {
-  border-color: var(--ln-ok);
-  background: var(--ln-ok);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-ok) 60%, transparent);
+  border-color: var(--ln-bp-green);
+  background: var(--ln-bp-green);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-bp-green) 60%, transparent);
 }
 
 .firstDone {
-  color: var(--ln-ok) !important;
+  color: var(--ln-bp-green) !important;
 }
 
 .bottomRail {
@@ -564,16 +567,16 @@
   justify-content: space-between;
   gap: 12px;
   padding: 8px 16px;
-  border-top: 1px solid var(--ln-hairline);
-  color: var(--ln-text-muted);
-  font: 700 8px var(--ln-font-mono);
+  border-top: 1px solid var(--ln-bp-line-strong);
+  color: var(--ln-bp-ink-mute);
+  font: 700 14px var(--ln-font-mono);
 }
 
 .bottomRail span:first-child {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--ln-text-dim);
+  color: var(--ln-bp-ink-dim);
 }
 
 @media (max-width: 980px) {
@@ -743,7 +746,7 @@
   }
 
   .branchCopy strong {
-    font-size: 8px;
+    font-size: 14px;
   }
 
   .treePanel,
@@ -754,7 +757,7 @@
 
   .panelHeader h3,
   .inspectorPanel h3 {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .treeCanvas {

@@ -28,6 +28,8 @@ const AUDIT = `(() => {
     if (k.h >= 12 && k.h <= 48) return what+':orange'; if (k.h >= 262 && k.h <= 335) return what+':purple'; return null }
   const bgOf = el => { for (let n = el; n; n = n.parentElement) { const c = parse(getComputedStyle(n).backgroundColor); if (c && c.a > 0.85) return c } return {r:255,g:255,b:255,a:1} }
   const out = { dark: [], hue: [], small: [], taps: [], contrast: [], panels: [] }
+  const ovRoot = document.querySelector('nextjs-portal')?.shadowRoot; const ovClone = ovRoot ? [...ovRoot.children].filter(n => n.tagName !== 'STYLE').map(n => n.textContent).join(' ') : ''; const overlay = ovClone
+  if (/Build Error|Runtime Error|Parsing CSS/.test(overlay)) return JSON.stringify({ error: 'Next error overlay: ' + overlay.replace(/\\s+/g, ' ').slice(0, 240) })
   const seen = new Set()
   const vis = el => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && +s.opacity > 0.05 && r.bottom > 0 && r.top < innerHeight*3 }
   const name = el => (el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\\s+/).join('.') : '') + ' < ' + (el.parentElement && typeof el.parentElement.className === 'string' ? el.parentElement.className.trim().split(/\\s+/).join('.') : '') + ':' + (el.innerText||el.getAttribute('aria-label')||'').trim().slice(0,28).replace(/\\s+/g,' '))

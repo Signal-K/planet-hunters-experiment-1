@@ -96,7 +96,7 @@ export default function AcademyScreen(props: AcademyScreenProps) {
   )
 
   return (
-    <div className={`game-screen theme-light ${styles.screen}`} data-testid="academy-screen">
+    <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="academy-screen">
       <TopBar eyebrow="BASE · CREW" title="Astronaut Academy" onBack={props.onBack} solid />
 
       {!built ? (

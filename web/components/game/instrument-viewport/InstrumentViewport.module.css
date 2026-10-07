@@ -634,10 +634,25 @@
 @media (max-width: 600px) and (orientation: portrait) {
   .knobLabel,
   .switchLabel {
-    font-size: 10px;
-    letter-spacing: 0.03em;
+    font-size: 14px;
+    letter-spacing: 0;
     white-space: nowrap;
   }
-  .knobRow { gap: var(--ln-s-1); }
-  .knob { width: 52px; }
+  .knobRow { gap: var(--ln-s-1); flex-wrap: wrap; }
+  .knob { width: auto; min-width: 52px; }
+}
+
+/* One visual style (SSL-423): control and command panels carry the 2px ink outline and offset shadow. */
+.controls,
+.command {
+  border: 2px solid var(--iv-ink);
+  box-shadow: 4px 4px 0 rgba(31, 120, 193, 0.28);
+}
+.well {
+  background: var(--ln-bp-paper-2, #dfe9f3);
+  box-shadow: 4px 4px 0 rgba(31, 120, 193, 0.28);
+}
+.terminal,
+.toolButton {
+  box-shadow: 3px 3px 0 rgba(31, 120, 193, 0.28);
 }
