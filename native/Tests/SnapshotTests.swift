@@ -116,6 +116,16 @@ struct SnapshotTests {
                    size: CGSize(width: 402, height: 1000), name: "sky-badges-phone")
     }
 
+    @Test func roverFieldPhone() throws {
+        var p = Prospecting(requirements: ["iron": 2, "copper": 1])
+        p.select("ore-a"); p.driveToSelected(); _ = p.drill(); _ = p.drill(); _ = p.drill(); p.startConstruction()
+        try render(RoverFieldScreen(initial: p, deployed: true).environment(GameStore(state: GameState())), size: CGSize(width: 402, height: 874), name: "rover-field-phone")
+    }
+
+    @Test func roverTouchdownPhone() throws {
+        try render(RoverFieldScreen(initial: Prospecting(requirements: ["iron": 2])).environment(GameStore(state: GameState())), size: CGSize(width: 402, height: 874), name: "rover-touchdown-phone")
+    }
+
     @Test func hubSkyCraftPhone() throws {
         var gs = GameState()
         gs.player.activeMission = ActiveMission(id: "m", label: "Ceres run")

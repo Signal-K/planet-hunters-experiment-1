@@ -154,6 +154,15 @@ import Foundation
         #expect(Market.applyPurchaseRocket(s, rocket: prospector) == s)
     }
 
+    @Test func roverFieldFinishesTheSurfaceContract() {
+        var s = GameState()
+        s.screen = .roverMining; s.missionId = "m"; s.targetId = "eros"
+        let done = Loop.roverMiningDone(s, cargo: ["iron": 2], catalog: catalog, now: t0)
+        #expect(done.screen == .transit && done.player.returningToEarth && done.lastCargo == ["iron": 2])
+        // The laser field entry point must still refuse a rover run.
+        #expect(Loop.miningDone(s, cargo: ["iron": 2], catalog: catalog, now: t0) == s)
+    }
+
     @Test func deliveryLegHandsOffToUnloadAndHome() {
         var s = GameState()
         s.screen = .mining; s.missionId = "m"; s.targetId = "eros"; s.deliveryTargetId = "mars"

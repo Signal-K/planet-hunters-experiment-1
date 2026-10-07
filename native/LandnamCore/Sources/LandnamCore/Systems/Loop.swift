@@ -182,6 +182,13 @@ public enum Loop {
         return Transitions.applyMiningDone(s, cargo: cargo, arrivalAt: arrival, transitStartedAt: s.player.freeOperations ? now : nil, now: now)
     }
 
+    /// Surface-ops contracts (drill tier 0) finish from the rover field, not the laser field.
+    public static func roverMiningDone(_ s: GameState, cargo: Cargo, catalog: Catalog, now: Double) -> GameState {
+        let nextLeg = s.deliveryTargetId != nil ? catalog.target(s.deliveryTargetId) : catalog.target(s.targetId)
+        let arrival = travelArrival(target: nextLeg, player: s.player, now: now)
+        return Transitions.applyRoverMiningDone(s, cargo: cargo, arrivalAt: arrival, transitStartedAt: s.player.freeOperations ? now : nil, now: now)
+    }
+
     public static func deliveryUnloadComplete(_ s: GameState, catalog: Catalog, now: Double) -> GameState {
         let arrival = travelArrival(target: catalog.target(s.targetId), player: s.player, now: now)
         return Transitions.applyDeliveryUnloadComplete(s, arrivalAt: arrival, now: now)

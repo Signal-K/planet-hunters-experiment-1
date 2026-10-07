@@ -112,6 +112,7 @@ public final class GameStore {
     }
     public func transitArrived() { apply(Loop.transitArrived(state, catalog: catalog, now: now)) }
     public func miningDone(_ cargo: Cargo) { apply(Loop.miningDone(state, cargo: cargo, catalog: catalog, now: now)) }
+    public func roverMiningDone(_ cargo: Cargo) { apply(Loop.roverMiningDone(state, cargo: cargo, catalog: catalog, now: now)) }
     public func deliveryUnloadComplete() { apply(Loop.deliveryUnloadComplete(state, catalog: catalog, now: now)) }
     public func debriefDone(payout: Int, affinity: Int, consumed: Cargo = [:], disposition: HaulDisposition? = nil) {
         apply(Loop.debriefDone(state, payout: payout, affinity: affinity, consumed: consumed, disposition: disposition, catalog: catalog, now: now))
