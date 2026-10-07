@@ -60,7 +60,7 @@ function LaunchGlyph() {
 function SetupFrame({ title, screen, onBack, children }: { title: string; screen: Screen; onBack: () => void; children: ReactNode }) {
   // SSL-432: shared "?" slot. Renders nothing until this screen has a help topic.
   const help = useHelp(screen)
-  return <div className={`game-screen ${styles.root}`} data-testid="mission-setup-scaffold">
+  return <div className={`game-screen theme-blueprint ${styles.root}`} data-testid="mission-setup-scaffold">
     <div className={styles.landscape} data-testid="mission-setup-landscape" aria-hidden="true">
       <HubWorldBackground phase="day" composition="earth-base-wide" />
       <div className={styles.launchpad}><LaunchpadModules /></div>

@@ -189,11 +189,11 @@ describe('resolvePreset — recent UI surfaces', () => {
     expect(p.player!.unlockedSkillNodes).toContain('ship-customizer-1')
   })
 
-  it('opens Target Picker with a real mission loaded', () => {
+  it('opens the launch review with a real mission and target loaded', () => {
     const p = resolvePreset('ui-target-picker')!
     expect(p.screen).toBe('targets')
     expect(p.missionId).toBe(TRANSPORT_MISSION.id)
-    expect(p.targetId).toBeNull()
+    expect(p.targetId).not.toBeNull()
   })
 
   it('opens the TESS discovery console with the satellite built and launched', () => {
