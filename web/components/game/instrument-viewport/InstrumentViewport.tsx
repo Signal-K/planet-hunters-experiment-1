@@ -334,7 +334,7 @@ export default function InstrumentViewport({
                     data-testid="instrument-command-input"
                     aria-label="Instrument command"
                     value={draft}
-                    placeholder="POINT, ZOOM, EXPOSE, DOWNLINK"
+                    placeholder="TYPE A COMMAND"
                     onChange={event => setDraft(event.target.value)}
                     autoCapitalize="characters"
                     autoCorrect="off"
