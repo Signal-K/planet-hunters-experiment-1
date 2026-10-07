@@ -25,7 +25,7 @@ export default function SkyEventChip({ surface, className }: { surface: 'base' |
 
   if (!preset) return null
   return (
-    <div className={className} data-testid={`sky-event-${surface}`} style={{ position: 'absolute', top: 64, left: 12, zIndex: 30, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
+    <div className={['sky-event-wrap', className].filter(Boolean).join(' ')} data-testid={`sky-event-${surface}`} style={{ position: 'absolute', top: 64, left: 12, zIndex: 30, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
       <div className="sky-event-overlay" aria-hidden="true">
         <i /><i /><i />
       </div>

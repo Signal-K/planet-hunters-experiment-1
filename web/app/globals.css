@@ -2743,50 +2743,6 @@ button { cursor: pointer; }
   }
 }
 
-@keyframes coach-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
-@keyframes coach-spot {
-  0%,100% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 0 0 rgba(54,198,226,0); }
-  50% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 18px 3px rgba(54,198,226,0.6); }
-}
-@keyframes coach-spot-pulse {
-  0%,100% { border-color: rgba(255,255,255,0.28); box-shadow: 0 0 8px rgba(112,217,234,0.15); }
-  50% { border-color: rgba(112,217,234,0.9); box-shadow: 0 0 20px rgba(112,217,234,0.45); }
-}
-@keyframes coach-glow-fade {
-  0%,100% { opacity: 0.35; }
-  50% { opacity: 1; }
-}
-
-/* Cyan pulse ring. Sits over its positioned parent (or fills a highlight
-   overlay); never paints text, so animating the whole layer's opacity is safe.
-   Was amber (rgba(54,198,226,...)) until KES-192 — TutorialHighlight wraps
-   whole content panels (Target Picker, Rocket Buy, Launch Preflight, Debrief)
-   whenever hasCoach is true, so that amber was a panel accent on every
-   onboarding screen, not the small payout-emphasis use the standing amber
-   rule allows. Cyan matches TutorialCoach's own instruction-card border. */
-.coach-glow-ring {
-  position: absolute;
-  inset: 0;
-  border: 2px solid rgba(112,217,234,1);
-  border-radius: inherit;
-  box-shadow: 0 0 20px 5px rgba(112,217,234,0.45);
-  pointer-events: none;
-  will-change: opacity;
-  animation: coach-glow-fade 1.6s ease-in-out infinite;
-}
-@keyframes coach-point { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
-@keyframes coach-arrow-bounce {
-  0%,100% { transform: translateY(0); opacity: 0.7; }
-  40% { transform: translateY(10px); opacity: 1; }
-  60% { transform: translateY(8px); opacity: 1; }
-}
-
-/* Coach element highlight ring animation */
-@keyframes coach-ring-pulse {
-  0%, 100% { opacity: 0.65; box-shadow: 0 0 0 3px rgba(112,217,234,0.12), 0 0 14px rgba(112,217,234,0.3); }
-  50% { opacity: 1; box-shadow: 0 0 0 5px rgba(112,217,234,0.22), 0 0 26px rgba(112,217,234,0.55); }
-}
-
 /* SSL-395 beacon: Flight Plan sets data-flight-target (space-separated ids) on
    <html>; the real control pulses its own outline. Nothing is drawn on top. */
 @keyframes flight-beacon-pulse {
@@ -3459,4 +3415,16 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* SSL-462: on wide landscape the result cards sit in the right half so they never cover the docked rocket. */
 @media (min-width: 900px) and (orientation: landscape) {
   .debrief-game__content > * { width: min(54%, 620px); margin-left: auto; margin-right: 24px; }
+}
+
+/* SSL-345: hub chrome that used to collide. The dock's "Launchpad / Ready"
+   repeats the building's own label, so it only shows for a live mission. */
+.hub-bottom-dock-main:not([data-testid]) > div:first-child { display: none; }
+/* The Draconids chip sits under the top controls on phones and beside the
+   launchpad in compact landscape instead of over HUB or the launchpad. */
+@media (max-width: 480px) and (orientation: portrait) {
+  .sky-event-wrap[data-testid="sky-event-base"] { top: 112px !important; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .sky-event-wrap[data-testid="sky-event-base"] { top: 56px !important; left: 300px !important; }
 }
