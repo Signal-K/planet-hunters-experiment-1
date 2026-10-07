@@ -64,22 +64,118 @@ struct DebriefScreen: View {
     var body: some View {
         let m = store.mission
         let payout = m.map { MissionGenerator.calibrateOnboardingPayout(raw: $0.payout.francs, missionsDone: store.player.missionsDone) } ?? 0
+        let client = m?.client.flatMap { id in Clients.all.first { $0.id == id } }
+        let cargo = store.state.lastCargo ?? [:]
         ScreenFrame(title: "Debrief") {
-            Panel {
-                Text(m?.title ?? "Contract").font(.headline)
-                if let reward = m?.programReward { Text(reward.outcome).foregroundStyle(Theme.textDim) }
-                if m?.payload == nil { Text("Payout: \(francs(payout))") }
-            }
-            if let m, !m.isOwnProgram, store.player.missionsDone >= 2, LaserCapacitor.units(store.player.stash) > 0 || !(store.state.lastCargo ?? [:]).isEmpty {
+            DebriefStrip(title: m?.title ?? "Contract", from: store.target?.name)
+            if let client { DebriefClientPanel(client: client, xp: m?.payout.affinity ?? 0) }
+            if let m, !m.requires.minerals.isEmpty { DebriefManifest(title: m.title, required: m.requires.minerals, delivered: cargo) }
+            DebriefLedger(payout: m?.payload == nil ? payout : nil, reward: m?.programReward)
+            if let m, !m.isOwnProgram, store.player.missionsDone >= 2, LaserCapacitor.units(store.player.stash) > 0 || !cargo.isEmpty {
                 LaserCapacitorPanel(level: store.player.laserCapacitorLevel,
-                                    haulUnits: LaserCapacitor.units(store.state.lastCargo ?? [:]),
+                                    haulUnits: LaserCapacitor.units(cargo),
                                     stashUnits: LaserCapacitor.units(store.player.stash),
                                     reservedUnits: m.requires.minerals.values.reduce(0, +)) {
                     store.buyLaserCapacitor(expectedLevel: store.player.laserCapacitorLevel, reservedUnits: m.requires.minerals.values.reduce(0, +))
                 }
             }
             PrimaryButton(title: m?.payload?.type == .satellite ? "Open control station" : (m?.isOwnProgram == true && m?.client == nil && m?.programReward != nil ? "File report" : "Collect payout")) {
-                store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: store.state.lastCargo ?? [:])
+                store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: cargo)
+            }
+        }
+    }
+}
+
+/// Status strip: docked, which mission, where it returned from (mirrors web debrief-mission-strip).
+struct DebriefStrip: View {
+    let title: String
+    let from: String?
+    var body: some View {
+        Panel(accent: Theme.teal) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Circle().fill(Theme.teal).frame(width: 10, height: 10)
+                    Text("DOCKED · MISSION COMPLETE").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.teal)
+                }
+                Eyebrow(text: "Mission")
+                Text(title).font(AppFont.display(18)).foregroundStyle(Theme.ink)
+                if let from { Eyebrow(text: "Returned from"); Text(from).font(AppFont.display(16)).foregroundStyle(Theme.ink) }
+            }
+        }
+    }
+}
+
+struct DebriefClientPanel: View {
+    let client: Client
+    let xp: Int
+    var body: some View {
+        Panel {
+            VStack(alignment: .leading, spacing: 10) {
+                Eyebrow(text: "Client")
+                HStack(spacing: 12) {
+                    Text(client.initial).font(AppFont.display(16)).foregroundStyle(Theme.ink)
+                        .frame(width: 44, height: 44)
+                        .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(client.name).font(AppFont.display(16)).foregroundStyle(Theme.ink)
+                        Text("CLIENT WORK COMPLETE").font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.textMuted)
+                    }
+                    Spacer(minLength: 0)
+                    if xp > 0 { Text("+\(xp) XP").font(AppFont.mono(14)).foregroundStyle(Theme.bluePress) }
+                }
+            }
+        }
+    }
+}
+
+/// Cargo manifest: each ordered mineral with delivered / required and a DONE or SHORT chip.
+struct DebriefManifest: View {
+    let title: String
+    let required: Cargo
+    let delivered: Cargo
+    var body: some View {
+        let delivered = delivered
+        Panel(accent: Theme.blue) {
+            VStack(alignment: .leading, spacing: 10) {
+                Eyebrow(text: "Manifest · \(title)")
+                ForEach(required.keys.sorted(), id: \.self) { id in
+                    let need = required[id] ?? 0, have = delivered[id] ?? 0
+                    let meta = Minerals.all.first { $0.id == id }
+                    HStack(spacing: 10) {
+                        Text(meta?.symbol ?? id.prefix(2).capitalized).font(AppFont.mono(14)).foregroundStyle(Theme.ink)
+                            .frame(width: 44, height: 36).background(Theme.paper2, in: RoundedRectangle(cornerRadius: 6))
+                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.ink, lineWidth: 1.5))
+                        Text(meta?.name ?? id).font(AppFont.display(16)).foregroundStyle(Theme.ink)
+                        Text("\(min(have, need)) / \(need)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
+                        Spacer(minLength: 0)
+                        Text(have >= need ? "DONE" : "SHORT").font(AppFont.display(14)).tracking(1.2)
+                            .foregroundStyle(have >= need ? Theme.teal : Theme.crimson)
+                            .padding(.horizontal, 10).padding(.vertical, 4)
+                            .background((have >= need ? Theme.teal : Theme.crimson).opacity(0.12), in: Capsule())
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct DebriefLedger: View {
+    let payout: Int?
+    let reward: ProgramReward?
+    var body: some View {
+        if payout != nil || reward != nil {
+            Panel(accent: Theme.teal) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Eyebrow(text: "Ledger")
+                    if let payout {
+                        HStack { Text("Contract value").foregroundStyle(Theme.textDim); Spacer(); Text(Economy.format(francs: payout)).font(AppFont.mono(16)).foregroundStyle(Theme.ink) }
+                    }
+                    if let reward {
+                        Text(reward.outcome).foregroundStyle(Theme.textDim)
+                        HStack { Text("Research").foregroundStyle(Theme.textDim); Spacer(); Text("+\(reward.researchXP) XP").font(AppFont.mono(16)).foregroundStyle(Theme.bluePress) }
+                    }
+                }
             }
         }
     }

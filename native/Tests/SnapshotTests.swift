@@ -126,6 +126,16 @@ struct SnapshotTests {
         try render(RoverFieldScreen(initial: Prospecting(requirements: ["iron": 2])).environment(GameStore(state: GameState())), size: CGSize(width: 402, height: 874), name: "rover-touchdown-phone")
     }
 
+    @Test func debriefPhone() throws {
+        var gs = GameState()
+        let cat = Catalog()
+        let m = cat.missions.first { $0.client != nil && !$0.requires.minerals.isEmpty } ?? cat.missions[0]
+        gs.missionId = m.id; gs.targetId = m.targetId ?? cat.targets.first?.id
+        gs.lastCargo = m.requires.minerals
+        gs.screen = .debrief
+        try render(DebriefScreen().environment(GameStore(state: gs, catalog: cat)).environment(\.flatLayout, true), size: CGSize(width: 402, height: 874), name: "debrief-phone")
+    }
+
     @Test func hubStructuresPhone() throws {
         var gs = GameState()
         gs.player.placed = ["launchpad", "surface-silo", "refinery", "astronaut-academy"]
