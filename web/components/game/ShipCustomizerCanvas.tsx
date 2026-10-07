@@ -208,7 +208,7 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
 
         const labelStyle = new TextStyle({
           fontFamily: '"Oxanium", "Turret Road", monospace',
-          fontSize: 10,
+          fontSize: 14,
           fontWeight: '800',
           fill: 0xffffff,
           letterSpacing: 2,
