@@ -35,6 +35,7 @@ import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
+import { SkyBadgeRow } from './SkyBadgeRow'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
@@ -571,6 +572,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           </div>
         )}
       </div>
+      {!subsurface && <SkyBadgeRow badges={player.badges} className={layoutStyles.badges} />}
 
       {confirmingLaunchpadUpgrade && onUpgradeLaunchpad && (
         <ActionConfirmBar
@@ -643,6 +645,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                     rather than flexWrap) so it can never overlap the scene
                     below it, unlike the pill row it replaces. */}
                 <div className="hub-bottom-dock-actions" style={{ display: 'flex', gap: 4, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
+                  <DockIconBtn testId="hub-control-station-btn" icon={<HistoryGlyph />} label="Control" onClick={() => onOpenScene('instrument-hub')} />
                   {editMode && (
                     <>
                       <DockIconBtn testId="hub-new-structure-btn" icon={<PlusGlyph />} label="New" onClick={() => onFocusBuilding('build')} />

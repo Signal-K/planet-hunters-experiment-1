@@ -100,7 +100,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         {model ? <>
           <button type="button" className={`${styles.carouselArrow} ${styles.previous}`} onClick={() => relay.selectRelativeSignal(-1)} disabled={relay.cardModels.length < 2} aria-label="Previous contract"><ArrowGlyph direction="previous" /></button>
           <article className={styles.contractSlide} aria-live="polite">
-            <div className={styles.contractIdentity}><ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-cyan)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={88} /><div><span>CLIENT CONTRACT {relay.selectedIndex + 1} / {relay.cardModels.length}</span><strong>{client?.name ?? 'YOUR PROGRAM'}</strong></div></div>
+            <div className={styles.contractIdentity}><ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-cyan)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={88} /><div><span>{model.mission.payload?.type === 'satellite' ? 'INSTRUMENT LAUNCH' : `CLIENT CONTRACT ${relay.selectedIndex + 1} / ${relay.cardModels.length}`}</span><strong>{model.mission.payload?.type === 'satellite' ? model.mission.payload.name : client?.name ?? 'YOUR PROGRAM'}</strong></div></div>
             <div className={styles.contractCopy}><h2>{model.mission.title}</h2><span className={styles.contractRoute} data-testid="contract-route">{model.routeLabel ?? `${model.targetCount} ELIGIBLE TARGET${model.targetCount === 1 ? '' : 'S'}`}</span><p>{model.mission.brief}</p></div>
             <dl className={styles.contractFacts}><div><dt>VALUE</dt><dd>{formatCurrency(model.displayPayout, { compact: true })}</dd></div><div><dt>CLIENT LEVEL</dt><dd>{client ? `L${clientLevel}` : 'PROGRAM'}</dd></div><div><dt>MISSION TIER</dt><dd>{model.mission.difficulty}</dd></div></dl>
             <div className={styles.contractCargo}><span>REQUIRED CARGO</span><RequiredCargo minerals={model.mission.requires.minerals} catalog={game.catalog.minerals} /></div>
@@ -133,7 +133,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
       <section className={styles.review} data-testid="mission-launch-review">
         <div className={styles.launchScene}><div className={styles.launchArt}><div className={styles.launchTower} aria-hidden="true"><i /><i /><i /></div><img src={rocketDisplay.img} alt={`${selectedRocket.name} on the launchpad`} /></div><div className={styles.launchCaption}><span>LAUNCHPAD · READY FOR DEPARTURE</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
         <aside className={styles.reviewBrief}>
-          <div className={styles.reviewHeading}><span>CLIENT CONTRACT</span><h2>{game.mission.title}</h2></div>
+          <div className={styles.reviewHeading}><span>{game.mission.payload?.type === 'satellite' ? 'INSTRUMENT LAUNCH' : 'CLIENT CONTRACT'}</span><h2>{game.mission.title}</h2></div>
           <div className={styles.reviewMap} data-testid="launch-review-map" aria-label={`Route to ${target.name}`}>
             <PixiGalaxyMap mission={game.mission} targets={game.catalog.targets} compatibleIds={compatibleIds} pickedId={target.id} onPick={game.onPickTarget} />
           </div>

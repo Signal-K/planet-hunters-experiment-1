@@ -1,7 +1,7 @@
 // Landnam game — shared type definitions
 // Extracted from game-context.tsx so they can be imported without pulling in React context.
 
-import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict, SaturnClassification, SaturnVerdict } from '@/lib/data'
+import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict, SaturnClassification, SaturnVerdict, MoonSurveyChart } from '@/lib/data'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import type { RoverSpec } from '@takeon/engine'
 import type { SceneScope } from './scene-scope'
@@ -373,6 +373,10 @@ export interface Player {
   // building or level; launching it opens the Cassini storm-cloud feed.
   saturnImagerLaunchedAt?: number | null
   saturnClassifications?: Record<string, SaturnClassification>
+  /** The unanswered Cassini frame must survive a reload until all nine panes
+   * are classified; it is intentionally separate from the digest cadence. */
+  saturnActiveFrameId?: string | null
+  moonSurveyCharts?: Record<string, MoonSurveyChart>
   // Sky event badges (SSL-491), keyed by event id. Gold/silver by date played.
   badges?: Record<string, import('@/lib/data/sky-events').PlayerBadge>
   // Player's satellite-pointing choice for the *next* daily downlink,
@@ -578,7 +582,8 @@ export interface GameActions {
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   chooseSatelliteTarget: (subjectId: string) => void
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
-  submitSaturnClassification: (candidateId: string, verdict: SaturnVerdict) => void
+  submitSaturnClassification: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
+  claimSaturnSurveyTerritory: () => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void

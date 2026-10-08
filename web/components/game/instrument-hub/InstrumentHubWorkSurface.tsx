@@ -17,7 +17,7 @@ interface InstrumentHubWorkSurfaceProps {
 }
 
 function sourceLabel(kind: InstrumentSignal['kind']): string {
-  return kind === 'transit' ? 'Transit telescope' : kind === 'saturn' ? 'Saturn imager' : 'Deep space telescope'
+  return kind === 'transit' ? 'Transit telescope' : kind === 'saturn' ? 'Saturn satellite' : 'Deep space telescope'
 }
 
 export function InstrumentHubWorkSurface({

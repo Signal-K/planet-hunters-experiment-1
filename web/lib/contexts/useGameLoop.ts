@@ -43,6 +43,7 @@ const ORBIT_MS_PER_UNIT = 42 * 1000
 // already-classified subject earn nothing (see submitTessClassification).
 const RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION = 15
 const RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION = 15
+const RESEARCH_XP_PER_ENCELADUS_CHART = 30
 interface GameLoopOpts {
   stateRef: React.RefObject<GameState>
   setState: React.Dispatch<React.SetStateAction<GameState>>
@@ -840,26 +841,72 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   // Saturn imager (SSL-492): local record first (offline-safe), then a pool
   // classification (SSC-43) when the frame came from the shared pool. Badge
   // tier comes from the SSL-491 sky event config.
-  const submitSaturnClassification = useCallback((candidateId: string, verdict: SaturnVerdict) => {
+  const submitSaturnClassification = useCallback((candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
     setState(s => {
       const existing = s.player.saturnClassifications?.[candidateId]
-      if (existing) return s
-      return {
-        ...s,
-        player: {
-          ...grantSkyBadges(s.player, 'saturn-classification', submittedAt),
-          researchAnnotations: s.player.researchAnnotations + 1,
-          saturnClassifications: {
-            ...(s.player.saturnClassifications ?? {}),
-            [candidateId]: { candidateId, verdict, submittedAt, badgeTier: resolveSaturnBadgeTier(submittedAt) },
+      // Historic whole-frame records remain complete; a new 3x3 record only
+      // rejects a repeat on the same square, never the other eight squares.
+      if (existing && !existing.cells) return s
+      if (existing?.cells?.[cellIndex]) return s
+      const cells = {
+        ...(existing?.cells ?? {}),
+        [cellIndex]: { verdict, storm, submittedAt },
+      }
+      const completed = Object.keys(cells).length === 9
+      const tier = completed ? resolveSaturnBadgeTier(submittedAt) : null
+      const player = {
+        ...s.player,
+        ...(completed ? grantSkyBadges(s.player, 'saturn-classification', submittedAt) : {}),
+        saturnActiveFrameId: completed ? null : candidateId,
+        saturnClassifications: {
+          ...(s.player.saturnClassifications ?? {}),
+          [candidateId]: {
+            candidateId,
+            verdict,
+            submittedAt,
+            badgeTier: tier,
+            cells,
+            ...(completed ? { completedAt: submittedAt } : {}),
           },
         },
       }
+      const next: GameState = {
+        ...s,
+        player: completed && tier === 'silver'
+          ? {
+              ...player,
+              researchXP: (s.player.researchXP ?? 0) + RESEARCH_XP_PER_ENCELADUS_CHART,
+              moonSurveyCharts: {
+                ...(s.player.moonSurveyCharts ?? {}),
+                enceladus: {
+                  moonId: 'enceladus',
+                  completedAt: submittedAt,
+                  tier,
+                  researchXpAwarded: RESEARCH_XP_PER_ENCELADUS_CHART,
+                  atlasUnlockedAt: submittedAt,
+                },
+              },
+            }
+          : completed && tier === 'gold'
+            ? {
+                ...player,
+                moonSurveyCharts: {
+                  ...(s.player.moonSurveyCharts ?? {}),
+                  enceladus: { moonId: 'enceladus', completedAt: submittedAt, tier },
+                },
+              }
+            : player,
+      }
+      return next
     })
 
+    const answeredBefore = Object.keys(stateRef.current.player.saturnClassifications?.[candidateId]?.cells ?? {}).length
     const userId = pbShared.authStore.record?.id
-    if (userId && isSaturnPoolCandidateId(candidateId)) {
+    // The shared collection is frame-level, while the player-side Cassini
+    // instrument is deliberately 3x3. Submit a single completed-frame result
+    // rather than nine indistinguishable rows without a cell coordinate.
+    if (answeredBefore === 8 && userId && isSaturnPoolCandidateId(candidateId)) {
       pbShared.collection('ss_saturn_storm_classifications').create({
         user: userId,
         frame: candidateId,
@@ -869,6 +916,37 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         addToast('Saved locally — could not reach the shared classification feed', 'warn')
       })
     }
+  }, [setState, stateRef])
+
+  const claimSaturnSurveyTerritory = useCallback(() => {
+    setState(s => {
+      const chart = s.player.moonSurveyCharts?.enceladus
+      if (!chart || chart.tier !== 'gold' || chart.territoryPlotClaimedAt) return s
+      const claimedAt = skyEventNow(isDevLauncherEnabled())
+      const ownerId = pbShared.authStore.record?.id ?? 'local-player'
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          territoryClaims: [
+            ...(s.player.territoryClaims ?? []),
+            {
+              id: `saturn-chart:${ownerId}:enceladus:${claimedAt}`,
+              targetId: 'enceladus',
+              divisionId: 'enceladus:chart-0',
+              ownerId,
+              ownerKind: 'player',
+              ownerName: pbShared.authStore.record?.username ?? 'Operator',
+              claimedAt,
+            },
+          ],
+          moonSurveyCharts: {
+            ...(s.player.moonSurveyCharts ?? {}),
+            enceladus: { ...chart, territoryPlotClaimedAt: claimedAt },
+          },
+        },
+      }
+    })
   }, [setState])
 
   // Player picks where the satellite points for the *next* daily downlink
@@ -1231,6 +1309,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
-    submitAsteroidClassification, submitSaturnClassification,
+    submitAsteroidClassification, submitSaturnClassification, claimSaturnSurveyTerritory,
   }
 }

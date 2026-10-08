@@ -362,6 +362,7 @@ function ScreenBody({
           onBack={() => game.goBack()}
           onLaunchImager={() => game.go('launchpad')}
           onSubmit={game.submitSaturnClassification}
+          onClaimTerritory={game.claimSaturnSurveyTerritory}
         />
       )
 

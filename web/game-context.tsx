@@ -369,6 +369,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       chooseSatelliteTarget: loop.chooseSatelliteTarget,
       submitAsteroidClassification: loop.submitAsteroidClassification,
       submitSaturnClassification: loop.submitSaturnClassification,
+      claimSaturnSurveyTerritory: loop.claimSaturnSurveyTerritory,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,

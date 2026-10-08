@@ -286,6 +286,7 @@ export default function MissionOperationRoutes({
           onBuyLaserCapacitor={game.onBuyLaserCapacitor}
           laserCapacitorLevel={game.player.laserCapacitorLevel ?? 0}
           stashUnits={storedUnits(game.player.stash)}
+          badges={game.player.badges}
           minerals={game.catalog.minerals}
           clients={game.catalog.clients}
           clientMissions={game.player.clientMissions}

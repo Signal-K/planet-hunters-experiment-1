@@ -122,7 +122,12 @@ export function unresolvedSaturnInstrumentDigest(
   dateKey: string
 ): SaturnCandidate[] {
   const classifications = player.saturnClassifications ?? {}
-  return dailySaturnCandidates(candidates.filter(candidate => !classifications[candidate.id]), dateKey)
+  return dailySaturnCandidates(candidates.filter(candidate => {
+    const progress = classifications[candidate.id]
+    // A legacy single-verdict record was the old whole-frame submission.
+    // New records stay in the feed until all nine panes are complete.
+    return !progress || (!!progress.cells && Object.keys(progress.cells).length < 9)
+  }), dateKey)
 }
 
 export function instrumentDigestWasNotified(

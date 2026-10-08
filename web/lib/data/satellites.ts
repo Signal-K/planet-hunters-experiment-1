@@ -30,7 +30,7 @@ export const SATELLITE_MODELS: SatelliteModel[] = [
   },
   {
     id: 'saturn-imager',
-    name: 'Saturn Imager',
+    name: 'Saturn satellite',
     unlockHint: 'Reach Free Operations',
   },
 ]

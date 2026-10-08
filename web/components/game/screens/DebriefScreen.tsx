@@ -17,8 +17,10 @@ import { formatCurrency } from '@/lib/format'
 import { rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import StatRow from '@/components/ui/StatRow'
 import { captureGameEvent } from '@/lib/posthog'
+import type { PlayerBadge } from '@/lib/data/sky-events'
+import { SkyBadgeRow } from './SkyBadgeRow'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0 }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -58,6 +60,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   laserCapacitorLevel?: number
   /** Ore units in the Earth stash right now, including this run's haul. */
   stashUnits?: number
+  badges?: Record<string, PlayerBadge>
 }) {
   // A self-directed haul the player owns outright gets a store-vs-sell choice
   // here instead of a fixed contract payout (KES-271). Storing needs a built
@@ -134,6 +137,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       />
 
       <div className={`debrief-game__content screen-scroll`} data-ui-zone={UI_ZONES.screenContent}>
+        <SkyBadgeRow badges={badges} className="debrief-sky-badges" />
         <section className="debrief-mission-strip" aria-label="Mission result">
           <div className="debrief-mission-strip__status"><span aria-hidden="true" /> {shipDestroyed ? 'HULL LOST · CARGO RECOVERED' : isProgramOperation ? 'COMMISSIONED · INSTRUMENT ONLINE' : 'DOCKED · MISSION COMPLETE'}</div>
           <div className="debrief-mission-strip__route">
@@ -229,7 +233,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text)' }}>
                 {mission.programReward.outcome}
               </div>
-              {isOrbitalInstrumentDeployment ? <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>The Transit Telescope remains in Earth orbit. Its sky-side status indicator shows when a daily downlink is ready to review.</div> : <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              {isOrbitalInstrumentDeployment ? <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>{mission.payload?.name ?? 'Instrument'} remains in Earth orbit. Its sky-side status indicator shows when a daily downlink is ready to review.</div> : <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>Research</span>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, color: 'var(--ln-cyan)', lineHeight: 1 }}>+{mission.programReward.researchXP} XP</span>
               </div>}
