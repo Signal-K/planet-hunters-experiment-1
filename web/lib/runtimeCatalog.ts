@@ -108,7 +108,7 @@ export function buildRuntimeCatalog({
       locked: false,
       sequence: missionsDone + 1,
       unlockAt: 'Reach Free Operations',
-      requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 4, drill_tier: 2, max_orbit: 8 },
+      requires: { minerals: { nickel: 1 }, cargo_min: 1, drill_tier: 1, max_orbit: 2 },
       payout: { francs: 0, affinity: 0 },
     }
   const hasSelfDirectedMining = catalog.missions.some(mission =>
