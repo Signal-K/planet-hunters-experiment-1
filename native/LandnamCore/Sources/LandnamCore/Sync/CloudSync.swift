@@ -25,6 +25,9 @@ public actor CloudSync {
         await outbox.flush()
     }
 
+    /// Queues a non-save op (e.g. a treasury call) behind the save and replays it; survives offline and relaunch.
+    public func enqueue(_ op: OutboxOp) async { await outbox.enqueue(op); await outbox.flush() }
+
     public func flush() async { await outbox.flush() }
     public func snapshot() async -> OutboxSnapshot { await outbox.snapshot() }
 }

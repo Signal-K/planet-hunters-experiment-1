@@ -650,7 +650,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                         <DockIconBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onFocusBuilding('hangar')} />
                       )}
                       {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                        <DockIconBtn icon={<UpgradeGlyph />} label="UPGRADE" accent onClick={() => setConfirmingLaunchpadUpgrade(true)} />
+                        <DockIconBtn icon={<UpgradeGlyph />} label="UPGRADE" onClick={() => setConfirmingLaunchpadUpgrade(true)} />
                       )}
                     </>
                   )}

@@ -580,6 +580,23 @@
   display: block;
 }
 
+/* SSL-448: on a 390px phone the stacked controls (226px) and command panel
+   (235px) left the light-curve well 16px tall, so nothing could be classified.
+   Portrait phones now stack well, review command, then the fine controls in a
+   scrolling column so every panel keeps its own height. */
+@media (max-width: 600px) and (orientation: portrait) {
+  .stage {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .wellSlot { flex: none; height: 200px; min-height: 200px; }
+  .command { order: 1; }
+  .controls { order: 2; }
+  .controls,
+  .command { flex: none; min-height: min-content; overflow: visible; }
+}
+
 @media (orientation: landscape), (min-width: 960px) {
   .body { top: 64px; }
 

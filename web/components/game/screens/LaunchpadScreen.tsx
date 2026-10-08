@@ -289,6 +289,7 @@ export default function LaunchpadScreen({
               <button type="button" className="launchpad-mission-menu-close" data-testid="launchpad-new-mission-close" onClick={() => setMissionMenu(false)}>CLOSE</button>
             </div>
             {!operationBrief ? <div className="launchpad-mission-menu-options">
+              {infrastructureOperations.length ? (
               <button
                 type="button"
                 className="launchpad-mission-choice"
@@ -300,6 +301,8 @@ export default function LaunchpadScreen({
                 <strong>LAUNCH SATELLITE / TOOL</strong>
                 <span>{infrastructureOperations.length ? 'Deploy an instrument that keeps working for your program.' : 'No owned instrument launch is queued yet.'}</span>
               </button>
+              ) : null}
+              {ownMiningOperation ? (
               <button
                 type="button"
                 className="launchpad-mission-choice"
@@ -311,6 +314,8 @@ export default function LaunchpadScreen({
                 <strong>GO MINING</strong>
                 <span>{ownMiningOperation ? 'Set storage and inspect market conditions before dispatch.' : 'Self-directed mining unlocks with Free Operations.'}</span>
               </button>
+              ) : null}
+              {buildOperation ? (
               <button
                 type="button"
                 className="launchpad-mission-choice"
@@ -322,6 +327,7 @@ export default function LaunchpadScreen({
                 <strong>BUILD SOMETHING YOURSELF</strong>
                 <span>{buildOperation ? 'Choose a permanent program build and its assigned site.' : 'No player construction mission is ready for dispatch.'}</span>
               </button>
+              ) : null}
               <button
                 type="button"
                 className="launchpad-mission-choice"

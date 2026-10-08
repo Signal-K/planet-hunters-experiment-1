@@ -79,6 +79,7 @@ final class Services {
             Task { await sync.save(state) }
             Task { @MainActor in gc.report(state.player) }
         }
+        store.onSiteDeed = { siteId in Task { await sync.enqueue(SiteDeed.op(siteId: siteId)) } }
         store.onClassified = { verdict in
             // Local save already happened. Without a shared login (Apple sign-in) the verdict stays local.
             guard let id = user.value, let op = verdict.op(sharedUserId: id) else { return }

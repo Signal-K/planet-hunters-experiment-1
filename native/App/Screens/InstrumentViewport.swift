@@ -223,13 +223,13 @@ struct InstrumentAnswerButton: View {
     var primary = false
     let action: () -> Void
     var body: some View {
-        Button(action: action) {
+        // Not .disabled: the system dims a disabled plain button's label below 4.5:1. Gate the action instead.
+        Button(action: { if enabled { action() } }) {
             Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, minHeight: 44).padding(.horizontal, 6)
-                .foregroundStyle(primary ? Color.white : Theme.ink)
-                .background(primary ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
-                .opacity(enabled ? 1 : 0.4)
-        }.buttonStyle(.plain).disabled(!enabled)
+                .foregroundStyle(primary && enabled ? Color.white : Theme.ink)
+                .background(!enabled ? Theme.paper2 : (primary ? Theme.blue : Theme.paper), in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink.opacity(enabled ? 1 : 0.55), lineWidth: 2))
+        }.buttonStyle(.plain).accessibilityAddTraits(enabled ? [] : .isStaticText)
     }
 }

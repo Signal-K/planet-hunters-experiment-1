@@ -180,7 +180,6 @@ function GameCanvas() {
     >
       <TakeOnPwaPreload />
       <div className="portrait-canvas">
-        <BackendStatus />
         <LandnamSyncStatus />
         {/* Mission alerts have a reserved desktop slot to the left of the
             horizontal resource HUD. They are hidden at compact widths rather
@@ -236,6 +235,7 @@ function GameCanvas() {
             }} />
           )}
         </div>
+        <BackendStatus />
           {coach && !game.authGateOpen && (
             <FlightPlan
               key={coach.id}

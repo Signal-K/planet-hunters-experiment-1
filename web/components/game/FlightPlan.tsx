@@ -14,6 +14,8 @@ interface FlightPlanProps {
   hidden?: boolean
   onHiddenChange?: (hidden: boolean) => void
   hint?: string
+  /** SSL-448: a labelled button that takes the player to the step's screen. */
+  go?: { label: string; run: () => void }
 }
 
 /**
@@ -24,7 +26,7 @@ interface FlightPlanProps {
  * Action gating is unchanged: steps still complete from real game actions;
  * `manual` steps get a Continue button here.
  */
-export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: persistedHidden, onHiddenChange, hint }: FlightPlanProps) {
+export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: persistedHidden, onHiddenChange, hint, go }: FlightPlanProps) {
   const isDesktop = useIsDesktop()
   // SSL-432: the beacon outline pauses while help is on screen.
   const helpOpen = useHelpOpen()
@@ -35,7 +37,7 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
   useEffect(() => { if (persistedHidden !== undefined) setHidden(persistedHidden) }, [persistedHidden])
 
   const isTryStep = 'try' in step
-  const targetId = isTryStep ? step.beacon : ((isDesktop && step.desktopCoachId !== undefined) ? step.desktopCoachId : step.coachId)
+  const targetId = go ? 'flight-plan-go' : isTryStep ? step.beacon : ((isDesktop && step.desktopCoachId !== undefined) ? step.desktopCoachId : step.coachId)
   const body = isTryStep ? step.radio : ((isDesktop && step.desktopBody !== undefined) ? step.desktopBody : step.body)
   const action = isTryStep ? step.objective : ((isDesktop && step.desktopAction !== undefined)
     ? step.desktopAction
@@ -90,6 +92,7 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
           <span className="flight-plan-kicker">Flight Plan · {isTryStep ? step.try : step.title} · {stepIndex + 1}/{total}</span>
           <span className="flight-plan-action">{hint && !expanded ? `Hint: ${hint}` : action}</span>
         </button>
+        {go && <button type="button" className="flight-plan-go" data-testid="flight-plan-go" data-coach-id="flight-plan-go" onClick={go.run}>{go.label}</button>}
         <button type="button" className="flight-plan-btn" data-testid="flight-plan-hide" aria-label="Hide Flight Plan" onClick={() => { setHidden(true); onHiddenChange?.(true) }}>
           ▾
         </button>

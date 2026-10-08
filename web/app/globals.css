@@ -867,7 +867,7 @@ button { cursor: pointer; }
   /* Third header row: [sync]  ...  [GARDEN][FEEDBACK]. The rail used to be a
      column at the same corner, so Feedback sat on top of it. The identity
      chip is dropped here for room; GARDEN still carries its caption. */
-  .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 110px; right: 108px; flex-direction: row; align-items: center; }
+  .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 110px; right: 132px; flex-direction: row; align-items: center; }
   .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none; }
   .portrait-canvas:has([data-screen="hub"]) .feedback-panel { right: 12px !important; bottom: calc(var(--ln-nav-h) + 12px) !important; }
   /* SSL-381: the active-craft control used to sit at top:96px, which is now the
@@ -954,21 +954,25 @@ button { cursor: pointer; }
 
 /* Fallback while a code-split screen chunk loads (GameScreenRouter's
    next/dynamic screens). Matches .game-screen so there's no flash/jump. */
-.game-screen-loading { position: absolute; inset: 0; background: var(--ln-bg); }
+.game-screen-loading { position: absolute; inset: 0; background: var(--ln-bp-bg, #eef4fa); }
 
 /* The Hub and Launchpad share one physical campus. Each screen enters with a
    short ground-line camera move so navigation feels like approaching the pad,
    not replacing the entire scene. */
 .backend-status {
-  position: absolute;
-  right: var(--ln-s-3);
-  bottom: calc(var(--ln-s-2) + var(--flight-plan-h, 0px));
-  z-index: 96;
+  /* SSL-429: in the flow, its own 28px row between the screen and the Flight Plan
+     strip, so it can never sit on the Map brief, Hangar title or mining controls. */
+  position: relative;
+  flex: none;
+  align-self: flex-end;
+  margin: 0 var(--ln-s-3);
+  min-height: 28px;
+  z-index: 30;
   display: inline-flex;
   align-items: center;
   gap: var(--ln-s-1);
   color: var(--ln-text-muted);
-  font: 700 12px var(--ln-font-display);
+  font: 700 14px var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
   pointer-events: none;
@@ -1073,7 +1077,6 @@ button { cursor: pointer; }
 .toast-dismiss:hover { color: var(--ln-text); border-color: var(--ln-cyan-border); }
 
 @media (max-width: 1023px) {
-  .portrait-canvas:has(.bottom-tab-bar) .backend-status,
   .portrait-canvas:has(.bottom-tab-bar) .sync-status {
     bottom: calc(var(--ln-nav-h) + var(--ln-s-2));
   }
@@ -1084,8 +1087,7 @@ button { cursor: pointer; }
    directly on top of FIRE LASER whenever the rail grows on a small viewport.
    Keep the utility status in the quiet band below the mining header instead,
    where it remains visible without competing with an action or ore readout. */
-.portrait-canvas:has(.mining-screen) .sync-status,
-.portrait-canvas:has(.mining-screen) .backend-status {
+.portrait-canvas:has(.mining-screen) .sync-status {
   top: 78px;
   bottom: auto;
   padding: 3px 6px;
@@ -1098,7 +1100,6 @@ button { cursor: pointer; }
   left: 50%;
   transform: translateX(-50%);
 }
-.portrait-canvas:has(.mining-screen) .backend-status { right: var(--ln-s-3); }
 
 .ln-page-surface {
   position: absolute;
@@ -2772,6 +2773,17 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
   html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"],
   html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] { animation: none !important; box-shadow: 0 0 0 2px var(--ln-cyan) !important; }
 }
+/* SSL-449: one primary action per screen. While the Flight Plan beacons another
+   control, the Base Build button drops to a quiet secondary so only the
+   beaconed control reads as the next step. Build is the primary again once the
+   plan has no target on Base (and while the silo step beacons Build Silo itself). */
+html[data-flight-target]:not([data-flight-target~="hub-build-storage-silo"]) [data-testid="hub-edit-build-btn"] {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-width: 2px !important;
+  opacity: 0.75;
+}
+
 
 /* SSL-395 Flight Plan: in-flow strip between the screen and the nav. */
 .flight-plan, .flight-plan-chip { flex: none; position: relative; z-index: 30; font-family: var(--ln-font-body); }
@@ -2788,6 +2800,7 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 }
 .flight-plan-kicker { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-cyan, #70d9ea); }
 .flight-plan-action { font-size: 14px; line-height: 1.3; }
+.flight-plan-go { min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: 8px; cursor: pointer; background: var(--ln-cyan, #70d9ea); color: #06121a; border: 1px solid var(--ln-cyan, #70d9ea); font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; }
 .flight-plan-btn, .flight-plan-skip, .flight-plan-chip {
   min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 8px; cursor: pointer;
   background: transparent; color: var(--ln-cyan, #70d9ea); border: 1px solid var(--ln-cyan-border, rgba(112,217,234,0.4));
@@ -3489,7 +3502,9 @@ button.hub-orbital-network__status:disabled { cursor: default; }
     top: auto;
     left: auto;
     right: 60px;
-    bottom: calc(var(--flight-plan-h, 0px) - 30px);
+    /* SSL-448: the chip gets its own row under the Flight Plan text (the strip
+       grows by 28px below) instead of sitting on the objective line. */
+    bottom: 4px;
     padding: 2px 8px;
     border: 2px solid var(--ln-bp-ink, #0f2436);
     border-radius: var(--ln-r-pill);
@@ -3498,4 +3513,5 @@ button.hub-orbital-network__status:disabled { cursor: default; }
     font: 700 14px var(--ln-font-display);
     letter-spacing: 0;
   }
+  .portrait-canvas:not(:has([data-screen="hub"])):not(:has(.mining-screen)):has(.sync-status) .flight-plan { padding-bottom: 34px; }
 }

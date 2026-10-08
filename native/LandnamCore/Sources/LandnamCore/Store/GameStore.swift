@@ -14,6 +14,8 @@ public final class GameStore {
     /// Called after every persisted change; the app wires cloud sync and Game Center here.
     public var onChange: ((GameState) -> Void)?
     /// Fires once per new citizen-science verdict, after the local save, so the app can queue the shared upload.
+    /// Fires after a site deed is bought locally, so the app can queue the treasury call (offline safe).
+    public var onSiteDeed: ((String) -> Void)?
     public var onClassified: ((SharedClassification) -> Void)?
 
     public init(state: GameState = GameState(), catalog: Catalog = Catalog(), saveURL: URL? = nil,
@@ -140,7 +142,18 @@ public final class GameStore {
         guard next != state else { return false }
         apply(next); return true
     }
-    public func purchaseSiteAccess(_ id: String) { apply(SurfaceOps.applyPurchaseAccess(state, id, now: now)) }
+    public func purchaseSiteAccess(_ id: String) {
+        let next = SurfaceOps.applyPurchaseAccess(state, id, now: now)
+        guard next != state else { return }
+        apply(next); onSiteDeed?(id)
+    }
+    /// Applies a polled global confirmation; returns true when it is new news worth a notice.
+    @discardableResult
+    public func noteConfirmedDiscovery(_ lastConfirmedAt: String?) -> Bool {
+        let (next, announce) = ConfirmedDiscovery.apply(state, lastConfirmedAt: lastConfirmedAt)
+        if next != state { apply(next) }
+        return announce
+    }
     public func buildSettlementPad(_ id: String, pad: Int) { apply(SurfaceOps.applyBuildPad(state, id, pad: pad, now: now)) }
     public func recordSurfaceMined(_ id: String, mineral: String, amount: Int) { apply(SurfaceOps.applyMined(state, id, mineral: mineral, amount: amount)) }
     public func dispatchFerry(_ id: String) { apply(SurfaceOps.applyDispatch(state, id, now: now)) }

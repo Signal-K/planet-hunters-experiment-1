@@ -87,7 +87,8 @@ struct RoverFieldScreen: View {
                 }.buttonStyle(.plain).position(CGPoint(x: size.width / 2, y: fieldTop - 8))
             }
             Art.view("actors/road_rover.png").resizable().aspectRatio(1.5, contentMode: .fit).frame(width: 64)
-                .position(at(prospecting.rover.x, prospecting.rover.y))
+                .position(at(prospecting.rover.x, prospecting.rover.y + 0.0))
+                .offset(y: 52)
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: prospecting.rover.x)
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: prospecting.rover.y)
                 .allowsHitTesting(false).accessibilityHidden(true)

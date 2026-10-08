@@ -108,7 +108,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
             <button type="button" className={styles.primary} data-testid={`mission-accept-${model.mission.id}`} disabled={!model.unlocked || relay.tutorialMissionInProgress} onClick={() => model.mission.id === ACADEMY_INTRO_MISSION_ID ? game.go('academy') : game.onPickMission(model.mission.id)}><LaunchGlyph /> ACCEPT &amp; PREPARE</button>
           </article>
           <button type="button" className={`${styles.carouselArrow} ${styles.next}`} onClick={() => relay.selectRelativeSignal(1)} disabled={relay.cardModels.length < 2} aria-label="Next contract"><ArrowGlyph direction="next" /></button>
-        </> : relay.onboardingComplete ? <div className={styles.empty}><strong>BUILD A STORAGE SILO TO OPEN FREE OPS</strong><button type="button" className={styles.primary} onClick={() => game.go('build')}>BUILD STORAGE SILO</button></div> : <div className={styles.empty}>NO COMPATIBLE CLIENT SIGNALS</div>}
+        </> : relay.onboardingComplete ? <div className={styles.empty}><strong>NO CONTRACTS ARE OFFERED YET</strong><span>Free Ops opens once the Earth storage silo is built.</span><button type="button" className={styles.primary} onClick={() => game.go('build')}>BUILD STORAGE SILO</button></div> : <div className={styles.empty}>NO COMPATIBLE CLIENT SIGNALS</div>}
       </section>
     </SetupFrame>
   }

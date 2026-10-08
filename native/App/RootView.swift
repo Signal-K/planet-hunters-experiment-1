@@ -6,6 +6,7 @@ import LandnamCore
 struct RootView: View {
     @Environment(GameStore.self) private var store
     @Environment(AuthModel.self) private var auth
+    @Environment(FeedModel.self) private var feed
 
     var body: some View {
         if auth.session == nil { SignInScreen() } else { game }
@@ -40,6 +41,8 @@ struct RootView: View {
             }
         }
         .tint(Theme.accent)
+        // Someone confirmed a planet: flag a re-point on the exoplanet target flow (web useConfirmedDiscoveryPoll).
+        .task { await feed.pollConfirmed(store: store) }
     }
 }
 

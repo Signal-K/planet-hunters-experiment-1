@@ -32,4 +32,13 @@ final class FeedModel {
         saturnPhase = .loading
         saturn = await feed.saturn(); saturnPhase = .ready
     }
+
+    /// Polls the global last-confirmed signal while signed in; cancelled with the owning view's task.
+    /// A failed poll is silent and retried next interval.
+    func pollConfirmed(store: GameStore) async {
+        while !Task.isCancelled {
+            if let found = try? await feed.lastConfirmed() { store.noteConfirmedDiscovery(found.lastConfirmedAt) }
+            try? await Task.sleep(for: .seconds(ConfirmedDiscovery.pollSeconds))
+        }
+    }
 }
