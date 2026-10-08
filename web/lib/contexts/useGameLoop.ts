@@ -26,6 +26,7 @@ import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
+import { applyStartScan, applyResolveScan } from '@/lib/systems/SurveyScanSystem'
 import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
@@ -670,6 +671,20 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setState(s => applyGainResearchXP(s, amount))
   }, [setState])
 
+  const startSurveyScan = useCallback((targetId: string) => {
+    setState(s => applyStartScan(s, targetId, Date.now()))
+    captureGameEvent('survey_scan_started', { target_id: targetId })
+  }, [setState])
+
+  const resolveSurveyScan = useCallback(() => {
+    const current = stateRef.current
+    const scan = current.player.activeScan
+    if (!scan || applyResolveScan(current, Date.now()) === current) return
+    setState(s => applyResolveScan(s, Date.now()))
+    captureGameEvent('survey_scan_completed', { target_id: scan.targetId })
+    addToast('Scan complete. Body charted and research XP awarded.', 'ok')
+  }, [addToast, setState, stateRef])
+
   const upgradeLicenseGrade = useCallback((grade: Exclude<LicenseGrade, 'Grade I'>) => {
     setState(s => applyUpgradeLicenseGrade(s, grade))
   }, [setState])
@@ -702,6 +717,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const roundedRanges = ranges
       .map(range => ({ x1: Math.round(range.x1 * 1000) / 1000, x2: Math.round(range.x2 * 1000) / 1000 }))
       .sort((a, b) => a.x1 - b.x1)
+
+    // SSL-512: a first classification pays research XP; say so, since the number
+    // otherwise moves with no feedback at the place the player earned it.
+    if (!stateRef.current.player.tessClassifications?.[subjectId]) {
+      addToast(`Transit classified. +${RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION} research XP`, 'ok')
+    }
 
     setState(s => {
       const existing = s.player.tessClassifications?.[subjectId]
@@ -792,6 +813,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   // verdict record itself.
   const submitAsteroidClassification = useCallback((candidateId: string, verdict: AsteroidVerdict) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
+
+    if (!stateRef.current.player.asteroidClassifications?.[candidateId]) {
+      addToast(`Asteroid candidate classified. +${RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION} research XP`, 'ok')
+    }
 
     setState(s => {
       const existing = s.player.asteroidClassifications?.[candidateId]
@@ -889,6 +914,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
 
     const answeredBefore = Object.keys(stateRef.current.player.saturnClassifications?.[candidateId]?.cells ?? {}).length
+    if (answeredBefore === 8) {
+      addToast('Saturn frame complete. Enceladus survey chart recorded.', 'ok')
+    }
     const userId = pbShared.authStore.record?.id
     // The shared collection is frame-level, while the player-side Cassini
     // instrument is deliberately 3x3. Submit a single completed-frame result
@@ -1296,7 +1324,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onLaunch, resumeMissionRun,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
-    gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
+    gainResearchXP, startSurveyScan, resolveSurveyScan, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
     submitAsteroidClassification, submitSaturnClassification, claimSaturnSurveyTerritory,
   }
 }

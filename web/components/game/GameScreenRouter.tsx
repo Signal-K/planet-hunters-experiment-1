@@ -305,6 +305,9 @@ function ScreenBody({
         <InstrumentHubScreen
           player={game.player}
           onClaimSurveyPlot={game.claimSaturnSurveyTerritory}
+          targets={game.catalog.targets}
+          onStartScan={game.startSurveyScan}
+          onResolveScan={game.resolveSurveyScan}
           onBack={() => game.goBack()}
           onInspect={signal => {
             setInspectSignal(signal)
@@ -546,6 +549,8 @@ function ScreenBody({
           }}
           onViewMissionLog={() => game.go('mission-history')}
           onOpenSiloBuild={() => game.go('build')}
+          onOpenControlStation={() => game.go('instrument-hub')}
+          onOpenMarket={() => game.go('market')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           hydrated={game.hydrated}

@@ -416,6 +416,10 @@ export interface Player {
   // keyed by Landnam target id. The takeon save owns placement; this record
   // owns the economics (what was charged, which beacon staked which claim)
   // and feeds site refinery/factory processing.
+  /** SSL-512 survey scan in progress: an owned telescope pointed at a body. */
+  activeScan?: { targetId: string; startedAt: number } | null
+  /** SSL-512 bodies charted by a survey scan, with the research XP each paid. */
+  chartedBodies?: Record<string, { chartedAt: number; researchXpAwarded: number }>
   fieldStructures?: Record<string, FieldStructureRecord[]>
   /** Field structure kits built at the Market (SSL-512), keyed by crafting recipe id. Placing one on a field spends the kit instead of francs and minerals. */
   fieldKits?: Record<string, number>
@@ -611,6 +615,10 @@ export interface GameActions {
   buildFieldKit: (recipeId: string) => boolean
   seedBiosphere: (target: import('@/lib/data').SurfaceTarget) => boolean
   gainResearchXP: (amount: number) => void
+  /** SSL-512: point an owned telescope at a body. */
+  startSurveyScan: (targetId: string) => void
+  /** SSL-512: finish a scan whose time is up. */
+  resolveSurveyScan: () => void
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
   claimFriendGift: (giftId: string) => Promise<void>

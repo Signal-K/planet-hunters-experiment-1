@@ -41,6 +41,9 @@ interface LaunchpadScreenProps {
   missionMenuOpen?: boolean
   onMissionMenuOpenChange?: (open: boolean) => void
   onOpenSiloBuild?: () => void
+  /** Free Ops agency routes (SSL-512): everything the program does without a client starts from this menu. */
+  onOpenControlStation?: () => void
+  onOpenMarket?: () => void
 }
 
 function HangarGlyph() {
@@ -97,7 +100,7 @@ const guideSteps = [
 ] as const
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, hydrated = false, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange, onOpenSiloBuild,
+  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, hydrated = false, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange, onOpenSiloBuild, onOpenControlStation, onOpenMarket,
 }: LaunchpadScreenProps) {
   // This is the Launchpad route: a playable Earth Base composition. The
   // tower and hangar are the primary interactions; the rail only exposes
@@ -353,6 +356,30 @@ export default function LaunchpadScreen({
                 <span>{buildOperation ? 'Choose a permanent program build and its assigned site.' : 'No player construction mission is ready for dispatch.'}</span>
               </button>
               ) : null}
+              {onOpenControlStation && (
+              <button
+                type="button"
+                className="launchpad-mission-choice"
+                data-testid="launchpad-new-mission-control-station-btn"
+                onClick={onOpenControlStation}
+              >
+                <SatelliteGlyph />
+                <strong>CONTROL STATION</strong>
+                <span>Operate your instruments, scan and chart bodies, and review citizen science feeds. No client needed.</span>
+              </button>
+              )}
+              {onOpenMarket && (
+              <button
+                type="button"
+                className="launchpad-mission-choice"
+                data-testid="launchpad-new-mission-market-btn"
+                onClick={onOpenMarket}
+              >
+                <InfrastructureGlyph />
+                <strong>SELL &amp; BUILD</strong>
+                <span>Sell what you mined, then spend the francs on Base builds and field kits.</span>
+              </button>
+              )}
               <button
                 type="button"
                 className="launchpad-mission-choice"

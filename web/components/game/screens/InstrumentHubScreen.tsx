@@ -11,6 +11,8 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import type { Player } from '@/lib/game-types'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
+import SurveyScanConsole from '@/components/game/control-station/SurveyScanConsole'
+import type { Target } from '@/lib/data'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import styles from './InstrumentHubScreen.module.css'
 
@@ -21,13 +23,17 @@ interface InstrumentHubScreenProps {
   onSnoozePing?: () => void
   /** Claim the Enceladus plot from the stored survey chart. */
   onClaimSurveyPlot?: () => void
+  /** Survey scan (SSL-512): bodies a telescope can chart, and the actions that run it. */
+  targets?: readonly Target[]
+  onStartScan?: (targetId: string) => void
+  onResolveScan?: () => void
 }
 
 /**
  * Control Station. The route id stays `instrument-hub` so existing entry
  * points land here. This is the equipment station, not `player.controlBuilt`.
  */
-export default function InstrumentHubScreen({ player, onBack, onInspect, onClaimSurveyPlot }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onInspect, onClaimSurveyPlot, targets = [], onStartScan, onResolveScan }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [bodyId, setBodyId] = useState('all')
   const help = useHelp('instrument-hub')
@@ -59,6 +65,9 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onClaim
       {help.layer}
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
         <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} />
+        {onStartScan && onResolveScan && player.freeOperations && (
+          <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />
+        )}
         {player.moonSurveyCharts?.enceladus && (
           <section data-testid="control-station-survey-charts" aria-label="Survey charts" style={{ display: 'grid', gap: 8, padding: 12, border: '1px solid var(--ln-hairline-strong)', borderRadius: 8, background: 'var(--ln-panel)' }}>
             <div className="ln-section-label">Survey charts</div>
