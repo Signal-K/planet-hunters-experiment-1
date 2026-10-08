@@ -57,7 +57,7 @@ export function PrimaryBtn({ children, onClick, disabled, ariaDisabled = false, 
         alignItems: 'center',
         justifyContent: 'center',
         gap: 10,
-        opacity: unavailable ? 0.45 : 1,
+        opacity: unavailable ? 0.7 : 1,
       }}
     >
       {children}
@@ -88,7 +88,7 @@ export function GhostBtn({ children, onClick, disabled, full = true, testId }: B
         border: '1px solid var(--ln-hairline)',
         borderRadius: 10,
         cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.45 : 1,
+        opacity: disabled ? 0.7 : 1,
       }}
     >
       {children}

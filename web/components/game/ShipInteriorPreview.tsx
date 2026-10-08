@@ -348,7 +348,7 @@ export default function ShipInteriorPreview({
               color: isFirst || buildState.confirmed ? 'var(--ln-bp-ink-dim)' : 'var(--ln-bp-ink-dim)',
               fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.1em',
               textTransform: 'uppercase', cursor: isFirst || buildState.confirmed ? 'not-allowed' : 'pointer',
-              opacity: isFirst || buildState.confirmed ? 0.4 : 1,
+              opacity: isFirst || buildState.confirmed ? 0.7 : 1,
             }}
           >
             Back
@@ -369,7 +369,7 @@ export default function ShipInteriorPreview({
                   fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900,
                   letterSpacing: '0.1em', textTransform: 'uppercase',
                   cursor: currentInstalled ? 'pointer' : 'not-allowed',
-                  opacity: currentInstalled ? 1 : 0.4,
+                  opacity: currentInstalled ? 1 : 0.7,
                 }}
               >
                 Refund Step
@@ -389,7 +389,7 @@ export default function ShipInteriorPreview({
                 fontFamily: 'var(--ln-font-display)', fontSize: 14,
                 fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
                 cursor: readyToConfirm && !buildState.confirmed ? 'pointer' : 'not-allowed',
-                opacity: readyToConfirm || buildState.confirmed ? 1 : 0.45,
+                opacity: readyToConfirm || buildState.confirmed ? 1 : 0.7,
               }}
             >
               {buildState.confirmed ? 'Configuration Confirmed' : 'Confirm Configuration'}
@@ -406,7 +406,7 @@ export default function ShipInteriorPreview({
               color: isLast || buildState.confirmed ? 'var(--ln-bp-ink-dim)' : 'var(--ln-bp-blue)',
               fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.1em',
               textTransform: 'uppercase', cursor: isLast || buildState.confirmed ? 'not-allowed' : 'pointer',
-              opacity: isLast || buildState.confirmed ? 0.4 : 1,
+              opacity: isLast || buildState.confirmed ? 0.7 : 1,
             }}
           >
             Next
