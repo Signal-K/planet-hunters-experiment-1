@@ -517,7 +517,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           data-testid="dev-skip-mining-btn"
           onClick={handleDevSkip}
           style={{
-            position: 'absolute', top: 8, right: 8, zIndex: 999,
+            position: 'absolute', top: 58, right: 8, zIndex: 999,
             padding: '3px 8px',
             background: 'var(--ln-bp-paper)',
             border: '1px solid var(--ln-bp-green)',
@@ -538,7 +538,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       {/* KES-282: moved out of the always-visible stats row (which was competing
           with the mineral/charge readout for attention) into a small standalone
           corner control — same button, same testid/behavior, lower prominence.
-          Sits left of the dev-only Skip Mining button so the two never overlap. */}
+          The dev-only Skip Mining button sits below it so the two never overlap. */}
       <button
         data-testid="mining-guide-btn"
         onClick={() => setGuideOpen(o => !o)}
@@ -547,7 +547,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         style={{
           position: 'absolute',
           top: 8,
-          right: process.env.NODE_ENV === 'development' ? 108 : 8,
+          right: 8,
           zIndex: 90,
           width: 44,
           height: 44,

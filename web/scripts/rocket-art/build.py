@@ -11,7 +11,7 @@ OUT = pathlib.Path('public/game/assets/ships')
 
 MODELS = {
     'sr1': dict(pods=[(560, 900)], stripe='#1a8c7e', stripe2='#14695f', windows=3),
-    'sr2': dict(pods=[(420, 640), (680, 900)], stripe='#d2562f', stripe2='#9e3c1e', windows=4),
+    'sr2': dict(pods=[(420, 640), (680, 900)], stripe='#27a9c9', stripe2='#17718a', windows=4),
 }
 TOP, BOT, MID = 72, 428, 250
 
@@ -98,7 +98,7 @@ def cutaway_bay(m):
     for x in (x0 + 140, x0 + 420, x0 + 700):
         p.append(f'<rect x="{x}" y="{y0-8}" width="22" height="{y1-y0+16}" fill="#6c9fc5" stroke="{INK}" stroke-width="5"/>')
     # conduits along the ceiling, floor deck plates and pipe runs
-    for y, col in ((y0 + 14, '#2f86c0'), (y0 + 26, '#d2562f'), (y1 - 14, '#1a8c7e')):
+    for y, col in ((y0 + 14, '#2f86c0'), (y0 + 26, '#27a9c9'), (y1 - 14, '#1a8c7e')):
         p.append(f'<line x1="{x0+8}" y1="{y}" x2="{x1-8}" y2="{y}" stroke="{col}" stroke-width="6" stroke-linecap="round"/>')
     for x in range(x0 + 40, x1 - 20, 120):
         p.append(f'<circle cx="{x}" cy="{y0+14}" r="6" fill="#e3f0f9" stroke="{INK}" stroke-width="3"/>')
