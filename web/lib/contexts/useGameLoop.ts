@@ -805,7 +805,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // drafted but never created against a real project), so this is an
     // event only for now — wire a survey key here once that's created.
     captureGameEvent('tess_classification_submitted', { subject_id: subjectId, verdict })
-  }, [setState])
+  }, [addToast, setState, stateRef])
 
   // Deep Space Telescope's asteroid-discovery classification (STS-622) — a
   // passive digest, so unlike submitTessClassification there's no
@@ -845,7 +845,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         addToast('Saved locally — could not reach the shared classification feed', 'warn')
       })
     }
-  }, [setState])
+  }, [addToast, setState, stateRef])
 
   // Saturn imager (SSL-492): local record first (offline-safe), then a pool
   // classification (SSC-43) when the frame came from the shared pool. Badge
