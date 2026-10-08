@@ -169,11 +169,15 @@ export default function MissionOperationRoutes({
           target={game.target}
           rocketImageSrc={rocketDisplay.img}
           initialCargo={game.player.miningCargoInProgress}
-          onBack={(cargo) => {
+          initialCharges={game.player.miningLaserCharges}
+          francs={game.player.francs}
+          onSpendFrancs={amount => game.setPlayer(player => ({ ...player, francs: Math.max(0, player.francs - amount) }))}
+          onBack={(cargo, charges) => {
             game.setPlayer(player => ({
               ...player,
               missionPhase: 'mining',
               miningCargoInProgress: Object.keys(cargo).length > 0 ? cargo : undefined,
+              miningLaserCharges: charges,
             }))
             game.go('hub')
           }}

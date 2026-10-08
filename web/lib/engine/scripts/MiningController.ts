@@ -16,7 +16,9 @@ export const SHIP_X = 80
 export const SHIP_Y = 112
 export const SURFACE_Y = 320
 // Wider than ship X so ore movement during laser flight doesn't cause misses on tall screens
-const HIT_TOLERANCE = 48
+const HIT_TOLERANCE = 56
+// Share of ore nodes that are the requested mineral(s) once the seeded ones are out.
+const REQUIRED_ORE_SHARE = 0.5
 const LASER_SIZE = { width: 4, height: 16 }
 const LASER_COLOR = '#9becff'
 const ORE_STROKE = '#0a0a12'
@@ -358,10 +360,24 @@ export class MiningController extends ScriptBehaviour {
     return this.totalScrollX
   }
 
+  /**
+   * Which mineral the next ore node is. The requested minerals are seeded first,
+   * then make up about half of the field so a normal player finds them within a
+   * few shots (SSL-512: 15 shots never hit the requested Nickel). Only minerals
+   * the equipped laser can reach count, since an unreachable node is no ore.
+   */
+  private pickMineral(): string {
+    if (this.requiredMineralQueue.length > 0) return this.requiredMineralQueue.shift()!
+    const maxTier = this.opts.maxLaserTier ?? 3
+    const reachable = (this.opts.requiredMinerals ?? []).filter(m => (this.opts.mineralLaserAccess?.[m] ?? 1) <= maxTier)
+    if (reachable.length > 0 && Math.random() < REQUIRED_ORE_SHARE) {
+      return reachable[Math.floor(Math.random() * reachable.length)]
+    }
+    return this.opts.minerals[this.oreCounter % this.opts.minerals.length]
+  }
+
   private spawnOre(x: number): void {
-    const mineral = this.requiredMineralQueue.length > 0
-      ? this.requiredMineralQueue.shift()!
-      : this.opts.minerals[this.oreCounter % this.opts.minerals.length]
+    const mineral = this.pickMineral()
     const tier = this.opts.mineralLaserAccess?.[mineral] ?? 1
     const cfg = ORE_TIER[tier] ?? ORE_TIER[1]
     const radius = cfg.radius

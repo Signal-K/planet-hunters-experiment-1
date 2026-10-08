@@ -3,7 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Mission, Target, MineralMeta } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE, REMOTE_MINERAL_SILO_CAPACITY } from '@/lib/data'
-import { miningNeedsRecharge, unitsStillNeeded } from '@/lib/systems/mining-charges'
+import { miningNeedsRecharge, unitsStillNeeded, rechargeCost } from '@/lib/systems/mining-charges'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
@@ -148,13 +148,18 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
   onComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell', earthDisposition?: 'store' | 'sell') => void
   /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
-  onBack: (cargo: Record<string, number>) => void
+  onBack: (cargo: Record<string, number>, laserCharges: number) => void
+  /** Laser charges left before a prior "Back to hub" pause; resuming must not refill the magazine. */
+  initialCharges?: number
+  /** Franc balance, shown on and deducted by the recharge action. */
+  francs?: number
+  onSpendFrancs?: (amount: number) => void
   onAbandon?: () => void
   minerals: Record<string, MineralMeta>
   laserChargeCap?: number
@@ -222,7 +227,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const gateOpen = !!isFreeHaulEligible && earthDisposition == null
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
-  const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
+  const [laserCharges, setLaserCharges] = useState(() => initialCharges != null ? Math.max(0, Math.min(MAX_CHARGES, initialCharges)) : MAX_CHARGES)
+  const laserChargesRef = useRef(laserCharges)
+  laserChargesRef.current = laserCharges
+  const [confirmingRecharge, setConfirmingRecharge] = useState(false)
   const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
   const [sceneStatus, setSceneStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
   const firedRef = useRef(false)
@@ -265,9 +273,20 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const runFailed = !isFreeHaulEligible && laserCharges === 0 && !orderFilled
   const chargesLow = !isFreeHaulEligible && !orderFilled && laserCharges > 0 && laserCharges <= LOW_CHARGE_THRESHOLD
 
+  // A recharge is paid for (SSL-512): the cost is on the button, confirmed,
+  // deducted, and the new balance is reported. Training tries recharge free so
+  // onboarding can't be softlocked.
+  const rechargePrice = trainingMiningTry ? 0 : rechargeCost(francs)
   function handleRecharge() {
-    setLaserCharges(MAX_CHARGES)
+    setConfirmingRecharge(true)
   }
+  function confirmRecharge() {
+    setConfirmingRecharge(false)
+    if (rechargePrice > 0) onSpendFrancs?.(rechargePrice)
+    setLaserCharges(MAX_CHARGES)
+    addToast?.(rechargePrice > 0 ? `Laser recharged for ${rechargePrice} fr. Balance ${francs - rechargePrice} fr` : 'Laser recharged', 'ok')
+  }
+  const rechargeLabel = rechargePrice > 0 ? `Recharge Laser · ${rechargePrice} fr` : 'Recharge Laser · free'
 
   function handleTryAgain() {
     cargoRef.current = {}
@@ -441,7 +460,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       <TopBar
         eyebrow={`${target.name.toUpperCase()} · SURFACE`}
         title="Mining Run"
-        onBack={() => onBack(cargoRef.current)}
+        onBack={() => onBack(cargoRef.current, laserChargesRef.current)}
         glass
         right={isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : undefined}
       />
@@ -609,8 +628,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 280, marginTop: 8 }}>
             <button className="mining-failure-retry" data-testid="mining-recharge-btn" onClick={handleRecharge}>
-              Recharge Laser
+              {rechargeLabel}
             </button>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', textAlign: 'center' }} data-testid="mining-balance">Balance {francs} fr</div>
             {onAbandon && (
               <button className="mining-failure-abandon" onClick={() => setConfirmingAbandon(true)}>
                 Scrub Mission
@@ -734,13 +754,13 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             type="button"
             aria-disabled={(!orderFilled && laserCharges > 0 && !needsRecharge) || undefined}
             data-testid="return-home-btn"
-            data-mode={needsRecharge && !orderFilled ? 'recharge' : 'return'}
-            onClick={needsRecharge && !orderFilled ? handleRecharge : handleReturn}
+            data-mode={!isFreeOps && needsRecharge && !orderFilled ? 'recharge' : 'return'}
+            onClick={!isFreeOps && needsRecharge && !orderFilled ? handleRecharge : handleReturn}
           >
             <span className="mining-command__label">
               {(() => {
                 const destination = deliveryTargetName ? `DELIVER TO ${deliveryTargetName.toUpperCase()}` : 'RETURN TO EARTH'
-                if (!isFreeOps && needsRecharge && !orderFilled) return 'RECHARGE LASER'
+                if (!isFreeOps && needsRecharge && !orderFilled) return rechargePrice > 0 ? `RECHARGE LASER · ${rechargePrice} FR` : 'RECHARGE LASER'
                 return isFreeOps || orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
               })()}
             </span>
@@ -764,6 +784,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             {overflowOpen && (
               <div className="mining-overflow__menu" data-testid="mining-overflow-menu" role="group" aria-label="More controls">
                 <ScrollTrack scrollRef={scrollRef} disabled={sceneStatus !== 'ready'} />
+                <button type="button" className="mining-overflow__scrub" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setOverflowOpen(false); handleRecharge() }}>
+                  {rechargeLabel}
+                </button>
                 {onAbandon && (
                   <button type="button" className="mining-overflow__scrub" data-testid="mining-scrub-btn" onClick={() => { setOverflowOpen(false); setConfirmingAbandon(true) }}>
                     Scrub Mission
@@ -774,6 +797,17 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </div>
         </div>
       </div>
+
+      {confirmingRecharge && (
+        <ActionConfirmBar
+          eyebrow="Mining Run"
+          title="Recharge Laser"
+          description={rechargePrice > 0 ? `Refill to ${MAX_CHARGES} charges for ${rechargePrice} fr. Balance ${francs} fr, ${francs - rechargePrice} fr after. Your cargo is kept.` : `Refill to ${MAX_CHARGES} charges. Your cargo is kept.`}
+          confirmLabel={rechargePrice > 0 ? `Pay ${rechargePrice} fr` : 'Recharge'}
+          onConfirm={confirmRecharge}
+          onDismiss={() => setConfirmingRecharge(false)}
+        />
+      )}
 
       {confirmingAbandon && onAbandon && (
         <ActionConfirmBar

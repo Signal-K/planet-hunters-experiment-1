@@ -47,6 +47,7 @@ export interface MissionRunSnapshot {
   missionRunId?: string
   missionPhase?: 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
   miningCargoInProgress?: Record<string, number>
+  miningLaserCharges?: number
   deliveryUnloadStartedAt?: number
   landingStartedAt?: number
   landingReturnStartedAt?: number
@@ -227,6 +228,9 @@ export interface Player {
   // state before this, and was lost on remount). Cleared once the mission
   // completes or is abandoned.
   miningCargoInProgress?: Record<string, number>
+  // Laser charges left in the paused mining run (SSL-512). Without it, leaving
+  // and resuming refilled the magazine, a free recharge.
+  miningLaserCharges?: number
   // Legacy timer field retained for save migration. Live rover missions now
   // persist their field state through TakeOnMount/LandnamSync.
   roverMiningStartedAt?: number
