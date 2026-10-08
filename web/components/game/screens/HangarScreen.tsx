@@ -158,7 +158,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
 
   return (
     <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="hangar-screen">
-      <TopBar eyebrow="BASE · HANGAR" title="Hangar" onBack={onBack} />
+      <TopBar eyebrow="BASE · HANGAR" title="Hangar" onBack={onBack} solid />
       <div className={`screen-scroll ${styles.scroll}`} data-ui-zone={UI_ZONES.screenContent}>
         <div className={styles.inner}>
           <div className={styles.intro}>

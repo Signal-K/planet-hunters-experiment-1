@@ -962,13 +962,13 @@ button { cursor: pointer; }
 .backend-status {
   position: absolute;
   right: var(--ln-s-3);
-  bottom: var(--ln-s-2);
+  bottom: calc(var(--ln-s-2) + var(--flight-plan-h, 0px));
   z-index: 96;
   display: inline-flex;
   align-items: center;
   gap: var(--ln-s-1);
   color: var(--ln-text-muted);
-  font: 700 var(--ln-fs-micro) var(--ln-font-display);
+  font: 700 12px var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
   pointer-events: none;

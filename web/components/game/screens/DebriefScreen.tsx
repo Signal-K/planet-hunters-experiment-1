@@ -9,7 +9,6 @@ import Panel from '@/components/ui/Panel'
 import TopBar from '@/components/ui/TopBar'
 import StatusPill from '@/components/ui/StatusPill'
 import MineralChip from '@/components/game/MineralChip'
-import CostSummaryRow from '@/components/game/CostSummaryRow'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { ScrapSequenceCanvas } from '@/components/game/ScrapSequenceCanvas'
 import LaserCapacitorPanel from '@/components/game/screens/LaserCapacitorPanel'
@@ -253,18 +252,18 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               )}
               {calibratedTotal > rawTotal && <PayRow label="Onboarding bonus" value={calibratedTotal - rawTotal} />}
               {crewArrivalBonus > 0 && <PayRow label={`First astronaut at ${target.name}`} value={crewArrivalBonus} />}
-              <CostSummaryRow
+              <StatRow
+                style={{ borderTop: '1px solid var(--ln-hairline)' }}
                 label={rocketSource === 'fabricated' ? `Vehicle cost · ${starterRocket.name} · silo fabrication` : `Vehicle cost · ${starterRocket.name}`}
                 value={rocketSource === 'fabricated' ? 'Minerals committed' : vehicleCost === 0 ? formatCurrency(0) : formatCurrency(-vehicleCost, { signed: true })}
-                color={rocketSource === 'fabricated' ? 'var(--ln-cyan)' : vehicleCost === 0 ? 'var(--ln-text-dim)' : 'var(--ln-crimson)'}
-                last={loanRepayment === 0}
+                valueColor={rocketSource === 'fabricated' ? 'var(--ln-cyan)' : vehicleCost === 0 ? 'var(--ln-text-dim)' : 'var(--ln-crimson)'}
               />
               {loanRepayment > 0 && (
-                <CostSummaryRow
+                <StatRow
+                  style={{ borderTop: '1px solid var(--ln-hairline)' }}
                   label={loanRepayment >= (loanDebt ?? 0) ? 'Loan · cleared' : 'Loan · instalment'}
                   value={formatCurrency(-loanRepayment, { signed: true })}
-                  color="var(--ln-crimson)"
-                  last
+                  valueColor="var(--ln-crimson)"
                 />
               )}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0 2px', marginTop: 2, borderTop: '1px solid var(--ln-hairline)' }}>

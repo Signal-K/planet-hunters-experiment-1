@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { GameProvider, useGame } from '@/game-context'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
@@ -49,7 +49,8 @@ function Stage() {
   }, [game.hydrated])
 
   // ?chrome=1 mounts the Base overlays (DEV badge, Friends, Hub, suite rail) so their overlaps can be checked.
-  const chrome = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('chrome') === '1'
+  const [chrome, setChrome] = useState(false)
+  useEffect(() => { setChrome(new URLSearchParams(window.location.search).get('chrome') === '1') }, [])
   const immersive = LOCATION_SCREENS.has(game.screen as Screen)
 
   return (
