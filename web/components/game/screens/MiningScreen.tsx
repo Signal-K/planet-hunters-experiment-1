@@ -262,8 +262,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const needsRecharge = miningNeedsRecharge(laserCharges, stillNeeded)
 
   // Charges depleted without filling the order — always show recovery options, not just during coaching
-  const runFailed = laserCharges === 0 && !orderFilled
-  const chargesLow = !orderFilled && laserCharges > 0 && laserCharges <= LOW_CHARGE_THRESHOLD
+  const runFailed = !isFreeHaulEligible && laserCharges === 0 && !orderFilled
+  const chargesLow = !isFreeHaulEligible && !orderFilled && laserCharges > 0 && laserCharges <= LOW_CHARGE_THRESHOLD
 
   function handleRecharge() {
     setLaserCharges(MAX_CHARGES)
@@ -356,7 +356,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   }, [laserCharges, sceneStatus, isCharging])
 
   function handleReturn() {
-    if (orderFilled || laserCharges <= 0) {
+    if (isFreeHaulEligible || orderFilled || laserCharges <= 0) {
       onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
       return
     }
@@ -411,10 +411,15 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trainingMiningTry])
 
-  const isFreeOps = !mission.client
+  const isFreeOps = !!isFreeHaulEligible
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
   const { dismissed: freeOpsFirstSuccessDismissed, dismiss: dismissFreeOpsFirstSuccess } = useFreeOpsFirstSuccessAck()
-  const showFreeOpsSuccessPopup = isFreeOps && orderFilled && !freeOpsFirstSuccessDismissed
+  const freeOpsCargoUnits = Object.values(cargo).reduce((sum, amount) => sum + Math.max(0, amount), 0)
+  const freeOpsDebrisReadout = Object.entries(cargo)
+    .filter(([id, amount]) => DEBRIS_RESOURCE_IDS.includes(id) && amount > 0)
+    .map(([id, amount]) => `${minerals[id]?.name ?? id} ${amount} U`)
+    .join(' · ')
+  const showFreeOpsSuccessPopup = isFreeOps && freeOpsCargoUnits > 0 && !freeOpsFirstSuccessDismissed
 
   // KES-282: a first-time player could previously face up to 4 stacked overlays at
   // once (first-entry explainer, guide flyout, first-success popup, low-charge
@@ -687,7 +692,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             `${minerals[id]?.name ?? id}: ${Math.min(cargo[id] ?? 0, amount)} of ${amount} collected. `).join('')}
         </span>
 
-        {remoteSiloAvailable && (orderFilled || laserCharges <= 0) && (
+        {remoteSiloAvailable && (isFreeOps || orderFilled || laserCharges <= 0) && (
           <Panel accent="var(--ln-cyan)" surface="glass" style={{ marginBottom: 8, padding: 10 }}>
             <div style={{ font: '800 14px var(--ln-font-display)', letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>Arrival settlement</div>
             <div style={{ font: '14px var(--ln-font-body)', color: 'var(--ln-text-dim)', lineHeight: 1.4, marginTop: 4 }}>
@@ -735,13 +740,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             <span className="mining-command__label">
               {(() => {
                 const destination = deliveryTargetName ? `DELIVER TO ${deliveryTargetName.toUpperCase()}` : 'RETURN TO EARTH'
-                if (needsRecharge && !orderFilled) return 'RECHARGE LASER'
-                return orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
+                if (!isFreeOps && needsRecharge && !orderFilled) return 'RECHARGE LASER'
+                return isFreeOps || orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
               })()}
             </span>
-            <span className="mining-command__meta" data-testid="mining-order-progress">Order {totalCollected}/{totalNeeded}</span>
+            <span className="mining-command__meta" data-testid={isFreeOps ? 'freeops-cargo-progress' : 'mining-order-progress'}>{isFreeOps ? `Cargo collected ${freeOpsCargoUnits} U` : `Order ${totalCollected}/${totalNeeded}`}</span>
+            {isFreeOps && freeOpsDebrisReadout && <span className="mining-command__meta" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span>}
             <span className="mining-command__fill" aria-hidden="true">
-              <span style={{ width: `${totalNeeded > 0 ? Math.min(100, (totalCollected / totalNeeded) * 100) : 0}%` }} />
+              <span style={{ width: `${isFreeOps ? Math.min(100, freeOpsCargoUnits * 10) : totalNeeded > 0 ? Math.min(100, (totalCollected / totalNeeded) * 100) : 0}%` }} />
             </span>
           </button>
           <div className="mining-overflow">

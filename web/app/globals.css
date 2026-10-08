@@ -1139,7 +1139,7 @@ button { cursor: pointer; }
 }
 
 .ln-action-confirm {
-  position: absolute;
+  position: fixed;
   z-index: 88;
   right: var(--ln-s-3);
   bottom: calc(var(--ln-nav-h, 64px) + var(--ln-s-3));
@@ -1153,6 +1153,10 @@ button { cursor: pointer; }
   border: 1px solid var(--ln-cyan-border);
   box-shadow: var(--ln-shadow-panel);
 }
+
+/* Keep the event affordance below Base telemetry. Its previous upper-left
+   anchor sat directly over the Francs rail on a real phone viewport. */
+.sky-event-wrap[data-testid="sky-event-base"] { top: 144px !important; }
 .ln-action-confirm__copy { min-width: 0; }
 .ln-action-confirm__copy > span { display: block; color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .22em; text-transform: uppercase; }
 .ln-action-confirm__copy > strong { display: block; margin-top: 2px; color: var(--ln-text); font: 800 16px var(--ln-font-display); text-transform: uppercase; }
@@ -3437,7 +3441,7 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* The Draconids chip sits under the top controls on phones and beside the
    launchpad in compact landscape instead of over HUB or the launchpad. */
 @media (max-width: 480px) and (orientation: portrait) {
-  .sky-event-wrap[data-testid="sky-event-base"] { top: 112px !important; }
+  .sky-event-wrap[data-testid="sky-event-base"] { top: 152px !important; }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   .sky-event-wrap[data-testid="sky-event-base"] { top: 56px !important; left: 300px !important; }

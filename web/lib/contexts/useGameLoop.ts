@@ -276,6 +276,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [setState])
 
   const onPickMission = useCallback((id: string, freeHaulDisposition?: 'store' | 'sell') => {
+    // A launched run owns its cargo, charge state, and mission receipt. Do not
+    // replace it while the player is browsing the Launchpad.
+    if (stateRef.current.player.activeMission) {
+      addToast('Finish or scrub your current run first.', 'warn')
+      return
+    }
     // Counterpart to mission_completed — without a started event, Trends/
     // Funnels can't tell "never picked a mission" apart from "picked one and
     // dropped off before finishing it".
@@ -291,6 +297,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
     setState(s => {
       if (s.screen !== 'missions' && s.screen !== 'launchpad') return s
+      if (s.player.activeMission) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? null
@@ -316,40 +323,15 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const dailyClientPool = (nextDailyPool && id.startsWith('dcp-'))
         ? { ...nextDailyPool, acceptedId: id }
         : nextDailyPool
-      // Selecting another mission parks the current operational context first.
-      // The old single `activeMission` guard made this a silent no-op; runs are
-      // now independently resumable, with no arbitrary capacity limit.
-      const parkedRun = snapshotActiveMission(s)
-      const pausedMissionRuns = parkedRun
-        ? [...(s.player.pausedMissionRuns ?? []).filter(run => run.key !== parkedRun.key), parkedRun]
-        : s.player.pausedMissionRuns
       const base = {
         ...s,
-        lastCargo: parkedRun ? null : s.lastCargo,
-        deliveredCargo: parkedRun ? null : s.deliveredCargo,
+        lastCargo: s.lastCargo,
+        deliveredCargo: s.deliveredCargo,
         player: {
           ...s.player,
           dailyClientPool,
           francs: s.player.francs - (mission.jointProject?.playerCost ?? 0),
-          pausedMissionRuns,
-          activeMission: parkedRun ? null : s.player.activeMission,
-          missionRunId: parkedRun ? undefined : s.player.missionRunId,
-          missionPhase: parkedRun ? undefined : s.player.missionPhase,
-          miningCargoInProgress: parkedRun ? undefined : s.player.miningCargoInProgress,
-          deliveryUnloadStartedAt: parkedRun ? undefined : s.player.deliveryUnloadStartedAt,
-          landingStartedAt: parkedRun ? undefined : s.player.landingStartedAt,
-          landingReturnStartedAt: parkedRun ? undefined : s.player.landingReturnStartedAt,
-          arrivalAt: parkedRun ? undefined : s.player.arrivalAt,
-          transitStartedAt: parkedRun ? undefined : s.player.transitStartedAt,
-          missionRocketSource: parkedRun ? undefined : s.player.missionRocketSource,
-          missionCrewIds: parkedRun ? [] : s.player.missionCrewIds,
-          debriefPending: parkedRun ? false : s.player.debriefPending,
-          cargoSettledOffworld: parkedRun ? false : s.player.cargoSettledOffworld,
-          pendingRemoteDisposition: parkedRun ? undefined : s.player.pendingRemoteDisposition,
-          freeHaulDisposition: parkedRun ? undefined : freeHaulDisposition ?? s.player.freeHaulDisposition,
-          returningToEarth: parkedRun ? false : s.player.returningToEarth,
-          headingToDelivery: parkedRun ? false : s.player.headingToDelivery,
-          shipDestroyed: parkedRun ? false : s.player.shipDestroyed,
+          freeHaulDisposition: freeHaulDisposition ?? s.player.freeHaulDisposition,
         },
       }
       if (mission?.targetId) {
@@ -378,7 +360,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         doneSteps: { ...s.doneSteps, 2: true },
       }, catalog)
     })
-  }, [catalog, setState])
+  }, [addToast, catalog, setState, stateRef])
 
   const onPickTarget = useCallback((id: string) => {
     setState(s => {

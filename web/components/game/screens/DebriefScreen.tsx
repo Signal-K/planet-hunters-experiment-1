@@ -16,7 +16,6 @@ import DebriefCanvas from '@/components/game/screens/DebriefCanvas'
 import { formatCurrency } from '@/lib/format'
 import { rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import StatRow from '@/components/ui/StatRow'
-import { captureGameEvent } from '@/lib/posthog'
 import type { PlayerBadge } from '@/lib/data/sky-events'
 import { SkyBadgeRow } from './SkyBadgeRow'
 
@@ -76,9 +75,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const [resolved, setResolved] = useState(isOrbitalInstrumentDeployment)
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
-  const [disposition, setDisposition] = useState<'store' | 'sell'>(
-    initialDisposition ?? (hasEarthStorage ? 'store' : 'sell')
-  )
+  // Free Ops chooses its Earth disposition during launch planning. The
+  // debrief reports that committed route; it must not ask a second time.
+  const disposition = initialDisposition ?? (hasEarthStorage ? 'store' : 'sell')
   const haulUnits = Object.values(cargo).reduce((sum, n) => sum + Math.max(0, n), 0)
   const overflowUnits = hasEarthStorage ? Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0)) : haulUnits
   // Every current vehicle is single-use. Show teardown on every mission so the
@@ -216,11 +215,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             teardown so the player sees the payout they are about to collect. */}
         {(resolved || (!isFreeHaul && !isProgramOperation)) && (
           isFreeHaul ? (
-            <CargoDispositionPanel
+            <CargoDestinationPanel
               cargo={cargo}
               minerals={minerals}
               disposition={disposition}
-              setDisposition={setDisposition}
               hasEarthStorage={!!hasEarthStorage}
               storageUsed={storageUsed ?? 0}
               storageCapacity={storageCapacity ?? 0}
@@ -411,16 +409,13 @@ function ManifestRow({ id, name, meta, children }: { id: string; name: string; m
   )
 }
 
-/** The store-vs-sell choice for a self-directed haul (KES-271). Kept compact:
- *  a one-line explanation, a two-option toggle, and a single detail row that is
- *  either the silo fill (store) or the market value (sell). */
-function CargoDispositionPanel({
-  cargo, minerals, disposition, setDisposition, hasEarthStorage, storageUsed, storageCapacity, haulMarketValue, overflowUnits,
+/** Read-only confirmation of the destination chosen before a Free Ops launch. */
+function CargoDestinationPanel({
+  cargo, minerals, disposition, hasEarthStorage, storageUsed, storageCapacity, haulMarketValue, overflowUnits,
 }: {
   cargo: Record<string, number>
   minerals: Record<string, MineralMeta>
   disposition: 'store' | 'sell'
-  setDisposition: (d: 'store' | 'sell') => void
   hasEarthStorage: boolean
   storageUsed: number
   storageCapacity: number
@@ -434,14 +429,10 @@ function CargoDispositionPanel({
   const segments = Object.entries(cargo).filter(([, n]) => n > 0)
   return (
     <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
-      <div className="ln-section-label" style={{ marginBottom: 6 }}>Your ore · keep or sell</div>
+      <div className="ln-section-label" style={{ marginBottom: 6 }}>Free Ops haul</div>
       <p style={{ margin: '0 0 12px', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
-        No client is owed this haul. Keep it in the silo to sell when the price is right or spend on your own builds, or sell the lot now at market.
+        No client is owed this haul. Destination selected at launch: {store ? 'Earth storage' : 'sell on Earth return'}.
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <DispositionOption testId="debrief-store" active={store} disabled={!hasEarthStorage} onClick={() => { captureGameEvent('debrief_disposition_chosen', { disposition: 'store' }); setDisposition('store') }} title="Keep on Earth" sub={hasEarthStorage ? 'Into the silo' : 'Needs a Vault · Earth silo'} />
-        <DispositionOption testId="debrief-sell" active={!store} onClick={() => { captureGameEvent('debrief_disposition_chosen', { disposition: 'sell' }); setDisposition('sell') }} title="Sell now" sub="At market price" />
-      </div>
       <div style={{ marginTop: 12 }}>
         {store ? (
           <>
@@ -474,32 +465,5 @@ function CargoDispositionPanel({
         </p>
       )}
     </Panel>
-  )
-}
-
-function DispositionOption({ active, disabled, onClick, title, sub, testId }: {
-  active: boolean
-  disabled?: boolean
-  onClick: () => void
-  title: string
-  sub: string
-  testId: string
-}) {
-  return (
-    <button
-      type="button"
-      data-testid={testId}
-      onClick={disabled ? undefined : onClick}
-      disabled={disabled}
-      style={{
-        textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: disabled ? 'not-allowed' : 'pointer',
-        border: `1.5px solid ${active ? 'var(--ln-cyan)' : 'var(--ln-hairline)'}`,
-        background: active ? 'var(--ln-cyan-soft)' : 'var(--ln-surface-2)',
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      <div style={{ font: '800 14px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: active ? 'var(--ln-cyan)' : 'var(--ln-text)' }}>{title}</div>
-      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 2 }}>{sub}</div>
-    </button>
   )
 }

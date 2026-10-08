@@ -106,6 +106,7 @@ export default function LaunchpadScreen({
   const [guideStep, setGuideStep] = useState<number | null>(null)
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
+  const [activeRunBlockerOpen, setActiveRunBlockerOpen] = useState(false)
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   const [operationBrief, setOperationBrief] = useState<'instrument' | 'mining' | 'build' | null>(null)
   const externallyControlled = onMissionMenuOpenChange !== undefined
@@ -189,6 +190,10 @@ export default function LaunchpadScreen({
   const openMissionMenu = () => {
     if (player.pendingLaunch) {
       onLaunchpadAction()
+      return
+    }
+    if (player.activeMission) {
+      setActiveRunBlockerOpen(true)
       return
     }
     if (!hasFreeOpsAccess) {
@@ -278,6 +283,26 @@ export default function LaunchpadScreen({
           </section>
         )}
 
+        {activeRunBlockerOpen && player.activeMission && (
+          <section className="launchpad-mission-menu" data-testid="launchpad-active-run-blocker" aria-labelledby="launchpad-active-run-blocker-title">
+            <div className="launchpad-mission-menu-header">
+              <div>
+                <span className="launchpad-guide-kicker">MISSION IN PROGRESS</span>
+                <h2 id="launchpad-active-run-blocker-title">Current run is still active</h2>
+                <p>Finish or scrub your current run first. Starting Free Ops now would replace its cargo and charge state.</p>
+              </div>
+              <button type="button" className="launchpad-mission-menu-close" onClick={() => setActiveRunBlockerOpen(false)}>CLOSE</button>
+            </div>
+            <div className="launchpad-mission-menu-options">
+              <button type="button" className="launchpad-mission-choice" onClick={onResumeMission}>
+                <MissionGlyph />
+                <strong>RESUME CURRENT RUN</strong>
+                <span>{player.activeMission.label} · scrub it from the run controls only if you intend to abandon it.</span>
+              </button>
+            </div>
+          </section>
+        )}
+
         {visibleMissionMenuOpen && !player.pendingLaunch && (
           <section className="launchpad-mission-menu" data-testid="launchpad-new-mission-menu" aria-labelledby="launchpad-new-mission-title">
             <div className="launchpad-mission-menu-header">
@@ -311,8 +336,8 @@ export default function LaunchpadScreen({
                 onClick={() => setOperationBrief('mining')}
               >
                 <MiningGlyph />
-                <strong>GO MINING</strong>
-                <span>{ownMiningOperation ? 'Set storage and inspect market conditions before dispatch.' : 'Self-directed mining unlocks with Free Operations.'}</span>
+                <strong>FREE OPS</strong>
+                <span>{ownMiningOperation ? 'Plan your own haul: no client, no required cargo, return when ready.' : 'Self-directed mining unlocks with Free Operations.'}</span>
               </button>
               ) : null}
               {buildOperation ? (
