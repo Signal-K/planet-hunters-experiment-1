@@ -633,7 +633,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                     <DockIconBtn testId="hub-resume-mission-btn" icon={<HistoryGlyph />} label="Resume" onClick={() => onOpenScene(missionResumeScreen(player))} accent />
                   ) : (
                     <DockPrimaryBtn testId="hub-edit-build-btn" onClick={() => setEditMode(v => !v)}>
-                      {editMode ? 'Done' : 'Edit · Build'}
+                      {editMode ? 'Done' : 'Build'}
                     </DockPrimaryBtn>
                   )}
                 </div>

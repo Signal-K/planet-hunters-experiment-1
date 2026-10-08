@@ -209,7 +209,7 @@ describe('Earth Base — redesigned scene', () => {
     // overflow:hidden box, which is still programmatically scrollable, so
     // Cypress's default scrollIntoView drags the scene to the subsurface half
     // before clicking and the screenshot captures that instead of the surface.
-    cy.get('[data-testid="hub-edit-build-btn"]').contains('Edit · Build').click({ scrollBehavior: false })
+    cy.get('[data-testid="hub-edit-build-btn"]').contains('Build').click({ scrollBehavior: false })
     cy.wait(600)
     cy.screenshot('earth-base-06-portrait-edit', { capture: 'viewport' })
   })
@@ -220,7 +220,7 @@ describe('Earth Base — redesigned scene', () => {
     // Reach BuildPlaceScreen the way a player does — a bare visit to
     // /game/build bounces back to the hub.
     cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 10000 })
-      .contains('Edit · Build')
+      .contains('Build')
       .click({ scrollBehavior: false })
     cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 10000 })
       .should('contain.text', 'Done')
