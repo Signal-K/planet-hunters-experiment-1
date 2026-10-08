@@ -406,6 +406,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       recordFieldDemolish: surfaceOps.recordFieldDemolish,
       runFieldRefining: surfaceOps.runFieldRefining,
       fabricateAtField: surfaceOps.fabricateAtField,
+      buildFieldKit: surfaceOps.buildFieldKit,
       seedBiosphere: surfaceOps.seedBiosphere,
     }}>
       {children}

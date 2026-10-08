@@ -1,5 +1,6 @@
 'use client'
 
+import { mineralSourceHints } from '@/lib/data/mineral-sources'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Boxes,
@@ -148,6 +149,9 @@ export default function SurfaceOpsScreen({
     player.francs >= SETTLEMENT_LAUNCHPAD.costFrancs
     && Object.entries(SETTLEMENT_LAUNCHPAD.costMaterials)
       .every(([id, amount]) => (player.stash?.[id] ?? 0) >= amount)
+  const launchpadShort = Object.entries(SETTLEMENT_LAUNCHPAD.costMaterials)
+    .filter(([id, amount]) => (player.stash?.[id] ?? 0) < amount)
+    .map(([id]) => id)
   const dispatchReady =
     launchpadStatus === 'ready'
     && cargoReady
@@ -413,6 +417,9 @@ export default function SurfaceOpsScreen({
                     <p className={styles.sectionCopy}>
                       Pad {selectedPad + 1} selected · {launchpadCost}
                     </p>
+                    {!canAffordLaunchpad && launchpadShort.length > 0 && (
+                      <p className={styles.sectionCopy} data-testid="surface-launchpad-source">{mineralSourceHints(launchpadShort)}</p>
+                    )}
                     <PrimaryBtn
                       disabled={!canAffordLaunchpad}
                       testId="surface-build-launchpad"

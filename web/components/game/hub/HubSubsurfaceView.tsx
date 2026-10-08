@@ -24,6 +24,7 @@ import {
   type SubsurfaceRoomId,
 } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
+import { mineralSourceHints } from '@/lib/data/mineral-sources'
 import { PrimaryBtn } from '@/components/ui/Button'
 import styles from './HubSubsurfaceView.module.css'
 
@@ -372,6 +373,7 @@ function RoomBuildPrompt({
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
 }) {
   const affordable = canAffordSubsurface(room, { francs, stash })
+  const shortMinerals = Object.entries(room.costMaterials).map(([id, need]): [string, number] => [id, need - (stash?.[id] ?? 0)]).filter(([, n]) => n > 0)
   return (
     <div className={styles.trainingPanel} data-testid={`subsurface-room-build-${room.id}`}>
       <div>
@@ -383,6 +385,11 @@ function RoomBuildPrompt({
         <p className={styles.trainingCopy}>
           Construction cost: <strong>{formatRoomCost(room)}</strong>
         </p>
+        {!affordable && shortMinerals.length > 0 && (
+          <p className={styles.trainingCopy} data-testid={`subsurface-room-source-${room.id}`}>
+            Short {shortMinerals.map(([id, n]) => `${n} ${id}`).join(', ')}. {mineralSourceHints(shortMinerals.map(([id]) => id))}
+          </p>
+        )}
         <div style={{ marginTop: 24, maxWidth: 320, marginInline: 'auto' }}>
           <PrimaryBtn
             testId={`subsurface-build-${room.id}`}
@@ -438,7 +445,7 @@ function ExcavatePrompt({
         </p>
         {!affordable && (
           <p className={styles.trainingCopy} data-testid="subsurface-excavate-lock-copy">
-            Need {missing.join(' and ')}. Aluminium is delivered to Base Storage with aluminium-bearing client mineral cargo.
+            Need {missing.join(' and ')}. {mineralSourceHints(['aluminium'])}
           </p>
         )}
         <div style={{ marginTop: 12, maxWidth: 320, marginInline: 'auto' }}>

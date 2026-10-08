@@ -417,6 +417,8 @@ export interface Player {
   // owns the economics (what was charged, which beacon staked which claim)
   // and feeds site refinery/factory processing.
   fieldStructures?: Record<string, FieldStructureRecord[]>
+  /** Field structure kits built at the Market (SSL-512), keyed by crafting recipe id. Placing one on a field spends the kit instead of francs and minerals. */
+  fieldKits?: Record<string, number>
   /** Last refinery pass per target id, for the field processing cadence. */
   fieldProcessedAt?: Record<string, number>
   clientStructures?: import('@/lib/data').ClientStructureRecord[]
@@ -605,6 +607,8 @@ export interface GameActions {
   recordFieldDemolish: (targetId: string, structureId: string) => void
   runFieldRefining: (field: import('@/lib/systems/SandboxSystem').FieldIdentity) => void
   fabricateAtField: (targetId: string, recipeId: string) => boolean
+  /** SSL-512: build a field structure kit at the Market, spent when placed on a field. */
+  buildFieldKit: (recipeId: string) => boolean
   seedBiosphere: (target: import('@/lib/data').SurfaceTarget) => boolean
   gainResearchXP: (amount: number) => void
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void

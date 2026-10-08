@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
-import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, SUBSURFACE_EXCAVATE_COST, type CraftingRecipe } from '@/lib/data'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
@@ -433,6 +433,26 @@ function ScreenBody({
           onBack={() => game.goBack()}
           onOpenMissions={() => game.go('missions')}
           clientId={game.player.lastClient}
+          placedStructures={game.player.placed}
+          fieldKits={game.player.fieldKits ?? {}}
+          onBuildRecipe={(recipe: CraftingRecipe) => {
+            if (recipe.producedAt === 'field') return game.buildFieldKit(recipe.id)
+            if (recipe.producedAt === 'earth-base') {
+              const kind = recipe.id.replace(/^earth-/, '')
+              const structure = game.catalog.structures.find(s => s.id === kind)
+              const occupied = new Set(Object.values(game.player.placementPlots ?? {}))
+              if (game.player.placed.includes('launchpad') && game.player.placementPlots?.launchpad == null) occupied.add(0)
+              const plot = [0, 1, 2, 3].find(i => !occupied.has(i))
+              if (plot == null) { game.addToast('Every Base plot is taken.', 'warn'); return false }
+              const placed = game.placeStructure(structure, kind, plot)
+              game.addToast(placed ? `${recipe.name} placed at the Base. It finishes building in a few seconds.` : `${recipe.name} cannot be built yet. Check its unlock and cost.`, placed ? 'ok' : 'warn')
+              return placed
+            }
+            if (recipe.producedAt === 'subsurface') { game.go('hub'); return false }
+            if (recipe.producedAt === 'refinery') { game.go('refinery'); return false }
+            if (recipe.producedAt === 'hangar') { game.go('hangar'); return false }
+            return false
+          }}
         />
       )
 

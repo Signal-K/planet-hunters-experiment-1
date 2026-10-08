@@ -75,6 +75,8 @@ export function fieldMineralPool(player: Player, siteId?: string): Record<string
 }
 
 export function fieldBuildAffordability(player: Player, recipe: CraftingRecipe, siteId?: string) {
+  // A kit built at the Market is already paid for.
+  if ((player.fieldKits?.[recipe.id] ?? 0) > 0) return { ok: true, francsShort: 0, mineralsShort: {}, refinedShort: {} }
   return craftingAffordability(recipe, player.francs, fieldMineralPool(player, siteId), player.refinedGoods ?? {})
 }
 
@@ -138,8 +140,14 @@ export function applyFieldBuild(
     if (affordability.francsShort > 0) missing.unshift(`${affordability.francsShort} francs`)
     return { state, ok: false, reason: `Short ${missing.join(', ')} for ${recipe.name}.`, recipe }
   }
-  let player = drawMinerals(state.player, recipe.costMinerals, field.siteId)
-  player = { ...player, francs: player.francs - recipe.costFrancs }
+  const kits = state.player.fieldKits?.[recipe.id] ?? 0
+  let player: Player
+  if (kits > 0) {
+    player = { ...state.player, fieldKits: { ...state.player.fieldKits, [recipe.id]: kits - 1 } }
+  } else {
+    player = drawMinerals(state.player, recipe.costMinerals, field.siteId)
+    player = { ...player, francs: player.francs - recipe.costFrancs }
+  }
   const record: FieldStructureRecord = {
     id: structure.id,
     type: structure.type,
@@ -169,6 +177,33 @@ export function applyFieldBuild(
     }
   }
   return { state: { ...state, player }, ok: true, recipe, claim }
+}
+
+/**
+ * Build a field structure kit at the Market, paid from the wallet and the Earth
+ * stash. The kit is spent when the structure is placed on a field (SSL-512).
+ */
+export function applyBuildFieldKit(state: GameState, recipeId: string): FabricateResult {
+  const recipe = craftingRecipeById(recipeId)
+  if (!recipe || recipe.producedAt !== 'field' || !recipe.takeonType) return { state, ok: false, reason: 'That cannot be built as a kit.' }
+  const affordability = craftingAffordability(recipe, state.player.francs, state.player.stash ?? {}, state.player.refinedGoods ?? {})
+  if (!affordability.ok) {
+    const missing = Object.entries(affordability.mineralsShort).map(([k, v]) => `${v} ${k}`)
+    if (affordability.francsShort > 0) missing.unshift(`${affordability.francsShort} francs`)
+    return { state, ok: false, reason: `Short ${missing.join(', ')} for ${recipe.name}.` }
+  }
+  return {
+    ok: true,
+    state: {
+      ...state,
+      player: {
+        ...state.player,
+        francs: state.player.francs - recipe.costFrancs,
+        stash: spendMinerals(state.player.stash ?? {}, recipe.costMinerals),
+        fieldKits: { ...state.player.fieldKits, [recipeId]: (state.player.fieldKits?.[recipeId] ?? 0) + 1 },
+      },
+    },
+  }
 }
 
 /** Forget a demolished structure and drop any claim its beacon staked. No refund: demolition is permanent. */
