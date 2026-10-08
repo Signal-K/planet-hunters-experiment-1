@@ -3441,3 +3441,31 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 @media (min-width: 1024px) {
   .portrait-canvas:has([data-screen="hub"]) .hub-community-button { right: 216px !important; }
 }
+
+/* SSL-449: the mining action bar has one primary (Fire laser). Return and the
+   overflow menu are secondary: paper with an ink outline, not a second filled
+   blue button. */
+.mining-screen .mining-action-row .mining-command--return,
+.mining-screen .mining-action-row .mining-overflow__btn,
+.theme-deep.mining-screen .mining-action-row .mining-command--return,
+.theme-deep.mining-screen .mining-action-row .mining-overflow__btn {
+  background: var(--ln-bp-paper, #fff) !important;
+  color: var(--ln-bp-ink, #0f2436) !important;
+  border: 2px solid var(--ln-bp-ink, #0f2436) !important;
+  box-shadow: none !important;
+}
+
+/* SSL-423: the mining viewport showed navy/black while the Pixi scene loaded.
+   Light sky until the canvas paints; disabled Fire Laser keeps readable ink. */
+.mining-viewport {
+  background: linear-gradient(180deg, #e6f1f9 0%, #cfe3f2 60%, #a9cce6 100%) !important;
+}
+.mining-screen .mining-action-row .mining-command--fire:disabled,
+.mining-screen .mining-action-row .mining-command--fire:disabled .mining-command__meta {
+  color: var(--ln-bp-ink, #0f2436) !important;
+}
+.mining-screen .mining-action-row .mining-command--return .mining-command__meta,
+.mining-screen .mining-action-row .mining-command--return .mining-command__label {
+  color: var(--ln-bp-ink, #0f2436) !important;
+}
+.mining-screen .mining-action-row .mining-command--return * { color: var(--ln-bp-ink, #0f2436) !important; }
