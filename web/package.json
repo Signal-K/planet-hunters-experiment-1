@@ -65,7 +65,7 @@
     "lint": "npm run lint:design-tokens && npm run verify:hue-palette && npm run verify:native-text-floor && npm run verify:native-tap-targets && npm run verify:native-contrast && npm run verify:scene-surfaces && npm run typecheck"
   },
   "dependencies": {
-    "@takeon/engine": "file:vendor/takeon/takeon-engine-0.2.1.tgz",
+    "@takeon/engine": "file:vendor/takeon/takeon-engine-0.2.2.tgz",
     "@takeon/pixi": "file:vendor/takeon/takeon-pixi-0.2.2.tgz",
     "lucide-react": "^1.17.0",
     "next": "16.2.12",
