@@ -3435,3 +3435,9 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 .game-screen > .debrief-game__content.screen-scroll {
   padding-top: calc(var(--ln-topbar-h, 64px) + 12px);
 }
+
+/* SSL-345: Base header spacing. Desktop HUB sat flush against FRIENDS; the
+   landscape DEV fix lives in HubLayout.module.css. */
+@media (min-width: 1024px) {
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { right: 216px !important; }
+}
