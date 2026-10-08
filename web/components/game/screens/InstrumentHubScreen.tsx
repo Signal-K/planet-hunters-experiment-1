@@ -10,6 +10,7 @@ import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { UI_ZONES } from '@/lib/ui-zones'
 import type { Player } from '@/lib/game-types'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
+import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import styles from './InstrumentHubScreen.module.css'
 
@@ -18,13 +19,15 @@ interface InstrumentHubScreenProps {
   onBack: () => void
   onInspect: (signal: InstrumentSignal) => void
   onSnoozePing?: () => void
+  /** Claim the Enceladus plot from the stored survey chart. */
+  onClaimSurveyPlot?: () => void
 }
 
 /**
  * Control Station. The route id stays `instrument-hub` so existing entry
  * points land here. This is the equipment station, not `player.controlBuilt`.
  */
-export default function InstrumentHubScreen({ player, onBack, onInspect }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onInspect, onClaimSurveyPlot }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [bodyId, setBodyId] = useState('all')
   const help = useHelp('instrument-hub')
@@ -56,6 +59,18 @@ export default function InstrumentHubScreen({ player, onBack, onInspect }: Instr
       {help.layer}
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
         <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} />
+        {player.moonSurveyCharts?.enceladus && (
+          <section data-testid="control-station-survey-charts" aria-label="Survey charts" style={{ display: 'grid', gap: 8, padding: 12, border: '1px solid var(--ln-hairline-strong)', borderRadius: 8, background: 'var(--ln-panel)' }}>
+            <div className="ln-section-label">Survey charts</div>
+            <EnceladusSurveyChart
+              chart={player.moonSurveyCharts.enceladus}
+              classification={player.moonSurveyCharts.enceladus.frameId ? player.saturnClassifications?.[player.moonSurveyCharts.enceladus.frameId] : undefined}
+            />
+            {player.moonSurveyCharts.enceladus.tier === 'gold' && !player.moonSurveyCharts.enceladus.territoryPlotClaimedAt && onClaimSurveyPlot && (
+              <button type="button" data-testid="control-station-claim-plot" onClick={onClaimSurveyPlot} style={{ minHeight: 44, font: '800 14px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Claim Enceladus plot</button>
+            )}
+          </section>
+        )}
         <SkyBadgeRow badges={player.badges} />
       </div>
     </ScenePanel>

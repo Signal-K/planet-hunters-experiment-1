@@ -36,6 +36,8 @@ export interface SaturnClassification {
 
 export interface MoonSurveyChart {
   moonId: 'enceladus'
+  /** Saturn frame whose nine squares make this chart, so the plot can be redrawn later. */
+  frameId?: string
   completedAt: number
   tier: 'gold' | 'silver'
   researchXpAwarded?: number

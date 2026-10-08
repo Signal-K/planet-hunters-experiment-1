@@ -1,4 +1,5 @@
 import { STARTING_FRANCS } from '@/lib/data/economy'
+import { canonicalSaturnLabel } from '@/lib/saturn-label'
 import { sanitizeBadges } from '@/lib/data/sky-events'
 import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, OWN_PROGRAM_CLIENT_ID, TARGETS } from '@/lib/data'
@@ -162,7 +163,7 @@ function normalizeCompletedMissions(value: unknown): CompletedMissionRecord[] {
       && (record.targetName === undefined || typeof record.targetName === 'string')
       && (record.runId === undefined || typeof record.runId === 'string')
       && (record.kind === undefined || record.kind === 'client' || record.kind === 'program')
-  }).slice(-100)
+  }).slice(-100).map(record => ({ ...record, title: canonicalSaturnLabel(record.title) }))
 }
 
 export function normalizeState(input: PartialSave): GameState {

@@ -5,6 +5,7 @@ import { Radio, Telescope } from 'lucide-react'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
+import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
 import NebulaBackdrop from '@/components/game/NebulaBackdrop'
 import InstrumentViewport, { InstrumentAnswerRow, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
@@ -183,7 +184,8 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
         </div>
       )}
       answers={complete ? (
-        <div className={viewportStyles.saved} data-testid="saturn-frame-complete">
+        <div className={viewportStyles.saved} data-testid="saturn-frame-complete" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+          {chart && <EnceladusSurveyChart chart={chart} classification={classification} />}
           {chart?.tier === 'gold' && !chart.territoryPlotClaimedAt ? <button type="button" className={viewportStyles.chartAction} onClick={onClaimTerritory}>CLAIM ENCELADUS PLOT</button> : chart?.tier === 'gold' ? 'ENCELADUS PLOT CLAIMED' : 'MOON ATLAS RECORDED · RESEARCH XP AWARDED'}
         </div>
       ) : (

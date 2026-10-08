@@ -290,6 +290,7 @@ function ScreenBody({
                 records={game.player.completedMissions ?? []}
                 clients={game.catalog.clients}
                 targets={game.catalog.targets}
+                missions={game.catalog.missions}
                 player={game.player}
                 onBack={() => game.goBack('hub')}
               />
@@ -303,6 +304,7 @@ function ScreenBody({
       return (
         <InstrumentHubScreen
           player={game.player}
+          onClaimSurveyPlot={game.claimSaturnSurveyTerritory}
           onBack={() => game.goBack()}
           onInspect={signal => {
             setInspectSignal(signal)

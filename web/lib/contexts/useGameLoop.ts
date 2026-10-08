@@ -842,7 +842,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const player = {
         ...s.player,
         ...(completed ? grantSkyBadges(s.player, 'saturn-classification', submittedAt) : {}),
-        saturnActiveFrameId: completed ? null : candidateId,
+        // A completed gold frame stays active until its plot is claimed, so a reload
+        // shows the finished frame instead of loading a new one (SSL-492).
+        saturnActiveFrameId: completed && tier !== 'gold' ? null : candidateId,
         saturnClassifications: {
           ...(s.player.saturnClassifications ?? {}),
           [candidateId]: {
@@ -865,6 +867,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
                 ...(s.player.moonSurveyCharts ?? {}),
                 enceladus: {
                   moonId: 'enceladus',
+                  frameId: candidateId,
                   completedAt: submittedAt,
                   tier,
                   researchXpAwarded: RESEARCH_XP_PER_ENCELADUS_CHART,
@@ -877,7 +880,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
                 ...player,
                 moonSurveyCharts: {
                   ...(s.player.moonSurveyCharts ?? {}),
-                  enceladus: { moonId: 'enceladus', completedAt: submittedAt, tier },
+                  enceladus: { moonId: 'enceladus', frameId: candidateId, completedAt: submittedAt, tier },
                 },
               }
             : player,
@@ -928,6 +931,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
             ...(s.player.moonSurveyCharts ?? {}),
             enceladus: { ...chart, territoryPlotClaimedAt: claimedAt },
           },
+          saturnActiveFrameId: null,
         },
       }
     })

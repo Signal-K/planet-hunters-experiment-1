@@ -1127,7 +1127,7 @@ button { cursor: pointer; }
     align-items: center;
     justify-content: center;
     padding: var(--ln-s-6);
-    background: rgba(8, 8, 10, 0.72);
+    background: color-mix(in srgb, var(--ln-void) 72%, transparent);
   }
   .ln-page-surface--tray .ln-page-surface__content {
     width: min(720px, 100%);
