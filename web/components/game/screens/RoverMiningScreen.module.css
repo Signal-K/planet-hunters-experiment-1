@@ -71,7 +71,7 @@
   .landingHandoff { grid-template-columns: minmax(240px, .9fr) minmax(240px, 1.1fr); align-items: start; padding: 16px; }
   .landingHandoff img { grid-column: 2; grid-row: 1; max-height: 54vh; }
   .landingHandoff > div { grid-column: 1; grid-row: 1; padding: 12px; gap: 8px; }
-  .landingHandoff p { font-size: 11px; }
+  .landingHandoff p { font-size: 14px; line-height: 1.4; }
   .controls { top: 8px; left: 8px; }
   .drillReadout { top: 8px; right: 8px; width: min(304px, 40vw); gap: 8px; padding: 8px; }
   .sandboxDock { bottom: 64px; left: 8px; width: min(400px, 55vw); max-height: calc(100% - 64px); }
