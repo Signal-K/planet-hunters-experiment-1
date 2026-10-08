@@ -12,6 +12,10 @@ function sourceFiles(directory) {
   })
 }
 
+// Sub-panels rendered inside a screen that already owns a scene backdrop
+// (DebriefScreen mounts LaserCapacitorPanel over its scene).
+const EMBEDDED_IN_SCENE = new Set(['LaserCapacitorPanel.tsx'])
+
 const violations = []
 for (const path of sourceFiles(screensDirectory)) {
   const source = readFileSync(path, 'utf8')
@@ -19,7 +23,7 @@ for (const path of sourceFiles(screensDirectory)) {
   if (source.includes('AvailableActionsPanel')) {
     violations.push(`${file}: do not add a generic AvailableActionsPanel; gameplay must keep one contextual action surface.`)
   }
-  if (!file.endsWith('.test.tsx') && usesPanelWithoutAScene(source)) {
+  if (!file.endsWith('.test.tsx') && !EMBEDDED_IN_SCENE.has(file) && usesPanelWithoutAScene(source)) {
     violations.push(`${file}: renders Panel cards with no scene backdrop (ScenePanel/HubWorldBackground/TerrainScene/a *Canvas component) — see KES-289. Wrap content in <ScenePanel> instead of a flat --ln-panel/--ln-bg fill.`)
   }
 }

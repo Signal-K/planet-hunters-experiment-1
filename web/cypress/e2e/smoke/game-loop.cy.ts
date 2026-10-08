@@ -506,7 +506,7 @@ describe('Full Game Loop — Landnam', () => {
       }))
       cy.get('[data-testid="flight-plan"]')
         .should('be.visible')
-        .should('contain', 'Classify the transit candidate')
+        .should('contain', 'Open the Galaxy map')
         .should('contain', 'scan')
     })
   })
@@ -575,7 +575,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="mission-launch-review"]').should('contain', 'Prospector')
       // SSL-405: the Two-Stop Route lesson is retired; the Flight Plan strip
       // stays up with the active try's objective.
-      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Open client contracts')
+      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Accept a mining contract')
     })
 
     it('Transport preflight launch button visible with prebuilt Prospector', () => {
