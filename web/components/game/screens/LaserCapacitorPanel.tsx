@@ -1,7 +1,6 @@
 'use client'
 
 import Panel from '@/components/ui/Panel'
-import ScenePanel from '@/components/game/ScenePanel'
 import { PrimaryBtn } from '@/components/ui/Button'
 import { LASER_CAPACITOR_TIERS, laserCapacitorBonus, nextLaserCapacitorTier } from '@/lib/data/mining-upgrades'
 
@@ -25,17 +24,17 @@ export default function LaserCapacitorPanel({ level, haulUnits, spareUnits, onIn
 
   if (!next) {
     return (
-      <ScenePanel ambient="industrial" data-testid="laser-capacitor-panel"><Panel accent="var(--ln-ok)" surface="solid">
+      <div data-testid="laser-capacitor-panel"><Panel accent="var(--ln-ok)" surface="solid">
         <div className="ln-section-label" style={{ marginBottom: 6 }}>Next build · Laser Capacitor</div>
         <p style={body}>{installed?.name} is installed: +{laserCapacitorBonus(level)} laser charges on every run. Fully upgraded.</p>
-      </Panel></ScenePanel>
+      </Panel></div>
     )
   }
 
   const canAfford = spareUnits >= next.costUnits
   const bonusGain = next.bonusCharges - laserCapacitorBonus(level)
   return (
-    <ScenePanel ambient="industrial" data-testid="laser-capacitor-panel"><Panel accent={canAfford ? 'var(--ln-cyan)' : 'var(--ln-hairline-strong)'} surface="solid">
+    <div data-testid="laser-capacitor-panel"><Panel accent={canAfford ? 'var(--ln-cyan)' : 'var(--ln-hairline-strong)'} surface="solid">
       <div className="ln-section-label" style={{ marginBottom: 6 }}>Next build · {next.name}</div>
       {canAfford ? (
         <p style={body} data-testid="laser-capacitor-copy">
@@ -51,6 +50,6 @@ export default function LaserCapacitorPanel({ level, haulUnits, spareUnits, onIn
           {canAfford ? `Install ${next.name} · ${next.costUnits} ore` : `Need ${next.costUnits - spareUnits} more ore`}
         </PrimaryBtn>
       </div>
-    </Panel></ScenePanel>
+    </Panel></div>
   )
 }

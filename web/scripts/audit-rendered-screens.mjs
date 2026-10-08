@@ -58,13 +58,14 @@ for (const pr of presets) {
   // LANDNAM_PATCH='{"francs":0}' shallow-merges into the player. Waits for the stage to report ready instead of a fixed sleep.
   const stage = process.env.LANDNAM_STAGE !== '0'
   const chrome = process.env.LANDNAM_CHROME ? '&chrome=1' : ''
-  const patch = (process.env.LANDNAM_PATCH ? `&patch=${encodeURIComponent(process.env.LANDNAM_PATCH)}` : '') + chrome
+  const patch = (process.env.LANDNAM_PATCH ? `&patch=${encodeURIComponent(process.env.LANDNAM_PATCH)}` : '') + chrome + (process.env.LANDNAM_CLICK ? `&click=${encodeURIComponent(process.env.LANDNAM_CLICK)}` : '')
   await send('Page.navigate', { url: stage ? `http://localhost:3001/game/stage?preset=${pr}${patch}` : `http://localhost:3001/game?preset=${pr}` })
   if (stage) {
     for (let i = 0; i < 60; i++) { const t = await send('Runtime.evaluate', { expression: `document.querySelector('[data-stage-ready=true] .game-screen-area')?.children.length > 0`, returnByValue: true }); if (t.result?.value) break; await sleep(250) }
     await sleep(+(process.env.LANDNAM_SETTLE ?? 4000))
   } else await sleep(11000)
   const r = await send('Runtime.evaluate', { expression: AUDIT, returnByValue: true })
+  if (process.env.LANDNAM_EVAL) { const r = await send('Runtime.evaluate', { expression: process.env.LANDNAM_EVAL, returnByValue: true, awaitPromise: true }); console.log('EVAL', JSON.stringify(r.result?.value ?? r.exceptionDetails?.text)) }
   const shot = await send('Page.captureScreenshot', { format: 'png' })
   writeFileSync(`/tmp/audit-${tag}-${pr}.png`, Buffer.from(shot.data, 'base64'))
   try { report[pr] = JSON.parse(r.result.value) } catch { report[pr] = { error: JSON.stringify(r) } }
