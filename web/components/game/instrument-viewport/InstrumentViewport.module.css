@@ -16,7 +16,7 @@
 .body {
   position: absolute;
   inset: 0;
-  top: 76px;
+  top: calc(var(--ln-topbar-h, 64px) + 4px);
   display: flex;
   flex-direction: column;
   gap: var(--ln-s-2);

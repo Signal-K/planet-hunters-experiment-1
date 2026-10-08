@@ -247,11 +247,11 @@ export default function RoverMiningScreen({
             startView="iso"
             className={styles.takeonMount}
           />
-          <div className={styles.fieldHotbar} data-testid="rover-field-hotbar">
+          {deployed && <div className={styles.fieldHotbar} data-testid="rover-field-hotbar">
             <button type="button" onClick={onBack}>EXIT FIELD</button>
             <span>PROSPECTOR · {target.name.toUpperCase()}</span>
             <strong>{mineSite ? 'MINE SITE ACTIVE' : `${Math.max(0, 3 - drillings.length)} DRILLS TO GUARANTEED SITE`}</strong>
-          </div>
+          </div>}
           {!deployed && (
             <div className={styles.landingHandoff} data-testid="deploy-surface-ops-handoff">
               {rocketImageSrc && <img src={rocketImageSrc} alt="Prospector rocket landed on the surface" />}

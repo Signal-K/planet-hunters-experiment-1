@@ -117,11 +117,18 @@ function StructureSprite({ kind, active, buildStartedAt }: { kind: string; activ
     if (kind === 'market') {
       return <span aria-hidden="true" style={{ display: 'grid', gridTemplateRows: '18% 1fr', width: '100%', height: '100%', border: '3px solid var(--ln-cyan)', background: 'var(--ln-panel)', boxShadow: active ? '8px 8px 0 var(--ln-cyan)' : '6px 6px 0 var(--ln-hairline)' }}>
         <span style={{ display: 'block', background: 'var(--ln-cyan)', borderBottom: '3px solid var(--ln-text)' }} />
-        <span style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, padding: 8 }}>
-          <i style={{ display: 'block', border: '3px solid var(--ln-text-muted)' }} />
-          <i style={{ display: 'block', border: '3px solid var(--ln-text-muted)' }} />
-          <i style={{ display: 'block', border: '3px solid var(--ln-text-muted)' }} />
-        </span>
+        <svg viewBox="0 0 100 64" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: '100%' }}>
+          {/* Exchange hall: crates on the left, loading-dock shutter in the middle, price board on the right. */}
+          <rect x="0" y="0" width="100" height="64" fill="#eaf2f9" />
+          <rect x="6" y="36" width="22" height="24" fill="#cfe3f2" stroke="#0f2436" strokeWidth="2" />
+          <rect x="10" y="22" width="16" height="14" fill="#e3f0f9" stroke="#0f2436" strokeWidth="2" />
+          <line x1="6" y1="48" x2="28" y2="48" stroke="#0f2436" strokeWidth="1.5" />
+          <rect x="36" y="14" width="30" height="46" fill="#9cc2df" stroke="#0f2436" strokeWidth="2.5" />
+          {[22, 30, 38, 46, 54].map(y => <line key={y} x1="36" y1={y} x2="66" y2={y} stroke="#0f2436" strokeOpacity=".55" strokeWidth="1.5" />)}
+          <rect x="74" y="12" width="22" height="26" fill="#0f2436" stroke="#0f2436" strokeWidth="2" />
+          <polyline points="77,32 82,26 87,29 93,18" fill="none" stroke="#7fe0d0" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+          <line x1="85" y1="38" x2="85" y2="60" stroke="#0f2436" strokeWidth="2" />
+        </svg>
       </span>
     }
     // No base art exists yet for this kind (command/refinery/deep-space-telescope/

@@ -3428,3 +3428,10 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 @media (orientation: landscape) and (max-height: 500px) {
   .sky-event-wrap[data-testid="sky-event-base"] { top: 56px !important; left: 300px !important; }
 }
+
+/* The top bar wraps to 2-4 lines on phones, so its height varies. TopBar publishes it as --ln-topbar-h and the
+   scroll area starts just below it (it used to sit at a fixed 68-96px and the first card slid under the bar). */
+.game-screen > .screen-scroll,
+.game-screen > .debrief-game__content.screen-scroll {
+  padding-top: calc(var(--ln-topbar-h, 64px) + 12px);
+}

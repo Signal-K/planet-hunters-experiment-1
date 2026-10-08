@@ -38,7 +38,7 @@ const STORAGE_KEY = GAME_STATE_STORAGE_KEY
 
 const GameContext = createContext<(GameState & GameActions) | null>(null)
 
-export function GameProvider({ children }: { children: React.ReactNode }) {
+export function GameProvider({ children, urlSync = true }: { children: React.ReactNode; /** false = never push the router (isolated dev stage keeps its own URL). */ urlSync?: boolean }) {
   const [state, setState] = useState<GameState>(DEFAULT_STATE)
   const stateRef = useRef(state)
   stateRef.current = state
@@ -88,7 +88,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (preset) {
         isPreview.current = true
         setState({ ...DEFAULT_STATE, ...preset })
-        if (!routePreset) window.history.replaceState({}, '', window.location.pathname)
+        if (!routePreset && urlSync) window.history.replaceState({}, '', window.location.pathname)
         setHydrated(true)
         return
       }
@@ -227,7 +227,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // the hydration effect's setState and can leave the URL on /game/intro
     // (dropping preview/isPreview routing) before the real screen lands a tick
     // later. Wait for hydration so only the real screen ever reaches the URL.
-    if (!hydrated) return
+    if (!hydrated || !urlSync) return
     if (ui.skipNextUrlSync.current) {
       ui.skipNextUrlSync.current = false
       return

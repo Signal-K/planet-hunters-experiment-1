@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { IconBtn } from './Button'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatFrancs } from '@/lib/format'
@@ -57,8 +57,21 @@ function ClockIcon() {
 
 export default function TopBar({ eyebrow, title, onBack, right, dense, solid, glass, scene, levelBadge, francs }: TopBarProps) {
   const devBadge = isDevLauncherEnabled()
+  const ref = useRef<HTMLDivElement>(null)
+  // Publish the bar's real height (it wraps to 2-4 lines on phones) so the
+  // screen's scroll area can start below it instead of under it.
+  useEffect(() => {
+    const bar = ref.current
+    const screen = bar?.parentElement
+    if (!bar || !screen) return
+    const publish = () => screen.style.setProperty('--ln-topbar-h', `${Math.ceil(bar.getBoundingClientRect().height)}px`)
+    publish()
+    const ro = new ResizeObserver(publish)
+    ro.observe(bar)
+    return () => { ro.disconnect(); screen.style.removeProperty('--ln-topbar-h') }
+  }, [])
   return (
-    <div className="top-bar" data-ui-zone={UI_ZONES.topChrome} style={{
+    <div ref={ref} className="top-bar" data-ui-zone={UI_ZONES.topChrome} style={{
       position: 'absolute',
       top: 0,
       left: 0,
