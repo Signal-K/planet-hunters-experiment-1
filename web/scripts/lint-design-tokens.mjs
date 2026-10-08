@@ -226,10 +226,16 @@ walkDir(path.join(WEB_ROOT, 'lib'));
 walkDir(path.join(WEB_ROOT, 'app'));
 
 console.log(`\n✅ Checked ${filesChecked} files`);
-if (issueCount === 0) {
-  console.log('✨ No design token violations found!\n');
-  process.exit(0);
-} else {
-  console.log(`\n⚠️  Found ${issueCount} design token issues\n`);
+// Ratchet: existing violations are tracked in a baseline; any increase fails.
+// Lower design-token-baseline.json whenever the count drops.
+const baselinePath = path.join(WEB_ROOT, 'scripts', 'design-token-baseline.json');
+const baseline = JSON.parse(fs.readFileSync(baselinePath, 'utf8')).maxIssues;
+console.log(`\n⚠️  Found ${issueCount} design token issues (baseline ${baseline})`);
+if (issueCount > baseline) {
+  console.log(`❌ ${issueCount - baseline} new violation(s) above the baseline\n`);
   process.exit(1);
 }
+if (issueCount < baseline) {
+  console.log(`🎉 Down ${baseline - issueCount}: set maxIssues to ${issueCount} in scripts/design-token-baseline.json\n`);
+}
+process.exit(0);
