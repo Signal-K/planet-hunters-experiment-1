@@ -20,6 +20,7 @@ export const pbLandnam = new PocketBase(
 
 let exchangeInFlight: Promise<{ token: string; record: RecordModel }> | null = null
 let exchangeInFlightFor: string | null = null
+let refreshInFlight: Promise<boolean> | null = null
 
 /**
  * Exchanges a verified shared-backend session token for a real, native
@@ -79,4 +80,27 @@ export async function exchangeLandnamAuth(sharedToken: string): Promise<{
     exchangeInFlightFor = null
   })
   return exchangeInFlight
+}
+
+/**
+ * Recover a Landnam session once after a protected write receives 401/403.
+ * The Landnam token is minted from the shared session, so renewing the shared
+ * token and exchanging it is the only refresh that keeps both identities in
+ * sync. The promise is shared so a burst of queued writes performs one
+ * refresh, then each write gets its single retry with the new token.
+ */
+export function refreshLandnamAuthOnce(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight
+  refreshInFlight = (async () => {
+    if (!pbShared.authStore.token) return false
+    await pbShared.collection('users').authRefresh()
+    const sharedToken = pbShared.authStore.token
+    if (!sharedToken) return false
+    const { token, record } = await exchangeLandnamAuth(sharedToken)
+    pbLandnam.authStore.save(token, record)
+    return true
+  })().catch(() => false).finally(() => {
+    refreshInFlight = null
+  })
+  return refreshInFlight
 }

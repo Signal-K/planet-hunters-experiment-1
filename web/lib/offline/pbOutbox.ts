@@ -4,7 +4,7 @@
 
 import { ClientResponseError } from 'pocketbase'
 import { landnamPbUrl } from '@/lib/pb-config'
-import { pbLandnam } from '@/lib/pb-landnam'
+import { pbLandnam, refreshLandnamAuthOnce } from '@/lib/pb-landnam'
 import { createOutbox, browserStore, memoryStore, newRecordId, type Outbox, type OutboxFailure, type OutboxOp } from './outbox'
 
 interface PbErrorBody {
@@ -32,7 +32,7 @@ function landnamBaseUrl(): string {
   return landnamPbUrl().replace(/\/$/, '')
 }
 
-async function executeHttp(op: Extract<OutboxOp, { type: 'http' }>): Promise<OutboxFailure | null> {
+async function executeHttp(op: Extract<OutboxOp, { type: 'http' }>, retried = false): Promise<OutboxFailure | null> {
   const token = pbLandnam.authStore.token
   // No session yet (exchange pending): wait rather than burn an attempt on a guaranteed 401.
   if (!token) return { kind: 'offline' }
@@ -46,6 +46,9 @@ async function executeHttp(op: Extract<OutboxOp, { type: 'http' }>): Promise<Out
   } catch {
     return { kind: 'offline' }
   }
+  if ((res.status === 401 || res.status === 403) && !retried && await refreshLandnamAuthOnce()) {
+    return executeHttp(op, true)
+  }
   return classifyHttpStatus(res.status)
 }
 
@@ -56,27 +59,41 @@ export function classifyHttpStatus(status: number): OutboxFailure | null {
   return { kind: 'rejected', message: `${status}` }
 }
 
+async function executePocketBaseOp(op: OutboxOp): Promise<OutboxFailure | null> {
+  if (op.type === 'http') return executeHttp(op)
+  if (op.type === 'upsert') {
+    const collection = pbLandnam.collection(op.collection)
+    const existing = await collection.getFirstListItem(op.filter).catch((error: unknown) => {
+      if (error instanceof ClientResponseError && error.status === 404) return null
+      throw error
+    })
+    if (existing) await collection.update(existing.id, op.data)
+    else await collection.create({ id: op.id, ...op.data })
+    return null
+  }
+  if (op.type === 'create') await pbLandnam.collection(op.collection).create({ id: op.id, ...op.data })
+  else await pbLandnam.collection(op.collection).update(op.id, op.data)
+  return null
+}
+
 async function executeOnPocketBase(op: OutboxOp): Promise<OutboxFailure | null> {
   // No Landnam session yet (shared-to-Landnam exchange pending). PocketBase
   // answers an unauthenticated create with 400 "create rule failure", which
   // would be classed as invalid and dropped, losing the write. Wait instead.
   if (!pbLandnam.authStore.token) return { kind: 'offline' }
   try {
-    if (op.type === 'http') return await executeHttp(op)
-    if (op.type === 'upsert') {
-      const collection = pbLandnam.collection(op.collection)
-      const existing = await collection.getFirstListItem(op.filter).catch((error: unknown) => {
-        if (error instanceof ClientResponseError && error.status === 404) return null
-        throw error
-      })
-      if (existing) await collection.update(existing.id, op.data)
-      else await collection.create({ id: op.id, ...op.data })
-      return null
-    }
-    if (op.type === 'create') await pbLandnam.collection(op.collection).create({ id: op.id, ...op.data })
-    else await pbLandnam.collection(op.collection).update(op.id, op.data)
-    return null
+    return await executePocketBaseOp(op)
   } catch (error) {
+    // A native Landnam token may expire while the shared identity remains
+    // valid. Refresh the pair once, then retry the exact idempotent outbox
+    // operation before classifying it as an offline wait.
+    if (error instanceof ClientResponseError && (error.status === 401 || error.status === 403) && await refreshLandnamAuthOnce()) {
+      try {
+        return await executePocketBaseOp(op)
+      } catch (retryError) {
+        return classifyPbError(op, retryError)
+      }
+    }
     return classifyPbError(op, error)
   }
 }
