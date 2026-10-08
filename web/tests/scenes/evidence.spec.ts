@@ -7,6 +7,8 @@ import { VIEWPORTS, stage } from './helpers'
 // Known visual debt is ratcheted, like the design-token lint: a violation listed in evidence-baseline.json is reported
 // (annotation) but does not fail; any violation NOT in the baseline fails. Regenerate after fixing debt with
 // EVIDENCE_WRITE_BASELINE=1 npx playwright test evidence --workers=1 (never to hide a new regression).
+// Animated labels (OBSERVING / ACQUIRING) and sub-pixel ratios vary per run, so entries compare on the element, not its text.
+const norm = (v: string) => v.replace(/\(\d+% hidden\) /, '').replace(/^(.*\b(?:clipped by \w+|\d\.\d\d:1 < [\d.]+:1) ?)(\w+):.*$/, '$1$2').replace(/\d+\.\d\d:1/, 'N:1')
 const BASELINE_FILE = path.join(__dirname, 'evidence-baseline.json')
 const WRITE = process.env.EVIDENCE_WRITE_BASELINE === '1'
 const baseline: Record<string, string[]> = !WRITE && fs.existsSync(BASELINE_FILE) ? JSON.parse(fs.readFileSync(BASELINE_FILE, 'utf8')) : {}
@@ -35,9 +37,9 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         const flat = Object.entries(problems).flatMap(([k, v]) => (Array.isArray(v) ? v.map(x => `${k}: ${x}`) : []))
         const key = `${vp}/${preset}`
         if (WRITE) { written[key] = flat; fs.writeFileSync(BASELINE_FILE, JSON.stringify(Object.fromEntries(Object.entries(written).filter(([, v]) => v.length).sort()), null, 2) + '\n'); return }
-        const known = new Set(baseline[key] ?? [])
-        for (const v of flat) info.annotations.push({ type: known.has(v) ? 'known-debt' : 'violation', description: v })
-        const fresh = flat.filter(v => !known.has(v))
+        const known = new Set((baseline[key] ?? []).map(norm))
+        for (const v of flat) info.annotations.push({ type: known.has(norm(v)) ? 'known-debt' : 'violation', description: v })
+        const fresh = flat.filter(v => !known.has(norm(v)))
         expect(fresh, 'new evidence violations (not in evidence-baseline.json)').toEqual([])
       })
     }
