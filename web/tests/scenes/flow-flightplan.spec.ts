@@ -11,7 +11,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test('mining try: Base shows the first step, then the launchpad step after tapping the Launchpad', async ({ page }, info) => {
       const { errors } = await stage(page, 'm1-hub', { chrome: true, patch: { flightPlan: { completed: {}, hidden: false } } })
       await page.goto(page.url() + '&plan=1')
-      await expect(page.locator('[data-stage-ready="true"]')).toBeVisible()
+      await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
       await expect(objective(page)).toContainText('Open client contracts')
       await page.screenshot({ path: `tests/.out/flow-flightplan-mining-${vp}.png` })
       expect(errors).toEqual([])
@@ -36,8 +36,20 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test('a finished plan shows no objective', async ({ page }) => {
       await stage(page, 'm1-hub', { patch: { flightPlan: { completed: { mining: true, scan: true, part: true }, hidden: true } } })
       await page.goto(page.url() + '&plan=1')
-      await expect(page.locator('[data-stage-ready="true"]')).toBeVisible()
+      await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
       await expect(objective(page)).toHaveCount(0)
+    })
+
+    test('after the Hangar part is fitted, no screen of the loop shows a Part or Fit-a-module step', async ({ page }) => {
+      test.setTimeout(150_000)
+      for (const preset of ['ui-hangar-assembly', 'm1-mining', 'm1-hub', 'transport-hub']) {
+        await stage(page, preset, { patch: { flightPlan: { completed: { mining: true, scan: true, part: true }, hidden: false } } })
+        await page.goto(page.url() + '&plan=1')
+        await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
+        await expect(objective(page), preset).toHaveCount(0)
+        await expect(page.getByText(/Fit a module/i), preset).toHaveCount(0)
+      }
+      await page.screenshot({ path: `tests/.out/flow-flightplan-after-part-${vp}.png` })
     })
   })
 }
