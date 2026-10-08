@@ -12,7 +12,7 @@ struct HubScreen: View {
             let w = geo.size.width, h = geo.size.height
             let portrait = h > w * 1.3
             let ground = portrait ? 0.36 : 0.28
-            let xs: [CGFloat] = portrait ? [0.17, 0.46, 0.79] : [0.30, 0.64, 0.88]
+            let xs: [CGFloat] = portrait ? [0.17, 0.46] : [0.30, 0.64]
             let k = min(max(w / 402, 0.8), h / 874 * 1.25 + 0.6)
             let groundY = h * (1 - ground)
             ZStack(alignment: .topLeading) {
@@ -22,8 +22,6 @@ struct HubScreen: View {
                          x: w * xs[0], groundY: groundY + 2 * k) { store.go(.launchpad) }
                 building("Hangar", sprite: "base/hangar_flat.png", aspect: 182.0 / 155, width: 176 * k * 0.62,
                          x: w * xs[1], groundY: groundY + 2 * k) { store.go(.hangar) }
-                building("Exchange", sprite: "base/exchange_flat.png", aspect: 1153.0 / 461, width: 210 * k * 0.62,
-                         x: w * xs[2], groundY: groundY + 2 * k) { store.go(.market) }
                 ForEach(["surface-silo", "refinery", "astronaut-academy"], id: \.self) { kind in
                     if let plot = store.player.placementPlots[kind], store.player.placed.contains(kind) {
                         placedStructure(kind, plot: plot, width: w, groundY: groundY, k: k)

@@ -259,7 +259,7 @@ function MineralVault({ minerals, capacity, onOpenMarket }: { minerals: StoredMi
           <div className={styles.metricLabel}>Units in secure storage</div>
           <p className={styles.summaryCopy}>
             Ore you keep sits in the silo until you sell it at the Commodity
-            Exchange or spend it on your own builds. Selling later, when prices
+            Market or spend it on your own builds. Selling later, when prices
             are up, beats the fixed payout for auto-selling on return.
           </p>
         </div>

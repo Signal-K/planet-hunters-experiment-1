@@ -60,9 +60,6 @@ def main():
     for rel, box in cards.items():
         save(cutout(hub, box, enclosed=True), rel)
 
-    ex = Image.open(V5 / "buildings/exchange.jpg").convert("RGB")
-    save(cutout(ex, (62, 60, 1215, 552)), "base/exchange_flat.png")
-
     bd = Image.open(V5 / "backdrops/space-backdrops.jpg").convert("RGB")
     quads = {
         "backgrounds/starmap.png": ((10, 10, 632, 350), (1024, 512)),

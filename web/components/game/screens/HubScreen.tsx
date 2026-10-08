@@ -298,9 +298,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       buildStartedAt: startedAt,
     }]
   })
-  // The exchange is a permanent Earth Base facility, not a menu destination.
-  // It deliberately has its own scene object even before the player has ore.
-  hubBuildings.push({ kind: 'market', plotX: 338, w: 84, status: 'ok' })
   const launchpadPlot = hubBuildings.find(building => building.kind === 'launchpad')
   // The launchpad speaks only while the Base has no live run. Progression is
   // now exposed through contextual buildings and the persistent chrome rather
@@ -504,18 +501,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
                 return <Building key={kind} {...building} hitH={HIT_H[kind] ?? 60} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
               })}
-              <Building
-                kind="market"
-                label="Exchange"
-                sub="SELL CARGO"
-                status="ok"
-                w={84}
-                hitH={72}
-                active={activeBuilding === 'market'}
-                onActiveChange={active => setActiveBuilding(active ? 'market' : null)}
-                onClick={() => onFocusBuilding('market')}
-                style={{ left: `clamp(62px, ${sceneXPercent(338, EARTH_BASE_STRUCTURE_SIZES.market.width / 6.4)}%, calc(100% - 62px))`, bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`, transform: 'translateX(-50%)' }}
-              />
             </div>
           </div>
 
