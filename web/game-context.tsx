@@ -26,7 +26,7 @@ import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
 import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
-import { canonicalGamePath, trayScreenFromPath } from '@/lib/game-route'
+import { canonicalGamePath, entryScreenForPath } from '@/lib/game-route'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
@@ -102,15 +102,11 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     // hydrates. Keep that entry decision authoritative; otherwise hydration
     // restores the previous Contracts screen and the URL-sync effect pushes
     // the player straight back to `/game/missions` (KES-226).
-    const trayScreen = trayScreenFromPath(window.location.pathname)
     // SSL-476: /game/launchpad is a stable destination too. Without this a cold
     // load restored the saved screen (e.g. hub-subsurface) and the URL sync
     // rewrote the path to it, so the Launchpad opened the underground.
-    const entryState = window.location.pathname === '/game/hub'
-      ? { ...loadedState, screen: 'hub' as Screen }
-      : window.location.pathname === '/game/launchpad' && loadedState.player.placed.includes('launchpad')
-        ? { ...loadedState, screen: 'launchpad' as Screen }
-        : trayScreen ? { ...loadedState, screen: trayScreen } : loadedState
+    const entryScreen = entryScreenForPath(window.location.pathname, loadedState.player.placed)
+    const entryState = entryScreen ? { ...loadedState, screen: entryScreen } : loadedState
     setState(entryState)
     setHydrated(true)
     const record = pbShared.authStore.record

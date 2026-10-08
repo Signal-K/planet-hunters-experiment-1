@@ -52,3 +52,13 @@ CI runs the same `npm run test:scenes` in the `scenes` job (see `docs/ci.md`) an
 ## Known flakiness
 
 On a heavily loaded Mac, Chrome sometimes dies mid-test ("Target page, context or browser has been closed"). Roughly 13 of 84 tests needed a retry in two consecutive runs, with a different set each time and a system load average above 180. Tests that failed this way passed when rerun alone. Run on Linux/Docker or a quiet machine for a trustworthy signal.
+
+## Evidence
+
+Screenshot evidence is mandatory and checked without any paid vision API. Everything is computed from the DOM and pixels.
+
+- `tests/scenes/checks.ts` exports `checkContrast` (WCAG AA 4.5:1, 3:1 for large text, against the resolved background colour; text over an image, gradient, canvas, video or svg is skipped and the reason recorded), `checkClipping` (visible text cut off by an `overflow:hidden` box; intentional ellipsis and line-clamp are ignored), `checkGameplayVisible` (scene root or canvas has nonzero size and the rendered frame is not blank) and `collectStructural` (overlap, tap size, small text, horizontal scroll as data).
+- `tests/scenes/evidence.spec.ts` runs all of them on 8 key presets at the 3 viewports and saves `evidence-<preset>-<viewport>.png`.
+- `tests/scenes/checks.selftest.spec.ts` proves the checkers work: a built page with a known overlap, tiny text, low contrast and clipped text must be reported, and a clean page must report nothing.
+- `scripts/build-evidence-index.mjs` reads `tests/.out/results.json` (JSON reporter, enabled when `CI` is set) and the screenshots, and writes `tests/.out/index.html`: one row per screen x viewport with screenshot, pass/fail and violations. CI runs it and uploads it inside the `scenes-out-*` artifact. Locally: `CI=true SCENES_CHANNEL=chrome npx playwright test scenes; node scripts/build-evidence-index.mjs`.
+- Native: `scripts/native-evidence.sh [scene ...]` launches catalog scenes (`SceneCatalog.swift`) in the booted iOS Simulator and saves screenshots with `simctl io booted screenshot`. It captures images only; there are no automated native pixel checks beyond the existing `verify:native-*` scripts.

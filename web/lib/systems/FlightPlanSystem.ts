@@ -46,7 +46,9 @@ export function completeFlightPlanEvent(progress: FlightPlanProgress | undefined
   // SSL-478: a replay of an already-finished try must not outlive the player
   // moving on. Any other real try event (mining -> cargo -> debrief -> hub)
   // drops the replay so the objective follows the live plan again.
-  if (next.replayTry && next.replayTry !== tryId && next.completed[next.replayTry]) {
+  // A replay of a try that was never finished (Menu -> Flight Plan) used to
+  // swallow every other event too, so a finished mining run was never recorded.
+  if (next.replayTry && next.replayTry !== tryId) {
     next = { ...next, replayTry: undefined, hintShownFor: undefined }
   }
   if (currentTrainingTry(next) !== tryId) return next

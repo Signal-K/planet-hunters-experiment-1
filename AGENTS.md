@@ -68,6 +68,11 @@ npm run test:unit          # verify:scene-surfaces + vitest
 - Decisions: research in Craft, tracking in Linear, durable decisions and rules in ZenNotes (search ZenNotes first). Landnam has no local decision store.
 - Verify claims about existing state yourself (stashes, "pre-existing changes", ticket status that says In Review but has no code). Check `.github/workflows/*.yml` before removing dependencies.
 
+## Commit rule (hard)
+
+- A commit happens only when a ticket is done, and every commit stages ALL changes in the repo (`git add -A`; nothing left uncommitted). Right after, push, post the handoff with the Linear MCP (`save_comment`) and set the status (`save_issue`).
+- Landnam is a web app game and a native SwiftUI game. Nothing else; no Godot.
+
 ## Commit policy (Navigation-wide)
 
 - Commit only after a coherent, verified ticket outcome. No checkpoint, progress, one-file or speculative commits. A coding request authorizes the final commit unless the user says not to.

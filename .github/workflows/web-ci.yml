@@ -96,6 +96,9 @@ jobs:
         env:
           CI: true
           NEXT_TELEMETRY_DISABLED: 1
+      - name: Build evidence index
+        if: always()
+        run: node scripts/build-evidence-index.mjs
       # A missing report or screenshot directory is a failure, not a pass.
       - name: Upload Playwright report
         if: always()

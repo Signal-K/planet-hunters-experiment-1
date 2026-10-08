@@ -36,3 +36,10 @@ export function trayScreenFromPath(pathname: string): Screen | null {
   const screen = match?.[1] as Screen | undefined
   return screen && TRAY_ROUTE_SCREENS.has(screen) ? screen : null
 }
+
+/** SSL-476/KES-226: the screen a cold load of `pathname` must open, regardless of the saved screen. null = keep the saved one. */
+export function entryScreenForPath(pathname: string, placed: readonly string[]): Screen | null {
+  if (pathname === '/game/hub') return 'hub'
+  if (pathname === '/game/launchpad' && placed.includes('launchpad')) return 'launchpad'
+  return trayScreenFromPath(pathname)
+}

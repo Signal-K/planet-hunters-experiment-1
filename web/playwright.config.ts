@@ -14,7 +14,7 @@ export default defineConfig({
   // reported as "flaky" so they stay visible.
   retries: 2,
   timeout: 45_000,
-  reporter: process.env.CI ? [['list'], ['html', { open: 'never', outputFolder: 'tests/.report' }]] : 'list',
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never', outputFolder: 'tests/.report' }], ['json', { outputFile: 'tests/.out/results.json' }]] : 'list',
   use: {
     baseURL: process.env.SCENES_BASE_URL ?? `http://localhost:${port}`,
     channel: process.env.SCENES_CHANNEL || undefined,

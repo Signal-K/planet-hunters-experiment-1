@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canonicalGamePath, canonicalGameRoute } from './game-route'
+import { canonicalGamePath, canonicalGameRoute, entryScreenForPath } from './game-route'
 
 describe('canonical mission setup route', () => {
   it.each(['missions', 'targets', 'rocket-buy'] as const)(
@@ -34,5 +34,19 @@ describe('trayScreenFromPath', () => {
     expect(trayScreenFromPath('/game/mission-history')).toBe('mission-history')
     expect(trayScreenFromPath('/game/missions')).toBeNull()
     expect(trayScreenFromPath('/game/hub')).toBeNull()
+  })
+})
+
+describe('entryScreenForPath (SSL-476)', () => {
+  it('a cold load of /game/launchpad opens the Launchpad, never the saved underground', () => {
+    expect(entryScreenForPath('/game/launchpad', ['launchpad'])).toBe('launchpad')
+  })
+  it('does not open a Launchpad the player has not built', () => {
+    expect(entryScreenForPath('/game/launchpad', [])).toBeNull()
+  })
+  it('keeps Base and the tray routes pinned', () => {
+    expect(entryScreenForPath('/game/hub', [])).toBe('hub')
+    expect(entryScreenForPath('/game/hub-subsurface', [])).toBe('hub-subsurface')
+    expect(entryScreenForPath('/game/missions', ['launchpad'])).toBeNull()
   })
 })
