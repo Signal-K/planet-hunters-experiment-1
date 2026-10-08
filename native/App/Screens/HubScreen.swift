@@ -17,33 +17,26 @@ struct HubScreen: View {
         GeometryReader { geo in
             let w = geo.size.width, h = geo.size.height
             let insets = safeAreaOverride ?? geo.safeAreaInsets
-            let portrait = h > w * 1.3
-            let ground = portrait ? 0.36 : 0.28
-            // Landscape keeps the middle clear for the bottom-centre dock.
-            let xs: [CGFloat] = portrait ? [0.17, 0.46, 0.79] : [0.20, 0.72, 0.90]
-            let k = min(max(w / 402, 0.8), h / 874 * 1.25 + 0.6)
-            let groundY = h * (1 - ground)
+            let layout = BaseLayout(size: geo.size, insets: insets, zones: zones, hasPlaced: store.player.placed.contains { $0 != "launchpad" && store.player.placementPlots[$0] != nil })
+            let portrait = layout.portrait
+            let k = layout.k, groundY = layout.groundY
             ZStack(alignment: .topLeading) {
-                TerrainScene(composition: .earthBaseWide, ground: ground)
-                PlanetBackdrop().frame(width: w, height: groundY).allowsHitTesting(false)
-                building("Launchpad", sprite: "base/launchpad_flat.png", aspect: 192.0 / 318, width: 84 * k * 0.62,
-                         x: w * xs[0], groundY: groundY + 2 * k) { store.go(.launchpad) }
-                building("Hangar", sprite: "base/hangar_flat.png", aspect: 182.0 / 155, width: 176 * k * 0.62,
-                         x: w * xs[1], groundY: groundY + 2 * k) { store.go(.hangar) }
-                // The Commodity Exchange is the only way into the Market: a real, tappable base structure.
-                building("Exchange", sprite: "base/exchange_flat.png", aspect: 1153.0 / 461, width: 210 * k * 0.62,
-                         x: w * xs[2], groundY: groundY + 2 * k) { store.go(.market) }
+                TerrainScene(composition: .earthBaseWide, ground: layout.ground, exclusions: layout.exclusions)
+                ForEach(Array(BaseLayout.slots.enumerated()), id: \.offset) { i, slot in
+                    building(slot.name, sprite: slot.sprite, aspect: slot.aspect, width: layout.width(slot),
+                             x: layout.centreX(i), groundY: layout.structureY) { store.go(slot.tap) }
+                }
                 ForEach(["surface-silo", "refinery", "astronaut-academy"], id: \.self) { kind in
                     if let plot = store.player.placementPlots[kind], store.player.placed.contains(kind) {
-                        placedStructure(kind, plot: plot, width: w, groundY: groundY, k: k, portrait: portrait)
+                        placedStructure(kind, plot: plot, width: w, groundY: layout.placedGroundY(), k: k, portrait: portrait)
                     }
                 }
                 BaseTraffic(width: w, groundY: groundY, k: k).allowsHitTesting(false)
-                subsurfaceHotspot(x: w * (portrait ? 0.28 : 0.33), groundY: groundY - 22 * k)
+                subsurfaceHotspot(x: w * layout.spec.subsurfaceX, groundY: groundY)
                 skyCraft(width: w, height: h)
                 topLeftHud(insets: insets, portrait: portrait)
                 topRightHud(insets: insets)
-                dock.padding(.bottom, insets.bottom + zones.dock.bottomInset)
+                dock(tile: layout.tile).padding(.bottom, insets.bottom + zones.dock.bottomInset)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
         }
@@ -56,14 +49,16 @@ struct HubScreen: View {
     private func topLeftHud(insets: EdgeInsets, portrait: Bool) -> some View {
         let z = zones.topLeft
         return VStack(alignment: .leading, spacing: z.gap) {
-            HStack(spacing: 8) {
-                Image(systemName: "f.circle.fill").font(.system(size: 24, weight: .bold)).foregroundStyle(Theme.hudInk)
-                Text(Economy.format(francs: store.player.francs)).font(AppFont.mono(16)).foregroundStyle(Theme.hudInk)
+            HStack(spacing: 6) {
+                Image(systemName: "f.circle.fill").font(.system(size: z.francsChip.glyph, weight: .bold)).foregroundStyle(Theme.hudInk)
+                Text(Economy.format(francs: store.player.francs)).font(AppFont.mono(14)).foregroundStyle(Theme.hudInk)
             }
-            .padding(.horizontal, 12).frame(minHeight: z.francsChip.height)
+            .padding(.horizontal, z.francsChip.padding).frame(minHeight: z.francsChip.height)
             .hudPanel()
             .accessibilityElement(children: .combine)
-            ContractCard(width: z.contractCard.width, collapsible: portrait && z.contractCard.collapseInPortrait)
+            if store.player.activeMission != nil {
+                ContractCard(width: z.contractCard.width, collapsible: portrait && z.contractCard.collapseInPortrait)
+            }
             SkyEventChip()
         }
         .padding(.leading, insets.leading + z.inset).padding(.top, insets.top + z.inset)
@@ -78,25 +73,30 @@ struct HubScreen: View {
             Button { showSettings = true } label: { hudGlyph("gearshape.fill", z.pill.buttonSize) }
                 .buttonStyle(.plain).accessibilityLabel("Settings")
         }
-        .padding(2).hudPanel()
+        .hudPanel()
         .padding(.trailing, insets.trailing + z.inset).padding(.top, insets.top + z.inset)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
     }
 
     private func hudGlyph(_ symbol: String, _ size: CGFloat) -> some View {
-        Image(systemName: symbol).font(.system(size: 20, weight: .black)).foregroundStyle(Theme.hudInk)
+        Image(systemName: symbol).font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
             .frame(width: size, height: size).contentShape(Rectangle())
     }
 
-    /// Small ground hotspot that opens the subsurface level (no dock tile for it).
+    /// Small marker standing on the ground that opens the subsurface level (no dock tile for it).
+    /// The visible marker is 28pt; the tap area around it is 44pt.
     /// TODO: native has no separate subsurface scene yet; `.hubSubsurface` renders this same base screen.
     private func subsurfaceHotspot(x: CGFloat, groundY: CGFloat) -> some View {
         Button { store.go(.hubSubsurface) } label: {
-            Image(systemName: "arrow.down.to.line").font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
-                .frame(width: 44, height: 44).hudPanel(radius: 10)
+            VStack(spacing: 0) {
+                Image(systemName: "arrow.down.to.line").font(.system(size: 14, weight: .black)).foregroundStyle(Theme.hudInk)
+                    .frame(width: 28, height: 28).hudPanel(radius: 8)
+                Ellipse().fill(Theme.hudInk.opacity(0.35)).frame(width: 34, height: 6)
+            }
+            .frame(width: 44, height: 44).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .position(x: x, y: groundY)
+        .position(x: x, y: groundY - 12)
         .accessibilityLabel("Open the subsurface")
     }
 
@@ -127,7 +127,7 @@ struct HubScreen: View {
 
     /// Player-placed structures stand on the four apron plots, nearer the camera than the main buildings.
     @ViewBuilder private func placedStructure(_ kind: String, plot: Int, width w: CGFloat, groundY: CGFloat, k: CGFloat, portrait: Bool) -> some View {
-        let x = w * (portrait ? [0.15, 0.38, 0.62, 0.85] : [0.08, 0.30, 0.70, 0.92] as [CGFloat])[min(max(plot, 0), 3)], y = groundY + 92 * k
+        let x = w * (portrait ? [0.15, 0.38, 0.62, 0.85] : [0.08, 0.30, 0.70, 0.92] as [CGFloat])[min(max(plot, 0), 3)], y = groundY
         switch kind {
         case "refinery":
             structure("Refinery", art: StructureShape(kind: .refinery), width: 70 * k, x: x, groundY: y) { store.go(.refinery) }
@@ -177,14 +177,13 @@ struct HubScreen: View {
     }
 
     /// One floating dock, bottom-centre: « » quick access, Build, Hub.
-    private var dock: some View {
-        let tile = zones.dock.tileSize
+    private func dock(tile: CGFloat) -> some View {
         let locations = quickLocations
-        return HStack(alignment: .top, spacing: 12) {
+        return HStack(alignment: .top, spacing: zones.dock.gap) {
             Button {
                 if locations.count == 1, let only = locations.first { store.go(only.screen) } else { showLocations = true }
             } label: {
-                dockTile(tile, label: nil) { Text("«»").font(AppFont.display(28)).foregroundStyle(Theme.hudInk) }
+                dockTile(tile, label: nil) { Text("«»").font(AppFont.display(tile * 0.5)).foregroundStyle(Theme.hudInk) }
             }
             .buttonStyle(.plain)
             .disabled(locations.isEmpty).opacity(locations.isEmpty ? 0.4 : 1)
@@ -195,17 +194,17 @@ struct HubScreen: View {
                 }
             }
             Button { store.go(.build) } label: {
-                dockTile(tile, label: "Build") { Image(systemName: "hammer.fill").font(.system(size: 28, weight: .black)).foregroundStyle(Theme.hudInk) }
+                dockTile(tile, label: "Build") { Image(systemName: "hammer.fill").font(.system(size: tile * 0.5, weight: .black)).foregroundStyle(Theme.hudInk) }
             }.buttonStyle(.plain).accessibilityLabel("Build")
             Button { store.go(.instrumentHub) } label: {
-                dockTile(tile, label: "Hub") { Image(systemName: "globe").font(.system(size: 28, weight: .bold)).foregroundStyle(Theme.hudInk) }
+                dockTile(tile, label: "Hub") { Image(systemName: "globe").font(.system(size: tile * 0.5, weight: .bold)).foregroundStyle(Theme.hudInk) }
             }.buttonStyle(.plain).accessibilityLabel("Open the instrument hub")
         }
-        .padding(8).hudPanel(radius: 14)
+        .padding(zones.dock.padding).hudPanel(radius: 14)
     }
 
     private func dockTile<Glyph: View>(_ size: CGFloat, label: String?, @ViewBuilder glyph: () -> Glyph) -> some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 2) {
             glyph().frame(width: size, height: size).hudPanel(radius: 12)
             Text((label ?? " ").uppercased()).font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.hudInk).lineLimit(1)
         }
@@ -219,7 +218,7 @@ private struct ContractCard: View {
     let collapsible: Bool
     @State private var expanded = false
 
-    private var title: String { store.player.activeMission?.label ?? "Free Ops: pick a contract" }
+    private var title: String { store.player.activeMission?.label ?? "" }
     private var progress: Double {
         guard store.player.activeMission != nil else { return 0 }
         switch store.player.missionPhase ?? .transit {
@@ -360,32 +359,6 @@ private struct FriendsSheet: View {
         }
         .padding(16).background(Theme.bg)
         .presentationDetents([.medium])
-    }
-}
-
-/// Layer part: a huge outlined planet hanging in the sky behind the base
-/// (reference frame "side-on base"). Ink outline, offset shade, ice/cyan bands only.
-private struct PlanetBackdrop: View {
-    var body: some View {
-        GeometryReader { geo in
-            let d = min(geo.size.width * 0.62, geo.size.height * 0.5)
-            let c = CGPoint(x: geo.size.width * 0.70, y: geo.size.height * 0.34)
-            ZStack {
-                Circle().fill(Theme.blue.opacity(0.35)).frame(width: d, height: d).offset(x: 5, y: 5)
-                Circle().fill(Theme.paper2).frame(width: d, height: d)
-                ZStack {
-                    ForEach(0..<3, id: \.self) { i in
-                        Capsule().fill((i == 1 ? Theme.teal : Theme.blueBright).opacity(0.45))
-                            .frame(width: d, height: d * 0.09)
-                            .offset(y: d * (-0.18 + 0.17 * CGFloat(i)))
-                    }
-                }
-                .frame(width: d, height: d).clipShape(Circle())
-                Circle().stroke(Theme.ink, lineWidth: 3).frame(width: d, height: d)
-            }
-            .frame(width: d, height: d)
-            .position(c)
-        }
     }
 }
 

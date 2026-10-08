@@ -101,6 +101,8 @@ extension SceneComposition {
 struct TerrainScene: View {
     var composition: SceneComposition = .earthBaseWide
     var ground: Double = 0.28
+    /// Footprints (scene coordinates) that outcrops and foreground rocks must stay out of.
+    var exclusions: [CGRect] = []
 
     var body: some View {
         GeometryReader { geo in
@@ -122,23 +124,34 @@ struct TerrainScene: View {
         .clipped()
     }
 
-    private func baselineY(_ band: Band, h: Double) -> Double {
-        let pct = band.baseline.ground ? ground * 100 + band.baseline.pct : band.baseline.pct
-        return h * (1 - pct / 100)
+    @ViewBuilder private func bandView(_ band: Band, w: Double, h: Double, k: Double) -> some View {
+        ForEach(Array(Self.frames(band, composition: composition, ground: ground, size: CGSize(width: w, height: h), exclusions: exclusions).enumerated()), id: \.offset) { _, f in
+            Art.view("terrain/\(f.brick.id).png").resizable().interpolation(.high)
+                .frame(width: f.frame.width, height: f.frame.height)
+                .scaleEffect(x: f.brick.flip ? -1 : 1, y: 1)
+                .shadow(color: Theme.bg.opacity(band.depth >= 0.88 ? 0.42 : 0), radius: 3, y: 4)
+                .position(x: f.frame.midX, y: f.frame.midY)
+        }
     }
 
-    @ViewBuilder private func bandView(_ band: Band, w: Double, h: Double, k: Double) -> some View {
-        let y = baselineY(band, h: h)
-        ForEach(Array(band.bricks.enumerated()), id: \.offset) { _, p in
-            if let kit = TerrainKit.size[p.id] {
-                let s = p.scale * band.scale * k
-                let bw = kit.w * s, bh = kit.h * s
-                Art.view("terrain/\(p.id).png").resizable().interpolation(.high)
-                .frame(width: bw, height: bh)
-                .scaleEffect(x: p.flip ? -1 : 1, y: 1)
-                .shadow(color: Theme.bg.opacity(band.depth >= 0.88 ? 0.42 : 0), radius: 3, y: 4)
-                .position(x: w * p.x / 100, y: y - bh / 2 - p.lift)
-            }
+    /// Pieces that read as background rock: no structure may stand in front of them.
+    static let outcrops: Set<String> = ["mesa", "bluff", "rock_boulder", "rock_cluster", "scree"]
+
+    /// Bricks of one band with their on-screen frames. Outcrops, and anything in the two ground bands,
+    /// that touch an exclusion rect are dropped, so structures and the dock never sit over rock.
+    static func frames(_ band: Band, composition: SceneComposition, ground: Double, size: CGSize, exclusions: [CGRect]) -> [(brick: Brick, frame: CGRect)] {
+        let w = Double(size.width), h = Double(size.height)
+        let k = min(max(w / 402, 0.8), h / 874 * 1.25 + 0.6)
+        let pct = band.baseline.ground ? ground * 100 + band.baseline.pct : band.baseline.pct
+        let y = h * (1 - pct / 100)
+        let guarded = band.id == "foreground" || band.id == "ground-detail"
+        return band.bricks.compactMap { p in
+            guard let kit = TerrainKit.size[p.id] else { return nil }
+            let s = p.scale * band.scale * k
+            let bw = kit.w * s, bh = kit.h * s
+            let frame = CGRect(x: w * p.x / 100 - bw / 2, y: y - bh - p.lift, width: bw, height: bh)
+            if (outcrops.contains(p.id) || guarded) && exclusions.contains(where: { $0.intersects(frame) }) { return nil }
+            return (p, frame)
         }
     }
 
