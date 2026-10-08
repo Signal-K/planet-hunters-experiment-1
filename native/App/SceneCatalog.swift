@@ -35,11 +35,20 @@ enum SceneCatalog {
         return gs
     }
 
+    /// Base player who owns one settlement, so the « » dock tile shows enabled.
+    static func landscapeBase() -> GameState {
+        var gs = basePlayer()
+        var site = SurfaceSiteProgress(); site.siteAccessPurchasedAt = t0
+        gs.player.surfaceOps.sites["moon-south-pole"] = site
+        return gs
+    }
+
     static let tess = TessCandidate(id: "tess-demo", ticId: "TIC 260004324", toi: "TOI 700.01", sector: "Sectors 1-3", periodDays: 3.4, transitEpoch: 1.1, depthPpm: 9000, signalToNoise: 14)
 
     static var all: [CatalogScene] { [
         scene("intro-phone", 700) { IntroScreen().environment(GameStore(state: GameState())) },
-        scene("hub-phone", 874) { HubScreen().environment(GameStore()) },
+        scene("hub-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore()) },
+        scene("hub-phone-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)).environment(GameStore(state: landscapeBase())) },
         scene("hub-desktop", 680, w: 1000) { HubScreen().environment(GameStore()) },
         scene("hub-structures-phone", 874) {
             var gs = GameState()

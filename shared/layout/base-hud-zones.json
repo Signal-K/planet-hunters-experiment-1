@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "origin": "safe-area",
+  "unit": "pt",
+  "zones": {
+    "top-chrome": {
+      "topLeft": {
+        "inset": 12,
+        "gap": 8,
+        "francsChip": { "height": 44 },
+        "contractCard": { "width": 200, "collapseInPortrait": true }
+      },
+      "topRight": {
+        "inset": 12,
+        "pill": { "buttonSize": 44, "buttons": ["friends", "settings"] }
+      }
+    },
+    "bottom-nav": {
+      "anchor": "bottom-center",
+      "bottomInset": 8,
+      "tileSize": 64,
+      "tiles": ["switch", "build", "hub"]
+    }
+  },
+  "empty": ["bottom-left", "bottom-right"]
+}

@@ -128,17 +128,12 @@ struct TerrainScene: View {
     }
 
     @ViewBuilder private func bandView(_ band: Band, w: Double, h: Double, k: Double) -> some View {
-        let haze = min(0.92, pow(1 - min(1, max(0, band.depth)), 2) * 0.95)
         let y = baselineY(band, h: h)
         ForEach(Array(band.bricks.enumerated()), id: \.offset) { _, p in
             if let kit = TerrainKit.size[p.id] {
                 let s = p.scale * band.scale * k
                 let bw = kit.w * s, bh = kit.h * s
-                let sprite = Art.view("terrain/\(p.id).png").resizable().interpolation(.high)
-                ZStack {
-                    sprite
-                    Theme.hillFar.opacity(haze).mask(sprite)
-                }
+                Art.view("terrain/\(p.id).png").resizable().interpolation(.high)
                 .frame(width: bw, height: bh)
                 .scaleEffect(x: p.flip ? -1 : 1, y: 1)
                 .shadow(color: Theme.bg.opacity(band.depth >= 0.88 ? 0.42 : 0), radius: 3, y: 4)
