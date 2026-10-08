@@ -285,8 +285,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           ? buildLandnamBody(engine, bodyId, currentTarget, lifeStage)
           : engine.getBody(bodyId)
         if (!body) throw new Error(`Unknown Takeon body: ${bodyId}`)
-        // Light blueprint look (SSL-501): ice sky, ink night, neutral tint on every body.
-        body.palette = { sky: '#9fd0ee', skyNight: '#0f2436', tint: [1, 1, 1] }
+        // Light blueprint look (SSL-501): ice sky, ice night (no near-black), neutral tint on every body.
+        body.palette = { sky: '#9fd0ee', skyNight: '#bcd7ea', tint: [1, 1, 1] }
 
         // Seeded scenes (a tutorial dropoff, etc.) are ephemeral flavor —
         // Landnam owns the persisted delivery state, not Takeon — so they

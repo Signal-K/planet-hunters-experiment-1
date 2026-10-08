@@ -76,7 +76,7 @@
   gap: 9px;
   padding: 16px;
   border-top: 1px solid rgba(112,217,234, .18);
-  background: linear-gradient(180deg, var(--ln-panel), var(--ln-void) 24%);
+  background: linear-gradient(180deg, var(--ln-panel), #e8f1f8 24%);
 }
 
 .statusRow,

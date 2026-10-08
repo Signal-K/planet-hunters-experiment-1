@@ -1487,7 +1487,7 @@ button { cursor: pointer; }
   background:
     radial-gradient(ellipse at 78% 30%, var(--ln-cyan-soft), transparent 34%),
     radial-gradient(ellipse at 20% 78%, var(--ln-ok-soft), transparent 30%),
-    var(--ln-void) !important;
+    #e8f1f8 !important; /* SSL-482: was var(--ln-void), near-black in the live shell */
 }
 
 /* Landing, Intro, Asteroid Discovery, TESS Discovery, Surface Ops (KES-262) —
@@ -3479,3 +3479,23 @@ button.hub-orbital-network__status:disabled { cursor: default; }
    screen (mining overflow, build confirm). It now takes its own row, so no
    guidance element can sit on the control it points at. */
 .flight-plan-chip { position: relative; right: auto; bottom: auto; align-self: flex-end; margin: 4px 8px; }
+
+/* SSL-430: the sync chip (offline outbox state) sat on top of the primary
+   button on debrief and over the Flight Plan text. On phones it now lives in
+   the Flight Plan strip, right-aligned, 14px, on paper. Hub and mining keep
+   their own placements above. */
+@media (max-width: 1023px) {
+  .portrait-canvas:not(:has([data-screen="hub"])):not(:has(.mining-screen)) .sync-status {
+    top: auto;
+    left: auto;
+    right: 60px;
+    bottom: calc(var(--flight-plan-h, 0px) - 30px);
+    padding: 2px 8px;
+    border: 2px solid var(--ln-bp-ink, #0f2436);
+    border-radius: var(--ln-r-pill);
+    background: var(--ln-bp-paper, #fff);
+    color: var(--ln-bp-ink, #0f2436);
+    font: 700 14px var(--ln-font-display);
+    letter-spacing: 0;
+  }
+}
