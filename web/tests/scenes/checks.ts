@@ -40,6 +40,7 @@ export async function checkContrast(page: Page, root = 'body'): Promise<CheckRes
       const cs = getComputedStyle(el)
       // Effective opacity down the tree.
       let op = 1; for (let n: Element | null = el; n; n = n.parentElement) op *= +getComputedStyle(n).opacity
+      if (op < 0.05) continue // inside a faded-out ancestor: not on screen
       // Resolve background: nearest ancestors stacked until one is opaque.
       const layers: [number, number, number, number][] = []
       let unresolved = ''
@@ -56,6 +57,12 @@ export async function checkContrast(page: Page, root = 'body'): Promise<CheckRes
         const under = document.elementsFromPoint(Math.min(Math.max(cx, 0), innerWidth - 1), Math.min(Math.max(cy, 0), innerHeight - 1))
         const media = under.find(u => u !== el && !u.contains(el) && !el.contains(u) && /^(CANVAS|VIDEO|IMG|SVG)$/i.test(u.tagName))
         if (media) unresolved = `${media.tagName.toLowerCase()} behind text`
+        // No opaque ancestor: the real backdrop is whatever a non-ancestor element (scene layer, gradient) paints behind the text.
+        if (!unresolved && !layers.some(l => l[3] >= 0.999)) {
+          const painter = under.find(u => u !== el && !u.contains(el) && !el.contains(u) && u !== document.documentElement && u !== document.body
+            && (getComputedStyle(u).backgroundImage !== 'none' || parse(getComputedStyle(u).backgroundColor)[3] > 0))
+          if (painter) unresolved = `${painter.tagName.toLowerCase()} paints behind text`
+        }
       }
       if (unresolved) { skipped.add(`skipped: ${unresolved}`); continue }
       let bg: number[] = [255, 255, 255]
