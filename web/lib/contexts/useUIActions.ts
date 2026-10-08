@@ -72,12 +72,14 @@ export function useUIActions(
   }, [rememberHost, setState])
 
   const openLaunchpad = useCallback(() => {
+    setSubsurfaceView(false)
     setLaunchpadMissionMenuOpen(false)
     rememberHost('launchpad')
     setState(s => ({ ...s, screen: 'launchpad' }))
   }, [rememberHost, setState])
 
   const openLaunchpadMissionMenu = useCallback(() => {
+    setSubsurfaceView(false)
     setLaunchpadMissionMenuOpen(true)
     rememberHost('launchpad')
     setState(s => ({ ...s, screen: 'launchpad' }))

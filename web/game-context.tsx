@@ -103,9 +103,14 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     // restores the previous Contracts screen and the URL-sync effect pushes
     // the player straight back to `/game/missions` (KES-226).
     const trayScreen = trayScreenFromPath(window.location.pathname)
+    // SSL-476: /game/launchpad is a stable destination too. Without this a cold
+    // load restored the saved screen (e.g. hub-subsurface) and the URL sync
+    // rewrote the path to it, so the Launchpad opened the underground.
     const entryState = window.location.pathname === '/game/hub'
       ? { ...loadedState, screen: 'hub' as Screen }
-      : trayScreen ? { ...loadedState, screen: trayScreen } : loadedState
+      : window.location.pathname === '/game/launchpad' && loadedState.player.placed.includes('launchpad')
+        ? { ...loadedState, screen: 'launchpad' as Screen }
+        : trayScreen ? { ...loadedState, screen: trayScreen } : loadedState
     setState(entryState)
     setHydrated(true)
     const record = pbShared.authStore.record

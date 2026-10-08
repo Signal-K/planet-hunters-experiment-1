@@ -60,8 +60,8 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
           />
         ) : (
           <div>
-            <span className={styles.lockedTier}>TIER {rocket.tier}</span>
-            <span className={styles.lockedHint}>CLASSIFIED VEHICLE</span>
+            <span className={styles.lockedTier}>CLASSIFIED</span>
+            <span className={styles.lockedHint}>Vehicle blueprint sealed</span>
           </div>
         )}
         <div className={styles.tier}>TIER {rocket.tier}</div>

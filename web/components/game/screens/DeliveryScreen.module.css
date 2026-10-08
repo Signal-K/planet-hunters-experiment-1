@@ -169,8 +169,12 @@
 .fee {
   padding: 9px 10px;
   border-left: 2px solid var(--ln-amber);
-  background: rgba(54, 198, 226, .07);
+  background: var(--ln-bp-paper, #fff);
+  border: 1px solid var(--ln-bp-line-strong, var(--ln-hairline-strong));
+  border-left: 3px solid var(--ln-bp-accent, #1f78c8);
 }
+
+.fee span { color: var(--ln-bp-ink, var(--ln-text)); font-size: 14px; }
 
 .fee div {
   display: flex;
@@ -179,13 +183,13 @@
 }
 
 .fee small {
-  color: var(--ln-text-muted);
-  font: var(--ln-fs-micro) var(--ln-font-body);
+  color: var(--ln-bp-ink-mute, var(--ln-text-muted));
+  font: 14px var(--ln-font-body);
 }
 
 .fee strong {
-  color: var(--ln-amber);
-  font: 800 14px var(--ln-font-mono);
+  color: var(--ln-bp-ink, var(--ln-text));
+  font: 800 18px var(--ln-font-mono);
 }
 
 .dumpError {

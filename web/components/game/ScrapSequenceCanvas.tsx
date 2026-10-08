@@ -46,7 +46,7 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
           canvas,
           width: cw,
           height: ch,
-          background: 0x050b16, // --ln-void mirror for the Pixi renderer
+          background: 0xdbeaf6, // light blueprint sky (SSL-423: no near-black scenes)
           antialias: false,
           autoDensity: true,
           resolution: capDpr(),
@@ -81,7 +81,7 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
 
   return (
     <SequenceDesktopFrame
-      background="var(--ln-void)"
+      background="#dbeaf6"
       stageAspect="4 / 3"
       stageMaxWidth={720}
       leftTitle="RECOVERY"
@@ -94,7 +94,7 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
         { label: 'SEQUENCE', value: 'AUTOMATED' },
         { label: 'RESULT', value: 'HULL RETIRED' },
       ]}
-      renderStage={style => <div ref={divRef} data-testid="scrap-sequence-stage" style={{ background: 'var(--ln-void)', ...style }} />}
+      renderStage={style => <div ref={divRef} data-testid="scrap-sequence-stage" style={{ background: '#dbeaf6', ...style }} />}
     >
       {/* Player-facing skip, not dev-only (KES-316) — this overlay auto-plays
           and blocks the ledger reveal on every early-onboarding debrief with
@@ -104,9 +104,9 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
         onClick={() => completeRef.current()}
         style={{
           position: 'absolute', bottom: 24, right: 24, zIndex: 101,
-          padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
-          background: 'rgba(20,20,23,0.72)', border: '1px solid rgba(112,217,234,0.4)',
-          color: '#7ec8ff', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11,
+          padding: '8px 16px', minHeight: 44, borderRadius: 8, cursor: 'pointer',
+          background: 'var(--ln-bp-paper, #fff)', border: '2px solid var(--ln-bp-ink, #0f2436)',
+          color: 'var(--ln-bp-ink, #0f2436)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14,
           letterSpacing: '0.12em', textTransform: 'uppercase',
         }}
       >

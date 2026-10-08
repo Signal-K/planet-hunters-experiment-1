@@ -120,6 +120,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'transport-hub',     label: 'Hub',     hint: 'Extraction done (missionsDone: 1), Transport coach active — pick the two-leg client job', stage: 'tutorial' },
       { key: 'transport-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab', stage: 'tutorial' },
       { key: 'transport-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending', stage: 'tutorial' },
+      { key: 'transport-delivery', label: 'Delivery', hint: 'Cargo transfer at Vesta with mixed cargo (ordered + leftover minerals)', stage: 'tutorial' },
       { key: 'transport-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned', stage: 'tutorial' },
     ],
   },
@@ -253,6 +254,16 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'bennu', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
+      }
+
+    case 'transport-delivery':
+      return {
+        screen: 'delivery',
+        player: { ...BASE_PLAYER, missionsDone: 1, activeMission: { id: TRANSPORT_MISSION.id, label: `${TRANSPORT_MISSION.title} → ${TRANSPORT_MISSION.targetId}` } },
+        tutorial: true, doneSteps: { ...EXTRACTION_DONE, 30: true, 31: true, 32: true },
+        missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'bennu', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: { ...(TRANSPORT_MISSION.requires?.minerals ?? {}), ice: 3 }, popup: null,
       }
 
     case 'transport-debrief':

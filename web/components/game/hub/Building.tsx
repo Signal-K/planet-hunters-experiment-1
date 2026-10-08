@@ -277,12 +277,12 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 aria-label="Dismiss"
                 onClick={e => { e.stopPropagation(); setCalloutOpen(false) }}
                 style={{
-                  flexShrink: 0, width: 16, height: 16, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                  background: 'var(--ln-hairline)', color: 'var(--ln-text-dim)',
-                  fontSize: 14, lineHeight: 1, display: 'grid', placeItems: 'center', padding: 0,
+                  flexShrink: 0, width: 46, height: 46, margin: '-11px -11px -11px 0', border: 'none', cursor: 'pointer',
+                  background: 'transparent', color: 'var(--ln-text-dim)',
+                  display: 'grid', placeItems: 'center', padding: 0,
                 }}
               >
-                ×
+                <span aria-hidden style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--ln-hairline)', fontSize: 16, lineHeight: 1, display: 'grid', placeItems: 'center' }}>×</span>
               </button>
             </div>
             <div style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--ln-text-dim)', marginTop: 4 }}>
@@ -292,7 +292,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
               type="button"
               onClick={e => { e.stopPropagation(); setCalloutOpen(false); callout.onCta() }}
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 9,
+                display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 2, minHeight: 46, minWidth: 46,
                 background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
                 fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
                 letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--hub-mint)',
@@ -306,7 +306,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 data-testid={`building-${kind}-callout-dismiss`}
                 onClick={e => { e.stopPropagation(); setCalloutOpen(false); callout.onDismiss?.() }}
                 style={{
-                  display: 'inline-flex', marginTop: 9, marginLeft: 12, padding: 0, cursor: 'pointer',
+                  display: 'inline-flex', alignItems: 'center', marginTop: 2, marginLeft: 12, minHeight: 46, minWidth: 46, padding: 0, cursor: 'pointer',
                   background: 'transparent', border: 'none',
                   fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
                   letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)',

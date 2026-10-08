@@ -46,7 +46,12 @@ export default function DeliveryScreen({
   const progress = deliveryUnloadProgress(startedAt, now)
   const progressPct = Math.round(progress * 100)
   const remainingMs = Math.max(0, 8000 - Math.max(0, now - (startedAt ?? now)))
-  const cargoEntries = Object.entries(cargo).filter(([, amount]) => amount > 0)
+  // SSL-482: show only the minerals the contract ordered; leftover mining
+  // cargo is not part of this delivery.
+  const orderedMinerals = mission.requires?.minerals ? Object.keys(mission.requires.minerals) : []
+  const cargoEntries = Object.entries(cargo).filter(
+    ([id, amount]) => amount > 0 && (orderedMinerals.length === 0 || orderedMinerals.includes(id)),
+  )
   const cargoUnits = cargoEntries.reduce((total, [, amount]) => total + amount, 0)
   const transportFee = mission.payout.francs - Math.round(mission.payout.francs * 0.5)
 

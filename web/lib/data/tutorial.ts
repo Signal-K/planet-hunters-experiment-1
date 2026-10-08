@@ -26,15 +26,27 @@ export interface TrainingTryStep {
 export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-launchpad', try: 'mining', screen: 'launchpad', objective: 'Open client contracts', radio: 'The first try is a complete mine-and-return run.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
+  { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },
+  { id: 'mine-surface', try: 'mining', screen: 'rover-mining', objective: 'Deploy the rover and drill the ore', radio: 'Drive to an exposed outcrop and drill. Drill three opens a mine site.', doneOn: 'mining-debriefed' },
   { id: 'mine-target', try: 'mining', screen: 'targets', objective: 'Choose the highlighted target', radio: 'The target carries the mineral named by the order.', doneOn: 'mining-debriefed' },
   { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
   { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
+  { id: 'mine-return', try: 'mining', screen: 'transit', objective: 'Fly the cargo home', radio: 'The order is only paid once the cargo reaches the debrief.', doneOn: 'mining-debriefed' },
+  { id: 'mine-return-landing', try: 'mining', screen: 'landing', objective: 'Fly the cargo home', radio: 'The order is only paid once the cargo reaches the debrief.', doneOn: 'mining-debriefed' },
+  { id: 'mine-return-delivery', try: 'mining', screen: 'delivery', objective: 'Deliver the cargo', radio: 'The order is only paid once the cargo reaches the debrief.', doneOn: 'mining-debriefed' },
+  { id: 'scan-open', try: 'scan', screen: '*', objective: 'Open the Galaxy map', radio: 'Transit candidates are classified from the Galaxy map.', doneOn: 'tess-classified' },
   { id: 'scan-classify', try: 'scan', screen: 'galaxy', objective: 'Classify the transit candidate', radio: 'Review the light curve and submit a science verdict.', hint: 'The expected transit sits in the shaded dip band.', doneOn: 'tess-classified' },
+  { id: 'part-open', try: 'part', screen: '*', objective: 'Open the Hangar from Base', radio: 'The Hangar is where ship modules are fitted.', doneOn: 'part-tweaked' },
   { id: 'part-fit', try: 'part', screen: 'hangar', objective: 'Fit a module in each ship stage', radio: 'Open the ship customiser, choose a module for engine, booster, cockpit and payload, then confirm.', doneOn: 'part-tweaked' },
 ]
 
 export function trainingTryStep(tryId: TrainingTryId, screen: string): TrainingTryStep | undefined {
+  // SSL-478: objective text must match the current screen, so a try never
+  // shows another screen's instruction (e.g. "Fit a module" on Base). The
+  // mining try keeps its first step as the neutral fallback; scan and part
+  // fall back to a wildcard "open it" step.
   return TRAINING_TRIES.find(step => step.try === tryId && step.screen === screen)
+    ?? TRAINING_TRIES.find(step => step.try === tryId && step.screen === '*')
     ?? TRAINING_TRIES.find(step => step.try === tryId)
 }
 

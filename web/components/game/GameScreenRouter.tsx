@@ -134,11 +134,9 @@ function ScreenBody({
   // mining seam tied to the active try rather than the legacy coach state.
   const trainingMiningTry = currentTrainingTry(game.player.flightPlan) === 'mining'
 
-  // Market is a Free Ops feature — a player without freeOperations landing
-  // here directly (bookmarked URL, back/forward) shouldn't see a locked
-  // screen render at all.
+  // The Exchange is a permanent Earth Base building the player can tap at any
+  // stage (SSL-477), so Market is no longer gated on freeOperations.
   useEffect(() => {
-    if (screen === 'market' && !game.player.freeOperations) game.go('hub')
     // Refining is commissioned at an approved off-world site. An old save
     // that contains a Base refinery remains readable, but no unbuilt player
     // can enter the retired Earth-refinery screen.
@@ -160,7 +158,10 @@ function ScreenBody({
   // `initialSubsurface` prop used to.
   useEffect(() => {
     if (screen === 'hub-subsurface') game.setSubsurfaceView(true)
-    else if (screen === 'hub') game.setSubsurfaceView(false)
+    // Any other screen except the Mission Log tray (which sits over whichever
+    // half of the Base is showing) clears it, so a stale flag from a visit to
+    // Subsurface can't leak into /game/launchpad (SSL-476).
+    else if (screen !== 'mission-history') game.setSubsurfaceView(false)
   }, [screen, game.setSubsurfaceView])
 
   switch (screen) {

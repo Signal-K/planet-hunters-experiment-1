@@ -66,6 +66,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
     if (!bar || !screen) return
     const publish = () => screen.style.setProperty('--ln-topbar-h', `${Math.ceil(bar.getBoundingClientRect().height)}px`)
     publish()
+    if (typeof ResizeObserver === 'undefined') return () => { screen.style.removeProperty('--ln-topbar-h') }
     const ro = new ResizeObserver(publish)
     ro.observe(bar)
     return () => { ro.disconnect(); screen.style.removeProperty('--ln-topbar-h') }

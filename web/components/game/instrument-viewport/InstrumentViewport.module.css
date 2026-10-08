@@ -416,8 +416,13 @@
 }
 
 .answer:disabled {
-  color: var(--ln-bp-ink-mute, var(--ln-text-muted));
+  /* SSL-480: disabled stays readable (>=4.5:1) and keeps the 44px target. */
+  min-height: 44px;
+  opacity: 1;
+  color: #3d4f60;
+  background: #e8eef5;
   border-color: var(--iv-line);
+  border-style: dashed;
   cursor: not-allowed;
 }
 

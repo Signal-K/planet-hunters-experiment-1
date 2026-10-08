@@ -209,7 +209,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         </div>
 
         {/* ── Resolved outcome ─────────────────────────────────────────────── */}
-        {resolved && (
+        {/* SSL-479: the Ledger (contract or mining + transport fees) shows before
+            teardown so the player sees the payout they are about to collect. */}
+        {(resolved || (!isFreeHaul && !isProgramOperation)) && (
           isFreeHaul ? (
             <CargoDispositionPanel
               cargo={cargo}
@@ -238,6 +240,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                than two stacked panels repeating the same section chrome. */
             <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
               <div className="ln-section-label" style={{ marginBottom: 8 }}>Ledger</div>
+              <p data-testid="debrief-brought" style={{ margin: '0 0 8px', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.45, color: 'var(--ln-text-dim)' }}>
+                You brought <strong style={{ color: 'var(--ln-text)' }}>{cargoEntries.map(([id, units]) => `${units} ${minerals[id]?.name ?? id}`).join(', ') || 'the order'}</strong>, enough for <strong style={{ color: 'var(--ln-text)' }}>{mission.title}</strong>.
+              </p>
               {isTwoLegJob ? (
                 <>
                   <PayRow label={`Mining fee · ${client?.name ?? 'Client'}`} value={miningFee} />
@@ -328,7 +333,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               if (!isOrbitalInstrumentDeployment) setScrapping(true)
             }}
           >
-            {scrapping ? 'VEHICLE TEARDOWN IN PROGRESS' : shipDestroyed ? 'AUTHORISE RECOVERY' : isProgramOperation ? 'LOG PROGRAM OUTCOME' : 'AUTHORISE VEHICLE TEARDOWN'}
+            {scrapping ? 'VEHICLE TEARDOWN IN PROGRESS' : shipDestroyed ? 'AUTHORISE RECOVERY' : isProgramOperation ? 'LOG PROGRAM OUTCOME' : 'CONTINUE'}
           </PrimaryBtn>
         ) : (
           <PrimaryBtn

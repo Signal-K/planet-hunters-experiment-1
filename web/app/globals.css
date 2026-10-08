@@ -3469,3 +3469,13 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   color: var(--ln-bp-ink, #0f2436) !important;
 }
 .mining-screen .mining-action-row .mining-command--return * { color: var(--ln-bp-ink, #0f2436) !important; }
+
+/* SSL-430: the mining loading status sits on a light panel, so its eyebrow and
+   retry text use blueprint ink/blue instead of the old cyan (1.5:1). */
+.mining-scene-status .mining-scene-status__eyebrow { color: #14598f !important; }
+.mining-scene-status__retry { color: var(--ln-bp-ink, #0f2436); min-height: 44px; }
+
+/* SSL-429: the hidden Flight Plan chip used to float over the bottom-right of the
+   screen (mining overflow, build confirm). It now takes its own row, so no
+   guidance element can sit on the control it points at. */
+.flight-plan-chip { position: relative; right: auto; bottom: auto; align-self: flex-end; margin: 4px 8px; }
