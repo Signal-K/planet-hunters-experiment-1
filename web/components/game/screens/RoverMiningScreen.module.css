@@ -63,7 +63,8 @@
   .drillReadout .kicker, .drillReadout p:not(.mineSiteStatus), .drillReadout li:not(:last-child) { display: none; }
   .drillReadout li { padding: 6px 8px; }
   .readoutHeading strong { font-size: 12px; }
-  .sandboxDock { right: 12px; bottom: 64px; left: 12px; width: auto; max-height: 38%; }
+  /* SSL-404: the drawer sits above the drive pad strip instead of over it. */
+  .sandboxDock { right: 12px; bottom: 196px; left: 12px; width: auto; max-height: 38%; }
   .fieldHotbar { right: 8px; bottom: 8px; left: 8px; gap: 8px; }
 }
 
