@@ -49,6 +49,8 @@ struct BaseLayout {
         let roadCentre = roadBottom - 11
         return Double((size.height - roadCentre) / size.height) + 0.045
     }
+    /// Road centre line: what the biome ground band is pinned to.
+    var roadY: CGFloat { size.height * (1 - CGFloat(ground) + 0.045) }
     var groundY: CGFloat { size.height * (1 - CGFloat(ground)) }
     /// Structures stand slightly in front of the ground line, on the apron.
     var structureY: CGFloat { groundY + 2 * k }

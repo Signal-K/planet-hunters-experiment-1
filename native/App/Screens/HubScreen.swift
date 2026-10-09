@@ -8,6 +8,7 @@ struct HubScreen: View {
     @Environment(GameStore.self) private var store
     /// Snapshots have no real safe area; fixtures pass the device insets they want to show.
     var safeAreaOverride: EdgeInsets?
+    var biome: EarthBiome = .resolve()
     @State private var showSettings = false
     @State private var showFriends = false
     @State private var showLocations = false
@@ -37,7 +38,7 @@ struct HubScreen: View {
             let portrait = layout.portrait
             let k = layout.k, groundY = layout.groundY
             ZStack(alignment: .topLeading) {
-                TerrainScene(composition: .earthBaseWide, ground: layout.ground, exclusions: layout.exclusions)
+                BiomeBackdrop(layout: BiomeLayout(biome: biome, size: size, roadY: layout.roadY, exclusions: layout.exclusions))
                 ForEach(Array(BaseLayout.slots.enumerated()), id: \.offset) { i, slot in
                     building(slot.name, sprite: slot.sprite, aspect: slot.aspect, width: layout.width(slot),
                              x: layout.centreX(i), groundY: layout.structureY) { store.go(slot.tap) }

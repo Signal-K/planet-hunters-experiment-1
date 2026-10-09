@@ -44,35 +44,6 @@ private func b(_ id: String, _ x: Double, _ s: Double = 1, lift: Double = 0, fli
 }
 
 extension SceneComposition {
-    static let earthBaseWide = SceneComposition(bands: [
-        Band(id: "clouds", depth: 0.05, baseline: abs(62), bricks: [
-            b("cloud_bank_a", 8, 1.1), b("cloud_bank_b", 30, 0.85, flip: true), b("cloud_bank_a", 52, 0.8, lift: 26),
-            b("cloud_bank_b", 74, 1.05), b("cloud_bank_a", 92, 0.7, lift: 34, flip: true)]),
-        Band(id: "range-far", depth: 0.18, baseline: g(7), scale: 1.05, bricks: [
-            b("mtn_peak_broad", -2), b("mtn_saw_ridge", 13, 0.82, flip: true), b("mtn_peak_tall", 27, 0.9),
-            b("mtn_horn", 38, 0.72, flip: true), b("mtn_peak_broad", 50, 0.98, flip: true), b("mtn_shoulder", 63, 1.0),
-            b("mtn_peak_tall", 74, 1.06, flip: true), b("mtn_saw_ridge", 88, 0.88), b("mtn_horn", 99, 0.8)]),
-        Band(id: "range-mid", depth: 0.34, baseline: g(3.5), bricks: [
-            b("mtn_shoulder", 4, 0.8), b("mesa", 19, 0.78, flip: true), b("mtn_saw_ridge", 34, 0.6, flip: true),
-            b("mtn_peak_tall", 50, 0.6), b("mesa", 65, 0.68), b("mtn_shoulder", 80, 0.78), b("mtn_saw_ridge", 95, 0.55)]),
-        Band(id: "facilities-far", depth: 0.46, baseline: g(1.2), scale: 0.82, bricks: [
-            b("far_block", 6), b("far_silo", 12, 0.9), b("far_mast", 17, 0.8), b("far_dome", 24),
-            b("far_block", 31, 0.85, flip: true), b("far_dish", 38, 0.9), b("far_silo", 45), b("far_block", 57, 1.05),
-            b("far_mast", 63), b("far_dome", 70, 0.9, flip: true), b("far_silo", 77, 1.05), b("far_block", 84, 0.9),
-            b("far_dish", 91, flip: true), b("far_block", 97, 0.8)]),
-        Band(id: "treeline", depth: 0.74, baseline: g(-0.5), bricks: [
-            b("tree_pine_cluster", 3, 0.8), b("tree_pine_tall", 11, 0.7), b("tree_pine_cluster", 17, 0.62, flip: true),
-            b("pylon", 27, 0.72), b("tree_pine_short", 34, 0.8), b("tree_pine_cluster", 40, 0.7), b("pylon", 52, 0.72),
-            b("tree_pine_cluster", 62, 0.66, flip: true), b("tree_pine_tall", 70, 0.72), b("pylon", 78, 0.72),
-            b("tree_pine_cluster", 86, 0.78), b("tree_pine_short", 95, 0.85), b("tree_pine_cluster", 99, 0.7, flip: true)]),
-        Band(id: "ground-detail", depth: 0.88, baseline: g(-4.5), bricks: [
-            b("scree", 44, 0.9), b("rock_cluster", 72, 0.75), b("shrub", 90, 1.1)]),
-        Band(id: "foreground", depth: 1, baseline: g(-9), scale: 1.25, bricks: [
-            b("rock_cluster", 6, 0.9), b("shrub", 17, 1.2), b("scree", 27, 1.1, flip: true), b("rock_boulder", 40, 0.85),
-            b("shrub", 52, 1.0, flip: true), b("rock_cluster", 63, 1.05, flip: true), b("scree", 76, 1.0),
-            b("shrub", 87, 1.15), b("rock_boulder", 96, 1.0, flip: true)]),
-    ], roadOffset: -4.5)
-
     static let earthBasePad = SceneComposition(bands: [
         Band(id: "clouds", depth: 0.05, baseline: abs(70), bricks: [
             b("cloud_bank_a", 14, 1.5), b("cloud_bank_b", 46, 1.2, flip: true), b("cloud_bank_a", 82, 1.3, lift: 30)]),
@@ -99,7 +70,7 @@ extension SceneComposition {
 /// Draws sky gradient, ground, road bed and depth-hazed bricks. `ground` is the
 /// ground line as a fraction of height from the bottom (web `--hub-ground`).
 struct TerrainScene: View {
-    var composition: SceneComposition = .earthBaseWide
+    var composition: SceneComposition = .earthBasePad
     var ground: Double = 0.28
     /// Footprints (scene coordinates) that outcrops and foreground rocks must stay out of.
     var exclusions: [CGRect] = []

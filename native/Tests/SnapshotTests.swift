@@ -104,11 +104,12 @@ struct BaseClearanceTests {
             layout.hasPlaced = true
             let roadBottom = size.height * (1 - CGFloat(layout.ground) + 0.045) + 11
             #expect(roadBottom <= layout.dockRect.minY, "dock covers the road at \(size)")
-            for band in SceneComposition.earthBaseWide.bands {
-                for f in TerrainScene.frames(band, composition: .earthBaseWide, ground: layout.ground, size: size, exclusions: layout.exclusions)
-                where TerrainScene.outcrops.contains(f.brick.id) || band.id == "foreground" || band.id == "ground-detail" {
-                    for i in BaseLayout.slots.indices { #expect(!layout.footprint(i).intersects(f.frame), "\(f.brick.id) overlaps structure \(i) at \(size)") }
-                    #expect(!layout.dockRect.intersects(f.frame), "\(f.brick.id) behind dock at \(size)")
+            for biome in EarthBiome.allCases {
+                let bl = BiomeLayout(biome: biome, size: size, roadY: layout.roadY, exclusions: layout.exclusions)
+                #expect(bl.groundFrame.maxY >= size.height - 0.5, "\(biome) ground stops short of the bottom at \(size)")
+                for f in bl.props.map(\.frame) {
+                    for i in BaseLayout.slots.indices { #expect(!layout.footprint(i).intersects(f), "\(biome) prop overlaps structure \(i) at \(size)") }
+                    #expect(!layout.dockRect.intersects(f), "\(biome) prop behind dock at \(size)")
                 }
             }
         }
