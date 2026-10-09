@@ -3089,9 +3089,10 @@ html[data-flight-target]:not([data-flight-target~="hub-build-storage-silo"]) [da
 }
 
 .ln-scene-panel--industrial {
+  /* Light blueprint ramp (no dark surfaces): ice wash with a soft blue glow. */
   background:
-    radial-gradient(140px 90px at 88% 6%, rgba(112, 212, 235, 0.16), transparent 70%),
-    linear-gradient(180deg, #142544 0%, #0e1c34 50%, #081222 100%);
+    radial-gradient(160px 100px at 88% 6%, color-mix(in srgb, var(--ln-bp-blue) 14%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-bp-bg) 92%, var(--ln-bp-blue)) 0%, var(--ln-bp-bg) 100%);
 }
 
 .ln-scene-panel--survey {
@@ -3109,8 +3110,8 @@ html[data-flight-target]:not([data-flight-target~="hub-build-storage-silo"]) [da
 
 .ln-scene-panel--utility {
   background:
-    radial-gradient(150px 90px at 50% -4%, rgba(177, 198, 229, 0.12), transparent 65%),
-    linear-gradient(180deg, #101e35 0%, #0b1729 55%, #060c17 100%);
+    radial-gradient(180px 100px at 50% -4%, color-mix(in srgb, var(--ln-bp-blue) 10%, transparent), transparent 65%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-bp-bg) 94%, var(--ln-bp-blue)) 0%, var(--ln-bp-bg) 100%);
 }
 
 .hub-push-opt-in {

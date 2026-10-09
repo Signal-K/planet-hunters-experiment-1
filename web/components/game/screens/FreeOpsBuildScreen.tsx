@@ -14,7 +14,7 @@ interface FreeOpsBuildScreenProps {
 export default function FreeOpsBuildScreen({ onBack, onMissions, onInfrastructure }: FreeOpsBuildScreenProps) {
 
   return (
-    <div className="game-screen theme-deep" data-testid="free-ops-build-screen" style={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="game-screen theme-blueprint" data-testid="free-ops-build-screen" style={{ display: 'flex', flexDirection: 'column' }}>
       <TopBar eyebrow="FREE OPS · LAUNCH SETUP" title="Build an Operation" onBack={onBack} />
       <ScenePanel ambient="utility" className="screen-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 14 }}>
         <Panel accent="var(--ln-cyan)" style={{ padding: 14 }}>
