@@ -189,6 +189,11 @@ enum SceneCatalog {
             p.select("ore-a"); p.driveToSelected(); _ = p.drill(); _ = p.drill(); _ = p.drill(); p.startConstruction()
             return RoverFieldScreen(initial: p, deployed: true).environment(GameStore(state: GameState()))
         },
+        scene("rover-field-landscape", 402, w: 874) {
+            var p = Prospecting(requirements: ["iron": 2, "copper": 1])
+            p.select("ore-a"); p.driveToSelected(); _ = p.drill(); _ = p.drill()
+            return RoverFieldScreen(initial: p, deployed: true).environment(GameStore(state: GameState()))
+        },
         scene("rover-touchdown-phone", 874) {
             RoverFieldScreen(initial: Prospecting(requirements: ["iron": 2])).environment(GameStore(state: GameState()))
         },

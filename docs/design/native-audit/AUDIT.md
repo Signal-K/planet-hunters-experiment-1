@@ -42,3 +42,14 @@ No PostHog client exists in `native/` (searched Swift, yml, md). No SDK was adde
 ## Later (not built)
 
 Ambient music and sound effects are a TODO: base ambience, transit hum, laser fire, rover drive, drill, debrief sting.
+
+## Status after merging cycle/4 (2026-10-09)
+
+- Merge: cycle/4 (web save import, authored missions, sign-out, iOS version keys) merged into this branch. Only `HubScreen.swift` conflicted: PR #157's HUD/dock won, and cycle/4's Sign out (with its confirmation) and Archive moved into the settings sheet, since the base dock no longer has a Menu button. Archive tap target (44pt) and contrast fixes from the verify scripts landed with it.
+- B colour: not reproducible in this build, tokens resolve (see table above). Nothing changed at token level.
+- C button sizing: `Panel` fix (earlier commit). Rover field: readout shows the latest drill only, and landscape lays the pad, drill and readout side by side, so the drive pad no longer runs off the bottom. Snapshots: `docs/design/native-fix/rover-field-phone.png`, `rover-field-landscape.png`.
+- D controls: subsurface hotspot still routes to the base screen (dead, needs a Subsurface screen design, not invented). Friends sheet is a stub. Nothing else found dead by reading.
+- E mining/rover: laser mining is a drone over an asteroid field, rover is a separate screen. Native still splits on `requires.drillTier == 0`, web on `survey.onWorldVehicle == 'starter-rover'`; aligning needs a `survey` field on native `Mission`, not done.
+- F Takeon: not done. `native/TakeonKit` is a protocol plus `NullTakeonEngine`, not linked in `project.yml`; web uses a vendored JS engine, so there is no Swift engine to wire.
+- G biomes: `App/Biome.swift` (`EarthBiome`, `BiomeLayout`, `BiomeBackdrop`). Default `.mountains`; override with launch arg `-biome desert|tundra|coast|mountains`, or UserDefaults `earthBiome`. Unknown values fall back to mountains. Each band is tiled on its own, ground runs to the bottom edge, props are seeded and kept out of structure, label and dock footprints (`BaseClearanceTests`). Coast far layer: shared saturation grade plus a top fade. No picker (SSL-502). Procedural mountain composition for the base removed. `preview.png` files are not shipped. Snapshots: `docs/design/native-fix/hub-biome-*.png`. The hue-palette scan covers Swift only, so no exemption was needed.
+- H analytics: no PostHog client in native; the scene/mission map above is the plan.
