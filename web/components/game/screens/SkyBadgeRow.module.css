@@ -1,6 +1,8 @@
 .row { position: absolute; left: 16px; bottom: 16px; z-index: 9; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; max-width: calc(100% - 32px); }
 .badge { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--ln-hairline-strong); background: var(--ln-panel); color: var(--ln-text); font-family: var(--ln-font-body); font-size: 14px; }
 .tier { font-family: var(--ln-font-mono); font-size: 14px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.medallion { width: 32px; height: 32px; flex: none; }
+.medallion[data-tier="silver"] { filter: grayscale(1); }
 .gold { border-color: var(--ln-cyan-border); }
 .gold .tier { color: var(--ln-cyan); }
 .silver .tier { color: var(--ln-text-muted); }

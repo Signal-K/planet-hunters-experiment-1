@@ -30,7 +30,11 @@ struct RoverFieldScreen: View {
                 VStack(spacing: 10) {
                     hotbar
                     Spacer(minLength: 0)
-                    if deployed { readout; controls } else { touchdown }
+                    if !deployed { touchdown }
+                    else if geo.size.width > geo.size.height {
+                        // Landscape has no spare height: drive pad and drill on the left, readout beside them.
+                        HStack(alignment: .bottom, spacing: 12) { controls.frame(maxWidth: 330); readout }
+                    } else { readout; controls }
                 }
                 .padding(16)
             }
@@ -126,7 +130,8 @@ struct RoverFieldScreen: View {
                     Text("Select an exposed ore marker, drive into range, then use the drill. A mine site is guaranteed by drill three.")
                         .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                 } else {
-                    ForEach(prospecting.drillings) { f in
+                    // The latest result only: the full history pushed the drive pad off the screen.
+                    ForEach(prospecting.drillings.suffix(1)) { f in
                         Text("DRILL \(f.attempt) · \(f.label)").font(AppFont.mono(14)).foregroundStyle(f.kind == .mineSite ? Theme.teal : Theme.ink)
                     }
                 }

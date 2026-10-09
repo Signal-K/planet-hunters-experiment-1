@@ -3,17 +3,32 @@
 import { useEffect, useState } from 'react'
 import { captureGameEvent } from '@/lib/posthog'
 import { useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
+import { ORIONIDS_VARIANTS, orionidsVariantForSurface } from '@/lib/orionids/theme'
+import type { BadgeTier } from '@/lib/data/sky-events'
+import styles from './SkyEventChip.module.css'
 
 const seenSurfaces = new Set<string>()
 
 /**
- * "Orionids active" chip plus a small sky overlay (CSS meteor streaks; placeholder
- * art until Ink's sprites land, SSL-475). Renders nothing outside the event.
- * The chip is a 44px tap target that opens a one-line explainer.
+ * Sky overlay plus the "Orionids active" chip on Base and the mining HUD.
+ * Renders nothing outside an active shower. The chip art is 235×44 (15px type).
  */
-export default function SkyEventChip({ surface, className }: { surface: 'base' | 'mining'; className?: string }) {
+export default function SkyEventChip({
+  surface,
+  className,
+  debrisCount = 0,
+  badgeTier = null,
+}: {
+  surface: 'base' | 'mining'
+  className?: string
+  debrisCount?: number
+  badgeTier?: BadgeTier | null
+}) {
   const preset = useDebrisEvent()
   const [open, setOpen] = useState(false)
+  const [dotOn, setDotOn] = useState(true)
+  const orionids = preset?.eventId === 'orionids-2026'
+  const variant = ORIONIDS_VARIANTS[orionidsVariantForSurface(surface)]
 
   useEffect(() => {
     if (!preset) return
@@ -23,30 +38,66 @@ export default function SkyEventChip({ surface, className }: { surface: 'base' |
     captureGameEvent('sky_event_seen', { event_id: preset.eventId, surface })
   }, [preset, surface])
 
+  useEffect(() => {
+    if (!orionids) return
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const id = window.setInterval(() => setDotOn(on => !on), 600)
+    return () => window.clearInterval(id)
+  }, [orionids])
+
   if (!preset) return null
   return (
-    <div className={['sky-event-wrap', className].filter(Boolean).join(' ')} data-testid={`sky-event-${surface}`} style={{ position: 'absolute', top: 64, left: 12, zIndex: 30, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
-      <div className="sky-event-overlay" aria-hidden="true">
-        <i /><i /><i />
-      </div>
-      <button
-        type="button"
-        data-testid="sky-event-chip"
-        aria-expanded={open}
-        onClick={() => setOpen(o => !o)}
-        style={{
-          minHeight: 44, minWidth: 44, padding: '0 16px', borderRadius: 22,
-          border: '2px solid var(--ln-ink, #0f2436)', background: 'var(--ln-panel)', color: 'var(--ln-text)',
-          font: '700 14px var(--ln-font-display)', letterSpacing: '0.04em', cursor: 'pointer',
-        }}
-      >
-        {preset.chipLabel}
-      </button>
-      {open && (
-        <div role="status" style={{ maxWidth: 240, padding: 12, borderRadius: 8, border: '1px solid var(--ln-hairline)', background: 'var(--ln-panel)', color: 'var(--ln-text-dim)', font: '14px/1.4 var(--ln-font-body)' }}>
-          {preset.label} falls while you mine tonight. Laser it, then sell it at the Market spot price.
-        </div>
+    <>
+      {orionids && (
+        <img
+          className={styles.sky}
+          data-blend={variant.skyBlend}
+          src={variant.sky}
+          alt=""
+          data-testid="orionids-sky"
+        />
       )}
-    </div>
+      <div className={[styles.hud, 'sky-event-wrap', className].filter(Boolean).join(' ')} data-testid={`sky-event-${surface}`}>
+        {orionids ? (
+          <button
+            type="button"
+            className={styles.chip}
+            data-testid="sky-event-chip"
+            aria-expanded={open}
+            aria-label="Orionids active. Debris falls while you mine tonight."
+            onClick={() => setOpen(o => !o)}
+          >
+            <img src={dotOn ? variant.chipOn : variant.chipOff} alt="" width={235} height={44} />
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={styles.fallback}
+            data-testid="sky-event-chip"
+            aria-expanded={open}
+            onClick={() => setOpen(o => !o)}
+          >
+            {preset.chipLabel}
+          </button>
+        )}
+        {open && (
+          <div className={styles.note} role="status">
+            {preset.label} falls while you mine tonight. Laser it after it lands, then sell it at the Market spot price. It does not count toward the mining order.
+          </div>
+        )}
+        {orionids && debrisCount > 0 && (
+          <div className={styles.tally} data-testid="orionid-debris-count">
+            <img src={variant.iconResource} alt="" />
+            <strong>Orionid debris {debrisCount}</strong>
+          </div>
+        )}
+        {orionids && badgeTier && (
+          <div className={styles.badge} data-testid="orionids-badge" data-tier={badgeTier} role="status">
+            <img src={variant.badgeSmall} alt="" data-tier={badgeTier} />
+            <strong>Orionids {badgeTier}</strong>
+          </div>
+        )}
+      </div>
+    </>
   )
 }

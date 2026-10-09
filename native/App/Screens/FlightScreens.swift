@@ -136,7 +136,7 @@ struct MiningScreen: View {
                         if let toast { Text(toast.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.crimson)
                             .padding(.horizontal, 10).padding(.vertical, 6).background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.crimson, lineWidth: 1.5)) }
                         HStack(alignment: .bottom) {
-                            Text("DRAG THE GROUND TO DRIVE · TAP ORE TO FIRE").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.textDim)
+                            Text("DRAG BELOW TO MOVE THE DRONE · TAP ORE TO FIRE").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.textDim)
                                 .padding(.horizontal, 8).padding(.vertical, 5).background(Theme.paper.opacity(0.85), in: Capsule())
                             Spacer()
                             DashButton(charge: dashCharge) { scene?.dash() }

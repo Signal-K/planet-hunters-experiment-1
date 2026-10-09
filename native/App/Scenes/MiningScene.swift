@@ -1,7 +1,7 @@
 import SpriteKit
 import LandnamCore
 
-/// Tap-to-laser mining: chunky ore nodes float over a blueprint-light surface, the rover
+/// Tap-to-laser mining: chunky ore nodes float in an asteroid field, the drone
 /// fires a beam at whatever you tap, nodes crack and pop into pickups that fly to cargo.
 /// All rules live in `MiningField`; this scene only renders it and forwards input.
 @MainActor
@@ -52,6 +52,8 @@ final class MiningScene: SKScene {
 
     // MARK: layout
     private var groundY: CGFloat { max(size.height * 0.30, 200) }
+    /// The drone hovers above the touch strip along the bottom; ore floats above it.
+    private var droneY: CGFloat { max(size.height * 0.30, 200) - 60 }
     private var parallaxLayers: [(node: SKNode, base: CGFloat, factor: CGFloat)] = []
 
     private func buildBackdrop() {
@@ -59,45 +61,20 @@ final class MiningScene: SKScene {
         sky.size = size; sky.position = CGPoint(x: size.width / 2, y: size.height / 2); sky.zPosition = -10
         world.addChild(sky)
 
-        // Depth-hazed terrain bricks, same kit as the hub.
-        let ranges: [(id: String, x: CGFloat, s: CGFloat, haze: CGFloat)] = [
-            ("mtn_peak_broad", 0.12, 1.3, 0.55), ("mtn_horn", 0.38, 1.0, 0.55), ("mtn_peak_tall", 0.66, 1.2, 0.55),
-            ("mtn_saw_ridge", 0.92, 1.1, 0.55), ("mesa", 0.25, 0.9, 0.3), ("mtn_shoulder", 0.78, 0.9, 0.3),
+        // Laser mining is a drone working an asteroid field, not a ground vehicle: painted asteroid sky, no terrain.
+        // Two copies of the painting at different scales drift against the drone so travel has depth.
+        let layers: [(art: String, scale: CGFloat, alpha: CGFloat, factor: CGFloat, z: CGFloat)] = [
+            ("backgrounds/mining_asteroid_far.png", 1.0, 1, 0.04, -8), ("backgrounds/mining_asteroid_close.png", 1.25, 0.8, 0.12, -7),
         ]
-        for (i, r) in ranges.enumerated() {
-            guard let tex = SK.texture("terrain/\(r.id).png") else { continue }
-            let sp = SKSpriteNode(texture: tex)
-            let k = TerrainKit.size[r.id] ?? (100, 80)
-            let w = CGFloat(k.w) * r.s * max(1, size.width / 600)
-            sp.size = CGSize(width: w, height: w * CGFloat(k.h / k.w))
-            sp.anchorPoint = CGPoint(x: 0.5, y: 0)
-            sp.position = CGPoint(x: size.width * r.x, y: groundY - 4)
-            sp.zPosition = -8 + CGFloat(i) * 0.1
-            sp.color = Theme.mix(0.5).sk; sp.colorBlendFactor = r.haze
+        for l in layers {
+            guard let tex = SK.texture(l.art) else { continue }
+            let h = size.height * l.scale, w = max(size.width * l.scale, h * 2) * 1.15
+            let sp = SKSpriteNode(texture: tex, size: CGSize(width: w, height: w / 2))
+            if sp.size.height < h { sp.size = CGSize(width: h * 2, height: h) }
+            sp.position = CGPoint(x: size.width / 2, y: size.height / 2); sp.zPosition = l.z; sp.alpha = l.alpha
             world.addChild(sp)
-            parallaxLayers.append((sp, sp.position.x, r.haze < 0.4 ? 0.12 : 0.05))
+            parallaxLayers.append((sp, sp.position.x, l.factor))
         }
-        let ground = SKSpriteNode(texture: SK.gradient(top: Theme.groundFar, bottom: Theme.groundNear))
-        ground.size = CGSize(width: size.width, height: groundY); ground.anchorPoint = .zero; ground.zPosition = -5
-        world.addChild(ground)
-        // Ground props scroll faster than the mountains, so driving reads as real travel.
-        let props = ["rock_boulder", "rock_cluster", "scree", "shrub", "rock_boulder", "scree"]
-        for (i, id) in props.enumerated() {
-            guard let tex = SK.texture("terrain/\(id).png") else { continue }
-            let k = TerrainKit.size[id] ?? (40, 30)
-            let w = CGFloat(k.w) * (1.4 + CGFloat(i % 3) * 0.5)
-            let sp = SKSpriteNode(texture: tex, size: CGSize(width: w, height: w * CGFloat(k.h / k.w)))
-            sp.anchorPoint = CGPoint(x: 0.5, y: 0)
-            let y = groundY - 6 - CGFloat(i % 3) * groundY * 0.22
-            sp.position = CGPoint(x: size.width * (0.08 + CGFloat(i) * 0.17), y: y)
-            sp.zPosition = -3 + CGFloat(i % 3) * 0.1 - y / 1000
-            sp.color = Theme.mix(0.6).sk; sp.colorBlendFactor = 0.25
-            world.addChild(sp)
-            parallaxLayers.append((sp, sp.position.x, 0.25 + CGFloat(i % 3) * 0.12))
-        }
-        let lip = SKSpriteNode(color: Theme.groundLip.sk, size: CGSize(width: size.width, height: 4))
-        lip.anchorPoint = .zero; lip.position = CGPoint(x: 0, y: groundY); lip.zPosition = -4
-        world.addChild(lip)
     }
 
     private func spriteY(_ ny: Double) -> CGFloat {
@@ -149,11 +126,11 @@ final class MiningScene: SKScene {
     }
 
     private func buildRover() {
-        rover = SKSpriteNode(texture: SK.texture("actors/rover.png"), size: CGSize(width: 132, height: 99))
-        rover.anchorPoint = CGPoint(x: 0.5, y: 0.1)
+        rover = SKSpriteNode(texture: SK.texture("actors/drone.png"), size: CGSize(width: 96, height: 96))
+        rover.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         let startX = motion.x == 0 ? Double(size.width / 2) : min(max(motion.x, 40), Double(size.width) - 40)
         motion = RoverMotion(x: startX, minX: 40, maxX: Double(size.width) - 40)
-        rover.position = CGPoint(x: CGFloat(motion.x), y: groundY - 6); rover.zPosition = 20
+        rover.position = CGPoint(x: CGFloat(motion.x), y: droneY); rover.zPosition = 20
         world.addChild(rover)
     }
 
@@ -163,7 +140,7 @@ final class MiningScene: SKScene {
     func fire(at p: CGPoint) {
         let hit = nodeSprites.first { $0.value.frame.insetBy(dx: -10, dy: -10).contains(p) }
         let outcome = field.strike(nodeId: hit?.key, roverX: motion.x / Double(size.width))
-        let muzzle = CGPoint(x: rover.position.x, y: rover.position.y + 72)
+        let muzzle = CGPoint(x: rover.position.x, y: rover.position.y + 30)
         switch outcome {
         case .noCharge: onFeedback?("Laser charging"); shake()
         case .cargoFull: onFeedback?("Cargo hold full")
@@ -204,7 +181,7 @@ final class MiningScene: SKScene {
         let chip = SKSpriteNode(texture: sp.texture, size: CGSize(width: 24, height: 24))
         chip.position = sp.position; chip.zPosition = 40
         world.addChild(chip)
-        let home = CGPoint(x: rover.position.x, y: rover.position.y + 30)
+        let home = rover.position
         chip.run(.sequence([
             .group([.moveBy(x: 0, y: 26, duration: 0.18), .scale(to: 1.3, duration: 0.18)]),
             .group([.move(to: home, duration: 0.35), .scale(to: 0.4, duration: 0.35)]),
@@ -261,15 +238,15 @@ final class MiningScene: SKScene {
             dustTimer += simDt
             if abs(motion.velocity) > 60, dustTimer > (motion.isDashing ? 0.025 : 0.12) {
                 dustTimer = 0
-                SK.burst(at: CGPoint(x: rover.position.x - facing * 30, y: groundY + 2), color: Theme.hex(0xFFFFFF, 0.8).sk, count: motion.isDashing ? 3 : 1, speed: 26, in: world, z: 19)
+                SK.burst(at: CGPoint(x: rover.position.x - facing * 30, y: rover.position.y - 10), color: Theme.hex(0xFFFFFF, 0.8).sk, count: motion.isDashing ? 3 : 1, speed: 26, in: world, z: 19)
             }
         }
         let stretch: CGFloat = motion.isDashing ? 1.22 : 1
         rover.xScale = facing * stretch
-        rover.yScale = motion.isDashing ? 0.9 : 1
+        rover.yScale = 1
         let recoil = CGFloat(Juice.recoil(at: clock - lastShot, kick: reducedMotion ? 0 : 5))
         rover.position.x = CGFloat(motion.x) - facing * recoil
-        rover.position.y = groundY - 6 + (abs(motion.velocity) > 20 ? CGFloat(abs(sin(clock * 22))) * 1.5 : CGFloat(sin(clock * 4)))
+        rover.position.y = droneY + CGFloat(sin(clock * 3)) * 4
 
         // Parallax: layers slide opposite the rover so travel has depth.
         let mid = size.width / 2
@@ -279,13 +256,13 @@ final class MiningScene: SKScene {
     }
 
     private func dashBurst() {
-        SK.burst(at: CGPoint(x: rover.position.x - facing * 34, y: groundY + 4), color: Theme.hex(0xFFFFFF, 0.9).sk, count: reducedMotion ? 3 : 9, speed: 70, in: world, z: 19)
+        SK.burst(at: CGPoint(x: rover.position.x - facing * 34, y: rover.position.y - 8), color: Theme.hex(0xFFFFFF, 0.9).sk, count: reducedMotion ? 3 : 9, speed: 70, in: world, z: 19)
         guard !reducedMotion else { return }
         world.removeAction(forKey: "kick")
         world.run(.sequence([.moveBy(x: -facing * 4, y: 0, duration: 0.04), .move(to: .zero, duration: 0.14)]), withKey: "kick")
     }
 
-    /// The ground strip steers the rover (analog, toward the finger); anything above fires.
+    /// The strip along the bottom steers the drone (analog, toward the finger); anything above fires.
     private func isDriveZone(_ p: CGPoint) -> Bool { p.y < groundY + 30 }
     private func steer(to p: CGPoint) { drive((p.x - CGFloat(motion.x)) / 70) }
 

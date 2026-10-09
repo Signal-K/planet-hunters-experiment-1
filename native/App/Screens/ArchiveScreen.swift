@@ -74,11 +74,11 @@ struct ArchiveScreen: View {
                         VStack(spacing: 0) {
                             marker(done: node.done, next: i == next)
                             if i < nodes.count - 1 { Rectangle().fill(node.done ? Theme.teal : Theme.hairline).frame(width: 3).frame(minHeight: 28) }
-                        }.frame(width: 28)
+                        }.frame(width: 44)
                         VStack(alignment: .leading, spacing: 2) {
                             HStack {
                                 Text(node.title.uppercased()).font(AppFont.display(14, "Bold")).tracking(1.2)
-                                if i == next { Text("NEXT").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.blue) }
+                                if i == next { Text("NEXT").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.bluePress) }
                             }
                             Text(node.detail).font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
                         }

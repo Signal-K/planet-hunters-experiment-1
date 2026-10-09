@@ -35,12 +35,48 @@ enum SceneCatalog {
         return gs
     }
 
+    /// Base player who owns one settlement, so the « » dock tile shows enabled.
+    static func landscapeBase() -> GameState {
+        var gs = basePlayer()
+        var site = SurfaceSiteProgress(); site.siteAccessPurchasedAt = t0
+        gs.player.surfaceOps.sites["moon-south-pole"] = site
+        return gs
+    }
+
+
+    /// A real catalog contract with the ship in flight toward its target (no timer, so the arrival button is live).
+    static func transitState(returning: Bool) -> GameState {
+        var gs = basePlayer()
+        let cat = Catalog()
+        let m = cat.missions.first { !$0.locked && ($0.requires.drillTier ?? 1) > 0 } ?? cat.missions[0]
+        gs.missionId = m.id; gs.targetId = m.targetId ?? cat.targets.first?.id
+        gs.player.activeMission = ActiveMission(id: m.id, label: m.title)
+        gs.player.missionPhase = .transit
+        gs.player.returningToEarth = returning
+        gs.screen = .transit
+        return gs
+    }
+
+    static func miningState(rover: Bool) -> GameState {
+        var gs = transitState(returning: false)
+        gs.player.missionPhase = .mining
+        gs.screen = rover ? .roverMining : .mining
+        return gs
+    }
+
     static let tess = TessCandidate(id: "tess-demo", ticId: "TIC 260004324", toi: "TOI 700.01", sector: "Sectors 1-3", periodDays: 3.4, transitEpoch: 1.1, depthPpm: 9000, signalToNoise: 14)
 
     static var all: [CatalogScene] { [
         scene("intro-phone", 700) { IntroScreen().environment(GameStore(state: GameState())) },
-        scene("hub-phone", 874) { HubScreen().environment(GameStore()) },
+        scene("hub-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore()) },
+        scene("hub-phone-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)).environment(GameStore(state: landscapeBase())) },
         scene("hub-desktop", 680, w: 1000) { HubScreen().environment(GameStore()) },
+        scene("hub-biome-mountains-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .mountains).environment(GameStore()) },
+        scene("hub-biome-desert-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .desert).environment(GameStore()) },
+        scene("hub-biome-tundra-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .tundra).environment(GameStore()) },
+        scene("hub-biome-coast-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .coast).environment(GameStore()) },
+        scene("hub-live", 874) { HubScreen().environment(GameStore()) },
+        scene("hub-biome-mountains-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), biome: .mountains).environment(GameStore(state: landscapeBase())) },
         scene("hub-structures-phone", 874) {
             var gs = GameState()
             gs.player.placed = ["launchpad", "surface-silo", "refinery", "astronaut-academy"]
@@ -135,9 +171,27 @@ enum SceneCatalog {
             feed.tess = (1...9).map { TessCandidate(id: "toi-\($0)", toi: "TOI \(100 + $0).01") }
             return TessDiscoveryScreen(candidate: tess).environment(GameStore(state: gs)).environment(feed).environment(\.flatLayout, true)
         },
+        scene("transit-live", 874) {
+            let st = GameStore(state: transitState(returning: false))
+            return TransitScreen().environment(st)
+        },
+        scene("transit-live-landscape", 402, w: 874) {
+            TransitScreen().environment(GameStore(state: transitState(returning: false)))
+        },
+        scene("mining-laser-live", 874) {
+            MiningScreen().environment(GameStore(state: miningState(rover: false)))
+        },
+        scene("mining-laser-live-landscape", 402, w: 874) {
+            MiningScreen().environment(GameStore(state: miningState(rover: false)))
+        },
         scene("rover-field-phone", 874) {
             var p = Prospecting(requirements: ["iron": 2, "copper": 1])
             p.select("ore-a"); p.driveToSelected(); _ = p.drill(); _ = p.drill(); _ = p.drill(); p.startConstruction()
+            return RoverFieldScreen(initial: p, deployed: true).environment(GameStore(state: GameState()))
+        },
+        scene("rover-field-landscape", 402, w: 874) {
+            var p = Prospecting(requirements: ["iron": 2, "copper": 1])
+            p.select("ore-a"); p.driveToSelected(); _ = p.drill(); _ = p.drill()
             return RoverFieldScreen(initial: p, deployed: true).environment(GameStore(state: GameState()))
         },
         scene("rover-touchdown-phone", 874) {
@@ -187,7 +241,10 @@ enum SceneCatalog {
 struct SceneHost: View {
     let id: String
     var body: some View {
-        if let s = SceneCatalog.find(id) {
+        if let s = SceneCatalog.find(id), id.contains("-live") {
+            // Full-screen, real safe areas: what a player sees, without the fixed fixture frame.
+            s.make().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.bg)
+        } else if let s = SceneCatalog.find(id) {
             ScrollView { s.make().frame(width: s.size.width, height: s.size.height) }.background(Theme.bg)
         } else {
             ScrollView { VStack(alignment: .leading, spacing: 8) {
