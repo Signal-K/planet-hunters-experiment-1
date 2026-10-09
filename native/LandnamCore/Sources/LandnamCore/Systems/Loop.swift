@@ -8,7 +8,7 @@ public struct Catalog: Sendable {
     public var targets: [Target]
     public var parts: PartCatalog
 
-    public init(missions: [Mission] = MissionGenerator.fullBoard(), targets: [Target] = Targets.all, parts: PartCatalog = .standard) {
+    public init(missions: [Mission] = MissionGenerator.everything(), targets: [Target] = Targets.all, parts: PartCatalog = .standard) {
         self.missions = missions; self.targets = targets; self.parts = parts
     }
 
@@ -30,6 +30,8 @@ public enum Loop {
         if s.screen == .launchpad && !mission.isOwnProgram { return s }
         if s.screen == .missions && s.player.freeOperations && mission.isOwnProgram { return s }
         guard s.player.activeMission == nil else { return s }
+        // Off-world builds carry the materials from the stash; no kit, no flight.
+        if let plan = mission.construction, plan.requiredMaterials.contains(where: { (s.player.stash[$0.key] ?? 0) < $0.value }) { return s }
         var base = s
         base.player.freeHaulDisposition = haul ?? s.player.freeHaulDisposition
         base.doneSteps["2"] = true
@@ -172,6 +174,17 @@ public enum Loop {
         if s.player.headingToDelivery { return Transitions.applyDeliveryArrived(s, now: now) }
         var n = s
         let mission = catalog.mission(s.missionId)
+        if let plan = mission?.construction {
+            // The kit is delivered on arrival: materials leave the stash, the site starts its build clock.
+            n = ConstructionMissions.applyDelivery(n, plan: plan, targetId: s.targetId ?? mission?.targetId ?? "", now: now)
+            n.player.missionPhase = .debrief
+            n.player.arrivalAt = nil
+            n.player.transitStartedAt = nil
+            n.lastCargo = [:]
+            n.screen = .debrief
+            n.doneSteps["6"] = true
+            return n
+        }
         if Instruments.isOrbitalOnly(mission: mission, target: catalog.target(s.targetId)) {
             // Orbital deployments and survey flights end on arrival: the instrument comes online, nothing is mined.
             switch mission?.payload?.instrumentId {

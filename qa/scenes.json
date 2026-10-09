@@ -90,7 +90,7 @@
    "id": "mining-actions",
    "name": "Mining action row",
    "flow": "core-loop",
-   "web": null,
+   "web": "m1-mining",
    "native": "mining-actionrow-phone",
    "tickets": [
     "SSL-411"
@@ -118,7 +118,7 @@
    "id": "debrief-capacitor",
    "name": "Debrief laser capacitor",
    "flow": "core-loop",
-   "web": null,
+   "web": "m1-debrief",
    "native": "debrief-capacitor-phone",
    "tickets": [
     "SSL-462"
@@ -180,7 +180,7 @@
    "id": "tess-pointing",
    "name": "TESS pointing",
    "flow": "instruments",
-   "web": null,
+   "web": "ui-tess-discovery",
    "native": "tess-pointing-phone",
    "tickets": [
     "SSL-497"
@@ -232,7 +232,7 @@
    "id": "rover-touchdown",
    "name": "Rover touchdown",
    "flow": "field",
-   "web": null,
+   "web": "ui-rover-mining",
    "native": "rover-touchdown-phone",
    "tickets": []
   },
