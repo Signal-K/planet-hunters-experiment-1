@@ -6,6 +6,9 @@ import LandnamCore
 /// (mirrors web HubScreen + HubWorldBackground).
 struct HubScreen: View {
     @Environment(GameStore.self) private var store
+    @Environment(AuthModel.self) private var auth
+    @State private var showArchive = false
+    @State private var confirmSignOut = false
 
     var body: some View {
         // The scene bleeds under the status bar and home indicator; the HUD and dock keep clear of them.
@@ -140,13 +143,28 @@ struct HubScreen: View {
             Button { store.go(.market) } label: { iconLabel("MARKET", "cart", accent: false) }
                 .buttonStyle(.plain)
             Menu {
-                Button("Missions") { store.go(.missions) }
-                ForEach(Screen.allCases.filter { !$0.needsMissionContext && $0 != .hub && $0 != .missions && $0 != .market && $0 != .narrativeLedger }, id: \.self) { s in
-                    Button(s.rawValue) { store.go(s) }
-                }
+                Button("Mission board") { store.go(.missions) }
+                Button("Archive: pathways and unlocks") { showArchive = true }
+                Button("Mission log") { store.go(.missionHistory) }
+                Button("Skills") { store.go(.skills) }
+                Button("Astronaut Academy") { store.go(.academy) }
+                Button("Refinery") { store.go(.refinery) }
+                Button("Surface operations") { store.go(.surfaceOps) }
+                Button("Control Station") { store.go(.instrumentHub) }
+                Divider()
+                if let email = auth.session?.email { Text("Signed in as \(email)") }
+                Button("Sign out", role: .destructive) { confirmSignOut = true }
             } label: { iconLabel("MENU", "line.3.horizontal", accent: false) }
             .menuStyle(.borderlessButton).fixedSize()
+            .accessibilityLabel("Menu")
             Spacer(minLength: 0)
+        }
+        .sheet(isPresented: $showArchive) { ArchiveScreen() }
+        .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+            Button("Sign out", role: .destructive) { auth.signOut() }
+            Button("Stay signed in", role: .cancel) {}
+        } message: {
+            Text("Your progress stays saved on this device and in the cloud. Sign back in to continue.")
         }
         .padding(.horizontal, 10).padding(.vertical, 10)
         .frame(maxWidth: .infinity)

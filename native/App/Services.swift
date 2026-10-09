@@ -61,14 +61,20 @@ final class Services {
     private weak var store: GameStore?
     private var session: AuthSession?
     private var pulling = false
+    private let unauthorized = UnauthorizedBox()
+    private weak var auth: AuthModel?
+    private static let ownerKey = "landnam.saveOwner"
 
     init() {
         let box = token, sbox = sharedToken
-        let exec = PocketBaseExecutor(baseURL: api.baseURL, token: { box.value })
+        let bad = unauthorized
+        var exec = PocketBaseExecutor(baseURL: api.baseURL, token: { box.value })
+        exec.onUnauthorized = { bad.fire() }
         sync = CloudSync(outbox: Outbox(store: FileOutboxStore(url: FileOutboxStore.defaultURL()), execute: exec.executor))
         // Citizen-science verdicts go to the shared backend with the shared login, in their own queue
         // so a slow shared backend never holds up the game save.
-        let sharedExec = PocketBaseExecutor(baseURL: api.sharedURL, token: { sbox.value })
+        var sharedExec = PocketBaseExecutor(baseURL: api.sharedURL, token: { sbox.value })
+        sharedExec.onUnauthorized = { bad.fire() }
         shared = Outbox(store: FileOutboxStore(url: FileOutboxStore.defaultURL().deletingLastPathComponent().appendingPathComponent("shared-outbox.json")),
                         execute: sharedExec.executor)
         feed = FeedModel(feed: SharedFeed(baseURL: api.sharedURL, token: { sbox.value }))
@@ -77,6 +83,9 @@ final class Services {
     func start(store: GameStore, auth: AuthModel) {
         gameCenter.authenticate()
         self.store = store
+        self.auth = auth
+        // A server 401 means the token aged out: renew it, or ask the player to sign in again.
+        unauthorized.handler = { [weak auth] in Task { @MainActor in await auth?.refreshSession() } }
         attach(auth.session)
         let sync = sync, gc = gameCenter, shared = shared, user = sharedUser
         store.onChange = { state in
@@ -97,6 +106,7 @@ final class Services {
 
     func attach(_ session: AuthSession?) {
         self.session = session
+        claimSave(for: session)
         token.value = session?.token
         sharedToken.value = session?.sharedToken
         sharedUser.value = session?.sharedUserId
@@ -106,6 +116,20 @@ final class Services {
         Task { await sync.setUser(nil) }
         Task { await shared.flush() }
         pullIfNeeded()
+    }
+
+    /// One local save per account. A different player signing in on this device starts clean (and the previous
+    /// player's queued cloud writes are dropped); the same player signing back in resumes where they left off.
+    private func claimSave(for session: AuthSession?) {
+        guard let session, let store else { return }
+        let defaults = UserDefaults.standard
+        if let owner = defaults.string(forKey: Self.ownerKey), owner != session.userId {
+            store.reset()
+            defaults.removeObject(forKey: pulledKey(session.userId))   // re-read this account's cloud save into the clean slate
+            let sync = sync, shared = shared
+            Task { await sync.clear(); await shared.clear() }
+        }
+        defaults.set(session.userId, forKey: Self.ownerKey)
     }
 
     private func pulledKey(_ id: String) -> String { "landnam.cloudPulled.\(id)" }
@@ -134,6 +158,13 @@ final class Services {
     }
 
     func flush() { let s = sync, o = shared; Task { await s.flush(); await o.flush() } }
+}
+
+/// Lets the executors report a 401 before `Services` has finished initialising.
+final class UnauthorizedBox: @unchecked Sendable {
+    private let lock = NSLock(); private var h: (@Sendable () -> Void)?
+    var handler: (@Sendable () -> Void)? { get { lock.withLock { h } } set { lock.withLock { h = newValue } } }
+    func fire() { handler?() }
 }
 
 final class TokenBox: @unchecked Sendable {

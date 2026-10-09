@@ -9,6 +9,8 @@ public struct PocketBaseExecutor: Sendable {
     public var baseURL: URL
     public var session: URLSession
     public var token: @Sendable () -> String?
+    /// Fired when the server answers 401 so the app can renew the session (the op itself waits and is retried).
+    public var onUnauthorized: (@Sendable () -> Void)?
 
     public init(baseURL: URL, session: URLSession = .shared, token: @escaping @Sendable () -> String?) {
         self.baseURL = baseURL; self.session = session; self.token = token
@@ -43,7 +45,9 @@ public struct PocketBaseExecutor: Sendable {
         }
         do {
             let (data, resp) = try await session.data(for: req)
-            return ((resp as? HTTPURLResponse)?.statusCode ?? 0, data)
+            let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            if status == 401 { onUnauthorized?() }
+            return (status, data)
         } catch {
             return (0, nil)  // transport failure: offline, aborted or backgrounded
         }

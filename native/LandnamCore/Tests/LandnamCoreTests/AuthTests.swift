@@ -91,6 +91,41 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
         await model.signOut()
         #expect(await model.session == nil && store.load() == nil)
     }
+
+    @Test func expiredLandnamTokenIsRenewedQuietlyThroughTheSharedLogin() async {
+        StubProtocol.handler = { req in
+            if req.url?.path == "/api/collections/users/auth-refresh" {
+                #expect(req.value(forHTTPHeaderField: "Authorization") == "OLD-SHARED")
+                return (200, Data(#"{"token":"NEW-SHARED","record":{"id":"s1"}}"#.utf8))
+            }
+            #expect(req.url?.path == "/api/landnam-auth/exchange")
+            #expect(req.value(forHTTPHeaderField: "Authorization") == "Bearer NEW-SHARED")
+            return (200, Data(#"{"token":"NEW","record":{"id":"u1"}}"#.utf8))
+        }
+        let old = AuthSession(token: "OLD", userId: "u1", email: "a@b.co", sharedToken: "OLD-SHARED", sharedUserId: "s1")
+        let store = InMemorySessionStore(old)
+        let model = await AuthModel(api: api(), store: store)
+        #expect(await model.refreshSession())
+        let now = await model.session
+        #expect(now?.token == "NEW" && now?.sharedToken == "NEW-SHARED" && now?.email == "a@b.co")
+        #expect(store.load() == now)
+    }
+
+    @Test func unrenewableSessionSignsOutWithAMessageAndKeepsNothingSecret() async {
+        StubProtocol.handler = { _ in (401, Data()) }
+        let store = InMemorySessionStore(AuthSession(token: "OLD", userId: "u1", sharedToken: "OLD-SHARED"))
+        let model = await AuthModel(api: api(), store: store)
+        #expect(await model.refreshSession() == false)
+        #expect(await model.session == nil && store.load() == nil)
+        #expect(await model.errorMessage?.contains("expired") == true)
+    }
+
+    @Test func offlineDuringRefreshKeepsTheSession() async {
+        StubProtocol.handler = { _ in (503, Data()) }
+        let model = await AuthModel(api: api(), store: InMemorySessionStore(AuthSession(token: "OLD", userId: "u1", sharedToken: "S")))
+        #expect(await model.refreshSession())
+        #expect(await model.session?.token == "OLD")
+    }
 }
 
 extension URLRequest {

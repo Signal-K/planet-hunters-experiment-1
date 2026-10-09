@@ -73,6 +73,26 @@ public struct AuthAPI: Sendable {
         return session
     }
 
+    /// Renews an aging session without asking for a password: refresh the shared login, then re-exchange it.
+    /// Throws `.rejected` when the shared token is gone or too old, which means the player must sign in again.
+    public func refresh(_ old: AuthSession) async throws -> AuthSession {
+        guard let sharedToken = old.sharedToken else { throw AuthError.rejected }
+        var req = URLRequest(url: sharedURL.appendingPathComponent("api/collections/users/auth-refresh"))
+        req.httpMethod = "POST"
+        req.setValue(sharedToken, forHTTPHeaderField: "Authorization")
+        let (data, _) = try await send(req)
+        struct Shared: Decodable { struct Record: Decodable { var id: String }; var token: String; var record: Record? }
+        guard let shared = try? JSONDecoder().decode(Shared.self, from: data) else { throw AuthError.malformed }
+        var exchange = URLRequest(url: baseURL.appendingPathComponent("api/landnam-auth/exchange"))
+        exchange.httpMethod = "POST"
+        exchange.setValue("Bearer \(shared.token)", forHTTPHeaderField: "Authorization")
+        let (xdata, _) = try await send(exchange)
+        var fresh = try Self.decodeSession(xdata)
+        fresh.sharedToken = shared.token; fresh.sharedUserId = shared.record?.id ?? old.sharedUserId
+        fresh.email = fresh.email ?? old.email; fresh.displayName = fresh.displayName ?? old.displayName
+        return fresh
+    }
+
     private func send(_ req: URLRequest) async throws -> (Data, HTTPURLResponse) {
         let data: Data, resp: URLResponse
         do { (data, resp) = try await session.data(for: req) }

@@ -93,6 +93,9 @@ public actor Outbox {
         await store.save(items)
     }
 
+    /// Drops everything queued (a different account signed in; the old account's writes must never reach the new one).
+    public func clear() async { await ensureLoaded(); items.removeAll(); await store.save(items) }
+
     @discardableResult
     public func discard(where match: (OutboxOp) -> Bool) async -> Int {
         await ensureLoaded()
