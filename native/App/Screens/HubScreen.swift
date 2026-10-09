@@ -136,7 +136,7 @@ struct HubScreen: View {
                 .buttonStyle(.plain)
             Menu {
                 Button("Missions") { store.go(.missions) }
-                ForEach(Screen.allCases.filter { !$0.needsMissionContext && $0 != .hub && $0 != .missions && $0 != .market }, id: \.self) { s in
+                ForEach(Screen.allCases.filter { !$0.needsMissionContext && $0 != .hub && $0 != .missions && $0 != .market && $0 != .narrativeLedger }, id: \.self) { s in
                     Button(s.rawValue) { store.go(s) }
                 }
             } label: { iconLabel("MENU", "line.3.horizontal", accent: false) }
