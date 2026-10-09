@@ -291,7 +291,7 @@ describe('MiningController ore sym labels', () => {
   it('mines a landed chunk in one shot and ignores it while it is still falling', () => {
     const onCollect = vi.fn()
     const { controller, host } = makeController(onCollect, {
-      mineralColors: { ...MINERAL_COLORS, orionid_debris: '#7fd8ff' },
+      mineralColors: MINERAL_COLORS,
       debris: { getSpawn: () => ({ mineral: 'orionid_debris', ratePerMinute: 600, speedFactor: 1 }) },
     })
     controller.start()

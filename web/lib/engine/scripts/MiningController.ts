@@ -24,6 +24,8 @@ const REQUIRED_ORE_SHARE = 0.5
 const LASER_SIZE = { width: 4, height: 16 }
 const LASER_COLOR = '#9becff'
 const ORE_STROKE = '#0a0a12'
+// Untinted base fill; the mineral colour is applied with setTint.
+const ORE_FILL = '#ffffff'
 // Ore sym label — the only disambiguation signal that reaches all 16 minerals:
 // half of them render as PNG textures and never touch mineralShapes, and the
 // pale platinum-group colors are near-identical. White-on-dark-halo so it stays
@@ -398,7 +400,7 @@ export class MiningController extends ScriptBehaviour {
   private spawnDebris(mineral: string, speedFactor: number): void {
     const x = 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
     const y = -20 - Math.random() * 40
-    const colorHex = this.opts.mineralColors[mineral] ?? '#7fd8ff'
+    const colorHex = this.opts.mineralColors[mineral] ?? LASER_COLOR
     const mineralColor = parseInt(colorHex.replace('#', ''), 16)
     const art = this.opts.debrisArt
     const variant = art && art.intact.length > 0 ? Math.floor(Math.random() * art.intact.length) : 0
@@ -420,7 +422,7 @@ export class MiningController extends ScriptBehaviour {
           shape: this.opts.mineralShapes?.[mineral] ?? 'diamond',
           width: 22,
           height: 22,
-          color: '#ffffff',
+          color: ORE_FILL,
           strokeColor: ORE_STROKE,
           strokeWidth: 1.5,
         },
@@ -570,7 +572,7 @@ export class MiningController extends ScriptBehaviour {
     const depth = cfg.depthMin + Math.random() * (cfg.depthMax - cfg.depthMin)
     const y = (this.opts.surfaceY ?? SURFACE_Y) + depth
 
-    const colorHex = this.opts.mineralColors[mineral] ?? '#ffffff'
+    const colorHex = this.opts.mineralColors[mineral] ?? ORE_FILL
     const mineralColor = parseInt(colorHex.replace('#', ''), 16)
 
     const go = new GameObject(`ore-${this.oreCounter++}`, 'Ore', { position: { x, y } })
@@ -599,7 +601,7 @@ export class MiningController extends ScriptBehaviour {
           shape,
           width: radius * 2,
           height: radius * 2,
-          color: '#ffffff',
+          color: ORE_FILL,
           strokeColor: ORE_STROKE,
           strokeWidth: tier > 1 ? 2 + tier : 1.5,
         },
