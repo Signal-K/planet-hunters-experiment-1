@@ -43,7 +43,18 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.atlasskyventures.sslandnam.tests
         DEVELOPMENT_TEAM: NDP87SHHDT
+  LandnamUITests:
+    type: bundle.ui-testing
+    supportedDestinations: [iOS]
+    sources: [UITests]
+    dependencies: [{ target: Landnam }]
+    settings:
+      base:
+        SWIFT_VERSION: 6.0
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.atlasskyventures.sslandnam.uitests
+        DEVELOPMENT_TEAM: NDP87SHHDT
 schemes:
   Landnam:
-    build: { targets: { Landnam: all, LandnamTests: [test] } }
-    test: { targets: [LandnamTests] }
+    build: { targets: { Landnam: all, LandnamTests: [test], LandnamUITests: [test] } }
+    test: { targets: [LandnamTests, LandnamUITests] }

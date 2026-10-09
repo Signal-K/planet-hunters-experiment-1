@@ -2749,34 +2749,50 @@ button { cursor: pointer; }
   }
 }
 
-/* SSL-395 beacon: Flight Plan sets data-flight-target (space-separated ids) on
-   <html>; the real control pulses its own outline. Nothing is drawn on top. */
-@keyframes flight-beacon-pulse {
-  0%,100% { box-shadow: 0 0 0 2px rgba(112,217,234,0.7), 0 0 10px rgba(112,217,234,0.2); }
-  50%      { box-shadow: 0 0 0 4px rgba(112,217,234,1),   0 0 24px rgba(112,217,234,0.5); }
+/* SSL-444 beacon: Flight Plan sets data-flight-target (space-separated ids) on
+   <html>; the real control draws four lock-on corner brackets from its own CSS,
+   7px outside its edge. Nothing is measured or positioned in JS. Help open drops
+   data-flight-target, so the brackets pause with it (SSL-432). */
+@keyframes beacon-lock {
+  from { inset: -14px; opacity: 0; }
+  to   { inset: -7px; opacity: 1; }
 }
-html[data-flight-target~="bottom-tab-missions"] [data-beacon="bottom-tab-missions"],
-html[data-flight-target~="build-structure-strip"] [data-beacon="build-structure-strip"],
-html[data-flight-target~="building-launchpad"] [data-beacon="building-launchpad"],
-html[data-flight-target~="launchpad-view-contracts"] [data-beacon="launchpad-view-contracts"],
-html[data-flight-target~="hub-build-storage-silo"] [data-beacon="hub-build-storage-silo"],
-html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"],
-html[data-flight-target~="build-plot-0"] [data-beacon="build-plot-0"],
-html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"],
-html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] {
-  animation: flight-beacon-pulse 1.4s ease-in-out infinite;
-  border-radius: 8px;
+@keyframes beacon-glow {
+  0%, 100% { filter: none; }
+  25%      { filter: drop-shadow(0 0 5px var(--ln-bp-blue)); }
+  50%      { filter: none; }
+  75%      { filter: drop-shadow(0 0 5px var(--ln-bp-blue)); }
+}
+:where(html[data-flight-target] [data-beacon]) { position: relative; }
+html[data-flight-target~="bottom-tab-missions"] [data-beacon="bottom-tab-missions"]::after,
+html[data-flight-target~="build-structure-strip"] [data-beacon="build-structure-strip"]::after,
+html[data-flight-target~="building-launchpad"] [data-beacon="building-launchpad"]::after,
+html[data-flight-target~="launchpad-view-contracts"] [data-beacon="launchpad-view-contracts"]::after,
+html[data-flight-target~="hub-build-storage-silo"] [data-beacon="hub-build-storage-silo"]::after,
+html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"]::after,
+html[data-flight-target~="build-plot-0"] [data-beacon="build-plot-0"]::after,
+html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"]::after,
+html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"]::after,
+.mining-training-seam::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) top left / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) top left / 2px 12px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) top right / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) top right / 2px 12px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom left / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom left / 2px 12px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom right / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom right / 2px 12px no-repeat;
+  animation: beacon-lock 240ms ease-out both, beacon-glow 3s ease-in-out 240ms 1 both;
 }
 @media (prefers-reduced-motion: reduce) {
-  html[data-flight-target~="bottom-tab-missions"] [data-beacon="bottom-tab-missions"],
-  html[data-flight-target~="build-structure-strip"] [data-beacon="build-structure-strip"],
-  html[data-flight-target~="building-launchpad"] [data-beacon="building-launchpad"],
-  html[data-flight-target~="launchpad-view-contracts"] [data-beacon="launchpad-view-contracts"],
-  html[data-flight-target~="hub-build-storage-silo"] [data-beacon="hub-build-storage-silo"],
-  html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"],
-  html[data-flight-target~="build-plot-0"] [data-beacon="build-plot-0"],
-  html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"],
-  html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] { animation: none !important; box-shadow: 0 0 0 2px var(--ln-cyan) !important; }
+  html[data-flight-target] [data-beacon]::after,
+  .mining-training-seam::after { animation: none !important; }
 }
 /* SSL-449: one primary action per screen. While the Flight Plan beacons another
    control, the Base Build button drops to a quiet secondary so only the
@@ -2828,10 +2844,9 @@ html[data-flight-target]:not([data-flight-target~="hub-build-storage-silo"]) [da
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
 
 /* SSL-407: scene-local cues, not positioned coach overlays. */
-.mining-training-seam { position: absolute; z-index: 11; pointer-events: none; left: 18%; right: 18%; top: 52%; height: 10px; border-radius: 999px; background: rgba(112,217,234,0.22); box-shadow: 0 0 12px 4px rgba(112,217,234,0.38); animation: flight-beacon-pulse 1.4s ease-in-out infinite; }
+.mining-training-seam { position: absolute; z-index: 11; pointer-events: none; left: 18%; right: 18%; top: 52%; height: 10px; border-radius: 999px; background: rgba(112,217,234,0.22); }
 .tess-training-dip-band { position: relative; }
 .tess-training-dip-band::after { content: ''; position: absolute; pointer-events: none; z-index: 2; left: 42%; width: 14%; top: 16%; bottom: 16%; background: rgba(112,217,234,0.12); border-inline: 1px solid var(--ln-cyan-border); }
-@media (prefers-reduced-motion: reduce) { .mining-training-seam { animation: none; } }
 
 /* ── Earth Base scene (Open Design "landnam-earth-base-v2") ──────────────
    Ported 2026-07-26. Rebuilt 2026-08-21 (KES-220) into a light daylight
