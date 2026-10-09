@@ -13,7 +13,7 @@ interface StatusPillProps {
 const TONES: Record<PillKind, { bg: string; fg: string }> = {
   ok:    { bg: 'var(--ln-bp-green-soft, rgba(23,112,63,0.10))', fg: 'var(--ln-bp-green, #17703f)' },
   warn:  { bg: 'var(--ln-bp-blue-soft, rgba(31,120,193,0.08))', fg: 'var(--ln-bp-ink, #0f2436)' },
-  crit:  { bg: 'var(--ln-bp-pink-soft, rgba(200,41,62,0.10))',  fg: 'var(--ln-bp-pink, #c8293e)' },
+  crit:  { bg: 'var(--ln-bp-pink-soft, rgba(200,41,62,0.10))',  fg: 'color-mix(in srgb, var(--ln-bp-pink, #c8293e) 80%, var(--ln-bp-ink, #0b2540))' },
   info:  { bg: 'var(--ln-bp-blue-soft, rgba(31,120,193,0.08))', fg: 'var(--ln-bp-ink, #0f2436)' },
   amber: { bg: 'var(--ln-bp-blue-soft, rgba(31,120,193,0.08))', fg: 'var(--ln-bp-ink-dim, #48596a)' },
   mute:  { bg: 'var(--ln-bp-blue-soft, rgba(31,120,193,0.08))', fg: 'var(--ln-bp-ink-mute, #566879)' },
