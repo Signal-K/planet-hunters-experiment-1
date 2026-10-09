@@ -43,6 +43,27 @@ enum SceneCatalog {
         return gs
     }
 
+
+    /// A real catalog contract with the ship in flight toward its target (no timer, so the arrival button is live).
+    static func transitState(returning: Bool) -> GameState {
+        var gs = basePlayer()
+        let cat = Catalog()
+        let m = cat.missions.first { !$0.locked && ($0.requires.drillTier ?? 1) > 0 } ?? cat.missions[0]
+        gs.missionId = m.id; gs.targetId = m.targetId ?? cat.targets.first?.id
+        gs.player.activeMission = ActiveMission(id: m.id, label: m.title)
+        gs.player.missionPhase = .transit
+        gs.player.returningToEarth = returning
+        gs.screen = .transit
+        return gs
+    }
+
+    static func miningState(rover: Bool) -> GameState {
+        var gs = transitState(returning: false)
+        gs.player.missionPhase = .mining
+        gs.screen = rover ? .roverMining : .mining
+        return gs
+    }
+
     static let tess = TessCandidate(id: "tess-demo", ticId: "TIC 260004324", toi: "TOI 700.01", sector: "Sectors 1-3", periodDays: 3.4, transitEpoch: 1.1, depthPpm: 9000, signalToNoise: 14)
 
     static var all: [CatalogScene] { [
@@ -144,6 +165,19 @@ enum SceneCatalog {
             feed.tess = (1...9).map { TessCandidate(id: "toi-\($0)", toi: "TOI \(100 + $0).01") }
             return TessDiscoveryScreen(candidate: tess).environment(GameStore(state: gs)).environment(feed).environment(\.flatLayout, true)
         },
+        scene("transit-live", 874) {
+            let st = GameStore(state: transitState(returning: false))
+            return TransitScreen().environment(st)
+        },
+        scene("transit-live-landscape", 402, w: 874) {
+            TransitScreen().environment(GameStore(state: transitState(returning: false)))
+        },
+        scene("mining-laser-live", 874) {
+            MiningScreen().environment(GameStore(state: miningState(rover: false)))
+        },
+        scene("mining-laser-live-landscape", 402, w: 874) {
+            MiningScreen().environment(GameStore(state: miningState(rover: false)))
+        },
         scene("rover-field-phone", 874) {
             var p = Prospecting(requirements: ["iron": 2, "copper": 1])
             p.select("ore-a"); p.driveToSelected(); _ = p.drill(); _ = p.drill(); _ = p.drill(); p.startConstruction()
@@ -196,7 +230,10 @@ enum SceneCatalog {
 struct SceneHost: View {
     let id: String
     var body: some View {
-        if let s = SceneCatalog.find(id) {
+        if let s = SceneCatalog.find(id), id.contains("-live") {
+            // Full-screen, real safe areas: what a player sees, without the fixed fixture frame.
+            s.make().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.bg)
+        } else if let s = SceneCatalog.find(id) {
             ScrollView { s.make().frame(width: s.size.width, height: s.size.height) }.background(Theme.bg)
         } else {
             ScrollView { VStack(alignment: .leading, spacing: 8) {

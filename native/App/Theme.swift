@@ -72,7 +72,8 @@ struct Panel<Content: View>: View {
     var accent: Color = Theme.blue
     @ViewBuilder var content: Content
     var body: some View {
-        content
+        // One container, so several children share a single card instead of each getting its own padding and background.
+        VStack(alignment: .leading, spacing: 8) { content }
             .font(AppFont.body(14))
             .fixedSize(horizontal: false, vertical: true)
             .padding(14)

@@ -14,10 +14,26 @@ struct HubScreen: View {
     private let zones = HUDZones.standard
 
     var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width, h = geo.size.height
-            let insets = safeAreaOverride ?? geo.safeAreaInsets
-            let layout = BaseLayout(size: geo.size, insets: insets, zones: zones, hasPlaced: store.player.placed.contains { $0 != "launchpad" && store.player.placementPlots[$0] != nil })
+        // Read the real safe area from the outer proxy, then draw edge to edge at the full size.
+        // (ignoresSafeArea on the reader itself zeroes the insets, which put the HUD under the status bar; the reader keeps them and the scene is positioned out past them.)
+        GeometryReader { outer in
+            let insets = safeAreaOverride ?? outer.safeAreaInsets
+            let full = safeAreaOverride != nil ? outer.size
+                : CGSize(width: outer.size.width + insets.leading + insets.trailing, height: outer.size.height + insets.top + insets.bottom)
+            let origin = safeAreaOverride != nil ? CGSize.zero : CGSize(width: insets.leading, height: insets.top)
+            scene(size: full, insets: insets)
+                .frame(width: full.width, height: full.height)
+                .position(x: full.width / 2 - origin.width, y: full.height / 2 - origin.height)
+        }
+        .background(Theme.bg.ignoresSafeArea())
+        .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
+        .sheet(isPresented: $showFriends) { FriendsSheet(onClose: { showFriends = false }) }
+    }
+
+    private func scene(size: CGSize, insets: EdgeInsets) -> some View {
+        Group {
+            let w = size.width, h = size.height
+            let layout = BaseLayout(size: size, insets: insets, zones: zones, hasPlaced: store.player.placed.contains { $0 != "launchpad" && store.player.placementPlots[$0] != nil })
             let portrait = layout.portrait
             let k = layout.k, groundY = layout.groundY
             ZStack(alignment: .topLeading) {
@@ -40,10 +56,6 @@ struct HubScreen: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
         }
-        .background(Theme.bg)
-        .ignoresSafeArea()
-        .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
-        .sheet(isPresented: $showFriends) { FriendsSheet(onClose: { showFriends = false }) }
     }
 
     private func topLeftHud(insets: EdgeInsets, portrait: Bool) -> some View {
