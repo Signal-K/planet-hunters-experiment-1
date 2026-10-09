@@ -4,13 +4,14 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import type { useGame } from '@/game-context'
 import type { Catalog } from '@/lib/catalog'
 import type { Screen } from '@/lib/game-types'
-import { ACADEMY_INTRO_MISSION_ID, ROCKET_MODELS, feasibleTargetsFor, isFreeHaulEligibleMission, rocketConfigForModel, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, ROCKET_MODELS, hasShipCustomizer, feasibleTargetsFor, isFreeHaulEligibleMission, rocketConfigForModel, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
 import { clientAffinityLevel, crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import { formatCurrency } from '@/lib/format'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import ClientMark from '@/components/ui/ClientMark'
 import PixiGalaxyMap from '@/components/TargetPicker/PixiGalaxyMap'
+import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
@@ -84,6 +85,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const selectedVehicle = game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)
   // SSL-375: the rocket stands in the Workshop while it is prepared, then rolls to the pad in-scene on confirm.
   const [rolling, setRolling] = useState<string | null>(null)
+  const [customizing, setCustomizing] = useState(false)
   const purchaseRef = useRef(game.onPurchaseRocket)
   purchaseRef.current = game.onPurchaseRocket
   useEffect(() => {
@@ -156,10 +158,12 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
             <div><span>VEHICLE</span><strong>{selectedRocket.name}</strong><nav><button type="button" onClick={() => switchRocket(-1)} disabled={selectableRockets.length < 2} aria-label="Previous vehicle"><ArrowGlyph direction="previous" /></button><button type="button" onClick={() => switchRocket(1)} disabled={selectableRockets.length < 2} aria-label="Next vehicle"><ArrowGlyph direction="next" /></button></nav></div>
           </div>
           <div className={styles.clearance} data-ready={launchReady && !preparing}><span>LAUNCH CLEARANCE</span><strong>{preparing ? 'PREPARING VEHICLE' : launchReady ? 'ALL PARAMETERS PASS' : 'BUILD HOLD'}</strong>{!launchReady && <small>{crewStatus.reason ?? 'MISSION REQUIREMENTS NOT MET'}</small>}</div>
+          {preparing && (hasShipCustomizer(game.player.unlockedSkillNodes ?? []) || !!game.player.crewModuleResearched || !!game.player.landingResearched) && <button type="button" className={styles.primary} data-testid="launch-review-customize-btn" disabled={!!rolling} onClick={() => setCustomizing(true)}>CUSTOMISE VEHICLE</button>}
           <button type="button" className={styles.primary} data-testid={preparing ? 'prepare-launch-btn' : 'launch-btn'} disabled={!!rolling || selectedVehicle?.location === 'hangar' || (!preparing && !launchReady)} onClick={() => preparing ? setRolling(selectedRocket.id) : onLaunch()}><LaunchGlyph /> {preparing ? preparationLabel : 'LAUNCH'}</button>
         </aside>
       </section>
     </SetupFrame>
+    {customizing && <div data-testid="launch-review-customizer-overlay" style={{ position: 'fixed', inset: 0, zIndex: 40 }}><ShipInteriorPreview rocketId="explorer" startingFrancs={game.player.francs} missionsDone={game.player.missionsDone} installedParts={game.player.shipCustomizerParts ?? {}} crewModuleResearched={game.player.crewModuleResearched} landingResearched={game.player.landingResearched} onConfirm={game.confirmShipCustomizerBuild} onClose={() => setCustomizing(false)} /></div>}
     {launchPending && <ErrorBoundary fallback={null} onError={onLaunchComplete}><LaunchSequenceCanvas rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={target.name} onComplete={onLaunchComplete} /></ErrorBoundary>}
   </>
 }

@@ -10,8 +10,10 @@ import type { MineralMeta } from '@/lib/data'
 import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 import { prefersReducedMotion } from '@/lib/pixi/launchSpriteAnim'
 import { recoilOffset } from '@/lib/engine/miningJuice'
-import { debrisRatePerMinute, type DebrisEventPreset } from '@/lib/data/sky-events'
+import { activeDebrisPreset, debrisRatePerMinute, type DebrisEventPreset } from '@/lib/data/sky-events'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
+import { loadOrionidsArt } from '@/lib/orionids/loadArt'
+import { MINING_CANVAS_SKY, miningCanvasIsDark } from '@/lib/orionids/theme'
 
 // Keep every mineral visibly grounded in the mining scene. The authored set
 // covers the most common late-game ores; the neutral iron crystal is a
@@ -26,7 +28,7 @@ const GENERIC_ORE_TEXTURE_ID = 'iron'
 // Tile width must be a multiple of 16 (ridgeH period) for seamless wrapping
 const SURFACE_TILE_W = 320
 
-const SKY_COLOR = 0xdfe9f3
+const SKY_COLOR = MINING_CANVAS_SKY
 
 // Minimum gap between shots: long enough that a mashed tap reads as
 // deliberately ignored (not dropped input), short enough not to feel laggy.
@@ -264,6 +266,11 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         )
 
         const shakeState = { timer: 0 }
+        const shower = debrisPresetRef.current ?? activeDebrisPreset(debrisNow())
+        const debrisArt = shower?.eventId === 'orionids-2026'
+          ? await loadOrionidsArt(miningCanvasIsDark(SKY_COLOR) ? 'dark' : 'blueprint')
+          : null
+        if (destroyed) return
         const controllerObj = scene.find('mining-controller')
         const controller = new MiningController(new RuntimeContext(), {
           container: app.stage,
@@ -293,6 +300,7 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
           onOreNearby: (near) => { oreNearRef?.current?.(near) },
           neededMineralsRef,
           reducedMotion: prefersReducedMotion(),
+          debrisArt,
           debris: {
             getSpawn: () => {
               const preset = debrisPresetRef.current
