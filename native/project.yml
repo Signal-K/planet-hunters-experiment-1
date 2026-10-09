@@ -14,6 +14,8 @@ targets:
       - path: App/Resources/Art
         type: folder
         buildPhase: resources
+      - path: ../shared/layout
+        buildPhase: resources
     dependencies: [{ package: LandnamCore }]
     settings:
       base:

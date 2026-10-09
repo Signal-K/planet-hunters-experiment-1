@@ -31,6 +31,7 @@ import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
 import HUDStrip from '@/components/ui/HUDStrip'
 import SkyEventChip from '@/components/game/SkyEventChip'
+import OrionidsTeaser from '@/components/game/OrionidsTeaser'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
@@ -438,6 +439,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
           <CrewWalkers road={EARTH_BASE_WIDE.roadPaths?.[0]} />
           <SkyEventChip surface="base" />
+          {!subsurface && <OrionidsTeaser />}
 
           {/* Drifting ambient motes — replaces the old daylight cloud layer,
               which read as overcast weather against the new deep-blue sky. */}
