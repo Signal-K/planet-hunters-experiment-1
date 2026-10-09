@@ -24,5 +24,13 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(endX).toBeGreaterThan(startX + 20)
       await page.screenshot({ path: info.outputPath(`pad-${vp}.png`) })
     })
+    test('Customise opens the existing ship customiser from the launch review', async ({ page }, info) => {
+      await stage(page, 'ui-target-picker', { patch: { francs: 500_000_000, crewModuleResearched: true } })
+      expect(await page.evaluate(() => innerWidth)).toBe(size.width)
+      await page.getByTestId('launch-review-customize-btn').click()
+      await expect(page.getByTestId('launch-review-customizer-overlay')).toBeVisible()
+      await page.waitForTimeout(500)
+      await page.screenshot({ path: info.outputPath(`customiser-${vp}.png`) })
+    })
   })
 }

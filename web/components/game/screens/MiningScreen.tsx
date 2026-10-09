@@ -148,7 +148,7 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, orionidsBadgeTier = null }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
@@ -190,6 +190,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   initialEarthDisposition?: 'store' | 'sell'
   /** SSL-475: fired for every sky-event debris chunk mined (first one earns the badge). */
   onDebrisMined?: (resourceId: string) => void
+  /** Tier already stored for the Orionids badge, so the mining HUD can show it once. */
+  orionidsBadgeTier?: 'gold' | 'silver' | null
 }) {
   const debrisPreset = useDebrisEvent()
   // Charge count is mission-aware, not coach-aware.
@@ -302,6 +304,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const onDebrisMinedRef = useRef(onDebrisMined)
   onDebrisMinedRef.current = onDebrisMined
   const collectMineral = useCallback((mineral: string) => {
+    // Shower debris rides in cargo and sells at the Market. It is not part of the order.
     if (DEBRIS_RESOURCE_IDS.includes(mineral)) onDebrisMinedRef.current?.(mineral)
     cargoRef.current = {
       ...cargoRef.current,
@@ -391,7 +394,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // Local-dev-only shortcut: fills the order instantly so testing later
   // screens doesn't require playing the mining minigame by hand each time.
   function handleDevSkip() {
-    cargoRef.current = { ...mission.requires.minerals }
+    cargoRef.current = { ...cargoRef.current, ...mission.requires.minerals }
     onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
   }
 
@@ -670,7 +673,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           trainingMiningTry={trainingMiningTry}
           debrisPreset={debrisPreset}
         />
-        <SkyEventChip surface="mining" />
+        <SkyEventChip
+          surface="mining"
+          debrisCount={cargo.orionid_debris ?? 0}
+          badgeTier={(cargo.orionid_debris ?? 0) > 0 ? orionidsBadgeTier : null}
+        />
         {sceneStatus !== 'ready' && (
           <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">
             <span className="mining-scene-status__eyebrow">{sceneStatus === 'failed' ? 'FIELD OFFLINE' : 'PREPARING MINING FIELD'}</span>

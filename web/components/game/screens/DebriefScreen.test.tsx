@@ -155,10 +155,12 @@ describe('DebriefScreen own-program outcomes', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
-    expect(host.textContent).toContain('Your ore · keep or sell')
-    expect(host.textContent).toContain('Needs a Vault')
+    // 4c2c98cc (SSL-512): the destination is chosen at launch; the debrief only reports it.
+    expect(host.textContent).toContain('Free Ops haul')
+    expect(host.textContent).toContain('sell on Earth return')
     expect(host.textContent).toContain('Build a Mineral Vault')
-    expect(host.textContent).toContain('Sell haul')
+    expect(host.querySelector('[data-testid="debrief-store"]')).toBeNull()
+    expect(host.querySelector('[data-testid="debrief-sell"]')).toBeNull()
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
@@ -168,46 +170,56 @@ describe('DebriefScreen own-program outcomes', () => {
     root.unmount()
   })
 
-  it('lets a Vault owner switch a free haul from keeping to selling', async () => {
-    const host = document.createElement('div')
-    const root = createRoot(host)
-    const onDone = vi.fn()
+  it('reports the destination chosen at launch for a Vault owner (store by default, sell when selected)', async () => {
+    const renderDebrief = async (initialDisposition?: 'store' | 'sell') => {
+      const host = document.createElement('div')
+      const root = createRoot(host)
+      const onDone = vi.fn()
+      await act(async () => {
+        root.render(
+          <DebriefScreen
+            mission={freeMiningMission}
+            target={target}
+            cargo={{ iron: 2 }}
+            onDone={onDone}
+            minerals={{}}
+            clients={{}}
+            hasEarthStorage
+            storageCapacity={120}
+            storageUsed={2}
+            haulMarketValue={640}
+            initialDisposition={initialDisposition}
+          />,
+        )
+      })
+      await act(async () => {
+        host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
+          ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      })
+      return { host, root, onDone }
+    }
 
+    // 4c2c98cc (SSL-512): no keep/sell toggle in the debrief; launch planning owns the choice.
+    const kept = await renderDebrief()
+    expect(kept.host.textContent).toContain('Earth storage')
+    expect(kept.host.textContent).toContain('Keep haul on Earth')
+    expect(kept.host.querySelector('[data-testid="debrief-sell"]')).toBeNull()
     await act(async () => {
-      root.render(
-        <DebriefScreen
-          mission={freeMiningMission}
-          target={target}
-          cargo={{ iron: 2 }}
-          onDone={onDone}
-          minerals={{}}
-          clients={{}}
-          hasEarthStorage
-          storageCapacity={120}
-          storageUsed={2}
-          haulMarketValue={640}
-        />,
-      )
-    })
-
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
+      kept.host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
-    expect(host.textContent).toContain('Keep haul on Earth')
+    expect(kept.onDone).toHaveBeenCalledWith(0, 0, {}, 'store')
+    kept.root.unmount()
 
+    const sold = await renderDebrief('sell')
+    expect(sold.host.textContent).toContain('sell on Earth return')
+    expect(sold.host.textContent).toContain('Sell haul')
     await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="debrief-sell"]')
+      sold.host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
-    expect(host.textContent).toContain('Sell haul')
-
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-    expect(onDone).toHaveBeenCalledWith(0, 0, {}, 'sell')
-    root.unmount()
+    expect(sold.onDone).toHaveBeenCalledWith(0, 0, {}, 'sell')
+    sold.root.unmount()
   })
 
   it('KES-348: shows the ledger first and requires explicit vehicle teardown before Collect (early onboarding)', async () => {

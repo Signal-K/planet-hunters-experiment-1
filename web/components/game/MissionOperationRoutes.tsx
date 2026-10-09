@@ -14,8 +14,8 @@ import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUni
 import { TRANSPORT_LESSON_MISSIONS_DONE } from '@/lib/systems/AgencyOnboardingSystem'
 import { ownershipIdentity } from '@/lib/systems/SandboxSystem'
 import { isFreeHaulEligibleMission } from '@/lib/data'
-import { DEBRIS_PRESETS, applyDebrisMined, skyEventNow } from '@/lib/data/sky-events'
-import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-events'
+import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { captureGameEvent } from '@/lib/posthog'
 
 const reportedDebrisBadges = new Set<string>()
@@ -218,8 +218,9 @@ export default function MissionOperationRoutes({
           isFreeHaulEligible={isFreeHaulEligibleMission(game.mission)}
           hasEarthStorage={earthStorageBuilt(game.player)}
           initialEarthDisposition={game.player.freeHaulDisposition}
+          orionidsBadgeTier={game.player.badges?.['orionids-2026']?.tier ?? null}
           onDebrisMined={resourceId => {
-            const now = skyEventNow(isDevLauncherEnabled())
+            const now = debrisNow()
             const preset = DEBRIS_PRESETS.find(p => p.resourceId === resourceId)
             if (!preset) return
             captureGameEvent('sky_event_debris_mined', { event_id: preset.eventId, resource: resourceId })
@@ -229,7 +230,8 @@ export default function MissionOperationRoutes({
             if (badge && !reportedDebrisBadges.has(badge.eventId)) {
               reportedDebrisBadges.add(badge.eventId)
               captureGameEvent('badge_earned', { event_id: badge.eventId, tier: badge.tier, activity: 'debris-mining' })
-              game.addToast(`${preset.label} badge earned`, 'ok')
+              const name = getSkyEvent(badge.eventId)?.name ?? preset.label
+              game.addToast(`${name} ${badge.tier} badge earned`, 'ok')
             }
             game.setPlayer(player => applyDebrisMined(player, preset, now).player)
           }}

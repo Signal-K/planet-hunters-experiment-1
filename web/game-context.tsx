@@ -28,6 +28,7 @@ import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/a
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
 import { canonicalGamePath, entryScreenForPath } from '@/lib/game-route'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { captureOrionidsQueryFlag } from '@/lib/data/sky-events'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -54,6 +55,9 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
         || new URLSearchParams(window.location.search).has('preset')
         || window.location.pathname.endsWith('/game/ship-customizer')),
   )
+  // Hydration strips ?preset= before MiningScreen mounts. Keep ?orionids=
+  // in localStorage so the dev shower still turns on after that.
+  if (typeof window !== 'undefined') captureOrionidsQueryFlag()
   const skipNextLocalPersist = useRef(false)
   // React StrictMode double-invokes effects in dev. This effect strips the
   // `?preset=`/`?preview=` query via history.replaceState as one of its own
