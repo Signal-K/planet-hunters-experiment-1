@@ -4,7 +4,7 @@ import { useEffect, useMemo, type CSSProperties, type ReactNode } from 'react'
 import type { useGame } from '@/game-context'
 import type { Catalog } from '@/lib/catalog'
 import type { Screen } from '@/lib/game-types'
-import { ACADEMY_INTRO_MISSION_ID, ROCKET_MODELS, feasibleTargetsFor, rocketConfigForModel, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, ROCKET_MODELS, feasibleTargetsFor, isFreeHaulEligibleMission, rocketConfigForModel, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
 import { clientAffinityLevel, crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import { formatCurrency } from '@/lib/format'
@@ -58,7 +58,7 @@ function LaunchGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c4 3 6 7 6 12l-6 7-6-7c0-5 2-9 6-12Z" /><circle cx="12" cy="10" r="2" /></svg>
 }
 
-function SetupFrame({ title, screen, onBack, children }: { title: string; screen: Screen; onBack: () => void; children: ReactNode }) {
+function SetupFrame({ title, screen, onBack, children, eyebrow = 'CONTRACT → LAUNCH' }: { title: string; screen: Screen; onBack: () => void; children: ReactNode; eyebrow?: string }) {
   // SSL-432: shared "?" slot. Renders nothing until this screen has a help topic.
   const help = useHelp(screen)
   return <div className={`game-screen theme-blueprint ${styles.root}`} data-testid="mission-setup-scaffold">
@@ -69,7 +69,7 @@ function SetupFrame({ title, screen, onBack, children }: { title: string; screen
     </div>
     <header className={styles.header} data-dev-launcher={isDevLauncherEnabled()}>
       <button type="button" className={styles.back} onClick={onBack} aria-label="Back"><ArrowGlyph direction="previous" /></button>
-      <div className={styles.title}><span>CONTRACT → LAUNCH</span><h1>{title}</h1></div>
+      <div className={styles.title}><span>{eyebrow}</span><h1>{title}</h1></div>
       {help.button && <div className={styles.help}>{help.button}</div>}
     </header>
     {help.layer}
@@ -100,7 +100,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         {model ? <>
           <button type="button" className={`${styles.carouselArrow} ${styles.previous}`} onClick={() => relay.selectRelativeSignal(-1)} disabled={relay.cardModels.length < 2} aria-label="Previous contract"><ArrowGlyph direction="previous" /></button>
           <article className={styles.contractSlide} aria-live="polite">
-            <div className={styles.contractIdentity}><ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-cyan)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={88} /><div><span>CLIENT CONTRACT {relay.selectedIndex + 1} / {relay.cardModels.length}</span><strong>{client?.name ?? 'YOUR PROGRAM'}</strong></div></div>
+            <div className={styles.contractIdentity}><ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-cyan)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={88} /><div><span>{model.mission.payload?.type === 'satellite' ? 'INSTRUMENT LAUNCH' : `CLIENT CONTRACT ${relay.selectedIndex + 1} / ${relay.cardModels.length}`}</span><strong>{model.mission.payload?.type === 'satellite' ? model.mission.payload.name : client?.name ?? 'YOUR PROGRAM'}</strong></div></div>
             <div className={styles.contractCopy}><h2>{model.mission.title}</h2><span className={styles.contractRoute} data-testid="contract-route">{model.routeLabel ?? `${model.targetCount} ELIGIBLE TARGET${model.targetCount === 1 ? '' : 'S'}`}</span><p>{model.mission.brief}</p></div>
             <dl className={styles.contractFacts}><div><dt>VALUE</dt><dd>{formatCurrency(model.displayPayout, { compact: true })}</dd></div><div><dt>CLIENT LEVEL</dt><dd>{client ? `L${clientLevel}` : 'PROGRAM'}</dd></div><div><dt>MISSION TIER</dt><dd>{model.mission.difficulty}</dd></div></dl>
             <div className={styles.contractCargo}><span>REQUIRED CARGO</span><RequiredCargo minerals={model.mission.requires.minerals} catalog={game.catalog.minerals} /></div>
@@ -115,6 +115,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
 
   if (!game.mission || !game.target) return null
   const target = game.target
+  const isFreeOpsHaul = isFreeHaulEligibleMission(game.mission)
   const selectedRocket = rocketModelForConfig(game.rocket)
   const selectableRockets = ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= game.player.missionsDone).filter(model => validateBuild({ mission: game.mission!, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [] }).ok)
   const targetIndex = compatibleTargets.findIndex(candidate => candidate.id === target.id)
@@ -129,15 +130,15 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const preparationLabel = selectedRocket.costFrancs === 0 ? `PREPARE ${selectedRocket.name.toUpperCase()}` : `BUILD ${selectedRocket.name.toUpperCase()} · ${formatCurrency(selectedRocket.costFrancs, { compact: true })}`
 
   return <>
-    <SetupFrame title="Launch review" screen={screen} onBack={() => game.go('missions')}>
+    <SetupFrame title="Launch review" screen={screen} onBack={() => game.go('missions')} eyebrow={isFreeOpsHaul ? 'FREE OPS · OWN HAUL' : 'CONTRACT → LAUNCH'}>
       <section className={styles.review} data-testid="mission-launch-review">
         <div className={styles.launchScene}><div className={styles.launchArt}><div className={styles.launchTower} aria-hidden="true"><i /><i /><i /></div><img src={rocketDisplay.img} alt={`${selectedRocket.name} on the launchpad`} /></div><div className={styles.launchCaption}><span>LAUNCHPAD · READY FOR DEPARTURE</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
         <aside className={styles.reviewBrief}>
-          <div className={styles.reviewHeading}><span>CLIENT CONTRACT</span><h2>{game.mission.title}</h2></div>
+          <div className={styles.reviewHeading}><span>{game.mission.payload?.type === 'satellite' ? 'INSTRUMENT LAUNCH' : isFreeOpsHaul ? 'FREE OPS · OWN HAUL' : 'CLIENT CONTRACT'}</span><h2>{game.mission.title}</h2></div>
           <div className={styles.reviewMap} data-testid="launch-review-map" aria-label={`Route to ${target.name}`}>
             <PixiGalaxyMap mission={game.mission} targets={game.catalog.targets} compatibleIds={compatibleIds} pickedId={target.id} onPick={game.onPickTarget} />
           </div>
-          <dl className={styles.reviewFacts}><div><dt>DESTINATION</dt><dd>{target.name} · {targetTypeLabel(target.type)}</dd></div><div><dt>VEHICLE</dt><dd>{selectedRocket.name}</dd></div><div><dt>REQUIRED CARGO</dt><dd><RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} /></dd></div></dl>
+          <dl className={styles.reviewFacts}><div><dt>DESTINATION</dt><dd>{target.name} · {targetTypeLabel(target.type)}</dd></div><div><dt>VEHICLE</dt><dd>{selectedRocket.name}</dd></div>{!isFreeOpsHaul && <div><dt>REQUIRED CARGO</dt><dd><RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} /></dd></div>}</dl>
           <div className={styles.inlineChoices} aria-label="Change mission setup">
             <div><span>DESTINATION</span><strong>{target.name}</strong><nav><button type="button" onClick={() => switchTarget(-1)} disabled={compatibleTargets.length < 2} aria-label="Previous destination"><ArrowGlyph direction="previous" /></button><button type="button" onClick={() => switchTarget(1)} disabled={compatibleTargets.length < 2} aria-label="Next destination"><ArrowGlyph direction="next" /></button></nav></div>
             <div><span>VEHICLE</span><strong>{selectedRocket.name}</strong><nav><button type="button" onClick={() => switchRocket(-1)} disabled={selectableRockets.length < 2} aria-label="Previous vehicle"><ArrowGlyph direction="previous" /></button><button type="button" onClick={() => switchRocket(1)} disabled={selectableRockets.length < 2} aria-label="Next vehicle"><ArrowGlyph direction="next" /></button></nav></div>

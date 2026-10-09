@@ -14,13 +14,13 @@
    390,
    844
   ],
-  "dk": [
-   1280,
-   657
+  "ls": [
+   926,
+   428
   ],
-  "tab": [
-   1024,
-   768
+  "dk": [
+   1440,
+   900
   ]
  },
  "scenes": [
@@ -90,7 +90,7 @@
    "id": "mining-actions",
    "name": "Mining action row",
    "flow": "core-loop",
-   "web": null,
+   "web": "m1-mining",
    "native": "mining-actionrow-phone",
    "tickets": [
     "SSL-411"
@@ -118,7 +118,7 @@
    "id": "debrief-capacitor",
    "name": "Debrief laser capacitor",
    "flow": "core-loop",
-   "web": null,
+   "web": "m1-debrief",
    "native": "debrief-capacitor-phone",
    "tickets": [
     "SSL-462"
@@ -180,7 +180,7 @@
    "id": "tess-pointing",
    "name": "TESS pointing",
    "flow": "instruments",
-   "web": null,
+   "web": "ui-tess-discovery",
    "native": "tess-pointing-phone",
    "tickets": [
     "SSL-497"
@@ -232,7 +232,7 @@
    "id": "rover-touchdown",
    "name": "Rover touchdown",
    "flow": "field",
-   "web": null,
+   "web": "ui-rover-mining",
    "native": "rover-touchdown-phone",
    "tickets": []
   },
@@ -256,7 +256,7 @@
    "id": "refinery",
    "name": "Refinery",
    "flow": "progression",
-   "web": null,
+   "web": "ui-refinery",
    "native": "refinery-phone",
    "tickets": []
   },
@@ -264,7 +264,7 @@
    "id": "surface-ops",
    "name": "Surface ops",
    "flow": "progression",
-   "web": null,
+   "web": "ui-surface-ops",
    "native": "surface-ops-phone",
    "tickets": []
   },
@@ -272,7 +272,7 @@
    "id": "mission-log",
    "name": "Mission log",
    "flow": "records",
-   "web": null,
+   "web": "ui-mission-log",
    "native": "mission-log-phone",
    "tickets": []
   },
@@ -280,7 +280,7 @@
    "id": "ledger",
    "name": "Ledger",
    "flow": "records",
-   "web": null,
+   "web": "ui-ledger",
    "native": "ledger-phone",
    "tickets": []
   },
@@ -293,6 +293,22 @@
    "tickets": [
     "SSL-451"
    ]
+  },
+  {
+   "id": "market",
+   "name": "Market",
+   "flow": "progression",
+   "web": "ui-market",
+   "native": "market-phone",
+   "tickets": []
+  },
+  {
+   "id": "launchpad",
+   "name": "Launchpad",
+   "flow": "core-loop",
+   "web": "ui-launchpad",
+   "native": null,
+   "tickets": []
   }
  ]
 }

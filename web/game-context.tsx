@@ -350,6 +350,8 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       onDebriefDone: loop.onDebriefDone,
       onBuyLaserCapacitor: loop.onBuyLaserCapacitor,
       gainResearchXP: loop.gainResearchXP,
+      startSurveyScan: loop.startSurveyScan,
+      resolveSurveyScan: loop.resolveSurveyScan,
       upgradeLicenseGrade: loop.upgradeLicenseGrade,
       unlockBlueprint: loop.unlockBlueprint,
       claimFriendGift,
@@ -369,6 +371,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       chooseSatelliteTarget: loop.chooseSatelliteTarget,
       submitAsteroidClassification: loop.submitAsteroidClassification,
       submitSaturnClassification: loop.submitSaturnClassification,
+      claimSaturnSurveyTerritory: loop.claimSaturnSurveyTerritory,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,
@@ -405,6 +408,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       recordFieldDemolish: surfaceOps.recordFieldDemolish,
       runFieldRefining: surfaceOps.runFieldRefining,
       fabricateAtField: surfaceOps.fabricateAtField,
+      buildFieldKit: surfaceOps.buildFieldKit,
       seedBiosphere: surfaceOps.seedBiosphere,
     }}>
       {children}

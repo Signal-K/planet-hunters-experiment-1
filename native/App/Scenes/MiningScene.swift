@@ -78,7 +78,8 @@ final class MiningScene: SKScene {
     }
 
     private func spriteY(_ ny: Double) -> CGFloat {
-        let top = size.height - 110, bottom = groundY + 60
+        // Ore stays below the title and order chips (status bar + header + chip row is about 190pt).
+        let top = size.height - 200, bottom = groundY + 60
         let ys = field.nodes.map(\.y)
         let lo = ys.min() ?? 0, hi = ys.max() ?? 1
         let t = hi > lo ? (ny - lo) / (hi - lo) : 0.5

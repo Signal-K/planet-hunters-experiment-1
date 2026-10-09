@@ -33,7 +33,7 @@ export const DEEP_SPACE_TELESCOPE_TARGET: Target = {
   minerals: [],
 }
 
-// SSL-492: the Saturn imager reuses the same launch -> flight -> debrief ->
+// SSL-492: the Saturn satellite reuses the same launch -> flight -> debrief ->
 // Instrument Hub path as the telescopes. No payout; real Cassini frames.
 export const SATURN_IMAGER_TARGET_ID = 'earth-orbit-saturn-imager'
 export const SATURN_IMAGER_MISSION_ID = 'story-saturn-imager-launch'
@@ -44,7 +44,7 @@ export const SATURN_IMAGER_TARGET: Target = {
   type: 'planet',
   orbit: 1,
   difficulty: 'L1',
-  brief: 'Orbital lane for a Saturn imager that downlinks archived Cassini frames for storm-cloud review.',
+  brief: 'Orbital lane for a Saturn satellite that downlinks archived Cassini frames for storm-cloud review.',
   minerals: [],
 }
 
@@ -108,7 +108,7 @@ export function buildRuntimeCatalog({
       locked: false,
       sequence: missionsDone + 1,
       unlockAt: 'Reach Free Operations',
-      requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 4, drill_tier: 2, max_orbit: 8 },
+      requires: { minerals: { nickel: 1 }, cargo_min: 1, drill_tier: 1, max_orbit: 2 },
       payout: { francs: 0, affinity: 0 },
     }
   const hasSelfDirectedMining = catalog.missions.some(mission =>
@@ -181,8 +181,8 @@ export function buildRuntimeCatalog({
   const saturnImagerMission: Mission[] = shouldIncludeSaturnImagerMission && !existingMissionIds.has(SATURN_IMAGER_MISSION_ID)
     ? [{
         id: SATURN_IMAGER_MISSION_ID,
-        title: 'Launch Saturn Imager',
-        brief: 'Deploy a Saturn imager into Earth orbit. Its daily feed delivers real Cassini frames to check for storm clouds.',
+        title: 'Launch Saturn satellite',
+        brief: 'Deploy a Saturn satellite into Earth orbit. Its daily feed delivers real Cassini frames to check for storm clouds.',
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
@@ -191,7 +191,7 @@ export function buildRuntimeCatalog({
         targetId: SATURN_IMAGER_TARGET_ID,
         payload: {
           type: 'satellite',
-          name: 'Saturn Imager',
+          name: 'Saturn satellite',
           cargoCost: 0,
           instrumentId: 'saturn-imager',
         },
@@ -203,7 +203,7 @@ export function buildRuntimeCatalog({
         },
         programReward: {
           researchXP: 0,
-          outcome: 'Saturn imager online · Cassini storm-cloud feed unlocked',
+          outcome: 'Saturn satellite online · Cassini storm-cloud feed unlocked',
         },
         payout: { francs: 0, affinity: 0 },
       }]

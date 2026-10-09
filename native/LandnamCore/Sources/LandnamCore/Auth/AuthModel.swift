@@ -45,5 +45,26 @@ public final class AuthModel {
 
     public func fail(_ message: String) { errorMessage = message }
 
-    public func signOut() { store.clear(); session = nil }
+    /// Signs out. The local save stays on the device for the same account to resume.
+    public func signOut(message: String? = nil) { store.clear(); session = nil; errorMessage = message }
+
+    private var refreshing = false
+
+    /// Called when the server refuses the saved token. Renews quietly; if that is impossible the player signs in again
+    /// (their progress is kept locally and syncs afterwards). Returns whether the session is usable.
+    @discardableResult
+    public func refreshSession() async -> Bool {
+        guard let current = session, !refreshing else { return session != nil }
+        refreshing = true; defer { refreshing = false }
+        do {
+            let fresh = try await api.refresh(current)
+            store.save(fresh); session = fresh
+            return true
+        } catch AuthError.rejected {
+            signOut(message: "Your session expired. Sign in again; your progress is saved on this device.")
+            return false
+        } catch {
+            return true   // offline or server trouble: keep playing, try again on the next 401
+        }
+    }
 }

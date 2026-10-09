@@ -360,6 +360,13 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-active-mission { top: 64px; right: 12px; width: min(352px, calc(100% - 24px)); gap: 8px; padding: 12px; }
   .launchpad-active-mission h2 { font-size: 14px; }
 }
+@media (orientation: portrait) and (max-width: 720px) {
+  /* Keep the active-run card out of the suite rail's header lane. The old
+     * right-anchored version sat directly over SAME ACCOUNT / GARDEN and
+     * squeezed long destinations into an unreadable single line. */
+  .launchpad-active-mission { top: 160px; right: auto; left: 12px; width: calc(100% - 24px); max-height: calc(100% - 160px - 120px); }
+  .launchpad-active-mission h2 { overflow-wrap: anywhere; white-space: normal; }
+}
 .launchpad-mission-runs > :first-child { min-width: 0; }
 .launchpad-mission-runs h2 { margin: 4px 0 0; color: var(--ln-text); font: 800 20px var(--ln-font-display); letter-spacing: .04em; text-transform: uppercase; }
 .launchpad-mission-runs .launchpad-mission-menu-close { position: absolute; top: 16px; right: 16px; }

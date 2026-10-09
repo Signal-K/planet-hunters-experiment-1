@@ -29,5 +29,7 @@ public actor CloudSync {
     public func enqueue(_ op: OutboxOp) async { await outbox.enqueue(op); await outbox.flush() }
 
     public func flush() async { await outbox.flush() }
+    /// Drops queued writes (another account signed in).
+    public func clear() async { await outbox.clear() }
     public func snapshot() async -> OutboxSnapshot { await outbox.snapshot() }
 }

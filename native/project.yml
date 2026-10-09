@@ -27,6 +27,13 @@ targets:
         DEVELOPMENT_TEAM: NDP87SHHDT
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 3
+        INFOPLIST_KEY_CFBundleDisplayName: Landnám
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.games
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
   LandnamTests:
     type: bundle.unit-test
     supportedDestinations: [iOS, macOS]
@@ -38,7 +45,21 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.atlasskyventures.sslandnam.tests
         DEVELOPMENT_TEAM: NDP87SHHDT
+  LandnamUITests:
+    type: bundle.ui-testing
+    supportedDestinations: [iOS]
+    sources: [UITests]
+    dependencies: [{ target: Landnam }]
+    settings:
+      base:
+        SWIFT_VERSION: 6.0
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.atlasskyventures.sslandnam.uitests
+        DEVELOPMENT_TEAM: NDP87SHHDT
 schemes:
   Landnam:
     build: { targets: { Landnam: all, LandnamTests: [test] } }
     test: { targets: [LandnamTests] }
+  LandnamUI:
+    build: { targets: { Landnam: all, LandnamUITests: [test] } }
+    test: { targets: [LandnamUITests] }

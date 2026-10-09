@@ -165,6 +165,9 @@ public enum MissionGenerator {
             }
     }
 
+    /// Everything the web catalog offers: the generated board plus the authored missions.
+    public static func everything() -> [Mission] { fullBoard() + AuthoredMissions.all }
+
     public static func fullBoard() -> [Mission] {
         generate().filter { $0.sequence != transportSequence } + generateFreeOps() + generateSelfDirected()
     }

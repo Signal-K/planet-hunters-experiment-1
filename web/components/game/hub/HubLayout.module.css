@@ -50,6 +50,7 @@
   text-shadow: 0 4px 8px color-mix(in srgb, var(--ln-void) 60%, transparent);
 }
 .balance { pointer-events: auto; }
+.badges { top: 144px; bottom: auto; z-index: 19; }
 
 .surface::before {
   position: absolute;
@@ -119,4 +120,5 @@
   /* The eyebrow is hidden here, so the DEV badge would sit on the title instead. */
   .titleBlock:has(.eyebrow[data-dev-launcher='true']) { margin-left: 64px; }
   .titleText { margin: 0; font-size: 18px; }
+  .badges { top: 56px; }
 }

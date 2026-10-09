@@ -224,11 +224,13 @@ export const AUTHORED_MISSIONS: Mission[] = [
     requires: {
       // Sold at market on Earth return, so this must avoid earthAbundant
       // minerals (iron, silicon, carbon, ...) — Earth already has plenty.
-      minerals: { nickel: 2, cobalt: 2 },
-      cargo_min: 4,
-      // cobalt's laserAccess is 2 (see minerals.ts) — same floor as above.
-      drill_tier: 2,
-      max_orbit: 8,
+      // This is the first player-owned loop after the Flight Plan. It must
+      // launch on the Explorer fitted during training; requiring cobalt/T2
+      // here silently turned a Free Ops unlock into a contract gate.
+      minerals: { nickel: 1 },
+      cargo_min: 1,
+      drill_tier: 1,
+      max_orbit: 2,
     },
     payout: {
       francs: 0,

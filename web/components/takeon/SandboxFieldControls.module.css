@@ -218,6 +218,55 @@
   }
 }
 
+/* SSL-404: collapsed phone drawer = one row of structure cards, nothing else. */
+@media (max-width: 880px) {
+  .panel[data-compact='true'][data-expanded='false'] {
+    padding: var(--ln-s-1);
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .readouts,
+  .panel[data-compact='true'][data-expanded='false'] .actions > :not([data-testid='sandbox-drawer-expand']),
+  .panel[data-compact='true'][data-expanded='false'] .section,
+  .panel[data-compact='true'][data-expanded='false'] .short {
+    display: none;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .actions {
+    flex: 0 0 auto;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .actions .action {
+    min-height: 44px;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .palette {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .palette .card {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: var(--ln-s-2);
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .palette .cardState {
+    display: none;
+  }
+}
+
 @media (max-height: 480px) and (orientation: landscape) {
   .panel {
     gap: var(--ln-s-1);

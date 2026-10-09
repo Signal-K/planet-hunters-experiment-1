@@ -13,6 +13,7 @@ import { EarthBaseModules } from '@/components/game/hub/EarthBaseModules'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { formatCurrency } from '@/lib/format'
+import { mineralSourceHints } from '@/lib/data/mineral-sources'
 import { captureGameEvent } from '@/lib/posthog'
 import { structureBuildMs } from '@/lib/systems/HubConstructionSystem'
 
@@ -305,11 +306,12 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                     // (dimmed, non-interactive-looking) but let the tap
                     // through so "why won't this place" moments are visible.
                     const gaps = structureAffordabilityGaps(c, { francs: player.francs, stash: player.stash })
+                    const shortIds = Object.entries(c.costMaterials ?? {}).filter(([id, need]) => (player.stash?.[id] ?? 0) < need).map(([id]) => id)
                     setBlocked({
                       id: c.id,
                       reason: !unlocked
                         ? `Unlocks at ${c.unlocksAt}`
-                        : `Need ${gaps.join(', ')}`,
+                        : `Need ${gaps.join(', ')}${shortIds.length > 0 ? `. ${mineralSourceHints(shortIds)}` : ''}`,
                     })
                     captureGameEvent('structure_placement_blocked', {
                       structure_kind: c.id,

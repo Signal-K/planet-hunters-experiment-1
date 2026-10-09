@@ -41,6 +41,9 @@ interface LaunchpadScreenProps {
   missionMenuOpen?: boolean
   onMissionMenuOpenChange?: (open: boolean) => void
   onOpenSiloBuild?: () => void
+  /** Free Ops agency routes (SSL-512): everything the program does without a client starts from this menu. */
+  onOpenControlStation?: () => void
+  onOpenMarket?: () => void
 }
 
 function HangarGlyph() {
@@ -97,7 +100,7 @@ const guideSteps = [
 ] as const
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, hydrated = false, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange, onOpenSiloBuild,
+  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, hydrated = false, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange, onOpenSiloBuild, onOpenControlStation, onOpenMarket,
 }: LaunchpadScreenProps) {
   // This is the Launchpad route: a playable Earth Base composition. The
   // tower and hangar are the primary interactions; the rail only exposes
@@ -106,6 +109,7 @@ export default function LaunchpadScreen({
   const [guideStep, setGuideStep] = useState<number | null>(null)
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
+  const [activeRunBlockerOpen, setActiveRunBlockerOpen] = useState(false)
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   const [operationBrief, setOperationBrief] = useState<'instrument' | 'mining' | 'build' | null>(null)
   const externallyControlled = onMissionMenuOpenChange !== undefined
@@ -149,7 +153,7 @@ export default function LaunchpadScreen({
       locked: false,
       sequence: sequence,
       unlockAt: 'Reach Free Operations',
-      requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 4, drill_tier: 2, max_orbit: 8 },
+      requires: { minerals: { nickel: 1 }, cargo_min: 1, drill_tier: 1, max_orbit: 2 },
       payout: { francs: 0, affinity: 0 },
     } satisfies Mission : undefined)
   // Launchable instruments are the first-class infrastructure path. Only
@@ -189,6 +193,10 @@ export default function LaunchpadScreen({
   const openMissionMenu = () => {
     if (player.pendingLaunch) {
       onLaunchpadAction()
+      return
+    }
+    if (player.activeMission) {
+      setActiveRunBlockerOpen(true)
       return
     }
     if (!hasFreeOpsAccess) {
@@ -278,6 +286,26 @@ export default function LaunchpadScreen({
           </section>
         )}
 
+        {activeRunBlockerOpen && player.activeMission && (
+          <section className="launchpad-mission-menu" data-testid="launchpad-active-run-blocker" aria-labelledby="launchpad-active-run-blocker-title">
+            <div className="launchpad-mission-menu-header">
+              <div>
+                <span className="launchpad-guide-kicker">MISSION IN PROGRESS</span>
+                <h2 id="launchpad-active-run-blocker-title">Current run is still active</h2>
+                <p>Finish or scrub your current run first. Starting Free Ops now would replace its cargo and charge state.</p>
+              </div>
+              <button type="button" className="launchpad-mission-menu-close" onClick={() => setActiveRunBlockerOpen(false)}>CLOSE</button>
+            </div>
+            <div className="launchpad-mission-menu-options">
+              <button type="button" className="launchpad-mission-choice" onClick={onResumeMission}>
+                <MissionGlyph />
+                <strong>RESUME CURRENT RUN</strong>
+                <span>{player.activeMission.label} · scrub it from the run controls only if you intend to abandon it.</span>
+              </button>
+            </div>
+          </section>
+        )}
+
         {visibleMissionMenuOpen && !player.pendingLaunch && (
           <section className="launchpad-mission-menu" data-testid="launchpad-new-mission-menu" aria-labelledby="launchpad-new-mission-title">
             <div className="launchpad-mission-menu-header">
@@ -311,8 +339,8 @@ export default function LaunchpadScreen({
                 onClick={() => setOperationBrief('mining')}
               >
                 <MiningGlyph />
-                <strong>GO MINING</strong>
-                <span>{ownMiningOperation ? 'Set storage and inspect market conditions before dispatch.' : 'Self-directed mining unlocks with Free Operations.'}</span>
+                <strong>FREE OPS</strong>
+                <span>{ownMiningOperation ? 'Plan your own haul: no client, no required cargo, return when ready.' : 'Self-directed mining unlocks with Free Operations.'}</span>
               </button>
               ) : null}
               {buildOperation ? (
@@ -328,6 +356,30 @@ export default function LaunchpadScreen({
                 <span>{buildOperation ? 'Choose a permanent program build and its assigned site.' : 'No player construction mission is ready for dispatch.'}</span>
               </button>
               ) : null}
+              {onOpenControlStation && (
+              <button
+                type="button"
+                className="launchpad-mission-choice"
+                data-testid="launchpad-new-mission-control-station-btn"
+                onClick={onOpenControlStation}
+              >
+                <SatelliteGlyph />
+                <strong>CONTROL STATION</strong>
+                <span>Operate your instruments, scan and chart bodies, and review citizen science feeds. No client needed.</span>
+              </button>
+              )}
+              {onOpenMarket && (
+              <button
+                type="button"
+                className="launchpad-mission-choice"
+                data-testid="launchpad-new-mission-market-btn"
+                onClick={onOpenMarket}
+              >
+                <InfrastructureGlyph />
+                <strong>SELL &amp; BUILD</strong>
+                <span>Sell what you mined, then spend the francs on Base builds and field kits.</span>
+              </button>
+              )}
               <button
                 type="button"
                 className="launchpad-mission-choice"

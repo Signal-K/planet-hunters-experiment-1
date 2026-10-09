@@ -5,6 +5,8 @@ import LandnamCore
 /// (mirrors web MissionSetupRoutes "Launch review", SSL-450). Replaces the old
 /// Targets / Rocket yard / Launchpad hops.
 struct LaunchReviewScreen: View {
+    @State private var archiveFocus: String?
+    @State private var showArchive = false
     @Environment(GameStore.self) private var store
     @State private var launching = false
 
@@ -44,13 +46,15 @@ struct LaunchReviewScreen: View {
         }
     }
 
-    /// Launchpad with nothing queued: the owned operations (instrument launches, discovery surveys, self-directed mining).
+    /// Launchpad with nothing queued: the player's own programme (instrument launches, surveys, self-directed mining, builds, story).
     private var operations: some View {
         let p = store.player
-        let own = store.catalog.missions.filter { $0.isOwnProgram && !$0.locked && $0.construction == nil }
-        let instruments = own.filter { $0.payload?.type == .satellite }
-        let surveys = own.filter { $0.tag == "SCIENCE" }
-        let mining = own.filter { $0.tag == "FREE OPS" && $0.payload == nil }.prefix(4)
+        let own = MissionBoard.programBoard(catalog: store.catalog, player: p, now: store.now)
+        let instruments = own.filter { $0.mission.payload?.type == .satellite }
+        let surveys = own.filter { $0.mission.tag == "SCIENCE" }
+        let mining = own.filter { $0.mission.tag == "FREE OPS" && $0.mission.payload == nil }
+        let builds = own.filter { $0.mission.construction != nil }
+        let story = own.filter { $0.mission.tag == "STORY" && $0.mission.payload == nil }
         return ScreenFrame(title: "Launchpad", back: { store.go(.hub) }) {
             Eyebrow(text: "Base · Operations")
             if !p.freeOperations {
@@ -62,22 +66,41 @@ struct LaunchReviewScreen: View {
             } else {
                 group("Instruments", "Launch an owned instrument. Its daily feed opens in the Control Station.", instruments)
                 group("Discovery surveys", "Follow up a confirmed transit with a survey flight.", surveys)
-                group("Self-directed mining", "No client and no daily limit. Sell the haul yourself.", Array(mining))
+                group("Self-directed mining", "No client and no daily limit. Sell the haul yourself.", mining)
+                group("Off-world builds", "Carry a construction kit from storage to a site and start a structure.", builds)
+                group("Story", "Milestones that open new parts of the base.", story)
                 PrimaryButton(title: "Open mission board") { store.go(.missions) }
             }
+            PrimaryButton(title: "Archive · pathways and unlocks") { archiveFocus = nil; showArchive = true }
         }
+        .sheet(isPresented: $showArchive) { ArchiveScreen(focus: archiveFocus) }
     }
 
-    @ViewBuilder private func group(_ title: String, _ blurb: String, _ missions: [Mission]) -> some View {
-        if !missions.isEmpty {
+    @ViewBuilder private func group(_ title: String, _ blurb: String, _ entries: [MissionBoard.Entry]) -> some View {
+        if !entries.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 Eyebrow(text: title)
                 Text(blurb).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                ForEach(missions) { m in
-                    Panel(accent: Theme.teal) { VStack(alignment: .leading, spacing: 6) {
+                ForEach(entries) { e in
+                    let m = e.mission
+                    Panel(accent: e.unlocked ? Theme.teal : Theme.textMuted) { VStack(alignment: .leading, spacing: 6) {
                         Text(m.title).font(AppFont.display(16))
                         Text(m.programReward?.outcome ?? m.brief).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                        PrimaryButton(title: m.payload != nil ? "Plan launch" : "Plan run") { store.pickMission(m.id) }
+                        if e.unlocked {
+                            if m.id == AuthoredMissions.academyStoryId {
+                                PrimaryButton(title: "Open the Academy") { store.go(.academy) }
+                            } else {
+                                PrimaryButton(title: m.payload != nil ? "Plan launch" : m.construction != nil ? "Plan delivery" : "Plan run") { store.pickMission(m.id) }
+                            }
+                        } else {
+                            HStack(spacing: 8) {
+                                Image(systemName: "lock.fill").foregroundStyle(Theme.textMuted)
+                                Text(e.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                            }
+                            Button { archiveFocus = "mission:\(m.id)"; showArchive = true } label: {
+                                Text("SEE THE PATHWAY").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress).frame(minHeight: 44, alignment: .leading)
+                            }.buttonStyle(.plain)
+                        }
                     } }
                 }
             }

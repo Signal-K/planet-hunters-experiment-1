@@ -1,4 +1,5 @@
 import { STARTING_FRANCS } from '@/lib/data/economy'
+import { canonicalSaturnLabel } from '@/lib/saturn-label'
 import { sanitizeBadges } from '@/lib/data/sky-events'
 import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, OWN_PROGRAM_CLIENT_ID, TARGETS } from '@/lib/data'
@@ -70,6 +71,8 @@ export const DEFAULT_STATE: GameState = {
     artifactNarrativeSeenAt: null,
     asteroidClassifications: {},
     saturnClassifications: {},
+    saturnActiveFrameId: null,
+    moonSurveyCharts: {},
     badges: {},
     saturnImagerLaunchedAt: null,
     instrumentDigestNotifiedOn: {},
@@ -160,7 +163,7 @@ function normalizeCompletedMissions(value: unknown): CompletedMissionRecord[] {
       && (record.targetName === undefined || typeof record.targetName === 'string')
       && (record.runId === undefined || typeof record.runId === 'string')
       && (record.kind === undefined || record.kind === 'client' || record.kind === 'program')
-  }).slice(-100)
+  }).slice(-100).map(record => ({ ...record, title: canonicalSaturnLabel(record.title) }))
 }
 
 export function normalizeState(input: PartialSave): GameState {
@@ -191,6 +194,9 @@ export function normalizeState(input: PartialSave): GameState {
   const saturnClassifications = player.saturnClassifications && typeof player.saturnClassifications === 'object'
     ? player.saturnClassifications
     : DEFAULT_STATE.player.saturnClassifications
+  const moonSurveyCharts = player.moonSurveyCharts && typeof player.moonSurveyCharts === 'object'
+    ? player.moonSurveyCharts
+    : DEFAULT_STATE.player.moonSurveyCharts
   const badges = sanitizeBadges(player.badges)
   const roverTerrainClassifications = player.roverTerrainClassifications && typeof player.roverTerrainClassifications === 'object'
     ? player.roverTerrainClassifications
@@ -309,7 +315,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, badges, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
@@ -645,6 +651,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
       returningToEarth: current.player.returningToEarth,
       debriefPending: current.player.debriefPending,
       miningCargoInProgress: current.player.miningCargoInProgress,
+      miningLaserCharges: current.player.miningLaserCharges,
       roverMiningStartedAt: current.player.roverMiningStartedAt,
       landingStartedAt: current.player.landingStartedAt,
       landingReturnStartedAt: current.player.landingReturnStartedAt,

@@ -23,7 +23,7 @@ if (opt('list')) {
 const flow = opt('flow'), scene = opt('scene'), ticket = opt('ticket')
 const picked = M.scenes.filter(s => (!flow || s.flow === flow) && (!scene || s.id === scene) && (!ticket || s.tickets.includes(ticket)))
 if (!picked.length || !(flow || scene || ticket)) { console.error('Pick --flow, --scene or --ticket (or --list).'); process.exit(1) }
-const vps = (opt('vp') || 'ph,dk').split(',')
+const vps = (opt('vp') || 'ph,ls,dk').split(',')
 const run = new Date().toISOString().slice(11, 19).replace(/:/g, '')
 const out = `/tmp/landnam-qa/${run}`; mkdirSync(out, { recursive: true })
 const snap = process.env.SNAPSHOT_DIR || '/tmp/landnam-snap'

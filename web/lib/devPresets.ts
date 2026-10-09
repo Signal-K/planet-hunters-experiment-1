@@ -165,9 +165,15 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
       { key: 'ui-instrument-hub', label: 'Control Station', hint: 'One hub for telescopes and satellites. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn imager launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Deep Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-market', label: 'Market', hint: 'Market with a stocked stash to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-surface-ops', label: 'Surface Ops', hint: 'Surface Ops list with site access to buy and settlements. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
 ]
@@ -550,6 +556,84 @@ export function resolvePreset(name: string): Partial<GameState> | null {
       return {
         screen: 'academy',
         player: ACADEMY_PLAYER,
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-refinery':
+      return {
+        screen: 'refinery',
+        player: { ...POST_ONBOARDING_PLAYER, refineryBuilt: true, refineryUnlocked: true, stash: { iron: 40, nickel: 20 }, },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-market':
+      return {
+        screen: 'market',
+        player: { ...POST_ONBOARDING_PLAYER, stash: { iron: 40, nickel: 20, silicates: 15 }, },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-surface-ops':
+      return {
+        screen: 'surface-ops',
+        player: { ...POST_ONBOARDING_PLAYER, },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-mission-log':
+      return {
+        screen: 'mission-history',
+        player: { ...POST_ONBOARDING_PLAYER, },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-ledger':
+      return {
+        screen: 'narrative-ledger',
+        player: { ...POST_ONBOARDING_PLAYER, },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-launchpad':
+      return {
+        screen: 'launchpad',
+        player: { ...POST_ONBOARDING_PLAYER, },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

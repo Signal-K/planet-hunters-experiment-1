@@ -105,6 +105,21 @@ export default function SandboxFieldControls({
   const [selected, setSelected] = useState<string | null>(null)
   const [snapshot, setSnapshot] = useState<HandleSnapshot>({ order: null, routeSteps: 0, faced: null, view: null })
   const [paletteOpen, setPaletteOpen] = useState(false)
+  // SSL-404: on a phone the drawer rests as one row of structure cards; MORE expands the full controls.
+  const [expanded, setExpanded] = useState(false)
+  const [compact, setCompact] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 880px)')
+    const sync = () => { setCompact(mq.matches); if (mq.matches) setPaletteOpen(true) }
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  // Driving the rover folds the drawer back to its single row so the field stays clear.
+  const driving = snapshot.order !== null
+  useEffect(() => { if (driving) setExpanded(false) }, [driving])
 
   useEffect(() => {
     const timer = window.setInterval(() => setSnapshot(readHandle(handle)), POLL_MS)
@@ -123,6 +138,7 @@ export default function SandboxFieldControls({
   const build = useCallback(() => {
     if (!selectedRecipe?.takeonType || !affordability?.ok) return
     handle.current?.build(selectedRecipe.takeonType)
+    setExpanded(false)
     setSnapshot(readHandle(handle))
   }, [affordability?.ok, handle, selectedRecipe])
 
@@ -141,7 +157,7 @@ export default function SandboxFieldControls({
   const structureCount = handle.current?.structures().length ?? 0
 
   return (
-    <div className={styles.panel} data-testid="sandbox-field-controls">
+    <div className={styles.panel} data-testid="sandbox-field-controls" data-compact={compact} data-expanded={expanded}>
       <div className={styles.readouts}>
         <div className={styles.readout} data-testid="sandbox-order-readout">
           <span className={styles.eyebrow}>ROVER</span>
@@ -162,6 +178,17 @@ export default function SandboxFieldControls({
       </p>
 
       <div className={styles.actions}>
+        {compact && (
+          <button
+            type="button"
+            className={styles.action}
+            onClick={() => setExpanded(open => !open)}
+            aria-expanded={expanded}
+            data-testid="sandbox-drawer-expand"
+          >
+            {expanded ? 'LESS' : 'MORE'}
+          </button>
+        )}
         <button
           type="button"
           className={styles.action}
@@ -252,7 +279,7 @@ export default function SandboxFieldControls({
                 aria-selected={isSelected}
                 className={`${styles.card} ${isSelected ? styles.cardSelected : ''}`}
                 data-affordable={can.ok}
-                onClick={() => setSelected(isSelected ? null : recipe.id)}
+                onClick={() => { setSelected(isSelected ? null : recipe.id); setExpanded(false) }}
                 data-testid={`sandbox-recipe-${recipe.id}`}
               >
                 <span className={styles.cardName} data-testid="sandbox-recipe-name">{recipe.name}</span>

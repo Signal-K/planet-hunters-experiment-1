@@ -28,6 +28,21 @@ export interface SaturnClassification {
    * (see resolveSaturnBadgeTier in sky-events.ts).
    */
   badgeTier: 'gold' | 'silver' | null
+  /** One durable record per image square. Older single-verdict saves remain
+   * readable as completed frames in the Saturn screen. */
+  cells?: Record<number, { verdict: SaturnVerdict; storm: boolean; submittedAt: number }>
+  completedAt?: number
+}
+
+export interface MoonSurveyChart {
+  moonId: 'enceladus'
+  /** Saturn frame whose nine squares make this chart, so the plot can be redrawn later. */
+  frameId?: string
+  completedAt: number
+  tier: 'gold' | 'silver'
+  researchXpAwarded?: number
+  atlasUnlockedAt?: number
+  territoryPlotClaimedAt?: number
 }
 
 /** Fixed single-frame-per-day digest; the Saturn imager has no level scaling. */

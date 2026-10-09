@@ -512,6 +512,17 @@
   text-transform: uppercase;
 }
 
+.chartAction {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
 .saturnGrid {
   position: absolute;
   inset: 0;

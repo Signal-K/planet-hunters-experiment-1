@@ -1,7 +1,7 @@
 // Landnam game — shared type definitions
 // Extracted from game-context.tsx so they can be imported without pulling in React context.
 
-import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict, SaturnClassification, SaturnVerdict } from '@/lib/data'
+import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict, SaturnClassification, SaturnVerdict, MoonSurveyChart } from '@/lib/data'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import type { RoverSpec } from '@takeon/engine'
 import type { SceneScope } from './scene-scope'
@@ -47,6 +47,7 @@ export interface MissionRunSnapshot {
   missionRunId?: string
   missionPhase?: 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
   miningCargoInProgress?: Record<string, number>
+  miningLaserCharges?: number
   deliveryUnloadStartedAt?: number
   landingStartedAt?: number
   landingReturnStartedAt?: number
@@ -227,6 +228,9 @@ export interface Player {
   // state before this, and was lost on remount). Cleared once the mission
   // completes or is abandoned.
   miningCargoInProgress?: Record<string, number>
+  // Laser charges left in the paused mining run (SSL-512). Without it, leaving
+  // and resuming refilled the magazine, a free recharge.
+  miningLaserCharges?: number
   // Legacy timer field retained for save migration. Live rover missions now
   // persist their field state through TakeOnMount/LandnamSync.
   roverMiningStartedAt?: number
@@ -373,6 +377,10 @@ export interface Player {
   // building or level; launching it opens the Cassini storm-cloud feed.
   saturnImagerLaunchedAt?: number | null
   saturnClassifications?: Record<string, SaturnClassification>
+  /** The unanswered Cassini frame must survive a reload until all nine panes
+   * are classified; it is intentionally separate from the digest cadence. */
+  saturnActiveFrameId?: string | null
+  moonSurveyCharts?: Record<string, MoonSurveyChart>
   // Sky event badges (SSL-491), keyed by event id. Gold/silver by date played.
   badges?: Record<string, import('@/lib/data/sky-events').PlayerBadge>
   // Player's satellite-pointing choice for the *next* daily downlink,
@@ -408,7 +416,13 @@ export interface Player {
   // keyed by Landnam target id. The takeon save owns placement; this record
   // owns the economics (what was charged, which beacon staked which claim)
   // and feeds site refinery/factory processing.
+  /** SSL-512 survey scan in progress: an owned telescope pointed at a body. */
+  activeScan?: { targetId: string; startedAt: number } | null
+  /** SSL-512 bodies charted by a survey scan, with the research XP each paid. */
+  chartedBodies?: Record<string, { chartedAt: number; researchXpAwarded: number }>
   fieldStructures?: Record<string, FieldStructureRecord[]>
+  /** Field structure kits built at the Market (SSL-512), keyed by crafting recipe id. Placing one on a field spends the kit instead of francs and minerals. */
+  fieldKits?: Record<string, number>
   /** Last refinery pass per target id, for the field processing cadence. */
   fieldProcessedAt?: Record<string, number>
   clientStructures?: import('@/lib/data').ClientStructureRecord[]
@@ -578,7 +592,8 @@ export interface GameActions {
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   chooseSatelliteTarget: (subjectId: string) => void
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
-  submitSaturnClassification: (candidateId: string, verdict: SaturnVerdict) => void
+  submitSaturnClassification: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
+  claimSaturnSurveyTerritory: () => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
@@ -596,8 +611,14 @@ export interface GameActions {
   recordFieldDemolish: (targetId: string, structureId: string) => void
   runFieldRefining: (field: import('@/lib/systems/SandboxSystem').FieldIdentity) => void
   fabricateAtField: (targetId: string, recipeId: string) => boolean
+  /** SSL-512: build a field structure kit at the Market, spent when placed on a field. */
+  buildFieldKit: (recipeId: string) => boolean
   seedBiosphere: (target: import('@/lib/data').SurfaceTarget) => boolean
   gainResearchXP: (amount: number) => void
+  /** SSL-512: point an owned telescope at a body. */
+  startSurveyScan: (targetId: string) => void
+  /** SSL-512: finish a scan whose time is up. */
+  resolveSurveyScan: () => void
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
   claimFriendGift: (giftId: string) => Promise<void>

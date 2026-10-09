@@ -26,6 +26,7 @@ import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
+import { applyStartScan, applyResolveScan } from '@/lib/systems/SurveyScanSystem'
 import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
@@ -43,6 +44,7 @@ const ORBIT_MS_PER_UNIT = 42 * 1000
 // already-classified subject earn nothing (see submitTessClassification).
 const RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION = 15
 const RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION = 15
+const RESEARCH_XP_PER_ENCELADUS_CHART = 30
 interface GameLoopOpts {
   stateRef: React.RefObject<GameState>
   setState: React.Dispatch<React.SetStateAction<GameState>>
@@ -66,6 +68,7 @@ function snapshotActiveMission(state: GameState): MissionRunSnapshot | null {
     missionRunId: state.player.missionRunId,
     missionPhase: state.player.missionPhase,
     miningCargoInProgress: state.player.miningCargoInProgress,
+    miningLaserCharges: state.player.miningLaserCharges,
     deliveryUnloadStartedAt: state.player.deliveryUnloadStartedAt,
     landingStartedAt: state.player.landingStartedAt,
     landingReturnStartedAt: state.player.landingReturnStartedAt,
@@ -197,6 +200,7 @@ function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot):
       missionRunId: snapshot.missionRunId,
       missionPhase: snapshot.missionPhase,
       miningCargoInProgress: snapshot.miningCargoInProgress,
+      miningLaserCharges: snapshot.miningLaserCharges,
       deliveryUnloadStartedAt: snapshot.deliveryUnloadStartedAt,
       landingStartedAt: snapshot.landingStartedAt,
       landingReturnStartedAt: snapshot.landingReturnStartedAt,
@@ -275,6 +279,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [setState])
 
   const onPickMission = useCallback((id: string, freeHaulDisposition?: 'store' | 'sell') => {
+    // A launched run owns its cargo, charge state, and mission receipt. Do not
+    // replace it while the player is browsing the Launchpad.
+    if (stateRef.current.player.activeMission) {
+      addToast('Finish or scrub your current run first.', 'warn')
+      return
+    }
     // Counterpart to mission_completed — without a started event, Trends/
     // Funnels can't tell "never picked a mission" apart from "picked one and
     // dropped off before finishing it".
@@ -290,6 +300,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
     setState(s => {
       if (s.screen !== 'missions' && s.screen !== 'launchpad') return s
+      if (s.player.activeMission) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? null
@@ -315,40 +326,15 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const dailyClientPool = (nextDailyPool && id.startsWith('dcp-'))
         ? { ...nextDailyPool, acceptedId: id }
         : nextDailyPool
-      // Selecting another mission parks the current operational context first.
-      // The old single `activeMission` guard made this a silent no-op; runs are
-      // now independently resumable, with no arbitrary capacity limit.
-      const parkedRun = snapshotActiveMission(s)
-      const pausedMissionRuns = parkedRun
-        ? [...(s.player.pausedMissionRuns ?? []).filter(run => run.key !== parkedRun.key), parkedRun]
-        : s.player.pausedMissionRuns
       const base = {
         ...s,
-        lastCargo: parkedRun ? null : s.lastCargo,
-        deliveredCargo: parkedRun ? null : s.deliveredCargo,
+        lastCargo: s.lastCargo,
+        deliveredCargo: s.deliveredCargo,
         player: {
           ...s.player,
           dailyClientPool,
           francs: s.player.francs - (mission.jointProject?.playerCost ?? 0),
-          pausedMissionRuns,
-          activeMission: parkedRun ? null : s.player.activeMission,
-          missionRunId: parkedRun ? undefined : s.player.missionRunId,
-          missionPhase: parkedRun ? undefined : s.player.missionPhase,
-          miningCargoInProgress: parkedRun ? undefined : s.player.miningCargoInProgress,
-          deliveryUnloadStartedAt: parkedRun ? undefined : s.player.deliveryUnloadStartedAt,
-          landingStartedAt: parkedRun ? undefined : s.player.landingStartedAt,
-          landingReturnStartedAt: parkedRun ? undefined : s.player.landingReturnStartedAt,
-          arrivalAt: parkedRun ? undefined : s.player.arrivalAt,
-          transitStartedAt: parkedRun ? undefined : s.player.transitStartedAt,
-          missionRocketSource: parkedRun ? undefined : s.player.missionRocketSource,
-          missionCrewIds: parkedRun ? [] : s.player.missionCrewIds,
-          debriefPending: parkedRun ? false : s.player.debriefPending,
-          cargoSettledOffworld: parkedRun ? false : s.player.cargoSettledOffworld,
-          pendingRemoteDisposition: parkedRun ? undefined : s.player.pendingRemoteDisposition,
-          freeHaulDisposition: parkedRun ? undefined : freeHaulDisposition ?? s.player.freeHaulDisposition,
-          returningToEarth: parkedRun ? false : s.player.returningToEarth,
-          headingToDelivery: parkedRun ? false : s.player.headingToDelivery,
-          shipDestroyed: parkedRun ? false : s.player.shipDestroyed,
+          freeHaulDisposition: freeHaulDisposition ?? s.player.freeHaulDisposition,
         },
       }
       if (mission?.targetId) {
@@ -377,7 +363,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         doneSteps: { ...s.doneSteps, 2: true },
       }, catalog)
     })
-  }, [catalog, setState])
+  }, [addToast, catalog, setState, stateRef])
 
   const onPickTarget = useCallback((id: string) => {
     setState(s => {
@@ -685,6 +671,20 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setState(s => applyGainResearchXP(s, amount))
   }, [setState])
 
+  const startSurveyScan = useCallback((targetId: string) => {
+    setState(s => applyStartScan(s, targetId, Date.now()))
+    captureGameEvent('survey_scan_started', { target_id: targetId })
+  }, [setState])
+
+  const resolveSurveyScan = useCallback(() => {
+    const current = stateRef.current
+    const scan = current.player.activeScan
+    if (!scan || applyResolveScan(current, Date.now()) === current) return
+    setState(s => applyResolveScan(s, Date.now()))
+    captureGameEvent('survey_scan_completed', { target_id: scan.targetId })
+    addToast('Scan complete. Body charted and research XP awarded.', 'ok')
+  }, [addToast, setState, stateRef])
+
   const upgradeLicenseGrade = useCallback((grade: Exclude<LicenseGrade, 'Grade I'>) => {
     setState(s => applyUpgradeLicenseGrade(s, grade))
   }, [setState])
@@ -717,6 +717,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const roundedRanges = ranges
       .map(range => ({ x1: Math.round(range.x1 * 1000) / 1000, x2: Math.round(range.x2 * 1000) / 1000 }))
       .sort((a, b) => a.x1 - b.x1)
+
+    // SSL-512: a first classification pays research XP; say so, since the number
+    // otherwise moves with no feedback at the place the player earned it.
+    if (!stateRef.current.player.tessClassifications?.[subjectId]) {
+      addToast(`Transit classified. +${RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION} research XP`, 'ok')
+    }
 
     setState(s => {
       const existing = s.player.tessClassifications?.[subjectId]
@@ -799,7 +805,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // drafted but never created against a real project), so this is an
     // event only for now — wire a survey key here once that's created.
     captureGameEvent('tess_classification_submitted', { subject_id: subjectId, verdict })
-  }, [setState])
+  }, [addToast, setState, stateRef])
 
   // Deep Space Telescope's asteroid-discovery classification (STS-622) — a
   // passive digest, so unlike submitTessClassification there's no
@@ -807,6 +813,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   // verdict record itself.
   const submitAsteroidClassification = useCallback((candidateId: string, verdict: AsteroidVerdict) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
+
+    if (!stateRef.current.player.asteroidClassifications?.[candidateId]) {
+      addToast(`Asteroid candidate classified. +${RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION} research XP`, 'ok')
+    }
 
     setState(s => {
       const existing = s.player.asteroidClassifications?.[candidateId]
@@ -835,31 +845,83 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         addToast('Saved locally — could not reach the shared classification feed', 'warn')
       })
     }
-  }, [setState])
+  }, [addToast, setState, stateRef])
 
   // Saturn imager (SSL-492): local record first (offline-safe), then a pool
   // classification (SSC-43) when the frame came from the shared pool. Badge
   // tier comes from the SSL-491 sky event config.
-  const submitSaturnClassification = useCallback((candidateId: string, verdict: SaturnVerdict) => {
+  const submitSaturnClassification = useCallback((candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
     setState(s => {
       const existing = s.player.saturnClassifications?.[candidateId]
-      if (existing) return s
-      return {
-        ...s,
-        player: {
-          ...grantSkyBadges(s.player, 'saturn-classification', submittedAt),
-          researchAnnotations: s.player.researchAnnotations + 1,
-          saturnClassifications: {
-            ...(s.player.saturnClassifications ?? {}),
-            [candidateId]: { candidateId, verdict, submittedAt, badgeTier: resolveSaturnBadgeTier(submittedAt) },
+      // Historic whole-frame records remain complete; a new 3x3 record only
+      // rejects a repeat on the same square, never the other eight squares.
+      if (existing && !existing.cells) return s
+      if (existing?.cells?.[cellIndex]) return s
+      const cells = {
+        ...(existing?.cells ?? {}),
+        [cellIndex]: { verdict, storm, submittedAt },
+      }
+      const completed = Object.keys(cells).length === 9
+      const tier = completed ? resolveSaturnBadgeTier(submittedAt) : null
+      const player = {
+        ...s.player,
+        ...(completed ? grantSkyBadges(s.player, 'saturn-classification', submittedAt) : {}),
+        // A completed gold frame stays active until its plot is claimed, so a reload
+        // shows the finished frame instead of loading a new one (SSL-492).
+        saturnActiveFrameId: completed && tier !== 'gold' ? null : candidateId,
+        saturnClassifications: {
+          ...(s.player.saturnClassifications ?? {}),
+          [candidateId]: {
+            candidateId,
+            verdict,
+            submittedAt,
+            badgeTier: tier,
+            cells,
+            ...(completed ? { completedAt: submittedAt } : {}),
           },
         },
       }
+      const next: GameState = {
+        ...s,
+        player: completed && tier === 'silver'
+          ? {
+              ...player,
+              researchXP: (s.player.researchXP ?? 0) + RESEARCH_XP_PER_ENCELADUS_CHART,
+              moonSurveyCharts: {
+                ...(s.player.moonSurveyCharts ?? {}),
+                enceladus: {
+                  moonId: 'enceladus',
+                  frameId: candidateId,
+                  completedAt: submittedAt,
+                  tier,
+                  researchXpAwarded: RESEARCH_XP_PER_ENCELADUS_CHART,
+                  atlasUnlockedAt: submittedAt,
+                },
+              },
+            }
+          : completed && tier === 'gold'
+            ? {
+                ...player,
+                moonSurveyCharts: {
+                  ...(s.player.moonSurveyCharts ?? {}),
+                  enceladus: { moonId: 'enceladus', frameId: candidateId, completedAt: submittedAt, tier },
+                },
+              }
+            : player,
+      }
+      return next
     })
 
+    const answeredBefore = Object.keys(stateRef.current.player.saturnClassifications?.[candidateId]?.cells ?? {}).length
+    if (answeredBefore === 8) {
+      addToast('Saturn frame complete. Enceladus survey chart recorded.', 'ok')
+    }
     const userId = pbShared.authStore.record?.id
-    if (userId && isSaturnPoolCandidateId(candidateId)) {
+    // The shared collection is frame-level, while the player-side Cassini
+    // instrument is deliberately 3x3. Submit a single completed-frame result
+    // rather than nine indistinguishable rows without a cell coordinate.
+    if (answeredBefore === 8 && userId && isSaturnPoolCandidateId(candidateId)) {
       pbShared.collection('ss_saturn_storm_classifications').create({
         user: userId,
         frame: candidateId,
@@ -869,6 +931,38 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         addToast('Saved locally — could not reach the shared classification feed', 'warn')
       })
     }
+  }, [setState, stateRef])
+
+  const claimSaturnSurveyTerritory = useCallback(() => {
+    setState(s => {
+      const chart = s.player.moonSurveyCharts?.enceladus
+      if (!chart || chart.tier !== 'gold' || chart.territoryPlotClaimedAt) return s
+      const claimedAt = skyEventNow(isDevLauncherEnabled())
+      const ownerId = pbShared.authStore.record?.id ?? 'local-player'
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          territoryClaims: [
+            ...(s.player.territoryClaims ?? []),
+            {
+              id: `saturn-chart:${ownerId}:enceladus:${claimedAt}`,
+              targetId: 'enceladus',
+              divisionId: 'enceladus:chart-0',
+              ownerId,
+              ownerKind: 'player',
+              ownerName: pbShared.authStore.record?.username ?? 'Operator',
+              claimedAt,
+            },
+          ],
+          moonSurveyCharts: {
+            ...(s.player.moonSurveyCharts ?? {}),
+            enceladus: { ...chart, territoryPlotClaimedAt: claimedAt },
+          },
+          saturnActiveFrameId: null,
+        },
+      }
+    })
   }, [setState])
 
   // Player picks where the satellite points for the *next* daily downlink
@@ -1230,7 +1324,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onLaunch, resumeMissionRun,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
-    gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
-    submitAsteroidClassification, submitSaturnClassification,
+    gainResearchXP, startSurveyScan, resolveSurveyScan, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
+    submitAsteroidClassification, submitSaturnClassification, claimSaturnSurveyTerritory,
   }
 }

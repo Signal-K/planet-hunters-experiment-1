@@ -5,14 +5,66 @@ private func francs(_ n: Int) -> String { Economy.format(francs: n) }
 
 struct MissionsScreen: View {
     @Environment(GameStore.self) private var store
+    @State private var archiveFocus: String?
+    @State private var showArchive = false
+
     var body: some View {
+        let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
         ScreenFrame(title: "Mission board", back: { store.go(.hub) }) {
-            ForEach(store.catalog.missions.filter { !$0.locked }.prefix(12)) { m in
+            Eyebrow(text: store.player.freeOperations ? "Free Operations · client work" : "Guided contracts")
+            if entries.isEmpty {
                 Panel {
-                    Text(m.title).font(.headline)
-                    Text("\(m.client ?? "Own program") · seq \(m.sequence) · \(francs(m.payout.francs))").font(.caption)
-                    Text(m.requires.minerals.map { "\($0.value) \($0.key)" }.sorted().joined(separator: ", ")).font(.caption)
-                    PrimaryButton(title: "Take contract") { store.pickMission(m.id) }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("No contracts open right now").font(AppFont.display(16))
+                        Text("Your own operations are on the Launchpad. The archive shows what unlocks the next contract.")
+                            .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    }
+                }
+            }
+            ForEach(entries) { e in MissionCard(entry: e, catalog: store.catalog) {
+                store.pickMission(e.id)
+            } onPathway: { archiveFocus = "mission:\(e.id)"; showArchive = true } }
+            PrimaryButton(title: "Archive · pathways and unlocks") { archiveFocus = nil; showArchive = true }
+        }
+        .sheet(isPresented: $showArchive) { ArchiveScreen(focus: archiveFocus) }
+    }
+}
+
+/// One contract: who, where, what it pays, and either a Take button or the plain reason it is locked.
+struct MissionCard: View {
+    let entry: MissionBoard.Entry
+    let catalog: Catalog
+    let onTake: () -> Void
+    let onPathway: () -> Void
+
+    var body: some View {
+        let m = entry.mission
+        let client = m.client.flatMap { Clients.byId[$0]?.name } ?? "Your programme"
+        let from = m.targetId.flatMap(catalog.target)?.name
+        let to = m.deliveryTargetId.flatMap(catalog.target)?.name
+        Panel(accent: entry.unlocked ? Theme.blue : Theme.textMuted) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(m.title).font(AppFont.display(18)).fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 8)
+                    Text(m.tag.uppercased()).font(AppFont.display(14, "Bold")).tracking(1.0).foregroundStyle(Theme.textDim)
+                }
+                Text("\(client) · \(m.difficulty)").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                if let from { Text(to.map { "\(from) → \($0)" } ?? "Target: \(from)").font(AppFont.body(14)) }
+                if !m.requires.minerals.isEmpty {
+                    Text(m.requires.minerals.sorted { $0.key < $1.key }.map { "\($0.value) \(Minerals.byId[$0.key]?.name ?? $0.key)" }.joined(separator: ", ")).font(AppFont.body(14))
+                }
+                if m.payout.francs > 0 { Text(Economy.format(francs: m.payout.francs)).font(AppFont.display(16)).foregroundStyle(Theme.teal) }
+                if entry.unlocked {
+                    PrimaryButton(title: "Take contract", action: onTake)
+                } else {
+                    HStack(spacing: 8) {
+                        Image(systemName: "lock.fill").foregroundStyle(Theme.textMuted)
+                        Text(entry.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+                    }
+                    Button(action: onPathway) {
+                        Text("SEE THE PATHWAY").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress).frame(minHeight: 44, alignment: .leading)
+                    }.buttonStyle(.plain)
                 }
             }
         }
@@ -37,6 +89,15 @@ struct LaunchScreen: View {
         ScreenFrame(title: "Launchpad", back: { store.go(.hub) }) {
             if let m = store.mission {
                 Panel { Text(m.title).font(.headline); Text("Target: \(store.target?.name ?? "none")") }
+            } else if store.player.stagedRockets.isEmpty {
+                Panel(accent: Theme.teal) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Nothing in the hangar yet").font(AppFont.display(16))
+                        Text("Take a contract and pick a rocket in launch review. It rolls out here, then to the pad.")
+                            .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                        PrimaryButton(title: "Open mission board") { store.go(.missions) }
+                    }
+                }
             }
             ForEach(store.player.stagedRockets) { r in
                 Panel {
@@ -44,8 +105,10 @@ struct LaunchScreen: View {
                     if r.location == .hangar { PrimaryButton(title: "Roll out to pad") { store.rollOutToPad() } }
                 }
             }
-            PrimaryButton(title: "Launch", enabled: store.player.stagedRockets.contains { $0.location == .launchpad }) { launching = true }
-            Button("Abandon contract", role: .destructive) { store.abandonMission() }
+            if store.mission != nil || !store.player.stagedRockets.isEmpty {
+                PrimaryButton(title: "Launch", enabled: store.player.stagedRockets.contains { $0.location == .launchpad }) { launching = true }
+                Button("Abandon contract", role: .destructive) { store.abandonMission() }.frame(minHeight: 44)
+            }
         }
     }
 }

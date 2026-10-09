@@ -314,6 +314,9 @@ extension View {
 /// Settings gear destination: the screens the old MENU dock button listed.
 private struct SettingsSheet: View {
     @Environment(GameStore.self) private var store
+    @Environment(AuthModel.self) private var auth
+    @State private var showArchive = false
+    @State private var confirmSignOut = false
     let onClose: () -> Void
 
     private var destinations: [Screen] {
@@ -334,15 +337,31 @@ private struct SettingsSheet: View {
                 VStack(spacing: 8) {
                     row("Missions", .missions)
                     ForEach(destinations, id: \.self) { row($0.rawValue.replacingOccurrences(of: "-", with: " ").capitalized, $0) }
+                    action("Archive: pathways and unlocks") { showArchive = true }
+                    if let email = auth.session?.email {
+                        Text("Signed in as \(email)").font(AppFont.display(14)).foregroundStyle(Theme.textDim)
+                    }
+                    action("Sign out") { confirmSignOut = true }
                 }.padding(16)
             }
+        }
+        .sheet(isPresented: $showArchive) { ArchiveScreen() }
+        .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+            Button("Sign out", role: .destructive) { auth.signOut() }
+            Button("Stay signed in", role: .cancel) {}
+        } message: {
+            Text("Your progress stays saved on this device and in the cloud. Sign back in to continue.")
         }
         .background(Theme.bg)
         .presentationDetents([.medium, .large])
     }
 
     private func row(_ title: String, _ screen: Screen) -> some View {
-        Button { onClose(); store.go(screen) } label: {
+        action(title) { onClose(); store.go(screen) }
+    }
+
+    private func action(_ title: String, _ run: @escaping () -> Void) -> some View {
+        Button(action: run) {
             HStack {
                 Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
                 Spacer()

@@ -332,7 +332,7 @@ export function generateSelfDirectedMiningPoolFromRules(input: MissionGeneratorI
   const templates = input.templates ?? DEFAULT_MISSION_TEMPLATES
   const freeOpsTemplates = templates.filter(t => t.id.startsWith('freeops-') && t.cargoRange[0] + t.cargoRange[1] > 0)
 
-  return freeOpsTemplates.map((template, index) => {
+  const runs = freeOpsTemplates.map((template, index) => {
     const eligibleMineralKeys = deliveryEligibleMineralKeys(template, input.minerals)
     const mineral = eligibleMineralKeys[index % eligibleMineralKeys.length]
     const amount = template.cargoRange[0] + index
@@ -361,6 +361,36 @@ export function generateSelfDirectedMiningPoolFromRules(input: MissionGeneratorI
       survey: template.survey,
     } satisfies Mission
   })
+
+  // SSL-512: aluminium is earth-abundant, so the delivery filter above never
+  // picks it, yet the first Base builds (Excavate deck, Settlement pad,
+  // Refinery) all need it. A standing run guarantees an early source.
+  const aluminium = input.minerals.aluminium
+  if (aluminium) {
+    const amount = 12
+    runs.push({
+      id: 'self-directed-freeops-aluminium-stock',
+      survey: undefined,
+      title: 'Aluminium stock run',
+      brief: `No client, no daily limit. Mine ${amount} units of aluminium. Keep it for Base builds or sell it yourself at market price.`,
+      tag: 'FREE OPS',
+      difficulty: 'L1',
+      locked: false,
+      sequence: FREE_OPS_MISSION_SEQUENCE,
+      unlockAt: 'Reach Free Operations',
+      requires: {
+        minerals: { aluminium: amount },
+        cargo_min: amount,
+        drill_tier: requiredDrillTier(['aluminium'], 1, input.minerals),
+        max_orbit: 5,
+      },
+      payout: {
+        francs: normalizeMissionPayout(aluminium.price * amount * CARGO_BONUS_RATE, FREE_OPS_MISSION_SEQUENCE),
+        affinity: 0,
+      },
+    } satisfies Mission)
+  }
+  return runs
 }
 
 export function missionTemplatesToPocketBaseRows(templates = DEFAULT_MISSION_TEMPLATES): PocketBaseMissionTemplateSeed[] {
