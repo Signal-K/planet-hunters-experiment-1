@@ -1,7 +1,8 @@
 /* SSL-432: bottom sheet on phones, right-hand panel on desktop. Light
    blueprint surfaces only. Every text size is 14px or larger and every
    control is at least 44px tall. */
-.scrim {
+.scrim.scrim {
+  /* Doubled class: `.ln-scene-panel > :not(...)` sets position: relative on a scene's direct children and would pin the sheet in flow behind the screen. */
   position: fixed;
   inset: 0;
   z-index: 70;
@@ -33,6 +34,10 @@
   border-bottom: 1px solid var(--ln-cyan-border);
 }
 
+.titleBlock { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.kicker { font-family: var(--ln-font-display); font-size: 14px; font-weight: 800; letter-spacing: 0.12em; color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); }
+.badge { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 2px solid var(--ln-bp-blue, #1f78c1); border-radius: 8px; background: var(--ln-bp-blue-soft, rgba(31,120,193,.08)); color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font-family: var(--ln-font-display); font-size: 14px; font-weight: 800; letter-spacing: .08em; }
+.num { font-family: var(--ln-font-mono); color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); margin-right: 4px; }
 .title {
   flex: 1;
   min-width: 0;
