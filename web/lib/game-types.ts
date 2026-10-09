@@ -2,6 +2,7 @@
 // Extracted from game-context.tsx so they can be imported without pulling in React context.
 
 import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict, SaturnClassification, SaturnVerdict, MoonSurveyChart } from '@/lib/data'
+import type { BuildingLevels } from '@/lib/data/building-levels'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import type { RoverSpec } from '@takeon/engine'
 import type { SceneScope } from './scene-scope'
@@ -323,7 +324,10 @@ export interface Player {
   refinedGoods: Record<string, number>
   /** Raw ore stored at operational player-owned off-world silos, by target. */
   remoteStorage?: Record<string, Record<string, number>>
+  /** Mirrors buildingLevels.launchpad >= 2; kept so older saves and clients keep working. */
   launchpadUpgraded: boolean
+  /** Levels 2-3 of upgradable buildings; absent means level 1. Same JSON key as native. */
+  buildingLevels?: BuildingLevels
   lastClient?: string
   /** Mirrors treasury.loans[...].outstandingFrancs for this player; treasury is authoritative. */
   loanDebt: number
@@ -578,6 +582,7 @@ export interface GameActions {
   resetGame: () => void
   signOut: () => void
   upgradeLaunchpad: () => void
+  upgradeBuilding: (id: string) => void
   placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => boolean
   excavateSubsurface: () => void
   buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void

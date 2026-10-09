@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
-import { applySellMinerals, applySellRefinedGoods, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom } from '@/lib/systems/EconomySystem'
+import { applySellMinerals, applySellRefinedGoods, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyUpgradeBuilding, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom } from '@/lib/systems/EconomySystem'
 import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import type { TreasuryState } from '@/lib/systems/TreasurySystem'
 import { captureGameEvent } from '@/lib/posthog'
@@ -49,6 +49,10 @@ export function useEconomyActions(
 
   const upgradeLaunchpad = useCallback(() => {
     setState(s => applyUpgradeLaunchpad(s))
+  }, [setState])
+
+  const upgradeBuilding = useCallback((id: string) => {
+    setState(s => applyUpgradeBuilding(s, id))
   }, [setState])
 
   const excavateSubsurface = useCallback(() => {
@@ -127,7 +131,7 @@ export function useEconomyActions(
   }, [setState])
 
   return {
-    sellMinerals, sellRefinedGoods, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad,
+    sellMinerals, sellRefinedGoods, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad, upgradeBuilding,
     excavateSubsurface, buildSubsurfaceRoom,
     unlockSkillNode, acceptLoan, abandonMission,
     confirmShipCustomizerBuild,

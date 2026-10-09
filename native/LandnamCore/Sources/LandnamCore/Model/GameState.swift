@@ -95,6 +95,8 @@ public struct Player: Codable, Equatable, Sendable {
     public var refineryLastStartedAt: Double?
     public var structureCrewAssignments: [String: String] = [:]
     public var launchpadUpgraded: Bool = false
+    /// Levels 2-3 of upgradable buildings (`BuildingLevels`); absent means level 1. Same JSON key as web.
+    public var buildingLevels: [String: Int] = [:]
     public var lastClient: String?
     public var loanDebt: Int = 0
     public var loanOffered: Bool = false
@@ -157,11 +159,13 @@ public struct Player: Codable, Equatable, Sendable {
         get("underConstruction", &underConstruction); get("discoveredExoplanetTargets", &discoveredExoplanetTargets)
         getOpt("satelliteTargetId", &satelliteTargetId); get("pendingRepick", &pendingRepick); getOpt("lastSeenConfirmedAt", &lastSeenConfirmedAt); getOpt("transitSatelliteLevel", &transitSatelliteLevel); getOpt("deepSpaceTelescopeLaunchedAt", &deepSpaceTelescopeLaunchedAt); get("surfaceOps", &surfaceOps)
         get("refineryQueue", &refineryQueue); getOpt("refineryLastStartedAt", &refineryLastStartedAt); get("structureCrewAssignments", &structureCrewAssignments)
-        get("launchpadUpgraded", &launchpadUpgraded); getOpt("lastClient", &lastClient); get("loanDebt", &loanDebt)
+        get("launchpadUpgraded", &launchpadUpgraded); get("buildingLevels", &buildingLevels); getOpt("lastClient", &lastClient); get("loanDebt", &loanDebt)
         get("loanOffered", &loanOffered); getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
         get("seenPlanets", &seenPlanets); get("researchXP", &researchXP); get("subsurfaceExcavated", &subsurfaceExcavated)
         get("subsurfaceBuilt", &subsurfaceBuilt); get("landingResearched", &landingResearched)
         get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("laserCapacitorLevel", &laserCapacitorLevel)
+        buildingLevels = BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)
+        launchpadUpgraded = launchpadUpgraded || (buildingLevels["launchpad"] ?? 1) >= 2
         for key in c.allKeys where !consumed.contains(key.stringValue) {
             extras[key.stringValue] = try? c.decode(JSONValue.self, forKey: key)
         }
@@ -201,7 +205,7 @@ public struct Player: Codable, Equatable, Sendable {
         try put("underConstruction", underConstruction); try put("discoveredExoplanetTargets", discoveredExoplanetTargets)
         try putOpt("satelliteTargetId", satelliteTargetId); try put("pendingRepick", pendingRepick); try putOpt("lastSeenConfirmedAt", lastSeenConfirmedAt); try putOpt("transitSatelliteLevel", transitSatelliteLevel); try putOpt("deepSpaceTelescopeLaunchedAt", deepSpaceTelescopeLaunchedAt); try put("surfaceOps", surfaceOps)
         try put("refineryQueue", refineryQueue); try putOpt("refineryLastStartedAt", refineryLastStartedAt); try put("structureCrewAssignments", structureCrewAssignments)
-        try put("launchpadUpgraded", launchpadUpgraded); try putOpt("lastClient", lastClient); try put("loanDebt", loanDebt)
+        try put("launchpadUpgraded", launchpadUpgraded || BuildingLevels.level(self, "launchpad") >= 2); try put("buildingLevels", BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)); try putOpt("lastClient", lastClient); try put("loanDebt", loanDebt)
         try put("loanOffered", loanOffered); try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
         try put("seenPlanets", seenPlanets); try put("researchXP", researchXP); try put("subsurfaceExcavated", subsurfaceExcavated)
         try put("subsurfaceBuilt", subsurfaceBuilt); try put("landingResearched", landingResearched)

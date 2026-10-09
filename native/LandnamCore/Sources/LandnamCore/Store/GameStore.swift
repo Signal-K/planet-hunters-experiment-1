@@ -158,6 +158,11 @@ public final class GameStore {
         guard next != state else { return false }
         apply(next); return true
     }
+    @discardableResult public func upgradeBuilding(_ id: String) -> Bool {
+        let next = BuildingLevels.applyUpgrade(state, id: id)
+        guard next != state else { return false }
+        apply(next); return true
+    }
     public func purchaseSiteAccess(_ id: String) {
         let next = SurfaceOps.applyPurchaseAccess(state, id, now: now)
         guard next != state else { return }

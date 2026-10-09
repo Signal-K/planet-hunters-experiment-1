@@ -37,11 +37,11 @@ public struct PartCatalog: Sendable {
 
     /// Picks the cheapest unlocked build that can fly the mission (port of `suggestBuild`).
     public func suggestBuild(mission: Mission?, target: Target?, deliveryTarget: Target? = nil,
-                             missionsDone: Int, launchpadUpgraded: Bool = false, skills: [String] = []) -> RocketConfig {
+                             missionsDone: Int, launchpadUpgraded: Bool = false, launchpadLevel: Int = 1, skills: [String] = []) -> RocketConfig {
         let orbit = max(target?.orbit ?? 4, deliveryTarget?.orbit ?? 0)
         let drillTier = mission?.requires.drillTier ?? 1
         let cargoMin = mission?.requires.cargoMin ?? 6
-        let done = launchpadUpgraded ? max(missionsDone, 1) : missionsDone
+        let done = max(missionsDone, launchpadUpgraded ? 1 : 0, BuildingLevels.launchpadMissionFloor(launchpadLevel))
         func available(_ p: Part) -> Bool { !p.locked && (p.missionsRequired ?? 0) <= done }
         func best(_ parts: [Part]) -> Part { parts.last(where: available) ?? parts[0] }
         let prop = propulsion.first { available($0) && effectiveMaxOrbit($0, skills: skills) >= orbit } ?? best(propulsion)
