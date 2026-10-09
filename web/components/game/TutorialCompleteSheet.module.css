@@ -3,7 +3,7 @@
   align-content: start;
   gap: 24px;
   width: min(920px, calc(100vw - 32px));
-  max-height: calc(100vh - 32px);
+  max-height: calc(var(--app-h) - 32px);
   margin-inline: auto;
   overflow: auto;
   padding: 32px;
