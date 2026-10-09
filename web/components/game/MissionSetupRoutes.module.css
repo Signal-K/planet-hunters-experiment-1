@@ -59,3 +59,13 @@
 
 /* SSL-450: at phone width the two choosers stack so labels never run under their arrows. */
 @media (max-width:480px){.inlineChoices{grid-template-columns:1fr;}.inlineChoices span,.inlineChoices strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.inlineChoices > div{grid-template-columns:minmax(0,1fr) auto;padding:4px 8px;}}
+
+/* SSL-375: Workshop on the left, pad tower on the right; the rocket rolls between them on confirm. */
+.workshop { position:absolute; left:6%; top:18%; bottom:0; width:34%; border:4px solid var(--mission-ink); border-bottom:0; background:color-mix(in srgb,var(--ln-cyan) 10%,var(--mission-paper)); opacity:.55; }
+.workshop b { position:absolute; left:8px; top:6px; font:800 14px var(--ln-font-display); letter-spacing:.14em; color:var(--mission-ink); }
+.launchArt[data-stage='workshop'] .launchTower { opacity:.14; }
+.launchScene .launchArt img { transition:left 1.5s ease-in-out; }
+.launchScene .launchArt img { transform:translate(-50%,-50%) rotate(-90deg) scale(.72); }
+.launchArt[data-stage='workshop'] img { left:31%; }
+.launchArt[data-stage='pad'] img { left:70%; }
+@media (prefers-reduced-motion:reduce){ .launchScene .launchArt img { transition:none; } }

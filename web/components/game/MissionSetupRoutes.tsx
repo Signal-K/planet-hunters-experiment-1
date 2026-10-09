@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { useGame } from '@/game-context'
 import type { Catalog } from '@/lib/catalog'
 import type { Screen } from '@/lib/game-types'
@@ -21,6 +21,7 @@ import styles from './MissionSetupRoutes.module.css'
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
+const ROLLOUT_MS = 1600
 export type MissionSetupRoute = Extract<Screen, 'missions' | 'targets' | 'rocket-buy' | 'fab'>
 
 interface MissionSetupRoutesProps {
@@ -81,6 +82,15 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const relay = useMissionRelayModels({ catalog: game.catalog, missionsDone: game.player.missionsDone, freeOperations: game.player.freeOperations, francs: game.player.francs, crew: game.player.crew, player: game.player, sceneScope: game.sceneScope })
   const compatibleTargets = useMemo(() => game.mission ? feasibleTargetsFor(game.mission, game.catalog.targets, game.catalog.parts, game.player.missionsDone, game.player.launchpadUpgraded, game.player.unlockedSkillNodes ?? []) : [], [game.catalog.parts, game.catalog.targets, game.mission, game.player.launchpadUpgraded, game.player.missionsDone, game.player.unlockedSkillNodes])
   const selectedVehicle = game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)
+  // SSL-375: the rocket stands in the Workshop while it is prepared, then rolls to the pad in-scene on confirm.
+  const [rolling, setRolling] = useState<string | null>(null)
+  const purchaseRef = useRef(game.onPurchaseRocket)
+  purchaseRef.current = game.onPurchaseRocket
+  useEffect(() => {
+    if (!rolling) return
+    const timer = window.setTimeout(() => { purchaseRef.current(rolling); setRolling(null) }, ROLLOUT_MS)
+    return () => window.clearTimeout(timer)
+  }, [rolling])
 
   // Older saves may still hold a prepared vehicle in the hangar. The R1 route
   // never asks for a second confirmation: roll it onto the pad on mount.
@@ -127,12 +137,14 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const switchTarget = (offset: number) => compatibleTargets.length > 1 && game.onPickTarget(compatibleTargets[(targetIndex + offset + compatibleTargets.length) % compatibleTargets.length].id)
   const switchRocket = (offset: number) => selectableRockets.length > 1 && game.onPurchaseRocket(selectableRockets[(rocketIndex + offset + selectableRockets.length) % selectableRockets.length].id)
   const preparing = !selectedVehicle || selectedVehicle.location !== 'launchpad'
+  const artStage = rolling || !preparing ? 'pad' : 'workshop'
+  const caption = rolling ? 'ROLLING OUT TO THE LAUNCHPAD' : preparing ? 'WORKSHOP · READY TO ROLL OUT' : 'LAUNCHPAD · READY FOR DEPARTURE'
   const preparationLabel = selectedRocket.costFrancs === 0 ? `PREPARE ${selectedRocket.name.toUpperCase()}` : `BUILD ${selectedRocket.name.toUpperCase()} · ${formatCurrency(selectedRocket.costFrancs, { compact: true })}`
 
   return <>
     <SetupFrame title="Launch review" screen={screen} onBack={() => game.go('missions')} eyebrow={isFreeOpsHaul ? 'FREE OPS · OWN HAUL' : 'CONTRACT → LAUNCH'}>
       <section className={styles.review} data-testid="mission-launch-review">
-        <div className={styles.launchScene}><div className={styles.launchArt}><div className={styles.launchTower} aria-hidden="true"><i /><i /><i /></div><img src={rocketDisplay.img} alt={`${selectedRocket.name} on the launchpad`} /></div><div className={styles.launchCaption}><span>LAUNCHPAD · READY FOR DEPARTURE</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
+        <div className={styles.launchScene}><div className={styles.launchArt} data-testid="launch-art" data-stage={artStage}><div className={styles.workshop} aria-hidden="true"><b>WORKSHOP</b></div><div className={styles.launchTower} aria-hidden="true"><i /><i /><i /></div><img data-testid="launch-rocket" src={rocketDisplay.img} alt={`${selectedRocket.name} ${artStage === 'pad' ? 'on the launchpad' : 'in the workshop'}`} /></div><div className={styles.launchCaption}><span>{caption}</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
         <aside className={styles.reviewBrief}>
           <div className={styles.reviewHeading}><span>{game.mission.payload?.type === 'satellite' ? 'INSTRUMENT LAUNCH' : isFreeOpsHaul ? 'FREE OPS · OWN HAUL' : 'CLIENT CONTRACT'}</span><h2>{game.mission.title}</h2></div>
           <div className={styles.reviewMap} data-testid="launch-review-map" aria-label={`Route to ${target.name}`}>
@@ -144,7 +156,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
             <div><span>VEHICLE</span><strong>{selectedRocket.name}</strong><nav><button type="button" onClick={() => switchRocket(-1)} disabled={selectableRockets.length < 2} aria-label="Previous vehicle"><ArrowGlyph direction="previous" /></button><button type="button" onClick={() => switchRocket(1)} disabled={selectableRockets.length < 2} aria-label="Next vehicle"><ArrowGlyph direction="next" /></button></nav></div>
           </div>
           <div className={styles.clearance} data-ready={launchReady && !preparing}><span>LAUNCH CLEARANCE</span><strong>{preparing ? 'PREPARING VEHICLE' : launchReady ? 'ALL PARAMETERS PASS' : 'BUILD HOLD'}</strong>{!launchReady && <small>{crewStatus.reason ?? 'MISSION REQUIREMENTS NOT MET'}</small>}</div>
-          <button type="button" className={styles.primary} data-testid={preparing ? 'prepare-launch-btn' : 'launch-btn'} disabled={selectedVehicle?.location === 'hangar' || (!preparing && !launchReady)} onClick={() => preparing ? game.onPurchaseRocket(selectedRocket.id) : onLaunch()}><LaunchGlyph /> {preparing ? preparationLabel : 'LAUNCH'}</button>
+          <button type="button" className={styles.primary} data-testid={preparing ? 'prepare-launch-btn' : 'launch-btn'} disabled={!!rolling || selectedVehicle?.location === 'hangar' || (!preparing && !launchReady)} onClick={() => preparing ? setRolling(selectedRocket.id) : onLaunch()}><LaunchGlyph /> {preparing ? preparationLabel : 'LAUNCH'}</button>
         </aside>
       </section>
     </SetupFrame>
