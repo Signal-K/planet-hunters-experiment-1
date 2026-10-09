@@ -4,3 +4,10 @@
 .gold { border-color: var(--ln-cyan-border); }
 .gold .tier { color: var(--ln-cyan); }
 .silver .tier { color: var(--ln-text-muted); }
+[data-wsw-tone] { border-left-width: 6px; }
+[data-wsw-tone='blue'] { border-left-color: var(--ln-bp-blue); }
+[data-wsw-tone='sky'] { border-left-color: var(--ln-cyan); }
+[data-wsw-tone='green'] { border-left-color: var(--ln-bp-green); }
+[data-wsw-tone='crimson'] { border-left-color: var(--ln-crimson); }
+[data-wsw-tone='dim'] { border-left-color: var(--ln-text-muted); }
+[data-wsw-tone='ink'] { border-left-color: var(--ln-text); }
