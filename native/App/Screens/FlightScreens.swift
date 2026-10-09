@@ -269,6 +269,9 @@ struct LaunchSequenceScreen: View {
                             Eyebrow(text: telemetry.event.label)
                             Text(telemetry.clock).font(AppFont.display(34)).foregroundStyle(Theme.ink)
                         }
+                        // The sky fades to space behind this readout, so it carries its own light card.
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .background(Theme.paper.opacity(0.92), in: RoundedRectangle(cornerRadius: 12))
                         Spacer()
                         VStack(alignment: .trailing, spacing: 6) {
                             RailCard(symbol: "arrow.up") { Text("\(telemetry.altitudeKm) KM").font(AppFont.mono(14)).foregroundStyle(Theme.ink) }

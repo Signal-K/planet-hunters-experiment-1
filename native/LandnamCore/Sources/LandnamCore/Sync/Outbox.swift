@@ -102,14 +102,17 @@ public actor Outbox {
         return before - items.count
     }
 
-    /// One ordered pass. Stops at the first offline result without burning an attempt.
+    /// Ordered replay. Stops at the first offline result without burning an attempt. Items
+    /// enqueued while a pass is running (a newer save) are picked up by the same flush, so the
+    /// latest snapshot never waits for the next trigger.
     public func flush() async {
         await ensureLoaded()
         guard !flushing else { return }
         flushing = true
         defer { flushing = false }
-        for item in items {
-            if item.nextAttemptAt > now() { continue }
+        var tried = Set<String>()
+        while let item = items.first(where: { !tried.contains($0.id) && $0.nextAttemptAt <= now() }) {
+            tried.insert(item.id)
             let failure = await execute(item.op)
             switch failure {
             case nil, .alreadyApplied?:

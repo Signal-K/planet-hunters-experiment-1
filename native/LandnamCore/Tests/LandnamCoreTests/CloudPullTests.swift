@@ -45,3 +45,29 @@ import Foundation
         #expect(!store.welcomePending)
     }
 }
+
+@Suite struct OutboxRaceTests {
+    @Test func opEnqueuedDuringAFlushIsSentByThatSameFlush() async {
+        let sent = SentLog()
+        let box = Box()
+        let outbox = Outbox(store: MemoryOutboxStore()) { op in
+            await sent.add(op)
+            if await sent.count == 1 { await box.enqueueNewer() }   // newer save arrives mid-flight
+            return nil
+        }
+        await box.set(outbox)
+        let op: @Sendable (Double) -> OutboxOp = { n in OutboxOp.upsert(collection: "game_states", id: "u", filter: "user = \"u\"", data: ["n": .number(n)]) }
+        await box.setMaker(op)
+        await outbox.enqueue(op(1))
+        await outbox.flush()
+        #expect(await sent.count == 2)
+        #expect(await outbox.pending().isEmpty)
+    }
+}
+actor SentLog { var ops: [OutboxOp] = []; func add(_ o: OutboxOp) { ops.append(o) }; var count: Int { ops.count } }
+actor Box {
+    var outbox: Outbox?; var make: (@Sendable (Double) -> OutboxOp)?
+    func set(_ o: Outbox) { outbox = o }
+    func setMaker(_ m: @escaping @Sendable (Double) -> OutboxOp) { make = m }
+    func enqueueNewer() async { if let outbox, let make { await outbox.enqueue(make(2)) } }
+}

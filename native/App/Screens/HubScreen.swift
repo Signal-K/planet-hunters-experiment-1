@@ -8,6 +8,11 @@ struct HubScreen: View {
     @Environment(GameStore.self) private var store
 
     var body: some View {
+        // The scene bleeds under the status bar and home indicator; the HUD and dock keep clear of them.
+        GeometryReader { outer in scene(top: outer.safeAreaInsets.top, bottom: outer.safeAreaInsets.bottom) }
+    }
+
+    private func scene(top: CGFloat, bottom: CGFloat) -> some View {
         GeometryReader { geo in
             let w = geo.size.width, h = geo.size.height
             let portrait = h > w * 1.3
@@ -31,8 +36,8 @@ struct HubScreen: View {
                 }
                 BaseTraffic(width: w, groundY: groundY, k: k).allowsHitTesting(false)
                 skyCraft(width: w, height: h)
-                topHud
-                dock.frame(maxHeight: .infinity, alignment: .bottom)
+                topHud.padding(.top, top)
+                dock.padding(.bottom, bottom * 0.6).frame(maxHeight: .infinity, alignment: .bottom)
             }
         }
         .background(Theme.bg)

@@ -1,6 +1,7 @@
 import XCTest
 
 /// Drives the real app against a local PocketBase (debug build defaults to localhost:8090/8091).
+/// Needs a signed-out simulator: `simctl uninstall` the app and `simctl keychain reset` first.
 @MainActor final class AuthFlowTests: XCTestCase {
     let app = XCUIApplication()
     override func setUp() { continueAfterFailure = false }
