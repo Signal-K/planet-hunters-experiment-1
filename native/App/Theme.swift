@@ -30,11 +30,16 @@ enum Theme {
     static let skyTop = mix(0.14)
     static let skyMid = mix(0.28)
     static let horizon = mix(0.46)
-    static let hillFar = mix(0.36)
     static let groundFar = mix(0.34)
     static let groundNear = mix(0.48)
     static let groundLip = hex(0xADB4BB)
     static let chalk = mix(0.18)
+
+    // Base HUD (Out There: Omega style): white panels, thin black outline, bold black glyphs, mint accents.
+    static let hudInk = hex(0x111111)
+    static let hudPanel = hex(0xFFFFFF)
+    static let hudTrack = hex(0xE6E9EC)
+    static let hudMint = hex(0x5EDBA8)
 
     // Legacy aliases used by older screens.
     static let line = blue
@@ -67,7 +72,8 @@ struct Panel<Content: View>: View {
     var accent: Color = Theme.blue
     @ViewBuilder var content: Content
     var body: some View {
-        content
+        // One container, so several children share a single card instead of each getting its own padding and background.
+        VStack(alignment: .leading, spacing: 8) { content }
             .font(AppFont.body(14))
             .fixedSize(horizontal: false, vertical: true)
             .padding(14)

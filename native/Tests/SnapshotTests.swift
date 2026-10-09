@@ -89,3 +89,29 @@ struct LaunchSnapshotTests {
         }
     }
 }
+
+/// Structures must never stand in front of background rock, and the dock must float over empty foreground.
+@MainActor
+struct BaseClearanceTests {
+    @Test func structuresAndDockClearOutcrops() throws {
+        let sizes: [(CGSize, EdgeInsets)] = [
+            (CGSize(width: 402, height: 874), EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)),
+            (CGSize(width: 874, height: 402), EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)),
+            (CGSize(width: 1000, height: 680), EdgeInsets()),
+        ]
+        for (size, insets) in sizes {
+            var layout = BaseLayout(size: size, insets: insets, zones: .standard)
+            layout.hasPlaced = true
+            let roadBottom = size.height * (1 - CGFloat(layout.ground) + 0.045) + 11
+            #expect(roadBottom <= layout.dockRect.minY, "dock covers the road at \(size)")
+            for biome in EarthBiome.allCases {
+                let bl = BiomeLayout(biome: biome, size: size, roadY: layout.roadY, exclusions: layout.exclusions)
+                #expect(bl.groundFrame.maxY >= size.height - 0.5, "\(biome) ground stops short of the bottom at \(size)")
+                for f in bl.props.map(\.frame) {
+                    for i in BaseLayout.slots.indices { #expect(!layout.footprint(i).intersects(f), "\(biome) prop overlaps structure \(i) at \(size)") }
+                    #expect(!layout.dockRect.intersects(f), "\(biome) prop behind dock at \(size)")
+                }
+            }
+        }
+    }
+}
