@@ -14,7 +14,8 @@ struct RootView: View {
 
     private var game: some View {
         Group {
-            switch store.screen {
+            switch store.welcomePending ? nil : store.screen {
+            case nil: WelcomeScreen()
             case .intro: IntroScreen()
             case .hub, .hubSubsurface: HubScreen()
             case .refinery: RefineryScreen()

@@ -40,6 +40,13 @@ import XCTest
             case "tapxy":
                 let c = arg.split(separator: ",").compactMap { Double($0) }
                 app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: c[0], dy: c[1])).tap(); sleep(1)
+            case "taps":
+                let c = arg.split(separator: ",").compactMap { Double($0) }
+                let pt = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: c[0], dy: c[1]))
+                for _ in 0..<Int(c[2]) { pt.tap() }
+            case "press":
+                let c = arg.split(separator: ",").compactMap { Double($0) }
+                app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: c[0], dy: c[1])).press(forDuration: c[2])
             case "drag":
                 let c = arg.split(separator: ",").compactMap { Double($0) }
                 let z = app.coordinate(withNormalizedOffset: .zero)

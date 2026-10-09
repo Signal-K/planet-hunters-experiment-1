@@ -87,10 +87,10 @@ struct PrimaryButton: View {
         Button(action: action) {
             Text(title.uppercased()).font(AppFont.display(14)).tracking(1.4)
                 .frame(maxWidth: .infinity).padding(.vertical, 12)
-                .foregroundStyle(.white)
-                .background(Theme.blue, in: RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink.opacity(0.55), lineWidth: 1.5))
-                .opacity(enabled ? 1 : 0.4)
+                // Disabled keeps readable ink text on a pale fill; fading white-on-blue left the label unreadable.
+                .foregroundStyle(enabled ? Color.white : Theme.ink.opacity(0.75))
+                .background(enabled ? Theme.blue : Theme.blue.opacity(0.14), in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink.opacity(enabled ? 0.55 : 0.3), lineWidth: 1.5))
         }
         .buttonStyle(.plain).disabled(!enabled)
     }

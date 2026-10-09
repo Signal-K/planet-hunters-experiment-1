@@ -161,6 +161,7 @@ final class MiningScene: SKScene {
 
     func fire(at p: CGPoint) {
         let hit = nodeSprites.first { $0.value.frame.insetBy(dx: -10, dy: -10).contains(p) }
+        NSLog("DBG fire p=%@ hit=%@ nodes=%d", NSCoder.string(for: p), String(describing: hit?.key), nodeSprites.count)
         let outcome = field.strike(nodeId: hit?.key, roverX: motion.x / Double(size.width))
         let muzzle = CGPoint(x: rover.position.x, y: rover.position.y + 72)
         switch outcome {
@@ -292,6 +293,7 @@ final class MiningScene: SKScene {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let t = touches.first else { return }
         let p = t.location(in: world)
+        NSLog("DBG touchBegan p=%@ groundY=%f drive=%d size=%@", NSCoder.string(for: p), groundY, isDriveZone(p) ? 1 : 0, NSCoder.string(for: CGPoint(x: size.width, y: size.height)))
         if isDriveZone(p) { steer(to: p) } else { fire(at: p) }
     }
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {

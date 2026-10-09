@@ -54,6 +54,22 @@ public final class GameStore {
         try? data.write(to: saveURL, options: .atomic)
     }
 
+    /// Adopts a cloud save made elsewhere (web) when it is further along than the local one.
+    /// The player lands on the hub with the mobile welcome pending; navigation from the web is dropped.
+    @discardableResult public func adoptRemote(_ remote: GameState) -> Bool {
+        guard CloudPull.shouldAdopt(local: state, remote: remote) else { return false }
+        var n = remote
+        n.screen = .hub; n.menuOpen = false; n.popup = nil
+        // A web mission in flight keeps its mission and target so the hub can resume it.
+        if remote.player.activeMission == nil { n.missionId = nil; n.targetId = nil }
+        n.extras[CloudPull.welcomeKey] = .bool(true)
+        apply(n)
+        return true
+    }
+
+    public var welcomePending: Bool { if case .bool(true)? = state.extras[CloudPull.welcomeKey] { return true } else { return false } }
+    public func finishWelcome() { var n = state; n.extras[CloudPull.welcomeKey] = nil; if n.screen == .intro { n.screen = .hub }; apply(n) }
+
     public func go(_ screen: Screen) { var n = state; n.screen = screen; apply(n) }
     public func reset() { state = GameState(); persist() }
 

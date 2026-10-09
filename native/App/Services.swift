@@ -57,9 +57,12 @@ final class Services {
     private let sharedToken = TokenBox()
     private let sharedUser = TokenBox()
     private let monitor = NWPathMonitor()
+    private let api = AuthAPI.fromEnvironment()
+    private weak var store: GameStore?
+    private var session: AuthSession?
+    private var pulling = false
 
     init() {
-        let api = AuthAPI.fromEnvironment()
         let box = token, sbox = sharedToken
         let exec = PocketBaseExecutor(baseURL: api.baseURL, token: { box.value })
         sync = CloudSync(outbox: Outbox(store: FileOutboxStore(url: FileOutboxStore.defaultURL()), execute: exec.executor))
@@ -73,6 +76,7 @@ final class Services {
 
     func start(store: GameStore, auth: AuthModel) {
         gameCenter.authenticate()
+        self.store = store
         attach(auth.session)
         let sync = sync, gc = gameCenter, shared = shared, user = sharedUser
         store.onChange = { state in
@@ -86,17 +90,47 @@ final class Services {
             Task { await shared.enqueue(op); await shared.flush() }
         }
         monitor.pathUpdateHandler = { path in
-            if path.status == .satisfied { Task { await sync.flush(); await shared.flush() } }
+            if path.status == .satisfied { Task { @MainActor in self.pullIfNeeded(); await sync.flush(); await shared.flush() } }
         }
         monitor.start(queue: .global(qos: .utility))
     }
 
     func attach(_ session: AuthSession?) {
+        self.session = session
         token.value = session?.token
         sharedToken.value = session?.sharedToken
         sharedUser.value = session?.sharedUserId
-        let sync = sync, id = session?.userId, shared = shared
-        Task { await sync.setUser(id); await sync.flush(); await shared.flush() }
+        let shared = shared
+        // Cloud pushes stay off until this account's cloud save has been read once, so a fresh
+        // install can never overwrite a web player's progress with an empty save.
+        Task { await sync.setUser(nil) }
+        Task { await shared.flush() }
+        pullIfNeeded()
+    }
+
+    private func pulledKey(_ id: String) -> String { "landnam.cloudPulled.\(id)" }
+
+    /// Reads the account's web/cloud save once per account per install, then enables pushing.
+    /// Offline or failing: local play continues, pushes stay held, and the next reachable moment retries.
+    func pullIfNeeded() {
+        guard let session, let store, !pulling else { return }
+        let id = session.userId
+        if UserDefaults.standard.bool(forKey: pulledKey(id)) { Task { await sync.setUser(id); await sync.flush() }; return }
+        pulling = true
+        let base = api.baseURL, tok = session.token, sync = sync
+        Task { @MainActor in
+            defer { pulling = false }
+            let result = await CloudPull.fetch(baseURL: base, token: tok, userId: id)
+            guard self.session?.userId == id else { return }
+            switch result {
+            case .found(let remote): store.adoptRemote(remote)
+            case .none: break
+            case .unavailable: return
+            }
+            UserDefaults.standard.set(true, forKey: pulledKey(id))
+            await sync.setUser(id)
+            await sync.save(store.state)
+        }
     }
 
     func flush() { let s = sync, o = shared; Task { await s.flush(); await o.flush() } }
