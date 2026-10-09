@@ -2819,29 +2819,38 @@ html[data-flight-target]:not([data-flight-target~="hub-build-storage-silo"]) [da
 .flight-plan, .flight-plan-chip { flex: none; position: relative; z-index: 30; font-family: var(--ln-font-body); }
 .flight-plan {
   display: flex; flex-direction: column; gap: 6px;
-  padding: 6px 10px; background: var(--ln-panel-2, #101722);
-  border-top: 1px solid var(--ln-cyan-border, rgba(112,217,234,0.4));
-  color: var(--ln-text, #e8f4ff);
+  padding: 6px 10px; background: var(--ln-bp-paper, #fff);
+  border-top: 2px solid var(--ln-bp-blue, #1f78c1);
+  color: var(--ln-bp-ink, #0f2436);
 }
 .flight-plan-row { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 .flight-plan-line {
-  flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: column; justify-content: center;
+  flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: row; align-items: center; gap: 10px;
   text-align: left; background: transparent; border: 0; padding: 0 4px; color: inherit; cursor: pointer;
 }
-.flight-plan-kicker { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-cyan, #70d9ea); }
+.flight-plan-text { display: flex; flex-direction: column; min-width: 0; }
+.flight-plan-kicker { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); }
+.flight-plan-kicker[data-state='done'] { color: var(--ln-bp-green, #17703f); }
+/* SSL-442 Ops call-sign badge: OPS plus three signal bars that tick up in 240ms. */
+.ops-badge { flex: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 44px; height: 44px; border: 2px solid var(--ln-bp-blue, #1f78c1); border-radius: 8px; background: var(--ln-bp-blue-soft, rgba(31,120,193,.08)); color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; }
+.ops-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 8px; margin-top: 3px; }
+.ops-bars i { width: 4px; background: currentColor; border-radius: 1px; animation: ops-bar 240ms ease-out both; }
+.ops-bars i:nth-child(1) { height: 3px; } .ops-bars i:nth-child(2) { height: 5px; animation-delay: 80ms; } .ops-bars i:nth-child(3) { height: 8px; animation-delay: 160ms; }
+@keyframes ops-bar { from { opacity: 0; transform: scaleY(.2); transform-origin: bottom; } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ops-bars i { animation: none; } }
 .flight-plan-action { font-size: 14px; line-height: 1.3; }
-.flight-plan-go { min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: 8px; cursor: pointer; background: var(--ln-cyan, #70d9ea); color: #06121a; border: 1px solid var(--ln-cyan, #70d9ea); font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; }
+.flight-plan-go { min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: 8px; cursor: pointer; background: var(--ln-bp-blue, #1f78c1); color: var(--ln-bp-paper, #fff); border: 1px solid var(--ln-bp-blue, #1f78c1); font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; }
 .flight-plan-btn, .flight-plan-skip, .flight-plan-chip {
   min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 8px; cursor: pointer;
-  background: transparent; color: var(--ln-cyan, #70d9ea); border: 1px solid var(--ln-cyan-border, rgba(112,217,234,0.4));
+  background: transparent; color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); border: 1px solid var(--ln-bp-blue, #1f78c1);
   font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase;
 }
 .flight-plan-btn.is-primary { background: var(--ln-cyan, #70d9ea); color: #06121a; }
 .flight-plan-radio { padding: 0 4px 6px; display: flex; flex-direction: column; gap: 4px; }
-.flight-plan-radio p { margin: 0; font-size: 14px; line-height: 1.4; color: var(--ln-text-muted, #b4c4d8); max-width: 760px; }
-.flight-plan-radio .flight-plan-hint { color: var(--ln-cyan); }
+.flight-plan-radio p { margin: 0; font-size: 14px; line-height: 1.4; color: var(--ln-bp-ink-dim, #48596a); max-width: 760px; }
+.flight-plan-radio .flight-plan-hint { color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); }
 .flight-plan-skip { align-self: flex-start; margin-top: 4px; }
-.flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-panel-2, #101722); }
+.flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-bp-paper, #fff); }
 .game-chrome-bottom__training-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 999px; background: var(--ln-cyan); }
 .game-chrome-bottom__training-chip { margin-left: 4px; font-size: var(--ln-fs-micro); color: var(--ln-cyan); }
 /* Phone widths: MENU + dot + "0/3" is wider than its slot and spilled past the
@@ -3545,3 +3554,15 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   }
   .portrait-canvas:not(:has([data-screen="hub"])):not(:has(.mining-screen)):has(.sync-status) .flight-plan { padding-bottom: 34px; }
 }
+
+/* SSL-442 Mission patch shelf (Menu > Training log): one patch per try, ring filled when done. */
+.patch-shelf { display: grid; gap: 8px; }
+.patch { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 12px; padding: 8px; border: 1px solid var(--ln-bp-line, rgba(15,36,54,.14)); border-radius: 8px; background: var(--ln-bp-paper, #fff); }
+.patch-ring { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 999px; border: 2px dashed var(--ln-bp-line-strong, rgba(15,36,54,.3)); color: var(--ln-bp-ink-dim, #48596a); font: 800 14px/1 var(--ln-font-display); }
+.patch[data-state='active'] .patch-ring { border: 3px solid var(--ln-bp-blue, #1f78c1); color: var(--ln-bp-ink, #0f2436); }
+.patch[data-state='done'] .patch-ring { border: 3px solid var(--ln-bp-green, #17703f); background: var(--ln-bp-green-soft, rgba(23,112,63,.1)); color: var(--ln-bp-green, #17703f); }
+.patch-name { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--ln-bp-ink, #0f2436); }
+.patch-status { font: 14px/1.3 var(--ln-font-body); color: var(--ln-bp-ink-dim, #48596a); margin-top: 2px; }
+.patch[data-state='active'] .patch-status { color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font-weight: 700; }
+.patch[data-state='done'] .patch-status { color: var(--ln-bp-green, #17703f); }
+

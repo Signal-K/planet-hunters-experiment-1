@@ -170,18 +170,22 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
         )}
 
         <Section label="Training">
-          {TRAINING_TRY_IDS.map(tryId => {
-            const active = currentTrainingTry(game.player.flightPlan) === tryId
-            const done = !!game.player.flightPlan?.completed?.[tryId]
-            const status = done ? 'Done' : active ? 'Now' : 'Next'
-            return <Row key={tryId}>
-              <div data-testid={`training-${tryId}-status`}>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text)', textTransform: 'capitalize' }}>{tryId === 'part' ? 'Part tweak' : tryId}</div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: done ? 'var(--ln-ok)' : 'var(--ln-text-muted)', marginTop: 2 }}>{status}</div>
+          <div className="patch-shelf" data-testid="training-patch-shelf" role="list" aria-label="Mission patches">
+            {TRAINING_TRY_IDS.map(tryId => {
+              const active = currentTrainingTry(game.player.flightPlan) === tryId
+              const done = !!game.player.flightPlan?.completed?.[tryId]
+              const status = done ? 'Done' : active ? 'On air' : 'Standby'
+              const label = tryId === 'part' ? 'Part tweak' : tryId === 'scan' ? 'Planet scan' : 'Mining'
+              return <div key={tryId} role="listitem" className="patch" data-state={done ? 'done' : active ? 'active' : 'standby'}>
+                <span className="patch-ring" aria-hidden="true">{done ? '✓' : TRAINING_TRY_IDS.indexOf(tryId) + 1}</span>
+                <div data-testid={`training-${tryId}-status`}>
+                  <div className="patch-name">{label}</div>
+                  <div className="patch-status">{status}</div>
+                </div>
+                <Btn label="Replay" onClick={() => replay(tryId)} variant="primary" />
               </div>
-              <Btn label="Replay" onClick={() => replay(tryId)} variant="primary" />
-            </Row>
-          })}
+            })}
+          </div>
           {!game.player.freeOperations && (
             <Row>
               <div>
