@@ -96,7 +96,7 @@ export function exposedOreMarkers(spawn: { x: number; y: number }): ExposedOreMa
   return [
     { id: 'ore-a', label: 'OUTCROP A', mineral: 'iron', x: boundedCoordinate(spawn.x + 3), y: boundedCoordinate(spawn.y), left: '62%', top: '43%' },
     { id: 'ore-b', label: 'OUTCROP B', mineral: 'copper', x: boundedCoordinate(spawn.x - 2), y: boundedCoordinate(spawn.y + 2), left: '38%', top: '31%' },
-    { id: 'ore-c', label: 'OUTCROP C', mineral: 'aluminium', x: boundedCoordinate(spawn.x + 1), y: boundedCoordinate(spawn.y - 3), left: '76%', top: '24%' },
+    { id: 'ore-c', label: 'OUTCROP C', mineral: 'aluminium', x: boundedCoordinate(spawn.x + 1), y: boundedCoordinate(spawn.y - 3), left: '50%', top: '66%' },
   ]
 }
 
@@ -105,6 +105,34 @@ export function drillFinding(attempt: number, marker: ExposedOreMarker): DrillFi
   if (attempt >= 3) return { attempt, markerId: marker.id, label: 'MINE SITE LOCATED · CLAIM STAKED', kind: 'mine-site' }
   if (attempt === 2) return { attempt, markerId: marker.id, label: 'VEIN CONFIRMED · ONE MORE DRILL WILL OPEN THE SITE', kind: 'vein' }
   return { attempt, markerId: marker.id, label: `TRACE ${marker.mineral.toUpperCase()} · CONTINUE PROSPECTING`, kind: 'trace' }
+}
+
+/** Drills it takes to open the guaranteed mine site (SSL-471). */
+export const GUARANTEED_SITE_DRILLS = 3
+
+export function cargoMeetsRequirements(
+  cargo: Record<string, number>,
+  requirements: Record<string, number>
+): boolean {
+  const required = Object.entries(requirements)
+  return required.length > 0 && required.every(([mineral, amount]) => (cargo[mineral] ?? 0) >= amount)
+}
+
+/**
+ * The prospector may return once the order is in the hold or the third drill
+ * has opened the mine site. Starting the first rig stays optional.
+ */
+export function roverReturnReady(
+  drillCount: number,
+  cargo: Record<string, number>,
+  requirements: Record<string, number>
+): boolean {
+  return drillCount >= GUARANTEED_SITE_DRILLS || cargoMeetsRequirements(cargo, requirements)
+}
+
+/** The engine ends a mine order once the rover stands next to (or on) the tile. */
+export function reachedMarker(pose: { x: number; y: number } | null, marker: Pick<ExposedOreMarker, 'x' | 'y'>): boolean {
+  return !!pose && Math.abs(pose.x - marker.x) + Math.abs(pose.y - marker.y) <= 1
 }
 
 interface RoverMiningScreenProps {
@@ -151,6 +179,8 @@ export default function RoverMiningScreen({
   const [drillings, setDrillings] = useState<DrillFinding[]>([])
   const [mineSite, setMineSite] = useState<ExposedOreMarker | null>(null)
   const [constructionStarted, setConstructionStarted] = useState(false)
+  const [pendingMarker, setPendingMarker] = useState<ExposedOreMarker | null>(null)
+  const drillCountRef = useRef(0)
   const takeonHandle = useRef<TakeOnMountHandle | null>(null)
   const fieldIdentity = useMemo<FieldIdentity>(() => ({ targetId: target.id }), [target.id])
   const lifeStage = lifeStageForTarget(target, player?.biosphereSeeds?.[target.id])
@@ -206,27 +236,43 @@ export default function RoverMiningScreen({
     onComplete(requirements)
   }, [onComplete, requirements])
 
-  const beginDrill = useCallback(() => {
-    if (!selectedMarker || mineSite) return
-    const attempt = drillings.length + 1
-    const finding = drillFinding(attempt, selectedMarker)
-    takeonHandle.current?.orderMine(selectedMarker.x, selectedMarker.y)
-    setRouteSteps(takeonHandle.current?.plannedRouteLength() ?? 0)
+  const recordDrill = useCallback((marker: ExposedOreMarker) => {
+    if (drillCountRef.current >= GUARANTEED_SITE_DRILLS) return
+    const attempt = drillCountRef.current + 1
+    drillCountRef.current = attempt
+    const finding = drillFinding(attempt, marker)
     setDrillings(previous => [...previous, finding])
-    if (finding.kind === 'mine-site') setMineSite(selectedMarker)
+    if (finding.kind === 'mine-site') setMineSite(marker)
     captureGameEvent('rover_exposed_ore_drilled', {
       target_id: target.id,
-      marker_id: selectedMarker.id,
+      marker_id: marker.id,
       drill_attempt: attempt,
       result: finding.kind,
     })
-  }, [drillings.length, mineSite, selectedMarker, target.id])
+  }, [target.id])
 
+  // Tapping an outcrop sends the rover there and the engine drills the column
+  // on arrival; the drill is recorded once that mine order finishes beside it.
   const selectMarker = useCallback((marker: ExposedOreMarker) => {
+    if (!takeonReady) return
     setSelectedMarkerId(marker.id)
     takeonHandle.current?.orderMine(marker.x, marker.y)
     setRouteSteps(takeonHandle.current?.plannedRouteLength() ?? 0)
-  }, [])
+    setPendingMarker(drillCountRef.current >= GUARANTEED_SITE_DRILLS ? null : marker)
+  }, [takeonReady])
+
+  useEffect(() => {
+    if (!pendingMarker) return
+    const timer = window.setInterval(() => {
+      const handle = takeonHandle.current
+      if (!handle || handle.currentOrder()) return
+      setPendingMarker(null)
+      if (reachedMarker(handle.rover(), pendingMarker)) recordDrill(pendingMarker)
+    }, 250)
+    return () => window.clearInterval(timer)
+  }, [pendingMarker, recordDrill])
+
+  const returnReady = roverReturnReady(drillings.length, cargo, requirements)
 
   return (
     <div className={`game-screen theme-blueprint ln-scene-takeon ${styles.screen}`} data-testid="rover-mining-screen">
@@ -281,16 +327,7 @@ export default function RoverMiningScreen({
                 ) : null}
               />
               <section className={styles.objectControls} data-testid="rover-object-controls">
-                <span className={styles.eyebrow}>{selectedMarker ? `${selectedMarker.label} SELECTED` : 'SELECT EXPOSED ORE'}</span>
-                <button
-                  type="button"
-                  className={styles.primaryAction}
-                  disabled={!selectedMarker || !!mineSite || !takeonReady}
-                  onClick={beginDrill}
-                  data-testid="rover-drill-action"
-                >
-                  {mineSite ? 'MINE SITE OPEN' : 'DRILL EXPOSED ORE'}
-                </button>
+                <span className={styles.eyebrow}>{selectedMarker ? `${selectedMarker.label} SELECTED` : 'TAP EXPOSED ORE TO DRIVE AND DRILL'}</span>
               </section>
             </div>
           )}
@@ -347,16 +384,16 @@ export default function RoverMiningScreen({
             <strong>{mineSite ? 'SITE LOCATED' : 'PROSPECTING'}</strong>
           </div>
           {drillings.length === 0 ? (
-            <p>Select an exposed ore marker, drive into range, then use the drill. A mine site is guaranteed by drill three.</p>
+            <p>Tap an exposed ore marker. The rover drives there and drills on arrival. A mine site is guaranteed by drill three.</p>
           ) : (
             <ol>
               {drillings.map(finding => <li key={`${finding.markerId}-${finding.attempt}`} data-kind={finding.kind}>DRILL {finding.attempt} · {finding.label}</li>)}
             </ol>
           )}
           {mineSite && (
-            <p className={styles.mineSiteStatus}>{constructionStarted ? 'FIRST MINE RIG IS STAKED ON THE FIELD.' : 'SELECT THE MINE SITE ON THE FIELD TO START THE FIRST RIG.'}</p>
+            <p className={styles.mineSiteStatus}>{constructionStarted ? 'FIRST MINE RIG IS STAKED ON THE FIELD.' : 'START THE FIRST RIG ON THE FIELD, OR RETURN THE PROSPECTOR.'}</p>
           )}
-          <button type="button" className={styles.primaryAction} disabled={!constructionStarted} onClick={() => { captureGameEvent('rover_returned_to_ship', { target_id: target.id }); onComplete(cargo) }} data-testid="rover-return-to-ship">RETURN PROSPECTOR</button>
+          <button type="button" className={styles.primaryAction} disabled={!returnReady} onClick={() => { captureGameEvent('rover_returned_to_ship', { target_id: target.id }); onComplete(cargo) }} data-testid="rover-return-to-ship">RETURN PROSPECTOR</button>
         </aside>}
       </main>
 
