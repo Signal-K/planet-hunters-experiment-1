@@ -33,14 +33,15 @@ export default function HelpSheet({ topic, onClose, onShowMe, onReplayTraining }
     <div className={styles.scrim} data-testid="help-scrim" onClick={event => { if (event.target === event.currentTarget) onClose() }}>
       <section className={styles.sheet} role="complementary" aria-label={topic.title} data-testid="help-sheet">
         <header className={styles.head}>
-          <h2 className={styles.title}>{topic.title}</h2>
+          <span className={styles.badge} aria-hidden="true">OPS</span>
+          <div className={styles.titleBlock}><span className={styles.kicker}>OPS BRIEFING</span><h2 className={styles.title}>{topic.title}</h2></div>
           <button ref={closeRef} type="button" className={styles.close} data-testid="help-close" onClick={onClose}>Close</button>
         </header>
         <div className={styles.body}>
-          {topic.cards.map(card => (
+          {topic.cards.map((card, index) => (
             <article key={card.title} className={styles.card} data-testid="help-card">
               {card.image && <img src={card.image.src} alt={card.image.alt} />}
-              <h3>{card.title}</h3>
+              <h3><span className={styles.num}>{String(index + 1).padStart(2, '0')}</span> {card.title}</h3>
               <p>{card.body}</p>
             </article>
           ))}
