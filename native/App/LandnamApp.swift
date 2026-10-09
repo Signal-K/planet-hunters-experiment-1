@@ -8,6 +8,7 @@ struct LandnamApp: App {
     @State private var auth = AuthModel(api: .fromEnvironment(), store: KeychainSessionStore())
 
     @State private var services = Services()
+    @State private var surveys = SurveyCenter()
     @Environment(\.scenePhase) private var scenePhase
 
     init() { AppFont.register() }
@@ -17,7 +18,7 @@ struct LandnamApp: App {
             Group {
                 if let scene = SceneHost.requested { SceneHost(id: scene).environment(store) } else { RootView() }
             }
-                .environment(store).environment(auth).environment(services.feed)
+                .environment(store).environment(auth).environment(services.feed).environment(surveys)
                 .task { if SceneHost.requested == nil { services.start(store: store, auth: auth) } }
                 .onChange(of: auth.session) { _, s in services.attach(s) }
                 .onChange(of: scenePhase) { _, p in if p == .active { services.flush() } }

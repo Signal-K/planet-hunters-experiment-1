@@ -30,6 +30,7 @@ struct SkyEventChip: View {
 
 /// Earned sky-event badges (mirrors web SkyBadgeRow). Renders nothing until one is earned.
 struct SkyBadgeRow: View {
+    @Environment(SurveyCenter.self) private var surveys: SurveyCenter?
     let badges: [String: PlayerBadge]
 
     var body: some View {
@@ -43,6 +44,12 @@ struct SkyBadgeRow: View {
                         Text(b.tier == .gold ? "GOLD" : "SILVER").font(AppFont.display(14)).tracking(1.2)
                         Text(SkyEvents.event(b.eventId)?.name ?? "").font(AppFont.body(14))
                         Spacer(minLength: 0)
+                        if let event = SkyEvents.event(b.eventId) {
+                            ShareLink(item: BadgeShare.url, message: Text(BadgeShare.text(event.name, tier: b.tier))) {
+                                Text("SHARE").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.bluePress)
+                                    .frame(minWidth: 44, minHeight: 44)
+                            }.simultaneousGesture(TapGesture().onEnded { surveys?.enqueue(Surveys.badgeShared) })
+                        }
                     }
                     .foregroundStyle(Theme.ink).padding(.horizontal, 12).frame(minHeight: 44)
                     .background(b.tier == .gold ? Theme.blueBright.opacity(0.35) : Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
@@ -51,5 +58,13 @@ struct SkyBadgeRow: View {
                 }
             }
         }
+    }
+}
+
+/// Share text and link, identical to web `lib/share.ts`.
+enum BadgeShare {
+    static let url = URL(string: "https://playlandnam.space/?utm_source=badge_share&utm_medium=share&utm_campaign=sky_event_badge")!
+    static func text(_ eventName: String, tier: BadgeTier) -> String {
+        "I earned the \(tier == .gold ? "Gold" : "Silver") \(eventName) badge in Landnam: Space Program."
     }
 }
