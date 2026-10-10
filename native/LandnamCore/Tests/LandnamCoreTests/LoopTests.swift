@@ -163,6 +163,27 @@ import Foundation
         #expect(Loop.miningDone(s, cargo: ["iron": 2], catalog: catalog, now: t0) == s)
     }
 
+    @Test func roverCargoMeetingTheOrderReachesDebrief() {
+        let order: Cargo = ["iron": 2]
+        var p = Prospecting(requirements: order)
+        _ = p.tapOutcrop("ore-a"); _ = p.tapOutcrop("ore-a")
+        #expect(p.canReturn && p.cargo == order)
+        var s = GameState()
+        s.screen = .roverMining; s.missionId = "m"; s.targetId = "eros"
+        let transit = Loop.roverMiningDone(s, cargo: p.cargo, catalog: catalog, now: t0)
+        let debrief = Transitions.applyReturnArrived(transit)
+        #expect(debrief.screen == .debrief)
+        #expect(order.allSatisfy { (debrief.lastCargo?[$0.key] ?? 0) >= $0.value })
+        #expect(debrief.player.stash["iron"] == 2)
+    }
+
+    @Test func shortRoverCargoIsKeptNotDropped() {
+        var s = GameState()
+        s.screen = .roverMining; s.missionId = "m"; s.targetId = "eros"
+        let debrief = Transitions.applyReturnArrived(Loop.roverMiningDone(s, cargo: ["iron": 1], catalog: catalog, now: t0))
+        #expect(debrief.screen == .debrief && debrief.lastCargo == ["iron": 1])
+    }
+
     @Test func deliveryLegHandsOffToUnloadAndHome() {
         var s = GameState()
         s.screen = .mining; s.missionId = "m"; s.targetId = "eros"; s.deliveryTargetId = "mars"

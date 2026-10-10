@@ -1,5 +1,5 @@
 .page {
-  min-height: 100svh;
+  min-height: var(--app-h);
   display: grid;
   place-items: center;
   padding: 16px;
@@ -213,7 +213,7 @@
 
 @media (max-width: 480px) {
   .page { display: block; padding: 0; }
-  .intro { min-height: 100svh; border: 0; border-radius: 0; }
+  .intro { min-height: var(--app-h); border: 0; border-radius: 0; }
   .copyPanel { min-height: 52svh; padding: 24px 16px; }
   .yard { min-height: 48svh; }
   .title { font-size: 32px; }

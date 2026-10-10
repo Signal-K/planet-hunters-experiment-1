@@ -2,7 +2,7 @@ import SwiftUI
 import LandnamCore
 
 /// Surface-ops prospecting (mirrors web RoverMiningScreen, SSL-484 / SSL-485): deploy the Mule rover,
-/// drive to exposed ore, drill. Drill three always opens a mine site; stake the first rig, then return.
+/// tap exposed ore to drive and drill. Drill three always opens a mine site; return once the order is met or after drill three; the first rig is optional.
 /// The field fills the screen; only the hotbar, drive pad and drill control sit over it.
 struct RoverFieldScreen: View {
     @Environment(GameStore.self) private var store
@@ -102,7 +102,7 @@ struct RoverFieldScreen: View {
     private func outcropButton(_ o: Outcrop) -> some View {
         let isSite = prospecting.mineSite == o.id, on = prospecting.selected == o.id
         return Button {
-            prospecting.select(o.id); prospecting.driveToSelected()
+            prospecting.tapOutcrop(o.id)
         } label: {
             VStack(spacing: 2) {
                 Image(systemName: isSite ? "flag.fill" : "triangle.fill").font(.system(size: 22, weight: .bold))
@@ -127,7 +127,7 @@ struct RoverFieldScreen: View {
                     Text(prospecting.mineSite != nil ? "SITE LOCATED" : "PROSPECTING").font(AppFont.display(14)).tracking(1.0)
                 }
                 if prospecting.drillings.isEmpty {
-                    Text("Select an exposed ore marker, drive into range, then use the drill. A mine site is guaranteed by drill three.")
+                    Text("Tap an exposed ore marker. The rover drives there and drills on arrival. A mine site is guaranteed by drill three.")
                         .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                 } else {
                     // The latest result only: the full history pushed the drive pad off the screen.
@@ -136,7 +136,7 @@ struct RoverFieldScreen: View {
                     }
                 }
                 if prospecting.mineSite != nil {
-                    Text(prospecting.constructionStarted ? "FIRST MINE RIG IS STAKED ON THE FIELD." : "SELECT THE MINE SITE ON THE FIELD TO START THE FIRST RIG.")
+                    Text(prospecting.constructionStarted ? "FIRST MINE RIG IS STAKED ON THE FIELD." : "START THE FIRST RIG ON THE FIELD, OR RETURN THE PROSPECTOR.")
                         .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.ink)
                 }
                 PrimaryButton(title: "RETURN PROSPECTOR", enabled: prospecting.canReturn) { store.roverMiningDone(prospecting.cargo) }
@@ -157,9 +157,6 @@ struct RoverFieldScreen: View {
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: 6) {
                 Eyebrow(text: prospecting.selectedOutcrop.map { "\($0.label) selected" } ?? "Select exposed ore")
-                InstrumentAnswerButton(title: prospecting.mineSite != nil ? "Mine site open" : (prospecting.selected != nil && !prospecting.inRange ? "Drive closer" : "Drill exposed ore"),
-                                       enabled: prospecting.canDrill, primary: true) { prospecting.drill() }
-                    .frame(maxWidth: 220)
             }
         }
     }
