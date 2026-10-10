@@ -53,8 +53,8 @@ private struct HelpModifier: ViewModifier {
                     Text("?").font(AppFont.display(20, "Bold")).foregroundStyle(Theme.ink)
                         .frame(width: 44, height: 44)
                         .background(Theme.paper, in: Circle())
-                        .overlay(Circle().stroke(Theme.border, lineWidth: 2))
-                        .background(Circle().fill(Theme.blue).offset(x: 2, y: 2))
+                        .overlay(Circle().stroke(Theme.border, lineWidth: 1).allowsHitTesting(false))
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain).padding(12)
                 .accessibilityLabel("Help: \(topic.title)")
@@ -67,6 +67,8 @@ private struct HelpModifier: ViewModifier {
                                    rects: rects, size: geo.size, onNext: { coach.run.advance() }, onStop: { coach.run.stop() })
                     }
                 }
+                // An idle coach layer fills the screen. It must not take taps from the station underneath.
+                .allowsHitTesting(coach.run.current != nil)
             }
             .sheet(isPresented: Binding(get: { coach.sheetOpen }, set: { coach.sheetOpen = $0 })) {
                 HelpSheet(topic: topic, onShowMe: topic.coach.isEmpty ? nil : {
@@ -103,7 +105,7 @@ struct HelpSheet: View {
             Spacer(minLength: 0)
         }
         .padding(16)
-        .background(Theme.bg.ignoresSafeArea())
+        .background { PageBackdrop().ignoresSafeArea().allowsHitTesting(false) }
     }
 }
 
@@ -132,7 +134,7 @@ struct CoachMarks: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            dim.fill(Theme.ink.opacity(0.55), style: FillStyle(eoFill: true))
+            dim.fill(Theme.shell.opacity(0.72), style: FillStyle(eoFill: true))
                 .contentShape(dim, eoFill: true)
                 .onTapGesture {}
             if let hole {

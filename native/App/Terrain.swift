@@ -114,8 +114,8 @@ struct TerrainScene: View {
     var ground: Double = 0.28
     /// Footprints (scene coordinates) that outcrops and foreground rocks must stay out of.
     var exclusions: [CGRect] = []
-    /// The web shows the outlined planet only on the wide establishing shot.
-    var showsPlanet = true
+    /// Decorative planet disc. Off: screens use the terrain, and only a flight draws its destination body.
+    var showsPlanet = false
 
     /// How strongly a band is washed toward the haze colour (web `hazeFor`): most of aerial perspective
     /// happens in the first stretch of distance.
@@ -233,17 +233,50 @@ private struct Planet: View {
             let s = geo.size.width / 100
             ZStack(alignment: .topLeading) {
                 Circle().fill(Theme.blue.opacity(0.35)).frame(width: 96 * s, height: 96 * s).offset(x: 5 * s, y: 5 * s)
-                Circle().fill(Theme.hex(0xDFE9F3)).frame(width: 96 * s, height: 96 * s).offset(x: 2 * s, y: 2 * s)
+                Circle().fill(Theme.paper2).frame(width: 96 * s, height: 96 * s).offset(x: 2 * s, y: 2 * s)
                 ZStack(alignment: .topLeading) {
-                    ForEach([(26.0, 0x42A6DF), (43, 0x168A80), (60, 0x42A6DF)], id: \.0) { y, c in
-                        Rectangle().fill(Theme.hex(UInt32(c), 0.45)).frame(width: 100 * s, height: 9 * s).offset(y: y * s)
+                    ForEach([26.0, 43, 60], id: \.self) { y in
+                        Rectangle().fill(Theme.blue.opacity(0.45)).frame(width: 100 * s, height: 9 * s).offset(y: y * s)
                     }
                 }
                 .frame(width: 100 * s, height: 100 * s, alignment: .topLeading)
                 .mask { Circle().frame(width: 96 * s, height: 96 * s).offset(x: 2 * s, y: 2 * s).frame(width: 100 * s, height: 100 * s, alignment: .topLeading) }
-                Circle().stroke(Theme.hex(0x0F2436), lineWidth: 1.2 * s).frame(width: 96 * s, height: 96 * s).offset(x: 2 * s, y: 2 * s)
+                Circle().stroke(Theme.ink, lineWidth: 1.2 * s).frame(width: 96 * s, height: 96 * s).offset(x: 2 * s, y: 2 * s)
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+/// Internal-page backdrop: Earth Base terrain under the web starfield scrim (`--ln-shell` + `.ln-starfield`).
+/// Hit testing is off so it cannot sit on top of a control.
+struct PageBackdrop: View {
+    var composition: SceneComposition = .earthBaseWide
+    var ground: Double = 0.38
+
+    var body: some View {
+        ZStack {
+            Theme.shell
+            TerrainScene(composition: composition, ground: ground, showsPlanet: false)
+            LinearGradient(stops: [
+                .init(color: Theme.shell.opacity(0.86), location: 0),
+                .init(color: Theme.shell.opacity(0.58), location: 0.42),
+                .init(color: Theme.shell.opacity(0.8), location: 1),
+            ], startPoint: .top, endPoint: .bottom)
+            Canvas { ctx, size in
+                let stars: [(CGFloat, CGFloat, CGFloat)] = [
+                    (0.06, 0.22, 1.2), (0.28, 0.12, 1.5), (0.45, 0.18, 1.0),
+                    (0.68, 0.28, 1.2), (0.82, 0.14, 1.4), (0.18, 0.34, 1.0), (0.92, 0.30, 1.1),
+                ]
+                for (i, s) in stars.enumerated() {
+                    let r = s.2
+                    let rect = CGRect(x: s.0 * size.width - r, y: s.1 * size.height - r, width: r * 2, height: r * 2)
+                    ctx.fill(Path(ellipseIn: rect), with: .color(i % 2 == 0 ? Color.white.opacity(0.45) : Theme.blue.opacity(0.4)))
+                }
+            }
+            .allowsHitTesting(false)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }

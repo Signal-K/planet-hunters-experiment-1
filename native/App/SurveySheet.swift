@@ -78,7 +78,8 @@ struct SurveySheet: View {
                         Button { submit(String(n)) } label: {
                             Text("\(n)").font(AppFont.display(16)).frame(maxWidth: .infinity, minHeight: 44)
                                 .foregroundStyle(Theme.ink).background(Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
-                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1).allowsHitTesting(false))
+                                .contentShape(Rectangle())
                         }.buttonStyle(.plain)
                     }
                 }
@@ -88,7 +89,8 @@ struct SurveySheet: View {
                         Text(choice).font(AppFont.body(14)).multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).padding(.horizontal, 12)
                             .foregroundStyle(Theme.ink).background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1).allowsHitTesting(false))
+                            .contentShape(Rectangle())
                     }.buttonStyle(.plain)
                 }
             }
@@ -99,7 +101,7 @@ struct SurveySheet: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Theme.bg)
+        .background { PageBackdrop().ignoresSafeArea().allowsHitTesting(false) }
         .presentationDetents([.medium, .large])
     }
 }

@@ -54,6 +54,7 @@ struct SignInScreen: View {
             }
             .padding(24)
         }
+        .foregroundStyle(Theme.ink)
     }
 
     private func submitPassword() {

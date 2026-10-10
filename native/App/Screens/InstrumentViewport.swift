@@ -36,7 +36,7 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
             }
             .padding(16).frame(maxWidth: 560).frame(maxWidth: .infinity)
         }
-        .background(Theme.bg.ignoresSafeArea())
+        .background { PageBackdrop().ignoresSafeArea().allowsHitTesting(false) }
         .foregroundStyle(Theme.ink)
         .onAppear { view = initialView }
     }
@@ -66,7 +66,7 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
     private var stage: some View {
         let o = Instrument.optics(view)
         return ZStack {
-            Theme.ink
+            Theme.shell
             GeometryReader { geo in
                 ZStack {
                     well.frame(width: geo.size.width, height: geo.size.height)
@@ -208,10 +208,11 @@ private struct SwitchChip: View {
                 Image(systemName: on ? "checkmark.square.fill" : "square").font(.system(size: 18))
                 Text(label).font(AppFont.display(14)).tracking(1.2)
             }
-            .foregroundStyle(on ? Color.white : Theme.ink)
+            .foregroundStyle(on ? Theme.onAccent : Theme.ink)
             .padding(.horizontal, 14).frame(maxWidth: .infinity, minHeight: 44)
+            .contentShape(Rectangle())
             .background(on ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1).allowsHitTesting(false))
         }.buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
     }
 }
@@ -227,9 +228,10 @@ struct InstrumentAnswerButton: View {
         Button(action: { if enabled { action() } }) {
             Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, minHeight: 44).padding(.horizontal, 6)
-                .foregroundStyle(primary && enabled ? Color.white : Theme.ink)
+                .foregroundStyle(primary && enabled ? Theme.onAccent : Theme.ink)
+                .contentShape(Rectangle())
                 .background(!enabled ? Theme.paper2 : (primary ? Theme.blue : Theme.paper), in: RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink.opacity(enabled ? 1 : 0.55), lineWidth: 2))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border.opacity(enabled ? 1 : 0.55), lineWidth: 1).allowsHitTesting(false))
         }.buttonStyle(.plain).accessibilityAddTraits(enabled ? [] : .isStaticText)
     }
 }

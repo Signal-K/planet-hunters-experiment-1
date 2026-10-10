@@ -98,7 +98,8 @@ struct LaunchReviewScreen: View {
                                 Text(e.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                             }
                             Button { archiveFocus = "mission:\(m.id)"; showArchive = true } label: {
-                                Text("SEE THE PATHWAY").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress).frame(minHeight: 44, alignment: .leading)
+                                Text("SEE THE PATHWAY").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress)
+                                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                             }.buttonStyle(.plain)
                         }
                     } }
@@ -145,12 +146,12 @@ struct LaunchReviewScreen: View {
                 Text(model.name.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.ink)
             }
             .padding(.horizontal, 12).padding(.vertical, 8)
-            .background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
-            .background(Rectangle().fill(Theme.ink).offset(x: 4, y: 4))
+            .background(Theme.paper.opacity(0.92))
+            .overlay(Rectangle().stroke(Theme.glassBorder, lineWidth: 1).allowsHitTesting(false))
             .padding(16)
         }
         .frame(height: 260).clipped()
-        .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+        .overlay(Rectangle().stroke(Theme.glassBorder, lineWidth: 1).allowsHitTesting(false))
     }
 
     private func fact(_ label: String, _ value: String) -> some View {
@@ -179,7 +180,7 @@ struct LaunchReviewScreen: View {
                 .frame(width: 44, height: 44)
                 .foregroundStyle(Theme.ink)
                 .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1).allowsHitTesting(false))
                 .opacity(enabled ? 1 : 0.4)
         }
         .buttonStyle(.plain).disabled(!enabled).accessibilityLabel(label)

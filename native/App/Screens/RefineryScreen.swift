@@ -72,7 +72,7 @@ struct RefineryScreen: View {
                             Spacer(minLength: 0)
                             Text(Economy.format(francs: r.price * n)).font(AppFont.display(14))
                             Button { store.sellRefined(id, amount: n) } label: {
-                                Text("SELL").font(AppFont.display(14)).tracking(1.2).foregroundStyle(.white)
+                                Text("SELL").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.onAccent)
                                     .padding(.horizontal, 14).frame(minHeight: 44)
                                     .background(Theme.blue, in: RoundedRectangle(cornerRadius: 8))
                             }.buttonStyle(.plain).accessibilityLabel("Sell \(r.name)")

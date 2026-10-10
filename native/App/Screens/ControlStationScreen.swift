@@ -23,7 +23,11 @@ struct ControlStationScreen: View {
             if let empty = m.emptyLabel { Panel { Text(empty).foregroundStyle(Theme.textDim) } }
             ForEach(m.groups) { group in
                 VStack(alignment: .leading, spacing: 10) {
-                    Eyebrow(text: group.label)
+                    HStack(alignment: .firstTextBaseline) {
+                        Eyebrow(text: group.label)
+                        Spacer(minLength: 8)
+                        Text("\(group.rows.count)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
+                    }
                     ForEach(group.rows) { row in rowView(row) }
                 }
             }
@@ -39,9 +43,10 @@ struct ControlStationScreen: View {
                 Button { bodyId = f.id } label: {
                     Text(f.label.uppercased()).font(AppFont.display(14)).tracking(1.2)
                         .padding(.horizontal, 16).frame(minHeight: 44)
-                        .foregroundStyle(on ? Color.white : Theme.ink)
+                        .contentShape(Rectangle())
+                        .foregroundStyle(on ? Theme.onAccent : Theme.ink)
                         .background(on ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(on ? Theme.bluePress : Theme.border, lineWidth: 1).allowsHitTesting(false))
                 }.buttonStyle(.plain)
             }
             Spacer(minLength: 0)
@@ -54,8 +59,11 @@ struct ControlStationScreen: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(row.name).font(AppFont.display(16)).foregroundStyle(Theme.ink)
                     HStack(spacing: 6) {
-                        Circle().fill(row.live ? Theme.teal : Theme.textMuted).frame(width: 8, height: 8)
+                        Circle().fill(row.live ? Theme.ok : Theme.textMuted).frame(width: 8, height: 8)
                         Text(row.status).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                        if row.readyCount > 0 {
+                            Text("\(row.readyCount) READY").font(AppFont.mono(14)).foregroundStyle(Theme.teal)
+                        }
                     }
                     Text(row.projects.joined(separator: " · ")).font(AppFont.body(14)).foregroundStyle(Theme.textMuted)
                     WorldSpaceWeekChips(chips: row.wsw)
@@ -63,15 +71,17 @@ struct ControlStationScreen: View {
                 Spacer(minLength: 0)
                 if row.buildPrompt {
                     Button { store.go(.build) } label: {
-                        Text("BUILD").font(AppFont.display(14)).tracking(1.4).foregroundStyle(.white)
+                        Text("BUILD").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.onAccent)
                             .padding(.horizontal, 18).frame(minHeight: 44)
+                            .contentShape(Rectangle())
                             .background(Theme.blue, in: RoundedRectangle(cornerRadius: 8))
                     }.buttonStyle(.plain).accessibilityLabel("Build \(row.name)").accessibilityIdentifier("control-station-build")
                 }
                 if let signal = row.open {
                     Button { open(signal) } label: {
-                        Text("OPEN").font(AppFont.display(14)).tracking(1.4).foregroundStyle(.white)
+                        Text("OPEN").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.onAccent)
                             .padding(.horizontal, 18).frame(minHeight: 44)
+                            .contentShape(Rectangle())
                             .background(Theme.blue, in: RoundedRectangle(cornerRadius: 8))
                     }.buttonStyle(.plain).accessibilityLabel("Open \(row.name)")
                 }
@@ -123,10 +133,10 @@ struct StationMap: View {
                 let c = pt(m.x, m.y)
                 if m.readyCount > 0 {
                     ctx.fill(Path(ellipseIn: CGRect(x: c.x - 11, y: c.y - 11, width: 22, height: 22)), with: .color(Theme.teal))
-                    ctx.draw(Text("\(m.readyCount)").font(AppFont.display(14)).foregroundStyle(.white), at: c)
+                    ctx.draw(Text("\(m.readyCount)").font(AppFont.display(14)).foregroundStyle(Theme.onAccent), at: c)
                 } else {
-                    ctx.fill(Path(ellipseIn: CGRect(x: c.x - 5, y: c.y - 5, width: 10, height: 10)), with: .color(Theme.paper))
-                    ctx.stroke(Path(ellipseIn: CGRect(x: c.x - 5, y: c.y - 5, width: 10, height: 10)), with: .color(Theme.ink), lineWidth: 2)
+                    ctx.fill(Path(ellipseIn: CGRect(x: c.x - 5, y: c.y - 5, width: 10, height: 10)), with: .color(Theme.ink))
+                    ctx.stroke(Path(ellipseIn: CGRect(x: c.x - 5, y: c.y - 5, width: 10, height: 10)), with: .color(Theme.blue), lineWidth: 2)
                 }
             }
         }

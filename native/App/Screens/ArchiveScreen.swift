@@ -26,7 +26,7 @@ struct ArchiveScreen: View {
                 .padding(16).frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
             }
         }
-        .background(Theme.bg.ignoresSafeArea()).foregroundStyle(Theme.ink)
+        .background { PageBackdrop().ignoresSafeArea().allowsHitTesting(false) }.foregroundStyle(Theme.ink)
         .onAppear { if selected == nil { selected = focus } }
     }
 
@@ -54,7 +54,7 @@ struct ArchiveScreen: View {
     private func chip(_ title: String, _ on: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title).font(AppFont.display(14)).tracking(1.2).padding(.horizontal, 14).frame(minHeight: 44)
-                .foregroundStyle(on ? Color.white : Theme.ink)
+                .foregroundStyle(on ? Theme.onAccent : Theme.ink)
                 .background(on ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
         }.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(on ? .isSelected : [])
