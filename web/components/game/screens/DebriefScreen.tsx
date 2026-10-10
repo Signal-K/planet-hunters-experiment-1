@@ -7,6 +7,7 @@ import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
 import TopBar from '@/components/ui/TopBar'
+import { useHelp } from '@/components/ui/useHelp'
 import StatusPill from '@/components/ui/StatusPill'
 import MineralChip from '@/components/game/MineralChip'
 import { UI_ZONES } from '@/lib/ui-zones'
@@ -72,6 +73,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   // An ordinary rocket must remain visibly intact until the player authorises
   // teardown. Instrument deployments have no returning launch vehicle to
   // dismantle, so their result can open directly.
+  const help = useHelp('debrief')
   const [resolved, setResolved] = useState(isOrbitalInstrumentDeployment)
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
@@ -132,8 +134,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         scene
         eyebrow="MISSION COMPLETE"
         title={isOrbitalInstrumentDeployment ? 'DEPLOYMENT' : 'DEBRIEF'}
-        right={<span className="debrief-hud-header__location">{isOrbitalInstrumentDeployment ? 'EARTH ORBIT · INSTRUMENT ONLINE' : 'EARTH RECEIVING BERTH · 01'}</span>}
+        right={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{help.button}<span className="debrief-hud-header__location">{isOrbitalInstrumentDeployment ? 'EARTH ORBIT · INSTRUMENT ONLINE' : 'EARTH RECEIVING BERTH · 01'}</span></span>}
       />
+      {help.layer}
 
       <div className={`debrief-game__content screen-scroll`} data-ui-zone={UI_ZONES.screenContent}>
         <SkyBadgeRow badges={badges} className="debrief-sky-badges" />
