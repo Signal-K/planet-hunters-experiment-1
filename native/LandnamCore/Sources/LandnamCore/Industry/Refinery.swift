@@ -68,7 +68,7 @@ public enum Refinery {
         var n = s
         n.player.stash[r.inputMineral, default: 0] -= r.inputAmount
         n.player.francs -= r.cost
-        n.player.refineryQueue.append(RefineryJob(recipeId: r.id, startedAt: now, durationMs: Double(r.seconds) * 1000 * (isStaffed(s.player) ? 0.75 : 1)))
+        n.player.refineryQueue.append(RefineryJob(recipeId: r.id, startedAt: now, durationMs: Double(r.seconds) * 1000 * (isStaffed(s.player) ? 0.75 : 1) * BuildingLevels.timeMultiplier(BuildingLevels.level(s.player, "refinery"))))
         n.player.refineryLastStartedAt = now
         return n
     }

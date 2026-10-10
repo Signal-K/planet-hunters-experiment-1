@@ -1,3 +1,4 @@
+import { buildingLevel } from '@/lib/data/building-levels'
 import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
@@ -22,7 +23,7 @@ import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
-import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, type SkyActivityKind } from '@/lib/data'
+import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
@@ -32,6 +33,7 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
+import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { completeFlightPlanEvent, currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
@@ -125,8 +127,8 @@ function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState 
   const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
   const target = catalog.targets.find(t => t.id === id) ?? null
   if (!mission || !target) return s
-  if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, s.player.unlockedSkillNodes ?? []).some(item => item.id === id)) return s
-  const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
+  if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, s.player.unlockedSkillNodes ?? [], buildingLevel(s.player, 'launchpad')).some(item => item.id === id)) return s
+  const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: buildingLevel(s.player, 'launchpad'), parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
   // SSL-450: switching target releases a free (F0) vehicle built for the old one, so Change never strands a rocket.
   const freeIds = new Set(ROCKET_MODELS.filter(model => model.costFrancs === 0).map(model => model.id))
   const stagedRockets = (s.player.stagedRockets ?? []).filter(vehicle =>
@@ -154,7 +156,7 @@ function finishQuickSetup(s: GameState, catalog: Catalog): GameState {
   if (next.screen === 'targets' && next.missionId) {
     const mission = missionById(next, catalog, next.missionId)
     if (!mission) return next
-    const feasible = feasibleTargetsFor(mission, catalog.targets, catalog.parts, next.player.missionsDone, next.player.launchpadUpgraded, next.player.unlockedSkillNodes ?? [])
+    const feasible = feasibleTargetsFor(mission, catalog.targets, catalog.parts, next.player.missionsDone, next.player.launchpadUpgraded, next.player.unlockedSkillNodes ?? [], buildingLevel(next.player, 'launchpad'))
     const pick = feasible.find(target => target.recommended) ?? feasible[0]
     if (!pick) return next
     next = pickTargetState(next, catalog, pick.id)
@@ -182,6 +184,36 @@ function rollOutToPad(s: GameState): GameState | null {
     doneSteps: { ...s.doneSteps, 8: true },
     player: { ...s.player, stagedRockets: s.player.stagedRockets?.map(candidate => candidate.id === vehicle.id ? onPad : candidate) },
   }, onPad)
+}
+
+/** Park a live sortie so another mission can be set up, or drop it when it was already collected. */
+function parkOrDropActiveRun(state: GameState): GameState {
+  if (!state.player.activeMission) return state
+  const settled = isSettledMissionRun(state.player, {
+    runId: state.player.missionRunId,
+    missionId: state.player.activeMission.id,
+    targetId: state.targetId,
+    launchedAt: state.player.transitStartedAt,
+  })
+  const snapshot = settled ? null : snapshotActiveMission(state)
+  const paused = (state.player.pausedMissionRuns ?? []).filter(run => !isSettledMissionRun(state.player, {
+    runId: run.missionRunId,
+    missionId: run.missionId,
+    targetId: run.targetId,
+    launchedAt: run.transitStartedAt,
+  }))
+  const pausedMissionRuns = snapshot
+    ? [...paused.filter(run => run.key !== snapshot.key), snapshot]
+    : paused
+  return {
+    ...state,
+    lastCargo: null,
+    deliveredCargo: null,
+    missionId: null,
+    targetId: null,
+    deliveryTargetId: null,
+    player: { ...clearActiveRunPlayer(state.player), pausedMissionRuns },
+  }
 }
 
 function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot): GameState {
@@ -233,6 +265,19 @@ function grantSkyBadges(player: Player, kind: SkyActivityKind, at: number): Play
   return next
 }
 
+// Our own World Space Week mission-type badges (wsw-badges.ts), same clock.
+function grantWswBadges(player: Player, type: WswMissionType, at: number): Player {
+  const { player: next, granted } = grantWswBadge(player, type, at)
+  if (granted) {
+    const key = `${granted.eventId}:${granted.tier}`
+    if (!reportedBadges.has(key)) {
+      reportedBadges.add(key)
+      captureGameEvent('badge_earned', { event_id: granted.eventId, tier: granted.tier, activity: type })
+    }
+  }
+  return next
+}
+
 export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopOpts) {
   const missionRunIdRef = useRef<string | null>(null)
   const setPlayer: React.Dispatch<React.SetStateAction<import('@/lib/game-types').Player>> = useCallback(
@@ -279,12 +324,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [setState])
 
   const onPickMission = useCallback((id: string, freeHaulDisposition?: 'store' | 'sell') => {
-    // A launched run owns its cargo, charge state, and mission receipt. Do not
-    // replace it while the player is browsing the Launchpad.
-    if (stateRef.current.player.activeMission) {
-      addToast('Finish or scrub your current run first.', 'warn')
-      return
-    }
+    // A launched run keeps its cargo and charges in pausedMissionRuns. Picking
+    // another mission parks that run instead of replacing it. A collected run
+    // is dropped, never parked, so it cannot be flown again.
     // Counterpart to mission_completed — without a started event, Trends/
     // Funnels can't tell "never picked a mission" apart from "picked one and
     // dropped off before finishing it".
@@ -300,7 +342,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
     setState(s => {
       if (s.screen !== 'missions' && s.screen !== 'launchpad') return s
-      if (s.player.activeMission) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? null
@@ -323,26 +364,27 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const ownOperation = isOwnProgramMission(mission)
       if (s.screen === 'launchpad' && !ownOperation) return s
       if (s.screen === 'missions' && s.player.freeOperations && ownOperation) return s
+      // Park only once the new mission is actually accepted. A rejected pick
+      // must leave the live run where it is.
+      const prepared = s.player.activeMission ? parkOrDropActiveRun(s) : s
       const dailyClientPool = (nextDailyPool && id.startsWith('dcp-'))
         ? { ...nextDailyPool, acceptedId: id }
         : nextDailyPool
       const base = {
-        ...s,
-        lastCargo: s.lastCargo,
-        deliveredCargo: s.deliveredCargo,
+        ...prepared,
         player: {
-          ...s.player,
+          ...prepared.player,
           dailyClientPool,
-          francs: s.player.francs - (mission.jointProject?.playerCost ?? 0),
-          freeHaulDisposition: freeHaulDisposition ?? s.player.freeHaulDisposition,
+          francs: prepared.player.francs - (mission.jointProject?.playerCost ?? 0),
+          freeHaulDisposition: freeHaulDisposition ?? prepared.player.freeHaulDisposition,
         },
       }
       if (mission?.targetId) {
         const target = catalog.targets.find(t => t.id === mission.targetId) ?? null
         const deliveryTarget = mission.deliveryTargetId ? catalog.targets.find(t => t.id === mission.deliveryTargetId) ?? null : null
-        const next = suggestBuild({ mission, target, deliveryTarget, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
+        const next = suggestBuild({ mission, target, deliveryTarget, missionsDone: prepared.player.missionsDone, launchpadUpgraded: prepared.player.launchpadUpgraded, launchpadLevel: buildingLevel(prepared.player, 'launchpad'), parts: catalog.parts, unlockedSkillNodes: prepared.player.unlockedSkillNodes ?? [] })
         if (mission.payload?.type === 'rover') next.drill = 'cargo-module-t1'
-        const stagedVehicle = stagedRocketForMission(s, mission.id, mission.targetId)
+        const stagedVehicle = stagedRocketForMission(prepared, mission.id, mission.targetId)
         const setup = {
           ...base,
           missionId: id,
@@ -350,7 +392,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           deliveryTargetId: mission.deliveryTargetId ?? null,
           rocket: stagedVehicle?.rocket ?? next,
           screen: stagedVehicle ? ('fab' as const) : ('rocket-buy' as const),
-          doneSteps: { ...s.doneSteps, 2: true, 3: true },
+          doneSteps: { ...prepared.doneSteps, 2: true, 3: true },
         }
         return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : finishQuickSetup(setup, catalog)
       }
@@ -360,10 +402,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         targetId: null,
         deliveryTargetId: mission.deliveryTargetId ?? null,
         screen: 'targets',
-        doneSteps: { ...s.doneSteps, 2: true },
+        doneSteps: { ...prepared.doneSteps, 2: true },
       }, catalog)
     })
-  }, [addToast, catalog, setState, stateRef])
+  }, [catalog, setState, stateRef])
 
   const onPickTarget = useCallback((id: string) => {
     setState(s => {
@@ -477,6 +519,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (currentMission.requires.crew && (!currentCrewStatus.met || currentMissionCrew.length === 0)) return
     const isFirstEver = current.player.missionsDone === 0
     let launchedTransitStartedAt: number | null = null
+    let earnedLaunchBadge: 'gold' | 'silver' | null = null
     setState(s => {
       const vehicle = s.player.stagedRockets?.find(candidate => candidate.id === s.player.selectedStagedRocketId)
       if (s.screen !== 'fab' || !s.missionId || !s.targetId || s.player.activeMission || !vehicle || vehicle.location !== 'launchpad') return s
@@ -498,10 +541,17 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const arrivalAt = (timedTransit && target)
         ? transitStartedAt + travelDurationMs(target, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
+      // SSL-491: the Rocket Revolution tier follows the launch, not the later
+      // debrief, so a flight inside the window stays gold.
+      const at = skyEventNow(isDevLauncherEnabled())
+      const beforeBadge = s.player.badges?.['rocket-revolution-2026']
+      const badged = grantSkyBadges(s.player, 'launch', at)
+      const earned = badged.badges?.['rocket-revolution-2026']
+      if (earned && earned !== beforeBadge) earnedLaunchBadge = earned.tier
       return {
         ...s,
         player: {
-          ...s.player,
+          ...badged,
           pendingLaunch: remainingStagedRockets.length > 0,
           pendingRocketId: nextStagedRocket?.rocketId,
           pendingRocketLocation: nextStagedRocket?.location,
@@ -545,9 +595,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : s)
     }
     captureGameEvent('rocket_launched', { mission_id: currentMission.id, target_id: current.targetId, is_first_ever: isFirstEver })
+    if (earnedLaunchBadge) addToast(`Rocket Revolution badge · ${earnedLaunchBadge === 'gold' ? 'Gold' : 'Silver'}`, 'ok')
     if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
     if (currentMissionCrew.length > 0) enqueueSurvey('lnm_crew_first_launch', 4000)
-  }, [catalog.missions, catalog.targets, setState, stateRef])
+  }, [addToast, catalog.missions, catalog.targets, setState, stateRef])
 
   const onMiningDone = useCallback((cargo: Record<string, number>, remoteDisposition: 'store' | 'sell' = 'sell') => {
     let hasDelivery = false
@@ -639,7 +690,18 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [addToast, catalog.targets, setState])
 
   const onLandingTouchdown = useCallback(() => {
-    setState(s => applyLandingTouchdown(s))
+    setState(s => {
+      if (s.screen !== 'landing') return s
+      return applyLandingTouchdown({
+        ...s,
+        player: {
+          ...s.player,
+          missionPhase: 'landing',
+          // A resumed descent whose clock was never saved is already due.
+          landingStartedAt: s.player.landingStartedAt ?? Date.now(),
+        },
+      })
+    })
     addToast('Touchdown confirmed — surface operations underway', 'ok')
   }, [addToast, setState])
 
@@ -743,7 +805,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ...s,
         screen: completedTrainingScan ? 'hangar' : s.screen,
         player: {
-          ...s.player,
+          ...(existing ? s.player : grantWswBadges(s.player, 'citizen-science', submittedAt)),
           researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,
           flightPlan: completeFlightPlanEvent(s.player.flightPlan, 'tess-classified'),
           tessClassifications: {
@@ -823,7 +885,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const next: GameState = {
         ...s,
         player: {
-          ...(existing ? s.player : grantSkyBadges(s.player, 'asteroid-classification', submittedAt)),
+          ...(existing ? s.player : grantWswBadges(grantSkyBadges(s.player, 'asteroid-classification', submittedAt), 'citizen-science', submittedAt)),
           researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,
           asteroidClassifications: {
             ...(s.player.asteroidClassifications ?? {}),
@@ -866,7 +928,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const tier = completed ? resolveSaturnBadgeTier(submittedAt) : null
       const player = {
         ...s.player,
-        ...(completed ? grantSkyBadges(s.player, 'saturn-classification', submittedAt) : {}),
+        ...(completed ? grantWswBadges(grantSkyBadges(s.player, 'saturn-classification', submittedAt), 'citizen-science', submittedAt) : {}),
         // A completed gold frame stays active until its plot is claimed, so a reload
         // shows the finished frame instead of loading a new one (SSL-492).
         saturnActiveFrameId: completed && tier !== 'gold' ? null : candidateId,
@@ -1145,14 +1207,32 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         { ...s, player: { ...s.player, stash } },
         rocketModelForConfig(s.rocket),
       )
+      // SSL-475: our own World Space Week badge for this mission type, graded at
+      // completion. The Rocket Revolution launch badge is granted at launch.
+      const wswBadgedPlayer = grantWswBadges(
+        constructionPlayer,
+        wswMissionTypeFor(mission, s.player.freeOperations),
+        skyEventNow(isDevLauncherEnabled()),
+      )
       const next: GameState = {
         ...s,
         player: {
-          ...grantSkyBadges(constructionPlayer, 'launch', skyEventNow(isDevLauncherEnabled())),
+          ...wswBadgedPlayer,
           francs,
           activeMission: null,
           missionRunId: undefined,
           missionPhase: undefined,
+          miningCargoInProgress: undefined,
+          miningLaserCharges: undefined,
+          pausedMissionRuns: (s.player.pausedMissionRuns ?? []).filter(run => {
+            if (run.key === historyRunId || (run.missionRunId && run.missionRunId === historyRunId)) return false
+            return !isSettledMissionRun({ completedMissions }, {
+              runId: run.missionRunId,
+              missionId: run.missionId,
+              targetId: run.targetId,
+              launchedAt: run.transitStartedAt,
+            })
+          }),
           debriefPending: false,
           cargoSettledOffworld: false,
           returningToEarth: false,
