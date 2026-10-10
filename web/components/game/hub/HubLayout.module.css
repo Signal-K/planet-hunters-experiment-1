@@ -92,6 +92,12 @@
 
 }
 
+/* Phone dock is two rows. Lift the ground so building pills and the
+   launchpad beacon brackets clear Build and the rest of the dock. */
+@media (max-width: 520px) and (orientation: portrait) {
+  .root { --hub-ground: 42%; }
+}
+
 @media (max-width: 720px) {
   .topHud { padding: 12px 12px 20px; gap: 8px; }
   .topRow { min-height: 42px; align-items: center; }

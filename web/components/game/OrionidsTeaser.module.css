@@ -3,6 +3,7 @@
   z-index: 40;
   top: 96px;
   right: 16px;
+  left: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -13,6 +14,45 @@
   background: var(--ln-panel);
   color: var(--ln-text);
   pointer-events: auto;
+}
+
+/* Phone and short landscape: one sky row. A stacked card covered the
+   launchpad callout's close control and the Exchange sell button. */
+@media (max-width: 520px) and (orientation: portrait),
+  (orientation: landscape) and (max-height: 500px) {
+  .card {
+    top: 72px;
+    right: 8px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: auto;
+    max-width: calc(100% - 16px);
+    padding: 4px 4px 4px 8px;
+    gap: 8px;
+  }
+
+  .copy,
+  .count {
+    display: none;
+  }
+
+  .icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dismiss {
+    margin-left: 0;
+    padding: 8px 12px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .card {
+    top: 60px;
+    right: 12px;
+  }
 }
 
 .row {
@@ -43,6 +83,7 @@
 }
 
 .dismiss {
+  margin-left: auto;
   min-width: 44px;
   min-height: 44px;
   padding: 8px 16px;
@@ -54,4 +95,5 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
+  flex: none;
 }

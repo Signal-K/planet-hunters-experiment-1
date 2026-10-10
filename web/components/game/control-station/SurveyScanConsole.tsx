@@ -46,7 +46,7 @@ export default function SurveyScanConsole({ player, targets, onStart, onResolve 
   const activeName = bodies.find(target => target.id === player.activeScan?.targetId)?.name
 
   return (
-    <section data-testid="survey-scan-console" aria-label="Survey scan" style={{ display: 'grid', gap: 12, padding: 12, border: '1px solid var(--ln-hairline-strong)', borderRadius: 8, background: 'var(--ln-panel)' }}>
+    <section data-testid="survey-scan-console" aria-label="Survey scan" style={{ display: 'grid', gap: 12, minWidth: 0, maxWidth: '100%', padding: 12, border: '1px solid var(--ln-hairline-strong)', borderRadius: 8, background: 'var(--ln-panel)' }}>
       <div className="ln-section-label">Survey scan · no client needed</div>
       {!ready ? (
         <p style={body} data-testid="survey-scan-locked">Launch a telescope from the Launchpad to scan bodies. Your own instruments do the survey.</p>
@@ -61,7 +61,7 @@ export default function SurveyScanConsole({ player, targets, onStart, onResolve 
               </span>
             </div>
           )}
-          <div role="group" aria-label="Bodies to scan" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+          <div role="group" aria-label="Bodies to scan" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, minWidth: 0, maxWidth: '100%', paddingBottom: 4 }}>
             {bodies.map(target => {
               const done = !!charted[target.id]
               const active = player.activeScan?.targetId === target.id
