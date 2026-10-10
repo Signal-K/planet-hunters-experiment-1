@@ -12,7 +12,7 @@ import {
 } from '@/lib/systems/SurveyScanSystem'
 
 interface SurveyScanConsoleProps {
-  player: Pick<Player, 'freeOperations' | 'transitSatelliteLaunchedAt' | 'deepSpaceTelescopeBuilt' | 'deepSpaceTelescopeLaunchedAt' | 'activeScan' | 'chartedBodies'>
+  player: Pick<Player, 'freeOperations' | 'transitSatelliteLaunchedAt' | 'deepSpaceTelescopeBuilt' | 'deepSpaceTelescopeLaunchedAt' | 'activeScan' | 'chartedBodies' | 'researchXP'>
   targets: readonly Target[]
   onStart: (targetId: string) => void
   onResolve: () => void
@@ -52,7 +52,7 @@ export default function SurveyScanConsole({ player, targets, onStart, onResolve 
         <p style={body} data-testid="survey-scan-locked">Launch a telescope from the Launchpad to scan bodies. Your own instruments do the survey.</p>
       ) : (
         <>
-          <p style={body}>Point your telescope at a body. The scan runs, the body is charted, and you earn {SURVEY_SCAN_RESEARCH_XP} research XP.</p>
+          <p style={body}>Point your telescope at a body. The scan runs, the body is charted, and you earn {SURVEY_SCAN_RESEARCH_XP} research XP. Balance: {player.researchXP ?? 0} research XP.</p>
           {scanning && (
             <div data-testid="survey-scan-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={`Scanning ${activeName ?? 'body'}`} style={{ display: 'grid', gap: 4 }}>
               <span style={label}>Scanning {activeName} · {Math.round(progress * 100)}%</span>
@@ -76,7 +76,7 @@ export default function SurveyScanConsole({ player, targets, onStart, onResolve 
                   style={{ flex: '0 0 auto', minHeight: 44, minWidth: 112, padding: '6px 12px', textAlign: 'left', borderRadius: 8, border: `2px solid ${done ? 'var(--ln-ok)' : 'var(--ln-hairline-strong)'}`, background: done ? 'var(--ln-ok-soft)' : 'var(--ln-panel)', color: 'var(--ln-text)', cursor: done || scanning ? 'default' : 'pointer' }}
                 >
                   <span style={{ ...label, display: 'block' }}>{target.name}</span>
-                  <span style={{ font: '14px var(--ln-font-body)', color: 'var(--ln-text-dim)' }}>{done ? '✓ Charted' : active ? 'Scanning' : 'Scan'}</span>
+                  <span style={{ font: '14px var(--ln-font-body)', color: 'var(--ln-text-dim)' }}>{done ? `Charted · +${SURVEY_SCAN_RESEARCH_XP} research XP` : active ? 'Scanning' : 'Scan'}</span>
                 </button>
               )
             })}
@@ -89,7 +89,7 @@ export default function SurveyScanConsole({ player, targets, onStart, onResolve 
           {chartedList.map(target => (
             <div key={target.id} data-testid={`survey-scan-chart-${target.id}`} style={{ ...body, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
               <strong style={{ color: 'var(--ln-text)' }}>{target.name}</strong>
-              <span>{target.minerals.map(id => MINERAL_META[id]?.name ?? id).join(', ') || 'No minerals'}</span>
+              <span>+{SURVEY_SCAN_RESEARCH_XP} research XP · {target.minerals.map(id => MINERAL_META[id]?.name ?? id).join(', ') || 'No minerals'}</span>
             </div>
           ))}
         </div>

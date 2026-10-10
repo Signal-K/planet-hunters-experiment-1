@@ -21,6 +21,7 @@ import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
 import { captureGameEvent } from '@/lib/posthog'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import styles from './MarketScreen.module.css'
+import { useHelp } from '@/components/ui/useHelp'
 
 interface MarketScreenProps {
   stash: Record<string, number>
@@ -47,12 +48,12 @@ function recipeAction(recipe: CraftingRecipe, affordable: boolean, placed: strin
   switch (recipe.producedAt) {
     case 'field': {
       const held = kits[recipe.id] ?? 0
-      return { label: `Build kit${held > 0 ? ` (${held} held)` : ''}`, disabled: !affordable }
+      return { label: held > 0 ? `BUILD · ${held} HELD` : 'BUILD', disabled: !affordable }
     }
     case 'earth-base':
       return placed.includes(recipe.id.replace(/^earth-/, ''))
-        ? { label: 'Built at Base', disabled: true }
-        : { label: 'Build at Base', disabled: !affordable }
+        ? { label: 'BUILT', disabled: true }
+        : { label: 'BUILD', disabled: !affordable }
     case 'subsurface': return { label: 'Open Base deck', disabled: false }
     case 'refinery': return { label: 'Open Refinery', disabled: false }
     case 'hangar': return { label: 'Open Hangar', disabled: false }
@@ -61,6 +62,7 @@ function recipeAction(recipe: CraftingRecipe, affordable: boolean, placed: strin
 }
 
 export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell, refinedGoods, onSellRefined, onBack, onOpenMissions, clientId, placedStructures = [], fieldKits = {}, onBuildRecipe }: MarketScreenProps) {
+  const help = useHelp('market')
   const [confirming, setConfirming] = useState<string | null>(null)
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
   // SSL-316: every recipe in the game is published here so the player can
@@ -103,6 +105,8 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           <div className={styles.eyebrow}>Base · Resource Desk</div>
           <h1 className={styles.title}>Commodity Exchange</h1>
         </div>
+        {help.button}
+        {help.layer}
         <div className={styles.balance} aria-label={`Current balance ${formatCurrency(francs)}`}>
           <span className={styles.metricLabel}>Available francs</span>
           <span className={styles.balanceValue}>{formatCurrency(francs, { compact: true })}</span>
@@ -249,7 +253,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
                     if (!action || !onBuildRecipe) return null
                     return (
                       <button
-                        className={styles.sellButton}
+                        className={styles.primaryButton}
                         type="button"
                         disabled={action.disabled}
                         data-testid={`market-recipe-build-${recipe.id}`}

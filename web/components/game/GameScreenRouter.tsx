@@ -551,6 +551,7 @@ function ScreenBody({
           onOpenSiloBuild={() => game.go('build')}
           onOpenControlStation={() => game.go('instrument-hub')}
           onOpenMarket={() => game.go('market')}
+          onAbandonMission={game.player.activeMission ? () => game.abandonMission({ confirmed: true }) : undefined}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           hydrated={game.hydrated}
