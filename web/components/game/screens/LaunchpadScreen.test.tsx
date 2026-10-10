@@ -277,16 +277,17 @@ describe('Launchpad own-program actions', () => {
       host.querySelector<HTMLButtonElement>('[data-testid="launchpad-status-card"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
-    // 4c2c98cc (SSL-512): starting Free Ops would replace the launched run's cargo
-    // and charge state, so the pad shows a blocker with a resume action instead of the picker.
-    expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).toBeNull()
-    expect(host.querySelector('[data-testid="launchpad-active-run-blocker"]')).not.toBeNull()
-    expect(host.textContent).toContain('Current run is still active')
-    expect(onPick).not.toHaveBeenCalled()
+    // Starting a new Free Ops route parks this run intact; it stays resumable
+    // from the launchpad's active-run controls.
+    expect(onResumeMission).not.toHaveBeenCalled()
+    expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).not.toBeNull()
     await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-active-run-blocker"] .launchpad-mission-choice')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-new-mission-mining-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
-    expect(onResumeMission).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-mining-sell-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(onPick).toHaveBeenCalledWith('freeops-self-directed-mining', 'sell')
     await act(async () => root.unmount())
   })
 

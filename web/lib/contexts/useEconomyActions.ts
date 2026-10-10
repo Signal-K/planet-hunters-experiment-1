@@ -7,6 +7,8 @@ import { captureGameEvent } from '@/lib/posthog'
 import { completeFlightPlanEvent } from '@/lib/systems/FlightPlanSystem'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { pbLandnam } from '@/lib/pb-landnam'
+import { queueUpdate } from '@/lib/offline/pbOutbox'
+import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState } from '@/lib/game-types'
 import type { Mission, ShipRoomKind, StructureBlueprint, SubsurfaceRoomId } from '@/lib/data'
@@ -89,8 +91,8 @@ export function useEconomyActions(
     })
   }, [setState])
 
-  const abandonMission = useCallback(() => {
-    if (!confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
+  const abandonMission = useCallback((opts?: { confirmed?: boolean }) => {
+    if (!opts?.confirmed && !confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
     // mission_completed has no failure counterpart today — a player who
     // aborts mid-transit (cargo + progress lost, 10% payout penalty) would
     // otherwise just look like a player who never finished, indistinguishable
@@ -100,6 +102,18 @@ export function useEconomyActions(
     setState(s => {
       abandonedMissionId = s.missionId
       abandonedMissionPhase = s.player.missionPhase
+      const runId = s.player.missionRunId
+      if (runId) {
+        const settled = isSettledMissionRun(s.player, {
+          runId,
+          missionId: s.missionId ?? s.player.activeMission?.id,
+          targetId: s.targetId,
+          launchedAt: s.player.transitStartedAt,
+        })
+        queueUpdate('mission_runs', runId, settled
+          ? { status: 'completed', phase: 'debrief', completed_at: new Date().toISOString() }
+          : { status: 'abandoned', phase: s.player.missionPhase ?? 'transit', completed_at: new Date().toISOString() })
+      }
       return applyAbandonMission(s, getCatalogMissions())
     })
     if (abandonedMissionId) {

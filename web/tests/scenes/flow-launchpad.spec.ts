@@ -14,5 +14,17 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.screenshot({ path: `tests/.out/flow-launchpad-${vp}.png` })
       expect(errors).toEqual([])
     })
+
+    test('the underground deck keeps Surface and Launchpad above the tray', async ({ page }) => {
+      const { errors } = await stage(page, 'm1-hub', { chrome: true })
+      await page.getByTestId('hub-subsurface-btn').click()
+      await expect(page.getByTestId('hub-subsurface-view')).toBeVisible()
+      await expect(page.getByTestId('subsurface-surface-btn')).toBeVisible()
+      await expect(page.getByTestId('subsurface-launchpad-btn')).toBeVisible()
+      await page.getByTestId('subsurface-launchpad-btn').click()
+      await expect(page.locator('[data-stage-screen]')).toHaveAttribute('data-stage-screen', 'launchpad')
+      await expect(page.getByTestId('hub-subsurface-view')).toHaveCount(0)
+      expect(errors).toEqual([])
+    })
   })
 }

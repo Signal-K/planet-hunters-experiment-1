@@ -2658,6 +2658,7 @@ button { cursor: pointer; }
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 8px;
   min-height: 78px;
   padding: 12px 18px 16px;
   border-top: 1px solid var(--ln-cyan-border);
@@ -2782,7 +2783,8 @@ html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"]::after,
 html[data-flight-target~="build-plot-0"] [data-beacon="build-plot-0"]::after,
 html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"]::after,
 html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"]::after,
-.mining-training-seam::after {
+.mining-training-seam::after,
+.lock-on::after {
   content: '';
   position: absolute;
   inset: -7px;
@@ -2801,7 +2803,8 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"]:
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-flight-target] [data-beacon]::after,
-  .mining-training-seam::after { animation: none !important; }
+  .mining-training-seam::after,
+  .lock-on::after { animation: none !important; }
 }
 /* SSL-449: one primary action per screen. While the Flight Plan beacons another
    control, the Base Build button drops to a quiet secondary so only the
@@ -2849,6 +2852,9 @@ html[data-flight-target]:not([data-flight-target~="hub-build-storage-silo"]) [da
 .flight-plan-radio { padding: 0 4px 6px; display: flex; flex-direction: column; gap: 4px; }
 .flight-plan-radio p { margin: 0; font-size: 14px; line-height: 1.4; color: var(--ln-bp-ink-dim, #48596a); max-width: 760px; }
 .flight-plan-radio .flight-plan-hint { color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); }
+.flight-plan-hint-dock { display: flex; align-items: center; gap: 8px; margin: 0; min-height: 44px; }
+.flight-plan-hint-dock button { flex: none; min-width: 44px; min-height: 44px; padding: 0 12px; border: 2px solid var(--ln-bp-blue, #1f78c1); border-radius: 8px; background: var(--ln-bp-paper, #fff); color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+.flight-plan-hint-dock span { font-size: 14px; line-height: 1.3; color: var(--ln-bp-ink, #0f2436); }
 .flight-plan-skip { align-self: flex-start; margin-top: 4px; }
 .flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-bp-paper, #fff); }
 .game-chrome-bottom__training-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 999px; background: var(--ln-cyan); }
@@ -3558,8 +3564,9 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* SSL-442 Mission patch shelf (Menu > Training log): one patch per try, ring filled when done. */
 .patch-shelf { display: grid; gap: 8px; }
 .patch { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 12px; padding: 8px; border: 1px solid var(--ln-bp-line, rgba(15,36,54,.14)); border-radius: 8px; background: var(--ln-bp-paper, #fff); }
-.patch-ring { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 999px; border: 2px dashed var(--ln-bp-line-strong, rgba(15,36,54,.3)); color: var(--ln-bp-ink-dim, #48596a); font: 800 14px/1 var(--ln-font-display); }
-.patch[data-state='active'] .patch-ring { border: 3px solid var(--ln-bp-blue, #1f78c1); color: var(--ln-bp-ink, #0f2436); }
+.patch-ring { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 999px; border: 2px dashed var(--ln-bp-line-strong, rgba(15,36,54,.3)); color: var(--ln-bp-ink-dim, #48596a); font: 800 14px/1 var(--ln-font-display); background: var(--ln-bp-paper, #fff); }
+.patch[data-state='active'] .patch-ring { border-color: transparent; color: var(--ln-bp-ink, #0f2436); }
+.patch[data-state='active'] .patch-ring::before { content: ''; position: absolute; inset: -2px; border-radius: inherit; background: conic-gradient(var(--ln-bp-blue, #1f78c1) calc(var(--patch-turn, 0.2) * 1turn), var(--ln-bp-line, rgba(15,36,54,.14)) 0); -webkit-mask: radial-gradient(circle, transparent 16px, #000 18px); mask: radial-gradient(circle, transparent 16px, #000 18px); }
 .patch[data-state='done'] .patch-ring { border: 3px solid var(--ln-bp-green, #17703f); background: var(--ln-bp-green-soft, rgba(23,112,63,.1)); color: var(--ln-bp-green, #17703f); }
 .patch-name { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--ln-bp-ink, #0f2436); }
 .patch-status { font: 14px/1.3 var(--ln-font-body); color: var(--ln-bp-ink-dim, #48596a); margin-top: 2px; }
