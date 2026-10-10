@@ -9,6 +9,10 @@ struct LandnamApp: App {
 
     @State private var services = Services()
     @Environment(\.scenePhase) private var scenePhase
+    #if canImport(UIKit)
+    @UIApplicationDelegateAdaptor(LandnamAppDelegate.self) private var appDelegate
+    @AppStorage(OrientationPreference.storageKey) private var orientation = OrientationPreference.auto.rawValue
+    #endif
 
     init() { AppFont.register() }
 
@@ -21,6 +25,10 @@ struct LandnamApp: App {
                 .task { if SceneHost.requested == nil { services.start(store: store, auth: auth) } }
                 .onChange(of: auth.session) { _, s in services.attach(s) }
                 .onChange(of: scenePhase) { _, p in if p == .active { services.flush() } }
+                #if canImport(UIKit)
+                .onAppear { OrientationPreference(stored: orientation).apply() }
+                .onChange(of: orientation) { _, v in OrientationPreference(stored: v).apply() }
+                #endif
                 #if os(macOS)
                 .frame(minWidth: 480, minHeight: 640)
                 #endif
