@@ -25,12 +25,32 @@ import Testing
         #expect(q.cargo.isEmpty)
     }
 
-    @Test func returnWaitsForTheFirstRig() {
-        var p = Prospecting(requirements: ["iron": 1])
-        p.startConstruction(); #expect(!p.canReturn)
-        p.select("ore-c"); p.driveToSelected()
-        for _ in 0..<3 { _ = p.drill() }
-        p.startConstruction(); #expect(p.canReturn)
+    @Test func tappingAnOutcropRoutesAndDrillsOnArrival() {
+        var p = Prospecting(requirements: ["iron": 3])
+        #expect(p.tapOutcrop("ore-a")?.kind == .trace)
+        #expect(p.inRange && p.drillings.count == 1)
+        #expect(p.tapOutcrop("ore-b")?.kind == .vein)
+        #expect(p.tapOutcrop("ore-c")?.kind == .mineSite)
+        #expect(p.mineSite == "ore-c")
+        #expect(p.tapOutcrop("ore-a") == nil)           // site open: further taps only drive
+        #expect(p.drillings.count == 3)
+    }
+
+    @Test func returnOpensAfterDrillThreeWithoutTheRig() {
+        var p = Prospecting(requirements: ["iron": 5])
+        #expect(!p.canReturn)
+        _ = p.tapOutcrop("ore-b"); _ = p.tapOutcrop("ore-b"); #expect(!p.canReturn)
+        _ = p.tapOutcrop("ore-b"); #expect(p.canReturn && !p.constructionStarted)
+    }
+
+    @Test func returnOpensOnceTheOrderIsMetEvenBeforeDrillThree() {
+        var p = Prospecting(requirements: ["iron": 2])
+        _ = p.tapOutcrop("ore-a"); #expect(!p.canReturn)
+        _ = p.tapOutcrop("ore-a"); #expect(p.cargoMet && p.canReturn && p.drillings.count == 2)
+    }
+
+    @Test func noRequirementsNeverCountsAsMet() {
+        #expect(!Prospecting(requirements: [:]).canReturn)
     }
 
     @Test func drivePadClampsToTheField() {
