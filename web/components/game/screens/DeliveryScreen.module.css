@@ -20,16 +20,21 @@
   inset: 0;
 }
 
-.landedShip {
+.siteLock {
   position: absolute;
-  left: 6%;
-  bottom: 12%;
+  left: 58%;
+  top: 42%;
+  width: 72px;
+  height: 72px;
   z-index: 2;
-  width: min(27vw, 310px);
-  max-height: 54%;
-  object-fit: contain;
   pointer-events: none;
-  filter: drop-shadow(0 18px 22px rgba(0,0,0,.58));
+}
+
+.landedShip {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-bottom: 4px;
 }
 
 .targetLabel {
@@ -190,6 +195,27 @@
 .fee strong {
   color: var(--ln-bp-ink, var(--ln-text));
   font: 800 18px var(--ln-font-mono);
+}
+
+.dumpBtn {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 2px solid var(--ln-bp-ink);
+  border-radius: 8px;
+  background: var(--ln-bp-blue);
+  color: var(--ln-bp-paper);
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.dumpBtn:disabled {
+  opacity: 1;
+  background: var(--ln-bp-paper-2);
+  color: var(--ln-bp-ink);
+  border-style: dashed;
+  cursor: not-allowed;
 }
 
 .dumpError {

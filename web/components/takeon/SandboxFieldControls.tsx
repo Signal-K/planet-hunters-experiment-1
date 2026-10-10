@@ -23,6 +23,7 @@ import {
 } from '@/lib/systems/SandboxSystem'
 import { placementHint } from '@/lib/takeon/sandbox'
 import { formatCurrency } from '@/lib/format'
+import { mineralSourceHints } from '@/lib/data/mineral-sources'
 import type { TakeOnFieldOrder, TakeOnMountHandle } from './TakeOnMount'
 import styles from './SandboxFieldControls.module.css'
 
@@ -298,6 +299,7 @@ export default function SandboxFieldControls({
             affordability.francsShort > 0 ? formatCurrency(affordability.francsShort, { compact: true }) : null,
             ...Object.entries(affordability.mineralsShort).map(([id, n]) => `${n} ${MINERAL_META[id]?.sym ?? id}`),
           ].filter(Boolean).join(' · ')}
+          {Object.keys(affordability.mineralsShort).length > 0 ? ` ${mineralSourceHints(Object.keys(affordability.mineralsShort))}` : ''}
         </p>
       )}
 

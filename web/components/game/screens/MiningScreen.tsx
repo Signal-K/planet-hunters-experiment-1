@@ -5,6 +5,7 @@ import type { Mission, Target, MineralMeta } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE, REMOTE_MINERAL_SILO_CAPACITY } from '@/lib/data'
 import { miningNeedsRecharge, unitsStillNeeded, rechargeCost } from '@/lib/systems/mining-charges'
 import TopBar from '@/components/ui/TopBar'
+import { useHelp } from '@/components/ui/useHelp'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
@@ -148,13 +149,15 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, orionidsBadgeTier = null }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, orionidsBadgeTier = null }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
   onComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell', earthDisposition?: 'store' | 'sell') => void
   /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
   onBack: (cargo: Record<string, number>, laserCharges: number) => void
+  /** Writes cargo and charges while the run is open, so a reload does not refill the laser or drop ore. */
+  onPersist?: (cargo: Record<string, number>, laserCharges: number) => void
   /** Laser charges left before a prior "Back to hub" pause; resuming must not refill the magazine. */
   initialCharges?: number
   /** Franc balance, shown on and deducted by the recharge action. */
@@ -215,9 +218,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // the skill-based cap could ever supply, making the mission mathematically unwinnable.
   const totalOreNeeded = Object.values(mission.requires.minerals).reduce((sum, v) => sum + v, 0)
   const isOnboarding = typeof mission.sequence === 'number' && mission.sequence <= FREE_OPS_START_MISSIONS_DONE
-  const MAX_CHARGES = isOnboarding
+  const MAX_CHARGES = (isOnboarding
     ? Math.max(80, totalOreNeeded * 16)
-    : Math.max(laserChargeCap ?? 5, totalOreNeeded * 4) + laserBonusCharges
+    : Math.max(laserChargeCap ?? 5, totalOreNeeded * 4)) + laserBonusCharges
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>(initialCargo ?? {})
   const [cargo, setCargo] = useState<Record<string, number>>(initialCargo ?? {})
@@ -232,6 +235,12 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [laserCharges, setLaserCharges] = useState(() => initialCharges != null ? Math.max(0, Math.min(MAX_CHARGES, initialCharges)) : MAX_CHARGES)
   const laserChargesRef = useRef(laserCharges)
   laserChargesRef.current = laserCharges
+  const onPersistRef = useRef(onPersist)
+  onPersistRef.current = onPersist
+  const help = useHelp('mining')
+  useEffect(() => {
+    onPersistRef.current?.(cargo, laserCharges)
+  }, [cargo, laserCharges])
   const [confirmingRecharge, setConfirmingRecharge] = useState(false)
   const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
   const [sceneStatus, setSceneStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
@@ -465,8 +474,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         title="Mining Run"
         onBack={() => onBack(cargoRef.current, laserChargesRef.current)}
         glass
-        right={isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : undefined}
+        right={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{help.button}{isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : null}</span>}
       />
+      {help.layer}
 
       {/* KES-283: self-directed mining requires a storage destination before
           the run can start — takes absolute precedence over every other
