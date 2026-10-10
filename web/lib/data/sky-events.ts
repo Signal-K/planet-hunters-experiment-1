@@ -8,6 +8,12 @@ import type { Player } from '@/lib/game-types'
 
 export type BadgeTier = 'gold' | 'silver'
 
+/** Public cross-game destinations shown from the live Draconids event banner. */
+export const WORLD_SPACE_WEEK_PLAYER_LINKS = [
+  { label: 'Open Atlas badges', href: 'https://youratlas.cc/app/profile' },
+  { label: 'Open Garden sky events', href: 'https://starsailors.space/game' },
+] as const
+
 export type SkyActivityKind =
   | 'launch'
   | 'saturn-classification'
