@@ -103,7 +103,7 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
           <span className="ops-badge" data-testid="ops-badge" aria-hidden="true">OPS<span className="ops-bars"><i /><i /><i /></span></span>
           <span className="flight-plan-text">
           <span className="flight-plan-kicker" data-state={doneStep ? 'done' : 'live'} data-testid="flight-plan-kicker">{doneStep ? `Copy · Step ${doneStep} done` : `${isTryStep ? step.try : step.title} Ops · Step ${stepIndex + 1}/${total}`}</span>
-          <span className="flight-plan-action">{hint && !expanded ? `Hint: ${hint}` : action}</span>
+          <span className="flight-plan-action">{action}</span>
           </span>
         </button>
         {go && <button type="button" className="flight-plan-go" data-testid="flight-plan-go" data-coach-id="flight-plan-go" onClick={go.run}>{go.label}</button>}
@@ -111,6 +111,12 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
           ▾
         </button>
       </div>
+      {hint && (
+        <p className="flight-plan-hint-dock" data-testid="flight-plan-show-me">
+          <button type="button" onClick={() => setExpanded(open => !open)} aria-expanded={expanded}>Show me</button>
+          <span>{hint}</span>
+        </p>
+      )}
       {expanded && (
         <div className="flight-plan-radio" data-testid="flight-plan-radio">
           <span className="flight-plan-kicker">{isTryStep ? step.try : step.title} · Ops radio</span>

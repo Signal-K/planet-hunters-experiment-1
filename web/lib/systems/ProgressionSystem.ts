@@ -5,6 +5,7 @@ import type { Mission } from '@/lib/data'
 import { canUnlockSkillNode, getSkillNode, LOAN_PRINCIPAL, TREASURY_STARTING_BALANCE } from '@/lib/data'
 import { grantXP } from './XPSystem'
 import { createTreasuryState, issueBankruptcyLoan, loanOutstanding } from './TreasurySystem'
+import { isSettledMissionRun } from './MissionRunLifecycle'
 
 /** The persisted GameState carries no account id (that lives only in the
  *  React auth context), and this per-player treasury instance is local to
@@ -134,19 +135,44 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
        ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
        ?? null)
     : null
-  const penalty = mission ? Math.round(mission.payout.francs * 0.1) : 0
+  // A collected run can be resurrected by a stale in-progress receipt. Scrubbing
+  // that ghost must not charge 10% of a payout the player already received.
+  const alreadyCollected = isSettledMissionRun(s.player, {
+    runId: s.player.missionRunId,
+    missionId: s.missionId ?? s.player.activeMission?.id,
+    targetId: s.targetId,
+    launchedAt: s.player.transitStartedAt,
+  })
+  const penalty = mission && !alreadyCollected ? Math.round(mission.payout.francs * 0.1) : 0
   const dailyClientPool = (s.missionId?.startsWith('dcp-') && s.player.dailyClientPool)
     ? { ...s.player.dailyClientPool, acceptedId: null }
     : s.player.dailyClientPool
+  const scrubRunId = s.player.missionRunId
+  const scrubKey = scrubRunId ?? (s.player.activeMission
+    ? `${s.player.activeMission.id}:${s.player.transitStartedAt ?? 'current'}`
+    : null)
   return {
     ...s,
     player: {
       ...s.player,
       francs: Math.max(0, s.player.francs - penalty),
       activeMission: null,
+      missionRunId: undefined,
       missionPhase: undefined,
+      pausedMissionRuns: (s.player.pausedMissionRuns ?? []).filter(run => {
+        if (scrubRunId && run.missionRunId === scrubRunId) return false
+        if (scrubKey && run.key === scrubKey) return false
+        return !isSettledMissionRun(s.player, {
+          runId: run.missionRunId,
+          missionId: run.missionId,
+          targetId: run.targetId,
+          launchedAt: run.transitStartedAt,
+        })
+      }),
       miningCargoInProgress: undefined,
       miningLaserCharges: undefined,
+      landingStartedAt: undefined,
+      landingReturnStartedAt: undefined,
       roverMiningStartedAt: undefined,
       deliveryUnloadStartedAt: undefined,
       missionCrewIds: [],

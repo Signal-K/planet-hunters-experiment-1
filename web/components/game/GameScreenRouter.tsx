@@ -49,6 +49,7 @@ import {
   markInstrumentDigestNotified,
 } from '@/lib/systems/InstrumentFeedSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
+import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
@@ -257,7 +258,7 @@ function ScreenBody({
               return game.openLaunchpadMissionMenu()
             }
           }}
-          onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
+          onUpgradeBuilding={id => game.upgradeBuilding(id)}
           onExcavateSubsurface={() => game.excavateSubsurface()}
           onExcavateSubsurfaceUnavailable={() => {
             const cost = SUBSURFACE_EXCAVATE_COST
@@ -507,17 +508,30 @@ function ScreenBody({
         const currentRunKey = game.player.activeMission
           ? (game.player.missionRunId ?? `${game.player.activeMission.id}:${game.player.transitStartedAt ?? 'current'}`)
           : null
+        const activeSettled = !!game.player.activeMission && isSettledMissionRun(game.player, {
+          runId: game.player.missionRunId,
+          missionId: game.player.activeMission.id,
+          targetId: game.targetId,
+          launchedAt: game.player.transitStartedAt,
+        })
         const missionRuns = [
-          ...(game.player.activeMission && currentRunKey ? [{
+          ...(game.player.activeMission && currentRunKey && !activeSettled ? [{
             key: currentRunKey,
             label: game.player.activeMission.label,
             phase: game.player.missionPhase ?? 'transit',
           }] : []),
-          ...(game.player.pausedMissionRuns ?? []).map(run => ({
-            key: run.key,
-            label: run.activeMission.label,
-            phase: run.missionPhase ?? 'transit',
-          })),
+          ...(game.player.pausedMissionRuns ?? [])
+            .filter(run => !isSettledMissionRun(game.player, {
+              runId: run.missionRunId,
+              missionId: run.missionId,
+              targetId: run.targetId,
+              launchedAt: run.transitStartedAt,
+            }))
+            .map(run => ({
+              key: run.key,
+              label: run.activeMission.label,
+              phase: run.missionPhase ?? 'transit',
+            })),
         ]
       return (
         <LaunchpadScreen
@@ -534,7 +548,7 @@ function ScreenBody({
           onOpenHangar={() => game.go('hangar')}
           missionMenuOpen={game.launchpadMissionMenuOpen}
           onMissionMenuOpenChange={game.setLaunchpadMissionMenuOpen}
-          onResumeMission={game.player.activeMission ? () => {
+          onResumeMission={game.player.activeMission && !activeSettled ? () => {
             captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
             enqueueSurvey('lnm_resume_mission', 1200)
             game.go(missionResumeScreen(game.player))
@@ -551,6 +565,7 @@ function ScreenBody({
           onOpenSiloBuild={() => game.go('build')}
           onOpenControlStation={() => game.go('instrument-hub')}
           onOpenMarket={() => game.go('market')}
+          onAbandonMission={game.player.activeMission && !activeSettled ? () => game.abandonMission({ confirmed: true }) : undefined}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           hydrated={game.hydrated}

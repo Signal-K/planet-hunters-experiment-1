@@ -59,7 +59,7 @@ public enum Market {
         p.placed.contains("surface-silo") || p.subsurfaceBuilt.contains("mineral-vault")
     }
     public static func storageCapacity(_ p: Player) -> Int {
-        (p.placed.contains("surface-silo") ? Economy.surfaceSiloCapacity : 0)
+        (p.placed.contains("surface-silo") ? Economy.surfaceSiloCapacity * BuildingLevels.siloCapacityMultiplier(BuildingLevels.level(p, "surface-silo")) : 0)
             + (p.subsurfaceBuilt.contains("mineral-vault") ? Economy.mineralSiloCapacity : 0)
             + (p.subsurfaceBuilt.contains("deep-mineral-vault") ? Economy.deepMineralSiloCapacity : 0)
     }

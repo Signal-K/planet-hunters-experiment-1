@@ -33,23 +33,37 @@ struct SkyBadgeRow: View {
     let badges: [String: PlayerBadge]
 
     var body: some View {
-        let earned = badges.values.filter { SkyEvents.event($0.eventId) != nil }.sorted { $0.earnedAt < $1.earnedAt }
+        let earned = badges.values.filter { SkyEvents.event($0.eventId) != nil || WswBadges.badge(id: $0.eventId) != nil }.sorted { $0.earnedAt < $1.earnedAt }
         if !earned.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 Eyebrow(text: "Sky event badges")
                 ForEach(earned, id: \.eventId) { b in
+                    let wsw = WswBadges.badge(id: b.eventId)
                     HStack(spacing: 10) {
                         Image(systemName: "rosette").font(.system(size: 18, weight: .bold))
                         Text(b.tier == .gold ? "GOLD" : "SILVER").font(AppFont.display(14)).tracking(1.2)
-                        Text(SkyEvents.event(b.eventId)?.name ?? "").font(AppFont.body(14))
+                        if wsw != nil { Text("WSW").font(AppFont.display(14)).tracking(1.2) }
+                        Text(wsw?.name ?? SkyEvents.event(b.eventId)?.name ?? "").font(AppFont.body(14))
                         Spacer(minLength: 0)
                     }
                     .foregroundStyle(Theme.ink).padding(.horizontal, 12).frame(minHeight: 44)
                     .background(b.tier == .gold ? Theme.blueBright.opacity(0.35) : Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
+                    .overlay(alignment: .leading) { if let wsw { Rectangle().fill(wswColor(wsw.tone)).frame(width: 6).clipShape(RoundedRectangle(cornerRadius: 3)) } }
                     .accessibilityElement(children: .combine)
                 }
             }
         }
+    }
+}
+
+private func wswColor(_ tone: WswTone) -> Color {
+    switch tone {
+    case .blue: Theme.blue
+    case .sky: Theme.blueBright
+    case .green: Theme.teal
+    case .crimson: Theme.crimson
+    case .dim: Theme.textMuted
+    case .ink: Theme.ink
     }
 }

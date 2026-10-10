@@ -20,7 +20,9 @@ export const SURFACE_Y = 320
 // Wider than ship X so ore movement during laser flight doesn't cause misses on tall screens
 const HIT_TOLERANCE = 56
 // Share of ore nodes that are the requested mineral(s) once the seeded ones are out.
-const REQUIRED_ORE_SHARE = 0.5
+const REQUIRED_ORE_SHARE = 0.85
+// First nodes are copies of the requested ore, close and shallow, so a few shots hit it.
+const REQUIRED_ORE_COPIES = 6
 const LASER_SIZE = { width: 4, height: 16 }
 const LASER_COLOR = '#9becff'
 const ORE_STROKE = '#0a0a12'
@@ -214,8 +216,9 @@ export class MiningController extends ScriptBehaviour {
   }
 
   start(): void {
-    this.requiredMineralQueue = [...(this.opts.requiredMinerals ?? [])]
-    let x = 160
+    const required = this.opts.requiredMinerals ?? []
+    this.requiredMineralQueue = required.flatMap(mineral => Array.from({ length: REQUIRED_ORE_COPIES }, () => mineral))
+    let x = SHIP_X + 40
     let count = 0
     while (count < 20) {
       this.spawnOre(x)
@@ -553,23 +556,26 @@ export class MiningController extends ScriptBehaviour {
    * few shots (SSL-512: 15 shots never hit the requested Nickel). Only minerals
    * the equipped laser can reach count, since an unreachable node is no ore.
    */
-  private pickMineral(): string {
-    if (this.requiredMineralQueue.length > 0) return this.requiredMineralQueue.shift()!
+  private pickMineral(): { mineral: string; seeded: boolean } {
+    if (this.requiredMineralQueue.length > 0) return { mineral: this.requiredMineralQueue.shift()!, seeded: true }
     const maxTier = this.opts.maxLaserTier ?? 3
     const reachable = (this.opts.requiredMinerals ?? []).filter(m => (this.opts.mineralLaserAccess?.[m] ?? 1) <= maxTier)
     if (reachable.length > 0 && Math.random() < REQUIRED_ORE_SHARE) {
-      return reachable[Math.floor(Math.random() * reachable.length)]
+      return { mineral: reachable[Math.floor(Math.random() * reachable.length)], seeded: false }
     }
-    return this.opts.minerals[this.oreCounter % this.opts.minerals.length]
+    return { mineral: this.opts.minerals[this.oreCounter % this.opts.minerals.length], seeded: false }
   }
 
   private spawnOre(x: number): void {
-    const mineral = this.pickMineral()
+    const picked = this.pickMineral()
+    const mineral = picked.mineral
     const tier = this.opts.mineralLaserAccess?.[mineral] ?? 1
     const cfg = ORE_TIER[tier] ?? ORE_TIER[1]
     const radius = cfg.radius
     const maxHp = cfg.maxHp
-    const depth = cfg.depthMin + Math.random() * (cfg.depthMax - cfg.depthMin)
+    const depth = picked.seeded
+      ? 8 + Math.random() * 14
+      : cfg.depthMin + Math.random() * (cfg.depthMax - cfg.depthMin)
     const y = (this.opts.surfaceY ?? SURFACE_Y) + depth
 
     const colorHex = this.opts.mineralColors[mineral] ?? ORE_FILL

@@ -53,18 +53,18 @@
   .landingHandoff::before { background: linear-gradient(180deg, transparent 10%, color-mix(in srgb, var(--ln-bp-paper) 96%, transparent) 64%); }
   .landingHandoff img { width: min(54vw, 280px); max-height: 34vh; align-self: end; }
   .landingHandoff > div { padding: 16px; }
-  /* Phone: scene-first. Drive pad + drill action dock above the hotbar, and the
-     readout shrinks to a one-finding strip under the status chips. */
-  .controls { top: auto; right: 8px; bottom: 68px; left: 8px; width: auto; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  /* Phone: the shaded field stays clear. Drive and drill sit in the lower-left
+     corner; the readout is a short strip at the top-right. */
+  .controls { top: auto; right: auto; bottom: 68px; left: 8px; width: min(220px, 48vw); grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .controls > div { width: auto; }
   .objectControls { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 6px 8px; }
   .objectControls .primaryAction { min-height: 44px; }
-  .drillReadout { top: 44px; right: 8px; left: 8px; width: auto; gap: 6px; padding: 8px 10px; }
+  .drillReadout { top: 44px; right: 8px; left: auto; width: min(200px, 46vw); gap: 6px; padding: 8px 10px; }
   .drillReadout .kicker, .drillReadout p:not(.mineSiteStatus), .drillReadout li:not(:last-child) { display: none; }
   .drillReadout li { padding: 6px 8px; }
   .readoutHeading strong { font-size: 12px; }
-  /* SSL-404: the drawer sits above the drive pad strip instead of over it. */
-  .sandboxDock { right: 12px; bottom: 262px; left: 12px; width: auto; max-height: 38%; }
+  /* SSL-404: one-row drawer sits beside the drive pad, not across the field. */
+  .sandboxDock { right: 8px; bottom: 68px; left: auto; width: min(240px, calc(100% - 244px)); max-height: 42%; }
   .fieldHotbar { right: 8px; bottom: 8px; left: 8px; gap: 8px; }
 }
 

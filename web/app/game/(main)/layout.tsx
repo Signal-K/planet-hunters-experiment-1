@@ -134,7 +134,7 @@ function GameChrome({ children }: { children: ReactNode }) {
     return routeCoach
   }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, settingsOpen])
 
-  const coachIndex = activeTry ? ['mining', 'scan', 'part'].indexOf(activeTry) : -1
+  const coachIndex = flightStep ? ['mining', 'scan', 'part'].indexOf(flightStep.try) : -1
   const onboardingActive = !!coach
 
   // SSL-432: the 8s hint waits while a help sheet or "Show me" run is open and

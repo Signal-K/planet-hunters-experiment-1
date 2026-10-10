@@ -1,7 +1,7 @@
 {
   "name": "Landnam: Space Program",
   "short_name": "Landnam",
-  "description": "Command a space program of launches, logistics, discovery, and settlement building.",
+  "description": "Command a space program of launches, logistics, discovery, and settlement building. Landscape is supported on phones at 844x390 and 926x428, and on desktop.",
   "start_url": "/game",
   "display": "standalone",
   "orientation": "any",

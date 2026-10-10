@@ -40,13 +40,22 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'part-fit', try: 'part', screen: 'hangar', objective: 'Fit a module in each ship stage', radio: 'Open the ship customiser, choose a module for engine, booster, cockpit and payload, then confirm.', doneOn: 'part-tweaked' },
 ]
 
+/** Screens that belong to a live cargo run. A scan or part try must not paste
+ * its "open the Hangar / fit a module" line onto these; the player is flying
+ * the mining loop, so the objective is that screen's mining step (SSL-478). */
+const LOOP_SCREENS = new Set([
+  'fab', 'rover-mining', 'targets', 'mining', 'debrief', 'transit', 'landing', 'delivery',
+])
+
 export function trainingTryStep(tryId: TrainingTryId, screen: string): TrainingTryStep | undefined {
-  // SSL-478: objective text must match the current screen, so a try never
-  // shows another screen's instruction (e.g. "Fit a module" on Base). The
-  // mining try keeps its first step as the neutral fallback; scan and part
-  // fall back to a wildcard "open it" step.
-  return TRAINING_TRIES.find(step => step.try === tryId && step.screen === screen)
-    ?? TRAINING_TRIES.find(step => step.try === tryId && step.screen === '*')
+  const exact = TRAINING_TRIES.find(step => step.try === tryId && step.screen === screen)
+  if (exact) return exact
+  if (LOOP_SCREENS.has(screen)) {
+    return TRAINING_TRIES.find(step => step.try === 'mining' && step.screen === screen)
+  }
+  // Hub, Launchpad, Hangar and Galaxy keep the try's own "open it" line.
+  // The mining try has no wildcard, so Base falls back to its first step.
+  return TRAINING_TRIES.find(step => step.try === tryId && step.screen === '*')
     ?? TRAINING_TRIES.find(step => step.try === tryId)
 }
 

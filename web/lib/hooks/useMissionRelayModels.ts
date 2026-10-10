@@ -1,3 +1,4 @@
+import { buildingLevel } from '@/lib/data/building-levels'
 import { useState } from 'react'
 import { ACADEMY_INTRO_MISSION_ID, feasibleTargetsFor, FREE_OPS_START_MISSIONS_DONE, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
@@ -82,6 +83,7 @@ export function useMissionRelayModels({
       missionsDone,
       player?.launchpadUpgraded ?? false,
       player?.unlockedSkillNodes ?? [],
+      player ? buildingLevel(player, 'launchpad') : 1,
     ).length > 0,
   )
   const tutorialOptionIds = new Set(freeOperations
@@ -103,7 +105,7 @@ export function useMissionRelayModels({
       const jointFundingReady = !m.jointProject || (francs ?? 0) >= m.jointProject.playerCost
       const academyReady = m.id !== ACADEMY_INTRO_MISSION_ID || (!!player && academyAffinityUnlocked(player))
       const unlocked = academyReady && clientReady && jointFundingReady && (freeOperations || available.some(item => item.id === m.id))
-      const mTargets = feasibleTargetsFor(m, targets, parts, missionsDone, player?.launchpadUpgraded ?? false, player?.unlockedSkillNodes ?? [])
+      const mTargets = feasibleTargetsFor(m, targets, parts, missionsDone, player?.launchpadUpgraded ?? false, player?.unlockedSkillNodes ?? [], player ? buildingLevel(player, 'launchpad') : 1)
       const displayPayout = m.payout.francs
       const cardState = !unlocked ? 'locked' as const : 'available' as const
       const lockedDetail = !jointFundingReady

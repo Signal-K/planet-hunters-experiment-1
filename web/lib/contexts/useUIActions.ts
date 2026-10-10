@@ -41,7 +41,16 @@ export function useUIActions(
     else if (screen === 'hub-subsurface') lastHost.current = 'hub'
   }, [])
 
+  // The underground tray is ephemeral UI, not the route. Any navigation that
+  // leaves it (including a warm open of /game/launchpad) has to drop the
+  // overlay in the same turn, or the Base stays buried under it (SSL-476).
+  const syncSubsurface = useCallback((screen: Screen) => {
+    if (screen === 'hub-subsurface') setSubsurfaceView(true)
+    else if (screen !== 'mission-history') setSubsurfaceView(false)
+  }, [])
+
   const go = useCallback((screen: Screen) => {
+    syncSubsurface(screen)
     setState(s => {
       if (screen === 'hangar') {
         hangarReturnView.current = s.screen === 'launchpad' || s.screen === 'academy'
@@ -51,15 +60,16 @@ export function useUIActions(
       rememberHost(screen)
       return { ...s, screen }
     })
-  }, [rememberHost, setState])
+  }, [rememberHost, setState, syncSubsurface])
 
   const recordScreenTransition = useCallback((_from: Screen, to: Screen) => {
     rememberHost(to)
   }, [rememberHost])
 
   const goBack = useCallback((fallback: Screen = 'hub') => {
+    let destination: Screen | null = null
     setState(s => {
-      const destination = resolveLogicalBack({
+      destination = resolveLogicalBack({
         current: s.screen,
         fallback,
         lastHost: lastHost.current,
@@ -69,7 +79,8 @@ export function useUIActions(
       if (destination === s.screen) return s
       return { ...s, screen: destination }
     })
-  }, [rememberHost, setState])
+    if (destination) syncSubsurface(destination)
+  }, [rememberHost, setState, syncSubsurface])
 
   const openLaunchpad = useCallback(() => {
     setSubsurfaceView(false)
@@ -121,6 +132,7 @@ export function useUIActions(
   // Updates state.screen WITHOUT triggering the URL-sync effect so we don't create
   // a push that fights the navigation.
   const setScreenFromUrl = useCallback((screen: Screen) => {
+    let applied: Screen | null = null
     setState(s => {
       // A bookmarked /game/build must not resurrect the transient plot picker
       // for an operational base after hydration has already repaired it to
@@ -138,9 +150,11 @@ export function useUIActions(
       // navigation's push, stranding the URL on the old route.
       if (s.screen === safeScreen) return s
       skipNextUrlSync.current = safeScreen === screen
+      applied = safeScreen
       return { ...s, screen: safeScreen }
     })
-  }, [setState])
+    if (applied) syncSubsurface(applied)
+  }, [setState, syncSubsurface])
 
   // The [screen] page asks this before trusting a route param. True means the
   // param belongs to an earlier navigation that a newer push has superseded.

@@ -55,3 +55,21 @@
   text-transform: uppercase;
   cursor: pointer;
 }
+
+/* Short landscape canvases have no clear column beside the buildings, so the card becomes a one-row banner above them. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .card {
+    top: 8px;
+    width: min(560px, calc(100% - 340px));
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 0;
+    padding: 8px 12px;
+  }
+  .row { display: contents; }
+  .icon { grid-row: 1 / span 3; grid-column: 1; }
+  .kicker, .copy, .count { grid-column: 2; }
+  .dismiss { grid-column: 3; grid-row: 1 / span 3; }
+}

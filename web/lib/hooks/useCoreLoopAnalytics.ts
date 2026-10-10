@@ -11,6 +11,9 @@ export type CoreLoopStep = 'base' | 'contract' | 'launch' | 'mine' | 'debrief' |
 const CORE_LOOP_SCREEN_STEPS: Partial<Record<Screen, CoreLoopStep>> = {
   hub: 'base',
   missions: 'contract',
+  // Preflight and the flight itself are one Launch step. The first of the two
+  // wins so a retry of either does not add a second launch (SSL-465).
+  fab: 'launch',
   transit: 'launch',
   mining: 'mine',
   debrief: 'debrief',
@@ -22,6 +25,38 @@ export function coreLoopStepForScreen(screen: Screen): CoreLoopStep | null {
 }
 
 type CompletedTries = FlightPlanProgress['completed'] | undefined
+
+export interface LoopVisit {
+  fired: CoreLoopStep[]
+  loopId: string
+}
+
+export interface LoopVisitResult {
+  fired: CoreLoopStep[]
+  loopId: string
+  capture: { step: CoreLoopStep; loopId: string } | null
+}
+
+/** One capture per step inside a loop. Debrief closes the loop: the same
+ * debrief does not count again, and the next Base starts a new loop id. */
+export function advanceLoopVisit(screen: Screen, visit: LoopVisit, nextLoopId: string): LoopVisitResult {
+  const step = coreLoopStepForScreen(screen)
+  if (!step) return { fired: visit.fired, loopId: visit.loopId, capture: null }
+  let fired = visit.fired
+  let loopId = visit.loopId
+  if (fired.includes('debrief') && step !== 'debrief') fired = []
+  if (fired.includes(step)) return { fired, loopId, capture: null }
+  fired = [...fired, step]
+  const capture = { step, loopId }
+  if (step === 'debrief') loopId = nextLoopId
+  return { fired, loopId, capture }
+}
+
+let loopSeq = 0
+function mintLoopId(): string {
+  loopSeq += 1
+  return `loop-${loopSeq}`
+}
 
 export function newlyCompletedTrainingTries(
   previous: CompletedTries,
@@ -38,11 +73,16 @@ export function newlyCompletedTrainingTries(
  */
 export function useCoreLoopAnalytics(screen: Screen, flightPlan?: FlightPlanProgress) {
   const previousCompletedRef = useRef<CompletedTries>(flightPlan?.completed)
+  const visitRef = useRef<LoopVisit>({ fired: [], loopId: mintLoopId() })
 
   useEffect(() => {
-    const step = coreLoopStepForScreen(screen)
-    if (!step) return
-    captureGameEvent(`core_loop_${step}_viewed`, { step })
+    const next = advanceLoopVisit(screen, visitRef.current, mintLoopId())
+    visitRef.current = { fired: next.fired, loopId: next.loopId }
+    if (!next.capture) return
+    captureGameEvent(`core_loop_${next.capture.step}_viewed`, {
+      step: next.capture.step,
+      loop_id: next.capture.loopId,
+    })
   }, [screen])
 
   useEffect(() => {

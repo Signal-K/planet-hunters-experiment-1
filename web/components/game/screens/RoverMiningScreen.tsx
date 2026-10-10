@@ -315,7 +315,7 @@ export default function RoverMiningScreen({
             <button
               key={marker.id}
               type="button"
-              className={`${styles.oreMarker} ${selectedMarkerId === marker.id ? styles.oreMarkerSelected : ''} ${mineSite?.id === marker.id ? styles.oreMarkerClaimed : ''}`}
+              className={`${styles.oreMarker} ${selectedMarkerId === marker.id ? styles.oreMarkerSelected : ''} ${mineSite?.id === marker.id ? styles.oreMarkerClaimed : ''} ${(selectedMarkerId ? selectedMarkerId === marker.id : marker.id === markers[0]?.id) ? 'lock-on' : ''}`}
               style={{ left: marker.left, top: marker.top }}
               onClick={() => selectMarker(marker)}
               data-testid={`rover-ore-${marker.id}`}

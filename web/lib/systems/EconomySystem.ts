@@ -1,3 +1,4 @@
+import type { BuildingLevels } from '@/lib/data/building-levels'
 // Pure state-transition functions for the economy system.
 // Covers: sell minerals, refinery queue, launchpad upgrade.
 
@@ -8,6 +9,7 @@ import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } 
 import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { nextLaserCapacitorTier, spendOreUnits } from '@/lib/data/mining-upgrades'
 import { structureIsStaffed } from './AcademySystem'
+import { buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
 import { freeOperationsUnlocked } from './AgencyOnboardingSystem'
 
@@ -127,7 +129,7 @@ export function applySellMinerals(
 // a self-directed haul rather than selling it on return. Storage capacity, the
 // silo fill visual, and the free-mission store/sell choice all read off these.
 
-type StoragePlayer = { placed?: string[]; subsurfaceExcavated?: boolean; subsurfaceBuilt?: string[]; stash?: Record<string, number> }
+type StoragePlayer = { placed?: string[]; subsurfaceExcavated?: boolean; subsurfaceBuilt?: string[]; stash?: Record<string, number>; buildingLevels?: BuildingLevels }
 
 /** True once any Earth-side silo is built — the prerequisite for keeping ore
  *  on Earth. Excavation alone is not enough; the room/building is the silo. */
@@ -144,8 +146,8 @@ export function siloCount(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuil
 }
 
 /** Total ore units the player's silos can hold. 0 with no silo. */
-export function storageCapacity(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuilt'>): number {
-  return ((player.placed ?? []).includes('surface-silo') ? SURFACE_SILO_CAPACITY : 0)
+export function storageCapacity(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuilt' | 'buildingLevels'>): number {
+  return ((player.placed ?? []).includes('surface-silo') ? SURFACE_SILO_CAPACITY * siloCapacityMultiplier(buildingLevel(player, 'surface-silo')) : 0)
     + ((player.subsurfaceBuilt ?? []).includes('mineral-vault') ? MINERAL_SILO_CAPACITY : 0)
     + ((player.subsurfaceBuilt ?? []).includes('deep-mineral-vault') ? DEEP_MINERAL_SILO_CAPACITY : 0)
 }
@@ -286,7 +288,7 @@ export function applyStartRefine(s: GameState, recipe: RefineryRecipe): GameStat
       refineryQueue: [...s.player.refineryQueue, {
         recipeId: recipe.id,
         startedAt: Date.now(),
-        durationMs: recipe.time * 1000 * (structureIsStaffed(s.player, 'refinery') ? 0.75 : 1),
+        durationMs: recipe.time * 1000 * (structureIsStaffed(s.player, 'refinery') ? 0.75 : 1) * buildingTimeMultiplier(buildingLevel(s.player, 'refinery')),
       }],
       refineryLastStartedAt: Date.now(),
     },
@@ -541,9 +543,28 @@ export function applyBuildSubsurfaceRoom(s: GameState, roomId: SubsurfaceRoomId)
   }
 }
 
+/** Raise a placed building one level (max 3), paying the francs in BUILDING_UPGRADE_COSTS.
+ *  No-op if the building is not placed, is maxed, or is unaffordable. Never touches `placed`. */
+export function applyUpgradeBuilding(s: GameState, id: string): GameState {
+  if (!isUpgradableBuilding(id) || !s.player.placed.includes(id)) return s
+  const level = buildingLevel(s.player, id)
+  const cost = upgradeCost(id, level)
+  if (cost === null || level >= MAX_BUILDING_LEVEL || s.player.francs < cost) return s
+  const next = level + 1
+  return {
+    ...s,
+    player: {
+      ...s.player,
+      francs: s.player.francs - cost,
+      buildingLevels: { ...(s.player.buildingLevels ?? {}), [id]: next },
+      launchpadUpgraded: s.player.launchpadUpgraded || (id === 'launchpad' && next >= 2),
+    },
+  }
+}
+
+/** Launchpad level 1 to 2: the original one-off upgrade. */
 export function applyUpgradeLaunchpad(s: GameState): GameState {
-  if (s.player.launchpadUpgraded || s.player.francs < LAUNCHPAD_UPGRADE_COST) return s
-  return { ...s, player: { ...s.player, francs: s.player.francs - LAUNCHPAD_UPGRADE_COST, launchpadUpgraded: true } }
+  return buildingLevel(s.player, 'launchpad') >= 2 ? s : applyUpgradeBuilding(s, 'launchpad')
 }
 
 // Ship customiser: swaps/upgrades individual room parts on the player's owned

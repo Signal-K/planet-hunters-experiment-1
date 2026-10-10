@@ -51,6 +51,13 @@ export default function RootLayout({
           `}</Script>
         ) : (
           <Script id="sw-dev-cleanup" strategy="beforeInteractive">{`
+            // make up and next dev are development mode. They unregister the
+            // worker and delete Landnam caches, so they cannot prove the
+            // offline PWA. Production (next start on a secure origin) registers
+            // /sw.js. Acceptance: load /game online in landscape (844x390 or
+            // 926x428) until the worker controls the page, disable the network,
+            // reload, and play a local action; restore the network and confirm
+            // the saved state reaches the backend without another mutation.
             // A service worker installed by a prior production/PWA run keeps
             // controlling localhost even after Next switches back to dev.
             // That made branch UI work appear unchanged because the browser

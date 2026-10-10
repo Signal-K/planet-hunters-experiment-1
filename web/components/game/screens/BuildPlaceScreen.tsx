@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
+import { useHelp } from '@/components/ui/useHelp'
 import { PrimaryBtn } from '@/components/ui/Button'
 import { canAffordStructure, STRUCTURES, structureAffordabilityGaps, structureUnlocked } from '@/lib/data'
 import type { StructureBlueprint } from '@/lib/data'
@@ -65,6 +66,7 @@ function formatStructureCost(structure: StructureBlueprint): string {
 }
 
 export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlaceScreenProps) {
+  const help = useHelp('build')
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
   // A tap on a locked/unaffordable card previously only fired an analytics
@@ -181,7 +183,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
         <EarthBaseModules buildings={previewBuildings} />
       </div>
 
-      <TopBar eyebrow="BASE · SETUP" title="Build" onBack={onBack} />
+      <TopBar eyebrow="BASE · SETUP" title="Build" onBack={onBack} right={help.button} />
+      {help.layer}
 
       {/* Plot pads */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>

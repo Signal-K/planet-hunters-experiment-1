@@ -371,6 +371,20 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-mission-runs h2 { margin: 4px 0 0; color: var(--ln-text); font: 800 20px var(--ln-font-display); letter-spacing: .04em; text-transform: uppercase; }
 .launchpad-mission-runs .launchpad-mission-menu-close { position: absolute; top: 16px; right: 16px; }
 .launchpad-mission-run-list { display: grid; gap: 8px; }
+.launchpad-mission-run-row { display: flex; align-items: stretch; gap: 8px; }
+.launchpad-mission-run-row > button:first-child { flex: 1; min-width: 0; }
+.launchpad-mission-run-list .launchpad-mission-run-scrub {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  grid-template-columns: none;
+  flex: 0 0 auto;
+  min-width: 72px;
+  border-color: var(--ln-crit);
+  color: var(--ln-crit);
+  letter-spacing: .12em;
+  text-align: center;
+}
 .launchpad-mission-run-list button {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr) auto;

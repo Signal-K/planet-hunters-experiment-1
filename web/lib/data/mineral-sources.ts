@@ -21,7 +21,7 @@ export function mineralSourceHint(mineralId: string): string {
   const name = MINERAL_META[mineralId]?.name ?? mineralId
   const sources = mineralSourceTargets(mineralId)
   if (sources.length === 0) return `${name} cannot be mined yet. Look for it in a market or refinery.`
-  return `Mine ${name} on ${sources.map(s => s.name).join(' or ')} in Free Ops, then bring it home to the Base.`
+  return `Free Ops: mine ${name} on ${sources.map(s => s.name).join(' or ')}, then bring it home to the Base.`
 }
 
 /** Hint for the first of several short minerals, or all of them joined. */

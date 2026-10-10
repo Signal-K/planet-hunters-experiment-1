@@ -21,7 +21,7 @@ import { EARTH_BASE_WIDE } from '@/lib/scene/compositions'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
-import { LAUNCHPAD_UPGRADE_COST, MISSIONS, missionTypePrimer, type SubsurfaceRoomId } from '@/lib/data'
+import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, MISSIONS, missionTypePrimer, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
@@ -37,6 +37,8 @@ import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SkyBadgeRow } from './SkyBadgeRow'
+import OpsHubSheet from '@/components/game/hub/OpsHubSheet'
+import { useHelp } from '@/components/ui/useHelp'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
@@ -186,7 +188,7 @@ interface HubScreenProps {
   onFocusBuilding: (b: string) => void
   onOpenScene: (s: Screen) => void
   onDismissHubPrompt?: (key: HubPromptKey) => void
-  onUpgradeLaunchpad?: () => void
+  onUpgradeBuilding?: (id: string) => void
   onExcavateSubsurface?: () => void
   onExcavateSubsurfaceUnavailable?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
@@ -196,7 +198,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -213,7 +215,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     const operation = missionTypePrimer(mission).label
     return target ? `${operation} → ${target}` : operation
   }
-  const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
+  const [upgradingBuilding, setUpgradingBuilding] = useState<UpgradableBuildingId | null>(null)
+  const [opsOpen, setOpsOpen] = useState(false)
+  const help = useHelp('hub')
   const { signals } = useInstrumentSignals(player)
   const asteroidQueueCount = signals.filter(signal => signal.kind === 'deep-space').length
   const placed = player.placed ?? []
@@ -416,8 +420,12 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     }
   }
 
+  // The phone dock lays its actions out two per row, so a fifth action adds a row. The scene lifts by the same
+  // amount (HubLayout.module.css) so the dock never sits on the buildings' hit boxes.
+  const dockRows = Math.ceil(((player.freeOperations ? 5 : 4)) / 2)
+
   return (
-    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-dock-rows={dockRows} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
       {/* Base stays mounted at its authored camera frame while a tray is open.
           The former 200%-tall slider moved the whole world before revealing
@@ -505,7 +513,12 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 // can't run off the edge of the scene.
                 const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
-                return <Building key={kind} {...building} hitH={HIT_H[kind] ?? 60} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
+                // In Edit mode a tap on an upgradable building opens its upgrade rail
+                // instead of navigating into the building.
+                const editable = editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind)
+                  ? { ...building, onClick: () => setUpgradingBuilding(kind) }
+                  : building
+                return <Building key={kind} {...editable} hitH={HIT_H[kind] ?? 60} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
               })}
               <Building
                 kind="market"
@@ -576,16 +589,26 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       </div>
       {!subsurface && <SkyBadgeRow badges={player.badges} className={layoutStyles.badges} />}
 
-      {confirmingLaunchpadUpgrade && onUpgradeLaunchpad && (
-        <ActionConfirmBar
-          eyebrow="Upgrade"
-          title="Upgrade Launchpad"
-          description={`Spend ${formatCurrency(LAUNCHPAD_UPGRADE_COST)} to permanently upgrade the launchpad. This can't be undone.`}
-          confirmLabel={`Confirm Upgrade (${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })})`}
-          onConfirm={() => { onUpgradeLaunchpad(); setConfirmingLaunchpadUpgrade(false) }}
-          onDismiss={() => setConfirmingLaunchpadUpgrade(false)}
-        />
-      )}
+      {upgradingBuilding && onUpgradeBuilding && (() => {
+        const level = buildingLevel(player, upgradingBuilding)
+        const cost = upgradeCost(upgradingBuilding, level)
+        const name = BUILDING_NAMES[upgradingBuilding]
+        const effects = BUILDING_LEVEL_EFFECTS[upgradingBuilding]
+        const maxed = cost === null
+        return (
+          <ActionConfirmBar
+            eyebrow={maxed ? `Level ${level} of ${MAX_BUILDING_LEVEL}` : `Level ${level} to ${level + 1}`}
+            title={`Upgrade ${name}`}
+            description={maxed
+              ? `${effects[level - 1]}. Fully upgraded.`
+              : `Now: ${effects[level - 1]}. Next: ${effects[level]}. ${player.francs < cost ? `Needs ${formatCurrency(cost - player.francs)} more. ` : ''}Upgrades are permanent.`}
+            confirmLabel={maxed ? 'Max level' : `Upgrade (${formatCurrency(cost, { compact: true })})`}
+            confirmDisabled={maxed || player.francs < cost}
+            onConfirm={() => { onUpgradeBuilding(upgradingBuilding); setUpgradingBuilding(null) }}
+            onDismiss={() => setUpgradingBuilding(null)}
+          />
+        )
+      })()}
       {/* Bottom dock — rebuilt 2026-08-21 (KES-226) as a docked sheet, not a
           floating pill row (see DockIconBtn/DockPrimaryBtn doc comment for
           why). It remains available during onboarding so the tutorial can
@@ -595,7 +618,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           removing the rest of the player's controls. */}
       {(
         <div className="hub-bottom-dock" style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20,
+          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: subsurface ? 40 : 20,
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
         }}>
           <div className="hub-bottom-dock-inner" style={{
@@ -609,10 +632,15 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             padding: '12px 16px 16px',
           }}>
             {subsurface ? (
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <DockPrimaryBtn onClick={() => setSubsurface(false)}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+                <DockPrimaryBtn testId="subsurface-surface-btn" onClick={() => setSubsurface(false)}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><SurfaceGlyph />Surface</span>
                 </DockPrimaryBtn>
+                {player.placed.includes('launchpad') && (
+                  <DockPrimaryBtn testId="subsurface-launchpad-btn" onClick={() => onOpenScene('launchpad')}>
+                    Launchpad
+                  </DockPrimaryBtn>
+                )}
               </div>
             ) : (
               <>
@@ -647,6 +675,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                     rather than flexWrap) so it can never overlap the scene
                     below it, unlike the pill row it replaces. */}
                 <div className="hub-bottom-dock-actions" style={{ display: 'flex', gap: 4, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
+                  <DockIconBtn testId="hub-ops-btn" icon={<HistoryGlyph />} label="Ops" onClick={() => setOpsOpen(true)} />
+                  {help.button}
                   <DockIconBtn testId="hub-control-station-btn" icon={<HistoryGlyph />} label="Control" onClick={() => onOpenScene('instrument-hub')} />
                   {editMode && (
                     <>
@@ -654,8 +684,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                       {player.placed.includes('launchpad') && (
                         <DockIconBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onFocusBuilding('hangar')} />
                       )}
-                      {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                        <DockIconBtn icon={<UpgradeGlyph />} label="UPGRADE" onClick={() => setConfirmingLaunchpadUpgrade(true)} />
+                      {player.placed.includes('launchpad') && buildingLevel(player, 'launchpad') < MAX_BUILDING_LEVEL && onUpgradeBuilding && (
+                        <DockIconBtn icon={<UpgradeGlyph />} label="UPGRADE" onClick={() => setUpgradingBuilding('launchpad')} />
                       )}
                     </>
                   )}
@@ -670,6 +700,16 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             )}
           </div>
         </div>
+      )}
+      {help.layer}
+      {opsOpen && (
+        <OpsHubSheet
+          player={player}
+          downlinkCount={signals.length}
+          onClose={() => setOpsOpen(false)}
+          onOpenScene={screen => { setOpsOpen(false); onOpenScene(screen) }}
+          onFocusBuilding={kind => { setOpsOpen(false); onFocusBuilding(kind) }}
+        />
       )}
     </div>
   )

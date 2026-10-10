@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Target } from '@/lib/data'
 import {
   LANDING_ASCEND_DURATION_MS,
@@ -49,13 +49,18 @@ const COPY: Record<LandingSequenceMode, {
 }
 
 export default function LandingScreen({ target, mode, startedAt, onBack, onContinue }: LandingScreenProps) {
-  const [now, setNow] = useState(0)
+  // A saved run can reopen this screen with no descent clock (Belt Courier
+  // stalled at 0% and a frozen 00:08). That run is already due: land it.
+  const clockMissing = startedAt == null || !Number.isFinite(startedAt)
+  const [now, setNow] = useState(() => Date.now())
   const durationMs = mode === 'descend' ? LANDING_DESCEND_DURATION_MS : LANDING_ASCEND_DURATION_MS
-  const progress = landingProgress(startedAt, now, durationMs)
+  const liveNow = now > 0 ? now : Date.now()
+  const progress = clockMissing ? 1 : landingProgress(startedAt, liveNow, durationMs)
   const progressPct = Math.round(progress * 100)
-  const remainingMs = Math.max(0, durationMs - Math.max(0, now - (startedAt ?? now)))
-  const ready = progress >= 1
+  const remainingMs = clockMissing ? 0 : Math.max(0, durationMs - Math.max(0, liveNow - startedAt))
+  const ready = clockMissing || progress >= 1
   const copy = COPY[mode]
+  const landed = useRef(false)
 
   useEffect(() => {
     const tick = () => setNow(Date.now())
@@ -68,6 +73,12 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
       document.removeEventListener('visibilitychange', onVisible)
     }
   }, [])
+
+  useEffect(() => {
+    if (!ready || landed.current) return
+    landed.current = true
+    onContinue()
+  }, [ready, onContinue])
 
   return (
     <div className={`game-screen theme-blueprint ln-scene-landing ${styles.screen}`} data-testid="landing-screen">

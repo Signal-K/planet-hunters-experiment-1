@@ -21,6 +21,7 @@ import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
 import { captureGameEvent } from '@/lib/posthog'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import styles from './MarketScreen.module.css'
+import { useHelp } from '@/components/ui/useHelp'
 
 interface MarketScreenProps {
   stash: Record<string, number>
@@ -43,16 +44,24 @@ interface MarketScreenProps {
 }
 
 /** The build button a recipe card offers, or null when it is made elsewhere. */
-function recipeAction(recipe: CraftingRecipe, affordable: boolean, placed: string[], kits: Record<string, number>): { label: string; disabled: boolean } | null {
+function recipeAction(recipe: CraftingRecipe, affordable: boolean, placed: string[], kits: Record<string, number>): { label: string; disabled: boolean; reason?: string } | null {
   switch (recipe.producedAt) {
     case 'field': {
       const held = kits[recipe.id] ?? 0
-      return { label: `Build kit${held > 0 ? ` (${held} held)` : ''}`, disabled: !affordable }
+      return { label: held > 0 ? `BUILD · ${held} HELD` : 'BUILD', disabled: !affordable }
     }
-    case 'earth-base':
-      return placed.includes(recipe.id.replace(/^earth-/, ''))
-        ? { label: 'Built at Base', disabled: true }
-        : { label: 'Build at Base', disabled: !affordable }
+    case 'earth-base': {
+      const kind = recipe.id.replace(/^earth-/, '')
+      if (!placed.includes(kind)) return { label: 'BUILD', disabled: !affordable }
+      if (recipe.id === 'earth-surface-silo') {
+        return {
+          label: 'ONE PER BASE',
+          disabled: true,
+          reason: 'One Surface Silo stands at the Base. It cannot be built again. More ore storage is the Mineral Vault under the Base.',
+        }
+      }
+      return { label: 'BUILT', disabled: true, reason: `${recipe.name} is already at the Base.` }
+    }
     case 'subsurface': return { label: 'Open Base deck', disabled: false }
     case 'refinery': return { label: 'Open Refinery', disabled: false }
     case 'hangar': return { label: 'Open Hangar', disabled: false }
@@ -61,6 +70,7 @@ function recipeAction(recipe: CraftingRecipe, affordable: boolean, placed: strin
 }
 
 export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell, refinedGoods, onSellRefined, onBack, onOpenMissions, clientId, placedStructures = [], fieldKits = {}, onBuildRecipe }: MarketScreenProps) {
+  const help = useHelp('market')
   const [confirming, setConfirming] = useState<string | null>(null)
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
   // SSL-316: every recipe in the game is published here so the player can
@@ -103,6 +113,8 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           <div className={styles.eyebrow}>Base · Resource Desk</div>
           <h1 className={styles.title}>Commodity Exchange</h1>
         </div>
+        {help.button}
+        {help.layer}
         <div className={styles.balance} aria-label={`Current balance ${formatCurrency(francs)}`}>
           <span className={styles.metricLabel}>Available francs</span>
           <span className={styles.balanceValue}>{formatCurrency(francs, { compact: true })}</span>
@@ -248,15 +260,20 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
                     const action = recipeAction(recipe, can.ok, placedStructures, fieldKits)
                     if (!action || !onBuildRecipe) return null
                     return (
-                      <button
-                        className={styles.sellButton}
-                        type="button"
-                        disabled={action.disabled}
-                        data-testid={`market-recipe-build-${recipe.id}`}
-                        onClick={() => { captureGameEvent('market_recipe_build', { recipe_id: recipe.id }); onBuildRecipe(recipe) }}
-                      >
-                        {action.label}
-                      </button>
+                      <>
+                        {action.reason && (
+                          <p className={styles.recipeDescription} data-testid={`market-recipe-reason-${recipe.id}`}>{action.reason}</p>
+                        )}
+                        <button
+                          className={styles.primaryButton}
+                          type="button"
+                          disabled={action.disabled}
+                          data-testid={`market-recipe-build-${recipe.id}`}
+                          onClick={() => { captureGameEvent('market_recipe_build', { recipe_id: recipe.id }); onBuildRecipe(recipe) }}
+                        >
+                          {action.label}
+                        </button>
+                      </>
                     )
                   })()}
                 </article>

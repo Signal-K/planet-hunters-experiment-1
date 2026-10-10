@@ -49,6 +49,7 @@ help:
 up: pb-up
 	$(FRONTEND_COMPOSE) up -d --remove-orphans web
 	@echo "Landnam:         http://localhost:3001/game"
+	@echo "Dev mode only. make up unregisters service workers, so it is not offline-PWA proof. Use a production build on a secure origin (see web/app/layout.tsx)."
 	@echo "Shared PB:       http://localhost:8090/_/"
 	@echo "Landnam PB:      http://localhost:8091/_/"
 

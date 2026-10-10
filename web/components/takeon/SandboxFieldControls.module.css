@@ -152,8 +152,8 @@
   border-radius: var(--ln-r-pill);
   color: var(--ln-text-dim);
   font-family: var(--ln-font-mono);
-  /* SSL-401: price tags never drop below the 12px phone minimum. */
-  font-size: max(12px, var(--ln-fs-micro));
+  /* SSL-404: prices stay on the card at the 14px text floor. */
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -197,7 +197,7 @@
 
   .readout strong,
   .eyebrow {
-    font-size: 10px;
+    font-size: 14px;
   }
 
   .hint {

@@ -361,3 +361,48 @@ export default function InstrumentViewport({
     </div>
   )
 }
+
+/** Locked, loading, and empty feeds stay on the same console as a live classify. */
+export function InstrumentStandbyViewport({
+  testId,
+  sceneClassName,
+  eyebrow,
+  title,
+  onBack,
+  status,
+  messageTitle,
+  messageBody,
+  answers,
+  devBar,
+}: {
+  testId: string
+  sceneClassName: string
+  eyebrow: string
+  title: string
+  onBack: () => void
+  status: string
+  messageTitle: string
+  messageBody: string
+  answers?: ReactNode
+  devBar?: ReactNode
+}) {
+  return (
+    <InstrumentViewport
+      testId={testId}
+      sceneClassName={sceneClassName}
+      eyebrow={eyebrow}
+      title={title}
+      onBack={onBack}
+      status={status}
+      devBar={devBar}
+      viewport={(
+        <div className={styles.standby} data-testid="instrument-standby">
+          <strong>{messageTitle}</strong>
+          <p>{messageBody}</p>
+        </div>
+      )}
+      answers={answers ?? <p className={styles.standbyNote}>No verdict yet</p>}
+      emptyToolLabel="No tool"
+    />
+  )
+}

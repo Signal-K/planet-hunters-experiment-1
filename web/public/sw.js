@@ -2,6 +2,13 @@
 // pass-through for PocketBase API calls so the game handles cold-start
 // delays itself rather than serving stale API responses.
 // Also handles Web Push notifications (opt-in).
+//
+// Production offline landscape (SSL-66): registered only when NODE_ENV is
+// production. The first online visit to /game stores the shell. A later
+// reload with the network disabled serves that shell in landscape (844x390
+// and 926x428 are not locked out). PocketBase calls stay network-only, so
+// restoring the network lets the existing save sync without a new mutation.
+// `make up` is development mode and unregisters this worker.
 
 const CACHE = 'landnam-shell-v5'
 

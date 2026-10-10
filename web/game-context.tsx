@@ -394,6 +394,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       onCollectRefined: economy.onCollectRefined,
       placeStructure: economy.placeStructure,
       upgradeLaunchpad: economy.upgradeLaunchpad,
+      upgradeBuilding: economy.upgradeBuilding,
       excavateSubsurface: economy.excavateSubsurface,
       buildSubsurfaceRoom: economy.buildSubsurfaceRoom,
       unlockSkillNode: economy.unlockSkillNode,

@@ -445,7 +445,7 @@ function ExcavatePrompt({
         </p>
         {!affordable && (
           <p className={styles.trainingCopy} data-testid="subsurface-excavate-lock-copy">
-            Need {missing.join(' and ')}. {mineralSourceHints(['aluminium'])}
+            Need {missing.join(' and ')}.{missingAluminium > 0 ? ` ${mineralSourceHints(['aluminium'])}` : ''}
           </p>
         )}
         <div style={{ marginTop: 12, maxWidth: 320, marginInline: 'auto' }}>

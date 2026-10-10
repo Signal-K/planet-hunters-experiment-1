@@ -54,9 +54,11 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   )
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
-  const [now, setNow] = useState(0)
+  const [now, setNow] = useState(() => Date.now())
   const [fakeStartedAt, setFakeStartedAt] = useState(0)
   const [fakeProgress, setFakeProgress] = useState(FAKE_PROGRESS_START)
+  const onArriveRef = useRef(onArrive)
+  onArriveRef.current = onArrive
 
   // Tutorial legs are fast, but they are still real mission state. Use the
   // persisted launch timestamp when one exists so a remount does not rewind
@@ -71,8 +73,8 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   const arriveOnce = useCallback(() => {
     if (arrivalHandledRef.current) return
     arrivalHandledRef.current = true
-    onArrive()
-  }, [onArrive])
+    onArriveRef.current()
+  }, [])
 
   useEffect(() => {
     if (!isTimed) return
@@ -109,15 +111,16 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   }, [isTimed, now, arrivalAt, fakeProgress, arriveOnce])
 
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
+  const liveNow = now > 0 ? now : Date.now()
   const stableTransitStartedAt = isTimed
-    ? (transitStartedAt ?? (arrivalAt ? arrivalAt - 1 : now))
+    ? (transitStartedAt ?? (arrivalAt ? arrivalAt - 1 : liveNow))
     : fakeStartedAt
   const totalMs = isTimed && arrivalAt ? Math.max(1, arrivalAt - stableTransitStartedAt) : 1
+  const arrived = isTimed ? liveNow >= arrivalAt! : fakeProgress >= 100
   const progress = isTimed
-    ? Math.min(100, Math.max(0, Math.round(((now - stableTransitStartedAt) / totalMs) * 100)))
+    ? (arrived ? 100 : Math.min(100, Math.max(0, Math.round(((liveNow - stableTransitStartedAt) / totalMs) * 100))))
     : Math.round(fakeProgress)
-  const etaMs = isTimed ? Math.max(0, arrivalAt! - now) : 0
-  const arrived = isTimed ? now >= arrivalAt! : fakeProgress >= 100
+  const etaMs = isTimed ? Math.max(0, arrivalAt! - liveNow) : 0
   const destinationName = returning ? 'Earth' : target.name
   const legLabel = returning ? 'Inbound' : isDelivery ? 'Delivery' : 'Outbound'
   const cargoEntries = cargo && (isDelivery || returning)

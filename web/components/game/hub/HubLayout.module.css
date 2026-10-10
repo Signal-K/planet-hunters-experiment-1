@@ -50,7 +50,8 @@
   text-shadow: 0 4px 8px color-mix(in srgb, var(--ln-void) 60%, transparent);
 }
 .balance { pointer-events: auto; }
-.badges { top: 144px; bottom: auto; z-index: 19; }
+/* Two classes: SkyBadgeRow's own `bottom: 16px` ties a single class and can win on stylesheet order. */
+.root .badges { top: 144px; bottom: auto; z-index: 19; }
 
 .surface::before {
   position: absolute;
@@ -82,6 +83,12 @@
   background: linear-gradient(90deg, transparent, var(--hub-cyan), transparent);
   opacity: 0.6;
   z-index: 5;
+}
+
+/* Phone portrait stacks the dock actions two per row (launchpad-screen.css). Each row beyond the second is 48px of
+   dock the scene has to clear, or the dock covers the buildings' hit boxes. */
+@media (orientation: portrait) and (max-width: 1023px), (max-width: 600px) {
+  .root[data-dock-rows='3'] { --hub-ground: calc(28% + 48px); }
 }
 
 @media (min-width: 1024px) {
@@ -120,5 +127,5 @@
   /* The eyebrow is hidden here, so the DEV badge would sit on the title instead. */
   .titleBlock:has(.eyebrow[data-dev-launcher='true']) { margin-left: 64px; }
   .titleText { margin: 0; font-size: 18px; }
-  .badges { top: 56px; }
+  .root .badges { top: 56px; }
 }
