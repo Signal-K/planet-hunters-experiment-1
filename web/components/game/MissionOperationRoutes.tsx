@@ -172,6 +172,13 @@ export default function MissionOperationRoutes({
           initialCharges={game.player.miningLaserCharges}
           francs={game.player.francs}
           onSpendFrancs={amount => game.setPlayer(player => ({ ...player, francs: Math.max(0, player.francs - amount) }))}
+          onPersist={(cargo, charges) => {
+            game.setPlayer(player => ({
+              ...player,
+              miningCargoInProgress: Object.keys(cargo).length > 0 ? cargo : undefined,
+              miningLaserCharges: charges,
+            }))
+          }}
           onBack={(cargo, charges) => {
             game.setPlayer(player => ({
               ...player,

@@ -163,21 +163,19 @@ export default function DeliveryScreen({
             roverName="Mule Field Rover"
             seedCargo={seedCargo}
             seedCache
+            startView="iso"
             onReady={handleTakeonReady}
             className={styles.takeonMount}
           />
-          {rocketImageSrc && <img className={styles.landedShip} src={rocketImageSrc} alt="Prospector rocket landed beside the client build site" />}
-          <div className={styles.targetLabel}>
-            <span>LANDED ROVER SITE · CLIENT BUILD SITE</span>
-            <strong>{clientName ?? 'CLIENT SITE'} · {target.name}</strong>
-          </div>
+          {!dumped && <div className={`${styles.siteLock} lock-on`} data-testid="delivery-site-lock" aria-hidden="true" />}
         </div>
 
         <section className={styles.hud} aria-label="Cargo unload status">
           <div className={styles.statusRow}>
             <div>
+              {rocketImageSrc && <img className={styles.landedShip} src={rocketImageSrc} alt="" />}
               <div className={styles.kicker}>{roverReturned ? 'ROVER REDOCKED' : dumped ? 'MINERALS UNLOADED' : 'DRIVE TO THE BUILDING SITE'}</div>
-              <div className={styles.contract}>{mission.title}</div>
+              <div className={styles.contract}>{clientName ?? 'CLIENT SITE'} · {target.name}</div>
             </div>
             <span className={styles.timer}>{roverReturned ? 'LAUNCH READY' : dumped ? 'UNLOADED' : 'MANUAL'}</span>
           </div>
@@ -205,9 +203,9 @@ export default function DeliveryScreen({
 
           {dumpError && <div className={styles.dumpError} role="status">{dumpError}</div>}
           {!dumped ? (
-            <PrimaryBtn disabled={!takeonReady} testId="delivery-dump-cargo" onClick={handleDump}>
+            <button type="button" className={styles.dumpBtn} disabled={!takeonReady} data-testid="delivery-dump-cargo" onClick={handleDump}>
               {takeonReady ? 'Dump Cargo At Building Site' : 'Preparing Rover'}
-            </PrimaryBtn>
+            </button>
           ) : (
             <PrimaryBtn disabled={roverReturned} testId="delivery-return-rover" onClick={() => setRoverReturned(true)}>
               {roverReturned ? 'Rover Redocked · Launch Ready' : 'Return Rover To Ship'}

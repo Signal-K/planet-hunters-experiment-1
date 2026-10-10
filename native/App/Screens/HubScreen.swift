@@ -319,6 +319,9 @@ private struct SettingsSheet: View {
     @Environment(AuthModel.self) private var auth
     @State private var showArchive = false
     @State private var confirmSignOut = false
+    #if os(iOS)
+    @AppStorage(OrientationPreference.storageKey) private var orientation = OrientationPreference.auto.rawValue
+    #endif
     let onClose: () -> Void
 
     private var destinations: [Screen] {
@@ -337,6 +340,9 @@ private struct SettingsSheet: View {
             }.padding(.horizontal, 16).padding(.top, 8)
             ScrollView {
                 VStack(spacing: 8) {
+                    #if os(iOS)
+                    orientationPicker
+                    #endif
                     row("Missions", .missions)
                     ForEach(destinations, id: \.self) { row($0.rawValue.replacingOccurrences(of: "-", with: " ").capitalized, $0) }
                     action("Archive: pathways and unlocks") { showArchive = true }
@@ -357,6 +363,30 @@ private struct SettingsSheet: View {
         .background(Theme.bg)
         .presentationDetents([.medium, .large])
     }
+
+    #if os(iOS)
+    private var orientationPicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("SCREEN ORIENTATION").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
+            HStack(spacing: 8) {
+                ForEach(OrientationPreference.allCases) { option in
+                    let on = OrientationPreference(stored: orientation) == option
+                    Button { orientation = option.rawValue } label: {
+                        Text(option.title.uppercased()).font(AppFont.display(14)).tracking(1.0)
+                            .foregroundStyle(on ? Theme.hudPanel : Theme.hudInk)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .background(on ? Theme.hudInk : Color.clear, in: RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.hudInk, lineWidth: 1.5))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Orientation \(option.title)")
+                    .accessibilityAddTraits(on ? .isSelected : [])
+                }
+            }
+        }
+        .padding(14).frame(maxWidth: .infinity, alignment: .leading).hudPanel(radius: 10)
+    }
+    #endif
 
     private func row(_ title: String, _ screen: Screen) -> some View {
         action(title) { onClose(); store.go(screen) }

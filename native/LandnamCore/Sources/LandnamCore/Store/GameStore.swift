@@ -84,6 +84,7 @@ public final class GameStore {
         let at = clock()
         n.player.saturnClassifications[candidateId] = SaturnClassification(candidateId: candidateId, verdict: verdict, submittedAt: at, badgeTier: SkyEvents.saturnTier(at: at)?.rawValue)
         SkyEvents.grant(&n.player.badges, activity: .saturnClassification, at: at)
+        WswBadges.grant(&n.player.badges, .citizenScience, at: at)
         n.player.researchAnnotations += 1
         apply(n)
         onClassified?(.saturn(frame: candidateId, verdict: verdict))
@@ -99,6 +100,7 @@ public final class GameStore {
             n.player.discoveredExoplanetTargets[t.id] = n.player.discoveredExoplanetTargets[t.id] ?? t
         }
         n.player.tessClassifications[subjectId] = TessClassification(subjectId: subjectId, verdict: verdict, ranges: marks, submittedAt: clock())
+        WswBadges.grant(&n.player.badges, .citizenScience, at: clock())
         n.player.researchAnnotations += 1
         n.player.researchXP += Self.firstClassificationXP
         apply(n)
@@ -111,6 +113,7 @@ public final class GameStore {
         var n = state
         n.player.asteroidClassifications[candidateId] = AsteroidClassification(candidateId: candidateId, verdict: verdict, submittedAt: clock())
         SkyEvents.grant(&n.player.badges, activity: .asteroidClassification, at: clock())
+        WswBadges.grant(&n.player.badges, .citizenScience, at: clock())
         n.player.researchAnnotations += 1
         n.player.researchXP += Self.firstClassificationXP
         apply(n)
@@ -155,6 +158,11 @@ public final class GameStore {
     public func assignCrew(_ structureId: String, crewId: String?) { apply(Academy.applyAssign(state, structureId: structureId, crewId: crewId)) }
     @discardableResult public func place(_ kind: String, plot: Int) -> Bool {
         let next = Construction.applyPlace(state, kind: kind, plot: plot, now: now)
+        guard next != state else { return false }
+        apply(next); return true
+    }
+    @discardableResult public func upgradeBuilding(_ id: String) -> Bool {
+        let next = BuildingLevels.applyUpgrade(state, id: id)
         guard next != state else { return false }
         apply(next); return true
     }

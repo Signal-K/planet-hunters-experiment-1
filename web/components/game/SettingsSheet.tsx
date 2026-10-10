@@ -1,10 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useGame } from '@/game-context'
 import { pbShared } from '@/lib/pb'
 import { DEV_GROUPS } from '@/lib/devPresets'
+import { canOfferFullscreen, enterFullscreen, readFullscreenEnv } from '@/lib/fullscreen'
 import PageSurface from '@/components/ui/PageSurface'
+import { TRAINING_TRIES } from '@/lib/data'
 import { TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
 
 interface SettingsSheetProps {
@@ -70,7 +72,20 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   const game = useGame()
   const [confirmReset, setConfirmReset] = useState(false)
   const [confirmSkipTraining, setConfirmSkipTraining] = useState(false)
+  const [showFullscreen, setShowFullscreen] = useState(false)
   const email = pbShared.authStore.record?.email as string | undefined
+
+  useEffect(() => {
+    const update = () => setShowFullscreen(canOfferFullscreen(readFullscreenEnv()))
+    update()
+    const mq = window.matchMedia('(orientation: landscape)')
+    mq.addEventListener('change', update)
+    document.addEventListener('fullscreenchange', update)
+    return () => {
+      mq.removeEventListener('change', update)
+      document.removeEventListener('fullscreenchange', update)
+    }
+  }, [])
 
   function handleSignOut() {
     onClose()
@@ -132,6 +147,15 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
           </Row>
         </Section>
 
+        {showFullscreen && (
+          <Section label="Display">
+            <Row>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text)' }}>Hide browser bars</div>
+              <Btn label="Fullscreen" onClick={() => { enterFullscreen().catch(() => {}) }} variant="primary" />
+            </Row>
+          </Section>
+        )}
+
         {game.player.missionsDone > 0 && (
           <Section label="Program">
             <Row>
@@ -153,8 +177,11 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
               const done = !!game.player.flightPlan?.completed?.[tryId]
               const status = done ? 'Done' : active ? 'On air' : 'Standby'
               const label = tryId === 'part' ? 'Part tweak' : tryId === 'scan' ? 'Planet scan' : 'Mining'
+              const steps = TRAINING_TRIES.filter(step => step.try === tryId)
+              const stepAt = steps.findIndex(step => step.screen === game.screen)
+              const turn = done ? 1 : active ? Math.max(1, stepAt + 1) / Math.max(1, steps.length) : 0
               return <div key={tryId} role="listitem" className="patch" data-state={done ? 'done' : active ? 'active' : 'standby'}>
-                <span className="patch-ring" aria-hidden="true">{done ? '✓' : TRAINING_TRY_IDS.indexOf(tryId) + 1}</span>
+                <span className="patch-ring" style={{ ['--patch-turn' as string]: String(turn) }} aria-hidden="true">{done ? '✓' : TRAINING_TRY_IDS.indexOf(tryId) + 1}</span>
                 <div data-testid={`training-${tryId}-status`}>
                   <div className="patch-name">{label}</div>
                   <div className="patch-status">{status}</div>

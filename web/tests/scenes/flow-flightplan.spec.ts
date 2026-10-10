@@ -27,6 +27,15 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.screenshot({ path: `tests/.out/flow-flightplan-part-${vp}.png` })
     })
 
+    test('part try on the mining screen shows the laser step, not Fit a module', async ({ page }) => {
+      await stage(page, 'm1-mining', { patch: { flightPlan: { completed: { mining: true, scan: true }, hidden: false } } })
+      await page.goto(page.url() + '&plan=1')
+      await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
+      await expect(objective(page)).toContainText('Fire the laser')
+      await expect(objective(page)).not.toContainText('Fit a module')
+      await expect(page.getByText(/Fit a module/i)).toHaveCount(0)
+    })
+
     test('part try on the Hangar screen says fit a module, not the Base instruction', async ({ page }) => {
       await stage(page, 'ui-hangar-assembly', { patch: { flightPlan: { completed: { mining: true, scan: true }, hidden: false } } })
       await page.goto(page.url() + '&plan=1')

@@ -297,12 +297,13 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         if (disposed) return
 
         const viewport = takeOnViewportSize(canvasElement)
+        const sky = getComputedStyle(canvasElement).getPropertyValue('--ln-bp-bg').trim()
         app = new PIXI.Application()
         await app.init({
           canvas: canvasElement,
           width: viewport.width,
           height: viewport.height,
-          backgroundAlpha: 0,
+          ...(sky ? { background: sky, backgroundAlpha: 1 } : { backgroundAlpha: 0 }),
           antialias: true,
         })
         if (disposed) {

@@ -1,5 +1,6 @@
 'use client'
 
+import { buildingLevel } from '@/lib/data/building-levels'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { useGame } from '@/game-context'
 import type { Catalog } from '@/lib/catalog'
@@ -81,7 +82,7 @@ function SetupFrame({ title, screen, onBack, children, eyebrow = 'CONTRACT → L
 
 export default function MissionSetupRoutes({ screen, game, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
   const relay = useMissionRelayModels({ catalog: game.catalog, missionsDone: game.player.missionsDone, freeOperations: game.player.freeOperations, francs: game.player.francs, crew: game.player.crew, player: game.player, sceneScope: game.sceneScope })
-  const compatibleTargets = useMemo(() => game.mission ? feasibleTargetsFor(game.mission, game.catalog.targets, game.catalog.parts, game.player.missionsDone, game.player.launchpadUpgraded, game.player.unlockedSkillNodes ?? []) : [], [game.catalog.parts, game.catalog.targets, game.mission, game.player.launchpadUpgraded, game.player.missionsDone, game.player.unlockedSkillNodes])
+  const compatibleTargets = useMemo(() => game.mission ? feasibleTargetsFor(game.mission, game.catalog.targets, game.catalog.parts, game.player.missionsDone, game.player.launchpadUpgraded, game.player.unlockedSkillNodes ?? [], buildingLevel(game.player, 'launchpad')) : [], [game.catalog.parts, game.catalog.targets, game.mission, game.player.launchpadUpgraded, game.player.missionsDone, game.player.unlockedSkillNodes])
   const selectedVehicle = game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)
   // SSL-375: the rocket stands in the Workshop while it is prepared, then rolls to the pad in-scene on confirm.
   const [rolling, setRolling] = useState<string | null>(null)
@@ -146,7 +147,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   return <>
     <SetupFrame title="Launch review" screen={screen} onBack={() => game.go('missions')} eyebrow={isFreeOpsHaul ? 'FREE OPS · OWN HAUL' : 'CONTRACT → LAUNCH'}>
       <section className={styles.review} data-testid="mission-launch-review">
-        <div className={styles.launchScene}><div className={styles.launchArt} data-testid="launch-art" data-stage={artStage}><div className={styles.workshop} aria-hidden="true"><b>WORKSHOP</b></div><div className={styles.launchTower} aria-hidden="true"><i /><i /><i /></div><img data-testid="launch-rocket" src={rocketDisplay.img} alt={`${selectedRocket.name} ${artStage === 'pad' ? 'on the launchpad' : 'in the workshop'}`} /></div><div className={styles.launchCaption}><span>{caption}</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
+        <div className={styles.launchScene}><div className={styles.launchArt} data-testid="launch-art" data-stage={artStage}><HubWorldBackground phase="day" composition="earth-base-wide" /><div className={styles.launchpad} aria-hidden="true"><LaunchpadModules /></div><div className={styles.hangar} aria-hidden="true"><HangarModules /></div><div className={styles.workshop} aria-hidden="true"><b>WORKSHOP</b></div><img data-testid="launch-rocket" src={rocketDisplay.img} alt={`${selectedRocket.name} ${artStage === 'pad' ? 'on the launchpad' : 'in the workshop'}`} /></div><div className={styles.launchCaption}><span>{caption}</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
         <aside className={styles.reviewBrief}>
           <div className={styles.reviewHeading}><span>{game.mission.payload?.type === 'satellite' ? 'INSTRUMENT LAUNCH' : isFreeOpsHaul ? 'FREE OPS · OWN HAUL' : 'CLIENT CONTRACT'}</span><h2>{game.mission.title}</h2></div>
           <div className={styles.reviewMap} data-testid="launch-review-map" aria-label={`Route to ${target.name}`}>

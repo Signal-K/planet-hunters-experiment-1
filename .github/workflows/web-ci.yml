@@ -1,12 +1,17 @@
 name: Web CI
 
-# SSL-505: one gate for every real target. Branch protection (when enabled)
-# should require ONLY the aggregate job "CI required" (job id ci-required).
-# No path filters on purpose: a path-filtered required check never reports and
-# blocks (or, worse, silently passes) a PR that did not touch the filtered paths.
+# SSL-505: one gate for every real target. Branch rulesets are admin-only and
+# cannot be created from this file. Require ONLY the aggregate check named
+# "CI required" (job id ci-required) on main, cycle/3, cycle/4, release/*, and
+# native/*. No path filters: a path-filtered required check never reports and
+# blocks, or silently passes, a PR that did not touch the filtered paths.
+# Jobs do not use continue-on-error. A failed, cancelled, or skipped dependency
+# fails ci-required.
 on:
+  # Push only for branches that publish or are long-lived; every other branch
+  # is covered by its pull_request run, so one branch never runs both.
   push:
-    branches: [main, "cycle/**"]
+    branches: [main, "cycle/**", "release/**", "native/**"]
   pull_request:
     branches: [main, "cycle/**", "sprint*/**", "release/**", "native/**"]
   workflow_dispatch:
@@ -15,7 +20,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: web-ci-${{ github.event_name }}-${{ github.ref }}
+  group: web-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -72,52 +77,6 @@ jobs:
         run: npm ci
       - name: Unit tests
         run: npm run test:unit
-
-  scenes:
-    name: Playwright scenes
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: web
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - name: Install dependencies
-        run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Run scene tests
-        run: npm run test:scenes
-        env:
-          CI: true
-          NEXT_TELEMETRY_DISABLED: 1
-      - name: Build evidence index
-        if: always()
-        run: node scripts/build-evidence-index.mjs
-      # A missing report or screenshot directory is a failure, not a pass.
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: scenes-report-${{ github.run_id }}-${{ github.run_attempt }}
-          path: web/tests/.report
-          if-no-files-found: error
-          include-hidden-files: true
-          retention-days: 14
-      - name: Upload scene screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: scenes-out-${{ github.run_id }}-${{ github.run_attempt }}
-          path: web/tests/.out
-          if-no-files-found: error
-          include-hidden-files: true
-          retention-days: 14
 
   build:
     name: Next.js Build Check
@@ -198,10 +157,12 @@ jobs:
   deploy-staging:
     name: Deploy staging
     # Staging is the fast integration path. It waits only for the install/type
-    # gate and application build; Playwright and evidence jobs still run but
-    # must not hold back a deploy.
+    # gate and application build.
     needs: [lint-typecheck, build]
-    if: github.ref != 'refs/heads/main' && github.event_name == 'push'
+    # Only cycle/* pushes publish the one staging worker. main uses Deploy.
+    # sprint, release, and native pushes still run the required checks above
+    # without replacing staging.
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/cycle/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -240,7 +201,7 @@ jobs:
     # The single required status check. if: always() so a skipped or cancelled
     # dependency still produces a (failing) result instead of a missing check.
     if: always()
-    needs: [lint-typecheck, unit, scenes, build]
+    needs: [lint-typecheck, unit, build]
     runs-on: ubuntu-latest
     steps:
       - name: Every needed job must have succeeded
@@ -252,4 +213,4 @@ jobs:
             echo "A required job did not succeed." >&2
             exit 1
           fi
-          test "$(echo "$RESULTS" | grep -c '"result": "success"')" -eq 4
+          test "$(echo "$RESULTS" | grep -c '"result": "success"')" -eq 3

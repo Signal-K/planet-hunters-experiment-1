@@ -4,9 +4,27 @@ import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
 import './globals.css'
 import './loop-screens.css'
 
+const SITE_URL = 'https://playlandnam.space'
+const OG_IMAGE = { url: '/og-image.png', width: 1200, height: 630, alt: PRODUCT_NAME }
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: PRODUCT_NAME,
   description: PRODUCT_DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: PRODUCT_NAME,
+    title: PRODUCT_NAME,
+    description: PRODUCT_DESCRIPTION,
+    url: SITE_URL,
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: PRODUCT_NAME,
+    description: PRODUCT_DESCRIPTION,
+    images: [OG_IMAGE.url],
+  },
   manifest: '/manifest.webmanifest',
   // SSL-322: iOS only honours installed-app chrome via these apple- tags.
   appleWebApp: { capable: true, title: PRODUCT_NAME, statusBarStyle: 'black' },
@@ -51,6 +69,13 @@ export default function RootLayout({
           `}</Script>
         ) : (
           <Script id="sw-dev-cleanup" strategy="beforeInteractive">{`
+            // make up and next dev are development mode. They unregister the
+            // worker and delete Landnam caches, so they cannot prove the
+            // offline PWA. Production (next start on a secure origin) registers
+            // /sw.js. Acceptance: load /game online in landscape (844x390 or
+            // 926x428) until the worker controls the page, disable the network,
+            // reload, and play a local action; restore the network and confirm
+            // the saved state reaches the backend without another mutation.
             // A service worker installed by a prior production/PWA run keeps
             // controlling localhost even after Next switches back to dev.
             // That made branch UI work appear unchanged because the browser
