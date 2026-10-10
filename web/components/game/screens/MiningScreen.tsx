@@ -474,7 +474,27 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         title="Mining Run"
         onBack={() => onBack(cargoRef.current, laserChargesRef.current)}
         glass
-        right={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{help.button}{isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : null}</span>}
+        right={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><button
+          data-testid="mining-guide-btn"
+          onClick={() => setGuideOpen(o => !o)}
+          aria-label="Mining controls guide"
+          aria-expanded={guideOpen}
+          style={{
+            width: 44,
+            height: 44,
+            padding: 0,
+            borderRadius: 8,
+            border: '2px solid var(--ln-bp-ink, #0f2436)',
+            background: 'var(--ln-bp-paper, #fff)',
+            color: 'var(--ln-bp-ink, #0f2436)',
+            boxShadow: '2px 2px 0 var(--ln-bp-blue, #42a6df)',
+            fontFamily: 'var(--ln-font-display)',
+            fontSize: 16,
+            fontWeight: 800,
+            lineHeight: 1,
+            cursor: 'pointer',
+          }}
+        >?</button>{help.button}{isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : null}</span>}
       />
       {help.layer}
 
@@ -554,8 +574,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           data-testid="dev-skip-mining-btn"
           onClick={handleDevSkip}
           style={{
-            position: 'absolute', top: 58, right: 8, zIndex: 999,
-            padding: '3px 8px',
+            position: 'absolute', top: 'calc(var(--ln-topbar-h, 96px) + 8px)', right: 8, zIndex: 25,
+            minWidth: 44, minHeight: 44, padding: '8px 12px',
             background: 'var(--ln-bp-paper)',
             border: '1px solid var(--ln-bp-green)',
             borderRadius: 6,
@@ -571,38 +591,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             SKIP MINING
         </button>
       )}
-
-      {/* KES-282: moved out of the always-visible stats row (which was competing
-          with the mineral/charge readout for attention) into a small standalone
-          corner control — same button, same testid/behavior, lower prominence.
-          The dev-only Skip Mining button sits below it so the two never overlap. */}
-      <button
-        data-testid="mining-guide-btn"
-        onClick={() => setGuideOpen(o => !o)}
-        aria-label="Mining controls guide"
-        aria-expanded={guideOpen}
-        style={{
-          position: 'absolute',
-          top: 8,
-          right: 8,
-          zIndex: 90,
-          width: 44,
-          height: 44,
-          padding: 0,
-          borderRadius: 8,
-          border: '2px solid var(--ln-bp-ink, #0f2436)',
-          background: 'var(--ln-bp-paper, #fff)',
-          color: 'var(--ln-bp-ink, #0f2436)',
-          boxShadow: '2px 2px 0 var(--ln-bp-blue, #42a6df)',
-          fontFamily: 'var(--ln-font-display)',
-          fontSize: 16,
-          fontWeight: 800,
-          lineHeight: 1,
-          cursor: 'pointer',
-        }}
-      >
-        ?
-      </button>
 
       {activeOverlay === 'success' && (
         <div className="mining-success-overlay" data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'flex', alignItems: 'flex-end', padding: 16 }}>

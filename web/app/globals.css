@@ -3472,7 +3472,12 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* The Draconids chip sits under the top controls on phones and beside the
    launchpad in compact landscape instead of over HUB or the launchpad. */
 @media (max-width: 480px) and (orientation: portrait) {
-  .sky-event-wrap[data-testid="sky-event-base"] { top: 152px !important; }
+  .sky-event-wrap[data-testid="sky-event-base"] { top: 168px !important; }
+}
+/* Mining chip clears the title bar (and a wrapped eyebrow) instead of sitting on Back. */
+.mining-screen .sky-event-wrap[data-testid="sky-event-mining"] {
+  top: calc(var(--ln-topbar-h, 96px) + 8px);
+  left: 12px;
 }
 @media (orientation: landscape) and (max-height: 500px) {
   .sky-event-wrap[data-testid="sky-event-base"] { top: 56px !important; left: 300px !important; }

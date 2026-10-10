@@ -1,6 +1,6 @@
 .root { --mission-paper: var(--ln-blueprint-paper-2); --mission-paper-bright: var(--ln-blueprint-paper); --mission-paper-muted: var(--ln-blueprint-bg); --mission-ink: var(--ln-blueprint-ink); --mission-green: var(--ln-ok); position:absolute; inset:0; overflow:hidden; color:var(--mission-ink); isolation:isolate; }
 .landscape { position:absolute; inset:0; z-index:0; overflow:hidden; filter:saturate(1.08) contrast(1.03); }
-.launchpad,.hangar { position:absolute; z-index:1; bottom:19%; }.launchpad { left:4%; width:31%; aspect-ratio:172/118; }.hangar { right:2%; width:38%; aspect-ratio:226/116; }.launchpad :global(.earth-base-flat-sprite),.hangar :global(.earth-base-flat-sprite){width:100%;height:100%;object-fit:contain;}
+.launchpad,.hangar { position:absolute; z-index:1; bottom:19%; }.launchpad { right:2%; left:auto; width:31%; aspect-ratio:172/118; }.hangar { left:4%; right:auto; width:38%; aspect-ratio:226/116; }.launchpad :global(.earth-base-flat-sprite),.hangar :global(.earth-base-flat-sprite){width:100%;height:100%;object-fit:contain;}
 .header { position:absolute; inset:16px 32px auto; z-index:3; display:flex; align-items:center; gap:8px; pointer-events:none; }.header[data-dev-launcher='true'] { top:40px; }.back,.title { border:3px solid var(--mission-ink); background:var(--mission-paper-bright); box-shadow:0 4px 0 color-mix(in srgb,var(--mission-ink) 42%,transparent); }.back { display:grid; place-items:center; width:48px; height:48px; padding:0; border-radius:4px; color:var(--mission-ink); cursor:pointer; pointer-events:auto; }.back svg,.primary svg,.carouselArrow svg,.inlineChoices svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }.title { display:grid; gap:4px; min-width:240px; min-height:48px; padding:8px 12px; border-left-width:7px; border-left-color:var(--mission-green); border-radius:4px; }.title span,.contractIdentity span,.contractCargo > span,.reviewHeading span,.inlineChoices span { font:800 14px/1 var(--ln-font-display); letter-spacing:.14em; text-transform:uppercase; }.title h1 { margin:0; font:800 20px/1 var(--ln-font-display); }
 .help { margin-left:auto; pointer-events:auto; }
 .stage { position:absolute; inset:96px 32px 32px; z-index:2; overflow:hidden; border:3px solid var(--mission-ink); border-radius:8px; background:var(--mission-paper-bright); box-shadow:0 8px 0 color-mix(in srgb,var(--mission-ink) 42%,transparent),0 16px 32px color-mix(in srgb,var(--mission-ink) 24%,transparent); }.primary { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; padding:8px 16px; border:3px solid var(--mission-ink); border-radius:4px; background:var(--mission-green); color:#fff; box-shadow:0 4px 0 color-mix(in srgb,var(--mission-ink) 72%,transparent); font:800 14px var(--ln-font-display); letter-spacing:.12em; text-transform:uppercase; cursor:pointer; }.primary:disabled,.carouselArrow:disabled { opacity:.5; cursor:not-allowed; }.root button:focus-visible { outline:3px solid var(--ln-cyan); outline-offset:3px; }
@@ -60,12 +60,12 @@
 /* SSL-450: at phone width the two choosers stack so labels never run under their arrows. */
 @media (max-width:480px){.inlineChoices{grid-template-columns:1fr;}.inlineChoices span,.inlineChoices strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.inlineChoices > div{grid-template-columns:minmax(0,1fr) auto;padding:4px 8px;}}
 
-/* SSL-375: the Earth base art is the floor. Hangar (workshop) is on the right, pad on the left, and the same rocket rolls between them. */
+/* SSL-375: workshop on the left, pad on the right. The same rocket rolls right onto the pad when the vehicle is built. */
 .launchArt .launchpad,
 .launchArt .hangar { z-index: 2; pointer-events: none; }
-.workshop { position:absolute; z-index:3; top:8px; right:8%; left:auto; bottom:auto; width:auto; height:auto; padding:4px 8px; border:2px solid var(--mission-ink); background:color-mix(in srgb, var(--mission-paper) 88%, transparent); opacity:1; }
+.workshop { position:absolute; z-index:3; top:8px; left:8%; right:auto; bottom:auto; width:auto; height:auto; padding:4px 8px; border:2px solid var(--mission-ink); background:color-mix(in srgb, var(--mission-paper) 88%, transparent); opacity:1; }
 .workshop b { position:static; font:800 14px var(--ln-font-display); letter-spacing:.14em; color:var(--mission-ink); }
 .launchArt > img { transition:left 1.5s ease-in-out; transform:translate(-50%,-50%) rotate(-90deg) scale(.72); }
-.launchArt[data-stage='workshop'] > img { left:72%; }
-.launchArt[data-stage='pad'] > img { left:22%; }
+.launchArt[data-stage='workshop'] > img { left:31%; }
+.launchArt[data-stage='pad'] > img { left:70%; }
 @media (prefers-reduced-motion:reduce){ .launchArt > img { transition:none; } }

@@ -268,7 +268,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
               textAlign: 'left',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 44 }}>
               <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.06em', color: 'var(--ln-text)' }}>
                 {callout.title}
               </span>
@@ -277,7 +277,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 aria-label="Dismiss"
                 onClick={e => { e.stopPropagation(); setCalloutOpen(false) }}
                 style={{
-                  flexShrink: 0, width: 46, height: 46, margin: '-11px -11px -11px 0', border: 'none', cursor: 'pointer',
+                  flex: '0 0 auto', width: 44, height: 44, margin: 0, border: 'none', cursor: 'pointer',
                   background: 'transparent', color: 'var(--ln-text-dim)',
                   display: 'grid', placeItems: 'center', padding: 0,
                 }}
@@ -288,11 +288,12 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             <div style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--ln-text-dim)', marginTop: 4 }}>
               {callout.body}
             </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 8 }}>
             <button
               type="button"
               onClick={e => { e.stopPropagation(); setCalloutOpen(false); callout.onCta() }}
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 2, minHeight: 46, minWidth: 46,
+                display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 44,
                 background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
                 fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
                 letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--hub-mint)',
@@ -306,7 +307,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 data-testid={`building-${kind}-callout-dismiss`}
                 onClick={e => { e.stopPropagation(); setCalloutOpen(false); callout.onDismiss?.() }}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', marginTop: 2, marginLeft: 12, minHeight: 46, minWidth: 46, padding: 0, cursor: 'pointer',
+                  display: 'inline-flex', alignItems: 'center', minHeight: 44, minWidth: 44, padding: 0, cursor: 'pointer',
                   background: 'transparent', border: 'none',
                   fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
                   letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)',
@@ -315,6 +316,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 Dismiss
               </button>
             )}
+            </div>
             {/* Bubble tail — outline triangle with a fill triangle stacked over it */}
             <span style={{
               position: 'absolute', left: tailLeft, top: '100%', transform: 'translateX(-50%)',
