@@ -150,15 +150,13 @@ describe('DebriefScreen own-program outcomes', () => {
       )
     })
 
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-
-    expect(host.textContent).toContain('Your ore · keep or sell')
-    expect(host.textContent).toContain('Needs a Vault')
+    expect(host.textContent).toContain('Mining fee · your program')
+    expect(host.textContent).toContain('Transport fee · return')
+    expect(host.querySelector('[data-testid="debrief-mining-fee"]')?.textContent).toContain('320')
+    expect(host.querySelector('[data-testid="debrief-transport-fee"]')?.textContent).toContain('320')
     expect(host.textContent).toContain('Build a Mineral Vault')
-    expect(host.textContent).toContain('Sell haul')
+    expect(host.textContent).toContain('Collect')
+    expect(host.querySelector('[data-testid="resolve-cargo-btn"]')).toBeNull()
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
@@ -168,7 +166,7 @@ describe('DebriefScreen own-program outcomes', () => {
     root.unmount()
   })
 
-  it('lets a Vault owner switch a free haul from keeping to selling', async () => {
+  it('keeps a Vault owner free haul in Earth storage chosen at launch', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
     const onDone = vi.fn()
@@ -190,23 +188,17 @@ describe('DebriefScreen own-program outcomes', () => {
       )
     })
 
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
+    expect(host.textContent).toContain('Destination selected at launch: Earth storage.')
     expect(host.textContent).toContain('Keep haul on Earth')
-
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="debrief-sell"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-    expect(host.textContent).toContain('Sell haul')
+    expect(host.textContent).toContain('Mining fee · your program')
+    expect(host.textContent).toContain('Transport fee · return')
+    expect(host.querySelector('[data-testid="debrief-sell"]')).toBeNull()
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
-    expect(onDone).toHaveBeenCalledWith(0, 0, {}, 'sell')
+    expect(onDone).toHaveBeenCalledWith(0, 0, {}, 'store')
     root.unmount()
   })
 

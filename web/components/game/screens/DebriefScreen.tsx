@@ -343,7 +343,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           {isFreeHaul
             ? willStore
               ? overflowUnits > 0 ? `Store haul · sell ${overflowUnits} over cap` : 'Keep haul on Earth'
-              : `Sell haul · ${formatCurrency(haulMarketValue ?? 0)}`
+              : `Collect ${formatCurrency(haulMarketValue ?? 0)}`
             : delivered
               ? isProgramOperation
                 ? 'Log Program Outcome'
@@ -413,9 +413,17 @@ function CargoDestinationPanel({
   const priorUnits = Math.max(0, storageUsed - haulUnits)
   const cap = storageCapacity > 0 ? storageCapacity : 1
   const segments = Object.entries(cargo).filter(([, n]) => n > 0)
+  const miningFee = Math.round(haulMarketValue * 0.5)
+  const transportFee = haulMarketValue - miningFee
   return (
     <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
       <div className="ln-section-label" style={{ marginBottom: 6 }}>Free Ops haul</div>
+      {haulMarketValue > 0 && (
+        <>
+          <PayRow testId="debrief-mining-fee" label="Mining fee · your program" value={miningFee} />
+          <PayRow testId="debrief-transport-fee" label="Transport fee · return" value={transportFee} />
+        </>
+      )}
       <p style={{ margin: '0 0 12px', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
         No client is owed this haul. Destination selected at launch: {store ? 'Earth storage' : 'sell on Earth return'}.
       </p>
