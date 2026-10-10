@@ -119,7 +119,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const clientOwedUnits = !isFreeHaul && !isTwoLegJob && delivered
     ? Object.values(requiredMaterials).reduce((sum, n) => sum + Math.max(0, n), 0)
     : 0
-  const showLaserCapacitor = !!onBuyLaserCapacitor && !isEarlyMission && !isProgramOperation
+  const showLaserCapacitor = !!onBuyLaserCapacitor && !isProgramOperation
     && (!isFreeHaul || willStore) && (cargoEntries.length > 0 || stashUnits > 0)
 
   return (
