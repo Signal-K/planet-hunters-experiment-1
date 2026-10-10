@@ -89,8 +89,8 @@ export function useEconomyActions(
     })
   }, [setState])
 
-  const abandonMission = useCallback(() => {
-    if (!confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
+  const abandonMission = useCallback((opts?: { confirmed?: boolean }) => {
+    if (!opts?.confirmed && !confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
     // mission_completed has no failure counterpart today — a player who
     // aborts mid-transit (cargo + progress lost, 10% payout penalty) would
     // otherwise just look like a player who never finished, indistinguishable
