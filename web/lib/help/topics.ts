@@ -37,6 +37,15 @@ export const MAX_HELP_CARDS = 4
  * Other screens add their topic here (sibling stories). Nothing opens
  * unprompted: a topic only shows when the player taps the "?".
  */
+const LAUNCH_HELP: HelpTopic = {
+  id: 'launch',
+  title: 'Launch',
+  cards: [
+    { title: 'Workshop, then the pad', body: 'The rocket stands by the Workshop on the Earth base. Confirm and the same rocket rolls to the pad.' },
+    { title: 'Then it flies', body: 'LAUNCH starts the flight. A Free Ops haul and a client contract both leave from this review. The contract was a choice, not a gate.' },
+  ],
+}
+
 export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
   'instrument-hub': {
     id: 'control-station',
@@ -104,6 +113,9 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       { title: 'A run already out', body: 'RESUME jumps back in. SCRUB abandons that run after you confirm. Cargo and laser charges from it are cleared.' },
     ],
   },
+  targets: LAUNCH_HELP,
+  'rocket-buy': LAUNCH_HELP,
+  fab: LAUNCH_HELP,
   missions: {
     id: 'contracts',
     title: 'Contracts',
