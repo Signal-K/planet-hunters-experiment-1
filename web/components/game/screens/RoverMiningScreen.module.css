@@ -65,8 +65,9 @@
   .drillReadout .kicker, .drillReadout p:not(.mineSiteStatus), .drillReadout li:not(:last-child) { display: none; }
   .drillReadout li { padding: 6px 8px; }
   .readoutHeading strong { font-size: 12px; }
-  /* SSL-404: one-row drawer sits beside the drive pad, not across the field. */
-  .sandboxDock { position: static; right: auto; bottom: auto; left: auto; width: auto; max-height: none; overflow: visible; }
+  /* SSL-404: one-row drawer sits on the drive pad. Expanded, it scrolls
+     inside the field so a structure card is never parked above the viewport. */
+  .sandboxDock { position: static; right: auto; bottom: auto; left: auto; width: auto; max-height: min(46vh, 360px); overflow: auto; }
   .fieldHotbar { right: 8px; bottom: 8px; left: 8px; gap: 8px; }
 }
 
