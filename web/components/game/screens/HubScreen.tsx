@@ -420,8 +420,12 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     }
   }
 
+  // The phone dock lays its actions out two per row, so a fifth action adds a row. The scene lifts by the same
+  // amount (HubLayout.module.css) so the dock never sits on the buildings' hit boxes.
+  const dockRows = Math.ceil(((player.freeOperations ? 5 : 4)) / 2)
+
   return (
-    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-dock-rows={dockRows} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
       {/* Base stays mounted at its authored camera frame while a tray is open.
           The former 200%-tall slider moved the whole world before revealing

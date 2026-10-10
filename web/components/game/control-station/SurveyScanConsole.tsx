@@ -61,7 +61,7 @@ export default function SurveyScanConsole({ player, targets, onStart, onResolve 
               </span>
             </div>
           )}
-          <div role="group" aria-label="Bodies to scan" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+          <div role="group" aria-label="Bodies to scan" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {bodies.map(target => {
               const done = !!charted[target.id]
               const active = player.activeScan?.targetId === target.id

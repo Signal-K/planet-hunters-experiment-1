@@ -264,7 +264,9 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
               boxShadow: '0 24px 48px var(--ln-overlay)',
               opacity: calloutOpen ? 1 : 0,
               pointerEvents: calloutOpen ? 'auto' : 'none',
-              transition: 'opacity 160ms ease, transform 160ms ease',
+              // A closed callout is hidden, not just transparent: its buttons must leave the tab order and hit-testing.
+              visibility: calloutOpen ? 'visible' : 'hidden',
+              transition: calloutOpen ? 'opacity 160ms ease, transform 160ms ease' : 'opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms',
               textAlign: 'left',
             }}
           >
