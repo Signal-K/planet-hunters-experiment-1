@@ -6,6 +6,7 @@
 .gold { border-color: var(--ln-cyan-border); }
 .gold .tier { color: var(--ln-cyan); }
 .silver .tier { color: var(--ln-text-muted); }
+.share { min-height: 44px; min-width: 44px; padding: 0 12px; border: 1px solid var(--ln-hairline-strong); border-radius: 8px; background: transparent; color: var(--ln-text); font-family: var(--ln-font-mono); font-size: 14px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
 .badge[data-wsw-tone] { border-left-width: 6px; }
 .badge[data-wsw-tone='blue'] { border-left-color: var(--ln-bp-blue); }
 .badge[data-wsw-tone='sky'] { border-left-color: var(--ln-cyan); }

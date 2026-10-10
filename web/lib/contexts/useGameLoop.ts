@@ -261,6 +261,7 @@ function grantSkyBadges(player: Player, kind: SkyActivityKind, at: number): Play
     if (reportedBadges.has(key)) continue
     reportedBadges.add(key)
     captureGameEvent('badge_earned', { event_id: badge.eventId, tier: badge.tier, activity: kind })
+    enqueueSurvey('lnm_badge_earned', 4000)
   }
   return next
 }
@@ -784,6 +785,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // otherwise moves with no feedback at the place the player earned it.
     if (!stateRef.current.player.tessClassifications?.[subjectId]) {
       addToast(`Transit classified. +${RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION} research XP`, 'ok')
+      enqueueSurvey('lnm_citizen_task_done', 3000)
     }
 
     setState(s => {
@@ -878,6 +880,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
     if (!stateRef.current.player.asteroidClassifications?.[candidateId]) {
       addToast(`Asteroid candidate classified. +${RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION} research XP`, 'ok')
+      enqueueSurvey('lnm_citizen_task_done', 3000)
     }
 
     setState(s => {
@@ -978,6 +981,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const answeredBefore = Object.keys(stateRef.current.player.saturnClassifications?.[candidateId]?.cells ?? {}).length
     if (answeredBefore === 8) {
       addToast('Saturn frame complete. Enceladus survey chart recorded.', 'ok')
+      enqueueSurvey('lnm_citizen_task_done', 3000)
     }
     const userId = pbShared.authStore.record?.id
     // The shared collection is frame-level, while the player-side Cassini
@@ -1363,6 +1367,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         enqueueSurvey('lnm_client_pick', 60_000)
       }
     }
+    if (current.player.freeOperations) enqueueSurvey('lnm_free_ops_first', 5000)
     if (isFirstMissionEver) {
       enqueueSurvey('lnm_m1_complete', 3000)
       enqueueSurvey('lnm_progression_feel', 8000)

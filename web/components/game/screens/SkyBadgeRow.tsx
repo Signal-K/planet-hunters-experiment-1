@@ -1,3 +1,7 @@
+'use client'
+
+import { useState } from 'react'
+import { shareBadge } from '@/lib/share'
 import { getSkyEvent, type PlayerBadge } from '@/lib/data/sky-events'
 import { getWswBadge } from '@/lib/data/wsw-badges'
 import { ORIONIDS_VARIANTS } from '@/lib/orionids/theme'
@@ -9,6 +13,7 @@ import styles from './SkyBadgeRow.module.css'
 const ORIONIDS_BADGE = ORIONIDS_VARIANTS.blueprint.badgeSmall
 
 export function SkyBadgeRow({ badges, className }: { badges?: Record<string, PlayerBadge>; className?: string }) {
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const earned = Object.values(badges ?? {})
     .filter(badge => getSkyEvent(badge.eventId) || getWswBadge(badge.eventId))
     .sort((a, b) => a.earnedAt - b.earnedAt)
@@ -17,6 +22,7 @@ export function SkyBadgeRow({ badges, className }: { badges?: Record<string, Pla
     <ul className={`${styles.row} ${className ?? ''}`} aria-label="Sky event badges" data-testid="sky-badge-row">
       {earned.map(badge => {
         const wsw = getWswBadge(badge.eventId)
+        const badgeName = wsw?.name ?? getSkyEvent(badge.eventId)?.name ?? ''
         return (
         <li
           key={badge.eventId}
@@ -31,7 +37,18 @@ export function SkyBadgeRow({ badges, className }: { badges?: Record<string, Pla
           )}
           <span className={styles.tier}>{badge.tier === 'gold' ? 'Gold' : 'Silver'}</span>
           {wsw && <span className={styles.tier}>WSW</span>}
-          <span>{wsw?.name ?? getSkyEvent(badge.eventId)?.name}</span>
+          <span>{badgeName}</span>
+          <button
+            type="button"
+            className={styles.share}
+            data-testid="sky-badge-share"
+            onClick={async () => {
+              const result = await shareBadge(badgeName, badge.tier)
+              if (result === 'copied') setCopiedId(badge.eventId)
+            }}
+          >
+            {copiedId === badge.eventId ? 'Link copied' : 'Share'}
+          </button>
         </li>
         )
       })}
