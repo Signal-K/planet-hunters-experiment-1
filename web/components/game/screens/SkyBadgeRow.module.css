@@ -6,3 +6,10 @@
 .gold { border-color: var(--ln-cyan-border); }
 .gold .tier { color: var(--ln-cyan); }
 .silver .tier { color: var(--ln-text-muted); }
+.badge[data-wsw-tone] { border-left-width: 6px; }
+.badge[data-wsw-tone='blue'] { border-left-color: var(--ln-bp-blue); }
+.badge[data-wsw-tone='sky'] { border-left-color: var(--ln-cyan); }
+.badge[data-wsw-tone='green'] { border-left-color: var(--ln-bp-green); }
+.badge[data-wsw-tone='crimson'] { border-left-color: var(--ln-crimson); }
+.badge[data-wsw-tone='dim'] { border-left-color: var(--ln-text-muted); }
+.badge[data-wsw-tone='ink'] { border-left-color: var(--ln-text); }
