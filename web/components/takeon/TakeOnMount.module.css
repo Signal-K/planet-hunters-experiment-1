@@ -3,9 +3,9 @@
   width: 100%;
   min-height: var(--takeon-min-height, 22rem);
   overflow: hidden;
-  border: 1px solid var(--ln-border);
+  border: 1px solid var(--ln-bp-line, var(--ln-border));
   border-radius: var(--ln-r-lg);
-  background: var(--ln-shell);
+  background: var(--ln-bp-bg, var(--ln-shell));
 }
 
 .canvas {
