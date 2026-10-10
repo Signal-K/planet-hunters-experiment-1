@@ -512,6 +512,30 @@ function mergeDiscoveredExoplanetTargets(
   return { ...(remote ?? {}), ...(local ?? {}) }
 }
 
+// Instrument work is append-only too. A classification, a badge, or an
+// instrument launch that exists on either side must survive the merge, or a
+// stale save on the other device erases it from the Mission Log and drops the
+// instrument off the Control Station.
+function mergeKeyed<T>(local: Record<string, T> | undefined, remote: Record<string, T> | undefined): Record<string, T> {
+  return { ...(remote ?? {}), ...(local ?? {}) }
+}
+
+function mergeBadges(local: Player['badges'], remote: Player['badges']): NonNullable<Player['badges']> {
+  const out = { ...(remote ?? {}) }
+  for (const [id, badge] of Object.entries(local ?? {})) {
+    const other = out[id]
+    if (!other || (badge.tier === 'gold' && other.tier !== 'gold')) out[id] = badge
+  }
+  return out
+}
+
+function earliestStamp(local: number | null | undefined, remote: number | null | undefined): number | null | undefined {
+  if (local && remote) return Math.min(local, remote)
+  return local || remote || local
+}
+
+const INSTRUMENT_LAUNCH_FIELDS = ['transitSatelliteLaunchedAt', 'deepSpaceTelescopeLaunchedAt', 'saturnImagerLaunchedAt'] as const
+
 export function mergeRemoteState(current: GameState, remoteState: PartialSave): GameState {
   const merged: GameState = { ...current, ...remoteState } as GameState
 
@@ -596,6 +620,14 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     current.player.discoveredExoplanetTargets,
     remoteState.player?.discoveredExoplanetTargets,
   )
+  merged.player.tessClassifications = mergeKeyed(current.player.tessClassifications, remoteState.player?.tessClassifications)
+  merged.player.asteroidClassifications = mergeKeyed(current.player.asteroidClassifications, remoteState.player?.asteroidClassifications)
+  merged.player.saturnClassifications = mergeKeyed(current.player.saturnClassifications, remoteState.player?.saturnClassifications)
+  merged.player.badges = mergeBadges(current.player.badges, remoteState.player?.badges)
+  for (const field of INSTRUMENT_LAUNCH_FIELDS) {
+    merged.player[field] = earliestStamp(current.player[field], remoteState.player?.[field])
+  }
+  merged.player.deepSpaceTelescopeBuilt = !!(current.player.deepSpaceTelescopeBuilt || remoteState.player?.deepSpaceTelescopeBuilt)
   // Paused missions are independent runs, not a last-write-wins preference.
   // Keep the union so a device that launched another vehicle cannot erase a
   // run parked on the other device between syncs.

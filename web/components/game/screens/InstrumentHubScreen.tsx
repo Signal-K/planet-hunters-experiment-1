@@ -14,12 +14,16 @@ import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
 import SurveyScanConsole from '@/components/game/control-station/SurveyScanConsole'
 import type { Target } from '@/lib/data'
 import { SkyBadgeRow } from './SkyBadgeRow'
+import { skyEventNow } from '@/lib/data/sky-events'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { wswBanner } from '@/lib/wsw'
 import styles from './InstrumentHubScreen.module.css'
 
 interface InstrumentHubScreenProps {
   player: Player
   onBack: () => void
   onInspect: (signal: InstrumentSignal) => void
+  onBuild: () => void
   onSnoozePing?: () => void
   /** Claim the Enceladus plot from the stored survey chart. */
   onClaimSurveyPlot?: () => void
@@ -33,19 +37,21 @@ interface InstrumentHubScreenProps {
  * Control Station. The route id stays `instrument-hub` so existing entry
  * points land here. This is the equipment station, not `player.controlBuilt`.
  */
-export default function InstrumentHubScreen({ player, onBack, onInspect, onClaimSurveyPlot, targets = [], onStartScan, onResolveScan }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild, onClaimSurveyPlot, targets = [], onStartScan, onResolveScan }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [bodyId, setBodyId] = useState('all')
   const help = useHelp('instrument-hub')
   const awaitingFeed = loading && signals.length === 0
+  const now = useMemo(() => skyEventNow(isDevLauncherEnabled()), [])
   const model = useMemo(
     () => buildControlStation({
       player,
       signals,
       bodyId,
       loading: awaitingFeed,
+      now,
     }),
-    [player, signals, bodyId, awaitingFeed],
+    [player, signals, bodyId, awaitingFeed, now],
   )
 
   return (
@@ -64,7 +70,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onClaim
       />
       {help.layer}
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
-        <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} />
+        <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} onBuild={onBuild} banner={wswBanner(player.badges, now)} />
         {onStartScan && onResolveScan && player.freeOperations && (
           <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />
         )}

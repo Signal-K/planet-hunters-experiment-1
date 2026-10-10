@@ -408,6 +408,52 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.tutorial).toBe(false)
   })
 
+  it('keeps local instrument work when a newer remote save has none of it', () => {
+    const merged = mergeRemoteState(
+      local({
+        player: {
+          ...DEFAULT_STATE.player,
+          missionsDone: 4,
+          transitSatelliteLaunchedAt: 1_000,
+          tessClassifications: { 'toi-1': { subjectId: 'toi-1', verdict: 'planet', ranges: [], submittedAt: 2_000 } },
+          badges: { 'rocket-revolution-2026': { eventId: 'rocket-revolution-2026', tier: 'gold', earnedAt: 3_000 } },
+        },
+      }),
+      { player: { missionsDone: 6, transitSatelliteLaunchedAt: null, tessClassifications: {}, badges: {} } },
+    )
+
+    expect(merged.player.missionsDone).toBe(6)
+    expect(merged.player.transitSatelliteLaunchedAt).toBe(1_000)
+    expect(Object.keys(merged.player.tessClassifications ?? {})).toEqual(['toi-1'])
+    expect(merged.player.badges?.['rocket-revolution-2026']?.tier).toBe('gold')
+  })
+
+  it('keeps remote instrument work the local save has not seen, and the better badge tier', () => {
+    const merged = mergeRemoteState(
+      local({
+        player: {
+          ...DEFAULT_STATE.player,
+          missionsDone: 6,
+          badges: { 'saturn-night-2026': { eventId: 'saturn-night-2026', tier: 'silver', earnedAt: 9_000 } },
+        },
+      }),
+      {
+        player: {
+          missionsDone: 6,
+          transitSatelliteLaunchedAt: 500,
+          saturnImagerLaunchedAt: 700,
+          tessClassifications: { 'toi-7': { subjectId: 'toi-7', verdict: 'unsure', ranges: [], submittedAt: 600 } },
+          badges: { 'saturn-night-2026': { eventId: 'saturn-night-2026', tier: 'gold', earnedAt: 8_000 } },
+        },
+      },
+    )
+
+    expect(merged.player.transitSatelliteLaunchedAt).toBe(500)
+    expect(merged.player.saturnImagerLaunchedAt).toBe(700)
+    expect(Object.keys(merged.player.tessClassifications ?? {})).toEqual(['toi-7'])
+    expect(merged.player.badges?.['saturn-night-2026']?.tier).toBe('gold')
+  })
+
   it('re-arms the tutorial flag if a remote record disables it mid-onboarding', () => {
     const merged = mergeRemoteState(local(), {
       player: { missionsDone: 1 },

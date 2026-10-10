@@ -30,7 +30,9 @@ export function useInstrumentSignals(player: Player): {
 
     let cancelled = false
     setLoading(true)
-    Promise.all([
+    // One feed failing must not blank the others: a launched transit
+    // telescope still reports when the Saturn or asteroid fetch is down.
+    Promise.allSettled([
       transitOnline ? fetchReviewableTessCandidates() : Promise.resolve([]),
       deepSpaceOnline ? fetchReviewableAsteroidCandidates() : Promise.resolve([]),
       saturnOnline ? fetchReviewableSaturnCandidates() : Promise.resolve([]),
@@ -38,15 +40,12 @@ export function useInstrumentSignals(player: Player): {
       .then(([tess, asteroids, saturn]) => {
         if (cancelled) return
         setSignals(collectInstrumentSignals({
-          tess,
-          asteroids,
-          saturn,
+          tess: tess.status === 'fulfilled' ? tess.value : [],
+          asteroids: asteroids.status === 'fulfilled' ? asteroids.value : [],
+          saturn: saturn.status === 'fulfilled' ? saturn.value : [],
           player,
           dateKey: instrumentDigestDateKey(),
         }))
-      })
-      .catch(() => {
-        if (!cancelled) setSignals([])
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

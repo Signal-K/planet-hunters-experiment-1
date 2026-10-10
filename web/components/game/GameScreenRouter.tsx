@@ -310,6 +310,7 @@ function ScreenBody({
           onStartScan={game.startSurveyScan}
           onResolveScan={game.resolveSurveyScan}
           onBack={() => game.goBack()}
+          onBuild={() => game.go('build')}
           onInspect={signal => {
             setInspectSignal(signal)
             game.go(signal.inspectorScreen)

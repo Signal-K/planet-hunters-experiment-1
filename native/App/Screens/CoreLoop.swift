@@ -12,6 +12,7 @@ struct MissionsScreen: View {
         let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
         ScreenFrame(title: "Mission board", back: { store.go(.hub) }) {
             Eyebrow(text: store.player.freeOperations ? "Free Operations · client work" : "Guided contracts")
+            WorldSpaceWeekBanner(banner: WorldSpaceWeek.banner(badges: store.player.badges, now: store.now))
             if entries.isEmpty {
                 Panel {
                     VStack(alignment: .leading, spacing: 8) {
@@ -21,7 +22,7 @@ struct MissionsScreen: View {
                     }
                 }
             }
-            ForEach(entries) { e in MissionCard(entry: e, catalog: store.catalog) {
+            ForEach(entries) { e in MissionCard(entry: e, catalog: store.catalog, wsw: WorldSpaceWeek.chips(for: e.mission, badges: store.player.badges, now: store.now)) {
                 store.pickMission(e.id)
             } onPathway: { archiveFocus = "mission:\(e.id)"; showArchive = true } }
             PrimaryButton(title: "Archive · pathways and unlocks") { archiveFocus = nil; showArchive = true }
@@ -34,6 +35,7 @@ struct MissionsScreen: View {
 struct MissionCard: View {
     let entry: MissionBoard.Entry
     let catalog: Catalog
+    let wsw: [WorldSpaceWeek.Chip]
     let onTake: () -> Void
     let onPathway: () -> Void
 
@@ -55,6 +57,7 @@ struct MissionCard: View {
                     Text(m.requires.minerals.sorted { $0.key < $1.key }.map { "\($0.value) \(Minerals.byId[$0.key]?.name ?? $0.key)" }.joined(separator: ", ")).font(AppFont.body(14))
                 }
                 if m.payout.francs > 0 { Text(Economy.format(francs: m.payout.francs)).font(AppFont.display(16)).foregroundStyle(Theme.teal) }
+                WorldSpaceWeekChips(chips: wsw)
                 if entry.unlocked {
                     PrimaryButton(title: "Take contract", action: onTake)
                 } else {
