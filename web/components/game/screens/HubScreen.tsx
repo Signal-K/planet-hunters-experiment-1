@@ -21,7 +21,7 @@ import { EARTH_BASE_WIDE } from '@/lib/scene/compositions'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
-import { LAUNCHPAD_UPGRADE_COST, MISSIONS, missionTypePrimer, type SubsurfaceRoomId } from '@/lib/data'
+import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, MISSIONS, missionTypePrimer, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
@@ -188,7 +188,7 @@ interface HubScreenProps {
   onFocusBuilding: (b: string) => void
   onOpenScene: (s: Screen) => void
   onDismissHubPrompt?: (key: HubPromptKey) => void
-  onUpgradeLaunchpad?: () => void
+  onUpgradeBuilding?: (id: string) => void
   onExcavateSubsurface?: () => void
   onExcavateSubsurfaceUnavailable?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
@@ -198,7 +198,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -215,7 +215,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     const operation = missionTypePrimer(mission).label
     return target ? `${operation} → ${target}` : operation
   }
-  const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
+  const [upgradingBuilding, setUpgradingBuilding] = useState<UpgradableBuildingId | null>(null)
   const [opsOpen, setOpsOpen] = useState(false)
   const help = useHelp('hub')
   const { signals } = useInstrumentSignals(player)
@@ -513,7 +513,12 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 // can't run off the edge of the scene.
                 const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
-                return <Building key={kind} {...building} hitH={HIT_H[kind] ?? 60} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
+                // In Edit mode a tap on an upgradable building opens its upgrade rail
+                // instead of navigating into the building.
+                const editable = editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind)
+                  ? { ...building, onClick: () => setUpgradingBuilding(kind) }
+                  : building
+                return <Building key={kind} {...editable} hitH={HIT_H[kind] ?? 60} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
               })}
               <Building
                 kind="market"
@@ -584,16 +589,26 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       </div>
       {!subsurface && <SkyBadgeRow badges={player.badges} className={layoutStyles.badges} />}
 
-      {confirmingLaunchpadUpgrade && onUpgradeLaunchpad && (
-        <ActionConfirmBar
-          eyebrow="Upgrade"
-          title="Upgrade Launchpad"
-          description={`Spend ${formatCurrency(LAUNCHPAD_UPGRADE_COST)} to permanently upgrade the launchpad. This can't be undone.`}
-          confirmLabel={`Confirm Upgrade (${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })})`}
-          onConfirm={() => { onUpgradeLaunchpad(); setConfirmingLaunchpadUpgrade(false) }}
-          onDismiss={() => setConfirmingLaunchpadUpgrade(false)}
-        />
-      )}
+      {upgradingBuilding && onUpgradeBuilding && (() => {
+        const level = buildingLevel(player, upgradingBuilding)
+        const cost = upgradeCost(upgradingBuilding, level)
+        const name = BUILDING_NAMES[upgradingBuilding]
+        const effects = BUILDING_LEVEL_EFFECTS[upgradingBuilding]
+        const maxed = cost === null
+        return (
+          <ActionConfirmBar
+            eyebrow={maxed ? `Level ${level} of ${MAX_BUILDING_LEVEL}` : `Level ${level} to ${level + 1}`}
+            title={`Upgrade ${name}`}
+            description={maxed
+              ? `${effects[level - 1]}. Fully upgraded.`
+              : `Now: ${effects[level - 1]}. Next: ${effects[level]}. ${player.francs < cost ? `Needs ${formatCurrency(cost - player.francs)} more. ` : ''}Upgrades are permanent.`}
+            confirmLabel={maxed ? 'Max level' : `Upgrade (${formatCurrency(cost, { compact: true })})`}
+            confirmDisabled={maxed || player.francs < cost}
+            onConfirm={() => { onUpgradeBuilding(upgradingBuilding); setUpgradingBuilding(null) }}
+            onDismiss={() => setUpgradingBuilding(null)}
+          />
+        )
+      })()}
       {/* Bottom dock — rebuilt 2026-08-21 (KES-226) as a docked sheet, not a
           floating pill row (see DockIconBtn/DockPrimaryBtn doc comment for
           why). It remains available during onboarding so the tutorial can
@@ -669,8 +684,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                       {player.placed.includes('launchpad') && (
                         <DockIconBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onFocusBuilding('hangar')} />
                       )}
-                      {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                        <DockIconBtn icon={<UpgradeGlyph />} label="UPGRADE" onClick={() => setConfirmingLaunchpadUpgrade(true)} />
+                      {player.placed.includes('launchpad') && buildingLevel(player, 'launchpad') < MAX_BUILDING_LEVEL && onUpgradeBuilding && (
+                        <DockIconBtn icon={<UpgradeGlyph />} label="UPGRADE" onClick={() => setUpgradingBuilding('launchpad')} />
                       )}
                     </>
                   )}

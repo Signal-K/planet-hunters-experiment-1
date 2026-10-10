@@ -174,6 +174,7 @@ export function feasibleTargetsFor(
   missionsDone: number,
   launchpadUpgraded = false,
   unlockedSkillNodes: string[] = [],
+  launchpadLevel = 1,
 ): Target[] {
   const deliveryTarget = mission.deliveryTargetId
     ? targets.find(target => target.id === mission.deliveryTargetId) ?? null
@@ -186,6 +187,7 @@ export function feasibleTargetsFor(
       deliveryTarget,
       missionsDone,
       launchpadUpgraded,
+      launchpadLevel,
       parts,
       unlockedSkillNodes,
     })
