@@ -3,12 +3,12 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
-import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, SUBSURFACE_EXCAVATE_COST, trainingCoachSteps } from '@/lib/data'
-import { agencyTrainingStage, freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
+import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, SUBSURFACE_EXCAVATE_COST, type CraftingRecipe } from '@/lib/data'
+import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
-import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 import { formatCurrency } from '@/lib/format'
+import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 // IntroScreen and HubScreen are the two most likely first paints (cold start
 // and post-onboarding default), so they stay in the main bundle. Every other
 // screen below is code-split with next/dynamic — the switch below only ever
@@ -30,6 +30,7 @@ const SkillTreeScreen = dynamic(() => import('@/components/game/screens/SkillTre
 const LaunchpadScreen = dynamic(() => import('@/components/game/screens/LaunchpadScreen'), { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(() => import('@/components/game/screens/InstrumentHubScreen'), { loading: ScreenLoading })
 const TessDiscoveryScreen = dynamic(() => import('@/components/game/screens/TessDiscoveryScreen'), { loading: ScreenLoading })
+const SaturnStormSearchScreen = dynamic(() => import('@/components/game/screens/SaturnStormSearchScreen'), { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(() => import('@/components/game/screens/AsteroidDiscoveryScreen'), { loading: ScreenLoading })
 const SurfaceOpsScreen = dynamic(() => import('@/components/game/screens/SurfaceOpsScreen'), { loading: ScreenLoading })
 const AcademyScreen = dynamic(() => import('@/components/game/screens/AcademyScreen'), { loading: ScreenLoading })
@@ -42,11 +43,15 @@ import { dismissHubPrompt } from '@/lib/hub-prompts'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import {
   DEEP_SPACE_TELESCOPE_INSTRUMENT_ID,
+  SATURN_IMAGER_INSTRUMENT_ID,
   TRANSIT_TELESCOPE_INSTRUMENT_ID,
   instrumentDigestDateKey,
   markInstrumentDigestNotified,
 } from '@/lib/systems/InstrumentFeedSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
+import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
+import { surfaceForScreen } from '@/lib/screen-layouts'
+import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
 
 export const VALID_SCREENS = new Set<Screen>([
@@ -57,6 +62,7 @@ export const VALID_SCREENS = new Set<Screen>([
   'surface-ops',
   'academy',
   'asteroid-discovery',
+  'saturn-storm-search',
   'instrument-hub',
   'mission-history',
   'narrative-ledger',
@@ -69,7 +75,7 @@ export const VALID_SCREENS = new Set<Screen>([
 type ScreenContentProps = {
   screen: Screen
   game: ReturnType<typeof useGame>
-  hasCoach: boolean
+  onboardingActive: boolean
   /** Overrides HangarScreen's onBack; falls back to the remembered entry scene. */
   onBackFromHangar?: () => void
 }
@@ -78,7 +84,11 @@ type ScreenContentProps = {
 export function ScreenContent(props: ScreenContentProps) {
   return (
     <SceneTransition sceneKey={props.screen}>
-      <ScreenBody {...props} />
+      {/* SSL-35 / SSL-452: every screen renders inside the shared frame,
+          labelled with the layout type its route maps to in GAME_ROUTES. */}
+      <SurfaceLayout surface={surfaceForScreen(props.screen)}>
+        <ScreenBody {...props} />
+      </SurfaceLayout>
     </SceneTransition>
   )
 }
@@ -86,11 +96,13 @@ export function ScreenContent(props: ScreenContentProps) {
 function ScreenBody({
   screen,
   game,
-  hasCoach,
+  onboardingActive,
   onBackFromHangar,
 }: ScreenContentProps) {
   // Launch sequence state lives here so it's scoped to the fab screen
-  const [launchPending, setLaunchPending] = useState(false)
+  // Dev-only: `?launchscene=1` mounts the launch sequence so it can be rendered headless.
+  const [launchPending, setLaunchPending] = useState(() =>
+    process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('launchscene'))
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
   const handleLaunch = useCallback(() => setLaunchPending(true), [])
   const handleLaunchComplete = useCallback(() => {
@@ -119,23 +131,13 @@ function ScreenBody({
     ? game.catalog.targets.find(t => t.id === game.mission!.targetId)?.name
     : undefined
 
-  // Derive the coach step for coachManual (needed by AssemblyScreen)
-  const coachSteps = !game.tutorial || game.player.freeOperations ? [] : trainingCoachSteps(agencyTrainingStage(game.player))
-  // An active run always outranks onboarding copy. A player returning to an
-  // in-flight mission must see the resume affordance, not a fresh-contract
-  // coach card that routes them back to mission creation.
-  const coach = game.player.activeMission
-    ? null
-    : coachSteps.find(s => s.screen === screen && !game.doneSteps[s.id]) ?? null
   // Flight Plan supersedes the retired coach sequence. Keep the contextual
   // mining seam tied to the active try rather than the legacy coach state.
   const trainingMiningTry = currentTrainingTry(game.player.flightPlan) === 'mining'
 
-  // Market is a Free Ops feature — a player without freeOperations landing
-  // here directly (bookmarked URL, back/forward) shouldn't see a locked
-  // screen render at all.
+  // The Exchange is a permanent Earth Base building the player can tap at any
+  // stage (SSL-477), so Market is no longer gated on freeOperations.
   useEffect(() => {
-    if (screen === 'market' && !game.player.freeOperations) game.go('hub')
     // Refining is commissioned at an approved off-world site. An old save
     // that contains a Base refinery remains readable, but no unbuilt player
     // can enter the retired Earth-refinery screen.
@@ -157,7 +159,10 @@ function ScreenBody({
   // `initialSubsurface` prop used to.
   useEffect(() => {
     if (screen === 'hub-subsurface') game.setSubsurfaceView(true)
-    else if (screen === 'hub') game.setSubsurfaceView(false)
+    // Any other screen except the Mission Log tray (which sits over whichever
+    // half of the Base is showing) clears it, so a stale flag from a visit to
+    // Subsurface can't leak into /game/launchpad (SSL-476).
+    else if (screen !== 'mission-history') game.setSubsurfaceView(false)
   }, [screen, game.setSubsurfaceView])
 
   switch (screen) {
@@ -176,7 +181,6 @@ function ScreenBody({
       return (
         <BuildPlaceScreen
           onBack={() => game.goBack()}
-          hasCoach={hasCoach}
           player={{
             francs: game.player.francs,
             stash: game.player.stash,
@@ -218,7 +222,7 @@ function ScreenBody({
         <HubScreen
           player={game.player}
           rocketVariant={rocketModelForConfig(game.rocket).tier >= 2 ? 'prospector' : 'explorer'}
-          hasCoach={hasCoach}
+          onboardingActive={onboardingActive}
           onOpenScene={s => {
             if (s === 'missions') { game.goToMissions(); return }
             if (s === 'launchpad') { game.openLaunchpad(); return }
@@ -287,6 +291,7 @@ function ScreenBody({
                 records={game.player.completedMissions ?? []}
                 clients={game.catalog.clients}
                 targets={game.catalog.targets}
+                missions={game.catalog.missions}
                 player={game.player}
                 onBack={() => game.goBack('hub')}
               />
@@ -300,6 +305,10 @@ function ScreenBody({
       return (
         <InstrumentHubScreen
           player={game.player}
+          onClaimSurveyPlot={game.claimSaturnSurveyTerritory}
+          targets={game.catalog.targets}
+          onStartScan={game.startSurveyScan}
+          onResolveScan={game.resolveSurveyScan}
           onBack={() => game.goBack()}
           onInspect={signal => {
             setInspectSignal(signal)
@@ -308,8 +317,12 @@ function ScreenBody({
           onSnoozePing={() => {
             const dateKey = instrumentDigestDateKey()
             game.setPlayer(player => markInstrumentDigestNotified(
-              markInstrumentDigestNotified(player, TRANSIT_TELESCOPE_INSTRUMENT_ID, dateKey),
-              DEEP_SPACE_TELESCOPE_INSTRUMENT_ID,
+              markInstrumentDigestNotified(
+                markInstrumentDigestNotified(player, TRANSIT_TELESCOPE_INSTRUMENT_ID, dateKey),
+                DEEP_SPACE_TELESCOPE_INSTRUMENT_ID,
+                dateKey,
+              ),
+              SATURN_IMAGER_INSTRUMENT_ID,
               dateKey,
             ))
           }}
@@ -331,6 +344,7 @@ function ScreenBody({
           onOpenProgram={game.openLaunchpad}
           onSubmit={game.submitTessClassification}
           onChooseTarget={game.chooseSatelliteTarget}
+          onReplayTraining={currentTrainingTry(game.player.flightPlan) === 'scan' ? () => game.replayTrainingTry('scan') : undefined}
         />
       )
 
@@ -346,6 +360,18 @@ function ScreenBody({
         />
       )
 
+    case 'saturn-storm-search':
+      return (
+        <SaturnStormSearchScreen
+          player={game.player}
+          inspectSubjectId={inspectSignal?.kind === 'saturn' ? inspectSignal.id : undefined}
+          onBack={() => game.goBack()}
+          onLaunchImager={() => game.go('launchpad')}
+          onSubmit={game.submitSaturnClassification}
+          onClaimTerritory={game.claimSaturnSurveyTerritory}
+        />
+      )
+
     case 'missions':
     case 'targets':
     case 'rocket-buy':
@@ -354,9 +380,6 @@ function ScreenBody({
         <MissionSetupRoutes
           screen={screen}
           game={game}
-          hasCoach={hasCoach}
-          coachManual={coach?.manual ?? false}
-          deliveryTargetName={deliveryTargetName}
           rocketDisplay={rocketDisplay}
           launchPending={launchPending}
           onTransferToLaunchpad={game.onTransferToLaunchpad}
@@ -376,9 +399,7 @@ function ScreenBody({
         <MissionOperationRoutes
           screen={screen}
           game={game}
-          hasCoach={hasCoach}
           trainingMiningTry={trainingMiningTry}
-          coachManual={coach?.manual ?? false}
           transitTarget={transitTarget}
           debriefOriginTarget={debriefOriginTarget}
           deliveryTargetName={deliveryTargetName}
@@ -418,6 +439,26 @@ function ScreenBody({
           onBack={() => game.goBack()}
           onOpenMissions={() => game.go('missions')}
           clientId={game.player.lastClient}
+          placedStructures={game.player.placed}
+          fieldKits={game.player.fieldKits ?? {}}
+          onBuildRecipe={(recipe: CraftingRecipe) => {
+            if (recipe.producedAt === 'field') return game.buildFieldKit(recipe.id)
+            if (recipe.producedAt === 'earth-base') {
+              const kind = recipe.id.replace(/^earth-/, '')
+              const structure = game.catalog.structures.find(s => s.id === kind)
+              const occupied = new Set(Object.values(game.player.placementPlots ?? {}))
+              if (game.player.placed.includes('launchpad') && game.player.placementPlots?.launchpad == null) occupied.add(0)
+              const plot = [0, 1, 2, 3].find(i => !occupied.has(i))
+              if (plot == null) { game.addToast('Every Base plot is taken.', 'warn'); return false }
+              const placed = game.placeStructure(structure, kind, plot)
+              game.addToast(placed ? `${recipe.name} placed at the Base. It finishes building in a few seconds.` : `${recipe.name} cannot be built yet. Check its unlock and cost.`, placed ? 'ok' : 'warn')
+              return placed
+            }
+            if (recipe.producedAt === 'subsurface') { game.go('hub'); return false }
+            if (recipe.producedAt === 'refinery') { game.go('refinery'); return false }
+            if (recipe.producedAt === 'hangar') { game.go('hangar'); return false }
+            return false
+          }}
         />
       )
 
@@ -467,17 +508,30 @@ function ScreenBody({
         const currentRunKey = game.player.activeMission
           ? (game.player.missionRunId ?? `${game.player.activeMission.id}:${game.player.transitStartedAt ?? 'current'}`)
           : null
+        const activeSettled = !!game.player.activeMission && isSettledMissionRun(game.player, {
+          runId: game.player.missionRunId,
+          missionId: game.player.activeMission.id,
+          targetId: game.targetId,
+          launchedAt: game.player.transitStartedAt,
+        })
         const missionRuns = [
-          ...(game.player.activeMission && currentRunKey ? [{
+          ...(game.player.activeMission && currentRunKey && !activeSettled ? [{
             key: currentRunKey,
             label: game.player.activeMission.label,
             phase: game.player.missionPhase ?? 'transit',
           }] : []),
-          ...(game.player.pausedMissionRuns ?? []).map(run => ({
-            key: run.key,
-            label: run.activeMission.label,
-            phase: run.missionPhase ?? 'transit',
-          })),
+          ...(game.player.pausedMissionRuns ?? [])
+            .filter(run => !isSettledMissionRun(game.player, {
+              runId: run.missionRunId,
+              missionId: run.missionId,
+              targetId: run.targetId,
+              launchedAt: run.transitStartedAt,
+            }))
+            .map(run => ({
+              key: run.key,
+              label: run.activeMission.label,
+              phase: run.missionPhase ?? 'transit',
+            })),
         ]
       return (
         <LaunchpadScreen
@@ -494,7 +548,7 @@ function ScreenBody({
           onOpenHangar={() => game.go('hangar')}
           missionMenuOpen={game.launchpadMissionMenuOpen}
           onMissionMenuOpenChange={game.setLaunchpadMissionMenuOpen}
-          onResumeMission={game.player.activeMission ? () => {
+          onResumeMission={game.player.activeMission && !activeSettled ? () => {
             captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
             enqueueSurvey('lnm_resume_mission', 1200)
             game.go(missionResumeScreen(game.player))
@@ -509,6 +563,9 @@ function ScreenBody({
           }}
           onViewMissionLog={() => game.go('mission-history')}
           onOpenSiloBuild={() => game.go('build')}
+          onOpenControlStation={() => game.go('instrument-hub')}
+          onOpenMarket={() => game.go('market')}
+          onAbandonMission={game.player.activeMission && !activeSettled ? () => game.abandonMission({ confirmed: true }) : undefined}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           hydrated={game.hydrated}

@@ -50,25 +50,27 @@ export {
 } from './launchCamera'
 
 const C = {
-  void: 0x0a0a0c,
+  void: 0x0f2436,
   cyan: 0x70d9ea,
   cyanBright: 0xa3ecf5,
   cyanPress: 0x3fb8cc,
-  amber: 0xf5a623,
+  amber: 0x36c6e2,
   text: 0xe8e8ed,
   hull: 0xd5dde8,
   hullShade: 0x8a96a8,
-  panel: 0x25252a,
-  panel2: 0x303036,
+  panel: 0xdfe9f3,
+  panel2: 0xbcd6ec,
   booster: 0x3a3a42,
-  grass: 0x6fae63,
-  dirt: 0x6f6f4e,
-  dirtDark: 0x4e4e38,
-  mountainFar: 0x7a8a9a,
-  mountainNear: 0x5a6a78,
-  pad: 0x3a3a42,
-  padLite: 0x4a4a54,
-  skyTop: 0x4f9bda,
+  grass: 0xcfe6f2,
+  dirt: 0xe9f1f8,
+  dirtDark: 0xbcd6ec,
+  mountainFar: 0xdbe8f3,
+  mountainNear: 0xbcd6ec,
+  pad: 0xffffff,
+  padLite: 0xdfe9f3,
+  ink: 0x0f2436,
+  shade: 0x42a6df,
+  skyTop: 0x9fd0ee,
   skyHorizon: 0xd5ecf7,
 } as const
 
@@ -193,8 +195,8 @@ export function buildLaunchScene(
   const skyGfx = new Graphics()
   app.stage.addChild(skyGfx)
   const sunGfx = new Graphics()
-  sunGfx.circle(W * 0.82, H * 0.12, Math.min(W, H) * 0.045).fill({ color: 0xffeb96, alpha: 0.95 })
-  sunGfx.circle(W * 0.82, H * 0.12, Math.min(W, H) * 0.09).fill({ color: 0xffeb96, alpha: 0.18 })
+  sunGfx.circle(W * 0.82, H * 0.12, Math.min(W, H) * 0.045).fill({ color: 0xffffff, alpha: 0.95 })
+  sunGfx.circle(W * 0.82, H * 0.12, Math.min(W, H) * 0.09).fill({ color: 0xffffff, alpha: 0.18 })
   app.stage.addChild(sunGfx)
 
   function drawSky(skyT: number) {
@@ -228,6 +230,7 @@ export function buildLaunchScene(
   const padContainer = new Container()
   app.stage.addChild(padContainer)
 
+  // Layered outlined parts (blueprint style): ice hills, paper ground, ink outlines, offset shade.
   const mountains = new Graphics()
   const farPeaks: number[] = [0, layout.groundTop]
   const farHeights = [0.22, 0.34, 0.18, 0.40, 0.26, 0.36, 0.20, 0.32, 0.24]
@@ -235,50 +238,51 @@ export function buildLaunchScene(
     farPeaks.push((W * i) / 8, layout.groundTop - H * farHeights[i] * 0.55)
   }
   farPeaks.push(W, layout.groundTop, W, H, 0, H)
-  mountains.poly(farPeaks).fill(C.mountainFar)
+  mountains.poly(farPeaks).fill(C.mountainFar).stroke({ width: 2, color: C.ink })
   const nearPeaks: number[] = [0, layout.groundTop]
   const nearHeights = [0.14, 0.22, 0.10, 0.26, 0.16, 0.20, 0.12]
   for (let i = 0; i <= 6; i++) {
     nearPeaks.push((W * i) / 6, layout.groundTop - H * nearHeights[i] * 0.42)
   }
   nearPeaks.push(W, layout.groundTop, W, H, 0, H)
-  mountains.poly(nearPeaks).fill(C.mountainNear)
+  mountains.poly(nearPeaks).fill(C.mountainNear).stroke({ width: 2.5, color: C.ink })
   padContainer.addChild(mountains)
 
   const groundGfx = new Graphics()
   groundGfx.rect(0, layout.groundTop, W, layout.groundHeight + 4).fill(C.dirt)
   groundGfx.rect(0, layout.groundTop, W, 14).fill(C.grass)
-  groundGfx.rect(0, layout.groundTop + 14, W, 4).fill(C.dirtDark)
+  groundGfx.moveTo(0, layout.groundTop).lineTo(W, layout.groundTop).stroke({ width: 3, color: C.ink })
+  groundGfx.moveTo(0, layout.groundTop + 14).lineTo(W, layout.groundTop + 14).stroke({ width: 1.5, color: C.dirtDark })
   const padW = Math.min(W * 0.38, 320)
   const padX = W / 2 - padW / 2
-  groundGfx.rect(padX - 18, layout.padDeckY - 4, padW + 36, 22).fill(C.dirtDark)
-  groundGfx.rect(padX, layout.padDeckY - 10, padW, 20).fill(C.pad)
-  groundGfx.rect(padX, layout.padDeckY - 12, padW, 3).fill(C.padLite)
-  groundGfx.rect(W / 2 - 16, layout.padDeckY - 4, 32, 22).fill(0x121214)
-  groundGfx.rect(padX + 12, layout.padDeckY - 10, 14, 5).fill({ color: C.amber, alpha: 0.7 })
-  groundGfx.rect(padX + padW - 26, layout.padDeckY - 10, 14, 5).fill({ color: C.amber, alpha: 0.7 })
+  groundGfx.rect(padX - 18 + 4, layout.padDeckY - 4 + 4, padW + 36, 22).fill({ color: C.shade, alpha: 0.5 })
+  groundGfx.rect(padX - 18, layout.padDeckY - 4, padW + 36, 22).fill(C.dirtDark).stroke({ width: 2.5, color: C.ink })
+  groundGfx.rect(padX, layout.padDeckY - 10, padW, 20).fill(C.pad).stroke({ width: 2.5, color: C.ink })
+  groundGfx.rect(W / 2 - 16, layout.padDeckY - 4, 32, 22).fill(C.void).stroke({ width: 2, color: C.ink })
+  groundGfx.rect(padX + 12, layout.padDeckY - 10, 14, 5).fill({ color: C.amber, alpha: 0.9 })
+  groundGfx.rect(padX + padW - 26, layout.padDeckY - 10, 14, 5).fill({ color: C.amber, alpha: 0.9 })
   padContainer.addChild(groundGfx)
 
   const towerGfx = new Graphics()
   function drawTower(x: number, height: number, armDir: 1 | -1) {
     const top = layout.padDeckY - height
-    towerGfx.rect(x - 5, top, 10, height).fill(C.panel)
+    towerGfx.rect(x - 5, top, 10, height).fill(C.panel).stroke({ width: 2, color: C.ink })
     for (let y = top + 16; y < layout.padDeckY - 8; y += 18) {
-      towerGfx.rect(x - 14, y, 28, 2).fill(C.panel2)
+      towerGfx.rect(x - 14, y, 28, 3).fill(C.panel2).stroke({ width: 1.5, color: C.ink })
     }
-    towerGfx.rect(x, top + height * 0.38, armDir * 36, 4).fill(C.panel2)
-    towerGfx.rect(x, top + height * 0.62, armDir * 28, 3).fill(C.panel2)
-    towerGfx.circle(x, top - 3, 3).fill({ color: C.amber, alpha: 0.9 })
+    towerGfx.rect(x, top + height * 0.38, armDir * 36, 5).fill(C.panel2).stroke({ width: 1.5, color: C.ink })
+    towerGfx.rect(x, top + height * 0.62, armDir * 28, 4).fill(C.panel2).stroke({ width: 1.5, color: C.ink })
+    towerGfx.circle(x, top - 3, 4).fill(C.amber).stroke({ width: 1.5, color: C.ink })
   }
   drawTower(layout.towerLeftX, layout.towerHeight, 1)
   drawTower(layout.towerRightX, layout.towerHeight, -1)
   padContainer.addChild(towerGfx)
 
   const gear = new Graphics()
-  gear.circle(layout.towerLeftX - 28, layout.padDeckY - 18, 14).fill(C.panel)
-  gear.circle(layout.towerLeftX - 28, layout.padDeckY - 18, 10).fill(C.panel2)
-  gear.rect(layout.towerRightX + 16, layout.padDeckY - 28, 22, 28).fill(C.panel)
-  gear.rect(layout.towerRightX + 18, layout.padDeckY - 26, 18, 4).fill({ color: C.cyan, alpha: 0.4 })
+  gear.circle(layout.towerLeftX - 28, layout.padDeckY - 18, 14).fill(C.panel).stroke({ width: 2, color: C.ink })
+  gear.circle(layout.towerLeftX - 28, layout.padDeckY - 18, 8).fill(C.panel2).stroke({ width: 1.5, color: C.ink })
+  gear.rect(layout.towerRightX + 16, layout.padDeckY - 28, 22, 28).fill(C.panel).stroke({ width: 2, color: C.ink })
+  gear.rect(layout.towerRightX + 18, layout.padDeckY - 26, 18, 4).fill({ color: C.cyan, alpha: 0.8 })
   padContainer.addChild(gear)
 
   const cloudContainer = new Container()
@@ -393,21 +397,24 @@ export function buildLaunchScene(
       // Sprite sheets resolve asynchronously. Cypress can advance away from
       // the launch scene before this continuation runs, which removes the
       // root from the stage and made getChildIndex throw during M1/visual QA.
-      const rootIndex = app.stage.children.indexOf(rocketRoot)
+      const stage = app.stage
+      if (!stage) return
+      const rootIndex = stage.children.indexOf(rocketRoot)
       if (rootIndex < 0) return
       const at = rootIndex + 1
-      app.stage.addChildAt(padFx.container, at)
-      app.stage.addChildAt(sepFx.container, at + 1)
+      stage.addChildAt(padFx.container, at)
+      stage.addChildAt(sepFx.container, at + 1)
     }
   }
   void loadLaunchSheets(variant).then(mountStack)
 
   const hudStyle = new TextStyle({
     fontFamily: '"Oxanium", "Turret Road", monospace',
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: '800',
-    fill: C.cyan,
-    letterSpacing: 2,
+    fill: C.ink,
+    stroke: { color: 0xffffff, width: 4 },
+    letterSpacing: 1.2,
   })
   const destLabel = new Text({ text: `TRANSIT → ${opts.targetName.toUpperCase()}`, style: hudStyle })
   destLabel.anchor.set(0.5, 0)
@@ -418,7 +425,7 @@ export function buildLaunchScene(
 
   const shipLabel = new Text({
     text: opts.rocketName.toUpperCase(),
-    style: new TextStyle({ ...hudStyle, fill: C.text, fontSize: 8, letterSpacing: 1.5 }),
+    style: new TextStyle({ ...hudStyle, fill: C.ink, fontSize: 14, letterSpacing: 1.2 }),
   })
   shipLabel.anchor.set(0.5, 1)
   shipLabel.x = W / 2
@@ -428,7 +435,7 @@ export function buildLaunchScene(
 
   const phaseLabel = new Text({
     text: 'AUTOMATED COUNTDOWN',
-    style: new TextStyle({ ...hudStyle, fill: C.text, fontSize: 9, letterSpacing: 1.8 }),
+    style: new TextStyle({ ...hudStyle, fill: C.ink, fontSize: 14, letterSpacing: 1.2 }),
   })
   phaseLabel.anchor.set(0.5, 0)
   phaseLabel.x = W / 2
@@ -436,8 +443,8 @@ export function buildLaunchScene(
   app.stage.addChild(phaseLabel)
 
   const automationLabel = new Text({
-    text: 'ATTITUDE  AUTO  ·  THROTTLE  AUTO  ·  STAGING  AUTO',
-    style: new TextStyle({ ...hudStyle, fill: C.text, fontSize: 7, letterSpacing: 1.1 }),
+    text: 'AUTO ATTITUDE · THROTTLE · STAGING',
+    style: new TextStyle({ ...hudStyle, fill: C.ink, fontSize: 14, letterSpacing: 0.4 }),
   })
   automationLabel.anchor.set(0.5, 0)
   automationLabel.x = W / 2

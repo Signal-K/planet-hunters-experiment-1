@@ -54,7 +54,7 @@ export class AcademyController extends ScriptBehaviour {
     g.roundRect(w * .06, h * .20, w * .42, h * .46, 8)
       .fill(palette.surfaceBright)
       .stroke({ color: palette.textMuted, width: 2 })
-    g.rect(w * .10, h * .28, w * .34, h * .08).fill(palette.text)
+    g.rect(w * .10, h * .28, w * .34, h * .08).fill(palette.cyan)
     for (let x = w * .13; x < w * .42; x += w * .08) {
       g.rect(x, h * .41, w * .045, h * .20).fill(palette.hairline).stroke({ color: palette.textMuted, width: 1 })
     }

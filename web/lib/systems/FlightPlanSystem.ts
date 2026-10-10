@@ -41,8 +41,16 @@ export function revealFlightPlanHint(progress: FlightPlanProgress | undefined, n
 }
 
 export function completeFlightPlanEvent(progress: FlightPlanProgress | undefined, event: FlightPlanEvent): FlightPlanProgress {
-  const next = startFlightPlan(progress, Date.now())
+  let next = startFlightPlan(progress, Date.now())
   const tryId = EVENT_TRY[event]
+  // SSL-478: a replay of an already-finished try must not outlive the player
+  // moving on. Any other real try event (mining -> cargo -> debrief -> hub)
+  // drops the replay so the objective follows the live plan again.
+  // A replay of a try that was never finished (Menu -> Flight Plan) used to
+  // swallow every other event too, so a finished mining run was never recorded.
+  if (next.replayTry && next.replayTry !== tryId) {
+    next = { ...next, replayTry: undefined, hintShownFor: undefined }
+  }
   if (currentTrainingTry(next) !== tryId) return next
   return { ...next, completed: { ...next.completed, [tryId]: true }, replayTry: undefined, hidden: false, activeSince: undefined, hintShownFor: undefined }
 }

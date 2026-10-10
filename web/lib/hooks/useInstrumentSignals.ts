@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { Player } from '@/lib/game-types'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
+import { fetchReviewableSaturnCandidates } from '@/lib/saturn-subjects'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import {
   collectInstrumentSignals,
@@ -20,7 +21,8 @@ export function useInstrumentSignals(player: Player): {
   useEffect(() => {
     const transitOnline = !!player.freeOperations && !!player.transitSatelliteLaunchedAt
     const deepSpaceOnline = !!player.freeOperations && !!player.deepSpaceTelescopeBuilt
-    if (!transitOnline && !deepSpaceOnline) {
+    const saturnOnline = !!player.freeOperations && !!player.saturnImagerLaunchedAt
+    if (!transitOnline && !deepSpaceOnline && !saturnOnline) {
       setSignals([])
       setLoading(false)
       return
@@ -31,12 +33,14 @@ export function useInstrumentSignals(player: Player): {
     Promise.all([
       transitOnline ? fetchReviewableTessCandidates() : Promise.resolve([]),
       deepSpaceOnline ? fetchReviewableAsteroidCandidates() : Promise.resolve([]),
+      saturnOnline ? fetchReviewableSaturnCandidates() : Promise.resolve([]),
     ])
-      .then(([tess, asteroids]) => {
+      .then(([tess, asteroids, saturn]) => {
         if (cancelled) return
         setSignals(collectInstrumentSignals({
           tess,
           asteroids,
+          saturn,
           player,
           dateKey: instrumentDigestDateKey(),
         }))
@@ -55,6 +59,8 @@ export function useInstrumentSignals(player: Player): {
     player.deepSpaceTelescopeBuilt,
     player.tessClassifications,
     player.asteroidClassifications,
+    player.saturnImagerLaunchedAt,
+    player.saturnClassifications,
     player.transitSatelliteLevel,
     player.deepSpaceTelescopeLevel,
     player.satelliteTargetId,

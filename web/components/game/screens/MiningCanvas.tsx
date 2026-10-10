@@ -8,6 +8,12 @@ import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
 import type { MineralMeta } from '@/lib/data'
 import { ROCKET_ASSETS } from '@/lib/rocket-assets'
+import { prefersReducedMotion } from '@/lib/pixi/launchSpriteAnim'
+import { recoilOffset } from '@/lib/engine/miningJuice'
+import { activeDebrisPreset, debrisRatePerMinute, type DebrisEventPreset } from '@/lib/data/sky-events'
+import { debrisNow } from '@/lib/hooks/useDebrisEvent'
+import { loadOrionidsArt } from '@/lib/orionids/loadArt'
+import { MINING_CANVAS_SKY, miningCanvasIsDark } from '@/lib/orionids/theme'
 
 // Keep every mineral visibly grounded in the mining scene. The authored set
 // covers the most common late-game ores; the neutral iron crystal is a
@@ -22,7 +28,7 @@ const GENERIC_ORE_TEXTURE_ID = 'iron'
 // Tile width must be a multiple of 16 (ridgeH period) for seamless wrapping
 const SURFACE_TILE_W = 320
 
-const SKY_COLOR = 0x03060c
+const SKY_COLOR = MINING_CANVAS_SKY
 
 // Minimum gap between shots: long enough that a mashed tap reads as
 // deliberately ignored (not dropped input), short enough not to feel laggy.
@@ -38,27 +44,27 @@ function buildStars(worldW: number, surfaceY: number): Graphics {
     [0.28, 0.30, 0.8, 0.16], [0.68, 0.62, 1.2, 0.18], [0.04, 0.75, 1.0, 0.12],
   ]
   for (const [fx, fy, r, alpha] of stars) {
-    g.circle(fx * worldW, fy * (surfaceY - 8), r).fill({ color: 0xffffff, alpha })
+    g.circle(fx * worldW, fy * (surfaceY - 8), r).fill({ color: 0x0f2436, alpha })
   }
   return g
 }
 
 function buildSurfaceTile(tileH: number): Graphics {
   const g = new Graphics()
-  g.rect(0, 6, SURFACE_TILE_W, tileH - 6).fill(0x1a1006)
+  g.rect(0, 6, SURFACE_TILE_W, tileH - 6).fill(0x9fc8e2)
   const ridgeH = [0, -10, -14, -7, -18, -11, -5, -16, -12, -8, -15, -9, -19, -6, -13, -10, -17, -4, -11, -8]
   const edge: number[] = [0, tileH]
   for (let i = 0; i <= SURFACE_TILE_W; i += 16) {
     edge.push(i, 6 + ridgeH[Math.floor(i / 16) % ridgeH.length])
   }
   edge.push(SURFACE_TILE_W, tileH)
-  g.poly(edge).fill(0x2d1e0c)
+  g.poly(edge).fill(0x7aabc9)
   const patches: [number, number][] = [
     [32, 14], [85, 22], [140, 10], [195, 18], [248, 12], [295, 20],
     [60, 8],  [125, 26], [175, 9],  [230, 16], [275, 24], [310, 11],
   ]
   for (const [px, pr] of patches) {
-    g.circle(px, 22, pr).fill({ color: 0x110c04, alpha: 0.6 })
+    g.circle(px, 22, pr).fill({ color: 0x5d8fac, alpha: 0.32 })
   }
   return g
 }
@@ -66,7 +72,7 @@ function buildSurfaceTile(tileH: number): Graphics {
 function buildAimGuide(shipY: number, surfaceY: number): Graphics {
   const g = new Graphics()
   for (let y = shipY + 22; y < surfaceY - 10; y += 11) {
-    g.circle(SHIP_X, y, 1.2).fill({ color: 0x9becff, alpha: 0.18 })
+    g.circle(SHIP_X, y, 1.2).fill({ color: 0x1f78c1, alpha: 0.22 })
   }
   return g
 }
@@ -105,10 +111,14 @@ interface MiningCanvasProps {
   /** Pushed true immediately after a shot fires, false once the cooldown clears. Mirrors the oreNearRef push pattern so the screen can show ready/charging state without owning the timer. */
   chargingRef?: React.MutableRefObject<((charging: boolean) => void) | null>
   trainingMiningTry?: boolean
+  /** SSL-475: sky-event debris. Omit (or event inactive) for the unchanged scene. */
+  debrisPreset?: DebrisEventPreset | null
 }
 
-export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false }: MiningCanvasProps) {
+export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const debrisPresetRef = useRef(debrisPreset)
+  debrisPresetRef.current = debrisPreset
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
   const onFireRequestRef = useRef(onFireRequest)
@@ -256,6 +266,11 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         )
 
         const shakeState = { timer: 0 }
+        const shower = debrisPresetRef.current ?? activeDebrisPreset(debrisNow())
+        const debrisArt = shower?.eventId === 'orionids-2026'
+          ? await loadOrionidsArt(miningCanvasIsDark(SKY_COLOR) ? 'dark' : 'blueprint')
+          : null
+        if (destroyed) return
         const controllerObj = scene.find('mining-controller')
         const controller = new MiningController(new RuntimeContext(), {
           container: app.stage,
@@ -284,6 +299,19 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
           },
           onOreNearby: (near) => { oreNearRef?.current?.(near) },
           neededMineralsRef,
+          reducedMotion: prefersReducedMotion(),
+          debrisArt,
+          debris: {
+            getSpawn: () => {
+              const preset = debrisPresetRef.current
+              if (!preset) return null
+              return {
+                mineral: preset.resourceId,
+                speedFactor: preset.speedFactor,
+                ratePerMinute: debrisRatePerMinute(preset, debrisNow()),
+              }
+            },
+          },
         })
 
         app.ticker.add(ticker => {
@@ -307,12 +335,14 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         // oreNearRef pushes ore-proximity — the screen just mirrors it, it
         // never owns the timer.
         let isCharging = false
+        let lastFireAt = -1
         const attemptFire = () => {
           if (isCharging) {
             onTapAckRef.current?.()
             return
           }
           controller.fireLaser()
+          lastFireAt = performance.now()
           isCharging = true
           chargingRef?.current?.(true)
           if (chargeTimer) clearTimeout(chargeTimer)
@@ -323,13 +353,38 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         }
 
         input = new InputManager(canvas, worldW, worldH)
+        // SSL-411: a tap fires, a horizontal drag scrolls the field. The shot
+        // is decided on release so a drag never spends a charge. Dragging left
+        // pulls the field forward (fast), dragging right slows it, and the
+        // field returns to normal speed on release.
+        canvas.style.touchAction = 'none'
+        let dragStartX: number | null = null
+        let dragging = false
+        const DRAG_THRESHOLD_PX = 10
+        const DRAG_FULL_SPEED_PX = 120
+        const endDrag = () => {
+          if (dragging) scrollRef.current?.(0)
+          dragStartX = null
+          dragging = false
+        }
         input.onAny(event => {
-          // A direct canvas tap must go through the screen's fireLaser(), not
-          // straight to attemptFire() — otherwise it fires for real without
-          // ever consuming a laser charge, bypassing the charge-budget gate
-          // that fireLaser() owns (laserCharges, gateOpen, sceneStatus).
-          if (event.type === 'pointerdown') onFireRequestRef.current?.()
+          if (event.type === 'pointerdown') {
+            dragStartX = event.screen.x
+            dragging = false
+          } else if (event.type === 'pointermove' && dragStartX !== null) {
+            const delta = event.screen.x - dragStartX
+            if (!dragging && Math.abs(delta) >= DRAG_THRESHOLD_PX) dragging = true
+            if (dragging) scrollRef.current?.(Math.max(-1, Math.min(1, -delta / DRAG_FULL_SPEED_PX)))
+          } else if (event.type === 'pointerup') {
+            const wasDrag = dragging
+            endDrag()
+            // A direct canvas tap must go through the screen's fireLaser(), not
+            // straight to attemptFire(), so the charge-budget and gate checks
+            // it owns are not bypassed.
+            if (!wasDrag) onFireRequestRef.current?.()
+          }
         })
+        canvas.addEventListener('pointercancel', endDrag)
         fireRef.current = attemptFire
         scrollRef.current = (dx: number) => {
           const speed = SCROLL_SPEED + dx * (dx > 0 ? SCROLL_SPEED_MAX - SCROLL_SPEED : SCROLL_SPEED - SCROLL_SPEED_MIN)
@@ -357,6 +412,10 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
             const pulse = 0.92 + Math.sin(plumePhase * 18) * 0.08
             plume.scale.set(pulse, 0.94 + Math.sin(plumePhase * 13) * 0.06)
             plume.alpha = 0.84 + Math.sin(plumePhase * 11) * 0.10
+            // Recoil kick on each shot; the plume rides with the hull.
+            const kick = prefersReducedMotion() || lastFireAt < 0 ? 0 : recoilOffset((performance.now() - lastFireAt) / 1000)
+            ship.y = shipY + kick
+            plume.y = shipY + kick
           })
         }
 

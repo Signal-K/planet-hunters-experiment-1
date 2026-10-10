@@ -1,0 +1,200 @@
+{
+ "frames": {
+  "fx/impact-line/00": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "sourceSize": {
+    "w": 91,
+    "h": 82
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 46,
+    "y": 74
+   }
+  },
+  "fx/impact-line/01": {
+   "frame": {
+    "x": 91,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "sourceSize": {
+    "w": 91,
+    "h": 82
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 46,
+    "y": 74
+   }
+  },
+  "fx/impact-line/02": {
+   "frame": {
+    "x": 182,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "sourceSize": {
+    "w": 91,
+    "h": 82
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 46,
+    "y": 74
+   }
+  },
+  "fx/impact-line/03": {
+   "frame": {
+    "x": 273,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "sourceSize": {
+    "w": 91,
+    "h": 82
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 46,
+    "y": 74
+   }
+  },
+  "fx/impact-line/04": {
+   "frame": {
+    "x": 364,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "sourceSize": {
+    "w": 91,
+    "h": 82
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 46,
+    "y": 74
+   }
+  },
+  "fx/impact-line/05": {
+   "frame": {
+    "x": 455,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 91,
+    "h": 82
+   },
+   "sourceSize": {
+    "w": 91,
+    "h": 82
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 46,
+    "y": 74
+   }
+  }
+ },
+ "meta": {
+  "app": "landnam orionids-2026 (SSL-475)",
+  "image": "impact-line-sheet.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 546,
+   "h": 82
+  },
+  "scale": "1"
+ },
+ "animations": {
+  "fx/impact-line": [
+   "fx/impact-line/00",
+   "fx/impact-line/01",
+   "fx/impact-line/02",
+   "fx/impact-line/03",
+   "fx/impact-line/04",
+   "fx/impact-line/05"
+  ]
+ },
+ "landnam": {
+  "fps": 12,
+  "loop": false,
+  "durationSec": 0.5,
+  "blend": "normal (or multiply)",
+  "theme": "blueprint",
+  "use": "inked burst ring + dust ticks (blueprint version of impact-sheet)"
+ }
+}

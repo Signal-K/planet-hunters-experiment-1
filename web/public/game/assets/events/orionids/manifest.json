@@ -1,0 +1,1139 @@
+{
+ "name": "orionids-2026",
+ "ticket": "SSL-475",
+ "version": 1,
+ "created": "2026-10-05",
+ "basePath": "/game/assets/events/orionids/",
+ "resolution": {
+  "1x": "<name>.png",
+  "2x": "<name>@2x.png (native crop from the generated art)",
+  "note": "badge ships 512 + 128; icons 64 (1x) + 128 (2x); sky 1920 + 1280"
+ },
+ "defaultTheme": "blueprint",
+ "themeSelect": "Pick the variant set by the active theme: .theme-blueprint (default, UI locked to light blueprint per SSL-158) -> variantSets.blueprint; the current dark mining canvas -> variantSets.dark.",
+ "tokens": {
+  "source": "web/app/globals.css (.theme-blueprint / --ln-blueprint-* and :root deck tokens), main @ faf00c4",
+  "blueprint": {
+   "--ln-bp-bg": "#eef3f8",
+   "--ln-bp-paper": "#ffffff",
+   "--ln-bp-paper-2": "#dfe9f3",
+   "--ln-bp-ink": "#0f2436",
+   "--ln-bp-ink-dim": "#48596a",
+   "--ln-bp-ink-mute": "#7c8ea0",
+   "--ln-bp-line": "rgba(15, 36, 54, 0.14)",
+   "--ln-bp-line-strong": "rgba(15, 36, 54, 0.30)",
+   "--ln-bp-blue (accent)": "#1f78c1",
+   "grid": "22px hairline (.ln-con-grid)"
+  },
+  "deck": {
+   "panel": "#1a1a1d",
+   "--ln-cyan": "#70d9ea",
+   "--ln-cyan-bright": "#a3ecf5"
+  },
+  "font": "Oxanium SemiBold 600 (/fonts/Oxanium-SemiBold.woff2)",
+  "notUsed": "--ln-bp-pink #c94a86 and every orange/purple token: house rule, no orange or purple in event art"
+ },
+ "eventReference": {
+  "note": "from SSL-475 (config lives in code, not here)",
+  "active": "2026-10-02 .. 2026-11-07 (local)",
+  "peakNight": "2026-10-21/22",
+  "dailyWindow": "player local night ~22:00 - dawn"
+ },
+ "variantSets": {
+  "blueprint": {
+   "debris": [
+    "debris-01-light",
+    "debris-02-light",
+    "debris-03-light",
+    "debris-04-light"
+   ],
+   "debrisMined": [
+    "debris-01-mined-light",
+    "debris-02-mined-light",
+    "debris-03-mined-light",
+    "debris-04-mined-light"
+   ],
+   "shards": [
+    "shard-01",
+    "shard-02",
+    "shard-03",
+    "shard-04"
+   ],
+   "dustPuff": "dust-puff",
+   "streaks": [
+    "streak-line-01",
+    "streak-line-02",
+    "streak-line-03",
+    "streak-line-04"
+   ],
+   "trails": [],
+   "impact": "impact-line-sheet",
+   "debrisFall": "debris-fall-line-sheet",
+   "sky": "orionids-sky-blueprint",
+   "skyBlend": "multiply",
+   "chip": "chip-orionids-active",
+   "badge": "badge-orionids-2026-light",
+   "iconMeteor": "icon-meteor-light",
+   "iconResource": "icon-orionid-debris",
+   "iconRadiant": "icon-radiant-light"
+  },
+  "dark": {
+   "debris": [
+    "debris-01",
+    "debris-02",
+    "debris-03",
+    "debris-04"
+   ],
+   "debrisMined": [
+    "debris-01-mined",
+    "debris-02-mined",
+    "debris-03-mined",
+    "debris-04-mined"
+   ],
+   "shards": [
+    "shard-01",
+    "shard-02",
+    "shard-03",
+    "shard-04"
+   ],
+   "dustPuff": "dust-puff",
+   "streaks": [
+    "streak-01",
+    "streak-02",
+    "streak-03",
+    "streak-04"
+   ],
+   "trails": [
+    "trail-01",
+    "trail-02",
+    "trail-03"
+   ],
+   "impact": "impact-sheet",
+   "debrisFall": "debris-fall-sheet",
+   "sky": "orionids-sky-overlay-screen",
+   "skyBlend": "screen",
+   "skyAlt": "orionids-sky-overlay (alpha, normal blend)",
+   "chip": "chip-orionids-active-dark",
+   "badge": "badge-orionids-2026",
+   "iconMeteor": "icon-meteor",
+   "iconResource": "icon-orionid-debris",
+   "iconRadiant": "icon-radiant"
+  }
+ },
+ "pairs": {
+  "debris-0N -> debris-0N-mined": "same ground anchor; swap on laser hit",
+  "debris-fall*-sheet last frame -> debris-01 / debris-01-light": "rotation ends at 0 so the swap does not pop"
+ },
+ "anchors": "normalised 0..1 of the image; debris = ground contact (bottom-centre of opaque pixels); streaks = head centre; sheets = per-frame anchor in the sheet JSON",
+ "assets": {
+  "debris-01": {
+   "file": "debris/debris-01.png",
+   "file2x": "debris/debris-01@2x.png",
+   "size": [
+    92,
+    74
+   ],
+   "size2x": [
+    183,
+    147
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9592
+   },
+   "blend": "normal",
+   "theme": "dark",
+   "use": "intact falling/landed debris chunk (mineable)"
+  },
+  "debris-02": {
+   "file": "debris/debris-02.png",
+   "file2x": "debris/debris-02@2x.png",
+   "size": [
+    124,
+    99
+   ],
+   "size2x": [
+    247,
+    197
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9594
+   },
+   "blend": "normal",
+   "theme": "dark",
+   "use": "intact falling/landed debris chunk (mineable)"
+  },
+  "debris-03": {
+   "file": "debris/debris-03.png",
+   "file2x": "debris/debris-03@2x.png",
+   "size": [
+    120,
+    105
+   ],
+   "size2x": [
+    240,
+    209
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9569
+   },
+   "blend": "normal",
+   "theme": "dark",
+   "use": "intact falling/landed debris chunk (mineable)"
+  },
+  "debris-04": {
+   "file": "debris/debris-04.png",
+   "file2x": "debris/debris-04@2x.png",
+   "size": [
+    136,
+    122
+   ],
+   "size2x": [
+    272,
+    244
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9631
+   },
+   "blend": "normal",
+   "theme": "dark",
+   "use": "intact falling/landed debris chunk (mineable)"
+  },
+  "debris-01-mined": {
+   "file": "debris/debris-01-mined.png",
+   "file2x": "debris/debris-01-mined@2x.png",
+   "size": [
+    104,
+    84
+   ],
+   "size2x": [
+    207,
+    167
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9701
+   },
+   "blend": "normal",
+   "theme": "dark",
+   "use": "mined state of debris-01 (swap on laser hit)"
+  },
+  "debris-02-mined": {
+   "file": "debris/debris-02-mined.png",
+   "file2x": "debris/debris-02-mined@2x.png",
+   "size": [
+    130,
+    104
+   ],
+   "size2x": [
+    260,
+    208
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9712
+   },
+   "blend": "normal",
+   "theme": "dark",
+   "use": "mined state of debris-02 (swap on laser hit)"
+  },
+  "debris-03-mined": {
+   "file": "debris/debris-03-mined.png",
+   "file2x": "debris/debris-03-mined@2x.png",
+   "size": [
+    118,
+    102
+   ],
+   "size2x": [
+    235,
+    204
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9706
+   },
+   "blend": "normal",
+   "theme": "dark",
+   "use": "mined state of debris-03 (swap on laser hit)"
+  },
+  "debris-04-mined": {
+   "file": "debris/debris-04-mined.png",
+   "file2x": "debris/debris-04-mined@2x.png",
+   "size": [
+    132,
+    105
+   ],
+   "size2x": [
+    264,
+    209
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9761
+   },
+   "blend": "normal",
+   "theme": "dark",
+   "use": "mined state of debris-04 (swap on laser hit)"
+  },
+  "shard-01": {
+   "file": "debris/shard-01.png",
+   "file2x": "debris/shard-01@2x.png",
+   "size": [
+    31,
+    28
+   ],
+   "size2x": [
+    62,
+    55
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "blend": "normal",
+   "theme": "both",
+   "use": "small shard particle (break-up / ambient fall)"
+  },
+  "shard-02": {
+   "file": "debris/shard-02.png",
+   "file2x": "debris/shard-02@2x.png",
+   "size": [
+    47,
+    44
+   ],
+   "size2x": [
+    93,
+    87
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "blend": "normal",
+   "theme": "both",
+   "use": "small shard particle (break-up / ambient fall)"
+  },
+  "shard-03": {
+   "file": "debris/shard-03.png",
+   "file2x": "debris/shard-03@2x.png",
+   "size": [
+    46,
+    41
+   ],
+   "size2x": [
+    91,
+    81
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "blend": "normal",
+   "theme": "both",
+   "use": "small shard particle (break-up / ambient fall)"
+  },
+  "shard-04": {
+   "file": "debris/shard-04.png",
+   "file2x": "debris/shard-04@2x.png",
+   "size": [
+    53,
+    51
+   ],
+   "size2x": [
+    106,
+    101
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "blend": "normal",
+   "theme": "both",
+   "use": "small shard particle (break-up / ambient fall)"
+  },
+  "dust-puff": {
+   "file": "debris/dust-puff.png",
+   "file2x": "debris/dust-puff@2x.png",
+   "size": [
+    77,
+    67
+   ],
+   "size2x": [
+    153,
+    133
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "blend": "normal (or screen on dark)",
+   "theme": "both",
+   "use": "cyan dust puff on mine/collect"
+  },
+  "debris-01-light": {
+   "file": "debris/debris-01-light.png",
+   "file2x": "debris/debris-01-light@2x.png",
+   "size": [
+    91,
+    74
+   ],
+   "size2x": [
+    182,
+    147
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9728
+   },
+   "blend": "normal",
+   "theme": "blueprint",
+   "use": "blueprint-paper variant of debris-01: tight halo + ink stroke"
+  },
+  "debris-01-mined-light": {
+   "file": "debris/debris-01-mined-light.png",
+   "file2x": "debris/debris-01-mined-light@2x.png",
+   "size": [
+    104,
+    85
+   ],
+   "size2x": [
+    207,
+    169
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9704
+   },
+   "blend": "normal",
+   "theme": "blueprint",
+   "use": "blueprint-paper variant of debris-01-mined: tight halo + ink stroke"
+  },
+  "debris-02-light": {
+   "file": "debris/debris-02-light.png",
+   "file2x": "debris/debris-02-light@2x.png",
+   "size": [
+    123,
+    98
+   ],
+   "size2x": [
+    246,
+    196
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9694
+   },
+   "blend": "normal",
+   "theme": "blueprint",
+   "use": "blueprint-paper variant of debris-02: tight halo + ink stroke"
+  },
+  "debris-02-mined-light": {
+   "file": "debris/debris-02-mined-light.png",
+   "file2x": "debris/debris-02-mined-light@2x.png",
+   "size": [
+    130,
+    105
+   ],
+   "size2x": [
+    260,
+    209
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9761
+   },
+   "blend": "normal",
+   "theme": "blueprint",
+   "use": "blueprint-paper variant of debris-02-mined: tight halo + ink stroke"
+  },
+  "debris-03-light": {
+   "file": "debris/debris-03-light.png",
+   "file2x": "debris/debris-03-light@2x.png",
+   "size": [
+    117,
+    98
+   ],
+   "size2x": [
+    234,
+    195
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.959
+   },
+   "blend": "normal",
+   "theme": "blueprint",
+   "use": "blueprint-paper variant of debris-03: tight halo + ink stroke"
+  },
+  "debris-03-mined-light": {
+   "file": "debris/debris-03-mined-light.png",
+   "file2x": "debris/debris-03-mined-light@2x.png",
+   "size": [
+    117,
+    103
+   ],
+   "size2x": [
+    234,
+    206
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9757
+   },
+   "blend": "normal",
+   "theme": "blueprint",
+   "use": "blueprint-paper variant of debris-03-mined: tight halo + ink stroke"
+  },
+  "debris-04-light": {
+   "file": "debris/debris-04-light.png",
+   "file2x": "debris/debris-04-light@2x.png",
+   "size": [
+    135,
+    121
+   ],
+   "size2x": [
+    269,
+    241
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.971
+   },
+   "blend": "normal",
+   "theme": "blueprint",
+   "use": "blueprint-paper variant of debris-04: tight halo + ink stroke"
+  },
+  "debris-04-mined-light": {
+   "file": "debris/debris-04-mined-light.png",
+   "file2x": "debris/debris-04-mined-light@2x.png",
+   "size": [
+    132,
+    105
+   ],
+   "size2x": [
+    264,
+    210
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9762
+   },
+   "blend": "normal",
+   "theme": "blueprint",
+   "use": "blueprint-paper variant of debris-04-mined: tight halo + ink stroke"
+  },
+  "streak-01": {
+   "file": "fx/streak-01.png",
+   "file2x": "fx/streak-01@2x.png",
+   "size": [
+    93,
+    71
+   ],
+   "size2x": [
+    185,
+    142
+   ],
+   "anchor": {
+    "x": 0.8486,
+    "y": 0.8099
+   },
+   "blend": "screen (dark) / normal",
+   "theme": "dark",
+   "use": "glowing meteor streak (dark scene); anchor = head; travels top-left -> bottom-right"
+  },
+  "streak-02": {
+   "file": "fx/streak-02.png",
+   "file2x": "fx/streak-02@2x.png",
+   "size": [
+    129,
+    98
+   ],
+   "size2x": [
+    258,
+    196
+   ],
+   "anchor": {
+    "x": 0.8566,
+    "y": 0.8163
+   },
+   "blend": "screen (dark) / normal",
+   "theme": "dark",
+   "use": "glowing meteor streak (dark scene); anchor = head; travels top-left -> bottom-right"
+  },
+  "streak-03": {
+   "file": "fx/streak-03.png",
+   "file2x": "fx/streak-03@2x.png",
+   "size": [
+    149,
+    107
+   ],
+   "size2x": [
+    297,
+    214
+   ],
+   "anchor": {
+    "x": 0.8586,
+    "y": 0.8224
+   },
+   "blend": "screen (dark) / normal",
+   "theme": "dark",
+   "use": "glowing meteor streak (dark scene); anchor = head; travels top-left -> bottom-right"
+  },
+  "streak-04": {
+   "file": "fx/streak-04.png",
+   "file2x": "fx/streak-04@2x.png",
+   "size": [
+    114,
+    83
+   ],
+   "size2x": [
+    228,
+    165
+   ],
+   "anchor": {
+    "x": 0.8377,
+    "y": 0.8121
+   },
+   "blend": "screen (dark) / normal",
+   "theme": "dark",
+   "use": "glowing meteor streak (dark scene); anchor = head; travels top-left -> bottom-right"
+  },
+  "trail-01": {
+   "file": "fx/trail-01.png",
+   "file2x": "fx/trail-01@2x.png",
+   "size": [
+    111,
+    74
+   ],
+   "size2x": [
+    222,
+    148
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "blend": "screen (dark) / normal",
+   "theme": "dark",
+   "use": "lingering trail / smoke fragment after a streak"
+  },
+  "trail-02": {
+   "file": "fx/trail-02.png",
+   "file2x": "fx/trail-02@2x.png",
+   "size": [
+    120,
+    74
+   ],
+   "size2x": [
+    240,
+    148
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "blend": "screen (dark) / normal",
+   "theme": "dark",
+   "use": "lingering trail / smoke fragment after a streak"
+  },
+  "trail-03": {
+   "file": "fx/trail-03.png",
+   "file2x": "fx/trail-03@2x.png",
+   "size": [
+    112,
+    66
+   ],
+   "size2x": [
+    223,
+    132
+   ],
+   "anchor": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "blend": "screen (dark) / normal",
+   "theme": "dark",
+   "use": "lingering trail / smoke fragment after a streak"
+  },
+  "streak-line-01": {
+   "file": "fx/streak-line-01.png",
+   "file2x": "fx/streak-line-01@2x.png",
+   "size": [
+    78,
+    60
+   ],
+   "size2x": [
+    156,
+    119
+   ],
+   "anchor": {
+    "x": 0.9038,
+    "y": 0.8739
+   },
+   "blend": "normal (or multiply)",
+   "theme": "blueprint",
+   "use": "inked line-style meteor streak for blueprint paper (no glow); anchor = cyan head"
+  },
+  "streak-line-02": {
+   "file": "fx/streak-line-02.png",
+   "file2x": "fx/streak-line-02@2x.png",
+   "size": [
+    105,
+    80
+   ],
+   "size2x": [
+    210,
+    159
+   ],
+   "anchor": {
+    "x": 0.9238,
+    "y": 0.8994
+   },
+   "blend": "normal (or multiply)",
+   "theme": "blueprint",
+   "use": "inked line-style meteor streak for blueprint paper (no glow); anchor = cyan head"
+  },
+  "streak-line-03": {
+   "file": "fx/streak-line-03.png",
+   "file2x": "fx/streak-line-03@2x.png",
+   "size": [
+    124,
+    93
+   ],
+   "size2x": [
+    247,
+    185
+   ],
+   "anchor": {
+    "x": 0.9352,
+    "y": 0.9135
+   },
+   "blend": "normal (or multiply)",
+   "theme": "blueprint",
+   "use": "inked line-style meteor streak for blueprint paper (no glow); anchor = cyan head"
+  },
+  "streak-line-04": {
+   "file": "fx/streak-line-04.png",
+   "file2x": "fx/streak-line-04@2x.png",
+   "size": [
+    41,
+    32
+   ],
+   "size2x": [
+    81,
+    64
+   ],
+   "anchor": {
+    "x": 0.8148,
+    "y": 0.7656
+   },
+   "blend": "normal (or multiply)",
+   "theme": "blueprint",
+   "use": "inked line-style meteor streak for blueprint paper (no glow); anchor = cyan head"
+  },
+  "impact-sheet": {
+   "file": "fx/impact-sheet.png",
+   "file2x": "fx/impact-sheet@2x.png",
+   "json": "fx/impact-sheet.json",
+   "json2x": "fx/impact-sheet@2x.json",
+   "size": [
+    546,
+    82
+   ],
+   "size2x": [
+    1092,
+    164
+   ],
+   "frames": 6,
+   "frameSize": [
+    91,
+    82
+   ],
+   "frameSize2x": [
+    182,
+    164
+   ],
+   "fps": 12,
+   "order": "left-to-right, equal cells, single row",
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "blend": "screen (dark) / normal",
+   "theme": "dark",
+   "use": "impact / hit sequence when debris lands or is lasered",
+   "loop": false,
+   "individualFrames": [
+    "fx/impact-01{,@2x}.png",
+    "fx/impact-02{,@2x}.png",
+    "fx/impact-03{,@2x}.png",
+    "fx/impact-04{,@2x}.png",
+    "fx/impact-05{,@2x}.png",
+    "fx/impact-06{,@2x}.png"
+   ]
+  },
+  "impact-line-sheet": {
+   "file": "fx/impact-line-sheet.png",
+   "file2x": "fx/impact-line-sheet@2x.png",
+   "json": "fx/impact-line-sheet.json",
+   "json2x": "fx/impact-line-sheet@2x.json",
+   "size": [
+    546,
+    82
+   ],
+   "size2x": [
+    1092,
+    164
+   ],
+   "frames": 6,
+   "frameSize": [
+    91,
+    82
+   ],
+   "frameSize2x": [
+    182,
+    164
+   ],
+   "fps": 12,
+   "order": "left-to-right, equal cells, single row",
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "blend": "normal (or multiply)",
+   "theme": "blueprint",
+   "use": "inked burst ring + dust ticks (blueprint version of impact-sheet)",
+   "loop": false,
+   "individualFrames": [
+    "fx/impact-line-01{,@2x}.png",
+    "fx/impact-line-02{,@2x}.png",
+    "fx/impact-line-03{,@2x}.png",
+    "fx/impact-line-04{,@2x}.png",
+    "fx/impact-line-05{,@2x}.png",
+    "fx/impact-line-06{,@2x}.png"
+   ]
+  },
+  "debris-fall-sheet": {
+   "file": "fx/debris-fall-sheet.png",
+   "file2x": "fx/debris-fall-sheet@2x.png",
+   "json": "fx/debris-fall-sheet.json",
+   "json2x": "fx/debris-fall-sheet@2x.json",
+   "size": [
+    1280,
+    140
+   ],
+   "size2x": [
+    2560,
+    280
+   ],
+   "frames": 8,
+   "frameSize": [
+    160,
+    140
+   ],
+   "frameSize2x": [
+    320,
+    280
+   ],
+   "fps": 24,
+   "order": "left-to-right, equal cells, single row",
+   "anchor": {
+    "x": 0.6438,
+    "y": 0.6286
+   },
+   "blend": "normal (tail may use screen)",
+   "theme": "dark",
+   "use": "debris-01 falling with streak tail (slight -14deg->0 rotation), then 2 impact frames. Runtime translates the sprite along the fall path; loop \"fall\" until the anchor reaches the seam line, play \"land\", then swap to the static debris-01 sprite (rotation already 0).",
+   "animations": {
+    "fall": {
+     "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "loop": true
+    },
+    "land": {
+     "frames": [
+      6,
+      7
+     ],
+     "loop": false
+    }
+   },
+   "groundContact": {
+    "x": 0.6438,
+    "y": 0.775
+   }
+  },
+  "debris-fall-line-sheet": {
+   "file": "fx/debris-fall-line-sheet.png",
+   "file2x": "fx/debris-fall-line-sheet@2x.png",
+   "json": "fx/debris-fall-line-sheet.json",
+   "json2x": "fx/debris-fall-line-sheet@2x.json",
+   "size": [
+    1280,
+    140
+   ],
+   "size2x": [
+    2560,
+    280
+   ],
+   "frames": 8,
+   "frameSize": [
+    160,
+    140
+   ],
+   "frameSize2x": [
+    320,
+    280
+   ],
+   "fps": 24,
+   "order": "left-to-right, equal cells, single row",
+   "anchor": {
+    "x": 0.6438,
+    "y": 0.6286
+   },
+   "blend": "normal",
+   "theme": "blueprint",
+   "use": "debris-01 falling with streak tail (slight -14deg->0 rotation), then 2 impact frames. Runtime translates the sprite along the fall path; loop \"fall\" until the anchor reaches the seam line, play \"land\", then swap to the static debris-01 sprite (rotation already 0).",
+   "animations": {
+    "fall": {
+     "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "loop": true
+    },
+    "land": {
+     "frames": [
+      6,
+      7
+     ],
+     "loop": false
+    }
+   },
+   "groundContact": {
+    "x": 0.6438,
+    "y": 0.775
+   }
+  },
+  "badge-orionids-2026": {
+   "file": "ui/badge-orionids-2026.png",
+   "size": [
+    512,
+    512
+   ],
+   "small": "ui/badge-orionids-2026-128.png",
+   "theme": "dark",
+   "use": "one-time Orionids 2026 badge (dark medallion face)"
+  },
+  "badge-orionids-2026-light": {
+   "file": "ui/badge-orionids-2026-light.png",
+   "size": [
+    512,
+    512
+   ],
+   "small": "ui/badge-orionids-2026-light-128.png",
+   "theme": "blueprint",
+   "use": "one-time badge, paper face + ink constellation + cyan meteor, chalky rim kept"
+  },
+  "icon-meteor": {
+   "file": "ui/icon-meteor.png",
+   "file2x": "ui/icon-meteor@2x.png",
+   "size": [
+    64,
+    64
+   ],
+   "size2x": [
+    128,
+    128
+   ],
+   "theme": "dark",
+   "use": "event glyph (navy disc); chip icon in the dark chip"
+  },
+  "icon-meteor-light": {
+   "file": "ui/icon-meteor-light.png",
+   "file2x": "ui/icon-meteor-light@2x.png",
+   "size": [
+    64,
+    64
+   ],
+   "size2x": [
+    128,
+    128
+   ],
+   "theme": "blueprint",
+   "use": "event glyph on paper disc with ink ring; chip icon in the default chip"
+  },
+  "icon-orionid-debris": {
+   "file": "ui/icon-orionid-debris.png",
+   "file2x": "ui/icon-orionid-debris@2x.png",
+   "size": [
+    64,
+    64
+   ],
+   "size2x": [
+    128,
+    128
+   ],
+   "theme": "both",
+   "use": "orionid_debris resource icon (cargo, market rows)"
+  },
+  "icon-radiant": {
+   "file": "ui/icon-radiant.png",
+   "file2x": "ui/icon-radiant@2x.png",
+   "size": [
+    64,
+    64
+   ],
+   "size2x": [
+    128,
+    128
+   ],
+   "theme": "dark",
+   "use": "radiant starburst (glow)"
+  },
+  "icon-radiant-light": {
+   "file": "ui/icon-radiant-light.png",
+   "file2x": "ui/icon-radiant-light@2x.png",
+   "size": [
+    64,
+    64
+   ],
+   "size2x": [
+    128,
+    128
+   ],
+   "theme": "blueprint",
+   "use": "radiant starburst, ink-edged, cyan core, no glow"
+  },
+  "chip-orionids-active": {
+   "file": "ui/chip-orionids-active.png",
+   "file2x": "ui/chip-orionids-active@2x.png",
+   "svg": "ui/chip-orionids-active.svg",
+   "dotOff": "ui/chip-orionids-active-dot-off.png",
+   "dotOff2x": "ui/chip-orionids-active-dot-off@2x.png",
+   "size": [
+    235,
+    44
+   ],
+   "size2x": [
+    470,
+    88
+   ],
+   "theme": "blueprint",
+   "default": true,
+   "fontPx1x": 15,
+   "font": "Oxanium SemiBold (600)",
+   "letterSpacingEm": 0.14,
+   "heightPx1x": 44,
+   "tapTargetPx1x": [
+    235,
+    44
+   ],
+   "blink": {
+    "on": "ui/chip-orionids-active.png",
+    "off": "ui/chip-orionids-active-dot-off.png",
+    "periodMs": 1200,
+    "reducedMotion": "hold dot on"
+   },
+   "use": "\"Orionids active\" HUD chip (mining HUD + Base) while the event window is live",
+   "a11y": "text 15px at 1x (>=14px), pill 44px tall at 1x (>=44px tap target) - SSL-475 done-when"
+  },
+  "chip-orionids-active-dark": {
+   "file": "ui/chip-orionids-active-dark.png",
+   "file2x": "ui/chip-orionids-active-dark@2x.png",
+   "svg": "ui/chip-orionids-active-dark.svg",
+   "dotOff": "ui/chip-orionids-active-dark-dot-off.png",
+   "dotOff2x": "ui/chip-orionids-active-dark-dot-off@2x.png",
+   "size": [
+    235,
+    44
+   ],
+   "size2x": [
+    470,
+    88
+   ],
+   "theme": "dark",
+   "default": false,
+   "fontPx1x": 15,
+   "font": "Oxanium SemiBold (600)",
+   "letterSpacingEm": 0.14,
+   "heightPx1x": 44,
+   "tapTargetPx1x": [
+    235,
+    44
+   ],
+   "blink": {
+    "on": "ui/chip-orionids-active-dark.png",
+    "off": "ui/chip-orionids-active-dark-dot-off.png",
+    "periodMs": 1200,
+    "reducedMotion": "hold dot on"
+   },
+   "use": "\"Orionids active\" HUD chip (mining HUD + Base) while the event window is live",
+   "a11y": "text 15px at 1x (>=14px), pill 44px tall at 1x (>=44px tap target) - SSL-475 done-when"
+  },
+  "orionids-sky-overlay": {
+   "file": "sky/orionids-sky-overlay.png",
+   "size": [
+    1920,
+    1080
+   ],
+   "alt1280": "sky/orionids-sky-overlay-1280.png",
+   "anchor": {
+    "x": 0,
+    "y": 0
+   },
+   "blend": "normal (alpha from luminance)",
+   "theme": "dark",
+   "use": "Orion + radiant + streak fan + haze over the dark mining sky; fit to scene width, top-aligned"
+  },
+  "orionids-sky-overlay-screen": {
+   "file": "sky/orionids-sky-overlay-screen.png",
+   "size": [
+    1920,
+    1080
+   ],
+   "alt1280": "sky/orionids-sky-overlay-screen-1280.png",
+   "anchor": {
+    "x": 0,
+    "y": 0
+   },
+   "blend": "screen",
+   "theme": "dark",
+   "use": "same overlay with black kept; use with screen/add blend (Pixi BLEND_MODES.SCREEN / CSS mix-blend-mode: screen)"
+  },
+  "orionids-sky-blueprint": {
+   "file": "sky/orionids-sky-blueprint.png",
+   "size": [
+    1920,
+    1080
+   ],
+   "alt1280": "sky/orionids-sky-blueprint-1280.png",
+   "anchor": {
+    "x": 0,
+    "y": 0
+   },
+   "blend": "multiply",
+   "theme": "blueprint",
+   "use": "faint ink line diagram (Orion, radiant crosshair, streak fan) on transparent for blueprint paper; multiply (normal also works)"
+  }
+ },
+ "qa": {
+  "orangePx": 0,
+  "purplePx": 0,
+  "greenFringePx": 0,
+  "checked": "every PNG, alpha>=8, sat>0.22: green 75-160deg, orange 12-48deg, purple 255-335deg"
+ }
+}

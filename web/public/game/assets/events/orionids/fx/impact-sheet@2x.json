@@ -1,0 +1,200 @@
+{
+ "frames": {
+  "fx/impact/00": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "sourceSize": {
+    "w": 182,
+    "h": 164
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 91,
+    "y": 149
+   }
+  },
+  "fx/impact/01": {
+   "frame": {
+    "x": 182,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "sourceSize": {
+    "w": 182,
+    "h": 164
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 91,
+    "y": 149
+   }
+  },
+  "fx/impact/02": {
+   "frame": {
+    "x": 364,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "sourceSize": {
+    "w": 182,
+    "h": 164
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 91,
+    "y": 149
+   }
+  },
+  "fx/impact/03": {
+   "frame": {
+    "x": 546,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "sourceSize": {
+    "w": 182,
+    "h": 164
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 91,
+    "y": 149
+   }
+  },
+  "fx/impact/04": {
+   "frame": {
+    "x": 728,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "sourceSize": {
+    "w": 182,
+    "h": 164
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 91,
+    "y": 149
+   }
+  },
+  "fx/impact/05": {
+   "frame": {
+    "x": 910,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 182,
+    "h": 164
+   },
+   "sourceSize": {
+    "w": 182,
+    "h": 164
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 0.9085
+   },
+   "anchorPx": {
+    "x": 91,
+    "y": 149
+   }
+  }
+ },
+ "meta": {
+  "app": "landnam orionids-2026 (SSL-475)",
+  "image": "impact-sheet@2x.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1092,
+   "h": 164
+  },
+  "scale": "2"
+ },
+ "animations": {
+  "fx/impact": [
+   "fx/impact/00",
+   "fx/impact/01",
+   "fx/impact/02",
+   "fx/impact/03",
+   "fx/impact/04",
+   "fx/impact/05"
+  ]
+ },
+ "landnam": {
+  "fps": 12,
+  "loop": false,
+  "durationSec": 0.5,
+  "blend": "screen (dark) / normal",
+  "theme": "dark",
+  "use": "impact / hit sequence when debris lands or is lasered"
+ }
+}

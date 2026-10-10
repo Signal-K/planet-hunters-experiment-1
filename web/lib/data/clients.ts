@@ -11,7 +11,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
   {
     id: 'helios-propulsion-depot',
     name: 'Helios Propulsion Depot',
-    color: '#f5a623',
+    color: '#36c6e2',
     initial: 'HP',
     unlockTier: 1,
     projectType: 'Catalytic thruster components and drive system supply',
@@ -92,7 +92,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
   {
     id: 'helioforge-metals',
     name: 'Helioforge Metals',
-    color: '#ffd166',
+    color: '#79d1ec',
     initial: 'HF',
     unlockTier: 2,
     projectType: 'Nickel, cobalt, and precious-metal assay',
@@ -122,7 +122,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
   {
     id: 'nightjar-systems',
     name: 'Nightjar Systems',
-    color: '#c084ff',
+    color: '#93cef0',
     initial: 'NS',
     unlockTier: 3,
     projectType: 'Rare gas capture and ion drive reserves',
@@ -140,7 +140,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
   {
     id: 'vulcan-core-metallurgy',
     name: 'Vulcan Core Metallurgy',
-    color: '#e85d5d',
+    color: '#3b7fb8',
     initial: 'VC',
     unlockTier: 4,
     projectType: 'Deep metallic-core assay and platinum-group refinement',
@@ -158,7 +158,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
   {
     id: 'solgrid-dynamics',
     name: 'Solgrid Dynamics',
-    color: '#ff8c42',
+    color: '#5ae7de',
     initial: 'SD',
     unlockTier: 4,
     projectType: 'Solar-grid expansion and high-purity silicon',
@@ -173,7 +173,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
   {
     id: 'lumen-research',
     name: 'Lumen Research',
-    color: '#f5a623',
+    color: '#36c6e2',
     initial: 'LR',
     unlockTier: 4,
     projectType: 'Strategic sample reserve and sensor research',

@@ -41,8 +41,8 @@ export default function StatRow({
         ...style,
       }}
     >
-      <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)' }}>{label}</span>
-      <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 12, color: valueColor, whiteSpace: 'nowrap' }}>{value}</span>
+      <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)' }}>{label}</span>
+      <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: valueColor, whiteSpace: 'nowrap' }}>{value}</span>
     </div>
   )
 }

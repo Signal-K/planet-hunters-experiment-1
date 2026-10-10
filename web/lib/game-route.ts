@@ -26,13 +26,20 @@ export function canonicalGamePath(state: RouteState): string {
   return `/game/${canonicalGameRoute(state)}`
 }
 
-/** Trays (Market, Subsurface) are stable URLs that open over the Base. A cold
+/** Trays (Market, Subsurface, Mission Log) are stable URLs that open over the Base. A cold
  * load of one must keep that tray instead of restoring the saved screen, which
  * would make the state -> URL sync rewrite the path to the saved screen. */
-export const TRAY_ROUTE_SCREENS = new Set<Screen>(['market', 'hub-subsurface'])
+export const TRAY_ROUTE_SCREENS = new Set<Screen>(['market', 'hub-subsurface', 'mission-history'])
 
 export function trayScreenFromPath(pathname: string): Screen | null {
   const match = /^\/game\/([^/]+)\/?$/.exec(pathname)
   const screen = match?.[1] as Screen | undefined
   return screen && TRAY_ROUTE_SCREENS.has(screen) ? screen : null
+}
+
+/** SSL-476/KES-226: the screen a cold load of `pathname` must open, regardless of the saved screen. null = keep the saved one. */
+export function entryScreenForPath(pathname: string, placed: readonly string[]): Screen | null {
+  if (pathname === '/game/hub') return 'hub'
+  if (pathname === '/game/launchpad' && placed.includes('launchpad')) return 'launchpad'
+  return trayScreenFromPath(pathname)
 }

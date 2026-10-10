@@ -4,21 +4,23 @@ import { useRef, useState, type ReactNode } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
 import { calibrateOnboardingPayout, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig, loanInstalmentFor } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
-import { PrimaryBtn } from '@/components/ui/Button'
+import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
+import TopBar from '@/components/ui/TopBar'
+import { useHelp } from '@/components/ui/useHelp'
 import StatusPill from '@/components/ui/StatusPill'
 import MineralChip from '@/components/game/MineralChip'
-import CostSummaryRow from '@/components/game/CostSummaryRow'
 import { UI_ZONES } from '@/lib/ui-zones'
-import TutorialHighlight from '@/components/game/TutorialHighlight'
 import { ScrapSequenceCanvas } from '@/components/game/ScrapSequenceCanvas'
+import LaserCapacitorPanel from '@/components/game/screens/LaserCapacitorPanel'
 import DebriefCanvas from '@/components/game/screens/DebriefCanvas'
 import { formatCurrency } from '@/lib/format'
 import { rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import StatRow from '@/components/ui/StatRow'
-import { captureGameEvent } from '@/lib/posthog'
+import type { PlayerBadge } from '@/lib/data/sky-events'
+import { SkyBadgeRow } from './SkyBadgeRow'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -29,7 +31,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   freeOperations?: boolean
   annotations?: number
   missionsDone?: number
-  hasCoach?: boolean
   shipDestroyed?: boolean
   rocket?: Pick<RocketConfig, 'chassis'>
   rocketSource?: 'company' | 'fabricated'
@@ -54,6 +55,12 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
    *  Seeds this screen's toggle so it reads as a confirmation of that choice
    *  rather than asking the player again from scratch. */
   initialDisposition?: 'store' | 'sell'
+  /** SSL-462: spend hauled ore on the next Laser Capacitor level. */
+  onBuyLaserCapacitor?: (expectedLevel: number, reservedUnits: number) => void
+  laserCapacitorLevel?: number
+  /** Ore units in the Earth stash right now, including this run's haul. */
+  stashUnits?: number
+  badges?: Record<string, PlayerBadge>
 }) {
   // A self-directed haul the player owns outright gets a store-vs-sell choice
   // here instead of a fixed contract payout (KES-271). Storing needs a built
@@ -66,12 +73,12 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   // An ordinary rocket must remain visibly intact until the player authorises
   // teardown. Instrument deployments have no returning launch vehicle to
   // dismantle, so their result can open directly.
-  const [resolved, setResolved] = useState(isOrbitalInstrumentDeployment)
+  const help = useHelp('debrief')
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
-  const [disposition, setDisposition] = useState<'store' | 'sell'>(
-    initialDisposition ?? (hasEarthStorage ? 'store' : 'sell')
-  )
+  // Free Ops chooses its Earth disposition during launch planning. The
+  // debrief reports that committed route; it must not ask a second time.
+  const disposition = initialDisposition ?? (hasEarthStorage ? 'store' : 'sell')
   const haulUnits = Object.values(cargo).reduce((sum, n) => sum + Math.max(0, n), 0)
   const overflowUnits = hasEarthStorage ? Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0)) : haulUnits
   // Every current vehicle is single-use. Show teardown on every mission so the
@@ -109,21 +116,29 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
     : delivered ? 'var(--ln-ok)' : 'var(--ln-crimson)'
   const cargoEntries = Object.entries(cargo).filter(([, units]) => units > 0)
   const willStore = isFreeHaul && disposition === 'store' && !!hasEarthStorage
+  // SSL-462: the haul funds the next build. Ore a client is still owed, or a
+  // free haul that is about to be sold, is not spare.
+  const clientOwedUnits = !isFreeHaul && !isTwoLegJob && delivered
+    ? Object.values(requiredMaterials).reduce((sum, n) => sum + Math.max(0, n), 0)
+    : 0
+  const showLaserCapacitor = !!onBuyLaserCapacitor && !isProgramOperation
+    && (!isFreeHaul || willStore) && (cargoEntries.length > 0 || stashUnits > 0)
 
   return (
-    <div className="game-screen debrief-game">
+    <div className="game-screen theme-blueprint debrief-game">
       <DebriefCanvas rocketImageSrc={rocketDisplay.img} />
       <div className="debrief-game__world-shade" aria-hidden="true" />
 
-      <header className="debrief-hud-header" data-ui-zone={UI_ZONES.topChrome}>
-        <div>
-          <span>MISSION COMPLETE</span>
-          <h1>{isOrbitalInstrumentDeployment ? 'DEPLOYMENT' : 'DEBRIEF'}</h1>
-        </div>
-        <span className="debrief-hud-header__location">{isOrbitalInstrumentDeployment ? 'EARTH ORBIT · INSTRUMENT ONLINE' : 'EARTH RECEIVING BERTH · 01'}</span>
-      </header>
+      <TopBar
+        scene
+        eyebrow="MISSION COMPLETE"
+        title={isOrbitalInstrumentDeployment ? 'DEPLOYMENT' : 'DEBRIEF'}
+        right={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{help.button}<span className="debrief-hud-header__location">{isOrbitalInstrumentDeployment ? 'EARTH ORBIT · INSTRUMENT ONLINE' : 'EARTH RECEIVING BERTH · 01'}</span></span>}
+      />
+      {help.layer}
 
       <div className={`debrief-game__content screen-scroll`} data-ui-zone={UI_ZONES.screenContent}>
+        <SkyBadgeRow badges={badges} className="debrief-sky-badges" />
         <section className="debrief-mission-strip" aria-label="Mission result">
           <div className="debrief-mission-strip__status"><span aria-hidden="true" /> {shipDestroyed ? 'HULL LOST · CARGO RECOVERED' : isProgramOperation ? 'COMMISSIONED · INSTRUMENT ONLINE' : 'DOCKED · MISSION COMPLETE'}</div>
           <div className="debrief-mission-strip__route">
@@ -135,6 +150,85 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </div>
         </section>
 
+        {/* SSL-479: payout, mining fee and transport fee sit under the mission
+            strip so they are on screen before any vehicle teardown. */}
+        {isFreeHaul ? (
+          <CargoDestinationPanel
+            cargo={cargo}
+            minerals={minerals}
+            disposition={disposition}
+            hasEarthStorage={!!hasEarthStorage}
+            storageUsed={storageUsed ?? 0}
+            storageCapacity={storageCapacity ?? 0}
+            haulMarketValue={haulMarketValue ?? 0}
+            overflowUnits={overflowUnits}
+          />
+        ) : isProgramOperation && mission.programReward ? (
+          <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+            <div className="ln-section-label" style={{ marginBottom: 8 }}>Program Outcome</div>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text)' }}>
+              {mission.programReward.outcome}
+            </div>
+            {isOrbitalInstrumentDeployment ? <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>{mission.payload?.name ?? 'Instrument'} remains in Earth orbit. Its sky-side status indicator shows when a daily downlink is ready to review.</div> : <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>Research</span>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, color: 'var(--ln-cyan)', lineHeight: 1 }}>+{mission.programReward.researchXP} XP</span>
+            </div>}
+          </Panel>
+        ) : delivered ? (
+          <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+            <div className="ln-section-label" style={{ marginBottom: 8 }}>Ledger</div>
+            <p data-testid="debrief-brought" style={{ margin: '0 0 8px', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.45, color: 'var(--ln-text-dim)' }}>
+              You brought <strong style={{ color: 'var(--ln-text)' }}>{cargoEntries.map(([id, units]) => `${units} ${minerals[id]?.name ?? id}`).join(', ') || 'the order'}</strong>, enough for <strong style={{ color: 'var(--ln-text)' }}>{mission.title}</strong>.
+            </p>
+            {isTwoLegJob ? (
+              <>
+                <PayRow testId="debrief-mining-fee" label={`Mining fee · ${client?.name ?? 'Client'}`} value={miningFee} />
+                <PayRow testId="debrief-transport-fee" label="Transport fee · relay" value={transportFee} />
+              </>
+            ) : (
+              <PayRow label={isStoryMission ? 'Mission funding' : 'Contract value'} value={mission.payout.francs} />
+            )}
+            {calibratedTotal > rawTotal && <PayRow label="Onboarding bonus" value={calibratedTotal - rawTotal} />}
+            {crewArrivalBonus > 0 && <PayRow label={`First astronaut at ${target.name}`} value={crewArrivalBonus} />}
+            <StatRow
+              style={{ borderTop: '1px solid var(--ln-hairline)' }}
+              label={rocketSource === 'fabricated' ? `Vehicle cost · ${starterRocket.name} · silo fabrication` : `Vehicle cost · ${starterRocket.name}`}
+              value={rocketSource === 'fabricated' ? 'Minerals committed' : vehicleCost === 0 ? formatCurrency(0) : formatCurrency(-vehicleCost, { signed: true })}
+              valueColor={rocketSource === 'fabricated' ? 'var(--ln-cyan)' : vehicleCost === 0 ? 'var(--ln-text-dim)' : 'var(--ln-crimson)'}
+            />
+            {loanRepayment > 0 && (
+              <StatRow
+                style={{ borderTop: '1px solid var(--ln-hairline)' }}
+                label={loanRepayment >= (loanDebt ?? 0) ? 'Loan · cleared' : 'Loan · instalment'}
+                value={formatCurrency(-loanRepayment, { signed: true })}
+                valueColor="var(--ln-crimson)"
+              />
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0 2px', marginTop: 2, borderTop: '1px solid var(--ln-hairline)' }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: shipDestroyed ? 'var(--ln-crimson)' : 'var(--ln-ok)' }} />
+              <span style={{ fontFamily: 'var(--ln-font-body)', fontWeight: 500, fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.3 }}>
+                {shipDestroyed
+                  ? <><strong style={{ color: 'var(--ln-text)' }}>Hull lost</strong> · recovery crews are dismantling what remains</>
+                  : <><strong style={{ color: 'var(--ln-text)' }}>Stage recovery scheduled</strong> · this single-use vehicle is dismantled after cargo clearance</>}
+              </span>
+            </div>
+            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--ln-hairline-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Net</span>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 26, fontWeight: 800, lineHeight: 1, color: netTotal >= 0 ? 'var(--ln-amber)' : 'var(--ln-crimson)' }}>
+                {formatCurrency(netTotal, { signed: true })}
+              </span>
+            </div>
+          </Panel>
+        ) : null}
+        {showLaserCapacitor && onBuyLaserCapacitor && (
+          <LaserCapacitorPanel
+            level={laserCapacitorLevel}
+            haulUnits={haulUnits}
+            spareUnits={Math.max(0, stashUnits - clientOwedUnits)}
+            onInstall={() => onBuyLaserCapacitor(laserCapacitorLevel, clientOwedUnits)}
+          />
+        )}
+
         {/* ── Overview: client (if any) + cargo manifest ─────────────────── */}
         <div className="debrief-overview" style={(client && !isStoryMission) ? undefined : { gridTemplateColumns: 'minmax(0, 1fr)' }}>
         {client && !isStoryMission && (
@@ -145,14 +239,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                 width: 38, height: 38, borderRadius: 8, flexShrink: 0,
                 display: 'grid', placeItems: 'center',
                 fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15,
-                border: `1.5px solid ${client.color}`, background: 'var(--ln-surface-2)', color: client.color,
+                border: `2px solid ${client.color}`, background: 'var(--ln-surface-2)', color: 'var(--ln-text)',
               }}>
                 {client.initial}
               </div>
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.name}</div>
-                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>Client work complete</div>
+                  <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)', overflowWrap: 'anywhere' }}>{client.name}</div>
+                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>Client work complete</div>
                 </div>
                 {affinityEarned > 0 && <strong style={{ color: 'var(--ln-cyan)', font: '800 14px var(--ln-font-mono)', whiteSpace: 'nowrap' }}>+{affinityEarned} CLIENT XP</strong>}
               </div>
@@ -164,7 +258,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             for a self-directed run the player owns. */}
         <Panel className="debrief-delivery-panel" accent={manifestAccent} surface="solid">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isTwoLegJob ? 10 : 4 }}>
-            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
+            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
               {isFreeHaul ? 'Cargo Hold' : mission.title}
             </span>
             {!isFreeHaul && !isProgramOperation && (
@@ -173,16 +267,16 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </div>
           {isTwoLegJob && deliveryTargetName && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', paddingBottom: 10 }}>
-              <span style={{ font: '600 9px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Route</span>
-              <span style={{ font: '700 10px var(--ln-font-display)', padding: '3px 10px', borderRadius: 4, background: 'rgba(112,217,234,0.06)', border: '1px solid rgba(112,217,234,0.12)', color: 'var(--ln-cyan)' }}>{originTargetName ?? target.name}</span>
-              <span style={{ color: 'var(--ln-text-muted)', fontSize: 9 }}>→</span>
-              <span style={{ font: '700 10px var(--ln-font-display)', padding: '3px 10px', borderRadius: 4, background: 'rgba(112,217,234,0.06)', border: '1px solid rgba(112,217,234,0.12)', color: 'var(--ln-cyan)' }}>{deliveryTargetName}</span>
+              <span style={{ font: '600 14px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Route</span>
+              <span style={{ font: '700 14px var(--ln-font-display)', padding: '3px 10px', borderRadius: 4, background: 'var(--ln-cyan-soft)', border: '2px solid var(--ln-cyan-border)', color: 'var(--ln-cyan)' }}>{originTargetName ?? target.name}</span>
+              <span style={{ color: 'var(--ln-text-muted)', fontSize: 14 }}>→</span>
+              <span style={{ font: '700 14px var(--ln-font-display)', padding: '3px 10px', borderRadius: 4, background: 'var(--ln-cyan-soft)', border: '2px solid var(--ln-cyan-border)', color: 'var(--ln-cyan)' }}>{deliveryTargetName}</span>
             </div>
           )}
           {isFreeHaul
             ? cargoEntries.map(([id, units]) => (
                 <ManifestRow key={id} id={id} name={minerals[id]?.name ?? id}>
-                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--ln-text)' }}>{units} U</span>
+                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 700, color: 'var(--ln-text)' }}>{units} U</span>
                 </ManifestRow>
               ))
             : Object.entries(mission.requires.minerals).map(([id, required]) => {
@@ -197,81 +291,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         </Panel>
         </div>
 
-        {/* ── Resolved outcome ─────────────────────────────────────────────── */}
-        {resolved && (
-          isFreeHaul ? (
-            <CargoDispositionPanel
-              cargo={cargo}
-              minerals={minerals}
-              disposition={disposition}
-              setDisposition={setDisposition}
-              hasEarthStorage={!!hasEarthStorage}
-              storageUsed={storageUsed ?? 0}
-              storageCapacity={storageCapacity ?? 0}
-              haulMarketValue={haulMarketValue ?? 0}
-              overflowUnits={overflowUnits}
-            />
-          ) : isProgramOperation && mission.programReward ? (
-            <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
-              <div className="ln-section-label" style={{ marginBottom: 8 }}>Program Outcome</div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, lineHeight: 1.5, color: 'var(--ln-text)' }}>
-                {mission.programReward.outcome}
-              </div>
-              {isOrbitalInstrumentDeployment ? <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', fontFamily: 'var(--ln-font-body)', fontSize: 13, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>The Transit Telescope remains in Earth orbit. Its sky-side status indicator shows when a daily downlink is ready to review.</div> : <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>Research</span>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, color: 'var(--ln-cyan)', lineHeight: 1 }}>+{mission.programReward.researchXP} XP</span>
-              </div>}
-            </Panel>
-          ) : delivered ? (
-            /* One Ledger panel: payout, expenses, hull and net together, rather
-               than two stacked panels repeating the same section chrome. */
-            <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
-              <div className="ln-section-label" style={{ marginBottom: 8 }}>Ledger</div>
-              {isTwoLegJob ? (
-                <>
-                  <PayRow label={`Mining fee · ${client?.name ?? 'Client'}`} value={miningFee} />
-                  <PayRow label="Transport fee · relay" value={transportFee} />
-                </>
-              ) : (
-                <PayRow label={isStoryMission ? 'Mission funding' : 'Contract value'} value={mission.payout.francs} />
-              )}
-              {calibratedTotal > rawTotal && <PayRow label="Onboarding bonus" value={calibratedTotal - rawTotal} />}
-              {crewArrivalBonus > 0 && <PayRow label={`First astronaut at ${target.name}`} value={crewArrivalBonus} />}
-              <CostSummaryRow
-                label={rocketSource === 'fabricated' ? `Vehicle cost · ${starterRocket.name} · silo fabrication` : `Vehicle cost · ${starterRocket.name}`}
-                value={rocketSource === 'fabricated' ? 'Minerals committed' : formatCurrency(-vehicleCost, { signed: true })}
-                color={rocketSource === 'fabricated' ? 'var(--ln-cyan)' : 'var(--ln-crimson)'}
-                last={loanRepayment === 0}
-              />
-              {loanRepayment > 0 && (
-                <CostSummaryRow
-                  label={loanRepayment >= (loanDebt ?? 0) ? 'Loan · cleared' : 'Loan · instalment'}
-                  value={formatCurrency(-loanRepayment, { signed: true })}
-                  color="var(--ln-crimson)"
-                  last
-                />
-              )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0 2px', marginTop: 2, borderTop: '1px solid var(--ln-hairline)' }}>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: shipDestroyed ? 'var(--ln-crimson)' : 'var(--ln-ok)' }} />
-                <span style={{ fontFamily: 'var(--ln-font-body)', fontWeight: 500, fontSize: 11, color: 'var(--ln-text-dim)', lineHeight: 1.3 }}>
-                  {shipDestroyed
-                    ? <><strong style={{ color: 'var(--ln-text)' }}>Hull lost</strong> · recovery crews are dismantling what remains</>
-                    : <><strong style={{ color: 'var(--ln-text)' }}>Stage recovery scheduled</strong> · this single-use vehicle is dismantled after cargo clearance</>}
-                </span>
-              </div>
-              <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--ln-hairline-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Net</span>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 26, fontWeight: 800, lineHeight: 1, color: netTotal >= 0 ? 'var(--ln-amber)' : 'var(--ln-crimson)' }}>
-                  {formatCurrency(netTotal, { signed: true })}
-                </span>
-              </div>
-            </Panel>
-          ) : null
-        )}
-        {resolved && !isOrbitalInstrumentDeployment && (
+        {!isOrbitalInstrumentDeployment && (
           <Panel accent={hasEarthStorage ? 'var(--ln-ok)' : 'var(--ln-cyan)'} surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
             <div className="ln-section-label" style={{ marginBottom: 8 }}>Vehicle Recovery</div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
               {isEarlyMission && !hasEarthStorage
                 ? 'You can salvage parts once you build a silo.'
                 : hasEarthStorage
@@ -287,7 +310,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             pre- and post-resolve states, instead of two near-identical panels. */}
         {!isFreeHaul && !isProgramOperation && !delivered && (
           <Panel accent="var(--ln-crimson)" surface="solid">
-            <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.5, textAlign: 'left' }}>
+            <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.5, textAlign: 'left' }}>
               <strong style={{ color: 'var(--ln-text)' }}>Order incomplete</strong> — the fee is only paid on a full delivery. Return and mine the rest.
             </p>
           </Panel>
@@ -296,52 +319,37 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       </div>
 
       <div className="debrief-command-dock" data-ui-zone={UI_ZONES.bottomActions}>
-        {hasCoach && <TutorialHighlight borderRadius={8} />}
-        {!resolved ? (
-          <PrimaryBtn
-            // Amber is reserved for the payout amount itself. The action that
-            // resolves the mission remains the cyan primary CTA in both states.
-            kind="cyan"
-            full={false}
-            testId="resolve-cargo-btn"
-            disabled={scrapping}
-            onClick={() => {
-              setResolved(true)
-              if (!isOrbitalInstrumentDeployment) setScrapping(true)
-            }}
-          >
-            {scrapping ? 'VEHICLE TEARDOWN IN PROGRESS' : shipDestroyed ? 'AUTHORISE RECOVERY' : isProgramOperation ? 'LOG PROGRAM OUTCOME' : 'AUTHORISE VEHICLE TEARDOWN'}
-          </PrimaryBtn>
-        ) : (
-          <PrimaryBtn
-            // Collecting a reward is still a primary action; keep payout
-            // emphasis inside the payout panel rather than on the button.
-            kind="cyan"
-            full={false}
-            testId="collect-reward-btn"
-            disabled={collecting}
-            onClick={() => {
-              if (collectingRef.current) return
-              collectingRef.current = true
-              setCollecting(true)
-              if (isFreeHaul) {
-                onDone(0, 0, {}, hasEarthStorage ? disposition : 'sell')
-              } else {
-                onDone(total, affinityEarned, delivered ? requiredMaterials : {})
-              }
-            }}
-          >
-            {isFreeHaul
-              ? willStore
-                ? overflowUnits > 0 ? `Store haul · sell ${overflowUnits} over cap` : 'Keep haul on Earth'
-                : `Sell haul · ${formatCurrency(haulMarketValue ?? 0)}`
-              : delivered
-                ? isProgramOperation
-                  ? 'Log Program Outcome'
-                  : `Collect ${formatCurrency(total)}`
-                : 'Return to Base'}
-          </PrimaryBtn>
+        {!isOrbitalInstrumentDeployment && (
+          <GhostBtn testId="debrief-teardown-btn" full={false} disabled={scrapping} onClick={() => setScrapping(true)}>
+            Teardown
+          </GhostBtn>
         )}
+        <PrimaryBtn
+          kind="cyan"
+          full={false}
+          testId="collect-reward-btn"
+          disabled={collecting}
+          onClick={() => {
+            if (collectingRef.current) return
+            collectingRef.current = true
+            setCollecting(true)
+            if (isFreeHaul) {
+              onDone(0, 0, {}, hasEarthStorage ? disposition : 'sell')
+            } else {
+              onDone(total, affinityEarned, delivered ? requiredMaterials : {})
+            }
+          }}
+        >
+          {isFreeHaul
+            ? willStore
+              ? overflowUnits > 0 ? `Store haul · sell ${overflowUnits} over cap` : 'Keep haul on Earth'
+              : `Collect ${formatCurrency(haulMarketValue ?? 0)}`
+            : delivered
+              ? isProgramOperation
+                ? 'Log Program Outcome'
+                : `Collect ${formatCurrency(total)}`
+              : 'Return to Base'}
+        </PrimaryBtn>
       </div>
 
       {scrapping && (
@@ -356,19 +364,21 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   )
 }
 
-function PayRow({ label, value }: { label: string; value: number }) {
+function PayRow({ label, value, testId }: { label: string; value: number; testId?: string }) {
   // Payout lines stay on full precision — this is the itemization the player
   // checks the collected total against (STS-539 policy). Rendered as a plain
   // manifest row (navy ink, light hairline divider) rather than StatRow's
   // amber-by-default styling — amber is reserved for the one Total figure
   // per the standing amber-restricted-to-payout rule (KES-211).
   return (
-    <StatRow
-      label={label}
-      value={formatCurrency(value)}
-      valueColor="var(--ln-text)"
-      style={{ borderTop: '1px solid var(--ln-hairline)' }}
-    />
+    <div data-testid={testId}>
+      <StatRow
+        label={label}
+        value={formatCurrency(value)}
+        valueColor="var(--ln-text)"
+        style={{ borderTop: '1px solid var(--ln-hairline)' }}
+      />
+    </div>
   )
 }
 
@@ -377,24 +387,21 @@ function ManifestRow({ id, name, meta, children }: { id: string; name: string; m
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderTop: '1px solid var(--ln-hairline)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
         <MineralChip mineral={id} variant="avatar" size={22} />
-        <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, fontWeight: 700, color: 'var(--ln-text)' }}>{name}</span>
-        {meta && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--ln-text-dim)' }}>{meta}</span>}
+        <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, fontWeight: 700, color: 'var(--ln-text)' }}>{name}</span>
+        {meta && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-text-dim)' }}>{meta}</span>}
       </div>
       {children}
     </div>
   )
 }
 
-/** The store-vs-sell choice for a self-directed haul (KES-271). Kept compact:
- *  a one-line explanation, a two-option toggle, and a single detail row that is
- *  either the silo fill (store) or the market value (sell). */
-function CargoDispositionPanel({
-  cargo, minerals, disposition, setDisposition, hasEarthStorage, storageUsed, storageCapacity, haulMarketValue, overflowUnits,
+/** Read-only confirmation of the destination chosen before a Free Ops launch. */
+function CargoDestinationPanel({
+  cargo, minerals, disposition, hasEarthStorage, storageUsed, storageCapacity, haulMarketValue, overflowUnits,
 }: {
   cargo: Record<string, number>
   minerals: Record<string, MineralMeta>
   disposition: 'store' | 'sell'
-  setDisposition: (d: 'store' | 'sell') => void
   hasEarthStorage: boolean
   storageUsed: number
   storageCapacity: number
@@ -406,22 +413,26 @@ function CargoDispositionPanel({
   const priorUnits = Math.max(0, storageUsed - haulUnits)
   const cap = storageCapacity > 0 ? storageCapacity : 1
   const segments = Object.entries(cargo).filter(([, n]) => n > 0)
+  const miningFee = Math.round(haulMarketValue * 0.5)
+  const transportFee = haulMarketValue - miningFee
   return (
     <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
-      <div className="ln-section-label" style={{ marginBottom: 6 }}>Your ore · keep or sell</div>
-      <p style={{ margin: '0 0 12px', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
-        No client is owed this haul. Keep it in the silo to sell when the price is right or spend on your own builds, or sell the lot now at market.
+      <div className="ln-section-label" style={{ marginBottom: 6 }}>Free Ops haul</div>
+      {haulMarketValue > 0 && (
+        <>
+          <PayRow testId="debrief-mining-fee" label="Mining fee · your program" value={miningFee} />
+          <PayRow testId="debrief-transport-fee" label="Transport fee · return" value={transportFee} />
+        </>
+      )}
+      <p style={{ margin: '0 0 12px', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
+        No client is owed this haul. Destination selected at launch: {store ? 'Earth storage' : 'sell on Earth return'}.
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <DispositionOption testId="debrief-store" active={store} disabled={!hasEarthStorage} onClick={() => { captureGameEvent('debrief_disposition_chosen', { disposition: 'store' }); setDisposition('store') }} title="Keep on Earth" sub={hasEarthStorage ? 'Into the silo' : 'Needs a Vault · Earth silo'} />
-        <DispositionOption testId="debrief-sell" active={!store} onClick={() => { captureGameEvent('debrief_disposition_chosen', { disposition: 'sell' }); setDisposition('sell') }} title="Sell now" sub="At market price" />
-      </div>
       <div style={{ marginTop: 12 }}>
         {store ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ font: '700 9px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Silo</span>
-              <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--ln-text-dim)' }}>{Math.min(storageUsed, storageCapacity)} / {storageCapacity} U</span>
+              <span style={{ font: '700 14px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Silo</span>
+              <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-text-dim)' }}>{Math.min(storageUsed, storageCapacity)} / {storageCapacity} U</span>
             </div>
             <div style={{ height: 12, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--ln-surface-2)', border: '1px solid var(--ln-hairline)' }} aria-hidden="true">
               {priorUnits > 0 && <span style={{ width: `${Math.min(100, (priorUnits / cap) * 100)}%`, background: 'var(--ln-cyan)', opacity: 0.5 }} />}
@@ -430,50 +441,23 @@ function CargoDispositionPanel({
               ))}
             </div>
             {overflowUnits > 0 && (
-              <p style={{ margin: '8px 0 0', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 11, lineHeight: 1.4, color: 'var(--ln-text-dim)' }}>
+              <p style={{ margin: '8px 0 0', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.4, color: 'var(--ln-text-dim)' }}>
                 Silo full — <strong style={{ color: 'var(--ln-text)' }}>{overflowUnits}</strong> units over capacity are sold automatically.
               </p>
             )}
           </>
         ) : (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span style={{ font: '700 10px var(--ln-font-display)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Sale value</span>
+            <span style={{ font: '700 14px var(--ln-font-display)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Sale value</span>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-amber)', lineHeight: 1 }}>{formatCurrency(haulMarketValue)}</span>
           </div>
         )}
       </div>
       {!hasEarthStorage && (
-        <p style={{ margin: '10px 0 0', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 11, lineHeight: 1.4, color: 'var(--ln-text-muted)' }}>
+        <p style={{ margin: '10px 0 0', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.4, color: 'var(--ln-text-muted)' }}>
           Build a Mineral Vault in the Subsurface or a Surface Silo after the tutorial. Underground vaults provide larger capacity; until then, ore is sold on return.
         </p>
       )}
     </Panel>
-  )
-}
-
-function DispositionOption({ active, disabled, onClick, title, sub, testId }: {
-  active: boolean
-  disabled?: boolean
-  onClick: () => void
-  title: string
-  sub: string
-  testId: string
-}) {
-  return (
-    <button
-      type="button"
-      data-testid={testId}
-      onClick={disabled ? undefined : onClick}
-      disabled={disabled}
-      style={{
-        textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: disabled ? 'not-allowed' : 'pointer',
-        border: `1.5px solid ${active ? 'var(--ln-cyan)' : 'var(--ln-hairline)'}`,
-        background: active ? 'var(--ln-cyan-soft)' : 'var(--ln-surface-2)',
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      <div style={{ font: '800 12px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: active ? 'var(--ln-cyan)' : 'var(--ln-text)' }}>{title}</div>
-      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>{sub}</div>
-    </button>
   )
 }

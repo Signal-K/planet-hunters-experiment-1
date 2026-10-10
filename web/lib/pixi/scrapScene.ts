@@ -22,13 +22,13 @@ import { Application, Assets, Container, Graphics, Sprite, Text, TextStyle, Text
 
 // Mirrors the current deep command tokens for Pixi.
 const C = {
-  bg:      0x050b16,
+  bg:      0xdbeaf6,
   paper:   0xe6efff,
-  paper2:  0x122236,
-  ink:     0xe6efff,
-  inkDim:  0xa9b8ce,
-  line:    0x70d9ea,
-  blue:    0x70d9ea,
+  paper2:  0xf4f9fd,
+  ink:     0x0f2436,
+  inkDim:  0x3d5568,
+  line:    0x2f86c0,
+  blue:    0x1f6aa5,
   pink:    0xff5a6a,
 } as const
 
@@ -149,7 +149,7 @@ export function buildScrapScene(
     text: 'STAGE RECOVERY',
     style: new TextStyle({
       fontFamily: '"Oxanium", "Turret Road", monospace',
-      fontSize: 8, fontWeight: '800', fill: C.blue, letterSpacing: 2,
+      fontSize: 14, fontWeight: '800', fill: C.blue, letterSpacing: 2,
     }),
   })
   binLabel.anchor.set(0.5, 0)
@@ -220,7 +220,7 @@ export function buildScrapScene(
     text: 'RECOVERED STAGES — DISMANTLE INTO PARTS',
     style: new TextStyle({
       fontFamily: '"Oxanium", "Turret Road", monospace',
-      fontSize: 10, fontWeight: '800', fill: C.ink, letterSpacing: 1.5,
+      fontSize: 14, fontWeight: '800', fill: C.ink, letterSpacing: 1.5,
     }),
   })
   caption.anchor.set(0.5, 0)

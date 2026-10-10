@@ -20,16 +20,21 @@
   inset: 0;
 }
 
-.landedShip {
+.siteLock {
   position: absolute;
-  left: 6%;
-  bottom: 12%;
+  left: 58%;
+  top: 42%;
+  width: 72px;
+  height: 72px;
   z-index: 2;
-  width: min(27vw, 310px);
-  max-height: 54%;
-  object-fit: contain;
   pointer-events: none;
-  filter: drop-shadow(0 18px 22px rgba(0,0,0,.58));
+}
+
+.landedShip {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-bottom: 4px;
 }
 
 .targetLabel {
@@ -56,13 +61,13 @@
 .fee span,
 .holdState span {
   color: var(--ln-text-muted);
-  font: 700 9px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .18em;
 }
 
 .targetLabel strong {
   color: var(--ln-cyan);
-  font: 800 12px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .1em;
   text-transform: uppercase;
 }
@@ -76,7 +81,7 @@
   gap: 9px;
   padding: 16px;
   border-top: 1px solid rgba(112,217,234, .18);
-  background: linear-gradient(180deg, var(--ln-panel), var(--ln-void) 24%);
+  background: linear-gradient(180deg, var(--ln-panel), #e8f1f8 24%);
 }
 
 .statusRow,
@@ -97,7 +102,7 @@
 .contract {
   margin-top: 3px;
   color: var(--ln-text);
-  font: 700 13px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
 }
 
 .timer {
@@ -107,7 +112,7 @@
 
 .progressMeta strong {
   color: var(--ln-cyan);
-  font: 700 12px var(--ln-font-mono);
+  font: 700 var(--ln-fs-micro) var(--ln-font-mono);
 }
 
 .track {
@@ -139,14 +144,14 @@
   border-radius: 6px;
   background: var(--ln-panel-2);
   color: var(--ln-text-dim);
-  font: 600 10px var(--ln-font-display);
+  font: 600 var(--ln-fs-micro) var(--ln-font-display);
 }
 
 .cargoRow strong,
 .holdState strong {
   margin-left: auto;
   color: var(--ln-text);
-  font: 700 11px var(--ln-font-mono);
+  font: 700 var(--ln-fs-micro) var(--ln-font-mono);
 }
 
 .swatch {
@@ -169,8 +174,12 @@
 .fee {
   padding: 9px 10px;
   border-left: 2px solid var(--ln-amber);
-  background: rgba(245, 166, 35, .07);
+  background: var(--ln-bp-paper, #fff);
+  border: 1px solid var(--ln-bp-line-strong, var(--ln-hairline-strong));
+  border-left: 3px solid var(--ln-bp-accent, #1f78c8);
 }
+
+.fee span { color: var(--ln-bp-ink, var(--ln-text)); font-size: 14px; }
 
 .fee div {
   display: flex;
@@ -179,22 +188,43 @@
 }
 
 .fee small {
-  color: var(--ln-text-muted);
-  font: 10px var(--ln-font-body);
+  color: var(--ln-bp-ink-mute, var(--ln-text-muted));
+  font: 14px var(--ln-font-body);
 }
 
 .fee strong {
-  color: var(--ln-amber);
-  font: 800 14px var(--ln-font-mono);
+  color: var(--ln-bp-ink, var(--ln-text));
+  font: 800 18px var(--ln-font-mono);
+}
+
+.dumpBtn {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 2px solid var(--ln-bp-ink);
+  border-radius: 8px;
+  background: var(--ln-bp-blue);
+  color: var(--ln-bp-paper);
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.dumpBtn:disabled {
+  opacity: 1;
+  background: var(--ln-bp-paper-2);
+  color: var(--ln-bp-ink);
+  border-style: dashed;
+  cursor: not-allowed;
 }
 
 .dumpError {
   padding: 8px 10px;
-  border: 1px solid rgba(255, 179, 71, .36);
+  border: 1px solid rgba(94, 215, 232, .36);
   border-radius: 6px;
-  background: rgba(255, 179, 71, .08);
+  background: rgba(94, 215, 232, .08);
   color: var(--ln-warn);
-  font: 700 10px var(--ln-font-display);
+  font: 700 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .12em;
   text-align: center;
 }
@@ -204,7 +234,7 @@
   border-left: 2px solid var(--ln-ok);
   background: color-mix(in srgb, var(--ln-ok) 8%, transparent);
   color: var(--ln-text-dim);
-  font: 600 10px/1.4 var(--ln-font-body);
+  font: 600 var(--ln-fs-micro)/1.4 var(--ln-font-body);
 }
 
 @media (max-height: 720px) {
@@ -240,7 +270,7 @@
 
   .contract,
   .timer {
-    font-size: 12px;
+    font-size: var(--ln-fs-micro);
   }
 
   .cargoRow,

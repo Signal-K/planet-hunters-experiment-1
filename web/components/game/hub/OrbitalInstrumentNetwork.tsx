@@ -57,7 +57,7 @@ export function OrbitalInstrumentNetwork({
           {transitOnline && <span className="hub-orbital-network__satellite" aria-hidden="true" />}
           {deepSpaceOnline && <span className="hub-orbital-network__telescope" aria-hidden="true" />}
           {transitOnline && onOpenTransit && (
-            <button type="button" className="hub-orbital-network__hit hub-orbital-network__hit--transit" data-testid="hub-sky-telescope-transit" aria-label="Transit telescope: open instrument hub" onClick={onOpenTransit} />
+            <button type="button" className="hub-orbital-network__hit hub-orbital-network__hit--transit" data-testid="hub-sky-telescope-transit" aria-label="Transit telescope: open control station" onClick={onOpenTransit} />
           )}
           {deepSpaceOnline && onOpenDeepSpace && (
             <button type="button" className="hub-orbital-network__hit hub-orbital-network__hit--deep-space" data-testid="hub-sky-telescope-deep-space" aria-label="Deep space telescope: open asteroid discovery" onClick={onOpenDeepSpace} />

@@ -1,10 +1,15 @@
-import { dailyTessCandidates, dailyAsteroidCandidates, type TessCandidate, type AsteroidCandidate } from '@/lib/data'
+import { dailyTessCandidates, dailyAsteroidCandidates, dailySaturnCandidates, type TessCandidate, type AsteroidCandidate, type SaturnCandidate } from '@/lib/data'
+import { isNewMoonDay } from '@/lib/data/sky-events'
 import type { Player } from '@/lib/game-types'
 
 export const TRANSIT_TELESCOPE_INSTRUMENT_ID = 'transit-telescope'
 export const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
 
-export type InstrumentSignalKind = 'transit' | 'deep-space'
+export const NEW_MOON_EXTRA_ASTEROID_CANDIDATES = 1
+
+export const SATURN_IMAGER_INSTRUMENT_ID = 'saturn-imager'
+
+export type InstrumentSignalKind = 'transit' | 'deep-space' | 'saturn'
 
 export interface InstrumentSignal {
   id: string
@@ -12,7 +17,7 @@ export interface InstrumentSignal {
   instrumentId: string
   title: string
   subtitle: string
-  inspectorScreen: 'galaxy' | 'asteroid-discovery'
+  inspectorScreen: 'galaxy' | 'asteroid-discovery' | 'saturn-storm-search'
 }
 
 type InstrumentFeedPlayer = Pick<
@@ -92,7 +97,10 @@ export function deepSpaceInstrumentDigest(
   player: DeepSpaceInstrumentFeedPlayer,
   dateKey: string
 ): AsteroidCandidate[] {
-  return dailyAsteroidCandidates(candidates, dateKey, deepSpaceInstrumentLevel(player))
+  // SSL-491: on the UTC day of a new moon (monthly) the dark sky serves one
+  // extra asteroid candidate. Deterministic: same dateKey, same digest.
+  const extra = isNewMoonDay(dateKey) ? NEW_MOON_EXTRA_ASTEROID_CANDIDATES : 0
+  return dailyAsteroidCandidates(candidates, dateKey, deepSpaceInstrumentLevel(player) + extra)
 }
 
 export function unresolvedDeepSpaceInstrumentDigest(
@@ -106,6 +114,20 @@ export function unresolvedDeepSpaceInstrumentDigest(
     player,
     dateKey,
   )
+}
+
+export function unresolvedSaturnInstrumentDigest(
+  candidates: SaturnCandidate[],
+  player: Pick<Player, 'saturnClassifications'>,
+  dateKey: string
+): SaturnCandidate[] {
+  const classifications = player.saturnClassifications ?? {}
+  return dailySaturnCandidates(candidates.filter(candidate => {
+    const progress = classifications[candidate.id]
+    // A legacy single-verdict record was the old whole-frame submission.
+    // New records stay in the feed until all nine panes are complete.
+    return !progress || (!!progress.cells && Object.keys(progress.cells).length < 9)
+  }), dateKey)
 }
 
 export function instrumentDigestWasNotified(
@@ -145,6 +167,7 @@ export function pickInstrumentInspectCandidate<T extends { id: string }>(
 export function collectInstrumentSignals(opts: {
   tess: TessCandidate[]
   asteroids: AsteroidCandidate[]
+  saturn?: SaturnCandidate[]
   player: Pick<
     Player,
     | 'freeOperations'
@@ -155,6 +178,8 @@ export function collectInstrumentSignals(opts: {
     | 'tessClassifications'
     | 'deepSpaceTelescopeLevel'
     | 'asteroidClassifications'
+    | 'saturnImagerLaunchedAt'
+    | 'saturnClassifications'
     | 'instrumentDigestNotifiedOn'
   >
   dateKey: string
@@ -181,6 +206,18 @@ export function collectInstrumentSignals(opts: {
         title: item.tempDesig,
         subtitle: `V ${item.vMag.toFixed(1)} · score ${Math.round(item.score)}`,
         inspectorScreen: 'asteroid-discovery',
+      })
+    }
+  }
+  if (opts.player.freeOperations && opts.player.saturnImagerLaunchedAt) {
+    for (const item of unresolvedSaturnInstrumentDigest(opts.saturn ?? [], opts.player, opts.dateKey)) {
+      signals.push({
+        id: item.id,
+        kind: 'saturn',
+        instrumentId: SATURN_IMAGER_INSTRUMENT_ID,
+        title: item.opusId.toUpperCase(),
+        subtitle: `Cassini ISS · ${item.opusId}`,
+        inspectorScreen: 'saturn-storm-search',
       })
     }
   }

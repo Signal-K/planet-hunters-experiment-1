@@ -57,7 +57,7 @@ export default function DevShortcuts() {
     // the DEV button. Left at its original anchor; the screens that were
     // actually clipped (HubScreen's own inline header) now reserve
     // horizontal clearance for it instead.
-    <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 999, userSelect: 'none' }}>
+    <div className="dev-shortcuts" style={{ position: 'absolute', top: 8, left: 8, zIndex: 999, userSelect: 'none' }}>
       <button
         data-testid="dev-shortcuts-toggle"
         onClick={() => setOpen(o => !o)}

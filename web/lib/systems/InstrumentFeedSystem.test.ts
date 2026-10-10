@@ -123,6 +123,14 @@ describe('InstrumentFeedSystem', () => {
       expect(deepSpaceInstrumentDigest(asteroids, player({ deepSpaceTelescopeLevel: 3 }), '2026-07-30')).toHaveLength(3)
     })
 
+    it('serves +1 candidate on new-moon days only, deterministically', () => {
+      expect(deepSpaceInstrumentDigest(asteroids, player(), '2026-10-10')).toHaveLength(2)
+      expect(deepSpaceInstrumentDigest(asteroids, player(), '2026-10-10'))
+        .toEqual(deepSpaceInstrumentDigest(asteroids, player(), '2026-10-10'))
+      expect(deepSpaceInstrumentDigest(asteroids, player(), '2026-10-09')).toHaveLength(1)
+      expect(deepSpaceInstrumentDigest(asteroids, player(), '2026-10-11')).toHaveLength(1)
+    })
+
     it('counts only unresolved candidates in today’s deterministic digest', () => {
       const digest = deepSpaceInstrumentDigest(asteroids, player({ deepSpaceTelescopeLevel: 2 }), '2026-07-30')
       const unresolved = unresolvedDeepSpaceInstrumentDigest(asteroids, player({

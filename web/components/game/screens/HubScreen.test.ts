@@ -15,9 +15,9 @@ describe('Earth Base module composition', () => {
     // These are the authored CSS footprints for the current flat sprite
     // renders. Keep the test tied to the rendered assets rather than the
     // retired modular-kit dimensions.
-    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad.width).toBe(172)
-    expect(EARTH_BASE_STRUCTURE_SIZES.hangar.width).toBe(226)
-    expect(EARTH_BASE_STRUCTURE_SIZES['surface-silo']).toEqual({ width: 120, height: 78 })
+    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad.width).toBe(84)
+    expect(EARTH_BASE_STRUCTURE_SIZES.hangar.width).toBe(176)
+    expect(EARTH_BASE_STRUCTURE_SIZES['surface-silo']).toEqual({ width: 124, height: 132 })
   })
 
   it('uses the rust/steel silo render instead of the cyan SVG placeholder', () => {
@@ -30,9 +30,11 @@ describe('Earth Base module composition', () => {
   /** Support facilities stay smaller than the two primary Earth Base sprites. */
   it('keeps structure sizes in the same ratio as the Blender models', () => {
     const { launchpad, hangar, refinery } = EARTH_BASE_STRUCTURE_SIZES
-    expect(launchpad.width).toBeGreaterThan(refinery.width)
-    expect(hangar.width).toBeGreaterThan(refinery.width)
-    expect(EARTH_BASE_STRUCTURE_SIZES['surface-silo'].width).toBeLessThan(refinery.width)
+    // v5 art (SSL-489): the launchpad is a tall, narrow tower, so compare height for it and area for the hangar.
+    const area = (s: { width: number; height: number }) => s.width * s.height
+    expect(launchpad.height).toBeGreaterThan(refinery.height)
+    expect(area(hangar)).toBeGreaterThan(area(refinery))
+    expect(area(EARTH_BASE_STRUCTURE_SIZES['surface-silo'])).toBeLessThan(area(hangar))
   })
 
   it('carries an explicit height so nothing depends on intrinsic image size', () => {

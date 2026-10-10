@@ -1,4 +1,6 @@
 import { STARTING_FRANCS } from '@/lib/data/economy'
+import { canonicalSaturnLabel } from '@/lib/saturn-label'
+import { sanitizeBadges } from '@/lib/data/sky-events'
 import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, OWN_PROGRAM_CLIENT_ID, TARGETS } from '@/lib/data'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
@@ -15,17 +17,18 @@ import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/Dail
 import { CLIENT_TERRITORIES } from '@/lib/data/site-rights'
 import { createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
+import { dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'instrument-hub', 'mission-history', 'narrative-ledger']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'saturn-storm-search', 'instrument-hub', 'mission-history', 'narrative-ledger']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
-const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey'])
-const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope'])
+const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch'])
+const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager'])
 
 export const DEFAULT_STATE: GameState = {
   screen: 'intro',
@@ -68,6 +71,11 @@ export const DEFAULT_STATE: GameState = {
     tessClassifications: {},
     artifactNarrativeSeenAt: null,
     asteroidClassifications: {},
+    saturnClassifications: {},
+    saturnActiveFrameId: null,
+    moonSurveyCharts: {},
+    badges: {},
+    saturnImagerLaunchedAt: null,
     instrumentDigestNotifiedOn: {},
     dismissedHubPrompts: {},
     discoveredExoplanetTargets: {},
@@ -156,7 +164,7 @@ function normalizeCompletedMissions(value: unknown): CompletedMissionRecord[] {
       && (record.targetName === undefined || typeof record.targetName === 'string')
       && (record.runId === undefined || typeof record.runId === 'string')
       && (record.kind === undefined || record.kind === 'client' || record.kind === 'program')
-  }).slice(-100)
+  }).slice(-100).map(record => ({ ...record, title: canonicalSaturnLabel(record.title) }))
 }
 
 export function normalizeState(input: PartialSave): GameState {
@@ -184,6 +192,13 @@ export function normalizeState(input: PartialSave): GameState {
   const asteroidClassifications = player.asteroidClassifications && typeof player.asteroidClassifications === 'object'
     ? player.asteroidClassifications
     : DEFAULT_STATE.player.asteroidClassifications
+  const saturnClassifications = player.saturnClassifications && typeof player.saturnClassifications === 'object'
+    ? player.saturnClassifications
+    : DEFAULT_STATE.player.saturnClassifications
+  const moonSurveyCharts = player.moonSurveyCharts && typeof player.moonSurveyCharts === 'object'
+    ? player.moonSurveyCharts
+    : DEFAULT_STATE.player.moonSurveyCharts
+  const badges = sanitizeBadges(player.badges)
   const roverTerrainClassifications = player.roverTerrainClassifications && typeof player.roverTerrainClassifications === 'object'
     ? player.roverTerrainClassifications
     : DEFAULT_STATE.player.roverTerrainClassifications
@@ -301,7 +316,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
@@ -377,7 +392,7 @@ function dropRetiredOnboardingRun(input: GameState): GameState {
 }
 
 function repairStateRoute(rawInput: GameState): GameState {
-  const input = dropRetiredOnboardingRun(rawInput)
+  const input = dropSettledMissionRuns(dropRetiredOnboardingRun(rawInput))
   const mission = input.missionId
     ? (MISSIONS.find(m => m.id === input.missionId)
        ?? input.player.dailyClientPool?.missions.find(m => m.id === input.missionId)
@@ -386,10 +401,15 @@ function repairStateRoute(rawInput: GameState): GameState {
   const hasRuntimeMission = !!input.missionId && RUNTIME_MISSION_IDS.has(input.missionId)
   const target = input.targetId ? TARGETS.find(t => t.id === input.targetId) ?? null : null
   const hasRuntimeTarget = !!input.targetId && RUNTIME_TARGET_IDS.has(input.targetId)
-  if (MISSION_CONTEXT_SCREENS.has(input.screen) && !mission && !hasRuntimeMission) {
+  // A Free Ops player's bare /game/fab (no mission, no target) is the Free Ops
+  // Build objective screen, which owns that route (see canonicalGameRoute). It
+  // is not a lost mission context, so it must survive a cold load.
+  const isBareFreeOpsBuild = input.screen === 'fab' && input.player.freeOperations
+    && !input.missionId && !input.targetId
+  if (!isBareFreeOpsBuild && MISSION_CONTEXT_SCREENS.has(input.screen) && !mission && !hasRuntimeMission) {
     return { ...input, screen: 'missions', missionId: null, targetId: null }
   }
-  if (TARGET_CONTEXT_SCREENS.has(input.screen) && !target && !hasRuntimeTarget) {
+  if (!isBareFreeOpsBuild && TARGET_CONTEXT_SCREENS.has(input.screen) && !target && !hasRuntimeTarget) {
     return { ...input, screen: mission ? 'targets' : 'missions', targetId: null }
   }
   // A bare onboarding fab route is not a valid entry point. The Build tab is
@@ -632,6 +652,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
       returningToEarth: current.player.returningToEarth,
       debriefPending: current.player.debriefPending,
       miningCargoInProgress: current.player.miningCargoInProgress,
+      miningLaserCharges: current.player.miningLaserCharges,
       roverMiningStartedAt: current.player.roverMiningStartedAt,
       landingStartedAt: current.player.landingStartedAt,
       landingReturnStartedAt: current.player.landingReturnStartedAt,
@@ -645,7 +666,28 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.deliveredCargo = current.deliveredCargo
   }
 
+  if ((current.player.completedMissions?.length ?? 0) > 0 || (remoteState.player?.completedMissions?.length ?? 0) > 0) {
+    merged.player.completedMissions = mergeCompletedMissions(
+      current.player.completedMissions,
+      remoteState.player?.completedMissions,
+    )
+  }
+
   return normalizeAndRepair(merged)
+}
+
+/** Completions are append-only. A stale remote save must not forget a collected run. */
+function mergeCompletedMissions(
+  local: CompletedMissionRecord[] | undefined,
+  remote: CompletedMissionRecord[] | undefined,
+): CompletedMissionRecord[] {
+  const byKey = new Map<string, CompletedMissionRecord>()
+  for (const record of [...(local ?? []), ...(remote ?? [])]) {
+    const key = record.runId ?? `${record.id}:${record.completedAt}`
+    const prev = byKey.get(key)
+    if (!prev || record.completedAt >= prev.completedAt) byKey.set(key, record)
+  }
+  return Array.from(byKey.values()).sort((a, b) => a.completedAt - b.completedAt).slice(-100)
 }
 
 export function loadState(storageKey: string): GameState {

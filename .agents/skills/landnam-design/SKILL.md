@@ -4,6 +4,8 @@ description: Use this skill to generate well-branded interfaces and assets for L
 user-invocable: true
 ---
 
+> STALE-ASSET NOTICE: Landnam is a Next.js web app plus a SwiftUI native app, not Godot, and is not portrait-only. This skill's colors, dark palette and Godot prompts are historical reference only. The repo root `AGENTS.md` (light blueprint style, 14px text floor, 44px targets, real scenes, phone portrait/landscape/desktop) overrides anything below.
+
 Read the `README.md` file at the root of this skill first — it covers the brand context, content fundamentals, visual foundations, and iconography. Then explore the other available files.
 
 Key files:

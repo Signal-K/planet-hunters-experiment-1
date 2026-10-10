@@ -1,5 +1,5 @@
 import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
-import { TESS_SETTLED_LABELS, recordHasOpenConsensus } from '@/lib/citizen-science/open-anomaly'
+import { TESS_SETTLED_LABELS, recordHasOpenConsensus } from '../citizen-science/open-anomaly'
 import { mineralsForArchetype, type TargetArchetype } from './target-archetypes'
 
 export type TessVerdict = 'planet' | 'not_planet' | 'unsure'
@@ -48,7 +48,7 @@ function hashId(id: string): number {
 }
 
 function seededNoise(seed: number, index: number): number {
-  let h = seed ^ Math.imul(index + 1, 0x9e3779b9)
+  let h = seed ^ Math.imul(index + 1, 0x374b9eb9)
   h ^= h >>> 16
   h = Math.imul(h, 0x7feb352d)
   h ^= h >>> 15

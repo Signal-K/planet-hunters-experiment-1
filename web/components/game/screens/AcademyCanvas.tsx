@@ -38,13 +38,13 @@ function readTokenColor(el: Element, name: string, fallback: number): number {
 
 function readPalette(el: Element): AcademyScenePalette {
   return {
-    surface: readTokenColor(el, '--ln-surface-2', 0xf2eee4),
+    surface: readTokenColor(el, '--ln-bp-bg', 0xeef3f8),
     surfaceBright: readTokenColor(el, '--ln-surface', 0xffffff),
-    hairline: readTokenColor(el, '--ln-hairline-strong', 0xc9c4b6),
-    cyan: readTokenColor(el, '--ln-cyan', 0x1c7fbf),
+    hairline: readTokenColor(el, '--ln-bp-paper-2', 0xdfe9f3),
+    cyan: readTokenColor(el, '--ln-bp-blue', 0x1f78c1),
     cyanBright: readTokenColor(el, '--ln-cyan-bright', 0x2a94d8),
     text: readTokenColor(el, '--ln-text', 0x1c1a14),
-    textMuted: readTokenColor(el, '--ln-text-muted', 0x7a7460),
+    textMuted: readTokenColor(el, '--ln-bp-ink-mute', 0x566879),
   }
 }
 

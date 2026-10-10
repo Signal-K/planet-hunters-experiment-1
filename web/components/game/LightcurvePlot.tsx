@@ -113,7 +113,7 @@ export default function LightcurvePlot({ points, markers, onMarker, height = 190
           <Tooltip
             contentStyle={{ background: '#0a121d', border: '1px solid rgba(112,217,234,0.3)', borderRadius: 6, fontFamily: 'var(--ln-font-mono)', fontSize: 9 }}
             labelStyle={{ color: '#7ec8ff' }}
-            itemStyle={{ color: '#f5a623' }}
+            itemStyle={{ color: '#36c6e2' }}
             labelFormatter={v => `t = ${Number(v).toFixed(2)} d`}
             formatter={(v) => [fmt(Number(v)), 'Flux']}
           />
@@ -123,17 +123,17 @@ export default function LightcurvePlot({ points, markers, onMarker, height = 190
             stroke="#3fa9ff"
             strokeWidth={1.2}
             dot={false}
-            activeDot={{ r: 3, fill: '#f5a623' }}
+            activeDot={{ r: 3, fill: '#36c6e2' }}
             isAnimationActive={false}
           />
           {markers.map(x => (
             <ReferenceLine
               key={x}
               x={x}
-              stroke="#f5a623"
+              stroke="#36c6e2"
               strokeWidth={1.5}
               strokeDasharray="4 3"
-              label={{ value: `▼`, position: 'top', fill: '#f5a623', fontSize: 9, fontFamily: 'var(--ln-font-mono)' }}
+              label={{ value: `▼`, position: 'top', fill: '#36c6e2', fontSize: 9, fontFamily: 'var(--ln-font-mono)' }}
             />
           ))}
         </LineChart>

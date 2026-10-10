@@ -2,7 +2,7 @@ import { Container, Graphics } from 'pixi.js'
 import { ScriptBehaviour } from '../components/ScriptBehaviour'
 import type { RuntimeContext } from '../RuntimeContext'
 
-const AMBER = 0xf5a623
+const AMBER = 0x36c6e2
 const CYAN = 0x3fa9ff
 const STEEL = 0x31445f
 const DEEP = 0x07101c

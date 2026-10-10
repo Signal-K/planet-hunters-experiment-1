@@ -1,0 +1,314 @@
+{
+ "flows": {
+  "onboarding": "First run and Flight Plan",
+  "core-loop": "Base, contract, launch, mine, debrief, build",
+  "ship": "Rocket art and customiser",
+  "instruments": "Telescopes and classification",
+  "field": "Rover on a surface",
+  "progression": "Skills, academy, refinery",
+  "records": "Logs",
+  "chrome": "Shared chrome"
+ },
+ "viewports": {
+  "ph": [
+   390,
+   844
+  ],
+  "ls": [
+   926,
+   428
+  ],
+  "dk": [
+   1440,
+   900
+  ]
+ },
+ "scenes": [
+  {
+   "id": "intro",
+   "name": "Intro",
+   "flow": "onboarding",
+   "web": "m1-intro",
+   "native": "intro-phone",
+   "tickets": [
+    "SSL-451"
+   ]
+  },
+  {
+   "id": "hub",
+   "name": "Earth Base",
+   "flow": "core-loop",
+   "web": "m1-hub",
+   "native": "hub-phone",
+   "tickets": [
+    "SSL-345",
+    "SSL-451"
+   ]
+  },
+  {
+   "id": "hub-structures",
+   "name": "Base with structures",
+   "flow": "core-loop",
+   "web": "storage-hub",
+   "native": "hub-structures-phone",
+   "tickets": []
+  },
+  {
+   "id": "mission-board",
+   "name": "Contract board",
+   "flow": "core-loop",
+   "web": "ui-mission-board",
+   "native": "launchpad-ops-phone",
+   "tickets": [
+    "SSL-425"
+   ]
+  },
+  {
+   "id": "launch-review",
+   "name": "Launch review",
+   "flow": "core-loop",
+   "web": "ui-target-picker",
+   "native": "launch-review-phone",
+   "tickets": [
+    "SSL-426",
+    "SSL-450",
+    "SSL-411"
+   ]
+  },
+  {
+   "id": "mining",
+   "name": "Mining",
+   "flow": "core-loop",
+   "web": "m1-mining",
+   "native": "mining-phone",
+   "tickets": [
+    "SSL-411",
+    "SSL-430"
+   ]
+  },
+  {
+   "id": "mining-actions",
+   "name": "Mining action row",
+   "flow": "core-loop",
+   "web": "m1-mining",
+   "native": "mining-actionrow-phone",
+   "tickets": [
+    "SSL-411"
+   ]
+  },
+  {
+   "id": "flight",
+   "name": "Transit",
+   "flow": "core-loop",
+   "web": "telescope-transit",
+   "native": "flight-phone",
+   "tickets": []
+  },
+  {
+   "id": "debrief",
+   "name": "Debrief",
+   "flow": "core-loop",
+   "web": "m1-debrief",
+   "native": "debrief-phone",
+   "tickets": [
+    "SSL-462"
+   ]
+  },
+  {
+   "id": "debrief-capacitor",
+   "name": "Debrief laser capacitor",
+   "flow": "core-loop",
+   "web": "m1-debrief",
+   "native": "debrief-capacitor-phone",
+   "tickets": [
+    "SSL-462"
+   ],
+   "note": "Web has no preset; needs 3 missions done"
+  },
+  {
+   "id": "build",
+   "name": "Build",
+   "flow": "core-loop",
+   "web": "ui-build",
+   "native": "build-phone",
+   "tickets": [
+    "SSL-424"
+   ]
+  },
+  {
+   "id": "customiser",
+   "name": "Ship customiser",
+   "flow": "ship",
+   "web": "ship-customizer",
+   "native": null,
+   "tickets": [
+    "SSL-427",
+    "SSL-472"
+   ]
+  },
+  {
+   "id": "hangar-assembly",
+   "name": "Hangar assembly",
+   "flow": "ship",
+   "web": "ui-hangar-assembly",
+   "native": null,
+   "tickets": [
+    "SSL-427"
+   ]
+  },
+  {
+   "id": "control-station",
+   "name": "Control station",
+   "flow": "instruments",
+   "web": "ui-instrument-hub",
+   "native": "control-station-phone",
+   "tickets": [
+    "SSL-496"
+   ]
+  },
+  {
+   "id": "tess",
+   "name": "TESS classify",
+   "flow": "instruments",
+   "web": "ui-tess-discovery",
+   "native": "tess-discovery-phone",
+   "tickets": [
+    "SSL-497"
+   ]
+  },
+  {
+   "id": "tess-pointing",
+   "name": "TESS pointing",
+   "flow": "instruments",
+   "web": "ui-tess-discovery",
+   "native": "tess-pointing-phone",
+   "tickets": [
+    "SSL-497"
+   ]
+  },
+  {
+   "id": "asteroid",
+   "name": "Asteroid discovery",
+   "flow": "instruments",
+   "web": "ui-asteroid-discovery",
+   "native": "asteroid-discovery-phone",
+   "tickets": [
+    "SSL-497"
+   ]
+  },
+  {
+   "id": "saturn",
+   "name": "Saturn storm search",
+   "flow": "instruments",
+   "web": "ui-saturn-storm-search",
+   "native": "saturn-imager-phone",
+   "tickets": [
+    "SSL-492"
+   ]
+  },
+  {
+   "id": "sky-badges",
+   "name": "Sky badges",
+   "flow": "instruments",
+   "web": null,
+   "native": "sky-badges-phone",
+   "tickets": [
+    "SSL-491"
+   ]
+  },
+  {
+   "id": "rover",
+   "name": "Rover field",
+   "flow": "field",
+   "web": "ui-rover-mining",
+   "native": "rover-field-phone",
+   "tickets": [
+    "SSL-485",
+    "SSL-486",
+    "SSL-487"
+   ]
+  },
+  {
+   "id": "rover-touchdown",
+   "name": "Rover touchdown",
+   "flow": "field",
+   "web": "ui-rover-mining",
+   "native": "rover-touchdown-phone",
+   "tickets": []
+  },
+  {
+   "id": "skill-tree",
+   "name": "Skill tree",
+   "flow": "progression",
+   "web": "ui-skill-tree",
+   "native": "skill-tree-phone",
+   "tickets": []
+  },
+  {
+   "id": "academy",
+   "name": "Academy",
+   "flow": "progression",
+   "web": "ui-academy",
+   "native": "academy-phone",
+   "tickets": []
+  },
+  {
+   "id": "refinery",
+   "name": "Refinery",
+   "flow": "progression",
+   "web": "ui-refinery",
+   "native": "refinery-phone",
+   "tickets": []
+  },
+  {
+   "id": "surface-ops",
+   "name": "Surface ops",
+   "flow": "progression",
+   "web": "ui-surface-ops",
+   "native": "surface-ops-phone",
+   "tickets": []
+  },
+  {
+   "id": "mission-log",
+   "name": "Mission log",
+   "flow": "records",
+   "web": "ui-mission-log",
+   "native": "mission-log-phone",
+   "tickets": []
+  },
+  {
+   "id": "ledger",
+   "name": "Ledger",
+   "flow": "records",
+   "web": "ui-ledger",
+   "native": "ledger-phone",
+   "tickets": []
+  },
+  {
+   "id": "help",
+   "name": "Help sheet",
+   "flow": "chrome",
+   "web": null,
+   "native": "help-sheet-phone",
+   "tickets": [
+    "SSL-451"
+   ]
+  },
+  {
+   "id": "market",
+   "name": "Market",
+   "flow": "progression",
+   "web": "ui-market",
+   "native": "market-phone",
+   "tickets": []
+  },
+  {
+   "id": "launchpad",
+   "name": "Launchpad",
+   "flow": "core-loop",
+   "web": "ui-launchpad",
+   "native": null,
+   "tickets": []
+  }
+ ]
+}

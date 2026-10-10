@@ -159,7 +159,7 @@ describe('HubSubsurfaceView', () => {
     await act(async () => root.unmount())
   })
 
-  it('keeps an unaffordable excavation action tappable and labels it aria-disabled', async () => {
+  it('keeps an unaffordable excavation tappable (aria-disabled) until both francs and aluminium are available, with the missing amounts explained', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
     let unavailable = 0
@@ -173,6 +173,9 @@ describe('HubSubsurfaceView', () => {
       cta?.click()
     })
     expect(unavailable).toBe(1)
+    expect(host.querySelector('[data-testid="subsurface-excavate-lock-copy"]')?.textContent)
+      .toContain('10 aluminium (you have 0)')
+    expect(host.textContent).toContain('Free Ops: mine Aluminium on Mercury or Venus, then bring it home to the Base.')
     await act(async () => root.unmount())
   })
 

@@ -3,7 +3,7 @@
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
-import { isFreeHaulMission, isOwnProgramMission, rocketDisplayForConfig } from '@/lib/data'
+import { isFreeHaulMission, isOwnProgramMission, laserCapacitorBonus, rocketDisplayForConfig } from '@/lib/data'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
@@ -14,6 +14,11 @@ import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUni
 import { TRANSPORT_LESSON_MISSIONS_DONE } from '@/lib/systems/AgencyOnboardingSystem'
 import { ownershipIdentity } from '@/lib/systems/SandboxSystem'
 import { isFreeHaulEligibleMission } from '@/lib/data'
+import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-events'
+import { debrisNow } from '@/lib/hooks/useDebrisEvent'
+import { captureGameEvent } from '@/lib/posthog'
+
+const reportedDebrisBadges = new Set<string>()
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
@@ -22,9 +27,7 @@ export type MissionOperationRoute = Extract<Screen, 'transit' | 'landing' | 'min
 interface MissionOperationRoutesProps {
   screen: MissionOperationRoute
   game: Game
-  hasCoach: boolean
   trainingMiningTry: boolean
-  coachManual: boolean
   transitTarget: Target
   debriefOriginTarget: Target
   deliveryTargetName?: string
@@ -35,9 +38,7 @@ interface MissionOperationRoutesProps {
 export default function MissionOperationRoutes({
   screen,
   game,
-  hasCoach,
   trainingMiningTry,
-  coachManual,
   transitTarget,
   debriefOriginTarget,
   deliveryTargetName,
@@ -89,6 +90,9 @@ export default function MissionOperationRoutes({
                 deepSpaceTelescopeLaunchedAt: game.mission?.payload?.instrumentId === 'deep-space-telescope'
                   ? (player.deepSpaceTelescopeLaunchedAt ?? Date.now())
                   : player.deepSpaceTelescopeLaunchedAt,
+                saturnImagerLaunchedAt: game.mission?.payload?.instrumentId === 'saturn-imager'
+                  ? (player.saturnImagerLaunchedAt ?? Date.now())
+                  : player.saturnImagerLaunchedAt,
               }))
               game.setLastCargo({})
               game.go('debrief')
@@ -165,11 +169,22 @@ export default function MissionOperationRoutes({
           target={game.target}
           rocketImageSrc={rocketDisplay.img}
           initialCargo={game.player.miningCargoInProgress}
-          onBack={(cargo) => {
+          initialCharges={game.player.miningLaserCharges}
+          francs={game.player.francs}
+          onSpendFrancs={amount => game.setPlayer(player => ({ ...player, francs: Math.max(0, player.francs - amount) }))}
+          onPersist={(cargo, charges) => {
+            game.setPlayer(player => ({
+              ...player,
+              miningCargoInProgress: Object.keys(cargo).length > 0 ? cargo : undefined,
+              miningLaserCharges: charges,
+            }))
+          }}
+          onBack={(cargo, charges) => {
             game.setPlayer(player => ({
               ...player,
               missionPhase: 'mining',
               miningCargoInProgress: Object.keys(cargo).length > 0 ? cargo : undefined,
+              miningLaserCharges: charges,
             }))
             game.go('hub')
           }}
@@ -192,11 +207,9 @@ export default function MissionOperationRoutes({
           }}
           minerals={game.catalog.minerals}
           laserChargeCap={game.laserChargeCap}
+          laserBonusCharges={laserCapacitorBonus(game.player.laserCapacitorLevel)}
           laserTier={game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1}
-          hasCoach={hasCoach}
           trainingMiningTry={trainingMiningTry}
-          coachManual={coachManual}
-          onCoachDone={() => game.completeStep(6)}
           deliveryTargetName={deliveryTargetName}
           onAbandon={game.abandonMission}
           addToast={game.addToast}
@@ -212,6 +225,23 @@ export default function MissionOperationRoutes({
           isFreeHaulEligible={isFreeHaulEligibleMission(game.mission)}
           hasEarthStorage={earthStorageBuilt(game.player)}
           initialEarthDisposition={game.player.freeHaulDisposition}
+          orionidsBadgeTier={game.player.badges?.['orionids-2026']?.tier ?? null}
+          onDebrisMined={resourceId => {
+            const now = debrisNow()
+            const preset = DEBRIS_PRESETS.find(p => p.resourceId === resourceId)
+            if (!preset) return
+            captureGameEvent('sky_event_debris_mined', { event_id: preset.eventId, resource: resourceId })
+            // State update is pure and idempotent; the toast/analytics side effects
+            // are deduped per event so a re-run updater or fast second chunk can't repeat them.
+            const { badge } = applyDebrisMined(game.player, preset, now)
+            if (badge && !reportedDebrisBadges.has(badge.eventId)) {
+              reportedDebrisBadges.add(badge.eventId)
+              captureGameEvent('badge_earned', { event_id: badge.eventId, tier: badge.tier, activity: 'debris-mining' })
+              const name = getSkyEvent(badge.eventId)?.name ?? preset.label
+              game.addToast(`${name} ${badge.tier} badge earned`, 'ok')
+            }
+            game.setPlayer(player => applyDebrisMined(player, preset, now).player)
+          }}
         />
       )
 
@@ -266,13 +296,16 @@ export default function MissionOperationRoutes({
           originTargetName={originTargetName}
           cargo={debriefCargo}
           onDone={game.onDebriefDone}
+          onBuyLaserCapacitor={game.onBuyLaserCapacitor}
+          laserCapacitorLevel={game.player.laserCapacitorLevel ?? 0}
+          stashUnits={storedUnits(game.player.stash)}
+          badges={game.player.badges}
           minerals={game.catalog.minerals}
           clients={game.catalog.clients}
           clientMissions={game.player.clientMissions}
           freeOperations={game.player.freeOperations}
           annotations={game.player.researchAnnotations}
           missionsDone={game.player.missionsDone}
-          hasCoach={hasCoach}
           shipDestroyed={!!game.player.shipDestroyed}
           rocket={game.rocket}
           rocketSource={game.player.missionRocketSource}

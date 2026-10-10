@@ -26,7 +26,7 @@ export default function SuiteHopRail({ signedIn }: SuiteHopRailProps) {
             padding: '4px 8px', borderRadius: 999,
             background: 'var(--ln-panel)', border: '1px solid var(--ln-hairline)',
             color: 'var(--ln-cyan)', fontFamily: 'var(--ln-font-mono)',
-            fontSize: 10, letterSpacing: '0.12em',
+            fontSize: 14, letterSpacing: '0.12em',
           }}
         >
           {chip}
@@ -40,11 +40,11 @@ export default function SuiteHopRail({ signedIn }: SuiteHopRailProps) {
           title={hop.caption}
           aria-label={hop.caption}
           style={{
-            minHeight: 32, display: 'flex', alignItems: 'center', padding: '0 12px',
+            minHeight: 44, display: 'flex', alignItems: 'center', padding: '0 12px',
             borderRadius: 999, textDecoration: 'none',
             background: 'var(--ln-panel)', border: '1px solid var(--ln-hairline)',
             color: 'var(--ln-cyan)', fontFamily: 'var(--ln-font-display)',
-            fontSize: 10, fontWeight: 800, letterSpacing: '0.12em',
+            fontSize: 14, fontWeight: 800, letterSpacing: '0.12em',
           }}
         >
           {hop.label}

@@ -48,10 +48,10 @@ export default function ModuleCard({ name, cost, glyph, state, lockedNote, onCli
         {glyph}
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ font: '700 11px var(--ln-font-display)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>{name}</div>
-        <div style={{ font: '400 10px var(--ln-font-mono)', color: 'var(--ln-text-muted)' }}>{locked ? (lockedNote ?? 'locked') : cost}</div>
+        <div style={{ font: '700 14px var(--ln-font-display)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>{name}</div>
+        <div style={{ font: '400 14px var(--ln-font-mono)', color: 'var(--ln-text-muted)' }}>{locked ? (lockedNote ?? 'locked') : cost}</div>
       </span>
-      <span style={{ font: '700 10px var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', color: accent, flexShrink: 0 }}>
+      <span style={{ font: '700 14px var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', color: accent, flexShrink: 0 }}>
         {locked ? 'locked' : installed ? '✓ in' : 'add'}
       </span>
     </div>

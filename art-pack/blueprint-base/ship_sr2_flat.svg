@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="180" viewBox="0 0 480 180" stroke-linejoin="round" stroke-linecap="round" stroke="#0f2436" stroke-width="5">
+  <g opacity=".2" stroke="none" fill="#0f2436" transform="translate(8 8)"><path d="M4 90L50 44V136Z"/><rect x="50" y="44" width="300" height="92"/><path d="M348 44L428 66V114L348 136Z"/></g>
+  <path d="M12 90L66 40V140Z" fill="#dfe9f3"/>
+  <path d="M170 44L190 14H250L270 44Z M170 136L190 166H250L270 136Z" fill="#bcd6ec"/>
+  <rect x="86" y="22" width="70" height="22" fill="#cfe6f6"/><rect x="96" y="12" width="50" height="10" fill="#42a6df"/>
+  <rect x="50" y="44" width="300" height="92" fill="#f4f8fc"/>
+  <rect x="50" y="78" width="300" height="24" fill="#168a80"/>
+  <rect x="120" y="44" width="22" height="92" fill="#dfe9f3"/><rect x="236" y="44" width="22" height="92" fill="#dfe9f3"/>
+  <circle cx="190" cy="90" r="16" fill="#cfe6f6"/><circle cx="190" cy="90" r="6" fill="#42a6df" stroke-width="3"/>
+  <path d="M348 50L418 70V110L348 130Z" fill="#dfe9f3"/>
+  <path d="M418 70L462 54V126L418 110Z" fill="#42a6df"/>
+</svg>

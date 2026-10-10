@@ -24,6 +24,7 @@ const FILTER_LABEL: Record<InstrumentSourceFilter, string> = {
   all: 'ALL',
   transit: 'TESS',
   'deep-space': 'NEOCP',
+  saturn: 'CASSINI',
 }
 
 export function InstrumentHubControlsBar({

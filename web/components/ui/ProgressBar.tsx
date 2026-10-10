@@ -16,9 +16,9 @@ const TONE: Record<ProgressBarTone, { track: string; fill: string; glow: string 
     glow: '0 0 6px rgba(112,217,234,0.5)',
   },
   amber: {
-    track: 'rgba(245,166,35,0.14)',
+    track: 'rgba(54,198,226,0.14)',
     fill: 'linear-gradient(90deg, var(--ln-amber-press), var(--ln-amber-bright))',
-    glow: '0 0 6px rgba(245,166,35,0.45)',
+    glow: '0 0 6px rgba(54,198,226,0.45)',
   },
   ok: {
     track: 'rgba(57,211,106,0.14)',

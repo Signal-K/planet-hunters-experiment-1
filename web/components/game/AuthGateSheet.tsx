@@ -68,7 +68,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
 
   return (
     <div
-      className="ln-sheet ln-sheet--bottom auth-gate"
+      className="ln-sheet ln-sheet--bottom auth-gate theme-blueprint"
       style={keyboardInset ? ({ '--gate-kb': `${keyboardInset}px` } as React.CSSProperties) : undefined}
     >
       <div className="auth-gate__scrim" aria-hidden="true" />
@@ -80,16 +80,16 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
         <div className="auth-gate__scene" aria-hidden="true">
           <div className="auth-gate__scene-copy">
             <span className="auth-gate__eyebrow">LANDNAM // BASE</span>
-            <span className="auth-gate__scene-title">MISSION CONTROL</span>
-            <span className="auth-gate__scene-status"><i /> FLIGHT SYSTEMS READY</span>
+            <span className="auth-gate__scene-title">PROGRAM MAP</span>
+            <span className="auth-gate__scene-status"><i /> SYSTEM LINK READY</span>
           </div>
           <div className="auth-gate__orbit auth-gate__orbit--outer" />
           <div className="auth-gate__orbit auth-gate__orbit--inner" />
           <div className="auth-gate__planet" />
           <img className="auth-gate__ship" src={ROCKET_ASSETS.explorer.exterior} alt="" />
           <div className="auth-gate__telemetry">
-            <span>ORBITAL NETWORK</span><strong>ONLINE</strong>
-            <span>LOCAL TIME</span><strong>03:17:42 UTC</strong>
+            <span>PROGRAM LINK</span><strong>READY</strong>
+            <span>ACCESS ROUTE</span><strong>EARTH BASE</strong>
           </div>
         </div>
 
@@ -100,8 +100,8 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
               tabs — a brand-new player on Sign Up has nothing to resume. */}
           <p className="auth-gate__intro" data-testid="auth-gate-intro">
             {mode === 'signin'
-              ? 'Resume the program and return to the command deck.'
-              : 'Start the program and take command of your first launch.'}
+              ? 'Pick up at the next step in your space program.'
+              : 'Create a program, then build toward your first launch.'}
           </p>
 
           <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">

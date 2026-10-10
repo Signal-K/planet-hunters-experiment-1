@@ -1,5 +1,4 @@
 import { useCallback } from 'react'
-import { PROGRESSION_STEPS } from '@/lib/data'
 import { applyTutorialSkip } from '@/lib/tutorial-skip'
 import type { GameState } from '@/lib/game-types'
 import { completeFlightPlanEvent, replayFlightPlanTry, revealFlightPlanHint, skipFlightPlan as applyFlightPlanSkip, startFlightPlan as beginFlightPlan, type FlightPlanEvent, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
@@ -25,17 +24,6 @@ export function useTutorialActions(
 
   const completeStep = useCallback((id: number) => {
     setState(s => ({ ...s, doneSteps: { ...s.doneSteps, [id]: true } }))
-  }, [setState])
-
-  const coachManualNext = useCallback(() => {
-    setState(s => {
-      const stepsHere = s.tutorial
-        ? PROGRESSION_STEPS.filter(step => step.screen === s.screen && !s.doneSteps[step.id])
-        : []
-      const coach = stepsHere[0]
-      if (!coach) return s
-      return { ...s, doneSteps: { ...s.doneSteps, [coach.id]: true } }
-    })
   }, [setState])
 
   const startFlightPlan = useCallback(() => {
@@ -69,5 +57,5 @@ export function useTutorialActions(
     })
   }, [setState])
 
-  return { setTutorial, skipTutorial, setDoneSteps, completeStep, coachManualNext, startFlightPlan, completeFlightPlan, showFlightPlanHint, replayTrainingTry, openTrainingTry, skipFlightPlan }
+  return { setTutorial, skipTutorial, setDoneSteps, completeStep, startFlightPlan, completeFlightPlan, showFlightPlanHint, replayTrainingTry, openTrainingTry, skipFlightPlan }
 }

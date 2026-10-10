@@ -46,18 +46,18 @@ export default function RobotCard({ name, glyph, task, state, onClick }: RobotCa
           flexShrink: 0,
           border: `1.5px solid ${color}`,
           color,
-          font: '800 12px var(--ln-font-display)',
+          font: '800 14px var(--ln-font-display)',
         }}
       >
         {glyph}
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ font: '700 11px var(--ln-font-display)', color: 'var(--ln-text)' }}>{name}</div>
-        <div style={{ font: '400 10px var(--ln-font-mono)', color: 'var(--ln-text-muted)' }}>{task}</div>
+        <div style={{ font: '700 14px var(--ln-font-display)', color: 'var(--ln-text)' }}>{name}</div>
+        <div style={{ font: '400 14px var(--ln-font-mono)', color: 'var(--ln-text-muted)' }}>{task}</div>
       </span>
       <span
         style={{
-          font: '800 9.5px var(--ln-font-display)',
+          font: '800 14px var(--ln-font-display)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           color,

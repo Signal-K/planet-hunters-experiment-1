@@ -17,6 +17,7 @@ import {
   surfaceSiteProgress,
 } from '@/lib/systems/SurfaceOpsSystem'
 import {
+  applyBuildFieldKit,
   applyFieldBuild,
   applyFieldDemolish,
   applyFieldFabricate,
@@ -76,6 +77,19 @@ export function useSurfaceOpsActions(
     }
     setState(state => applyFieldFabricate(state, targetId, recipeId).state)
     addToast('Part fabricated at the field factory.', 'ok')
+    return true
+  }, [addToast, setState, stateRef])
+
+  const buildFieldKit = useCallback((recipeId: string): boolean => {
+    const current = stateRef.current
+    if (!current) return false
+    const result = applyBuildFieldKit(current, recipeId)
+    if (!result.ok) {
+      addToast(result.reason ?? 'Kit could not be built.', 'warn')
+      return false
+    }
+    setState(state => applyBuildFieldKit(state, recipeId).state)
+    addToast('Kit built. It is spent when you place it on a field.', 'ok')
     return true
   }, [addToast, setState, stateRef])
 
@@ -223,6 +237,7 @@ export function useSurfaceOpsActions(
     recordFieldDemolish,
     runFieldRefining,
     fabricateAtField,
+    buildFieldKit,
     seedBiosphere,
   }
 }

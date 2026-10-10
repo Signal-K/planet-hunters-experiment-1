@@ -30,8 +30,8 @@ export default function BlueprintCard({ name, sub, onClick }: BlueprintCardProps
         <path d="M40 26 H58 V52 H70" stroke="var(--ln-cyan)" fill="none" strokeWidth={1.5} />
       </svg>
       <div>
-        <div style={{ font: '700 11px var(--ln-font-display)', textTransform: 'uppercase', color: 'var(--ln-text)' }}>{name}</div>
-        <div style={{ font: '400 10px var(--ln-font-mono)', color: 'var(--ln-text-muted)' }}>{sub}</div>
+        <div style={{ font: '700 14px var(--ln-font-display)', textTransform: 'uppercase', color: 'var(--ln-text)' }}>{name}</div>
+        <div style={{ font: '400 14px var(--ln-font-mono)', color: 'var(--ln-text-muted)' }}>{sub}</div>
       </div>
     </div>
   )

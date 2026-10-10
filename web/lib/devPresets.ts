@@ -104,7 +104,7 @@ export interface DevGroup {
 export const DEV_GROUPS: DevGroup[] = [
   {
     label: 'Extraction',
-    color: '#d97150',
+    color: '#50d9bc',
     shots: [
       { key: 'm1-intro',  label: 'Intro',   hint: 'Fresh start, no progress', stage: 'tutorial' },
       { key: 'm1-hub',    label: 'Hub',     hint: 'Launchpad built, Extraction coach active', stage: 'tutorial' },
@@ -115,11 +115,12 @@ export const DEV_GROUPS: DevGroup[] = [
   },
   {
     label: 'Transport',
-    color: '#c084fc',
+    color: '#91ccef',
     shots: [
       { key: 'transport-hub',     label: 'Hub',     hint: 'Extraction done (missionsDone: 1), Transport coach active — pick the two-leg client job', stage: 'tutorial' },
       { key: 'transport-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab', stage: 'tutorial' },
       { key: 'transport-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending', stage: 'tutorial' },
+      { key: 'transport-delivery', label: 'Delivery', hint: 'Cargo transfer at Vesta with mixed cargo (ordered + leftover minerals)', stage: 'tutorial' },
       { key: 'transport-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned', stage: 'tutorial' },
     ],
   },
@@ -158,14 +159,21 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
       { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
       { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-target-picker', label: 'Target Picker', hint: 'Solar map target selection with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
+      { key: 'ui-target-picker', label: 'Launch Review', hint: 'Launch review (the target picker is folded in) with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Transit telescope classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover live TakeOn field — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
-      { key: 'ui-instrument-hub', label: 'Instrument Hub', hint: 'Orbit downlink queue for owned telescopes and satellites — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-instrument-hub', label: 'Control Station', hint: 'One hub for telescopes and satellites. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Deep Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-market', label: 'Market', hint: 'Market with a stocked stash to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-surface-ops', label: 'Surface Ops', hint: 'Surface Ops list with site access to buy and settlements. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
 ]
@@ -252,6 +260,16 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'bennu', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
+      }
+
+    case 'transport-delivery':
+      return {
+        screen: 'delivery',
+        player: { ...BASE_PLAYER, missionsDone: 1, activeMission: { id: TRANSPORT_MISSION.id, label: `${TRANSPORT_MISSION.title} → ${TRANSPORT_MISSION.targetId}` } },
+        tutorial: true, doneSteps: { ...EXTRACTION_DONE, 30: true, 31: true, 32: true },
+        missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'bennu', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: { ...(TRANSPORT_MISSION.requires?.minerals ?? {}), ice: 3 }, popup: null,
       }
 
     case 'transport-debrief':
@@ -437,7 +455,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         tutorial: false,
         doneSteps: EXTRACTION_DONE,
         missionId: TRANSPORT_MISSION.id,
-        targetId: null,
+        targetId: TRANSPORT_MISSION.targetId ?? 'bennu',
         deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
@@ -490,6 +508,26 @@ export function resolvePreset(name: string): Partial<GameState> | null {
           transitSatelliteLaunchedAt: Date.now() - 86_400_000,
           transitSatelliteLevel: 1,
           deepSpaceTelescopeBuilt: true,
+          saturnImagerLaunchedAt: Date.now() - 86_400_000,
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-saturn-storm-search':
+      return {
+        screen: 'saturn-storm-search',
+        player: {
+          ...ASTEROID_DISCOVERY_PLAYER,
+          transitSatelliteLaunchedAt: Date.now() - 86_400_000,
+          transitSatelliteLevel: 1,
+          deepSpaceTelescopeBuilt: true,
+          saturnImagerLaunchedAt: Date.now() - 86_400_000,
         },
         tutorial: false,
         doneSteps: TRAINING_DONE,
@@ -518,6 +556,84 @@ export function resolvePreset(name: string): Partial<GameState> | null {
       return {
         screen: 'academy',
         player: ACADEMY_PLAYER,
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-refinery':
+      return {
+        screen: 'refinery',
+        player: { ...POST_ONBOARDING_PLAYER, refineryBuilt: true, refineryUnlocked: true, stash: { iron: 40, nickel: 20 }, },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-market':
+      return {
+        screen: 'market',
+        player: { ...POST_ONBOARDING_PLAYER, stash: { iron: 40, nickel: 20, silicates: 15 }, },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-surface-ops':
+      return {
+        screen: 'surface-ops',
+        player: { ...POST_ONBOARDING_PLAYER, },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-mission-log':
+      return {
+        screen: 'mission-history',
+        player: { ...POST_ONBOARDING_PLAYER, },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-ledger':
+      return {
+        screen: 'narrative-ledger',
+        player: { ...POST_ONBOARDING_PLAYER, },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-launchpad':
+      return {
+        screen: 'launchpad',
+        player: { ...POST_ONBOARDING_PLAYER, },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

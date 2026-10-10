@@ -43,6 +43,8 @@ export type OutboxFailure =
   | { kind: 'already-applied' }
   /** The server refused or errored: count an attempt and back off. */
   | { kind: 'rejected'; message: string }
+  /** The server rejected the payload itself (e.g. HTTP 400): retrying cannot help, so drop it. */
+  | { kind: 'invalid'; message: string }
 
 export interface OutboxStore {
   load(): Promise<OutboxItem[]>
@@ -215,6 +217,10 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
         items = items.filter(i => i !== item)
       } else if (failure.kind === 'offline') {
         break
+      } else if (failure.kind === 'invalid') {
+        // SSL-402: a rejected payload would loop forever and pin the sync banners.
+        console.warn('[outbox] dropping write the server rejected', item.op, failure.message)
+        items = items.filter(i => i !== item)
       } else {
         item.attempts += 1
         item.lastError = failure.message

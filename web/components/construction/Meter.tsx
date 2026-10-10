@@ -29,8 +29,8 @@ export default function Meter({ label, value, tone = 'cyan', variant = 'linear',
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-        <span style={{ font: '700 9.5px var(--ln-font-display)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>{label}</span>
-        <span style={{ font: '400 11px var(--ln-font-mono)', color }}>{value}</span>
+        <span style={{ font: '700 14px var(--ln-font-display)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>{label}</span>
+        <span style={{ font: '400 14px var(--ln-font-mono)', color }}>{value}</span>
       </div>
 
       {variant === 'segmented' && segments && (

@@ -44,6 +44,7 @@ func main() {
 	})
 
 	registerLandnamAuthExchange(app, sharedAuth)
+	registerLandnamOIDCAuth(app)
 	registerLandnamOwnerAlerts(app)
 	registerFriendsRoutes(app)
 	registerCommunityRoutes(app)
@@ -67,6 +68,11 @@ func ensureCollections(app core.App) {
 		// uniqueness itself (case-insensitive) before writing, since two
 		// players racing the same name is a 409 we want to word ourselves.
 		users.Fields.Add(&core.TextField{Name: "username", Max: 24})
+		// SSL-488: Sign in with Apple / Clerk provider subjects.
+		users.Fields.Add(&core.TextField{Name: "appleSub", Max: 128})
+		users.Fields.Add(&core.TextField{Name: "clerkId", Max: 128})
+		users.AddIndex("idx_users_apple_sub", true, "appleSub", "appleSub != ''")
+		users.AddIndex("idx_users_clerk_id", true, "clerkId", "clerkId != ''")
 		if err := app.Save(users); err != nil {
 			log.Printf("failed to save users collection: %v", err)
 		}
@@ -592,8 +598,10 @@ func ensureCollections(app core.App) {
 			Name: "category", MaxSelect: 1,
 			Values: []string{"functional", "decorative"},
 		})
-		col.Fields.Add(&core.NumberField{Name: "pos_x", Required: true})
-		col.Fields.Add(&core.NumberField{Name: "pos_y", Required: true})
+		// Not Required: PocketBase treats a required number as non-zero, so
+		// a structure at x=0 or y=0 was rejected with HTTP 400 (SSL-402).
+		col.Fields.Add(&core.NumberField{Name: "pos_x"})
+		col.Fields.Add(&core.NumberField{Name: "pos_y"})
 		col.Fields.Add(&core.NumberField{Name: "facing"}) // 0-3, iso-space SE/SW/NW/NE per takeon's convention
 		col.Fields.Add(&core.JSONField{Name: "buffer", MaxSize: 2000})
 		col.Fields.Add(&core.NumberField{Name: "cooldown_until"})
@@ -605,9 +613,33 @@ func ensureCollections(app core.App) {
 		if err := app.Save(col); err != nil {
 			log.Printf("failed to save structures: %v", err)
 		}
+	} else {
+		migrateStructures(app)
 	}
 
 	ensureCatalogFields(app)
+}
+
+// migrateStructures relaxes pos_x/pos_y on existing databases (SSL-402): they
+// were created Required, which PocketBase enforces as non-zero, so structures
+// placed at x=0 or y=0 failed to save with HTTP 400. Safe on every startup.
+func migrateStructures(app core.App) {
+	col, err := app.FindCollectionByNameOrId("structures")
+	if err != nil {
+		return
+	}
+	changed := false
+	for _, name := range []string{"pos_x", "pos_y"} {
+		if f, ok := col.Fields.GetByName(name).(*core.NumberField); ok && f.Required {
+			f.Required = false
+			changed = true
+		}
+	}
+	if changed {
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to migrate structures: %v", err)
+		}
+	}
 }
 
 // migrateUsers adds lastExchangeAt/guest fields (2026-07-15, for admin-UI
@@ -636,6 +668,12 @@ func migrateUsers(app core.App) {
 	if col.Fields.GetByName("username") == nil {
 		col.Fields.Add(&core.TextField{Name: "username", Max: 24})
 		changed = true
+	}
+	for _, name := range []string{"appleSub", "clerkId"} {
+		if col.Fields.GetByName(name) == nil {
+			col.Fields.Add(&core.TextField{Name: name, Max: 128})
+			changed = true
+		}
 	}
 
 	if changed {

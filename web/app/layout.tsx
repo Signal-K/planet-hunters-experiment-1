@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
 import './globals.css'
+import './loop-screens.css'
 
 export const metadata: Metadata = {
   title: PRODUCT_NAME,
@@ -27,11 +28,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <Script id="pwa-standalone" strategy="afterInteractive">{`
           // body[data-pwa="standalone"] drives the installed-app layout rules.
@@ -50,6 +51,13 @@ export default function RootLayout({
           `}</Script>
         ) : (
           <Script id="sw-dev-cleanup" strategy="beforeInteractive">{`
+            // make up and next dev are development mode. They unregister the
+            // worker and delete Landnam caches, so they cannot prove the
+            // offline PWA. Production (next start on a secure origin) registers
+            // /sw.js. Acceptance: load /game online in landscape (844x390 or
+            // 926x428) until the worker controls the page, disable the network,
+            // reload, and play a local action; restore the network and confirm
+            // the saved state reaches the backend without another mutation.
             // A service worker installed by a prior production/PWA run keeps
             // controlling localhost even after Next switches back to dev.
             // That made branch UI work appear unchanged because the browser

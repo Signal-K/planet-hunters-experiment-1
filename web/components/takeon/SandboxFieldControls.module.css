@@ -152,8 +152,8 @@
   border-radius: var(--ln-r-pill);
   color: var(--ln-text-dim);
   font-family: var(--ln-font-mono);
-  /* SSL-401: price tags never drop below the 12px phone minimum. */
-  font-size: max(12px, var(--ln-fs-micro));
+  /* SSL-404: prices stay on the card at the 14px text floor. */
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -197,7 +197,7 @@
 
   .readout strong,
   .eyebrow {
-    font-size: 10px;
+    font-size: 14px;
   }
 
   .hint {
@@ -215,6 +215,55 @@
     flex: 0 0 auto;
     min-height: 32px;
     padding: var(--ln-s-1) var(--ln-s-2);
+  }
+}
+
+/* SSL-404: collapsed phone drawer = one row of structure cards, nothing else. */
+@media (max-width: 880px) {
+  .panel[data-compact='true'][data-expanded='false'] {
+    padding: var(--ln-s-1);
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .readouts,
+  .panel[data-compact='true'][data-expanded='false'] .actions > :not([data-testid='sandbox-drawer-expand']),
+  .panel[data-compact='true'][data-expanded='false'] .section,
+  .panel[data-compact='true'][data-expanded='false'] .short {
+    display: none;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .actions {
+    flex: 0 0 auto;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .actions .action {
+    min-height: 44px;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .palette {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .palette .card {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: var(--ln-s-2);
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
+  .panel[data-compact='true'][data-expanded='false'] .palette .cardState {
+    display: none;
   }
 }
 

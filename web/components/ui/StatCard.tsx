@@ -58,7 +58,7 @@ export default function StatCard(props: StatCardProps) {
     return (
       <div style={{ minWidth: 0, padding: '7px 6px', borderRadius: 7, background: 'var(--ln-stat-card-bg, rgba(20,20,23,0.72))', border: `1px solid ${border}` }}>
         <StatLabel>{props.label}</StatLabel>
-        <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: 'var(--ln-stat-card-text, #e8f0fe)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>
+        <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 800, color: 'var(--ln-stat-card-text, #e8f0fe)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>
           {props.value}
         </div>
       </div>
@@ -91,7 +91,7 @@ export default function StatCard(props: StatCardProps) {
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <StatLabel>{props.label}</StatLabel>
-          <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, fontWeight: 800, color: 'var(--ln-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 800, color: 'var(--ln-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {props.value}
           </div>
           {props.meter && (
@@ -119,7 +119,7 @@ export default function StatCard(props: StatCardProps) {
       <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: 'var(--ln-cyan)', marginTop: 4, letterSpacing: '-0.01em' }}>
         {props.value}
       </div>
-      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 3, lineHeight: 1.3 }}>
+      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 3, lineHeight: 1.3 }}>
         {props.detail}
       </div>
     </div>
@@ -128,7 +128,7 @@ export default function StatCard(props: StatCardProps) {
 
 function StatLabel({ children }: { children: ReactNode }) {
   return (
-    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
+    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
       {children}
     </div>
   )

@@ -20,7 +20,7 @@ export function SoilCrossSection() {
       }} />
 
       {/* Ore deposits — offset pulse cycles so they never breathe in unison */}
-      <Ore left="20%" w={60} h={22} color="rgba(217,113,80,0.32)" delay="0s" />
+      <Ore left="20%" w={60} h={22} color="rgba(80,217,188,0.32)" delay="0s" />
       <Ore left="74%" w={54} h={20} color="rgba(185,216,255,0.3)" delay="1.6s" />
       <Ore left="48%" w={42} h={16} color="rgba(200,200,200,0.24)" delay="3s" />
     </div>

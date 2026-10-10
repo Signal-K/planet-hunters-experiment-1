@@ -60,7 +60,7 @@
 .launchpad-satellite svg { width: 92px; filter: drop-shadow(0 0 10px rgba(112,217,234,.32)); }
 .launchpad-satellite div { display: flex; flex-direction: column; }
 .launchpad-satellite strong { color: #f3fbff; font: 800 18px var(--ln-font-mono); }
-.launchpad-satellite span { color: #8de8f4; font: 700 9px var(--ln-font-display); letter-spacing: .2em; }
+.launchpad-satellite span { color: #8de8f4; font: 700 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .2em; }
 .launchpad-scene-object {
   position: absolute; z-index: 6; padding: 0; border: 0; background: transparent; color: #fff;
   display: flex; flex-direction: column; align-items: center; cursor: default;
@@ -72,8 +72,8 @@ button.launchpad-scene-object { cursor: pointer; }
   background: rgba(8,18,32,.72);
   box-shadow: 0 6px 18px rgba(0,0,0,.28); display: flex; flex-direction: column; align-items: center; gap: 1px; white-space: nowrap;
 }
-.launchpad-object-label small { color: #c2d2e5; font: 700 8px var(--ln-font-display); letter-spacing: .16em; }
-.launchpad-object-label strong { color: #f5f8ff; font: 800 10px var(--ln-font-display); letter-spacing: .08em; }
+.launchpad-object-label small { color: #c2d2e5; font: 700 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .16em; }
+.launchpad-object-label strong { color: #f5f8ff; font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .08em; }
 .launchpad-object-label--center strong { color: #65e38f; }
 .launchpad-station { left: 8%; bottom: 13%; width: 25%; }
 .launchpad-object-art { position: relative; width: min(210px, 76%); aspect-ratio: 1.45; display: grid; place-items: end center; }
@@ -151,12 +151,12 @@ button.launchpad-scene-object { cursor: pointer; }
   white-space: nowrap;
 }
 .launchpad-primary-pad-control small {
-  font: 800 8px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .18em;
   opacity: .76;
 }
 .launchpad-primary-pad-control strong {
-  font: 900 13px var(--ln-font-display);
+  font: 900 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .12em;
 }
 .launchpad-tower:hover .launchpad-primary-pad-control,
@@ -200,18 +200,18 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-rail-status,
 .launchpad-rail-actions { display: flex; align-items: center; gap: 8px; }
-.launchpad-rail-status span { color: #cfdcec; text-shadow: 0 1px 3px rgba(0,0,0,.5); font: 700 9px var(--ln-font-display); letter-spacing: .14em; white-space: nowrap; }
+.launchpad-rail-status span { color: #cfdcec; text-shadow: 0 1px 3px rgba(0,0,0,.5); font: 700 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .14em; white-space: nowrap; }
 .launchpad-rail-status i { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #5ad07e; box-shadow: 0 0 8px #5ad07e; }
 .launchpad-rail-actions button {
   height: 40px; padding: 0 14px; border: 1px solid rgba(199,216,238,.34); border-radius: 10px;
-  background: rgba(233,243,255,.10); color: #eaf2fb; font: 800 10px var(--ln-font-display); letter-spacing: .12em;
+  background: rgba(233,243,255,.10); color: #eaf2fb; font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .12em;
   display: inline-flex; align-items: center; gap: 7px;
 }
 .launchpad-rail-actions button:focus-visible { outline: 2px solid #70d9ea; outline-offset: 2px; }
 .launchpad-rail-actions button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .launchpad-rail-actions button.is-primary { border-color: #70d9ea; background: #70d9ea; color: #07101c; box-shadow: 0 0 18px rgba(112,217,234,.24); }
 .launchpad-rail-actions button.is-primary { min-width: 172px; justify-content: center; }
-.launchpad-action-count { opacity: .68; font-size: 8px; }
+.launchpad-action-count { opacity: .68; font-size: var(--ln-fs-micro); }
 
 /* The mission selector is an in-scene command surface attached to the pad.
    It intentionally has no scrim or modal semantics: the Earth Base remains
@@ -261,7 +261,7 @@ button.launchpad-scene-object { cursor: pointer; }
   background: transparent;
   color: var(--ln-cyan);
   cursor: pointer;
-  font: 800 10px var(--ln-font-display);
+  font: 800 var(--ln-fs-micro) var(--ln-font-display);
   letter-spacing: .12em;
 }
 .launchpad-mission-menu-close:focus-visible,
@@ -308,12 +308,12 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-mission-choice strong {
   color: var(--ln-cyan);
-  font: 800 11px/1.25 var(--ln-font-display);
+  font: 800 var(--ln-fs-micro)/1.25 var(--ln-font-display);
   letter-spacing: .1em;
 }
 .launchpad-mission-choice span {
   color: var(--ln-text-dim);
-  font: 13px/1.35 var(--ln-font-body);
+  font: var(--ln-fs-micro)/1.35 var(--ln-font-body);
 }
 .launchpad-mission-choice--focus { grid-column: 1 / -1; min-height: 96px; border-width: 4px; }
 .launchpad-operation-brief { display: grid; gap: 16px; }
@@ -321,12 +321,12 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-operation-brief > p { max-width: 720px; margin: 0; color: var(--ln-text-dim); font: 14px/1.45 var(--ln-font-body); }
 .launchpad-operation-brief__muted { color: var(--ln-text-muted) !important; }
 .launchpad-operation-brief__choices, .launchpad-operation-brief__builds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.launchpad-operation-brief__link { justify-self: start; min-height: 40px; padding: 0 16px; border: 1px solid var(--ln-cyan-border); border-radius: 6px; background: var(--ln-cyan-soft); color: var(--ln-cyan); font: 800 10px var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
+.launchpad-operation-brief__link { justify-self: start; min-height: 40px; padding: 0 16px; border: 1px solid var(--ln-cyan-border); border-radius: 6px; background: var(--ln-cyan-soft); color: var(--ln-cyan); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
 .launchpad-operation-brief__market { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--ln-hairline); }
 .launchpad-operation-brief__prices { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.launchpad-operation-brief__prices > div, .launchpad-operation-brief__sites > span { display: grid; gap: 4px; padding: 8px; border: 1px solid var(--ln-hairline); border-radius: 6px; color: var(--ln-text-muted); font: 800 9px var(--ln-font-mono); letter-spacing: .08em; }
-.launchpad-operation-brief__prices small { color: var(--ln-text-muted); font: 700 9px var(--ln-font-mono); text-transform: uppercase; }.launchpad-operation-brief__prices strong { color: var(--ln-text); font: 800 13px var(--ln-font-display); }.launchpad-operation-brief__prices span[data-direction="up"] { color: var(--ln-ok); }.launchpad-operation-brief__prices span[data-direction="down"] { color: var(--ln-crit); }
-.launchpad-operation-brief__sites { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }.launchpad-operation-brief__sites > span strong { color: var(--ln-text); font: 800 10px var(--ln-font-display); }.launchpad-operation-brief__sites > span[data-state="ready"] { border-color: var(--ln-ok); color: var(--ln-ok); }
+.launchpad-operation-brief__prices > div, .launchpad-operation-brief__sites > span { display: grid; gap: 4px; padding: 8px; border: 1px solid var(--ln-hairline); border-radius: 6px; color: var(--ln-text-muted); font: 800 var(--ln-fs-micro) var(--ln-font-mono); letter-spacing: .08em; }
+.launchpad-operation-brief__prices small { color: var(--ln-text-muted); font: 700 var(--ln-fs-micro) var(--ln-font-mono); text-transform: uppercase; }.launchpad-operation-brief__prices strong { color: var(--ln-text); font: 800 var(--ln-fs-micro) var(--ln-font-display); }.launchpad-operation-brief__prices span[data-direction="up"] { color: var(--ln-ok); }.launchpad-operation-brief__prices span[data-direction="down"] { color: var(--ln-crit); }
+.launchpad-operation-brief__sites { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }.launchpad-operation-brief__sites > span strong { color: var(--ln-text); font: 800 var(--ln-fs-micro) var(--ln-font-display); }.launchpad-operation-brief__sites > span[data-state="ready"] { border-color: var(--ln-ok); color: var(--ln-ok); }
 
 .launchpad-mission-runs {
   position: absolute;
@@ -350,9 +350,9 @@ button.launchpad-scene-object { cursor: pointer; }
   box-shadow: 0 16px 32px color-mix(in srgb, var(--ln-void) 44%, transparent);
 }
 .launchpad-active-mission h2 { margin: 4px 0; color: var(--ln-text); font: 800 16px/1.2 var(--ln-font-display); text-transform: uppercase; }
-.launchpad-active-mission p { margin: 0; color: var(--ln-text-dim); font: 800 9px var(--ln-font-mono); letter-spacing: .12em; }
+.launchpad-active-mission p { margin: 0; color: var(--ln-text-dim); font: 800 var(--ln-fs-micro) var(--ln-font-mono); letter-spacing: .12em; }
 .launchpad-active-mission__actions { display: flex; justify-content: flex-end; gap: 8px; }
-.launchpad-active-mission__actions button { min-height: 48px; padding: 0 12px; border-radius: 8px; font: 800 9px var(--ln-font-display); letter-spacing: .12em; }
+.launchpad-active-mission__actions button { min-height: 48px; padding: 0 12px; border-radius: 8px; font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .12em; }
 .launchpad-active-mission__dismiss { border: 1px solid var(--ln-hairline-strong); background: transparent; color: var(--ln-text-dim); }
 .launchpad-active-mission__resume { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-text-on-cyan); }
 .launchpad-active-mission__resume svg { width: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
@@ -360,10 +360,31 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-active-mission { top: 64px; right: 12px; width: min(352px, calc(100% - 24px)); gap: 8px; padding: 12px; }
   .launchpad-active-mission h2 { font-size: 14px; }
 }
+@media (orientation: portrait) and (max-width: 720px) {
+  /* Keep the active-run card out of the suite rail's header lane. The old
+     * right-anchored version sat directly over SAME ACCOUNT / GARDEN and
+     * squeezed long destinations into an unreadable single line. */
+  .launchpad-active-mission { top: 160px; right: auto; left: 12px; width: calc(100% - 24px); max-height: calc(100% - 160px - 120px); }
+  .launchpad-active-mission h2 { overflow-wrap: anywhere; white-space: normal; }
+}
 .launchpad-mission-runs > :first-child { min-width: 0; }
 .launchpad-mission-runs h2 { margin: 4px 0 0; color: var(--ln-text); font: 800 20px var(--ln-font-display); letter-spacing: .04em; text-transform: uppercase; }
 .launchpad-mission-runs .launchpad-mission-menu-close { position: absolute; top: 16px; right: 16px; }
 .launchpad-mission-run-list { display: grid; gap: 8px; }
+.launchpad-mission-run-row { display: flex; align-items: stretch; gap: 8px; }
+.launchpad-mission-run-row > button:first-child { flex: 1; min-width: 0; }
+.launchpad-mission-run-list .launchpad-mission-run-scrub {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  grid-template-columns: none;
+  flex: 0 0 auto;
+  min-width: 72px;
+  border-color: var(--ln-crit);
+  color: var(--ln-crit);
+  letter-spacing: .12em;
+  text-align: center;
+}
 .launchpad-mission-run-list button {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr) auto;
@@ -380,8 +401,8 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-mission-run-list button:hover,
 .launchpad-mission-run-list button:focus-visible { border-color: var(--ln-cyan); background: var(--ln-cyan-soft); outline: none; }
 .launchpad-mission-run-list svg { width: 18px; height: 18px; fill: none; stroke: var(--ln-cyan); stroke-width: 1.8; }
-.launchpad-mission-run-list span { overflow: hidden; font: 800 10px var(--ln-font-display); letter-spacing: .08em; text-overflow: ellipsis; white-space: nowrap; }
-.launchpad-mission-run-list strong { color: var(--ln-cyan); font: 800 8px var(--ln-font-display); letter-spacing: .12em; }
+.launchpad-mission-run-list span { overflow: hidden; font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .08em; text-overflow: ellipsis; white-space: nowrap; }
+.launchpad-mission-run-list strong { color: var(--ln-cyan); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .12em; }
 
 .launchpad-guide {
   position: absolute; z-index: 24; top: 72px; left: 16px; right: 16px; width: auto;
@@ -395,7 +416,7 @@ button.launchpad-scene-object { cursor: pointer; }
   background: transparent; color: var(--ln-text-dim); font: 400 20px/1 var(--ln-font-body); cursor: pointer;
 }
 .launchpad-guide-close:focus-visible, .launchpad-guide-actions button:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 2px; }
-.launchpad-guide-kicker { color: var(--ln-cyan); font: 800 10px var(--ln-font-display); letter-spacing: .16em; }
+.launchpad-guide-kicker { color: var(--ln-cyan); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .16em; }
 .launchpad-guide h2 { margin: 10px 36px 0 0; font: 800 22px var(--ln-font-display); letter-spacing: .02em; text-transform: uppercase; }
 .launchpad-guide-copy { margin: 10px 0 20px; color: var(--ln-text-dim); font: 14px/1.45 var(--ln-font-body); }
 .launchpad-guide-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -403,7 +424,7 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-guide-progress i { width: 24px; height: 4px; border-radius: 2px; background: var(--ln-hairline-strong); }
 .launchpad-guide-progress i[data-active="true"] { background: var(--ln-cyan); }
 .launchpad-guide-actions { display: flex; gap: 8px; }
-.launchpad-guide-actions button { min-height: 32px; padding: 0 10px; border: 1px solid var(--ln-hairline); border-radius: 7px; background: transparent; color: var(--ln-text); font: 800 9px var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
+.launchpad-guide-actions button { min-height: 44px; padding: 0 10px; border: 1px solid var(--ln-hairline); border-radius: 7px; background: transparent; color: var(--ln-text); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
 .launchpad-guide-actions button.is-primary { border-color: var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-text-on-cyan); }
 
 /* The Hub dock is an action rail, not a floating modal. Keep its status and
@@ -438,13 +459,13 @@ button.launchpad-scene-object { cursor: pointer; }
 @media (max-width: 860px) {
   .launchpad-object-label { min-width: 0; padding: 6px 8px; }
   .launchpad-object-label small { display: none; }
-  .launchpad-object-label strong { font-size: 8px; }
+  .launchpad-object-label strong { font-size: var(--ln-fs-micro); }
   .launchpad-primary-pad-control { min-width: 192px; min-height: 48px; padding: 8px 12px; }
-  .launchpad-primary-pad-control strong { font-size: 10px; }
+  .launchpad-primary-pad-control strong { font-size: var(--ln-fs-micro); }
   .launchpad-satellite svg { width: 70px; }
   .launchpad-rail-status span:not(:first-child) { display: none; }
   .launchpad-rail-actions { gap: 4px; }
-  .launchpad-rail-actions button { padding: 0 8px; font-size: 8px; flex: 0 1 auto; }
+  .launchpad-rail-actions button { padding: 0 8px; font-size: var(--ln-fs-micro); flex: 0 1 auto; }
   .launchpad-rail-actions button.is-primary { min-width: 142px; }
 }
 @media (orientation: landscape) and (max-height: 600px) {
@@ -468,7 +489,7 @@ button.launchpad-scene-object { cursor: pointer; }
 @media (orientation: landscape) and (max-height: 600px) {
   .launchpad-scene-rail { height: 62px; padding: 6px 8px; gap: 8px; }
   .launchpad-rail-status { flex: 0 0 auto; }
-  .launchpad-rail-status span { font-size: 7px; }
+  .launchpad-rail-status span { font-size: var(--ln-fs-micro); }
   /* Every compact-landscape command remains on the same visible row. The
      previous three-column grid wrapped a fourth action below this fixed-height
      rail, leaving it neither reachable nor intentionally hidden. */
@@ -480,13 +501,13 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-mission-menu { bottom: 70px; padding: 12px; }
   .launchpad-mission-menu-header { gap: 12px; margin-bottom: 8px; }
   .launchpad-mission-menu-header h2 { margin: 4px 0; font-size: 18px; }
-  .launchpad-mission-menu-header p { font-size: 11px; line-height: 1.3; }
+  .launchpad-mission-menu-header p { font-size: var(--ln-fs-micro); line-height: 1.3; }
   .launchpad-mission-menu-options { gap: 8px; }
   .launchpad-mission-choice { min-height: 72px; gap: 4px; padding: 8px; }
   .launchpad-mission-choice svg { width: 18px; height: 18px; }
-  .launchpad-mission-choice strong { font-size: 8px; }
-  .launchpad-mission-choice span { font-size: 9px; line-height: 1.2; }
-  .launchpad-operation-brief { gap: 8px; }.launchpad-operation-brief h2 { font-size: 18px; }.launchpad-operation-brief > p { font-size: 11px; line-height: 1.3; }.launchpad-operation-brief__choices, .launchpad-operation-brief__builds { gap: 8px; }
+  .launchpad-mission-choice strong { font-size: var(--ln-fs-micro); }
+  .launchpad-mission-choice span { font-size: var(--ln-fs-micro); line-height: 1.2; }
+  .launchpad-operation-brief { gap: 8px; }.launchpad-operation-brief h2 { font-size: 18px; }.launchpad-operation-brief > p { font-size: var(--ln-fs-micro); line-height: 1.3; }.launchpad-operation-brief__choices, .launchpad-operation-brief__builds { gap: 8px; }
 }
 
 /* Portrait phones cannot fit four instrument controls beside the status readout
@@ -496,10 +517,10 @@ button.launchpad-scene-object { cursor: pointer; }
 @media (orientation: portrait) and (max-width: 600px) {
   .launchpad-scene-rail { height: auto; min-height: 62px; padding: 6px 8px; align-items: flex-start; }
   .launchpad-rail-status { padding-top: 14px; flex: 0 0 auto; }
-  .launchpad-rail-status span { font-size: 7px; }
+  .launchpad-rail-status span { font-size: var(--ln-fs-micro); }
   .launchpad-rail-status span:not(:first-child) { display: none; }
   .launchpad-rail-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); flex: 1 1 auto; gap: 4px; }
-  .launchpad-rail-actions button { width: 100%; min-width: 0; height: 40px; padding: 0 6px; justify-content: center; font-size: 8px; }
+  .launchpad-rail-actions button { width: 100%; min-width: 0; height: 40px; padding: 0 6px; justify-content: center; font-size: var(--ln-fs-micro); }
   .launchpad-rail-actions button.is-primary { min-width: 0; }
   .launchpad-rail-actions button svg { display: none; }
   .launchpad-rail-actions [data-testid="launchpad-guide-open"] { display: none; }

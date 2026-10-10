@@ -1,0 +1,35 @@
+{
+  "desktop/ship-customizer": [
+    "contrast below AA: 3.77:1 < 4.5:1 div:Unannounced",
+    "contrast below AA: 2.48:1 < 4.5:1 div:Unlocks at L3/M3",
+    "clipped text: clipped by div (60% hidden) span:DRILL T1",
+    "clipped text: clipped by div (74% hidden) span:1",
+    "clipped text: clipped by div (28% hidden) span:DRILL T2"
+  ],
+  "landscape/m1-hub": [
+    "contrast below AA: 3.93:1 < 4.5:1 button:BUILD"
+  ],
+  "landscape/ship-customizer": [
+    "clipped text: clipped by section (11% hidden) span:BUILD BAY 01 · ASSEMBLY "
+  ],
+  "landscape/telescope-hub": [
+    "contrast below AA: 3.93:1 < 4.5:1 button:BUILD",
+    "clipped text: clipped by div (86% hidden) div:Your program can put a t"
+  ],
+  "landscape/transport-hub": [
+    "contrast below AA: 3.93:1 < 4.5:1 button:BUILD"
+  ],
+  "landscape/ui-academy": [
+    "clipped text: clipped by div (22% hidden) strong:ASTRONAUTS",
+    "clipped text: clipped by div (22% hidden) span:0",
+    "clipped text: clipped by div (22% hidden) strong:ROVERS",
+    "clipped text: clipped by div (22% hidden) span:0/4",
+    "clipped text: clipped by div (22% hidden) strong:DRONES"
+  ],
+  "landscape/ui-instrument-hub": [
+    "clipped text: clipped by div (39% hidden) span:OBSERVING"
+  ],
+  "phone/ui-instrument-hub": [
+    "clipped text: clipped by div (24% hidden) span:Saturn satellite"
+  ]
+}

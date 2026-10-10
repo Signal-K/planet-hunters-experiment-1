@@ -4,7 +4,7 @@ export interface MissionPayload {
   type: 'rover' | 'satellite' | 'deep-space-survey'
   name: string
   cargoCost: number
-  instrumentId?: 'transit-telescope' | 'deep-space-telescope'
+  instrumentId?: 'transit-telescope' | 'deep-space-telescope' | 'saturn-imager'
 }
 
 export interface MissionSurveyPlan {

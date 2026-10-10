@@ -12,7 +12,7 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  border-top: 2px solid color-mix(in srgb, #e8e0d0 28%, var(--ln-hairline));
+  border-top: 2px solid color-mix(in srgb, #d0e3e8 28%, var(--ln-hairline));
 }
 
 .controls {

@@ -46,7 +46,12 @@ export default function DeliveryScreen({
   const progress = deliveryUnloadProgress(startedAt, now)
   const progressPct = Math.round(progress * 100)
   const remainingMs = Math.max(0, 8000 - Math.max(0, now - (startedAt ?? now)))
-  const cargoEntries = Object.entries(cargo).filter(([, amount]) => amount > 0)
+  // SSL-482: show only the minerals the contract ordered; leftover mining
+  // cargo is not part of this delivery.
+  const orderedMinerals = mission.requires?.minerals ? Object.keys(mission.requires.minerals) : []
+  const cargoEntries = Object.entries(cargo).filter(
+    ([id, amount]) => amount > 0 && (orderedMinerals.length === 0 || orderedMinerals.includes(id)),
+  )
   const cargoUnits = cargoEntries.reduce((total, [, amount]) => total + amount, 0)
   const transportFee = mission.payout.francs - Math.round(mission.payout.francs * 0.5)
 
@@ -142,7 +147,7 @@ export default function DeliveryScreen({
 
   if (useTakeonDropoff) {
     return (
-      <div className={`game-screen theme-deep ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
+      <div className={`game-screen theme-blueprint ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
         <TopBar
           eyebrow={`DELIVERY TARGET · ${target.name.toUpperCase()}`}
           title="Cargo Transfer"
@@ -158,21 +163,19 @@ export default function DeliveryScreen({
             roverName="Mule Field Rover"
             seedCargo={seedCargo}
             seedCache
+            startView="iso"
             onReady={handleTakeonReady}
             className={styles.takeonMount}
           />
-          {rocketImageSrc && <img className={styles.landedShip} src={rocketImageSrc} alt="Prospector rocket landed beside the client build site" />}
-          <div className={styles.targetLabel}>
-            <span>LANDED ROVER SITE · CLIENT BUILD SITE</span>
-            <strong>{clientName ?? 'CLIENT SITE'} · {target.name}</strong>
-          </div>
+          {!dumped && <div className={`${styles.siteLock} lock-on`} data-testid="delivery-site-lock" aria-hidden="true" />}
         </div>
 
         <section className={styles.hud} aria-label="Cargo unload status">
           <div className={styles.statusRow}>
             <div>
+              {rocketImageSrc && <img className={styles.landedShip} src={rocketImageSrc} alt="" />}
               <div className={styles.kicker}>{roverReturned ? 'ROVER REDOCKED' : dumped ? 'MINERALS UNLOADED' : 'DRIVE TO THE BUILDING SITE'}</div>
-              <div className={styles.contract}>{mission.title}</div>
+              <div className={styles.contract}>{clientName ?? 'CLIENT SITE'} · {target.name}</div>
             </div>
             <span className={styles.timer}>{roverReturned ? 'LAUNCH READY' : dumped ? 'UNLOADED' : 'MANUAL'}</span>
           </div>
@@ -200,9 +203,9 @@ export default function DeliveryScreen({
 
           {dumpError && <div className={styles.dumpError} role="status">{dumpError}</div>}
           {!dumped ? (
-            <PrimaryBtn disabled={!takeonReady} testId="delivery-dump-cargo" onClick={handleDump}>
+            <button type="button" className={styles.dumpBtn} disabled={!takeonReady} data-testid="delivery-dump-cargo" onClick={handleDump}>
               {takeonReady ? 'Dump Cargo At Building Site' : 'Preparing Rover'}
-            </PrimaryBtn>
+            </button>
           ) : (
             <PrimaryBtn disabled={roverReturned} testId="delivery-return-rover" onClick={() => setRoverReturned(true)}>
               {roverReturned ? 'Rover Redocked · Launch Ready' : 'Return Rover To Ship'}
@@ -225,7 +228,7 @@ export default function DeliveryScreen({
   }
 
   return (
-    <div className={`game-screen theme-deep ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
+    <div className={`game-screen theme-blueprint ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
       <TopBar
         eyebrow={`DELIVERY TARGET · ${target.name.toUpperCase()}`}
         title="Cargo Transfer"

@@ -101,6 +101,10 @@ describe('DebriefScreen own-program outcomes', () => {
 
     expect(host.textContent).not.toContain('Client')
     expect(host.textContent).not.toContain('Collect ₣')
+    // SSL-345: Debrief uses the shared top meta bar, not a one-off header.
+    expect(host.querySelectorAll('.top-bar')).toHaveLength(1)
+    expect(host.querySelector('.debrief-hud-header')).toBeNull()
+    expect(host.querySelector('.top-bar__title')?.textContent).toBe('DEPLOYMENT')
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
@@ -146,15 +150,13 @@ describe('DebriefScreen own-program outcomes', () => {
       )
     })
 
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-
-    expect(host.textContent).toContain('Your ore · keep or sell')
-    expect(host.textContent).toContain('Needs a Vault')
+    expect(host.textContent).toContain('Mining fee · your program')
+    expect(host.textContent).toContain('Transport fee · return')
+    expect(host.querySelector('[data-testid="debrief-mining-fee"]')?.textContent).toContain('320')
+    expect(host.querySelector('[data-testid="debrief-transport-fee"]')?.textContent).toContain('320')
     expect(host.textContent).toContain('Build a Mineral Vault')
-    expect(host.textContent).toContain('Sell haul')
+    expect(host.textContent).toContain('Collect')
+    expect(host.querySelector('[data-testid="resolve-cargo-btn"]')).toBeNull()
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
@@ -164,7 +166,7 @@ describe('DebriefScreen own-program outcomes', () => {
     root.unmount()
   })
 
-  it('lets a Vault owner switch a free haul from keeping to selling', async () => {
+  it('keeps a Vault owner free haul in Earth storage chosen at launch', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
     const onDone = vi.fn()
@@ -186,27 +188,21 @@ describe('DebriefScreen own-program outcomes', () => {
       )
     })
 
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
+    expect(host.textContent).toContain('Destination selected at launch: Earth storage.')
     expect(host.textContent).toContain('Keep haul on Earth')
-
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="debrief-sell"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-    expect(host.textContent).toContain('Sell haul')
+    expect(host.textContent).toContain('Mining fee · your program')
+    expect(host.textContent).toContain('Transport fee · return')
+    expect(host.querySelector('[data-testid="debrief-sell"]')).toBeNull()
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
-    expect(onDone).toHaveBeenCalledWith(0, 0, {}, 'sell')
+    expect(onDone).toHaveBeenCalledWith(0, 0, {}, 'store')
     root.unmount()
   })
 
-  it('KES-348: requires explicit vehicle teardown before an early onboarding ledger', async () => {
+  it('KES-348: shows the ledger and Collect before vehicle teardown (early onboarding)', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
     const onDone = vi.fn()
@@ -226,18 +222,13 @@ describe('DebriefScreen own-program outcomes', () => {
       )
     })
 
-    expect(host.querySelector('[data-testid="resolve-cargo-btn"]')).not.toBeNull()
-    expect(host.textContent).not.toContain('Ledger')
-
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-
+    expect(host.querySelector('[data-testid="debrief-teardown-btn"]')).not.toBeNull()
+    // SSL-479: the payout Ledger and Collect are on screen before teardown.
     expect(host.textContent).toContain('Ledger')
-    expect(host.textContent).not.toContain('Affinity')
+    expect(host.textContent).toContain('You brought')
     const collectBtn = host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
     expect(collectBtn).not.toBeNull()
+    expect(host.textContent).not.toContain('Affinity')
 
     await act(async () => {
       collectBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
@@ -247,7 +238,7 @@ describe('DebriefScreen own-program outcomes', () => {
     root.unmount()
   })
 
-  it('KES-282: keeps the two-tap ritual for later (post-onboarding) missions', async () => {
+  it('KES-282: shows the ledger and Collect before vehicle teardown (post-onboarding)', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
     const onDone = vi.fn()
@@ -267,14 +258,9 @@ describe('DebriefScreen own-program outcomes', () => {
       )
     })
 
-    expect(host.querySelector('[data-testid="resolve-cargo-btn"]')).not.toBeNull()
-    expect(host.textContent).not.toContain('Ledger')
-
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
+    expect(host.querySelector('[data-testid="debrief-teardown-btn"]')).not.toBeNull()
     expect(host.textContent).toContain('Ledger')
+    expect(host.querySelector('[data-testid="collect-reward-btn"]')).not.toBeNull()
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')

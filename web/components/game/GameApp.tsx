@@ -28,6 +28,7 @@ import CommunityButton from '@/components/game/CommunityButton'
 import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 
 function GameCanvas() {
   const game = useGame()
@@ -38,6 +39,8 @@ function GameCanvas() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [hubOpen, setHubOpen] = useState(false)
+
+  useCoreLoopAnalytics(game.screen, game.player.flightPlan)
 
   // PostHog injects recorder/survey scripts. Initialising during module
   // evaluation can let those scripts mutate the document while React is
@@ -128,7 +131,7 @@ function GameCanvas() {
   }, [coachSteps, friendsOpen, hubOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
-  const hasCoach = !!coach
+  const onboardingActive = !!coach
 
   // No onboarding-step-level analytics existed before — only the
   // mission-level events (mission_completed etc). Without per-step coverage
@@ -177,7 +180,6 @@ function GameCanvas() {
     >
       <TakeOnPwaPreload />
       <div className="portrait-canvas">
-        <BackendStatus />
         <LandnamSyncStatus />
         {/* Mission alerts have a reserved desktop slot to the left of the
             horizontal resource HUD. They are hidden at compact widths rather
@@ -225,7 +227,7 @@ function GameCanvas() {
         >
           {/* Gated the same way as [screen]/page.tsx — see STS-624. */}
           {!game.authGateOpen && (
-            <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
+            <ScreenContent screen={game.screen} game={game} onboardingActive={onboardingActive} onBackFromHangar={() => {
               game.returnFromHangar()
               if (window.location.pathname.includes('/game/ship-customizer')) {
                 router.replace('/game')
@@ -233,13 +235,13 @@ function GameCanvas() {
             }} />
           )}
         </div>
+        <BackendStatus />
           {coach && !game.authGateOpen && (
             <FlightPlan
               key={coach.id}
               stepIndex={coachIndex}
               step={coach}
               total={coachSteps.length}
-              onManualNext={game.coachManualNext}
               onSkip={() => {
                 // Distinct from a step being completed in the normal flow —
                 // this is the player bailing out of onboarding entirely, which

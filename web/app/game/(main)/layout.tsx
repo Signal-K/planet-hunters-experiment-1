@@ -32,6 +32,8 @@ import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
+import { useHelpOpen } from '@/lib/help/open-state'
+import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
@@ -41,6 +43,8 @@ function GameChrome({ children }: { children: ReactNode }) {
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [communityOpen, setCommunityOpen] = useState(false)
   const { phase: backdropSkyPhase } = useTimeOfDay()
+
+  useCoreLoopAnalytics(game.screen, game.player.flightPlan)
 
   // Keep third-party analytics script injection out of React hydration. See
   // GameApp's equivalent effect for the legacy route shell.
@@ -130,15 +134,19 @@ function GameChrome({ children }: { children: ReactNode }) {
     return routeCoach
   }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, settingsOpen])
 
-  const coachIndex = activeTry ? ['mining', 'scan', 'part'].indexOf(activeTry) : -1
-  const hasCoach = !!coach
+  const coachIndex = flightStep ? ['mining', 'scan', 'part'].indexOf(flightStep.try) : -1
+  const onboardingActive = !!coach
 
+  // SSL-432: the 8s hint waits while a help sheet or "Show me" run is open and
+  // restarts its clock when help closes.
+  const helpOpen = useHelpOpen()
   useEffect(() => {
     if (!coach) return
     game.startFlightPlan()
+    if (helpOpen) return
     const timer = window.setTimeout(() => game.showFlightPlanHint(), 8_000)
     return () => window.clearTimeout(timer)
-  }, [coach?.id, currentScreen])
+  }, [coach?.id, currentScreen, helpOpen])
 
   // SSL-342: per-step training analytics for the live shell (mirrors GameApp).
   // Fires only when the active step itself changes.
@@ -219,7 +227,6 @@ function GameChrome({ children }: { children: ReactNode }) {
             positioned inside this stage so it can never land on the shared
             nav — a bottom row in portrait, a left rail on landscape phones. */}
         <div className="game-stage-main">
-          <BackendStatus />
           <LandnamSyncStatus />
           {/* Mission alerts have a reserved desktop slot to the left of the
               horizontal resource HUD. They are hidden at compact widths rather
@@ -245,7 +252,7 @@ function GameChrome({ children }: { children: ReactNode }) {
           )}
 
           {/* Suite return rail (SSL-296): hop back to the SSC garden / Spectra. */}
-          {(currentScreen === 'hub' || currentScreen === 'launchpad') && !game.subsurfaceView && !game.authGateOpen && (
+          {(currentScreen === 'hub' || currentScreen === 'launchpad') && !(currentScreen === 'launchpad' && game.launchpadMissionMenuOpen) && !game.subsurfaceView && !game.authGateOpen && (
             <SuiteHopRail signedIn={!!game.authUserId} />
           )}
 
@@ -253,19 +260,23 @@ function GameChrome({ children }: { children: ReactNode }) {
               but the visible game tree belongs to this persistent layout. */}
           <div className="game-screen-area">
             {!game.authGateOpen && (
-              <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} />
+              <ScreenContent screen={game.screen} game={game} onboardingActive={onboardingActive} />
             )}
           </div>
+        <BackendStatus />
         {coach && !game.popup && !game.authGateOpen && (
           <FlightPlan
             key={coach.id}
             stepIndex={coachIndex}
               step={coach}
             total={3}
-            onManualNext={game.coachManualNext}
             hidden={game.player.flightPlan?.hidden}
             onHiddenChange={hidden => game.setPlayer(player => ({ ...player, flightPlan: { ...(player.flightPlan ?? { completed: {} }), hidden } }))}
             hint={activeTry && game.player.flightPlan?.hintShownFor === activeTry ? coach.hint : undefined}
+            go={'try' in coach && coach.screen === '*' && game.screen === 'hub'
+              ? (coach.try === 'part' ? { label: 'Open Hangar', run: () => game.go('hangar') }
+                : coach.try === 'scan' ? { label: 'Open Galaxy', run: () => game.go('galaxy') } : undefined)
+              : undefined}
             onSkip={() => {
               captureGameEvent('tutorial_skipped', {
                 step_id: coach.id,
@@ -287,10 +298,6 @@ function GameChrome({ children }: { children: ReactNode }) {
 
         {mountsSharedChrome(currentScreen, game.authGateOpen) && (
           <GameChromeBars
-            screen={currentScreen}
-            missionsDone={game.player.missionsDone}
-            hasActiveRun={!!game.player.activeMission}
-            onHome={() => game.go('hub')}
             onOperations={resumeOperations}
             onMarket={() => {
               // SSL-416: Market is locked until training ends; say so instead of ignoring the tap.

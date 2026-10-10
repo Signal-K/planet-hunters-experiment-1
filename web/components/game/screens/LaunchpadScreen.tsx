@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
+import { useHelp } from '@/components/ui/useHelp'
 import { partitionByOwner, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
 import type { Mission } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
@@ -16,9 +17,11 @@ import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
 import { EARTH_BASE_PAD } from '@/lib/scene/compositions'
 import { earthStorageBuilt, sellUnitPrice } from '@/lib/systems/EconomySystem'
+import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { hasActiveBuildSiteRight, ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
 import { REFINERY_BUILD_MISSION_ID } from '@/lib/data/missions'
 import { captureGameEvent } from '@/lib/posthog'
+import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 
 interface LaunchpadScreenProps {
   onBack: () => void
@@ -41,6 +44,11 @@ interface LaunchpadScreenProps {
   missionMenuOpen?: boolean
   onMissionMenuOpenChange?: (open: boolean) => void
   onOpenSiloBuild?: () => void
+  /** Free Ops agency routes (SSL-512): everything the program does without a client starts from this menu. */
+  onOpenControlStation?: () => void
+  onOpenMarket?: () => void
+  /** Scrub the active run after the launchpad confirm rail (SSL-512). */
+  onAbandonMission?: () => void
 }
 
 function HangarGlyph() {
@@ -67,13 +75,13 @@ function MiningGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18h14M7 18l2-7h6l2 7M10 11V7h4v4M8 7h8M12 4v3" /></svg>
 }
 
-function OperationBrief({ kind, instruments, mining, builds, player, catalog, onPick, onBack, onOpenSiloBuild }: { kind: 'instrument' | 'mining' | 'build'; instruments: Mission[]; mining?: Mission; builds: Mission[]; player: Player; catalog: Catalog; onPick: (id: string, freeHaulDisposition?: 'store' | 'sell') => void; onBack: () => void; onOpenSiloBuild?: () => void }) {
+function OperationBrief({ kind, instruments, mining, aluminium, builds, player, catalog, onPick, onBack, onOpenSiloBuild }: { kind: 'instrument' | 'mining' | 'build'; instruments: Mission[]; mining?: Mission; aluminium?: Mission; builds: Mission[]; player: Player; catalog: Catalog; onPick: (id: string, freeHaulDisposition?: 'store' | 'sell') => void; onBack: () => void; onOpenSiloBuild?: () => void }) {
   const hasStorage = earthStorageBuilt(player)
   const market = Object.entries(catalog.minerals).sort(([, a], [, b]) => b.price - a.price).slice(0, 4)
   return <div className="launchpad-operation-brief" data-testid={`launchpad-operation-brief-${kind}`}>
     <button type="button" className="launchpad-mission-menu-close" onClick={onBack}>BACK</button>
     {kind === 'instrument' && <><span className="launchpad-guide-kicker">OWN INFRASTRUCTURE / INSTRUMENT</span><h2>Launch an instrument</h2><p>An owned telescope stays in orbit after launch. It unlocks an instrument feed at Base; it is not a client contract and it does not consume a mining slot.</p>{instruments.length ? <div className="launchpad-operation-brief__choices">{instruments.map(instrument => <button type="button" key={instrument.id} className="launchpad-mission-choice" data-testid={instrument.payload?.instrumentId === 'transit-telescope' ? 'launchpad-prepare-instrument-btn' : `launchpad-prepare-instrument-${instrument.payload?.instrumentId ?? instrument.id}`} onClick={() => onPick(instrument.id)}><SatelliteGlyph /><strong>{instrument.title}</strong><span>{instrument.programReward?.outcome ?? instrument.brief}</span></button>)}</div> : <p className="launchpad-operation-brief__muted">Your current instruments are online. Their orbital status indicators show when a data review is ready.</p>}</>}
-    {kind === 'mining' && <><span className="launchpad-guide-kicker">FREE OPS / OWN HAUL</span><h2>Plan a mining run</h2><p>Choose the destination for the haul before selecting a target and rocket. This run belongs to your program: no client claim and no daily limit.</p><div className="launchpad-operation-brief__choices"><button type="button" className="launchpad-mission-choice" data-testid="launchpad-mining-sell-btn" disabled={!mining} onClick={() => mining && onPick(mining.id, 'sell')}><MiningGlyph /><strong>SELL ON EARTH RETURN</strong><span>Exchange the complete haul immediately at the shown market price.</span></button><button type="button" className="launchpad-mission-choice" data-testid="launchpad-mining-store-btn" disabled={!mining || !hasStorage} onClick={() => mining && hasStorage && onPick(mining.id, 'store')}><InfrastructureGlyph /><strong>STORE IN SILO</strong><span>{hasStorage ? 'Keep ore for construction, fabrication, or a better market window.' : 'Requires an Earth Mineral Vault or Surface Silo.'}</span></button></div>{!hasStorage && onOpenSiloBuild && <button type="button" className="launchpad-operation-brief__link" data-testid="launchpad-build-silo-link" onClick={onOpenSiloBuild}>BUILD A SILO AT BASE</button>}<div className="launchpad-operation-brief__market"><span className="launchpad-guide-kicker">COMMODITY EXCHANGE / MAJOR MINERALS</span><div className="launchpad-operation-brief__prices">{market.map(([id, mineral]) => { const quote = player.dailyEconomySnapshot?.prices[id]; const movement = quote ? Math.round((quote.multiplier - 1) * 100) : 0; return <div key={id}><small>{mineral.name}</small><strong>₣{sellUnitPrice(id, player).price}/U</strong><span data-direction={movement >= 0 ? 'up' : 'down'}>{movement >= 0 ? '+' : ''}{movement}% TODAY</span></div> })}</div></div></>}
+    {kind === 'mining' && <><span className="launchpad-guide-kicker">FREE OPS / OWN HAUL</span><h2>Plan a mining run</h2><p>Choose the destination for the haul before selecting a target and rocket. This run belongs to your program: no client claim and no daily limit.</p><div className="launchpad-operation-brief__choices"><button type="button" className="launchpad-mission-choice" data-testid="launchpad-mining-sell-btn" disabled={!mining} onClick={() => mining && onPick(mining.id, 'sell')}><MiningGlyph /><strong>SELL ON EARTH RETURN</strong><span>Exchange the complete haul immediately at the shown market price.</span></button><button type="button" className="launchpad-mission-choice" data-testid="launchpad-mining-store-btn" disabled={!mining || !hasStorage} onClick={() => mining && hasStorage && onPick(mining.id, 'store')}><InfrastructureGlyph /><strong>STORE IN SILO</strong><span>{hasStorage ? 'Keep ore for construction, fabrication, or a better market window.' : 'Requires an Earth Mineral Vault or Surface Silo.'}</span></button><button type="button" className="launchpad-mission-choice" data-testid="launchpad-mining-aluminium-btn" disabled={!aluminium} onClick={() => aluminium && onPick(aluminium.id, hasStorage ? 'store' : 'sell')}><MiningGlyph /><strong>MINE ALUMINIUM</strong><span>{hasStorage ? 'Early stock for Base builds. This haul is stored in the silo.' : 'Early stock for Base builds. No silo yet, so the haul sells on Earth return.'}</span></button></div>{!hasStorage && onOpenSiloBuild && <button type="button" className="launchpad-operation-brief__link" data-testid="launchpad-build-silo-link" onClick={onOpenSiloBuild}>BUILD A SILO AT BASE</button>}<div className="launchpad-operation-brief__market"><span className="launchpad-guide-kicker">COMMODITY EXCHANGE / MAJOR MINERALS</span><div className="launchpad-operation-brief__prices">{market.map(([id, mineral]) => { const quote = player.dailyEconomySnapshot?.prices[id]; const movement = quote ? Math.round((quote.multiplier - 1) * 100) : 0; return <div key={id}><small>{mineral.name}</small><strong>₣{sellUnitPrice(id, player).price}/U</strong><span data-direction={movement >= 0 ? 'up' : 'down'}>{movement >= 0 ? '+' : ''}{movement}% TODAY</span></div> })}</div></div></>}
     {kind === 'build' && <><span className="launchpad-guide-kicker">OWN INFRASTRUCTURE</span><h2>Build something yourself</h2><p>You get your own work area on any planet — no competing for a plot. Mars is ready now; Mercury and Venus are yours too, once the thermal and pressure kit they need is fitted. Asteroids work differently: you buy or lease rights there before building.</p><p className="launchpad-operation-brief__muted">A mining settlement is a standing claim, not a one-off haul — once it&apos;s up, every later run to that body skips re-scouting and feeds the same local silo and refinery instead of hauling raw ore all the way back to Earth each time.</p><div className="launchpad-operation-brief__builds">{builds.map(mission => <button type="button" key={mission.id} className="launchpad-mission-choice" data-testid={`launchpad-build-${mission.id}`} onClick={() => onPick(mission.id)}><InfrastructureGlyph /><strong>{mission.title}</strong><span>{mission.programReward?.outcome ?? mission.brief}</span></button>)}</div></>}
   </div>
 }
@@ -97,7 +105,7 @@ const guideSteps = [
 ] as const
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, hydrated = false, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange, onOpenSiloBuild,
+  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, hydrated = false, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange, onOpenSiloBuild, onOpenControlStation, onOpenMarket, onAbandonMission,
 }: LaunchpadScreenProps) {
   // This is the Launchpad route: a playable Earth Base composition. The
   // tower and hangar are the primary interactions; the rail only exposes
@@ -106,8 +114,10 @@ export default function LaunchpadScreen({
   const [guideStep, setGuideStep] = useState<number | null>(null)
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
+  const [confirmingScrub, setConfirmingScrub] = useState(false)
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   const [operationBrief, setOperationBrief] = useState<'instrument' | 'mining' | 'build' | null>(null)
+  const help = useHelp('launchpad')
   const externallyControlled = onMissionMenuOpenChange !== undefined
   // Keep a local open signal as well as the app-level signal. The physical pad
   // is the primary control; an auth/catalog refresh can briefly replay the
@@ -125,6 +135,7 @@ export default function LaunchpadScreen({
   const launchedSatellites = [
     player.transitSatelliteLaunchedAt,
     player.deepSpaceTelescopeLaunchedAt || player.deepSpaceTelescopeBuilt || player.placed.includes('deep-space-telescope'),
+    player.saturnImagerLaunchedAt,
   ].filter(Boolean).length
   const { own } = partitionByOwner(catalog.missions, mission => mission)
   const sequence = missionsDone + 1
@@ -138,7 +149,8 @@ export default function LaunchpadScreen({
   }
   // Academy/crew progression remains deferred until it has a replacement for
   // the retired affinity ladder, so it cannot become the next required launch.
-  const ownMiningOperation = operations.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
+  const aluminiumOperation = operations.find(mission => mission.id === 'self-directed-freeops-aluminium-stock')
+  const ownMiningOperation = operations.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction && mission.id !== 'self-directed-freeops-aluminium-stock')
     ?? (hasFreeOpsAccess ? {
       id: SELF_DIRECTED_MINING_MISSION_ID,
       title: 'Self-Directed Mining Run',
@@ -148,7 +160,7 @@ export default function LaunchpadScreen({
       locked: false,
       sequence: sequence,
       unlockAt: 'Reach Free Operations',
-      requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 4, drill_tier: 2, max_orbit: 8 },
+      requires: { minerals: { nickel: 1 }, cargo_min: 1, drill_tier: 1, max_orbit: 2 },
       payout: { francs: 0, affinity: 0 },
     } satisfies Mission : undefined)
   // Launchable instruments are the first-class infrastructure path. Only
@@ -213,13 +225,14 @@ export default function LaunchpadScreen({
 
   return (
     <div
-      className="game-screen theme-deep ln-scene-launchpad"
+      className="game-screen theme-blueprint ln-scene-launchpad"
       data-testid="launchpad-focus-screen"
       data-game-hydrated={hydrated ? 'true' : 'false'}
     >
       {/* Scene chrome stays crisp over the terrain; the previous `glass` prop
           created the large frosted rectangle visible across the upper UI. */}
-      <TopBar eyebrow="BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} />
+      <TopBar eyebrow="BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} right={help.button} />
+      {help.layer}
 
       <main data-ui-zone={UI_ZONES.screenContent} className="launchpad-visual-scene earth-base-campus-transition">
         {/* Same Earth Base backdrop the Hub screen uses (KES-233) — this
@@ -272,6 +285,7 @@ export default function LaunchpadScreen({
             </div>
             <div className="launchpad-active-mission__actions">
               <button type="button" className="launchpad-active-mission__dismiss" onClick={() => setActiveMissionCalloutDismissed(true)}>DISMISS</button>
+              {onAbandonMission && <button type="button" className="launchpad-active-mission__dismiss" data-testid="launchpad-scrub-run" onClick={() => setConfirmingScrub(true)}>SCRUB</button>}
               <button type="button" className="launchpad-active-mission__resume" onClick={onResumeMission}><MissionGlyph /> RESUME MISSION</button>
             </div>
           </section>
@@ -288,6 +302,7 @@ export default function LaunchpadScreen({
               <button type="button" className="launchpad-mission-menu-close" data-testid="launchpad-new-mission-close" onClick={() => setMissionMenu(false)}>CLOSE</button>
             </div>
             {!operationBrief ? <div className="launchpad-mission-menu-options">
+              {infrastructureOperations.length ? (
               <button
                 type="button"
                 className="launchpad-mission-choice"
@@ -299,6 +314,8 @@ export default function LaunchpadScreen({
                 <strong>LAUNCH SATELLITE / TOOL</strong>
                 <span>{infrastructureOperations.length ? 'Deploy an instrument that keeps working for your program.' : 'No owned instrument launch is queued yet.'}</span>
               </button>
+              ) : null}
+              {ownMiningOperation ? (
               <button
                 type="button"
                 className="launchpad-mission-choice"
@@ -307,9 +324,11 @@ export default function LaunchpadScreen({
                 onClick={() => setOperationBrief('mining')}
               >
                 <MiningGlyph />
-                <strong>GO MINING</strong>
-                <span>{ownMiningOperation ? 'Set storage and inspect market conditions before dispatch.' : 'Self-directed mining unlocks with Free Operations.'}</span>
+                <strong>FREE OPS</strong>
+                <span>{ownMiningOperation ? 'Plan your own haul: no client, no required cargo, return when ready.' : 'Self-directed mining unlocks with Free Operations.'}</span>
               </button>
+              ) : null}
+              {buildOperation ? (
               <button
                 type="button"
                 className="launchpad-mission-choice"
@@ -321,6 +340,31 @@ export default function LaunchpadScreen({
                 <strong>BUILD SOMETHING YOURSELF</strong>
                 <span>{buildOperation ? 'Choose a permanent program build and its assigned site.' : 'No player construction mission is ready for dispatch.'}</span>
               </button>
+              ) : null}
+              {onOpenControlStation && (
+              <button
+                type="button"
+                className="launchpad-mission-choice"
+                data-testid="launchpad-new-mission-control-station-btn"
+                onClick={onOpenControlStation}
+              >
+                <SatelliteGlyph />
+                <strong>CONTROL STATION</strong>
+                <span>Operate your instruments, scan and chart bodies, and review citizen science feeds. No client needed.</span>
+              </button>
+              )}
+              {onOpenMarket && (
+              <button
+                type="button"
+                className="launchpad-mission-choice"
+                data-testid="launchpad-new-mission-market-btn"
+                onClick={onOpenMarket}
+              >
+                <InfrastructureGlyph />
+                <strong>SELL &amp; BUILD</strong>
+                <span>Sell what you mined, then spend the francs on Base builds and field kits.</span>
+              </button>
+              )}
               <button
                 type="button"
                 className="launchpad-mission-choice"
@@ -343,7 +387,7 @@ export default function LaunchpadScreen({
                   <span>{resourceFocusOperation.title}. Configuration is ready; choose a highlighted source and dispatch.</span>
                 </button>
               )}
-            </div> : <OperationBrief kind={operationBrief} instruments={infrastructureOperations} mining={ownMiningOperation} builds={buildOperations} player={player} catalog={catalog} onPick={pickOperation} onBack={() => setOperationBrief(null)} onOpenSiloBuild={onOpenSiloBuild} />}
+            </div> : <OperationBrief kind={operationBrief} instruments={infrastructureOperations} mining={ownMiningOperation} aluminium={aluminiumOperation} builds={buildOperations} player={player} catalog={catalog} onPick={pickOperation} onBack={() => setOperationBrief(null)} onOpenSiloBuild={onOpenSiloBuild} />}
           </section>
         )}
 
@@ -356,11 +400,16 @@ export default function LaunchpadScreen({
             <button type="button" className="launchpad-mission-menu-close" onClick={() => setMissionRunsOpen(false)}>CLOSE</button>
             <div className="launchpad-mission-run-list">
               {missionRuns.map(run => (
-                <button key={run.key} type="button" data-testid={`launchpad-resume-run-${run.key}`} onClick={() => onResumeMissionRun?.(run.key)}>
-                  <MissionGlyph />
-                  <span>{run.label}</span>
-                  <strong>{run.phase.toUpperCase()}</strong>
-                </button>
+                <div key={run.key} className="launchpad-mission-run-row">
+                  <button type="button" data-testid={`launchpad-resume-run-${run.key}`} onClick={() => onResumeMissionRun?.(run.key)}>
+                    <MissionGlyph />
+                    <span>{run.label}</span>
+                    <strong>{run.phase.toUpperCase()}</strong>
+                  </button>
+                  {onAbandonMission && run.key === (player.missionRunId ?? `${player.activeMission?.id ?? ''}:${player.transitStartedAt ?? 'current'}`) && (
+                    <button type="button" className="launchpad-mission-run-scrub" data-testid="launchpad-scrub-run-card" onClick={() => setConfirmingScrub(true)}>SCRUB</button>
+                  )}
+                </div>
               ))}
             </div>
           </section>
@@ -409,6 +458,23 @@ export default function LaunchpadScreen({
               </div>
             </div>
           </aside>
+        )}
+
+        {confirmingScrub && onAbandonMission && (
+          <ActionConfirmBar
+            eyebrow="Active run"
+            title="Scrub this run"
+            description={isSettledMissionRun(player, {
+              runId: player.missionRunId,
+              missionId: player.activeMission?.id,
+              launchedAt: player.transitStartedAt,
+            })
+              ? 'This run was already collected. Scrubbing it clears the listing and does not charge a penalty.'
+              : 'Abandon the current run? Cargo and laser charges from it are cleared. A payout penalty applies.'}
+            confirmLabel="Confirm Scrub"
+            onConfirm={() => { setConfirmingScrub(false); onAbandonMission() }}
+            onDismiss={() => setConfirmingScrub(false)}
+          />
         )}
 
         <SoilCrossSection />

@@ -19,6 +19,7 @@ import type {
 } from '@takeon/engine'
 import type { LifeStage, SurfaceTarget } from '@/lib/data'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
+import { createBlueprintHueFilter } from '@/lib/takeon/blueprintFilter'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
 import { installLandnamStructureGlyphs } from '@/lib/takeon/structureGlyphs'
 import {
@@ -57,6 +58,10 @@ export interface TakeOnMountHandle {
   currentOrder: () => TakeOnFieldOrder | null
   cancelOrder: () => void
   plannedRouteLength: () => number
+  /** Drive to an exposed column and drill it from an adjacent tile. */
+  orderMine: (x: number, y: number) => void
+  /** Start a manual drill on the column directly ahead of the rover. */
+  mine: () => boolean
   /**
    * Drive one tile in a screen-relative direction (0 right/SE, 1 down/SW,
    * 2 left/NW, 3 up/NE as seen). Clears any tap-to-drive order. False when
@@ -197,6 +202,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     },
     cancelOrder: () => gameRef.current?.cancelOrder(),
     plannedRouteLength: () => gameRef.current?.plannedRoute().length ?? 0,
+    orderMine: (x, y) => gameRef.current?.orderMine(x, y),
+    mine: () => gameRef.current?.mine() ?? false,
     move: dir => gameRef.current?.move(dir) ?? false,
     rover: () => {
       const game = gameRef.current
@@ -278,6 +285,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           ? buildLandnamBody(engine, bodyId, currentTarget, lifeStage)
           : engine.getBody(bodyId)
         if (!body) throw new Error(`Unknown Takeon body: ${bodyId}`)
+        // Light blueprint look (SSL-501): ice sky, ice night (no near-black), neutral tint on every body.
+        body.palette = { sky: '#9fd0ee', skyNight: '#bcd7ea', tint: [1, 1, 1] }
 
         // Seeded scenes (a tutorial dropoff, etc.) are ephemeral flavor —
         // Landnam owns the persisted delivery state, not Takeon — so they
@@ -288,18 +297,26 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         if (disposed) return
 
         const viewport = takeOnViewportSize(canvasElement)
+        const sky = getComputedStyle(canvasElement).getPropertyValue('--ln-bp-bg').trim()
         app = new PIXI.Application()
         await app.init({
           canvas: canvasElement,
           width: viewport.width,
           height: viewport.height,
-          backgroundAlpha: 0,
+          ...(sky ? { background: sky, backgroundAlpha: 1 } : { backgroundAlpha: 0 }),
           antialias: true,
         })
         if (disposed) {
           app.destroy()
           app = null
           return
+        }
+
+        // Hue guard: engine props with fixed warm or green colours land in the cyan/teal band.
+        try {
+          app.stage.filters = [createBlueprintHueFilter(PIXI) as import('pixi.js').Filter]
+        } catch (filterError) {
+          console.warn('[Takeon] blueprint hue filter unavailable', filterError)
         }
 
         mounted = mountRoverGame({

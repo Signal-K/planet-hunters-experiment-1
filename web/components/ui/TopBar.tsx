@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { IconBtn } from './Button'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatFrancs } from '@/lib/format'
@@ -57,8 +57,22 @@ function ClockIcon() {
 
 export default function TopBar({ eyebrow, title, onBack, right, dense, solid, glass, scene, levelBadge, francs }: TopBarProps) {
   const devBadge = isDevLauncherEnabled()
+  const ref = useRef<HTMLDivElement>(null)
+  // Publish the bar's real height (it wraps to 2-4 lines on phones) so the
+  // screen's scroll area can start below it instead of under it.
+  useEffect(() => {
+    const bar = ref.current
+    const screen = bar?.parentElement
+    if (!bar || !screen) return
+    const publish = () => screen.style.setProperty('--ln-topbar-h', `${Math.ceil(bar.getBoundingClientRect().height)}px`)
+    publish()
+    if (typeof ResizeObserver === 'undefined') return () => { screen.style.removeProperty('--ln-topbar-h') }
+    const ro = new ResizeObserver(publish)
+    ro.observe(bar)
+    return () => { ro.disconnect(); screen.style.removeProperty('--ln-topbar-h') }
+  }, [])
   return (
-    <div className="top-bar" data-ui-zone={UI_ZONES.topChrome} style={{
+    <div ref={ref} className="top-bar" data-ui-zone={UI_ZONES.topChrome} style={{
       position: 'absolute',
       top: 0,
       left: 0,
@@ -76,7 +90,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
       background: scene
         ? 'color-mix(in srgb, var(--ln-blueprint-paper) 90%, var(--ln-cyan))'
         : glass
-        ? 'linear-gradient(180deg, rgba(6,14,26,0.58) 0%, rgba(6,14,26,0.28) 72%, transparent 100%)'
+        ? 'linear-gradient(180deg, color-mix(in srgb, var(--ln-blueprint-paper) 86%, transparent) 0%, color-mix(in srgb, var(--ln-blueprint-paper) 60%, transparent) 72%, transparent 100%)'
         : solid
           ? 'var(--ln-shell)'
           : 'linear-gradient(180deg, var(--ln-shell) 0%, color-mix(in srgb, var(--ln-shell) 50%, transparent) 70%, transparent 100%)',
@@ -99,7 +113,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
             border: '1px solid rgba(112,217,234,0.4)',
             background: 'rgba(112,217,234,0.08)',
             color: 'var(--ln-cyan)',
-            fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9,
+            fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14,
             letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap',
           }}>
             <ClockIcon /> {levelBadge}
@@ -110,7 +124,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
         {eyebrow && (
           <div className="top-bar__eyebrow" style={{
             fontFamily: 'var(--ln-font-display)',
-            fontSize: 9,
+            fontSize: 14,
             fontWeight: 700,
             letterSpacing: '0.24em',
             textTransform: 'uppercase',
@@ -139,10 +153,10 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
           <span style={{
             display: 'flex', alignItems: 'center', gap: 4,
             padding: '4px 9px', borderRadius: 999,
-            border: '1px solid rgba(224,165,39,0.4)',
-            background: 'rgba(224,165,39,0.08)',
+            border: '1px solid rgba(39,184,224,0.4)',
+            background: 'rgba(39,184,224,0.08)',
             color: 'var(--ln-amber)',
-            fontFamily: 'var(--ln-font-mono)', fontWeight: 800, fontSize: 11,
+            fontFamily: 'var(--ln-font-mono)', fontWeight: 800, fontSize: 14,
             whiteSpace: 'nowrap',
           }}>
             FRANCS · {formatFrancs(francs, { compact: true })}

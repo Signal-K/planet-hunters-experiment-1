@@ -22,7 +22,7 @@ const SKY_BG     = 0x03060a
 const GRID_COLOR = 0x87cffa
 const STAR_OPEN  = 0x3fa9ff
 const STAR_VISITED = 0x39d36a
-const STAR_SELECTED = 0xf5a623
+const STAR_SELECTED = 0x36c6e2
 const TICK_COLOR = 0x6b7fa3
 const SOL_ID = '__sol__'
 // Fixed normalized position (not hash-derived like TESS candidates) — our
@@ -95,16 +95,16 @@ export default function PixiGalaxyStarMap({ candidates, visitedIds, selectedId, 
       // Small orbit-ring hint, distinguishing Sol from a plain star marker
       // (this is a system, not just a point of light).
       const orbit = new Graphics()
-      orbit.circle(0, 0, radius + 10).stroke({ width: 1, color: 0xf5a623, alpha: 0.35 })
-      orbit.circle(0, 0, radius + 16).stroke({ width: 1, color: 0xf5a623, alpha: 0.18 })
+      orbit.circle(0, 0, radius + 10).stroke({ width: 1, color: 0x36c6e2, alpha: 0.35 })
+      orbit.circle(0, 0, radius + 16).stroke({ width: 1, color: 0x36c6e2, alpha: 0.18 })
       marker.addChild(orbit)
 
       const sun = new Graphics()
-      sun.circle(0, 0, radius).fill({ color: 0xffe1a8, alpha: 1 })
-      sun.circle(0, 0, radius + 3).stroke({ width: 1.5, color: 0xf5a623, alpha: 0.7 })
+      sun.circle(0, 0, radius).fill({ color: 0xb3e8f4, alpha: 1 })
+      sun.circle(0, 0, radius + 3).stroke({ width: 1.5, color: 0x36c6e2, alpha: 0.7 })
       marker.addChild(sun)
 
-      const label = new Text({ text: 'SOL', style: new TextStyle({ fontFamily: 'Oxanium, monospace', fontSize: 9, fontWeight: '700', fill: 0xf5a623 }) })
+      const label = new Text({ text: 'SOL', style: new TextStyle({ fontFamily: 'Oxanium, monospace', fontSize: 9, fontWeight: '700', fill: 0x36c6e2 }) })
       label.anchor.set(0.5, 0)
       label.y = radius + 20
       const labelBg = new Graphics()
@@ -236,7 +236,7 @@ export default function PixiGalaxyStarMap({ candidates, visitedIds, selectedId, 
 function mulberry32(seed: number): () => number {
   let a = seed | 0
   return () => {
-    a = (a + 0x6d2b79f5) | 0
+    a = (a + 0x2b4e79f5) | 0
     let t = Math.imul(a ^ (a >>> 15), 1 | a)
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296

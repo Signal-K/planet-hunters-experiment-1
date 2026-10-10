@@ -6,7 +6,7 @@ import type { Screen, GameState, GameActions } from '@/lib/game-types'
 import { MISSIONS, TARGETS, getLaserChargeCap } from '@/lib/data'
 import { DEFAULT_STATE, loadState, normalizeAndRepair } from '@/lib/game-state'
 import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
-import { resolvePreset } from '@/lib/devPresets'
+import { resolvePreset, DEV_GROUPS } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { identifyUser } from '@/lib/posthog'
 import { enqueueSurvey } from '@/lib/surveys'
@@ -26,7 +26,9 @@ import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
 import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
-import { canonicalGamePath, trayScreenFromPath } from '@/lib/game-route'
+import { canonicalGamePath, entryScreenForPath } from '@/lib/game-route'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { captureOrionidsQueryFlag } from '@/lib/data/sky-events'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -37,13 +39,25 @@ const STORAGE_KEY = GAME_STATE_STORAGE_KEY
 
 const GameContext = createContext<(GameState & GameActions) | null>(null)
 
-export function GameProvider({ children }: { children: React.ReactNode }) {
+export function GameProvider({ children, urlSync = true }: { children: React.ReactNode; /** false = never push the router (isolated dev stage keeps its own URL). */ urlSync?: boolean }) {
   const [state, setState] = useState<GameState>(DEFAULT_STATE)
   const stateRef = useRef(state)
   stateRef.current = state
 
   const [hydrated, setHydrated] = useState(false)
-  const isPreview = useRef(false)
+  // Preview mode must be known on the first render. Initialising this only in
+  // the hydration effect lets the auth hook run once as a normal game route,
+  // opening the sign-in sheet over the preview before the effect marks it
+  // local-only.
+  const isPreview = useRef(
+    typeof window !== 'undefined'
+      && (new URLSearchParams(window.location.search).has('preview')
+        || new URLSearchParams(window.location.search).has('preset')
+        || window.location.pathname.endsWith('/game/ship-customizer')),
+  )
+  // Hydration strips ?preset= before MiningScreen mounts. Keep ?orionids=
+  // in localStorage so the dev shower still turns on after that.
+  if (typeof window !== 'undefined') captureOrionidsQueryFlag()
   const skipNextLocalPersist = useRef(false)
   // React StrictMode double-invokes effects in dev. This effect strips the
   // `?preset=`/`?preview=` query via history.replaceState as one of its own
@@ -78,7 +92,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (preset) {
         isPreview.current = true
         setState({ ...DEFAULT_STATE, ...preset })
-        if (!routePreset) window.history.replaceState({}, '', window.location.pathname)
+        if (!routePreset && urlSync) window.history.replaceState({}, '', window.location.pathname)
         setHydrated(true)
         return
       }
@@ -92,10 +106,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // hydrates. Keep that entry decision authoritative; otherwise hydration
     // restores the previous Contracts screen and the URL-sync effect pushes
     // the player straight back to `/game/missions` (KES-226).
-    const trayScreen = trayScreenFromPath(window.location.pathname)
-    const entryState = window.location.pathname === '/game/hub'
-      ? { ...loadedState, screen: 'hub' as Screen }
-      : trayScreen ? { ...loadedState, screen: trayScreen } : loadedState
+    // SSL-476: /game/launchpad is a stable destination too. Without this a cold
+    // load restored the saved screen (e.g. hub-subsurface) and the URL sync
+    // rewrote the path to it, so the Launchpad opened the underground.
+    const entryScreen = entryScreenForPath(window.location.pathname, loadedState.player.placed)
+    const entryState = entryScreen ? { ...loadedState, screen: entryScreen } : loadedState
     setState(entryState)
     setHydrated(true)
     const record = pbShared.authStore.record
@@ -217,7 +232,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // the hydration effect's setState and can leave the URL on /game/intro
     // (dropping preview/isPreview routing) before the real screen lands a tick
     // later. Wait for hydration so only the real screen ever reaches the URL.
-    if (!hydrated) return
+    if (!hydrated || !urlSync) return
     if (ui.skipNextUrlSync.current) {
       ui.skipNextUrlSync.current = false
       return
@@ -228,6 +243,37 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       router.push(nextPath)
     }
   }, [state.screen, state.missionId, state.targetId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Dev-only QA bridge (never present when isDevLauncherEnabled() is false, so
+  // never in production). Lets a headless driver jump a real, signed-in
+  // session to any state without replaying the loop:
+  //   __landnam.get()                      current GameState
+  //   __landnam.patch({ francs: 5e6 })     merge into player
+  //   __landnam.goto('hangar', {missionId, targetId})
+  //   __landnam.skipTutorial()
+  //   __landnam.scenario('ui-rover-mining')  load a DEV preset into this session
+  //   __landnam.scenarios()                  list preset keys
+  useEffect(() => {
+    if (!isDevLauncherEnabled()) return
+    const w = window as unknown as { __landnam?: unknown }
+    w.__landnam = {
+      get: () => stateRef.current,
+      patch: (p: Partial<GameState['player']>) => setState(s => ({ ...s, player: { ...s.player, ...p } })),
+      goto: (screen: GameState['screen'], ids?: { missionId?: string | null; targetId?: string | null }) =>
+        setState(s => ({ ...s, screen, missionId: ids?.missionId ?? s.missionId, targetId: ids?.targetId ?? s.targetId })),
+      skipTutorial: () => tutorial.skipTutorial([0, 1, 2, 3, 4, 5, 6, 8, 9, 30, 31, 32, 33, 40, 41]),
+      // Load any DEV preset (m1-mining, ui-rover-mining, ship-customizer, ...)
+      // into the live signed-in session. Returns false for an unknown key.
+      scenario: (name: string) => {
+        const p = resolvePreset(name)
+        if (!p) return false
+        setState(s => ({ ...s, ...p }))
+        return true
+      },
+      scenarios: () => DEV_GROUPS.flatMap(g => g.shots.map(sh => sh.key)),
+    }
+    return () => { delete w.__landnam }
+  })
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const mission = state.missionId
@@ -306,7 +352,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onLandingTouchdown: loop.onLandingTouchdown,
       onRedockComplete: loop.onRedockComplete,
       onDebriefDone: loop.onDebriefDone,
+      onBuyLaserCapacitor: loop.onBuyLaserCapacitor,
       gainResearchXP: loop.gainResearchXP,
+      startSurveyScan: loop.startSurveyScan,
+      resolveSurveyScan: loop.resolveSurveyScan,
       upgradeLicenseGrade: loop.upgradeLicenseGrade,
       unlockBlueprint: loop.unlockBlueprint,
       claimFriendGift,
@@ -325,12 +374,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       submitTessClassification: loop.submitTessClassification,
       chooseSatelliteTarget: loop.chooseSatelliteTarget,
       submitAsteroidClassification: loop.submitAsteroidClassification,
+      submitSaturnClassification: loop.submitSaturnClassification,
+      claimSaturnSurveyTerritory: loop.claimSaturnSurveyTerritory,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,
       setDoneSteps: tutorial.setDoneSteps,
       completeStep: tutorial.completeStep,
-      coachManualNext: tutorial.coachManualNext,
       startFlightPlan: tutorial.startFlightPlan,
       completeFlightPlan: tutorial.completeFlightPlan,
       showFlightPlanHint: tutorial.showFlightPlanHint,
@@ -362,6 +412,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       recordFieldDemolish: surfaceOps.recordFieldDemolish,
       runFieldRefining: surfaceOps.runFieldRefining,
       fabricateAtField: surfaceOps.fabricateAtField,
+      buildFieldKit: surfaceOps.buildFieldKit,
       seedBiosphere: surfaceOps.seedBiosphere,
     }}>
       {children}

@@ -60,8 +60,8 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
           />
         ) : (
           <div>
-            <span className={styles.lockedTier}>TIER {rocket.tier}</span>
-            <span className={styles.lockedHint}>CLASSIFIED VEHICLE</span>
+            <span className={styles.lockedTier}>CLASSIFIED</span>
+            <span className={styles.lockedHint}>Vehicle blueprint sealed</span>
           </div>
         )}
         <div className={styles.tier}>TIER {rocket.tier}</div>
@@ -157,8 +157,8 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
     .find(rocket => !rocket.locked && missionsDone >= rocket.missionsRequired) ?? ROCKET_MODELS[0]
 
   return (
-    <div className={`game-screen theme-light ${styles.screen}`} data-testid="hangar-screen">
-      <TopBar eyebrow="BASE · HANGAR" title="Hangar" onBack={onBack} />
+    <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="hangar-screen">
+      <TopBar eyebrow="BASE · HANGAR" title="Hangar" onBack={onBack} solid />
       <div className={`screen-scroll ${styles.scroll}`} data-ui-zone={UI_ZONES.screenContent}>
         <div className={styles.inner}>
           <div className={styles.intro}>
@@ -204,7 +204,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
       </div>
 
       {customizerOpen && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
+        <div data-testid="hangar-customizer-overlay" style={{ position: 'absolute', inset: 0, zIndex: 30 }}>
           <ShipInteriorPreview
             rocketId="explorer"
             startingFrancs={francs}

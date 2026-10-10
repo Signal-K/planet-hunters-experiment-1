@@ -16,13 +16,13 @@ export default function Chip({ children, amber }: ChipProps) {
       padding: '4px 10px',
       background: 'rgba(20,20,23,0.78)',
       backdropFilter: 'blur(6px)',
-      border: `1px solid ${amber ? 'rgba(245,166,35,0.55)' : 'rgba(112,217,234,0.35)'}`,
+      border: `1px solid ${amber ? 'rgba(54,198,226,0.55)' : 'rgba(112,217,234,0.35)'}`,
       borderRadius: 999,
       fontFamily: 'var(--ln-font-display)',
-      fontSize: 11,
+      fontSize: 14,
       fontWeight: 700,
       letterSpacing: '0.14em',
-      color: amber ? '#f5a623' : '#cde4ff',
+      color: amber ? '#36c6e2' : '#cde4ff',
       textTransform: 'uppercase',
     }}>
       {children}

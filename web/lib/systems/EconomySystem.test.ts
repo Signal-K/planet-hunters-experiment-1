@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
 import { normalizeAndRepair, type PartialSave } from '@/lib/game-state'
 import { MINERAL_META, CLIENT_SLOTS, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, STRUCTURES, customizerPartById } from '@/lib/data'
-import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, rocketPurchaseRefusal, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
+import { applyBuyLaserCapacitor, applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, rocketPurchaseRefusal, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 
@@ -65,9 +65,15 @@ describe('applyPurchaseRocket', () => {
     expect(applyPurchaseRocket(state, rocket).screen).toBe('fab')
   })
 
+  it('accepts a build from the launch review (SSL-450 screen fab)', () => {
+    const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
+    const state = { ...makeState({ francs: rocket.costFrancs }), screen: 'fab' as const, missionId: 'm1', targetId: 'mars' }
+    expect(rocketPurchaseRefusal(state, rocket)).toBeNull()
+  })
+
   it('explains each authoritative purchase refusal', () => {
     const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
-    expect(rocketPurchaseRefusal(makeState({ francs: 0 }), rocket)).toBe('Return to the rocket blueprint before building.')
+    expect(rocketPurchaseRefusal(makeState({ francs: 0 }), rocket)).toBe('Return to the launch review before building.')
   })
 
   it('persists each built vehicle separately so a second preparation has its own charge', () => {
@@ -154,6 +160,14 @@ describe('silo rocket fabrication and recovery', () => {
 })
 
 describe('applySellMinerals', () => {
+  it('sells orionid_debris at the open-market spot price (SSL-475)', () => {
+    const s = makeState({ stash: { orionid_debris: 3 } })
+    const next = applySellMinerals(s, 'orionid_debris', 3)
+    expect(next.player.francs).toBe(openMarketSellPrice(MINERAL_META.orionid_debris.price, 0) * 3)
+    expect(next.player.francs).toBeGreaterThan(0)
+    expect(next.player.stash?.orionid_debris).toBeUndefined()
+  })
+
   it('pays the discounted open-market rate and tracks cumulative supply sold', () => {
     const s = makeState({ stash: { iron: 10 } })
     const next = applySellMinerals(s, 'iron', 4)
@@ -465,5 +479,21 @@ describe('sell quote and sale agree', () => {
     const { price, base, premiumApplied } = sellUnitPrice(unwanted, s.player, premiumClient.id)
     expect(premiumApplied).toBe(false)
     expect(price).toBe(base)
+  })
+})
+
+describe('applyBuyLaserCapacitor (SSL-462)', () => {
+  it('spends hauled ore and raises the level, once', () => {
+    const s = makeState({ stash: { copper: 5, aluminium: 4 } })
+    const bought = applyBuyLaserCapacitor(s, 0, 0)
+    expect(bought.player.laserCapacitorLevel).toBe(1)
+    expect(storedUnits(bought.player.stash)).toBe(3)
+    expect(applyBuyLaserCapacitor(bought, 0, 0)).toBe(bought)
+  })
+
+  it('refuses when ore is short or owed to a client', () => {
+    const s = makeState({ stash: { copper: 7 } })
+    expect(applyBuyLaserCapacitor(s, 0, 2)).toBe(s)
+    expect(applyBuyLaserCapacitor(makeState({ stash: { copper: 3 } }), 0, 0).player.laserCapacitorLevel).toBeUndefined()
   })
 })

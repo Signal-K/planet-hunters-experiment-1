@@ -54,9 +54,11 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   )
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
-  const [now, setNow] = useState(0)
+  const [now, setNow] = useState(() => Date.now())
   const [fakeStartedAt, setFakeStartedAt] = useState(0)
   const [fakeProgress, setFakeProgress] = useState(FAKE_PROGRESS_START)
+  const onArriveRef = useRef(onArrive)
+  onArriveRef.current = onArrive
 
   // Tutorial legs are fast, but they are still real mission state. Use the
   // persisted launch timestamp when one exists so a remount does not rewind
@@ -71,8 +73,8 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   const arriveOnce = useCallback(() => {
     if (arrivalHandledRef.current) return
     arrivalHandledRef.current = true
-    onArrive()
-  }, [onArrive])
+    onArriveRef.current()
+  }, [])
 
   useEffect(() => {
     if (!isTimed) return
@@ -109,15 +111,16 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   }, [isTimed, now, arrivalAt, fakeProgress, arriveOnce])
 
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
+  const liveNow = now > 0 ? now : Date.now()
   const stableTransitStartedAt = isTimed
-    ? (transitStartedAt ?? (arrivalAt ? arrivalAt - 1 : now))
+    ? (transitStartedAt ?? (arrivalAt ? arrivalAt - 1 : liveNow))
     : fakeStartedAt
   const totalMs = isTimed && arrivalAt ? Math.max(1, arrivalAt - stableTransitStartedAt) : 1
+  const arrived = isTimed ? liveNow >= arrivalAt! : fakeProgress >= 100
   const progress = isTimed
-    ? Math.min(100, Math.max(0, Math.round(((now - stableTransitStartedAt) / totalMs) * 100)))
+    ? (arrived ? 100 : Math.min(100, Math.max(0, Math.round(((liveNow - stableTransitStartedAt) / totalMs) * 100))))
     : Math.round(fakeProgress)
-  const etaMs = isTimed ? Math.max(0, arrivalAt! - now) : 0
-  const arrived = isTimed ? now >= arrivalAt! : fakeProgress >= 100
+  const etaMs = isTimed ? Math.max(0, arrivalAt! - liveNow) : 0
   const destinationName = returning ? 'Earth' : target.name
   const legLabel = returning ? 'Inbound' : isDelivery ? 'Delivery' : 'Outbound'
   const cargoEntries = cargo && (isDelivery || returning)
@@ -139,7 +142,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   const targetKind = target.type === 'asteroid' ? 'asteroid' : 'planet'
 
   return (
-    <div className="game-screen transit-screen">
+    <div className="game-screen theme-blueprint transit-screen">
       <TopBar eyebrow={`${legLabel} LEG · MISSION TRANSIT`} title={destinationName} onBack={onBack} glass />
 
       <main className="transit-flight-scene" aria-label={`Flight to ${destinationName}`}>
@@ -152,33 +155,36 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
 
         <div className="transit-flight-vignette" aria-hidden="true" />
 
-        <div className="transit-destination-chip">
-          <span className="transit-destination-chip__status">COURSE LOCKED</span>
-          <strong>{destinationName}</strong>
-          <span>{returning ? 'EARTH RECOVERY VECTOR' : `${target.type.toUpperCase()} · ORBIT ${target.orbit}`}</span>
-        </div>
+        <div className="transit-brief">
+          <div className="transit-brief__text">
+            <div className="transit-destination-chip">
+              <span className="transit-destination-chip__status">COURSE LOCKED</span>
+              <strong>{destinationName}</strong>
+              <span>{returning ? 'EARTH RECOVERY VECTOR' : `${target.type.toUpperCase()} · ORBIT ${target.orbit}`}</span>
+            </div>
 
-        {!returning && ownership && (
-          <div className={`transit-approach${progress >= 70 ? ' transit-approach--close' : ''}`} data-testid="transit-approach" data-progress={progress}>
-            <TargetSphere
-              target={target}
-              lifeStage={bodyOwnership.lifeStage}
-              ownership={bodyOwnership}
-              size={progress >= 70 ? 152 : 112}
-              compact={progress < 70}
-              eyebrow={progress >= 70 ? 'ON APPROACH · DIVISIONS' : 'TARGET BODY'}
-            />
+            {mission && (
+              <section className="transit-mission-card" data-testid="transit-mission-context" aria-label="Mission context">
+                <div className="transit-mission-card__eyebrow">{legLabel} mission</div>
+                <strong>{mission.title}</strong>
+                {issuedBy && <span className={ownProgram ? 'transit-mission-card__own' : ''}>{ownProgram ? issuedBy : `Issued by ${issuedBy}`}</span>}
+                {legPurpose && <p>{legPurpose}</p>}
+              </section>
+            )}
           </div>
-        )}
-
-        {mission && (
-          <section className="transit-mission-card" data-testid="transit-mission-context" aria-label="Mission context">
-            <div className="transit-mission-card__eyebrow">{legLabel} mission</div>
-            <strong>{mission.title}</strong>
-            {issuedBy && <span className={ownProgram ? 'transit-mission-card__own' : ''}>{ownProgram ? issuedBy : `Issued by ${issuedBy}`}</span>}
-            {legPurpose && <p>{legPurpose}</p>}
-          </section>
-        )}
+          {!returning && ownership && (
+            <div className={`transit-approach${progress >= 70 ? ' transit-approach--close' : ''}`} data-testid="transit-approach" data-progress={progress}>
+              <TargetSphere
+                target={target}
+                lifeStage={bodyOwnership.lifeStage}
+                ownership={bodyOwnership}
+                size={112}
+                compact
+                eyebrow="TARGET BODY"
+              />
+            </div>
+          )}
+        </div>
 
         <section className="transit-flight-hud transit-readout" data-transit-progress={progress} aria-label="Flight telemetry">
           <div className="transit-flight-hud__heading">

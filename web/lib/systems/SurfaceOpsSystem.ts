@@ -283,7 +283,7 @@ export function applyStartFieldOperation(
     power: 'power-solar-xl',
     battery: 'batt-stack',
     modules: ['tool-drill', 'cam-pano', 'cargo-crate'],
-    color: '#f6c96a',
+    color: '#75d2eb',
   }
   return updateSite(state, siteId, current => ({
     ...current,

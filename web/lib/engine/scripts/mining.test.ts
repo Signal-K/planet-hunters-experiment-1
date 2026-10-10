@@ -8,9 +8,12 @@ vi.mock('pixi.js', () => ({
     this.rect = vi.fn().mockReturnThis()
     this.fill = vi.fn().mockReturnThis()
     this.stroke = vi.fn().mockReturnThis()
+    this.moveTo = vi.fn().mockReturnThis()
+    this.lineTo = vi.fn().mockReturnThis()
     this.destroy = vi.fn()
     this.x = 0
     this.y = 0
+    this.alpha = 1
     this.rotation = 0
     this.tint = 0xffffff
     this.scale = { set: vi.fn() }
@@ -174,6 +177,28 @@ describe('MiningController', () => {
     expect(onCollect.mock.calls[0][0]).toBe('iron')
   })
 
+  it('freezes the scene briefly on a collect, then resumes (hit-stop)', () => {
+    const { controller, host } = makeController(vi.fn())
+    controller.start()
+    const ore = host.children.find(c => c.id === 'ore-0')!
+    ore.transform.position.x = 80
+    ore.transform.position.y = 190
+    for (let i = 0; i < 4; i++) {
+      controller.fireLaser()
+      const laser = host.children.find(c => c.id.startsWith('laser-') && c.active)
+      if (!laser) break
+      laser.transform.position.x = 80
+      laser.transform.position.y = 190
+      controller.update(0)
+    }
+    const other = host.children.find(c => c.id === 'ore-1')!
+    const x0 = other.transform.position.x
+    controller.update(0.03) // inside the freeze: nothing scrolls
+    expect(other.transform.position.x).toBe(x0)
+    controller.update(0.2) // past the freeze: scrolling resumes
+    expect(other.transform.position.x).toBeLessThan(x0)
+  })
+
   it('calls onHit on every collision, including a partial hit that does not destroy the ore', () => {
     const onHit = vi.fn()
     const { controller, host } = makeController(vi.fn(), { onHit })
@@ -253,6 +278,44 @@ describe('MiningController ore sym labels', () => {
       controller.update(0)
     }
     expect(labels()[0].visible).toBe(false)
+  })
+
+  it('does not spawn shower debris when the event is off', () => {
+    const { controller, host } = makeController(vi.fn(), { debris: { getSpawn: () => null } })
+    controller.start()
+    controller.update(2)
+    expect(host.children.some(c => c.id.startsWith('debris-'))).toBe(false)
+    expect(host.children.filter(c => c.id.startsWith('ore-'))).toHaveLength(20)
+  })
+
+  it('mines a landed chunk in one shot and ignores it while it is still falling', () => {
+    const onCollect = vi.fn()
+    const { controller, host } = makeController(onCollect, {
+      mineralColors: MINERAL_COLORS,
+      debris: { getSpawn: () => ({ mineral: 'orionid_debris', ratePerMinute: 600, speedFactor: 1 }) },
+    })
+    controller.start()
+    controller.update(0.05)
+    const debris = host.children.find(c => c.id.startsWith('debris-'))
+    expect(debris).toBeTruthy()
+    debris!.transform.position.x = 80
+    debris!.transform.position.y = 40
+    controller.fireLaser()
+    const fallingLaser = host.children.find(c => c.id.startsWith('laser-') && c.active)!
+    fallingLaser.transform.position.x = 80
+    fallingLaser.transform.position.y = 40
+    controller.update(0)
+    expect(onCollect).not.toHaveBeenCalled()
+
+    debris!.transform.position.y = 316
+    controller.update(0)
+    controller.fireLaser()
+    const landedLaser = host.children.find(c => c.id.startsWith('laser-') && c.active)!
+    landedLaser.transform.position.x = 80
+    landedLaser.transform.position.y = 316
+    controller.update(0)
+    expect(onCollect).toHaveBeenCalledTimes(1)
+    expect(onCollect).toHaveBeenCalledWith('orionid_debris')
   })
 
   it('destroys the label when its ore scrolls offscreen', () => {

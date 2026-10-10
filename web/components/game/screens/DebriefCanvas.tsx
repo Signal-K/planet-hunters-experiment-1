@@ -9,7 +9,6 @@ interface DebriefCanvasProps {
   rocketImageSrc?: string
 }
 
-const STARFIELD = '/game/assets/backgrounds/starmap.png'
 const HANGAR = '/game/assets/base/hangar_flat.png'
 const FALLBACK_SHIP = ROCKET_ASSETS.explorer.exterior
 
@@ -42,17 +41,14 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
           canvas,
           width,
           height,
-          background: 0x050b16,
+          background: 0xeef3f8,
           antialias: false,
           autoDensity: true,
           resolution: capDpr(),
         })
         if (destroyed) return
 
-        const [starfield, hangar] = await Promise.all([
-          Assets.load<Texture>(STARFIELD),
-          Assets.load<Texture>(HANGAR),
-        ])
+        const hangar = await Assets.load<Texture>(HANGAR)
         if (destroyed) return
 
         let shipTexture: Texture | null = null
@@ -66,8 +62,9 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
         const scene = new Container()
         app.stage.addChild(scene)
 
-        const background = new Sprite(starfield)
-        background.name = 'arrival-starfield'
+        // Light blueprint sky and apron (SSL-423): ice gradient, no starfield.
+        const background = new Graphics()
+        background.name = 'arrival-sky'
         scene.addChild(background)
 
         const atmosphere = new Graphics()
@@ -95,35 +92,40 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
           const nextHeight = Math.max(220, parent.clientHeight)
           app.renderer.resize(nextWidth, nextHeight)
 
-          const coverScale = Math.max(nextWidth / starfield.width, nextHeight / starfield.height)
-          background.scale.set(coverScale)
-          background.x = (nextWidth - starfield.width * coverScale) / 2
-          background.y = (nextHeight - starfield.height * coverScale) / 2
-
+          background.clear()
+          const bands = 14
+          for (let i = 0; i < bands; i++) {
+            const t = i / (bands - 1)
+            const mix = (a: number, b: number) => Math.round(a + (b - a) * t)
+            const color = (mix(0xea, 0xc4) << 16) | (mix(0xf1, 0xdb) << 8) | mix(0xf8, 0xee)
+            background.rect(0, (nextHeight * i) / bands, nextWidth, nextHeight / bands + 1).fill({ color })
+          }
           atmosphere.clear()
-          atmosphere.rect(0, 0, nextWidth, nextHeight * 0.42).fill({ color: 0x020711, alpha: 0.32 })
-          atmosphere.rect(0, nextHeight * 0.68, nextWidth, nextHeight * 0.32).fill({ color: 0x020711, alpha: 0.74 })
-          atmosphere.rect(0, nextHeight * 0.76, nextWidth, 2).fill({ color: 0x70d9ea, alpha: 0.24 })
+          atmosphere.rect(0, nextHeight * 0.74, nextWidth, nextHeight * 0.26).fill({ color: 0xb4cde2, alpha: 1 })
+          atmosphere.rect(0, nextHeight * 0.74, nextWidth, 3).fill({ color: 0x0f2436, alpha: 0.85 })
 
-          const hangarWidth = Math.min(nextWidth * 0.78, 680)
+          // Wide landscape: the rocket parks in the left third and the result cards take the right.
+          const wide = nextWidth >= 900 && nextWidth > nextHeight * 1.3
+          const cx = nextWidth * (wide ? 0.26 : 0.5)
+          const hangarWidth = wide ? Math.min(nextWidth * 0.44, 560) : Math.min(nextWidth * 0.78, 680)
           const hangarScale = hangarWidth / hangar.width
           hangarSprite.scale.set(hangarScale)
-          hangarSprite.x = nextWidth * 0.5
+          hangarSprite.x = cx
           hangarSprite.y = nextHeight * 0.96
 
-          const berthX = nextWidth * 0.5
+          const berthX = cx
           const berthY = nextHeight * 0.78
           berth.clear()
-          berth.ellipse(berthX, berthY, Math.min(150, nextWidth * 0.2), 18).stroke({ color: 0x70d9ea, alpha: 0.46, width: 2 })
-          berth.ellipse(berthX, berthY, Math.min(96, nextWidth * 0.13), 10).stroke({ color: 0x5ad07e, alpha: 0.55, width: 1 })
+          berth.ellipse(berthX, berthY, Math.min(150, nextWidth * 0.2), 18).stroke({ color: 0x175f9b, alpha: 0.9, width: 3 })
+          berth.ellipse(berthX, berthY, Math.min(96, nextWidth * 0.13), 10).stroke({ color: 0x17703f, alpha: 0.9, width: 2 })
           for (let i = -3; i <= 3; i++) {
-            berth.circle(berthX + i * Math.min(34, nextWidth * 0.045), berthY, 2.5).fill({ color: i === 0 ? 0xf5a623 : 0x70d9ea, alpha: 0.85 })
+            berth.circle(berthX + i * Math.min(34, nextWidth * 0.045), berthY, 2.5).fill({ color: i === 0 ? 0x17703f : 0x175f9b, alpha: 1 })
           }
 
           if (ship) {
             const shipWidth = Math.min(nextWidth * 0.44, 330)
             ship.scale.set(shipWidth / Math.max(shipTexture?.width ?? 1, 1))
-            ship.x = nextWidth * 0.5
+            ship.x = cx
             ship.y = nextHeight * 0.68
           }
         }

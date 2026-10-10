@@ -7,14 +7,15 @@ import { GameChromeBars, mountsSharedChrome } from './GameChromeBars'
 describe('GameChromeBars', () => {
   it('keeps the shared controls mounted for an operational surface', () => {
     const markup = renderToStaticMarkup(
-      <GameChromeBars screen="mining" missionsDone={3} hasActiveRun onHome={vi.fn()} onOperations={vi.fn()} onMarket={vi.fn()} onMenu={vi.fn()} />,
+      <GameChromeBars onOperations={vi.fn()} onMarket={vi.fn()} onMenu={vi.fn()} />,
     )
-    expect(markup).toContain('data-testid="home-ops-readout"')
     expect(markup).toContain('data-testid="home-bottom-bar"')
-    expect(markup).toContain('data-testid="home-bar-hub"')
+    expect(markup).toContain('data-testid="home-bar-switch"')
     expect(markup).toContain('data-testid="home-bar-market"')
     expect(markup).toContain('data-testid="settings-button"')
     expect(markup).toContain('« »')
+    expect(markup).not.toContain('data-testid="home-bar-ops"')
+    expect(markup).not.toContain('data-testid="home-bar-hub"')
   })
 
   it('lists the surfaces that mount the shared bar', () => {
@@ -23,7 +24,7 @@ describe('GameChromeBars', () => {
       'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining',
       'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'instrument-hub', 'mission-history', 'narrative-ledger',
     ]
-    expect(screens.filter(screen => mountsSharedChrome(screen, false))).toEqual(screens.filter(screen => screen !== 'intro'))
+    expect(screens.filter(screen => mountsSharedChrome(screen, false))).toEqual(screens.filter(screen => screen !== 'intro' && screen !== 'rover-mining'))
     expect(mountsSharedChrome('transit', true)).toBe(false)
   })
 })

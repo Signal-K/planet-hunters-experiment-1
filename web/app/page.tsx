@@ -4,7 +4,7 @@ import styles from './landing.module.css'
 
 export default function Home() {
   return (
-    <main className={`theme-deep ${styles.page}`} data-testid="landnam-landing">
+    <main className={`theme-blueprint ${styles.page}`} data-testid="landnam-landing">
       <section className={styles.intro} aria-labelledby="landing-title">
         <div className={styles.copyPanel}>
           <div className={styles.eyebrow}>{PRODUCT_WORDMARK} · BASE ONLINE</div>
@@ -23,12 +23,10 @@ export default function Home() {
 
         <div className={styles.yard} aria-label="Earth Base growing from one launchpad into an operating space programme">
           <div className={styles.sky} aria-hidden="true">
-            <span className={`${styles.star} ${styles.starOne}`} />
-            <span className={`${styles.star} ${styles.starTwo}`} />
-            <span className={`${styles.star} ${styles.starThree}`} />
+
+
             <span className={styles.rocket} />
           </div>
-          <div className={styles.horizon} aria-hidden="true" />
           <div className={styles.ground} aria-hidden="true">
             <span className={`${styles.structure} ${styles.launchpad}`}><i /><b /></span>
             <span className={`${styles.structure} ${styles.silo}`}><i /><b /></span>

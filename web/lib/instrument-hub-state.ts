@@ -1,6 +1,6 @@
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 
-export type InstrumentSourceFilter = 'all' | 'transit' | 'deep-space'
+export type InstrumentSourceFilter = 'all' | 'transit' | 'deep-space' | 'saturn'
 
 export interface InstrumentHubViewState {
   sourceFilter: InstrumentSourceFilter
@@ -25,6 +25,7 @@ function signalMeetsUnresolvedThreshold(signal: InstrumentSignal): boolean {
     const sn = Number.parseFloat(signal.subtitle.split('S/N ')[1] ?? '0')
     return sn >= 8
   }
+  if (signal.kind === 'saturn') return true
   const score = Number.parseInt(signal.subtitle.match(/score (\d+)/i)?.[1] ?? '0', 10)
   return score >= 60
 }
@@ -65,6 +66,7 @@ export function selectInstrumentSignalIndex(
 export function cycleSourceFilter(current: InstrumentSourceFilter): InstrumentSourceFilter {
   if (current === 'all') return 'transit'
   if (current === 'transit') return 'deep-space'
+  if (current === 'deep-space') return 'saturn'
   return 'all'
 }
 

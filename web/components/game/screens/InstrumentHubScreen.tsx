@@ -1,71 +1,89 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import ScenePanel from '@/components/game/ScenePanel'
+import { ControlStationBoard } from '@/components/game/control-station/ControlStationBoard'
 import TopBar from '@/components/ui/TopBar'
-import { InstrumentHubControlsBar } from '@/components/game/instrument-hub/InstrumentHubControlsBar'
-import { InstrumentHubScene } from '@/components/game/instrument-hub/InstrumentHubScene'
-import { InstrumentHubWorkSurface } from '@/components/game/instrument-hub/InstrumentHubWorkSurface'
+import { useHelp } from '@/components/ui/useHelp'
+import { buildControlStation } from '@/lib/control-station'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
-import {
-  DEFAULT_INSTRUMENT_HUB_VIEW,
-  cycleSourceFilter,
-  filterInstrumentSignals,
-  selectInstrumentSignalIndex,
-} from '@/lib/instrument-hub-state'
 import { UI_ZONES } from '@/lib/ui-zones'
 import type { Player } from '@/lib/game-types'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
+import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
+import SurveyScanConsole from '@/components/game/control-station/SurveyScanConsole'
+import type { Target } from '@/lib/data'
+import { SkyBadgeRow } from './SkyBadgeRow'
 import styles from './InstrumentHubScreen.module.css'
-import { ControlRoomBackdrop } from './ControlRoomBackdrop'
-import { DownlinkControlDesk } from './DownlinkControlDesk'
 
 interface InstrumentHubScreenProps {
   player: Player
   onBack: () => void
   onInspect: (signal: InstrumentSignal) => void
   onSnoozePing?: () => void
+  /** Claim the Enceladus plot from the stored survey chart. */
+  onClaimSurveyPlot?: () => void
+  /** Survey scan (SSL-512): bodies a telescope can chart, and the actions that run it. */
+  targets?: readonly Target[]
+  onStartScan?: (targetId: string) => void
+  onResolveScan?: () => void
 }
 
-export default function InstrumentHubScreen({ player, onBack, onInspect }: InstrumentHubScreenProps) {
+/**
+ * Control Station. The route id stays `instrument-hub` so existing entry
+ * points land here. This is the equipment station, not `player.controlBuilt`.
+ */
+export default function InstrumentHubScreen({ player, onBack, onInspect, onClaimSurveyPlot, targets = [], onStartScan, onResolveScan }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
-  const transitOnline = !!player.transitSatelliteLaunchedAt
-  const deepSpaceOnline = !!player.deepSpaceTelescopeBuilt
-  const [view, setView] = useState(DEFAULT_INSTRUMENT_HUB_VIEW)
-  const [armed, setArmed] = useState(false)
-
-  const filteredSignals = useMemo(
-    () => filterInstrumentSignals(signals, view),
-    [signals, view],
+  const [bodyId, setBodyId] = useState('all')
+  const help = useHelp('instrument-hub')
+  const awaitingFeed = loading && signals.length === 0
+  const model = useMemo(
+    () => buildControlStation({
+      player,
+      signals,
+      bodyId,
+      loading: awaitingFeed,
+    }),
+    [player, signals, bodyId, awaitingFeed],
   )
-
-  useEffect(() => {
-    setView(current => selectInstrumentSignalIndex(current, current.selectedIndex, filteredSignals.length))
-  }, [filteredSignals.length])
-
-  const selectedSignal = filteredSignals[view.selectedIndex] ?? null
-
-  const openSelectedInspector = () => {
-    if (!selectedSignal) return
-    setArmed(true)
-    onInspect(selectedSignal)
-  }
 
   return (
     <ScenePanel
-      ambient="observatory"
-      className={`game-screen theme-deep ${styles.screen}`}
+      ambient="survey"
+      className={`game-screen theme-blueprint ${styles.screen}`}
       data-testid="instrument-hub-screen"
-      scene={<ControlRoomBackdrop phase="day" windowLabel={transitOnline ? 'COURTYARD / TESS LINK' : deepSpaceOnline ? 'COURTYARD / NEOCP LINK' : 'COURTYARD / RECEIVER STANDBY'} />}
+      scene={<div className={`ln-con-grid ${styles.grid}`} />}
     >
-      <TopBar eyebrow="ORBITAL OBSERVATORY / DATA LINK" title="Instrument Hub" onBack={onBack} glass />
+      <TopBar
+        eyebrow="ORBITAL OBSERVATORY / DATA LINK"
+        title="Control Station"
+        onBack={onBack}
+        right={help.button}
+        solid
+      />
+      {help.layer}
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
-        {!loading && signals.length === 0 && <span className={styles.srOnly} data-testid="instrument-hub-empty">No unresolved instrument data.</span>}
-        {signals.map(signal => <span key={`${signal.kind}:${signal.id}`} className={styles.srOnly} data-testid="instrument-signal">{signal.title}</span>)}
-        <DownlinkControlDesk signals={signals} loading={loading} onInspect={onInspect} />
+        <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} />
+        {onStartScan && onResolveScan && player.freeOperations && (
+          <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />
+        )}
+        {player.moonSurveyCharts?.enceladus && (
+          <section data-testid="control-station-survey-charts" aria-label="Survey charts" style={{ display: 'grid', gap: 8, padding: 12, border: '1px solid var(--ln-hairline-strong)', borderRadius: 8, background: 'var(--ln-panel)' }}>
+            <div className="ln-section-label">Survey charts</div>
+            <EnceladusSurveyChart
+              chart={player.moonSurveyCharts.enceladus}
+              classification={player.moonSurveyCharts.enceladus.frameId ? player.saturnClassifications?.[player.moonSurveyCharts.enceladus.frameId] : undefined}
+            />
+            {player.moonSurveyCharts.enceladus.tier === 'gold' && !player.moonSurveyCharts.enceladus.territoryPlotClaimedAt && onClaimSurveyPlot && (
+              <button type="button" data-testid="control-station-claim-plot" onClick={onClaimSurveyPlot} style={{ minHeight: 44, font: '800 14px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Claim Enceladus plot</button>
+            )}
+          </section>
+        )}
+        <SkyBadgeRow badges={player.badges} />
       </div>
     </ScenePanel>
   )
 }
 
-export type InstrumentHubInspectScreen = Extract<import('@/lib/game-types').Screen, 'galaxy' | 'asteroid-discovery'>
+export type InstrumentHubInspectScreen = Extract<import('@/lib/game-types').Screen, 'galaxy' | 'asteroid-discovery' | 'saturn-storm-search'>

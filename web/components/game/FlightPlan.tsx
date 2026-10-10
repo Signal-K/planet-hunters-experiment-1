@@ -4,36 +4,51 @@ import { useEffect, useRef, useState } from 'react'
 import type { TutorialStep, TrainingTryStep } from '@/lib/data'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { useHelpOpen } from '@/lib/help/open-state'
 
 interface FlightPlanProps {
   stepIndex: number
   total: number
   step: TutorialStep | TrainingTryStep
-  onManualNext: () => void
   onSkip: () => void
   hidden?: boolean
   onHiddenChange?: (hidden: boolean) => void
   hint?: string
+  /** SSL-448: a labelled button that takes the player to the step's screen. */
+  go?: { label: string; run: () => void }
 }
 
 /**
- * SSL-395 Flight Plan: replaces the TutorialCoach overlay. It lives in layout
+ * SSL-395 Flight Plan replaces the retired overlay guidance. It lives in layout
  * flow (a strip between the screen and the nav), so it never covers a control.
  * The target control is marked by its own outline via
  * `html[data-flight-target="…"] [data-coach-id="…"]` in globals.css.
  * Action gating is unchanged: steps still complete from real game actions;
  * `manual` steps get a Continue button here.
  */
-export default function FlightPlan({ stepIndex, total, step, onManualNext, onSkip, hidden: persistedHidden, onHiddenChange, hint }: FlightPlanProps) {
+export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: persistedHidden, onHiddenChange, hint, go }: FlightPlanProps) {
   const isDesktop = useIsDesktop()
+  // SSL-432: the beacon outline pauses while help is on screen.
+  const helpOpen = useHelpOpen()
   const [expanded, setExpanded] = useState(false)
   const [hidden, setHidden] = useState(false)
   const stripRef = useRef<HTMLElement>(null)
+  // SSL-442: a finished step reads "COPY · STEP n DONE" in the kicker for 1.5s.
+  const [doneStep, setDoneStep] = useState<number | null>(null)
+  const prevStep = useRef({ index: stepIndex, id: step.id })
+  useEffect(() => {
+    const prev = prevStep.current
+    prevStep.current = { index: stepIndex, id: step.id }
+    if (stepIndex <= prev.index || step.id === prev.id) return
+    setDoneStep(prev.index + 1)
+    const timer = window.setTimeout(() => setDoneStep(null), 1500)
+    return () => window.clearTimeout(timer)
+  }, [stepIndex, step.id])
 
   useEffect(() => { if (persistedHidden !== undefined) setHidden(persistedHidden) }, [persistedHidden])
 
   const isTryStep = 'try' in step
-  const targetId = isTryStep ? step.beacon : ((isDesktop && step.desktopCoachId !== undefined) ? step.desktopCoachId : step.coachId)
+  const targetId = go ? 'flight-plan-go' : isTryStep ? step.beacon : ((isDesktop && step.desktopCoachId !== undefined) ? step.desktopCoachId : step.coachId)
   const body = isTryStep ? step.radio : ((isDesktop && step.desktopBody !== undefined) ? step.desktopBody : step.body)
   const action = isTryStep ? step.objective : ((isDesktop && step.desktopAction !== undefined)
     ? step.desktopAction
@@ -42,11 +57,11 @@ export default function FlightPlan({ stepIndex, total, step, onManualNext, onSki
   useEffect(() => { setExpanded(false) }, [step.id, step.screen])
 
   useEffect(() => {
-    if (hidden || !targetId) return
+    if (hidden || !targetId || helpOpen) return
     const html = document.documentElement
     html.setAttribute('data-flight-target', targetId.split('|').join(' '))
     return () => { html.removeAttribute('data-flight-target') }
-  }, [hidden, targetId])
+  }, [hidden, targetId, helpOpen])
 
   // Publish the strip's height so bottom-anchored status pills (the sync note)
   // sit above it instead of on top of its text.
@@ -85,18 +100,23 @@ export default function FlightPlan({ stepIndex, total, step, onManualNext, onSki
           aria-expanded={expanded}
           onClick={() => setExpanded(v => !v)}
         >
-          <span className="flight-plan-kicker">Flight Plan · {isTryStep ? step.try : step.title} · {stepIndex + 1}/{total}</span>
-          <span className="flight-plan-action">{hint && !expanded ? `Hint: ${hint}` : action}</span>
+          <span className="ops-badge" data-testid="ops-badge" aria-hidden="true">OPS<span className="ops-bars"><i /><i /><i /></span></span>
+          <span className="flight-plan-text">
+          <span className="flight-plan-kicker" data-state={doneStep ? 'done' : 'live'} data-testid="flight-plan-kicker">{doneStep ? `Copy · Step ${doneStep} done` : `${isTryStep ? step.try : step.title} Ops · Step ${stepIndex + 1}/${total}`}</span>
+          <span className="flight-plan-action">{action}</span>
+          </span>
         </button>
-        {!isTryStep && step.manual && (
-          <button type="button" className="flight-plan-btn is-primary" data-testid="flight-plan-continue" onClick={onManualNext}>
-            Continue
-          </button>
-        )}
+        {go && <button type="button" className="flight-plan-go" data-testid="flight-plan-go" data-coach-id="flight-plan-go" onClick={go.run}>{go.label}</button>}
         <button type="button" className="flight-plan-btn" data-testid="flight-plan-hide" aria-label="Hide Flight Plan" onClick={() => { setHidden(true); onHiddenChange?.(true) }}>
           ▾
         </button>
       </div>
+      {hint && (
+        <p className="flight-plan-hint-dock" data-testid="flight-plan-show-me">
+          <button type="button" onClick={() => setExpanded(open => !open)} aria-expanded={expanded}>Show me</button>
+          <span>{hint}</span>
+        </p>
+      )}
       {expanded && (
         <div className="flight-plan-radio" data-testid="flight-plan-radio">
           <span className="flight-plan-kicker">{isTryStep ? step.try : step.title} · Ops radio</span>

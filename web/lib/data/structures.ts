@@ -23,10 +23,10 @@ function refined(id: string, name: string, mineral: string, amount: number, sym:
 }
 
 export const REFINERY_RECIPES: RefineryRecipe[] = [
-  refined('refined-gold', 'Refined Gold', 'gold', 3, 'Au+', '#ffd166', 3600),
+  refined('refined-gold', 'Refined Gold', 'gold', 3, 'Au+', '#79d1ec', 3600),
   refined('refined-uranium', 'Refined Uranium', 'uranium', 3, 'U+', '#8fd16a', 3600),
   refined('refined-cobalt', 'Refined Cobalt', 'cobalt', 3, 'Co+', '#4f9cf7', 3000),
-  refined('refined-copper', 'Refined Copper', 'copper', 4, 'Cu+', '#c9824b', 2400),
+  refined('refined-copper', 'Refined Copper', 'copper', 4, 'Cu+', '#4bc9c6', 2400),
   refined('refined-aluminium', 'Refined Aluminium', 'aluminium', 4, 'Al+', '#c7d0dc', 2400),
   refined('refined-hydrogen', 'Refined Hydrogen', 'hydrogen', 4, 'H+', '#9becff', 1800),
 ]

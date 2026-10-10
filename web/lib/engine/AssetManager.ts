@@ -12,7 +12,7 @@ export type AssetManifest = Record<string, string>
 
 /** Visible fallback used when a sprite's logical name is missing from the manifest, or its
  * texture fails to load — a magenta-tinted square, rather than a blank/broken render. */
-export const PLACEHOLDER_TINT = 0xff00ff
+export const PLACEHOLDER_TINT = 0xff00ff // hue-check-ignore: debug sentinel for a missing sprite, never shipped UI
 
 export interface ResolvedTexture {
   texture: Texture

@@ -24,6 +24,7 @@ import {
 
 export interface SandboxEngine {
   CUSTOM_MATERIAL_BASE: number
+  MATERIALS?: Record<number, { name: string; colors: string[] }>
   registerStructure(def: StructureDef): StructureType
   registerMaterial(def: MaterialDef): Material
   registerBiome(biome: Biome): Biome
@@ -157,6 +158,41 @@ export function biomeDefForBiome(biome: BiomeId, base: number): Biome {
   }
 }
 
+/** Ore and crystal read as distinct teal/cyan/ice parts (top, side, shade); no orange or purple (SSL-501). */
+const BLUEPRINT_ORE: Record<string, [string, string, string]> = {
+  'Iron ore': ['#2f9e92', '#217a70', '#16564f'],
+  'Copper ore': ['#2bb5c9', '#1f8a9b', '#16626f'],
+  'Titanium ore': ['#d4e6f5', '#9fbfd9', '#6b8fb0'],
+  'Crystal': ['#7fdcf0', '#42a6df', '#2a73a6'],
+  'Sulfur deposit': ['#bdeede', '#8ccfb9', '#5fa38c'],
+}
+
+function mixHex(a: string, b: string, t: number): string {
+  const [ar, ag, ab] = hexToRgb(a)
+  const [br, bg, bb] = hexToRgb(b)
+  const c = (x: number, y: number) => Math.round(x + (y - x) * t).toString(16).padStart(2, '0')
+  return `#${c(ar, br)}${c(ag, bg)}${c(ab, bb)}`
+}
+
+/**
+ * Recolour takeon's stock terrain (ochre soil, purple basalt) onto the light blueprint ramp:
+ * keep each face's luminance so the isometric shading still reads, swap the hue to ice/cyan.
+ */
+export function reskinBlueprintMaterials(engine: SandboxEngine): void {
+  const materials = engine.MATERIALS
+  if (!materials) return
+  for (const m of Object.values(materials)) {
+    if (m.name === 'Air') continue
+    const ore = BLUEPRINT_ORE[m.name]
+    if (ore) { m.colors = [...ore]; continue }
+    m.colors = m.colors.map(hex => {
+      const [r, g, b] = hexToRgb(hex)
+      const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+      return mixHex('#5b9bc9', '#eef5fa', Math.min(1, Math.max(0, lum * 1.15)))
+    })
+  }
+}
+
 let registered: WeakSet<SandboxEngine> = new WeakSet()
 
 /**
@@ -168,6 +204,7 @@ let registered: WeakSet<SandboxEngine> = new WeakSet()
 export function registerLandnamSandbox(engine: SandboxEngine): void {
   if (registered.has(engine)) return
   registered.add(engine)
+  reskinBlueprintMaterials(engine)
   for (const def of LANDNAM_STRUCTURE_DEFS) engine.registerStructure(def)
   for (const recipe of SANDBOX_STRUCTURE_RECIPES) {
     if (!recipe.takeonType || LANDNAM_STRUCTURE_DEFS.some(d => d.type === recipe.takeonType)) continue
@@ -224,6 +261,8 @@ export function buildLandnamBody(
   body.id = `${baseBodyId}--${target.id}`
   body.kind = kindId
   body.terrain = { ...body.terrain, biomes: true }
+  // Light blueprint look (SSL-501): ice sky, ink night, neutral tint so terrain is not recoloured warm or purple.
+  body.palette = { sky: '#9fd0ee', skyNight: '#0f2436', tint: [1, 1, 1] }
   body.climate = { temperature: profile.temperature, tempVariance: profile.tempVariance }
   return body
 }

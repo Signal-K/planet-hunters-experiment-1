@@ -1,0 +1,730 @@
+/* SSL-497 shared instrument console. Light blueprint paper, ink, and blue.
+   The viewport well stays dark because it is the instrument image, not chrome. */
+
+.screen {
+  --iv-ink: var(--ln-bp-ink, var(--ln-text));
+  --iv-paper: var(--ln-bp-paper, var(--ln-panel));
+  --iv-blue: var(--ln-bp-blue, var(--ln-cyan));
+  --iv-line: var(--ln-bp-line-strong, var(--ln-hairline-strong));
+  color: var(--iv-ink);
+}
+
+.screen :global(.top-bar__title) {
+  text-shadow: none;
+}
+
+.body {
+  position: absolute;
+  inset: 0;
+  top: calc(var(--ln-topbar-h, 64px) + 4px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ln-s-2);
+  min-height: 0;
+  padding: 0 var(--ln-s-2) var(--ln-s-2);
+  z-index: 1;
+  overflow: hidden;
+}
+
+.stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "viewport"
+    "controls"
+    "command";
+  gap: var(--ln-s-2);
+  align-content: stretch;
+  overflow: hidden;
+}
+
+.controls { grid-area: controls; }
+.wellSlot {
+  grid-area: viewport;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+.command { grid-area: command; }
+
+.controls,
+.command {
+  background: var(--iv-paper);
+  border: 2px solid var(--iv-ink);
+  border-radius: var(--ln-r-xl);
+  padding: var(--ln-s-2);
+}
+
+.controlGrid {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ln-s-1);
+}
+
+.dpadBlock,
+.knobRow,
+.switchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ln-s-2);
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: 44px 44px 44px;
+  grid-template-areas:
+    ". north ."
+    "west center east"
+    ". south .";
+  gap: 0;
+}
+
+.aim {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 2px solid var(--iv-ink);
+  background: var(--iv-paper);
+  color: var(--iv-ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.aimNorth { grid-area: north; border-radius: var(--ln-r-lg) var(--ln-r-lg) 0 0; }
+.aimWest { grid-area: west; border-radius: var(--ln-r-lg) 0 0 var(--ln-r-lg); }
+.aimCenter { grid-area: center; border-radius: var(--ln-r-pill); }
+.aimEast { grid-area: east; border-radius: 0 var(--ln-r-lg) var(--ln-r-lg) 0; }
+.aimSouth { grid-area: south; border-radius: 0 0 var(--ln-r-lg) var(--ln-r-lg); }
+
+.aim:focus-visible,
+.switch:focus-visible,
+.answer:focus-visible,
+.toolButton:focus-visible,
+.terminalToggle:focus-visible,
+.commandInput:focus-visible,
+.knobRange:focus-visible {
+  outline: 2px solid var(--iv-blue);
+  outline-offset: 2px;
+}
+
+.aimLabel,
+.knobLabel,
+.switchLabel {
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--iv-ink);
+}
+
+.dpadBlock { flex-direction: column; }
+
+.knob {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ln-s-1);
+  width: 48px;
+}
+
+.dial {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--ln-r-pill);
+  border: 2px solid var(--iv-ink);
+  background:
+    radial-gradient(circle at 50% 42%, var(--iv-paper), var(--ln-bp-paper-2, var(--ln-surface-2)));
+  position: relative;
+}
+
+.needle {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 3px;
+  height: 16px;
+  border-radius: var(--ln-r-pill);
+  background: var(--iv-blue);
+  transform: translateX(-50%);
+}
+
+.knobRange {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.switch {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--iv-ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ln-s-1);
+  cursor: pointer;
+}
+
+.switchTrack {
+  width: 28px;
+  height: 44px;
+  border: 2px solid var(--iv-ink);
+  border-radius: var(--ln-r-pill);
+  background: var(--iv-paper);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4px;
+}
+
+.switchTrack[data-on="true"] {
+  align-items: flex-end;
+  background: var(--ln-bp-paper-2, var(--ln-surface-2));
+}
+
+.switchThumb {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--ln-r-sm);
+  background: var(--iv-ink);
+}
+
+.well {
+  position: relative;
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1 / 1;
+  justify-self: center;
+  overflow: hidden;
+  border: 3px solid var(--iv-ink);
+  border-radius: var(--ln-r-xl);
+  background: var(--iv-ink);
+  min-width: 0;
+  min-height: 0;
+}
+
+.optics {
+  position: absolute;
+  inset: 0;
+  transform: translate(calc(var(--iv-pan-x) * 28%), calc(var(--iv-pan-y) * 28%)) scale(var(--iv-zoom), calc(var(--iv-zoom) * var(--iv-stretch)));
+  filter: contrast(var(--iv-exposure)) blur(var(--iv-blur)) invert(var(--iv-invert));
+  transform-origin: center center;
+  transition: transform 80ms linear, filter 80ms linear;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+}
+
+.reticle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--iv-paper);
+  border-radius: var(--ln-r-pill);
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.reticle::before,
+.reticle::after {
+  content: "";
+  position: absolute;
+  background: var(--iv-paper);
+}
+
+.reticle::before { left: 50%; top: -8px; bottom: -8px; width: 2px; transform: translateX(-50%); }
+.reticle::after { top: 50%; left: -8px; right: -8px; height: 2px; transform: translateY(-50%); }
+
+.caption {
+  position: absolute;
+  left: var(--ln-s-2);
+  bottom: var(--ln-s-2);
+  z-index: 2;
+  margin: 0;
+  padding: 4px var(--ln-s-2);
+  border-radius: var(--ln-r-sm);
+  background: var(--iv-paper);
+  color: var(--iv-ink);
+  font: 800 14px/1.2 var(--ln-font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.viewportChrome {
+  position: absolute;
+  top: var(--ln-s-2);
+  left: var(--ln-s-2);
+  right: var(--ln-s-2);
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ln-s-2);
+}
+
+.chip {
+  min-height: 44px;
+  padding: 0 var(--ln-s-3);
+  border: 2px solid var(--iv-paper);
+  border-radius: var(--ln-r-pill);
+  background: var(--iv-ink);
+  color: var(--iv-paper);
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.chip[data-active="true"] {
+  background: var(--iv-paper);
+  color: var(--iv-ink);
+  border-color: var(--iv-paper);
+}
+
+.command {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ln-s-2);
+  min-height: 0;
+}
+
+.terminal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ln-s-1);
+  min-height: 0;
+  background: var(--ln-bp-paper-2, var(--ln-surface-2));
+  color: var(--iv-ink);
+  border: 2px solid var(--iv-ink);
+  border-radius: var(--ln-r-lg);
+  padding: var(--ln-s-2);
+}
+
+.promptRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ln-s-2);
+  min-height: 44px;
+  min-width: 0;
+}
+
+.log {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+  min-height: 0;
+  font: 14px/1.35 var(--ln-font-mono);
+  letter-spacing: 0.02em;
+}
+
+.terminal[data-open="true"] .log { display: flex; }
+
+.terminalToggle {
+  flex: 0 1 auto;
+  max-width: 46%;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--iv-ink);
+  text-align: right;
+  font: 14px/1.3 var(--ln-font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+}
+
+.prompt {
+  display: flex;
+  align-items: center;
+  gap: var(--ln-s-2);
+  min-height: 44px;
+}
+
+.promptMark {
+  font: 800 16px/1 var(--ln-font-mono);
+  color: var(--iv-ink);
+}
+
+.commandInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  border-bottom: 2px solid var(--iv-ink);
+  background: transparent;
+  color: var(--iv-ink);
+  font: 16px/1.2 var(--ln-font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0;
+}
+
+.commandInput::placeholder { color: var(--ln-bp-ink-mute, var(--ln-text-muted)); }
+
+.status {
+  margin: 0;
+  font: 800 14px/1.2 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--iv-ink);
+}
+
+.answers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ln-s-2);
+}
+
+.answer {
+  min-height: 44px;
+  padding: 4px var(--ln-s-2);
+  border: 2px solid var(--iv-ink);
+  border-radius: var(--ln-r-lg);
+  background: var(--iv-paper);
+  color: var(--iv-ink);
+  font: 800 14px/1.15 var(--ln-font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.answer:disabled {
+  /* SSL-480: disabled stays readable (>=4.5:1) and keeps the 44px target. */
+  min-height: 44px;
+  opacity: 1;
+  color: #3d4f60;
+  background: #e8eef5;
+  border-color: var(--iv-line);
+  border-style: dashed;
+  cursor: not-allowed;
+}
+
+.toolButton,
+.emptyTool {
+  min-height: 44px;
+  width: 100%;
+  border-radius: var(--ln-r-lg);
+  font: 800 14px/1.15 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.toolButton {
+  border: 2px solid var(--iv-ink);
+  background: var(--iv-paper);
+  color: var(--iv-ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ln-s-2);
+}
+
+.toolButton[aria-pressed="true"] {
+  background: var(--iv-blue);
+  color: #fff;
+}
+
+.toolButton:disabled {
+  color: var(--ln-bp-ink-mute, var(--ln-text-muted));
+  border-color: var(--iv-line);
+  cursor: not-allowed;
+}
+
+.emptyTool {
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--iv-line);
+  color: var(--ln-bp-ink-mute, var(--ln-text-muted));
+  background: transparent;
+}
+
+.devBar {
+  display: flex;
+  align-items: center;
+  gap: var(--ln-s-2);
+  min-height: 44px;
+  padding: 0 var(--ln-s-2);
+  border: 2px dashed var(--iv-line, var(--ln-hairline-strong));
+  border-radius: var(--ln-r-lg);
+  background: var(--iv-paper, var(--ln-panel));
+  color: var(--iv-ink, var(--ln-text));
+}
+
+.devBar span {
+  flex: 1 1 auto;
+  font: 14px/1.2 var(--ln-font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--iv-ink, var(--ln-text));
+}
+
+.devBar button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 var(--ln-s-3);
+  border: 2px solid var(--iv-ink, var(--ln-text));
+  border-radius: var(--ln-r-lg);
+  background: var(--iv-paper, var(--ln-panel));
+  color: var(--iv-ink, var(--ln-text));
+  font: 800 14px/1 var(--ln-font-mono);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.saved {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--ln-bp-green, var(--ln-ok));
+  border-radius: var(--ln-r-lg);
+  color: var(--ln-bp-green, var(--ln-ok));
+  background: var(--ln-bp-green-soft, var(--ln-ok-soft));
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chartAction {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.saturnGrid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
+.saturnCell {
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--iv-paper) 70%, transparent);
+  background: transparent;
+  color: var(--iv-ink);
+  padding: 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  cursor: pointer;
+}
+
+.saturnCell[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 3px var(--iv-paper), inset 0 0 0 6px var(--iv-ink);
+}
+
+.cellTag {
+  padding: 0 4px;
+  background: var(--iv-paper);
+  color: var(--iv-ink);
+  font: 800 14px/1.4 var(--ln-font-display);
+  letter-spacing: 0.04em;
+}
+
+.stormMark {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  border: 2px solid var(--iv-paper);
+  border-radius: var(--ln-r-pill);
+  background: var(--iv-blue);
+}
+
+.sky {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sky svg { flex: 1 1 auto; width: 100%; min-height: 0; }
+
+.skyCaption {
+  margin: 0;
+  padding: var(--ln-s-2);
+  background: var(--iv-paper);
+  color: var(--iv-ink);
+  font: 800 14px/1.2 var(--ln-font-mono);
+  letter-spacing: 0.03em;
+}
+
+.frameImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* SSL-448: on a 390px phone the stacked controls (226px) and command panel
+   (235px) left the light-curve well 16px tall, so nothing could be classified.
+   Portrait phones now stack well, review command, then the fine controls in a
+   scrolling column so every panel keeps its own height. */
+@media (max-width: 600px) and (orientation: portrait) {
+  .stage {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .wellSlot { flex: none; height: 200px; min-height: 200px; }
+  .command { order: 1; }
+  .controls { order: 2; }
+  .controls,
+  .command { flex: none; min-height: min-content; overflow: visible; }
+}
+
+@media (orientation: landscape), (min-width: 960px) {
+  .body { top: 64px; }
+
+  .stage {
+    grid-template-columns: minmax(168px, 220px) minmax(0, 1fr) minmax(200px, 280px);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "controls viewport command";
+    align-content: stretch;
+    overflow: hidden;
+  }
+
+  .controls,
+  .command {
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .controlGrid {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  .knobRow,
+  .switchRow { justify-content: space-between; }
+
+  .wellSlot { display: block; }
+
+  .well {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    max-width: none;
+    max-height: none;
+  }
+
+  .terminal { flex: 1 1 auto; }
+  .log { display: flex; flex: 1 1 auto; }
+  .terminalToggle { display: none; }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .body { top: 52px; padding-bottom: var(--ln-s-1); }
+  .stage {
+    grid-template-columns: 156px minmax(0, 1fr) 176px;
+  }
+  .controlGrid { gap: var(--ln-s-1); }
+  .controls, .command { padding: var(--ln-s-1); }
+  .knob { width: 44px; }
+  .dial { width: 44px; height: 44px; }
+  .knobRange { left: 0; width: 44px; height: 44px; }
+}
+
+/* Phone portrait: the ZOOM / FOCUS / EXPOSURE / STRETCH labels were wider than
+   their 48px knobs and ran into each other at ~400px (SSL-492 playtest). */
+@media (max-width: 600px) and (orientation: portrait) {
+  .knobLabel,
+  .switchLabel {
+    font-size: 14px;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  .knobRow { gap: var(--ln-s-1); flex-wrap: wrap; }
+  .knob { width: auto; min-width: 52px; }
+}
+
+/* One visual style (SSL-423): control and command panels carry the 2px ink outline and offset shadow. */
+.controls,
+.command {
+  border: 2px solid var(--iv-ink);
+  box-shadow: 4px 4px 0 rgba(31, 120, 193, 0.28);
+}
+.well {
+  background: var(--ln-bp-paper-2, #dfe9f3);
+  box-shadow: 4px 4px 0 rgba(31, 120, 193, 0.28);
+}
+.terminal,
+.toolButton {
+  box-shadow: 3px 3px 0 rgba(31, 120, 193, 0.28);
+}
+
+.standby {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ln-s-2);
+  padding: var(--ln-s-4);
+  text-align: center;
+  background: radial-gradient(circle at 50% 42%, var(--ln-bp-paper-2, var(--iv-paper)), var(--ln-bp-bg, var(--iv-paper)));
+}
+
+.standby strong {
+  font: 800 16px/1.2 var(--ln-font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--iv-ink);
+}
+
+.standby p {
+  margin: 0;
+  max-width: 36ch;
+  font: 500 14px/1.4 var(--ln-font-body);
+  color: var(--ln-bp-ink-dim, var(--iv-ink));
+}
+
+.standbyNote {
+  margin: 0;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--iv-ink);
+}

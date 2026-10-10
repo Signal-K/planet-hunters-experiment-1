@@ -25,17 +25,17 @@ import type { TransitRange } from '@/lib/data'
 // lavender→violet→amber rather than saturated cyan, and the sky leans on
 // purple/rust/amber with only a faint cool accent (not a blue wash).
 const SKY_BASE   = 0x0a0810
-const SKY_PURPLE = 0x5a3a8a
-const SKY_VIOLET = 0x3a2a52
+const SKY_PURPLE = 0x3a688a
+const SKY_VIOLET = 0x2a4152
 const SKY_RUST   = 0x7a2a44
-const SKY_AMBER  = 0x9a5210
-const MARK_COLOR = 0xf5a623
+const SKY_AMBER  = 0x159295
+const MARK_COLOR = 0x36c6e2
 const GRID_COLOR = 0x8c7fa0
 const TICK_COLOR = 0x8c7c8e
-const LINE_COLOR = 0xbfaee0
-const DOT_LO     = 0xb8a4e0  // shallow dip — pale lavender, not cyan
-const DOT_MID    = 0x9d6fd6  // mid dip — violet
-const DOT_HI     = 0xf5a623  // deep dip — amber
+const LINE_COLOR = 0xaecce0
+const DOT_LO     = 0xa4c8e0  // shallow dip — pale lavender, not cyan
+const DOT_MID    = 0x6fb2d6  // mid dip — violet
+const DOT_HI     = 0x36c6e2  // deep dip — amber
 
 /**
  * SSL-301: a fixed 3-decimal formatter on an auto Y domain produced runs of
@@ -63,7 +63,7 @@ function dipColor(frac: number): number {
 function mulberry32(seed: number): () => number {
   let a = seed | 0
   return () => {
-    a = (a + 0x6d2b79f5) | 0
+    a = (a + 0x2b4e79f5) | 0
     let t = Math.imul(a ^ (a >>> 15), 1 | a)
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296

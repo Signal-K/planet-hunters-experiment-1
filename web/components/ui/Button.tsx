@@ -46,7 +46,7 @@ export function PrimaryBtn({ children, onClick, disabled, ariaDisabled = false, 
         color,
         fontFamily: 'var(--ln-font-display)',
         fontWeight: 800,
-        fontSize: 12,
+        fontSize: 14,
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
         border: `1px solid ${border}`,
@@ -57,7 +57,7 @@ export function PrimaryBtn({ children, onClick, disabled, ariaDisabled = false, 
         alignItems: 'center',
         justifyContent: 'center',
         gap: 10,
-        opacity: unavailable ? 0.45 : 1,
+        opacity: unavailable ? 0.7 : 1,
       }}
     >
       {children}
@@ -82,13 +82,13 @@ export function GhostBtn({ children, onClick, disabled, full = true, testId }: B
         color: 'var(--ln-text-dim)',
         fontFamily: 'var(--ln-font-display)',
         fontWeight: 700,
-        fontSize: 13,
+        fontSize: 14,
         letterSpacing: '0.18em',
         textTransform: 'uppercase',
         border: '1px solid var(--ln-hairline)',
         borderRadius: 10,
         cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.45 : 1,
+        opacity: disabled ? 0.7 : 1,
       }}
     >
       {children}

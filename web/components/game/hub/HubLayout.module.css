@@ -37,7 +37,7 @@
 .titleBlock { min-width: 0; }
 .eyebrow {
   color: color-mix(in srgb, var(--ln-text) 70%, transparent);
-  font: 700 9.5px var(--ln-font-display);
+  font: 700 14px var(--ln-font-display);
   letter-spacing: .18em;
   text-transform: uppercase;
 }
@@ -50,6 +50,7 @@
   text-shadow: 0 4px 8px color-mix(in srgb, var(--ln-void) 60%, transparent);
 }
 .balance { pointer-events: auto; }
+.badges { top: 144px; bottom: auto; z-index: 19; }
 
 .surface::before {
   position: absolute;
@@ -94,7 +95,7 @@
 @media (max-width: 720px) {
   .topHud { padding: 12px 12px 20px; gap: 8px; }
   .topRow { min-height: 42px; align-items: center; }
-  .eyebrow { font-size: 8px; }
+  .eyebrow { font-size: 14px; }
   .eyebrow[data-dev-launcher='true'] { margin-left: 52px; }
   .titleText { font-size: 20px; }
   .balance { margin-top: 4px; }
@@ -116,5 +117,8 @@
   .topHud { flex-direction: row; align-items: center; gap: 12px; padding: 8px 12px 16px; }
   .topRow { width: auto; }
   .eyebrow { display: none; }
+  /* The eyebrow is hidden here, so the DEV badge would sit on the title instead. */
+  .titleBlock:has(.eyebrow[data-dev-launcher='true']) { margin-left: 64px; }
   .titleText { margin: 0; font-size: 18px; }
+  .badges { top: 56px; }
 }

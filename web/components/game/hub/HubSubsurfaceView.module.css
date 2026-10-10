@@ -7,7 +7,7 @@
 }
 
 /* Recolored 2026-08-22 (KES-228): this deck sits directly beneath the Hub
-   surface scene in the same slide, and the old soil-brown strata (#493824 /
+   surface scene in the same slide, and the old soil-brown strata (#244649 /
    #2c241c / #191713, #92785d etc.) read as a different game's palette next
    to the new dark-navy/cyan/pink diorama above it. Same geology-cutaway
    shapes, recolored into that world instead of literal dirt tones. */
@@ -123,10 +123,10 @@
   content: '';
   opacity: 0.5;
   background-image:
-    radial-gradient(ellipse 22px 12px at 12% 30%, rgba(217, 113, 80, 0.4), transparent 70%),
+    radial-gradient(ellipse 22px 12px at 12% 30%, rgba(80, 217, 188, 0.4), transparent 70%),
     radial-gradient(ellipse 18px 10px at 82% 44%, rgba(185, 216, 255, 0.34), transparent 70%),
-    radial-gradient(ellipse 26px 12px at 30% 72%, rgba(255, 209, 102, 0.26), transparent 70%),
-    radial-gradient(ellipse 16px 10px at 68% 84%, rgba(217, 113, 80, 0.3), transparent 70%);
+    radial-gradient(ellipse 26px 12px at 30% 72%, rgba(121, 209, 236, 0.26), transparent 70%),
+    radial-gradient(ellipse 16px 10px at 68% 84%, rgba(80, 217, 188, 0.3), transparent 70%);
   background-repeat: no-repeat;
 }
 

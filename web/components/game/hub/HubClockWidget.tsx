@@ -20,14 +20,14 @@ export function HubClockWidget() {
       data-testid="hub-clock-widget"
       style={{
         display: 'flex', alignItems: 'center', gap: 6,
-        background: 'rgba(4,16,31,0.7)', border: '1.5px solid var(--hub-outline)',
+        background: 'var(--hub-panel)', border: '2px solid var(--hub-outline)',
         borderRadius: 999, padding: '5px 10px', flexShrink: 0,
       }}
     >
       <span style={{ color: 'var(--hub-cyan)', display: 'flex' }}><ClockGlyph /></span>
       <span style={{
-        fontFamily: 'var(--ln-font-mono)', fontSize: 11, fontWeight: 700,
-        letterSpacing: '0.06em', color: 'rgba(234,241,248,0.85)',
+        fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 700,
+        letterSpacing: '0.06em', color: 'var(--ln-text)',
       }}>
         {label}
       </span>

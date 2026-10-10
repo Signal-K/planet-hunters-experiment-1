@@ -44,7 +44,8 @@ describe('instrument hub view state', () => {
   it('cycles source filters in hub order', () => {
     expect(cycleSourceFilter('all')).toBe('transit')
     expect(cycleSourceFilter('transit')).toBe('deep-space')
-    expect(cycleSourceFilter('deep-space')).toBe('all')
+    expect(cycleSourceFilter('deep-space')).toBe('saturn')
+    expect(cycleSourceFilter('saturn')).toBe('all')
   })
 
   it('clamps selected index to visible queue length', () => {

@@ -49,12 +49,21 @@ function finiteMissionsDone(player: AgencyTrainingPlayer): number {
   return Number.isFinite(player.missionsDone) ? player.missionsDone : 0
 }
 
-/** The Free Ops boundary: guided missions flown and a storage silo placed,
- *  or a save that already reached Free Ops under the old onboarding. */
+function flightPlanStarted(plan: AgencyTrainingPlayer['flightPlan']): boolean {
+  if (!plan) return false
+  if (plan.activeSince || plan.replayTry) return true
+  const completed = plan.completed
+  return !!(completed?.mining || completed?.scan || completed?.part)
+}
+
+/** Free Ops opens once the three tries are finished. A save that already
+ * reached Free Ops under the old three-mission onboarding, and never started
+ * this plan, keeps the unlock. Mining three contracts without the scan and
+ * part tries does not (SSL-393). */
 export function freeOperationsUnlocked(player: AgencyTrainingPlayer): boolean {
-  const missionsDone = finiteMissionsDone(player)
-  if (missionsDone >= LEGACY_FREE_OPS_MISSIONS_DONE) return true
-  return isTrainingComplete(player.flightPlan)
+  if (isTrainingComplete(player.flightPlan)) return true
+  if (flightPlanStarted(player.flightPlan)) return false
+  return finiteMissionsDone(player) >= LEGACY_FREE_OPS_MISSIONS_DONE
 }
 
 /** True while the player has flown both guided missions but has not yet
@@ -126,7 +135,7 @@ export function freeOpsActivities(player: FreeOpsActivityPlayer): FreeOpsActivit
       body: telescopeUp
         ? 'Review new observations from your telescope in orbit.'
         : 'Launch a transit telescope and classify real observation data.',
-      cta: telescopeUp ? 'Open instrument hub' : 'Open launchpad',
+      cta: telescopeUp ? 'Open control station' : 'Open launchpad',
       screen: telescopeUp ? 'instrument-hub' : 'launchpad',
     },
     {

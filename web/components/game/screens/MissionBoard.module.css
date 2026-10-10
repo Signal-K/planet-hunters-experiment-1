@@ -467,8 +467,8 @@
   color: var(--ln-text-dim);
 }
 .detailChip b { font-family: var(--ln-font-mono); font-weight: 800; color: var(--ln-text); }
-.detailChipPay { color: rgba(224,165,39,0.8); border-color: rgba(224,165,39,0.24); background: rgba(224,165,39,0.06); }
-.detailChipPay b { color: rgba(224,165,39,0.9); }
+.detailChipPay { color: rgba(39,184,224,0.8); border-color: rgba(39,184,224,0.24); background: rgba(39,184,224,0.06); }
+.detailChipPay b { color: rgba(39,184,224,0.9); }
 .detailChipAff { color: var(--ln-ok); border-color: rgba(90,208,126,0.2); background: rgba(90,208,126,0.05); }
 .detailChipAff b { color: var(--ln-ok); }
 
@@ -605,7 +605,7 @@
 }
 :global(.theme-blueprint) .tagTwostop {
   color: var(--ln-bp-green);
-  border-color: rgba(31, 143, 87, 0.32);
+  border-color: rgba(23, 112, 63, 0.32);
   background: var(--ln-bp-green-soft);
 }
 
@@ -657,7 +657,7 @@
 }
 :global(.theme-blueprint) .detailChipAff {
   color: var(--ln-bp-green);
-  border-color: rgba(31, 143, 87, 0.32);
+  border-color: rgba(23, 112, 63, 0.32);
   background: var(--ln-bp-green-soft);
 }
 :global(.theme-blueprint) .detailCta:disabled {

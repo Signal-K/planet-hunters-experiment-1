@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
-import { Application, Assets, Container, FederatedPointerEvent, FillGradient, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
+import { Application, Assets, Container, FederatedPointerEvent, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
 import type { ShipInteriorLayout, ShipRoomKind, InstalledCustomizerPartsByKind } from '@/lib/data'
 import { CUSTOMIZER_PARTS, getRoomIconArt, SHIP_ROOM_ASSETS, SHIP_ROOM_FOOTPRINT } from '@/lib/data'
 
@@ -14,14 +14,14 @@ const H = 300
 // the default/active accent, `--ln-ok` green for "done" segmented status —
 // not crimson, which the doc reserves for danger/destructive only.
 const BADGE_RADIUS      = 7
-const C_ACTIVE_BORDER = 0xa3ecf5  // --ln-cyan-bright
-const C_ACTIVE_BRIGHT = 0xa3ecf5
-const C_DONE_BORDER   = 0x5ad07e  // --ln-ok
-const C_EMPTY_BORDER  = 0x1a3a5e
-const C_GRID_LINE     = 0x123049
-const C_ACTIVE_FILL   = 0x0d2830
-const C_DONE_FILL     = 0x0a2015
-const C_EMPTY_FILL    = 0x00101c
+const C_ACTIVE_BORDER = 0x2a76bd  // blueprint blue
+const C_ACTIVE_BRIGHT = 0x0f2436  // ink
+const C_DONE_BORDER   = 0x1f8f86  // teal
+const C_EMPTY_BORDER  = 0x5b9bc9
+const C_GRID_LINE     = 0x5b9bc9
+const C_ACTIVE_FILL   = 0xd5ecf7
+const C_DONE_FILL     = 0xbdeede
+const C_EMPTY_FILL    = 0xc4dcee
 
 interface Props {
   layout: ShipInteriorLayout
@@ -105,9 +105,10 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
     ;(async () => {
       await app.init({
         canvas,
-        width: W,
-        height: H,
-        background: 0x06090f,
+        // Track the container so the ship scales to fit (see `fit` in the
+        // ticker) instead of sitting 1:1 in a corner with blank paper beside it.
+        resizeTo: div,
+        background: 0xeef5fa,
         antialias: false,
         autoDensity: true,
         resolution: capDpr(),
@@ -119,21 +120,7 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
       app.stage.addChild(world)
       app.stage.eventMode = 'static'
 
-      // Navy-to-black backdrop — the Out There: Omega mood anchor the
-      // design-language doc cites for the dark palette (`--ln-void` down to
-      // black), sitting behind the hull art rather than a flat fill.
-      const backdrop = new Graphics()
-      const backdropGradient = new FillGradient({
-        type: 'linear',
-        start: { x: 0, y: 0 },
-        end: { x: 0, y: 1 },
-        colorStops: [
-          { offset: 0, color: 0x000d1f },
-          { offset: 1, color: 0x000000 },
-        ],
-      })
-      backdrop.rect(0, 0, W, H).fill(backdropGradient)
-      world.addChild(backdrop)
+      // Backdrop is the renderer's solid paper colour, so letterbox bars match.
 
       // Hull background — the interior cutaway, always present underneath.
       try {
@@ -187,8 +174,10 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
           exteriorSprite = new Sprite(exTex)
           exteriorSprite.width = W
           exteriorSprite.height = H
-          exteriorSprite.eventMode = 'static'
-          exteriorSprite.cursor = 'pointer'
+          // This is a presentational reveal layer. Keeping it interactive
+          // placed an invisible hit target above the fitter after the fade,
+          // which swallowed pointer selection on the module cards (SSL-472).
+          exteriorSprite.eventMode = 'none'
         }
       } catch { /* missing exterior art — skip straight to the interior view */ }
 
@@ -206,10 +195,11 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
 
         const labelStyle = new TextStyle({
           fontFamily: '"Oxanium", "Turret Road", monospace',
-          fontSize: 10,
+          fontSize: 14,
           fontWeight: '800',
-          fill: 0xffffff,
+          fill: 0x0f2436,
           letterSpacing: 2,
+          stroke: { color: 0xffffff, width: 5 },
         })
         const label = new Text({ text: slot.label.toUpperCase(), style: labelStyle })
         label.anchor.set(0.5, 0.5)
@@ -310,13 +300,10 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
       // it out — see the `revealElapsed` block in the ticker below.
       if (exteriorSprite) {
         world.addChild(exteriorSprite)
-        exteriorSprite.on('pointerdown', () => {
-          // Re-reveal on demand: jump back to fully opaque and let the
-          // ticker's reveal timer play the fade out again.
-          revealElapsed = 0
-          if (exteriorSprite) { exteriorSprite.visible = true; exteriorSprite.alpha = 1 }
-        })
       }
+
+      // Dev-only: lets QA step the ticker in a hidden tab, where rAF never fires.
+      if (process.env.NODE_ENV !== 'production') (window as unknown as { __customiserApp?: Application }).__customiserApp = app
 
       let prevInstalledHash = ''
 
@@ -327,7 +314,8 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
       const REVEAL_DURATION = 1.1
 
       // Camera state for category-focus zoom
-      const ZOOM_FOCUSED = 1.35
+      // 1: the whole ship stays in frame; zooming in cropped room labels (SSL-427).
+      const ZOOM_FOCUSED = 1.0
       const CAM_LERP = 5.5
       let camZoom = 1.0
       let camX = 0.0
@@ -371,6 +359,7 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
           camY    += (targetCamY - camY)    * Math.min(1, CAM_LERP * dt)
         }
 
+        const fit = Math.min(app.screen.width / W, app.screen.height / H)
         for (const slot of layout.slots) {
           const vis = slotVisuals.get(slot.kind)
           if (!vis) continue
@@ -418,8 +407,8 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
             vis.border
               .roundRect(px, py, pw, ph, BADGE_RADIUS)
               .fill({
-                color: isActive ? C_ACTIVE_FILL : isDone ? C_DONE_FILL : C_EMPTY_FILL,
-                alpha: isActive ? 0.40 : isDone ? 0.18 : 0.55,
+                color: isActive ? C_ACTIVE_FILL : isDone ? 0xeaf6f3 : C_EMPTY_FILL,
+                alpha: isActive ? 0.45 : isDone ? 0.95 : 0.22,
               })
               .stroke({
                 color: vis.anim.flashAlpha > 0
@@ -474,7 +463,8 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
               // fits inside the cell, centered, so proportions stay correct
               // at the cost of some empty margin in non-square cells.
               if (hashChanged) vis.partSprite.texture = roomTex
-              const fitScale = Math.min(pw / roomTex.width, ph / roomTex.height)
+              // 0.78: the sprite sits inside the room's light plate instead of filling it edge to edge
+              const fitScale = Math.min(pw / roomTex.width, ph / roomTex.height) * 0.78
               vis.partSprite.eventMode = confirmed ? 'none' : 'static'
               vis.partSprite.cursor = confirmed ? 'default' : 'grab'
               if (!vis.dragging) {
@@ -504,15 +494,22 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
           vis.label.visible = !vis.dragging
           vis.label.x = px + pw / 2
           vis.label.y = py + ph / 2
-          vis.label.alpha = isDone ? 0 : isActive ? pulse * 0.9 : 0.38
-          vis.label.style.fill = isActive ? C_ACTIVE_BRIGHT : 0x6cc2ff
+          // Only the active room is named on the canvas (the step tabs name
+          // the rest), counter-scaled so it stays 14px on screen however far
+          // the ship is scaled down to fit.
+          vis.label.scale.set(1 / (camZoom * fit))
+          vis.label.alpha = isDone || !isActive ? 0 : 0.7 + pulse * 0.3
+          vis.label.style.fill = isActive ? C_ACTIVE_BRIGHT : 0x1c4f78
         }
 
         if (hashChanged) prevInstalledHash = installedHash
 
-        world.scale.set(camZoom)
-        world.x = camX
-        world.y = camY + Math.sin(phase * 0.38) * 2.2
+        // Letterbox the fixed W x H design space into whatever the container is.
+        const offX = (app.screen.width - W * fit) / 2
+        const offY = (app.screen.height - H * fit) / 2
+        world.scale.set(camZoom * fit)
+        world.x = offX + camX * fit
+        world.y = offY + (camY + Math.sin(phase * 0.38) * 2.2) * fit
       })
 
       // Wire up drag start listeners once sprites exist (done in the
@@ -549,7 +546,7 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
       ref={containerRef}
       style={{
         width: '100%',
-        aspectRatio: '12 / 5',
+        height: '100%',
         overflow: 'hidden',
         borderBottom: '1px solid var(--ln-hairline)',
         background: 'radial-gradient(ellipse at 50% 50%, rgba(112,217,234,0.05) 0%, rgba(0,0,0,0) 70%)',

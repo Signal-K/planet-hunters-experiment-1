@@ -172,7 +172,7 @@ export function toClient(r: any): Client {
     }),
     id: r.slug,
     name: (!hasPlaceholderName && rawName) ? rawName : (fallback?.name ?? rawName) || r.slug,
-    color: r.color ?? fallback?.color ?? '#87CFFA',
+    color: fallback?.color ?? r.color ?? '#87CFFA',
     initial: r.initial ?? fallback?.initial ?? String(r.name ?? r.slug).slice(0, 2).toUpperCase(),
     unlockTier: r.unlock_tier ?? fallback?.unlockTier ?? 1,
     projectType: r.project_type ?? fallback?.projectType ?? 'General contracting',
@@ -273,12 +273,13 @@ export async function fetchCatalog(): Promise<Catalog> {
       propulsion: parts.filter(p => p.part_type === 'propulsion').map(toPart),
       drill:      parts.filter(p => p.part_type === 'drill').map(toPart),
     },
+    // The static table owns mineral colours (blueprint palette); the seeded PocketBase rows still carry the old orange.
     // Merge static MINERAL_META first so any key not yet seeded in PocketBase
     // still resolves (avoids crashes when missions reference new minerals).
     minerals: {
       ...MINERAL_META,
       ...Object.fromEntries(
-        minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
+        minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: MINERAL_META[r.slug]?.color ?? r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
       ),
     },
     // Merge static CLIENTS first so clients not yet seeded in PocketBase

@@ -6,6 +6,9 @@ import { GameObject } from '../GameObject'
 import type { RuntimeContext } from '../RuntimeContext'
 import type { EntityBounds } from '../InputManager'
 import { devMiningSpeedMultiplier } from '@/lib/devMiningSpeed'
+import { hitStopSeconds, pickupPosition, stepHitStop, type HitKind } from '../miningJuice'
+import type { DebrisArtSet } from '../debrisArt'
+import { fallFrameIndex, landFrameIndex } from '@/lib/orionids/theme'
 
 export const SCROLL_SPEED = 48
 export const SCROLL_SPEED_MIN = 16
@@ -15,10 +18,16 @@ export const SHIP_X = 80
 export const SHIP_Y = 112
 export const SURFACE_Y = 320
 // Wider than ship X so ore movement during laser flight doesn't cause misses on tall screens
-const HIT_TOLERANCE = 48
+const HIT_TOLERANCE = 56
+// Share of ore nodes that are the requested mineral(s) once the seeded ones are out.
+const REQUIRED_ORE_SHARE = 0.85
+// First nodes are copies of the requested ore, close and shallow, so a few shots hit it.
+const REQUIRED_ORE_COPIES = 6
 const LASER_SIZE = { width: 4, height: 16 }
 const LASER_COLOR = '#9becff'
 const ORE_STROKE = '#0a0a12'
+// Untinted base fill; the mineral colour is applied with setTint.
+const ORE_FILL = '#ffffff'
 // Ore sym label — the only disambiguation signal that reaches all 16 minerals:
 // half of them render as PNG textures and never touch mineralShapes, and the
 // pale platinum-group colors are near-identical. White-on-dark-halo so it stays
@@ -91,6 +100,43 @@ export interface MiningControllerOptions {
    * Omit (or leave `current` null) to flash for any ore, regardless of mineral.
    */
   neededMineralsRef?: { current: Set<string> | null }
+  /** Skip hit-stop freezes when the player prefers reduced motion. */
+  reducedMotion?: boolean
+  /**
+   * Sky-event debris (SSL-475). Absent, or `getSpawn()` returning null / rate 0,
+   * means no debris and no streaks: the scene is the unchanged ore field.
+   */
+  debris?: {
+    /** Live spawn config; null (or rate 0) when the event is not active. */
+    getSpawn: () => { mineral: string; ratePerMinute: number; speedFactor: number } | null
+  }
+  /** Raster shower art. Omit to keep the vector chunk fallback. */
+  debrisArt?: DebrisArtSet | null
+}
+
+/** Falling debris chunk: descends while scrolling, mineable only after it lands. */
+const DEBRIS_RADIUS = 36
+const DEBRIS_BASE_FALL_SPEED = 70
+/** Cap so a long run cannot fill the field with chunks. */
+const MAX_DEBRIS = 4
+const MAX_STREAKS = 6
+/** Visual-only meteor streak. */
+interface Streak {
+  g: Graphics | null
+  sprite: Sprite | null
+  vx: number
+  vy: number
+  life: number
+  maxLife: number
+}
+
+interface LiveFx {
+  sprite: Sprite
+  life: number
+  maxLife: number
+  frames: Texture[] | null
+  fps: number
+  grow: boolean
 }
 
 interface OreEntity {
@@ -104,11 +150,23 @@ interface OreEntity {
   radius: number
   flashTimer: number
   mineralColor: number
+  /** Falling debris only: px/s descent. Undefined on seam ore. */
+  fallSpeed?: number
+  /** Debris only. Mineable in `intact` — after the fall and land clips. */
+  phase?: 'fall' | 'land' | 'intact'
+  animTime: number
+  variant: number
 }
 
 interface LaserEntity {
   go: GameObject
   prevY: number
+}
+
+interface Pickup {
+  g: Graphics
+  from: { x: number; y: number }
+  t: number
 }
 
 interface Particle {
@@ -129,6 +187,15 @@ export class MiningController extends ScriptBehaviour {
   private ores: OreEntity[] = []
   private lasers: LaserEntity[] = []
   private particles: Particle[] = []
+  private pickups: Pickup[] = []
+  private streaks: Streak[] = []
+  private liveFx: LiveFx[] = []
+  private debrisAccumulator = 0
+  private streakAccumulator = 0
+  /** First active frame drops a chunk immediately so the shower is visible. */
+  private debrisPrimed = false
+  private debrisCounter = 0
+  private hitStop = 0
   private oreCounter = 0
   private requiredMineralQueue: string[] = []
   private laserCounter = 0
@@ -149,8 +216,9 @@ export class MiningController extends ScriptBehaviour {
   }
 
   start(): void {
-    this.requiredMineralQueue = [...(this.opts.requiredMinerals ?? [])]
-    let x = 160
+    const required = this.opts.requiredMinerals ?? []
+    this.requiredMineralQueue = required.flatMap(mineral => Array.from({ length: REQUIRED_ORE_COPIES }, () => mineral))
+    let x = SHIP_X + 40
     let count = 0
     while (count < 20) {
       this.spawnOre(x)
@@ -171,7 +239,11 @@ export class MiningController extends ScriptBehaviour {
     }
   }
 
-  update(dt: number): void {
+  update(realDt: number): void {
+    const stepped = stepHitStop(this.hitStop, realDt)
+    this.hitStop = stepped.remaining
+    const dt = stepped.simDt
+    if (this.hitStop > 0) return // frozen: the whole scene holds for the impact
     const dx = this.scrollSpeed * this.devSpeed * dt
     this.totalScrollX += dx
 
@@ -188,9 +260,13 @@ export class MiningController extends ScriptBehaviour {
       }
     }
 
-    const last = this.ores[this.ores.length - 1]
+    this.updateDebris(dt)
+    this.updateLiveFx(dt)
+
+    const seamOres = this.ores.filter(o => o.fallSpeed === undefined)
+    const last = seamOres[seamOres.length - 1]
     const needsSpawn = !last || last.go.transform.position.x < this.opts.worldWidth + 120
-    if (needsSpawn && this.ores.length < MAX_ORES) {
+    if (needsSpawn && this.ores.length < MAX_ORES + 8) {
       const lastX = last ? last.go.transform.position.x : 0
       this.spawnOre(lastX + oreGap())
     }
@@ -203,6 +279,7 @@ export class MiningController extends ScriptBehaviour {
     this.resolveCollisions()
     this.removeOffscreen()
     this.updateParticles(dt)
+    this.updatePickups(dt)
 
     this.opts.onScroll?.(this.totalScrollX)
 
@@ -231,22 +308,277 @@ export class MiningController extends ScriptBehaviour {
     this.lasers.push({ go, prevY: go.transform.position.y })
   }
 
+  /** Spawns falling debris + decorative streaks while the event rate is above zero. */
+  private updateDebris(dt: number): void {
+    const debris = this.opts.debris
+    const groundY = (this.opts.surfaceY ?? SURFACE_Y) - 4
+    for (const ore of this.ores) {
+      if (ore.phase === undefined) continue
+      this.stepDebris(ore, dt, groundY)
+    }
+    this.updateStreaks(dt)
+    if (!debris) return
+    const spawn = debris.getSpawn()
+    if (!spawn || !(spawn.ratePerMinute > 0)) { this.debrisAccumulator = 0; this.debrisPrimed = false; return }
+    if (!this.debrisPrimed) {
+      this.debrisPrimed = true
+      this.debrisAccumulator = Math.max(this.debrisAccumulator, 1)
+      this.streakAccumulator = Math.max(this.streakAccumulator, 1)
+    }
+    const rate = spawn.ratePerMinute
+    this.debrisAccumulator += (rate / 60) * dt
+    this.streakAccumulator += (rate / 60) * dt * 2
+    let alive = this.ores.filter(o => o.phase !== undefined).length
+    while (this.debrisAccumulator >= 1) {
+      this.debrisAccumulator -= 1
+      if (alive >= MAX_DEBRIS) continue
+      this.spawnDebris(spawn.mineral, spawn.speedFactor)
+      alive += 1
+    }
+    while (this.streakAccumulator >= 1) {
+      this.streakAccumulator -= 1
+      if (this.streaks.length < MAX_STREAKS) this.spawnStreak(spawn.speedFactor)
+    }
+  }
+
+  /** Fall until the ground contact meets the surface, play land, then sit mineable. */
+  private stepDebris(ore: OreEntity, dt: number, groundY: number): void {
+    if (ore.phase === 'fall') {
+      const speed = ore.fallSpeed ?? 0
+      const y = Math.min(ore.go.transform.position.y + speed * dt, groundY)
+      this.placeDebris(ore, y)
+      ore.animTime += dt
+      if (y >= groundY - 0.5) {
+        ore.fallSpeed = 0
+        ore.animTime = 0
+        const art = this.opts.debrisArt
+        const useSheet = !!art && art.fallFrames.length >= 8 && ore.variant === 0 && !this.opts.reducedMotion
+        ore.phase = useSheet ? 'land' : 'intact'
+        if (ore.phase === 'intact') this.showIntact(ore)
+        else this.showFallFrame(ore, 6)
+      } else if (ore.variant === 0) {
+        const art = this.opts.debrisArt
+        const frame = art
+          ? fallFrameIndex(ore.animTime, art.fallFps, Math.min(6, art.fallFrames.length), !!this.opts.reducedMotion)
+          : 0
+        this.showFallFrame(ore, frame)
+      }
+      return
+    }
+    if (ore.phase === 'land') {
+      ore.animTime += dt
+      const art = this.opts.debrisArt
+      const fps = art?.fallFps ?? 24
+      const land = landFrameIndex(ore.animTime, fps, !!this.opts.reducedMotion)
+      this.showFallFrame(ore, land.frame)
+      if (land.done) {
+        ore.phase = 'intact'
+        this.showIntact(ore)
+      }
+    }
+  }
+
+  private placeDebris(ore: OreEntity, y: number): void {
+    ore.go.transform.position.y = y
+    if (ore.sprite) ore.sprite.y = y
+    if (ore.label) ore.label.y = y
+  }
+
+  private showFallFrame(ore: OreEntity, frame: number): void {
+    const art = this.opts.debrisArt
+    if (!art || !ore.sprite || art.fallFrames.length === 0) return
+    const tex = art.fallFrames[Math.min(frame, art.fallFrames.length - 1)]
+    ore.sprite.texture = tex
+    ore.sprite.anchor.set(art.fallAnchor.x, art.fallAnchor.y)
+  }
+
+  private showIntact(ore: OreEntity): void {
+    const art = this.opts.debrisArt
+    const piece = art?.intact[ore.variant]
+    if (!art || !ore.sprite || !piece) return
+    ore.sprite.texture = piece.texture
+    ore.sprite.anchor.set(piece.ax, piece.ay)
+  }
+
+  private spawnDebris(mineral: string, speedFactor: number): void {
+    const x = 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
+    const y = -20 - Math.random() * 40
+    const colorHex = this.opts.mineralColors[mineral] ?? LASER_COLOR
+    const mineralColor = parseInt(colorHex.replace('#', ''), 16)
+    const art = this.opts.debrisArt
+    const variant = art && art.intact.length > 0 ? Math.floor(Math.random() * art.intact.length) : 0
+    const go = new GameObject(`debris-${this.debrisCounter++}`, 'Debris', { position: { x, y } })
+    let renderer: ShapeRenderer | null = null
+    let sprite: Sprite | null = null
+    if (art && art.intact[variant]) {
+      const useSheet = variant === 0 && art.fallFrames.length > 0
+      const tex = useSheet ? art.fallFrames[0] : art.intact[variant].texture
+      sprite = new Sprite(tex)
+      if (useSheet) sprite.anchor.set(art.fallAnchor.x, art.fallAnchor.y)
+      else sprite.anchor.set(art.intact[variant].ax, art.intact[variant].ay)
+      sprite.x = x
+      sprite.y = y
+      this.opts.container.addChild(sprite)
+    } else {
+      renderer = new ShapeRenderer(
+        {
+          shape: this.opts.mineralShapes?.[mineral] ?? 'diamond',
+          width: 22,
+          height: 22,
+          color: ORE_FILL,
+          strokeColor: ORE_STROKE,
+          strokeWidth: 1.5,
+        },
+        this.opts.container,
+      )
+      go.addComponent(renderer)
+      go.start()
+      renderer.setTint(mineralColor)
+    }
+    this.gameObject.addChild(go)
+    this.ores.push({
+      go, renderer, sprite, label: art ? null : this.createLabel(mineral, x, y, 11), mineral,
+      hp: 1, maxHp: 1, radius: art ? DEBRIS_RADIUS : 11, flashTimer: 0, mineralColor,
+      fallSpeed: DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor),
+      phase: 'fall', animTime: 0, variant,
+    })
+  }
+
+  private spawnStreak(speedFactor: number): void {
+    const art = this.opts.debrisArt
+    const speed = 280 * Math.max(0.3, speedFactor)
+    const life = 0.7 + Math.random() * 0.4
+    const x = -30 + Math.random() * (this.opts.worldWidth * 0.45)
+    const y = 8 + Math.random() * ((this.opts.surfaceY ?? SURFACE_Y) * 0.28)
+    if (art && art.streaks.length > 0) {
+      const piece = art.streaks[Math.floor(Math.random() * art.streaks.length)]
+      const sprite = new Sprite(piece.texture)
+      sprite.anchor.set(piece.ax, piece.ay)
+      sprite.blendMode = art.streakBlend
+      sprite.x = x
+      sprite.y = y
+      this.opts.container.addChild(sprite)
+      this.streaks.push({ g: null, sprite, vx: speed, vy: speed * 0.42, life, maxLife: life })
+      return
+    }
+    const g = new Graphics()
+    g.moveTo(0, 0).lineTo(22, 9).stroke({ color: 0xffffff, alpha: 0.85, width: 2 })
+    g.x = x
+    g.y = y
+    this.opts.container.addChild(g)
+    this.streaks.push({ g, sprite: null, vx: speed, vy: speed * 0.42, life, maxLife: life })
+  }
+
+  private updateStreaks(dt: number): void {
+    this.streaks = this.streaks.filter(s => {
+      s.life -= dt
+      const node = s.sprite ?? s.g
+      if (!node || s.life <= 0) {
+        if (node) {
+          this.opts.container.removeChild(node)
+          node.destroy()
+        }
+        return false
+      }
+      node.x += s.vx * dt
+      node.y += s.vy * dt
+      node.alpha = s.life / s.maxLife
+      const onScreen = node.x < this.opts.worldWidth + 80 && node.y < (this.opts.surfaceY ?? SURFACE_Y) + 24
+      if (onScreen) return true
+      this.opts.container.removeChild(node)
+      node.destroy()
+      return false
+    })
+  }
+
+  /** Intact → mined swap, plus the impact clip and dust puff. */
+  private playDebrisMine(ore: OreEntity): void {
+    const art = this.opts.debrisArt
+    if (!art) return
+    const mined = art.mined[ore.variant] ?? art.mined[0]
+    if (mined) {
+      const sprite = new Sprite(mined.texture)
+      sprite.anchor.set(mined.ax, mined.ay)
+      sprite.x = ore.go.transform.position.x
+      sprite.y = ore.go.transform.position.y
+      this.opts.container.addChild(sprite)
+      this.liveFx.push({ sprite, life: 0.45, maxLife: 0.45, frames: null, fps: 1, grow: false })
+    }
+    if (art.impactFrames.length > 0) {
+      const sprite = new Sprite(art.impactFrames[0])
+      sprite.anchor.set(art.impactAnchor.x, art.impactAnchor.y)
+      sprite.blendMode = art.streakBlend
+      sprite.x = ore.go.transform.position.x
+      sprite.y = ore.go.transform.position.y
+      this.opts.container.addChild(sprite)
+      this.liveFx.push({
+        sprite, life: art.impactFrames.length / art.impactFps, maxLife: art.impactFrames.length / art.impactFps,
+        frames: art.impactFrames, fps: art.impactFps, grow: false,
+      })
+    }
+    if (art.dust) {
+      const sprite = new Sprite(art.dust)
+      sprite.anchor.set(0.5)
+      sprite.blendMode = art.streakBlend
+      sprite.x = ore.go.transform.position.x
+      sprite.y = ore.go.transform.position.y
+      this.opts.container.addChild(sprite)
+      this.liveFx.push({ sprite, life: 0.4, maxLife: 0.4, frames: null, fps: 1, grow: true })
+    }
+  }
+
+  private updateLiveFx(dt: number): void {
+    this.liveFx = this.liveFx.filter(fx => {
+      fx.life -= dt
+      if (fx.life <= 0) {
+        this.opts.container.removeChild(fx.sprite)
+        fx.sprite.destroy()
+        return false
+      }
+      const t = 1 - fx.life / fx.maxLife
+      if (fx.frames && fx.frames.length > 0) {
+        const i = Math.min(fx.frames.length - 1, Math.floor(t * fx.frames.length))
+        fx.sprite.texture = fx.frames[i]
+      }
+      fx.sprite.alpha = fx.life / fx.maxLife
+      if (fx.grow) fx.sprite.scale.set(0.7 + t * 0.6)
+      return true
+    })
+  }
+
   getScrollX(): number {
     return this.totalScrollX
   }
 
+  /**
+   * Which mineral the next ore node is. The requested minerals are seeded first,
+   * then make up about half of the field so a normal player finds them within a
+   * few shots (SSL-512: 15 shots never hit the requested Nickel). Only minerals
+   * the equipped laser can reach count, since an unreachable node is no ore.
+   */
+  private pickMineral(): { mineral: string; seeded: boolean } {
+    if (this.requiredMineralQueue.length > 0) return { mineral: this.requiredMineralQueue.shift()!, seeded: true }
+    const maxTier = this.opts.maxLaserTier ?? 3
+    const reachable = (this.opts.requiredMinerals ?? []).filter(m => (this.opts.mineralLaserAccess?.[m] ?? 1) <= maxTier)
+    if (reachable.length > 0 && Math.random() < REQUIRED_ORE_SHARE) {
+      return { mineral: reachable[Math.floor(Math.random() * reachable.length)], seeded: false }
+    }
+    return { mineral: this.opts.minerals[this.oreCounter % this.opts.minerals.length], seeded: false }
+  }
+
   private spawnOre(x: number): void {
-    const mineral = this.requiredMineralQueue.length > 0
-      ? this.requiredMineralQueue.shift()!
-      : this.opts.minerals[this.oreCounter % this.opts.minerals.length]
+    const picked = this.pickMineral()
+    const mineral = picked.mineral
     const tier = this.opts.mineralLaserAccess?.[mineral] ?? 1
     const cfg = ORE_TIER[tier] ?? ORE_TIER[1]
     const radius = cfg.radius
     const maxHp = cfg.maxHp
-    const depth = cfg.depthMin + Math.random() * (cfg.depthMax - cfg.depthMin)
+    const depth = picked.seeded
+      ? 8 + Math.random() * 14
+      : cfg.depthMin + Math.random() * (cfg.depthMax - cfg.depthMin)
     const y = (this.opts.surfaceY ?? SURFACE_Y) + depth
 
-    const colorHex = this.opts.mineralColors[mineral] ?? '#ffffff'
+    const colorHex = this.opts.mineralColors[mineral] ?? ORE_FILL
     const mineralColor = parseInt(colorHex.replace('#', ''), 16)
 
     const go = new GameObject(`ore-${this.oreCounter++}`, 'Ore', { position: { x, y } })
@@ -275,7 +607,7 @@ export class MiningController extends ScriptBehaviour {
           shape,
           width: radius * 2,
           height: radius * 2,
-          color: '#ffffff',
+          color: ORE_FILL,
           strokeColor: ORE_STROKE,
           strokeWidth: tier > 1 ? 2 + tier : 1.5,
         },
@@ -289,7 +621,7 @@ export class MiningController extends ScriptBehaviour {
     const label = this.createLabel(mineral, x, y, radius)
 
     this.gameObject.addChild(go)
-    this.ores.push({ go, renderer, sprite, label, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor })
+    this.ores.push({ go, renderer, sprite, label, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0 })
   }
 
   /** Ore sym label, sized to fit inside the node — longer syms (`H2O`) shrink. */
@@ -324,21 +656,28 @@ export class MiningController extends ScriptBehaviour {
         const ox = ore.go.transform.position.x
         const oy = ore.go.transform.position.y
 
+        // Debris is scenery until it has landed. The shot keeps going.
+        if (ore.phase && ore.phase !== 'intact') continue
+
         // Swept Y check: did the laser travel THROUGH the ore's Y band this frame?
         const minTravelY = Math.min(laser.prevY, ly)
         const maxTravelY = Math.max(laser.prevY, ly)
-        if (maxTravelY < oy - ore.radius || minTravelY > oy + ore.radius) continue
+        const hitY = ore.phase ? oy - ore.radius * 0.35 : oy
+        if (maxTravelY < hitY - ore.radius || minTravelY > hitY + ore.radius) continue
         if (Math.abs(lx - ox) >= HIT_TOLERANCE) continue
 
         ore.hp -= 1
         laser.go.active = false
         this.opts.onHit?.()
+        this.freeze(ore.hp <= 0 ? 'collect' : 'hit')
 
         if (ore.hp <= 0) {
           ore.go.active = false
+          if (ore.phase) this.playDebrisMine(ore)
           if (ore.sprite) ore.sprite.visible = false
           if (ore.label) ore.label.visible = false
-          this.spawnParticleBurst(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor, ore.radius)
+          if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor, ore.radius)
+          this.spawnPickup(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor)
           this.opts.onCollect(ore.mineral)
         } else {
           ore.flashTimer = FLASH_DURATION
@@ -400,6 +739,38 @@ export class MiningController extends ScriptBehaviour {
       const life = 0.3 + Math.random() * 0.15
       this.particles.push({ g, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life, maxLife: life })
     }
+  }
+
+  private freeze(kind: HitKind): void {
+    this.hitStop = Math.max(this.hitStop, hitStopSeconds(kind, !!this.opts.reducedMotion))
+  }
+
+  /** A chunky chip pops off a mined ore and flies to the ship's hold. */
+  private spawnPickup(x: number, y: number, color: number): void {
+    const g = new Graphics()
+    g.rect(-4, -4, 8, 8).fill({ color, alpha: 1 })
+    g.rect(-4, -4, 8, 8).stroke({ color: 0x0f2436, alpha: 0.55, width: 1.5 })
+    g.x = x
+    g.y = y
+    this.opts.container.addChild(g)
+    this.pickups.push({ g, from: { x, y }, t: 0 })
+  }
+
+  private updatePickups(dt: number): void {
+    const home = { x: SHIP_X, y: this.opts.shipY ?? SHIP_Y }
+    this.pickups = this.pickups.filter(p => {
+      p.t += dt / 0.55
+      if (p.t >= 1) {
+        this.opts.container.removeChild(p.g)
+        p.g.destroy()
+        return false
+      }
+      const pos = pickupPosition(p.from, home, p.t)
+      p.g.x = pos.x
+      p.g.y = pos.y
+      p.g.alpha = p.t > 0.8 ? (1 - p.t) / 0.2 : 1
+      return true
+    })
   }
 
   private updateParticles(dt: number): void {
