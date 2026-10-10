@@ -235,7 +235,7 @@ describe('Launchpad own-program actions', () => {
     await act(async () => root.unmount())
   })
 
-  it('blocks a second mission while one is active and offers to resume the current run', async () => {
+  it('keeps the physical launchpad available to create another mission while one is active', async () => {
     const player = {
       ...DEFAULT_STATE.player,
       activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
@@ -277,16 +277,15 @@ describe('Launchpad own-program actions', () => {
       host.querySelector<HTMLButtonElement>('[data-testid="launchpad-status-card"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
-    // 4c2c98cc (SSL-512): starting Free Ops would replace the launched run's cargo
-    // and charge state, so the pad shows a blocker with a resume action instead of the picker.
-    expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).toBeNull()
-    expect(host.querySelector('[data-testid="launchpad-active-run-blocker"]')).not.toBeNull()
-    expect(host.textContent).toContain('Current run is still active')
-    expect(onPick).not.toHaveBeenCalled()
+    expect(onResumeMission).not.toHaveBeenCalled()
+    expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).not.toBeNull()
     await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-active-run-blocker"] .launchpad-mission-choice')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-new-mission-mining-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
-    expect(onResumeMission).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-mining-sell-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(onPick).toHaveBeenCalledWith('freeops-self-directed-mining', 'sell')
     await act(async () => root.unmount())
   })
 

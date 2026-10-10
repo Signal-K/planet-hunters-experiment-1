@@ -175,9 +175,7 @@ describe('HubSubsurfaceView', () => {
     expect(unavailable).toBe(1)
     expect(host.querySelector('[data-testid="subsurface-excavate-lock-copy"]')?.textContent)
       .toContain('10 aluminium (you have 0)')
-    // SSL-512: the lock copy now says where to mine the missing aluminium (Free Ops), not client cargo.
-    expect(host.textContent).toContain('Mine Aluminium on')
-    expect(host.textContent).toContain('in Free Ops')
+    expect(host.textContent).toContain('Free Ops: mine Aluminium on Mercury or Venus, then bring it home to the Base.')
     await act(async () => root.unmount())
   })
 

@@ -23,6 +23,7 @@
   min-height: 0;
   padding: 0 var(--ln-s-2) var(--ln-s-2);
   z-index: 1;
+  overflow: hidden;
 }
 
 .stage {
@@ -688,4 +689,42 @@
 .terminal,
 .toolButton {
   box-shadow: 3px 3px 0 rgba(31, 120, 193, 0.28);
+}
+
+.standby {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ln-s-2);
+  padding: var(--ln-s-4);
+  text-align: center;
+  background: radial-gradient(circle at 50% 42%, var(--ln-bp-paper-2, var(--iv-paper)), var(--ln-bp-bg, var(--iv-paper)));
+}
+
+.standby strong {
+  font: 800 16px/1.2 var(--ln-font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--iv-ink);
+}
+
+.standby p {
+  margin: 0;
+  max-width: 36ch;
+  font: 500 14px/1.4 var(--ln-font-body);
+  color: var(--ln-bp-ink-dim, var(--iv-ink));
+}
+
+.standbyNote {
+  margin: 0;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--iv-ink);
 }
