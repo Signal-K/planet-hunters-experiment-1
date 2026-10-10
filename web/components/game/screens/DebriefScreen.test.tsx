@@ -210,7 +210,7 @@ describe('DebriefScreen own-program outcomes', () => {
     root.unmount()
   })
 
-  it('KES-348: shows the ledger first and requires explicit vehicle teardown before Collect (early onboarding)', async () => {
+  it('KES-348: shows the ledger and Collect before vehicle teardown (early onboarding)', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
     const onDone = vi.fn()
@@ -230,20 +230,13 @@ describe('DebriefScreen own-program outcomes', () => {
       )
     })
 
-    expect(host.querySelector('[data-testid="resolve-cargo-btn"]')).not.toBeNull()
-    // SSL-479: the payout Ledger is shown before teardown; teardown still gates Collect.
+    expect(host.querySelector('[data-testid="debrief-teardown-btn"]')).not.toBeNull()
+    // SSL-479: the payout Ledger and Collect are on screen before teardown.
     expect(host.textContent).toContain('Ledger')
-    expect(host.querySelector('[data-testid="collect-reward-btn"]')).toBeNull()
-
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-
-    expect(host.textContent).toContain('Ledger')
-    expect(host.textContent).not.toContain('Affinity')
+    expect(host.textContent).toContain('You brought')
     const collectBtn = host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
     expect(collectBtn).not.toBeNull()
+    expect(host.textContent).not.toContain('Affinity')
 
     await act(async () => {
       collectBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
@@ -253,7 +246,7 @@ describe('DebriefScreen own-program outcomes', () => {
     root.unmount()
   })
 
-  it('KES-282: keeps the two-tap ritual for later (post-onboarding) missions', async () => {
+  it('KES-282: shows the ledger and Collect before vehicle teardown (post-onboarding)', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
     const onDone = vi.fn()
@@ -273,16 +266,9 @@ describe('DebriefScreen own-program outcomes', () => {
       )
     })
 
-    expect(host.querySelector('[data-testid="resolve-cargo-btn"]')).not.toBeNull()
-    // SSL-479: the payout Ledger is shown before teardown; teardown still gates Collect.
+    expect(host.querySelector('[data-testid="debrief-teardown-btn"]')).not.toBeNull()
     expect(host.textContent).toContain('Ledger')
-    expect(host.querySelector('[data-testid="collect-reward-btn"]')).toBeNull()
-
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-    expect(host.textContent).toContain('Ledger')
+    expect(host.querySelector('[data-testid="collect-reward-btn"]')).not.toBeNull()
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
