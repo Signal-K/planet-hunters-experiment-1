@@ -639,7 +639,18 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [addToast, catalog.targets, setState])
 
   const onLandingTouchdown = useCallback(() => {
-    setState(s => applyLandingTouchdown(s))
+    setState(s => {
+      if (s.screen !== 'landing') return s
+      return applyLandingTouchdown({
+        ...s,
+        player: {
+          ...s.player,
+          missionPhase: 'landing',
+          // A resumed descent whose clock was never saved is already due.
+          landingStartedAt: s.player.landingStartedAt ?? Date.now(),
+        },
+      })
+    })
     addToast('Touchdown confirmed — surface operations underway', 'ok')
   }, [addToast, setState])
 

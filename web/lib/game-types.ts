@@ -587,7 +587,7 @@ export interface GameActions {
   onCollectRefined: (recipeId: string) => void
   unlockSkillNode: (id: string) => void
   acceptLoan: () => void
-  abandonMission: () => void
+  abandonMission: (opts?: { confirmed?: boolean }) => void
   launchTransitSatellite: () => void
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   chooseSatelliteTarget: (subjectId: string) => void
