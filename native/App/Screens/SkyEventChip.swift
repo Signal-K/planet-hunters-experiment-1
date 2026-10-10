@@ -34,18 +34,21 @@ struct SkyBadgeRow: View {
     let badges: [String: PlayerBadge]
 
     var body: some View {
-        let earned = badges.values.filter { SkyEvents.event($0.eventId) != nil }.sorted { $0.earnedAt < $1.earnedAt }
+        let earned = badges.values.filter { SkyEvents.event($0.eventId) != nil || WswBadges.badge(id: $0.eventId) != nil }.sorted { $0.earnedAt < $1.earnedAt }
         if !earned.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 Eyebrow(text: "Sky event badges")
                 ForEach(earned, id: \.eventId) { b in
+                    let wsw = WswBadges.badge(id: b.eventId)
+                    let badgeName = wsw?.name ?? SkyEvents.event(b.eventId)?.name
                     HStack(spacing: 10) {
                         Image(systemName: "rosette").font(.system(size: 18, weight: .bold))
                         Text(b.tier == .gold ? "GOLD" : "SILVER").font(AppFont.display(14)).tracking(1.2)
-                        Text(SkyEvents.event(b.eventId)?.name ?? "").font(AppFont.body(14))
+                        if wsw != nil { Text("WSW").font(AppFont.display(14)).tracking(1.2) }
+                        Text(badgeName ?? "").font(AppFont.body(14))
                         Spacer(minLength: 0)
-                        if let event = SkyEvents.event(b.eventId) {
-                            ShareLink(item: BadgeShare.url, message: Text(BadgeShare.text(event.name, tier: b.tier))) {
+                        if let badgeName {
+                            ShareLink(item: BadgeShare.url, message: Text(BadgeShare.text(badgeName, tier: b.tier))) {
                                 Text("SHARE").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.bluePress)
                                     .frame(minWidth: 44, minHeight: 44)
                             }.simultaneousGesture(TapGesture().onEnded { surveys?.enqueue(Surveys.badgeShared) })
@@ -54,6 +57,7 @@ struct SkyBadgeRow: View {
                     .foregroundStyle(Theme.ink).padding(.horizontal, 12).frame(minHeight: 44)
                     .background(b.tier == .gold ? Theme.blueBright.opacity(0.35) : Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
+                    .overlay(alignment: .leading) { if let wsw { Rectangle().fill(wswColor(wsw.tone)).frame(width: 6).clipShape(RoundedRectangle(cornerRadius: 3)) } }
                     .accessibilityElement(children: .combine)
                 }
             }
@@ -66,5 +70,16 @@ enum BadgeShare {
     static let url = URL(string: "https://playlandnam.space/?utm_source=badge_share&utm_medium=share&utm_campaign=sky_event_badge")!
     static func text(_ eventName: String, tier: BadgeTier) -> String {
         "I earned the \(tier == .gold ? "Gold" : "Silver") \(eventName) badge in Landnam: Space Program."
+    }
+}
+
+private func wswColor(_ tone: WswTone) -> Color {
+    switch tone {
+    case .blue: Theme.blue
+    case .sky: Theme.blueBright
+    case .green: Theme.teal
+    case .crimson: Theme.crimson
+    case .dim: Theme.textMuted
+    case .ink: Theme.ink
     }
 }

@@ -1,12 +1,15 @@
 name: Web CI
 
-# SSL-505: one gate for every real target. Branch protection (when enabled)
-# should require ONLY the aggregate job "CI required" (job id ci-required).
-# No path filters on purpose: a path-filtered required check never reports and
-# blocks (or, worse, silently passes) a PR that did not touch the filtered paths.
+# SSL-505: one gate for every real target. Branch rulesets are admin-only and
+# cannot be created from this file. Require ONLY the aggregate check named
+# "CI required" (job id ci-required) on main, cycle/3, cycle/4, release/*, and
+# native/*. No path filters: a path-filtered required check never reports and
+# blocks, or silently passes, a PR that did not touch the filtered paths.
+# Jobs do not use continue-on-error. A failed, cancelled, or skipped dependency
+# fails ci-required.
 on:
   push:
-    branches: [main, "cycle/**"]
+    branches: [main, "cycle/**", "sprint*/**", "release/**", "native/**"]
   pull_request:
     branches: [main, "cycle/**", "sprint*/**", "release/**", "native/**"]
   workflow_dispatch:
@@ -201,7 +204,10 @@ jobs:
     # gate and application build; Playwright and evidence jobs still run but
     # must not hold back a deploy.
     needs: [lint-typecheck, build]
-    if: github.ref != 'refs/heads/main' && github.event_name == 'push'
+    # Only cycle/* pushes publish the one staging worker. main uses Deploy.
+    # sprint, release, and native pushes still run the required checks above
+    # without replacing staging.
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/cycle/')
     runs-on: ubuntu-latest
     defaults:
       run:

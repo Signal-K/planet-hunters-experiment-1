@@ -80,7 +80,7 @@ function Stage() {
           <div className="game-screen-area">
             {game.hydrated && <ScreenContent screen={game.screen} game={game} onboardingActive={false} />}
           </div>
-          {planStep && <FlightPlan key={planStep.id} stepIndex={['mining', 'scan', 'part'].indexOf(activeTry!)} step={planStep} total={3} onSkip={() => {}} />}
+          {planStep && <FlightPlan key={planStep.id} stepIndex={['mining', 'scan', 'part'].indexOf(planStep.try)} step={planStep} total={3} onSkip={() => {}} />}
         </div>
       </div>
     </main>
