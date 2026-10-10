@@ -20,7 +20,7 @@ struct IntroScreen: View {
             Spacer(minLength: 0)
         }
         .padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.bg.ignoresSafeArea()).foregroundStyle(Theme.ink)
+        .background { PageBackdrop().ignoresSafeArea().allowsHitTesting(false) }.foregroundStyle(Theme.ink)
     }
 }
 

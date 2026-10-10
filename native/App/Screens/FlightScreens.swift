@@ -205,12 +205,12 @@ struct MiningActionRow: View {
                     }
                     ProgressTrack(value: need > 0 ? Double(have) / Double(need) : 0)
                 }
-                .foregroundStyle(ready ? Color.white : Theme.ink)
+                .foregroundStyle(ready ? Theme.onAccent : Theme.ink)
                 .padding(.horizontal, 12).padding(.vertical, 8)
                 .frame(maxWidth: .infinity, minHeight: 56)
                 .background(ready ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 2))
-                .background(RoundedRectangle(cornerRadius: 8).fill(Theme.blue).offset(x: 3, y: 3))
+                .background { RoundedRectangle(cornerRadius: 8).fill(Theme.blue).offset(x: 3, y: 3).allowsHitTesting(false) }
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Return to Earth. Order \(have) of \(need). Laser charge \(field.charge) of \(field.chargeCap).")
@@ -269,7 +269,7 @@ struct LaunchSequenceScreen: View {
                             Eyebrow(text: telemetry.event.label)
                             Text(telemetry.clock).font(AppFont.display(34)).foregroundStyle(Theme.ink)
                         }
-                        // The sky fades to space behind this readout, so it carries its own light card.
+                        // The sky fades behind this readout, so it carries its own card.
                         .padding(.horizontal, 12).padding(.vertical, 8)
                         .background(Theme.paper.opacity(0.92), in: RoundedRectangle(cornerRadius: 12))
                         Spacer()
@@ -282,7 +282,9 @@ struct LaunchSequenceScreen: View {
                     Spacer()
                     Button { scene?.skip() } label: {
                         Text("SKIP").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.bluePress)
-                            .padding(.horizontal, 14).padding(.vertical, 7).background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 1.5))
+                            .padding(.horizontal, 16).frame(minHeight: 44).contentShape(Capsule())
+                            .background(Theme.paper, in: Capsule())
+                            .overlay(Capsule().stroke(Theme.border, lineWidth: 1).allowsHitTesting(false))
                     }.buttonStyle(.plain)
                 }.padding(16)
             }

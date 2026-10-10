@@ -58,7 +58,7 @@ struct SaturnStormSearchScreen: View {
             switch phase {
             case .success(let image): image.resizable().scaledToFill()
             default:
-                LinearGradient(colors: [Theme.ink, Theme.blue.opacity(0.7), Theme.ink], startPoint: .topLeading, endPoint: .bottomTrailing)
+                LinearGradient(colors: [Theme.shell, Theme.blue.opacity(0.35), Theme.shell], startPoint: .topLeading, endPoint: .bottomTrailing)
             }
         }
         .accessibilityLabel("Cassini frame \(c.opusId)")
@@ -73,7 +73,7 @@ struct SaturnStormSearchScreen: View {
                     ZStack {
                         Rectangle().stroke(.white.opacity(0.55), lineWidth: 1)
                         if selected == i { Rectangle().stroke(Theme.blueBright, lineWidth: 4) }
-                        if let a = answers[i] { Text(String(a.rawValue.prefix(1)).uppercased()).font(AppFont.display(16)).foregroundStyle(.white).padding(4).background(Theme.blue, in: Circle()).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading) }
+                        if let a = answers[i] { Text(String(a.rawValue.prefix(1)).uppercased()).font(AppFont.display(16)).foregroundStyle(Theme.onAccent).padding(4).background(Theme.blue, in: Circle()).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading) }
                         if storms.contains(i) { Circle().stroke(Theme.blueBright, lineWidth: 3).frame(width: 26, height: 26) }
                     }
                     .contentShape(Rectangle())

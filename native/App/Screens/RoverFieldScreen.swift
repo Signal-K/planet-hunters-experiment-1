@@ -84,7 +84,7 @@ struct RoverFieldScreen: View {
             if let site = prospecting.mineSite.flatMap({ id in Prospecting.outcrops.first { $0.id == id } }) {
                 Button { prospecting.startConstruction() } label: {
                     Text(prospecting.constructionStarted ? "FIRST MINE RIG · STARTED" : "START FIRST MINE RIG")
-                        .font(AppFont.display(14)).tracking(1.0).foregroundStyle(.white)
+                        .font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.onAccent)
                         .padding(.horizontal, 12).frame(minHeight: 44)
                         .background(prospecting.constructionStarted ? Theme.teal : Theme.blue, in: RoundedRectangle(cornerRadius: 8))
                         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))

@@ -146,7 +146,7 @@ struct TessDiscoveryScreen: View {
     private func chip(_ title: String, on: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title).font(AppFont.display(14)).tracking(1).padding(.horizontal, 14).frame(minHeight: 44)
-                .foregroundStyle(on ? Color.white : Theme.ink)
+                .foregroundStyle(on ? Theme.onAccent : Theme.ink)
                 .background(on ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
         }.buttonStyle(.plain)

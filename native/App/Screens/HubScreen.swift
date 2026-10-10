@@ -264,7 +264,7 @@ private struct ContractCard: View {
         VStack(alignment: .leading, spacing: 0) {
             Text("CONTRACT").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudMint)
                 .padding(.horizontal, 12).frame(height: 24)
-                .background(Theme.hudInk, in: UnevenRoundedRectangle(topLeadingRadius: 8, topTrailingRadius: 8))
+                .background(Theme.shell, in: UnevenRoundedRectangle(topLeadingRadius: 8, topTrailingRadius: 8))
             VStack(alignment: .leading, spacing: 8) {
                 Button { if collapsible { expanded = false } else { store.go(.missions) } } label: {
                     VStack(alignment: .leading, spacing: 8) {
@@ -278,10 +278,10 @@ private struct ContractCard: View {
                 .accessibilityLabel(collapsible ? "Collapse contract" : "Open contracts")
                 if collapsible {
                     Button { store.go(.missions) } label: {
-                        Text("OPEN CONTRACTS").font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.hudInk)
-                            .frame(maxWidth: .infinity, minHeight: 44)
+                        Text("OPEN CONTRACTS").font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.onAccent)
+                            .frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
                             .background(Theme.hudMint, in: RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.hudInk, lineWidth: 1.5))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.onAccent.opacity(0.45), lineWidth: 1).allowsHitTesting(false))
                     }.buttonStyle(.plain)
                 }
             }
@@ -306,7 +306,7 @@ private struct HudBar: View {
 }
 
 extension View {
-    /// White rounded panel with a thin black outline (base HUD surface).
+    /// Charcoal glass panel with a thin light outline (base HUD surface).
     func hudPanel(radius: CGFloat = 12) -> some View {
         background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: radius))
             .overlay(RoundedRectangle(cornerRadius: radius).stroke(Theme.hudInk, lineWidth: 1.5))
@@ -360,7 +360,7 @@ private struct SettingsSheet: View {
         } message: {
             Text("Your progress stays saved on this device and in the cloud. Sign back in to continue.")
         }
-        .background(Theme.bg)
+        .background { PageBackdrop().ignoresSafeArea().allowsHitTesting(false) }
         .presentationDetents([.medium, .large])
     }
 
@@ -420,7 +420,7 @@ private struct FriendsSheet: View {
             Text("Friends are not available in the native app yet.").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
             Spacer()
         }
-        .padding(16).background(Theme.bg)
+        .padding(16).background { PageBackdrop().ignoresSafeArea().allowsHitTesting(false) }
         .presentationDetents([.medium])
     }
 }

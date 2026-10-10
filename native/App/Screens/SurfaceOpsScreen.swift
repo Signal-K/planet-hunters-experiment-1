@@ -33,7 +33,7 @@ struct SurfaceOpsScreen: View {
                 ForEach(View_.allCases, id: \.self) { v in
                     Button { if v == .logistics || access { view = v } } label: {
                         Text(v.rawValue.uppercased()).font(AppFont.display(14)).tracking(1.2).frame(maxWidth: .infinity, minHeight: 44)
-                            .foregroundStyle(view == v ? Color.white : Theme.ink)
+                            .foregroundStyle(view == v ? Theme.onAccent : Theme.ink)
                             .background(view == v ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
                             .opacity(v == .field && !access ? 0.45 : 1)
@@ -78,7 +78,7 @@ struct SurfaceOpsScreen: View {
                     ForEach(0..<SurfaceOps.padCount, id: \.self) { i in
                         Button { pad = i } label: {
                             Text("PAD \(i + 1)").font(AppFont.display(14)).frame(maxWidth: .infinity, minHeight: 44)
-                                .foregroundStyle(pad == i ? Color.white : Theme.ink)
+                                .foregroundStyle(pad == i ? Theme.onAccent : Theme.ink)
                                 .background(pad == i ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
                                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
                         }.buttonStyle(.plain)

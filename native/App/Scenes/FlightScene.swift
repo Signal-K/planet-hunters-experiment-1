@@ -53,15 +53,18 @@ final class FlightScene: SKScene {
             addChild(c); streaks.append(c)
         }
 
-        for (node, color) in [(origin, Theme.blue), (dest, Theme.teal)] {
-            let planet = SKSpriteNode(texture: SK.planet(radius: 70, color: color))
-            planet.size = CGSize(width: 164, height: 164)
-            node.addChild(planet); node.zPosition = -12
-            addChild(node)
-            planet.run(.repeatForever(.sequence([.moveBy(x: 0, y: 4, duration: 3), .moveBy(x: 0, y: -4, duration: 3)])))
-        }
+        origin.zPosition = -12
+        dest.zPosition = -12
+        addChild(origin)
+        addChild(dest)
+        // Planet only on the body this leg flies toward. The other node is motion, not a backdrop.
+        let inbound = returning ? origin : dest
+        let planet = SKSpriteNode(texture: SK.planet(radius: 70, color: Theme.blue))
+        planet.size = CGSize(width: 164, height: 164)
+        inbound.addChild(planet)
+        planet.run(.repeatForever(.sequence([.moveBy(x: 0, y: 4, duration: 3), .moveBy(x: 0, y: -4, duration: 3)])))
         let label = SKLabelNode(text: targetName.uppercased())
-        label.fontName = "Oxanium-Bold"; label.fontSize = 10; label.fontColor = Theme.ink.sk
+        label.fontName = "Oxanium-Bold"; label.fontSize = 14; label.fontColor = Theme.ink.sk
         label.position = CGPoint(x: 0, y: -92); dest.addChild(label)
 
         ship.zPosition = 5

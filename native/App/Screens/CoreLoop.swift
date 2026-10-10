@@ -11,7 +11,11 @@ struct MissionsScreen: View {
     var body: some View {
         let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
         ScreenFrame(title: "Mission board", back: { store.go(.hub) }) {
-            Eyebrow(text: store.player.freeOperations ? "Free Operations · client work" : "Guided contracts")
+            HStack(alignment: .firstTextBaseline) {
+                Eyebrow(text: store.player.freeOperations ? "Free Operations · client work" : "Guided contracts")
+                Spacer(minLength: 8)
+                Text("\(entries.count)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
+            }
             WorldSpaceWeekBanner(banner: WorldSpaceWeek.banner(badges: store.player.badges, now: store.now))
             if entries.isEmpty {
                 Panel {
@@ -52,11 +56,17 @@ struct MissionCard: View {
                     Text(m.tag.uppercased()).font(AppFont.display(14, "Bold")).tracking(1.0).foregroundStyle(Theme.textDim)
                 }
                 Text("\(client) · \(m.difficulty)").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                if !m.brief.isEmpty { Text(m.brief).font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true) }
                 if let from { Text(to.map { "\(from) → \($0)" } ?? "Target: \(from)").font(AppFont.body(14)) }
+                if entry.feasibleTargets > 0 {
+                    Text("\(entry.feasibleTargets) reachable").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                }
                 if !m.requires.minerals.isEmpty {
                     Text(m.requires.minerals.sorted { $0.key < $1.key }.map { "\($0.value) \(Minerals.byId[$0.key]?.name ?? $0.key)" }.joined(separator: ", ")).font(AppFont.body(14))
                 }
+                if m.requires.cargoMin > 0 { Text("Cargo minimum \(m.requires.cargoMin)").font(AppFont.body(14)).foregroundStyle(Theme.textDim) }
                 if m.payout.francs > 0 { Text(Economy.format(francs: m.payout.francs)).font(AppFont.display(16)).foregroundStyle(Theme.teal) }
+                if m.payout.affinity > 0 { Text("+\(m.payout.affinity) client XP").font(AppFont.mono(14)).foregroundStyle(Theme.bluePress) }
                 WorldSpaceWeekChips(chips: wsw)
                 if entry.unlocked {
                     PrimaryButton(title: "Take contract", action: onTake)
@@ -66,7 +76,8 @@ struct MissionCard: View {
                         Text(entry.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
                     }
                     Button(action: onPathway) {
-                        Text("SEE THE PATHWAY").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress).frame(minHeight: 44, alignment: .leading)
+                        Text("SEE THE PATHWAY").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.buttonStyle(.plain)
                 }
             }
@@ -91,7 +102,15 @@ struct LaunchScreen: View {
     private var pad: some View {
         ScreenFrame(title: "Launchpad", back: { store.go(.hub) }) {
             if let m = store.mission {
-                Panel { Text(m.title).font(.headline); Text("Target: \(store.target?.name ?? "none")") }
+                Panel(accent: Theme.teal) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Eyebrow(text: m.isOwnProgram ? "Own operation" : "Client contract")
+                        Text(m.title).font(AppFont.display(18))
+                        Text("Target: \(store.target?.name ?? "none")").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                        if m.payout.francs > 0 { Text(Economy.format(francs: m.payout.francs)).font(AppFont.mono(16)).foregroundStyle(Theme.teal) }
+                        if m.payout.affinity > 0 { Text("+\(m.payout.affinity) client XP").font(AppFont.mono(14)).foregroundStyle(Theme.bluePress) }
+                    }
+                }
             } else if store.player.stagedRockets.isEmpty {
                 Panel(accent: Theme.teal) {
                     VStack(alignment: .leading, spacing: 8) {
@@ -103,9 +122,16 @@ struct LaunchScreen: View {
                 }
             }
             ForEach(store.player.stagedRockets) { r in
+                let model = Rockets.model(id: Rockets.canonicalId(r.rocketId))
+                let aimed = store.catalog.target(r.targetId)?.name
                 Panel {
-                    Text("\(r.rocketId) · \(r.location.rawValue)")
-                    if r.location == .hangar { PrimaryButton(title: "Roll out to pad") { store.rollOutToPad() } }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model?.name ?? r.rocketId).font(AppFont.display(16))
+                        Text(r.location == .launchpad ? "On the pad" : "In the hangar").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                        if let aimed { Text("Target · \(aimed)").font(AppFont.body(14)) }
+                        if let model { Text("Cargo \(model.cargo) · orbit \(model.maxOrbit) · drill \(model.drillTier)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim) }
+                        if r.location == .hangar { PrimaryButton(title: "Roll out to pad") { store.rollOutToPad() } }
+                    }
                 }
             }
             if store.mission != nil || !store.player.stagedRockets.isEmpty {
@@ -119,7 +145,30 @@ struct LaunchScreen: View {
 struct DeliveryScreen: View {
     @Environment(GameStore.self) private var store
     var body: some View {
+        let mission = store.mission
+        let cargo = store.state.lastCargo ?? [:]
+        let place = store.catalog.target(store.state.deliveryTargetId)?.name
         ScreenFrame(title: "Delivery") {
+            Panel(accent: Theme.teal) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Eyebrow(text: "Unload")
+                    Text(mission?.title ?? "Cargo").font(AppFont.display(18))
+                    if let place { Text(place).font(AppFont.body(14)).foregroundStyle(Theme.textDim) }
+                    if cargo.isEmpty {
+                        Text("Hold is empty.").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    } else {
+                        ForEach(cargo.keys.sorted(), id: \.self) { id in
+                            let n = cargo[id] ?? 0
+                            let need = mission?.requires.minerals[id]
+                            HStack {
+                                Text(Minerals.byId[id]?.name ?? id)
+                                Spacer()
+                                Text(need.map { "\(n) / \($0)" } ?? "×\(n)").font(AppFont.mono(14)).foregroundStyle(Theme.teal)
+                            }
+                        }
+                    }
+                }
+            }
             PrimaryButton(title: "Unload cargo") { store.deliveryUnloadComplete() }
         }
     }
@@ -235,7 +284,7 @@ struct DebriefLedger: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Eyebrow(text: "Ledger")
                     if let payout {
-                        HStack { Text("Contract value").foregroundStyle(Theme.textDim); Spacer(); Text(Economy.format(francs: payout)).font(AppFont.mono(16)).foregroundStyle(Theme.ink) }
+                        HStack { Text("Contract value").foregroundStyle(Theme.textDim); Spacer(); Text(Economy.format(francs: payout)).font(AppFont.mono(16)).foregroundStyle(Theme.teal) }
                     }
                     if let reward {
                         Text(reward.outcome).foregroundStyle(Theme.textDim)
@@ -250,16 +299,38 @@ struct DebriefLedger: View {
 struct MarketScreen: View {
     @Environment(GameStore.self) private var store
     var body: some View {
+        let p = store.player
+        let stored = Market.storedUnits(p.stash)
+        let cap = Market.storageCapacity(p)
         ScreenFrame(title: "Market", back: { store.go(.hub) }) {
-            Panel { Text("Funds: \(francs(store.player.francs))") }
-            ForEach(store.player.stash.keys.sorted(), id: \.self) { id in
-                let n = store.player.stash[id] ?? 0
-                Panel {
-                    Text("\(id) ×\(n)")
-                    PrimaryButton(title: "Sell all", enabled: n > 0) { store.sell(id, amount: n) }
+            Panel(accent: Theme.teal) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Eyebrow(text: "Exchange")
+                    HStack { Text("Funds").foregroundStyle(Theme.textDim); Spacer(); Text(francs(p.francs)).font(AppFont.mono(16)).foregroundStyle(Theme.teal) }
+                    HStack { Text("Storage").foregroundStyle(Theme.textDim); Spacer(); Text(cap > 0 ? "\(stored) / \(cap)" : "\(stored)").font(AppFont.mono(16)) }
                 }
             }
-            if store.player.stash.isEmpty { Panel { Text("Nothing in storage.") } }
+            ForEach(p.stash.keys.sorted(), id: \.self) { id in
+                let n = p.stash[id] ?? 0
+                let quote = Market.unitPrice(id, player: p, clientId: p.lastClient, now: store.now)
+                Panel {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text(Minerals.byId[id]?.name ?? id).font(AppFont.display(16))
+                            Spacer()
+                            Text("×\(n)").font(AppFont.mono(14))
+                        }
+                        HStack {
+                            Text(quote.premiumApplied ? "Client price" : "Spot price").foregroundStyle(Theme.textDim)
+                            Spacer()
+                            Text("\(Economy.format(francs: quote.price)) each").font(AppFont.mono(14)).foregroundStyle(Theme.teal)
+                        }
+                        if n > 0 { Text("Sell all · \(Economy.format(francs: quote.price * n))").font(AppFont.body(14)).foregroundStyle(Theme.textDim) }
+                        PrimaryButton(title: "Sell all", enabled: n > 0) { store.sell(id, amount: n) }
+                    }
+                }
+            }
+            if p.stash.isEmpty { Panel { Text("Nothing in storage.") } }
         }
     }
 }

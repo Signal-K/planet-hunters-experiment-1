@@ -82,7 +82,7 @@ struct AcademyScreen: View {
                 Button { tab = t } label: {
                     Text(t.rawValue.uppercased()).font(AppFont.display(14)).tracking(0.6).lineLimit(1)
                         .frame(maxWidth: .infinity, minHeight: 44)
-                        .foregroundStyle(tab == t ? Color.white : Theme.ink)
+                        .foregroundStyle(tab == t ? Theme.onAccent : Theme.ink)
                         .background(tab == t ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
                         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
                 }.buttonStyle(.plain)
@@ -155,7 +155,7 @@ struct AcademyScreen: View {
             ForEach(Academy.branches, id: \.self) { b in
                 Button { branch = b } label: {
                     Text(b.uppercased()).font(AppFont.display(14)).lineLimit(1).minimumScaleFactor(0.6).frame(maxWidth: .infinity, minHeight: 44)
-                        .foregroundStyle(branch == b ? Color.white : Theme.ink)
+                        .foregroundStyle(branch == b ? Theme.onAccent : Theme.ink)
                         .background(branch == b ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
                         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
                 }.buttonStyle(.plain)
