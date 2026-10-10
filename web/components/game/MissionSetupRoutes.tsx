@@ -1,5 +1,6 @@
 'use client'
 
+import { buildingLevel } from '@/lib/data/building-levels'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { useGame } from '@/game-context'
 import type { Catalog } from '@/lib/catalog'
@@ -85,7 +86,7 @@ function SetupFrame({ title, screen, onBack, children, eyebrow = 'CONTRACT → L
 
 export default function MissionSetupRoutes({ screen, game, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
   const relay = useMissionRelayModels({ catalog: game.catalog, missionsDone: game.player.missionsDone, freeOperations: game.player.freeOperations, francs: game.player.francs, crew: game.player.crew, player: game.player, sceneScope: game.sceneScope })
-  const compatibleTargets = useMemo(() => game.mission ? feasibleTargetsFor(game.mission, game.catalog.targets, game.catalog.parts, game.player.missionsDone, game.player.launchpadUpgraded, game.player.unlockedSkillNodes ?? []) : [], [game.catalog.parts, game.catalog.targets, game.mission, game.player.launchpadUpgraded, game.player.missionsDone, game.player.unlockedSkillNodes])
+  const compatibleTargets = useMemo(() => game.mission ? feasibleTargetsFor(game.mission, game.catalog.targets, game.catalog.parts, game.player.missionsDone, game.player.launchpadUpgraded, game.player.unlockedSkillNodes ?? [], buildingLevel(game.player, 'launchpad')) : [], [game.catalog.parts, game.catalog.targets, game.mission, game.player.launchpadUpgraded, game.player.missionsDone, game.player.unlockedSkillNodes])
   const selectedVehicle = game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)
   // SSL-375: the rocket stands in the Workshop while it is prepared, then rolls to the pad in-scene on confirm.
   const [rolling, setRolling] = useState<string | null>(null)

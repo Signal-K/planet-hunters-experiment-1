@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useGame } from '@/game-context'
 import { pbShared } from '@/lib/pb'
 import { DEV_GROUPS } from '@/lib/devPresets'
+import { canOfferFullscreen, enterFullscreen, readFullscreenEnv } from '@/lib/fullscreen'
 import PageSurface from '@/components/ui/PageSurface'
 import { TRAINING_TRIES } from '@/lib/data'
 import { TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
@@ -71,7 +72,20 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   const game = useGame()
   const [confirmReset, setConfirmReset] = useState(false)
   const [confirmSkipTraining, setConfirmSkipTraining] = useState(false)
+  const [showFullscreen, setShowFullscreen] = useState(false)
   const email = pbShared.authStore.record?.email as string | undefined
+
+  useEffect(() => {
+    const update = () => setShowFullscreen(canOfferFullscreen(readFullscreenEnv()))
+    update()
+    const mq = window.matchMedia('(orientation: landscape)')
+    mq.addEventListener('change', update)
+    document.addEventListener('fullscreenchange', update)
+    return () => {
+      mq.removeEventListener('change', update)
+      document.removeEventListener('fullscreenchange', update)
+    }
+  }, [])
 
   function handleSignOut() {
     onClose()
@@ -132,6 +146,15 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
             <Btn label="Sign Out" onClick={handleSignOut} variant="ghost" />
           </Row>
         </Section>
+
+        {showFullscreen && (
+          <Section label="Display">
+            <Row>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text)' }}>Hide browser bars</div>
+              <Btn label="Fullscreen" onClick={() => { enterFullscreen().catch(() => {}) }} variant="primary" />
+            </Row>
+          </Section>
+        )}
 
         {game.player.missionsDone > 0 && (
           <Section label="Program">

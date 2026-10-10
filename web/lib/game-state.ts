@@ -1,4 +1,5 @@
 import { STARTING_FRANCS } from '@/lib/data/economy'
+import { mergeBuildingLevels, sanitizeBuildingLevels } from '@/lib/data/building-levels'
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
 import { sanitizeBadges } from '@/lib/data/sky-events'
 import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
@@ -62,6 +63,7 @@ export const DEFAULT_STATE: GameState = {
     refinedGoods: {},
     remoteStorage: {},
     launchpadUpgraded: false,
+    buildingLevels: {},
     loanDebt: 0,
     loanOffered: false,
     seen_planets: [],
@@ -292,6 +294,11 @@ export function normalizeState(input: PartialSave): GameState {
   const underConstruction = Object.fromEntries(
     Object.entries(player.underConstruction ?? {}).filter(([kind, startedAt]) => isUnderConstruction(startedAt, kind))
   )
+  // Levels 2-3 of upgradable buildings. Old saves have none (level 1); the legacy
+  // launchpad flag is level 2. Only the level map is touched, never `placed`, so a
+  // malformed value can never drop a building.
+  const buildingLevels = sanitizeBuildingLevels(player.buildingLevels, !!player.launchpadUpgraded)
+  const launchpadUpgraded = !!player.launchpadUpgraded || (buildingLevels.launchpad ?? 1) >= 2
   const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
   const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt)
   const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
@@ -316,7 +323,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
@@ -628,6 +635,13 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.player[field] = earliestStamp(current.player[field], remoteState.player?.[field])
   }
   merged.player.deepSpaceTelescopeBuilt = !!(current.player.deepSpaceTelescopeBuilt || remoteState.player?.deepSpaceTelescopeBuilt)
+  // Building levels only ever go up, so take the per-building max: a stale remote
+  // save on either side can never lower an upgrade the player paid for.
+  merged.player.buildingLevels = mergeBuildingLevels(
+    sanitizeBuildingLevels(current.player.buildingLevels, current.player.launchpadUpgraded),
+    sanitizeBuildingLevels(remoteState.player?.buildingLevels, remoteState.player?.launchpadUpgraded),
+  )
+  merged.player.launchpadUpgraded = !!current.player.launchpadUpgraded || !!remoteState.player?.launchpadUpgraded
   // Paused missions are independent runs, not a last-write-wins preference.
   // Keep the union so a device that launched another vehicle cannot erase a
   // run parked on the other device between syncs.

@@ -277,14 +277,14 @@ public enum Academy {
               archetype(m.crewClass).specialisations.contains(branch), !s.player.crewTraining.contains(where: { $0.crewId == crewId }),
               (m.specialisations.first { $0.branch == branch }?.tier ?? 0) < 3 else { return s }
         return withSession(s, CrewTrainingSession(id: "training-\(crewId)-\(branch)-\(Int(now))", crewId: crewId, candidateId: nil, candidateName: nil,
-                                                  branch: branch, startedAt: now, completesAt: now + trainingDurationMs), now: now)
+                                                  branch: branch, startedAt: now, completesAt: now + trainingDurationMs * BuildingLevels.timeMultiplier(BuildingLevels.level(s.player, "astronaut-academy"))), now: now)
     }
     public static func applyStartCandidate(_ s: GameState, branch: String, now: Double) -> GameState {
         guard canStartTraining(s.player, now: now) else { return s }
         let id = "crew-trained-\(Int(now))"
         return withSession(s, CrewTrainingSession(id: "training-\(id)-\(branch)", crewId: nil, candidateId: id,
                                                   candidateName: pickName(id: id, crewClass: .astronaut, taken: s.player.crew), branch: branch,
-                                                  startedAt: now, completesAt: now + trainingDurationMs), now: now)
+                                                  startedAt: now, completesAt: now + trainingDurationMs * BuildingLevels.timeMultiplier(BuildingLevels.level(s.player, "astronaut-academy"))), now: now)
     }
     static func addSpecialisation(_ m: CrewMember, _ branch: String) -> CrewMember {
         var n = m
