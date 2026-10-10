@@ -595,7 +595,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           removing the rest of the player's controls. */}
       {(
         <div className="hub-bottom-dock" style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20,
+          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: subsurface ? 40 : 20,
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
         }}>
           <div className="hub-bottom-dock-inner" style={{
@@ -609,10 +609,15 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             padding: '12px 16px 16px',
           }}>
             {subsurface ? (
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <DockPrimaryBtn onClick={() => setSubsurface(false)}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+                <DockPrimaryBtn testId="subsurface-surface-btn" onClick={() => setSubsurface(false)}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><SurfaceGlyph />Surface</span>
                 </DockPrimaryBtn>
+                {player.placed.includes('launchpad') && (
+                  <DockPrimaryBtn testId="subsurface-launchpad-btn" onClick={() => onOpenScene('launchpad')}>
+                    Launchpad
+                  </DockPrimaryBtn>
+                )}
               </div>
             ) : (
               <>
