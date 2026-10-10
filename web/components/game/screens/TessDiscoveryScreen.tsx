@@ -1,21 +1,16 @@
 'use client'
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Radio, Satellite } from 'lucide-react'
-import TopBar from '@/components/ui/TopBar'
+import { useEffect, useMemo, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
-import Panel from '@/components/ui/Panel'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
-import NebulaBackdrop from '@/components/game/NebulaBackdrop'
-import InstrumentViewport, { InstrumentAnswerRow, InstrumentDevDayBar, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
+import InstrumentViewport, { InstrumentAnswerRow, InstrumentDevDayBar, InstrumentStandbyViewport, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import { periodFromRanges, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
 import type { InstrumentCommandResult, InstrumentView } from '@/lib/instrument-viewport/view'
 import type { Player } from '@/lib/game-types'
-import { UI_ZONES } from '@/lib/ui-zones'
 import { captureGameEvent } from '@/lib/posthog'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
@@ -91,7 +86,6 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         setViewingSol(false)
       })
       .catch(error => {
-        console.warn('[TESS] live candidate fetch failed', error)
         if (cancelled) return
         captureGameEvent('tess_downlink_load_failed', { error: error instanceof Error ? error.message : String(error) })
         setPool([])
@@ -118,42 +112,52 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     return [Math.min(...ys), Math.max(...ys)]
   }, [points])
 
+  const devBar = process.env.NODE_ENV === 'development' ? (
+    <InstrumentDevDayBar testIdPrefix="tess" offset={devDayOffset} onAdvance={() => setDevDayOffset(offset => offset + 1)} onReset={() => setDevDayOffset(0)} />
+  ) : undefined
+
   if (!visualCandidate && !player.freeOperations) {
     return (
-      <GateScreen
+      <InstrumentStandbyViewport
+        testId="tess-discovery-standby"
+        sceneClassName="ln-scene-tess-discovery"
         eyebrow="BASE / LOCKED"
-        icon={<Satellite size={22} />}
-        tone="amber"
-        title="Free Operations Required"
-        body="TESS candidate downlinks unlock after the starter contract arc."
+        title="Transit Telescope"
         onBack={onBack}
+        status="LOCKED"
+        messageTitle="Free Operations Required"
+        messageBody="TESS candidate downlinks unlock after the starter contract arc."
       />
     )
   }
 
   if (!visualCandidate && !player.transitSatelliteLaunchedAt) {
     return (
-      <GateScreen
+      <InstrumentStandbyViewport
+        testId="tess-discovery-standby"
+        sceneClassName="ln-scene-tess-discovery"
         eyebrow="BASE / TELESCOPE"
-        icon={<Radio size={22} />}
-        tone="amber"
-        title="Launch Transit Telescope"
-        body="Deploy your own telescope from the Launchpad. Its daily data will downlink here after the flight."
+        title="Transit Telescope"
         onBack={onBack}
-        action={<PrimaryBtn testId="open-transit-telescope-program-btn" kind="amber" onClick={onOpenProgram}>Open Your Program</PrimaryBtn>}
+        status="NO TELESCOPE"
+        messageTitle="Launch Transit Telescope"
+        messageBody="Deploy your own telescope from the Launchpad. Its daily data will downlink here after the flight."
+        answers={<PrimaryBtn testId="open-transit-telescope-program-btn" onClick={onOpenProgram}>Open Your Program</PrimaryBtn>}
       />
     )
   }
 
   if (loading) {
     return (
-      <GateScreen
+      <InstrumentStandbyViewport
+        testId="tess-discovery-standby"
+        sceneClassName="ln-scene-tess-discovery"
         eyebrow="BASE / DAILY DOWNLINK"
-        icon={<Satellite size={22} />}
-        tone="cyan"
-        title="Acquiring Signal"
-        body="Pulling the day's unresolved TESS transit anomaly from the shared feed."
+        title="Transit Telescope"
         onBack={onBack}
+        status="ACQUIRING"
+        messageTitle="Acquiring Signal"
+        messageBody="Pulling the day's unresolved TESS transit anomaly from the shared feed."
       />
     )
   }
@@ -161,23 +165,23 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   if (!candidate) {
     const misconfigured = loadFailed && sharedBackendMisconfigured()
     return (
-      <GateScreen
+      <InstrumentStandbyViewport
+        testId="tess-discovery-standby"
+        sceneClassName="ln-scene-tess-discovery"
         eyebrow="BASE / DAILY DOWNLINK"
-        icon={<Radio size={22} />}
-        tone="amber"
-        title={misconfigured ? 'Feed Not Configured' : loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Anomaly'}
-        body={misconfigured
+        title="Transit Telescope"
+        onBack={onBack}
+        status={loadFailed ? 'FEED OFFLINE' : 'EMPTY FEED'}
+        messageTitle={misconfigured ? 'Feed Not Configured' : loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Anomaly'}
+        messageBody={misconfigured
           ? 'This build has no shared backend configured. Reloading will not help — this needs a deploy fix.'
           : loadFailed
-            ? 'The shared TESS subject feed could not be reached.'
+            ? 'The shared TESS subject feed could not be reached. The viewport stays empty until a subject arrives.'
             : 'Every live TESS transit subject is currently confirmed, rejected, or already resolved by consensus.'}
-        onBack={onBack}
-        action={loadFailed && !misconfigured ? (
+        answers={loadFailed && !misconfigured ? (
           <GhostBtn onClick={() => { captureGameEvent('tess_downlink_retry'); setRetryToken(token => token + 1) }}>Retry Downlink</GhostBtn>
         ) : undefined}
-        devBar={process.env.NODE_ENV === 'development' ? (
-          <InstrumentDevDayBar testIdPrefix="tess" offset={devDayOffset} onAdvance={() => setDevDayOffset(offset => offset + 1)} onReset={() => setDevDayOffset(0)} />
-        ) : undefined}
+        devBar={devBar}
       />
     )
   }
@@ -216,9 +220,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       helpLayer={help.layer}
       status={classification ? 'ANNOTATION SAVED' : 'REVIEW'}
       onCommand={onCommand}
-      devBar={process.env.NODE_ENV === 'development' ? (
-        <InstrumentDevDayBar testIdPrefix="tess" offset={devDayOffset} onAdvance={() => setDevDayOffset(offset => offset + 1)} onReset={() => setDevDayOffset(0)} />
-      ) : undefined}
+      devBar={devBar}
       caption={(
         <p className={viewportStyles.caption} data-testid="tess-data-provenance">
           {showMap ? 'TARGET SELECT' : (activeSector?.label ?? 'LIGHT CURVE')}
@@ -298,41 +300,5 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         />
       )}
     />
-  )
-}
-
-function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }: {
-  eyebrow: string
-  icon: ReactNode
-  tone: 'amber' | 'cyan'
-  title: string
-  body: string
-  onBack: () => void
-  action?: ReactNode
-  devBar?: ReactNode
-}) {
-  const accent = tone === 'amber' ? 'var(--ln-warn)' : 'var(--ln-cyan)'
-  const bg = tone === 'amber' ? 'var(--ln-warn-soft)' : 'var(--ln-cyan-soft)'
-  const border = tone === 'amber' ? 'var(--ln-warn)' : 'var(--ln-cyan-border)'
-  return (
-    <div className="game-screen theme-deep ln-scene-tess-discovery">
-      <NebulaBackdrop />
-      <TopBar eyebrow={eyebrow} title="Transit Telescope" onBack={onBack} />
-      <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
-        {devBar}
-        <Panel accent={accent} style={{ padding: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 8, display: 'grid', placeItems: 'center', background: bg, border: `1px solid ${border}`, color: accent }}>
-              {icon}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: accent }}>{title}</div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 4 }}>{body}</div>
-            </div>
-          </div>
-          {action && <div style={{ marginTop: 12 }}>{action}</div>}
-        </Panel>
-      </div>
-    </div>
   )
 }
