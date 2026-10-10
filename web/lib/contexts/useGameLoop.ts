@@ -22,7 +22,7 @@ import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
-import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, type SkyActivityKind } from '@/lib/data'
+import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
@@ -260,6 +260,19 @@ function grantSkyBadges(player: Player, kind: SkyActivityKind, at: number): Play
     if (reportedBadges.has(key)) continue
     reportedBadges.add(key)
     captureGameEvent('badge_earned', { event_id: badge.eventId, tier: badge.tier, activity: kind })
+  }
+  return next
+}
+
+// Our own World Space Week mission-type badges (wsw-badges.ts), same clock.
+function grantWswBadges(player: Player, type: WswMissionType, at: number): Player {
+  const { player: next, granted } = grantWswBadge(player, type, at)
+  if (granted) {
+    const key = `${granted.eventId}:${granted.tier}`
+    if (!reportedBadges.has(key)) {
+      reportedBadges.add(key)
+      captureGameEvent('badge_earned', { event_id: granted.eventId, tier: granted.tier, activity: type })
+    }
   }
   return next
 }
@@ -791,7 +804,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ...s,
         screen: completedTrainingScan ? 'hangar' : s.screen,
         player: {
-          ...s.player,
+          ...(existing ? s.player : grantWswBadges(s.player, 'citizen-science', submittedAt)),
           researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,
           flightPlan: completeFlightPlanEvent(s.player.flightPlan, 'tess-classified'),
           tessClassifications: {
@@ -871,7 +884,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const next: GameState = {
         ...s,
         player: {
-          ...(existing ? s.player : grantSkyBadges(s.player, 'asteroid-classification', submittedAt)),
+          ...(existing ? s.player : grantWswBadges(grantSkyBadges(s.player, 'asteroid-classification', submittedAt), 'citizen-science', submittedAt)),
           researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,
           asteroidClassifications: {
             ...(s.player.asteroidClassifications ?? {}),
@@ -914,7 +927,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const tier = completed ? resolveSaturnBadgeTier(submittedAt) : null
       const player = {
         ...s.player,
-        ...(completed ? grantSkyBadges(s.player, 'saturn-classification', submittedAt) : {}),
+        ...(completed ? grantWswBadges(grantSkyBadges(s.player, 'saturn-classification', submittedAt), 'citizen-science', submittedAt) : {}),
         // A completed gold frame stays active until its plot is claimed, so a reload
         // shows the finished frame instead of loading a new one (SSL-492).
         saturnActiveFrameId: completed && tier !== 'gold' ? null : candidateId,
@@ -1193,10 +1206,17 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         { ...s, player: { ...s.player, stash } },
         rocketModelForConfig(s.rocket),
       )
+      // SSL-475: our own World Space Week badge for this mission type, graded at
+      // completion. The Rocket Revolution launch badge is granted at launch.
+      const wswBadgedPlayer = grantWswBadges(
+        constructionPlayer,
+        wswMissionTypeFor(mission, s.player.freeOperations),
+        skyEventNow(isDevLauncherEnabled()),
+      )
       const next: GameState = {
         ...s,
         player: {
-          ...constructionPlayer,
+          ...wswBadgedPlayer,
           francs,
           activeMission: null,
           missionRunId: undefined,

@@ -273,6 +273,7 @@ public enum Loop {
         n.player.missionsDone = missionsDone
         n.player.freeOperations = Transitions.freeOperationsUnlocked(n.player)
         let justFinishedOnboarding = !wasFreeOps && n.player.freeOperations
+        WswBadges.grant(&n.player.badges, WswBadges.type(for: mission, freeOperations: wasFreeOps), at: now)
         let showLoan = !program && !n.player.loanOffered && n.player.francs < Economy.bankruptcyThreshold && n.player.loanDebt == 0
         n.popup = justFinishedOnboarding ? "tutorial-complete" : (showLoan ? "loan" : s.popup)
         n.player.loanOffered = n.player.loanOffered || showLoan
