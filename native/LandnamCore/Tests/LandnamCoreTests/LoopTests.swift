@@ -251,15 +251,38 @@ import Foundation
         let m = ControlStation.build(player: Player(), signals: [], bodyId: "all")
         #expect(m.groups.isEmpty && m.emptyLabel == "Equipment links once Free Operations is open.")
     }
-    @Test func groundTelescopesAreStandingAndReadDeepSpaceFeed() {
-        var p = Player(); p.freeOperations = true
+    @Test func aBuiltGroundTelescopeReadsTheDeepSpaceFeed() {
+        var p = Player(); p.freeOperations = true; p.placed = ["ground-telescope"]
         let sig = InstrumentSignal(id: "a", kind: .deepSpace, title: "NEOCP")
         var m = ControlStation.build(player: p, signals: [sig], bodyId: "all")
-        #expect(m.groups.count == 1 && m.groups[0].rows[0].status == "Standing by" && m.groups[0].rows[0].open == nil)
+        #expect(m.groups.count == 1 && m.groups[0].rows[0].status == "Standing by" && m.groups[0].rows[0].open == nil && !m.groups[0].rows[0].buildPrompt)
+        #expect(m.markers.map(\.equipmentId) == ["ground-telescopes"])
         p.deepSpaceTelescopeBuilt = true
         m = ControlStation.build(player: p, signals: [sig], bodyId: "all")
         #expect(m.groups.flatMap(\.rows).filter { $0.open != nil }.count == 2)
         #expect(m.filters.map(\.id) == ["all", "earth"])
+    }
+    @Test func groundTelescopesAreABuildPromptUntilBuilt() {
+        var p = Player(); p.freeOperations = true
+        let m = ControlStation.build(player: p, signals: [InstrumentSignal(id: "a", kind: .deepSpace, title: "NEOCP")], bodyId: "all")
+        let rows = m.groups.flatMap(\.rows)
+        #expect(rows.count == 1)
+        #expect(rows[0].equipmentId == "ground-telescopes" && rows[0].status == "None built" && rows[0].buildPrompt)
+        #expect(!rows[0].live && rows[0].readyCount == 0 && rows[0].open == nil)
+        #expect(!rows.contains { $0.status == "Standing by" })
+        #expect(m.markers.isEmpty && m.emptyLabel == nil)
+    }
+    @Test func worldSpaceWeekBadgesAreFlaggedOnTheInstrumentsThatServeThem() {
+        var p = Player(); p.freeOperations = true; p.placed = ["ground-telescope"]; p.saturnImagerLaunchedAt = 5
+        let oct8 = SkyEvents.utc(2026, 10, 8) + 43_200_000
+        p.badges["saturn-night-2026"] = PlayerBadge(eventId: "saturn-night-2026", tier: .gold, earnedAt: oct8)
+        let m = ControlStation.build(player: p, signals: [], bodyId: "all", now: oct8)
+        let saturn = m.groups.flatMap(\.rows).first { $0.equipmentId == "saturn-imager" }
+        #expect(saturn?.wsw.map(\.label) == ["Saturn Gold earned"])
+        #expect(m.skyBadges.map(\.category) == ["Launch", "Saturn", "Meteor"])
+        let oct10 = SkyEvents.utc(2026, 10, 10) + 43_200_000
+        #expect(ControlStation.build(player: p, signals: [], bodyId: "all", now: oct10).skyBadges.map(\.label)
+                == ["Launch Gold open", "Saturn Gold earned", "Meteor Gold open", "New Moon Gold open"])
     }
     @Test func saturnAppearsAfterLaunchAndFilters() {
         var p = Player(); p.freeOperations = true; p.saturnImagerLaunchedAt = 5
@@ -285,5 +308,80 @@ import Foundation
         p.missionPhase = .mining
         let m = SkyCraft.current(for: p, now: 150)
         #expect(m?.state == .mining && m?.opens == .mining)
+    }
+}
+
+@Suite struct WorldSpaceWeekTests {
+    let oct8 = SkyEvents.utc(2026, 10, 8) + 43_200_000, oct12 = SkyEvents.utc(2026, 10, 12) + 43_200_000
+
+    @Test func isLiveFromFourOctUntilTheEndOfTenOct() {
+        #expect(!WorldSpaceWeek.isLive(SkyEvents.utc(2026, 10, 3) + 82_800_000))
+        #expect(WorldSpaceWeek.isLive(SkyEvents.utc(2026, 10, 4)))
+        #expect(WorldSpaceWeek.isLive(SkyEvents.utc(2026, 10, 10) + 86_340_000))
+        #expect(!WorldSpaceWeek.isLive(SkyEvents.utc(2026, 10, 11)))
+        #expect(WorldSpaceWeek.chip("orionids-2026", badges: [:], now: oct8) == nil)
+    }
+    @Test func everyMissionCarriesLaunchAndAddsTheCategoryItsTypeServes() throws {
+        let board = MissionGenerator.fullBoard()
+        var mining = try #require(board.first { $0.payload == nil && $0.construction == nil })
+        #expect(WorldSpaceWeek.eventIds(for: mining) == ["rocket-revolution-2026", "draconids-2026"])
+        mining.payload = MissionPayload(type: .satellite, name: "Saturn", cargoCost: 1, instrumentId: "saturn-imager")
+        #expect(WorldSpaceWeek.eventIds(for: mining) == ["rocket-revolution-2026", "saturn-night-2026"])
+        mining.payload = MissionPayload(type: .deepSpaceSurvey, name: "DST", cargoCost: 1, instrumentId: "deep-space-telescope")
+        #expect(WorldSpaceWeek.eventIds(for: mining) == ["rocket-revolution-2026", "new-moon-hunt-2026-10"])
+        mining.payload = MissionPayload(type: .rover, name: "Rover", cargoCost: 1, instrumentId: nil)
+        #expect(WorldSpaceWeek.eventIds(for: mining) == ["rocket-revolution-2026"])
+    }
+    @Test func chipsShowGoldOpenThenSilverOpenThenTheEarnedTier() throws {
+        let m = try #require(MissionGenerator.fullBoard().first { $0.payload == nil && $0.construction == nil })
+        #expect(WorldSpaceWeek.chips(for: m, badges: [:], now: oct8).map(\.label) == ["Launch Gold open", "Meteor Gold open"])
+        #expect(WorldSpaceWeek.chips(for: m, badges: [:], now: oct12).map(\.label) == ["Launch Silver open", "Meteor Silver open"])
+        let silver = ["rocket-revolution-2026": PlayerBadge(eventId: "rocket-revolution-2026", tier: .silver, earnedAt: oct12)]
+        #expect(WorldSpaceWeek.chip("rocket-revolution-2026", badges: silver, now: oct8)?.state == .silverEarned)
+        #expect(WorldSpaceWeek.chip("new-moon-hunt-2026-10", badges: [:], now: oct8) == nil)
+    }
+    @Test func bannerSummarisesTheWeekAndAfter() {
+        let gold = ["saturn-night-2026": PlayerBadge(eventId: "saturn-night-2026", tier: .gold, earnedAt: oct8)]
+        #expect(WorldSpaceWeek.banner(badges: gold, now: oct8) == .init(live: true, title: "World Space Week 4-10 OCT", detail: "Gold badges while it runs. Silver after.", earned: 1, total: 4))
+        #expect(WorldSpaceWeek.banner(badges: gold, now: oct12).title == "World Space Week ended")
+    }
+}
+
+@Suite struct MissionLogTests {
+    @Test func aClassifiedTransitIsLoggedWithItsVerdictAndTime() {
+        var p = Player()
+        p.completedMissions = [CompletedMissionRecord(id: "m", title: "Iron Run", clientName: "Meridian", completedAt: 100, runId: "r", kind: .client)]
+        p.tessClassifications = [
+            "toi-1": TessClassification(subjectId: "toi-1", verdict: .planet, ranges: [], submittedAt: 200),
+            "training-tess-toi-7001": TessClassification(subjectId: "training-tess-toi-7001", verdict: .planet, ranges: [], submittedAt: 300),
+        ]
+        let entries = MissionLog.entries(p)
+        #expect(entries.map(\.title) == ["Transit classified", "Iron Run"])
+        #expect(entries[0].meta == "TRANSIT TELESCOPE · Planet candidate" && entries[0].isTransit)
+        #expect(entries[1].meta == "Meridian" && !entries[1].isTransit)
+    }
+}
+
+@Suite struct CloudReconcileTests {
+    @Test func aStaleRemoteDoesNotEraseLocalInstrumentWork() {
+        var local = GameState(); local.player.missionsDone = 4
+        local.player.transitSatelliteLaunchedAt = 1_000
+        local.player.tessClassifications = ["toi-1": TessClassification(subjectId: "toi-1", verdict: .planet, ranges: [], submittedAt: 2_000)]
+        local.player.badges = ["rocket-revolution-2026": PlayerBadge(eventId: "rocket-revolution-2026", tier: .gold, earnedAt: 3_000)]
+        var remote = GameState(); remote.player.missionsDone = 6
+        remote.player.badges = ["rocket-revolution-2026": PlayerBadge(eventId: "rocket-revolution-2026", tier: .silver, earnedAt: 9_000)]
+        let n = CloudPull.reconcile(remote: remote, keeping: local)
+        #expect(n.player.missionsDone == 6)
+        #expect(n.player.transitSatelliteLaunchedAt == 1_000)
+        #expect(n.player.tessClassifications.keys.sorted() == ["toi-1"])
+        #expect(n.player.badges["rocket-revolution-2026"]?.tier == .gold)
+    }
+    @Test func remoteInstrumentWorkSurvivesToo() {
+        var local = GameState(); local.player.missionsDone = 4
+        var remote = GameState(); remote.player.missionsDone = 6
+        remote.player.saturnImagerLaunchedAt = 700
+        remote.player.tessClassifications = ["toi-7": TessClassification(subjectId: "toi-7", verdict: .unsure, ranges: [], submittedAt: 600)]
+        let n = CloudPull.reconcile(remote: remote, keeping: local)
+        #expect(n.player.saturnImagerLaunchedAt == 700 && n.player.tessClassifications.keys.sorted() == ["toi-7"])
     }
 }

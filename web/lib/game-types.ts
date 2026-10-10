@@ -28,7 +28,7 @@ export interface CompletedMissionRecord {
   targetName?: string
   completedAt: number
   runId?: string
-  kind?: 'client' | 'program'
+  kind?: 'client' | 'program' | 'transit'
 }
 
 /**

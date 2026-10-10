@@ -16,6 +16,7 @@ const signal = (partial: Pick<InstrumentSignal, 'id' | 'kind'> & Partial<Instrum
 
 const launched: StationPlayer = {
   freeOperations: true,
+  placed: ['ground-telescope'],
   transitSatelliteLaunchedAt: 1,
   deepSpaceTelescopeBuilt: true,
   saturnImagerLaunchedAt: 1,
@@ -57,18 +58,69 @@ describe('control station registry', () => {
     expect(row(launched, 'saturn-imager')?.openSignal?.inspectorScreen).toBe('saturn-storm-search')
   })
 
-  it('keeps ground telescopes visible and closed until the shared feed is live', () => {
-    const player: StationPlayer = { freeOperations: true }
+  it('keeps a built ground telescope closed until the shared feed is live', () => {
+    const player: StationPlayer = { freeOperations: true, placed: ['ground-telescope'] }
     const model = buildControlStation({ player, signals, bodyId: 'all' })
     expect(model.groups.flatMap(group => group.rows).map(item => item.equipmentId)).toEqual(['ground-telescopes'])
-    expect(model.groups[0]?.rows[0]).toMatchObject({ status: 'Standing by', readyCount: 0, openSignal: null })
+    expect(model.groups[0]?.rows[0]).toMatchObject({ status: 'Standing by', readyCount: 0, openSignal: null, buildPrompt: false })
+    expect(model.markers.map(marker => marker.equipmentId)).toEqual(['ground-telescopes'])
     expect(model.filters.map(filter => filter.id)).toEqual(['all', 'earth'])
+  })
+
+  it('asks the player to build ground telescopes instead of listing a standing one', () => {
+    const player: StationPlayer = { freeOperations: true }
+    const model = buildControlStation({ player, signals, bodyId: 'all' })
+    const rows = model.groups.flatMap(group => group.rows)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({
+      equipmentId: 'ground-telescopes',
+      status: 'None built',
+      live: false,
+      readyCount: 0,
+      openSignal: null,
+      buildPrompt: true,
+    })
+    expect(rows.some(item => item.status === 'Standing by')).toBe(false)
+    expect(model.markers).toEqual([])
+    expect(model.emptyLabel).toBeNull()
+  })
+
+  it('shows no build prompt before Free Operations', () => {
+    const model = buildControlStation({ player: {}, signals, bodyId: 'all' })
+    expect(model.groups).toEqual([])
+    expect(model.emptyLabel).toBe('Equipment links once Free Operations is open.')
   })
 
   it('hides a player-launched instrument until that launch', () => {
     const player: StationPlayer = { freeOperations: true, deepSpaceTelescopeBuilt: true }
-    const ids = buildControlStation({ player, signals, bodyId: 'all' }).groups.flatMap(group => group.rows).map(item => item.equipmentId)
-    expect(ids).toEqual(['ground-telescopes', 'deep-space-telescope'])
+    const rows = buildControlStation({ player, signals, bodyId: 'all' }).groups.flatMap(group => group.rows)
+    expect(rows.map(item => item.equipmentId)).toEqual(['ground-telescopes', 'deep-space-telescope'])
+    expect(rows[0]?.buildPrompt).toBe(true)
+  })
+
+  it('flags World Space Week badges on the instruments that serve them', () => {
+    const oct8 = Date.UTC(2026, 9, 8, 12)
+    const model = buildControlStation({
+      player: { ...launched, badges: { 'saturn-night-2026': { eventId: 'saturn-night-2026', tier: 'gold', earnedAt: oct8 } } },
+      signals,
+      bodyId: 'all',
+      now: oct8,
+    })
+    const rows = model.groups.flatMap(group => group.rows)
+    expect(rows.find(item => item.equipmentId === 'saturn-imager')?.wsw.map(chip => chip.label)).toEqual(['Saturn Gold earned'])
+    expect(rows.find(item => item.equipmentId === 'deep-space-telescope')?.wsw.map(chip => chip.label)).toEqual([])
+    expect(rows.find(item => item.equipmentId === 'transit-telescope')?.wsw).toEqual([])
+    expect(model.skyBadges.map(chip => chip.category)).toEqual(['Launch', 'Saturn', 'Meteor'])
+  })
+
+  it('lists every World Space Week badge once the New Moon night opens', () => {
+    const model = buildControlStation({ player: launched, signals, bodyId: 'all', now: Date.UTC(2026, 9, 10, 12) })
+    expect(model.skyBadges.map(chip => chip.label)).toEqual([
+      'Launch Gold open',
+      'Saturn Gold open',
+      'Meteor Gold open',
+      'New Moon Gold open',
+    ])
   })
 
   it('filters the list by body and leaves the map on the full station', () => {

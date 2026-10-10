@@ -69,3 +69,6 @@
 .launchArt[data-stage='workshop'] > img { left:72%; }
 .launchArt[data-stage='pad'] > img { left:22%; }
 @media (prefers-reduced-motion:reduce){ .launchArt > img { transition:none; } }
+.wswBanner { pointer-events:auto; flex:1 1 auto; min-width:0; max-width:520px; }
+.wswChips { margin-top:12px; }
+@media (max-width:720px),(max-height:520px){.wswBanner{padding:4px 8px;min-height:40px;gap:0 8px;}.wswBanner span:not(:last-child){display:none;}.wswChips{margin-top:8px;}}
