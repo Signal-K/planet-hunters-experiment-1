@@ -18,6 +18,7 @@ import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/Dail
 import { CLIENT_TERRITORIES } from '@/lib/data/site-rights'
 import { createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
+import { dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
@@ -398,7 +399,7 @@ function dropRetiredOnboardingRun(input: GameState): GameState {
 }
 
 function repairStateRoute(rawInput: GameState): GameState {
-  const input = dropRetiredOnboardingRun(rawInput)
+  const input = dropSettledMissionRuns(dropRetiredOnboardingRun(rawInput))
   const mission = input.missionId
     ? (MISSIONS.find(m => m.id === input.missionId)
        ?? input.player.dailyClientPool?.missions.find(m => m.id === input.missionId)
@@ -679,7 +680,28 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.deliveredCargo = current.deliveredCargo
   }
 
+  if ((current.player.completedMissions?.length ?? 0) > 0 || (remoteState.player?.completedMissions?.length ?? 0) > 0) {
+    merged.player.completedMissions = mergeCompletedMissions(
+      current.player.completedMissions,
+      remoteState.player?.completedMissions,
+    )
+  }
+
   return normalizeAndRepair(merged)
+}
+
+/** Completions are append-only. A stale remote save must not forget a collected run. */
+function mergeCompletedMissions(
+  local: CompletedMissionRecord[] | undefined,
+  remote: CompletedMissionRecord[] | undefined,
+): CompletedMissionRecord[] {
+  const byKey = new Map<string, CompletedMissionRecord>()
+  for (const record of [...(local ?? []), ...(remote ?? [])]) {
+    const key = record.runId ?? `${record.id}:${record.completedAt}`
+    const prev = byKey.get(key)
+    if (!prev || record.completedAt >= prev.completedAt) byKey.set(key, record)
+  }
+  return Array.from(byKey.values()).sort((a, b) => a.completedAt - b.completedAt).slice(-100)
 }
 
 export function loadState(storageKey: string): GameState {

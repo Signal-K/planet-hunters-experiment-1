@@ -37,6 +37,8 @@ import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SkyBadgeRow } from './SkyBadgeRow'
+import OpsHubSheet from '@/components/game/hub/OpsHubSheet'
+import { useHelp } from '@/components/ui/useHelp'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
@@ -214,6 +216,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     return target ? `${operation} → ${target}` : operation
   }
   const [upgradingBuilding, setUpgradingBuilding] = useState<UpgradableBuildingId | null>(null)
+  const [opsOpen, setOpsOpen] = useState(false)
+  const help = useHelp('hub')
   const { signals } = useInstrumentSignals(player)
   const asteroidQueueCount = signals.filter(signal => signal.kind === 'deep-space').length
   const placed = player.placed ?? []
@@ -614,7 +618,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           removing the rest of the player's controls. */}
       {(
         <div className="hub-bottom-dock" style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20,
+          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: subsurface ? 40 : 20,
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
         }}>
           <div className="hub-bottom-dock-inner" style={{
@@ -628,10 +632,15 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             padding: '12px 16px 16px',
           }}>
             {subsurface ? (
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <DockPrimaryBtn onClick={() => setSubsurface(false)}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+                <DockPrimaryBtn testId="subsurface-surface-btn" onClick={() => setSubsurface(false)}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><SurfaceGlyph />Surface</span>
                 </DockPrimaryBtn>
+                {player.placed.includes('launchpad') && (
+                  <DockPrimaryBtn testId="subsurface-launchpad-btn" onClick={() => onOpenScene('launchpad')}>
+                    Launchpad
+                  </DockPrimaryBtn>
+                )}
               </div>
             ) : (
               <>
@@ -666,6 +675,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                     rather than flexWrap) so it can never overlap the scene
                     below it, unlike the pill row it replaces. */}
                 <div className="hub-bottom-dock-actions" style={{ display: 'flex', gap: 4, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
+                  <DockIconBtn testId="hub-ops-btn" icon={<HistoryGlyph />} label="Ops" onClick={() => setOpsOpen(true)} />
+                  {help.button}
                   <DockIconBtn testId="hub-control-station-btn" icon={<HistoryGlyph />} label="Control" onClick={() => onOpenScene('instrument-hub')} />
                   {editMode && (
                     <>
@@ -689,6 +700,16 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             )}
           </div>
         </div>
+      )}
+      {help.layer}
+      {opsOpen && (
+        <OpsHubSheet
+          player={player}
+          downlinkCount={signals.length}
+          onClose={() => setOpsOpen(false)}
+          onOpenScene={screen => { setOpsOpen(false); onOpenScene(screen) }}
+          onFocusBuilding={kind => { setOpsOpen(false); onFocusBuilding(kind) }}
+        />
       )}
     </div>
   )
