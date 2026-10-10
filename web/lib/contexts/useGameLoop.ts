@@ -1,3 +1,4 @@
+import { buildingLevel } from '@/lib/data/building-levels'
 import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
@@ -126,8 +127,8 @@ function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState 
   const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
   const target = catalog.targets.find(t => t.id === id) ?? null
   if (!mission || !target) return s
-  if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, s.player.unlockedSkillNodes ?? []).some(item => item.id === id)) return s
-  const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
+  if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, s.player.unlockedSkillNodes ?? [], buildingLevel(s.player, 'launchpad')).some(item => item.id === id)) return s
+  const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: buildingLevel(s.player, 'launchpad'), parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
   // SSL-450: switching target releases a free (F0) vehicle built for the old one, so Change never strands a rocket.
   const freeIds = new Set(ROCKET_MODELS.filter(model => model.costFrancs === 0).map(model => model.id))
   const stagedRockets = (s.player.stagedRockets ?? []).filter(vehicle =>
@@ -155,7 +156,7 @@ function finishQuickSetup(s: GameState, catalog: Catalog): GameState {
   if (next.screen === 'targets' && next.missionId) {
     const mission = missionById(next, catalog, next.missionId)
     if (!mission) return next
-    const feasible = feasibleTargetsFor(mission, catalog.targets, catalog.parts, next.player.missionsDone, next.player.launchpadUpgraded, next.player.unlockedSkillNodes ?? [])
+    const feasible = feasibleTargetsFor(mission, catalog.targets, catalog.parts, next.player.missionsDone, next.player.launchpadUpgraded, next.player.unlockedSkillNodes ?? [], buildingLevel(next.player, 'launchpad'))
     const pick = feasible.find(target => target.recommended) ?? feasible[0]
     if (!pick) return next
     next = pickTargetState(next, catalog, pick.id)
@@ -381,7 +382,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (mission?.targetId) {
         const target = catalog.targets.find(t => t.id === mission.targetId) ?? null
         const deliveryTarget = mission.deliveryTargetId ? catalog.targets.find(t => t.id === mission.deliveryTargetId) ?? null : null
-        const next = suggestBuild({ mission, target, deliveryTarget, missionsDone: prepared.player.missionsDone, launchpadUpgraded: prepared.player.launchpadUpgraded, parts: catalog.parts, unlockedSkillNodes: prepared.player.unlockedSkillNodes ?? [] })
+        const next = suggestBuild({ mission, target, deliveryTarget, missionsDone: prepared.player.missionsDone, launchpadUpgraded: prepared.player.launchpadUpgraded, launchpadLevel: buildingLevel(prepared.player, 'launchpad'), parts: catalog.parts, unlockedSkillNodes: prepared.player.unlockedSkillNodes ?? [] })
         if (mission.payload?.type === 'rover') next.drill = 'cargo-module-t1'
         const stagedVehicle = stagedRocketForMission(prepared, mission.id, mission.targetId)
         const setup = {

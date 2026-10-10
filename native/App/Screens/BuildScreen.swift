@@ -22,10 +22,37 @@ struct BuildScreen: View {
             }
             ForEach(catalog) { b in card(b, p) }
             status(sel)
+            upgrades(p)
             PrimaryButton(title: "Confirm · Build here", enabled: sel != nil && plot != nil) {
                 guard let sel, let plot else { return }
                 if store.place(sel.id, plot: plot) { picked = nil; self.plot = nil; note = nil }
                 else { note = "Placement could not be confirmed. Check requirements and try again." }
+            }
+        }
+    }
+
+    /// Placed buildings can be upgraded to level 3 (mirrors the web Edit-mode upgrade rail).
+    @ViewBuilder private func upgrades(_ p: Player) -> some View {
+        let placed = BuildingLevels.ids.filter { p.placed.contains($0) }
+        if !placed.isEmpty {
+            Eyebrow(text: "Upgrade")
+            ForEach(placed, id: \.self) { id in
+                let level = BuildingLevels.level(p, id), price = BuildingLevels.cost(id, level: level)
+                let effects = BuildingLevels.effects[id] ?? []
+                Panel {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("\(BuildingLevels.names[id] ?? id) · Level \(level) of \(BuildingLevels.maxLevel)").font(AppFont.display(16))
+                        Text("Now: \(effects[level - 1])").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                        if let price {
+                            Text("Next: \(effects[level]) · \(Economy.format(francs: price))").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                            PrimaryButton(title: p.francs >= price ? "Upgrade · \(Economy.format(francs: price))" : "Need \(Economy.format(francs: price - p.francs)) more",
+                                          enabled: p.francs >= price) { _ = store.upgradeBuilding(id) }
+                                .frame(minHeight: 44)
+                        } else {
+                            Text("Fully upgraded").font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.teal)
+                        }
+                    }
+                }
             }
         }
     }
