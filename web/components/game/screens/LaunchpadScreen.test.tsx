@@ -219,7 +219,7 @@ describe('Launchpad own-program actions', () => {
     expect(host.querySelector('[data-testid="launchpad-new-mission-build-btn"]')).not.toBeNull()
     expect(host.querySelector('[data-testid="launchpad-new-mission-contracts-btn"]')).not.toBeNull()
     expect(host.textContent).toContain('LAUNCH SATELLITE / TOOL')
-    expect(host.textContent).toContain('GO MINING')
+    expect(host.textContent).toContain('FREE OPS')
     expect(host.textContent).toContain('BUILD SOMETHING YOURSELF')
     expect(host.textContent).toContain('AVAILABLE CONTRACTS')
 

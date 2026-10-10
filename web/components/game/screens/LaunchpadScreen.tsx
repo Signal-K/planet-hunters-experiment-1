@@ -17,6 +17,7 @@ import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
 import { EARTH_BASE_PAD } from '@/lib/scene/compositions'
 import { earthStorageBuilt, sellUnitPrice } from '@/lib/systems/EconomySystem'
+import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { hasActiveBuildSiteRight, ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
 import { REFINERY_BUILD_MISSION_ID } from '@/lib/data/missions'
 import { captureGameEvent } from '@/lib/posthog'
@@ -113,7 +114,6 @@ export default function LaunchpadScreen({
   const [guideStep, setGuideStep] = useState<number | null>(null)
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
-  const [activeRunBlockerOpen, setActiveRunBlockerOpen] = useState(false)
   const [confirmingScrub, setConfirmingScrub] = useState(false)
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   const [operationBrief, setOperationBrief] = useState<'instrument' | 'mining' | 'build' | null>(null)
@@ -202,10 +202,6 @@ export default function LaunchpadScreen({
       onLaunchpadAction()
       return
     }
-    if (player.activeMission) {
-      setActiveRunBlockerOpen(true)
-      return
-    }
     if (!hasFreeOpsAccess) {
       onViewContracts()
       return
@@ -291,33 +287,6 @@ export default function LaunchpadScreen({
               <button type="button" className="launchpad-active-mission__dismiss" onClick={() => setActiveMissionCalloutDismissed(true)}>DISMISS</button>
               {onAbandonMission && <button type="button" className="launchpad-active-mission__dismiss" data-testid="launchpad-scrub-run" onClick={() => setConfirmingScrub(true)}>SCRUB</button>}
               <button type="button" className="launchpad-active-mission__resume" onClick={onResumeMission}><MissionGlyph /> RESUME MISSION</button>
-            </div>
-          </section>
-        )}
-
-        {activeRunBlockerOpen && player.activeMission && (
-          <section className="launchpad-mission-menu" data-testid="launchpad-active-run-blocker" aria-labelledby="launchpad-active-run-blocker-title">
-            <div className="launchpad-mission-menu-header">
-              <div>
-                <span className="launchpad-guide-kicker">MISSION IN PROGRESS</span>
-                <h2 id="launchpad-active-run-blocker-title">Current run is still active</h2>
-                <p>Finish or scrub your current run first. Starting Free Ops now would replace its cargo and charge state.</p>
-              </div>
-              <button type="button" className="launchpad-mission-menu-close" onClick={() => setActiveRunBlockerOpen(false)}>CLOSE</button>
-            </div>
-            <div className="launchpad-mission-menu-options">
-              <button type="button" className="launchpad-mission-choice" onClick={onResumeMission}>
-                <MissionGlyph />
-                <strong>RESUME CURRENT RUN</strong>
-                <span>{player.activeMission.label}</span>
-              </button>
-              {onAbandonMission && (
-                <button type="button" className="launchpad-mission-choice" data-testid="launchpad-scrub-blocker" onClick={() => setConfirmingScrub(true)}>
-                  <MissionGlyph />
-                  <strong>SCRUB RUN</strong>
-                  <span>Abandon this run and clear its cargo. You can start a new one after you confirm.</span>
-                </button>
-              )}
             </div>
           </section>
         )}
@@ -495,9 +464,15 @@ export default function LaunchpadScreen({
           <ActionConfirmBar
             eyebrow="Active run"
             title="Scrub this run"
-            description="Abandon the current run? Cargo and laser charges from it are cleared. A payout penalty applies."
+            description={isSettledMissionRun(player, {
+              runId: player.missionRunId,
+              missionId: player.activeMission?.id,
+              launchedAt: player.transitStartedAt,
+            })
+              ? 'This run was already collected. Scrubbing it clears the listing and does not charge a penalty.'
+              : 'Abandon the current run? Cargo and laser charges from it are cleared. A payout penalty applies.'}
             confirmLabel="Confirm Scrub"
-            onConfirm={() => { setConfirmingScrub(false); setActiveRunBlockerOpen(false); onAbandonMission() }}
+            onConfirm={() => { setConfirmingScrub(false); onAbandonMission() }}
             onDismiss={() => setConfirmingScrub(false)}
           />
         )}

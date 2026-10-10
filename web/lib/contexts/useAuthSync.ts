@@ -3,7 +3,8 @@ import { useRouter } from 'next/navigation'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
-import { getOutbox, isQueuedUpsert, queueUpsert } from '@/lib/offline/pbOutbox'
+import { getOutbox, isQueuedUpsert, queueUpdate, queueUpsert } from '@/lib/offline/pbOutbox'
+import { dropSettledMissionRuns, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { identifyUser, captureGameEvent } from '@/lib/posthog'
 import { DEFAULT_STATE, loadState, mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import { accountGameStateStorageKey, gameStateStorageKey } from '@/lib/game-state-storage'
@@ -496,6 +497,9 @@ export function useAuthSync({
       // game-state rows can lose activeMission during an equal-stage merge,
       // so use the receipt to repair the resumable marker before the player
       // sees a false "Launch Ready" state on Earth Base.
+      // A collected run must not be reattached: the receipt can still say
+      // in_progress when the completion write has not landed yet.
+      const markedComplete = new Set<string>()
       pbLandnam.collection('mission_runs')
         .getFirstListItem(`user = "${authUserId}" && status = "in_progress"`, { sort: '-launched_at' })
         .then(run => {
@@ -509,8 +513,24 @@ export function useAuthSync({
             ? run.phase as NonNullable<GameState['player']['missionPhase']>
             : 'transit'
           setState(current => {
-            if (current.player.activeMission) return current
             const transitStartedAt = Number.isFinite(launchedAt) ? launchedAt : null
+            if (isSettledMissionRun(current.player, {
+              runId: run.id,
+              missionId,
+              targetId,
+              launchedAt: transitStartedAt,
+            })) {
+              if (!markedComplete.has(run.id)) {
+                markedComplete.add(run.id)
+                queueUpdate('mission_runs', run.id, {
+                  status: 'completed',
+                  phase: 'debrief',
+                  completed_at: new Date().toISOString(),
+                })
+              }
+              return dropSettledMissionRuns(current)
+            }
+            if (current.player.activeMission) return current
             const arrivalAt = phase === 'transit' && target && transitStartedAt !== null && current.player.freeOperations
               ? transitStartedAt + travelDurationMs(target, current.player.unlockedSkillNodes ?? [], 42 * 1000)
               : null
