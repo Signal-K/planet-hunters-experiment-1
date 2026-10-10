@@ -477,6 +477,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (currentMission.requires.crew && (!currentCrewStatus.met || currentMissionCrew.length === 0)) return
     const isFirstEver = current.player.missionsDone === 0
     let launchedTransitStartedAt: number | null = null
+    let earnedLaunchBadge: 'gold' | 'silver' | null = null
     setState(s => {
       const vehicle = s.player.stagedRockets?.find(candidate => candidate.id === s.player.selectedStagedRocketId)
       if (s.screen !== 'fab' || !s.missionId || !s.targetId || s.player.activeMission || !vehicle || vehicle.location !== 'launchpad') return s
@@ -498,10 +499,17 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const arrivalAt = (timedTransit && target)
         ? transitStartedAt + travelDurationMs(target, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
+      // SSL-491: the Rocket Revolution tier follows the launch, not the later
+      // debrief, so a flight inside the window stays gold.
+      const at = skyEventNow(isDevLauncherEnabled())
+      const beforeBadge = s.player.badges?.['rocket-revolution-2026']
+      const badged = grantSkyBadges(s.player, 'launch', at)
+      const earned = badged.badges?.['rocket-revolution-2026']
+      if (earned && earned !== beforeBadge) earnedLaunchBadge = earned.tier
       return {
         ...s,
         player: {
-          ...s.player,
+          ...badged,
           pendingLaunch: remainingStagedRockets.length > 0,
           pendingRocketId: nextStagedRocket?.rocketId,
           pendingRocketLocation: nextStagedRocket?.location,
@@ -545,9 +553,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : s)
     }
     captureGameEvent('rocket_launched', { mission_id: currentMission.id, target_id: current.targetId, is_first_ever: isFirstEver })
+    if (earnedLaunchBadge) addToast(`Rocket Revolution badge · ${earnedLaunchBadge === 'gold' ? 'Gold' : 'Silver'}`, 'ok')
     if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
     if (currentMissionCrew.length > 0) enqueueSurvey('lnm_crew_first_launch', 4000)
-  }, [catalog.missions, catalog.targets, setState, stateRef])
+  }, [addToast, catalog.missions, catalog.targets, setState, stateRef])
 
   const onMiningDone = useCallback((cargo: Record<string, number>, remoteDisposition: 'store' | 'sell' = 'sell') => {
     let hasDelivery = false
@@ -1159,7 +1168,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const next: GameState = {
         ...s,
         player: {
-          ...grantSkyBadges(constructionPlayer, 'launch', skyEventNow(isDevLauncherEnabled())),
+          ...constructionPlayer,
           francs,
           activeMission: null,
           missionRunId: undefined,
