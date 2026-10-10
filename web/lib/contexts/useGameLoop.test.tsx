@@ -102,6 +102,7 @@ describe('useGameLoop concurrent mission runs', () => {
   })
 
   it('parks an active run before setting up another mission, then restores it intact', async () => {
+    const activeRun = { id: 'baseline-extraction', label: 'Baseline extraction → Eros' }
     const activeState: GameState = {
       ...DEFAULT_STATE,
       screen: 'launchpad',
@@ -113,7 +114,7 @@ describe('useGameLoop concurrent mission runs', () => {
         freeOperations: true,
         missionsDone: 3,
         placed: ['launchpad'],
-        activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
+        activeMission: activeRun,
         missionPhase: 'transit',
         transitStartedAt: 1_700_000_000_000,
         arrivalAt: 1_700_000_040_000,
@@ -148,6 +149,49 @@ describe('useGameLoop concurrent mission runs', () => {
     expect(parkedKey).toBeTruthy()
     await act(async () => {
       if (parkedKey) handleRef.current?.resumeMissionRun(parkedKey)
+    })
+
+    expect(handleRef.current?.state.missionId).toBe('baseline-extraction')
+    expect(handleRef.current?.state.targetId).toBe('eros')
+    expect(handleRef.current?.state.player.activeMission?.id).toBe('baseline-extraction')
+    await act(async () => root.unmount())
+  })
+
+  it('restores a paused run intact when there is no active run', async () => {
+    const pausedState: GameState = {
+      ...DEFAULT_STATE,
+      screen: 'launchpad',
+      missionId: 'freeops-self-directed-mining',
+      targetId: 'vesta',
+      rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+      player: {
+        ...DEFAULT_STATE.player,
+        freeOperations: true,
+        missionsDone: 3,
+        placed: ['launchpad'],
+        pausedMissionRuns: [{
+          key: 'baseline:1700000000000',
+          activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
+          missionId: 'baseline-extraction',
+          targetId: 'eros',
+          rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+          lastCargo: null,
+          missionPhase: 'transit',
+          transitStartedAt: 1_700_000_000_000,
+        }],
+      },
+    }
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const handleRef: { current: LoopHandle | null } = { current: null }
+    const onReady = (next: LoopHandle) => { handleRef.current = next }
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<LoopHarness initial={pausedState} onReady={onReady} />)
+    })
+    await act(async () => {
+      handleRef.current?.resumeMissionRun('baseline:1700000000000')
     })
 
     expect(handleRef.current?.state.missionId).toBe('baseline-extraction')
