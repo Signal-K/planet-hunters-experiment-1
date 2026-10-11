@@ -6,7 +6,8 @@ import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
 import { getOutbox, isQueuedUpsert, queueUpdate, queueUpsert } from '@/lib/offline/pbOutbox'
 import { dropSettledMissionRuns, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { identifyUser, captureGameEvent } from '@/lib/posthog'
-import { DEFAULT_STATE, loadState, mergeRemoteState, type PartialSave } from '@/lib/game-state'
+import { DEFAULT_STATE, loadState, type PartialSave } from '@/lib/game-state'
+import { resolveGameStateLoad } from '@/lib/game-state-sync'
 import { accountGameStateStorageKey, gameStateStorageKey } from '@/lib/game-state-storage'
 import { isResumableMissionScreen } from '@/lib/initial-route'
 import type { GameState } from '@/lib/game-types'
@@ -150,6 +151,10 @@ export function useAuthSync({
 
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
+  // Capture this before React's normal persistence effect writes the rendered
+  // DEFAULT_STATE into a freshly authenticated account slot. That automatic
+  // placeholder is not a real local save and must not win over the server.
+  const hadAccountStateOnAuth = useRef(false)
   // Kept in sync with authUserId's deferred-to-mount initialization above.
   const knownAuthRecordId = useRef<string | null>(null)
   const landnamAuthAttemptedFor = useRef<string | null>(null)
@@ -184,6 +189,7 @@ export function useAuthSync({
     // as a new sign-in and clears landnamSynced, so the Hub sticks on
     // NOT SYNCED after a cold start even though the exchange already worked.
     knownAuthRecordId.current = record.id
+    hadAccountStateOnAuth.current = !!localStorage.getItem(accountGameStateStorageKey(storageKey, record.id))
     if (record.id !== authUserId) {
       setAuthUserId(record.id)
     }
@@ -318,6 +324,7 @@ export function useAuthSync({
       // Sign-in/account creation may happen after the provider hydrated the
       // guest/legacy slot. Never let that state become the new account's
       // first save while remote sync is warming up (KES-324).
+      hadAccountStateOnAuth.current = !!localStorage.getItem(accountGameStateStorageKey(storageKey, record.id))
       localStorage.removeItem(storageKey)
       setState(loadState(accountGameStateStorageKey(storageKey, record.id)))
     }
@@ -567,7 +574,7 @@ export function useAuthSync({
       const parsedUpdatedAt = typeof record.updated === 'string' ? new Date(record.updated).getTime() : NaN
       const remoteUpdatedAt = Number.isFinite(parsedUpdatedAt) ? parsedUpdatedAt : undefined
       const remoteState: PartialSave = { ...(record.state as PartialSave), updatedAt: remoteUpdatedAt }
-      setState(current => mergeRemoteState(current, remoteState))
+      setState(current => resolveGameStateLoad(current, remoteState, hadAccountStateOnAuth.current).state)
       setBackendReady(true)
       restoreInProgressRun()
     }
@@ -575,13 +582,12 @@ export function useAuthSync({
     function handleLoadFailure(err: unknown) {
       if (!active) return
       if (typeof err === 'object' && err && 'status' in err && (err as { status: number }).status === 404) {
-        // Confirmed no record. If this device already has a local save, create
-        // immediately instead of waiting for the debounced persist effect; the
-        // first-sync path is the one most likely to be interrupted by route
-        // redirects or test remounts.
+        // A load is the existence check. Only after this confirmed miss may a
+        // default be created; attempting create before the lookup caused an
+        // avoidable 400 for returning accounts with older record ids.
         backendLoadedFor.current = authUserId!
         setBackendReady(true)
-        if (localStorage.getItem(localStateKey)) {
+        if (resolveGameStateLoad(stateRef.current, null, hadAccountStateOnAuth.current).shouldCreateRemote) {
           persistRemoteState(authUserId!, stateRef.current).catch(() => {})
         }
         return
