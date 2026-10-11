@@ -104,7 +104,9 @@ describe('DebriefScreen own-program outcomes', () => {
     // SSL-345: Debrief uses the shared top meta bar, not a one-off header.
     expect(host.querySelectorAll('.top-bar')).toHaveLength(1)
     expect(host.querySelector('.debrief-hud-header')).toBeNull()
-    expect(host.querySelector('.top-bar__title')?.textContent).toBe('DEPLOYMENT')
+    expect(host.querySelector('.top-bar__title')).toBeNull()
+    expect(host.querySelectorAll('.debrief-result-panel')).toHaveLength(1)
+    expect(host.textContent).not.toContain('DEPLOYMENT')
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')

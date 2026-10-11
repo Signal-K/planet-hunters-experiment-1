@@ -126,19 +126,25 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 
   return (
     <div className="game-screen theme-blueprint debrief-game">
-      <DebriefCanvas rocketImageSrc={rocketDisplay.img} />
+      <DebriefCanvas rocketImageSrc={rocketDisplay.img} scene={isOrbitalInstrumentDeployment ? 'orbit' : 'berth'} />
       <div className="debrief-game__world-shade" aria-hidden="true" />
 
       <TopBar
-        scene
-        eyebrow="MISSION COMPLETE"
-        title={isOrbitalInstrumentDeployment ? 'DEPLOYMENT' : 'DEBRIEF'}
-        right={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{help.button}<span className="debrief-hud-header__location">{isOrbitalInstrumentDeployment ? 'EARTH ORBIT · INSTRUMENT ONLINE' : 'EARTH RECEIVING BERTH · 01'}</span></span>}
+        right={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{help.button}</span>}
       />
       {help.layer}
 
       <div className={`debrief-game__content screen-scroll`} data-ui-zone={UI_ZONES.screenContent}>
         <SkyBadgeRow badges={badges} className="debrief-sky-badges" />
+        {isOrbitalInstrumentDeployment ? (
+          <section className="debrief-result-panel" aria-label="Mission result" data-testid="debrief-result-panel">
+            <div className="debrief-result-panel__status"><span aria-hidden="true" /> Commissioned · instrument online</div>
+            <h2 className="debrief-result-panel__title">{mission.title}</h2>
+            <p className="debrief-result-panel__kicker">Program Outcome</p>
+            <p className="debrief-result-panel__outcome">{mission.programReward?.outcome}</p>
+            <p className="debrief-result-panel__note">{mission.payload?.name ?? 'Instrument'} remains in Earth orbit. Its sky-side status indicator shows when a daily downlink is ready to review. Stationed at {target.name}.</p>
+          </section>
+        ) : (
         <section className="debrief-mission-strip" aria-label="Mission result">
           <div className="debrief-mission-strip__status"><span aria-hidden="true" /> {shipDestroyed ? 'HULL LOST · CARGO RECOVERED' : isProgramOperation ? 'COMMISSIONED · INSTRUMENT ONLINE' : 'DOCKED · MISSION COMPLETE'}</div>
           <div className="debrief-mission-strip__route">
@@ -149,10 +155,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             <div><span>{isProgramOperation ? 'STATIONED AT' : 'RETURNED FROM'}</span><strong>{target.name}</strong></div>
           </div>
         </section>
+        )}
 
         {/* SSL-479: payout, mining fee and transport fee sit under the mission
             strip so they are on screen before any vehicle teardown. */}
-        {isFreeHaul ? (
+        {isOrbitalInstrumentDeployment ? null : isFreeHaul ? (
           <CargoDestinationPanel
             cargo={cargo}
             minerals={minerals}

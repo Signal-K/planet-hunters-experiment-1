@@ -16,10 +16,29 @@
   pointer-events: auto;
 }
 
-/* Phone and short landscape: one sky row. A stacked card covered the
-   launchpad callout's close control and the Exchange sell button. */
-@media (max-width: 520px) and (orientation: portrait),
-  (orientation: landscape) and (max-height: 500px) {
+/* Phone and short landscape: one sky chip. A stacked card covered the
+   launchpad callout and the dock. Portrait keeps it in the upper sky,
+   clear of the tower and the bottom rail. */
+@media (max-width: 520px) and (orientation: portrait) {
+  .card {
+    top: auto;
+    bottom: 96px;
+    left: 12px;
+    right: auto;
+    max-width: 210px;
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    max-width: calc(100% - 24px);
+    padding: 4px 4px 4px 8px;
+    gap: 8px;
+  }
+  .copy, .count { display: none; }
+  .icon { width: 32px; height: 32px; }
+  .dismiss { margin-left: 0; padding: 8px 12px; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
   .card {
     top: auto;
     bottom: 56px;
@@ -51,9 +70,11 @@
 
 @media (orientation: landscape) and (max-height: 500px) {
   .card {
-    top: 60px;
+    top: 8px;
     bottom: auto;
     right: 12px;
+    left: auto;
+    max-width: 200px;
   }
 }
 

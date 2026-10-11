@@ -107,6 +107,22 @@
   .balance { margin-top: 4px; }
 }
 
+/* Phone portrait: one header row. A second title line plus stacked
+   utility rows crowded the sky and pushed the first-contract card onto
+   the launch tower. */
+@media (max-width: 520px) and (orientation: portrait) {
+  .topHud {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px 8px 8px;
+  }
+  .eyebrow { display: none; }
+  .topRow { width: auto; flex: 0 1 auto; min-width: 0; }
+  .balance { margin-top: 0; }
+  .root { --hub-ground: 44%; }
+}
+
 @media (min-width: 721px) and (max-width: 1023px) and (max-height: 700px) {
   .root {
     --hub-ground: 34%;

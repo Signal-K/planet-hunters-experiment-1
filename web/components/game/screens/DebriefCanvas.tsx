@@ -7,6 +7,8 @@ import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 
 interface DebriefCanvasProps {
   rocketImageSrc?: string
+  /** Orbit deployments have no returning vehicle and no hangar plate. */
+  scene?: 'berth' | 'orbit'
 }
 
 const HANGAR = '/game/assets/base/hangar_flat.png'
@@ -24,7 +26,7 @@ function tokenColor(token: string, fallback: number): number {
  * visible berth and a readable ship silhouette, not a receipt page with a
  * decorative status icon.
  */
-export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
+export default function DebriefCanvas({ rocketImageSrc, scene = 'berth' }: DebriefCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -47,26 +49,29 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
           canvas,
           width,
           height,
-          background: 0xeef3f8,
-          antialias: false,
+          background: 0x10182c,
+          antialias: true,
           autoDensity: true,
           resolution: capDpr(),
         })
         if (destroyed) return
 
-        const hangar = await Assets.load<Texture>(HANGAR)
+        const showVehicle = scene !== 'orbit'
+        const hangar = showVehicle ? await Assets.load<Texture>(HANGAR) : null
         if (destroyed) return
 
         let shipTexture: Texture | null = null
-        try {
-          shipTexture = await Assets.load<Texture>(rocketImageSrc ?? FALLBACK_SHIP)
-        } catch {
-          try { shipTexture = await Assets.load<Texture>(FALLBACK_SHIP) } catch { shipTexture = null }
+        if (showVehicle) {
+          try {
+            shipTexture = await Assets.load<Texture>(rocketImageSrc ?? FALLBACK_SHIP)
+          } catch {
+            try { shipTexture = await Assets.load<Texture>(FALLBACK_SHIP) } catch { shipTexture = null }
+          }
         }
         if (destroyed) return
 
-        const scene = new Container()
-        app.stage.addChild(scene)
+        const world = new Container()
+        app.stage.addChild(world)
         const colors = {
           skyTop: tokenColor('--ln-world-dusk-top', 0x161a38),
           skyHorizon: tokenColor('--ln-world-dusk-horizon', 0x4c315b),
@@ -74,31 +79,35 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
           floorEdge: tokenColor('--ln-world-outline', 0x16293b),
           trim: tokenColor('--ln-world-trim-teal', 0x2a9aa3),
           light: tokenColor('--ln-world-hull-lit', 0xfaf7f0),
+          grass: tokenColor('--ln-world-grass', 0x3e6a46),
         }
 
-        // Light blueprint sky and apron (SSL-423): ice gradient, no starfield.
         const background = new Graphics()
         background.name = 'arrival-sky'
-        scene.addChild(background)
+        world.addChild(background)
 
         const atmosphere = new Graphics()
         atmosphere.name = 'arrival-atmosphere'
-        scene.addChild(atmosphere)
+        world.addChild(atmosphere)
 
-        const hangarSprite = new Sprite(hangar)
-        hangarSprite.name = 'arrival-hangar'
-        hangarSprite.anchor.set(0.5, 1)
-        scene.addChild(hangarSprite)
+        const hangarSprite = hangar ? new Sprite(hangar) : null
+        if (hangarSprite) {
+          hangarSprite.name = 'arrival-hangar'
+          hangarSprite.anchor.set(0.5, 1)
+          world.addChild(hangarSprite)
+        }
 
-        const berth = new Graphics()
-        berth.name = 'arrival-berth-lights'
-        scene.addChild(berth)
+        const berth = showVehicle ? new Graphics() : null
+        if (berth) {
+          berth.name = 'arrival-berth-lights'
+          world.addChild(berth)
+        }
 
         const ship = shipTexture ? new Sprite(shipTexture) : null
         if (ship) {
           ship.name = 'arrival-ship'
           ship.anchor.set(0.5)
-          scene.addChild(ship)
+          world.addChild(ship)
         }
 
         const layout = () => {
@@ -117,25 +126,32 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
             background.rect(0, (nextHeight * i) / bands, nextWidth, nextHeight / bands + 1).fill({ color })
           }
           atmosphere.clear()
-          atmosphere.rect(0, nextHeight * 0.72, nextWidth, nextHeight * 0.28).fill({ color: colors.floor, alpha: 1 })
-          atmosphere.rect(0, nextHeight * 0.72, nextWidth, 3).fill({ color: colors.floorEdge, alpha: 0.9 })
+          const floorColor = showVehicle ? colors.floor : colors.grass
+          const floorTop = showVehicle ? 0.72 : 0.62
+          atmosphere.rect(0, nextHeight * floorTop, nextWidth, nextHeight * (1 - floorTop)).fill({ color: floorColor, alpha: 1 })
+          atmosphere.rect(0, nextHeight * floorTop, nextWidth, 4).fill({ color: colors.floorEdge, alpha: 0.9 })
+          atmosphere.rect(0, nextHeight * (floorTop - 0.08), nextWidth, nextHeight * 0.08).fill({ color: colors.skyHorizon, alpha: 0.28 })
 
           // Wide landscape: the rocket parks in the left third and the result cards take the right.
           const wide = nextWidth >= 900 && nextWidth > nextHeight * 1.3
           const cx = nextWidth * (wide ? 0.26 : 0.5)
-          const hangarWidth = wide ? Math.min(nextWidth * 0.44, 560) : Math.min(nextWidth * 0.78, 680)
-          const hangarScale = hangarWidth / hangar.width
-          hangarSprite.scale.set(hangarScale)
-          hangarSprite.x = cx
-          hangarSprite.y = nextHeight * 0.96
+          if (hangarSprite && hangar) {
+            const hangarWidth = wide ? Math.min(nextWidth * 0.44, 560) : Math.min(nextWidth * 0.78, 680)
+            const hangarScale = hangarWidth / hangar.width
+            hangarSprite.scale.set(hangarScale)
+            hangarSprite.x = cx
+            hangarSprite.y = nextHeight * 0.96
+          }
 
-          const berthX = cx
-          const berthY = nextHeight * 0.78
-          berth.clear()
-          berth.ellipse(berthX, berthY, Math.min(150, nextWidth * 0.2), 18).stroke({ color: colors.trim, alpha: 0.82, width: 3 })
-          berth.ellipse(berthX, berthY, Math.min(96, nextWidth * 0.13), 10).stroke({ color: colors.light, alpha: 0.72, width: 2 })
-          for (let i = -3; i <= 3; i++) {
-            berth.circle(berthX + i * Math.min(34, nextWidth * 0.045), berthY, 2.5).fill({ color: i === 0 ? colors.light : colors.trim, alpha: 1 })
+          if (berth) {
+            const berthX = cx
+            const berthY = nextHeight * 0.78
+            berth.clear()
+            berth.ellipse(berthX, berthY, Math.min(150, nextWidth * 0.2), 18).stroke({ color: colors.trim, alpha: 0.82, width: 3 })
+            berth.ellipse(berthX, berthY, Math.min(96, nextWidth * 0.13), 10).stroke({ color: colors.light, alpha: 0.72, width: 2 })
+            for (let i = -3; i <= 3; i++) {
+              berth.circle(berthX + i * Math.min(34, nextWidth * 0.045), berthY, 2.5).fill({ color: i === 0 ? colors.light : colors.trim, alpha: 1 })
+            }
           }
 
           if (ship) {
@@ -143,7 +159,6 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
             ship.scale.set(shipWidth / Math.max(shipTexture?.width ?? 1, 1))
             ship.x = cx
             ship.y = nextHeight * 0.68
-            ship.texture.source.scaleMode = 'nearest'
           }
         }
 
@@ -163,7 +178,7 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
       }
       canvas.remove()
     }
-  }, [rocketImageSrc])
+  }, [rocketImageSrc, scene])
 
   return <div ref={containerRef} className="debrief-arrival-canvas" aria-hidden="true" />
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { structureBuildMs, hubConstructionProgress } from '@/lib/systems/HubConstructionSystem'
 import { useSharedSecond } from '@/lib/hooks/useSharedSecond'
 
@@ -241,28 +242,33 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             </span>
           </button>
 
+          {(() => {
+            const clear = callout.placement === 'viewport-clear'
+            // A transformed ancestor makes `position: fixed` stick to the
+            // tower. Viewport-clear prompts portal to the document so the
+            // card can sit in open sky, fully opaque, with the link intact.
+            const bubble = (
           <div
+            className={clear ? 'hub-callout hub-callout--clear' : undefined}
             data-testid={`building-${kind}-callout`}
             onClick={e => e.stopPropagation()}
-            style={{
-              // 50% is the building center (the wrapper is translateX(-50%)
-              // onto its plot); bubbleLeft then offsets the box from there.
-              position: callout.placement === 'viewport-clear' ? 'fixed' : 'absolute',
-              left: callout.placement === 'viewport-clear' ? 'calc(50vw - 104px)' : `calc(50% + ${bubbleLeft}px)`,
-              top: callout.placement === 'viewport-clear' ? 'clamp(92px, 13vh, 132px)' : undefined,
-              bottom: callout.placement === 'viewport-clear' ? undefined : 'calc(100% + 16px)',
+            style={clear ? {
+              opacity: calloutOpen ? 1 : 0,
+              pointerEvents: calloutOpen ? 'auto' : 'none',
+              visibility: calloutOpen ? 'visible' : 'hidden',
+            } : {
+              position: 'absolute',
+              left: `calc(50% + ${bubbleLeft}px)`,
+              bottom: 'calc(100% + 16px)',
               transform: calloutOpen ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.96)',
               transformOrigin: `bottom ${tailLeft}px`,
-              width: CALLOUT_W, zIndex: callout.placement === 'viewport-clear' ? 100 : 22,
-              // This must stay opaque: the gantry's blue struts previously showed
-              // through the onboarding copy and made the CTA look clipped.
+              width: CALLOUT_W, zIndex: 22,
               background: 'var(--hub-panel)',
               border: '1.5px solid var(--hub-outline)',
               borderRadius: 12, padding: 'var(--ln-s-3)',
               boxShadow: '0 2px 0 var(--hub-outline) inset, 0 24px 48px var(--ln-overlay)',
               opacity: calloutOpen ? 1 : 0,
               pointerEvents: calloutOpen ? 'auto' : 'none',
-              // A closed callout is hidden, not just transparent: its buttons must leave the tab order and hit-testing.
               visibility: calloutOpen ? 'visible' : 'hidden',
               transition: calloutOpen ? 'opacity 160ms ease, transform 160ms ease' : 'opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms',
               textAlign: 'left',
@@ -332,6 +338,10 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
               borderTop: '7.5px solid var(--hub-panel)',
             }} />}
           </div>
+            )
+            if (clear && typeof document !== 'undefined') return createPortal(bubble, document.body)
+            return bubble
+          })()}
         </>
       )}
     </div>
