@@ -148,7 +148,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   // entirely. Values below are sized to each building's actual rendered
   // silhouette (width x pixelHeight/pixelWidth of its PNG) plus headroom;
   // buildings whose art is short/squat keep the old w*0.6-ish default.
-  const HIT_H: Record<string, number> = { launchpad: 140, 'surface-silo': 70, refinery: 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
+  const HIT_H: Record<string, number> = { launchpad: 260, 'surface-silo': 70, refinery: 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
   // Post-tutorial Hub prominence pass (STS-631): telescope/satellite
   // buildings recede visually while they're unlocked but still in their
   // early, not-yet-actively-producing state — Transit Telescope
@@ -381,7 +381,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 const siloStyle = silo ? { ...style, left: '50%' } : style
                 const aspect = EARTH_BASE_STRUCTURE_SIZES[kind]
                 const pad = kind === 'launchpad'
-                return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 200 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={siloStyle} calloutAlign={calloutAlign} />
+                return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={siloStyle} calloutAlign={calloutAlign} />
               })}
             </div>
           </div>

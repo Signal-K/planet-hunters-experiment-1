@@ -903,7 +903,7 @@ button { cursor: pointer; }
   .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 36px; bottom: auto !important; left: 12px; }
   .portrait-canvas:has([data-screen="hub"]) .hub-sky-craft-control { top: 56px; }
   .portrait-canvas:has([data-screen="hub"]) [data-testid="hub-clock-widget"] { display: flex !important; }
-  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 32%; }
+  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 22%; }
 
   .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock-inner {
     max-width: 440px !important;

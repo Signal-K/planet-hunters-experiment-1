@@ -74,8 +74,13 @@ export function BaseLayerScene({
       </div>
       <div className={styles.grade} data-layer="season" />
       <div className={styles.timeShade} data-layer="time" />
+      <div className={styles.props} data-layer="props">
+        <img src="/game/assets/base/kit/prop-tree-a.png" alt="" draggable={false} className={styles.prop} data-prop="tree-a" />
+        <img src="/game/assets/base/kit/prop-tree-b.png" alt="" draggable={false} className={styles.prop} data-prop="tree-b" />
+        <img src="/game/assets/base/kit/prop-rock.png" alt="" draggable={false} className={styles.prop} data-prop="rock" />
+        <img src="/game/assets/base/kit/prop-tree-c.png" alt="" draggable={false} className={styles.prop} data-prop="tree-c" />
+      </div>
       <div className={styles.ground} data-layer="ground">
-        <div className={styles.trees} data-layer="trees" />
         <div className={styles.verge} />
         {paths.map(x => <span key={x} className={styles.path} data-layer="path" style={{ left: `${x}%` }} />)}
         <div className={styles.road} data-layer="road" />

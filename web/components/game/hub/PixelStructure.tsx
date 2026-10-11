@@ -137,13 +137,19 @@ function PixelImg({ kind, tier, src, flicker }: { kind: string; tier: number; sr
   )
 }
 
-/** Wide low slab from the kit, with the rocket scaled on its own so it stays about twice the hangar. */
+/** Flat tiled slab, with a separate gantry and rocket standing on it at a uniform pixel scale. */
 function LaunchpadKit({ tier }: { tier: number }) {
-  const rocket = tier >= 3 ? `${KIT}/upgraded-pad-rocket.png` : `${KIT}/starter-pad-rocket.png`
   return (
     <span data-pixel-structure="launchpad" data-tier={tier} className={styles.padStack}>
-      <span className={styles.padSlab} />
-      <img src={rocket} alt="" draggable={false} className={styles.padRocket} />
+      <span className={styles.padSlab}>
+        <img src={`${KIT}/pad-end-left.png`} alt="" draggable={false} className={styles.padEnd} />
+        <span className={styles.padFill} />
+        <img src={`${KIT}/pad-end-right.png`} alt="" draggable={false} className={styles.padEnd} />
+      </span>
+      <span className={styles.padCraft}>
+        <img src={`${KIT}/pad-gantry.png`} alt="" draggable={false} className={styles.padGantry} />
+        <img src={`${KIT}/pad-rocket.png`} alt="" draggable={false} className={styles.padRocket} />
+      </span>
     </span>
   )
 }

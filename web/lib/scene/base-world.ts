@@ -14,17 +14,16 @@ export type WorldTimeGrade = (typeof WORLD_TIME_GRADES)[number]
 export interface BiomeLayer {
   id: 'far' | 'hills' | 'treeline'
   src: string
-  /** Height of the band above the ground line. */
+  /** Height of the band as a fraction of the sky above the ground line. */
   height: string
   /** Seconds for one parallax wrap. Farther bands are slower. */
   parallaxSeconds: number
 }
 
-/** Sunset mountain bands for the approved base. Transparent layers, not one backdrop. */
+/** Two sunset ridges: far purple, nearer and darker. The green treeline stays out of this set. */
 const MOUNTAIN_LAYERS: readonly BiomeLayer[] = [
-  { id: 'far', src: '/game/assets/base/layers/mountains-far.png', height: '46%', parallaxSeconds: 140 },
-  { id: 'hills', src: '/game/assets/base/layers/mountains-mid.png', height: '32%', parallaxSeconds: 96 },
-  { id: 'treeline', src: '/game/assets/base/layers/mountains-near.png', height: '24%', parallaxSeconds: 64 },
+  { id: 'far', src: '/game/assets/base/layers/mountains-far.png', height: '58%', parallaxSeconds: 140 },
+  { id: 'hills', src: '/game/assets/base/layers/mountains-mid.png', height: '40%', parallaxSeconds: 90 },
 ]
 
 /** Launch complex stays this wide at every tier. Portrait CSS may ease it so neighbours keep a gap. */

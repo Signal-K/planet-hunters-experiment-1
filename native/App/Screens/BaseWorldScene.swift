@@ -16,20 +16,20 @@ struct BaseWorldScene: View {
             let w = geo.size.width
             let h = geo.size.height
             let portrait = h > w * 1.15
-            let ground = h * (h < 500 ? 0.68 : 0.78)
+            let ground = h * (portrait ? 0.65 : 0.78)
             TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { ctx in
                 let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
                 ZStack(alignment: .topLeading) {
                     Art.view("base/layers/sky.png")
                         .resizable().interpolation(.none).scaledToFill()
                         .frame(width: w, height: h).clipped()
-                    mountain("base/layers/mountains-far.png", height: h * 0.46, ground: ground, width: w, drift: t / 140)
-                    mountain("base/layers/mountains-mid.png", height: h * 0.32, ground: ground, width: w, drift: t / 96)
-                    mountain("base/layers/mountains-near.png", height: h * 0.24, ground: ground, width: w, drift: t / 64)
+                    mountain("base/layers/mountains-far.png", height: ground * 0.55, ground: ground, width: w, drift: t / 140)
+                    mountain("base/layers/mountains-mid.png", height: ground * 0.38, ground: ground, width: w, drift: t / 96)
                     cloud(t: t, width: w, height: h, lane: 0.08, scale: 0.18, speed: 92)
                     cloud(t: t, width: w, height: h, lane: 0.16, scale: 0.14, speed: 120)
                     cloud(t: t, width: w, height: h, lane: 0.05, scale: 0.12, speed: 108)
                     groundStack(width: w, height: h, ground: ground)
+                    props(width: w, ground: ground, portrait: portrait)
                     shaft(width: w, height: h)
                     ForEach(placed, id: \.self) { kind in
                         if let sprite = spriteName(kind) {
@@ -72,18 +72,45 @@ struct BaseWorldScene: View {
         let road: CGFloat = height < 500 ? 28 : 36
         return ZStack(alignment: .top) {
             Art.view("base/layers/dirt.png").resizable(resizingMode: .tile).interpolation(.none)
-            Art.view("base/kit/trees.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: 48).offset(y: -28)
-            Art.view("base/kit/grass.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: grass)
-            Art.view("base/kit/road-a.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: road).offset(y: grass - 6)
+            Art.view("base/kit/grass.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: grass).offset(y: -(grass + road - 6))
+            Art.view("base/kit/road-a.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: road).offset(y: -road)
         }
         .frame(width: width, height: height - ground, alignment: .top)
         .position(x: width / 2, y: ground + (height - ground) / 2)
         .allowsHitTesting(false)
     }
 
+    private func props(width: CGFloat, ground: CGFloat, portrait: Bool) -> some View {
+        let treeH: CGFloat = portrait ? 40 : (ground < 400 ? 36 : 52)
+        let midH: CGFloat = portrait ? 34 : (ground < 400 ? 40 : 58)
+        return ZStack {
+            prop("base/kit/prop-tree-a.png", x: width * (portrait ? 0.31 : 0.015), ground: ground, height: portrait ? 32 : treeH)
+            if !portrait {
+                prop("base/kit/prop-tree-b.png", x: width * 0.203, ground: ground, height: ground < 400 ? 28 : 36)
+            }
+            prop("base/kit/prop-rock.png", x: width * (portrait ? 0.68 : 0.788), ground: ground, height: 14)
+            if !portrait {
+                prop("base/kit/prop-tree-c.png", x: width * 0.904, ground: ground, height: midH)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    private func prop(_ path: String, x: CGFloat, ground: CGFloat, height: CGFloat) -> some View {
+        Art.view(path)
+            .resizable().interpolation(.none).scaledToFit()
+            .frame(height: height)
+            .position(x: x, y: ground - height / 2)
+    }
+
     private func shaft(width: CGFloat, height: CGFloat) -> some View {
-        let dock = height * 0.10
+        let portrait = height > width * 1.15
+        let ground = height * (portrait ? 0.65 : 0.78)
         let sh: CGFloat = height < 500 ? 44 : 56
+        let road: CGFloat = height < 500 ? 22 : 30
+        let dock = height * 0.10 + 8
+        let underRoad = (height - ground) - road - 6 - sh
+        let fromBottom = max(dock, underRoad)
         return Button(action: onShaft) {
             Art.view("base/kit/underground-window.png")
                 .resizable().interpolation(.none).scaledToFit()
@@ -92,28 +119,39 @@ struct BaseWorldScene: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .position(x: width / 2, y: height - dock - 8 - sh / 2)
+        .position(x: width / 2, y: height - fromBottom - sh / 2)
         .accessibilityLabel("Open the lift")
     }
 
     private func structure(_ kind: String, sprite: String, width: CGFloat, height: CGFloat, ground: CGFloat, portrait: Bool, level: Int) -> some View {
         let center = width * anchor(kind, plot: plots[kind] ?? 0, portrait: portrait)
         if kind == "launchpad" {
-            let padW = width * (portrait ? 0.42 : 0.55)
+            let padW = width * (portrait ? 0.30 : 0.55)
             let padH: CGFloat = portrait ? 40 : 48
-            let hangH = max(44, width * 0.14) * (129.0 / 238.0)
-            let rocketH = min(hangH * 2, max(64, ground - 72))
-            let rocketW = rocketH * (65.0 / 93.0)
-            let stackH = padH + rocketH * 0.82
+            let craftH = min(portrait ? width * 0.28 : width * 0.152, portrait ? 140 : 220)
+            let capW = padH
+            let tileW = padH * 4
+            let tiles = max(1, Int(ceil((padW - capW * 2) / tileW)))
+            let stackH = padH + craftH
             return Button { onStructure(kind) } label: {
                 ZStack(alignment: .bottom) {
-                    Art.view("base/kit/starter-pad-platform.png")
-                        .resizable(resizingMode: .tile).interpolation(.none)
-                        .frame(width: padW, height: padH)
-                    Art.view(sprite)
-                        .resizable().interpolation(.none).scaledToFit()
-                        .frame(width: rocketW, height: rocketH)
-                        .padding(.bottom, 16)
+                    HStack(spacing: 0) {
+                        Art.view("base/kit/pad-end-left.png").resizable().interpolation(.none).scaledToFit().frame(width: capW, height: padH)
+                        HStack(spacing: 0) {
+                            ForEach(0..<tiles, id: \.self) { _ in
+                                Art.view("base/kit/pad-tile.png").resizable().interpolation(.none).scaledToFit().frame(width: tileW, height: padH)
+                            }
+                        }
+                        .frame(maxWidth: max(8, padW - capW * 2), alignment: .leading)
+                        .clipped()
+                        Art.view("base/kit/pad-end-right.png").resizable().interpolation(.none).scaledToFit().frame(width: capW, height: padH)
+                    }
+                    .frame(width: padW, height: padH)
+                    HStack(alignment: .bottom, spacing: 4) {
+                        Art.view("base/kit/pad-gantry.png").resizable().interpolation(.none).scaledToFit().frame(height: craftH)
+                        Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none).scaledToFit().frame(height: craftH)
+                    }
+                    .padding(.bottom, padH)
                 }
                 .frame(width: padW, height: stackH, alignment: .bottom)
                 .frame(minWidth: 44, minHeight: 44)
@@ -141,7 +179,7 @@ struct BaseWorldScene: View {
 
     private func spriteName(_ kind: String) -> String? {
         switch kind {
-        case "launchpad": return "base/kit/starter-pad-rocket.png"
+        case "launchpad": return "base/kit/pad-rocket.png"
         case "hangar", "garage": return "base/kit/starter-hangar.png"
         case "command": return "base/kit/starter-cabin.png"
         case "refinery": return "base/kit/starter-silo.png"
@@ -155,10 +193,10 @@ struct BaseWorldScene: View {
     /// Centres match the web anchors. Kinds without one spread across the remaining plots.
     private func anchor(_ kind: String, plot: Int, portrait: Bool) -> CGFloat {
         switch kind {
-        case "hangar", "garage": return 0.11
-        case "launchpad": return 0.50
-        case "command": return 0.84
-        case "refinery": return 0.96
+        case "hangar", "garage": return portrait ? 0.145 : 0.11
+        case "launchpad": return portrait ? 0.50 : 0.50
+        case "command": return portrait ? 0.78 : 0.84
+        case "refinery": return portrait ? 0.93 : 0.96
         default:
             let slots: [CGFloat] = portrait ? [0.16, 0.38, 0.62, 0.84] : [0.14, 0.36, 0.64, 0.86]
             return slots[min(max(plot, 0), 3)]
@@ -166,11 +204,11 @@ struct BaseWorldScene: View {
     }
 
     private func widthFraction(_ kind: String, portrait: Bool, level _: Int) -> CGFloat {
-        if kind == "launchpad" { return portrait ? 0.42 : 0.55 }
+        if kind == "launchpad" { return portrait ? 0.30 : 0.55 }
         switch kind {
-        case "hangar", "garage": return 0.14
-        case "command": return 0.08
-        case "refinery": return 0.06
+        case "hangar", "garage": return portrait ? 0.26 : 0.14
+        case "command": return portrait ? 0.12 : 0.08
+        case "refinery": return portrait ? 0.11 : 0.06
         case "astronaut-academy": return 0.12
         default: return 0.10
         }

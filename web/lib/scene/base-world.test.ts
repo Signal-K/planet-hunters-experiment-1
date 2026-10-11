@@ -21,14 +21,13 @@ import {
 
 describe('base world layers', () => {
   it('ships two biome layer sets and borrows them for the other two biomes', () => {
-    expect(biomeLayers('mountains').map(layer => layer.id)).toEqual(['far', 'hills', 'treeline'])
+    expect(biomeLayers('mountains').map(layer => layer.id)).toEqual(['far', 'hills'])
     expect(biomeLayers('desert').map(layer => layer.id)).toEqual(['far'])
     expect(biomeLayers('tundra').map(layer => layer.src)).toEqual(biomeLayers('mountains').map(layer => layer.src))
     expect(biomeLayers('coast').map(layer => layer.src)).toEqual(biomeLayers('desert').map(layer => layer.src))
     expect(biomeLayers('mountains').map(layer => layer.src)).toEqual([
       '/game/assets/base/layers/mountains-far.png',
       '/game/assets/base/layers/mountains-mid.png',
-      '/game/assets/base/layers/mountains-near.png',
     ])
   })
 
