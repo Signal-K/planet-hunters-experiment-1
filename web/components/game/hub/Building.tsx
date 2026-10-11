@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { structureBuildMs, hubConstructionProgress } from '@/lib/systems/HubConstructionSystem'
+import { useSharedSecond } from '@/lib/hooks/useSharedSecond'
 
 /**
  * DOM half of a hub structure — hit area, status pill, and the notification
@@ -107,19 +108,9 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
-  // Nothing else in the codebase ticks in the background — everything else
-  // resolves (now - startedAt) lazily on renders that happen for other
-  // reasons. A player just watching a structure build won't reliably trigger
-  // those, so this is the one place a local interval is worth it: just to
-  // force a re-render every second so the countdown visibly moves.
-  const [, forceTick] = useState(0)
-  useEffect(() => {
-    if (status !== 'building') return
-    const id = setInterval(() => forceTick(t => t + 1), 1000)
-    return () => clearInterval(id)
-  }, [status])
+  const now = useSharedSecond()
   const buildRemainingS = status === 'building'
-    ? Math.max(0, Math.ceil(structureBuildMs(kind) * (1 - hubConstructionProgress(buildStartedAt, kind)) / 1000))
+    ? Math.max(0, Math.ceil(structureBuildMs(kind) * (1 - hubConstructionProgress(buildStartedAt, kind, now || undefined)) / 1000))
     : 0
   const displaySub = status === 'building' ? `BUILDING · ${buildRemainingS}S` : sub
   // Hover (desktop) and press (mobile — there's no real :hover on touch) both

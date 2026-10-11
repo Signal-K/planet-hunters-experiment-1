@@ -15,6 +15,7 @@ export class GameLoop {
   private lastTime = 0
   private rafId = 0
   private running = false
+  private readonly onVisibilityChange: () => void
 
   constructor(scene: Scene, app: Application, opts: GameLoopOptions = {}) {
     this.scene = scene
@@ -22,6 +23,16 @@ export class GameLoop {
     this.fixedTimestep = 1 / (opts.fixedHz ?? 60)
     this.maxCatchUp = opts.maxCatchUpSeconds ?? 0.05
     this.tick = this.tick.bind(this)
+    this.onVisibilityChange = () => {
+      if (!this.running) return
+      if (document.hidden) {
+        cancelAnimationFrame(this.rafId)
+      } else {
+        this.lastTime = performance.now()
+        this.accumulator = 0
+        this.rafId = requestAnimationFrame(this.tick)
+      }
+    }
   }
 
   start(): void {
@@ -29,16 +40,18 @@ export class GameLoop {
     this.running = true
     this.lastTime = performance.now()
     this.scene.start()
-    this.rafId = requestAnimationFrame(this.tick)
+    document.addEventListener('visibilitychange', this.onVisibilityChange)
+    if (!document.hidden) this.rafId = requestAnimationFrame(this.tick)
   }
 
   stop(): void {
     this.running = false
     cancelAnimationFrame(this.rafId)
+    document.removeEventListener('visibilitychange', this.onVisibilityChange)
   }
 
   private tick(timestamp: number): void {
-    if (!this.running) return
+    if (!this.running || document.hidden) return
     const dt = Math.min((timestamp - this.lastTime) / 1000, this.maxCatchUp)
     this.lastTime = timestamp
     this.accumulator += dt

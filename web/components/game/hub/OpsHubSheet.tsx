@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSharedSecond } from '@/lib/hooks/useSharedSecond'
 import type { Player, Screen } from '@/lib/game-types'
 import { CRAFTING_RECIPES, REFINERY_RECIPES, STRUCTURES, TARGETS, surfaceSiteById } from '@/lib/data'
 import { formatCountdown } from '@/lib/format'
@@ -52,11 +52,7 @@ export default function OpsHubSheet({
   onOpenScene: (screen: Screen) => void
   onFocusBuilding: (kind: string) => void
 }) {
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 1000)
-    return () => window.clearInterval(id)
-  }, [])
+  const now = useSharedSecond()
 
   const go = (screen: Screen) => onOpenScene(screen)
   const focus = (kind: string) => onFocusBuilding(kind)

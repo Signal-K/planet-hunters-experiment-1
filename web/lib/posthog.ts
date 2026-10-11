@@ -1,10 +1,22 @@
 import posthog from 'posthog-js'
 
 let initialised = false
+let initialisationScheduled = false
+const pendingCalls: Array<() => void> = []
 
-export function initPostHog() {
+function runWhenReady(call: () => void) {
+  if (initialised) {
+    call()
+    return
+  }
+  pendingCalls.push(call)
+  initPostHog()
+}
+
+function initialise() {
+  if (initialised || typeof window === 'undefined') return
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
-  if (!key || initialised || typeof window === 'undefined') return
+  if (!key) return
   posthog.init(key, {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com',
     person_profiles: 'always',
@@ -19,17 +31,10 @@ export function initPostHog() {
     // paths (PocketBase sync, push scheduling); knowing what actually
     // throws for real players is otherwise invisible.
     capture_exceptions: true,
-    // Click/mousemove heatmaps for every routed screen. Screens with no
-    // dedicated survey or captureGameEvent (Refinery, Market, Hangar,
-    // Skills, Fab, mission history, narrative ledger, galaxy/target picker
-    // — see the 2026-09-11 instrumentation coverage audit) get a passive
-    // usage signal this way instead of adding more popovers.
-    capture_heatmaps: true,
-    // SSL-342: a click that produces no visible DOM change within PostHog's
-    // own dead-click window is the clearest signal of "player expected this
-    // to do something and it didn't": exactly the friction the agency-loop
-    // funnel needs alongside the explicit screen/tutorial/Free-Ops events.
-    capture_dead_clicks: true,
+    // Explicit screen and gameplay events provide the useful product signal;
+    // passive heatmap and dead-click listeners add continuous page overhead.
+    capture_heatmaps: false,
+    capture_dead_clicks: false,
     // Session replay complements the qualitative surveys (mining feel,
     // launch feel, mission friction) by letting the team watch the actual
     // friction instead of only reading a rating. Mask all text inputs by
@@ -42,14 +47,31 @@ export function initPostHog() {
     // thread busy enough that requestIdleCallback never got a clean window
     // after a click — the actual cause of "panels take a second to
     // register a click" on every screen, not just canvas-heavy ones.
-    // Sampling keeps replay coverage for triage while cutting that
-    // always-on background cost for the other 4 in 5 sessions.
+    // Sampling keeps replay coverage for triage while avoiding rrweb work in
+    // 19 out of 20 sessions.
     session_recording: {
       maskAllInputs: true,
-      sampleRate: 0.2,
+      sampleRate: 0.05,
     },
   })
   initialised = true
+  pendingCalls.splice(0).forEach(call => call())
+}
+
+export function initPostHog() {
+  if (initialised || initialisationScheduled || typeof window === 'undefined') return
+  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
+  if (!key) return
+  initialisationScheduled = true
+  const start = () => {
+    initialisationScheduled = false
+    initialise()
+  }
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(start, { timeout: 2000 })
+  } else {
+    window.setTimeout(start, 0)
+  }
 }
 
 // Fires a virtual pageview for the given in-game screen. The SPA never
@@ -58,17 +80,15 @@ export function initPostHog() {
 // Trends/Funnels need this to tell screens apart.
 export function captureScreenView(screen: string) {
   if (typeof window === 'undefined') return
-  initPostHog()
-  posthog.capture('$pageview', {
+  runWhenReady(() => posthog.capture('$pageview', {
     $current_url: `${window.location.origin}/game/${screen}`,
     screen,
-  })
+  }))
 }
 
 export function identifyUser(userId: string, props?: Record<string, string>) {
   if (typeof window === 'undefined') return
-  initPostHog()
-  posthog.identify(userId, props)
+  runWhenReady(() => posthog.identify(userId, props))
 }
 
 // Milestone/checkpoint analytics events, separate from the survey system.
@@ -78,8 +98,7 @@ export function identifyUser(userId: string, props?: Record<string, string>) {
 // they were also shown a survey at that checkpoint.
 export function captureGameEvent(name: string, props?: Record<string, unknown>) {
   if (typeof window === 'undefined') return
-  initPostHog()
-  posthog.capture(name, props)
+  runWhenReady(() => posthog.capture(name, props))
 }
 
 // SSL-342: the end of training and the start of Free Ops are one moment in
