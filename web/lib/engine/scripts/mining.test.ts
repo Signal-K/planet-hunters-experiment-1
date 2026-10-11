@@ -262,6 +262,20 @@ describe('MiningController ore sym labels', () => {
     expect(labels()[0].y).toBeLessThan(320)
   })
 
+  it('separates labels vertically when deposits sit side by side', () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0)
+    const { controller } = makeController(vi.fn(), { mineralSyms: SYMS, chipFill: 0x334455, chipShade: 0x112233 })
+    controller.start()
+    random.mockRestore()
+    const placed = labels()
+    for (let i = 0; i < placed.length; i++) {
+      for (let j = i + 1; j < placed.length; j++) {
+        if (Math.abs(placed[i].x - placed[j].x) >= 160) continue
+        expect(Math.abs(placed[i].y - placed[j].y)).toBeGreaterThanOrEqual(28)
+      }
+    }
+  })
+
   it('keeps the label on the ore as the terrain scrolls', () => {
     const { controller, host } = makeController(vi.fn(), { mineralSyms: SYMS })
     controller.start()

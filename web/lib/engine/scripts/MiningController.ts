@@ -47,43 +47,143 @@ const LASER_DEPTH_BY_TIER: Record<number, number> = {
   3: LASER_MAX_DEPTH,
 }
 
-/** Organic ore gap distribution: 20% tight cluster, 50% normal, 30% wide open space */
+/** Organic ore gap. The tight band still clears a rock mass and its label. */
 function oreGap(): number {
   const r = Math.random()
-  if (r < 0.20) return 55  + Math.random() * 40   // close follow-on
-  if (r < 0.70) return 100 + Math.random() * 100  // normal spacing
-  return 220 + Math.random() * 160                 // barren stretch
+  if (r < 0.20) return 112 + Math.random() * 36
+  if (r < 0.70) return 160 + Math.random() * 100
+  return 260 + Math.random() * 160
 }
 
 /** Pixel outcrops. `#` is exposed rock, `+` is the buried root, `.` is empty.
- *  The hit test stays on the underground node; this is only the surface graphic. */
+ *  The hit test stays on the underground node; this is only the surface graphic.
+ *  Each mineral family has three silhouettes so neighbouring deposits do not repeat one slab. */
 const OUTCROP_PX = 6
-const OUTCROPS = [
+const FLECK_OUTCROPS = [
   [
-    '....########..',
-    '..##########..',
-    '..##########..',
-    '##############',
-    '##############',
-    '+############+',
-    '..++++++++++..',
+    '.......##.......',
+    '......####......',
+    '.....######.....',
+    '....###..###....',
+    '...####..####...',
+    '..#####...####..',
+    '.######...#####.',
+    '..#####...####..',
+    '...####..###....',
+    '+######..####+..',
+    '.++++++++++++...',
+    '..++++++++++++..',
   ],
   [
-    '##............',
-    '#####.........',
-    '########......',
-    '###########...',
-    '##############',
-    '+############+',
-    '.++++++++++++.',
+    '##..............',
+    '####............',
+    '######..##......',
+    '########.##.....',
+    '######..####....',
+    '.#####..#####...',
+    '..####...####...',
+    '...###...###....',
+    '....##...##.....',
+    '+######..###+...',
+    '.++++++++++++...',
+    '..++++++++++++..',
   ],
   [
-    '..####....###.',
-    '.#####...####.',
-    '##############',
-    '##############',
-    '+############+',
-    '...++++++++++.',
+    '..##........##..',
+    '.####......###..',
+    '.#####....####..',
+    '..####....####..',
+    '...###....###...',
+    '....###..###....',
+    '.....######.....',
+    '......####......',
+    '.......##.......',
+    '+.#####..####+..',
+    '..++++++++++++..',
+    '...++++++++++...',
+  ],
+]
+const SEAM_OUTCROPS = [
+  [
+    '......####......',
+    '....########....',
+    '..######..####..',
+    '.########..###..',
+    '..##########....',
+    '.######..#####..',
+    '..####....###...',
+    '...###....##....',
+    '+#######..###+..',
+    '.++++++++++++...',
+    '..++++++++++++..',
+  ],
+  [
+    '###.............',
+    '######..........',
+    '########.##.....',
+    '######..####....',
+    '####....#####...',
+    '.###....####....',
+    '..##.....###....',
+    '...##....##.....',
+    '+#####..####+...',
+    '..++++++++++++..',
+    '...++++++++++...',
+  ],
+  [
+    '...........##...',
+    '........#####...',
+    '.....########...',
+    '...######..##...',
+    '..#####....##...',
+    '.####......#....',
+    '..###...........',
+    '...##...........',
+    '+######..##+....',
+    '.++++++++++++...',
+    '..++++++++++++..',
+  ],
+]
+const CRYSTAL_OUTCROPS = [
+  [
+    '.......##.......',
+    '......#..#......',
+    '.....##..##.....',
+    '....##....##....',
+    '...##......##...',
+    '..###.....###...',
+    '..##.......##...',
+    '...##.....##....',
+    '....##...##.....',
+    '+..####.####+...',
+    '...++++++++++...',
+    '....++++++++....',
+  ],
+  [
+    '.##....##....##.',
+    '.#......#.....#.',
+    '.##....###...##.',
+    '..##..##.##.##..',
+    '...####...###...',
+    '....##.....##...',
+    '.....#.....#....',
+    '......#...#.....',
+    '+.#####...###+..',
+    '..++++++++++++..',
+    '...++++++++++...',
+  ],
+  [
+    '............##..',
+    '..........#..#..',
+    '........##...#..',
+    '......##.....#..',
+    '....##.....##...',
+    '..##.....###....',
+    '.##.....##......',
+    '.##....#........',
+    '+####..##+......',
+    '.++++++++++++...',
+    '..++++++++++++..',
   ],
 ]
 
@@ -96,8 +196,25 @@ function mixHex(a: number, b: number, t: number): number {
   return (ch(16) << 16) | (ch(8) << 8) | ch(0)
 }
 
-function outcropCells(variant: number): { x: number; y: number; buried: boolean }[] {
-  const rows = OUTCROPS[variant % OUTCROPS.length]
+function outcropFamily(mineral: string): string[][] {
+  const style = oreFleckStyle(mineral)
+  if (style === 'seam') return SEAM_OUTCROPS
+  if (style === 'crystal') return CRYSTAL_OUTCROPS
+  return FLECK_OUTCROPS
+}
+
+function mineralSalt(mineral: string): number {
+  let hash = 0
+  for (let i = 0; i < mineral.length; i++) hash = (hash * 33 + mineral.charCodeAt(i)) >>> 0
+  return hash
+}
+
+function outcropRows(mineral: string, salt: number): string[] {
+  const family = outcropFamily(mineral)
+  return family[(mineralSalt(mineral) + salt) % family.length]
+}
+
+function outcropCells(rows: string[]): { x: number; y: number; buried: boolean }[] {
   const width = rows[0].length
   const buriedAt = rows.findIndex(row => row.includes('+'))
   const cells: { x: number; y: number; buried: boolean }[] = []
@@ -112,9 +229,8 @@ function outcropCells(variant: number): { x: number; y: number; buried: boolean 
   return cells
 }
 
-function outcropTop(variant: number): number {
-  const cells = outcropCells(variant)
-  return cells.reduce((top, cell) => Math.min(top, cell.y), 0)
+function outcropTop(rows: string[]): number {
+  return outcropCells(rows).reduce((top, cell) => Math.min(top, cell.y), 0)
 }
 
 /** Per-laser-tier ore properties: radius, hp, depth range within rock surface */
@@ -298,11 +414,11 @@ export class MiningController extends ScriptBehaviour {
       // Occasionally spawn a close companion (cluster of 2-3)
       const clusterRoll = Math.random()
       if (clusterRoll < 0.18 && count < 20) {
-        x += 45 + Math.random() * 35
+        x += 112 + Math.random() * 28
         this.spawnOre(x)
         count++
         if (Math.random() < 0.35 && count < 20) {
-          x += 40 + Math.random() * 30
+          x += 112 + Math.random() * 24
           this.spawnOre(x)
           count++
         }
@@ -694,55 +810,84 @@ export class MiningController extends ScriptBehaviour {
     }
 
     const surface = this.opts.surfaceY ?? SURFACE_Y
-    const variant = this.oreCounter % OUTCROPS.length
-    const chip = this.opts.chipFill != null ? this.createChip(x, surface, mineral, variant) : null
-    const label = this.createLabel(mineral, x, chip ? surface + outcropTop(variant) - 14 : y, radius)
+    const rows = outcropRows(mineral, this.oreCounter)
+    const chip = this.opts.chipFill != null ? this.createChip(x, surface, mineral, rows) : null
+    const label = this.createLabel(mineral, x, chip ? this.labelY(x, surface, outcropTop(rows)) : y, radius)
 
     this.gameObject.addChild(go)
     this.ores.push({ go, renderer, sprite, label, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0 })
   }
 
+  /** Keep neighbouring syms off one baseline when deposits sit side by side. */
+  private labelY(x: number, surface: number, top: number): number {
+    const base = surface + top - 14
+    const nearby = this.ores.filter(ore => ore.fallSpeed === undefined && ore.label && Math.abs(ore.go.transform.position.x - x) < 160)
+    let y = base
+    for (const ore of nearby) {
+      if (ore.label && Math.abs(ore.label.y - y) < 28) y = ore.label.y - 32
+    }
+    return y
+  }
+
   /** Pixel outcrop on the ridge at the node's x. The hit test still uses the buried position. */
-  private createChip(x: number, y: number, mineral: string, variant: number): Graphics {
+  private createChip(x: number, y: number, mineral: string, rows: string[]): Graphics {
     const ground = this.opts.chipFill ?? 0x4a433c
     const deep = this.opts.chipShade ?? 0x241e1a
     const groundAvg = (((ground >> 16) & 255) + ((ground >> 8) & 255) + (ground & 255)) / 3
-    const face = groundAvg > 150 ? mixHex(ground, deep, 0.55) : mixHex(ground, 0xffffff, 0.34)
-    const lit = mixHex(face, 0xffffff, 0.28)
-    const shade = mixHex(deep, 0x000000, 0.45)
+    const lightGround = groundAvg > 150
+    const face = lightGround ? mixHex(deep, 0x000000, 0.5) : mixHex(ground, 0xffffff, 0.14)
+    const lit = lightGround ? mixHex(deep, 0xffffff, 0.06) : mixHex(face, 0xffffff, 0.36)
+    const shade = mixHex(deep, 0x000000, lightGround ? 0.7 : 0.5)
+    const outline = mixHex(deep, 0x000000, lightGround ? 0.82 : 0.4)
+    const contact = mixHex(face, ground, lightGround ? 0.18 : 0.62)
     const fleck = oreFleck(mineral)
     const spark = mixHex(fleck, 0xffffff, 0.55)
     const core = mixHex(fleck, 0x000000, 0.4)
-    const cells = outcropCells(variant)
-    const top = outcropTop(variant)
+    const cells = outcropCells(rows)
+    const top = outcropTop(rows)
     const g = new Graphics()
-    const leftOfRow = new Map<number, number>()
-    for (const cell of cells) {
-      const prev = leftOfRow.get(cell.y)
-      if (prev === undefined || cell.x < prev) leftOfRow.set(cell.y, cell.x)
-    }
+    const exposed = cells.filter(cell => !cell.buried)
 
     let minX = Infinity
     let maxX = -Infinity
-    for (const cell of cells) {
-      if (cell.y < 0) continue
+    for (const cell of exposed) {
       minX = Math.min(minX, cell.x)
       maxX = Math.max(maxX, cell.x + OUTCROP_PX)
     }
     if (Number.isFinite(minX)) {
-      g.rect(minX + 6, 4, Math.max(OUTCROP_PX, maxX - minX - 4), 5).fill({ color: 0x000000, alpha: 0.4 })
+      const span = Math.max(OUTCROP_PX, maxX - minX)
+      g.rect(minX + 8, 2, Math.max(OUTCROP_PX, span - 10), 3).fill(shade)
+      g.rect(minX + 14, 5, Math.max(OUTCROP_PX, Math.floor(span * 0.42)), 2).fill(mixHex(shade, 0x000000, 0.35))
+      const lowest = exposed.reduce((max, cell) => Math.max(max, cell.y), top)
+      const base = exposed.filter(cell => cell.y === lowest)
+      for (let i = 0; i < base.length; i += 2) {
+        const cell = base[i]
+        const dx = i % 4 === 0 ? -5 : OUTCROP_PX + 1
+        g.rect(cell.x + dx, 1, 3, 2).fill(shade)
+        g.rect(cell.x + dx + (i % 4 === 0 ? -2 : 3), 3, 2, 2).fill(mixHex(ground, shade, 0.45))
+      }
+    }
+
+    for (const cell of exposed) {
+      g.rect(cell.x - 1, cell.y - 1, OUTCROP_PX + 2, OUTCROP_PX + 2).fill(outline)
+    }
+
+    const leftOfRow = new Map<number, number>()
+    for (const cell of exposed) {
+      const prev = leftOfRow.get(cell.y)
+      if (prev === undefined || cell.x < prev) leftOfRow.set(cell.y, cell.x)
     }
 
     for (const cell of cells) {
-      const sunlit = !cell.buried && cell.y <= top + OUTCROP_PX
-      const color = cell.buried ? deep : sunlit ? lit : face
+      if (cell.buried) {
+        g.rect(cell.x, cell.y, OUTCROP_PX, OUTCROP_PX).fill(cell.y === 0 ? contact : ground)
+        continue
+      }
+      const crest = cell.y <= top + OUTCROP_PX
+      const sinking = cell.y >= -OUTCROP_PX
+      const color = sinking ? contact : crest ? lit : face
       g.rect(cell.x, cell.y, OUTCROP_PX, OUTCROP_PX).fill(color)
-      if (!cell.buried && cell.x === leftOfRow.get(cell.y)) {
-        g.rect(cell.x, cell.y, 2, OUTCROP_PX).fill(shade)
-      }
-      if (!cell.buried && !sunlit && (cell.x / OUTCROP_PX) % 5 === 2) {
-        g.rect(cell.x + 2, cell.y + 2, 2, 2).fill(deep)
-      }
+      if (cell.x === leftOfRow.get(cell.y)) g.rect(cell.x, cell.y, 2, OUTCROP_PX).fill(shade)
     }
 
     this.paintMineral(g, mineral, cells, fleck, spark, core)
@@ -752,37 +897,47 @@ export class MiningController extends ScriptBehaviour {
     return g
   }
 
-  /** Rust flecks, black seams, or pale crystals. No circular outline. */
+  /** Veins and flecks run through the rock mass. No circular outline. */
   private paintMineral(g: Graphics, mineral: string, cells: { x: number; y: number; buried: boolean }[], fleck: number, spark: number, core: number): void {
-    const exposed = cells.filter(cell => !cell.buried)
-    if (exposed.length === 0) return
+    const body = cells.filter(cell => !cell.buried || cell.y <= 0)
+    if (body.length === 0) return
     const style = oreFleckStyle(mineral)
     if (style === 'seam') {
-      const rows = [...new Set(exposed.map(cell => cell.y))].sort((a, b) => a - b)
-      const seamRows = rows.filter((_, index) => index === 1 || index === 3)
-      for (const row of seamRows) {
-        const inRow = exposed.filter(cell => cell.y === row).sort((a, b) => a.x - b.x)
-        if (inRow.length < 4) continue
-        const start = inRow[1]
-        const end = inRow[inRow.length - 2]
-        g.rect(start.x, row + 2, end.x - start.x + OUTCROP_PX, 3).fill(core)
-        g.rect(start.x, row + 1, end.x - start.x + OUTCROP_PX, 1).fill({ color: spark, alpha: 0.75 })
-      }
+      const rows = [...new Set(body.map(cell => cell.y))].sort((a, b) => a - b)
+      rows.forEach((row, index) => {
+        if (index % 2 !== 0) return
+        const inRow = body.filter(cell => cell.y === row).sort((a, b) => a.x - b.x)
+        if (inRow.length < 3) return
+        const inset = 1 + (index % 3)
+        const start = inRow[Math.min(inset, inRow.length - 1)]
+        const end = inRow[Math.max(inset, inRow.length - 1 - (index % 2))]
+        if (end.x < start.x) return
+        g.rect(start.x, row + 2, end.x - start.x + OUTCROP_PX, 2).fill(core)
+        g.rect(start.x + 2, row + 1, Math.max(2, end.x - start.x), 1).fill(spark)
+      })
       return
     }
-    const picks = exposed.filter((_, index) => index % (style === 'crystal' ? 6 : 4) === 2).slice(0, 5)
-    for (const cell of picks) {
-      if (style === 'crystal') {
-        g.rect(cell.x, cell.y, OUTCROP_PX, OUTCROP_PX).fill(fleck)
-        g.rect(cell.x + 1, cell.y - 4, 4, 4).fill(spark)
-        g.rect(cell.x - 4, cell.y + 1, 4, 4).fill(core)
-        g.rect(cell.x + OUTCROP_PX, cell.y + 1, 4, 4).fill(fleck)
-      } else {
-        g.rect(cell.x, cell.y, OUTCROP_PX, OUTCROP_PX).fill(fleck)
-        g.rect(cell.x + OUTCROP_PX - 2, cell.y, 2, 2).fill(spark)
-        g.rect(cell.x, cell.y + OUTCROP_PX - 2, 2, 2).fill(core)
-      }
+    const exposed = body.filter(cell => !cell.buried)
+    const rows = [...new Set(exposed.map(cell => cell.y))].sort((a, b) => a - b)
+    if (style === 'crystal') {
+      rows.forEach((row, index) => {
+        if (index % 2 !== 0) return
+        const inRow = exposed.filter(cell => cell.y === row).sort((a, b) => a.x - b.x)
+        const cell = inRow[Math.min(inRow.length - 1, index % inRow.length)]
+        g.rect(cell.x + 1, cell.y, 3, OUTCROP_PX).fill(fleck)
+        g.rect(cell.x, cell.y + 1, OUTCROP_PX, 3).fill(spark)
+        g.rect(cell.x + 2, cell.y - 4, 2, 4).fill(spark)
+      })
+      return
     }
+    rows.forEach((row, index) => {
+      const inRow = exposed.filter(cell => cell.y === row).sort((a, b) => a.x - b.x)
+      const at = Math.min(inRow.length - 1, (index * 2 + 1) % inRow.length)
+      const cell = inRow[at]
+      g.rect(cell.x + 1, cell.y + 1, 4, 3).fill(fleck)
+      if (index % 2 === 0) g.rect(cell.x + 3, cell.y, 2, 2).fill(spark)
+      else g.rect(cell.x, cell.y + 3, 2, 2).fill(core)
+    })
   }
 
   /** Element sym above the outcrop. Longer syms (`H2O`) use a smaller size. */

@@ -37,6 +37,52 @@ function silhouette(g: Graphics, width: number, base: number, color: number, ter
   g.poly(pts).fill(color)
 }
 
+/** Pixel grit, stones, strata and cracks. Rock colours only — no discs. */
+function paintGroundGrit(g: Graphics, width: number, height: number, palette: LaserPalette, rand: () => number): void {
+  const rock = palette.ground
+  const deep = palette.groundDeep
+  const terrain = palette.terrain
+  const top = 18
+  const span = Math.max(24, height - 30)
+
+  const strata = terrain === 'dunes' ? 6 : terrain === 'ice' ? 5 : 4
+  for (let i = 0; i < strata; i++) {
+    const y = top + Math.floor(rand() * span)
+    const x0 = Math.floor(rand() * 20)
+    const len = Math.floor(48 + rand() * (width * (terrain === 'dunes' ? 0.8 : 0.5)))
+    g.rect(x0, y, Math.min(len, width - x0), 2).fill(deep)
+    if (rand() > 0.3) {
+      const x1 = x0 + len + 6 + Math.floor(rand() * 12)
+      if (x1 < width - 12) g.rect(x1, y + (rand() > 0.5 ? 3 : -2), Math.floor(24 + rand() * 48), 2).fill(deep)
+    }
+  }
+
+  const cracks = terrain === 'ice' ? 8 : terrain === 'rubble' ? 5 : 3
+  for (let i = 0; i < cracks; i++) {
+    let x = 8 + rand() * (width - 24)
+    let y = top + rand() * 16
+    const steps = 4 + Math.floor(rand() * (terrain === 'ice' ? 6 : 4))
+    for (let s = 0; s < steps; s++) {
+      g.rect(x, y, 2, 4 + rand() * 7).fill(deep)
+      x += (rand() - 0.35) * 6
+      y += 4 + rand() * 5
+    }
+  }
+
+  const stones = terrain === 'rubble' ? 14 : terrain === 'dunes' ? 7 : 9
+  for (let i = 0; i < stones; i++) {
+    const sw = 4 + Math.floor(rand() * (terrain === 'rubble' ? 7 : 4))
+    const sh = 3 + Math.floor(rand() * 4)
+    const sx = rand() * (width - sw)
+    const sy = top + rand() * (span - sh)
+    g.rect(sx, sy, sw, sh).fill(deep)
+    g.rect(sx, sy, Math.max(2, sw - 1), 1).fill(rock)
+  }
+
+  const grit = terrain === 'rubble' ? 28 : 18
+  for (let i = 0; i < grit; i++) g.rect(rand() * (width - 2), top + rand() * span, 2, rand() > 0.5 ? 2 : 1).fill(deep)
+}
+
 function paintSky(w: number, h: number, palette: LaserPalette): Graphics {
   const g = new Graphics()
   const steps = 28
@@ -164,9 +210,7 @@ export function buildLaserField(opts: {
     const g = new Graphics()
     g.rect(0, 16, GROUND_TILE_W, groundH).fill(palette.groundDeep)
     silhouette(g, GROUND_TILE_W, groundH, palette.ground, palette.terrain, rand, 14)
-    for (let s = 0; s < 16; s++) {
-      g.circle(rand() * GROUND_TILE_W, 24 + rand() * (groundH - 36), 3 + rand() * 7).fill({ color: palette.groundSpeck, alpha: 0.28 + rand() * 0.45 })
-    }
+    paintGroundGrit(g, GROUND_TILE_W, groundH, palette, rand)
     g.x = i * GROUND_TILE_W
     ground.addChild(g)
   }

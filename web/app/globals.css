@@ -1043,7 +1043,6 @@ button { cursor: pointer; }
   width: min(280px, calc(100% - 96px));
   pointer-events: none;
 }
-.portrait-canvas:has(.mining-screen) .toast-stack,
 .portrait-canvas:has(.transit-screen) .toast-stack,
 .portrait-canvas:has(.debrief-game) .toast-stack,
 .portrait-canvas:has([data-testid="rover-survey-screen"]) .toast-stack,
@@ -1055,6 +1054,15 @@ button { cursor: pointer; }
   right: 16px;
   align-items: flex-end;
   width: min(220px, 38%);
+}
+.portrait-canvas:has(.mining-screen) .toast-stack {
+  top: auto;
+  bottom: 66px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  align-items: center;
+  width: min(240px, calc(100% - 112px));
 }
 .survey-sheet {
   position: absolute;
