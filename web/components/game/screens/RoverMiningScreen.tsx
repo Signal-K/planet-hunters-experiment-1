@@ -310,6 +310,7 @@ export default function RoverMiningScreen({
             </div>
           )}
           {deployed && (
+            <div className={styles.lowerStack}>
             <div className={styles.controls} data-testid="rover-control-guide" data-route-steps={routeSteps}>
               <RoverDrivePad
                 handle={takeonHandle}
@@ -330,8 +331,7 @@ export default function RoverMiningScreen({
                 <span className={styles.eyebrow}>{selectedMarker ? `${selectedMarker.label} SELECTED` : 'TAP EXPOSED ORE TO DRIVE AND DRILL'}</span>
               </section>
             </div>
-          )}
-          {deployed && sandboxEnabled && buildMode && player && (
+            {sandboxEnabled && buildMode && player && (
             <div className={styles.sandboxDock} data-testid="rover-sandbox-dock">
               <SandboxFieldControls
                 player={player}
@@ -346,6 +346,8 @@ export default function RoverMiningScreen({
                   void shareFieldCreation(snapshot, target.name).then(result => setFieldNotice(result.message))
                 }}
               />
+            </div>
+            )}
             </div>
           )}
           {deployed && markers.map(marker => (

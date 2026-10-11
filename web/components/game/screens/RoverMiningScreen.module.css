@@ -29,6 +29,7 @@
 .objectControls { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--ln-bp-line-strong); background: color-mix(in srgb, var(--ln-bp-paper) 94%, transparent); box-shadow: var(--ln-shadow-card); }
 .buildToggle { display: inline-flex; flex: 1 1 auto; align-items: center; justify-content: center; min-height: 44px; padding: 0 8px; border: 1px solid var(--ln-bp-line-strong); background: transparent; color: var(--ln-bp-blue); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
 .buildToggle[aria-pressed='true'] { border-color: var(--ln-bp-green); color: var(--ln-bp-green); }
+.lowerStack { display: contents; }
 .sandboxDock { position: absolute; bottom: 72px; left: 16px; z-index: 6; width: min(440px, calc(100% - 32px)); max-height: calc(100% - 96px); overflow: auto; }
 
 .oreMarker, .mineSiteControl { position: absolute; z-index: 3; display: inline-flex; align-items: center; gap: 8px; transform: translate(-50%, -50%); border: 1px solid var(--ln-bp-line-strong); background: color-mix(in srgb, var(--ln-bp-paper) 92%, transparent); box-shadow: var(--ln-shadow-card); color: var(--ln-bp-ink); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
@@ -55,7 +56,8 @@
   .landingHandoff > div { padding: 16px; }
   /* Phone: the shaded field stays clear. Drive and drill sit in the lower-left
      corner; the readout is a short strip at the top-right. */
-  .controls { top: auto; right: auto; bottom: 68px; left: 8px; width: min(220px, 48vw); grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .lowerStack { display: flex; flex-direction: column-reverse; align-items: stretch; gap: 0; position: absolute; right: 8px; bottom: 68px; left: 8px; z-index: 6; }
+  .controls { position: static; top: auto; right: auto; bottom: auto; left: auto; width: min(220px, 48vw); grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .controls > div { width: auto; }
   .objectControls { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 6px 8px; }
   .objectControls .primaryAction { min-height: 44px; }
@@ -63,8 +65,9 @@
   .drillReadout .kicker, .drillReadout p:not(.mineSiteStatus), .drillReadout li:not(:last-child) { display: none; }
   .drillReadout li { padding: 6px 8px; }
   .readoutHeading strong { font-size: 12px; }
-  /* SSL-404: one-row drawer sits beside the drive pad, not across the field. */
-  .sandboxDock { right: 8px; bottom: 68px; left: auto; width: min(240px, calc(100% - 244px)); max-height: 42%; }
+  /* SSL-404: one-row drawer sits on the drive pad. Expanded, it scrolls
+     inside the field so a structure card is never parked above the viewport. */
+  .sandboxDock { position: static; right: auto; bottom: auto; left: auto; width: auto; max-height: min(46vh, 360px); overflow: auto; }
   .fieldHotbar { right: 8px; bottom: 8px; left: 8px; gap: 8px; }
 }
 

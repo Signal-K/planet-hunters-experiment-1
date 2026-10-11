@@ -22,6 +22,7 @@ import {
   orionidsTeaserDevForced,
   orionidsTeaserForcedInstant,
   shouldShowOrionidsTeaser,
+  WORLD_SPACE_WEEK_PLAYER_LINKS,
 } from './sky-events'
 import { MINERAL_META } from './minerals'
 
@@ -43,6 +44,15 @@ describe('badgeTierFor', () => {
   })
   it('is null for unknown events', () => {
     expect(badgeTierFor('nope', new Date())).toBeNull()
+  })
+})
+
+describe('World Space Week player links', () => {
+  it('connects the active Landnám banner to Atlas and Garden over HTTPS', () => {
+    expect(WORLD_SPACE_WEEK_PLAYER_LINKS).toEqual([
+      { label: 'Open Atlas badges', href: 'https://youratlas.cc/app/profile' },
+      { label: 'Open Garden sky events', href: 'https://starsailors.space/game' },
+    ])
   })
 })
 
