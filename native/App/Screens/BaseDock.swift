@@ -13,25 +13,24 @@ struct BaseDock: View {
             Spacer(minLength: zones.gap)
             Button { store.go(.build) } label: {
                 Text("BUILD").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                    .frame(minWidth: 72, minHeight: 36)
+                    .frame(minWidth: 56, minHeight: 36)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Build")
             Button { store.go(.instrumentHub) } label: {
                 Text("HUB").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                    .frame(minWidth: 72, minHeight: 36)
+                    .frame(minWidth: 56, minHeight: 36)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Open the Hub")
             Spacer(minLength: zones.gap)
             arrow("chevron.right", label: "Next") { step(1) }
         }
-        .padding(.horizontal, zones.padding)
+        .padding(.horizontal, zones.padding + 4)
         .padding(.vertical, 2)
-        .frame(maxWidth: 440, maxHeight: 42)
-        .background(RoundedRectangle(cornerRadius: 6).fill(Theme.hudPanel))
-        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.hudInk, lineWidth: 1))
-        .padding(.horizontal, 12)
+        .frame(width: 248, height: 44)
+        .background(Capsule().fill(Theme.hudPanel))
+        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Scene dock")
     }

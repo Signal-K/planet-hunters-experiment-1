@@ -38,6 +38,13 @@ enum SceneCatalog {
         return gs
     }
 
+    /// The web `baseArt=starter` base: launchpad, hangar, command hut and refinery tank.
+    static func starterState() -> GameState {
+        var gs = GameState()
+        gs.player.placed = ["launchpad", "hangar", "command", "refinery"]
+        return gs
+    }
+
     /// Base player who owns one settlement, so the « » dock tile shows enabled.
     static func landscapeBase() -> GameState {
         var gs = basePlayer()
@@ -200,10 +207,9 @@ enum SceneCatalog {
         scene("mining-laser-mars-live", 874) { MiningScreen().environment(GameStore(state: miningState(rover: false, target: "mars"))) },
         scene("mining-laser-icy-live", 874) { MiningScreen().environment(GameStore(state: miningState(rover: false, target: "jupiter"))) },
         scene("hub-empty-live", 874) { HubScreen().environment(GameStore(state: GameState())) },
-        scene("hub-starter-live", 874) {
-            var gs = GameState(); gs.player.placed = ["launchpad", "surface-silo"]; gs.player.placementPlots = ["surface-silo": 0]
-            return HubScreen().environment(GameStore(state: gs))
-        },
+        scene("hub-empty-live-landscape", 402, w: 874) { HubScreen().environment(GameStore(state: GameState())) },
+        scene("hub-starter-live", 874) { HubScreen().environment(GameStore(state: starterState())) },
+        scene("hub-starter-live-landscape", 402, w: 874) { HubScreen().environment(GameStore(state: starterState())) },
         scene("rover-field-phone", 874) {
             var p = Prospecting(requirements: ["iron": 2, "copper": 1])
             p.select("ore-a"); p.driveToSelected(); _ = p.drill(); _ = p.drill(); _ = p.drill(); p.startConstruction()
@@ -266,6 +272,9 @@ struct SceneHost: View {
         if let s = SceneCatalog.find(id), id.contains("-live") {
             // Full-screen, real safe areas: what a player sees, without the fixed fixture frame.
             s.make().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.bg)
+                #if os(iOS)
+                .onAppear { OrientationPreference.current.apply() }
+                #endif
         } else if let s = SceneCatalog.find(id) {
             ScrollView { s.make().frame(width: s.size.width, height: s.size.height) }.background(Theme.bg)
         } else {

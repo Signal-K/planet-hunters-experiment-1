@@ -21,16 +21,16 @@ struct BaseWorldScene: View {
                 let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
                 ZStack(alignment: .topLeading) {
                     Art.view("base/layers/sky.png")
-                        .resizable().interpolation(.none).scaledToFill()
-                        .frame(width: w, height: h).clipped()
-                    mountain("base/layers/mountains-far.png", height: ground * 0.55, ground: ground, width: w, drift: t / 140)
-                    mountain("base/layers/mountains-mid.png", height: ground * 0.38, ground: ground, width: w, drift: t / 96)
+                        .resizable().interpolation(.none)
+                        .frame(width: w, height: h)
+                    mountain("base/layers/mountains-far.png", height: ground * 0.58, ground: ground, width: w, drift: t / 140)
+                    mountain("base/layers/mountains-mid.png", height: ground * 0.40, ground: ground, width: w, drift: t / 96)
                     cloud(t: t, width: w, height: h, lane: 0.08, scale: 0.18, speed: 92)
                     cloud(t: t, width: w, height: h, lane: 0.16, scale: 0.14, speed: 120)
                     cloud(t: t, width: w, height: h, lane: 0.05, scale: 0.12, speed: 108)
                     groundStack(width: w, height: h, ground: ground)
                     props(width: w, ground: ground, portrait: portrait)
-                    shaft(width: w, height: h)
+                    if !placed.isEmpty { shaft(width: w, height: h) }
                     ForEach(placed, id: \.self) { kind in
                         if let sprite = spriteName(kind) {
                             structure(kind, sprite: sprite, width: w, height: h, ground: ground, portrait: portrait, level: levels[kind] ?? 1)
@@ -47,9 +47,10 @@ struct BaseWorldScene: View {
 
     private func mountain(_ path: String, height band: CGFloat, ground: CGFloat, width: CGFloat, drift: Double) -> some View {
         let shift = CGFloat(drift.truncatingRemainder(dividingBy: 1)) * width
-        return Art.view(path)
-            .resizable().interpolation(.none).scaledToFill()
-            .frame(width: width * 2, height: band, alignment: .bottom)
+        // Web: two copies side by side, each as wide as the scene, cover-fit to the bottom edge.
+        let copy = Art.view(path).resizable().interpolation(.none).scaledToFill()
+            .frame(width: width, height: band, alignment: .bottom).clipped()
+        return HStack(spacing: 0) { copy; copy }
             .offset(x: -shift)
             .frame(width: width, height: band, alignment: .leading)
             .clipped()
@@ -127,8 +128,10 @@ struct BaseWorldScene: View {
         let center = width * anchor(kind, plot: plots[kind] ?? 0, portrait: portrait)
         if kind == "launchpad" {
             let padW = width * (portrait ? 0.30 : 0.55)
-            let padH: CGFloat = portrait ? 16 : 24
-            let craftH = min(portrait ? width * 0.28 : width * 0.152, portrait ? 140 : 220)
+            let padH: CGFloat = portrait ? 12 : 16
+            // Rocket plus gantry stand about twice as tall as the hangar.
+            let hangarH = width * widthFraction("hangar", portrait: portrait, level: 1) * aspect("hangar")
+            let craftH = hangarH * 2
             let capW = padH
             let tileW = padH * 4
             let tiles = max(1, Int(ceil((padW - capW * 2) / tileW)))
@@ -151,7 +154,7 @@ struct BaseWorldScene: View {
                         Art.view("base/kit/pad-gantry.png").resizable().interpolation(.none).scaledToFit().frame(height: craftH)
                         Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none).scaledToFit().frame(height: craftH)
                     }
-                    .padding(.bottom, padH)
+                    .padding(.bottom, padH * 0.7)
                 }
                 .frame(width: padW, height: stackH, alignment: .bottom)
                 .frame(minWidth: 44, minHeight: 44)
