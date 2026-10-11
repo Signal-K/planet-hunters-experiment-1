@@ -229,6 +229,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           />
         )}
 
+        {/* Instrument deployments are a single commissioning outcome. A cargo
+            manifest would repeat the mission title with no cargo to inspect. */}
+        {!isOrbitalInstrumentDeployment && <>
         {/* ── Overview: client (if any) + cargo manifest ─────────────────── */}
         <div className="debrief-overview" style={(client && !isStoryMission) ? undefined : { gridTemplateColumns: 'minmax(0, 1fr)' }}>
         {client && !isStoryMission && (
@@ -290,6 +293,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               })}
         </Panel>
         </div>
+        </>}
 
         {!isOrbitalInstrumentDeployment && (
           <Panel accent={hasEarthStorage ? 'var(--ln-ok)' : 'var(--ln-cyan)'} surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>

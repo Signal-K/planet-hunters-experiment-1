@@ -3577,3 +3577,52 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 .patch-status { font: 14px/1.3 var(--ln-font-body); color: var(--ln-bp-ink-dim, #48596a); margin-top: 2px; }
 .patch[data-state='active'] .patch-status { color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font-weight: 700; }
 .patch[data-state='done'] .patch-status { color: var(--ln-bp-green, #17703f); }
+
+/* SSL-520: close side-on Base and deployment result use the approved dusk
+   world materials rather than the pale blueprint shell. */
+:root {
+  --ln-world-hull: #ece8df; --ln-world-hull-shade: #c9c4b8; --ln-world-hull-lit: #faf7f0;
+  --ln-world-outline: #16293b; --ln-world-trim-blue: #2f6fa8; --ln-world-trim-teal: #2a9aa3;
+  --ln-world-asphalt: #4b4f57; --ln-world-soil: #8a7a64; --ln-world-grass: #7f9a68;
+  --ln-world-dusk-top: #2a2766; --ln-world-dusk-horizon: #6b3fa0;
+}
+body:has([data-screen="hub"]), .debrief-game {
+  --hub-void: #10152b; --hub-bg: #171b38; --hub-panel: #18203a; --hub-panel-deep: #0d1226;
+  --hub-outline: color-mix(in srgb, var(--ln-world-hull-lit) 34%, var(--ln-world-outline));
+  --hub-cyan: var(--ln-world-trim-teal); --hub-chalk: var(--ln-world-hull-lit);
+  --hub-chalk-soft: color-mix(in srgb, var(--ln-world-hull-lit) 13%, transparent);
+  --hub-sky-top: var(--ln-world-dusk-top); --hub-sky-mid: #41316f; --hub-horizon: var(--ln-world-dusk-horizon);
+  --hub-horizon-glow: color-mix(in srgb, var(--ln-world-dusk-horizon) 56%, transparent);
+  --hub-hill-far: #3c3e68; --hub-hill-mid: #303957; --hub-hill-near: #263548; --hub-skyline: #202e40;
+  --hub-ground-far: var(--ln-world-soil); --hub-ground-near: var(--ln-world-grass);
+  --hub-ground-lip: color-mix(in srgb, var(--ln-world-grass) 64%, var(--ln-world-hull-shade));
+}
+.portrait-canvas:has([data-screen="hub"]) .earth-base-modules-layer { filter: drop-shadow(0 10px 0 color-mix(in srgb, var(--ln-world-outline) 36%, transparent)); }
+.portrait-canvas:has([data-screen="hub"]) .earth-base-structure { transform: translateX(-50%) scale(1.16); transform-origin: center bottom; }
+.portrait-canvas:has([data-screen="hub"]) .earth-base-flat-sprite, .debrief-arrival-canvas canvas { image-rendering: pixelated; }
+.portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock-inner {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--hub-panel) 74%, transparent), var(--hub-panel-deep)) !important;
+  border-top-color: color-mix(in srgb, var(--ln-world-hull-lit) 30%, var(--ln-world-outline)) !important;
+  box-shadow: 0 -10px 28px color-mix(in srgb, var(--hub-void) 64%, transparent), inset 0 1px 0 color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent) !important;
+}
+.portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock button {
+  border-color: color-mix(in srgb, var(--ln-world-hull-lit) 62%, var(--ln-world-outline)) !important; color: var(--ln-world-hull-lit) !important;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--hub-panel) 86%, var(--ln-world-trim-blue)), var(--hub-panel-deep)) !important;
+  box-shadow: 2px 3px 0 var(--ln-world-outline), inset 0 1px 0 color-mix(in srgb, var(--ln-world-hull-lit) 19%, transparent) !important;
+}
+@media (max-width: 520px) and (orientation: portrait) {
+  .portrait-canvas:has([data-screen="hub"]) .topHud { padding-bottom: 10px; }
+  .portrait-canvas:has([data-screen="hub"]) .balance, .portrait-canvas:has([data-screen="hub"]) .root .badges, .portrait-canvas:has([data-screen="hub"]) .hub-sky-craft-control, .portrait-canvas:has([data-screen="hub"]) .hub-orbital-network, .portrait-canvas:has([data-screen="hub"]) .hub-building-status { display: none; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure { transform: translateX(-50%) scale(1.08); }
+}
+.debrief-game { background: var(--hub-void); }
+.debrief-game__world-shade { background: linear-gradient(180deg, color-mix(in srgb, var(--ln-world-dusk-top) 42%, transparent), transparent 34%, color-mix(in srgb, var(--ln-world-outline) 34%, transparent)); }
+.debrief-game .top-bar, .debrief-game__content > *:not(.debrief-overview) {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--hub-panel) 95%, var(--ln-world-trim-blue)), var(--hub-panel-deep)) !important;
+  border-color: color-mix(in srgb, var(--ln-world-hull-lit) 30%, var(--ln-world-outline)) !important;
+  box-shadow: 3px 4px 0 var(--ln-world-outline), inset 0 1px 0 color-mix(in srgb, var(--ln-world-hull-lit) 16%, transparent) !important;
+}
+.debrief-mission-strip { border-left-color: var(--ln-world-trim-teal); }
+.debrief-command-dock { min-height: 68px; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--hub-panel-deep) 84%, var(--ln-world-outline)) 28%) !important; border-top-color: color-mix(in srgb, var(--ln-world-hull-lit) 28%, var(--ln-world-outline)); }
+.debrief-command-dock [data-testid="collect-reward-btn"] { min-width: 168px; border-color: var(--ln-world-hull-lit) !important; background: linear-gradient(145deg, var(--ln-world-trim-blue), var(--hub-panel-deep)) !important; box-shadow: 3px 4px 0 var(--ln-world-outline), inset 0 1px 0 color-mix(in srgb, var(--ln-world-hull-lit) 28%, transparent) !important; }
+@media (max-width: 620px) { .debrief-game__content { padding-top: calc(var(--ln-topbar-h, 64px) + 8px); padding-bottom: 88px; } .debrief-mission-strip__route { grid-template-columns: 1fr; gap: 4px; } .debrief-game .debrief-sky-badges { display: none; } }

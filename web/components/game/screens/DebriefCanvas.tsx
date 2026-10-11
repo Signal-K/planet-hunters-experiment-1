@@ -12,6 +12,12 @@ interface DebriefCanvasProps {
 const HANGAR = '/game/assets/base/hangar_flat.png'
 const FALLBACK_SHIP = ROCKET_ASSETS.explorer.exterior
 
+function tokenColor(token: string, fallback: number): number {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(token).trim()
+  const match = /^#([\da-f]{6})$/i.exec(value)
+  return match ? Number.parseInt(match[1], 16) : fallback
+}
+
 /**
  * Full-bleed arrival-bay scene for the debrief. The art is deliberately doing
  * the orientation work here: this is a place the ship has returned to, with a
@@ -61,6 +67,14 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
 
         const scene = new Container()
         app.stage.addChild(scene)
+        const colors = {
+          skyTop: tokenColor('--ln-world-dusk-top', 0x161a38),
+          skyHorizon: tokenColor('--ln-world-dusk-horizon', 0x4c315b),
+          floor: tokenColor('--ln-world-asphalt', 0x343b46),
+          floorEdge: tokenColor('--ln-world-outline', 0x16293b),
+          trim: tokenColor('--ln-world-trim-teal', 0x2a9aa3),
+          light: tokenColor('--ln-world-hull-lit', 0xfaf7f0),
+        }
 
         // Light blueprint sky and apron (SSL-423): ice gradient, no starfield.
         const background = new Graphics()
@@ -97,12 +111,14 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
           for (let i = 0; i < bands; i++) {
             const t = i / (bands - 1)
             const mix = (a: number, b: number) => Math.round(a + (b - a) * t)
-            const color = (mix(0xea, 0xc4) << 16) | (mix(0xf1, 0xdb) << 8) | mix(0xf8, 0xee)
+            const color = (mix((colors.skyTop >> 16) & 255, (colors.skyHorizon >> 16) & 255) << 16)
+              | (mix((colors.skyTop >> 8) & 255, (colors.skyHorizon >> 8) & 255) << 8)
+              | mix(colors.skyTop & 255, colors.skyHorizon & 255)
             background.rect(0, (nextHeight * i) / bands, nextWidth, nextHeight / bands + 1).fill({ color })
           }
           atmosphere.clear()
-          atmosphere.rect(0, nextHeight * 0.74, nextWidth, nextHeight * 0.26).fill({ color: 0xb4cde2, alpha: 1 })
-          atmosphere.rect(0, nextHeight * 0.74, nextWidth, 3).fill({ color: 0x0f2436, alpha: 0.85 })
+          atmosphere.rect(0, nextHeight * 0.72, nextWidth, nextHeight * 0.28).fill({ color: colors.floor, alpha: 1 })
+          atmosphere.rect(0, nextHeight * 0.72, nextWidth, 3).fill({ color: colors.floorEdge, alpha: 0.9 })
 
           // Wide landscape: the rocket parks in the left third and the result cards take the right.
           const wide = nextWidth >= 900 && nextWidth > nextHeight * 1.3
@@ -116,10 +132,10 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
           const berthX = cx
           const berthY = nextHeight * 0.78
           berth.clear()
-          berth.ellipse(berthX, berthY, Math.min(150, nextWidth * 0.2), 18).stroke({ color: 0x175f9b, alpha: 0.9, width: 3 })
-          berth.ellipse(berthX, berthY, Math.min(96, nextWidth * 0.13), 10).stroke({ color: 0x17703f, alpha: 0.9, width: 2 })
+          berth.ellipse(berthX, berthY, Math.min(150, nextWidth * 0.2), 18).stroke({ color: colors.trim, alpha: 0.82, width: 3 })
+          berth.ellipse(berthX, berthY, Math.min(96, nextWidth * 0.13), 10).stroke({ color: colors.light, alpha: 0.72, width: 2 })
           for (let i = -3; i <= 3; i++) {
-            berth.circle(berthX + i * Math.min(34, nextWidth * 0.045), berthY, 2.5).fill({ color: i === 0 ? 0x17703f : 0x175f9b, alpha: 1 })
+            berth.circle(berthX + i * Math.min(34, nextWidth * 0.045), berthY, 2.5).fill({ color: i === 0 ? colors.light : colors.trim, alpha: 1 })
           }
 
           if (ship) {
@@ -127,6 +143,7 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
             ship.scale.set(shipWidth / Math.max(shipTexture?.width ?? 1, 1))
             ship.x = cx
             ship.y = nextHeight * 0.68
+            ship.texture.source.scaleMode = 'nearest'
           }
         }
 
