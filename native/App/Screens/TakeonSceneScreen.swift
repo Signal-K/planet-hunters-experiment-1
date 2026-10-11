@@ -149,7 +149,7 @@ struct TakeonSceneScreen: View {
                         .background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: 12))
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.hudInk, lineWidth: 1.5))
                 }.buttonStyle(.plain)
-                .position(x: min(max(a.x, 80), geo.size.width - 90), y: max(a.y - 70, 70))
+                .position(x: min(max(a.x, 80), geo.size.width - 170), y: max(a.y - 70, 70))
                 .accessibilityIdentifier("takeon-mine-card")
             }
             if let n = model.notice {
