@@ -554,23 +554,44 @@ button.start {
 @media (orientation: portrait) and (max-width: 700px) {
   .panel {
     top: 64px;
-    left: 64px;
-    right: 64px;
+    left: 8px;
+    right: 8px;
     width: auto;
     height: calc(100% - 76px);
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
     border-radius: 22px;
   }
+  .arrow { top: auto; bottom: 12px; transform: none; z-index: 6; }
+  .prev { left: 14px; }
+  .next { right: 14px; }
+  /* Inset the pager so the arrows sit beside the dots. Padding would scroll away. */
+  .scene[data-paging='true'] .dots { margin-left: 56px; margin-right: 56px; }
   .tabs {
     flex-direction: row;
     align-items: stretch;
     border-right: 0;
     border-bottom: 2px solid color-mix(in srgb, var(--ln-board-ink) 12%, transparent);
     padding: 8px;
+    gap: 6px;
   }
-  .tab { flex: 1 1 0; min-height: 56px; }
-  button.log { margin-top: 0; flex: 0 0 auto; padding: 0 10px; }
+  button.tab {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 56px;
+    padding: 6px 2px;
+    font-size: 14px;
+    letter-spacing: 0;
+  }
+  button.log {
+    position: absolute;
+    top: 6px;
+    right: 62px;
+    z-index: 6;
+    margin: 0;
+    min-width: 52px;
+    padding: 0 12px;
+  }
   .body { padding: 8px; }
   .card { margin: 0; padding: 12px; }
   .cardBody {
@@ -603,9 +624,23 @@ button.start {
   }
   .mark { grid-column: 1 / -1; justify-self: stretch; }
   button.start { width: 100%; }
-  .head { grid-template-columns: minmax(0, 1fr) auto; }
-  .markSlot { grid-column: 2; grid-row: 1; }
-  .wsw { grid-column: 1 / -1; justify-self: start; }
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 6px;
+  }
+  .kicker {
+    order: 1;
+    flex: 1 1 auto;
+    min-width: max-content;
+    overflow: visible;
+    text-overflow: clip;
+    letter-spacing: 0.02em;
+  }
+  .wsw { order: 2; flex: 0 0 auto; margin-left: auto; }
+  .markSlot { order: 3; flex: 0 0 auto; justify-content: start; justify-items: start; }
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
@@ -626,9 +661,14 @@ button.start {
   .cargo { gap: 4px; }
   button.accept { margin-top: 0; min-height: 44px; }
   .rocket { max-height: 132px; align-self: center; }
-  .eventBody { padding: 8px 10px; }
-  .medal { width: 44px; height: 36px; }
-  .badges { margin-top: 6px; }
+  .heroArt, .eventArt { height: 64px; aspect-ratio: auto; }
+  .heroBody { padding: 6px 8px 8px; }
+  .hero h2 { font-size: 16px; }
+  .countdown { margin-top: 4px; min-height: 28px; }
+  .badges { margin-top: 4px; }
+  .blurb { margin-top: 4px; }
+  .eventBody { padding: 6px 8px 8px; }
+  .medal { width: 40px; height: 32px; }
   .step { grid-template-columns: 48px minmax(0, 1fr) auto; min-height: 56px; padding: 4px 8px; }
   .step p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .glyph { width: 44px; height: 44px; }
@@ -636,4 +676,20 @@ button.start {
   .join { height: 16px; }
   .chain { padding-bottom: 8px; }
   button.tab { min-height: 56px; }
+}
+
+@media (min-width: 1100px) and (min-height: 700px) {
+  .carousel { justify-content: center; }
+  .card { flex: 0 1 auto; max-height: 100%; }
+  .cardBody {
+    flex: 0 1 auto;
+    align-content: start;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+    grid-template-rows: none;
+  }
+  .head { min-height: 64px; }
+  .title { font-size: 36px; }
+  .fact { min-height: 96px; padding: 14px 16px; }
+  .fact strong { font-size: 28px; }
+  .rocket { height: auto; max-height: 220px; align-self: center; }
 }

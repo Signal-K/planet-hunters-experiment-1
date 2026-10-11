@@ -106,35 +106,16 @@ function MineralRock({ shape, color }: { shape?: string; color: string }) {
   </span>
 }
 
-function SkyBanner({ kind }: { kind: 'orionids' | 'comet' | 'saturn' | 'rocket' | 'moon' }) {
-  return <svg className={styles.banner} viewBox="0 0 320 140" width="320" height="140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <rect width="320" height="140" fill="var(--ln-world-dusk-top)" />
-    <rect y="70" width="320" height="70" fill="var(--ln-world-dusk-horizon)" />
-    <rect y="108" width="320" height="32" fill="var(--ln-world-soil)" />
-    <rect y="108" width="320" height="6" fill="var(--ln-world-grass)" />
-    {[[18, 22], [48, 40], [80, 16], [120, 34], [160, 18], [200, 42], [240, 20], [280, 36], [300, 14]].map(([x, y]) =>
-      <rect key={`${x}-${y}`} x={x} y={y} width="3" height="3" fill="var(--ln-board-paper)" />)}
-    {kind === 'orionids' && <>
-      <polygon points="40,78 150,36 138,48 210,18" fill="var(--ln-board-amber)" />
-      <circle cx="214" cy="18" r="12" fill="var(--ln-board-ink)" />
-      <rect x="250" y="78" width="10" height="30" fill="var(--ln-board-ink)" />
-      <polygon points="242,80 268,80 255,64" fill="var(--ln-board-ink)" />
-    </>}
-    {kind === 'comet' && <>
-      <polygon points="30,90 190,40 170,52" fill="var(--ln-board-paper)" opacity="0.85" />
-      <circle cx="196" cy="38" r="8" fill="var(--ln-board-paper)" />
-    </>}
-    {kind === 'saturn' && <>
-      <ellipse cx="168" cy="58" rx="46" ry="14" fill="none" stroke="var(--ln-board-amber)" strokeWidth="4" />
-      <circle cx="168" cy="58" r="22" fill="var(--ln-board-lavender-deep)" />
-    </>}
-    {kind === 'rocket' && <>
-      <polygon points="150,96 170,96 160,28" fill="var(--ln-board-paper)" />
-      <polygon points="150,96 138,110 160,96" fill="var(--ln-board-coral)" />
-      <polygon points="170,96 182,110 160,96" fill="var(--ln-board-coral)" />
-    </>}
-    {kind === 'moon' && <circle cx="200" cy="52" r="22" fill="var(--ln-board-paper)" />}
-  </svg>
+const EVENT_BANNERS = {
+  orionids: '/game/assets/events/banners/orionids.png',
+  comet: '/game/assets/events/banners/draconids.png',
+  saturn: '/game/assets/events/banners/saturn.png',
+  rocket: '/game/assets/events/banners/rocket.png',
+  moon: '/game/assets/events/banners/moon.png',
+} as const
+
+function SkyBanner({ kind }: { kind: keyof typeof EVENT_BANNERS }) {
+  return <img className={styles.banner} src={EVENT_BANNERS[kind]} alt="" />
 }
 
 function bannerKind(id: string): 'comet' | 'saturn' | 'rocket' | 'moon' {
@@ -191,7 +172,7 @@ export default function MissionBoard({
     onAccept(step.id, step.kind === 'focus' ? 'store' : undefined)
   }
 
-  return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions">
+  return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'}>
     <div className={styles.sky} aria-hidden="true">
       <BaseLayerScene time={grade} />
       <div className={styles.dim} />
@@ -204,8 +185,8 @@ export default function MissionBoard({
         <span className={`${styles.chip} ${styles.cargoChip}`} data-testid="hub-cargo-chip" aria-label="Cargo"><CubeIcon /></span>
         <button type="button" className={styles.round} data-testid="friends-button" aria-label="Friends" onClick={() => setFriendsOpen(true)}><PeopleIcon /></button>
       </div>
-      <button type="button" className={`${styles.round} ${styles.arrow} ${styles.prev}`} data-testid="mission-board-prev" aria-label="Previous contract" disabled={!paging} onClick={() => paging && onSelectRelative(-1)}><ArrowIcon direction="left" /></button>
-      <button type="button" className={`${styles.round} ${styles.arrow} ${styles.next}`} data-testid="mission-board-next" aria-label="Next contract" disabled={!paging} onClick={() => paging && onSelectRelative(1)}><ArrowIcon direction="right" /></button>
+      {paging && <button type="button" className={`${styles.round} ${styles.arrow} ${styles.prev}`} data-testid="mission-board-prev" aria-label="Previous contract" onClick={() => onSelectRelative(-1)}><ArrowIcon direction="left" /></button>}
+      {paging && <button type="button" className={`${styles.round} ${styles.arrow} ${styles.next}`} data-testid="mission-board-next" aria-label="Next contract" onClick={() => onSelectRelative(1)}><ArrowIcon direction="right" /></button>}
     </div>
     <section className={styles.panel} data-testid="mission-board" aria-label="Mission board">
       <button type="button" className={`${styles.round} ${styles.close}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
