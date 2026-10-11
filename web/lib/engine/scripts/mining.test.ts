@@ -262,17 +262,13 @@ describe('MiningController ore sym labels', () => {
     expect(labels()[0].y).toBeLessThan(320)
   })
 
-  it('separates labels vertically when deposits sit side by side', () => {
-    const random = vi.spyOn(Math, 'random').mockReturnValue(0)
-    const { controller } = makeController(vi.fn(), { mineralSyms: SYMS, chipFill: 0x334455, chipShade: 0x112233 })
+  it('keeps deposits at least two screen-widths apart', () => {
+    const { controller } = makeController(vi.fn(), { worldWidth: 600, mineralSyms: SYMS, chipFill: 0x334455 })
     controller.start()
-    random.mockRestore()
-    const placed = labels()
-    for (let i = 0; i < placed.length; i++) {
-      for (let j = i + 1; j < placed.length; j++) {
-        if (Math.abs(placed[i].x - placed[j].x) >= 160) continue
-        expect(Math.abs(placed[i].y - placed[j].y)).toBeGreaterThanOrEqual(28)
-      }
+    const ores = (controller as unknown as { ores: { go: { transform: { position: { x: number } } } }[] }).ores
+    for (let i = 1; i < ores.length; i++) {
+      const gap = ores[i].go.transform.position.x - ores[i - 1].go.transform.position.x
+      expect(gap).toBeGreaterThanOrEqual(600 * 2)
     }
   })
 
@@ -300,7 +296,7 @@ describe('MiningController ore sym labels', () => {
     expect(labels()[0].visible).toBe(false)
   })
 
-  it('places lead minerals first and inside the opening frame', () => {
+  it('places lead minerals first, each at least two screen-widths apart', () => {
     const { controller } = makeController(vi.fn(), {
       worldWidth: 390,
       leadMinerals: ['iron', 'carbon', 'ice'],
@@ -312,8 +308,9 @@ describe('MiningController ore sym labels', () => {
     expect(ores.slice(0, 3).map(ore => ore.mineral)).toEqual(['iron', 'carbon', 'ice'])
     const xs = ores.slice(0, 3).map(ore => ore.go.transform.position.x)
     expect(xs[0]).toBeGreaterThan(40)
-    expect(xs[1] - xs[0]).toBeGreaterThanOrEqual(112)
-    expect(xs[2]).toBeLessThan(390)
+    expect(xs[0]).toBeLessThan(390)
+    expect(xs[1] - xs[0]).toBeGreaterThanOrEqual(390 * 2)
+    expect(xs[2] - xs[1]).toBeGreaterThanOrEqual(390 * 2)
   })
 
   it('does not spawn shower debris when the event is off', () => {

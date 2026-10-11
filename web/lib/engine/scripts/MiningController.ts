@@ -47,31 +47,67 @@ const LASER_DEPTH_BY_TIER: Record<number, number> = {
   3: LASER_MAX_DEPTH,
 }
 
-/** Organic ore gap. The tight band still clears a rock mass and its label. */
-function oreGap(): number {
-  const r = Math.random()
-  if (r < 0.20) return 112 + Math.random() * 36
-  if (r < 0.70) return 160 + Math.random() * 100
-  return 260 + Math.random() * 160
-}
-
-/** Chunky blobs sitting on the ground line. Each part's bottom is y + h. */
+/** Buried cutaway shapes. y grows downward into the soil. Only the first part breaks the surface. */
 type OreBlob = { x: number; y: number; w: number; h: number }
-const FLECK_BLOBS: OreBlob[][] = [
-  [{ x: -36, y: -26, w: 72, h: 26 }, { x: -16, y: -44, w: 32, h: 18 }],
-  [{ x: -24, y: -48, w: 48, h: 48 }, { x: -12, y: -60, w: 24, h: 12 }],
-  [{ x: -42, y: -28, w: 84, h: 28 }],
-  [{ x: -32, y: -22, w: 64, h: 22 }, { x: -28, y: -42, w: 32, h: 20 }],
+const NODULE_BLOBS: OreBlob[][] = [
+  [
+    { x: -6, y: -2, w: 12, h: 6 },
+    { x: -30, y: 14, w: 24, h: 20 },
+    { x: -4, y: 18, w: 28, h: 24 },
+    { x: 22, y: 26, w: 18, h: 16 },
+    { x: -16, y: 44, w: 44, h: 12 },
+  ],
+  [
+    { x: -5, y: -2, w: 10, h: 5 },
+    { x: -22, y: 16, w: 20, h: 18 },
+    { x: 2, y: 22, w: 22, h: 20 },
+    { x: -12, y: 42, w: 36, h: 14 },
+  ],
+  [
+    { x: -4, y: -2, w: 8, h: 5 },
+    { x: -26, y: 12, w: 18, h: 16 },
+    { x: -6, y: 20, w: 16, h: 28 },
+    { x: 12, y: 28, w: 20, h: 18 },
+  ],
 ]
 const SEAM_BLOBS: OreBlob[][] = [
-  [{ x: -40, y: -16, w: 80, h: 16 }, { x: -28, y: -32, w: 56, h: 16 }],
-  [{ x: -36, y: -24, w: 72, h: 24 }],
-  [{ x: -34, y: -18, w: 68, h: 18 }, { x: 0, y: -36, w: 34, h: 18 }],
+  [
+    { x: -5, y: -2, w: 10, h: 5 },
+    { x: -48, y: 18, w: 96, h: 14 },
+    { x: -32, y: 34, w: 70, h: 12 },
+    { x: -18, y: 48, w: 40, h: 8 },
+  ],
+  [
+    { x: -4, y: -2, w: 8, h: 5 },
+    { x: -40, y: 22, w: 84, h: 12 },
+    { x: -22, y: 36, w: 52, h: 10 },
+  ],
+  [
+    { x: -6, y: -2, w: 12, h: 5 },
+    { x: -36, y: 16, w: 28, h: 10 },
+    { x: -4, y: 20, w: 56, h: 14 },
+    { x: 8, y: 36, w: 36, h: 10 },
+  ],
 ]
 const CRYSTAL_BLOBS: OreBlob[][] = [
-  [{ x: -22, y: -14, w: 44, h: 14 }, { x: -10, y: -52, w: 20, h: 38 }],
-  [{ x: -30, y: -12, w: 60, h: 12 }, { x: -26, y: -46, w: 18, h: 34 }, { x: 8, y: -40, w: 18, h: 28 }],
-  [{ x: -14, y: -46, w: 28, h: 46 }],
+  [
+    { x: -4, y: -2, w: 8, h: 5 },
+    { x: -16, y: 12, w: 14, h: 30 },
+    { x: 2, y: 16, w: 12, h: 26 },
+    { x: -8, y: 36, w: 22, h: 16 },
+  ],
+  [
+    { x: -3, y: -2, w: 7, h: 5 },
+    { x: -20, y: 14, w: 12, h: 28 },
+    { x: -4, y: 18, w: 14, h: 34 },
+    { x: 12, y: 22, w: 10, h: 22 },
+  ],
+  [
+    { x: -4, y: -2, w: 8, h: 5 },
+    { x: -10, y: 14, w: 20, h: 18 },
+    { x: -6, y: 30, w: 12, h: 26 },
+    { x: 8, y: 24, w: 12, h: 22 },
+  ],
 ]
 
 function mixHex(a: number, b: number, t: number): number {
@@ -87,7 +123,7 @@ function blobFamily(mineral: string): OreBlob[][] {
   const style = oreFleckStyle(mineral)
   if (style === 'seam') return SEAM_BLOBS
   if (style === 'crystal') return CRYSTAL_BLOBS
-  return FLECK_BLOBS
+  return NODULE_BLOBS
 }
 
 function mineralSalt(mineral: string): number {
@@ -99,10 +135,6 @@ function mineralSalt(mineral: string): number {
 function blobParts(mineral: string, salt: number): OreBlob[] {
   const family = blobFamily(mineral)
   return family[(mineralSalt(mineral) + salt) % family.length]
-}
-
-function blobTop(parts: OreBlob[]): number {
-  return parts.reduce((top, part) => Math.min(top, part.y), 0)
 }
 
 /** Per-laser-tier ore properties: radius, hp, depth range within rock surface */
@@ -121,9 +153,11 @@ export interface MiningControllerOptions {
   /** Overrides SHIP_Y when the world is sized dynamically from the viewport. */
   shipY?: number
   minerals: string[]
-  /** Drawn first, in order, spaced across the opening frame. Used by the
-   * `?ores=mixed` preview so iron, carbon and ice share one screenshot. */
+  /** Drawn first, in order, each one deposit-gap apart. `?ores=mixed` uses
+   * this so iron, carbon and ice each get their own stretch of soil. */
   leadMinerals?: string[]
+  /** Preview offset in deposit-gaps. `?scroll=1` opens on the next cluster. */
+  scrollScreens?: number
   /** Required order minerals are seeded at the front of the run so the
    * objective is always discoverable before the normal deposit rotation. */
   requiredMinerals?: string[]
@@ -285,31 +319,22 @@ export class MiningController extends ScriptBehaviour {
       ...lead,
       ...required.flatMap(mineral => Array.from({ length: REQUIRED_ORE_COPIES }, () => mineral)),
     ]
-    let x = SHIP_X + 40
+    const gap = this.depositGap()
+    const skip = Math.max(0, Math.floor(this.opts.scrollScreens ?? 0)) * gap
+    this.totalScrollX = skip
+    this.opts.onScroll?.(skip)
+    let x = SHIP_X + 220 - skip
     let count = 0
-    const leadGap = Math.min(160, Math.max(112, Math.round((this.opts.worldWidth - 180) / Math.max(lead.length, 1))))
-    while (count < lead.length && count < 20) {
-      this.spawnOre(x)
-      count++
-      x += leadGap
-    }
     while (count < 20) {
       this.spawnOre(x)
       count++
-      // Occasionally spawn a close companion (cluster of 2-3)
-      const clusterRoll = Math.random()
-      if (clusterRoll < 0.18 && count < 20) {
-        x += 112 + Math.random() * 28
-        this.spawnOre(x)
-        count++
-        if (Math.random() < 0.35 && count < 20) {
-          x += 112 + Math.random() * 24
-          this.spawnOre(x)
-          count++
-        }
-      }
-      x += oreGap()
+      x += gap
     }
+  }
+
+  /** Empty soil between deposits: two screen-widths, plus the deposit's own width. */
+  private depositGap(): number {
+    return Math.round(this.opts.worldWidth * 2 + 140)
   }
 
   update(realDt: number): void {
@@ -342,7 +367,7 @@ export class MiningController extends ScriptBehaviour {
     const needsSpawn = !last || last.go.transform.position.x < this.opts.worldWidth + 120
     if (needsSpawn && this.ores.length < MAX_ORES + 8) {
       const lastX = last ? last.go.transform.position.x : 0
-      this.spawnOre(lastX + oreGap())
+      this.spawnOre(lastX + this.depositGap())
     }
 
     for (const laser of this.lasers) {
@@ -697,45 +722,30 @@ export class MiningController extends ScriptBehaviour {
     const surface = this.opts.surfaceY ?? SURFACE_Y
     const parts = blobParts(mineral, this.oreCounter)
     const chip = this.opts.chipFill != null ? this.createChip(x, surface, mineral, parts) : null
-    const label = this.createLabel(mineral, x, chip ? this.labelY(x, surface, blobTop(parts)) : y, radius)
+    const label = this.createLabel(mineral, x, chip ? surface - 28 : y, radius)
 
     this.gameObject.addChild(go)
     this.ores.push({ go, renderer, sprite, label, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0 })
   }
 
-  /** Keep neighbouring syms off one baseline when deposits sit side by side. */
-  private labelY(x: number, surface: number, top: number): number {
-    const base = surface + top - 14
-    const nearby = this.ores.filter(ore => ore.fallSpeed === undefined && ore.label && Math.abs(ore.go.transform.position.x - x) < 160)
-    let y = base
-    for (const ore of nearby) {
-      if (ore.label && Math.abs(ore.label.y - y) < 28) y = ore.label.y - 32
-    }
-    return y
-  }
-
-  /** Bold two-tone blob on the ground line. The hit test still uses the buried position. */
+  /** Nodules, seams and crystal pockets inside the soil, plus a small sym chip above the crust. */
   private createChip(x: number, y: number, mineral: string, parts: OreBlob[]): Graphics {
     const body = oreFleck(mineral)
     const avg = (((body >> 16) & 255) + ((body >> 8) & 255) + (body & 255)) / 3
     const lit = mixHex(body, 0xffffff, avg < 70 ? 0.62 : 0.28)
     const outline = avg < 70 ? mixHex(body, 0xffffff, 0.38) : mixHex(body, 0x000000, 0.58)
     const g = new Graphics()
-    let minX = Infinity
-    let maxX = -Infinity
-    for (const part of parts) {
-      minX = Math.min(minX, part.x)
-      maxX = Math.max(maxX, part.x + part.w)
-    }
-    if (Number.isFinite(minX)) {
-      g.rect(minX + 6, 2, Math.max(12, maxX - minX - 10), 3).fill(outline)
-    }
     for (const part of parts) g.rect(part.x - 2, part.y - 2, part.w + 4, part.h + 4).fill(outline)
     for (const part of parts) g.rect(part.x, part.y, part.w, part.h).fill(body)
     for (const part of parts) {
-      const band = Math.max(6, Math.round(part.h * 0.34))
+      const band = Math.max(4, Math.round(part.h * 0.34))
       g.rect(part.x, part.y, part.w, band).fill(lit)
     }
+    const ink = this.opts.labelInk ?? ORE_LABEL_FILL
+    const disc = ink === ORE_LABEL_FILL ? 0x10141c : 0xf6f3ea
+    const ring = ink === ORE_LABEL_FILL ? 0xf6f3ea : 0x10141c
+    g.circle(0, -28, 18).fill(ring)
+    g.circle(0, -28, 15).fill(disc)
     g.x = x
     g.y = y
     this.opts.container.addChild(g)
@@ -747,7 +757,7 @@ export class MiningController extends ScriptBehaviour {
     const sym = this.opts.mineralSyms?.[mineral]
     if (!sym) return null
 
-    const fontSize = Math.round(radius * (sym.length >= 3 ? 1.15 : 1.7))
+    const fontSize = Math.max(14, Math.round(radius * (sym.length >= 3 ? 1.15 : 1.7)))
     const ink = this.opts.labelInk ?? ORE_LABEL_FILL
     const label = new Text({
       text: sym,

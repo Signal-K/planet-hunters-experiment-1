@@ -25,6 +25,7 @@ interface MiningCanvasProps {
   rocketImageSrc?: string
   minerals: string[]
   leadMinerals?: string[]
+  scrollScreens?: number
   requiredMinerals?: string[]
   mineralMeta: Record<string, MineralMeta>
   /** Equipped drill/laser part tier (1-3). Gates how deep the laser can reach. */
@@ -48,7 +49,7 @@ interface MiningCanvasProps {
   debrisPreset?: DebrisEventPreset | null
 }
 
-export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMinerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
   void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
@@ -186,6 +187,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
           shipY,
           minerals,
           leadMinerals,
+          scrollScreens,
           requiredMinerals,
           mineralColors: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.color])),
           mineralLaserAccess,
@@ -307,6 +309,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
           controller.setScrollSpeed(speed)
         }
 
+        app.stage.addChild(field.dig)
         app.stage.addChild(field.beam)
         app.stage.addChild(field.spark)
         app.stage.addChild(field.ship)
@@ -344,7 +347,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
       // else: async init returns early (destroyed=true), canvas stays briefly then is GC'd with parent
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [palette.id, rocketImageSrc, fitKey, leadMinerals?.join(',')])
+  }, [palette.id, rocketImageSrc, fitKey, leadMinerals?.join(','), scrollScreens])
 
   return (
     <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" data-palette={palette.id} data-training-mining={trainingMiningTry || undefined}>

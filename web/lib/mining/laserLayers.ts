@@ -34,40 +34,21 @@ function smoothHorizon(g: Graphics, width: number, color: number): void {
   g.poly(pts).fill(color)
 }
 
-/** Three flat ground tones: deep fill, mid band, lighter surface edge. */
+/** Cutaway soil: a light crust, then flat strata down to the deep layer. Nothing rises above y = 0. */
 function paintGroundBands(g: Graphics, width: number, height: number, palette: LaserPalette): void {
-  const edge = lerp(palette.ground, 0xffffff, 0.48)
-  const mid = Math.max(36, Math.round(height * 0.4))
-  g.rect(0, 0, width, height).fill(palette.groundDeep)
-  g.rect(0, 0, width, mid).fill(palette.ground)
-  g.rect(0, 0, width, 3).fill(edge)
-}
-
-/** A few large stepped mounds. Bottoms sit on y = 0 and grow upward. */
-function softMound(g: Graphics, x: number, w: number, h: number, color: number, shade: number): void {
-  const cap = lerp(color, 0xffffff, 0.34)
-  g.rect(x, -Math.round(h * 0.42), w, Math.round(h * 0.42)).fill(shade)
-  g.rect(x + Math.round(w * 0.08), -h, Math.round(w * 0.84), Math.round(h * 0.7)).fill(color)
-  g.rect(x + Math.round(w * 0.24), -h, Math.round(w * 0.52), Math.round(h * 0.28)).fill(cap)
-}
-
-function paintShapeRow(g: Graphics, terrain: LaserPalette['terrain'], color: number, shade: number, width: number): void {
-  const mound = (x: number, w: number, h: number) => softMound(g, x, w, h, color, shade)
-  const wide = width >= 400
-  if (terrain === 'dunes') {
-    mound(12, wide ? 240 : 168, wide ? 24 : 18)
-    mound(wide ? 270 : 188, wide ? 170 : 110, wide ? 18 : 14)
-    return
-  }
-  if (terrain === 'ice') {
-    mound(16, wide ? 180 : 140, wide ? 18 : 14)
-    mound(wide ? 220 : 168, wide ? 150 : 112, wide ? 14 : 12)
-    if (wide) mound(390, 72, 16)
-    return
-  }
-  mound(16, wide ? 130 : 96, wide ? 34 : 28)
-  mound(wide ? 180 : 140, wide ? 96 : 72, wide ? 26 : 20)
-  if (wide) mound(310, 120, 30)
+  const edge = lerp(palette.ground, 0xffffff, 0.55)
+  const crust = lerp(palette.ground, 0xffffff, 0.24)
+  const mid = palette.ground
+  const lower = lerp(palette.ground, palette.groundDeep, 0.42)
+  const deep = palette.groundDeep
+  const crustH = Math.max(18, Math.round(height * 0.16))
+  const midH = Math.max(28, Math.round(height * 0.28))
+  const lowerH = Math.max(24, Math.round(height * 0.22))
+  g.rect(0, 0, width, height).fill(deep)
+  g.rect(0, crustH + midH, width, lowerH).fill(lower)
+  g.rect(0, crustH, width, midH).fill(mid)
+  g.rect(0, 4, width, crustH).fill(crust)
+  g.rect(0, 0, width, 4).fill(edge)
 }
 
 function paintSky(w: number, h: number, palette: LaserPalette): Graphics {
@@ -88,6 +69,7 @@ export interface LaserField {
   near: Container
   ground: Container
   beam: Graphics
+  dig: Graphics
   spark: Graphics
   ship: Container
   plume: Graphics
@@ -179,16 +161,8 @@ export function buildLaserField(opts: {
   far.y = surfaceY - 36
   backdrop.addChild(far)
 
-  const shape = lerp(palette.nearRidge, 0xffffff, palette.terrain === 'rubble' ? 0.22 : 0.08)
   const nearW = RIDGE_TILE_W
   const near = new Container()
-  const nearCopies = Math.ceil(worldW / nearW) + 2
-  for (let i = 0; i < nearCopies; i++) {
-    const g = new Graphics()
-    paintShapeRow(g, palette.terrain, shape, palette.groundDeep, nearW)
-    g.x = i * nearW
-    near.addChild(g)
-  }
   near.y = surfaceY
   backdrop.addChild(near)
 
@@ -212,6 +186,14 @@ export function buildLaserField(opts: {
   beam.x = shipX
   beam.y = shipY + 10
 
+  const digH = 72
+  const dig = new Graphics()
+  dig.rect(-7, 0, 14, digH).fill({ color: palette.beam, alpha: 0.28 })
+  dig.rect(-2, 0, 4, digH).fill({ color: palette.beamCore, alpha: 0.95 })
+  dig.x = shipX
+  dig.y = surfaceY
+  dig.alpha = 0
+
   const spark = new Graphics()
   spark.circle(0, 0, 10).fill({ color: palette.beam, alpha: 0.45 })
   spark.circle(0, 0, 4).fill({ color: palette.beamCore, alpha: 0.95 })
@@ -224,7 +206,7 @@ export function buildLaserField(opts: {
   const plume = ship.children[0] as Graphics
 
   return {
-    backdrop, far, near, ground, beam, spark, ship, plume, farW, nearW,
+    backdrop, far, near, ground, beam, dig, spark, ship, plume, farW, nearW,
     step(time, reduced, firing) {
       const tw = reduced ? 0 : 1
       for (const star of stars) {
@@ -239,6 +221,7 @@ export function buildLaserField(opts: {
       const pulse = reduced ? 1 : 0.82 + Math.sin(time * 9) * 0.18
       beam.alpha = firing ? 1 : 0.72 + pulse * 0.28
       beam.scale.x = firing ? 1.45 : 0.9 + pulse * 0.15
+      dig.alpha = firing ? 1 : 0
       spark.scale.set(firing ? 1.6 : 0.75 + pulse * 0.35)
       spark.alpha = firing ? 1 : 0.7 + pulse * 0.3
       plume.scale.set(pulse, 0.85 + pulse * 0.2)

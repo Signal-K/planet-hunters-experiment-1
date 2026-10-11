@@ -350,11 +350,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [paletteOverride, setPaletteOverride] = useState<string | null>(null)
   const [devBars, setDevBars] = useState(false)
   const [mixedOres, setMixedOres] = useState(false)
+  const [scrollScreens, setScrollScreens] = useState(0)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     setPaletteOverride(params.get('palette'))
     setDevBars(params.get('dev') === '1')
     setMixedOres(params.get('ores') === 'mixed')
+    const scroll = Number(params.get('scroll'))
+    setScrollScreens(Number.isFinite(scroll) && scroll > 0 ? scroll : 0)
   }, [])
   const palette = paletteById(paletteOverride) ?? paletteForTarget(target)
 
@@ -601,6 +604,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           rocketImageSrc={rocketImageSrc}
           minerals={depositMinerals}
           leadMinerals={mixedOres ? ['iron', 'carbon', 'ice'] : undefined}
+          scrollScreens={scrollScreens}
           requiredMinerals={Object.keys(mission.requires.minerals)}
           mineralMeta={minerals}
           laserTier={laserTier}
