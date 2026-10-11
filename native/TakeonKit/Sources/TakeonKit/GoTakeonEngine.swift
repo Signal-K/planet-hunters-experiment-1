@@ -2,15 +2,6 @@
 import Foundation
 import Takeon
 
-/// Raw event as emitted by the Go runtime (`takeon.Event`).
-public struct TakeonRawEvent: Codable, Equatable, Sendable {
-    public var kind: String
-    public var x: Int?
-    public var y: Int?
-    public var detail: String?
-    public var amount: Double?
-}
-
 /// Maps Landnam target ids to Takeon body ids (the Go runtime's generated bodies).
 public enum TakeonBodies {
     public static let table: [String: String] = [

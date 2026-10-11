@@ -15,7 +15,19 @@ public enum TakeonEvent: Equatable, Sendable {
     case missionObjectiveMet
 }
 
+/// Raw event as emitted by the Go runtime (`takeon.Event`). Defined outside the
+/// `canImport(Takeon)` gate so app code compiles with or without the framework.
+public struct TakeonRawEvent: Codable, Equatable, Sendable {
+    public var kind: String
+    public var x: Int?
+    public var y: Int?
+    public var detail: String?
+    public var amount: Double?
+}
+
 public protocol TakeonEngine: AnyObject {
+    /// Raw events from the most recent `step` (empty for engines that do not report them).
+    var lastRawEvents: [TakeonRawEvent] { get }
     /// Load or generate the world for a target. Must be deterministic per seed.
     func loadWorld(_ seed: TakeonWorldSeed) throws
     /// Advance the simulation by `dt` seconds and return events raised.
@@ -40,6 +52,7 @@ public protocol TakeonEngine: AnyObject {
 }
 
 public extension TakeonEngine {
+    var lastRawEvents: [TakeonRawEvent] { [] }
     func window(x: Int, y: Int, w: Int, h: Int) throws -> TakeonTerrainWindow {
         throw TakeonEngineError.runtime("terrain window unsupported by this engine")
     }

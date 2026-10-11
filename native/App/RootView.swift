@@ -1,5 +1,6 @@
 import SwiftUI
 import LandnamCore
+import TakeonKit
 
 /// Routes every one of the 26 screens. Core-loop screens are playable; the rest
 /// show a staged placeholder until their systems are ported (see README).
@@ -30,7 +31,7 @@ struct RootView: View {
             case .build: BuildScreen()
             case .surfaceOps: SurfaceOpsScreen()
             case .transit: TransitScreen()
-            case .roverMining: if TakeonSceneFlag.enabled { TakeonSceneScreen(onExit: { store.go(.hub) }) } else { RoverFieldScreen() }
+            case .roverMining: if TakeonSceneFlag.enabled && takeonGoRuntimeAvailable { TakeonSceneScreen(onExit: { store.go(.hub) }) } else { RoverFieldScreen() }
             case .mining, .landing: MiningScreen()
             case .delivery: DeliveryScreen()
             case .debrief: DebriefScreen()

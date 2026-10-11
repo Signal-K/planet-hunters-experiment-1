@@ -23,6 +23,7 @@ final class TakeonSceneModel {
 
     init(engine: TakeonEngine = makeDefaultTakeonEngine(), target: String = "moon", seed: UInt64 = 4212) {
         self.engine = engine
+        guard takeonGoRuntimeAvailable else { failure = "Rover sim unavailable in this build"; return }
         do { try engine.loadWorld(TakeonWorldSeed(targetId: target, seed: seed)); refresh(force: true) }
         catch { failure = "Takeon runtime unavailable: \(error)" }
     }
@@ -31,7 +32,7 @@ final class TakeonSceneModel {
         guard failure == nil else { return }
         let events = engine.step(dt: dt)
         accum += dt
-        for e in (engine as? GoTakeonEngine)?.lastRawEvents ?? [] {
+        for e in engine.lastRawEvents {
             if e.kind == "mineOrder" { selected = nil }   // order finished (or failed): drop the card
             if let n = Self.notice(for: e) { notice = n; noticeUntil = accum + 4 } }
         if notice != nil, accum > noticeUntil { notice = nil }
