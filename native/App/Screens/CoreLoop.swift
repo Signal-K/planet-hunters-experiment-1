@@ -3,74 +3,218 @@ import LandnamCore
 
 private func francs(_ n: Int) -> String { Economy.format(francs: n) }
 
+/// Mission board (mirrors web `MissionSetupRoutes` "Choose a contract"): one contract slide at a time with
+/// previous / next arrows, the client mark, facts, required cargo and ACCEPT & PREPARE.
 struct MissionsScreen: View {
     @Environment(GameStore.self) private var store
+    @Environment(\.flatLayout) private var flat
     @State private var archiveFocus: String?
     @State private var showArchive = false
+    @State private var selected = 0
 
     var body: some View {
         let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
-        ScreenFrame(title: "Mission board", back: { store.go(.hub) }) {
-            Eyebrow(text: store.player.freeOperations ? "Free Operations · client work" : "Guided contracts")
-            WorldSpaceWeekBanner(banner: WorldSpaceWeek.banner(badges: store.player.badges, now: store.now))
-            if entries.isEmpty {
-                Panel {
+        let index = entries.isEmpty ? 0 : min(selected, entries.count - 1)
+        scroller {
+            VStack(alignment: .leading, spacing: 12) {
+                header
+                WorldSpaceWeekBanner(banner: WorldSpaceWeek.banner(badges: store.player.badges, now: store.now))
+                if entries.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("No contracts open right now").font(AppFont.display(16))
+                        Text("NO CONTRACTS ARE OFFERED YET").font(AppFont.display(16)).foregroundStyle(Theme.ink)
                         Text("Your own operations are on the Launchpad. The archive shows what unlocks the next contract.")
                             .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    }.padding(16).frame(maxWidth: .infinity, alignment: .leading).stage(accent: mixWhite("#17703F", 0.12, fallback: Theme.paper))
+                } else {
+                    let e = entries[index]
+                    HStack(alignment: .center, spacing: 4) {
+                        arrow("chevron.left", label: "Previous contract", disabled: entries.count < 2) { selected = (index - 1 + entries.count) % entries.count }
+                        MissionSlide(entry: e, position: index + 1, count: entries.count, catalog: store.catalog, player: store.player, rocket: store.state.rocket,
+                                     wsw: WorldSpaceWeek.chips(for: e.mission, badges: store.player.badges, now: store.now),
+                                     onTake: { store.pickMission(e.id) }, onPathway: { archiveFocus = "mission:\(e.id)"; showArchive = true })
+                        arrow("chevron.right", label: "Next contract", disabled: entries.count < 2) { selected = (index + 1) % entries.count }
                     }
+                    .padding(.vertical, 8).padding(.horizontal, 4)
+                    .stage(accent: mixWhite(e.mission.client.flatMap { Clients.byId[$0]?.colorHex } ?? "#17703F", 0.12, fallback: Theme.paper))
                 }
+                PrimaryButton(title: "Archive · pathways and unlocks") { archiveFocus = nil; showArchive = true }
             }
-            ForEach(entries) { e in MissionCard(entry: e, catalog: store.catalog, wsw: WorldSpaceWeek.chips(for: e.mission, badges: store.player.badges, now: store.now)) {
-                store.pickMission(e.id)
-            } onPathway: { archiveFocus = "mission:\(e.id)"; showArchive = true } }
-            PrimaryButton(title: "Archive · pathways and unlocks") { archiveFocus = nil; showArchive = true }
+            .padding(.horizontal, 16).padding(.top, 16).padding(.bottom, 32)
+            .frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
         }
+        .background(Theme.bg.ignoresSafeArea())
+        .foregroundStyle(Theme.ink)
         .sheet(isPresented: $showArchive) { ArchiveScreen(focus: archiveFocus) }
+    }
+
+    @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
+        if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
+    }
+
+    private var header: some View {
+        HStack(alignment: .center, spacing: 8) {
+            Button { store.go(.hub) } label: {
+                Image(systemName: "chevron.left").font(.system(size: 20, weight: .bold)).foregroundStyle(Theme.ink)
+                    .frame(width: 48, height: 48).background(Theme.paper).overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.ink, lineWidth: 3))
+                    .background(RoundedRectangle(cornerRadius: 4).fill(Theme.ink.opacity(0.42)).offset(y: 4))
+            }.buttonStyle(.plain).accessibilityLabel("Back")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("CONTRACT → LAUNCH").font(AppFont.display(14)).tracking(2.0)
+                Text("Choose a contract").font(AppFont.display(20))
+            }
+            .padding(.vertical, 8).padding(.leading, 12).padding(.trailing, 12).frame(minHeight: 48, alignment: .leading)
+            .background(Theme.paper)
+            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.ink, lineWidth: 3))
+            .overlay(alignment: .leading) { Rectangle().fill(Theme.green).frame(width: 7).padding(.vertical, 1.5) }
+            .background(RoundedRectangle(cornerRadius: 4).fill(Theme.ink.opacity(0.42)).offset(y: 4))
+        }
+        .padding(.bottom, 4)
+    }
+
+    private func arrow(_ symbol: String, label: String, disabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 20, weight: .bold)).foregroundStyle(Theme.ink)
+                .frame(width: 44, height: 64).background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+        }.buttonStyle(.plain).disabled(disabled).opacity(disabled ? 0.5 : 1).accessibilityLabel(label)
     }
 }
 
-/// One contract: who, where, what it pays, and either a Take button or the plain reason it is locked.
-struct MissionCard: View {
+/// `hex` at `pct` strength over white (CSS `color-mix(in srgb, hex pct, #fff)`).
+private func mixWhite(_ hex: String?, _ pct: Double, fallback: Color) -> Color {
+    guard let hex, hex.hasPrefix("#"), let v = UInt32(hex.dropFirst(), radix: 16) else { return fallback }
+    let c = (r: Double((v >> 16) & 0xFF) / 255, g: Double((v >> 8) & 0xFF) / 255, b: Double(v & 0xFF) / 255)
+    return Color(.sRGB, red: c.r * pct + (1 - pct), green: c.g * pct + (1 - pct), blue: c.b * pct + (1 - pct))
+}
+
+private extension Color {
+    init?(hex: String?) {
+        guard let hex, hex.hasPrefix("#"), let v = UInt32(hex.dropFirst(), radix: 16) else { return nil }
+        self = Theme.hex(v)
+    }
+}
+
+private extension View {
+    /// The web contract stage: 3pt ink frame, 8pt radius, a tint of the client colour behind the left half.
+    func stage(accent: Color) -> some View {
+        self.background(
+            GeometryReader { g in
+                HStack(spacing: 0) {
+                    Rectangle().fill(accent).frame(width: g.size.width * 0.5)
+                    Rectangle().fill(Theme.paper2)
+                }
+            }
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 3))
+        .background(RoundedRectangle(cornerRadius: 8).fill(Theme.ink.opacity(0.42)).offset(y: 8))
+        .padding(.bottom, 8)
+    }
+}
+
+/// One contract: identity, brief, facts, cargo and the accept button (web `contractSlide`).
+struct MissionSlide: View {
     let entry: MissionBoard.Entry
+    let position: Int
+    let count: Int
     let catalog: Catalog
+    let player: Player
+    let rocket: RocketConfig
     let wsw: [WorldSpaceWeek.Chip]
     let onTake: () -> Void
     let onPathway: () -> Void
 
+    private func compactFrancs(_ n: Int) -> String {
+        if n >= 1_000_000_000 { return String(format: "₣%.1fB", Double(n) / 1e9) }
+        if n >= 1_000_000 { return String(format: "₣%.0fM", Double(n) / 1e6) }
+        return Economy.format(francs: n)
+    }
+
     var body: some View {
         let m = entry.mission
-        let client = m.client.flatMap { Clients.byId[$0]?.name } ?? "Your programme"
-        let from = m.targetId.flatMap(catalog.target)?.name
-        let to = m.deliveryTargetId.flatMap(catalog.target)?.name
-        Panel(accent: entry.unlocked ? Theme.blue : Theme.textMuted) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(m.title).font(AppFont.display(18)).fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 8)
-                    Text(m.tag.uppercased()).font(AppFont.display(14, "Bold")).tracking(1.0).foregroundStyle(Theme.textDim)
-                }
-                Text("\(client) · \(m.difficulty)").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                if let from { Text(to.map { "\(from) → \($0)" } ?? "Target: \(from)").font(AppFont.body(14)) }
-                if !m.requires.minerals.isEmpty {
-                    Text(m.requires.minerals.sorted { $0.key < $1.key }.map { "\($0.value) \(Minerals.byId[$0.key]?.name ?? $0.key)" }.joined(separator: ", ")).font(AppFont.body(14))
-                }
-                if m.payout.francs > 0 { Text(Economy.format(francs: m.payout.francs)).font(AppFont.display(16)).foregroundStyle(Theme.teal) }
-                WorldSpaceWeekChips(chips: wsw)
-                if entry.unlocked {
-                    PrimaryButton(title: "Take contract", action: onTake)
-                } else {
-                    HStack(spacing: 8) {
-                        Image(systemName: "lock.fill").foregroundStyle(Theme.textMuted)
-                        Text(entry.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
-                    }
-                    Button(action: onPathway) {
-                        Text("SEE THE PATHWAY").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress).frame(minHeight: 44, alignment: .leading)
-                    }.buttonStyle(.plain)
+        let client = m.client.flatMap { Clients.byId[$0] }
+        let accent = Color(hex: client?.colorHex) ?? Theme.blue
+        let level = client.map { 1 + max(0, player.clientMissions[$0.id] ?? 0) / Clients.affinityMissionThreshold }
+        let route: String = {
+            if let from = m.targetId.flatMap(catalog.target)?.name, let to = m.deliveryTargetId.flatMap(catalog.target)?.name { return "\(from) → \(to)".uppercased() }
+            return "\(entry.feasibleTargets) ELIGIBLE TARGET\(entry.feasibleTargets == 1 ? "" : "S")"
+        }()
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle().fill(Theme.paper)
+                    Circle().stroke(accent, lineWidth: 2)
+                    Text(client?.initial ?? "OP").font(AppFont.display(28)).foregroundStyle(Theme.ink)
+                }.frame(width: 88, height: 88)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("CLIENT CONTRACT \(position) / \(count)").font(AppFont.display(14)).tracking(2.0)
+                    Text(client?.name ?? "Your program").font(AppFont.display(18)).fixedSize(horizontal: false, vertical: true)
                 }
             }
+            VStack(alignment: .leading, spacing: 6) {
+                Text(m.title).font(AppFont.display(26)).fixedSize(horizontal: false, vertical: true)
+                Text(route).font(AppFont.display(14)).tracking(1.7)
+                WorldSpaceWeekChips(chips: wsw).padding(.top, 6)
+                Text(m.brief).font(AppFont.body(14, "SemiBold")).fixedSize(horizontal: false, vertical: true)
+            }
+            HStack(alignment: .top, spacing: 8) {
+                fact("VALUE", compactFrancs(m.payout.francs))
+                fact("CLIENT LEVEL", level.map { "L\($0)" } ?? "PROGRAM")
+                fact("MISSION TIER", m.difficulty)
+            }
+            if !m.requires.minerals.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("REQUIRED CARGO").font(AppFont.display(14)).tracking(2.0)
+                    ChipFlow(spacing: 8) {
+                        ForEach(m.requires.minerals.sorted { $0.key < $1.key }, id: \.key) { id, amount in
+                            if let meta = Minerals.byId[id] { cargoChip(meta, amount) }
+                        }
+                    }
+                }
+            }
+            Art.view(Rockets.model(for: rocket).id == "prospector" ? "ships/ship_sr2.png" : "ships/ship_sr1.png")
+                .resizable().interpolation(.high).aspectRatio(contentMode: .fit).frame(height: 140).frame(maxWidth: .infinity)
+            Button(action: onTake) {
+                HStack(spacing: 8) {
+                    Image(systemName: "location.north.fill").font(.system(size: 16, weight: .bold))
+                    Text("ACCEPT & PREPARE").font(AppFont.display(14)).tracking(1.7)
+                }
+                .foregroundStyle(.white).frame(maxWidth: .infinity, minHeight: 48)
+                .background(Theme.green, in: RoundedRectangle(cornerRadius: 4))
+                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.ink, lineWidth: 3))
+                .background(RoundedRectangle(cornerRadius: 4).fill(Theme.ink.opacity(0.72)).offset(y: 4))
+                .padding(.bottom, 4)
+            }.buttonStyle(.plain).disabled(!entry.unlocked).opacity(entry.unlocked ? 1 : 0.5)
+            if !entry.unlocked {
+                HStack(spacing: 8) {
+                    Image(systemName: "lock.fill").foregroundStyle(Theme.textMuted)
+                    Text(entry.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+                }
+                Button(action: onPathway) {
+                    Text("SEE THE PATHWAY").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress).frame(minHeight: 44, alignment: .leading)
+                }.buttonStyle(.plain)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 4)
+    }
+
+    private func fact(_ k: String, _ v: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(k).font(AppFont.display(14)).tracking(1.7).fixedSize(horizontal: false, vertical: true)
+            Text(v).font(AppFont.display(15))
+        }.frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func cargoChip(_ meta: MineralMeta, _ amount: Int) -> some View {
+        HStack(spacing: 0) {
+            Text(meta.symbol).font(AppFont.display(14)).frame(minWidth: 28).frame(maxHeight: .infinity)
+                .background(mixWhite(meta.colorHex, 0.35, fallback: Theme.paper2))
+                .overlay(alignment: .trailing) { Rectangle().fill(Theme.ink).frame(width: 2) }
+            Text("×\(amount)").font(AppFont.display(14)).padding(.horizontal, 6)
+            Text(meta.name).font(AppFont.display(14)).padding(.trailing, 6)
+        }
+        .frame(minHeight: 32).fixedSize()
+        .background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
     }
 }
 

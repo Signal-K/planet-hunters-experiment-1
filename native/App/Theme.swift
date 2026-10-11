@@ -17,6 +17,7 @@ enum Theme {
     static let bluePress = hex(0x17639F)
     static let teal = hex(0x0E6F66)      // web --ln-amber / payout
     static let crimson = hex(0xB8223A)
+    static let green = hex(0x17703F)     // web --ln-bp-green / --ln-ok
     static let textDim = hex(0x48596A)
     static let textMuted = hex(0x566879)
     static let hairline = ink.opacity(0.14)
