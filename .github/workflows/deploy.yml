@@ -1,0 +1,102 @@
+name: Deploy
+
+# Deploy-only workflow. No lint, unit, or build-gate jobs; each deploy job runs
+# its own build as part of deploying.
+on:
+  push:
+    branches: [main, "cycle/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy
+    # Only from main: this publishes the production Worker served at playlandnam.space.
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://playlandnam.space
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # KES-193: every push to main deploys straight to the landnam-web Worker,
+      # which wrangler.jsonc binds to playlandnam.space as a custom domain.
+      # NEXT_PUBLIC_* vars are inlined at build time (Next.js convention).
+      - name: Build (OpenNext/Cloudflare)
+        run: |
+          node -e "console.log('PB urls', process.env.NEXT_PUBLIC_SHARED_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_ENV)"
+          npm run build:cf
+          node scripts/verify-deployed-pb-urls.mjs .open-next
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
+          NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-landnam.fly.dev
+          NEXT_PUBLIC_LANDNAM_ENV: production
+          NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          NEXT_PUBLIC_FEATURE_SCAN_STATION: true
+
+      - name: Deploy
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  deploy-staging:
+    name: Deploy staging
+    # Publishes the one staging worker.
+    # Only cycle/* pushes publish the one staging worker. main uses Deploy.
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/cycle/')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build (OpenNext/Cloudflare staging)
+        run: |
+          node -e "console.log('PB urls', process.env.NEXT_PUBLIC_SHARED_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_ENV)"
+          npm run build:cf
+          node scripts/verify-deployed-pb-urls.mjs .open-next
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
+          NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-landnam.fly.dev
+          NEXT_PUBLIC_LANDNAM_ENV: staging
+          NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          NEXT_PUBLIC_FEATURE_SCAN_STATION: true
+      - name: Deploy staging worker
+        run: npx wrangler deploy --env staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

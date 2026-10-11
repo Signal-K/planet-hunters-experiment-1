@@ -6,7 +6,7 @@ Epic: [SSL-423](https://linear.app/kestloome/issue/SSL-423/landnam-one-visual-st
 
 ## How it was captured
 
-Staging deploys from every non-`main` push whose CI build passes (`.github/workflows/web-ci.yml`, job `deploy-staging`, worker `landnam-web-staging`). That branch is `cycle/3`.
+Staging deploys from every non-`main` push (`.github/workflows/deploy.yml`, job `deploy-staging`, worker `landnam-web-staging`). That branch is `cycle/3`.
 
 | Build | SHA | Role |
 | --- | --- | --- |
