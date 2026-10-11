@@ -26,7 +26,7 @@ export const PREFABS: readonly Prefab[] = [
     id: 'build-plot',
     name: 'Build Plot',
     category: 'site',
-    description: 'A placement slot at Earth Base. Four sit in a row on the hub surface; each holds at most one structure.',
+    description: 'A placement slot on the home ground. Four sit in a row on the hub surface; each holds at most one structure.',
     components: [{ type: 'BuildPlot', index: 0 }],
   },
   {
@@ -89,7 +89,7 @@ export const PREFABS: readonly Prefab[] = [
     id: 'training-facility',
     name: 'Training Facility',
     category: 'site',
-    description: 'Earth Base Astronaut Academy with centrifuge and neutral-buoyancy zones.',
+    description: 'Astronaut Academy on the home ground, with centrifuge and neutral-buoyancy zones.',
     components: [{ type: 'TrainingFacility', facility: 'astronaut-academy' }],
   },
 ]

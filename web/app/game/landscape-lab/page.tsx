@@ -50,7 +50,7 @@ const OPTIONS: LandscapeOption[] = [
   {
     id: 'green-verge',
     label: 'B · Green verge',
-    summary: 'Adds a soft grass rise behind the service road for a more settled Earth Base read.',
+    summary: 'Adds a soft grass rise behind the service road for a more settled home-ground read.',
     composition: GREEN_VERGE,
   },
   {
@@ -159,7 +159,7 @@ export default function LandscapeLabPage() {
         }}
       >
         <p style={{ color: 'var(--ln-cyan)', fontSize: 12, letterSpacing: '.16em', fontWeight: 700 }}>
-          EARTH BASE · LANDSCAPE LAB
+          LANDSCAPE LAB
         </p>
         <h1 style={{ marginTop: 8, font: '700 26px var(--ln-font-display)' }}>Ground contact options</h1>
         <p style={{ marginTop: 8, color: 'var(--ln-text-dim)', fontSize: 14 }}>

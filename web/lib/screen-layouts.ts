@@ -40,7 +40,7 @@ export const SCREEN_SURFACES: Record<Exclude<ScreenSurface, 'dev'>, ScreenSurfac
   launch: { label: 'Launch', chrome: 'floating', summary: 'The launch sequence. Every launch renders here; it has no URL of its own.' },
   orbit: { label: 'Orbit', chrome: 'floating', summary: 'Rocket in flight, with « » to switch between missions in progress.' },
   mining: { label: 'Mining / hovering', chrome: 'floating', summary: 'Descent and mining at a target.' },
-  home: { label: 'Home (Earth Base)', chrome: 'floating', summary: 'Tap rockets in the sky and buildings on the landscape. Bottom bar: « » Market Menu.' },
+  home: { label: 'Home', chrome: 'floating', summary: 'Tap rockets in the sky and buildings on the landscape. Dock: « », Build, Hub.' },
   instrument: { label: 'Instrument', chrome: 'docked', summary: 'Inside a building or instrument: consoles, hangar, academy, refinery, skills, community.' },
   map: { label: 'Map / navigation', chrome: 'docked', summary: 'Choosing a target on the map.' },
   takeon: { label: 'Takeon', chrome: 'floating', summary: 'Shell around a vendored TakeOn module.' },

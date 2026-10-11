@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { PRODUCT_WORDMARK } from '@/lib/brand'
+import { SCENE_NAMES } from '@/lib/ui-strings'
 import styles from './landing.module.css'
 
 export default function Home() {
@@ -21,7 +22,7 @@ export default function Home() {
           <p className={styles.note}>Sign in when you enter operations. The briefing stays open to everyone.</p>
         </div>
 
-        <div className={styles.yard} aria-label="Earth Base growing from one launchpad into an operating space programme">
+        <div className={styles.yard} aria-label={`${SCENE_NAMES.base} growing from one launchpad into an operating space programme`}>
           <div className={styles.sky} aria-hidden="true">
 
 

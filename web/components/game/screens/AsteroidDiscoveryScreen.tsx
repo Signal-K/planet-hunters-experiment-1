@@ -84,7 +84,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       <InstrumentStandbyViewport
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / LOCKED"
+        eyebrow="LOCKED"
         title="Deep Space Telescope"
         onBack={onBack}
         status="LOCKED"
@@ -99,7 +99,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       <InstrumentStandbyViewport
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / TELESCOPE REQUIRED"
+        eyebrow="TELESCOPE REQUIRED"
         title="Deep Space Telescope"
         onBack={onBack}
         status="NO TELESCOPE"
@@ -115,7 +115,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       <InstrumentStandbyViewport
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / DAILY DOWNLINK"
+        eyebrow="DAILY DOWNLINK"
         title="Deep Space Telescope"
         onBack={onBack}
         status="ACQUIRING"
@@ -131,7 +131,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       <InstrumentStandbyViewport
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / DAILY DOWNLINK"
+        eyebrow="DAILY DOWNLINK"
         title="Deep Space Telescope"
         onBack={onBack}
         status={loadFailed ? 'FEED OFFLINE' : 'EMPTY FEED'}

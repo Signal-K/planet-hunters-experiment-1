@@ -77,7 +77,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       <InstrumentStandbyViewport
         testId="saturn-storm-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / LOCKED"
+        eyebrow="LOCKED"
         title="Saturn satellite"
         onBack={onBack}
         status="LOCKED"
@@ -92,7 +92,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       <InstrumentStandbyViewport
         testId="saturn-storm-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / IMAGER REQUIRED"
+        eyebrow="IMAGER REQUIRED"
         title="Saturn satellite"
         onBack={onBack}
         status="NO IMAGER"
@@ -108,7 +108,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       <InstrumentStandbyViewport
         testId="saturn-storm-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / DAILY DOWNLINK"
+        eyebrow="DAILY DOWNLINK"
         title="Saturn satellite"
         onBack={onBack}
         status="ACQUIRING"
@@ -123,7 +123,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       <InstrumentStandbyViewport
         testId="saturn-storm-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / DAILY DOWNLINK"
+        eyebrow="DAILY DOWNLINK"
         title="Saturn satellite"
         onBack={onBack}
         status="EMPTY FEED"

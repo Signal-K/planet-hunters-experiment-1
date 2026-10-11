@@ -40,7 +40,7 @@ export default function MissionHistoryScreen({ records, missions = [], player, o
     <section className="theme-light" data-testid="mission-history-screen" style={{ position: 'relative', minHeight: '100%', background: 'var(--ln-void)' }}>
       <div className={styles.shell}>
         <header className={styles.header}>
-          <div><div className={styles.eyebrow}>BASE · MISSION LOG</div><h1>Mission Log</h1><p>A concise record of completed client work and program operations.</p></div>
+          <div><div className={styles.eyebrow}>MISSION LOG</div><h1>Mission Log</h1><p>A concise record of completed client work and program operations.</p></div>
           <button className={styles.backButton} onClick={onBack}>Back to base</button>
         </header>
         <nav className={styles.tabs} aria-label="Mission log sections"><a className={styles.tabActive} href="#operations">Operations <span>{lifetimeCompleted}</span></a></nav>

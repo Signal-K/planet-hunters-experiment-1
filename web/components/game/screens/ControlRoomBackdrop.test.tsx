@@ -10,7 +10,7 @@ describe('ControlRoomBackdrop', () => {
     expect(markup).toContain('data-testid="control-room-backdrop"')
     expect(markup).toContain('data-courtyard-plate="day"')
     expect(markup).toContain('/game/assets/scenes/instrument-hub/courtyard-day.webp')
-    expect(markup).toContain('COURTYARD / EARTH BASE')
+    expect(markup).toContain('COURTYARD')
     expect(markup).not.toContain('data-composition="earth-base-wide"')
     expect(markup).not.toContain('TESS RAW CADENCE')
   })

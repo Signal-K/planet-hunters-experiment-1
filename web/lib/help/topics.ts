@@ -41,7 +41,7 @@ const LAUNCH_HELP: HelpTopic = {
   id: 'launch',
   title: 'Launch',
   cards: [
-    { title: 'Workshop, then the pad', body: 'The rocket stands by the Workshop on the Earth base. Confirm and the same rocket rolls to the pad.' },
+    { title: 'Workshop, then the pad', body: 'The rocket stands by the Workshop on the ground. Confirm and the same rocket rolls to the pad.' },
     { title: 'Then it flies', body: 'LAUNCH starts the flight. A Free Ops haul and a client contract both leave from this review. The contract was a choice, not a gate.' },
   ],
 }
@@ -97,11 +97,11 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
   },
   hub: {
     id: 'base',
-    title: 'Base',
+    title: 'Between flights',
     cards: [
-      { title: 'Home of the program', body: 'The Base is where you stand between flights. Buildings, the launch tower, and the Menu are on this ground. After training, you do not need a client contract to keep playing.' },
+      { title: 'Home of the program', body: 'You stand here between flights. Buildings and the launch tower are on this ground. After training, you do not need a client contract to keep playing.' },
       { title: 'Free Ops or a contract', body: 'Open the Launchpad. Launch your own instrument, scan a body, or mine for yourself. Available Contracts is the other branch from the same pad.' },
-      { title: 'Ops list', body: 'OPS in the Menu lists every building and every running process, including other worlds. Tap a row to jump there.' },
+      { title: 'Ops list', body: 'Buildings on the ground open their own work. The dock switches operation, opens Build, or opens Hub.' },
     ],
   },
   launchpad: {

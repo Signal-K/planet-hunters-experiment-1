@@ -12,13 +12,12 @@ struct SignInScreen: View {
 
     var body: some View {
         ZStack {
-            TerrainScene(composition: .earthBasePad, ground: 0.28, showsPlanet: false).ignoresSafeArea()
+            TerrainScene(composition: .earthBasePad, ground: 0.28).ignoresSafeArea()
             VStack {
                 Spacer()
                 Panel {
                     VStack(spacing: 14) {
                         VStack(spacing: 6) {
-                            Eyebrow(text: "Earth Base")
                             Text("Landnam").font(AppFont.display(36)).foregroundStyle(Theme.ink)
                             Text("Run a small space agency. Take contracts, mine, return, get paid.")
                                 .font(AppFont.body(14)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center)
@@ -48,6 +47,7 @@ struct SignInScreen: View {
                         }
                     }
                     .frame(maxWidth: .infinity)
+                    .accessibilityLabel("\(Strings.Scene.base) sign in")
                 }
                 .frame(maxWidth: 380)
                 Spacer().frame(height: 40)

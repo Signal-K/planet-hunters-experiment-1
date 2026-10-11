@@ -565,7 +565,7 @@ export function HubSubsurfaceView({
                 <span />
                 <span />
                 <span />
-                <b>BASE · BELOW-SOIL SERVICE TRUNK</b>
+                <b>BELOW-SOIL SERVICE TRUNK</b>
               </div>
               <div className={styles.roomGrid}>
                 {SUBSURFACE_ROOMS.map((room, index) => {

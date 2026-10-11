@@ -12,6 +12,7 @@
 // `mining-test.scene.json` ended up orphaned — no loader references either.
 
 import type { Screen } from '@/lib/game-types'
+import { SCENE_NAMES } from '@/lib/ui-strings'
 
 export type SceneSurface = 'canvas' | 'dom'
 
@@ -35,13 +36,13 @@ export interface SceneDefinition {
 export const SCENES: readonly SceneDefinition[] = [
   {
     id: 'hub',
-    name: 'Earth Base',
+    name: SCENE_NAMES.base,
     surface: 'canvas',
     location: 'earth-base',
     screen: 'hub',
     sceneFile: '/game/scenes/hub.scene.json',
     entityTypes: ['BuildPlot'],
-    description: 'The player\'s home surface. Build plots hold the Launchpad, Refinery, and — once built — the Astronaut Academy.',
+    description: `The player's home surface. Build plots hold the Launchpad, Refinery, and — once built — the Astronaut Academy.`,
   },
   {
     id: 'build-place',
@@ -51,15 +52,15 @@ export const SCENES: readonly SceneDefinition[] = [
     screen: 'build',
     sceneFile: '/game/scenes/hub.scene.json',
     entityTypes: ['BuildPlot'],
-    description: 'Structure placement over the same Earth Base plots. Note it loads the hub scene — `build-place.scene.json` is orphaned.',
+    description: `Structure placement over the same ${SCENE_NAMES.base} plots. Note it loads the hub scene — \`build-place.scene.json\` is orphaned.`,
   },
   {
     id: 'subsurface',
-    name: 'Earth Base Subsurface',
+    name: `${SCENE_NAMES.base} Subsurface`,
     surface: 'dom',
     location: 'earth-base-subsurface',
     entityTypes: [],
-    description: 'Embedded below-soil logistics deck reached from the Earth Base scene.',
+    description: `Embedded below-soil logistics deck reached from the ${SCENE_NAMES.base} scene.`,
   },
   {
     id: 'subsurface-mineral-vault',
@@ -103,7 +104,7 @@ export const SCENES: readonly SceneDefinition[] = [
     screen: 'surface-ops',
     sceneFile: '/game/scenes/construction-target.scene.json',
     entityTypes: ['ConstructionController'],
-    description: 'Building a structure on a target body rather than at Earth Base.',
+    description: `Building a structure on a target body rather than at ${SCENE_NAMES.base}.`,
   },
   {
     id: 'delivery',

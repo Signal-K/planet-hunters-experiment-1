@@ -7,7 +7,6 @@ import FlightPlan from '@/components/game/FlightPlan'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import { resolveShortcut } from '@/lib/game-shortcuts'
-import { GameChromeBars, mountsSharedChrome } from '@/components/layout/GameChromeBars'
 import { AGENCY_TRAINING_POPUP, agencyTrainingStage, agencyTrainingTrack, freeOpsActivities } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import BackendStatus from '@/components/game/BackendStatus'
@@ -295,20 +294,6 @@ function GameChrome({ children }: { children: ReactNode }) {
           <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor || !isSurveySafeScreen(currentScreen)} />
 
         </div>
-
-        {mountsSharedChrome(currentScreen, game.authGateOpen) && (
-          <GameChromeBars
-            onOperations={resumeOperations}
-            onMarket={() => {
-              // SSL-416: Market is locked until training ends; say so instead of ignoring the tap.
-              if (game.player.freeOperations) game.go('market')
-              else game.addToast('Market opens after you finish training', 'warn')
-            }}
-            onMenu={() => setSettingsOpen(true)}
-            menuExpanded={settingsOpen}
-            trainingProgress={game.player.freeOperations ? undefined : (game.player.flightPlan ? Object.keys(game.player.flightPlan.completed).length : 0)}
-          />
-        )}
 
         {(game.popup === 'tutorial-complete' || game.popup === AGENCY_TRAINING_POPUP) && !game.authGateOpen && (
           <TutorialCompleteSheet

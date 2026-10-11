@@ -8,6 +8,7 @@ import type { CrewMember } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { filterMissionsForSceneScope } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
+import { SCENE_NAMES } from '@/lib/ui-strings'
 import { isTutorialMissionInProgress } from '@/lib/mission-flow'
 
 export interface MissionRelayCardModel {
@@ -45,7 +46,7 @@ export function useMissionRelayModels({
   francs,
   crew = [],
   player,
-  sceneScope = { kind: 'earth-base', id: 'earth-base', label: 'Base' },
+  sceneScope = { kind: 'earth-base', id: 'earth-base', label: SCENE_NAMES.base },
 }: UseMissionRelayModelsArgs) {
   const { missions: MISSIONS, clients: CLIENTS, targets, parts } = catalog
   const [previewId, setPreviewId] = useState<string | null>(null)

@@ -79,7 +79,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
 
         <div className="auth-gate__scene" aria-hidden="true">
           <div className="auth-gate__scene-copy">
-            <span className="auth-gate__eyebrow">LANDNAM // BASE</span>
+            <span className="auth-gate__eyebrow">LANDNAM // LINK</span>
             <span className="auth-gate__scene-title">PROGRAM MAP</span>
             <span className="auth-gate__scene-status"><i /> SYSTEM LINK READY</span>
           </div>
@@ -89,7 +89,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
           <img className="auth-gate__ship" src={ROCKET_ASSETS.explorer.exterior} alt="" />
           <div className="auth-gate__telemetry">
             <span>PROGRAM LINK</span><strong>READY</strong>
-            <span>ACCESS ROUTE</span><strong>EARTH BASE</strong>
+            <span>ACCESS ROUTE</span><strong>FIELD LINK</strong>
           </div>
         </div>
 

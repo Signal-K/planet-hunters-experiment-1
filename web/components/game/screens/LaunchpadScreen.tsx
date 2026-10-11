@@ -231,7 +231,7 @@ export default function LaunchpadScreen({
     >
       {/* Scene chrome stays crisp over the terrain; the previous `glass` prop
           created the large frosted rectangle visible across the upper UI. */}
-      <TopBar eyebrow="BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} right={help.button} />
+      <TopBar eyebrow="LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} right={help.button} />
       {help.layer}
 
       <main data-ui-zone={UI_ZONES.screenContent} className="launchpad-visual-scene earth-base-campus-transition">

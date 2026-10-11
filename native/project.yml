@@ -17,6 +17,8 @@ targets:
         buildPhase: resources
       - path: ../shared/layout
         buildPhase: resources
+      - path: ../web/lib/scene-names.json
+        buildPhase: resources
     dependencies: [{ package: LandnamCore }, { package: TakeonKit }]
     settings:
       base:

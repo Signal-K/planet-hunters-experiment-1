@@ -183,7 +183,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
         <EarthBaseModules buildings={previewBuildings} />
       </div>
 
-      <TopBar eyebrow="BASE · SETUP" title="Build" onBack={onBack} right={help.button} />
+      <TopBar eyebrow="SETUP" title="Build" onBack={onBack} right={help.button} />
       {help.layer}
 
       {/* Plot pads */}

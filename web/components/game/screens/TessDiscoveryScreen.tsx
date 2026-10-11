@@ -121,7 +121,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       <InstrumentStandbyViewport
         testId="tess-discovery-standby"
         sceneClassName="ln-scene-tess-discovery"
-        eyebrow="BASE / LOCKED"
+        eyebrow="LOCKED"
         title="Transit Telescope"
         onBack={onBack}
         status="LOCKED"
@@ -136,7 +136,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       <InstrumentStandbyViewport
         testId="tess-discovery-standby"
         sceneClassName="ln-scene-tess-discovery"
-        eyebrow="BASE / TELESCOPE"
+        eyebrow="TELESCOPE"
         title="Transit Telescope"
         onBack={onBack}
         status="NO TELESCOPE"
@@ -152,7 +152,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       <InstrumentStandbyViewport
         testId="tess-discovery-standby"
         sceneClassName="ln-scene-tess-discovery"
-        eyebrow="BASE / DAILY DOWNLINK"
+        eyebrow="DAILY DOWNLINK"
         title="Transit Telescope"
         onBack={onBack}
         status="ACQUIRING"
@@ -168,7 +168,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       <InstrumentStandbyViewport
         testId="tess-discovery-standby"
         sceneClassName="ln-scene-tess-discovery"
-        eyebrow="BASE / DAILY DOWNLINK"
+        eyebrow="DAILY DOWNLINK"
         title="Transit Telescope"
         onBack={onBack}
         status={loadFailed ? 'FEED OFFLINE' : 'EMPTY FEED'}

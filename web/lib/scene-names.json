@@ -1,0 +1,10 @@
+{
+  "base": "Base",
+  "hub": "Hub",
+  "exchange": "Exchange",
+  "build": "Build",
+  "launchpad": "Launchpad",
+  "market": "Market",
+  "mining": "Mining",
+  "transit": "Transit"
+}

@@ -355,7 +355,7 @@ export const CRAFTING_RECIPES: readonly CraftingRecipe[] = [
 export const CRAFTING_CATEGORY_LABELS: Record<CraftingCategory, string> = {
   'sandbox-structure': 'Field structures',
   road: 'Roads',
-  'earth-structure': 'Earth base',
+  'earth-structure': 'Home structures',
   'target-structure': 'Client builds',
   'subsurface-room': 'Subsurface rooms',
   'refined-good': 'Refined goods',
