@@ -9,7 +9,10 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(180deg, var(--base-sky-top) 0%, var(--base-sky-mid) 58%, var(--base-sky-horizon) 100%);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--base-sky-top) 28%, transparent), transparent 42%),
+    url('/game/assets/base/layers/sky.png') center / 100% 100% no-repeat;
+  image-rendering: pixelated;
   transition: background 4s ease;
 }
 
@@ -136,23 +139,12 @@
 
 .cloud {
   position: absolute;
-  height: 28%;
+  height: auto;
   width: 18%;
-  background: color-mix(in srgb, var(--ln-world-hull-lit) 70%, transparent);
-  border-radius: 999px;
+  image-rendering: pixelated;
   animation: cloudDrift linear infinite;
+  pointer-events: none;
 }
-
-.cloud::before,
-.cloud::after {
-  content: '';
-  position: absolute;
-  background: inherit;
-  border-radius: inherit;
-}
-
-.cloud::before { width: 46%; height: 140%; left: 18%; top: -70%; }
-.cloud::after { width: 34%; height: 110%; right: 16%; top: -40%; }
 
 .horizon {
   position: absolute;
@@ -180,6 +172,7 @@
   object-fit: cover;
   object-position: center bottom;
   pointer-events: none;
+  image-rendering: pixelated;
 }
 
 .scene[data-biome='desert'] .band img,
@@ -219,7 +212,7 @@
 
 .scene[data-time='dawn'] .timeShade { background: color-mix(in srgb, var(--ln-world-dawn-top) 18%, transparent); }
 .scene[data-time='afternoon'] .timeShade { background: color-mix(in srgb, var(--ln-world-afternoon-top) 12%, transparent); }
-.scene[data-time='dusk'] .timeShade { background: color-mix(in srgb, var(--ln-world-dusk-top) 22%, transparent); }
+.scene[data-time='dusk'] .timeShade { background: color-mix(in srgb, var(--ln-world-dusk-horizon) 14%, transparent); }
 .scene[data-time='night'] .timeShade { background: color-mix(in srgb, var(--ln-world-night-top) 48%, transparent); }
 .scene[data-time='night'] .grade { opacity: 0.28; }
 .scene[data-time='dusk'] .grade,
@@ -231,10 +224,9 @@
   right: 0;
   bottom: 0;
   height: var(--hub-ground);
-  z-index: 5;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 18px, color-mix(in srgb, var(--ln-world-underground-rock) 18%, transparent) 18px 19px),
-    linear-gradient(180deg, var(--ln-world-grass) 0 14px, var(--ln-world-soil) 14px 42%, var(--ln-world-underground) 100%);
+  z-index: 8;
+  background: url('/game/assets/base/layers/dirt.png') left top / 64px 64px repeat;
+  image-rendering: pixelated;
   pointer-events: none;
 }
 
@@ -243,18 +235,20 @@
   left: 0;
   right: 0;
   top: 0;
-  height: 14px;
-  background: var(--ln-world-grass);
+  height: 12px;
+  background: url('/game/assets/base/layers/grass.png') left bottom / auto 12px repeat-x;
+  image-rendering: pixelated;
 }
 
 .road {
   position: absolute;
   left: 0;
   right: 0;
-  top: 16px;
-  height: 26px;
-  background: var(--ln-world-asphalt);
-  box-shadow: inset 0 3px 0 color-mix(in srgb, var(--ln-world-hull-lit) 28%, transparent), inset 0 -3px 0 color-mix(in srgb, var(--ln-world-outline) 55%, transparent);
+  top: 12px;
+  height: 56px;
+  background: url('/game/assets/base/layers/road.png') left center / auto 56px repeat-x;
+  image-rendering: pixelated;
+  box-shadow: none;
 }
 
 .lane {
@@ -278,20 +272,23 @@
   box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ln-world-outline) 35%, transparent);
 }
 
-.cutaway {
+.shaftWrap {
   position: absolute;
   left: 50%;
-  bottom: 88px;
-  width: min(300px, 46%);
-  height: min(132px, calc(100% - 150px));
+  bottom: 4px;
+  width: 72px;
+  height: 96px;
   transform: translateX(-50%);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--ln-world-underground-rock) 80%, var(--ln-world-outline)) 0 8px, transparent 8px),
-    repeating-linear-gradient(90deg, var(--ln-world-underground) 0 16px, color-mix(in srgb, var(--ln-world-underground-rock) 70%, var(--ln-world-underground)) 16px 18px);
-  border: 3px solid var(--ln-world-outline);
-  border-radius: 8px 8px 4px 4px;
-  overflow: hidden;
-  box-shadow: 0 8px 0 color-mix(in srgb, var(--ln-world-soil) 80%, var(--ln-world-outline));
+  z-index: 2;
+}
+
+.shaftArt {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  image-rendering: pixelated;
 }
 
 .shaft {
@@ -342,9 +339,11 @@
 
 .lamp {
   position: absolute;
-  top: 8px;
+  top: 2px;
+  left: 50%;
   width: 8px;
   height: 8px;
+  margin-left: -4px;
   border-radius: 50%;
   background: var(--ln-world-trim-teal);
   animation: beacon 2.4s steps(2, end) infinite;
@@ -353,9 +352,10 @@
 .shaftButton {
   position: absolute;
   left: 50%;
-  bottom: 88px;
-  width: 64px;
-  height: min(132px, 18vh);
+  bottom: 8px;
+  width: 72px;
+  height: 96px;
+  min-width: 44px;
   min-height: 44px;
   transform: translateX(-50%);
   z-index: 12;
@@ -363,6 +363,33 @@
   border: 0;
   background: transparent;
   cursor: pointer;
+}
+
+.spriteWrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  image-rendering: pixelated;
+}
+
+.beaconDot {
+  position: absolute;
+  left: 31%;
+  top: 3%;
+  width: 8px;
+  height: 8px;
+  background: var(--ln-world-trim-teal);
+  animation: beacon 2.4s steps(2, end) infinite;
+  pointer-events: none;
 }
 
 .pixel {
@@ -434,20 +461,11 @@
 }
 
 @media (max-height: 500px) {
-  /* The road owns the top of a short ground band. Keep the shaft window
-     below that road and above the dock. */
-  .road { height: 18px; top: 8px; }
-  .cutaway {
-    top: 30px;
-    bottom: auto;
-    height: 44px;
-    width: min(220px, 40%);
-  }
-  .shaftButton {
-    top: auto;
-    bottom: calc(var(--hub-ground) - 74px);
-    height: 44px;
-  }
+  /* Short landscape: keep a slim grass lip, a full-width road, and a small shaft in the dirt. */
+  .verge { height: 8px; background-size: auto 8px; }
+  .road { height: 32px; top: 8px; background-size: auto 32px; }
+  .shaftWrap { width: 48px; height: 64px; bottom: 2px; }
+  .shaftButton { bottom: 2px; width: 48px; height: 64px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -460,7 +478,8 @@
   .steam,
   .windowGlow,
   .dish,
-  .lamp {
+  .lamp,
+  .beaconDot {
     animation: none;
   }
 }

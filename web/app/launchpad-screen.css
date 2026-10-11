@@ -101,6 +101,13 @@ button.launchpad-scene-object { cursor: pointer; }
   display: block;
   transform: translateX(-50%);
 }
+.earth-base-structure--launchpad {
+  width: min(55%, 860px);
+  aspect-ratio: 200 / 140;
+}
+@media (orientation: portrait) and (max-width: 800px) {
+  .earth-base-structure--launchpad { width: min(50%, 340px); }
+}
 .earth-base-flat-sprite {
   position: absolute;
   inset: 0;

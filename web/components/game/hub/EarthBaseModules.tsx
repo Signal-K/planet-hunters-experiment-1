@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
-import { structureTierScale } from '@/lib/scene/base-world'
+import { LAUNCHPAD_SCENE_WIDTH_PCT, structureAnchorPercent, structureTierScale } from '@/lib/scene/base-world'
 import { structureBuildMs } from '@/lib/systems/HubConstructionSystem'
 import { PixelStructure } from '@/components/game/hub/PixelStructure'
 export interface HubBuildingDef {
@@ -23,14 +23,16 @@ export interface HubBuildingDef {
 /** Level-3 footprints. Level 1 and 2 render the same silhouette smaller via `structureTierScale`.
  *  The surface silo has no above-ground body; the lift shaft is the silo door. */
 export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height: number }> = {
-  launchpad: { width: 120, height: 168 },
+  // Launchpad width is fixed at LAUNCHPAD_SCENE_WIDTH_PCT. These numbers are the sprite aspect.
+  launchpad: { width: 200, height: 140 },
   'surface-silo': { width: 48, height: 96 },
-  hangar: { width: 108, height: 86 },
-  refinery: { width: 96, height: 72 },
-  command: { width: 70, height: 128 },
+  hangar: { width: 149, height: 99 },
+  garage: { width: 149, height: 99 },
+  refinery: { width: 80, height: 126 },
+  command: { width: 96, height: 86 },
   'deep-space-telescope': { width: 74, height: 96 },
   'transit-telescope': { width: 64, height: 88 },
-  'astronaut-academy': { width: 92, height: 84 },
+  'astronaut-academy': { width: 92, height: 72 },
   market: { width: 100, height: 74 },
 }
 
@@ -120,9 +122,15 @@ function StructureSprite({ kind, level = 1, active, buildStartedAt }: { kind: st
 const SCENE_WIDTH_DIVISOR = 6.4
 
 export function structureWidthPct(kind: string, level = 1): number {
+  if (kind === 'launchpad') return LAUNCHPAD_SCENE_WIDTH_PCT
   const size = EARTH_BASE_STRUCTURE_SIZES[kind] ?? EARTH_BASE_STRUCTURE_SIZES.command
   const tier = kind === 'market' ? Math.max(level, 2) : level
   return (size.width / SCENE_WIDTH_DIVISOR) * structureTierScale(tier)
+}
+
+/** Sprite centre. Starter kinds use the approved anchors; everything else stays on its plot. */
+export function structureCenterPercent(kind: string, plotX: number, widthPct: number): number {
+  return structureAnchorPercent(kind) ?? sceneXPercent(plotX, widthPct)
 }
 
 /** Half-width in hub scene units (the 402-wide plot space). */
@@ -131,15 +139,13 @@ export function structureHalfScene(kind: string, level = 1, sceneWidth = 402): n
 }
 
 export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] }) {
-  const visible = buildings.filter(building => building.kind !== 'surface-silo').length
-  const fit = visible <= 2 ? 1.65 : visible === 3 ? 1.3 : 1
   return (
-    <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': String(fit) } as React.CSSProperties}>
+    <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {
         if (building.kind === 'surface-silo') return null
         const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.command
         const widthPct = structureWidthPct(building.kind, building.level ?? 1)
-        const left = sceneXPercent(building.plotX, widthPct)
+        const left = structureCenterPercent(building.kind, building.plotX, widthPct)
         return (
           <span
             key={`${building.kind}-${building.plotX}`}
@@ -152,7 +158,7 @@ export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] })
               // receives a viewport-aware cap so structures retain the same
               // relationship to the terrain instead of ballooning with a 2K
               // canvas (the background bricks are authored in CSS pixels).
-              width: `min(${widthPct}%, var(--hub-structure-max, 9999px))`,
+              width: building.kind === 'launchpad' ? undefined : `min(${widthPct}%, var(--hub-structure-max, 9999px))`,
               aspectRatio: `${size.width} / ${size.height}`,
               opacity: building.dimmed ? 0.6 : 1,
             }}

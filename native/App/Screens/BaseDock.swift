@@ -1,60 +1,65 @@
 import SwiftUI
 import LandnamCore
 
-/// The Base scene's only dock. Its three controls and measurements come from
-/// `shared/layout/base-hud-zones.json` through `HUDZones`.
+/// Floating dock. A left arrow sits at the far left, Build and Hub in the middle, a right arrow at the far right.
 struct BaseDock: View {
     @Environment(GameStore.self) private var store
     let tile: CGFloat
     let zones: HUDZones.Zones.BottomNav
-    let locations: [(title: String, screen: Screen)]
-    @Binding var showLocations: Bool
 
     var body: some View {
-        HStack(alignment: .top, spacing: zones.gap) {
-            operationSwitch
+        HStack(spacing: zones.gap) {
+            arrow("chevron.left", label: "Previous") { step(-1) }
+            Spacer(minLength: zones.gap)
             Button { store.go(.build) } label: {
-                tile(label: "Build") {
-                    Image(systemName: "hammer.fill").font(.system(size: tile * 0.5, weight: .black)).foregroundStyle(Theme.hudInk)
-                }
+                Text("BUILD").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
+                    .frame(minWidth: 88, minHeight: 44)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Build")
             Button { store.go(.instrumentHub) } label: {
-                tile(label: "Hub") {
-                    Image(systemName: "globe").font(.system(size: tile * 0.5, weight: .bold)).foregroundStyle(Theme.hudInk)
-                }
+                Text("HUB").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
+                    .frame(minWidth: 88, minHeight: 44)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Open the Hub")
+            Spacer(minLength: zones.gap)
+            arrow("chevron.right", label: "Next") { step(1) }
         }
-        .padding(zones.padding)
-        .hudPanel(radius: 14)
+        .padding(.horizontal, zones.padding)
+        .padding(.vertical, 4)
+        .frame(maxWidth: 560)
+        .background(Capsule().fill(Theme.hudPanel))
+        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+        .padding(.horizontal, 12)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(Strings.Scene.base) dock")
+        .accessibilityLabel("Scene dock")
     }
 
-    private var operationSwitch: some View {
-        Button {
-            if locations.count == 1, let only = locations.first { store.go(only.screen) } else { showLocations = true }
-        } label: {
-            tile(label: nil) { Text("« »").font(AppFont.display(tile * 0.5)).foregroundStyle(Theme.hudInk) }
+    private func arrow(_ symbol: String, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(Theme.hudPanel))
+                .overlay(Circle().stroke(Theme.hudInk, lineWidth: 2))
         }
         .buttonStyle(.plain)
-        .disabled(locations.isEmpty)
-        .opacity(locations.isEmpty ? 0.4 : 1)
-        .accessibilityLabel("Switch operation")
-        .confirmationDialog("Go to", isPresented: $showLocations, titleVisibility: .visible) {
-            ForEach(Array(locations.enumerated()), id: \.offset) { _, location in
-                Button(location.title) { store.go(location.screen) }
-            }
-        }
+        .accessibilityLabel(label)
     }
 
-    private func tile<Glyph: View>(label: String?, @ViewBuilder glyph: () -> Glyph) -> some View {
-        VStack(spacing: 2) {
-            glyph().frame(width: tile, height: tile).hudPanel(radius: 12)
-            Text((label ?? " ").uppercased()).font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.hudInk).lineLimit(1)
-        }
+    private var stops: [Screen] {
+        var out: [Screen] = [.missions]
+        if store.player.freeOperations { out.append(.market) }
+        if store.player.activeMission != nil { out.append(.launchpad) }
+        return out
+    }
+
+    private func step(_ delta: Int) {
+        let list = stops
+        guard let first = list.first else { return }
+        let index = list.firstIndex(of: store.screen) ?? 0
+        let next = (index + delta + list.count) % list.count
+        let target = list.indices.contains(next) ? list[next] : first
+        store.go(target)
     }
 }

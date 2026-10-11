@@ -1,25 +1,26 @@
 'use client'
 
 import { UI_ZONES } from '@/lib/ui-zones'
-import { SCENE_NAMES } from '@/lib/ui-strings'
 
 type BaseDockProps = {
-  onSwitchOperation: () => void
+  onPrev: () => void
+  onNext: () => void
   onBuild: () => void
   onHub: () => void
 }
 
-/** Same three tiles as `shared/layout/base-hud-zones.json` bottom-nav. */
-export const BASE_DOCK_CONTROLS = ['switch', 'build', 'hub'] as const
+/** Dock controls. Arrows sit at the ends; Build and Hub sit in the middle. */
+export const BASE_DOCK_CONTROLS = ['prev', 'build', 'hub', 'next'] as const
 export const BASE_DOCK_GAP = 8
 export const BASE_DOCK_PADDING = 6
 
-const CONTROL_STYLE = {
+const WORD = {
   minHeight: 44,
-  background: 'color-mix(in srgb, var(--ln-world-hull-lit) 88%, transparent)',
-  border: '2px solid color-mix(in srgb, var(--ln-world-outline) 45%, transparent)',
-  borderRadius: 12,
-  padding: '8px 12px',
+  minWidth: 88,
+  background: 'transparent',
+  border: '2px solid transparent',
+  borderRadius: 999,
+  padding: '8px 16px',
   fontFamily: 'var(--ln-font-display)',
   fontWeight: 800,
   fontSize: 14,
@@ -27,29 +28,58 @@ const CONTROL_STYLE = {
   textTransform: 'uppercase' as const,
   color: 'var(--ln-world-outline)',
   cursor: 'pointer',
-  boxShadow: '0 1px 0 color-mix(in srgb, var(--ln-world-hull-lit) 70%, transparent)',
 }
 
-/** Visible dock controls. Scene names stay in the accessibility label only. */
-export const BASE_DOCK_LABELS = ['« »', 'Build', 'Hub'] as const
+const ARROW = {
+  width: 44,
+  height: 44,
+  minWidth: 44,
+  minHeight: 44,
+  borderRadius: 999,
+  border: '2px solid var(--ln-world-outline)',
+  background: 'var(--ln-world-hull-lit)',
+  color: 'var(--ln-world-outline)',
+  cursor: 'pointer',
+  display: 'grid',
+  placeItems: 'center',
+  padding: 0,
+}
 
-/** The home scene's only dock: switch operation, Build, and Hub. */
-export function BaseDock({ onSwitchOperation, onBuild, onHub }: BaseDockProps) {
+function Arrow({ direction }: { direction: 'left' | 'right' }) {
+  const d = direction === 'left' ? 'M14 6 L8 12 L14 18' : 'M10 6 L16 12 L10 18'
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={d} />
+    </svg>
+  )
+}
+
+/** Floating dock: previous at the far left, Build and Hub in the middle, next at the far right. */
+export function BaseDock({ onPrev, onNext, onBuild, onHub }: BaseDockProps) {
   return (
     <nav
-      aria-label={`${SCENE_NAMES.base} dock`}
+      aria-label="Scene dock"
       data-ui-zone={UI_ZONES.bottomNav}
       data-testid="base-dock"
       style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${BASE_DOCK_CONTROLS.length}, minmax(0, 1fr))`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         gap: BASE_DOCK_GAP,
         padding: BASE_DOCK_PADDING,
+        width: '100%',
       }}
     >
-      <button type="button" style={CONTROL_STYLE} data-testid="hub-switch-operation" onClick={onSwitchOperation} aria-label="Switch operation">{BASE_DOCK_LABELS[0]}</button>
-      <button type="button" style={CONTROL_STYLE} data-testid="hub-build-btn" data-beacon="hub-build-btn" onClick={onBuild}>{BASE_DOCK_LABELS[1]}</button>
-      <button type="button" style={CONTROL_STYLE} data-testid="hub-btn" onClick={onHub}>{BASE_DOCK_LABELS[2]}</button>
+      <button type="button" style={ARROW} data-testid="hub-dock-prev" onClick={onPrev} aria-label="Previous">
+        <Arrow direction="left" />
+      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: BASE_DOCK_GAP }}>
+        <button type="button" style={WORD} data-testid="hub-build-btn" data-beacon="hub-build-btn" onClick={onBuild}>Build</button>
+        <button type="button" style={WORD} data-testid="hub-btn" onClick={onHub}>Hub</button>
+      </div>
+      <button type="button" style={ARROW} data-testid="hub-dock-next" onClick={onNext} aria-label="Next">
+        <Arrow direction="right" />
+      </button>
     </nav>
   )
 }

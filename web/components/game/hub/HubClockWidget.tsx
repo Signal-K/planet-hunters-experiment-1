@@ -19,15 +19,16 @@ export function HubClockWidget() {
     <div
       data-testid="hub-clock-widget"
       style={{
-        display: 'flex', alignItems: 'center', gap: 6, minHeight: 44, boxSizing: 'border-box',
-        background: 'var(--dusk-panel)', border: '2px solid color-mix(in srgb, var(--dusk-ink) 45%, transparent)',
+        display: 'flex', alignItems: 'center', gap: 6, minHeight: 44, minWidth: 44, boxSizing: 'border-box',
+        background: 'var(--ln-world-hull-lit)', border: '2px solid var(--ln-world-outline)',
         borderRadius: 999, padding: '0 12px', flexShrink: 0,
+        color: 'var(--ln-world-outline)',
       }}
     >
-      <span style={{ color: 'var(--dusk-ink)', display: 'flex' }}><ClockGlyph /></span>
+      <span style={{ color: 'var(--ln-world-outline)', display: 'flex' }}><ClockGlyph /></span>
       <span style={{
         fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 700,
-        letterSpacing: '0.06em', color: 'var(--dusk-ink)',
+        letterSpacing: '0.06em', color: 'var(--ln-world-outline)',
       }}>
         {label}
       </span>

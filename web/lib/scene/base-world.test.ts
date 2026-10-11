@@ -12,6 +12,7 @@ import {
   sanitizeSeason,
   sanitizeWorldTime,
   seasonForMonth,
+  structureAnchorPercent,
   structureTier,
   structureTierScale,
   worldTimeForHour,
@@ -24,7 +25,11 @@ describe('base world layers', () => {
     expect(biomeLayers('desert').map(layer => layer.id)).toEqual(['far'])
     expect(biomeLayers('tundra').map(layer => layer.src)).toEqual(biomeLayers('mountains').map(layer => layer.src))
     expect(biomeLayers('coast').map(layer => layer.src)).toEqual(biomeLayers('desert').map(layer => layer.src))
-    expect(biomeLayers('mountains').every(layer => layer.src.startsWith('/game/assets/biomes/'))).toBe(true)
+    expect(biomeLayers('mountains').map(layer => layer.src)).toEqual([
+      '/game/assets/base/layers/mountains-far.png',
+      '/game/assets/base/layers/mountains-mid.png',
+      '/game/assets/base/layers/mountains-near.png',
+    ])
   })
 
   it('maps the year onto four seasons and the clock onto day, dusk and night', () => {
@@ -64,6 +69,15 @@ describe('base world layers', () => {
     const state = normalizeState({ player: { earthBiome: 'desert', francs: 10 } })
     expect(state.player.earthBiome).toBe('desert')
     expect(normalizeState({ player: { earthBiome: 'volcano' as 'desert' } }).player.earthBiome).toBe('mountains')
+  })
+
+  it('anchors starter structures to the approved base and leaves other kinds on their plot', () => {
+    expect(structureAnchorPercent('hangar')).toBe(10)
+    expect(structureAnchorPercent('launchpad')).toBe(50)
+    expect(structureAnchorPercent('command')).toBe(86)
+    expect(structureAnchorPercent('refinery')).toBe(94.5)
+    expect(structureAnchorPercent('astronaut-academy')).toBeNull()
+    expect(structureAnchorPercent('surface-silo')).toBeNull()
   })
 
   it('places the Exchange in the widest gap and grows buildings by tier', () => {

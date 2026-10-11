@@ -20,11 +20,36 @@ export interface BiomeLayer {
   parallaxSeconds: number
 }
 
+/** Sunset mountain bands for the approved base. Transparent layers, not one backdrop. */
 const MOUNTAIN_LAYERS: readonly BiomeLayer[] = [
-  { id: 'far', src: '/game/assets/biomes/mountains/layer-far.png', height: '34%', parallaxSeconds: 140 },
-  { id: 'hills', src: '/game/assets/biomes/mountains/layer-hills.png', height: '28%', parallaxSeconds: 96 },
-  { id: 'treeline', src: '/game/assets/biomes/mountains/layer-treeline.png', height: '22%', parallaxSeconds: 64 },
+  { id: 'far', src: '/game/assets/base/layers/mountains-far.png', height: '46%', parallaxSeconds: 140 },
+  { id: 'hills', src: '/game/assets/base/layers/mountains-mid.png', height: '32%', parallaxSeconds: 96 },
+  { id: 'treeline', src: '/game/assets/base/layers/mountains-near.png', height: '24%', parallaxSeconds: 64 },
 ]
+
+/** Launch complex stays this wide at every tier. Portrait CSS may ease it so neighbours keep a gap. */
+export const LAUNCHPAD_SCENE_WIDTH_PCT = 55
+
+/**
+ * Centre of a starter structure, as a percent of scene width.
+ * Kinds without an anchor stay on the plot the player chose.
+ * Hangar, pad, hut and tank match the approved base: wide gaps, pad in the middle.
+ */
+export function structureAnchorPercent(kind: string): number | null {
+  switch (kind) {
+    case 'hangar':
+    case 'garage':
+      return 10
+    case 'launchpad':
+      return 50
+    case 'command':
+      return 86
+    case 'refinery':
+      return 94.5
+    default:
+      return null
+  }
+}
 
 const DESERT_LAYERS: readonly BiomeLayer[] = [
   { id: 'far', src: '/game/assets/biomes/desert/layer-far.png', height: '32%', parallaxSeconds: 140 },

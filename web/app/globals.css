@@ -3614,7 +3614,7 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 [data-screen="hub"][data-time="night"] { --base-window-on: 1; --base-window: var(--ln-world-hull-lit); }
 .portrait-canvas:has([data-screen="hub"][data-time="dawn"]) .earth-base-structure { filter: brightness(0.9); }
 .portrait-canvas:has([data-screen="hub"][data-time="afternoon"]) .earth-base-structure { filter: brightness(0.96); }
-.portrait-canvas:has([data-screen="hub"][data-time="dusk"]) .earth-base-structure { filter: brightness(0.82); }
+.portrait-canvas:has([data-screen="hub"][data-time="dusk"]) .earth-base-structure { filter: none; }
 .portrait-canvas:has([data-screen="hub"][data-time="night"]) .earth-base-structure { filter: brightness(0.68); }
 /* Chrome (Friends, Garden, DEV) sits outside the scene root, so the
    blueprint paper tokens on body still painted those controls white.
@@ -3693,15 +3693,20 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   --hub-ground-far: #3d5a40; --hub-ground-near: #2f4c36;
   --hub-ground-lip: #6d8f62;
 }
-.portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 54%; }
+.portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 22%; }
 .portrait-canvas:has([data-screen="hub"]) .earth-base-structure { transform: translateX(-50%); transform-origin: center bottom; }
 .portrait-canvas:has([data-screen="hub"]) .earth-base-flat-sprite,
 .debrief-arrival-canvas canvas { image-rendering: auto; }
 .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock-inner {
-  background: color-mix(in srgb, var(--ln-world-hull-lit) 82%, transparent) !important;
-  border-top: 2px solid color-mix(in srgb, var(--ln-world-outline) 28%, transparent) !important;
-  box-shadow: 0 -8px 20px color-mix(in srgb, var(--ln-world-outline) 16%, transparent) !important;
+  width: min(560px, calc(100% - 24px)) !important;
+  max-width: 560px !important;
+  margin: 0 auto 10px;
+  background: var(--ln-world-hull-lit) !important;
+  border: 2px solid var(--ln-world-outline) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--ln-world-outline) 16%, transparent) !important;
   justify-content: center;
+  padding: 6px 8px !important;
 }
 .portrait-canvas:has([data-screen="hub"]) [data-testid="base-dock"] {
   width: min(440px, 100%);
@@ -3744,7 +3749,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
 }
 .hub-callout--clear button { min-height: 44px; }
 @media (max-width: 520px) and (orientation: portrait) {
-  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 58%; }
+  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 22%; }
   /* Percentage footprints are authored for a wide scene. Phone portrait keeps
      the same tier ratio and lifts it so a level-1 module stays readable. */
   /* A sparse base (one or two modules) can grow so a level-1 pad stays readable.
@@ -3774,7 +3779,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   }
 }
 @media (orientation: landscape) and (max-height: 500px) {
-  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 46%; --hub-structure-max: 132px; }
+  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 22%; --hub-structure-max: 9999px; }
   .portrait-canvas:has([data-screen="hub"]) .earth-base-structure { transform: translateX(-50%); }
   .hub-callout--clear { top: 56px; bottom: auto; left: 24%; right: auto; width: min(250px, 34vw); }
 }

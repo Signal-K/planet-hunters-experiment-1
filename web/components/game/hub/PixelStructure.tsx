@@ -125,6 +125,17 @@ function Telescope({ tier }: { tier: 1 | 2 | 3 }) {
   )
 }
 
+const LAYER = '/game/assets/base/layers'
+
+function PixelImg({ kind, tier, src, flicker }: { kind: string; tier: number; src: string; flicker?: boolean }) {
+  return (
+    <span data-pixel-structure={kind} data-tier={tier} className={styles.spriteWrap}>
+      <img src={src} alt="" draggable={false} className={styles.sprite} />
+      {flicker && <span className={styles.beaconDot} />}
+    </span>
+  )
+}
+
 function Shed() {
   return (
     <Frame viewBox="0 0 72 56">
@@ -140,12 +151,19 @@ function Shed() {
 export function PixelStructure({ kind, level = 1 }: { kind: string; level?: number }) {
   const tier = structureTier(level)
   let body: React.ReactNode = null
-  if (kind === 'launchpad') body = <Launchpad tier={tier} />
-  else if (kind === 'hangar') body = <Hall tier={tier} />
+  // Level 1 is the plain starter from the approved base. Later tiers grow into the fuller module.
+  if (kind === 'launchpad') body = <PixelImg kind={kind} tier={tier} src={`${LAYER}/launchpad-t1.png`} flicker />
+  else if (kind === 'hangar' || kind === 'garage') body = tier < 3
+    ? <PixelImg kind={kind} tier={tier} src={`${LAYER}/hangar-t1.png`} />
+    : <Hall tier={tier} />
   else if (kind === 'market') body = <Hall tier={Math.max(tier, 2) as 2 | 3} board />
-  else if (kind === 'command') body = <Tower tier={tier} />
-  else if (kind === 'astronaut-academy') body = <Dome tier={tier} />
-  else if (kind === 'refinery') body = <Refinery tier={tier} />
+  else if (kind === 'command') body = <PixelImg kind={kind} tier={tier} src={`${LAYER}/hut-t1.png`} flicker />
+  else if (kind === 'astronaut-academy') body = tier === 1
+    ? <PixelImg kind={kind} tier={tier} src={`${LAYER}/dome-t1.png`} flicker />
+    : <Dome tier={tier} />
+  else if (kind === 'refinery') body = tier === 1
+    ? <PixelImg kind={kind} tier={tier} src={`${LAYER}/tank-t1.png`} />
+    : <Refinery tier={tier} />
   else if (kind === 'deep-space-telescope' || kind === 'transit-telescope') body = <Telescope tier={tier} />
   else if (kind !== 'surface-silo') body = <Shed />
   if (!body) return null

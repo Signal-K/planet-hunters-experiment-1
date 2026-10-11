@@ -21,7 +21,7 @@
       "padding": 6,
       "gap": 8,
       "tileSize": { "portrait": 52, "landscape": 44 },
-      "tiles": ["switch", "build", "hub"]
+      "tiles": ["prev", "build", "hub", "next"]
     }
   },
   "scene": {

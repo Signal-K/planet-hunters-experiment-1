@@ -13,11 +13,8 @@ import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
 import { BaseDock } from '@/components/game/hub/BaseDock'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { useBaseSeason, useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
-import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES, structureHalfScene } from '@/components/game/hub/EarthBaseModules'
+import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES, structureCenterPercent, structureWidthPct } from '@/components/game/hub/EarthBaseModules'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
-import { RoadRover } from '@/components/game/hub/RoadRover'
-import { EARTH_BASE_WIDE } from '@/lib/scene/compositions'
-import { exchangeSeat } from '@/lib/scene/base-world'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
@@ -28,7 +25,6 @@ import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
-import HUDStrip from '@/components/ui/HUDStrip'
 import SkyEventChip from '@/components/game/SkyEventChip'
 import OrionidsTeaser from '@/components/game/OrionidsTeaser'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
@@ -44,7 +40,15 @@ import { SCENE_NAMES } from '@/lib/ui-strings'
  * the pill's own height plus its gap — set so the visible building base lands
  * on the ground line. The dock-clearance measurement above depends on it.
  */
-const PLOT_LABEL_DROP = 42
+function dockStops(player: Player): Screen[] {
+  const stops: Screen[] = ['missions']
+  if (player.freeOperations) stops.push('market')
+  if (player.activeMission) {
+    const resume = missionResumeScreen(player)
+    if (!stops.includes(resume)) stops.push(resume)
+  }
+  return stops
+}
 
 // Instantiated from the build-plot prefab rather than written out by hand.
 // This same list previously existed in four places (both hub scene files and
@@ -73,6 +77,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   const [editMode, setEditMode] = useState(false)
+  const [dockStop, setDockStop] = useState(0)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
   // The terrain baseline is part of the world composition. It must not move
   // when the dock grows or the mobile browser chrome changes height: doing so
@@ -114,13 +119,14 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     .map(e => {
       const plot = readComponentNumber(e, 'BuildPlot', 'index', 0)
       const kind = Object.entries(effectivePlots).find(([, index]) => index === plot)?.[0]
-      const widthPct = kind ? (EARTH_BASE_STRUCTURE_SIZES[kind]?.width ?? 0) / 6.4 : 0
+      const widthPct = kind ? structureWidthPct(kind, isUpgradableBuilding(kind) ? buildingLevel(player, kind) : 1) : 0
+      const center = kind ? structureCenterPercent(kind, e.transform.position.x, widthPct) : sceneXPercent(e.transform.position.x, widthPct)
       return ({
-        // The authored outer plots sit close to the scene edge. Clamp the DOM
-        // hit target (which is wider than the sprite) so its entire button and
-        // status remain reachable even on a 320px viewport.
-        left: `clamp(62px, ${sceneXPercent(e.transform.position.x, widthPct)}%, calc(100% - 62px))`,
-        bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`,
+        left: `${center}%`,
+        width: kind === 'launchpad' ? 'min(55%, 860px)' : `${Math.max(widthPct, 8)}%`,
+        minWidth: 44,
+        maxWidth: 'none',
+        bottom: 'var(--hub-ground)',
         transform: 'translateX(-50%)',
       } as React.CSSProperties)
     })
@@ -168,45 +174,25 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       buildStartedAt: startedAt,
     }]
   })
-  // The exchange is a permanent Earth Base building, not a dock item. It sits
-  // in the widest gap so a new base (ground, road, lift shaft, exchange) stays open.
-  const exchangeX = exchangeSeat(
-    hubBuildings.filter(building => building.kind !== 'surface-silo').map(building => ({
-      x: building.plotX,
-      half: structureHalfScene(building.kind, building.level ?? 1),
-    })),
-    structureHalfScene('market', 2),
-  )
-  hubBuildings.push({ kind: 'market', plotX: exchangeX, w: 84, level: 2, status: 'ok' })
   const launchpadPlot = hubBuildings.find(building => building.kind === 'launchpad')
   // The launchpad speaks only while the Base has no live run. Progression is
   // now exposed through contextual buildings and the persistent chrome rather
   // than a generic card laid over the landscape.
-  const hasProgressionCards = !!player.activeMission || !!player.pendingLaunch || player.missionsDone > 0
   // After the first run the launchpad offers the transit telescope, the one
   // prompt that used to live on a Home card. It is dismissible and goes away
   // once the satellite has launched.
   const offersTransitTelescope = !onboardingActive && !player.activeMission && player.missionsDone > 0
     && !!player.freeOperations && !player.transitSatelliteLaunchedAt
     && !isHubPromptDismissed(player, HUB_PROMPT_TRANSIT_TELESCOPE)
-  const launchpadCallout: BuildingCallout | undefined =
-    offersTransitTelescope
-      ? {
-        title: 'Launch a transit telescope',
-        body: 'Your program can put a telescope in orbit. It sends back planet candidates to review.',
-        cta: 'Open Launchpad',
-        onCta: () => onOpenScene('launchpad'),
-        onDismiss: onDismissHubPrompt ? () => onDismissHubPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined,
-      }
-      : onboardingActive || hasProgressionCards
-        ? undefined
-        : {
-          title: 'Choose your first contract',
-          body: 'A client job is open at the Mission Board. Your launchpad is ready to fly it.',
-          cta: 'View Missions',
-          placement: 'viewport-clear',
-          onCta: () => onOpenScene('missions'),
-        }
+  const launchpadCallout: BuildingCallout | undefined = offersTransitTelescope
+    ? {
+      title: 'Launch a transit telescope',
+      body: 'Your program can put a telescope in orbit. It sends back planet candidates to review.',
+      cta: 'Open Launchpad',
+      onCta: () => onOpenScene('launchpad'),
+      onDismiss: onDismissHubPrompt ? () => onDismissHubPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined,
+    }
+    : undefined
 
   // One sky control for the craft: flying, arrived and waiting on the pad.
   const skyCraft: { state: 'mining' | 'arrived' | 'transit' | 'waiting'; label: string; ariaLabel: string; onOpen: () => void } | null = (() => {
@@ -319,7 +305,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             paths={hubBuildings.filter(building => building.kind !== 'surface-silo').map(building => sceneXPercent(building.plotX))}
             onOpenSilo={() => setSubsurface(true)}
           />
-          <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
           <SkyEventChip surface="base" />
           {!subsurface && <OrionidsTeaser />}
 
@@ -394,20 +379,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                     ? { ...building, onClick: () => setSubsurface(true) }
                     : building
                 const siloStyle = silo ? { ...style, left: '50%' } : style
-                return <Building key={kind} {...editable} hitH={silo ? 120 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={siloStyle} calloutAlign={calloutAlign} />
+                const aspect = EARTH_BASE_STRUCTURE_SIZES[kind]
+                return <Building key={kind} {...editable} quiet hitAspect={aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={siloStyle} calloutAlign={calloutAlign} />
               })}
-              <Building
-                kind="market"
-                label="Exchange"
-                sub="SELL CARGO"
-                status="ok"
-                w={84}
-                hitH={72}
-                active={activeBuilding === 'market'}
-                onActiveChange={active => setActiveBuilding(active ? 'market' : null)}
-                onClick={() => onFocusBuilding('market')}
-                style={{ left: `clamp(62px, ${sceneXPercent(exchangeX, EARTH_BASE_STRUCTURE_SIZES.market.width / 6.4)}%, calc(100% - 62px))`, bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`, transform: 'translateX(-50%)' }}
-              />
             </div>
           </div>
 
@@ -442,12 +416,18 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       <div className={layoutStyles.topHud}>
         <div className={layoutStyles.topRow}>
           {!subsurface && <HubClockWidget />}
+          {!subsurface && (
+            <div className={layoutStyles.chips}>
+              <span className={layoutStyles.chip} data-testid="hub-francs-chip">{formatCurrency(player.francs, { compact: true })}</span>
+              <span className={layoutStyles.chip} data-testid="hub-cargo-chip" aria-label="Cargo">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" />
+                  <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />
+                </svg>
+              </span>
+            </div>
+          )}
         </div>
-        {!subsurface && (
-          <div className={layoutStyles.balance}>
-            <HUDStrip player={player} />
-          </div>
-        )}
       </div>
       {!subsurface && <SkyBadgeRow badges={player.badges} className={layoutStyles.badges} />}
 
@@ -490,7 +470,18 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             padding: '12px 16px 16px',
           }}>
             <BaseDock
-              onSwitchOperation={() => onOpenScene(player.activeMission ? missionResumeScreen(player) : 'missions')}
+              onPrev={() => {
+                const stops = dockStops(player)
+                const next = (dockStop - 1 + stops.length) % stops.length
+                setDockStop(next)
+                onOpenScene(stops[next])
+              }}
+              onNext={() => {
+                const stops = dockStops(player)
+                const next = (dockStop + 1) % stops.length
+                setDockStop(next)
+                onOpenScene(stops[next])
+              }}
               onBuild={() => showStorageSiloCta ? onOpenScene('build') : setEditMode(value => !value)}
               onHub={() => onOpenScene('instrument-hub')}
             />

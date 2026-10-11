@@ -159,6 +159,15 @@ body:has([data-screen="hub"]) {
 /* Dusk panels, chrome row, launchpad ground, and the desktop frame.
    Loaded after globals so these beat the paper token reset. */
 
+/* Approved base chrome is the cog, clock, chips, and dock. Suite hops, the
+   feedback launcher, and the data-link row sit on other screens. */
+body:has([data-screen="hub"]) .suite-hop-rail,
+body:has([data-screen="hub"]) .suite-identity-chip,
+body:has([data-screen="hub"]) .feedback-launcher,
+body:has([data-screen="hub"]) .backend-status {
+  display: none !important;
+}
+
 body:has([data-screen="hub"]) .hub-friends-button,
 body:has([data-screen="hub"]) .hub-community-button,
 body:has([data-screen="hub"]) .suite-hop-rail a,
@@ -215,14 +224,14 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
   .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: inline-flex !important; }
   [data-testid="orionids-teaser"] { top: 72px !important; bottom: auto !important; }
   .hub-callout--clear { top: 72px !important; }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--market { transform: translateX(-50%) scale(1.05); }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%) scale(2.15); transform-origin: center bottom; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor { bottom: calc(var(--hub-ground) - 64px) !important; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--market { transform: translateX(-50%); }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%); transform-origin: center bottom; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor { bottom: var(--hub-ground) !important; }
 }
 
 @media (max-width: 520px) and (orientation: portrait) {
-  .hub-plot-anchor { bottom: calc(var(--hub-ground) - 96px) !important; }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--market { transform: translateX(calc(-50% - 28px)) scale(1.65); }
+  .hub-plot-anchor { bottom: var(--hub-ground) !important; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--market { transform: translateX(-50%); }
   .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 8px; right: 8px; flex-direction: row; }
   .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none !important; }
 }
@@ -230,8 +239,8 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
 @media (orientation: landscape) and (max-height: 500px) {
   .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 8px !important; flex-direction: row !important; }
   .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none !important; }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%) scale(1.65); transform-origin: center bottom; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor { bottom: calc(var(--hub-ground) - 72px) !important; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%); transform-origin: center bottom; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor { bottom: var(--hub-ground) !important; }
   [data-testid="orionids-teaser"] {
     top: 64px !important;
     bottom: auto !important;
@@ -243,17 +252,7 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
 }
 
 .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad::after {
-  content: "";
-  position: absolute;
-  left: -18%;
-  right: -18%;
-  bottom: 0;
-  height: 14%;
-  border-radius: 40% 40% 6px 6px;
-  background: linear-gradient(180deg, var(--hub-ground-lip, var(--dusk-ground-lip)), var(--hub-ground-near, var(--dusk-ground-near)) 55%, var(--dusk-deep));
-  box-shadow: 0 10px 0 var(--dusk-deep);
-  z-index: 2;
-  pointer-events: none;
+  content: none;
 }
 
 .theme-blueprint.build-place-screen,

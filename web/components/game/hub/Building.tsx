@@ -74,6 +74,10 @@ export interface BuildingProps {
   active?: boolean
   /** Disable hover/press lift for scene objects whose art should stay still. */
   disableHover?: boolean
+  /** Hide the name pill. The structure stays tappable and keeps its accessible name. */
+  quiet?: boolean
+  /** Width/height of the hit spacer, matching the sprite. */
+  hitAspect?: string
 }
 
 const CALLOUT_W = 208
@@ -105,7 +109,7 @@ function ArrowGlyph() {
   )
 }
 
-export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false }: BuildingProps) {
+export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false, quiet = false, hitAspect }: BuildingProps) {
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
@@ -160,6 +164,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
       <button
         data-testid={`building-${kind}-hit`}
         onClick={onClick}
+        aria-label={label}
         style={{
           background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
@@ -174,7 +179,11 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
       >
         {/* Spacer reserving the building art's clickable footprint */}
         <div style={{
-          width: w, height: hitH ?? w * 0.6, position: 'relative',
+          width: hitAspect ? '100%' : w,
+          height: hitAspect ? undefined : (hitH ?? w * 0.6),
+          aspectRatio: hitAspect,
+          minHeight: 44,
+          position: 'relative',
           borderRadius: 12,
           // The sprite layer owns the silhouette highlight. Keep this spacer
           // visually empty so a tall hit target cannot read as a rectangle.
@@ -196,7 +205,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
           )}
         </div>
 
-        {/* Status pill — black tile, white outline */}
+        {!quiet && (
         <div className="hub-building-status" style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
           background: 'var(--dusk-deep)',
@@ -213,6 +222,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             </span>
           </span>
         </div>
+        )}
       </button>
 
       {callout && (
