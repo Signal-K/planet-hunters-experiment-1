@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { groundOffsetCss, type SceneRoadPath, type SceneRoadPoint } from '@/lib/scene/terrain-kit'
 
 // KES-260: ambient Earth Base traffic stays on the composition's road path.
@@ -36,7 +36,9 @@ function pointAtProgress(points: SceneRoadPoint[], progress: number): SceneRoadP
 }
 
 export function RoadRover({ road, durationMs = 18000 }: { road?: SceneRoadPath; durationMs?: number }) {
+  const roverRef = useRef<HTMLDivElement>(null)
   const [progress, setProgress] = useState(0)
+  const [canAnimate, setCanAnimate] = useState(false)
   const total = useMemo(() => road ? pathLength(road.points) : 0, [road])
   const point = useMemo(
     () => road ? pointAtProgress(road.points, progress) : { x: 0, groundOffset: 0 },
@@ -44,22 +46,55 @@ export function RoadRover({ road, durationMs = 18000 }: { road?: SceneRoadPath; 
   )
 
   useEffect(() => {
-    if (!road || road.points.length < 2 || total === 0) return
+    const rover = roverRef.current
+    if (!rover) return
 
-    let frame = 0
-    const startedAt = performance.now()
-    const tick = (now: number) => {
-      setProgress(((now - startedAt) % durationMs) / durationMs)
-      frame = requestAnimationFrame(tick)
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    // Mission Log is a tray over the still-mounted Base, so the rover stays
+    // inside the viewport. Intersection alone would keep the loop running
+    // under that cover.
+    const covered = () => document.querySelector('[data-testid="mission-history-tray"]') != null
+    let intersecting = typeof IntersectionObserver === 'undefined'
+    const update = () => setCanAnimate(intersecting && !document.hidden && !media.matches && !covered())
+
+    let observer: IntersectionObserver | undefined
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(([entry]) => {
+        intersecting = entry?.isIntersecting ?? false
+        update()
+      })
+      observer.observe(rover)
     }
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [durationMs, road, total])
+    const mutations = typeof MutationObserver !== 'undefined'
+      ? new MutationObserver(update)
+      : undefined
+    mutations?.observe(document.body, { childList: true, subtree: true })
+    document.addEventListener('visibilitychange', update)
+    media.addEventListener('change', update)
+    update()
+    return () => {
+      observer?.disconnect()
+      mutations?.disconnect()
+      document.removeEventListener('visibilitychange', update)
+      media.removeEventListener('change', update)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!canAnimate || !road || road.points.length < 2 || total === 0) return
+
+    const startedAt = Date.now()
+    const tick = () => setProgress(((Date.now() - startedAt) % durationMs) / durationMs)
+    tick()
+    const interval = window.setInterval(tick, 250)
+    return () => window.clearInterval(interval)
+  }, [canAnimate, durationMs, road, total])
 
   if (!road || road.points.length === 0) return null
 
   return (
     <div
+      ref={roverRef}
       data-testid="road-rover"
       data-road-id={road.id}
       data-road-progress={progress.toFixed(3)}
@@ -76,6 +111,7 @@ export function RoadRover({ road, durationMs = 18000 }: { road?: SceneRoadPath; 
         zIndex: 9,
         pointerEvents: 'none',
         transform: 'translateX(-50%)',
+        transition: 'left 250ms linear, bottom 250ms linear',
         filter: 'drop-shadow(0 3px 3px color-mix(in srgb, var(--ln-void) 48%, transparent))',
       }}
     >
