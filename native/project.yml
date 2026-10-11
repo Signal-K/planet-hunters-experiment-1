@@ -4,6 +4,7 @@ options:
   deploymentTarget: { macOS: "14.0", iOS: "17.0" }
 packages:
   LandnamCore: { path: LandnamCore }
+  TakeonKit: { path: TakeonKit }
 targets:
   Landnam:
     type: application
@@ -16,7 +17,7 @@ targets:
         buildPhase: resources
       - path: ../shared/layout
         buildPhase: resources
-    dependencies: [{ package: LandnamCore }]
+    dependencies: [{ package: LandnamCore }, { package: TakeonKit }]
     settings:
       base:
         SWIFT_VERSION: 6.0

@@ -28,6 +28,7 @@ import {
   type TakeonHostEvent,
 } from '@/lib/takeon/events'
 import { scheduleLandnamPush } from '@/lib/takeon/push'
+import { isTakeonGoWasmEnabled, loadTakeonGo, type TakeonGoRuntime } from '@/lib/takeon/goRuntime'
 import styles from './TakeOnMount.module.css'
 
 export interface TakeOnFieldOrder {
@@ -76,6 +77,11 @@ export interface TakeOnMountHandle {
   setView: (kind: ViewKind) => void
   toggleView: () => ViewKind | null
   rotateView: () => void
+  /**
+   * Go WASM runtime (docs/takeon-go-wasm.md), once loaded. Always null unless
+   * NEXT_PUBLIC_TAKEON_GO_WASM=1; the field itself still runs on the TS engine.
+   */
+  goRuntime: () => TakeonGoRuntime | null
   /** Structures currently placed on the field (read-only snapshot for sharing). */
   structures: () => { id: string; type: StructureType; x: number; y: number; facing: number }[]
 }
@@ -167,7 +173,16 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     () => suppliedAdapter ?? new LandnamSync(),
     [suppliedAdapter]
   )
+  const goRuntimeRef = useRef<TakeonGoRuntime | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Flag-gated and side-by-side only: loads the Go runtime for hosts that opt in, never drives the field.
+  useEffect(() => {
+    if (!isTakeonGoWasmEnabled()) return
+    let cancelled = false
+    loadTakeonGo().then(rt => { if (!cancelled) goRuntimeRef.current = rt }).catch(reason => console.warn('[Takeon] Go WASM runtime unavailable', reason))
+    return () => { cancelled = true }
+  }, [])
 
   // Seeding is applied once, on mount — read via refs so changing identity
   // on every render (an unmemoized object/array from the caller) can never
@@ -221,6 +236,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     setView: kind => gameRef.current?.setView(kind),
     toggleView: () => gameRef.current?.toggleView() ?? null,
     rotateView: () => gameRef.current?.rotateView(),
+    goRuntime: () => goRuntimeRef.current,
     structures: () => (gameRef.current?.sim.structures ?? []).map(s => ({
       id: s.id, type: s.type, x: s.pos.x, y: s.pos.y, facing: s.facing ?? 0,
     })),
