@@ -16,7 +16,7 @@ struct BaseWorldScene: View {
             let w = geo.size.width
             let h = geo.size.height
             let portrait = h > w * 1.15
-            let ground = h * 0.78
+            let ground = h * 0.80
             TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { ctx in
                 let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
                 ZStack(alignment: .topLeading) {
@@ -73,8 +73,9 @@ struct BaseWorldScene: View {
         let road: CGFloat = height < 500 ? 28 : 36
         return ZStack(alignment: .top) {
             Art.view("base/layers/dirt.png").resizable(resizingMode: .tile).interpolation(.none)
-            Art.view("base/kit/grass.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: grass).offset(y: -(grass + road - 6))
-            Art.view("base/kit/road-a.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: road).offset(y: -road)
+                .padding(.top, grass + road)
+            Art.view("base/kit/grass.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: grass)
+            Art.view("base/kit/road-a.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: road).offset(y: grass)
         }
         .frame(width: width, height: height - ground, alignment: .top)
         .position(x: width / 2, y: ground + (height - ground) / 2)
@@ -106,12 +107,11 @@ struct BaseWorldScene: View {
 
     private func shaft(width: CGFloat, height: CGFloat) -> some View {
         let portrait = height > width * 1.15
-        let ground = height * 0.78
+        let ground = height * 0.80
         let sh: CGFloat = height < 500 ? 44 : 56
         let road: CGFloat = height < 500 ? 22 : 30
         let dock = height * 0.10 + 8
-        let underRoad = (height - ground) - road - 6 - sh
-        let fromBottom = max(dock, underRoad)
+        let fromBottom = dock
         return Button(action: onShaft) {
             Art.view("base/kit/underground-window.png")
                 .resizable().interpolation(.none).scaledToFit()
@@ -127,41 +127,26 @@ struct BaseWorldScene: View {
     private func structure(_ kind: String, sprite: String, width: CGFloat, height: CGFloat, ground: CGFloat, portrait: Bool, level: Int) -> AnyView {
         let center = width * anchor(kind, plot: plots[kind] ?? 0, portrait: portrait)
         if kind == "launchpad" {
-            let padW = width * (portrait ? 0.30 : 0.55)
-            let padH: CGFloat = portrait ? 12 : 16
-            // Rocket plus gantry stand about twice as tall as the hangar.
+            let padW = width * (portrait ? 0.62 : 0.58)
             let hangarH = width * widthFraction("hangar", portrait: portrait, level: 1) * aspect("hangar")
-            let craftH = hangarH * 2
-            let capW = padH
-            let tileW = padH * 4
-            let tiles = max(1, Int(ceil((padW - capW * 2) / tileW)))
-            let stackH = padH + craftH
+            // Thick industrial slab about half the hangar's height, tall gantry and rocket on it.
+            let slabH = hangarH * 0.55
+            let towerH = hangarH * (portrait ? 2.6 : 3.0)
+            let stackH = towerH + slabH * 0.5
             return AnyView(Button { onStructure(kind) } label: {
                 ZStack(alignment: .bottom) {
-                    HStack(spacing: 0) {
-                        Art.view("base/kit/pad-end-left.png").resizable().interpolation(.none).scaledToFit().frame(width: capW, height: padH)
-                        HStack(spacing: 0) {
-                            ForEach(0..<tiles, id: \.self) { _ in
-                                Art.view("base/kit/pad-tile.png").resizable().interpolation(.none).scaledToFit().frame(width: tileW, height: padH)
-                            }
-                        }
-                        .frame(maxWidth: max(8, padW - capW * 2), alignment: .leading)
-                        .clipped()
-                        Art.view("base/kit/pad-end-right.png").resizable().interpolation(.none).scaledToFit().frame(width: capW, height: padH)
-                    }
-                    .frame(width: padW, height: padH)
-                    HStack(alignment: .bottom, spacing: 4) {
-                        Art.view("base/kit/pad-gantry.png").resizable().interpolation(.none).scaledToFit().frame(height: craftH)
-                        Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none).scaledToFit().frame(height: craftH)
-                    }
-                    .padding(.bottom, padH * 0.7)
+                    Art.view("base/kit/starter-pad-rocket.png").resizable().interpolation(.none).scaledToFit()
+                        .frame(height: towerH)
+                        .offset(x: -padW * 0.02, y: -slabH * 0.35)
+                    Art.view("base/kit/starter-pad-platform.png").resizable().interpolation(.none)
+                        .frame(width: padW, height: slabH)
                 }
                 .frame(width: padW, height: stackH, alignment: .bottom)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .position(x: center, y: ground - stackH / 2)
+            .position(x: center, y: ground - stackH / 2 + slabH * 0.1)
             .accessibilityLabel(kindLabel(kind)))
         }
         let fraction = widthFraction(kind, portrait: portrait, level: level)
