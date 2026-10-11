@@ -164,7 +164,9 @@ body:has([data-screen="hub"]) {
 body:has([data-screen="hub"]) .suite-hop-rail,
 body:has([data-screen="hub"]) .suite-identity-chip,
 body:has([data-screen="hub"]) .feedback-launcher,
-body:has([data-screen="hub"]) .backend-status {
+body:has([data-screen="hub"]) .backend-status,
+body:has([data-screen="missions"]) .backend-status,
+body:has([data-screen="missions"]) .game-stage-backdrop {
   display: none !important;
 }
 

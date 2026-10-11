@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useMemo, useState } from 'react'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import type { MissionRelayCardModel } from '@/lib/hooks/useMissionRelayModels'
@@ -24,7 +24,7 @@ import {
 import { takeMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
-import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsSheet from '@/components/game/FriendsSheet'
@@ -88,10 +88,60 @@ function DownIcon() {
 }
 
 function StepGlyph({ kind }: { kind: ProgramStep['kind'] }) {
-  if (kind === 'academy') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3" /><path d="M5 19c1.5-3 4-4.5 7-4.5S17.5 16 19 19" /></svg>
-  if (kind === 'build') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M7 20V10l5-4 5 4v10" /></svg>
+  if (kind === 'academy') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3" /><path d="M5 19c1.5-3 4-4.5 7-4.5S17.5 16 19 19" /><path d="M4 11h16" /></svg>
+  if (kind === 'build') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 20V9l6-5 6 5v11" /><path d="M10 20v-5h4v5" /></svg>
   if (kind === 'mining' || kind === 'focus') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16M8 18l2-8h4l2 8M10 10V7h4v3" /></svg>
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15c4-1 6-6 8-11 2 5 4 10 8 11" /><path d="M8 18h8" /></svg>
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16c3-1 5-5 8-12 3 7 5 11 8 12" /><circle cx="12" cy="16" r="2" /><path d="M8 20h8" /></svg>
+}
+
+function MineralRock({ shape, color }: { shape?: string; color: string }) {
+  const ink = 'var(--ln-board-ink)'
+  return <span className={styles.rock} aria-hidden="true">
+    <svg viewBox="0 0 24 24">
+      {shape === 'diamond' && <path d="M12 2.5 20 9.5 12 21.5 4 9.5Z" fill={color} stroke={ink} strokeWidth="1.6" strokeLinejoin="round" />}
+      {shape === 'triangle' && <path d="M12 3 21.5 20.5H2.5Z" fill={color} stroke={ink} strokeWidth="1.6" strokeLinejoin="round" />}
+      {shape === 'rect' && <path d="M4 9h16v11H4zM7.5 9 9 4.5h6L17 9" fill={color} stroke={ink} strokeWidth="1.6" strokeLinejoin="round" />}
+      {(!shape || shape === 'circle') && <path d="M8 7.5c2.2-3 7.2-2.4 8.4.4 2.6.4 3.4 4.2 1.2 6.2-.6 2.8-4.2 4.6-7.6 3.2C6.2 16.2 4.6 12.2 6.2 9.4 6.4 8.6 7 7.8 8 7.5Z" fill={color} stroke={ink} strokeWidth="1.6" strokeLinejoin="round" />}
+    </svg>
+  </span>
+}
+
+function SkyBanner({ kind }: { kind: 'orionids' | 'comet' | 'saturn' | 'rocket' | 'moon' }) {
+  return <svg className={styles.banner} viewBox="0 0 320 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="320" height="140" fill="var(--ln-world-dusk-top)" />
+    <rect y="70" width="320" height="70" fill="var(--ln-world-dusk-horizon)" />
+    <rect y="108" width="320" height="32" fill="var(--ln-world-soil)" />
+    <rect y="108" width="320" height="6" fill="var(--ln-world-grass)" />
+    {[[18, 22], [48, 40], [80, 16], [120, 34], [160, 18], [200, 42], [240, 20], [280, 36], [300, 14]].map(([x, y]) =>
+      <rect key={`${x}-${y}`} x={x} y={y} width="3" height="3" fill="var(--ln-board-paper)" />)}
+    {kind === 'orionids' && <>
+      <polygon points="40,78 150,36 138,48 210,18" fill="var(--ln-board-amber)" />
+      <circle cx="214" cy="18" r="12" fill="var(--ln-board-ink)" />
+      <rect x="250" y="78" width="10" height="30" fill="var(--ln-board-ink)" />
+      <polygon points="242,80 268,80 255,64" fill="var(--ln-board-ink)" />
+    </>}
+    {kind === 'comet' && <>
+      <polygon points="30,90 190,40 170,52" fill="var(--ln-board-paper)" opacity="0.85" />
+      <circle cx="196" cy="38" r="8" fill="var(--ln-board-paper)" />
+    </>}
+    {kind === 'saturn' && <>
+      <ellipse cx="168" cy="58" rx="46" ry="14" fill="none" stroke="var(--ln-board-amber)" strokeWidth="4" />
+      <circle cx="168" cy="58" r="22" fill="var(--ln-board-lavender-deep)" />
+    </>}
+    {kind === 'rocket' && <>
+      <polygon points="150,96 170,96 160,28" fill="var(--ln-board-paper)" />
+      <polygon points="150,96 138,110 160,96" fill="var(--ln-board-coral)" />
+      <polygon points="170,96 182,110 160,96" fill="var(--ln-board-coral)" />
+    </>}
+    {kind === 'moon' && <circle cx="200" cy="52" r="22" fill="var(--ln-board-paper)" />}
+  </svg>
+}
+
+function bannerKind(id: string): 'comet' | 'saturn' | 'rocket' | 'moon' {
+  if (id.startsWith('saturn')) return 'saturn'
+  if (id.startsWith('rocket')) return 'rocket'
+  if (id.startsWith('new-moon')) return 'moon'
+  return 'comet'
 }
 
 function Medal({ tier }: { tier: 'gold' | 'silver' | 'empty' }) {
@@ -119,7 +169,7 @@ export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onAccept, onClose, onOpenLog, onOpenBuild,
   rocketImg, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
-  const { phase } = useTimeOfDay()
+  const { grade } = useTimeOfDay()
   const [tab, setTab] = useState<MissionBoardTab>(() => takeMissionBoardTab() ?? 'contracts')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
@@ -142,13 +192,16 @@ export default function MissionBoard({
   }
 
   return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions">
-    <div className={styles.sky} aria-hidden="true"><HubWorldBackground phase={phase} composition="earth-base-wide" /></div>
+    <div className={styles.sky} aria-hidden="true">
+      <BaseLayerScene time={grade} />
+      <div className={styles.dim} />
+    </div>
     <div className={styles.chrome}>
       <button type="button" className={`${styles.round} ${styles.cog}`} data-testid="settings-button" aria-label="Settings" onClick={() => setSettingsOpen(true)}><CogIcon /></button>
       <div className={styles.clock}><HubClockWidget /></div>
       <div className={styles.chips}>
         <span className={styles.chip} data-testid="hub-francs-chip">{formatFrancs(player.francs, { compact: true })}</span>
-        <span className={styles.chip} data-testid="hub-cargo-chip" aria-label="Cargo"><CubeIcon /></span>
+        <span className={`${styles.chip} ${styles.cargoChip}`} data-testid="hub-cargo-chip" aria-label="Cargo"><CubeIcon /></span>
         <button type="button" className={styles.round} data-testid="friends-button" aria-label="Friends" onClick={() => setFriendsOpen(true)}><PeopleIcon /></button>
       </div>
       <button type="button" className={`${styles.round} ${styles.arrow} ${styles.prev}`} data-testid="mission-board-prev" aria-label="Previous contract" disabled={!paging} onClick={() => paging && onSelectRelative(-1)}><ArrowIcon direction="left" /></button>
@@ -173,8 +226,8 @@ export default function MissionBoard({
             <article className={styles.card} aria-live="polite" data-testid="mission-board-section-client">
               <header className={styles.head}>
                 <span className={styles.kicker}>Client contract {index + 1} / {count}</span>
-                <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-teal)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={48} />
-                {wsw && <span className={styles.wsw} title={wsw.title} data-testid="mission-board-wsw">{wsw.label}</span>}
+                <span className={styles.markSlot}><ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-teal)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={48} /></span>
+                {wsw && <span className={styles.wsw} title={wsw.title} data-testid="mission-board-wsw"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" /><rect x="14" y="4" width="6" height="6" /><rect x="4" y="14" width="6" height="6" /><rect x="14" y="14" width="6" height="6" /></svg>{wsw.label}</span>}
               </header>
               <h2 className={styles.title}>{card.mission.title}</h2>
               <div className={styles.facts}>
@@ -187,7 +240,7 @@ export default function MissionBoard({
                   {Object.entries(card.mission.requires.minerals).map(([id, amount]) => {
                     const meta = catalog.minerals[id]
                     if (!meta) return null
-                    return <span key={id} className={styles.ore}><i style={{ background: meta.color } as CSSProperties} aria-hidden="true" />{amount}</span>
+                    return <span key={id} className={styles.ore} title={meta.name}><MineralRock shape={meta.shape} color={meta.color} />{amount}</span>
                   })}
                 </div>
               </div>
@@ -216,7 +269,7 @@ export default function MissionBoard({
                   {step.state === 'locked' && step.lockLine && <p>{step.lockLine}</p>}
                 </div>
                 <div className={styles.mark}>
-                  {step.state === 'done' && <span aria-label="Done"><CheckIcon /></span>}
+                  {step.state === 'done' && <span className={styles.doneMark} aria-label="Done"><CheckIcon /></span>}
                   {step.state === 'locked' && <span aria-label="Locked"><LockIcon /></span>}
                   {(step.state === 'current' || step.state === 'available') && <button type="button" className={styles.start} data-testid={`program-start-${step.id}`} onClick={() => startStep(step)}>{step.state === 'current' ? 'START' : 'ACCEPT'}</button>}
                 </div>
@@ -227,7 +280,7 @@ export default function MissionBoard({
 
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">
             <article className={styles.hero} data-testid="events-orionids">
-              <div className={styles.heroArt} aria-hidden="true"><span /></div>
+              <div className={styles.heroArt} aria-hidden="true"><SkyBanner kind="orionids" /></div>
               <div className={styles.heroBody}>
                 <h2>{events.orionids.name}</h2>
                 <EventStatus card={events.orionids} />
@@ -240,12 +293,14 @@ export default function MissionBoard({
             </article>
             <div className={styles.stack}>
               {events.wsw.map(event => <article key={event.id} className={styles.eventCard} data-testid={`events-card-${event.id}`}>
-                <div className={styles.eventArt} aria-hidden="true" />
-                <h3>{event.name}</h3>
-                <div className={styles.badges}>
-                  <Medal tier={event.earnedTier ?? 'silver'} />
+                <div className={styles.eventArt} aria-hidden="true"><SkyBanner kind={bannerKind(event.id)} /></div>
+                <div className={styles.eventBody}>
+                  <h3>{event.name}</h3>
+                  <div className={styles.badges}>
+                    <Medal tier={event.earnedTier ?? 'silver'} />
+                  </div>
+                  <EventStatus card={event} />
                 </div>
-                <EventStatus card={event} />
               </article>)}
             </div>
           </div>}

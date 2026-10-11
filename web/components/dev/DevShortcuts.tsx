@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DEV_GROUPS, resolvePreset } from '@/lib/devPresets'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { pbShared } from '@/lib/pb'
@@ -24,7 +24,11 @@ export default function DevShortcuts() {
   // real play is saved.
   const [backendMode, setBackendMode] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
-  if (!isDevLauncherEnabled()) return null
+  const [devQuery, setDevQuery] = useState(false)
+  useEffect(() => {
+    setDevQuery(new URLSearchParams(window.location.search).get('dev') === '1')
+  }, [])
+  if (!isDevLauncherEnabled() || !devQuery) return null
 
   function jump(key: string) {
     const preset = resolvePreset(key)
