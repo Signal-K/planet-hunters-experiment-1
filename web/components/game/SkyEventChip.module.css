@@ -65,6 +65,33 @@
   font: 14px/1.4 var(--ln-font-body);
 }
 
+.note p { margin: 0; }
+
+.playerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.playerLinks a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  color: var(--ln-cyan);
+  font: 700 14px/1.2 var(--ln-font-body);
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.playerLinks a:focus-visible {
+  outline: 3px solid var(--ln-cyan-bright);
+  outline-offset: 2px;
+}
+
 .tally,
 .badge {
   display: flex;
