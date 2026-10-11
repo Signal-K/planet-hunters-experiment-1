@@ -35,93 +35,90 @@
    cyan/amber stay accent-only per the existing amber-restriction rule. This
    is still dark mode — just neutral-dark instead of blue-dark. */
 :root, .theme-deep {
+  /* BEGIN GENERATED SHARED TOKENS — run npm run sync:shared */
+  /* Accent naming: blueprintBlue is canonical; --ln-cyan remains a legacy web alias. Amber is the warm selection/currency accent. The Sun (--ln-map-sun) is ice-white with a cyan glow. */
+  --ln-void: #0a0a0c;
+  --ln-bg: #131316;
+  --ln-bg-grid: #1a1a1e;
+  --ln-surface: #1c1c20;
+  --ln-surface-2: #25252a;
+  --ln-surface-3: #303036;
+  --ln-overlay: rgba(10, 10, 12, 0.75);
+  --ln-cyan: #70d9ea;
+  --ln-cyan-bright: #a3ecf5;
+  --ln-cyan-press: #3fb8cc;
+  --ln-cyan-soft: rgba(112, 217, 234, 0.16);
+  --ln-cyan-border: rgba(112, 217, 234, 0.4);
   --ln-blueprint-bg: #eef3f8;
   --ln-blueprint-paper: #ffffff;
   --ln-blueprint-paper-2: #dfe9f3;
   --ln-blueprint-ink: #0f2436;
   --ln-blueprint-blue: #1f78c1;
   --ln-blueprint-line-strong: rgba(15, 36, 54, 0.30);
-  --ln-void:        #0a0a0c;
-  --ln-bg:          #131316;
-  --ln-bg-grid:     #1a1a1e;
-  --ln-surface:     #1c1c20;
-  --ln-surface-2:   #25252a;
-  --ln-surface-3:   #303036;
-  --ln-overlay:     rgba(10, 10, 12, 0.75);
-
-  --ln-cyan:        #70d9ea;
-  --ln-cyan-bright: #a3ecf5;
-  --ln-cyan-press:  #3fb8cc;
-  --ln-cyan-soft:   rgba(112, 217, 234, 0.16);
-  --ln-cyan-border: rgba(112, 217, 234, 0.4);
-
-  --ln-amber:        #f5a623;
+  --ln-amber: #f5a623;
   --ln-amber-bright: #ffc25c;
-  --ln-amber-press:  #d68a0d;
-  --ln-amber-soft:   rgba(245, 166, 35, 0.14);
+  --ln-amber-press: #d68a0d;
+  --ln-amber-soft: rgba(245, 166, 35, 0.14);
   --ln-amber-border: rgba(245, 166, 35, 0.55);
-
-  /* SSL-425: the Sun is ice-white with a cyan glow, never orange. */
-  --ln-map-sun:      #eefcff;
+  --ln-map-sun: #eefcff;
   --ln-map-sun-soft: rgba(112, 217, 234, 0.35);
-
-  --ln-crimson:        #c8293e;
+  --ln-crimson: #c8293e;
   --ln-crimson-bright: #e83a52;
-  --ln-crimson-press:  #a0202f;
-  --ln-crimson-soft:   rgba(200, 41, 62, 0.14);
+  --ln-crimson-press: #a0202f;
+  --ln-crimson-soft: rgba(200, 41, 62, 0.14);
   --ln-crimson-border: rgba(200, 41, 62, 0.52);
-  --ln-glow-crimson:   0 0 0 1px rgba(200,41,62,0.7), 0 0 18px rgba(200,41,62,0.4);
-
-  --ln-ok:        #5ad07e;
-  --ln-ok-soft:   rgba(90, 208, 126, 0.18);
-  --ln-warn:      #ffb347;
+  --ln-ok: #5ad07e;
+  --ln-ok-soft: rgba(90, 208, 126, 0.18);
+  --ln-warn: #ffb347;
   --ln-warn-soft: rgba(255, 179, 71, 0.18);
-  --ln-crit:      #ff5a6a;
+  --ln-crit: #ff5a6a;
   --ln-crit-soft: rgba(255, 90, 106, 0.18);
-  --ln-info:      #70d9ea;
-
   --ln-mineral-silicon: #b9d8ff;
-  --ln-mineral-iron:    #d97150;
-  --ln-mineral-ice:     #9becff;
-  --ln-mineral-carbon:  #6a7280;
-  --ln-mineral-gold:    #ffd166;
-  --ln-mineral-rare:    #c084ff;
-
-  --ln-text:       #e9e9ec;
-  --ln-text-dim:   #b4b4bc;
+  --ln-mineral-iron: #d97150;
+  --ln-mineral-ice: #9becff;
+  --ln-mineral-carbon: #6a7280;
+  --ln-mineral-gold: #ffd166;
+  --ln-mineral-rare: #c084ff;
+  --ln-text: #e9e9ec;
+  --ln-text-dim: #b4b4bc;
   --ln-text-muted: #7c7c86;
   --ln-text-ghost: rgba(233, 233, 236, 0.35);
-  --ln-text-on-cyan:  #0a1418;
+  --ln-text-on-cyan: #0a1418;
   --ln-text-on-amber: #1a1304;
-  --ln-text-inverse:  #0a0a0c;
-
-  --ln-hairline:        rgba(255, 255, 255, 0.14);
+  --ln-text-inverse: #0a0a0c;
+  --ln-hairline: rgba(255, 255, 255, 0.14);
   --ln-hairline-strong: rgba(255, 255, 255, 0.30);
-  --ln-divider:         rgba(255, 255, 255, 0.10);
-
-  /* Shell/panel/border tokens — neutral charcoal family, translucent-white
-     glass for elevated surfaces rather than an opaque navy fill.
-     --ln-panel-2 is the next charcoal step up from --ln-panel. */
-  --ln-shell:        #0a0a0c;
-  --ln-panel:        #1c1c20;
-  --ln-panel-2:      #25252a;
-  --ln-border:       rgba(255, 255, 255, 0.22);
-  --ln-payout:       #d8ff55;
-  --ln-play:         #fa49ca;
+  --ln-divider: rgba(255, 255, 255, 0.10);
+  --ln-shell: #0a0a0c;
+  --ln-panel: #1c1c20;
+  --ln-panel-2: #25252a;
+  --ln-border: rgba(255, 255, 255, 0.22);
+  --ln-payout: #d8ff55;
+  --ln-play: #fa49ca;
   --ln-purple-depth: #25123d;
-
-  --ln-shadow-card:   0 2px 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.10), 0 8px 24px rgba(0,0,0,0.5);
-  --ln-shadow-modal:  0 24px 64px rgba(0,0,0,0.7);
-  --ln-glow-cyan:     0 0 0 1px rgba(112,217,234,0.6), 0 0 18px rgba(112,217,234,0.35);
-  --ln-glow-amber:    0 0 0 1px rgba(245,166,35,0.7), 0 0 18px rgba(245,166,35,0.4);
-  --ln-glow-ok:       0 0 12px rgba(90,208,126,0.7);
-
   --ln-r-xs: 2px;
   --ln-r-sm: 4px;
   --ln-r-md: 6px;
   --ln-r-lg: 8px;
   --ln-r-xl: 14px;
   --ln-r-pill: 999px;
+  --ln-fs-display: 72px;
+  --ln-fs-title: 48px;
+  --ln-fs-h1: 36px;
+  --ln-fs-h2: 28px;
+  --ln-fs-body: 22px;
+  --ln-fs-button: 20px;
+  --ln-fs-label: 16px;
+  --ln-fs-micro: 14px;
+  /* END GENERATED SHARED TOKENS */
+  --ln-glow-crimson:   0 0 0 1px rgba(200,41,62,0.7), 0 0 18px rgba(200,41,62,0.4);
+  --ln-info:      #70d9ea;
+
+  --ln-shadow-card:   0 2px 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.10), 0 8px 24px rgba(0,0,0,0.5);
+  --ln-shadow-modal:  0 24px 64px rgba(0,0,0,0.7);
+  --ln-glow-cyan:     0 0 0 1px rgba(112,217,234,0.6), 0 0 18px rgba(112,217,234,0.35);
+  --ln-glow-amber:    0 0 0 1px rgba(245,166,35,0.7), 0 0 18px rgba(245,166,35,0.4);
+  --ln-glow-ok:       0 0 12px rgba(90,208,126,0.7);
 
   --ln-s-0: 0;
   --ln-s-1: 4px;
@@ -139,15 +136,6 @@
   --ln-font-display: "Oxanium", "Turret Road", system-ui, sans-serif;
   --ln-font-body:    "Oxanium", system-ui, sans-serif;
   --ln-font-mono:    "Turret Road", ui-monospace, "Geist Mono", monospace;
-
-  --ln-fs-display:  72px;
-  --ln-fs-title:    48px;
-  --ln-fs-h1:       36px;
-  --ln-fs-h2:       28px;
-  --ln-fs-body:     22px;
-  --ln-fs-button:   20px;
-  --ln-fs-label:    16px;
-  --ln-fs-micro:    14px;
 
   --ln-tr-tight:   -0.01em;
   --ln-tr-normal:   0em;

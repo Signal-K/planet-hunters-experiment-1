@@ -8,21 +8,6 @@ enum Theme {
         Color(.sRGB, red: Double((v >> 16) & 0xFF) / 255, green: Double((v >> 8) & 0xFF) / 255, blue: Double(v & 0xFF) / 255, opacity: a)
     }
 
-    static let bg = hex(0xEEF3F8)
-    static let paper = hex(0xFFFFFF)
-    static let paper2 = hex(0xDFE9F3)
-    static let ink = hex(0x0F2436)
-    static let blue = hex(0x1F78C1)
-    static let blueBright = hex(0x42A6DF)
-    static let bluePress = hex(0x17639F)
-    static let teal = hex(0x0E6F66)      // web --ln-amber / payout
-    static let crimson = hex(0xB8223A)
-    static let green = hex(0x17703F)     // web --ln-bp-green / --ln-ok
-    static let textDim = hex(0x48596A)
-    static let textMuted = hex(0x566879)
-    static let hairline = ink.opacity(0.14)
-    static let border = ink.opacity(0.30)
-
     // Hub scene gradient tokens (color-mix of blue into paper).
     static func mix(_ pct: Double) -> Color {
         let b: (Double, Double, Double) = (0x1F / 255, 0x78 / 255, 0xC1 / 255)
