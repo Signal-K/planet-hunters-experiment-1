@@ -254,7 +254,8 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-mission-menu-close {
   flex: 0 0 auto;
-  min-height: 32px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0 10px;
   border: 1px solid var(--ln-hairline);
   border-radius: 6px;
@@ -294,9 +295,13 @@ button.launchpad-scene-object { cursor: pointer; }
   background: var(--ln-cyan-soft);
 }
 .launchpad-mission-choice:disabled {
-  opacity: .48;
+  opacity: 1;
   cursor: not-allowed;
+  background: var(--dusk-deep);
+  color: var(--dusk-dim);
 }
+.launchpad-mission-choice:disabled strong,
+.launchpad-mission-choice:disabled span { color: var(--dusk-dim); }
 .launchpad-mission-choice svg {
   width: 24px;
   height: 24px;
@@ -515,12 +520,21 @@ button.launchpad-scene-object { cursor: pointer; }
    grow to two deliberate rows instead: each command stays visible and the
    scene remains the route's primary control above it. */
 @media (orientation: portrait) and (max-width: 600px) {
-  .launchpad-scene-rail { height: auto; min-height: 62px; padding: 6px 8px; align-items: flex-start; }
+  .launchpad-scene-rail { z-index: 30; height: auto; min-height: 62px; padding: 6px 8px; align-items: flex-start; }
+  .launchpad-mission-menu {
+    top: 56px;
+    right: 8px;
+    bottom: 112px;
+    left: 8px;
+    width: auto;
+    max-height: none;
+    transform: none;
+  }
   .launchpad-rail-status { padding-top: 14px; flex: 0 0 auto; }
   .launchpad-rail-status span { font-size: var(--ln-fs-micro); }
   .launchpad-rail-status span:not(:first-child) { display: none; }
   .launchpad-rail-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); flex: 1 1 auto; gap: 4px; }
-  .launchpad-rail-actions button { width: 100%; min-width: 0; height: 40px; padding: 0 6px; justify-content: center; font-size: var(--ln-fs-micro); }
+  .launchpad-rail-actions button { width: 100%; min-width: 0; height: 44px; min-height: 44px; padding: 0 6px; justify-content: center; font-size: var(--ln-fs-micro); }
   .launchpad-rail-actions button.is-primary { min-width: 0; }
   .launchpad-rail-actions button svg { display: none; }
   .launchpad-rail-actions [data-testid="launchpad-guide-open"] { display: none; }
@@ -572,11 +586,19 @@ button.launchpad-scene-object { cursor: pointer; }
    most of the height, and New Mission uses the whole game area so every
    option is on screen instead of in a clipped strip. */
 @media (orientation: landscape) and (max-height: 500px) {
-  .launchpad-visual-scene { inset: 48px 0 48px; }
-  .launchpad-scene-rail { height: 48px; padding: 4px 8px; }
-  .launchpad-rail-actions button { height: 40px; }
-  .launchpad-mission-menu { top: 8px; bottom: 8px; max-height: none; }
-  .launchpad-mission-menu-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .launchpad-visual-scene { inset: 48px 0 52px; }
+  .launchpad-scene-rail { height: 52px; padding: 4px 8px; z-index: 30; }
+  .launchpad-rail-actions button { height: 44px; min-height: 44px; }
+  .launchpad-mission-menu {
+    top: auto;
+    right: 8px;
+    bottom: 60px;
+    left: auto;
+    width: min(440px, 52vw);
+    max-height: calc(100% - 120px);
+    transform: none;
+  }
+  .launchpad-mission-menu-options { grid-template-columns: 1fr 1fr; }
   .portrait-canvas:has(.launchpad-scene-rail) .suite-hop-rail { top: 56px; flex-direction: row; align-items: center; }
   .portrait-canvas:has(.launchpad-scene-rail) .suite-identity-chip { display: none; }
   .portrait-canvas:has(.launchpad-mission-menu) .suite-hop-rail { display: none; }

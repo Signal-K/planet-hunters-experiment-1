@@ -82,10 +82,10 @@ const CALLOUT_W = 208
 const CALLOUT_TAIL_INSET = 26
 
 const STATUS_COLOR: Record<BuildingProps['status'], string> = {
-  ok:   'var(--ln-ok)',
-  warn: 'var(--ln-warn)',
-  info: 'var(--ln-cyan)',
-  building: 'var(--ln-cyan)',
+  ok:   'var(--dusk-cta)',
+  warn: 'var(--dusk-warn)',
+  info: 'var(--dusk-info)',
+  building: 'var(--dusk-info)',
 }
 
 function BellGlyph() {
@@ -148,6 +148,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
     // launchpad's `left: calc(...%)` off this element. Clicking it still
     // reaches the button underneath, which occupies the wrapper's center.
     <div
+      className="hub-plot-anchor"
       data-testid={`building-${kind}`}
       // Desktop tutorial spotlight target. With the sidebar gone, "open a
       // mission" is coached on the launchpad itself rather than a nav rail.
@@ -198,11 +199,11 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
         {/* Status pill — black tile, white outline */}
         <div className="hub-building-status" style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-          background: 'var(--hub-panel-deep)',
+          background: 'var(--dusk-deep)',
           border: '1.5px solid var(--hub-outline)',
           borderRadius: 999, padding: 'var(--ln-s-1) var(--ln-s-3)', whiteSpace: 'nowrap',
         }}>
-          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>
+          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--dusk-ink)' }}>
             {label}
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -275,7 +276,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.06em', color: 'var(--ln-text)' }}>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.06em', color: 'var(--dusk-ink)' }}>
                 {callout.title}
               </span>
               <button
@@ -285,14 +286,14 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 style={{
                   // 46px stays at least 44px while the bubble scales to 0.96 before it opens.
                   flex: '0 0 auto', width: 46, height: 46, margin: '-8px -8px 0 0', border: 'none', cursor: 'pointer',
-                  background: 'transparent', color: 'var(--ln-text-dim)',
+                  background: 'transparent', color: 'var(--dusk-dim)',
                   display: 'grid', placeItems: 'center', padding: 0,
                 }}
               >
                 <span aria-hidden style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--ln-hairline)', fontSize: 16, lineHeight: 1, display: 'grid', placeItems: 'center' }}>×</span>
               </button>
             </div>
-            <div style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--ln-text-dim)', marginTop: 4 }}>
+            <div style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--dusk-dim)', marginTop: 4 }}>
               {callout.body}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 4 }}>
@@ -303,7 +304,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 46, minWidth: 46,
                 background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
                 fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
-                letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--hub-mint)',
+                letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--dusk-cta)',
               }}
             >
               {callout.cta} <ArrowGlyph />
@@ -317,7 +318,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                   display: 'inline-flex', alignItems: 'center', minHeight: 46, minWidth: 46, padding: 0, cursor: 'pointer',
                   background: 'transparent', border: 'none',
                   fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
-                  letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)',
+                  letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--dusk-dim)',
                 }}
               >
                 Dismiss

@@ -273,7 +273,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
         }}
       >
         <div style={{
-          background: 'linear-gradient(180deg, transparent, var(--ln-overlay))',
+          background: 'linear-gradient(180deg, transparent, var(--dusk-deep) 36%, var(--dusk-panel))',
           padding: '10px 12px 0',
           position: 'relative',
         }}>
@@ -325,12 +325,13 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                   style={{
                     flex: '0 0 auto',
                     scrollSnapAlign: 'start',
-                    background: on ? 'var(--ln-cyan-soft)' : 'var(--ln-panel)',
-                    border: `2px solid ${on ? color : 'var(--ln-hairline-strong)'}`,
+                    background: !canSelect ? 'var(--dusk-deep)' : on ? 'var(--dusk-raised)' : 'var(--dusk-panel)',
+                    border: `2px solid ${on ? 'var(--dusk-cta)' : 'color-mix(in srgb, var(--dusk-ink) 35%, transparent)'}`,
                     borderRadius: 10,
-                    padding: '6px 10px',
+                    padding: '8px 10px',
+                    minHeight: 44,
                     cursor: canSelect ? 'pointer' : 'default',
-                    opacity: canSelect ? 1 : 0.4,
+                    opacity: 1,
                     textAlign: 'left',
                     minWidth: 108,
                     maxWidth: 152,
@@ -351,7 +352,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                         fontFamily: 'var(--ln-font-display)',
                         fontWeight: 800,
                         fontSize: 'var(--ln-fs-micro)',
-                        color: on ? color : 'var(--ln-text-dim)',
+                        color: canSelect ? 'var(--dusk-ink)' : 'var(--dusk-dim)',
                         letterSpacing: '0.01em',
                         lineHeight: 1.25,
                         whiteSpace: 'normal',
@@ -360,7 +361,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                       <div style={{
                         fontFamily: 'var(--ln-font-mono)',
                         fontSize: 'var(--ln-fs-micro)',
-                        color: on ? color : 'var(--ln-text-muted)',
+                        color: 'var(--dusk-dim)',
                         marginTop: 1,
                         fontWeight: 700,
                         letterSpacing: '0.04em',

@@ -3579,6 +3579,21 @@ button.hub-orbital-network__status:disabled { cursor: default; }
    panel borders and offset shadows. Hues stay out of the banned orange and
    purple bands (rose horizon is red, sky is navy). */
 :root {
+  /* Dusk text and panels. These names are not reset by .theme-blueprint.
+     scripts/verify-dusk-contrast.mjs requires 4.5:1 for each ink on each panel. */
+  --dusk-ink: #f7f4ee;
+  --dusk-dim: #d7e0d4;
+  --dusk-muted: #c5d4c8;
+  --dusk-cta: #b6e3a8;
+  --dusk-info: #9ed4cf;
+  --dusk-warn: #f3c1c6;
+  --dusk-panel: #152033;
+  --dusk-deep: #0c1424;
+  --dusk-raised: #1c2c48;
+  --dusk-ground-far: #3d5a40;
+  --dusk-ground-near: #2f4c36;
+  --dusk-ground-lip: #6d8f62;
+  --dusk-hill: #1c3048;
   --ln-world-hull: #ece8df; --ln-world-hull-shade: #c9c4b8; --ln-world-hull-lit: #faf7f0;
   --ln-world-outline: #16293b; --ln-world-trim-blue: #2f6fa8; --ln-world-trim-teal: #2a9aa3;
   --ln-world-glass: #9fd6e4; --ln-world-concrete: #b7b5ae;

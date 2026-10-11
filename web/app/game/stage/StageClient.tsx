@@ -53,7 +53,12 @@ function Stage() {
 
   // ?chrome=1 mounts the Base overlays (DEV badge, Friends, Hub, suite rail) so their overlaps can be checked.
   const [chrome, setChrome] = useState(false)
-  useEffect(() => { setChrome(new URLSearchParams(window.location.search).get('chrome') === '1') }, [])
+  const [signed, setSigned] = useState(false)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setChrome(params.get('chrome') === '1')
+    setSigned(params.get('signed') === '1')
+  }, [])
   // ?plan=1 mounts the live Flight Plan strip (same step lookup as the live shell) so an objective can be asserted.
   const [plan, setPlan] = useState(false)
   useEffect(() => { setPlan(new URLSearchParams(window.location.search).get('plan') === '1') }, [])
@@ -70,11 +75,16 @@ function Stage() {
       )}
       <div className={`portrait-canvas ${immersive ? 'portrait-canvas--full-page' : ''} ${game.screen === 'mining' ? 'portrait-canvas--mining' : ''}`}>
         <div className="game-stage-main">
-          {chrome && (
+              {chrome && (
             <>
               <DevShortcuts />
+              {(game.screen === 'hub' || game.screen === 'launchpad') && (
+                <button type="button" className="settings-cog" data-testid="settings-button" aria-label="Settings">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+                </button>
+              )}
               {game.screen === 'hub' && <><FriendsButton onClick={() => {}} /><CommunityButton onClick={() => {}} /></>}
-              {(game.screen === 'hub' || game.screen === 'launchpad') && <SuiteHopRail signedIn={false} />}
+              {(game.screen === 'hub' || game.screen === 'launchpad') && <SuiteHopRail signedIn={signed} />}
             </>
           )}
           <div className="game-screen-area">

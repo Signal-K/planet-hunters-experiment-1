@@ -9,10 +9,10 @@
   gap: 8px;
   width: min(280px, calc(100% - 32px));
   padding: 16px;
-  border: 1px solid var(--ln-hairline);
+  border: 1px solid color-mix(in srgb, var(--dusk-ink) 42%, transparent);
   border-radius: 8px;
-  background: var(--ln-panel);
-  color: var(--ln-text);
+  background: var(--dusk-panel);
+  color: var(--dusk-ink);
   pointer-events: auto;
 }
 
