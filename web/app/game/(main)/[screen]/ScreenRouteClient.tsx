@@ -4,7 +4,7 @@ import { use, useEffect } from 'react'
 import { notFound } from 'next/navigation'
 import { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
-import { VALID_SCREENS } from '@/components/game/GameScreenRouter'
+import { VALID_SCREENS } from '@/lib/game-screens'
 import { isMissionSetupInternalScreen } from '@/lib/game-route'
 
 export default function ScreenRouteClient({ params }: { params: Promise<{ screen: string }> }) {

@@ -53,20 +53,7 @@ import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
-
-export const VALID_SCREENS = new Set<Screen>([
-  'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
-  'transit', 'landing', 'mining', 'rover-survey', 'delivery', 'debrief', 'refinery',
-  'market', 'hangar', 'rocket-buy', 'skills',
-  'launchpad',
-  'surface-ops',
-  'academy',
-  'asteroid-discovery',
-  'saturn-storm-search',
-  'instrument-hub',
-  'mission-history',
-  'narrative-ledger',
-])
+export { VALID_SCREENS } from '@/lib/game-screens'
 
 // Shared per-screen render map — the single source of truth for "which
 // component renders for game.screen". Used by both the URL-synced

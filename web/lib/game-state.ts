@@ -19,12 +19,12 @@ import { CLIENT_TERRITORIES } from '@/lib/data/site-rights'
 import { createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
 import { dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
+import { GAME_SCREENS } from '@/lib/game-screens'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-survey', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'saturn-storm-search', 'instrument-hub', 'mission-history', 'narrative-ledger']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-survey', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-survey', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
@@ -170,7 +170,7 @@ function normalizeCompletedMissions(value: unknown): CompletedMissionRecord[] {
 }
 
 export function normalizeState(input: PartialSave): GameState {
-  const screen = input.screen && VALID_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
+  const screen = input.screen && GAME_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
   const missionId = typeof input.missionId === 'string' ? input.missionId : null
   const targetId = missionId && typeof input.targetId === 'string' ? input.targetId : null
   const savedScope = input.missionBoardScope

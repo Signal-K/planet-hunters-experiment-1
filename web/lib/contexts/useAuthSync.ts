@@ -7,7 +7,14 @@ import { getOutbox, isQueuedUpsert, queueUpdate, queueUpsert } from '@/lib/offli
 import { dropSettledMissionRuns, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { identifyUser, captureGameEvent } from '@/lib/posthog'
 import { DEFAULT_STATE, loadState, type PartialSave } from '@/lib/game-state'
-import { resolveGameStateLoad } from '@/lib/game-state-sync'
+import {
+  isSignInPlaceholder,
+  localAccountSlotIsRealSave,
+  mayOverwriteSavedRecord,
+  remoteSaveIsNonEmpty,
+  resolveGameStateLoad,
+  type GameStateLoadDecision,
+} from '@/lib/game-state-sync'
 import { accountGameStateStorageKey, gameStateStorageKey } from '@/lib/game-state-storage'
 import { isResumableMissionScreen } from '@/lib/initial-route'
 import type { GameState } from '@/lib/game-types'
@@ -155,6 +162,16 @@ export function useAuthSync({
   // DEFAULT_STATE into a freshly authenticated account slot. That automatic
   // placeholder is not a real local save and must not win over the server.
   const hadAccountStateOnAuth = useRef(false)
+  // Set once a non-empty server record is adopted. While it is set, a sign-in
+  // placeholder must not be written back over that record (web or native).
+  const remoteSaveProtected = useRef(false)
+  // The object adopted from the server. Persisting that same object would
+  // replace a native save with the web-normalized copy.
+  const adoptedSnapshot = useRef<GameState | null>(null)
+  // The load effect finishes before this callback is recreated. Sign-in routes
+  // from the record that was just adopted, not from the placeholder still in
+  // stateRef.
+  const routeLoadedState = useRef<(state: GameState) => void>(() => {})
   // Kept in sync with authUserId's deferred-to-mount initialization above.
   const knownAuthRecordId = useRef<string | null>(null)
   const landnamAuthAttemptedFor = useRef<string | null>(null)
@@ -189,7 +206,7 @@ export function useAuthSync({
     // as a new sign-in and clears landnamSynced, so the Hub sticks on
     // NOT SYNCED after a cold start even though the exchange already worked.
     knownAuthRecordId.current = record.id
-    hadAccountStateOnAuth.current = !!localStorage.getItem(accountGameStateStorageKey(storageKey, record.id))
+    hadAccountStateOnAuth.current = localAccountSlotIsRealSave(localStorage.getItem(accountGameStateStorageKey(storageKey, record.id)))
     if (record.id !== authUserId) {
       setAuthUserId(record.id)
     }
@@ -248,11 +265,20 @@ export function useAuthSync({
     }
   }, [authUserId, isPreview])
 
-  const saveRemoteState = useCallback(async (userId: string, nextState: GameState) => {
+  const saveRemoteState = useCallback(async (userId: string, nextState: GameState): Promise<{ wrote: boolean, existing?: PartialSave }> => {
+    // A known non-empty record (native or web) is never replaced by the
+    // sign-in placeholder. Later real progress still writes.
+    if (remoteSaveProtected.current && isSignInPlaceholder(nextState)) {
+      return { wrote: false }
+    }
+    if (adoptedSnapshot.current) {
+      if (nextState === adoptedSnapshot.current) return { wrote: false }
+      adoptedSnapshot.current = null
+    }
     const payload = { user: userId, state: nextState, missions_done: nextState.player.missionsDone }
     if (backendRecordId.current) {
       await pbLandnam.collection('game_states').update(backendRecordId.current, payload)
-      return
+      return { wrote: true }
     }
 
     try {
@@ -263,6 +289,7 @@ export function useAuthSync({
       // can still 404 on immediate read).
       const record = await pbLandnam.collection('game_states').create({ id: userId, ...payload })
       backendRecordId.current = record.id
+      return { wrote: true }
     } catch (createErr: unknown) {
       const status = responseStatus(createErr)
       if (status !== 400 && status !== 409) throw createErr
@@ -274,7 +301,13 @@ export function useAuthSync({
       // retry instead of writing to a record id that doesn't exist.
       const existing = await pbLandnam.collection('game_states').getFirstListItem(`user = "${userId}"`)
       backendRecordId.current = existing.id
+      const existingState = (existing.state ?? null) as PartialSave | null
+      if (!mayOverwriteSavedRecord(nextState, existingState)) {
+        remoteSaveProtected.current = true
+        return { wrote: false, existing: existingState ?? undefined }
+      }
       await pbLandnam.collection('game_states').update(existing.id, payload)
+      return { wrote: true }
     }
   }, [])
 
@@ -283,20 +316,31 @@ export function useAuthSync({
   // iOS kill while offline and replays on reconnect. While one is queued,
   // later saves replace it rather than racing it, so an older snapshot can
   // never land on top of a newer one. Resolves once the state is either on
-  // the server or stored in the queue.
+  // the server or stored in the queue. A refused placeholder write is not
+  // queued: replaying it would still replace a native save.
   const persistRemoteState = useCallback(async (userId: string, nextState: GameState) => {
+    if (remoteSaveProtected.current && isSignInPlaceholder(nextState)) {
+      return { wrote: false }
+    }
+    if (adoptedSnapshot.current) {
+      if (nextState === adoptedSnapshot.current) return { wrote: false }
+      adoptedSnapshot.current = null
+    }
     const filter = gameStateFilter(userId)
     const payload = { user: userId, state: nextState, missions_done: nextState.player.missionsDone }
     const outbox = getOutbox()
     if (!(await outbox.has(op => isQueuedUpsert(op, 'game_states', filter)))) {
       try {
-        await saveRemoteState(userId, nextState)
-        return
+        return await saveRemoteState(userId, nextState)
       } catch {
         // Offline or refused: fall through to the queue.
       }
     }
+    if (remoteSaveProtected.current && isSignInPlaceholder(nextState)) {
+      return { wrote: false }
+    }
     await queueUpsert('game_states', filter, payload, backendRecordId.current ?? userId)
+    return { wrote: true }
   }, [saveRemoteState])
 
   // Track auth identity changes. authRefresh() (called by the session-keepalive
@@ -315,6 +359,8 @@ export function useAuthSync({
     knownAuthRecordId.current = record?.id ?? null
     backendRecordId.current = null
     backendLoadedFor.current = null
+    remoteSaveProtected.current = false
+    adoptedSnapshot.current = null
     landnamAuthAttemptedFor.current = null
     landnamRetryDelay.current = 60_000
     setBackendReady(false)
@@ -324,7 +370,7 @@ export function useAuthSync({
       // Sign-in/account creation may happen after the provider hydrated the
       // guest/legacy slot. Never let that state become the new account's
       // first save while remote sync is warming up (KES-324).
-      hadAccountStateOnAuth.current = !!localStorage.getItem(accountGameStateStorageKey(storageKey, record.id))
+      hadAccountStateOnAuth.current = localAccountSlotIsRealSave(localStorage.getItem(accountGameStateStorageKey(storageKey, record.id)))
       localStorage.removeItem(storageKey)
       setState(loadState(accountGameStateStorageKey(storageKey, record.id)))
     }
@@ -460,7 +506,7 @@ export function useAuthSync({
   // PocketBase session can hydrate from the backend.
   useEffect(() => {
     if (!hydrated || isPreview) return
-    const noLocalState = !localStorage.getItem(localStateKey)
+    const noLocalState = !localAccountSlotIsRealSave(localStorage.getItem(localStateKey))
     if (noLocalState && pbShared.authStore.isValid) setAwaitingRemoteState(true)
   }, [hydrated, isPreview, localStateKey])
 
@@ -574,8 +620,17 @@ export function useAuthSync({
       const parsedUpdatedAt = typeof record.updated === 'string' ? new Date(record.updated).getTime() : NaN
       const remoteUpdatedAt = Number.isFinite(parsedUpdatedAt) ? parsedUpdatedAt : undefined
       const remoteState: PartialSave = { ...(record.state as PartialSave), updatedAt: remoteUpdatedAt }
-      setState(current => resolveGameStateLoad(current, remoteState, hadAccountStateOnAuth.current).state)
+      const decision: GameStateLoadDecision = resolveGameStateLoad(stateRef.current, remoteState, hadAccountStateOnAuth.current)
+      if (remoteSaveIsNonEmpty(remoteState)) remoteSaveProtected.current = true
+      if (!decision.shouldWriteRemote) {
+        skipNextRemotePersist.current = true
+        adoptedSnapshot.current = decision.state
+      } else {
+        adoptedSnapshot.current = null
+      }
+      setState(decision.state)
       setBackendReady(true)
+      routeLoadedState.current(decision.state)
       restoreInProgressRun()
     }
 
@@ -587,15 +642,34 @@ export function useAuthSync({
         // avoidable 400 for returning accounts with older record ids.
         backendLoadedFor.current = authUserId!
         setBackendReady(true)
-        if (resolveGameStateLoad(stateRef.current, null, hadAccountStateOnAuth.current).shouldCreateRemote) {
-          persistRemoteState(authUserId!, stateRef.current).catch(() => {})
+        const decision = resolveGameStateLoad(stateRef.current, null, hadAccountStateOnAuth.current)
+        if (decision.shouldCreateRemote) {
+          persistRemoteState(authUserId!, stateRef.current).then(result => {
+            if (!active) return
+            if (result.existing && remoteSaveIsNonEmpty(result.existing)) {
+              const adopted = resolveGameStateLoad(stateRef.current, result.existing, false)
+              remoteSaveProtected.current = true
+              if (!adopted.shouldWriteRemote) {
+                skipNextRemotePersist.current = true
+                adoptedSnapshot.current = adopted.state
+              }
+              setState(adopted.state)
+              routeLoadedState.current(adopted.state)
+              return
+            }
+            routeLoadedState.current(stateRef.current)
+          }).catch(() => {})
+        } else {
+          routeLoadedState.current(stateRef.current)
         }
         return
       }
       // Network / availability error (Fly cold-start, timeout, etc.)
-      // Only unblock persisting if the device already has local state — otherwise we
-      // risk overwriting a real backend record with a blank slate from a new device.
-      const hasLocalState = !!localStorage.getItem(localStateKey)
+      // Only unblock persisting if the device already has a real local save.
+      // The sign-in placeholder is written into the account slot before this
+      // fetch returns, and treating that string as a save overwrites a native
+      // or web record with screen 'intro' and placed [].
+      const hasLocalState = localAccountSlotIsRealSave(localStorage.getItem(localStateKey))
       if (hasLocalState) {
         backendLoadedFor.current = authUserId!
         setBackendReady(true)
@@ -657,6 +731,7 @@ export function useAuthSync({
   // defense if this flush is ever missed, e.g. offline at the exact moment).
   useEffect(() => {
     if (!hydrated || isPreview || resetting || !authUserId || !backendReady || backendLoadedFor.current !== authUserId) return
+    if (remoteSaveProtected.current && isSignInPlaceholder(state)) return
     if (skipNextRemotePersist.current) {
       skipNextRemotePersist.current = false
       return
@@ -697,8 +772,12 @@ export function useAuthSync({
   // bookmarked /game/missions). The one exception is a genuinely resumable
   // in-flight mission, matching returningScreen's rule for the root /game
   // bridge — see isResumableMissionScreen.
-  const landOnHubUnlessResumable = useCallback(() => {
-    const current = stateRef.current
+  const landOnHubUnlessResumable = useCallback((next?: GameState) => {
+    const current = next ?? stateRef.current
+    // The placeholder is not the account. Wait until the server record is
+    // adopted or confirmed missing, and never let a stale placeholder steer
+    // the URL after a native/web save has already been protected.
+    if (isSignInPlaceholder(current) && (remoteSaveProtected.current || backendLoadedFor.current !== authUserId)) return
     if (isResumableMissionScreen(current.screen, current.missionId, current.targetId)) return
     // Auth can complete while the route page is still rendering the old
     // deep-linked screen. Replace the URL here as well as the game state so
@@ -716,7 +795,8 @@ export function useAuthSync({
     }
     if (current.screen !== 'hub') setState(s => ({ ...s, screen: 'hub' }))
     router.replace('/game/hub')
-  }, [router, setState, stateRef])
+  }, [authUserId, router, setState, stateRef])
+  routeLoadedState.current = landOnHubUnlessResumable
 
   const noteWarming = useCallback(() => setAuthGateError(WARMING_STATUS), [])
 
@@ -789,11 +869,20 @@ export function useAuthSync({
       // Create the Landnam game_states record synchronously here, before the
       // gate closes — otherwise it only exists once the debounced persist
       // effect fires, and closing the tab before then leaves no record at all.
-      await retryTransient(
+      const saved = await retryTransient(
         () => saveRemoteState(authResult.record.id, DEFAULT_STATE),
         { onWait: noteWarming },
       )
       backendLoadedFor.current = authResult.record.id
+      if (saved.existing && remoteSaveIsNonEmpty(saved.existing)) {
+        const adopted = resolveGameStateLoad(DEFAULT_STATE, saved.existing, false)
+        remoteSaveProtected.current = true
+        if (!adopted.shouldWriteRemote) {
+          skipNextRemotePersist.current = true
+          adoptedSnapshot.current = adopted.state
+        }
+        setState(adopted.state)
+      }
       setBackendReady(true)
       setAuthGateError(null)
       setAuthGateOpen(false)
@@ -825,6 +914,8 @@ export function useAuthSync({
     // the next session instead of the account starting genuinely clean.
     setBackendReady(false)
     backendLoadedFor.current = null
+    remoteSaveProtected.current = false
+    adoptedSnapshot.current = null
     lastPersistedMissionsDone.current = null
     lastPersistedTutorial.current = null
 
