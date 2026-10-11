@@ -1840,8 +1840,9 @@ button { cursor: pointer; }
 
 .mining-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-void); display: flex; flex-direction: column; }
 .mining-stage {
+  position: relative;
   display: flex;
-  flex: 1;
+  flex: 1 1 auto;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
@@ -2795,7 +2796,6 @@ html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"]::after,
 html[data-flight-target~="build-plot-0"] [data-beacon="build-plot-0"]::after,
 html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"]::after,
 html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"]::after,
-.mining-training-seam::after,
 .lock-on::after {
   content: '';
   position: absolute;
@@ -2815,7 +2815,6 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"]:
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-flight-target] [data-beacon]::after,
-  .mining-training-seam::after,
   .lock-on::after { animation: none !important; }
 }
 /* SSL-449: one primary action per screen. While the Flight Plan beacons another
@@ -2829,6 +2828,14 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
   opacity: 0.75;
 }
 
+
+/* Mining keeps the scene full-height. The training copy is the short tip
+   inside the laser hud, not this strip and not a nav rail. */
+.game-stage-main:has(.mining-screen) .flight-plan,
+.game-stage-main:has(.mining-screen) .flight-plan-chip,
+.game-stage-main:has(.mining-screen) .backend-status {
+  display: none !important;
+}
 
 /* SSL-395 Flight Plan: in-flow strip between the screen and the nav. */
 .flight-plan, .flight-plan-chip { flex: none; position: relative; z-index: 30; font-family: var(--ln-font-body); }
@@ -3894,116 +3901,173 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   .debrief-result-panel__title { font-size: 18px; }
 }
 
-/* Ship laser chrome. One round control, shared blueprint tokens, same on every world. */
-.ln-round {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0;
-  border: 2px solid var(--ln-bp-line);
-  border-radius: 999px;
-  background: var(--ln-bp-paper);
-  color: var(--ln-bp-ink);
-  cursor: pointer;
-  box-shadow: var(--ln-shadow-card);
-}
-.ln-round:disabled { opacity: 0.45; cursor: not-allowed; }
+/* Ship laser HUD. Same icon button, clock, and friends control as Base.
+   Bottom stack (tip + slider + panel) stays inside 14% of the viewport in
+   landscape and 12% in portrait. The scene is the flex remainder. */
 .laser-chrome {
   position: absolute;
   inset: 0;
   z-index: 16;
   pointer-events: none;
 }
-.laser-chrome .ln-round { position: absolute; pointer-events: auto; }
-.laser-chrome__cog { top: 12px; left: 12px; }
-.laser-chrome__clock { top: 12px; left: 64px; }
-.laser-chrome__people { top: 12px; right: 12px; }
-.laser-chrome__cube { top: 12px; right: 64px; color: var(--ln-bp-green); }
-.laser-chrome__arrow { top: 42%; }
-.laser-chrome__arrow--left { left: 12px; }
-.laser-chrome__arrow--right { right: 12px; }
-.mining-screen .mining-controls,
-.theme-blueprint.mining-screen .mining-controls,
-.theme-deep.mining-screen .mining-controls,
-.portrait-canvas--mining .mining-controls {
-  right: 0;
-  bottom: 12px;
-  left: 0;
-  width: auto;
-  padding: 0 12px 12px;
+.laser-chrome .settings-cog,
+.laser-chrome .scene-icon-btn,
+.laser-chrome .game-friends-button,
+.laser-chrome .laser-chrome__clock {
+  position: absolute;
+  pointer-events: auto;
+  z-index: 17;
+}
+.mining-screen .laser-chrome .settings-cog { top: 8px; left: 8px; }
+.laser-chrome__clock {
+  top: 8px;
+  left: 56px;
+  padding: 0;
   border: 0;
   background: transparent;
-  box-shadow: none;
-  color: var(--ln-bp-ink);
-  pointer-events: none;
-  overflow: visible;
+  cursor: pointer;
 }
-.mining-screen .mining-controls > * { pointer-events: auto; }
-.laser-scroll { width: min(720px, 100%); margin: 0 auto 8px; }
+.mining-screen .laser-chrome [data-testid="hub-clock-widget"] { margin: 0 !important; }
+.laser-chrome__cube { top: 8px; right: 56px; color: var(--ln-bp-green); }
+.mining-screen .laser-chrome .game-friends-button {
+  top: 8px;
+  right: 8px;
+  left: auto;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  gap: 0;
+  border-radius: 4px;
+  background: var(--ln-world-hull-lit);
+  border: 1px solid var(--ln-world-outline);
+  color: var(--ln-world-outline);
+}
+.mining-screen .laser-chrome .game-friends-button span { display: none; }
+.laser-chrome__arrow { top: calc(50% - 20px); }
+.laser-chrome__arrow--left { left: 8px; }
+.laser-chrome__arrow--right { right: 8px; }
+.portrait-canvas--mining .sync-status { display: none; }
+html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="mining-fire-laser"]::after {
+  content: none;
+  animation: none;
+}
+.laser-hud {
+  position: relative;
+  z-index: 20;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 0;
+  max-height: 14vh;
+  padding: 0 8px;
+  background: transparent;
+  pointer-events: none;
+  overflow: hidden;
+}
+@media (orientation: portrait) {
+  .laser-hud { max-height: 12vh; }
+}
+.laser-hud > * { pointer-events: auto; }
+.laser-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 16px;
+  min-height: 0;
+  padding: 0 6px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 4px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  font: 700 14px/14px var(--ln-font-body);
+}
+.laser-tip span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.laser-tip button {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ln-world-outline);
+  font: 700 14px/14px var(--ln-font-display);
+  cursor: pointer;
+}
+.laser-scroll { height: 6px; margin: 0; }
 .laser-scroll__track {
   position: relative;
-  height: 44px;
+  height: 6px;
   border-radius: 999px;
-  background:
-    linear-gradient(var(--ln-bp-ink), var(--ln-bp-ink)) center / 100% 4px no-repeat,
-    transparent;
-  opacity: 0.9;
+  background: color-mix(in srgb, var(--ln-world-outline) 55%, transparent);
 }
-.laser-scroll__thumb { box-shadow: var(--ln-shadow-card); }
 .laser-dock {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr);
-  gap: 8px;
-  width: min(720px, 100%);
-  margin: 0 auto;
-  padding: 10px;
-  border: 1px solid var(--ln-bp-line);
-  border-radius: 22px;
-  background: var(--ln-bp-paper);
-  box-shadow: var(--ln-shadow-card);
+  grid-template-columns: minmax(156px, 0.95fr) minmax(140px, 1.35fr);
+  gap: 6px;
+  box-sizing: border-box;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 6px;
+  background: var(--ln-world-hull-lit);
 }
 .laser-dock__order,
 .laser-dock__fire {
-  min-height: 64px;
-  border-radius: 16px;
-  cursor: pointer;
-}
-.theme-blueprint.mining-screen .mining-controls .laser-dock button,
-.theme-deep.mining-screen .mining-controls .laser-dock button,
-.mining-screen .laser-dock button {
-  background: var(--ln-bp-paper-2);
-  color: var(--ln-bp-ink);
-  border: 1px solid var(--ln-bp-line);
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ln-world-outline);
   box-shadow: none;
+  cursor: pointer;
 }
 .laser-dock__order {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 2px;
   text-align: left;
 }
 .laser-dock__lines {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font: 700 16px/1.25 var(--ln-font-body);
-  color: var(--ln-bp-ink);
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ln-world-outline);
+  font: 700 14px/14px var(--ln-font-body);
+  white-space: nowrap;
 }
+.laser-dock__lines span { overflow: hidden; text-overflow: ellipsis; }
 .laser-dock__debris {
-  font: 700 14px/1.2 var(--ln-font-body);
-  color: var(--ln-bp-ink);
+  overflow: hidden;
+  color: var(--ln-world-outline);
+  font: 700 14px/14px var(--ln-font-body);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .laser-dock__charge {
   display: block;
-  height: 8px;
+  height: 3px;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--ln-bp-paper);
+  background: color-mix(in srgb, var(--ln-world-outline) 18%, transparent);
 }
 .laser-dock__charge > span {
   display: block;
@@ -4012,58 +4076,36 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   background: var(--ln-bp-green);
 }
 .laser-dock__fire {
-  font: 700 22px/1.1 var(--ln-font-display);
-  letter-spacing: 0;
-  text-transform: none;
+  border-color: var(--ln-world-outline);
+  background: var(--ln-bp-paper);
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.04em;
 }
 .laser-dock__fire:disabled { opacity: 0.55; cursor: not-allowed; }
 .laser-dev-skip {
   position: absolute;
-  top: 64px;
-  right: 12px;
+  top: 52px;
+  left: 8px;
   z-index: 25;
   min-width: 44px;
-  min-height: 44px;
-  padding: 8px 12px;
-  background: var(--ln-bp-paper);
-  border: 1px solid var(--ln-bp-green);
-  border-radius: 6px;
-  color: var(--ln-bp-green);
+  min-height: 28px;
+  padding: 4px 8px;
+  background: var(--ln-world-hull-lit);
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 4px;
+  color: var(--ln-world-outline);
   font-family: var(--ln-font-mono);
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   cursor: pointer;
 }
 .mining-screen .sky-event-wrap[data-testid="sky-event-mining"] {
-  top: 64px;
-  left: 64px;
+  top: 52px;
+  left: 160px;
 }
 .mining-screen .mining-charge-warning {
-  top: auto;
-  bottom: 168px;
+  top: 52px;
+  bottom: auto;
 }
 .mining-guide-actions { display: grid; gap: 8px; margin-top: 8px; }
-@media (orientation: landscape) and (max-height: 520px) {
-  .laser-chrome__arrow { top: 30%; }
-  .mining-screen .mining-controls,
-  .portrait-canvas--mining .mining-controls,
-  .theme-blueprint.mining-screen .mining-controls {
-    top: auto;
-    bottom: 8px;
-    left: 72px;
-    right: 72px;
-    width: auto;
-    padding: 0;
-    border: 0;
-    box-shadow: none;
-    background: transparent;
-    overflow: visible;
-  }
-  .mining-screen .laser-dock__fire { font-size: 18px; min-height: 52px; }
-  .mining-screen .laser-dock__order { min-height: 52px; }
-  .laser-dev-skip { top: 12px; right: 120px; }
-}
-@media (max-width: 1023px) {
-  .portrait-canvas--mining .mining-controls { bottom: 12px; }
-}

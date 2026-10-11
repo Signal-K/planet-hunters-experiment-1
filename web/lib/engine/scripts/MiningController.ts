@@ -632,7 +632,7 @@ export class MiningController extends ScriptBehaviour {
 
     const chipY = (this.opts.surfaceY ?? SURFACE_Y) - 4
     const chip = this.opts.chipFill != null ? this.createChip(x, chipY) : null
-    const label = this.createLabel(mineral, x, chip ? chipY - 2 : y, radius)
+    const label = this.createLabel(mineral, x, chip ? chipY + 2 : y, radius)
 
     this.gameObject.addChild(go)
     this.ores.push({ go, renderer, sprite, label, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0 })
@@ -642,11 +642,14 @@ export class MiningController extends ScriptBehaviour {
   private createChip(x: number, y: number): Graphics {
     const fill = this.opts.chipFill ?? 0x8a8078
     const shade = this.opts.chipShade ?? 0x5c534c
+    const avg = (((fill >> 16) & 255) + ((fill >> 8) & 255) + (fill & 255)) / 3
+    const rim = avg > 150 ? 0x1a2430 : 0xffffff
     const g = new Graphics()
-    g.circle(-12, 6, 12).fill(shade)
-    g.circle(10, 4, 14).fill(fill)
-    g.circle(0, 8, 11).fill(shade)
-    g.circle(4, 2, 8).fill({ color: fill, alpha: 0.9 })
+    g.circle(0, 2, 22).fill(shade)
+    g.circle(-10, 6, 14).fill(fill)
+    g.circle(12, 4, 16).fill(fill)
+    g.circle(2, 0, 11).fill({ color: shade, alpha: 0.9 })
+    g.circle(0, 2, 22).stroke({ width: 3, color: rim })
     g.x = x
     g.y = y
     this.opts.container.addChild(g)
@@ -658,7 +661,7 @@ export class MiningController extends ScriptBehaviour {
     const sym = this.opts.mineralSyms?.[mineral]
     if (!sym) return null
 
-    const fontSize = Math.max(7, Math.round(radius * (sym.length >= 3 ? 0.66 : 0.95)))
+    const fontSize = Math.round(radius * (sym.length >= 3 ? 1.15 : 1.7))
     const ink = this.opts.labelInk ?? ORE_LABEL_FILL
     const label = new Text({
       text: sym,
@@ -667,7 +670,7 @@ export class MiningController extends ScriptBehaviour {
         fontSize,
         fontWeight: 'bold',
         fill: ink,
-        stroke: { color: ink === ORE_LABEL_FILL ? ORE_LABEL_HALO : 0xffffff, width: 2, join: 'round' },
+        stroke: { color: ink === ORE_LABEL_FILL ? ORE_LABEL_HALO : 0xffffff, width: 4, join: 'round' },
       },
     })
     label.anchor.set(0.5)

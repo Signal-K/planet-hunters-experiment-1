@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { paletteForTarget } from './laserPalette'
+import { paletteById, paletteForTarget } from './laserPalette'
 
 describe('laser palettes', () => {
   it('maps the approved worlds and keeps a giant planet only on the icy moon', () => {
@@ -21,5 +21,12 @@ describe('laser palettes', () => {
     expect(paletteForTarget({ id: 'new-rock', type: 'asteroid' }).id).toBe('bennu')
     expect(paletteForTarget({ id: 'new-ice', type: 'planet', archetype: 'icy' }).id).toBe('icy-moon')
     expect(paletteForTarget({ id: 'new-world', type: 'planet', archetype: 'S' }).id).toBe('mars')
+  })
+
+  it('resolves a ?palette= id and rejects an unknown one', () => {
+    expect(paletteById('icy-moon')?.id).toBe('icy-moon')
+    expect(paletteById('mars')?.terrain).toBe('dunes')
+    expect(paletteById('nope')).toBeNull()
+    expect(paletteById(null)).toBeNull()
   })
 })

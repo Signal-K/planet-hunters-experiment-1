@@ -126,6 +126,15 @@ export const TARGETS: Target[] = [
     brief: 'Gas giant with hydrogen, helium, and a high gravity penalty. Jupiter itself is not a conventional mining site.',
     archetype: 'gas-giant',
   }),
+  landmark({
+    id: 'europa',
+    name: 'Europa',
+    type: 'planet',
+    orbit: 6,
+    difficulty: 'L2',
+    brief: 'Ice-covered moon of Jupiter. Water ice over a silicate interior, with a banded giant in the sky.',
+    archetype: 'icy',
+  }),
 ]
 
 export const STARS: Star[] = [

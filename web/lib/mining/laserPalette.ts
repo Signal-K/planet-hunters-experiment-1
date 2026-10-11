@@ -86,7 +86,7 @@ function compile(id: string, src: RawPalette): LaserPalette {
     planet: src.planet
       ? { cx: src.planet.cx, cy: src.planet.cy, radius: src.planet.radius, bands: src.planet.bands.map(hex) }
       : undefined,
-    labelInk: channelAverage(ground) > 150 ? 0x1a2430 : 0xffffff,
+    labelInk: channelAverage(hex(src.groundSpeck)) > 150 ? 0x1a2430 : 0xffffff,
   }
 }
 
@@ -97,6 +97,12 @@ const compiled: Record<string, LaserPalette> = Object.fromEntries(
 export const LASER_PALETTES = compiled
 
 /** Resolve a body to a palette. Unknown worlds fall through by type and archetype, so a new body is one map entry. */
+/** Dev/review override (`?palette=bennu|mars|icy-moon`). Unknown ids return null. */
+export function paletteById(id: string | null | undefined): LaserPalette | null {
+  if (!id) return null
+  return compiled[id] ?? null
+}
+
 export function paletteForTarget(target: { id: string; type: string; archetype?: string | null }): LaserPalette {
   const mapped = file.worlds[target.id]
   if (mapped && compiled[mapped]) return compiled[mapped]

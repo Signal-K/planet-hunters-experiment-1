@@ -6,8 +6,10 @@ import { FREE_OPS_START_MISSIONS_DONE, REMOTE_MINERAL_SILO_CAPACITY } from '@/li
 import { miningNeedsRecharge, unitsStillNeeded, rechargeCost } from '@/lib/systems/mining-charges'
 import { useHelp } from '@/components/ui/useHelp'
 import Panel from '@/components/ui/Panel'
-import { paletteForTarget } from '@/lib/mining/laserPalette'
+import { paletteById, paletteForTarget } from '@/lib/mining/laserPalette'
 import { openFriends, openSettings } from '@/lib/mining/openChrome'
+import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
+import FriendsButton from '@/components/game/FriendsButton'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
 import SkyEventChip from '@/components/game/SkyEventChip'
@@ -117,10 +119,11 @@ function ScrollTrack({ scrollRef, disabled = false, slim = false }: { scrollRef:
         )}
         <div className={slim ? 'laser-scroll__thumb' : undefined} style={{
           position: 'absolute',
-          left: `calc(${pos * 100}% - ${slim ? 14 : 10}px)`,
-          width: slim ? 28 : 20, height: slim ? 28 : 20, borderRadius: '50%',
-          background: slim ? 'var(--ln-bp-paper)' : (active ? 'var(--ln-cyan)' : 'var(--ln-cyan-soft)'),
-          border: slim ? '2px solid var(--ln-bp-ink)' : `1.5px solid ${active ? 'var(--ln-cyan)' : 'var(--ln-cyan-border)'}`,
+          top: slim ? 0 : undefined,
+          left: `calc(${pos * 100}% - ${slim ? 11 : 10}px)`,
+          width: slim ? 22 : 20, height: slim ? 6 : 20, borderRadius: slim ? 999 : '50%',
+          background: slim ? 'var(--ln-world-hull-lit)' : (active ? 'var(--ln-cyan)' : 'var(--ln-cyan-soft)'),
+          border: slim ? '1px solid var(--ln-world-outline)' : `1.5px solid ${active ? 'var(--ln-cyan)' : 'var(--ln-cyan-border)'}`,
           boxShadow: slim ? 'none' : (active ? 'var(--ln-glow-cyan)' : 'none'),
           transition: active ? 'background 80ms, border-color 80ms, box-shadow 80ms' : 'left 180ms ease-out, background 120ms, border-color 120ms, box-shadow 120ms',
         }} />
@@ -417,7 +420,15 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   )
   const [guideOpen, setGuideOpen] = useState(false)
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
-  const palette = paletteForTarget(target)
+  const [paletteOverride, setPaletteOverride] = useState<string | null>(null)
+  const [devBars, setDevBars] = useState(false)
+  const [tipDismissed, setTipDismissed] = useState(false)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setPaletteOverride(params.get('palette'))
+    setDevBars(params.get('dev') === '1')
+  }, [])
+  const palette = paletteById(paletteOverride) ?? paletteForTarget(target)
 
   // SSL-333 opened the guide once on a first mining run. The Flight Plan owns
   // the Fire Laser training try now, so the guide remains opt-in there and
@@ -470,7 +481,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const releaseScroll = () => { scrollRef.current?.(0) }
 
   return (
-    <div className="game-screen mining-screen theme-blueprint" data-training-active={trainingMiningTry ? 'true' : 'false'} data-palette={palette.id}>
+    <div className="game-screen mining-screen theme-blueprint" data-training-active={trainingMiningTry ? 'true' : 'false'} data-palette={palette.id} style={{ background: palette.skyCss }}>
       {help.layer}
 
       {/* KES-283: self-directed mining requires a storage destination before
@@ -544,7 +555,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         </div>
       )}
 
-      {process.env.NODE_ENV === 'development' && (
+      {devBars && (
         <button
           data-testid="dev-skip-mining-btn"
           className="laser-dev-skip"
@@ -612,7 +623,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         </div>
       )}
       <div className="laser-chrome">
-        <button type="button" className="ln-round laser-chrome__cog" aria-label="Settings" onClick={openSettings}>
+        <button type="button" className="settings-cog" aria-label="Settings" onClick={openSettings}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
@@ -620,34 +631,24 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         </button>
         <button
           type="button"
-          className="ln-round laser-chrome__clock"
+          className="laser-chrome__clock"
           data-testid="mining-guide-btn"
           aria-label="Mining controls guide"
           aria-expanded={guideOpen}
           onClick={() => setGuideOpen(o => !o)}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 7v6l4 2" />
-          </svg>
+          <HubClockWidget />
         </button>
-        <button type="button" className="ln-round laser-chrome__cube" aria-label={`Cargo ${freeOpsCargoUnits} units`} data-testid="mining-cargo-chip">
+        <button type="button" className="scene-icon-btn laser-chrome__cube" aria-label={`Cargo ${freeOpsCargoUnits} units`} data-testid="mining-cargo-chip">
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
             <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" strokeWidth="2" />
           </svg>
         </button>
-        <button type="button" className="ln-round laser-chrome__people" aria-label="Friends" onClick={openFriends}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M22 21v-2a4 4 0 00-3-3.87" />
-            <path d="M16 3.13a4 4 0 010 7.75" />
-          </svg>
-        </button>
+        <FriendsButton onClick={openFriends} />
         <button
           type="button"
-          className="ln-round laser-chrome__arrow laser-chrome__arrow--left"
+          className="scene-icon-btn laser-chrome__arrow laser-chrome__arrow--left"
           aria-label="Scroll slower"
           disabled={sceneStatus !== 'ready'}
           onPointerDown={holdScroll(-1)}
@@ -658,7 +659,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         </button>
         <button
           type="button"
-          className="ln-round laser-chrome__arrow laser-chrome__arrow--right"
+          className="scene-icon-btn laser-chrome__arrow laser-chrome__arrow--right"
           aria-label="Scroll faster"
           disabled={sceneStatus !== 'ready'}
           onPointerDown={holdScroll(1)}
@@ -739,7 +740,13 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       )}
       </div>
 
-      <div className="mining-controls" data-testid="mining-controls">
+      <div className="laser-hud" data-testid="mining-controls">
+        {trainingMiningTry && !tipDismissed && (
+          <div className="laser-tip" data-testid="mining-training-tip">
+            <span>Fire when a chip crosses the beam</span>
+            <button type="button" aria-label="Dismiss tip" onClick={() => setTipDismissed(true)}>×</button>
+          </div>
+        )}
         {/* SSL-411: the stat row is gone. Per-mineral progress is kept for
             assistive tech; charges live inside FIRE LASER and order progress
             inside the return button. */}
