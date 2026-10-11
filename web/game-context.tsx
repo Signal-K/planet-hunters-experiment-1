@@ -29,6 +29,7 @@ import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-st
 import { canonicalGamePath, entryScreenForPath } from '@/lib/game-route'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { captureOrionidsQueryFlag } from '@/lib/data/sky-events'
+import { lockBaseWorldPreview, sanitizeEarthBiome } from '@/lib/scene/base-world'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -71,6 +72,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     if (hydrationRanOnce.current) return
     hydrationRanOnce.current = true
     const params = new URLSearchParams(window.location.search)
+    lockBaseWorldPreview(params)
     const previewScreen = params.get('preview')
     const routePreset = window.location.pathname.endsWith('/game/ship-customizer') ? 'ship-customizer' : null
     const presetName = routePreset ?? params.get('preset')
@@ -91,7 +93,26 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       const preset = resolvePreset(presetName)
       if (preset) {
         isPreview.current = true
-        setState({ ...DEFAULT_STATE, ...preset })
+        const builtArt = params.get('baseArt') === 'built'
+        const biomeParam = params.get('biome')
+        const presetPlayer = preset.player
+        const playerPatch = presetPlayer && (builtArt || biomeParam) ? {
+          player: {
+            ...presetPlayer,
+            ...(biomeParam ? { earthBiome: sanitizeEarthBiome(biomeParam) } : {}),
+            ...(builtArt ? {
+              placed: ['command', 'refinery', 'astronaut-academy', 'launchpad', 'surface-silo'],
+              placementPlots: { command: 0, refinery: 1, 'astronaut-academy': 2, launchpad: 3 },
+              buildingLevels: { launchpad: 3, refinery: 3, 'astronaut-academy': 3, 'surface-silo': 3 },
+              launchpadUpgraded: true,
+            } : {}),
+          },
+        } : {}
+        setState({
+          ...DEFAULT_STATE,
+          ...preset,
+          ...playerPatch,
+        })
         if (!routePreset && urlSync) window.history.replaceState({}, '', window.location.pathname)
         setHydrated(true)
         return

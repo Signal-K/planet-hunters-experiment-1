@@ -156,7 +156,10 @@ function ScreenBody({
     case 'intro':
       return (
         <IntroScreen
-          onBegin={() => game.go('build')}
+          onBegin={biome => {
+            if (biome) game.setPlayer(current => ({ ...current, earthBiome: biome }))
+            game.go('build')
+          }}
           returning={game.player.missionsDone > 0 || game.player.placed.length > 0}
           missionsDone={game.player.missionsDone}
           totalEarned={game.player.francs}

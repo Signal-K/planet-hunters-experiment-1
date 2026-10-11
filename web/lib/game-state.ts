@@ -20,6 +20,7 @@ import { createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
 import { dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
 import { GAME_SCREENS } from '@/lib/game-screens'
+import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
@@ -64,6 +65,7 @@ export const DEFAULT_STATE: GameState = {
     remoteStorage: {},
     launchpadUpgraded: false,
     buildingLevels: {},
+    earthBiome: 'mountains',
     loanDebt: 0,
     loanOffered: false,
     seen_planets: [],
@@ -352,7 +354,9 @@ export function normalizeState(input: PartialSave): GameState {
       selectedStagedRocketId: player.activeMission ? undefined : (player.selectedStagedRocketId ?? (player.pendingLaunch && player.pendingRocketId && missionId && targetId
         ? `legacy-${player.pendingRocketId}-${missionId}-${targetId}`
         : undefined)),
-      deepSpaceTelescopeBuilt, refineryBuilt },
+      deepSpaceTelescopeBuilt, refineryBuilt,
+      earthBiome: sanitizeEarthBiome(player.earthBiome),
+    },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     // The retired private emergency-loan popup must not survive an old save.
     popup: input.popup === 'loan' || input.popup === undefined ? null : input.popup,

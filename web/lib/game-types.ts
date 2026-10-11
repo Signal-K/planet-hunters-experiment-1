@@ -3,6 +3,7 @@
 
 import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict, SaturnClassification, SaturnVerdict, MoonSurveyChart } from '@/lib/data'
 import type { BuildingLevels } from '@/lib/data/building-levels'
+import type { EarthBiomeId } from '@/lib/scene/base-world'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import type { RoverSpec } from '@takeon/engine'
 import type { SceneScope } from './scene-scope'
@@ -331,6 +332,8 @@ export interface Player {
   launchpadUpgraded: boolean
   /** Levels 2-3 of upgradable buildings; absent means level 1. Same JSON key as native. */
   buildingLevels?: BuildingLevels
+  /** Earth Base landscape. Missing saves read as mountains. */
+  earthBiome?: EarthBiomeId
   lastClient?: string
   /** Mirrors treasury.loans[...].outstandingFrancs for this player; treasury is authoritative. */
   loanDebt: number

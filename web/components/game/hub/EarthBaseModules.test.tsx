@@ -16,9 +16,10 @@ describe('EarthBaseModules', () => {
 })
 
 const silo = {
-  kind: 'surface-silo',
+  kind: 'launchpad',
   plotX: 154,
   w: 120,
+  level: 1,
 }
 
 function mount(buildStartedAt: number) {
@@ -49,21 +50,27 @@ describe('EarthBaseModules surface silo construction', () => {
     vi.useFakeTimers()
     const view = mount(Date.now())
     expect(view.container.querySelector('.hub-construction-rig')).not.toBeNull()
-    expect(view.container.querySelector('img')?.getAttribute('src')).toBe('/game/assets/base/surface_silo_flat.png')
+    expect(view.container.querySelector('[data-pixel-structure="launchpad"]')?.getAttribute('data-tier')).toBe('1')
 
     act(() => {
       vi.advanceTimersByTime(10_000)
     })
 
     expect(view.container.querySelector('.hub-construction-rig')).toBeNull()
-    expect(view.container.querySelector('img')?.getAttribute('src')).toBe('/game/assets/base/surface_silo_flat.png')
+    expect(view.container.querySelector('[data-pixel-structure="launchpad"]')).not.toBeNull()
     view.unmount()
   })
 
   it('renders the finished sprite when the build already completed before mount', () => {
     const view = mount(Date.now() - 20_000)
     expect(view.container.querySelector('.hub-construction-rig')).toBeNull()
-    expect(view.container.querySelector('img')?.getAttribute('src')).toBe('/game/assets/base/surface_silo_flat.png')
+    expect(view.container.querySelector('[data-pixel-structure="launchpad"]')).not.toBeNull()
     view.unmount()
+  })
+
+  it('draws no above-ground body for the surface silo', () => {
+    const markup = renderToStaticMarkup(<EarthBaseModules buildings={[{ kind: 'surface-silo', plotX: 200, w: 48, level: 3 }]} />)
+    expect(markup).not.toContain('data-pixel-structure')
+    expect(markup).not.toContain('surface_silo_flat.png')
   })
 })

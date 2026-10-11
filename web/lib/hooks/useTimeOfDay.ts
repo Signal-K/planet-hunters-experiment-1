@@ -1,47 +1,83 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import {
+  coarseSkyPhase,
+  lockedSeason,
+  lockedWorldTime,
+  sanitizeSeason,
+  sanitizeWorldTime,
+  seasonForDate,
+  worldTimeForHour,
+  type Season,
+  type WorldTimeGrade,
+} from '@/lib/scene/base-world'
 
 /**
- * Local-clock-driven sky phase for Earth Base (KES-231). Ops screens stay on
- * the dark command-deck theme (`.theme-deep`) at every phase — this only
- * modulates sky warmth/star visibility, it never goes to a bright daylight
- * blue, so it doesn't fight the "one dark-navy palette everywhere" rule.
+ * Game clock for Earth Base. The sky follows the player's local hour through
+ * dawn, morning, midday, afternoon, dusk and night. `?time=` and `?season=`
+ * lock a preview grade so each combination can be screenshotted. The coarse
+ * `phase` still feeds screens that only have four plates.
  */
 export type TimeOfDayPhase = 'night' | 'dawn' | 'day' | 'dusk'
 
 export interface TimeOfDay {
+  /** Four-step sky for older scenes. */
   phase: TimeOfDayPhase
+  /** Six-step grade that paints the Base. */
+  grade: WorldTimeGrade
   /** HH:MM in the player's local time. */
   label: string
 }
 
-function phaseForHour(hour: number): TimeOfDayPhase {
-  if (hour >= 5 && hour < 8) return 'dawn'
-  if (hour >= 8 && hour < 18) return 'day'
-  if (hour >= 18 && hour < 22) return 'dusk'
-  return 'night'
+function formatClock(now: Date): string {
+  const hh = String(now.getHours()).padStart(2, '0')
+  const mm = String(now.getMinutes()).padStart(2, '0')
+  return `${hh}:${mm}`
 }
 
 function computeNow(): TimeOfDay {
   const now = new Date()
-  const hh = String(now.getHours()).padStart(2, '0')
-  const mm = String(now.getMinutes()).padStart(2, '0')
-  return { phase: phaseForHour(now.getHours()), label: `${hh}:${mm}` }
+  const grade = worldTimeForHour(now.getHours())
+  return { phase: coarseSkyPhase(grade), grade, label: formatClock(now) }
 }
 
-// Matches the pre-existing static night palette so there's no hydration
-// flash between the server render and the client's real local time.
-const SSR_DEFAULT: TimeOfDay = { phase: 'night', label: '--:--' }
+function previewGrade(): WorldTimeGrade | null {
+  if (typeof window === 'undefined') return null
+  return sanitizeWorldTime(new URLSearchParams(window.location.search).get('time'))
+}
+
+function previewSeason(): Season | null {
+  if (typeof window === 'undefined') return null
+  return sanitizeSeason(new URLSearchParams(window.location.search).get('season'))
+}
+
+// Night matches the first server paint so the sky does not flash at midday
+// before the client reads the clock.
+const SSR_DEFAULT: TimeOfDay = { phase: 'night', grade: 'night', label: '--:--' }
 
 export function useTimeOfDay(): TimeOfDay {
   const [state, setState] = useState<TimeOfDay>(SSR_DEFAULT)
 
   useEffect(() => {
+    const locked = lockedWorldTime() ?? previewGrade()
+    if (locked) {
+      setState({ phase: coarseSkyPhase(locked), grade: locked, label: formatClock(new Date()) })
+      return
+    }
     setState(computeNow())
     const id = setInterval(() => setState(computeNow()), 30_000)
     return () => clearInterval(id)
   }, [])
 
   return state
+}
+
+/** Season from the local month, or `?season=` when a preview is locked. */
+export function useBaseSeason(): Season {
+  const [season, setSeason] = useState<Season>('autumn')
+  useEffect(() => {
+    setSeason(lockedSeason() ?? previewSeason() ?? seasonForDate(new Date()))
+  }, [])
+  return season
 }

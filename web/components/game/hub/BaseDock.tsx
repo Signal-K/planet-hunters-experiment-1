@@ -16,18 +16,18 @@ export const BASE_DOCK_PADDING = 6
 
 const CONTROL_STYLE = {
   minHeight: 44,
-  background: 'var(--hub-chalk-soft)',
-  border: '4px solid var(--hub-chalk)',
-  borderRadius: 14,
+  background: 'color-mix(in srgb, var(--ln-world-hull-lit) 88%, transparent)',
+  border: '2px solid color-mix(in srgb, var(--ln-world-outline) 45%, transparent)',
+  borderRadius: 12,
   padding: '8px 12px',
   fontFamily: 'var(--ln-font-display)',
   fontWeight: 800,
   fontSize: 14,
   letterSpacing: '0.08em',
   textTransform: 'uppercase' as const,
-  color: 'var(--hub-chalk)',
+  color: 'var(--ln-world-outline)',
   cursor: 'pointer',
-  boxShadow: '0 4px 16px color-mix(in srgb, var(--hub-chalk) 25%, transparent)',
+  boxShadow: '0 1px 0 color-mix(in srgb, var(--ln-world-hull-lit) 70%, transparent)',
 }
 
 /** Visible dock controls. Scene names stay in the accessibility label only. */

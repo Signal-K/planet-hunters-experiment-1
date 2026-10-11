@@ -1,15 +1,22 @@
 'use client'
 
+import { useState } from 'react'
 import { PRODUCT_OPERATIONS_LABEL, PRODUCT_WORDMARK } from '@/lib/brand'
 import { formatCurrency } from '@/lib/format'
+import type { EarthBiomeId } from '@/lib/scene/base-world'
 
 interface IntroScreenProps {
-  onBegin: () => void
+  onBegin: (biome?: EarthBiomeId) => void
   returning?: boolean
   missionsDone?: number
   totalEarned?: number
   awaitingRemoteState?: boolean
 }
+
+const BIOME_CHOICES: { id: EarthBiomeId; label: string }[] = [
+  { id: 'mountains', label: 'Mountains' },
+  { id: 'desert', label: 'Desert' },
+]
 
 export default function IntroScreen({
   onBegin,
@@ -18,6 +25,7 @@ export default function IntroScreen({
   totalEarned = 0,
   awaitingRemoteState = false,
 }: IntroScreenProps) {
+  const [biome, setBiome] = useState<EarthBiomeId>('mountains')
   return (
     <div className="game-screen intro-screen theme-blueprint">
 
@@ -43,7 +51,34 @@ export default function IntroScreen({
               ? `Missions completed: ${missionsDone} · Total earned: ${formatCurrency(totalEarned, { compact: true })}`
               : 'Build your base. Mine the asteroids. Fulfill the contract. The belt is waiting.'}
           </p>
-          <button className="intro-begin-btn" onClick={onBegin} data-testid="intro-begin-btn">
+          {!returning && (
+            <fieldset data-testid="base-biome-choice" style={{ border: '2px solid var(--ln-bp-ink)', borderRadius: 12, margin: '16px 0', padding: 12, display: 'grid', gap: 8 }}>
+              <legend style={{ padding: '0 8px', font: '800 14px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Landscape</legend>
+              {BIOME_CHOICES.map(choice => (
+                <button
+                  key={choice.id}
+                  type="button"
+                  aria-pressed={biome === choice.id}
+                  data-testid={`base-biome-${choice.id}`}
+                  onClick={() => setBiome(choice.id)}
+                  style={{
+                    minHeight: 44,
+                    font: '800 14px var(--ln-font-display)',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: 'var(--ln-bp-ink)',
+                    background: biome === choice.id ? 'var(--ln-bp-paper-2)' : 'var(--ln-bp-paper)',
+                    border: '2px solid var(--ln-bp-ink)',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {choice.label}
+                </button>
+              ))}
+            </fieldset>
+          )}
+          <button className="intro-begin-btn" onClick={() => onBegin(returning ? undefined : biome)} data-testid="intro-begin-btn">
             {returning ? 'RESUME OPERATIONS' : 'BEGIN OPERATIONS'}
           </button>
         </div>

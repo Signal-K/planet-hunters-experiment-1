@@ -2,11 +2,15 @@
 
 import React, { useEffect, useState } from 'react'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
+import { structureTierScale } from '@/lib/scene/base-world'
 import { structureBuildMs } from '@/lib/systems/HubConstructionSystem'
+import { PixelStructure } from '@/components/game/hub/PixelStructure'
 export interface HubBuildingDef {
   kind: string
   plotX: number
   w: number
+  /** 1 is the small first build. 2 and 3 grow into the full module. Absent means level 1. */
+  level?: number
   hot?: boolean
   status?: 'ok' | 'info' | 'warn' | 'locked' | 'building'
   dimmed?: boolean
@@ -16,40 +20,26 @@ export interface HubBuildingDef {
   buildStartedAt?: number
 }
 
-/** Earth Base hero structures, rendered as single-mass Blender sprites (see
- * `tools/blender/models/structures.py` and the ZenNotes decision "Landnam
- * Earth Base structure art — single-mass render standard"). Each is one
- * cohesive scene/one render, not a composited multi-piece kit. */
-const SPRITES = {
-  launchpad: { src: '/game/assets/base/launchpad_flat.png', width: 84, height: 139 },
-  'surface-silo': { src: '/game/assets/base/surface_silo_flat.png', width: 124, height: 132 },
-  hangar: { src: '/game/assets/base/hangar_flat.png', width: 176, height: 150 },
-} as const
-
+/** Level-3 footprints. Level 1 and 2 render the same silhouette smaller via `structureTierScale`.
+ *  The surface silo has no above-ground body; the lift shaft is the silo door. */
 export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height: number }> = {
-  launchpad: { width: 84, height: 139 },
-  'surface-silo': { width: 124, height: 132 },
-  hangar: { width: 176, height: 150 },
-  refinery: { width: 150, height: 97 },
-  command: { width: 150, height: 97 },
-  'deep-space-telescope': { width: 150, height: 97 },
-  'astronaut-academy': { width: 150, height: 97 },
-  market: { width: 132, height: 88 },
-}
-
-type SpriteName = keyof typeof SPRITES
-
-function FlatSprite({ name, className = '' }: { name: SpriteName; className?: string }) {
-  const sprite = SPRITES[name]
-  return <img className={`earth-base-flat-sprite ${className}`} src={sprite.src} alt="" draggable={false} aria-hidden="true" />
+  launchpad: { width: 120, height: 168 },
+  'surface-silo': { width: 48, height: 96 },
+  hangar: { width: 108, height: 86 },
+  refinery: { width: 96, height: 72 },
+  command: { width: 70, height: 128 },
+  'deep-space-telescope': { width: 74, height: 96 },
+  'transit-telescope': { width: 64, height: 88 },
+  'astronaut-academy': { width: 92, height: 84 },
+  market: { width: 100, height: 74 },
 }
 
 export function LaunchpadModules({ className = '' }: { className?: string }) {
-  return <FlatSprite name="launchpad" className={className} />
+  return <span className={className} style={{ display: 'block', width: '100%', height: '100%' }}><PixelStructure kind="launchpad" level={3} /></span>
 }
 
 export function HangarModules({ className = '' }: { className?: string }) {
-  return <FlatSprite name="hangar" className={className} />
+  return <span className={className} style={{ display: 'block', width: '100%', height: '100%' }}><PixelStructure kind="hangar" level={3} /></span>
 }
 
 /**
@@ -88,7 +78,7 @@ function ConstructionRig({ animDuration, animDelay }: { animDuration: string; an
   )
 }
 
-function StructureSprite({ kind, active, buildStartedAt }: { kind: string; active?: boolean; buildStartedAt?: number }) {
+function StructureSprite({ kind, level = 1, active, buildStartedAt }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number }) {
   const buildMs = structureBuildMs(kind)
   // `buildStartedAt` does not change when the build finishes, so a value
   // captured once at mount left `isBuilding` true forever and the cyan
@@ -112,36 +102,15 @@ function StructureSprite({ kind, active, buildStartedAt }: { kind: string; activ
     ? <ConstructionRig animDuration={animDuration} animDelay={animDelay} />
     : null
 
-  const name: SpriteName | null = kind === 'launchpad' || kind === 'surface-silo' || kind === 'hangar' ? kind : null
-  if (!name) {
-    if (kind === 'market') {
-      return <span aria-hidden="true" style={{ display: 'grid', gridTemplateRows: '18% 1fr', width: '100%', height: '100%', border: '3px solid var(--ln-cyan)', background: 'var(--ln-panel)', boxShadow: active ? '8px 8px 0 var(--ln-cyan)' : '6px 6px 0 var(--ln-hairline)' }}>
-        <span style={{ display: 'block', background: 'var(--ln-cyan)', borderBottom: '3px solid var(--ln-text)' }} />
-        <svg viewBox="0 0 100 64" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: '100%' }}>
-          {/* Exchange hall: crates on the left, loading-dock shutter in the middle, price board on the right. */}
-          <rect x="0" y="0" width="100" height="64" fill="#eaf2f9" />
-          <rect x="6" y="36" width="22" height="24" fill="#cfe3f2" stroke="#0f2436" strokeWidth="2" />
-          <rect x="10" y="22" width="16" height="14" fill="#e3f0f9" stroke="#0f2436" strokeWidth="2" />
-          <line x1="6" y1="48" x2="28" y2="48" stroke="#0f2436" strokeWidth="1.5" />
-          <rect x="36" y="14" width="30" height="46" fill="#9cc2df" stroke="#0f2436" strokeWidth="2.5" />
-          {[22, 30, 38, 46, 54].map(y => <line key={y} x1="36" y1={y} x2="66" y2={y} stroke="#0f2436" strokeOpacity=".55" strokeWidth="1.5" />)}
-          <rect x="74" y="12" width="22" height="26" fill="#0f2436" stroke="#0f2436" strokeWidth="2" />
-          <polyline points="77,32 82,26 87,29 93,18" fill="none" stroke="#7fe0d0" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-          <line x1="85" y1="38" x2="85" y2="60" stroke="#0f2436" strokeWidth="2" />
-        </svg>
-      </span>
-    }
-    // No base art exists yet for this kind (command/refinery/deep-space-telescope/
-    // astronaut-academy) — only ever show the construction rig while it's
-    // actively building; once done, render nothing, same as before this
-    // feature existed.
-    return rig
-  }
+  if (kind === 'surface-silo') return rig
   return (
     <>
-      <span className={isBuilding ? 'hub-construct-reveal' : ''} style={isBuilding ? { display: 'block', animationDuration: animDuration, animationDelay: animDelay } : undefined}>
-        <FlatSprite name={name} />
-        {active && <FlatSprite name={name} className="earth-base-flat-sprite--highlight" />}
+      <span
+        className={isBuilding ? 'hub-construct-reveal' : ''}
+        data-active={active ? 'true' : undefined}
+        style={isBuilding ? { display: 'block', animationDuration: animDuration, animationDelay: animDelay } : { display: 'block', height: '100%' }}
+      >
+        <PixelStructure kind={kind} level={level} />
       </span>
       {rig}
     </>
@@ -150,12 +119,26 @@ function StructureSprite({ kind, active, buildStartedAt }: { kind: string; activ
 
 const SCENE_WIDTH_DIVISOR = 6.4
 
+export function structureWidthPct(kind: string, level = 1): number {
+  const size = EARTH_BASE_STRUCTURE_SIZES[kind] ?? EARTH_BASE_STRUCTURE_SIZES.command
+  const tier = kind === 'market' ? Math.max(level, 2) : level
+  return (size.width / SCENE_WIDTH_DIVISOR) * structureTierScale(tier)
+}
+
+/** Half-width in hub scene units (the 402-wide plot space). */
+export function structureHalfScene(kind: string, level = 1, sceneWidth = 402): number {
+  return (structureWidthPct(kind, level) / 100) * sceneWidth / 2
+}
+
 export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] }) {
+  const visible = buildings.filter(building => building.kind !== 'surface-silo').length
+  const fit = visible <= 2 ? 1.65 : visible === 3 ? 1.3 : 1
   return (
-    <div aria-hidden="true" className="earth-base-modules-layer">
+    <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': String(fit) } as React.CSSProperties}>
       {buildings.map(building => {
+        if (building.kind === 'surface-silo') return null
         const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.command
-        const widthPct = size.width / SCENE_WIDTH_DIVISOR
+        const widthPct = structureWidthPct(building.kind, building.level ?? 1)
         const left = sceneXPercent(building.plotX, widthPct)
         return (
           <span
@@ -174,7 +157,7 @@ export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] })
               opacity: building.dimmed ? 0.6 : 1,
             }}
           >
-            <StructureSprite kind={building.kind} active={building.active} buildStartedAt={building.buildStartedAt} />
+            <StructureSprite kind={building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} />
           </span>
         )
       })}

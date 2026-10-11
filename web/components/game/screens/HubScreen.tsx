@@ -9,15 +9,15 @@ import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
 import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
-import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
 import { BaseDock } from '@/components/game/hub/BaseDock'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
-import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
-import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
+import { useBaseSeason, useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
+import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES, structureHalfScene } from '@/components/game/hub/EarthBaseModules'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
-import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
 import { EARTH_BASE_WIDE } from '@/lib/scene/compositions'
+import { exchangeSeat } from '@/lib/scene/base-world'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
@@ -70,7 +70,8 @@ interface HubScreenProps {
 }
 
 export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
-  const { phase: skyPhase } = useTimeOfDay()
+  const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
+  const skySeason = useBaseSeason()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
   // The terrain baseline is part of the world composition. It must not move
@@ -159,6 +160,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       kind,
       plotX: e.transform.position.x,
       w: BUILDING_W[kind] ?? 78,
+      level: isUpgradableBuilding(kind) ? buildingLevel(player, kind) : 1,
       hot: kind === 'launchpad' ? !!player.pendingLaunch : false,
       status: isUnderConstruction(startedAt, kind) ? ('building' as const) : ('ok' as const),
       dimmed: isDimmedBuildingKind(kind),
@@ -166,9 +168,16 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       buildStartedAt: startedAt,
     }]
   })
-  // The exchange is a permanent Earth Base facility, not a menu destination.
-  // It deliberately has its own scene object even before the player has ore.
-  hubBuildings.push({ kind: 'market', plotX: 338, w: 84, status: 'ok' })
+  // The exchange is a permanent Earth Base building, not a dock item. It sits
+  // in the widest gap so a new base (ground, road, lift shaft, exchange) stays open.
+  const exchangeX = exchangeSeat(
+    hubBuildings.filter(building => building.kind !== 'surface-silo').map(building => ({
+      x: building.plotX,
+      half: structureHalfScene(building.kind, building.level ?? 1),
+    })),
+    structureHalfScene('market', 2),
+  )
+  hubBuildings.push({ kind: 'market', plotX: exchangeX, w: 84, level: 2, status: 'ok' })
   const launchpadPlot = hubBuildings.find(building => building.kind === 'launchpad')
   // The launchpad speaks only while the Base has no live run. Progression is
   // now exposed through contextual buildings and the persistent chrome rather
@@ -283,7 +292,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   }
 
   return (
-    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-time={skyGrade} data-season={skySeason} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
       {/* Base stays mounted at its authored camera frame while a tray is open.
           The former 200%-tall slider moved the whole world before revealing
@@ -301,7 +310,15 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden' }}
         >
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
-          <HubWorldBackground phase={skyPhase} />
+          <BaseLayerScene
+            phase={skyPhase}
+            time={skyGrade}
+            season={skySeason}
+            biome={player.earthBiome ?? 'mountains'}
+            siloBuilt={(player.placed ?? []).includes('surface-silo') || (player.subsurfaceBuilt ?? []).length > 0}
+            paths={hubBuildings.filter(building => building.kind !== 'surface-silo').map(building => sceneXPercent(building.plotX))}
+            onOpenSilo={() => setSubsurface(true)}
+          />
           <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
           <SkyEventChip surface="base" />
           {!subsurface && <OrionidsTeaser />}
@@ -370,10 +387,14 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 // can't run off the edge of the scene.
                 const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
+                const silo = kind === 'surface-silo'
                 const editable = editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind)
                   ? { ...building, onClick: () => setUpgradingBuilding(kind) }
-                  : building
-                return <Building key={kind} {...editable} hitH={HIT_H[kind] ?? 60} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
+                  : silo
+                    ? { ...building, onClick: () => setSubsurface(true) }
+                    : building
+                const siloStyle = silo ? { ...style, left: '50%' } : style
+                return <Building key={kind} {...editable} hitH={silo ? 120 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={siloStyle} calloutAlign={calloutAlign} />
               })}
               <Building
                 kind="market"
@@ -385,13 +406,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 active={activeBuilding === 'market'}
                 onActiveChange={active => setActiveBuilding(active ? 'market' : null)}
                 onClick={() => onFocusBuilding('market')}
-                style={{ left: `clamp(62px, ${sceneXPercent(338, EARTH_BASE_STRUCTURE_SIZES.market.width / 6.4)}%, calc(100% - 62px))`, bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`, transform: 'translateX(-50%)' }}
+                style={{ left: `clamp(62px, ${sceneXPercent(exchangeX, EARTH_BASE_STRUCTURE_SIZES.market.width / 6.4)}%, calc(100% - 62px))`, bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`, transform: 'translateX(-50%)' }}
               />
             </div>
           </div>
 
-          {/* Soil cross-section */}
-          <SoilCrossSection />
         </div>
 
         {/* Subsurface is a tray over the still-mounted Base, never a camera slide. */}
@@ -465,9 +484,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             // A translucent command rail, deliberately without backdrop blur:
             // blurring the terrain under a fixed dock created the frosted band
             // reported in visual review and broke the scene's ground plane.
-            background: 'linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 72%, transparent) 0%, color-mix(in srgb, var(--ln-void) 88%, transparent) 100%)',
-            borderTop: '4px solid color-mix(in srgb, var(--hub-outline) 60%, transparent)',
-            borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 24px color-mix(in srgb, var(--ln-void) 28%, transparent)',
+            background: 'color-mix(in srgb, var(--ln-world-hull-lit) 82%, transparent)',
+            borderTop: '2px solid color-mix(in srgb, var(--ln-world-outline) 28%, transparent)',
+            borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 24px color-mix(in srgb, var(--ln-world-outline) 12%, transparent)',
             padding: '12px 16px 16px',
           }}>
             <BaseDock

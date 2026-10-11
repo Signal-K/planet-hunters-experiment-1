@@ -1,0 +1,466 @@
+.scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--base-sky-top);
+}
+
+.sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(180deg, var(--base-sky-top) 0%, var(--base-sky-mid) 58%, var(--base-sky-horizon) 100%);
+  transition: background 4s ease;
+}
+
+.scene[data-time='dawn'] {
+  --base-sky-top: var(--ln-world-dawn-top);
+  --base-sky-mid: var(--ln-world-dawn-mid);
+  --base-sky-horizon: var(--ln-world-dawn-horizon);
+  --base-sun-on: 0.9;
+  --base-sun-x: 18%;
+  --base-sun-y: 58%;
+  --base-sun: var(--ln-world-dawn-horizon);
+}
+
+.scene[data-time='morning'] {
+  --base-sky-top: var(--ln-world-morning-top);
+  --base-sky-mid: var(--ln-world-morning-mid);
+  --base-sky-horizon: var(--ln-world-morning-horizon);
+  --base-sun-on: 1;
+  --base-sun-x: 34%;
+  --base-sun-y: 22%;
+  --base-sun: var(--ln-world-hull-lit);
+}
+
+.scene[data-time='midday'] {
+  --base-sky-top: var(--ln-world-day-top);
+  --base-sky-mid: var(--ln-world-day-mid);
+  --base-sky-horizon: var(--ln-world-day-horizon);
+  --base-sun-on: 1;
+  --base-sun-x: 50%;
+  --base-sun-y: 8%;
+  --base-sun: var(--ln-world-hull-lit);
+}
+
+.scene[data-time='afternoon'] {
+  --base-sky-top: var(--ln-world-afternoon-top);
+  --base-sky-mid: var(--ln-world-afternoon-mid);
+  --base-sky-horizon: var(--ln-world-afternoon-horizon);
+  --base-sun-on: 0.95;
+  --base-sun-x: 68%;
+  --base-sun-y: 26%;
+  --base-sun: var(--ln-world-hull-lit);
+}
+
+.scene[data-time='dusk'] {
+  --base-sky-top: var(--ln-world-dusk-top);
+  --base-sky-mid: var(--ln-world-dusk-mid);
+  --base-sky-horizon: color-mix(in srgb, var(--ln-world-dusk-mid) 46%, var(--ln-world-hull-lit));
+  --base-sun-on: 0.85;
+  --base-sun-x: 82%;
+  --base-sun-y: 62%;
+  --base-sun: var(--ln-world-dusk-horizon);
+}
+
+.scene[data-time='night'] {
+  --base-sky-top: var(--ln-world-night-top);
+  --base-sky-mid: var(--ln-world-night-mid);
+  --base-sky-horizon: var(--ln-world-night-horizon);
+  --base-sun-on: 0.95;
+  --base-sun-x: 22%;
+  --base-sun-y: 12%;
+  --base-sun: var(--ln-world-hull-lit);
+}
+
+.luminary {
+  position: absolute;
+  z-index: 7;
+  width: 52px;
+  height: 52px;
+  margin-left: -26px;
+  border-radius: 50%;
+  left: var(--base-sun-x, 50%);
+  top: var(--base-sun-y, 18%);
+  background: var(--base-sun, var(--ln-world-hull-lit));
+  opacity: var(--base-sun-on, 0);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--base-sun, var(--ln-world-hull-lit)) 70%, transparent);
+  pointer-events: none;
+  transition: left 4s ease, top 4s ease, opacity 4s ease, background 4s ease;
+}
+
+.scene[data-time='night'] .luminary {
+  width: 36px;
+  height: 36px;
+  margin-left: -18px;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--ln-world-hull-lit) 55%, transparent);
+}
+
+.stars {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 42%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 8% 22%, var(--ln-world-hull-lit), transparent),
+    radial-gradient(1.5px 1.5px at 22% 10%, var(--ln-world-hull-lit), transparent),
+    radial-gradient(1px 1px at 41% 28%, var(--ln-world-hull-lit), transparent),
+    radial-gradient(1.5px 1.5px at 63% 14%, var(--ln-world-hull-lit), transparent),
+    radial-gradient(1px 1px at 78% 32%, var(--ln-world-hull-lit), transparent),
+    radial-gradient(1.5px 1.5px at 91% 18%, var(--ln-world-hull-lit), transparent);
+  background-size: 280px 160px;
+  animation: twinkle 3.2s ease-in-out infinite;
+}
+
+.scene[data-time='dawn'] .stars { opacity: 0.35; }
+.scene[data-time='dusk'] .stars { opacity: 0.45; }
+.scene[data-time='night'] .stars { opacity: 0.9; }
+.scene[data-time='night'] .clouds { opacity: 0.18; }
+.scene[data-time='dusk'] .clouds,
+.scene[data-time='dawn'] .clouds { opacity: 0.45; }
+
+.clouds {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6%;
+  height: 22%;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cloud {
+  position: absolute;
+  height: 28%;
+  width: 18%;
+  background: color-mix(in srgb, var(--ln-world-hull-lit) 70%, transparent);
+  border-radius: 999px;
+  animation: cloudDrift linear infinite;
+}
+
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: inherit;
+}
+
+.cloud::before { width: 46%; height: 140%; left: 18%; top: -70%; }
+.cloud::after { width: 34%; height: 110%; right: 16%; top: -40%; }
+
+.horizon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--hub-ground);
+  height: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.band {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 200%;
+  display: flex;
+  animation: parallax linear infinite;
+  transform: translateX(0);
+}
+
+.band img {
+  width: 50%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+  pointer-events: none;
+}
+
+.scene[data-biome='desert'] .band img,
+.scene[data-biome='coast'] .band img {
+  filter: saturate(0.72) contrast(0.96);
+}
+
+.scene[data-biome='mountains'] .band img,
+.scene[data-biome='tundra'] .band img {
+  filter: saturate(0.78) contrast(0.94);
+}
+
+.scene[data-biome='tundra'] .band img { filter: saturate(0.55) brightness(1.08); }
+.scene[data-biome='coast'] .band img { filter: saturate(0.7) hue-rotate(18deg); }
+
+.grade {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: var(--base-season);
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+}
+
+.scene[data-season='spring'] { --base-season: color-mix(in srgb, var(--ln-world-grass) 55%, transparent); }
+.scene[data-season='summer'] { --base-season: color-mix(in srgb, var(--ln-world-hull-lit) 40%, transparent); }
+.scene[data-season='autumn'] { --base-season: color-mix(in srgb, var(--ln-world-soil) 50%, transparent); }
+.scene[data-season='winter'] { --base-season: color-mix(in srgb, var(--ln-mineral-ice) 42%, transparent); }
+
+.timeShade {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.scene[data-time='dawn'] .timeShade { background: color-mix(in srgb, var(--ln-world-dawn-top) 18%, transparent); }
+.scene[data-time='afternoon'] .timeShade { background: color-mix(in srgb, var(--ln-world-afternoon-top) 12%, transparent); }
+.scene[data-time='dusk'] .timeShade { background: color-mix(in srgb, var(--ln-world-dusk-top) 22%, transparent); }
+.scene[data-time='night'] .timeShade { background: color-mix(in srgb, var(--ln-world-night-top) 48%, transparent); }
+.scene[data-time='night'] .grade { opacity: 0.28; }
+.scene[data-time='dusk'] .grade,
+.scene[data-time='dawn'] .grade { opacity: 0.4; }
+
+.ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--hub-ground);
+  z-index: 5;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 18px, color-mix(in srgb, var(--ln-world-underground-rock) 18%, transparent) 18px 19px),
+    linear-gradient(180deg, var(--ln-world-grass) 0 14px, var(--ln-world-soil) 14px 42%, var(--ln-world-underground) 100%);
+  pointer-events: none;
+}
+
+.verge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 14px;
+  background: var(--ln-world-grass);
+}
+
+.road {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 16px;
+  height: 26px;
+  background: var(--ln-world-asphalt);
+  box-shadow: inset 0 3px 0 color-mix(in srgb, var(--ln-world-hull-lit) 28%, transparent), inset 0 -3px 0 color-mix(in srgb, var(--ln-world-outline) 55%, transparent);
+}
+
+.lane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+  background: repeating-linear-gradient(90deg, var(--ln-world-hull-lit) 0 18px, transparent 18px 36px);
+  animation: lane 18s linear infinite;
+}
+
+.path {
+  position: absolute;
+  top: 8px;
+  width: 14px;
+  height: 18px;
+  margin-left: -7px;
+  background: var(--ln-world-concrete);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ln-world-outline) 35%, transparent);
+}
+
+.cutaway {
+  position: absolute;
+  left: 50%;
+  bottom: 88px;
+  width: min(300px, 46%);
+  height: min(132px, calc(100% - 150px));
+  transform: translateX(-50%);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-world-underground-rock) 80%, var(--ln-world-outline)) 0 8px, transparent 8px),
+    repeating-linear-gradient(90deg, var(--ln-world-underground) 0 16px, color-mix(in srgb, var(--ln-world-underground-rock) 70%, var(--ln-world-underground)) 16px 18px);
+  border: 3px solid var(--ln-world-outline);
+  border-radius: 8px 8px 4px 4px;
+  overflow: hidden;
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--ln-world-soil) 80%, var(--ln-world-outline));
+}
+
+.shaft {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  transform: translateX(-50%);
+  background: var(--ln-world-hull-shade);
+  border-left: 3px solid var(--ln-world-outline);
+  border-right: 3px solid var(--ln-world-outline);
+}
+
+.lift {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  height: 22px;
+  bottom: 28%;
+  background: var(--ln-world-trim-blue);
+  border: 2px solid var(--ln-world-outline);
+  animation: liftBob 3.4s ease-in-out infinite;
+}
+
+.bay {
+  position: absolute;
+  top: 18px;
+  bottom: 10px;
+  width: 28%;
+  background: color-mix(in srgb, var(--ln-world-hull) 16%, var(--ln-world-underground));
+  border: 2px solid var(--ln-world-outline);
+}
+
+.bayLeft { left: 8px; }
+.bayRight { right: 8px; }
+
+.tank {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 16%;
+  bottom: 18%;
+  background: var(--ln-world-hull);
+  border: 2px solid var(--ln-world-outline);
+  border-radius: 8px;
+}
+
+.lamp {
+  position: absolute;
+  top: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ln-world-trim-teal);
+  animation: beacon 2.4s steps(2, end) infinite;
+}
+
+.shaftButton {
+  position: absolute;
+  left: 50%;
+  bottom: 88px;
+  width: 64px;
+  height: min(132px, 18vh);
+  min-height: 44px;
+  transform: translateX(-50%);
+  z-index: 12;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pixel {
+  display: block;
+  width: 100%;
+  height: 100%;
+  shape-rendering: crispEdges;
+}
+
+.beacon { animation: beacon 2.4s steps(2, end) infinite; }
+.steam {
+  transform-origin: center bottom;
+  animation: steam 4.5s ease-out infinite;
+}
+.windowGlow {
+  fill: var(--base-window, var(--ln-world-glass));
+  opacity: var(--base-window-on, 0.35);
+}
+:global([data-screen='hub'][data-time='dusk']) .windowGlow,
+:global([data-screen='hub'][data-time='night']) .windowGlow {
+  animation: windowGlow 7s ease-in-out infinite;
+}
+.dish { transform-box: fill-box; transform-origin: center; animation: dish 14s linear infinite; }
+
+@keyframes parallax {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes cloudDrift {
+  from { transform: translateX(-20vw); }
+  to { transform: translateX(120vw); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.95; }
+}
+
+@keyframes lane {
+  from { background-position: 0 0; }
+  to { background-position: -72px 0; }
+}
+
+@keyframes liftBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes beacon {
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0.25; }
+}
+
+@keyframes steam {
+  0% { opacity: 0; transform: translateY(6px) scale(0.7); }
+  30% { opacity: 0.7; }
+  100% { opacity: 0; transform: translateY(-18px) scale(1.2); }
+}
+
+@keyframes windowGlow {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+@keyframes dish {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (max-height: 500px) {
+  /* The road owns the top of a short ground band. Keep the shaft window
+     below that road and above the dock. */
+  .road { height: 18px; top: 8px; }
+  .cutaway {
+    top: 30px;
+    bottom: auto;
+    height: 44px;
+    width: min(220px, 40%);
+  }
+  .shaftButton {
+    top: auto;
+    bottom: calc(var(--hub-ground) - 74px);
+    height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .band,
+  .cloud,
+  .stars,
+  .lane,
+  .lift,
+  .beacon,
+  .steam,
+  .windowGlow,
+  .dish,
+  .lamp {
+    animation: none;
+  }
+}
