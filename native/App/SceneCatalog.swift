@@ -60,8 +60,9 @@ enum SceneCatalog {
         return gs
     }
 
-    static func miningState(rover: Bool) -> GameState {
+    static func miningState(rover: Bool, target: String? = nil) -> GameState {
         var gs = transitState(returning: false)
+        if let target { gs.targetId = target }
         gs.player.missionPhase = rover ? .survey : .mining
         gs.screen = rover ? .roverSurvey : .mining
         return gs
@@ -194,6 +195,14 @@ enum SceneCatalog {
         },
         scene("mining-laser-live-landscape", 402, w: 874) {
             MiningScreen().environment(GameStore(state: miningState(rover: false)))
+        },
+        scene("mining-laser-bennu-live", 874) { MiningScreen().environment(GameStore(state: miningState(rover: false, target: "bennu"))) },
+        scene("mining-laser-mars-live", 874) { MiningScreen().environment(GameStore(state: miningState(rover: false, target: "mars"))) },
+        scene("mining-laser-icy-live", 874) { MiningScreen().environment(GameStore(state: miningState(rover: false, target: "jupiter"))) },
+        scene("hub-empty-live", 874) { HubScreen().environment(GameStore(state: GameState())) },
+        scene("hub-starter-live", 874) {
+            var gs = GameState(); gs.player.placed = ["launchpad", "surface-silo"]; gs.player.placementPlots = ["surface-silo": 0]
+            return HubScreen().environment(GameStore(state: gs))
         },
         scene("rover-field-phone", 874) {
             var p = Prospecting(requirements: ["iron": 2, "copper": 1])

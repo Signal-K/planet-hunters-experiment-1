@@ -16,7 +16,7 @@ struct BaseWorldScene: View {
             let w = geo.size.width
             let h = geo.size.height
             let portrait = h > w * 1.15
-            let ground = h * (portrait ? 0.65 : 0.78)
+            let ground = h * 0.78
             TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { ctx in
                 let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
                 ZStack(alignment: .topLeading) {
@@ -105,7 +105,7 @@ struct BaseWorldScene: View {
 
     private func shaft(width: CGFloat, height: CGFloat) -> some View {
         let portrait = height > width * 1.15
-        let ground = height * (portrait ? 0.65 : 0.78)
+        let ground = height * 0.78
         let sh: CGFloat = height < 500 ? 44 : 56
         let road: CGFloat = height < 500 ? 22 : 30
         let dock = height * 0.10 + 8
@@ -123,17 +123,17 @@ struct BaseWorldScene: View {
         .accessibilityLabel("Open the lift")
     }
 
-    private func structure(_ kind: String, sprite: String, width: CGFloat, height: CGFloat, ground: CGFloat, portrait: Bool, level: Int) -> some View {
+    private func structure(_ kind: String, sprite: String, width: CGFloat, height: CGFloat, ground: CGFloat, portrait: Bool, level: Int) -> AnyView {
         let center = width * anchor(kind, plot: plots[kind] ?? 0, portrait: portrait)
         if kind == "launchpad" {
             let padW = width * (portrait ? 0.30 : 0.55)
-            let padH: CGFloat = portrait ? 40 : 48
+            let padH: CGFloat = portrait ? 16 : 24
             let craftH = min(portrait ? width * 0.28 : width * 0.152, portrait ? 140 : 220)
             let capW = padH
             let tileW = padH * 4
             let tiles = max(1, Int(ceil((padW - capW * 2) / tileW)))
             let stackH = padH + craftH
-            return Button { onStructure(kind) } label: {
+            return AnyView(Button { onStructure(kind) } label: {
                 ZStack(alignment: .bottom) {
                     HStack(spacing: 0) {
                         Art.view("base/kit/pad-end-left.png").resizable().interpolation(.none).scaledToFit().frame(width: capW, height: padH)
@@ -159,7 +159,7 @@ struct BaseWorldScene: View {
             }
             .buttonStyle(.plain)
             .position(x: center, y: ground - stackH / 2)
-            .accessibilityLabel(kindLabel(kind))
+            .accessibilityLabel(kindLabel(kind)))
         }
         let fraction = widthFraction(kind, portrait: portrait, level: level)
         let ratio = aspect(kind)
@@ -168,13 +168,13 @@ struct BaseWorldScene: View {
         if artW * ratio > maxH { artW = maxH / ratio }
         let artH = max(44, artW * ratio)
         let art = Art.view(sprite).resizable().interpolation(.none).scaledToFit().frame(width: artW, height: artH)
-        return Button { onStructure(kind) } label: {
+        return AnyView(Button { onStructure(kind) } label: {
             art.frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .position(x: center, y: ground - artH * 0.5)
-        .accessibilityLabel(kindLabel(kind))
+        .accessibilityLabel(kindLabel(kind)))
     }
 
     private func spriteName(_ kind: String) -> String? {
