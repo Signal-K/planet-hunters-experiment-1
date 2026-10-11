@@ -239,8 +239,14 @@ export function TerrainScene({
           zenith colour. */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0,
-        background: `linear-gradient(180deg, ${palette.skyTop} 0%, ${palette.skyMid} 52%, ${palette.skyHorizon} 100%)`,
+        background: `radial-gradient(ellipse 42% 26% at 76% 18%, color-mix(in srgb, ${palette.skyHorizon} 48%, transparent), transparent 72%), linear-gradient(180deg, ${palette.skyTop} 0%, ${palette.skyMid} 52%, ${palette.skyHorizon} 100%)`,
         transition: 'background 1.2s ease',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.26,
+        backgroundImage: 'linear-gradient(90deg, color-mix(in srgb, var(--hub-outline) 45%, transparent) 1px, transparent 1px), linear-gradient(0deg, color-mix(in srgb, var(--hub-outline) 34%, transparent) 1px, transparent 1px)',
+        backgroundSize: '64px 64px',
+        maskImage: 'linear-gradient(to bottom, black, transparent 70%)', WebkitMaskImage: 'linear-gradient(to bottom, black, transparent 70%)',
       }} />
 
       {/* The sky/ground shell used to be the only thing visible while the
@@ -288,7 +294,7 @@ export function TerrainScene({
           lying on it. The road remains a single connected lane at zIndex 9. */}
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0, height: 'var(--hub-ground)',
-        zIndex: 9, background: palette.ground, transition: 'background 1.2s ease',
+        zIndex: 9, background: `repeating-linear-gradient(0deg, color-mix(in srgb, ${palette.ground} 94%, var(--hub-ground-lip)) 0 2px, ${palette.ground} 2px 18px), ${palette.ground}`, transition: 'background 1.2s ease',
       }}>
         {/* Enlarged from the earlier thin seam and opacity (KES-263) so the
             ground/sky contact point reads as a clear, deliberate line —
@@ -303,7 +309,7 @@ export function TerrainScene({
             near and a far half without adding a texture. */}
         <div style={{
           position: 'absolute', left: 0, right: 0, top: '46%', bottom: 0,
-          background: palette.groundNear, transition: 'background 1.2s ease',
+          background: `repeating-linear-gradient(90deg, color-mix(in srgb, ${palette.groundNear} 92%, var(--hub-ground-lip)) 0 1px, transparent 1px 44px), ${palette.groundNear}`, transition: 'background 1.2s ease',
         }} />
       </div>
 

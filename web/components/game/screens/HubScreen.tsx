@@ -222,6 +222,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           title: 'Choose your first contract',
           body: 'A client job is open at the Mission Board. Your launchpad is ready to fly it.',
           cta: 'View Missions',
+          placement: 'viewport-clear',
           onCta: () => onOpenScene('missions'),
         }
 
@@ -458,9 +459,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             <div className={layoutStyles.eyebrow} data-dev-launcher={isDevLauncherEnabled()}>
               {subsurface ? 'BASE · SUBSURFACE' : `BASE · OPS ${player.missionsDone}`}
             </div>
-            <h1 className={layoutStyles.titleText}>
-              {subsurface ? 'Subsurface' : 'Base'}
-            </h1>
           </div>
           {!subsurface && <HubClockWidget />}
         </div>

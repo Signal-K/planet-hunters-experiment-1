@@ -42,13 +42,6 @@
   text-transform: uppercase;
 }
 .eyebrow[data-dev-launcher='true'] { margin-left: 64px; }
-.titleText {
-  margin: 4px 0 0;
-  color: var(--ln-text);
-  font: 800 23px/1 var(--ln-font-display);
-  letter-spacing: -.01em;
-  text-shadow: 0 4px 8px color-mix(in srgb, var(--ln-void) 60%, transparent);
-}
 .balance { pointer-events: auto; }
 /* Two classes: SkyBadgeRow's own `bottom: 16px` ties a single class and can win on stylesheet order. */
 .root .badges { top: 144px; bottom: auto; z-index: 19; }
@@ -111,7 +104,6 @@
   .topRow { min-height: 42px; align-items: center; }
   .eyebrow { font-size: 14px; }
   .eyebrow[data-dev-launcher='true'] { margin-left: 52px; }
-  .titleText { font-size: 20px; }
   .balance { margin-top: 4px; }
 }
 
@@ -133,6 +125,5 @@
   .eyebrow { display: none; }
   /* The eyebrow is hidden here, so the DEV badge would sit on the title instead. */
   .titleBlock:has(.eyebrow[data-dev-launcher='true']) { margin-left: 64px; }
-  .titleText { margin: 0; font-size: 18px; }
   .root .badges { top: 56px; }
 }

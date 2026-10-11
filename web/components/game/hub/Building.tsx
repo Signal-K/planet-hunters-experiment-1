@@ -17,6 +17,8 @@ export interface BuildingCallout {
   title: string
   body: string
   cta: string
+  /** A scene prompt can reserve a viewport-safe area instead of covering art. */
+  placement?: 'anchored' | 'viewport-clear'
   onCta: () => void
   /** Optional "not now" for prompts the player can wave off. */
   onDismiss?: () => void
@@ -254,14 +256,19 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             style={{
               // 50% is the building center (the wrapper is translateX(-50%)
               // onto its plot); bubbleLeft then offsets the box from there.
-              position: 'absolute', left: `calc(50% + ${bubbleLeft}px)`, bottom: 'calc(100% + 16px)',
+              position: callout.placement === 'viewport-clear' ? 'fixed' : 'absolute',
+              left: callout.placement === 'viewport-clear' ? 'calc(50vw - 104px)' : `calc(50% + ${bubbleLeft}px)`,
+              top: callout.placement === 'viewport-clear' ? 'clamp(92px, 13vh, 132px)' : undefined,
+              bottom: callout.placement === 'viewport-clear' ? undefined : 'calc(100% + 16px)',
               transform: calloutOpen ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.96)',
               transformOrigin: `bottom ${tailLeft}px`,
-              width: CALLOUT_W, zIndex: 22,
+              width: CALLOUT_W, zIndex: callout.placement === 'viewport-clear' ? 100 : 22,
+              // This must stay opaque: the gantry's blue struts previously showed
+              // through the onboarding copy and made the CTA look clipped.
               background: 'var(--hub-panel)',
               border: '1.5px solid var(--hub-outline)',
               borderRadius: 12, padding: 'var(--ln-s-3)',
-              boxShadow: '0 24px 48px var(--ln-overlay)',
+              boxShadow: '0 2px 0 var(--hub-outline) inset, 0 24px 48px var(--ln-overlay)',
               opacity: calloutOpen ? 1 : 0,
               pointerEvents: calloutOpen ? 'auto' : 'none',
               // A closed callout is hidden, not just transparent: its buttons must leave the tab order and hit-testing.
@@ -321,18 +328,18 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             )}
             </div>
             {/* Bubble tail — outline triangle with a fill triangle stacked over it */}
-            <span style={{
+            {callout.placement !== 'viewport-clear' && <span style={{
               position: 'absolute', left: tailLeft, top: '100%', transform: 'translateX(-50%)',
               width: 0, height: 0,
               borderLeft: '8px solid transparent', borderRight: '8px solid transparent',
               borderTop: '9px solid var(--hub-outline)',
-            }} />
-            <span style={{
+            }} />}
+            {callout.placement !== 'viewport-clear' && <span style={{
               position: 'absolute', left: tailLeft, top: 'calc(100% - 1.5px)', transform: 'translateX(-50%)',
               width: 0, height: 0,
               borderLeft: '8px solid transparent', borderRight: '8px solid transparent',
               borderTop: '7.5px solid var(--hub-panel)',
-            }} />
+            }} />}
           </div>
         </>
       )}
