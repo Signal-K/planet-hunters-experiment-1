@@ -35,6 +35,14 @@ public protocol TakeonEngine: AnyObject {
     func missionProgress() throws -> TakeonMissionProgress
     /// Read-only rover/world state as JSON, for the renderer.
     func state() throws -> Data
+    /// Top height and top material per column for a rectangle of the world (renderer feed).
+    func window(x: Int, y: Int, w: Int, h: Int) throws -> TakeonTerrainWindow
+}
+
+public extension TakeonEngine {
+    func window(x: Int, y: Int, w: Int, h: Int) throws -> TakeonTerrainWindow {
+        throw TakeonEngineError.runtime("terrain window unsupported by this engine")
+    }
 }
 
 public struct TakeonObjectiveProgress: Codable, Equatable, Sendable {

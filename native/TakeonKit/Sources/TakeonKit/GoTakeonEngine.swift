@@ -142,6 +142,15 @@ public final class GoTakeonEngine: TakeonEngine {
         }
     }
 
+    public func window(x: Int, y: Int, w: Int, h: Int) throws -> TakeonTerrainWindow {
+        do {
+            let json = try Self.call { try loaded().windowJSON(x, y: y, w: w, h: h, error: $0) }
+            return try JSONDecoder().decode(TakeonTerrainWindow.self, from: Data(json.utf8))
+        } catch let e as TakeonEngineError { throw e } catch {
+            throw TakeonEngineError.runtime(error.localizedDescription)
+        }
+    }
+
     public func state() throws -> Data {
         do { return Data(try Self.call { try loaded().stateJSON($0) }.utf8) } catch let e as TakeonEngineError { throw e } catch {
             throw TakeonEngineError.runtime(error.localizedDescription)
@@ -166,5 +175,6 @@ public actor TakeonEngineActor {
     public func bank() -> Bool { engine.bank() }
     public func missionProgress() throws -> TakeonMissionProgress { try engine.missionProgress() }
     public func state() throws -> Data { try engine.state() }
+    public func window(x: Int, y: Int, w: Int, h: Int) throws -> TakeonTerrainWindow { try engine.window(x: x, y: y, w: w, h: h) }
 }
 #endif

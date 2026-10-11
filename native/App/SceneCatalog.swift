@@ -71,6 +71,7 @@ enum SceneCatalog {
 
     static var all: [CatalogScene] { [
         scene("intro-phone", 700) { IntroScreen().environment(GameStore(state: GameState())) },
+        scene("takeon-live", 874) { TakeonSceneScreen(onExit: {}).environment(GameStore()) },
         scene("hub-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore()) },
         scene("hub-phone-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)).environment(GameStore(state: landscapeBase())) },
         scene("hub-desktop", 680, w: 1000) { HubScreen().environment(GameStore()) },
