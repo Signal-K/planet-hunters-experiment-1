@@ -21,8 +21,9 @@
   z-index: 2;
   min-width: 0;
 }
-.top { grid-row: 1; padding-top: env(safe-area-inset-top, 0px); }
-.bottom { grid-row: 3; padding-bottom: env(safe-area-inset-bottom, 0px); }
+/* Safe-area insets are applied once, by body in globals.css (SSL-66). */
+.top { grid-row: 1; }
+.bottom { grid-row: 3; }
 
 .main {
   grid-row: 2;

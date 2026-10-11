@@ -34,8 +34,9 @@ struct MissionHistoryScreen: View {
     }
 
     var body: some View {
-        let ordered = store.player.completedMissions.sorted { $0.completedAt > $1.completedAt }
-        let lifetime = max(store.player.missionsDone, ordered.count)
+        let ordered = MissionLog.entries(store.player)
+        let missionEntries = ordered.filter { !$0.isTransit }.count
+        let lifetime = max(store.player.missionsDone, missionEntries)
         ScreenFrame(title: "Mission Log", back: { store.go(.hub) }) {
             Eyebrow(text: "Base · Mission log")
             Panel(accent: Theme.teal) {
@@ -43,7 +44,7 @@ struct MissionHistoryScreen: View {
                     Text("\(lifetime)").font(AppFont.display(36))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("MISSIONS COMPLETED").font(AppFont.display(14)).tracking(1.2)
-                        Text(lifetime > ordered.count ? "Detailed entries below cover your most recent operations." : "Your record stays available after the daily contract board refreshes.")
+                        Text(lifetime > missionEntries ? "Detailed entries below cover your most recent operations." : "Your record stays available after the daily contract board refreshes.")
                             .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                     }
                 }
@@ -57,8 +58,7 @@ struct MissionHistoryScreen: View {
                         Text(String(format: "%02d", ordered.count - i)).font(AppFont.mono(14)).foregroundStyle(Theme.textMuted)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(r.title).font(AppFont.display(16))
-                            Text((r.kind == .program ? "OWN PROGRAM" : (r.clientName ?? "CLIENT OPERATION")) + (r.targetName.map { " · \($0)" } ?? ""))
-                                .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                            Text(r.meta).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                         }
                         Spacer(minLength: 0)
                         Text(Self.date(r.completedAt)).font(AppFont.mono(14)).foregroundStyle(Theme.textDim)

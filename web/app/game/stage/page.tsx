@@ -14,7 +14,7 @@ export default async function StagePage({ searchParams }: { searchParams: Promis
   const { preset } = await searchParams
   if (preset) return <StageClient />
   return (
-    <main style={{ padding: 16, background: '#eef4fa', color: '#0f2436', minHeight: '100vh', font: '16px system-ui' }}>
+    <main style={{ padding: 16, background: '#eef4fa', color: '#0f2436', minHeight: 'var(--app-h)', font: '16px system-ui' }}>
       <h1 style={{ fontSize: 20 }}>Stage: one scene, no loop</h1>
       {DEV_GROUPS.map(g => (
         <section key={g.label} style={{ marginBottom: 16 }}>

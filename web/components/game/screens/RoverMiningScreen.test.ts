@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { drillFinding, exposedOreMarkers, landnamCargoFromTakeon, takeonBodyForTarget } from './RoverMiningScreen'
+import { cargoMeetsRequirements, drillFinding, exposedOreMarkers, landnamCargoFromTakeon, reachedMarker, roverReturnReady, takeonBodyForTarget } from './RoverMiningScreen'
 
 describe('RoverMiningScreen TakeOn host boundary', () => {
   it('maps Landnam mission targets to registered TakeOn bodies', () => {
@@ -18,5 +18,22 @@ describe('RoverMiningScreen TakeOn host boundary', () => {
     expect(firstMarker).toMatchObject({ x: 3, y: 30, label: 'OUTCROP A' })
     expect([1, 2, 3].map(attempt => drillFinding(attempt, firstMarker).kind))
       .toEqual(['trace', 'vein', 'mine-site'])
+  })
+
+  it('enables return after drill three or once the cargo order is met, rig not required', () => {
+    const requirements = { iron: 3, copper: 2 }
+    expect(roverReturnReady(0, {}, requirements)).toBe(false)
+    expect(roverReturnReady(2, { iron: 3, copper: 1 }, requirements)).toBe(false)
+    expect(roverReturnReady(3, {}, requirements)).toBe(true)
+    expect(roverReturnReady(1, { iron: 3, copper: 2 }, requirements)).toBe(true)
+    expect(cargoMeetsRequirements({}, {})).toBe(false)
+  })
+
+  it('counts a drill only when the mine order ends beside the outcrop', () => {
+    const marker = { x: 5, y: 5 }
+    expect(reachedMarker({ x: 4, y: 5 }, marker)).toBe(true)
+    expect(reachedMarker({ x: 5, y: 5 }, marker)).toBe(true)
+    expect(reachedMarker({ x: 2, y: 5 }, marker)).toBe(false)
+    expect(reachedMarker(null, marker)).toBe(false)
   })
 })

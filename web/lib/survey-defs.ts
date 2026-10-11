@@ -223,4 +223,36 @@ export const SURVEY_DEFS: Record<string, Survey> = {
       { id: 'd41b40f8-072d-47e2-9dc3-f63c65f7863b', type: 'multiple_choice', question: 'How clear was what your rover was doing while it mined?', choices: ['Very clear', 'Mostly clear', 'A bit confusing', 'I could not tell what was happening'] },
     ],
   },
+  lnm_citizen_task_done: {
+    id: '01a11f9f-0f71-0000-c6ad-fc46529f28f1',
+    name: '[Landnam / Citizen Science] Classification Task Clarity',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a11f9f-0f71-0000-c6ad-fc46529f28f1',
+    questions: [
+      { id: 'f980b310-8a9b-421f-bcf3-6f9e84a39f3d', type: 'multiple_choice', question: 'How clear was the classification task you just finished?', choices: ['Very clear', 'Mostly clear', 'A bit confusing', 'I was not sure what to look for'] },
+    ],
+  },
+  lnm_badge_earned: {
+    id: '01a11f9f-1509-0000-24ee-12791efa81c5',
+    name: '[Landnam / Badges] Sky Event Badge Earned',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a11f9f-1509-0000-24ee-12791efa81c5',
+    questions: [
+      { id: 'f0598e16-b5a8-42c7-8d40-6883ab24600f', type: 'rating', question: 'How good did earning that sky event badge feel?', scale: 5 },
+    ],
+  },
+  lnm_badge_shared: {
+    id: '01a11f9f-1bed-0000-2228-3f0e1aeb7110',
+    name: '[Landnam / Sharing] Badge Share Used',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a11f9f-1bed-0000-2228-3f0e1aeb7110',
+    questions: [
+      { id: 'b7f56a6e-39d1-4312-b580-d04582106fb7', type: 'multiple_choice', question: 'Why did you share your badge?', choices: ['To show friends', 'To invite someone to play', 'To keep a copy for myself', 'Just trying it out'] },
+    ],
+  },
+  lnm_free_ops_first: {
+    id: '01a11f9f-21df-0000-c2f8-2a865d9e47ad',
+    name: '[Landnam / Free Ops] Free Ops First Run Clarity',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a11f9f-21df-0000-c2f8-2a865d9e47ad',
+    questions: [
+      { id: '37052455-2168-4802-9b5f-aa13215923e4', type: 'multiple_choice', question: 'How clear was it what to do in Free Ops without a contract?', choices: ['Very clear', 'Mostly clear', 'A bit confusing', 'I did not know what to do'] },
+    ],
+  },
 }

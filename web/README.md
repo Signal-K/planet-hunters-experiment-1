@@ -31,4 +31,4 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deployment
 
-Deployed to a Cloudflare Worker via OpenNext (`npm run build:cf`, `wrangler deploy`). See `.github/workflows/web-ci.yml`.
+Deployed to a Cloudflare Worker via OpenNext (`npm run build:cf`, `wrangler deploy`). See `.github/workflows/deploy.yml`.

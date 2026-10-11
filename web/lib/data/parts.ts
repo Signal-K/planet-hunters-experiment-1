@@ -1,3 +1,4 @@
+import { launchpadMissionFloor } from './building-levels'
 // Landnam game data — rocket parts
 
 import type { Part, Mission, Target, RocketConfig, BuildCheck } from './types'
@@ -32,6 +33,8 @@ export function suggestBuild(opts: {
   target: Target | null
   missionsDone: number
   launchpadUpgraded?: boolean
+  /** Launchpad level 1-3; level 3 counts as two flown missions for part unlocks. */
+  launchpadLevel?: number
   parts?: typeof PARTS
   unlockedSkillNodes?: string[]
   // For two-leg "mine then deliver" missions — ensures the suggested
@@ -46,7 +49,7 @@ export function suggestBuild(opts: {
   )
   const drillTier = mission?.requires.drill_tier ?? 1
   const cargoMin = mission?.requires.cargo_min ?? 6
-  const effectiveMissionsDone = opts.launchpadUpgraded ? Math.max(opts.missionsDone, 1) : opts.missionsDone
+  const effectiveMissionsDone = Math.max(opts.missionsDone, opts.launchpadUpgraded ? 1 : 0, opts.launchpadLevel ? launchpadMissionFloor(opts.launchpadLevel) : 0)
 
   const available = (p: Part) => {
     if (p.locked) return false

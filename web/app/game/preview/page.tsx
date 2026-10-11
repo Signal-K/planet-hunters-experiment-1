@@ -35,7 +35,7 @@ function ScenePreview() {
     <div
       style={{
         width: '100vw',
-        height: '100vh',
+        height: 'var(--app-h)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

@@ -80,7 +80,7 @@ public enum MissionBoard {
 
     private static func entry(_ m: Mission, catalog: Catalog, player p: Player, now: Double) -> Entry {
         let targets = Targets.feasible(for: m, parts: catalog.parts, missionsDone: p.missionsDone,
-                                       launchpadUpgraded: p.launchpadUpgraded, skills: p.unlockedSkillNodes).count
+                                       launchpadUpgraded: p.launchpadUpgraded, launchpadLevel: BuildingLevels.level(p, "launchpad"), skills: p.unlockedSkillNodes).count
         var reason = gate(m, player: p, now: now)
         // Academy setup has no flight target; everything else needs somewhere reachable to fly.
         if reason == nil, targets == 0, m.id != AuthoredMissions.academyStoryId, m.targetId != nil || m.requires.maxOrbit > 0 {

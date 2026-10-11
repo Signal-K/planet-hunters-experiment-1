@@ -47,6 +47,20 @@ describe('buildPostHogSurveyPayload', () => {
     }
   })
 
+  it('registers four unique, short release surveys backed by PostHog records', () => {
+    const keys = ['lnm_citizen_task_done', 'lnm_badge_earned', 'lnm_badge_shared', 'lnm_free_ops_first']
+    const ids = new Set<string>()
+    for (const key of keys) {
+      const survey = SURVEY_DEFS[key]
+      expect(survey.id).toMatch(/^01a1/)
+      expect(survey.posthogUrl).toBe(`https://us.posthog.com/project/199773/surveys/${survey.id}`)
+      expect(survey.questions.length).toBeGreaterThanOrEqual(1)
+      expect(survey.questions.length).toBeLessThanOrEqual(2)
+      ids.add(survey.id)
+    }
+    expect(ids.size).toBe(keys.length)
+  })
+
   it('emits PostHog survey responses in current and legacy formats', () => {
     // buildPostHogSurveyPayload itself still supports multi-question
     // surveys — none of Landnam's own SURVEY_DEFS use more than one

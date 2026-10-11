@@ -12,7 +12,7 @@ struct SignInScreen: View {
 
     var body: some View {
         ZStack {
-            TerrainScene(composition: .earthBasePad, ground: 0.28).ignoresSafeArea()
+            TerrainScene(composition: .earthBasePad, ground: 0.28, showsPlanet: false).ignoresSafeArea()
             VStack {
                 Spacer()
                 Panel {

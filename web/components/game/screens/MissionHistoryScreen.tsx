@@ -5,6 +5,7 @@ import { useState } from 'react'
 import type { Client, Mission, Target } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
+import { transitLogRecords } from '@/lib/mission-log'
 import styles from './MissionHistoryScreen.module.css'
 
 interface MissionHistoryScreenProps {
@@ -26,13 +27,14 @@ function formatCompletedAt(value: number): string {
 export default function MissionHistoryScreen({ records, missions = [], player, onBack }: MissionHistoryScreenProps) {
   const [openKey, setOpenKey] = useState<string | null>(null)
   const recordKey = (record: CompletedMissionRecord) => record.runId ?? `${record.id}-${record.completedAt}`
-  const ordered = [...records].sort((a, b) => b.completedAt - a.completedAt)
+  const ordered = [...records, ...transitLogRecords(player ?? {})].sort((a, b) => b.completedAt - a.completedAt)
   // The detailed log below only holds the most recent runs (capped, and only
   // populated since this record-keeping shipped), so a long-lived account's
   // true lifetime count (missionsDone) can exceed ordered.length — show the
   // real total here rather than undercounting a veteran player's history.
-  const lifetimeCompleted = Math.max(player?.missionsDone ?? 0, ordered.length)
-  const logIsPartial = lifetimeCompleted > ordered.length
+  const missionEntries = ordered.filter(record => record.kind !== 'transit').length
+  const lifetimeCompleted = Math.max(player?.missionsDone ?? 0, missionEntries)
+  const logIsPartial = lifetimeCompleted > missionEntries
 
   return (
     <section className="theme-light" data-testid="mission-history-screen" style={{ position: 'relative', minHeight: '100%', background: 'var(--ln-void)' }}>
@@ -52,17 +54,17 @@ export default function MissionHistoryScreen({ records, missions = [], player, o
             <article className={styles.record} key={key} data-open={open || undefined} style={{ flexWrap: 'wrap' }}>
               <button type="button" className={styles.recordButton} aria-expanded={open} data-testid={`mission-log-entry-${index}`} onClick={() => setOpenKey(open ? null : key)}>
                 <span className={styles.index}>{String(ordered.length - index).padStart(2, '0')}</span>
-                <span className={styles.recordCopy}><span className={styles.recordTitle}>{title}</span><span className={styles.recordMeta}>{record.kind === 'program' ? 'OWN PROGRAM' : record.clientName ?? 'CLIENT OPERATION'}{record.targetName ? ` · ${record.targetName}` : ''}</span></span>
+                <span className={styles.recordCopy}><span className={styles.recordTitle}>{title}</span><span className={styles.recordMeta}>{record.kind === 'transit' ? 'TRANSIT TELESCOPE' : record.kind === 'program' ? 'OWN PROGRAM' : record.clientName ?? 'CLIENT OPERATION'}{record.targetName ? ` · ${record.targetName}` : ''}</span></span>
                 <time className={styles.date} dateTime={new Date(record.completedAt).toISOString()}>{formatCompletedAt(record.completedAt)}</time>
               </button>
               {open && (
                 <div className={styles.debrief} data-testid="mission-log-debrief">
                   <div className={styles.eyebrow}>DEBRIEF</div>
-                  <p>{mission ? canonicalSaturnLabel(mission.brief) : 'This operation was completed and filed to your record.'}</p>
+                  <p>{record.kind === 'transit' ? 'You classified a light curve from your Transit Telescope.' : mission ? canonicalSaturnLabel(mission.brief) : 'This operation was completed and filed to your record.'}</p>
                   <dl>
                     <div><dt>Result</dt><dd>Completed {formatCompletedAt(record.completedAt)}</dd></div>
-                    {record.targetName && <div><dt>Target</dt><dd>{record.targetName}</dd></div>}
-                    <div><dt>Type</dt><dd>{record.kind === 'program' ? 'Own program, no client' : record.clientName ?? 'Client operation'}</dd></div>
+                    {record.targetName && <div><dt>{record.kind === 'transit' ? 'Verdict' : 'Target'}</dt><dd>{record.targetName}</dd></div>}
+                    <div><dt>Type</dt><dd>{record.kind === 'transit' ? 'Transit Telescope classification' : record.kind === 'program' ? 'Own program, no client' : record.clientName ?? 'Client operation'}</dd></div>
                     {mission && record.kind !== 'program' && mission.payout.francs > 0 && <div><dt>Payout</dt><dd>{formatCurrency(mission.payout.francs)}</dd></div>}
                     {mission?.programReward && <div><dt>Outcome</dt><dd>{canonicalSaturnLabel(mission.programReward.outcome)}</dd></div>}
                   </dl>

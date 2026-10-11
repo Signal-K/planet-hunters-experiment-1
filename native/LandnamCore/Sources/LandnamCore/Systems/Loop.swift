@@ -45,7 +45,7 @@ public enum Loop {
         let target = catalog.target(targetId)
         let delivery = mission.deliveryTargetId.flatMap(catalog.target)
         let suggested = catalog.parts.suggestBuild(mission: mission, target: target, deliveryTarget: delivery,
-                                                   missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded,
+                                                   missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"),
                                                    skills: s.player.unlockedSkillNodes)
         base.missionId = id
         base.targetId = targetId
@@ -71,10 +71,10 @@ public enum Loop {
     static func pickTargetState(_ s: GameState, id: String, catalog: Catalog) -> GameState {
         guard let mission = catalog.mission(s.missionId), let target = catalog.target(id) else { return s }
         let feasible = Targets.feasible(for: mission, parts: catalog.parts, missionsDone: s.player.missionsDone,
-                                        launchpadUpgraded: s.player.launchpadUpgraded, skills: s.player.unlockedSkillNodes)
+                                        launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"), skills: s.player.unlockedSkillNodes)
         guard feasible.contains(where: { $0.id == id }) else { return s }
         let suggested = catalog.parts.suggestBuild(mission: mission, target: target, missionsDone: s.player.missionsDone,
-                                                   launchpadUpgraded: s.player.launchpadUpgraded, skills: s.player.unlockedSkillNodes)
+                                                   launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"), skills: s.player.unlockedSkillNodes)
         // Switching target releases a free vehicle built for the old one.
         let freeIds = Set(Rockets.models.filter { $0.costFrancs == 0 }.map(\.id))
         var n = s
@@ -96,7 +96,7 @@ public enum Loop {
         var n = s
         if n.screen == .targets, let mission = catalog.mission(n.missionId) {
             let feasible = Targets.feasible(for: mission, parts: catalog.parts, missionsDone: n.player.missionsDone,
-                                            launchpadUpgraded: n.player.launchpadUpgraded, skills: n.player.unlockedSkillNodes)
+                                            launchpadUpgraded: n.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(n.player, "launchpad"), skills: n.player.unlockedSkillNodes)
             guard let pick = feasible.first(where: { $0.recommended == true }) ?? feasible.first else { return n }
             n = pickTargetState(n, id: pick.id, catalog: catalog)
         }
@@ -273,6 +273,7 @@ public enum Loop {
         n.player.missionsDone = missionsDone
         n.player.freeOperations = Transitions.freeOperationsUnlocked(n.player)
         let justFinishedOnboarding = !wasFreeOps && n.player.freeOperations
+        WswBadges.grant(&n.player.badges, WswBadges.type(for: mission, freeOperations: wasFreeOps), at: now)
         let showLoan = !program && !n.player.loanOffered && n.player.francs < Economy.bankruptcyThreshold && n.player.loanDebt == 0
         n.popup = justFinishedOnboarding ? "tutorial-complete" : (showLoan ? "loan" : s.popup)
         n.player.loanOffered = n.player.loanOffered || showLoan

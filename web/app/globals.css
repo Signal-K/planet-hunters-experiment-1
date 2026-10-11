@@ -510,11 +510,10 @@ html {
   overflow: hidden;
 }
 body {
-  /* svh (small viewport height) is stable — it does not grow/shrink as the
-     mobile URL bar hides/shows, which is what made the whole game shell jump
-     and thrash layout mid-interaction (Bjorn's Symptom B). Installed PWA
-     (standalone) has no URL bar, so svh == dvh there. */
-  height: 100svh;
+  /* --app-h is svh in plain browser tabs (stable as the URL bar hides/shows,
+     which is what made the shell thrash mid-interaction, Bjorn's Symptom B)
+     and dvh in standalone/fullscreen and short landscape phones (SSL-66). */
+  height: var(--app-h);
   min-height: 100%;
   margin: 0;
   /* SSL-322: keep content clear of the notch, home indicator and landscape
@@ -536,8 +535,16 @@ body {
 button { cursor: pointer; }
 
 :root {
+  /* SSL-66: app height. svh is stable in plain browser tabs; installed or
+     fullscreen display modes and short landscape phones use dvh so the
+     playfield takes every pixel the browser chrome gives back. */
+  --app-h: 100svh;
   --tutorial-content-top: 238px;
   --tutorial-manual-content-top: 248px;
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen), (orientation: landscape) and (max-height: 520px) {
+  :root { --app-h: 100dvh; }
 }
 
 @media (max-width: 720px) {
@@ -561,7 +568,7 @@ button { cursor: pointer; }
   box-sizing: border-box;
   width: 100%;
   overflow: hidden;
-  min-height: 100svh;
+  min-height: var(--app-h);
   display: grid;
   place-items: center;
   padding: var(--ln-s-4);
@@ -573,9 +580,11 @@ button { cursor: pointer; }
    actual phone it just wastes screen as dead margin around a shrunk canvas.
    Drop the stage padding here so .portrait-canvas can go full-bleed. */
 @media (max-width: 1023px) {
-  html, body { height: 100svh; min-height: 100svh; }
+  html, body { height: var(--app-h); min-height: var(--app-h); }
   body { display: block; }
-  .game-stage { width: 100%; height: 100svh; min-height: 100svh; padding: 0; }
+  /* body already pads for the safe-area insets, so the stage fills the
+     content box instead of a second full viewport height (SSL-66). */
+  .game-stage { width: 100%; height: 100%; min-height: 0; padding: 0; }
 }
 .game-stage::before {
   content: '';
@@ -640,8 +649,8 @@ button { cursor: pointer; }
        browsers report a dynamic viewport taller than the visible frame;
        using it here lets absolute game screens extend below the actual
        viewport and clips their bottom HUD (KES-322). */
-    height: 100svh;
-    max-height: 100svh;
+    height: 100%;
+    max-height: 100%;
     border: 0;
     border-radius: 0;
     box-shadow: none;

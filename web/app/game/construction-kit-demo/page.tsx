@@ -41,7 +41,7 @@ export default function ConstructionKitDemoPage() {
   const [ruleActive, setRuleActive] = useState([true, false])
 
   return (
-    <div className="theme-blueprint" style={{ minHeight: '100vh', background: 'var(--ln-void)', padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="theme-blueprint" style={{ minHeight: 'var(--app-h)', background: 'var(--ln-void)', padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
         <div style={{ font: '700 10px var(--ln-font-display)', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'var(--ln-cyan)' }}>KES-280 · dev only</div>
         <h1 style={{ font: '800 26px var(--ln-font-display)', color: 'var(--ln-text)', margin: '4px 0 0' }}>Construction Kit primitives</h1>

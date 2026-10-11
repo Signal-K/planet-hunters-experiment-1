@@ -4,9 +4,27 @@ import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
 import './globals.css'
 import './loop-screens.css'
 
+const SITE_URL = 'https://playlandnam.space'
+const OG_IMAGE = { url: '/og-image.png', width: 1200, height: 630, alt: PRODUCT_NAME }
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: PRODUCT_NAME,
   description: PRODUCT_DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: PRODUCT_NAME,
+    title: PRODUCT_NAME,
+    description: PRODUCT_DESCRIPTION,
+    url: SITE_URL,
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: PRODUCT_NAME,
+    description: PRODUCT_DESCRIPTION,
+    images: [OG_IMAGE.url],
+  },
   manifest: '/manifest.webmanifest',
   // SSL-322: iOS only honours installed-app chrome via these apple- tags.
   appleWebApp: { capable: true, title: PRODUCT_NAME, statusBarStyle: 'black' },

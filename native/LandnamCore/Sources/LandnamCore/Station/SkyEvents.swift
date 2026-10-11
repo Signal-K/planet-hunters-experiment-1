@@ -57,6 +57,13 @@ public enum SkyEvents {
         badges[eventId] = PlayerBadge(eventId: eventId, tier: tier, earnedAt: ms)
     }
 
+    /// Same tiering as `grant(_:eventId:at:)`, stored under another badge key (WSW mission-type badges).
+    static func grant(_ badges: inout [String: PlayerBadge], eventId: String, as key: String, at ms: Double) {
+        guard let tier = badgeTier(eventId, at: ms) else { return }
+        if let existing = badges[key], existing.tier == .gold || tier == .silver { return }
+        badges[key] = PlayerBadge(eventId: key, tier: tier, earnedAt: ms)
+    }
+
     /// Every badge the activity earns at `ms`, optionally limited to one event (debris showers share the kind).
     public static func grant(_ badges: inout [String: PlayerBadge], activity: SkyActivity, at ms: Double, only eventId: String? = nil) {
         for e in all where e.activities.contains(activity) && (eventId == nil || e.id == eventId) { grant(&badges, eventId: e.id, at: ms) }

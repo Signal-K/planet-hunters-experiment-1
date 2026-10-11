@@ -235,7 +235,7 @@ describe('Launchpad own-program actions', () => {
     await act(async () => root.unmount())
   })
 
-  it('keeps the physical launchpad available to create another mission while one is active', async () => {
+  it('blocks a second mission while one is active and offers to resume the current run', async () => {
     const player = {
       ...DEFAULT_STATE.player,
       activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
@@ -277,6 +277,8 @@ describe('Launchpad own-program actions', () => {
       host.querySelector<HTMLButtonElement>('[data-testid="launchpad-status-card"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
+    // Starting a new Free Ops route parks this run intact; it stays resumable
+    // from the launchpad's active-run controls.
     expect(onResumeMission).not.toHaveBeenCalled()
     expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).not.toBeNull()
     await act(async () => {

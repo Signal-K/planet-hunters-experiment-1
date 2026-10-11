@@ -258,7 +258,7 @@ function ScreenBody({
               return game.openLaunchpadMissionMenu()
             }
           }}
-          onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
+          onUpgradeBuilding={id => game.upgradeBuilding(id)}
           onExcavateSubsurface={() => game.excavateSubsurface()}
           onExcavateSubsurfaceUnavailable={() => {
             const cost = SUBSURFACE_EXCAVATE_COST
@@ -310,6 +310,7 @@ function ScreenBody({
           onStartScan={game.startSurveyScan}
           onResolveScan={game.resolveSurveyScan}
           onBack={() => game.goBack()}
+          onBuild={() => game.go('build')}
           onInspect={signal => {
             setInspectSignal(signal)
             game.go(signal.inspectorScreen)

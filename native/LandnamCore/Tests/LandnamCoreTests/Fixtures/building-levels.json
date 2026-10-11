@@ -1,0 +1,20 @@
+{
+  "costs": {
+    "launchpad": [10000000, 20000000],
+    "surface-silo": [4000000, 8000000],
+    "refinery": [8000000, 16000000],
+    "astronaut-academy": [12000000, 24000000]
+  },
+  "effects": {
+    "launchpad": ["Base parts and targets", "Unlocks the parts and targets of a flown mission", "Unlocks the parts and targets of two flown missions"],
+    "surface-silo": ["Holds 40 units of ore", "Holds 80 units of ore", "Holds 120 units of ore"],
+    "refinery": ["Standard refining time", "Refining takes 25% less time", "Refining takes 50% less time"],
+    "astronaut-academy": ["Day-long training sessions", "Training takes 25% less time", "Training takes 50% less time"]
+  },
+  "save": {
+    "placed": ["launchpad", "surface-silo", "refinery"],
+    "launchpadUpgraded": true,
+    "buildingLevels": { "refinery": 3, "garage": 2, "surface-silo": 9 }
+  },
+  "levelsAfterNormalise": { "launchpad": 2, "refinery": 3, "surface-silo": 3 }
+}

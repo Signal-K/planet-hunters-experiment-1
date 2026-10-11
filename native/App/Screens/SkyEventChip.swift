@@ -30,26 +30,136 @@ struct SkyEventChip: View {
 
 /// Earned sky-event badges (mirrors web SkyBadgeRow). Renders nothing until one is earned.
 struct SkyBadgeRow: View {
+    @Environment(SurveyCenter.self) private var surveys: SurveyCenter?
     let badges: [String: PlayerBadge]
 
     var body: some View {
-        let earned = badges.values.filter { SkyEvents.event($0.eventId) != nil }.sorted { $0.earnedAt < $1.earnedAt }
+        let earned = badges.values.filter { SkyEvents.event($0.eventId) != nil || WswBadges.badge(id: $0.eventId) != nil }.sorted { $0.earnedAt < $1.earnedAt }
         if !earned.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 Eyebrow(text: "Sky event badges")
                 ForEach(earned, id: \.eventId) { b in
+                    let wsw = WswBadges.badge(id: b.eventId)
+                    let badgeName = wsw?.name ?? SkyEvents.event(b.eventId)?.name
                     HStack(spacing: 10) {
                         Image(systemName: "rosette").font(.system(size: 18, weight: .bold))
                         Text(b.tier == .gold ? "GOLD" : "SILVER").font(AppFont.display(14)).tracking(1.2)
-                        Text(SkyEvents.event(b.eventId)?.name ?? "").font(AppFont.body(14))
+                        if wsw != nil { Text("WSW").font(AppFont.display(14)).tracking(1.2) }
+                        Text(badgeName ?? "").font(AppFont.body(14))
                         Spacer(minLength: 0)
+                        if let badgeName {
+                            ShareLink(item: BadgeShare.url, message: Text(BadgeShare.text(badgeName, tier: b.tier))) {
+                                Text("SHARE").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.bluePress)
+                                    .frame(minWidth: 44, minHeight: 44)
+                            }.simultaneousGesture(TapGesture().onEnded { surveys?.enqueue(Surveys.badgeShared) })
+                        }
                     }
                     .foregroundStyle(Theme.ink).padding(.horizontal, 12).frame(minHeight: 44)
                     .background(b.tier == .gold ? Theme.blueBright.opacity(0.35) : Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
+                    .overlay(alignment: .leading) { if let wsw { Rectangle().fill(wswColor(wsw.tone)).frame(width: 6).clipShape(RoundedRectangle(cornerRadius: 3)) } }
                     .accessibilityElement(children: .combine)
                 }
             }
         }
+    }
+}
+
+/// World Space Week banner (mirrors web WorldSpaceWeekBanner): dates, the tier rule, and how many of the week's badges are earned.
+struct WorldSpaceWeekBanner: View {
+    let banner: WorldSpaceWeek.Banner
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(banner.title.uppercased()).font(AppFont.display(14)).tracking(1.4)
+            Text(banner.detail).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+            Text("\(banner.earned) / \(banner.total) BADGES").font(AppFont.display(14)).tracking(1.0)
+        }
+        .foregroundStyle(Theme.ink)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.horizontal, 12).padding(.vertical, 8).frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+        .background(banner.live ? Theme.paper : Theme.paper2, in: RoundedRectangle(cornerRadius: 4))
+        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.ink, lineWidth: 1.5))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("wsw-banner")
+    }
+}
+
+/// One chip per World Space Week category a thing can earn (mirrors web WorldSpaceWeekChips).
+struct WorldSpaceWeekChips: View {
+    let chips: [WorldSpaceWeek.Chip]
+
+    var body: some View {
+        if !chips.isEmpty {
+            ChipFlow(spacing: 8) {
+                ForEach(chips) { chip in
+                    HStack(spacing: 6) {
+                        Text("WSW").font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.paper)
+                            .padding(.horizontal, 6).padding(.vertical, 2).background(Theme.ink, in: Capsule())
+                        Text(chip.label.uppercased()).font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.ink)
+                    }
+                    .lineLimit(1).fixedSize()
+                    .padding(.horizontal, 10).frame(minHeight: 32)
+                    .background(isEarned(chip) ? Theme.paper2 : Theme.paper, in: Capsule())
+                    .overlay(Capsule().stroke(Theme.ink, style: StrokeStyle(lineWidth: 1.5, dash: chip.state == .silverOpen || chip.state == .silverEarned ? [4, 3] : [])))
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("wsw-chip-\(chip.eventId)")
+                }
+            }
+        }
+    }
+
+    private func isEarned(_ chip: WorldSpaceWeek.Chip) -> Bool { chip.state == .goldEarned || chip.state == .silverEarned }
+}
+
+/// Wraps its children onto new lines at their natural width.
+private struct ChipFlow: Layout {
+    var spacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = place(subviews, width: proposal.width ?? .infinity)
+        return CGSize(width: proposal.width ?? rows.map(\.maxX).max() ?? 0, height: rows.last.map { $0.y + $0.height } ?? 0)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for row in place(subviews, width: bounds.width) {
+            for item in row.items { subviews[item.index].place(at: CGPoint(x: bounds.minX + item.x, y: bounds.minY + row.y), proposal: .unspecified) }
+        }
+    }
+
+    private struct Row { var y: CGFloat = 0, height: CGFloat = 0, maxX: CGFloat = 0; var items: [(index: Int, x: CGFloat)] = [] }
+
+    private func place(_ subviews: Subviews, width: CGFloat) -> [Row] {
+        var rows = [Row()], x: CGFloat = 0
+        for (i, sub) in subviews.enumerated() {
+            let size = sub.sizeThatFits(.unspecified)
+            if x > 0, x + size.width > width {
+                let prev = rows[rows.count - 1]
+                rows.append(Row(y: prev.y + prev.height + spacing)); x = 0
+            }
+            rows[rows.count - 1].items.append((i, x))
+            rows[rows.count - 1].height = max(rows[rows.count - 1].height, size.height)
+            x += size.width; rows[rows.count - 1].maxX = x; x += spacing
+        }
+        return rows
+    }
+}
+
+/// Share text and link, identical to web `lib/share.ts`.
+enum BadgeShare {
+    static let url = URL(string: "https://playlandnam.space/?utm_source=badge_share&utm_medium=share&utm_campaign=sky_event_badge")!
+    static func text(_ eventName: String, tier: BadgeTier) -> String {
+        "I earned the \(tier == .gold ? "Gold" : "Silver") \(eventName) badge in Landnam: Space Program."
+    }
+}
+
+private func wswColor(_ tone: WswTone) -> Color {
+    switch tone {
+    case .blue: Theme.blue
+    case .sky: Theme.blueBright
+    case .green: Theme.teal
+    case .crimson: Theme.crimson
+    case .dim: Theme.textMuted
+    case .ink: Theme.ink
     }
 }

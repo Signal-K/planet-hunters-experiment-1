@@ -367,7 +367,7 @@
    underneath them. */
 @media (min-width: 720px) and (max-width: 820px) {
   .panel {
-    max-height: calc(100svh - 176px);
+    max-height: calc(var(--app-h) - 176px);
     overflow: hidden;
   }
   .panelBody { overflow-y: auto; }
@@ -699,7 +699,7 @@
   .panel {
     display: none !important;
     min-width: 0;
-    max-height: calc(100svh - 110px);
+    max-height: calc(var(--app-h) - 110px);
     overflow: hidden;
     border-top: 0;
     border-left: 1px solid var(--ln-bp-line-strong);

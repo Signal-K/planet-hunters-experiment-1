@@ -48,4 +48,31 @@ public enum CloudPull {
         if remote.player.placed.count != local.player.placed.count { return remote.player.placed.count > local.player.placed.count }
         return false
     }
+
+    /// The save to adopt: `remote`, plus anything the local save holds that only grows. A stale
+    /// remote must not erase a transit classification, a badge, or an instrument launch, or the
+    /// Mission Log loses the work and the Control Station drops the instrument.
+    public static func reconcile(remote: GameState, keeping local: GameState) -> GameState {
+        var n = remote
+        n.player.tessClassifications.merge(local.player.tessClassifications) { _, mine in mine }
+        n.player.asteroidClassifications.merge(local.player.asteroidClassifications) { _, mine in mine }
+        n.player.saturnClassifications.merge(local.player.saturnClassifications) { _, mine in mine }
+        for (id, badge) in local.player.badges {
+            if let theirs = n.player.badges[id], !(badge.tier == .gold && theirs.tier != .gold) { continue }
+            n.player.badges[id] = badge
+        }
+        func earliest(_ a: Double?, _ b: Double?) -> Double? {
+            switch (a, b) {
+            case let (a?, b?) where a > 0 && b > 0: min(a, b)
+            case let (a?, _) where a > 0: a
+            case let (_, b?) where b > 0: b
+            default: a ?? b
+            }
+        }
+        n.player.transitSatelliteLaunchedAt = earliest(n.player.transitSatelliteLaunchedAt, local.player.transitSatelliteLaunchedAt)
+        n.player.deepSpaceTelescopeLaunchedAt = earliest(n.player.deepSpaceTelescopeLaunchedAt, local.player.deepSpaceTelescopeLaunchedAt)
+        n.player.saturnImagerLaunchedAt = earliest(n.player.saturnImagerLaunchedAt, local.player.saturnImagerLaunchedAt)
+        n.player.deepSpaceTelescopeBuilt = n.player.deepSpaceTelescopeBuilt || local.player.deepSpaceTelescopeBuilt
+        return n
+    }
 }

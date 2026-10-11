@@ -10,12 +10,14 @@ struct ControlStationScreen: View {
     var signals: [InstrumentSignal] = []
 
     private var model: ControlStation.Model {
-        ControlStation.build(player: store.player, signals: signals, bodyId: bodyId)
+        ControlStation.build(player: store.player, signals: signals, bodyId: bodyId, now: store.now)
     }
 
     var body: some View {
         ScreenFrame(title: "Control Station", back: { store.go(.hub) }) {
             let m = model
+            WorldSpaceWeekBanner(banner: WorldSpaceWeek.banner(badges: store.player.badges, now: store.now))
+            WorldSpaceWeekChips(chips: m.skyBadges)
             StationMap(model: m).coachTarget("station-map")
             filters(m).coachTarget("station-filters")
             if let empty = m.emptyLabel { Panel { Text(empty).foregroundStyle(Theme.textDim) } }
@@ -56,8 +58,16 @@ struct ControlStationScreen: View {
                         Text(row.status).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                     }
                     Text(row.projects.joined(separator: " · ")).font(AppFont.body(14)).foregroundStyle(Theme.textMuted)
+                    WorldSpaceWeekChips(chips: row.wsw)
                 }
                 Spacer(minLength: 0)
+                if row.buildPrompt {
+                    Button { store.go(.build) } label: {
+                        Text("BUILD").font(AppFont.display(14)).tracking(1.4).foregroundStyle(.white)
+                            .padding(.horizontal, 18).frame(minHeight: 44)
+                            .background(Theme.blue, in: RoundedRectangle(cornerRadius: 8))
+                    }.buttonStyle(.plain).accessibilityLabel("Build \(row.name)").accessibilityIdentifier("control-station-build")
+                }
                 if let signal = row.open {
                     Button { open(signal) } label: {
                         Text("OPEN").font(AppFont.display(14)).tracking(1.4).foregroundStyle(.white)

@@ -109,6 +109,23 @@ describe('applyRoverMiningDone', () => {
     expect(next.screen).toBe('transit')
     expect(next.player.headingToDelivery).toBe(true)
   })
+
+  it('carries the rover cargo through to the debrief cargo the contract is judged on', () => {
+    const requirements = { iron: 3, copper: 2 }
+    const afterRover = applyRoverMiningDone(makeState({ screen: 'rover-mining' }), requirements, 500)
+    expect(afterRover.lastCargo).toEqual(requirements)
+    const debrief = applyReturnArrived(afterRover)
+    const debriefCargo = debrief.deliveredCargo ?? debrief.lastCargo ?? {}
+    expect(Object.entries(requirements).every(([id, n]) => (debriefCargo[id] ?? 0) >= n)).toBe(true)
+    expect(debrief.player.stash).toEqual(requirements)
+  })
+
+  it('does not drop or reject short cargo: it reaches debrief unchanged and unmet', () => {
+    const afterRover = applyRoverMiningDone(makeState({ screen: 'rover-mining' }), { iron: 1 }, 500)
+    const debrief = applyReturnArrived(afterRover)
+    expect(debrief.screen).toBe('debrief')
+    expect(debrief.lastCargo).toEqual({ iron: 1 })
+  })
 })
 
 describe('applyReturnArrived', () => {

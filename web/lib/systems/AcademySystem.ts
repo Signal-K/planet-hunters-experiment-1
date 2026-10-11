@@ -1,3 +1,4 @@
+import { buildingLevel, buildingTimeMultiplier } from '@/lib/data/building-levels'
 import type { GameState, Player } from '@/lib/game-types'
 import {
   ACADEMY_DAILY_UPKEEP,
@@ -292,7 +293,7 @@ export function applyStartCrewTraining(
     crewId,
     branch,
     startedAt: now,
-    completesAt: now + CREW_TRAINING_DURATION_MS,
+    completesAt: now + CREW_TRAINING_DURATION_MS * buildingTimeMultiplier(buildingLevel(state.player, 'astronaut-academy')),
   }, now)
 }
 
@@ -310,7 +311,7 @@ export function applyStartCandidateTraining(
     candidateName: pickCrewName(candidateId, 'astronaut', crew),
     branch,
     startedAt: now,
-    completesAt: now + CREW_TRAINING_DURATION_MS,
+    completesAt: now + CREW_TRAINING_DURATION_MS * buildingTimeMultiplier(buildingLevel(state.player, 'astronaut-academy')),
   }, now)
 }
 

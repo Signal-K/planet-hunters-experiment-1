@@ -60,7 +60,10 @@ public struct Prospecting: Equatable, Sendable {
         return hypot(o.x - rover.x, o.y - rover.y) <= Self.drillRange
     }
     public var canDrill: Bool { selected != nil && inRange && mineSite == nil }
-    public var canReturn: Bool { constructionStarted }
+    /// The order is in the hold (the mission requirement is met).
+    public var cargoMet: Bool { !requirements.isEmpty && requirements.allSatisfy { cargo[$0.key, default: 0] >= $0.value } }
+    /// Return opens once the order is met or drill three has opened the site; the first rig stays optional.
+    public var canReturn: Bool { drillings.count >= Self.guaranteedDrills || cargoMet }
 
     public mutating func select(_ id: String) { if Self.outcrops.contains(where: { $0.id == id }) { selected = id } }
 
@@ -73,6 +76,13 @@ public struct Prospecting: Equatable, Sendable {
     public mutating func driveToSelected() {
         guard let o = selectedOutcrop else { return }
         rover = (o.x, min(0.96, o.y + 0.11))
+    }
+
+    /// Tap on an outcrop: select it, route the rover beside it and drill on arrival.
+    @discardableResult public mutating func tapOutcrop(_ id: String) -> DrillFinding? {
+        select(id)
+        driveToSelected()
+        return drill()
     }
 
     /// One drill at the selected outcrop. Also lands that outcrop's mineral in the hold, up to the order.
