@@ -27,7 +27,6 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-launchpad', try: 'mining', screen: 'launchpad', objective: 'Open client contracts', radio: 'The first try is a complete mine-and-return run.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
   { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },
-  { id: 'mine-surface', try: 'mining', screen: 'rover-mining', objective: 'Deploy the rover and drill the ore', radio: 'Drive to an exposed outcrop and drill. Drill three opens a mine site.', doneOn: 'mining-debriefed' },
   { id: 'mine-target', try: 'mining', screen: 'targets', objective: 'Choose the highlighted target', radio: 'The target carries the mineral named by the order.', doneOn: 'mining-debriefed' },
   { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
   { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
@@ -44,7 +43,7 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
  * its "open the Hangar / fit a module" line onto these; the player is flying
  * the mining loop, so the objective is that screen's mining step (SSL-478). */
 const LOOP_SCREENS = new Set([
-  'fab', 'rover-mining', 'targets', 'mining', 'debrief', 'transit', 'landing', 'delivery',
+  'fab', 'rover-survey', 'targets', 'mining', 'debrief', 'transit', 'landing', 'delivery',
 ])
 
 export function trainingTryStep(tryId: TrainingTryId, screen: string): TrainingTryStep | undefined {

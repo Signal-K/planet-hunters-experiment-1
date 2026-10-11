@@ -56,7 +56,7 @@ import SceneTransition from '@/components/game/SceneTransition'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
-  'transit', 'landing', 'mining', 'rover-mining', 'delivery', 'debrief', 'refinery',
+  'transit', 'landing', 'mining', 'rover-survey', 'delivery', 'debrief', 'refinery',
   'market', 'hangar', 'rocket-buy', 'skills',
   'launchpad',
   'surface-ops',
@@ -392,7 +392,7 @@ function ScreenBody({
     case 'transit':
     case 'landing':
     case 'mining':
-    case 'rover-mining':
+    case 'rover-survey':
     case 'delivery':
     case 'debrief':
       if (!transitTarget || !debriefOriginTarget) return null

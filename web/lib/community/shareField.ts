@@ -1,5 +1,5 @@
 // SSL-320: publish a field build as a read-only creation share.
-// Shared by SurfaceOpsScreen and RoverMiningScreen so both produce the same
+// Shared by SurfaceOpsScreen and RoverSurveyScreen so both produce the same
 // post shape (programme `surface-builds`, kind `creation`, friends by default).
 
 import type { CreationSnapshot } from '@/lib/data/community'

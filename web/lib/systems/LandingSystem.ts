@@ -56,7 +56,7 @@ export function applyLandingTouchdown(state: GameState): GameState {
 
 /**
  * Redock-complete: ascend sequence finished. Resumes the same return-leg
- * transition mining/rover-mining completion already uses.
+ * transition mining completion already uses.
  */
 export function applyRedockComplete(
   state: GameState,

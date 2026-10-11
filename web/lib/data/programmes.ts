@@ -218,7 +218,7 @@ const SURFACE_BUILDS: ProgrammeDefinition = {
   reward: { francs: false, progression: 'territory' },
   framing: 'none',
   events: { contribute: 'sandbox_structure_built', shared: 'creation_shared' },
-  surfaces: ['SandboxBuildPalette', 'SurfaceOpsScreen', 'RoverMiningScreen'],
+  surfaces: ['SandboxBuildPalette', 'SurfaceOpsScreen', 'RoverSurveyScreen'],
   live: true,
 }
 

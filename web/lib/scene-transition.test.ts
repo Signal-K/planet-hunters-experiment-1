@@ -14,11 +14,11 @@ describe('scene transitions', () => {
 
   it('arrives from transit into the surface scenes', () => {
     expect(transitionKind('transit', 'mining')).toBe('arrival')
-    expect(transitionKind('transit', 'rover-mining')).toBe('arrival')
+    expect(transitionKind('transit', 'rover-survey')).toBe('arrival')
     expect(transitionKind('transit', 'landing')).toBe('arrival')
     expect(transitionKind('transit', 'delivery')).toBe('arrival')
     expect(transitionKind('landing', 'mining')).toBe('arrival')
-    expect(transitionKind('landing', 'rover-mining')).toBe('arrival')
+    expect(transitionKind('landing', 'rover-survey')).toBe('arrival')
   })
 
   it('descends into debrief from the return leg', () => {

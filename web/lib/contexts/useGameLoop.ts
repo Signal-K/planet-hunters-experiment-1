@@ -10,7 +10,7 @@ import {
   missionTypePrimer,
   BANKRUPTCY_THRESHOLD,
 } from '@/lib/data'
-import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
+import { applyMiningDone, applyReturnArrived } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
@@ -673,22 +673,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // notification would cover the next task if the player advances quickly.
   }, [setState])
 
-  const onRoverMiningDone = useCallback((cargo: Record<string, number>) => {
-    let hasDelivery = false
-    const transitStartedAt = Date.now()
-    setState(s => {
-      hasDelivery = !!s.deliveryTargetId
-      const nextLegTarget = hasDelivery
-        ? catalog.targets.find(t => t.id === s.deliveryTargetId)
-        : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
-      const timedTransit = s.player.freeOperations
-      const arrivalAt = (timedTransit && nextLegTarget)
-        ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
-        : null
-      return applyRoverMiningDone(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
-    })
-    addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Rover cargo secured — return to Earth for recovery', 'ok')
-  }, [addToast, catalog.targets, setState])
+  const onRoverSurveyComplete = useCallback(() => {
+    setState(s => s.screen === 'rover-survey'
+      ? { ...s, screen: 'mining', player: { ...s.player, missionPhase: 'mining' } }
+      : s)
+  }, [setState])
 
   const onLandingTouchdown = useCallback(() => {
     setState(s => {
@@ -1407,7 +1396,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onLaunch, resumeMissionRun,
-    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone, onBuyLaserCapacitor,
+    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverSurveyComplete, onDebriefDone, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
     submitAsteroidClassification, submitSaturnClassification, claimSaturnSurveyTerritory,

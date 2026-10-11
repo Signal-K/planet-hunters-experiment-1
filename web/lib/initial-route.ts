@@ -3,13 +3,13 @@ import type { Screen } from '@/lib/game-types'
 const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
   'transit', 'mining', 'delivery', 'debrief', 'refinery', 'market',
-  'hangar', 'rocket-buy', 'skills', 'rover-mining',
+  'hangar', 'rocket-buy', 'skills', 'rover-survey',
   'launchpad', 'surface-ops', 'academy',
   'mission-history',
 ])
 
 const RESUMABLE_MISSION_SCREENS = new Set<Screen>([
-  'targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining',
+  'targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-survey',
   'delivery', 'debrief',
 ])
 

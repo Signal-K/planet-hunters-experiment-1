@@ -161,7 +161,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-target-picker', label: 'Launch Review', hint: 'Launch review (the target picker is folded in) with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Transit telescope classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover live TakeOn field — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
+      { key: 'ui-rover-survey', label: 'Rover Survey', hint: 'Starter-rover live TakeOn field — survey before ship-laser extraction', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
       { key: 'ui-instrument-hub', label: 'Control Station', hint: 'One hub for telescopes and satellites. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -482,9 +482,9 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         popup: null,
       }
 
-    case 'ui-rover-mining':
+    case 'ui-rover-survey':
       return {
-        screen: 'rover-mining',
+        screen: 'rover-survey',
         player: {
           ...BASE_PLAYER,
           missionsDone: 1,
