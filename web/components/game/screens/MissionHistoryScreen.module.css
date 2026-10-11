@@ -53,6 +53,7 @@
 @media (max-width: 640px) { .shell { padding: 16px 12px 32px; } .header, .sectionHeading { display: block; } .backButton { margin-top: 16px; } .sectionNote { display: block; margin-top: 8px; } .clientGrid { grid-template-columns: 1fr; } .lockLabel { display: none; } .atlas { min-height: 300px; } .record { align-items: flex-start; flex-wrap: wrap; } .date { width: 100%; margin-left: 34px; } }
 
 .recordButton { display: flex; align-items: center; gap: 12px; flex: 1 1 100%; min-width: 0; min-height: 44px; padding: 0; color: inherit; background: transparent; border: 0; text-align: left; cursor: pointer; font: inherit; }
+.recordButton .date { width: auto; margin-left: 0; }
 .recordButton .recordTitle, .recordButton .recordMeta { display: block; }
 .debrief { flex: 1 1 100%; padding: 12px 0 4px; border-top: 1px solid var(--ln-hairline); color: var(--ln-text-dim); font: 400 14px/1.45 var(--ln-font-body); }
 .debrief p { margin: 8px 0 12px; }

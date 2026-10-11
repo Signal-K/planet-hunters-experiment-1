@@ -871,7 +871,7 @@ button { cursor: pointer; }
   /* MENU moved to the bottom bar, so this row no longer reserves its corner:
      at 196px from the right, HUB ran over the balance pill on phones. */
   .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { top: 66px !important; right: 12px !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 66px !important; right: 160px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 66px !important; right: 148px !important; }
   .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 110px; bottom: auto !important; left: 12px; height: max-content; }
   .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 110px !important; right: 12px !important; bottom: auto !important; min-height: 44px; }
   /* Third header row: [sync]  ...  [GARDEN][FEEDBACK]. The rail used to be a
