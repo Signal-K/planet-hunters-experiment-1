@@ -6,29 +6,31 @@ struct BaseDock: View {
     @Environment(GameStore.self) private var store
     let tile: CGFloat
     let zones: HUDZones.Zones.BottomNav
+    /// Middle buttons; nil gives the base dock (Build, Hub).
+    var items: [(title: String, action: () -> Void)]?
+
+    private var middle: [(title: String, action: () -> Void)] {
+        items ?? [("Build", { store.go(.build) }), ("Hub", { store.go(.instrumentHub) })]
+    }
 
     var body: some View {
         HStack(spacing: zones.gap) {
             arrow("chevron.left", label: "Previous") { step(-1) }
             Spacer(minLength: zones.gap)
-            Button { store.go(.build) } label: {
-                Text("BUILD").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                    .frame(minWidth: 56, minHeight: 36)
+            ForEach(Array(middle.enumerated()), id: \.offset) { _, item in
+                Button(action: item.action) {
+                    Text(item.title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
+                        .frame(minWidth: 56, minHeight: 36)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(item.title)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Build")
-            Button { store.go(.instrumentHub) } label: {
-                Text("HUB").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                    .frame(minWidth: 56, minHeight: 36)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Open the Hub")
             Spacer(minLength: zones.gap)
             arrow("chevron.right", label: "Next") { step(1) }
         }
         .padding(.horizontal, zones.padding + 4)
         .padding(.vertical, 2)
-        .frame(width: 248, height: 44)
+        .frame(width: items == nil ? 248 : 320, height: 44)
         .background(Capsule().fill(Theme.hudPanel))
         .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
         .accessibilityElement(children: .contain)

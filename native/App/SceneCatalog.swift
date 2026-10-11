@@ -67,6 +67,14 @@ enum SceneCatalog {
         return gs
     }
 
+    /// Transit roughly 45% of the way through, for flight screenshots.
+    static func flightState() -> GameState {
+        var gs = transitState(returning: false)
+        let nowMs = Date().timeIntervalSince1970 * 1000
+        gs.player.transitStartedAt = nowMs - 450_000; gs.player.arrivalAt = nowMs + 550_000
+        return gs
+    }
+
     static func miningState(rover: Bool, target: String? = nil) -> GameState {
         var gs = transitState(returning: false)
         if let target { gs.targetId = target }
@@ -190,6 +198,8 @@ enum SceneCatalog {
             feed.tess = (1...9).map { TessCandidate(id: "toi-\($0)", toi: "TOI \(100 + $0).01") }
             return TessDiscoveryScreen(candidate: tess).environment(GameStore(state: gs)).environment(feed).environment(\.flatLayout, true)
         },
+        scene("flight-live", 874) { TransitScreen().environment(GameStore(state: flightState())) },
+        scene("flight-live-landscape", 402, w: 874) { TransitScreen().environment(GameStore(state: flightState())) },
         scene("transit-live", 874) {
             let st = GameStore(state: transitState(returning: false))
             return TransitScreen().environment(st)

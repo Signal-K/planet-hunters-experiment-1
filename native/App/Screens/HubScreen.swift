@@ -63,26 +63,7 @@ struct HubScreen: View {
     private func topLeftHud(insets: EdgeInsets, portrait: Bool) -> some View {
         let z = zones.topLeft
         return VStack(alignment: .leading, spacing: z.gap) {
-            HStack(spacing: 8) {
-                Button { showSettings = true } label: {
-                    hudGlyph("gearshape.fill", 36)
-                        .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
-                        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
-                }
-                .buttonStyle(.plain).accessibilityLabel("Settings")
-                TimelineView(.periodic(from: .now, by: 30)) { ctx in
-                    HStack(spacing: 6) {
-                        Image(systemName: "clock").font(.system(size: 16, weight: .bold))
-                        Text(ctx.date.formatted(date: .omitted, time: .shortened)).font(AppFont.mono(14))
-                    }
-                    .foregroundStyle(Theme.hudInk)
-                    .padding(.horizontal, 8)
-                    .frame(minWidth: 44, minHeight: 36)
-                    .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
-                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
-                }
-                .accessibilityLabel("Clock")
-            }
+            HudGearClock(onSettings: { showSettings = true })
             if store.player.activeMission != nil {
                 ContractCard(width: z.contractCard.width, collapsible: portrait && z.contractCard.collapseInPortrait)
             }
@@ -94,24 +75,9 @@ struct HubScreen: View {
 
     private func topRightHud(insets: EdgeInsets) -> some View {
         let z = zones.topRight
-        return HStack(spacing: 8) {
-            Text(Economy.format(francs: store.player.francs)).font(AppFont.mono(14)).foregroundStyle(Theme.hudInk)
-                .padding(.horizontal, 8).frame(minWidth: 44, minHeight: 36)
-                .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
-                .accessibilityLabel("Francs")
-            hudGlyph("cube.fill", 36)
-                .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
-                .accessibilityLabel("Cargo")
-        }
+        return HudChips(francs: store.player.francs)
         .padding(.trailing, insets.trailing + z.inset).padding(.top, insets.top + z.inset)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-    }
-
-    private func hudGlyph(_ symbol: String, _ size: CGFloat) -> some View {
-        Image(systemName: symbol).font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
-            .frame(width: size, height: size).contentShape(Rectangle())
     }
 
     /// Storyboard 2026-09-24: a craft that needs a tap hangs in the sky and opens its mission step.

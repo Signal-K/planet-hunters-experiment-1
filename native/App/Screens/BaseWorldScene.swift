@@ -135,9 +135,8 @@ struct BaseWorldScene: View {
             let stackH = towerH + slabH * 0.5
             return AnyView(Button { onStructure(kind) } label: {
                 ZStack(alignment: .bottom) {
-                    Art.view("base/kit/starter-pad-rocket.png").resizable().interpolation(.none).scaledToFit()
-                        .frame(height: towerH)
-                        .offset(x: -padW * 0.02, y: -slabH * 0.35)
+                    padStack(padW: padW, towerH: towerH)
+                        .offset(y: -slabH * 0.35)
                     Art.view("base/kit/starter-pad-platform.png").resizable().interpolation(.none)
                         .frame(width: padW, height: slabH)
                 }
@@ -163,6 +162,40 @@ struct BaseWorldScene: View {
         .buttonStyle(.plain)
         .position(x: center, y: ground - artH * 0.5)
         .accessibilityLabel(kindLabel(kind)))
+    }
+
+    /// Chunky launch stack: a wide white rocket flanked by two stretched gantry towers joined by cross-bracing.
+    private func padStack(padW: CGFloat, towerH: CGFloat) -> some View {
+        let towerW = padW * 0.25
+        let rocketW = padW * 0.32
+        let rocketH = towerH * 0.92
+        let gap = rocketW * 0.5 + towerW * 0.5 - padW * 0.02
+        return ZStack(alignment: .bottom) {
+            Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none)
+                .frame(width: rocketW, height: rocketH)
+            ForEach([-1.0, 1.0], id: \.self) { side in
+                Art.view("base/kit/starter-pad-rocket.png").resizable().interpolation(.none)
+                    .frame(width: towerW, height: towerH)
+                    .scaleEffect(x: CGFloat(side), y: 1)
+                    .offset(x: CGFloat(side) * gap)
+            }
+            Canvas { ctx, size in
+                let ink = Color(red: 0.16, green: 0.26, blue: 0.5)
+                for i in 0..<5 {
+                    let y0 = size.height * (0.12 + 0.17 * CGFloat(i)), y1 = y0 + size.height * 0.17
+                    let x0 = size.width * 0.5 - gap + towerW * 0.4, x1 = size.width * 0.5 + gap - towerW * 0.4
+                    var path = Path()
+                    path.move(to: CGPoint(x: x0, y: y0)); path.addLine(to: CGPoint(x: x1, y: y1))
+                    path.move(to: CGPoint(x: x1, y: y0)); path.addLine(to: CGPoint(x: x0, y: y1))
+                    path.move(to: CGPoint(x: x0, y: y0)); path.addLine(to: CGPoint(x: x1, y: y0))
+                    ctx.stroke(path, with: .color(ink.opacity(0.75)), lineWidth: 3)
+                }
+            }
+            .frame(width: gap * 2 + towerW, height: towerH)
+            .allowsHitTesting(false)
+            .zIndex(-1)
+        }
+        .frame(width: padW, height: towerH, alignment: .bottom)
     }
 
     private func spriteName(_ kind: String) -> String? {

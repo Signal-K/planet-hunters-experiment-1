@@ -19,49 +19,53 @@ private struct OrderChip: View {
 
 struct TransitScreen: View {
     @Environment(GameStore.self) private var store
-    @State private var scene: FlightScene?
-
-    private var shipArt: String { "ships/ship_sr1.png" }
+    @State private var showSettings = false
+    private let zones = HUDZones.standard
 
     var body: some View {
-        GeometryReader { geo in
+        GeometryReader { outer in
+            let insets = outer.safeAreaInsets
             TimelineView(.animation(minimumInterval: 0.25)) { ctx in
                 let start = store.player.transitStartedAt ?? store.now
                 let end = store.player.arrivalAt ?? start
                 let p = end > start ? min(1, max(0, (ctx.date.timeIntervalSince1970 * 1000 - start) / (end - start))) : 1
-                let s = scene ?? makeScene(geo.size)
-                ZStack(alignment: .top) {
-                    SpriteView(scene: s).ignoresSafeArea()
+                ZStack(alignment: .topLeading) {
+                    FlightWorldScene(progress: p, returning: store.player.returningToEarth ?? false)
+                    HudGearClock(onSettings: { showSettings = true })
+                        .padding(.leading, insets.leading + zones.topLeft.inset).padding(.top, insets.top + zones.topLeft.inset)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    HudChips(francs: store.player.francs)
+                        .padding(.trailing, insets.trailing + zones.topRight.inset).padding(.top, insets.top + zones.topRight.inset)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                     VStack(spacing: 10) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Eyebrow(text: store.player.returningToEarth ? "Returning" : "En route")
-                                Text(store.player.returningToEarth ? "Earth" : (store.target?.name ?? "Target")).font(AppFont.display(24)).foregroundStyle(Theme.ink)
-                            }
-                            Spacer()
-                        }
-                        Spacer()
-                        Panel {
-                            HStack {
-                                Eyebrow(text: p >= 1 ? "Arrived" : "Transit")
-                                Spacer()
-                                Text("\(Int(p * 100))%").font(AppFont.mono(14)).foregroundStyle(Theme.ink)
-                            }
-                            ProgressTrack(value: p)
-                            PrimaryButton(title: p >= 1 ? "Arrive" : "In flight", enabled: p >= 1) { store.transitArrived() }
-                        }
+                        FlightProgressBar(value: p)
+                        BaseDock(tile: 44, zones: zones.dock, items: [
+                            (p >= 1 ? "Arrive" : "Boost", { if p >= 1 { store.transitArrived() } }),
+                            ("Hub", { store.go(.instrumentHub) }),
+                        ])
                     }
-                    .padding(16)
+                    .padding(.bottom, insets.bottom + zones.dock.bottomInset)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 }
-                .onChange(of: p) { _, new in s.progress = new }
-                .onAppear { scene = s; s.progress = p }
             }
         }
-        .background(Theme.bg)
+        .background(Color(red: 0.05, green: 0.04, blue: 0.16).ignoresSafeArea())
+        .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
     }
+}
 
-    private func makeScene(_ size: CGSize) -> FlightScene {
-        FlightScene(size: size, returning: store.player.returningToEarth ?? false, targetName: store.target?.name ?? "Target", shipArt: shipArt)
+/// Slim transit progress bar that sits above the dock.
+struct FlightProgressBar: View {
+    let value: Double
+    var body: some View {
+        GeometryReader { g in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color(red: 0.12, green: 0.14, blue: 0.4))
+                Capsule().fill(Color(red: 0.25, green: 0.5, blue: 0.95)).frame(width: max(8, g.size.width * value))
+            }
+        }
+        .frame(width: 300, height: 8)
+        .accessibilityElement().accessibilityLabel("Flight progress").accessibilityValue("\(Int(value * 100)) percent")
     }
 }
 
