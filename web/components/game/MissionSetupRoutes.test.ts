@@ -36,6 +36,12 @@ describe('R1 mission setup', () => {
     expect(styles).not.toContain('.rocketBlueprint')
   })
 
+  it('keeps the Mission Board back control at the 44px touch-target floor', () => {
+    const styles = read('./MissionSetupRoutes.module.css')
+
+    expect(styles).toMatch(/\.back\s*\{[^}]*min-width:44px;[^}]*min-height:44px;/)
+  })
+
   it('keeps the internal setup states on the one canonical missions URL', () => {
     const gameRoute = read('../../lib/game-route.ts')
 
