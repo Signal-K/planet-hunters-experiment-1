@@ -1,12 +1,30 @@
 # AGENTS (canonical, Landnam)
 
-## Commit rules (from Liam, mandatory)
-1. Commit only when real work has been done: a finished, coherent unit (feature, fix, ticket). No commits every few minutes, no WIP, no CI-poke or test-matching commits, no one-line churn.
-2. When you commit, commit ALL files that have changes in the worktree, in one commit. Do not leave stray changes behind and do not split a unit of work into many small commits.
-3. Prefer one commit (or at most a few meaningful ones) per ticket/PR; squash before merging.
-4. Don't wait on CI; CI pipelines were removed except deployments.
+This is the single source of agent instructions for the Landnam repo. `CLAUDE.md` carries identical content (keep the two files in sync); `web/AGENTS.md` and `web/CLAUDE.md` are thin pointers. Do not copy rules into other files.
 
-This is the single source of agent instructions for the Landnam repo. `CLAUDE.md`, `web/AGENTS.md` and `web/CLAUDE.md` are thin pointers. Do not copy rules into other files; edit this one.
+## Rules of the game (Liam, standing, mandatory)
+
+Process
+1. Commits: commit ALL files with changes, in one commit, and only after real work (a finished, coherent unit: feature, fix, ticket). No tiny or frequent commits, no WIP, checkpoint, CI-poke or one-line churn commits. See "Commit" below for the format.
+2. Branching: work directly on `cycle/4`. No feature branches, no PRs. Never push to `main`.
+3. No waiting on CI. CI is typecheck, unit tests and build only. Do not poll or block on it.
+4. Done means proof: nothing is "done" without a viewed screenshot of the running build. Every ticket carries a "Done when" line.
+5. Compact sessions at about 150k tokens. Start new sessions at medium effort.
+
+Names and surfaces
+6. Never show scene titles ("Base", "Earth HQ", "Earth Base") anywhere, web or native. They are internal names only.
+7. Mining default is ship mining with the laser, exactly as in the webapp. Laser mining is canonical. Rover/Takeon is a separate surface mode and never hijacks laser mining.
+8. The dock is exactly three controls: `« »`, Build, Hub. Base-only features (for example Subsurface) are opened from the base scene, not the dock.
+9. Exchange (Market) stays a real building on the base, not a menu item.
+
+Base scene
+10. No planet in the base sky. No people walking at this stage.
+11. Backgrounds and scenes are modular, tileable layers, never a single whole-scene image. Everything is animated.
+12. Base kit direction is the approved `base-kit-v6`: angular and modular, about 40% No Man's Sky, white panelled hulls, blue/orange trim (less orange), silos underground only, a bird's-eye toggle, an industrial and natural mix ground.
+13. Palette is the deep dusk palette in `docs/design/game-theme-spec.md` (section 2). No flat constant colour.
+
+Platforms
+14. Native must match the web look. Compare web and native side by side with screenshots before saying done.
 
 ## Priority order (highest wins)
 
@@ -30,7 +48,7 @@ Older docs are evidence, not instructions. If a doc or code comment contradicts 
 
 ## Visual rules (never violate)
 
-- Light blueprint style. No dark mode, no dark-by-default surface (operations screens included), no orange or purple hue. Amber only for tiny payout/reward emphasis.
+- Colour: the spec's deep dusk palette (`docs/design/game-theme-spec.md`, section 2) governs scene and world art. Supersedes the earlier "light blueprint, no dark, no orange or purple" rule for scene layers. Orange is a small detail accent only. UI chrome on top of the world follows the spec's section 2.4.
 - Body and map text at least 14px. Tap targets at least 44px. 8pt spacing rhythm.
 - All colors from CSS variables in `web/app/globals.css`; no hardcoded hex. Read `projects/landnam/decisions/landnam-ui-design-language-style-prompt.md` and the `:root` comment in `globals.css` before visual work, since direction has changed several times.
 - Every screen must work in phone portrait, phone landscape, and desktop.
@@ -69,18 +87,13 @@ npm run test:unit          # verify:scene-surfaces + vitest
 
 ## Workflow
 
-- Linear `SSL-*` (Landnam team) is the only tracker. Read the ticket first; its scope and "Done when" define the task. Move status as work progresses; set Done only when the "Done when" items are verified. Put new work, blockers and handoffs (what changed, what was verified, what is left) in Linear, not in repo files. Tag tickets with the current cycle milestone.
-- Branching: integration branch `cycle/<N>` off `main`; all work lands there; one Friday PR `cycle/<N>` to `main`; Saturday review. Never push to `main` mid-week.
+- Linear `SSL-*` (Landnam team) is the only tracker. Read the ticket first; its scope and "Done when" line define the task. Move status as work progresses; set Done only when the "Done when" item is verified with a viewed screenshot. Put new work, blockers and handoffs (what changed, what was verified, what is left) in Linear, not in repo files.
 - Decisions: research in Craft, tracking in Linear, durable decisions and rules in ZenNotes (search ZenNotes first). Landnam has no local decision store.
 - Verify claims about existing state yourself (stashes, "pre-existing changes", ticket status that says In Review but has no code). Check `.github/workflows/*.yml` before removing dependencies.
 
-## Commit rule (hard)
+## Commit
 
-- A commit happens only when a ticket is done, and every commit stages ALL changes in the repo (`git add -A`; nothing left uncommitted). Right after, push, post the handoff with the Linear MCP (`save_comment`) and set the status (`save_issue`).
-- Landnam is a web app game and a native SwiftUI game. Nothing else; no Godot.
-
-## Commit policy (Navigation-wide)
-
-- Commit only after a coherent, verified ticket outcome. No checkpoint, progress, one-file or speculative commits. A coding request authorizes the final commit unless the user says not to.
-- From the repo root: inspect `git status --short`, run checks, `git add .`, review `git diff --cached` and `git status --short`. Exclude only clearly unrelated work, secrets or generated output, and disclose exclusions.
+- One commit per finished unit of work, after real work only, staging ALL changes (`git add -A`; nothing left uncommitted, exclude only clearly unrelated work, secrets or generated output, and disclose exclusions). Inspect `git status --short` and `git diff --cached` first.
 - Subject: `🚀🐺 ↝ [SSL-123 SSL-456]: Concise outcome`. Two different emoji (no flags, no smiley or human faces), the exact `↝` arrow and spacing, every worked ticket key in one bracket pair separated by spaces. Never use `--no-verify`.
+- Then `git pull --rebase` and push to `cycle/4`. Post the handoff with the Linear MCP (`save_comment`) and set the status (`save_issue`).
+- Landnam is a web app game and a native SwiftUI game. Nothing else; no Godot.
