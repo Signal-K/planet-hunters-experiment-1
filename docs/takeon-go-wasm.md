@@ -1,7 +1,8 @@
 # Takeon Go WASM vs TakeOnMount (compatibility note)
 
-Status: experiment, off by default. Branch `orbit/takeon-scene`. Verified 11 Oct 2026 by running the real
-`takeon.wasm` under Node (`web/lib/takeon/goRuntime.test.ts`); it has **not** been driven in a browser yet.
+Status: experiment, off by default. Branch `orbit/takeon-scene`. Verified 11 Oct 2026 under Node
+(`web/lib/takeon/goRuntime.test.ts`) and in headless Chrome against a production Next build
+(`web/tests/scenes/takeon-go-wasm.production.spec.ts`).
 
 ## What the WASM is
 
@@ -51,6 +52,9 @@ It is headless: no renderer, no input, no timer. The host calls `step(dt)` itsel
   at start time, so the "Docker starts offline" rule holds.
 - `web/lib/takeon/goRuntime.test.ts`: facade tests plus a real-WASM test (new game, terrain window, mine order, bank). The
   real-WASM test skips when the artifacts are not synced.
+- `web/tests/scenes/takeon-go-wasm.production.spec.ts`: production-browser proof that a mounted `TakeOnMount` loads the
+  flagged runtime, then runs `new`, `step`, `orderMine`, `bank`, and mission progress through the browser facade. It also
+  proves an unflagged production build makes no WASM request or global.
 
 ## Suggested next steps
 

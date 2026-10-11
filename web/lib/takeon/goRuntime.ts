@@ -40,8 +40,11 @@ export interface TakeonGoRuntime {
 
 export const TAKEON_GO_WASM_BASE = '/takeon-go'
 
-export function isTakeonGoWasmEnabled(env: Record<string, string | undefined> = process.env): boolean {
-  return env.NEXT_PUBLIC_TAKEON_GO_WASM === '1'
+export function isTakeonGoWasmEnabled(env?: Record<string, string | undefined>): boolean {
+  // Keep the production read direct: Next replaces public environment accesses
+  // in client bundles, but cannot do so when `process.env` is first passed as
+  // an opaque object (which left the browser flag unset).
+  return (env ? env.NEXT_PUBLIC_TAKEON_GO_WASM : process.env.NEXT_PUBLIC_TAKEON_GO_WASM) === '1'
 }
 
 /** The engine reduces seeds to 32 bits (TS `seed >>> 0`); do it here so JS numbers stay exact. */
