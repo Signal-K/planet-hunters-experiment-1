@@ -1034,7 +1034,7 @@ button { cursor: pointer; }
 .portrait-canvas:has(.mining-screen) .toast-stack,
 .portrait-canvas:has(.transit-screen) .toast-stack,
 .portrait-canvas:has(.debrief-game) .toast-stack,
-.portrait-canvas:has([data-testid="rover-mining-screen"]) .toast-stack,
+.portrait-canvas:has([data-testid="rover-survey-screen"]) .toast-stack,
 .portrait-canvas:has([data-testid="delivery-screen"]) .toast-stack,
 .portrait-canvas:has([data-testid="launch-shell"]) .toast-stack {
   top: auto;
@@ -1406,7 +1406,7 @@ button { cursor: pointer; }
 .screen-scroll.theme-light { background: var(--ln-void); }
 /* .screen-scroll lives inside .game-screen-area, which already stops above
    the shared dock — this padding-bottom only needs to fit the base 3-button
-   verdict row now, not nav clearance too. TessDiscoveryScreen/transit-demo
+   verdict row now, not nav clearance too.
    add a "CLEAR MARKS" ghost button below it once a region is marked, which
    grows .sticky-actions by ~50px past that reservation and overlaps the
    readout cards above it (Liam, 2026-07-03: overlap screenshot showing
@@ -2278,7 +2278,7 @@ button { cursor: pointer; }
   color: var(--ln-bp-ink-mute);
   box-shadow: none;
 }
-.theme-blueprint[data-testid="rover-mining-screen"] .rover-mining-hud {
+.theme-blueprint[data-testid="rover-survey-screen"] .rover-mining-hud {
   background: linear-gradient(180deg, transparent, var(--ln-bp-bg) 18%);
   border-top: 1px solid var(--ln-bp-line-strong);
 }

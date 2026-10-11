@@ -11,7 +11,7 @@ export interface MissionRunIdentity {
   launchedAt?: number | null
 }
 
-const RUN_SCREENS = new Set<Screen>(['transit', 'landing', 'mining', 'rover-mining', 'delivery', 'debrief'])
+const RUN_SCREENS = new Set<Screen>(['transit', 'landing', 'mining', 'rover-survey', 'delivery', 'debrief'])
 
 /** True when this sortie was already collected. A later flight of the same contract is not settled. */
 export function isSettledMissionRun(player: Pick<Player, 'completedMissions'>, run: MissionRunIdentity): boolean {

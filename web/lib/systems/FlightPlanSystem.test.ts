@@ -55,7 +55,7 @@ describe('FlightPlanSystem', () => {
   })
 
   it('SSL-478: every screen of the mining run shows a mining objective that matches it', () => {
-    const run = ['launchpad', 'missions', 'fab', 'rover-mining', 'targets', 'mining', 'debrief', 'transit', 'landing', 'delivery']
+    const run = ['launchpad', 'missions', 'fab', 'rover-survey', 'targets', 'mining', 'debrief', 'transit', 'landing', 'delivery']
     for (const screen of run) {
       const step = trainingTryStep('mining', screen)
       expect(step?.try, screen).toBe('mining')

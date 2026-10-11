@@ -18,7 +18,7 @@ export default function ScenePreviewPage() {
 
 function ScenePreview() {
   const params = useSearchParams()
-  const sceneName = params.get('scene') ?? 'mining-test'
+  const sceneName = params.get('scene') ?? 'mining'
   const [data, setData] = useState<SceneData | null>(null)
 
   useEffect(() => {

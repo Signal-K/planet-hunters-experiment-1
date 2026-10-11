@@ -251,7 +251,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   //   __landnam.patch({ francs: 5e6 })     merge into player
   //   __landnam.goto('hangar', {missionId, targetId})
   //   __landnam.skipTutorial()
-  //   __landnam.scenario('ui-rover-mining')  load a DEV preset into this session
+  //   __landnam.scenario('ui-rover-survey')  load a DEV preset into this session
   //   __landnam.scenarios()                  list preset keys
   useEffect(() => {
     if (!isDevLauncherEnabled()) return
@@ -262,7 +262,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       goto: (screen: GameState['screen'], ids?: { missionId?: string | null; targetId?: string | null }) =>
         setState(s => ({ ...s, screen, missionId: ids?.missionId ?? s.missionId, targetId: ids?.targetId ?? s.targetId })),
       skipTutorial: () => tutorial.skipTutorial([0, 1, 2, 3, 4, 5, 6, 8, 9, 30, 31, 32, 33, 40, 41]),
-      // Load any DEV preset (m1-mining, ui-rover-mining, ship-customizer, ...)
+      // Load any DEV preset (m1-mining, ui-rover-survey, ship-customizer, ...)
       // into the live signed-in session. Returns false for an unknown key.
       scenario: (name: string) => {
         const p = resolvePreset(name)
@@ -348,7 +348,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       onDeliveryArrived: loop.onDeliveryArrived,
       onDeliveryUnloadComplete: loop.onDeliveryUnloadComplete,
       onReturnArrived: loop.onReturnArrived,
-      onRoverMiningDone: loop.onRoverMiningDone,
+      onRoverSurveyComplete: loop.onRoverSurveyComplete,
       onLandingTouchdown: loop.onLandingTouchdown,
       onRedockComplete: loop.onRedockComplete,
       onDebriefDone: loop.onDebriefDone,

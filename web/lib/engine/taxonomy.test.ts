@@ -116,7 +116,6 @@ describe('scene catalog', () => {
   it('has exactly the two known orphaned scene files', () => {
     expect(orphanedSceneFiles().sort()).toEqual([
       '/game/scenes/build-place.scene.json',
-      '/game/scenes/mining-test.scene.json',
     ])
   })
 })

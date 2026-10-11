@@ -21,10 +21,10 @@ describe('GameChromeBars', () => {
   it('lists the surfaces that mount the shared bar', () => {
     const screens: Screen[] = [
       'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing',
-      'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining',
+      'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-survey',
       'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'instrument-hub', 'mission-history', 'narrative-ledger',
     ]
-    expect(screens.filter(screen => mountsSharedChrome(screen, false))).toEqual(screens.filter(screen => screen !== 'intro' && screen !== 'rover-mining'))
+    expect(screens.filter(screen => mountsSharedChrome(screen, false))).toEqual(screens.filter(screen => screen !== 'intro' && screen !== 'rover-survey'))
     expect(mountsSharedChrome('transit', true)).toBe(false)
   })
 })

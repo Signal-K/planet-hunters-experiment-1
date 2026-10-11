@@ -93,7 +93,7 @@ export const GAME_ROUTES = [
   { path: '/game/mining', screen: 'mining', surface: 'mining' },
 
   // Takeon
-  { path: '/game/rover-mining', screen: 'rover-mining', surface: 'takeon' },
+  { path: '/game/rover-survey', screen: 'rover-survey', surface: 'takeon' },
   { path: '/game/delivery', screen: 'delivery', surface: 'takeon' },
   { path: '/game/surface-ops', screen: 'surface-ops', surface: 'takeon' },
 
@@ -126,8 +126,6 @@ export const GAME_ROUTES = [
   { path: '/game/control-room-preview', surface: 'instrument', dev: true },
   { path: '/game/ship-customizer', surface: 'instrument', dev: true },
   { path: '/game/mission-flow-preview', surface: 'mission-setup', dev: true },
-  { path: '/game/takeon-preview', surface: 'takeon', dev: true },
-  { path: '/game/transit-demo', surface: 'orbit', dev: true },
 ] as const satisfies readonly GameRoute[]
 
 type ScreenRoute = Extract<typeof GAME_ROUTES[number], { screen: Screen }>

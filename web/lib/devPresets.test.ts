@@ -202,9 +202,9 @@ describe('resolvePreset — recent UI surfaces', () => {
     expect(p.player!.transitSatelliteLaunchedAt).not.toBeNull()
   })
 
-  it('opens rover mining with an active mission and live TakeOn state', () => {
-    const p = resolvePreset('ui-rover-mining')!
-    expect(p.screen).toBe('rover-mining')
+  it('opens rover survey with an active mission and live TakeOn state', () => {
+    const p = resolvePreset('ui-rover-survey')!
+    expect(p.screen).toBe('rover-survey')
     expect(p.player!.activeMission).not.toBeNull()
   })
 })

@@ -84,7 +84,7 @@ export type Screen =
   | 'hangar'
   | 'rocket-buy'
   | 'skills'
-  | 'rover-mining'
+  | 'rover-survey'
   | 'launchpad'
   | 'surface-ops'
   | 'academy'
@@ -111,7 +111,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'transit',
   'landing',
   'mining',
-  'rover-mining',
+  'rover-survey',
   'delivery',
   'refinery',
   'academy',
@@ -599,7 +599,7 @@ export interface GameActions {
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   submitSaturnClassification: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
   claimSaturnSurveyTerritory: () => void
-  onRoverMiningDone: (cargo: Record<string, number>) => void
+  onRoverSurveyComplete: () => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean

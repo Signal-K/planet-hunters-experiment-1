@@ -15,7 +15,7 @@ type GameChromeBarsProps = {
  * rover field (SSL-485: scene plus hotbar only), and stays out of the way while
  * the auth gate owns the page. */
 export function mountsSharedChrome(screen: Screen, authGateOpen: boolean): boolean {
-  return screen !== 'intro' && screen !== 'rover-mining' && !authGateOpen
+  return screen !== 'intro' && screen !== 'rover-survey' && !authGateOpen
 }
 
 /**

@@ -7,12 +7,7 @@ export function applyMiningDone(s: GameState, cargo: Record<string, number>, arr
   return startReturnLeg(s, cargo, arrivalAt, transitStartedAt)
 }
 
-export function applyRoverMiningDone(s: GameState, cargo: Record<string, number>, arrivalAt: number | null, transitStartedAt?: number | null): GameState {
-  if (s.screen !== 'rover-mining' || !s.missionId || !s.targetId) return s
-  return startReturnLeg(s, cargo, arrivalAt, transitStartedAt)
-}
-
-// Shared by laser and rover mining completion (and lander redock completion,
+// Shared by laser mining completion (and lander redock completion,
 // see LandingSystem.ts): heads for the mission's deliveryTargetId (two-leg
 // "mine then deliver" jobs) if one is set, otherwise starts the Earth-return
 // leg directly.
