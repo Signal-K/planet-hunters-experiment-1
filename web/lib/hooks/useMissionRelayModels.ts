@@ -134,7 +134,7 @@ export function useMissionRelayModels({
     .filter((c): c is NonNullable<typeof c> => c !== null)
 
   // STS-582 makes this a client-only surface in Free Ops. Owned flights are
-  // filtered above and live under Launchpad → Your Program instead.
+  // filtered above and live on the Mission Board Program tab instead.
   // A newly unlocked Academy is the player's next concrete Base action, so
   // foreground it instead of burying it after the recurring client jobs.
   const academyIntro = cardModels.find(card => card.mission.id === ACADEMY_INTRO_MISSION_ID && card.unlocked)

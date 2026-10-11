@@ -364,7 +364,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (mission.jointProject && s.player.francs < mission.jointProject.playerCost) return s
       const ownOperation = isOwnProgramMission(mission)
       if (s.screen === 'launchpad' && !ownOperation) return s
-      if (s.screen === 'missions' && s.player.freeOperations && ownOperation) return s
       // Park only once the new mission is actually accepted. A rejected pick
       // must leave the live run where it is.
       const prepared = s.player.activeMission ? parkOrDropActiveRun(s) : s

@@ -75,8 +75,8 @@ export function isFreeHaulEligibleMission(mission: Mission): boolean {
 
 /**
  * During guided onboarding, the board remains the sequence entry point. Once
- * Free Ops begins, the Mission Board is strictly client work; owned flights
- * live under Launchpad → Your Program.
+ * Free Ops begins, the Contracts tab is strictly client work; owned flights
+ * live on the Mission Board Program tab.
  */
 export function isMissionBoardMission(mission: Mission, freeOperations: boolean): boolean {
   return !freeOperations || !isOwnProgramMission(mission)

@@ -36,17 +36,20 @@ describe('R1 mission setup', () => {
     expect(styles).not.toContain('.rocketBlueprint')
   })
 
-  it('lays the contract board out in two columns with a single WSW chip', () => {
+  it('renders the mission board instead of the contract carousel', () => {
     const routes = read('./MissionSetupRoutes.tsx')
     const styles = read('./MissionSetupRoutes.module.css')
+    const board = read('./MissionBoard.tsx')
 
-    expect(routes).toContain('contractMain')
-    expect(routes).toContain('contractAside')
-    expect(routes).toContain('variant="chip"')
-    expect(routes).not.toContain('WorldSpaceWeekChips')
-    expect(styles).toContain('grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr)')
-    expect(styles).toContain('.contractGallery .contractIdentity')
-    expect(styles).toMatch(/\.contractGallery \.contractIdentity[\s\S]*position: static/)
+    expect(routes).toContain('<MissionBoard')
+    expect(routes).toContain("id === ACADEMY_INTRO_MISSION_ID ? game.go('academy')")
+    expect(routes).not.toContain('Choose a contract')
+    expect(routes).not.toContain('contractGallery')
+    expect(styles).not.toContain('.contractGallery')
+    expect(board).toContain('mission-board-tab-contracts')
+    expect(board).toContain('mission-board-tab-program')
+    expect(board).toContain('mission-board-tab-events')
+    expect(board).toContain('ACCEPT &amp; PREPARE')
   })
 
   it('keeps the Mission Board back control at the 44px touch-target floor', () => {

@@ -111,6 +111,19 @@
   --ln-fs-label: 16px;
   --ln-fs-micro: 14px;
   /* END GENERATED SHARED TOKENS */
+  /* Mission Board palette approved with the Oct 2026 Contracts / Program / Events mockups. */
+  --ln-board-lavender: #e7def8;
+  --ln-board-lavender-deep: color-mix(in srgb, var(--ln-board-lavender) 72%, var(--ln-board-ink));
+  --ln-board-ink: #1b2430;
+  --ln-board-teal: #14a39a;
+  --ln-board-amber: var(--ln-amber);
+  --ln-board-coral: #ef6f62;
+  --ln-board-paper: #fffdf8;
+  --ln-board-muted: #5e6872;
+  --ln-board-live: #e23d3d;
+  --ln-board-gold: var(--ln-mineral-gold);
+  --ln-board-silver: #c8cdd4;
+  --ln-board-on-accent: #ffffff;
   --ln-glow-crimson:   0 0 0 1px rgba(200,41,62,0.7), 0 0 18px rgba(200,41,62,0.4);
   --ln-info:      #70d9ea;
 

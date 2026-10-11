@@ -37,6 +37,7 @@ const AcademyScreen = dynamic(() => import('@/components/game/screens/AcademyScr
 const MissionHistoryScreen = dynamic(() => import('@/components/game/screens/MissionHistoryScreen'), { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
+import { requestMissionBoardTab } from '@/lib/mission-board-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
@@ -243,9 +244,9 @@ function ScreenBody({
               // action on that scene, not an accidental consequence of
               // clicking the building.
               if (game.player.pendingLaunch) return game.go('fab')
-              // The Launchpad is an in-world interaction surface for every
-              // entry point; it must not fall back to a dashboard overview.
-              return game.openLaunchpadMissionMenu()
+              // The Launchpad building opens the pad scene. Contracts, the
+              // program chain and events live on the Mission Board.
+              return game.openLaunchpad()
             }
           }}
           onUpgradeBuilding={id => game.upgradeBuilding(id)}
@@ -266,7 +267,8 @@ function ScreenBody({
           onFocusResources={(label, minerals) => {
             game.setPlayer(player => ({ ...player, resourceFocus: { label, minerals } }))
             game.addToast(`${label} added to focus`, 'info')
-            game.openLaunchpadMissionMenu()
+            requestMissionBoardTab('program')
+            game.goToMissions()
           }}
           subsurface={game.subsurfaceView}
           onSubsurfaceChange={open => game.go(open ? 'hub-subsurface' : 'hub')}
@@ -332,7 +334,7 @@ function ScreenBody({
             : game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
           onBack={() => game.goBack()}
           onBuildStation={() => game.go('build')}
-          onOpenProgram={game.openLaunchpad}
+          onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
           onSubmit={game.submitTessClassification}
           onChooseTarget={game.chooseSatelliteTarget}
           onReplayTraining={currentTrainingTry(game.player.flightPlan) === 'scan' ? () => game.replayTrainingTry('scan') : undefined}

@@ -141,8 +141,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         onBack={onBack}
         status="NO TELESCOPE"
         messageTitle="Launch Transit Telescope"
-        messageBody="Deploy your own telescope from the Launchpad. Its daily data will downlink here after the flight."
-        answers={<PrimaryBtn testId="open-transit-telescope-program-btn" onClick={onOpenProgram}>Open Your Program</PrimaryBtn>}
+        messageBody="Deploy your own telescope from the Program tab. Its daily data will downlink here after the flight."
+        answers={<PrimaryBtn testId="open-transit-telescope-program-btn" onClick={onOpenProgram}>Open Program</PrimaryBtn>}
       />
     )
   }

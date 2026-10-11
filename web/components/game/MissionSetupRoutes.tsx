@@ -6,11 +6,10 @@ import type { useGame } from '@/game-context'
 import type { Catalog } from '@/lib/catalog'
 import type { Screen } from '@/lib/game-types'
 import { ACADEMY_INTRO_MISSION_ID, ROCKET_MODELS, hasShipCustomizer, feasibleTargetsFor, isFreeHaulEligibleMission, rocketConfigForModel, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
-import { clientAffinityLevel, crewRequirementStatus } from '@/lib/systems/AcademySystem'
+import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import { formatCurrency } from '@/lib/format'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
-import ClientMark from '@/components/ui/ClientMark'
 import PixiGalaxyMap from '@/components/TargetPicker/PixiGalaxyMap'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
@@ -19,9 +18,7 @@ import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { useHelp } from '@/components/ui/useHelp'
-import { WorldSpaceWeekBanner } from '@/components/game/WorldSpaceWeek'
-import { skyEventNow } from '@/lib/data/sky-events'
-import { wswBanner } from '@/lib/wsw'
+import MissionBoard from '@/components/game/MissionBoard'
 import styles from './MissionSetupRoutes.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -108,31 +105,20 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   if (screen === 'fab' && (!game.mission || !game.target)) return <FreeOpsBuildScreen onBack={() => game.goBack()} onMissions={() => game.go('missions')} onInfrastructure={() => game.go('build')} />
 
   if (screen === 'missions') {
-    const model = relay.previewModel
-    const client = model?.client
-    const clientJobs = client ? game.player.clientMissions[client.id] ?? 0 : 0
-    const clientLevel = client ? clientAffinityLevel(clientJobs) : 0
-    const now = skyEventNow(isDevLauncherEnabled())
-    return <SetupFrame title="Choose a contract" screen="missions" onBack={() => game.goBack()} aside={<WorldSpaceWeekBanner banner={wswBanner(game.player.badges, now)} variant="chip" className={styles.wswBanner} />}>
-      <section className={styles.contractGallery} data-testid="mission-board-section-client" style={{ '--client-accent': client?.color ?? 'var(--ln-ok)' } as CSSProperties}>
-        {model ? <>
-          <button type="button" className={`${styles.carouselArrow} ${styles.previous}`} onClick={() => relay.selectRelativeSignal(-1)} disabled={relay.cardModels.length < 2} aria-label="Previous contract"><ArrowGlyph direction="previous" /></button>
-          <article className={styles.contractSlide} aria-live="polite">
-            <div className={styles.contractMain}>
-              <div className={styles.contractIdentity}><ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-cyan)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={56} /><div><span>{model.mission.payload?.type === 'satellite' ? 'INSTRUMENT LAUNCH' : `CLIENT CONTRACT ${relay.selectedIndex + 1} / ${relay.cardModels.length}`}</span><strong>{model.mission.payload?.type === 'satellite' ? model.mission.payload.name : client?.name ?? 'YOUR PROGRAM'}</strong></div></div>
-              <div className={styles.contractCopy}><h2>{model.mission.title}</h2></div>
-              <dl className={styles.contractFacts}><div><dt>VALUE</dt><dd>{formatCurrency(model.displayPayout, { compact: true })}</dd></div><div><dt>CLIENT LEVEL</dt><dd>{client ? `L${clientLevel}` : 'PROGRAM'}</dd></div></dl>
-            </div>
-            <div className={styles.contractAside}>
-              <div className={styles.contractCargo}><span>REQUIRED CARGO</span><RequiredCargo minerals={model.mission.requires.minerals} catalog={game.catalog.minerals} /></div>
-              <img className={styles.contractRocket} src={rocketDisplayForConfig(game.rocket).img} alt="" />
-              <button type="button" className={styles.primary} data-testid={`mission-accept-${model.mission.id}`} disabled={!model.unlocked || relay.tutorialMissionInProgress} onClick={() => model.mission.id === ACADEMY_INTRO_MISSION_ID ? game.go('academy') : game.onPickMission(model.mission.id)}><LaunchGlyph /> ACCEPT &amp; PREPARE</button>
-            </div>
-          </article>
-          <button type="button" className={`${styles.carouselArrow} ${styles.next}`} onClick={() => relay.selectRelativeSignal(1)} disabled={relay.cardModels.length < 2} aria-label="Next contract"><ArrowGlyph direction="next" /></button>
-        </> : relay.onboardingComplete ? <div className={styles.empty}><strong>NO CONTRACTS ARE OFFERED YET</strong><span>Free Ops opens once the Earth storage silo is built.</span><button type="button" className={styles.primary} onClick={() => game.go('build')}>BUILD STORAGE SILO</button></div> : <div className={styles.empty}>NO COMPATIBLE CLIENT SIGNALS</div>}
-      </section>
-    </SetupFrame>
+    return <MissionBoard
+      catalog={game.catalog}
+      player={game.player}
+      cards={relay.cardModels}
+      selectedIndex={relay.selectedIndex}
+      onSelectRelative={relay.selectRelativeSignal}
+      onAccept={(id, disposition) => id === ACADEMY_INTRO_MISSION_ID ? game.go('academy') : game.onPickMission(id, disposition)}
+      onClose={() => game.goBack()}
+      onOpenLog={() => game.go('mission-history')}
+      onOpenBuild={() => game.go('build')}
+      rocketImg={rocketDisplayForConfig(game.rocket).img}
+      tutorialBlocked={relay.tutorialMissionInProgress}
+      onboardingComplete={relay.onboardingComplete}
+    />
   }
 
   if (!game.mission || !game.target) return null

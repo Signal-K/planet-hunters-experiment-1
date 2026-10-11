@@ -3,7 +3,7 @@
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import LaunchpadScreen from './LaunchpadScreen'
 import { STATIC_CATALOG } from '@/lib/catalog'
@@ -11,6 +11,22 @@ import { DEFAULT_STATE } from '@/lib/game-state'
 import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
 
 describe('Launchpad own-program actions', () => {
+  beforeEach(() => {
+    window.matchMedia = vi.fn().mockReturnValue({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })
+    if (!('IntersectionObserver' in window)) {
+      class ImmediateIntersectionObserver {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      }
+      vi.stubGlobal('IntersectionObserver', ImmediateIntersectionObserver)
+    }
+  })
+
   it('keeps mission resume explicit in the footer', () => {
     const player = {
       ...DEFAULT_STATE.player,
@@ -45,7 +61,7 @@ describe('Launchpad own-program actions', () => {
     expect(markup).toContain('NEW MISSION')
   })
 
-  it('shows a focused resource run as a fifth, preconfigured operation', () => {
+  it('does not paint the old program menu over the pad', () => {
     const player = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
@@ -56,9 +72,10 @@ describe('Launchpad own-program actions', () => {
     const markup = renderToStaticMarkup(
       <LaunchpadScreen onBack={vi.fn()} onPick={vi.fn()} onViewContracts={vi.fn()} onLaunchpadAction={vi.fn()} onOpenHangar={vi.fn()} missionsDone={3} freeOperations catalog={catalog} player={player} missionMenuOpen />,
     )
-    expect(markup).toContain('data-testid="launchpad-new-mission-resource-focus-btn"')
-    expect(markup).toContain('RESOURCE FOCUS')
-    expect(markup).toContain('Materials for Mineral Vault')
+    expect(markup).not.toContain('data-testid="launchpad-new-mission-menu"')
+    expect(markup).not.toContain('data-testid="launchpad-new-mission-resource-focus-btn"')
+    expect(markup).not.toContain('Your Program')
+    expect(markup).toContain('data-testid="launchpad-new-mission-btn"')
   })
 
   it('exposes one new-mission command once in the command rail', () => {
@@ -175,7 +192,7 @@ describe('Launchpad own-program actions', () => {
     await act(async () => root.unmount())
   })
 
-  it('opens the four-route mission picker when the pad is clicked', async () => {
+  it('opens the mission board from the pad instead of a route picker', async () => {
     const player = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
@@ -190,6 +207,7 @@ describe('Launchpad own-program actions', () => {
     })
     const host = document.createElement('div')
     const root = createRoot(host)
+    const onViewContracts = vi.fn()
     const onPick = vi.fn()
     ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -198,7 +216,7 @@ describe('Launchpad own-program actions', () => {
         <LaunchpadScreen
           onBack={vi.fn()}
           onPick={onPick}
-          onViewContracts={vi.fn()}
+          onViewContracts={onViewContracts}
           onLaunchpadAction={vi.fn()}
           onOpenHangar={vi.fn()}
           missionsDone={player.missionsDone}
@@ -213,29 +231,13 @@ describe('Launchpad own-program actions', () => {
       host.querySelector<HTMLButtonElement>('[data-testid="launchpad-status-card"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
-    expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).not.toBeNull()
-    expect(host.querySelector('[data-testid="launchpad-new-mission-satellite-btn"]')).not.toBeNull()
-    expect(host.querySelector('[data-testid="launchpad-new-mission-mining-btn"]')).not.toBeNull()
-    expect(host.querySelector('[data-testid="launchpad-new-mission-build-btn"]')).not.toBeNull()
-    expect(host.querySelector('[data-testid="launchpad-new-mission-contracts-btn"]')).not.toBeNull()
-    expect(host.textContent).toContain('LAUNCH SATELLITE / TOOL')
-    expect(host.textContent).toContain('FREE OPS')
-    expect(host.textContent).toContain('BUILD SOMETHING YOURSELF')
-    expect(host.textContent).toContain('AVAILABLE CONTRACTS')
-
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-new-mission-mining-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-
-    expect(host.querySelector('[data-testid="launchpad-operation-brief-mining"]')).not.toBeNull()
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-mining-sell-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-    expect(onPick).toHaveBeenCalledWith('freeops-self-directed-mining', 'sell')
+    expect(onViewContracts).toHaveBeenCalledTimes(1)
+    expect(onPick).not.toHaveBeenCalled()
+    expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).toBeNull()
     await act(async () => root.unmount())
   })
 
-  it('blocks a second mission while one is active and offers to resume the current run', async () => {
+  it('keeps an active run resumable when the pad opens the mission board', async () => {
     const player = {
       ...DEFAULT_STATE.player,
       activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
@@ -247,7 +249,7 @@ describe('Launchpad own-program actions', () => {
     const host = document.createElement('div')
     const root = createRoot(host)
     const onResumeMission = vi.fn()
-    const onPick = vi.fn()
+    const onViewContracts = vi.fn()
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
       freeOperations: true,
@@ -260,8 +262,8 @@ describe('Launchpad own-program actions', () => {
       root.render(
         <LaunchpadScreen
           onBack={vi.fn()}
-          onPick={onPick}
-          onViewContracts={vi.fn()}
+          onPick={vi.fn()}
+          onViewContracts={onViewContracts}
           onLaunchpadAction={vi.fn()}
           onOpenHangar={vi.fn()}
           onResumeMission={onResumeMission}
@@ -277,86 +279,10 @@ describe('Launchpad own-program actions', () => {
       host.querySelector<HTMLButtonElement>('[data-testid="launchpad-status-card"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
-    // Starting a new Free Ops route parks this run intact; it stays resumable
-    // from the launchpad's active-run controls.
     expect(onResumeMission).not.toHaveBeenCalled()
-    expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).not.toBeNull()
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-new-mission-mining-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-    await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-mining-sell-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-    expect(onPick).toHaveBeenCalledWith('freeops-self-directed-mining', 'sell')
+    expect(onViewContracts).toHaveBeenCalledTimes(1)
+    expect(host.querySelector('[data-testid="launchpad-resume-mission-btn"]')).not.toBeNull()
+    expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).toBeNull()
     await act(async () => root.unmount())
-  })
-
-  it('gates the off-world refinery build behind an existing silo and mining settlement', async () => {
-    const basePlayer = {
-      ...DEFAULT_STATE.player,
-      freeOperations: true,
-      missionsDone: 3,
-      placed: ['launchpad'],
-    }
-    const catalog = buildRuntimeCatalog({
-      catalog: STATIC_CATALOG,
-      freeOperations: true,
-      missionsDone: basePlayer.missionsDone,
-      player: basePlayer,
-    })
-    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
-
-    async function openBuildMenu(player: typeof basePlayer) {
-      const host = document.createElement('div')
-      const root = createRoot(host)
-      await act(async () => {
-        root.render(
-          <LaunchpadScreen
-            onBack={vi.fn()}
-            onPick={vi.fn()}
-            onViewContracts={vi.fn()}
-            onLaunchpadAction={vi.fn()}
-            onOpenHangar={vi.fn()}
-            missionsDone={player.missionsDone}
-            freeOperations={player.freeOperations}
-            catalog={catalog}
-            player={player}
-          />,
-        )
-      })
-      await act(async () => {
-        host.querySelector<HTMLButtonElement>('[data-testid="launchpad-status-card"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-      })
-      await act(async () => {
-        host.querySelector<HTMLButtonElement>('[data-testid="launchpad-new-mission-build-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-      })
-      return { host, root }
-    }
-
-    const { host: withoutPrereqs, root: rootA } = await openBuildMenu(basePlayer)
-    expect(withoutPrereqs.querySelector('[data-testid="launchpad-build-program-build-mars-mining-settlement"]')).not.toBeNull()
-    expect(withoutPrereqs.querySelector('[data-testid="launchpad-build-program-build-remote-silo"]')).not.toBeNull()
-    expect(withoutPrereqs.querySelector('[data-testid="launchpad-build-program-build-refinery"]')).toBeNull()
-    await act(async () => rootA.unmount())
-
-    const readyPlayer = {
-      ...basePlayer,
-      clientStructures: [
-        { targetId: 'mars', structureKind: 'mining-settlement', clientId: 'mission-control', state: 'delivered' as const, startedAt: 0 },
-        { targetId: 'mars', structureKind: 'mineral-silo', clientId: 'mission-control', state: 'delivered' as const, startedAt: 0 },
-      ],
-      siteRights: {
-        territories: basePlayer.siteRights?.territories ?? {},
-        rights: {
-          'moon-build-right': {
-            id: 'moon-build-right', playerId: 'local-player', clientId: 'atlas-aggregate', targetId: 'moon', siteId: 'moon-south-pole',
-            mode: 'purchase' as const, activities: ['build' as const, 'mine' as const], acquiredAt: 0,
-          },
-        },
-      },
-    }
-    const { host: withPrereqs, root: rootB } = await openBuildMenu(readyPlayer)
-    expect(withPrereqs.querySelector('[data-testid="launchpad-build-program-build-refinery"]')).not.toBeNull()
-    await act(async () => rootB.unmount())
   })
 })
