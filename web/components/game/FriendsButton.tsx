@@ -4,12 +4,13 @@ import React from 'react'
 
 interface FriendsButtonProps {
   onClick: () => void
+  className?: string
 }
 
-export default function FriendsButton({ onClick }: FriendsButtonProps) {
+export default function FriendsButton({ onClick, className }: FriendsButtonProps) {
   return (
     <button
-      className="hub-friends-button game-friends-button"
+      className={['hub-friends-button game-friends-button', className].filter(Boolean).join(' ')}
       data-testid="friends-button"
       aria-label="Friends"
       onClick={onClick}

@@ -300,6 +300,22 @@ describe('MiningController ore sym labels', () => {
     expect(labels()[0].visible).toBe(false)
   })
 
+  it('places lead minerals first and inside the opening frame', () => {
+    const { controller } = makeController(vi.fn(), {
+      worldWidth: 390,
+      leadMinerals: ['iron', 'carbon', 'ice'],
+      minerals: ['gold'],
+      mineralColors: { iron: '#e06a22', carbon: '#161616', ice: '#2ec8e8', gold: '#ffd166' },
+    })
+    controller.start()
+    const ores = (controller as unknown as { ores: { mineral: string; go: { transform: { position: { x: number } } } }[] }).ores
+    expect(ores.slice(0, 3).map(ore => ore.mineral)).toEqual(['iron', 'carbon', 'ice'])
+    const xs = ores.slice(0, 3).map(ore => ore.go.transform.position.x)
+    expect(xs[0]).toBeGreaterThan(40)
+    expect(xs[1] - xs[0]).toBeGreaterThanOrEqual(112)
+    expect(xs[2]).toBeLessThan(390)
+  })
+
   it('does not spawn shower debris when the event is off', () => {
     const { controller, host } = makeController(vi.fn(), { debris: { getSpawn: () => null } })
     controller.start()

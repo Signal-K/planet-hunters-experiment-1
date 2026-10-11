@@ -3761,6 +3761,22 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   background: color-mix(in srgb, var(--ln-world-hull-lit) 88%, transparent) !important;
   box-shadow: none !important;
 }
+.portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-dock-arrow,
+.portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-dock-word {
+  height: 32px;
+  min-height: 32px;
+}
+.portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-dock-arrow {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+}
+.scene-dock-arrow:active:not(:disabled),
+.scene-dock-word:active:not(:disabled),
+.portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock button:active:not(:disabled) {
+  background: color-mix(in srgb, var(--ln-world-outline) 18%, var(--ln-world-hull-lit)) !important;
+  border-color: var(--ln-world-outline) !important;
+}
 /* First-contract card: opaque, in open sky, not on the gantry. The building
    wrapper is transformed, so this rule only applies once the card is portaled
    to the document. */
@@ -3909,9 +3925,87 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   .debrief-result-panel__title { font-size: 18px; }
 }
 
-/* Ship laser HUD. Same icon button, clock, and friends control as Base.
-   Bottom stack (tip + slider + panel) stays inside 14% of the viewport in
-   landscape and 12% in portrait. The scene is the flex remainder. */
+/* Shared with the base dock and the top chips. Mining must not restyle these. */
+.scene-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 4px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  font-family: var(--ln-font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.scene-dock-arrow,
+.scene-dock-word,
+.scene-dock-primary {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  border-radius: 4px;
+  box-shadow: none;
+  cursor: pointer;
+  font-family: var(--ln-font-display);
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.theme-blueprint .scene-dock-arrow,
+.theme-blueprint .scene-dock-word {
+  height: 32px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--ln-world-outline) 45%, transparent);
+  background: color-mix(in srgb, var(--ln-world-hull-lit) 88%, transparent);
+  color: var(--ln-world-outline);
+}
+.theme-blueprint .scene-dock-arrow {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+}
+.theme-blueprint .scene-dock-word { min-width: 64px; }
+.theme-blueprint .scene-dock-primary {
+  height: 48px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--ln-world-outline);
+  background: var(--ln-world-trim-teal);
+  color: var(--ln-world-hull-lit);
+}
+.theme-blueprint .scene-dock-primary:active:not(:disabled) {
+  background: color-mix(in srgb, var(--ln-world-outline) 22%, var(--ln-world-trim-teal));
+}
+.theme-blueprint .scene-dock-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+.scene-dock-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 52px;
+  padding: 2px 6px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 6px;
+  background: var(--ln-world-hull-lit);
+}
+
+/* Ship laser HUD. Same chips, arrows, and dock buttons as Base.
+   The dock row stays inside 14% of the viewport in landscape and 12% in portrait. */
 .laser-chrome {
   position: absolute;
   inset: 0;
@@ -3919,7 +4013,8 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   pointer-events: none;
 }
 .laser-chrome .settings-cog,
-.laser-chrome .scene-icon-btn,
+.laser-chrome .laser-chrome__cube,
+.laser-chrome .scene-dock-arrow,
 .laser-chrome .game-friends-button,
 .laser-chrome .laser-chrome__clock {
   position: absolute;
@@ -3936,24 +4031,21 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   cursor: pointer;
 }
 .mining-screen .laser-chrome [data-testid="hub-clock-widget"] { margin: 0 !important; }
-.laser-chrome__cube { top: 8px; right: 56px; color: var(--ln-bp-green); }
-.mining-screen .laser-chrome .game-friends-button {
+.laser-chrome__cube { top: 8px; right: 60px; }
+.laser-chrome .scene-chip.game-friends-button {
   top: 8px;
   right: 8px;
   left: auto;
-  width: 40px;
-  min-width: 40px;
-  height: 40px;
-  min-height: 40px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
   padding: 0;
   gap: 0;
-  border-radius: 4px;
-  background: var(--ln-world-hull-lit);
-  border: 1px solid var(--ln-world-outline);
-  color: var(--ln-world-outline);
+  justify-content: center;
 }
-.mining-screen .laser-chrome .game-friends-button span { display: none; }
-.laser-chrome__arrow { top: calc(50% - 20px); }
+.laser-chrome .scene-chip.game-friends-button span { display: none; }
+.laser-chrome__arrow { top: calc(50% - 16px); }
 .laser-chrome__arrow--left { left: 8px; }
 .laser-chrome__arrow--right { right: 8px; }
 .portrait-canvas--mining .sync-status { display: none; }
@@ -3964,7 +4056,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 .laser-cue {
   position: absolute;
   z-index: 6;
-  top: 52px;
+  top: 56px;
   left: 16px;
   right: 16px;
   margin: 0;
@@ -3980,7 +4072,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   flex: 0 0 auto;
   box-sizing: border-box;
   width: 100%;
-  height: 54px;
+  height: 52px;
   max-height: 14vh;
   padding: 0 8px;
   background: transparent;
@@ -3990,61 +4082,24 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   .laser-hud { max-height: 12vh; }
 }
 .laser-hud > * { pointer-events: auto; }
-.laser-dock {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  box-sizing: border-box;
-  height: 54px;
-  padding: 4px 4px 4px 14px;
-  border: 1px solid var(--ln-world-outline);
-  border-radius: 999px;
-  background: var(--ln-world-hull-lit);
-}
-.laser-dock__order,
-.laser-dock__fire {
-  box-sizing: border-box;
+.laser-hud .laser-dock__order {
+  justify-content: flex-start;
+  flex: 0 1 auto;
+  width: auto;
+  max-width: calc(100% - 168px);
   min-width: 0;
-  margin: 0;
-  border: 0;
-  box-shadow: none;
-  cursor: pointer;
-}
-.laser-dock__order {
-  display: flex;
-  align-items: center;
-  height: 44px;
-  padding: 0;
-  background: transparent;
-  color: var(--ln-world-outline);
+  overflow: hidden;
   text-align: left;
 }
-.laser-dock__lines {
+.laser-dock__lines,
+.laser-dock__debris {
   display: flex;
   gap: 10px;
   min-width: 0;
-  color: var(--ln-world-outline);
-  font: 700 14px/18px var(--ln-font-body);
+  overflow: hidden;
+  color: inherit;
   white-space: nowrap;
 }
-.laser-dock__debris {
-  color: var(--ln-world-outline);
-  font: 700 14px/18px var(--ln-font-body);
-  white-space: nowrap;
-}
-.laser-dock__fire {
-  height: 44px;
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 999px;
-  background: var(--ln-bp-paper);
-  color: var(--ln-world-outline);
-  font: 800 14px/44px var(--ln-font-display);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.laser-dock__fire:disabled { opacity: 0.55; cursor: not-allowed; }
 .laser-dev-skip {
   position: absolute;
   top: 52px;

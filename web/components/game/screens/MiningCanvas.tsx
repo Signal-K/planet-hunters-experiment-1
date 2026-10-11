@@ -24,6 +24,7 @@ interface MiningCanvasProps {
   palette: LaserPalette
   rocketImageSrc?: string
   minerals: string[]
+  leadMinerals?: string[]
   requiredMinerals?: string[]
   mineralMeta: Record<string, MineralMeta>
   /** Equipped drill/laser part tier (1-3). Gates how deep the laser can reach. */
@@ -47,7 +48,7 @@ interface MiningCanvasProps {
   debrisPreset?: DebrisEventPreset | null
 }
 
-export default function MiningCanvas({ palette, rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMinerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
   void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
@@ -184,6 +185,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, requir
           surfaceY,
           shipY,
           minerals,
+          leadMinerals,
           requiredMinerals,
           mineralColors: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.color])),
           mineralLaserAccess,
@@ -342,7 +344,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, requir
       // else: async init returns early (destroyed=true), canvas stays briefly then is GC'd with parent
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [palette.id, rocketImageSrc, fitKey])
+  }, [palette.id, rocketImageSrc, fitKey, leadMinerals?.join(',')])
 
   return (
     <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" data-palette={palette.id} data-training-mining={trainingMiningTry || undefined}>

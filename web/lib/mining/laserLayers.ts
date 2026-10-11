@@ -23,64 +23,51 @@ function rng(seed: number): () => number {
   }
 }
 
-function ridgeY(terrain: LaserPalette['terrain'], i: number, rand: () => number): number {
-  if (terrain === 'ice') return i % 2 === 0 ? -26 - rand() * 22 : -2 - rand() * 4
-  if (terrain === 'dunes') return -8 - Math.sin(i * 0.65) * 16 - rand() * 4
-  return -4 - rand() * 18
-}
-
-function silhouette(g: Graphics, width: number, base: number, color: number, terrain: LaserPalette['terrain'], rand: () => number, step: number) {
-  const n = Math.ceil(width / step)
-  const pts: number[] = [0, base]
-  for (let i = 0; i <= n; i++) pts.push(i * step, ridgeY(terrain, i, rand))
-  pts.push(width, base)
+/** Low, smooth skyline. The ends meet so tiled copies do not step. */
+function smoothHorizon(g: Graphics, width: number, color: number): void {
+  const base = 28
+  const amp = 7
+  const yAt = (x: number) => Math.round(base - amp * (0.55 + 0.45 * Math.sin((x / width) * Math.PI * 2)))
+  const pts: number[] = []
+  for (let x = 0; x <= width; x += 24) pts.push(x, yAt(x))
+  pts.push(width, base, 0, base)
   g.poly(pts).fill(color)
 }
 
-/** Pixel grit, stones, strata and cracks. Rock colours only — no discs. */
-function paintGroundGrit(g: Graphics, width: number, height: number, palette: LaserPalette, rand: () => number): void {
-  const rock = palette.ground
-  const deep = palette.groundDeep
-  const terrain = palette.terrain
-  const top = 18
-  const span = Math.max(24, height - 30)
+/** Three flat ground tones: deep fill, mid band, lighter surface edge. */
+function paintGroundBands(g: Graphics, width: number, height: number, palette: LaserPalette): void {
+  const edge = lerp(palette.ground, 0xffffff, 0.48)
+  const mid = Math.max(36, Math.round(height * 0.4))
+  g.rect(0, 0, width, height).fill(palette.groundDeep)
+  g.rect(0, 0, width, mid).fill(palette.ground)
+  g.rect(0, 0, width, 3).fill(edge)
+}
 
-  const strata = terrain === 'dunes' ? 6 : terrain === 'ice' ? 5 : 4
-  for (let i = 0; i < strata; i++) {
-    const y = top + Math.floor(rand() * span)
-    const x0 = Math.floor(rand() * 20)
-    const len = Math.floor(48 + rand() * (width * (terrain === 'dunes' ? 0.8 : 0.5)))
-    g.rect(x0, y, Math.min(len, width - x0), 2).fill(deep)
-    if (rand() > 0.3) {
-      const x1 = x0 + len + 6 + Math.floor(rand() * 12)
-      if (x1 < width - 12) g.rect(x1, y + (rand() > 0.5 ? 3 : -2), Math.floor(24 + rand() * 48), 2).fill(deep)
-    }
+/** A few large stepped mounds. Bottoms sit on y = 0 and grow upward. */
+function softMound(g: Graphics, x: number, w: number, h: number, color: number, shade: number): void {
+  const cap = lerp(color, 0xffffff, 0.34)
+  g.rect(x, -Math.round(h * 0.42), w, Math.round(h * 0.42)).fill(shade)
+  g.rect(x + Math.round(w * 0.08), -h, Math.round(w * 0.84), Math.round(h * 0.7)).fill(color)
+  g.rect(x + Math.round(w * 0.24), -h, Math.round(w * 0.52), Math.round(h * 0.28)).fill(cap)
+}
+
+function paintShapeRow(g: Graphics, terrain: LaserPalette['terrain'], color: number, shade: number, width: number): void {
+  const mound = (x: number, w: number, h: number) => softMound(g, x, w, h, color, shade)
+  const wide = width >= 400
+  if (terrain === 'dunes') {
+    mound(12, wide ? 240 : 168, wide ? 24 : 18)
+    mound(wide ? 270 : 188, wide ? 170 : 110, wide ? 18 : 14)
+    return
   }
-
-  const cracks = terrain === 'ice' ? 8 : terrain === 'rubble' ? 5 : 3
-  for (let i = 0; i < cracks; i++) {
-    let x = 8 + rand() * (width - 24)
-    let y = top + rand() * 16
-    const steps = 4 + Math.floor(rand() * (terrain === 'ice' ? 6 : 4))
-    for (let s = 0; s < steps; s++) {
-      g.rect(x, y, 2, 4 + rand() * 7).fill(deep)
-      x += (rand() - 0.35) * 6
-      y += 4 + rand() * 5
-    }
+  if (terrain === 'ice') {
+    mound(16, wide ? 180 : 140, wide ? 18 : 14)
+    mound(wide ? 220 : 168, wide ? 150 : 112, wide ? 14 : 12)
+    if (wide) mound(390, 72, 16)
+    return
   }
-
-  const stones = terrain === 'rubble' ? 14 : terrain === 'dunes' ? 7 : 9
-  for (let i = 0; i < stones; i++) {
-    const sw = 4 + Math.floor(rand() * (terrain === 'rubble' ? 7 : 4))
-    const sh = 3 + Math.floor(rand() * 4)
-    const sx = rand() * (width - sw)
-    const sy = top + rand() * (span - sh)
-    g.rect(sx, sy, sw, sh).fill(deep)
-    g.rect(sx, sy, Math.max(2, sw - 1), 1).fill(rock)
-  }
-
-  const grit = terrain === 'rubble' ? 28 : 18
-  for (let i = 0; i < grit; i++) g.rect(rand() * (width - 2), top + rand() * span, 2, rand() > 0.5 ? 2 : 1).fill(deep)
+  mound(16, wide ? 130 : 96, wide ? 34 : 28)
+  mound(wide ? 180 : 140, wide ? 96 : 72, wide ? 26 : 20)
+  if (wide) mound(310, 120, 30)
 }
 
 function paintSky(w: number, h: number, palette: LaserPalette): Graphics {
@@ -179,28 +166,30 @@ export function buildLaserField(opts: {
     }
   }
 
+  const horizon = lerp(palette.distant, palette.skyHorizon, 0.42)
   const farW = RIDGE_TILE_W
   const far = new Container()
   const farCopies = Math.ceil(worldW / farW) + 2
   for (let i = 0; i < farCopies; i++) {
     const g = new Graphics()
-    silhouette(g, farW, 70, palette.distant, palette.terrain, rand, 28)
+    smoothHorizon(g, farW, horizon)
     g.x = i * farW
     far.addChild(g)
   }
-  far.y = surfaceY - 78
+  far.y = surfaceY - 36
   backdrop.addChild(far)
 
+  const shape = lerp(palette.nearRidge, 0xffffff, palette.terrain === 'rubble' ? 0.22 : 0.08)
   const nearW = RIDGE_TILE_W
   const near = new Container()
   const nearCopies = Math.ceil(worldW / nearW) + 2
   for (let i = 0; i < nearCopies; i++) {
     const g = new Graphics()
-    silhouette(g, nearW, 48, palette.nearRidge, palette.terrain, rand, 18)
+    paintShapeRow(g, palette.terrain, shape, palette.groundDeep, nearW)
     g.x = i * nearW
     near.addChild(g)
   }
-  near.y = surfaceY - 36
+  near.y = surfaceY
   backdrop.addChild(near)
 
   const groundH = Math.max(40, worldH - surfaceY)
@@ -208,25 +197,12 @@ export function buildLaserField(opts: {
   const tiles = Math.ceil(worldW / GROUND_TILE_W) + 2
   for (let i = 0; i < tiles; i++) {
     const g = new Graphics()
-    g.rect(0, 16, GROUND_TILE_W, groundH).fill(palette.groundDeep)
-    silhouette(g, GROUND_TILE_W, groundH, palette.ground, palette.terrain, rand, 14)
-    paintGroundGrit(g, GROUND_TILE_W, groundH, palette, rand)
+    paintGroundBands(g, GROUND_TILE_W, groundH, palette)
     g.x = i * GROUND_TILE_W
     ground.addChild(g)
   }
   ground.y = surfaceY
   backdrop.addChild(ground)
-
-  const motes: Mote[] = []
-  for (let i = 0; i < 22; i++) {
-    const g = new Graphics()
-    const r = 1 + rand() * 1.6
-    g.circle(0, 0, r).fill({ color: palette.dust, alpha: 0.25 + rand() * 0.4 })
-    g.x = rand() * worldW
-    g.y = surfaceY * 0.35 + rand() * (worldH - surfaceY * 0.35)
-    backdrop.addChild(g)
-    motes.push({ g, x: g.x, y: g.y, vx: 8 + rand() * 22, bob: rand() * Math.PI * 2 })
-  }
 
   const beamH = Math.max(24, surfaceY - shipY - 8)
   const beam = new Graphics()
@@ -254,12 +230,6 @@ export function buildLaserField(opts: {
       for (const star of stars) {
         const flick = 0.55 + 0.45 * Math.abs(Math.sin(time * 2.4 + star.phase))
         star.g.alpha = star.base * (1 - tw + tw * flick)
-      }
-      for (const mote of motes) {
-        if (!reduced) mote.x -= mote.vx * 0.016
-        if (mote.x < -8) mote.x = worldW + 8
-        mote.g.x = mote.x
-        mote.g.y = mote.y + Math.sin(time * 1.4 + mote.bob) * 3 * tw
       }
       for (const cloud of clouds) {
         if (!reduced) cloud.x += cloud.vx * 0.016

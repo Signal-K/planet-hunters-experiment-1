@@ -121,6 +121,9 @@ export interface MiningControllerOptions {
   /** Overrides SHIP_Y when the world is sized dynamically from the viewport. */
   shipY?: number
   minerals: string[]
+  /** Drawn first, in order, spaced across the opening frame. Used by the
+   * `?ores=mixed` preview so iron, carbon and ice share one screenshot. */
+  leadMinerals?: string[]
   /** Required order minerals are seeded at the front of the run so the
    * objective is always discoverable before the normal deposit rotation. */
   requiredMinerals?: string[]
@@ -277,9 +280,19 @@ export class MiningController extends ScriptBehaviour {
 
   start(): void {
     const required = this.opts.requiredMinerals ?? []
-    this.requiredMineralQueue = required.flatMap(mineral => Array.from({ length: REQUIRED_ORE_COPIES }, () => mineral))
+    const lead = (this.opts.leadMinerals ?? []).filter(mineral => mineral.length > 0)
+    this.requiredMineralQueue = [
+      ...lead,
+      ...required.flatMap(mineral => Array.from({ length: REQUIRED_ORE_COPIES }, () => mineral)),
+    ]
     let x = SHIP_X + 40
     let count = 0
+    const leadGap = Math.min(160, Math.max(112, Math.round((this.opts.worldWidth - 180) / Math.max(lead.length, 1))))
+    while (count < lead.length && count < 20) {
+      this.spawnOre(x)
+      count++
+      x += leadGap
+    }
     while (count < 20) {
       this.spawnOre(x)
       count++

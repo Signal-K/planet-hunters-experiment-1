@@ -419,8 +419,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           {!subsurface && <HubClockWidget />}
           {!subsurface && (
             <div className={layoutStyles.chips}>
-              <span className={layoutStyles.chip} data-testid="hub-francs-chip">{formatCurrency(player.francs, { compact: true })}</span>
-              <span className={layoutStyles.chip} data-testid="hub-cargo-chip" aria-label="Cargo">
+              <span className="scene-chip" data-testid="hub-francs-chip">{formatCurrency(player.francs, { compact: true })}</span>
+              <span className="scene-chip" data-testid="hub-cargo-chip" aria-label="Cargo">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" />
                   <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />

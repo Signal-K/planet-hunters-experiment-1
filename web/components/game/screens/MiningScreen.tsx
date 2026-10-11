@@ -9,6 +9,7 @@ import Panel from '@/components/ui/Panel'
 import { paletteById, paletteForTarget } from '@/lib/mining/laserPalette'
 import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
+import { DockArrowButton, DockPrimaryButton, DockWordButton } from '@/components/game/hub/BaseDock'
 import FriendsButton from '@/components/game/FriendsButton'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
@@ -348,10 +349,12 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
   const [paletteOverride, setPaletteOverride] = useState<string | null>(null)
   const [devBars, setDevBars] = useState(false)
+  const [mixedOres, setMixedOres] = useState(false)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     setPaletteOverride(params.get('palette'))
     setDevBars(params.get('dev') === '1')
+    setMixedOres(params.get('ores') === 'mixed')
   }, [])
   const palette = paletteById(paletteOverride) ?? paletteForTarget(target)
 
@@ -563,35 +566,31 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         >
           <HubClockWidget />
         </button>
-        <button type="button" className="scene-icon-btn laser-chrome__cube" aria-label={`Cargo ${freeOpsCargoUnits} units`} data-testid="mining-cargo-chip">
+        <button type="button" className="scene-chip laser-chrome__cube" aria-label={`Cargo ${freeOpsCargoUnits} units`} data-testid="mining-cargo-chip">
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
             <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" strokeWidth="2" />
           </svg>
         </button>
-        <FriendsButton onClick={openFriends} />
-        <button
-          type="button"
-          className="scene-icon-btn laser-chrome__arrow laser-chrome__arrow--left"
+        <FriendsButton className="scene-chip" onClick={openFriends} />
+        <DockArrowButton
+          direction="left"
+          className="laser-chrome__arrow laser-chrome__arrow--left"
           aria-label="Scroll slower"
           disabled={sceneStatus !== 'ready'}
           onPointerDown={holdScroll(-1)}
           onPointerUp={releaseScroll}
           onPointerCancel={releaseScroll}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-        </button>
-        <button
-          type="button"
-          className="scene-icon-btn laser-chrome__arrow laser-chrome__arrow--right"
+        />
+        <DockArrowButton
+          direction="right"
+          className="laser-chrome__arrow laser-chrome__arrow--right"
           aria-label="Scroll faster"
           disabled={sceneStatus !== 'ready'}
           onPointerDown={holdScroll(1)}
           onPointerUp={releaseScroll}
           onPointerCancel={releaseScroll}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
-        </button>
+        />
       </div>
 
       <div className="mining-stage">
@@ -601,6 +600,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           palette={palette}
           rocketImageSrc={rocketImageSrc}
           minerals={depositMinerals}
+          leadMinerals={mixedOres ? ['iron', 'carbon', 'ice'] : undefined}
           requiredMinerals={Object.keys(mission.requires.minerals)}
           mineralMeta={minerals}
           laserTier={laserTier}
@@ -689,10 +689,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </Panel>
         )}
 
-        <div className="laser-dock" data-ore-near={oreNear}>
-          <button
+        <div className="scene-dock-pill" data-ore-near={oreNear}>
+          <DockWordButton
             className="laser-dock__order"
-            type="button"
             data-testid="return-home-btn"
             data-mode={!isFreeOps && needsRecharge && !orderFilled ? 'recharge' : 'return'}
             onClick={!isFreeOps && needsRecharge && !orderFilled ? handleRecharge : handleReturn}
@@ -705,14 +704,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               )}
             </span>
             {isFreeOps && freeOpsDebrisReadout ? <span className="laser-dock__debris" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span> : null}
-          </button>
-          <button
-            className={[
-              'laser-dock__fire',
-              isCharging && 'laser-dock__fire--charging',
-              tapDenied && 'laser-dock__fire--denied',
-            ].filter(Boolean).join(' ')}
-            type="button"
+          </DockWordButton>
+          <DockPrimaryButton
             disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
             data-testid="fire-laser-btn"
             data-beacon="mining-fire-laser"
@@ -724,7 +717,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             onClick={e => { if (e.detail === 0) fireLaser() }}
           >
             {laserCharges <= 0 ? 'Depleted' : isCharging ? 'Charging' : 'Fire laser'}
-          </button>
+          </DockPrimaryButton>
         </div>
       </div>
 

@@ -49,22 +49,6 @@
   gap: 8px;
   pointer-events: none;
 }
-.chip {
-  min-width: 44px;
-  min-height: 36px;
-  padding: 0 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  background: var(--ln-world-hull-lit);
-  color: var(--ln-world-outline);
-  border: 1px solid var(--ln-world-outline);
-  font-family: var(--ln-font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  box-sizing: border-box;
-}
 .balance { pointer-events: auto; }
 /* Two classes: SkyBadgeRow's own `bottom: 16px` ties a single class and can win on stylesheet order. */
 .root .badges { top: 144px; bottom: auto; z-index: 19; }

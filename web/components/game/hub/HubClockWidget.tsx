@@ -16,22 +16,9 @@ function ClockGlyph() {
 export function HubClockWidget() {
   const { label } = useTimeOfDay()
   return (
-    <div
-      data-testid="hub-clock-widget"
-      style={{
-        display: 'flex', alignItems: 'center', gap: 6, minHeight: 36, minWidth: 44, boxSizing: 'border-box',
-        background: 'var(--ln-world-hull-lit)', border: '1px solid var(--ln-world-outline)',
-        borderRadius: 4, padding: '0 8px', flexShrink: 0,
-        color: 'var(--ln-world-outline)',
-      }}
-    >
-      <span style={{ color: 'var(--ln-world-outline)', display: 'flex' }}><ClockGlyph /></span>
-      <span style={{
-        fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 700,
-        letterSpacing: '0.06em', color: 'var(--ln-world-outline)',
-      }}>
-        {label}
-      </span>
+    <div data-testid="hub-clock-widget" className="scene-chip">
+      <span style={{ display: 'flex' }}><ClockGlyph /></span>
+      <span>{label}</span>
     </div>
   )
 }
