@@ -87,3 +87,6 @@ test-results/
 # CI sandbox output
 sandbox/output/
 __pycache__/
+
+# Written by tests/scenes/flow-landscape-height.spec.ts on every run
+/docs/landscape-playfield/

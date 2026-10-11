@@ -2,7 +2,6 @@ FROM node:24-alpine AS dev
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY vendor/takeon ./vendor/takeon
-ENV CYPRESS_INSTALL_BINARY=0
 RUN --mount=type=cache,target=/root/.npm npm ci --prefer-offline --no-audit
 ENV NEXT_TELEMETRY_DISABLED=1
 EXPOSE 3001
@@ -12,7 +11,6 @@ FROM node:24-alpine AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY vendor/takeon ./vendor/takeon
-ENV CYPRESS_INSTALL_BINARY=0
 RUN --mount=type=cache,target=/root/.npm npm ci --prefer-offline --no-audit
 
 FROM node:24-alpine AS builder

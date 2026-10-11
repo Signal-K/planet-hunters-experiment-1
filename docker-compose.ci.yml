@@ -3,13 +3,11 @@
 # Usage:
 #   docker compose -f docker-compose.ci.yml run --rm web-unit    # Typecheck + unit tests + migration check
 #   docker compose -f docker-compose.ci.yml run --rm web-build   # Next.js production build
-#   docker compose -f docker-compose.ci.yml run --rm sandbox     # M1→M3 Cypress E2E suite
 #   docker compose -f docker-compose.ci.yml run --rm seed-data   # RSpec tests + seed:import (mirrors seed-data.yml)
 #
 # Run all in sequence (same as CI):
 #   docker compose -f docker-compose.ci.yml run --rm web-unit && \
 #   docker compose -f docker-compose.ci.yml run --rm web-build && \
-#   docker compose -f docker-compose.ci.yml run --rm sandbox && \
 #   docker compose -f docker-compose.ci.yml run --rm seed-data
 
 services:
@@ -47,17 +45,6 @@ services:
       NEXT_TELEMETRY_DISABLED: "1"
       NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8090
       NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8091
-      CI: "true"
-
-  # Mirrors: Mission Sandbox / M1→M3 Mission Flow Sandbox
-  sandbox:
-    build:
-      context: .
-      dockerfile: Dockerfile.sandbox
-    volumes:
-      - ./sandbox/output:/output
-    shm_size: 256mb
-    environment:
       CI: "true"
 
   # Mirrors: Seed Data Import / seed-data.yml (rspec + seed:import)

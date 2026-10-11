@@ -25,26 +25,6 @@ services:
       timeout: 3s
       retries: 20
 
-  cypress:
-    image: cypress/included:15.16.0
-    working_dir: /e2e
-    environment:
-      CYPRESS_baseUrl: http://web:3001
-      CYPRESS_SHARED_PB_URL: http://host.docker.internal:8090
-      CYPRESS_LANDNAM_PB_URL: http://host.docker.internal:8091
-      CYPRESS_POCKETBASE_URL: http://host.docker.internal:8091
-      CYPRESS_PROFILE: with-pb
-    volumes:
-      - ./cypress.docker.config.js:/e2e/cypress.config.js:ro
-      - ./web/cypress:/e2e/cypress:ro
-      - ./web/package.json:/e2e/package.json:ro
-      - ./web/tsconfig.json:/e2e/tsconfig.json:ro
-      - ./web/node_modules:/e2e/node_modules:ro
-    depends_on:
-      web:
-        condition: service_healthy
-    profiles: ["e2e"]
-
 volumes:
   web_node_modules:
   web_next_cache:

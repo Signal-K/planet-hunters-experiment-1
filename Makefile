@@ -1,9 +1,7 @@
-.PHONY: help up up-ecosystem pb-up pb-stop down build web-deps logs e2e e2e-open web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
+.PHONY: help up up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 PARENT_COMPOSE   := docker compose -p navigation -f ../docker-compose.yml
-E2E_COMPOSE      := $(FRONTEND_COMPOSE) --profile e2e
-E2E_FULL_COMPOSE := docker compose -f docker-compose.e2e.yml
 
 help:
 	@echo "Landnam — available targets"
@@ -31,9 +29,6 @@ help:
 	@echo "                   modules. 'build' alone does NOT fix it: web_node_modules is a"
 	@echo "                   named volume that shadows whatever the rebuilt image installs"
 	@echo "    logs           Follow stack logs"
-	@echo "    e2e            Run Cypress against the frontend Docker stack"
-	@echo "    test-e2e       Run Cypress against full E2E stack (shared-pb + landnam-pb + next-app)"
-	@echo "    e2e-open       Start stack + open Cypress UI"
 	@echo "    web-dev        Run Next.js dev server locally (no Docker)"
 	@echo "    pb-dev         Run Landnam PocketBase as a native binary on :8093 (no Docker) —"
 	@echo "                   web already defaults NEXT_PUBLIC_LANDNAM_PB_URL to this port"
@@ -90,25 +85,6 @@ web-deps:
 logs:
 	$(PARENT_COMPOSE) logs -f backend landnam-backend
 	$(FRONTEND_COMPOSE) logs -f web
-
-test-e2e:
-	@cleanup() { $(E2E_FULL_COMPOSE) down --remove-orphans --volumes --rmi local; }; \
-	trap cleanup EXIT INT TERM; \
-	status=0; \
-	cleanup; \
-	$(E2E_FULL_COMPOSE) up --build --remove-orphans --abort-on-container-exit --exit-code-from cypress shared-pb landnam-pb next-app cypress || status=$$?; \
-	exit $$status
-
-e2e:
-	@status=0; \
-	$(E2E_COMPOSE) down --remove-orphans; \
-	CYPRESS_PROFILE=with-pb $(E2E_COMPOSE) up --build --remove-orphans --abort-on-container-exit --exit-code-from cypress web cypress || status=$$?; \
-	$(E2E_COMPOSE) down --remove-orphans; \
-	exit $$status
-
-e2e-open:
-	$(MAKE) up
-	cd web && npx cypress open --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:3001
 
 web-dev:
 	cd web && npm run dev
