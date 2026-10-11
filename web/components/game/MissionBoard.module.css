@@ -97,12 +97,14 @@ button.round:disabled { opacity: 0.45; cursor: default; }
   position: absolute;
   z-index: 2;
   top: 60px;
-  left: 7.5%;
-  width: 85%;
+  left: 64px;
+  right: 64px;
+  width: auto;
   height: calc(100% - 76px);
   display: grid;
   grid-template-columns: 104px minmax(0, 1fr);
   min-height: 0;
+  padding-top: 64px;
   border: 3px solid color-mix(in srgb, var(--ln-board-paper) 82%, var(--ln-board-ink));
   border-radius: 28px;
   background-color: var(--ln-board-lavender);
@@ -171,7 +173,7 @@ button.log {
 }
 
 .stage { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
-.close { position: absolute; top: 10px; right: 10px; z-index: 3; }
+.close { position: absolute; top: 6px; right: 10px; z-index: 6; }
 
 .body { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; padding: 12px 16px 12px 12px; }
 
@@ -184,14 +186,32 @@ button.log {
 .card {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(168px, 240px);
+  grid-template-areas:
+    "head head"
+    "title ship"
+    "facts ship"
+    "cargo ship"
+    "accept accept";
+  column-gap: 16px;
+  row-gap: 8px;
+  align-content: safe center;
+  align-items: center;
   flex: 1 1 auto;
   min-height: 0;
-  margin: 0 8%;
-  padding: 14px 16px 14px;
+  margin: 0 4%;
+  padding: 14px 16px;
   overflow: auto;
+}
+.card:has(.lockline) {
+  grid-template-areas:
+    "head head"
+    "title ship"
+    "facts ship"
+    "cargo ship"
+    "lock lock"
+    "accept accept";
 }
 .peek {
   position: absolute;
@@ -207,6 +227,7 @@ button.log {
 .peekNext { right: 0; background-color: color-mix(in srgb, var(--ln-board-amber) 48%, var(--ln-board-paper)); }
 
 .head {
+  grid-area: head;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
@@ -243,12 +264,12 @@ button.log {
 }
 .wsw svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .title {
+  grid-area: title;
   margin: 0;
-  padding-right: 150px;
   font: 800 clamp(22px, 3vw, 36px)/1.05 var(--ln-font-display);
   overflow-wrap: anywhere;
 }
-.facts { display: flex; flex-wrap: wrap; gap: 8px; max-width: calc(100% - 150px); }
+.facts { grid-area: facts; display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
 .fact {
   flex: 1 1 140px;
   min-height: 72px;
@@ -283,7 +304,7 @@ button.log {
   font: 800 14px/1 var(--ln-font-display);
   box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--ln-board-ink) 18%, transparent);
 }
-.cargo { display: flex; flex-direction: column; gap: 8px; max-width: calc(100% - 150px); }
+.cargo { grid-area: cargo; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .cargo > span {
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: 0.08em;
@@ -309,18 +330,24 @@ button.log {
 }
 .rock svg { width: 28px; height: 28px; }
 .rocket {
-  position: absolute;
-  right: 16px;
-  top: 78px;
-  width: 132px;
-  max-height: 180px;
+  grid-area: ship;
+  position: static;
+  justify-self: center;
+  align-self: center;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: 240px;
+  padding: 4px 8px;
   object-fit: contain;
   pointer-events: none;
 }
+.lockline { grid-area: lock; }
 button.accept {
-  margin-top: auto;
-  position: sticky;
-  bottom: 0;
+  grid-area: accept;
+  margin-top: 4px;
+  position: static;
   z-index: 2;
   min-height: 48px;
   border: 0;
@@ -371,7 +398,7 @@ button.dotBtn {
 }
 .empty strong { font: 800 16px/1.2 var(--ln-font-display); letter-spacing: 0.06em; }
 
-.chain { display: flex; flex-direction: column; align-items: stretch; gap: 0; max-width: 720px; margin: 0 auto; padding: 4px 48px 16px 8px; }
+.chain { display: flex; flex-direction: column; align-items: stretch; gap: 0; max-width: 720px; margin: 0 auto; padding: 4px 8px 16px; }
 .step {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr) auto;
@@ -434,11 +461,11 @@ button.start {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(200px, 0.75fr);
   gap: 12px;
-  align-items: stretch;
-  flex: 1 1 auto;
+  align-items: start;
+  flex: 0 0 auto;
   min-height: 0;
-  height: 100%;
-  overflow: hidden;
+  height: auto;
+  overflow: visible;
 }
 .hero, .eventCard {
   border: 2px solid color-mix(in srgb, var(--ln-board-ink) 10%, transparent);
@@ -447,17 +474,26 @@ button.start {
   overflow: hidden;
 }
 .eventCard { flex: 0 0 auto; }
-.hero { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.hero { display: flex; flex-direction: column; min-height: 0; height: auto; }
 .heroArt, .eventArt {
   position: relative;
   display: block;
   width: 100%;
+  aspect-ratio: 320 / 140;
+  height: auto;
+  flex: none;
   overflow: hidden;
   background-color: var(--ln-world-dusk-mid, var(--ln-board-lavender-deep));
 }
-.heroArt { flex: 1 1 auto; height: auto; min-height: 96px; }
-.eventArt { height: 64px; flex: none; }
-.banner { display: block; width: 100%; height: 100%; }
+.banner {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
 .heroBody, .eventBody { padding: 12px 14px 14px; }
 .hero h2, .eventBody h3 { margin: 0; font: 800 22px/1.1 var(--ln-font-display); color: var(--ln-board-ink); }
 .eventBody h3 { font-size: 16px; }
@@ -485,7 +521,7 @@ button.start {
 .medal[data-tier='gold'] { background-color: color-mix(in srgb, var(--ln-board-gold) 70%, var(--ln-board-paper)); color: var(--ln-board-ink); }
 .medal[data-tier='silver'] { background-color: color-mix(in srgb, var(--ln-board-silver) 80%, var(--ln-board-paper)); color: var(--ln-board-ink); }
 .blurb { margin: 8px 0 0; font: 600 14px/1.3 var(--ln-font-body); color: var(--ln-board-ink); }
-.stack { display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; overflow: auto; }
+.stack { display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; overflow: visible; }
 .ended {
   display: inline-flex;
   align-items: center;
@@ -504,9 +540,9 @@ button.start {
 @media (orientation: portrait) and (max-width: 700px) {
   .panel {
     top: 64px;
-    left: 12px;
+    left: 64px;
+    right: 64px;
     width: auto;
-    right: 12px;
     height: calc(100% - 76px);
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
@@ -521,32 +557,59 @@ button.start {
   }
   .tab { flex: 1 1 0; min-height: 56px; }
   button.log { margin-top: 0; flex: 0 0 auto; padding: 0 10px; }
-  .body { padding: 8px 12px 8px; }
-  .card { margin: 0; padding: 12px; }
-  .title, .facts, .cargo { padding-right: 0; max-width: none; }
-  .rocket { position: static; width: min(140px, 40%); max-height: 120px; align-self: center; }
-  .events { grid-template-columns: minmax(0, 1fr); height: auto; overflow: visible; }
-  .hero { height: auto; }
-  .stack { overflow: visible; }
-  .heroArt { min-height: 140px; flex: none; height: 140px; }
-  .chain { padding-right: 8px; }
+  .body { padding: 8px; }
+  .card {
+    margin: 0;
+    padding: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "title"
+      "facts"
+      "cargo"
+      "ship"
+      "accept";
+  }
+  .card:has(.lockline) {
+    grid-template-areas:
+      "head"
+      "title"
+      "facts"
+      "cargo"
+      "ship"
+      "lock"
+      "accept";
+  }
+  .rocket { max-width: 140px; max-height: 140px; }
+  .events { grid-template-columns: minmax(0, 1fr); }
+  .step {
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: start;
+  }
+  .mark { grid-column: 1 / -1; justify-self: stretch; }
+  button.start { width: 100%; }
   .head { grid-template-columns: minmax(0, 1fr) auto; }
   .markSlot { grid-column: 2; grid-row: 1; }
   .wsw { grid-column: 1 / -1; justify-self: start; }
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
-  .panel { top: 56px; height: calc(100% - 64px); border-radius: 20px; }
+  .panel { top: 52px; height: calc(100% - 58px); padding-top: 56px; border-radius: 20px; }
   .cog, .clock, .chips { top: 6px; }
-  .body { padding: 6px 8px 6px; }
-  .card { padding: 8px 10px; gap: 4px; }
-  .title { font-size: 22px; padding-right: 120px; }
-  .facts, .cargo { max-width: calc(100% - 120px); }
-  .fact { min-height: 56px; padding: 6px 10px; }
-  .fact strong { font-size: 18px; }
-  .rocket { top: 64px; width: 108px; max-height: 120px; }
-  .heroArt { min-height: 72px; }
-  .eventArt { height: 52px; }
+  .body { padding: 4px 8px; }
+  .card {
+    align-content: start;
+    padding: 4px 8px;
+    row-gap: 4px;
+    grid-template-columns: minmax(0, 1fr) 220px;
+  }
+  .head { min-height: 44px; padding: 2px 8px; }
+  .title { font-size: 20px; }
+  .fact { min-height: 44px; padding: 4px 8px; }
+  .fact strong { margin-top: 2px; font-size: 16px; }
+  .cargo { gap: 4px; }
+  button.accept { margin-top: 0; min-height: 44px; }
+  .rocket { max-height: 132px; align-self: center; }
   .eventBody { padding: 8px 10px; }
   .medal { width: 44px; height: 36px; }
   .badges { margin-top: 6px; }

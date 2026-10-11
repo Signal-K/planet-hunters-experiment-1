@@ -107,7 +107,7 @@ function MineralRock({ shape, color }: { shape?: string; color: string }) {
 }
 
 function SkyBanner({ kind }: { kind: 'orionids' | 'comet' | 'saturn' | 'rocket' | 'moon' }) {
-  return <svg className={styles.banner} viewBox="0 0 320 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  return <svg className={styles.banner} viewBox="0 0 320 140" width="320" height="140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <rect width="320" height="140" fill="var(--ln-world-dusk-top)" />
     <rect y="70" width="320" height="70" fill="var(--ln-world-dusk-horizon)" />
     <rect y="108" width="320" height="32" fill="var(--ln-world-soil)" />
@@ -208,6 +208,7 @@ export default function MissionBoard({
       <button type="button" className={`${styles.round} ${styles.arrow} ${styles.next}`} data-testid="mission-board-next" aria-label="Next contract" disabled={!paging} onClick={() => paging && onSelectRelative(1)}><ArrowIcon direction="right" /></button>
     </div>
     <section className={styles.panel} data-testid="mission-board" aria-label="Mission board">
+      <button type="button" className={`${styles.round} ${styles.close}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
       <nav className={styles.tabs} aria-label="Mission board">
         <button type="button" className={styles.tab} data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon />Contracts</button>
         <button type="button" className={styles.tab} data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => setTab('program')}><ClipboardIcon />Program</button>
@@ -218,7 +219,6 @@ export default function MissionBoard({
         <button type="button" className={styles.log} data-testid="mission-board-log" onClick={onOpenLog}>LOG</button>
       </nav>
       <div className={styles.stage}>
-        <button type="button" className={`${styles.round} ${styles.close}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
         <div className={styles.body}>
           {tab === 'contracts' && (card ? <div className={styles.carousel}>
             {prevCard && <button type="button" className={`${styles.peek} ${styles.peekPrev}`} aria-label={`Show ${prevCard.mission.title}`} onClick={() => onSelectRelative(-1)} />}
