@@ -169,7 +169,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   const resumeOperations = () => {
     if (game.player.activeMission) {
       const phase = game.player.missionPhase
-      game.go(phase === 'mining' ? 'mining' : phase === 'debrief' ? 'debrief' : 'transit')
+      game.go(phase === 'survey' ? 'rover-survey' : phase === 'mining' ? 'mining' : phase === 'debrief' ? 'debrief' : 'transit')
       return
     }
     game.goToMissions()

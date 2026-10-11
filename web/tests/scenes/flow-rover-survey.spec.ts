@@ -1,27 +1,20 @@
 import { expect, test } from '@playwright/test'
 import { VIEWPORTS, stage } from './helpers'
 
-// Easy mining: one tap on an outcrop drives the rover there and drills on arrival; RETURN opens after drill three, no rig needed.
+// Starter-rover survey: log one exposed outcrop, then continue to the ship laser. The rover does not extract cargo.
 for (const [vp, size] of Object.entries(VIEWPORTS)) {
   test.describe(vp, () => {
     test.use({ viewport: size })
-    test('tapping outcrops auto-drills and opens RETURN after drill three', async ({ page }, info) => {
+    test('logging an outcrop enables continue to the ship laser', async ({ page }, info) => {
       test.setTimeout(150_000)
-      const { errors } = await stage(page, 'ui-rover-mining', { click: ['deploy-surface-ops-confirm'] })
+      const { errors } = await stage(page, 'ui-rover-survey', { click: ['deploy-rover-survey-confirm'] })
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
-      await expect(page.getByTestId('rover-drill-action')).toHaveCount(0)
-      const back = page.getByTestId('rover-return-to-ship')
-      await expect(back).toBeDisabled()
-      const readout = page.getByTestId('rover-drill-readout')
-      for (const [index, id] of ['ore-a', 'ore-b', 'ore-c'].entries()) {
-        await page.getByTestId(`rover-ore-${id}`).click()
-        await expect(readout).toContainText(`DRILL ${index + 1}`, { timeout: 40_000 })
-        if (index < 2) await expect(back).toBeDisabled()
-      }
-      await expect(readout).toContainText('MINE SITE LOCATED')
-      await expect(back).toBeEnabled()
-      await expect(page.getByTestId('rover-mine-site-construction')).toContainText('START FIRST MINE RIG')
-      await page.screenshot({ path: info.outputPath(`easy-rover-mining-${vp}.png`) })
+      const cont = page.getByTestId('rover-continue-to-laser')
+      await expect(cont).toBeDisabled()
+      await page.locator('[data-testid^="rover-outcrop-"]').first().click({ timeout: 40_000 })
+      await expect(page.getByTestId('rover-survey-readout')).toContainText('OBSERVATION LOGGED')
+      await expect(cont).toBeEnabled()
+      await page.screenshot({ path: info.outputPath(`rover-survey-${vp}.png`) })
       expect(errors).toEqual([])
     })
   })

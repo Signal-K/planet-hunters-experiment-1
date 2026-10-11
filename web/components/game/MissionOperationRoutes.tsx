@@ -228,7 +228,6 @@ export default function MissionOperationRoutes({
           mission={game.mission}
           target={roverTarget}
           rocketImageSrc={rocketDisplay.img}
-          clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
           player={game.player}
           onFieldBuild={game.recordFieldBuild}
           onFieldDemolish={game.recordFieldDemolish}

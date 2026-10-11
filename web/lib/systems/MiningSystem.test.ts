@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
-import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from './MiningSystem'
+import { applyMiningDone, applyReturnArrived } from './MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from './DeliverySystem'
 
 type GameStateOverrides = Omit<Partial<GameState>, 'player'> & {
@@ -94,37 +94,16 @@ describe('applyMiningDone', () => {
     const next = applyMiningDone(s, { nickel: 2 }, 1_000)
     expect(next.player.miningCargoInProgress).toBeUndefined()
   })
-})
 
-describe('applyRoverMiningDone', () => {
-  it('clears roverMiningStartedAt once the run completes', () => {
-    const s = makeState({ screen: 'rover-mining', player: { roverMiningStartedAt: Date.now() } })
-    const next = applyRoverMiningDone(s, { ice: 3 }, 500)
+  it('clears the legacy rover timer when the laser run completes', () => {
+    const s = makeState({ screen: 'mining', player: { roverMiningStartedAt: Date.now() } })
+    const next = applyMiningDone(s, { nickel: 2 }, 1_000)
     expect(next.player.roverMiningStartedAt).toBeUndefined()
   })
 
-  it('mirrors applyMiningDone for the delivery/return branching', () => {
-    const s = makeState({ screen: 'rover-mining', deliveryTargetId: 'ceres' })
-    const next = applyRoverMiningDone(s, { ice: 3 }, 500)
-    expect(next.screen).toBe('transit')
-    expect(next.player.headingToDelivery).toBe(true)
-  })
-
-  it('carries the rover cargo through to the debrief cargo the contract is judged on', () => {
-    const requirements = { iron: 3, copper: 2 }
-    const afterRover = applyRoverMiningDone(makeState({ screen: 'rover-mining' }), requirements, 500)
-    expect(afterRover.lastCargo).toEqual(requirements)
-    const debrief = applyReturnArrived(afterRover)
-    const debriefCargo = debrief.deliveredCargo ?? debrief.lastCargo ?? {}
-    expect(Object.entries(requirements).every(([id, n]) => (debriefCargo[id] ?? 0) >= n)).toBe(true)
-    expect(debrief.player.stash).toEqual(requirements)
-  })
-
-  it('does not drop or reject short cargo: it reaches debrief unchanged and unmet', () => {
-    const afterRover = applyRoverMiningDone(makeState({ screen: 'rover-mining' }), { iron: 1 }, 500)
-    const debrief = applyReturnArrived(afterRover)
-    expect(debrief.screen).toBe('debrief')
-    expect(debrief.lastCargo).toEqual({ iron: 1 })
+  it('does not extract cargo from the rover survey screen', () => {
+    const s = makeState({ screen: 'rover-survey', player: { roverMiningStartedAt: Date.now() } })
+    expect(applyMiningDone(s, { ice: 3 }, 500)).toBe(s)
   })
 })
 
@@ -151,6 +130,19 @@ describe('applyReturnArrived', () => {
 
     expect(next.player.stash).toEqual({ nickel: 2 })
     expect(next.deliveredCargo).toBeNull()
+  })
+
+  it('keeps a short laser haul through debrief unchanged', () => {
+    const requirements = { iron: 3, copper: 2 }
+    const afterMining = applyMiningDone(makeState({ screen: 'mining' }), requirements, 500)
+    const debrief = applyReturnArrived(afterMining)
+    const debriefCargo = debrief.deliveredCargo ?? debrief.lastCargo ?? {}
+    expect(Object.entries(requirements).every(([id, n]) => (debriefCargo[id] ?? 0) >= n)).toBe(true)
+    expect(debrief.player.stash).toEqual(requirements)
+
+    const short = applyReturnArrived(applyMiningDone(makeState({ screen: 'mining' }), { iron: 1 }, 500))
+    expect(short.screen).toBe('debrief')
+    expect(short.lastCargo).toEqual({ iron: 1 })
   })
 
   it('is a no-op without pending debrief cargo', () => {

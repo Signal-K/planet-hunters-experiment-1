@@ -2,14 +2,14 @@ import Foundation
 
 /// Every top-level scene in the game. Raw values match the web `Screen` union so
 /// saves written by the web client decode unchanged.
-public enum Screen: String, Codable, CaseIterable, Sendable {
+public enum Screen: String, CaseIterable, Sendable {
     case intro, build, hub
     case hubSubsurface = "hub-subsurface"
     case missions, galaxy, targets, fab, transit, landing, mining, delivery, debrief
     case refinery, market, hangar
     case rocketBuy = "rocket-buy"
     case skills
-    case roverMining = "rover-mining"
+    case roverSurvey = "rover-survey"
     case launchpad
     case surfaceOps = "surface-ops"
     case academy
@@ -23,7 +23,7 @@ public enum Screen: String, Codable, CaseIterable, Sendable {
     /// that keep the boxed card treatment (mirrors `LOCATION_SCREENS` on web).
     public var isLocation: Bool {
         switch self {
-        case .hub, .hubSubsurface, .launchpad, .transit, .landing, .mining, .roverMining,
+        case .hub, .hubSubsurface, .launchpad, .transit, .landing, .mining, .roverSurvey,
              .delivery, .refinery, .academy, .hangar, .surfaceOps, .galaxy,
              .asteroidDiscovery, .saturnStormSearch, .instrumentHub:
             return true
@@ -34,11 +34,31 @@ public enum Screen: String, Codable, CaseIterable, Sendable {
 
     /// Screens that only make sense while a mission is selected.
     public var needsMissionContext: Bool {
-        [.targets, .rocketBuy, .fab, .transit, .mining, .roverMining, .delivery, .debrief].contains(self)
+        [.targets, .rocketBuy, .fab, .transit, .mining, .roverSurvey, .delivery, .debrief].contains(self)
     }
 
     /// Screens that additionally need a target.
     public var needsTargetContext: Bool {
-        [.rocketBuy, .fab, .transit, .mining, .roverMining, .delivery, .debrief].contains(self)
+        [.rocketBuy, .fab, .transit, .mining, .roverSurvey, .delivery, .debrief].contains(self)
+    }
+}
+
+extension Screen: Codable {
+    /// Web renamed the surface from `rover-mining` to `rover-survey`. Older saves still decode.
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        if raw == "rover-mining" || raw == "rover-survey" {
+            self = .roverSurvey
+            return
+        }
+        guard let value = Screen(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unknown screen \(raw)"))
+        }
+        self = value
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
     }
 }

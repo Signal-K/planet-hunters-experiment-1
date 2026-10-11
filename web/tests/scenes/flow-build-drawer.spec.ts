@@ -5,7 +5,7 @@ import { VIEWPORTS, stage } from './helpers'
 test.describe('phone', () => {
   test.use({ viewport: VIEWPORTS.phone })
   test('build drawer is one row high when closed and expands on demand', async ({ page }, info) => {
-    await stage(page, 'ui-rover-mining', { click: ['deploy-surface-ops-confirm', 'rover-build-mode-toggle'] })
+    await stage(page, 'ui-rover-survey', { click: ['deploy-rover-survey-confirm', 'rover-build-mode-toggle'] })
     expect(await page.evaluate(() => innerWidth)).toBe(390)
     const panel = page.getByTestId('sandbox-field-controls')
     await expect(panel).toBeVisible()

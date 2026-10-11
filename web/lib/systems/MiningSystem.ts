@@ -1,4 +1,4 @@
-// Pure state-transition functions for mining (laser) and rover mining systems.
+// Pure state transitions for ship-laser mining. The rover survey surface does not extract cargo.
 
 import type { GameState } from '@/lib/game-types'
 

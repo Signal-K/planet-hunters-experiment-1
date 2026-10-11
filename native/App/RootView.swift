@@ -31,7 +31,7 @@ struct RootView: View {
             case .build: BuildScreen()
             case .surfaceOps: SurfaceOpsScreen()
             case .transit: TransitScreen()
-            case .roverMining: if TakeonSceneFlag.enabled && takeonGoRuntimeAvailable { TakeonSceneScreen(onExit: { store.go(.hub) }) } else { RoverFieldScreen() }
+            case .roverSurvey: if TakeonSceneFlag.enabled && takeonGoRuntimeAvailable { TakeonSceneScreen(onExit: { store.go(.hub) }) } else { RoverFieldScreen() }
             case .mining, .landing: MiningScreen()
             case .delivery: DeliveryScreen()
             case .debrief: DebriefScreen()

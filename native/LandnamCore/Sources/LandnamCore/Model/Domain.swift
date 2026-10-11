@@ -199,4 +199,4 @@ public struct ActiveMission: Codable, Equatable, Sendable {
     public init(id: String, label: String) { self.id = id; self.label = label }
 }
 
-public enum MissionPhase: String, Codable, Sendable { case transit, landing, mining, delivery, debrief }
+public enum MissionPhase: String, Codable, Sendable { case transit, landing, survey, mining, delivery, debrief }

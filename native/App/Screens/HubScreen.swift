@@ -238,6 +238,7 @@ private struct ContractCard: View {
         switch store.player.missionPhase ?? .transit {
         case .transit: return 0.2
         case .landing: return 0.4
+        case .survey: return 0.5
         case .mining: return 0.6
         case .delivery: return 0.8
         case .debrief: return 0.9

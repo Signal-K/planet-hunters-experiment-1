@@ -1,8 +1,7 @@
 import SwiftUI
 import LandnamCore
 
-/// Surface-ops prospecting (mirrors web RoverMiningScreen, SSL-484 / SSL-485): deploy the Mule rover,
-/// tap exposed ore to drive and drill. Drill three always opens a mine site; return once the order is met or after drill three; the first rig is optional.
+/// Starter-rover survey (mirrors web RoverSurveyScreen): deploy the Mule, scout the field, then continue to the ship laser. The rover does not extract contract cargo.
 /// The field fills the screen; only the hotbar, drive pad and drill control sit over it.
 struct RoverFieldScreen: View {
     @Environment(GameStore.self) private var store
@@ -139,7 +138,7 @@ struct RoverFieldScreen: View {
                     Text(prospecting.constructionStarted ? "FIRST MINE RIG IS STAKED ON THE FIELD." : "START THE FIRST RIG ON THE FIELD, OR RETURN THE PROSPECTOR.")
                         .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.ink)
                 }
-                PrimaryButton(title: "RETURN PROSPECTOR", enabled: prospecting.canReturn) { store.roverMiningDone(prospecting.cargo) }
+                PrimaryButton(title: "CONTINUE TO SHIP LASER") { store.roverSurveyComplete() }
             }
         }
     }

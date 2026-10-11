@@ -219,7 +219,7 @@ function parkOrDropActiveRun(state: GameState): GameState {
 function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot): GameState {
   return {
     ...state,
-    screen: snapshot.missionPhase ?? 'transit',
+    screen: snapshot.missionPhase === 'survey' ? 'rover-survey' : (snapshot.missionPhase ?? 'transit'),
     missionId: snapshot.missionId,
     targetId: snapshot.targetId,
     deliveryTargetId: snapshot.deliveryTargetId,

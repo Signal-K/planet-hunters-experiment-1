@@ -46,7 +46,7 @@ export interface MissionRunSnapshot {
   lastCargo: Record<string, number> | null
   deliveredCargo?: Record<string, number> | null
   missionRunId?: string
-  missionPhase?: 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
+  missionPhase?: MissionPhase
   miningCargoInProgress?: Record<string, number>
   miningLaserCharges?: number
   deliveryUnloadStartedAt?: number
@@ -209,6 +209,9 @@ export interface FieldStructureRecord {
 }
 
 
+/** Operational step of a live run. `survey` is the starter-rover surface pass; extraction is always `mining` on the ship laser. */
+export type MissionPhase = 'transit' | 'landing' | 'survey' | 'mining' | 'delivery' | 'debrief'
+
 export interface ResourceFocus {
   label: string
   minerals: Record<string, number>
@@ -222,7 +225,7 @@ export interface Player {
   // PocketBase mission_runs record for the current run. Kept in the save so a
   // refresh/resume continues updating the same server-side lifecycle record.
   missionRunId?: string
-  missionPhase?: 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
+  missionPhase?: MissionPhase
   // Ore collected so far during an in-progress mining run, preserved across a
   // "Back to hub" pause so resuming the mission doesn't silently discard
   // already-collected cargo (that cargo only lived in MiningScreen's local

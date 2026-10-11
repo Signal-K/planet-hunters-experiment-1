@@ -62,8 +62,8 @@ enum SceneCatalog {
 
     static func miningState(rover: Bool) -> GameState {
         var gs = transitState(returning: false)
-        gs.player.missionPhase = .mining
-        gs.screen = rover ? .roverMining : .mining
+        gs.player.missionPhase = rover ? .survey : .mining
+        gs.screen = rover ? .roverSurvey : .mining
         return gs
     }
 

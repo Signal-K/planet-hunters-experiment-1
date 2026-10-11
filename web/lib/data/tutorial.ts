@@ -28,6 +28,7 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
   { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },
   { id: 'mine-target', try: 'mining', screen: 'targets', objective: 'Choose the highlighted target', radio: 'The target carries the mineral named by the order.', doneOn: 'mining-debriefed' },
+  { id: 'mine-survey', try: 'mining', screen: 'rover-survey', objective: 'Scout one outcrop, then continue to the ship laser', radio: 'The rover logs the surface. The ship laser extracts the order.', doneOn: 'mining-debriefed' },
   { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
   { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
   { id: 'mine-return', try: 'mining', screen: 'transit', objective: 'Fly the cargo home', radio: 'The order is only paid once the cargo reaches the debrief.', doneOn: 'mining-debriefed' },

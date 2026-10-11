@@ -1,6 +1,7 @@
 'use client'
 
 import type { Player, Screen } from '@/lib/game-types'
+import { missionResumeScreen } from '@/lib/mission-resume'
 
 // Screens that are themselves part of the active-mission flow — the ticker
 // would be redundant (or would float over live mining/transit UI) if shown
@@ -29,7 +30,7 @@ export default function MissionTicker({ player, screen, onResume }: MissionTicke
   return (
     <button
       data-testid="mission-ticker"
-      onClick={() => onResume(player.missionPhase ?? 'transit')}
+      onClick={() => onResume(missionResumeScreen(player))}
       style={{
         position: 'absolute',
         left: 14,

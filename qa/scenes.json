@@ -220,7 +220,7 @@
    "id": "rover",
    "name": "Rover field",
    "flow": "field",
-   "web": "ui-rover-mining",
+   "web": "ui-rover-survey",
    "native": "rover-field-phone",
    "tickets": [
     "SSL-485",
@@ -232,7 +232,7 @@
    "id": "rover-touchdown",
    "name": "Rover touchdown",
    "flow": "field",
-   "web": "ui-rover-mining",
+   "web": "ui-rover-survey",
    "native": "rover-touchdown-phone",
    "tickets": []
   },

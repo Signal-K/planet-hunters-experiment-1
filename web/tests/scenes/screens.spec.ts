@@ -8,7 +8,7 @@ const SCREENS = [
   'storage-hub', 'storage-build',
   'telescope-hub', 'telescope-fab', 'telescope-transit', 'telescope-debrief',
   'ui-tess-discovery', 'ui-mission-board', 'ui-build', 'ui-skill-tree', 'ui-target-picker',
-  'ui-rover-mining', 'ship-customizer', 'ui-hangar-assembly', 'ui-instrument-hub',
+  'ui-rover-survey', 'ship-customizer', 'ui-hangar-assembly', 'ui-instrument-hub',
   'ui-saturn-storm-search', 'ui-asteroid-discovery', 'ui-academy',
 ]
 

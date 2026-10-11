@@ -516,7 +516,7 @@ export function useAuthSync({
           const mission = MISSIONS.find(candidate => candidate.id === missionId)
           const target = TARGETS.find(candidate => candidate.id === targetId)
           const launchedAt = typeof run.launched_at === 'string' ? new Date(run.launched_at).getTime() : NaN
-          const phase = ['transit', 'landing', 'mining', 'delivery', 'debrief'].includes(run.phase)
+          const phase = ['transit', 'landing', 'survey', 'mining', 'delivery', 'debrief'].includes(run.phase)
             ? run.phase as NonNullable<GameState['player']['missionPhase']>
             : 'transit'
           setState(current => {

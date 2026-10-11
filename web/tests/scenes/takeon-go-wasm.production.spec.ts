@@ -15,9 +15,9 @@ test.describe('TakeOn Go WASM production loader', () => {
         wasmResponses.push({ contentType: response.headers()['content-type'], status: response.status() })
       }
     })
-    const { errors } = await stage(page, 'ui-rover-mining')
+    const { errors } = await stage(page, 'ui-rover-survey')
     await expect.poll(() => wasmResponses).toEqual([{ contentType: expect.stringContaining('application/wasm'), status: 200 }])
-    await expect(page.locator('[data-testid="rover-mining-screen"]')).toBeVisible()
+    await expect(page.locator('[data-testid="rover-survey-screen"]')).toBeVisible()
     await page.waitForFunction(() => typeof (window as typeof window & { takeon?: unknown }).takeon === 'object')
 
     const result = await page.evaluate(() => {
@@ -81,7 +81,7 @@ test.describe('TakeOn Go WASM production loader', () => {
     page.on('response', response => {
       if (response.url().endsWith('/takeon-go/takeon.wasm')) wasmResponses.push(response.status())
     })
-    const { errors } = await stage(page, 'ui-rover-mining')
+    const { errors } = await stage(page, 'ui-rover-survey')
     await page.waitForTimeout(400)
     expect(wasmResponses).toEqual([])
     expect(await page.evaluate(() => typeof (window as typeof window & { takeon?: unknown }).takeon)).toBe('undefined')
