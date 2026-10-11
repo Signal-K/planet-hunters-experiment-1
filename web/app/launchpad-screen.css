@@ -102,11 +102,22 @@ button.launchpad-scene-object { cursor: pointer; }
   transform: translateX(-50%);
 }
 .earth-base-structure--launchpad {
-  width: min(55%, 860px);
-  aspect-ratio: 200 / 140;
+  width: min(55%, 920px);
+  height: 48px;
+  aspect-ratio: auto;
+  overflow: visible;
+}
+.earth-base-structure--command,
+.earth-base-structure--refinery {
+  min-width: 44px;
+  min-height: 44px;
 }
 @media (orientation: portrait) and (max-width: 800px) {
-  .earth-base-structure--launchpad { width: min(50%, 340px); }
+  .earth-base-structure--launchpad { width: min(42%, 240px); height: 40px; }
+  [data-testid="building-launchpad"] { width: min(42%, 240px) !important; }
+}
+.portrait-canvas:has([data-screen="hub"]) .earth-base-structure img {
+  image-rendering: pixelated;
 }
 .earth-base-flat-sprite {
   position: absolute;

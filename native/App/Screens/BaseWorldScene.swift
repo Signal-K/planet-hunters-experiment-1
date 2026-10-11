@@ -16,7 +16,7 @@ struct BaseWorldScene: View {
             let w = geo.size.width
             let h = geo.size.height
             let portrait = h > w * 1.15
-            let ground = h * 0.78
+            let ground = h * (h < 500 ? 0.68 : 0.78)
             TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { ctx in
                 let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
                 ZStack(alignment: .topLeading) {
@@ -68,41 +68,67 @@ struct BaseWorldScene: View {
     }
 
     private func groundStack(width: CGFloat, height: CGFloat, ground: CGFloat) -> some View {
-        let grass: CGFloat = height < 500 ? 8 : 12
-        let road: CGFloat = height < 500 ? 32 : 56
+        let grass: CGFloat = height < 500 ? 18 : 28
+        let road: CGFloat = height < 500 ? 28 : 36
         return ZStack(alignment: .top) {
             Art.view("base/layers/dirt.png").resizable(resizingMode: .tile).interpolation(.none)
-            Art.view("base/layers/grass.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: grass)
-            Art.view("base/layers/road.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: road).offset(y: grass)
+            Art.view("base/kit/trees.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: 48).offset(y: -28)
+            Art.view("base/kit/grass.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: grass)
+            Art.view("base/kit/road-a.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: road).offset(y: grass - 6)
         }
         .frame(width: width, height: height - ground, alignment: .top)
-        .clipped()
         .position(x: width / 2, y: ground + (height - ground) / 2)
         .allowsHitTesting(false)
     }
 
     private func shaft(width: CGFloat, height: CGFloat) -> some View {
-        let side: CGFloat = height < 500 ? 48 : 72
+        let dock = height * 0.10
+        let sh: CGFloat = height < 500 ? 44 : 56
         return Button(action: onShaft) {
-            Art.view("base/layers/shaft.png")
+            Art.view("base/kit/underground-window.png")
                 .resizable().interpolation(.none).scaledToFit()
-                .frame(width: side, height: max(44, side * 1.3))
+                .frame(width: 88, height: sh)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .position(x: width / 2, y: height - side * 0.7)
+        .position(x: width / 2, y: height - dock - 8 - sh / 2)
         .accessibilityLabel("Open the lift")
     }
 
     private func structure(_ kind: String, sprite: String, width: CGFloat, height: CGFloat, ground: CGFloat, portrait: Bool, level: Int) -> some View {
-        let fraction = widthFraction(kind, portrait: portrait, level: level)
         let center = width * anchor(kind, plot: plots[kind] ?? 0, portrait: portrait)
+        if kind == "launchpad" {
+            let padW = width * (portrait ? 0.42 : 0.55)
+            let padH: CGFloat = portrait ? 40 : 48
+            let hangH = max(44, width * 0.14) * (129.0 / 238.0)
+            let rocketH = min(hangH * 2, max(64, ground - 72))
+            let rocketW = rocketH * (65.0 / 93.0)
+            let stackH = padH + rocketH * 0.82
+            return Button { onStructure(kind) } label: {
+                ZStack(alignment: .bottom) {
+                    Art.view("base/kit/starter-pad-platform.png")
+                        .resizable(resizingMode: .tile).interpolation(.none)
+                        .frame(width: padW, height: padH)
+                    Art.view(sprite)
+                        .resizable().interpolation(.none).scaledToFit()
+                        .frame(width: rocketW, height: rocketH)
+                        .padding(.bottom, 16)
+                }
+                .frame(width: padW, height: stackH, alignment: .bottom)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .position(x: center, y: ground - stackH / 2)
+            .accessibilityLabel(kindLabel(kind))
+        }
+        let fraction = widthFraction(kind, portrait: portrait, level: level)
         let ratio = aspect(kind)
-        var artW = width * fraction
+        var artW = max(44, width * fraction)
         let maxH = max(48, ground - 64)
         if artW * ratio > maxH { artW = maxH / ratio }
-        let artH = artW * ratio
+        let artH = max(44, artW * ratio)
         let art = Art.view(sprite).resizable().interpolation(.none).scaledToFit().frame(width: artW, height: artH)
         return Button { onStructure(kind) } label: {
             art.frame(minWidth: 44, minHeight: 44)
@@ -115,11 +141,11 @@ struct BaseWorldScene: View {
 
     private func spriteName(_ kind: String) -> String? {
         switch kind {
-        case "launchpad": return "base/layers/launchpad-t1.png"
-        case "hangar", "garage": return levelled("base/layers/hangar-t1.png", kind)
-        case "command": return "base/layers/hut-t1.png"
-        case "refinery": return (levels[kind] ?? 1) <= 1 ? "base/layers/tank-t1.png" : "base/layers/tank-t1.png"
-        case "astronaut-academy": return "base/layers/dome-t1.png"
+        case "launchpad": return "base/kit/starter-pad-rocket.png"
+        case "hangar", "garage": return "base/kit/starter-hangar.png"
+        case "command": return "base/kit/starter-cabin.png"
+        case "refinery": return "base/kit/starter-silo.png"
+        case "astronaut-academy": return "base/kit/starter-shed.png"
         default: return nil
         }
     }
@@ -129,38 +155,35 @@ struct BaseWorldScene: View {
     /// Centres match the web anchors. Kinds without one spread across the remaining plots.
     private func anchor(_ kind: String, plot: Int, portrait: Bool) -> CGFloat {
         switch kind {
-        case "hangar", "garage": return 0.10
+        case "hangar", "garage": return 0.11
         case "launchpad": return 0.50
-        case "command": return 0.86
-        case "refinery": return 0.945
+        case "command": return 0.84
+        case "refinery": return 0.96
         default:
             let slots: [CGFloat] = portrait ? [0.16, 0.38, 0.62, 0.84] : [0.14, 0.36, 0.64, 0.86]
             return slots[min(max(plot, 0), 3)]
         }
     }
 
-    private func widthFraction(_ kind: String, portrait: Bool, level: Int) -> CGFloat {
-        if kind == "launchpad" { return portrait ? 0.50 : 0.55 }
-        let tier: CGFloat = level >= 3 ? 1 : level >= 2 ? 0.78 : 0.56
-        let full: CGFloat
+    private func widthFraction(_ kind: String, portrait: Bool, level _: Int) -> CGFloat {
+        if kind == "launchpad" { return portrait ? 0.42 : 0.55 }
         switch kind {
-        case "hangar", "garage": full = 0.232
-        case "command": full = 0.15
-        case "refinery": full = 0.125
-        case "astronaut-academy": full = 0.16
-        default: full = 0.14
+        case "hangar", "garage": return 0.14
+        case "command": return 0.08
+        case "refinery": return 0.06
+        case "astronaut-academy": return 0.12
+        default: return 0.10
         }
-        return full * tier
     }
 
     /// Height / width of each starter sprite. */
     private func aspect(_ kind: String) -> CGFloat {
         switch kind {
-        case "launchpad": return 140.0 / 200.0
-        case "hangar", "garage": return 48.0 / 72.0
-        case "command": return 36.0 / 40.0
-        case "refinery": return 44.0 / 28.0
-        case "astronaut-academy": return 44.0 / 56.0
+        case "launchpad": return 48.0 / 145.0
+        case "hangar", "garage": return 129.0 / 238.0
+        case "command": return 127.0 / 118.0
+        case "refinery": return 125.0 / 81.0
+        case "astronaut-academy": return 86.0 / 178.0
         default: return 0.7
         }
     }

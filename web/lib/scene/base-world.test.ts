@@ -72,10 +72,10 @@ describe('base world layers', () => {
   })
 
   it('anchors starter structures to the approved base and leaves other kinds on their plot', () => {
-    expect(structureAnchorPercent('hangar')).toBe(10)
+    expect(structureAnchorPercent('hangar')).toBe(11)
     expect(structureAnchorPercent('launchpad')).toBe(50)
-    expect(structureAnchorPercent('command')).toBe(86)
-    expect(structureAnchorPercent('refinery')).toBe(94.5)
+    expect(structureAnchorPercent('command')).toBe(84)
+    expect(structureAnchorPercent('refinery')).toBe(96)
     expect(structureAnchorPercent('astronaut-academy')).toBeNull()
     expect(structureAnchorPercent('surface-silo')).toBeNull()
   })

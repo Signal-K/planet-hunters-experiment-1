@@ -13,13 +13,13 @@ struct BaseDock: View {
             Spacer(minLength: zones.gap)
             Button { store.go(.build) } label: {
                 Text("BUILD").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                    .frame(minWidth: 88, minHeight: 44)
+                    .frame(minWidth: 72, minHeight: 36)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Build")
             Button { store.go(.instrumentHub) } label: {
                 Text("HUB").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                    .frame(minWidth: 88, minHeight: 44)
+                    .frame(minWidth: 72, minHeight: 36)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Open the Hub")
@@ -27,10 +27,10 @@ struct BaseDock: View {
             arrow("chevron.right", label: "Next") { step(1) }
         }
         .padding(.horizontal, zones.padding)
-        .padding(.vertical, 4)
-        .frame(maxWidth: 560)
-        .background(Capsule().fill(Theme.hudPanel))
-        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+        .padding(.vertical, 2)
+        .frame(maxWidth: 440, maxHeight: 42)
+        .background(RoundedRectangle(cornerRadius: 6).fill(Theme.hudPanel))
+        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.hudInk, lineWidth: 1))
         .padding(.horizontal, 12)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Scene dock")
@@ -38,10 +38,10 @@ struct BaseDock: View {
 
     private func arrow(_ symbol: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(Theme.hudPanel))
-                .overlay(Circle().stroke(Theme.hudInk, lineWidth: 2))
+            Image(systemName: symbol).font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.hudInk)
+                .frame(width: 36, height: 36)
+                .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
+                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

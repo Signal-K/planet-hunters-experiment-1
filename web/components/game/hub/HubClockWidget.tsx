@@ -19,9 +19,9 @@ export function HubClockWidget() {
     <div
       data-testid="hub-clock-widget"
       style={{
-        display: 'flex', alignItems: 'center', gap: 6, minHeight: 44, minWidth: 44, boxSizing: 'border-box',
-        background: 'var(--ln-world-hull-lit)', border: '2px solid var(--ln-world-outline)',
-        borderRadius: 999, padding: '0 12px', flexShrink: 0,
+        display: 'flex', alignItems: 'center', gap: 6, minHeight: 36, minWidth: 44, boxSizing: 'border-box',
+        background: 'var(--ln-world-hull-lit)', border: '1px solid var(--ln-world-outline)',
+        borderRadius: 4, padding: '0 8px', flexShrink: 0,
         color: 'var(--ln-world-outline)',
       }}
     >

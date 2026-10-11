@@ -39,13 +39,13 @@ export function structureAnchorPercent(kind: string): number | null {
   switch (kind) {
     case 'hangar':
     case 'garage':
-      return 10
+      return 11
     case 'launchpad':
       return 50
     case 'command':
-      return 86
+      return 84
     case 'refinery':
-      return 94.5
+      return 96
     default:
       return null
   }

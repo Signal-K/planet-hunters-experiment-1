@@ -167,6 +167,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
         aria-label={label}
         style={{
           background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
+          minWidth: 44, minHeight: 44,
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
           transform: isActive ? 'translateY(-4px)' : 'translateY(0)',
           transition: 'transform 180ms',

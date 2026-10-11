@@ -9,11 +9,8 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--base-sky-top) 28%, transparent), transparent 42%),
-    url('/game/assets/base/layers/sky.png') center / 100% 100% no-repeat;
+  background: url('/game/assets/base/layers/sky.png') center / 100% 100% no-repeat;
   image-rendering: pixelated;
-  transition: background 4s ease;
 }
 
 .scene[data-time='dawn'] {
@@ -79,17 +76,10 @@
 .luminary {
   position: absolute;
   z-index: 7;
-  width: 52px;
-  height: 52px;
-  margin-left: -26px;
-  border-radius: 50%;
-  left: var(--base-sun-x, 50%);
-  top: var(--base-sun-y, 18%);
-  background: var(--base-sun, var(--ln-world-hull-lit));
-  opacity: var(--base-sun-on, 0);
-  box-shadow: 0 0 28px color-mix(in srgb, var(--base-sun, var(--ln-world-hull-lit)) 70%, transparent);
+  width: 0;
+  height: 0;
+  opacity: 0;
   pointer-events: none;
-  transition: left 4s ease, top 4s ease, opacity 4s ease, background 4s ease;
 }
 
 .scene[data-time='night'] .luminary {
@@ -213,7 +203,7 @@
 .scene[data-time='dawn'] .timeShade { background: color-mix(in srgb, var(--ln-world-dawn-top) 18%, transparent); }
 .scene[data-time='afternoon'] .timeShade { background: color-mix(in srgb, var(--ln-world-afternoon-top) 12%, transparent); }
 .scene[data-time='dusk'] .timeShade { background: color-mix(in srgb, var(--ln-world-dusk-horizon) 14%, transparent); }
-.scene[data-time='night'] .timeShade { background: color-mix(in srgb, var(--ln-world-night-top) 48%, transparent); }
+.scene[data-time='night'] .timeShade { background: color-mix(in srgb, var(--ln-world-night-top) 16%, transparent); }
 .scene[data-time='night'] .grade { opacity: 0.28; }
 .scene[data-time='dusk'] .grade,
 .scene[data-time='dawn'] .grade { opacity: 0.4; }
@@ -235,18 +225,30 @@
   left: 0;
   right: 0;
   top: 0;
-  height: 12px;
-  background: url('/game/assets/base/layers/grass.png') left bottom / auto 12px repeat-x;
+  height: 28px;
+  background: url('/game/assets/base/kit/grass.png') left bottom / auto 28px repeat-x;
   image-rendering: pixelated;
+}
+
+.trees {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -36px;
+  height: 48px;
+  background: url('/game/assets/base/kit/trees.png') left bottom / auto 48px repeat-x;
+  image-rendering: pixelated;
+  pointer-events: none;
+  opacity: 0.92;
 }
 
 .road {
   position: absolute;
   left: 0;
   right: 0;
-  top: 12px;
-  height: 56px;
-  background: url('/game/assets/base/layers/road.png') left center / auto 56px repeat-x;
+  top: 22px;
+  height: 36px;
+  background: url('/game/assets/base/kit/road-a.png') left center / auto 36px repeat-x;
   image-rendering: pixelated;
   box-shadow: none;
 }
@@ -275,11 +277,11 @@
 .shaftWrap {
   position: absolute;
   left: 50%;
-  bottom: 4px;
-  width: 72px;
-  height: 96px;
+  bottom: calc(10% + 8px);
+  width: 88px;
+  height: 56px;
   transform: translateX(-50%);
-  z-index: 2;
+  z-index: 9;
 }
 
 .shaftArt {
@@ -352,9 +354,9 @@
 .shaftButton {
   position: absolute;
   left: 50%;
-  bottom: 8px;
-  width: 72px;
-  height: 96px;
+  bottom: calc(10% + 8px);
+  width: 88px;
+  height: 56px;
   min-width: 44px;
   min-height: 44px;
   transform: translateX(-50%);
@@ -379,6 +381,33 @@
   object-fit: contain;
   object-position: center bottom;
   image-rendering: pixelated;
+}
+
+.padStack {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.padSlab {
+  position: absolute;
+  inset: 0;
+  background: url('/game/assets/base/kit/starter-pad-platform.png') left bottom / auto 100% repeat-x;
+  image-rendering: pixelated;
+}
+
+.padRocket {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  width: 20%;
+  height: auto;
+  aspect-ratio: 65 / 93;
+  transform: translateX(-50%);
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 
 .beaconDot {
@@ -461,11 +490,13 @@
 }
 
 @media (max-height: 500px) {
-  /* Short landscape: keep a slim grass lip, a full-width road, and a small shaft in the dirt. */
-  .verge { height: 8px; background-size: auto 8px; }
-  .road { height: 32px; top: 8px; background-size: auto 32px; }
-  .shaftWrap { width: 48px; height: 64px; bottom: 2px; }
-  .shaftButton { bottom: 2px; width: 48px; height: 64px; }
+  /* Short landscape: road stays at the surface, shaft sits in the dirt above the dock. */
+  .verge { height: 18px; background-size: auto 18px; }
+  .trees { height: 32px; top: -24px; background-size: auto 32px; }
+  .road { height: 28px; top: 14px; background-size: auto 28px; }
+  .shaftWrap { width: 72px; height: 44px; bottom: calc(10% + 14px); }
+  .shaftButton { bottom: calc(10% + 14px); width: 72px; height: 44px; }
+  .padRocket { width: 28%; bottom: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -75,13 +75,13 @@ export function BaseLayerScene({
       <div className={styles.grade} data-layer="season" />
       <div className={styles.timeShade} data-layer="time" />
       <div className={styles.ground} data-layer="ground">
+        <div className={styles.trees} data-layer="trees" />
         <div className={styles.verge} />
         {paths.map(x => <span key={x} className={styles.path} data-layer="path" style={{ left: `${x}%` }} />)}
         <div className={styles.road} data-layer="road" />
-        <div className={styles.shaftWrap} data-layer="cutaway" data-silo={siloBuilt ? 'built' : 'shaft'}>
-          <img src="/game/assets/base/layers/shaft.png" alt="" className={styles.shaftArt} data-layer="shaft" />
-          <span className={styles.lamp} />
-        </div>
+      </div>
+      <div className={styles.shaftWrap} data-layer="cutaway" data-silo={siloBuilt ? 'built' : 'shaft'}>
+        <img src="/game/assets/base/kit/underground-window.png" alt="" className={styles.shaftArt} data-layer="shaft" />
       </div>
       {onOpenSilo && (
         <button type="button" className={styles.shaftButton} data-testid="base-lift-shaft" aria-label="Open silo" onClick={onOpenSilo} />

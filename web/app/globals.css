@@ -902,16 +902,19 @@ button { cursor: pointer; }
   .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 8px !important; right: 12px !important; bottom: auto !important; min-height: 44px; }
   .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 36px; bottom: auto !important; left: 12px; }
   .portrait-canvas:has([data-screen="hub"]) .hub-sky-craft-control { top: 56px; }
-  .portrait-canvas:has([data-screen="hub"]) [data-testid="hub-clock-widget"] { display: none !important; }
+  .portrait-canvas:has([data-screen="hub"]) [data-testid="hub-clock-widget"] { display: flex !important; }
+  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 32%; }
 
-  .hub-bottom-dock-inner { max-width: none !important; padding: 8px 12px !important; border-top: 0 !important; border-radius: 0 !important; background: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
   .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock-inner {
     max-width: 440px !important;
+    max-height: 10% !important;
     margin-inline: auto;
     justify-content: center !important;
-    background: color-mix(in srgb, var(--ln-world-hull-lit) 86%, transparent) !important;
-    border: 2px solid color-mix(in srgb, var(--ln-world-outline) 28%, transparent) !important;
-    border-radius: 12px 12px 0 0 !important;
+    background: var(--ln-world-hull-lit) !important;
+    border: 1px solid var(--ln-world-outline) !important;
+    border-radius: 6px !important;
+    padding: 2px 6px !important;
+    box-shadow: none !important;
   }
   /* "Launchpad · Ready" repeats the building's own label; a live mission's
      status (the banner variant) stays. */
@@ -3698,15 +3701,16 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
 .portrait-canvas:has([data-screen="hub"]) .earth-base-flat-sprite,
 .debrief-arrival-canvas canvas { image-rendering: auto; }
 .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock-inner {
-  width: min(560px, calc(100% - 24px)) !important;
-  max-width: 560px !important;
-  margin: 0 auto 10px;
+  width: min(440px, calc(100% - 16px)) !important;
+  max-width: 440px !important;
+  max-height: 10% !important;
+  margin: 0 auto 6px;
   background: var(--ln-world-hull-lit) !important;
-  border: 2px solid var(--ln-world-outline) !important;
-  border-radius: 999px !important;
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--ln-world-outline) 16%, transparent) !important;
+  border: 1px solid var(--ln-world-outline) !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
   justify-content: center;
-  padding: 6px 8px !important;
+  padding: 2px 6px !important;
 }
 .portrait-canvas:has([data-screen="hub"]) [data-testid="base-dock"] {
   width: min(440px, 100%);

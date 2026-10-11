@@ -23,17 +23,17 @@ export interface HubBuildingDef {
 /** Level-3 footprints. Level 1 and 2 render the same silhouette smaller via `structureTierScale`.
  *  The surface silo has no above-ground body; the lift shaft is the silo door. */
 export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height: number }> = {
-  // Launchpad width is fixed at LAUNCHPAD_SCENE_WIDTH_PCT. These numbers are the sprite aspect.
-  launchpad: { width: 200, height: 140 },
+  // Launchpad width is the low platform only. The rocket is a separate sprite on top of it.
+  launchpad: { width: 145, height: 48 },
   'surface-silo': { width: 48, height: 96 },
-  hangar: { width: 149, height: 99 },
-  garage: { width: 149, height: 99 },
-  refinery: { width: 80, height: 126 },
-  command: { width: 96, height: 86 },
+  hangar: { width: 238, height: 129 },
+  garage: { width: 238, height: 129 },
+  refinery: { width: 81, height: 125 },
+  command: { width: 118, height: 127 },
   'deep-space-telescope': { width: 74, height: 96 },
   'transit-telescope': { width: 64, height: 88 },
-  'astronaut-academy': { width: 92, height: 72 },
-  market: { width: 100, height: 74 },
+  'astronaut-academy': { width: 178, height: 86 },
+  market: { width: 214, height: 124 },
 }
 
 export function LaunchpadModules({ className = '' }: { className?: string }) {
@@ -123,6 +123,12 @@ const SCENE_WIDTH_DIVISOR = 6.4
 
 export function structureWidthPct(kind: string, level = 1): number {
   if (kind === 'launchpad') return LAUNCHPAD_SCENE_WIDTH_PCT
+  // Starter footprints stay modest. Level 1 is not shrunk again, or the hut and tank fall under a 44px hit.
+  const starter: Record<string, number> = { hangar: 14, garage: 14, command: 8, refinery: 6 }
+  if (kind in starter) {
+    const grow = level >= 3 ? 1.12 : level >= 2 ? 1.06 : 1
+    return (starter[kind] ?? 8) * grow
+  }
   const size = EARTH_BASE_STRUCTURE_SIZES[kind] ?? EARTH_BASE_STRUCTURE_SIZES.command
   const tier = kind === 'market' ? Math.max(level, 2) : level
   return (size.width / SCENE_WIDTH_DIVISOR) * structureTierScale(tier)

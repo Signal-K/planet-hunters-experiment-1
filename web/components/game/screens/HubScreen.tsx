@@ -123,7 +123,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       const center = kind ? structureCenterPercent(kind, e.transform.position.x, widthPct) : sceneXPercent(e.transform.position.x, widthPct)
       return ({
         left: `${center}%`,
-        width: kind === 'launchpad' ? 'min(55%, 860px)' : `${Math.max(widthPct, 8)}%`,
+        width: kind === 'launchpad' ? 'min(55%, 920px)' : `${widthPct}%`,
         minWidth: 44,
         maxWidth: 'none',
         bottom: 'var(--hub-ground)',
@@ -380,7 +380,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                     : building
                 const siloStyle = silo ? { ...style, left: '50%' } : style
                 const aspect = EARTH_BASE_STRUCTURE_SIZES[kind]
-                return <Building key={kind} {...editable} quiet hitAspect={aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={siloStyle} calloutAlign={calloutAlign} />
+                const pad = kind === 'launchpad'
+                return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 200 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={siloStyle} calloutAlign={calloutAlign} />
               })}
             </div>
           </div>
@@ -460,14 +461,14 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
         }}>
           <div className="hub-bottom-dock-inner" style={{
-            pointerEvents: 'auto', width: '100%', maxWidth: 480,
-            // A translucent command rail, deliberately without backdrop blur:
-            // blurring the terrain under a fixed dock created the frosted band
-            // reported in visual review and broke the scene's ground plane.
-            background: 'color-mix(in srgb, var(--ln-world-hull-lit) 82%, transparent)',
-            borderTop: '2px solid color-mix(in srgb, var(--ln-world-outline) 28%, transparent)',
-            borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 24px color-mix(in srgb, var(--ln-world-outline) 12%, transparent)',
-            padding: '12px 16px 16px',
+            pointerEvents: 'auto', width: 'min(440px, calc(100% - 16px))', maxWidth: 440,
+            maxHeight: '10%',
+            background: 'var(--ln-world-hull-lit)',
+            border: '1px solid var(--ln-world-outline)',
+            borderRadius: 6,
+            boxShadow: 'none',
+            padding: '2px 6px',
+            marginBottom: 6,
           }}>
             <BaseDock
               onPrev={() => {

@@ -65,9 +65,9 @@ struct HubScreen: View {
         return VStack(alignment: .leading, spacing: z.gap) {
             HStack(spacing: 8) {
                 Button { showSettings = true } label: {
-                    hudGlyph("gearshape.fill", 44)
-                        .background(Circle().fill(Theme.hudPanel))
-                        .overlay(Circle().stroke(Theme.hudInk, lineWidth: 2))
+                    hudGlyph("gearshape.fill", 36)
+                        .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
+                        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
                 }
                 .buttonStyle(.plain).accessibilityLabel("Settings")
                 TimelineView(.periodic(from: .now, by: 30)) { ctx in
@@ -76,10 +76,10 @@ struct HubScreen: View {
                         Text(ctx.date.formatted(date: .omitted, time: .shortened)).font(AppFont.mono(14))
                     }
                     .foregroundStyle(Theme.hudInk)
-                    .padding(.horizontal, 12)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .background(Capsule().fill(Theme.hudPanel))
-                    .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+                    .padding(.horizontal, 8)
+                    .frame(minWidth: 44, minHeight: 36)
+                    .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
+                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
                 }
                 .accessibilityLabel("Clock")
             }
@@ -96,13 +96,13 @@ struct HubScreen: View {
         let z = zones.topRight
         return HStack(spacing: 8) {
             Text(Economy.format(francs: store.player.francs)).font(AppFont.mono(14)).foregroundStyle(Theme.hudInk)
-                .padding(.horizontal, 12).frame(minWidth: 44, minHeight: 44)
-                .background(Capsule().fill(Theme.hudPanel))
-                .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+                .padding(.horizontal, 8).frame(minWidth: 44, minHeight: 36)
+                .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
+                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
                 .accessibilityLabel("Francs")
-            hudGlyph("cube.fill", 44)
-                .background(Circle().fill(Theme.hudPanel))
-                .overlay(Circle().stroke(Theme.hudInk, lineWidth: 2))
+            hudGlyph("cube.fill", 36)
+                .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
+                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
                 .accessibilityLabel("Cargo")
         }
         .padding(.trailing, insets.trailing + z.inset).padding(.top, insets.top + z.inset)

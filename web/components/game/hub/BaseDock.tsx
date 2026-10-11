@@ -15,12 +15,12 @@ export const BASE_DOCK_GAP = 8
 export const BASE_DOCK_PADDING = 6
 
 const WORD = {
-  minHeight: 44,
-  minWidth: 88,
+  minHeight: 32,
+  minWidth: 64,
   background: 'transparent',
-  border: '2px solid transparent',
-  borderRadius: 999,
-  padding: '8px 16px',
+  border: '1px solid transparent',
+  borderRadius: 4,
+  padding: '4px 10px',
   fontFamily: 'var(--ln-font-display)',
   fontWeight: 800,
   fontSize: 14,
@@ -31,12 +31,12 @@ const WORD = {
 }
 
 const ARROW = {
-  width: 44,
-  height: 44,
-  minWidth: 44,
-  minHeight: 44,
-  borderRadius: 999,
-  border: '2px solid var(--ln-world-outline)',
+  width: 32,
+  height: 32,
+  minWidth: 32,
+  minHeight: 32,
+  borderRadius: 4,
+  border: '1px solid var(--ln-world-outline)',
   background: 'var(--ln-world-hull-lit)',
   color: 'var(--ln-world-outline)',
   cursor: 'pointer',
@@ -66,7 +66,7 @@ export function BaseDock({ onPrev, onNext, onBuild, onHub }: BaseDockProps) {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: BASE_DOCK_GAP,
-        padding: BASE_DOCK_PADDING,
+        padding: 2,
         width: '100%',
       }}
     >
