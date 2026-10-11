@@ -6,6 +6,13 @@ public struct MissionLogEntry: Equatable, Sendable {
     public let meta: String
     public let completedAt: Double
     public let isTransit: Bool
+    /// Catalog mission id (nil for transits), so the debrief can show the brief and payout.
+    public var missionId: String? = nil
+    public var isProgram: Bool = false
+    public var clientName: String? = nil
+    public var targetName: String? = nil
+    /// Transit verdict, e.g. "Planet candidate".
+    public var verdict: String? = nil
 }
 
 /// Mission Log contents (mirrors web lib/mission-log.ts). The log only ever held completed
@@ -25,7 +32,7 @@ public enum MissionLog {
     public static func transitEntries(_ p: Player) -> [MissionLogEntry] {
         p.tessClassifications.values
             .filter { !$0.subjectId.hasPrefix(trainingPrefix) && $0.submittedAt.isFinite }
-            .map { MissionLogEntry(title: "Transit classified", meta: "TRANSIT TELESCOPE · \(verdictLabel($0.verdict))", completedAt: $0.submittedAt, isTransit: true) }
+            .map { MissionLogEntry(title: "Transit classified", meta: "TRANSIT TELESCOPE · \(verdictLabel($0.verdict))", completedAt: $0.submittedAt, isTransit: true, verdict: verdictLabel($0.verdict)) }
     }
 
     /// Newest first. Missions and transits share one list.
@@ -33,7 +40,8 @@ public enum MissionLog {
         let missions = p.completedMissions.map { r in
             MissionLogEntry(title: r.title,
                             meta: (r.kind == .program ? "OWN PROGRAM" : (r.clientName ?? "CLIENT OPERATION")) + (r.targetName.map { " · \($0)" } ?? ""),
-                            completedAt: r.completedAt, isTransit: false)
+                            completedAt: r.completedAt, isTransit: false,
+                            missionId: r.id, isProgram: r.kind == .program, clientName: r.clientName, targetName: r.targetName)
         }
         return (missions + transitEntries(p)).sorted { $0.completedAt > $1.completedAt }
     }
