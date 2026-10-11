@@ -269,13 +269,13 @@ Web screens are routed by `web/components/game/GameScreenRouter.tsx`; screen com
 
 | Screen | Web | Native | Layers and notes |
 |---|---|---|---|
-| Earth Base (hub) | `HubScreen.tsx`, `hub/HubWorldBackground.tsx`, `hub/TerrainScene.tsx`, `hub/EarthBaseModules.tsx`, `hub/Building.tsx`, `hub/AmbientMotes.tsx`, `hub/RoadRover.tsx` | `HubScreen.swift`, `BaseLayout.swift`, `Terrain.swift`, `Biome.swift` | Layers 1 to 9, base kit, edit mode, bird's-eye. Remove the sky planet: `HubWorldBackground.PlanetBackdrop` (web) and `Planet` in `Terrain.swift` (native) violate "no planets in sky". Dock: `« »`, Build, Hub. |
+| Earth Base (hub) | `HubScreen.tsx`, `hub/HubWorldBackground.tsx`, `hub/TerrainScene.tsx`, `hub/EarthBaseModules.tsx`, `hub/Building.tsx`, `hub/AmbientMotes.tsx`, `hub/RoadRover.tsx` | `HubScreen.swift`, `BaseLayout.swift`, `Terrain.swift`, `Biome.swift` | Layers 1 to 9, base kit, edit mode, bird's-eye. Remove the sky planet: `HubWorldBackground.PlanetBackdrop` (web) and `Planet` and `showsPlanet` in `Terrain.swift` (native) violate "no planets in sky". Dock: `« »`, Build, Hub. |
 | Subsurface | `hub/HubSubsurfaceView.tsx`, `hub/SoilCrossSection.tsx` (`hub-subsurface`) | no dedicated file today (planned, via `HubScreen.swift`) | section 7 states |
 | Build / place | `BuildPlaceScreen.tsx`, `FreeOpsBuildScreen.tsx` | `BuildScreen.swift` | becomes the edit-mode shelf plus placement flow (section 8); no from-scratch building |
-| Mission board | `MissionSetupRoutes.tsx` (`missions`, `targets`, `rocket-buy`, `fab`), `previews/MissionFlowPreview.tsx` | `CoreLoop.swift` (mission flow), `RouteMap.swift` | dusk grade, whole landscape, one contract card |
+| Mission board | `MissionSetupRoutes.tsx` (`missions`, `targets`, `rocket-buy`, `fab`), `previews/MissionFlowPreview.tsx` | `CoreLoop.swift` (`MissionsScreen`), `RouteMap.swift` | dusk grade, whole landscape, one contract card |
 | Launchpad | `LaunchpadScreen.tsx`, `LaunchSequenceCanvas.tsx` | `LaunchReview.swift`, `Scenes/LaunchScene.swift`, `Scenes/LaunchAtlas.swift` | uses the XL launch complex module |
-| Hangar | `HangarScreen.tsx` | `Screens/CoreLoop.swift` (hangar flow) | L hall module interior is a separate scene; exterior uses the base kit |
-| Market (Exchange) | `MarketScreen.tsx` | `BaseRecordScreens.swift` | Exchange stays a real building on the base |
+| Hangar | `HangarScreen.tsx` | `CoreLoop.swift` (`LaunchScreen`, routed from `.hangar` in `RootView.swift`) | L hall module interior is a separate scene; exterior uses the base kit |
+| Market (Exchange) | `MarketScreen.tsx` | `CoreLoop.swift` (`MarketScreen`) | Exchange stays a real building on the base |
 | Refinery | `RefineryScreen.tsx` | `RefineryScreen.swift` | M facility |
 | Takeon surface ops | `SurfaceOpsScreen.tsx`, `takeon/TakeOnMount.tsx`, `takeon/SandboxFieldControls.tsx` | `SurfaceOpsScreen.swift`, `RoverFieldScreen.swift`, `Scenes/MiningScene.swift`, `TakeonKit/TakeonEngine.swift` | section 5 ground handover |
 | Mining, rover, delivery, landing, debrief | `MiningScreen.tsx`, `RoverMiningScreen.tsx`, `DeliveryScreen.tsx`, `LandingScreen.tsx`, `DebriefScreen.tsx` | `FlightScreens.swift`, `Scenes/FlightScene.swift`, `Scenes/MiningScene.swift` | shared layer stack with Takeon grade; flight and transit scenes are space views and may omit layers 2 to 6 |
