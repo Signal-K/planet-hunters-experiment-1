@@ -420,9 +420,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     }
   }
 
-  // The phone dock lays its actions out two per row, so a fifth action adds a row. The scene lifts by the same
-  // amount (HubLayout.module.css) so the dock never sits on the buildings' hit boxes.
-  const dockRows = Math.ceil(((player.freeOperations ? 5 : 4)) / 2)
+  // The phone dock lays its actions out two per row: Ops, Help, Control, Subsurface, Mission Log and Market, plus
+  // Sites in Free Ops. Each extra row lifts the scene by the same amount (HubLayout.module.css) so the dock never
+  // sits on the buildings' hit boxes.
+  const dockRows = Math.ceil((player.freeOperations ? 7 : 6) / 2)
 
   return (
     <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-dock-rows={dockRows} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>

@@ -89,6 +89,7 @@
    dock the scene has to clear, or the dock covers the buildings' hit boxes. */
 @media (orientation: portrait) and (max-width: 1023px), (max-width: 600px) {
   .root[data-dock-rows='3'] { --hub-ground: calc(28% + 48px); }
+  .root[data-dock-rows='4'] { --hub-ground: calc(28% + 96px); }
 }
 
 @media (min-width: 1024px) {

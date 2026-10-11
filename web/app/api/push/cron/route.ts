@@ -5,11 +5,6 @@ import { landnamPbUrl } from '@/lib/pb-config'
 import { withPbRetry } from '@/lib/pbRetry'
 
 export async function GET(req: NextRequest) {
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT!,
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!,
-  )
   const secret = process.env.CRON_SECRET
   if (secret) {
     const auth = req.headers.get('authorization') ?? req.nextUrl.searchParams.get('secret')
@@ -17,6 +12,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
     }
   }
+
+  // web-push throws on missing or malformed VAPID settings, which used to surface as an empty 500.
+  const { VAPID_SUBJECT, NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY } = process.env
+  if (!VAPID_SUBJECT || !NEXT_PUBLIC_VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+    return NextResponse.json({ error: 'push not configured' }, { status: 503 })
+  }
+  webpush.setVapidDetails(VAPID_SUBJECT, NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
   const pb = new PocketBase(landnamPbUrl())
   const now = Date.now()
