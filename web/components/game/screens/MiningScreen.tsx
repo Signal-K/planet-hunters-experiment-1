@@ -58,86 +58,12 @@ function useFreeOpsFirstSuccessAck() {
 
 // Horizontal drag track — left = slow, center = normal, right = fast forward
 // Thumb snaps back to center on release
-function ScrollTrack({ scrollRef, disabled = false, slim = false }: { scrollRef: React.MutableRefObject<((dx: number) => void) | null>; disabled?: boolean; slim?: boolean }) {
-  const trackRef = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState(0.5)   // 0..1, 0.5 = center = normal speed
-  const [active, setActive] = useState(false)
-
-  const applyAt = (clientX: number) => {
-    const rect = trackRef.current?.getBoundingClientRect()
-    if (!rect) return
-    const p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    setPos(p)
-    scrollRef.current?.(p * 2 - 1)  // maps 0..1 → -1..1
-  }
-
-  const release = () => {
-    setActive(false)
-    setPos(0.5)
-    scrollRef.current?.(0)
-  }
-
-  return (
-    <div className={slim ? 'laser-scroll' : undefined} style={slim ? undefined : { display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {!slim && (
-        <div style={{
-          fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
-          letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase',
-          textAlign: 'center',
-        }}>
-          SCROLL
-        </div>
-      )}
-      <div
-        ref={trackRef}
-        className={slim ? 'laser-scroll__track' : undefined}
-        style={slim ? { cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.52 : 1, touchAction: 'none' } : {
-          position: 'relative', flex: 1, height: 44, borderRadius: 8,
-          background: 'var(--ln-mining-control-fill)',
-          border: `1px solid ${active ? 'var(--ln-cyan-border)' : 'var(--ln-hairline)'}`,
-          cursor: disabled ? 'not-allowed' : 'pointer', touchAction: 'none',
-          opacity: disabled ? 0.52 : 1,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'border-color 120ms',
-        }}
-        onPointerDown={e => {
-          if (disabled) return
-          setActive(true)
-          e.currentTarget.setPointerCapture(e.pointerId)
-          applyAt(e.clientX)
-        }}
-        onPointerMove={e => { if (!disabled && active) applyAt(e.clientX) }}
-        onPointerUp={release}
-        onPointerCancel={release}
-      >
-        {!slim && (
-          <>
-            <span style={{ position: 'absolute', left: 6, fontSize: 14, color: 'var(--ln-text-muted)', lineHeight: 1 }}>◀</span>
-            <span style={{ position: 'absolute', right: 6, fontSize: 14, color: 'var(--ln-text-muted)', lineHeight: 1 }}>▶</span>
-            <div style={{ position: 'absolute', top: '30%', bottom: '30%', left: '50%', width: 1, background: 'var(--ln-divider)' }} />
-          </>
-        )}
-        <div className={slim ? 'laser-scroll__thumb' : undefined} style={{
-          position: 'absolute',
-          top: slim ? 0 : undefined,
-          left: `calc(${pos * 100}% - ${slim ? 11 : 10}px)`,
-          width: slim ? 22 : 20, height: slim ? 6 : 20, borderRadius: slim ? 999 : '50%',
-          background: slim ? 'var(--ln-world-hull-lit)' : (active ? 'var(--ln-cyan)' : 'var(--ln-cyan-soft)'),
-          border: slim ? '1px solid var(--ln-world-outline)' : `1.5px solid ${active ? 'var(--ln-cyan)' : 'var(--ln-cyan-border)'}`,
-          boxShadow: slim ? 'none' : (active ? 'var(--ln-glow-cyan)' : 'none'),
-          transition: active ? 'background 80ms, border-color 80ms, box-shadow 80ms' : 'left 180ms ease-out, background 120ms, border-color 120ms, box-shadow 120ms',
-        }} />
-      </div>
-    </div>
-  )
-}
-
 function miningGuide(hasDelivery: boolean) {
   return [
-    { label: 'FIRE LASER', desc: 'Fires the vertical beam. Scroll a chip under the beam, then fire (Space/F).' },
-    { label: 'CHARGE BAR', desc: 'The green bar under the order shows shots left. Empty, with the order unfinished, the run stops.' },
-    { label: 'ORDER', desc: 'The left side of the panel lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty.' },
-    { label: 'SCROLL', desc: 'The side arrows and the slider change how fast the ground moves. Release to return to a steady crawl. Drag the field the same way.' },
+    { label: 'FIRE LASER', desc: 'Fires the vertical beam. Scroll ore under the beam, then fire (Space/F).' },
+    { label: 'CHARGES', desc: 'The fire button reads Depleted when the laser is empty. Empty, with the order unfinished, the run stops.' },
+    { label: 'ORDER', desc: 'The left side of the dock lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty.' },
+    { label: 'SCROLL', desc: 'The side arrows change how fast the ground moves. Release to return to a steady crawl. Drag the field the same way.' },
     { label: 'INVENTORY', desc: 'The order lines show collected against required. Fill every line to unlock return.' },
     hasDelivery
       ? { label: 'DELIVER CARGO', desc: 'The next leg drops this cargo off. Payout unlocks after delivery.' }
@@ -422,7 +348,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
   const [paletteOverride, setPaletteOverride] = useState<string | null>(null)
   const [devBars, setDevBars] = useState(false)
-  const [tipDismissed, setTipDismissed] = useState(false)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     setPaletteOverride(params.get('palette'))
@@ -472,7 +397,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       : null
 
   const orderLines = Object.entries(mission.requires.minerals)
-  const chargePct = MAX_CHARGES > 0 ? Math.max(0, Math.min(100, (laserCharges / MAX_CHARGES) * 100)) : 0
   const holdScroll = (dx: number) => (e: React.PointerEvent<HTMLButtonElement>) => {
     if (sceneStatus !== 'ready') return
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -740,13 +664,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       )}
       </div>
 
+      {trainingMiningTry && (
+        <p className="laser-cue" data-testid="mining-training-tip">Fire when ore crosses the beam</p>
+      )}
       <div className="laser-hud" data-testid="mining-controls">
-        {trainingMiningTry && !tipDismissed && (
-          <div className="laser-tip" data-testid="mining-training-tip">
-            <span>Fire when a chip crosses the beam</span>
-            <button type="button" aria-label="Dismiss tip" onClick={() => setTipDismissed(true)}>×</button>
-          </div>
-        )}
         {/* SSL-411: the stat row is gone. Per-mineral progress is kept for
             assistive tech; charges live inside FIRE LASER and order progress
             inside the return button. */}
@@ -768,8 +689,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </Panel>
         )}
 
-        <ScrollTrack scrollRef={scrollRef} disabled={sceneStatus !== 'ready'} slim />
-
         <div className="laser-dock" data-ore-near={oreNear}>
           <button
             className="laser-dock__order"
@@ -781,14 +700,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             <span className="laser-dock__lines" data-testid={isFreeOps ? 'freeops-cargo-progress' : 'mining-order-progress'}>
               {isFreeOps ? (
                 <span>Cargo {freeOpsCargoUnits}</span>
-              ) : orderLines.map(([id, amount]) => (
-                <span key={id}>{minerals[id]?.name ?? id} {Math.min(cargo[id] ?? 0, amount)}/{amount}</span>
-              ))}
+              ) : (
+                <span>{orderLines.map(([id, amount]) => `${minerals[id]?.name ?? id} ${Math.min(cargo[id] ?? 0, amount)}/${amount}`).join(', ')}</span>
+              )}
             </span>
             {isFreeOps && freeOpsDebrisReadout ? <span className="laser-dock__debris" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span> : null}
-            <span className="laser-dock__charge" data-testid="mining-charges" aria-hidden="true">
-              <span style={{ width: `${chargePct}%` }} />
-            </span>
           </button>
           <button
             className={[

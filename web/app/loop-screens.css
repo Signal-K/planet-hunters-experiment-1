@@ -153,6 +153,10 @@ body:has([data-screen="hub"]) {
   min-height: 0;
   min-width: 0;
 }
+.theme-blueprint.mining-screen .laser-hud .laser-dock__fire {
+  min-height: 44px;
+  height: 44px;
+}
 .theme-blueprint.mining-screen .laser-chrome .scene-icon-btn,
 .theme-blueprint.mining-screen .laser-chrome .settings-cog,
 .theme-blueprint.mining-screen .laser-chrome .game-friends-button,
