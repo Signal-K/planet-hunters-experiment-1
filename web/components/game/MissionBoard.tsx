@@ -224,6 +224,7 @@ export default function MissionBoard({
             {prevCard && <button type="button" className={`${styles.peek} ${styles.peekPrev}`} aria-label={`Show ${prevCard.mission.title}`} onClick={() => onSelectRelative(-1)} />}
             {nextCard && <button type="button" className={`${styles.peek} ${styles.peekNext}`} aria-label={`Show ${nextCard.mission.title}`} onClick={() => onSelectRelative(1)} />}
             <article className={styles.card} aria-live="polite" data-testid="mission-board-section-client">
+              <div className={styles.cardBody}>
               <header className={styles.head}>
                 <span className={styles.kicker}>Client contract {index + 1} / {count}</span>
                 <span className={styles.markSlot}><ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-teal)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={48} /></span>
@@ -240,12 +241,13 @@ export default function MissionBoard({
                   {Object.entries(card.mission.requires.minerals).map(([id, amount]) => {
                     const meta = catalog.minerals[id]
                     if (!meta) return null
-                    return <span key={id} className={styles.ore} title={meta.name}><MineralRock shape={meta.shape} color={meta.color} />{amount}</span>
+                    return <span key={id} className={styles.ore}><MineralRock shape={meta.shape} color={meta.color} /><span className={styles.oreName}>{meta.name}</span><span className={styles.oreCount}>{amount}</span></span>
                   })}
                 </div>
               </div>
               <img className={styles.rocket} src={rocketImg} alt="" />
               {!card.unlocked && card.lockedDetail && <p className={styles.lockline}>{card.lockedDetail}</p>}
+              </div>
               <button type="button" className={styles.accept} data-testid={`mission-accept-${card.mission.id}`} disabled={!card.unlocked || tutorialBlocked} onClick={() => onAccept(card.mission.id)}>ACCEPT &amp; PREPARE</button>
             </article>
             <div className={styles.dots}>

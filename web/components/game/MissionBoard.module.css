@@ -186,32 +186,38 @@ button.log {
 .card {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0 4%;
+  padding: 14px 16px;
+  overflow: hidden;
+}
+.cardBody {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(168px, 240px);
   grid-template-areas:
     "head head"
     "title ship"
     "facts ship"
-    "cargo ship"
-    "accept accept";
+    "cargo ship";
   column-gap: 16px;
   row-gap: 8px;
-  align-content: safe center;
+  align-content: start;
   align-items: center;
-  flex: 1 1 auto;
-  min-height: 0;
-  margin: 0 4%;
-  padding: 14px 16px;
-  overflow: auto;
 }
-.card:has(.lockline) {
+.cardBody:has(.lockline) {
   grid-template-areas:
     "head head"
     "title ship"
     "facts ship"
     "cargo ship"
-    "lock lock"
-    "accept accept";
+    "lock lock";
 }
 .peek {
   position: absolute;
@@ -310,18 +316,26 @@ button.log {
   letter-spacing: 0.08em;
   color: var(--ln-board-muted);
 }
-.ores { display: flex; flex-wrap: wrap; gap: 10px; }
+.ores { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .ore {
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto;
   gap: 8px;
+  box-sizing: border-box;
+  max-width: 100%;
   min-height: 44px;
-  font: 800 16px/1 var(--ln-font-display);
+  font: 800 16px/1.2 var(--ln-font-display);
   color: var(--ln-board-ink);
 }
+.oreName, .oreCount { overflow: visible; }
+.oreName { min-width: 0; white-space: normal; }
+.oreCount { white-space: nowrap; }
+.oreCount { font-variant-numeric: tabular-nums; }
 .rock {
   display: grid;
   place-items: center;
+  flex: 0 0 44px;
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -345,8 +359,8 @@ button.log {
 }
 .lockline { grid-area: lock; }
 button.accept {
-  grid-area: accept;
-  margin-top: 4px;
+  flex: 0 0 auto;
+  margin-top: 8px;
   position: static;
   z-index: 2;
   min-height: 48px;
@@ -558,29 +572,30 @@ button.start {
   .tab { flex: 1 1 0; min-height: 56px; }
   button.log { margin-top: 0; flex: 0 0 auto; padding: 0 10px; }
   .body { padding: 8px; }
-  .card {
-    margin: 0;
-    padding: 12px;
+  .card { margin: 0; padding: 12px; }
+  .cardBody {
+    row-gap: 4px;
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "head"
       "title"
       "facts"
       "cargo"
-      "ship"
-      "accept";
+      "ship";
   }
-  .card:has(.lockline) {
+  .cardBody:has(.lockline) {
     grid-template-areas:
       "head"
       "title"
       "facts"
       "cargo"
       "ship"
-      "lock"
-      "accept";
+      "lock";
   }
-  .rocket { max-width: 140px; max-height: 140px; }
+  .rocket { max-width: 120px; max-height: 72px; }
+  .fact { min-height: 44px; padding: 4px 8px; }
+  .fact strong { margin-top: 2px; font-size: 18px; }
+  .title { font-size: 20px; }
   .events { grid-template-columns: minmax(0, 1fr); }
   .step {
     grid-template-columns: 48px minmax(0, 1fr);
@@ -594,15 +609,16 @@ button.start {
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
-  .panel { top: 52px; height: calc(100% - 58px); padding-top: 56px; border-radius: 20px; }
+  .panel { top: 52px; height: calc(100% - 54px); padding-top: 54px; border-radius: 20px; }
   .cog, .clock, .chips { top: 6px; }
-  .body { padding: 4px 8px; }
-  .card {
+  .body { padding: 2px 8px; }
+  .card { padding: 2px 8px; }
+  .cardBody {
     align-content: start;
-    padding: 4px 8px;
     row-gap: 4px;
-    grid-template-columns: minmax(0, 1fr) 220px;
+    grid-template-columns: minmax(0, 1fr) 180px;
   }
+  .ores { gap: 6px; }
   .head { min-height: 44px; padding: 2px 8px; }
   .title { font-size: 20px; }
   .fact { min-height: 44px; padding: 4px 8px; }
