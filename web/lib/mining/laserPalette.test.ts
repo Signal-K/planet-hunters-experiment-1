@@ -23,6 +23,12 @@ describe('laser palettes', () => {
     expect(paletteForTarget({ id: 'new-world', type: 'planet', archetype: 'S' }).id).toBe('mars')
   })
 
+  it('inks ore labels for the sky behind them', () => {
+    expect(paletteForTarget({ id: 'bennu', type: 'asteroid' }).labelInk).toBe(0xffffff)
+    expect(paletteForTarget({ id: 'europa', type: 'planet', archetype: 'icy' }).labelInk).toBe(0xffffff)
+    expect(paletteForTarget({ id: 'mars', type: 'planet' }).labelInk).toBe(0x1a2430)
+  })
+
   it('resolves a ?palette= id and rejects an unknown one', () => {
     expect(paletteById('icy-moon')?.id).toBe('icy-moon')
     expect(paletteById('mars')?.terrain).toBe('dunes')

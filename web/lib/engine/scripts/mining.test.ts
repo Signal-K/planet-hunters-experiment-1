@@ -217,7 +217,7 @@ describe('MiningController', () => {
   })
 })
 
-interface MockLabel { text: string; x: number; visible: boolean; destroy: () => void; style: { fontSize: number } }
+interface MockLabel { text: string; x: number; y: number; visible: boolean; destroy: () => void; style: { fontSize: number } }
 
 function labels(): MockLabel[] {
   return vi.mocked(Text).mock.instances as unknown as MockLabel[]
@@ -254,6 +254,12 @@ describe('MiningController ore sym labels', () => {
     })
     short.controller.start()
     expect(wide).toBeLessThan(labels()[0].style.fontSize)
+  })
+
+  it('puts the sym above the surface outcrop', () => {
+    const { controller } = makeController(vi.fn(), { mineralSyms: SYMS, chipFill: 0x334455, chipShade: 0x112233 })
+    controller.start()
+    expect(labels()[0].y).toBeLessThan(320)
   })
 
   it('keeps the label on the ore as the terrain scrolls', () => {

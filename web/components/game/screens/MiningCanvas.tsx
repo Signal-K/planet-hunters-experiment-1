@@ -191,7 +191,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, requir
           mineralShapes: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.shape ?? 'circle'])),
           mineralSyms: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.sym])),
           beamColor: palette.beamCss,
-          chipFill: palette.groundSpeck,
+          chipFill: palette.ground,
           chipShade: palette.groundDeep,
           labelInk: palette.labelInk,
           onCollect: mineral => onCollectRef.current(mineral),

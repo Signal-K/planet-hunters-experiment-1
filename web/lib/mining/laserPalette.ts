@@ -29,7 +29,7 @@ export interface LaserPalette {
   clouds: boolean
   terrain: LaserTerrain
   planet?: LaserPlanet
-  /** Ink for ore symbols. Light ground needs dark ink. */
+  /** Ink for ore symbols. The label sits in the sky above the outcrop, so a light sky needs dark ink. */
   labelInk: number
 }
 
@@ -86,7 +86,7 @@ function compile(id: string, src: RawPalette): LaserPalette {
     planet: src.planet
       ? { cx: src.planet.cx, cy: src.planet.cy, radius: src.planet.radius, bands: src.planet.bands.map(hex) }
       : undefined,
-    labelInk: channelAverage(hex(src.groundSpeck)) > 150 ? 0x1a2430 : 0xffffff,
+    labelInk: channelAverage(hex(src.skyHorizon)) > 120 ? 0x1a2430 : 0xffffff,
   }
 }
 
