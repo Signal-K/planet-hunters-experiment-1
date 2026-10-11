@@ -12,13 +12,27 @@ import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
 import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
 import { TRANSPORT_LESSON_MISSIONS_DONE } from '@/lib/systems/AgencyOnboardingSystem'
-import { ownershipIdentity } from '@/lib/systems/SandboxSystem'
 import { isFreeHaulEligibleMission } from '@/lib/data'
 import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-events'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { captureGameEvent } from '@/lib/posthog'
+import { missionResumeScreen } from '@/lib/mission-resume'
 
 const reportedDebrisBadges = new Set<string>()
+
+function flightStops(player: Game['player']): Screen[] {
+  const stops: Screen[] = ['hub', 'missions']
+  if (player.freeOperations) stops.push('market')
+  const resume = missionResumeScreen(player)
+  if (!stops.includes(resume)) stops.push(resume)
+  return stops
+}
+
+function stepFlightDock(game: Game, dir: -1 | 1) {
+  const stops = flightStops(game.player)
+  const at = Math.max(0, stops.indexOf(game.screen))
+  game.go(stops[(at + dir + stops.length) % stops.length])
+}
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
@@ -53,17 +67,16 @@ export default function MissionOperationRoutes({
       return (
         <TransitScreen
           target={transitTarget}
-          rocketImageSrc={rocketDisplay.img}
           arrivalAt={game.player.arrivalAt}
           transitStartedAt={game.player.transitStartedAt}
           returning={!!game.player.returningToEarth}
           isDelivery={!!game.player.headingToDelivery}
-          cargo={game.lastCargo}
-          minerals={game.catalog.minerals}
-          mission={game.mission}
-          client={game.mission?.client ? game.catalog.clients[game.mission.client] ?? null : null}
-          ownership={ownershipIdentity(game.player, game.authUserId)}
+          ore={Object.values(game.player.stash ?? {}).reduce((sum, amount) => sum + Math.max(0, amount), 0)}
+          skillPoints={game.player.skillPoints ?? 0}
           onBack={() => game.go('hub')}
+          onPrev={() => stepFlightDock(game, -1)}
+          onNext={() => stepFlightDock(game, 1)}
+          onHub={() => game.go('hub')}
           onArrive={() => {
             if (game.player.returningToEarth) {
               game.onReturnArrived()
@@ -112,7 +125,6 @@ export default function MissionOperationRoutes({
             }))
             game.go(isRoverSurvey ? 'rover-survey' : 'mining')
           }}
-          onAbandon={game.abandonMission}
         />
       )
 

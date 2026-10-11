@@ -1,35 +1,6 @@
-import { Application, Assets, Graphics, Container, Sprite, Text, TextStyle, Texture } from 'pixi.js'
-import { transitOriginEarthRadius, transitRocketScreenPos } from './transitFlight'
+import { Graphics } from 'pixi.js'
 
 export type TargetKind = 'asteroid' | 'planet' | 'moon' | 'earth'
-
-export interface TransitSceneOptions {
-  targetName: string
-  targetKind?: TargetKind
-  rocketImageSrc?: string
-  renderRocket?: boolean
-  getProgress: () => number  // 0..100
-}
-
-export interface TransitScene {
-  update(elapsed: number, dt: number): void
-}
-
-// How fast each star layer scrolls (deeper = faster parallax)
-const LAYER_SPEEDS = [18, 36, 65]   // px/s — gives clear sense of upward travel
-const LAYER_COUNTS = [55, 32, 18]
-
-function mkStarLayer(W: number, H: number, count: number, layer: number): Graphics {
-  const g = new Graphics()
-  for (let i = 0; i < count; i++) {
-    const x = Math.random() * W
-    const y = Math.random() * H
-    const r = 0.3 + Math.random() * (layer === 2 ? 1.2 : 0.6)
-    const alpha = 0.18 + Math.random() * 0.65
-    g.circle(x, y, r + 0.4).fill({ color: 0x1f78c1, alpha: alpha * 0.55 })
-  }
-  return g
-}
 
 // Stylized landmasses in spherical (longitude, latitude) terms so Earth can
 // slowly rotate like a real globe instead of sitting as a static painted
@@ -65,6 +36,7 @@ function drawGlobeFeature(
     .fill({ color, alpha: baseAlpha * Math.min(1, visibility * 1.6) })
 }
 
+/** Launch-orbit globe. The flight scene no longer paints a body here. */
 export function drawPlanet(g: Graphics, cx: number, cy: number, r: number, kind: TargetKind, rotation = 0) {
   g.clear()
   if (r < 1) return
@@ -106,149 +78,4 @@ export function drawPlanet(g: Graphics, cx: number, cy: number, r: number, kind:
   // crescent shade on the side away from the light, then the ink outline
   g.circle(cx + r * 0.22, cy + r * 0.05, r * 0.92).fill({ color: 0x1f78c1, alpha: 0.18 })
   g.circle(cx, cy, r).stroke({ color: 0x0f2436, width: outline })
-}
-
-export { transitOriginEarthRadius, transitRocketScreenPos } from './transitFlight'
-
-function drawRocket(g: Graphics, rx: number, ry: number, flicker: number) {
-  g.clear()
-  // body
-  g.rect(rx - 5, ry - 20, 10, 30).fill(0xc4d4f0)
-  // nose
-  g.poly([rx, ry - 28, rx - 5, ry - 20, rx + 5, ry - 20]).fill(0x9becff)
-  // fins
-  g.poly([rx - 5, ry + 8, rx - 13, ry + 20, rx - 5, ry + 10]).fill(0x9becff)
-  g.poly([rx + 5, ry + 8, rx + 13, ry + 20, rx + 5, ry + 10]).fill(0x9becff)
-  // engine bell
-  g.rect(rx - 4, ry + 10, 8, 5).fill(0x8899bb)
-  // plume
-  const plumeH = 10 + flicker * 5
-  g.poly([rx - 3, ry + 15, rx + 3, ry + 15, rx + 2, ry + 15 + plumeH, rx - 2, ry + 15 + plumeH]).fill({ color: 0x20dddf, alpha: 0.85 })
-  g.poly([rx - 1, ry + 15, rx + 1, ry + 15, rx, ry + 18 + plumeH]).fill({ color: 0xffffff, alpha: 0.95 })
-}
-
-export function buildTransitScene(app: Application, opts: TransitSceneOptions): TransitScene {
-  const W = app.screen.width
-  const H = app.screen.height
-
-  const bg = new Graphics()
-  bg.rect(0, 0, W, H).fill(0xdfe9f3)
-  app.stage.addChild(bg)
-
-  const starContainers: Container[] = []
-  for (let i = 0; i < 3; i++) {
-    const c = new Container()
-    c.addChild(mkStarLayer(W, H, LAYER_COUNTS[i], i))
-    app.stage.addChild(c)
-    starContainers.push(c)
-  }
-
-  const originEarthG = new Graphics()
-  app.stage.addChild(originEarthG)
-
-  const planetG = new Graphics()
-  app.stage.addChild(planetG)
-
-  const plumeG = new Graphics()
-  app.stage.addChild(plumeG)
-
-  const renderRocket = opts.renderRocket !== false
-  const rocketG = new Graphics()
-  if (renderRocket) app.stage.addChild(rocketG)
-
-  const rocketSprite = new Sprite(Texture.EMPTY)
-  rocketSprite.anchor.set(0.5)
-  rocketSprite.rotation = Math.PI / 2
-  rocketSprite.visible = false
-  if (renderRocket) app.stage.addChild(rocketSprite)
-  if (renderRocket && opts.rocketImageSrc) {
-    void Assets.load<Texture>(opts.rocketImageSrc).then(texture => {
-      rocketSprite.texture = texture
-      const longEdge = Math.min(H * 0.18, 110)
-      const thickEdge = Math.min(W * 0.16, 48)
-      const scale = Math.min(longEdge / Math.max(texture.width, 1), thickEdge / Math.max(texture.height, 1))
-      rocketSprite.scale.set(scale)
-      rocketSprite.visible = true
-      rocketG.visible = false
-    }).catch(() => {
-      rocketSprite.visible = false
-      rocketG.visible = true
-    })
-  }
-
-  // Target name label (fades in as planet grows)
-  const labelStyle = new TextStyle({
-    fontFamily: 'Oxanium, monospace',
-    fontSize: 14,
-    fontWeight: '800',
-    fill: 0x0f2436,
-    letterSpacing: 3,
-  })
-  const label = new Text({ text: opts.targetName.toUpperCase(), style: labelStyle })
-  label.alpha = 0
-  label.anchor.set(0.5, 0)
-  label.x = W * 0.5
-  app.stage.addChild(label)
-
-  const kind = opts.targetKind ?? 'asteroid'
-  const cx = W * 0.5
-  const planetCY = H * 0.3
-
-  return {
-    update(elapsed, _dt) {
-      // Stars scroll downward (rocket flying upward) — each layer at different speed for parallax.
-      // Modulo H produces seamless looping since stars tile vertically.
-      for (let i = 0; i < starContainers.length; i++) {
-        starContainers[i].y = (elapsed * LAYER_SPEEDS[i] * 1.35) % H
-      }
-
-      const progress = opts.getProgress()
-      const p = Math.min(1, progress / 100)
-      const minR = 6
-      const maxR = Math.min(W * 0.52, H * 0.52)
-      const r = minR + (maxR - minR) * Math.pow(p, 1.5)
-
-      const earthR = transitOriginEarthRadius(progress, H, kind)
-      originEarthG.clear()
-      if (earthR > 8) {
-        drawPlanet(originEarthG, cx, H * 0.92, earthR, 'earth', elapsed * 0.12)
-      }
-
-      drawPlanet(planetG, cx, planetCY, r, kind, elapsed * 0.22)
-
-      // label below planet, fades in past 10%
-      label.y = planetCY + r + 8
-      label.alpha = Math.max(0, (p - 0.1) / 0.2)
-
-      const rocketPos = transitRocketScreenPos(progress, W, H)
-      const bob = Math.sin(elapsed * 1.7) * 2.5
-      const flicker = 0.5 + Math.sin(elapsed * 14) * 0.5
-      const rx = rocketPos.x
-      const ry = rocketPos.y + bob
-      const angle = 56 * Math.PI / 180
-
-      plumeG.clear()
-      const ph = 28 + flicker * 10
-      const px = rx - Math.sin(angle) * 18
-      const py = ry + Math.cos(angle) * 22
-      plumeG
-        .circle(px, py, 10 + flicker * 4).fill({ color: 0x36c6e2, alpha: 0.35 })
-        .circle(px, py + 6, 6).fill({ color: 0xa3ecf5, alpha: 0.55 })
-        .poly([
-          px - 4, py,
-          px + 4, py,
-          px + 2, py + ph,
-          px - 2, py + ph,
-        ]).fill({ color: 0x70d9ea, alpha: 0.45 })
-
-      if (renderRocket) {
-        if (rocketSprite.visible) {
-          rocketSprite.x = rx
-          rocketSprite.y = ry
-        } else {
-          drawRocket(rocketG, rx, ry, flicker)
-        }
-      }
-    },
-  }
 }

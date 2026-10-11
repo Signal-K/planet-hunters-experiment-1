@@ -8,6 +8,12 @@ type BaseDockProps = {
   onNext: () => void
   onBuild: () => void
   onHub: () => void
+  /** Flight reuses this dock with Boost in the Build slot. */
+  buildLabel?: string
+  buildTestId?: string
+  buildIcon?: ReactNode
+  hubIcon?: ReactNode
+  variant?: 'base' | 'flight'
 }
 
 /** Dock controls. Arrows sit at the ends; Build and Hub sit in the middle. */
@@ -79,12 +85,24 @@ export function DockPrimaryButton({
 }
 
 /** Floating dock: previous at the far left, Build and Hub in the middle, next at the far right. */
-export function BaseDock({ onPrev, onNext, onBuild, onHub }: BaseDockProps) {
+export function BaseDock({
+  onPrev,
+  onNext,
+  onBuild,
+  onHub,
+  buildLabel = 'Build',
+  buildTestId = 'hub-build-btn',
+  buildIcon,
+  hubIcon,
+  variant = 'base',
+}: BaseDockProps) {
+  const flight = variant === 'flight'
   return (
     <nav
       aria-label="Scene dock"
       data-ui-zone={UI_ZONES.bottomNav}
       data-testid="base-dock"
+      data-dock-variant={variant}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -96,8 +114,12 @@ export function BaseDock({ onPrev, onNext, onBuild, onHub }: BaseDockProps) {
     >
       <DockArrowButton direction="left" data-testid="hub-dock-prev" onClick={onPrev} aria-label="Previous" />
       <div style={{ display: 'flex', alignItems: 'center', gap: BASE_DOCK_GAP }}>
-        <DockWordButton data-testid="hub-build-btn" data-beacon="hub-build-btn" onClick={onBuild}>Build</DockWordButton>
-        <DockWordButton data-testid="hub-btn" onClick={onHub}>Hub</DockWordButton>
+        <DockWordButton data-testid={flight ? buildTestId : 'hub-build-btn'} data-beacon="hub-build-btn" onClick={onBuild}>
+          {flight ? buildIcon : null}{flight ? buildLabel : 'Build'}
+        </DockWordButton>
+        <DockWordButton data-testid="hub-btn" onClick={onHub}>
+          {flight ? hubIcon : null}Hub
+        </DockWordButton>
       </div>
       <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label="Next" />
     </nav>

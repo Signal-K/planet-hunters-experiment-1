@@ -17,8 +17,16 @@ describe('loop screens use one chrome', () => {
     expect(source).not.toContain('debrief-hud-header"')
   })
 
-  it.each(LOOP_SCREENS.filter(n => n !== 'HubScreen'))('%s uses the shared TopBar', name => {
+  it.each(LOOP_SCREENS.filter(n => n !== 'HubScreen' && n !== 'TransitScreen'))('%s uses the shared TopBar', name => {
     const source = readFileSync(join(screensDir, `${name}.tsx`), 'utf8')
     expect(source).toMatch(/<TopBar/)
+  })
+
+  it('TransitScreen uses the shared base dock and clock, with no scene title', () => {
+    const source = readFileSync(join(screensDir, 'TransitScreen.tsx'), 'utf8')
+    expect(source).toContain('<BaseDock')
+    expect(source).toContain('<HubClockWidget')
+    expect(source).not.toMatch(/<TopBar/)
+    expect(source).not.toContain('COURSE LOCKED')
   })
 })
