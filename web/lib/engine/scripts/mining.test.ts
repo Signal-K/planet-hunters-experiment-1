@@ -5,6 +5,7 @@ vi.mock('pixi.js', () => ({
   Graphics: vi.fn().mockImplementation(function (this: Record<string, unknown>) {
     this.poly = vi.fn().mockReturnThis()
     this.circle = vi.fn().mockReturnThis()
+    this.ellipse = vi.fn().mockReturnThis()
     this.rect = vi.fn().mockReturnThis()
     this.fill = vi.fn().mockReturnThis()
     this.stroke = vi.fn().mockReturnThis()
@@ -35,7 +36,7 @@ vi.mock('pixi.js', () => ({
 
 import { Container, Text } from 'pixi.js'
 import { ShapeRenderer } from '../components/ShapeRenderer'
-import { MiningController } from './MiningController'
+import { MiningController, SHIP_X } from './MiningController'
 import type { MiningControllerOptions } from './MiningController'
 import { RuntimeContext } from '../RuntimeContext'
 import { GameObject } from '../GameObject'
@@ -256,10 +257,10 @@ describe('MiningController ore sym labels', () => {
     expect(wide).toBeLessThan(labels()[0].style.fontSize)
   })
 
-  it('puts the sym above the surface outcrop', () => {
+  it('puts the sym on the buried deposit, under the surface line', () => {
     const { controller } = makeController(vi.fn(), { mineralSyms: SYMS, chipFill: 0x334455, chipShade: 0x112233 })
     controller.start()
-    expect(labels()[0].y).toBeLessThan(320)
+    expect(labels()[0].y).toBeGreaterThan(320)
   })
 
   it('keeps deposits at least two screen-widths apart', () => {
@@ -294,6 +295,30 @@ describe('MiningController ore sym labels', () => {
       controller.update(0)
     }
     expect(labels()[0].visible).toBe(false)
+  })
+
+  it('treats ?scroll= as screen-widths, so two screens later is the next deposit', () => {
+    const width = 400
+    const placed = (screens: number) => {
+      const { controller } = makeController(vi.fn(), {
+        worldWidth: width,
+        scrollScreens: screens,
+        pinScroll: true,
+        leadMinerals: ['iron', 'carbon', 'ice'],
+        minerals: ['gold'],
+        mineralColors: { iron: '#e06a22', carbon: '#161616', ice: '#2ec8e8', gold: '#ffd166' },
+      })
+      controller.start()
+      return (controller as unknown as { ores: { mineral: string; go: { transform: { position: { x: number } } } }[] }).ores
+    }
+    const anchor = Math.max(SHIP_X + 150, Math.round(width * 0.42))
+    const first = placed(0)
+    expect(first[0].mineral).toBe('iron')
+    expect(first[0].go.transform.position.x).toBe(anchor)
+    const mid = placed(1).filter(ore => ore.go.transform.position.x > 0 && ore.go.transform.position.x < width)
+    expect(mid).toHaveLength(0)
+    const next = placed(2).find(ore => ore.go.transform.position.x === anchor)
+    expect(next?.mineral).toBe('carbon')
   })
 
   it('places lead minerals first, each at least two screen-widths apart', () => {

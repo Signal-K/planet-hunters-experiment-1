@@ -26,6 +26,8 @@ interface MiningCanvasProps {
   minerals: string[]
   leadMinerals?: string[]
   scrollScreens?: number
+  /** Hold the field still when `?scroll=` is set, so the offset can be checked. */
+  pinScroll?: boolean
   requiredMinerals?: string[]
   mineralMeta: Record<string, MineralMeta>
   /** Equipped drill/laser part tier (1-3). Gates how deep the laser can reach. */
@@ -49,7 +51,7 @@ interface MiningCanvasProps {
   debrisPreset?: DebrisEventPreset | null
 }
 
-export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
   void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
@@ -188,6 +190,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
           minerals,
           leadMinerals,
           scrollScreens,
+          pinScroll,
           requiredMinerals,
           mineralColors: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.color])),
           mineralLaserAccess,
@@ -347,7 +350,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
       // else: async init returns early (destroyed=true), canvas stays briefly then is GC'd with parent
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [palette.id, rocketImageSrc, fitKey, leadMinerals?.join(','), scrollScreens])
+  }, [palette.id, rocketImageSrc, fitKey, leadMinerals?.join(','), scrollScreens, pinScroll])
 
   return (
     <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" data-palette={palette.id} data-training-mining={trainingMiningTry || undefined}>

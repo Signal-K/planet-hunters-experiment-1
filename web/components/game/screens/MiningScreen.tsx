@@ -351,13 +351,21 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [devBars, setDevBars] = useState(false)
   const [mixedOres, setMixedOres] = useState(false)
   const [scrollScreens, setScrollScreens] = useState(0)
+  const [pinScroll, setPinScroll] = useState(false)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     setPaletteOverride(params.get('palette'))
     setDevBars(params.get('dev') === '1')
     setMixedOres(params.get('ores') === 'mixed')
-    const scroll = Number(params.get('scroll'))
+    const raw = params.get('scroll')
+    if (raw == null || raw === '') {
+      setScrollScreens(0)
+      setPinScroll(false)
+      return
+    }
+    const scroll = Number(raw)
     setScrollScreens(Number.isFinite(scroll) && scroll > 0 ? scroll : 0)
+    setPinScroll(true)
   }, [])
   const palette = paletteById(paletteOverride) ?? paletteForTarget(target)
 
@@ -411,7 +419,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const releaseScroll = () => { scrollRef.current?.(0) }
 
   return (
-    <div className="game-screen mining-screen theme-blueprint" data-training-active={trainingMiningTry ? 'true' : 'false'} data-palette={palette.id} style={{ background: palette.skyCss }}>
+    <div className="game-screen mining-screen theme-blueprint" data-training-active={trainingMiningTry ? 'true' : 'false'} data-palette={palette.id} data-scroll={pinScroll ? String(scrollScreens) : undefined} style={{ background: palette.skyCss }}>
       {help.layer}
 
       {/* KES-283: self-directed mining requires a storage destination before
@@ -605,6 +613,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           minerals={depositMinerals}
           leadMinerals={mixedOres ? ['iron', 'carbon', 'ice'] : undefined}
           scrollScreens={scrollScreens}
+          pinScroll={pinScroll}
           requiredMinerals={Object.keys(mission.requires.minerals)}
           mineralMeta={minerals}
           laserTier={laserTier}
@@ -704,7 +713,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               {isFreeOps ? (
                 <span>Cargo {freeOpsCargoUnits}</span>
               ) : (
-                <span>{orderLines.map(([id, amount]) => `${minerals[id]?.name ?? id} ${Math.min(cargo[id] ?? 0, amount)}/${amount}`).join(', ')}</span>
+                orderLines.map(([id, amount]) => (
+                  <span key={id}>{`${minerals[id]?.name ?? id} ${Math.min(cargo[id] ?? 0, amount)}/${amount}`}</span>
+                ))
               )}
             </span>
             {isFreeOps && freeOpsDebrisReadout ? <span className="laser-dock__debris" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span> : null}

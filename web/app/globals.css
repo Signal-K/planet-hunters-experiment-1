@@ -4082,22 +4082,33 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   .laser-hud { max-height: 12vh; }
 }
 .laser-hud > * { pointer-events: auto; }
+.laser-hud .scene-dock-primary { flex: 0 0 auto; }
 .laser-hud .laser-dock__order {
   justify-content: flex-start;
   flex: 0 1 auto;
   width: auto;
   max-width: calc(100% - 168px);
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   text-align: left;
+  padding: 0 8px;
 }
 .laser-dock__lines,
 .laser-dock__debris {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 0;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   color: inherit;
+  line-height: 16px;
+  white-space: normal;
+}
+.laser-dock__lines > span,
+.laser-dock__debris > span {
   white-space: nowrap;
 }
 .laser-dev-skip {

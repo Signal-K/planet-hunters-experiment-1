@@ -47,68 +47,61 @@ const LASER_DEPTH_BY_TIER: Record<number, number> = {
   3: LASER_MAX_DEPTH,
 }
 
-/** Buried cutaway shapes. y grows downward into the soil. Only the first part breaks the surface. */
+/** Buried cutaway shapes. y grows downward into the soil. Every part starts below the surface line. */
 type OreBlob = { x: number; y: number; w: number; h: number }
 const NODULE_BLOBS: OreBlob[][] = [
   [
-    { x: -6, y: -2, w: 12, h: 6 },
-    { x: -30, y: 14, w: 24, h: 20 },
-    { x: -4, y: 18, w: 28, h: 24 },
-    { x: 22, y: 26, w: 18, h: 16 },
-    { x: -16, y: 44, w: 44, h: 12 },
+    { x: -28, y: 14, w: 22, h: 18 },
+    { x: -4, y: 18, w: 26, h: 22 },
+    { x: 18, y: 26, w: 16, h: 16 },
+    { x: -14, y: 40, w: 40, h: 14 },
   ],
   [
-    { x: -5, y: -2, w: 10, h: 5 },
-    { x: -22, y: 16, w: 20, h: 18 },
-    { x: 2, y: 22, w: 22, h: 20 },
-    { x: -12, y: 42, w: 36, h: 14 },
+    { x: -22, y: 16, w: 20, h: 16 },
+    { x: 0, y: 22, w: 22, h: 20 },
+    { x: -12, y: 42, w: 34, h: 12 },
   ],
   [
-    { x: -4, y: -2, w: 8, h: 5 },
-    { x: -26, y: 12, w: 18, h: 16 },
-    { x: -6, y: 20, w: 16, h: 28 },
-    { x: 12, y: 28, w: 20, h: 18 },
+    { x: -24, y: 12, w: 18, h: 16 },
+    { x: -6, y: 20, w: 16, h: 26 },
+    { x: 12, y: 28, w: 18, h: 18 },
   ],
 ]
 const SEAM_BLOBS: OreBlob[][] = [
   [
-    { x: -5, y: -2, w: 10, h: 5 },
-    { x: -48, y: 18, w: 96, h: 14 },
-    { x: -32, y: 34, w: 70, h: 12 },
-    { x: -18, y: 48, w: 40, h: 8 },
+    { x: -46, y: 16, w: 92, h: 14 },
+    { x: -30, y: 32, w: 68, h: 12 },
+    { x: -16, y: 46, w: 38, h: 8 },
   ],
   [
-    { x: -4, y: -2, w: 8, h: 5 },
-    { x: -40, y: 22, w: 84, h: 12 },
-    { x: -22, y: 36, w: 52, h: 10 },
+    { x: -40, y: 20, w: 80, h: 12 },
+    { x: -22, y: 34, w: 50, h: 10 },
   ],
   [
-    { x: -6, y: -2, w: 12, h: 5 },
-    { x: -36, y: 16, w: 28, h: 10 },
-    { x: -4, y: 20, w: 56, h: 14 },
-    { x: 8, y: 36, w: 36, h: 10 },
+    { x: -34, y: 14, w: 28, h: 10 },
+    { x: -4, y: 18, w: 54, h: 14 },
+    { x: 8, y: 34, w: 34, h: 10 },
   ],
 ]
 const CRYSTAL_BLOBS: OreBlob[][] = [
   [
-    { x: -4, y: -2, w: 8, h: 5 },
-    { x: -16, y: 12, w: 14, h: 30 },
+    { x: -14, y: 12, w: 12, h: 28 },
     { x: 2, y: 16, w: 12, h: 26 },
-    { x: -8, y: 36, w: 22, h: 16 },
+    { x: -8, y: 36, w: 20, h: 16 },
   ],
   [
-    { x: -3, y: -2, w: 7, h: 5 },
-    { x: -20, y: 14, w: 12, h: 28 },
-    { x: -4, y: 18, w: 14, h: 34 },
+    { x: -18, y: 14, w: 12, h: 26 },
+    { x: -4, y: 18, w: 14, h: 32 },
     { x: 12, y: 22, w: 10, h: 22 },
   ],
   [
-    { x: -4, y: -2, w: 8, h: 5 },
-    { x: -10, y: 14, w: 20, h: 18 },
-    { x: -6, y: 30, w: 12, h: 26 },
-    { x: 8, y: 24, w: 12, h: 22 },
+    { x: -10, y: 14, w: 18, h: 16 },
+    { x: -6, y: 28, w: 12, h: 24 },
+    { x: 8, y: 22, w: 12, h: 20 },
   ],
 ]
+/** Symbol disc sits on the buried mass, fully under the crust. */
+const LABEL_DEPTH = 36
 
 function mixHex(a: number, b: number, t: number): number {
   const ch = (shift: number) => {
@@ -156,8 +149,11 @@ export interface MiningControllerOptions {
   /** Drawn first, in order, each one deposit-gap apart. `?ores=mixed` uses
    * this so iron, carbon and ice each get their own stretch of soil. */
   leadMinerals?: string[]
-  /** Preview offset in deposit-gaps. `?scroll=1` opens on the next cluster. */
+  /** Preview offset in screen-widths. Deposits are two screens apart, so
+   * `?scroll=0` shows the first, `?scroll=1` the empty stretch, `?scroll=2` the next. */
   scrollScreens?: number
+  /** When set (the `?scroll=` preview), the field stays put until the player scrolls. */
+  pinScroll?: boolean
   /** Required order minerals are seeded at the front of the run so the
    * objective is always discoverable before the normal deposit rotation. */
   requiredMinerals?: string[]
@@ -307,8 +303,13 @@ export class MiningController extends ScriptBehaviour {
     this.opts = opts
   }
 
-  /** Override the terrain scroll speed (px/s). Clamped to SCROLL_SPEED_MIN..SCROLL_SPEED_MAX. */
+  /** True while `?scroll=` is holding the field still for a spacing check. */
+  private pinScroll = false
+
+  /** Override the terrain scroll speed (px/s). Clamped to SCROLL_SPEED_MIN..SCROLL_SPEED_MAX.
+   * A player scroll releases the preview pin. */
   setScrollSpeed(speed: number): void {
+    this.pinScroll = false
     this.scrollSpeed = Math.max(SCROLL_SPEED_MIN, Math.min(SCROLL_SPEED_MAX, speed))
   }
 
@@ -320,10 +321,12 @@ export class MiningController extends ScriptBehaviour {
       ...required.flatMap(mineral => Array.from({ length: REQUIRED_ORE_COPIES }, () => mineral)),
     ]
     const gap = this.depositGap()
-    const skip = Math.max(0, Math.floor(this.opts.scrollScreens ?? 0)) * gap
+    const screens = Math.max(0, this.opts.scrollScreens ?? 0)
+    const skip = Math.round(screens * this.opts.worldWidth)
+    this.pinScroll = this.opts.pinScroll === true
     this.totalScrollX = skip
     this.opts.onScroll?.(skip)
-    let x = SHIP_X + 220 - skip
+    let x = this.depositAnchor() - skip
     let count = 0
     while (count < 20) {
       this.spawnOre(x)
@@ -332,9 +335,14 @@ export class MiningController extends ScriptBehaviour {
     }
   }
 
-  /** Empty soil between deposits: two screen-widths, plus the deposit's own width. */
+  /** Where the first deposit sits when `?scroll=0`, clear of the ship. */
+  private depositAnchor(): number {
+    return Math.max(SHIP_X + 150, Math.round(this.opts.worldWidth * 0.42))
+  }
+
+  /** Centre-to-centre gap: two screen-widths, so `?scroll=2` lands on the next deposit. */
   private depositGap(): number {
-    return Math.round(this.opts.worldWidth * 2 + 140)
+    return Math.round(this.opts.worldWidth * 2)
   }
 
   update(realDt: number): void {
@@ -342,7 +350,7 @@ export class MiningController extends ScriptBehaviour {
     this.hitStop = stepped.remaining
     const dt = stepped.simDt
     if (this.hitStop > 0) return // frozen: the whole scene holds for the impact
-    const dx = this.scrollSpeed * this.devSpeed * dt
+    const dx = (this.pinScroll ? 0 : this.scrollSpeed) * this.devSpeed * dt
     this.totalScrollX += dx
 
     for (const ore of this.ores) {
@@ -722,34 +730,54 @@ export class MiningController extends ScriptBehaviour {
     const surface = this.opts.surfaceY ?? SURFACE_Y
     const parts = blobParts(mineral, this.oreCounter)
     const chip = this.opts.chipFill != null ? this.createChip(x, surface, mineral, parts) : null
-    const label = this.createLabel(mineral, x, chip ? surface - 28 : y, radius)
+    const label = this.createLabel(mineral, x, chip ? surface + LABEL_DEPTH : y, radius)
 
     this.gameObject.addChild(go)
     this.ores.push({ go, renderer, sprite, label, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0 })
   }
 
-  /** Nodules, seams and crystal pockets inside the soil, plus a small sym chip above the crust. */
+  /** Faceted nodules, seams and crystals inside the soil, with a sym disc on the mass. */
   private createChip(x: number, y: number, mineral: string, parts: OreBlob[]): Graphics {
     const body = oreFleck(mineral)
     const avg = (((body >> 16) & 255) + ((body >> 8) & 255) + (body & 255)) / 3
-    const lit = mixHex(body, 0xffffff, avg < 70 ? 0.62 : 0.28)
-    const outline = avg < 70 ? mixHex(body, 0xffffff, 0.38) : mixHex(body, 0x000000, 0.58)
+    const lit = mixHex(body, 0xffffff, avg < 70 ? 0.62 : 0.34)
+    const shade = mixHex(body, 0x000000, avg < 70 ? 0.28 : 0.45)
     const g = new Graphics()
-    for (const part of parts) g.rect(part.x - 2, part.y - 2, part.w + 4, part.h + 4).fill(outline)
-    for (const part of parts) g.rect(part.x, part.y, part.w, part.h).fill(body)
+    let glowX = 0
+    let glowY = 0
+    let glowN = 0
     for (const part of parts) {
-      const band = Math.max(4, Math.round(part.h * 0.34))
-      g.rect(part.x, part.y, part.w, band).fill(lit)
+      glowX += part.x + part.w / 2
+      glowY += part.y + part.h / 2
+      glowN += 1
     }
+    if (glowN > 0) {
+      g.ellipse(glowX / glowN, glowY / glowN, 36, 18).fill({ color: lit, alpha: 0.28 })
+    }
+    for (const part of parts) this.paintFacet(g, part, body, lit, shade)
     const ink = this.opts.labelInk ?? ORE_LABEL_FILL
     const disc = ink === ORE_LABEL_FILL ? 0x10141c : 0xf6f3ea
     const ring = ink === ORE_LABEL_FILL ? 0xf6f3ea : 0x10141c
-    g.circle(0, -28, 18).fill(ring)
-    g.circle(0, -28, 15).fill(disc)
+    g.circle(0, LABEL_DEPTH, 16).fill(ring)
+    g.circle(0, LABEL_DEPTH, 13).fill(disc)
     g.x = x
     g.y = y
     this.opts.container.addChild(g)
     return g
+  }
+
+  /** One buried crystal: shade, body, and a highlight. The box is already under the surface. */
+  private paintFacet(g: Graphics, part: OreBlob, body: number, lit: number, shade: number): void {
+    const { x, y, w, h } = part
+    const cx = x + w / 2
+    g.poly([x, y + 2, cx, y, x + w, y + 2, x + w, y + h, x, y + h]).fill(shade)
+    g.poly([cx, y, x + w, y + 2, x + w, y + h * 0.72, cx, y + h * 0.55]).fill(body)
+    g.poly([
+      x + w * 0.22, y + Math.max(4, h * 0.22),
+      cx, y + 1,
+      x + w * 0.7, y + Math.max(4, h * 0.2),
+      cx, y + h * 0.42,
+    ]).fill(lit)
   }
 
   /** Element sym above the outcrop. Longer syms (`H2O`) use a smaller size. */
