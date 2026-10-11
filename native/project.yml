@@ -19,6 +19,8 @@ targets:
         buildPhase: resources
       - path: ../web/lib/scene-names.json
         buildPhase: resources
+      - path: ../web/lib/mining/laser-palettes.json
+        buildPhase: resources
     dependencies: [{ package: LandnamCore }, { package: TakeonKit }]
     settings:
       base:

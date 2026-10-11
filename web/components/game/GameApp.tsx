@@ -18,6 +18,7 @@ import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog, captureScreenView, captureGameEvent } from '@/lib/posthog'
+import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 import { SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
@@ -46,6 +47,17 @@ function GameCanvas() {
   // after the first client commit instead.
   useEffect(() => {
     initPostHog()
+  }, [])
+
+  useEffect(() => {
+    const openSettings = () => setSettingsOpen(true)
+    const openFriends = () => setFriendsOpen(true)
+    window.addEventListener(OPEN_SETTINGS_EVENT, openSettings)
+    window.addEventListener(OPEN_FRIENDS_EVENT, openFriends)
+    return () => {
+      window.removeEventListener(OPEN_SETTINGS_EVENT, openSettings)
+      window.removeEventListener(OPEN_FRIENDS_EVENT, openFriends)
+    }
   }, [])
 
   // The game is a single-page SPA — `screen` changes without a real

@@ -4,25 +4,15 @@ import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Mission, Target, MineralMeta } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE, REMOTE_MINERAL_SILO_CAPACITY } from '@/lib/data'
 import { miningNeedsRecharge, unitsStillNeeded, rechargeCost } from '@/lib/systems/mining-charges'
-import TopBar from '@/components/ui/TopBar'
 import { useHelp } from '@/components/ui/useHelp'
 import Panel from '@/components/ui/Panel'
-import StatusPill from '@/components/ui/StatusPill'
+import { paletteForTarget } from '@/lib/mining/laserPalette'
+import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
 import SkyEventChip from '@/components/game/SkyEventChip'
 import { useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
-
-// Out There: Omega Edition bolt glyph — used inside the charge-meter IconBadge.
-// Kept local since it's a one-off HUD glyph, not a shared icon set yet.
-function LaserBoltIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z" />
-    </svg>
-  )
-}
 
 // First-time-entering-Free-Ops-mining explainer — dismiss-once, same
 // localStorage-ack pattern as MissionBoardScreen's EXPLAINER_ACK_KEY, but
@@ -66,7 +56,7 @@ function useFreeOpsFirstSuccessAck() {
 
 // Horizontal drag track — left = slow, center = normal, right = fast forward
 // Thumb snaps back to center on release
-function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.MutableRefObject<((dx: number) => void) | null>; disabled?: boolean }) {
+function ScrollTrack({ scrollRef, disabled = false, slim = false }: { scrollRef: React.MutableRefObject<((dx: number) => void) | null>; disabled?: boolean; slim?: boolean }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState(0.5)   // 0..1, 0.5 = center = normal speed
   const [active, setActive] = useState(false)
@@ -86,17 +76,20 @@ function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.Mutable
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div style={{
-        fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
-        letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase',
-        textAlign: 'center',
-      }}>
-        SCROLL
-      </div>
+    <div className={slim ? 'laser-scroll' : undefined} style={slim ? undefined : { display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {!slim && (
+        <div style={{
+          fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
+          letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase',
+          textAlign: 'center',
+        }}>
+          SCROLL
+        </div>
+      )}
       <div
         ref={trackRef}
-        style={{
+        className={slim ? 'laser-scroll__track' : undefined}
+        style={slim ? { cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.52 : 1, touchAction: 'none' } : {
           position: 'relative', flex: 1, height: 44, borderRadius: 8,
           background: 'var(--ln-mining-control-fill)',
           border: `1px solid ${active ? 'var(--ln-cyan-border)' : 'var(--ln-hairline)'}`,
@@ -115,19 +108,20 @@ function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.Mutable
         onPointerUp={release}
         onPointerCancel={release}
       >
-        {/* End labels */}
-        <span style={{ position: 'absolute', left: 6, fontSize: 14, color: 'var(--ln-text-muted)', lineHeight: 1 }}>◀</span>
-        <span style={{ position: 'absolute', right: 6, fontSize: 14, color: 'var(--ln-text-muted)', lineHeight: 1 }}>▶</span>
-        {/* Center tick */}
-        <div style={{ position: 'absolute', top: '30%', bottom: '30%', left: '50%', width: 1, background: 'var(--ln-divider)' }} />
-        {/* Thumb */}
-        <div style={{
+        {!slim && (
+          <>
+            <span style={{ position: 'absolute', left: 6, fontSize: 14, color: 'var(--ln-text-muted)', lineHeight: 1 }}>◀</span>
+            <span style={{ position: 'absolute', right: 6, fontSize: 14, color: 'var(--ln-text-muted)', lineHeight: 1 }}>▶</span>
+            <div style={{ position: 'absolute', top: '30%', bottom: '30%', left: '50%', width: 1, background: 'var(--ln-divider)' }} />
+          </>
+        )}
+        <div className={slim ? 'laser-scroll__thumb' : undefined} style={{
           position: 'absolute',
-          left: `calc(${pos * 100}% - 10px)`,
-          width: 20, height: 20, borderRadius: '50%',
-          background: active ? 'var(--ln-cyan)' : 'var(--ln-cyan-soft)',
-          border: `1.5px solid ${active ? 'var(--ln-cyan)' : 'var(--ln-cyan-border)'}`,
-          boxShadow: active ? 'var(--ln-glow-cyan)' : 'none',
+          left: `calc(${pos * 100}% - ${slim ? 14 : 10}px)`,
+          width: slim ? 28 : 20, height: slim ? 28 : 20, borderRadius: '50%',
+          background: slim ? 'var(--ln-bp-paper)' : (active ? 'var(--ln-cyan)' : 'var(--ln-cyan-soft)'),
+          border: slim ? '2px solid var(--ln-bp-ink)' : `1.5px solid ${active ? 'var(--ln-cyan)' : 'var(--ln-cyan-border)'}`,
+          boxShadow: slim ? 'none' : (active ? 'var(--ln-glow-cyan)' : 'none'),
           transition: active ? 'background 80ms, border-color 80ms, box-shadow 80ms' : 'left 180ms ease-out, background 120ms, border-color 120ms, box-shadow 120ms',
         }} />
       </div>
@@ -135,17 +129,16 @@ function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.Mutable
   )
 }
 
-function miningGuide(deliveryTargetName?: string) {
+function miningGuide(hasDelivery: boolean) {
   return [
-    { label: 'FIRE LASER', desc: 'Fires your mining laser at the asteroid. Collect ore by hitting ore veins (Space/F).' },
-    { label: 'CHARGE METER', desc: 'Printed inside FIRE LASER, showing how many shots you have left. Runs out and the order isn\'t filled, the run fails.' },
-    { label: 'ORDER PROGRESS', desc: 'Printed inside the return button with a fill bar, showing how much of this order you\'ve mined so far.' },
-    { label: 'SCROLL', desc: 'Drag the field left to speed up or right to slow down. The more menu also has a scroll track and Scrub Mission.' },
-    { label: 'INVENTORY', desc: 'Shows collected vs. required per mineral. Fill all slots to unlock return.' },
-    { label: 'MISSION GOALS', desc: 'Combined ore progress and value context for the current contract.' },
-    deliveryTargetName
-      ? { label: 'DELIVER CARGO', desc: `Head to ${deliveryTargetName} to drop off this cargo. Payout is unlocked after delivery.` }
-      : { label: 'RETURN HOME', desc: 'Return to Earth for recovery and ship destruction. Payout is unlocked after landing.' },
+    { label: 'FIRE LASER', desc: 'Fires the vertical beam. Scroll a chip under the beam, then fire (Space/F).' },
+    { label: 'CHARGE BAR', desc: 'The green bar under the order shows shots left. Empty, with the order unfinished, the run stops.' },
+    { label: 'ORDER', desc: 'The left side of the panel lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty.' },
+    { label: 'SCROLL', desc: 'The side arrows and the slider change how fast the ground moves. Release to return to a steady crawl. Drag the field the same way.' },
+    { label: 'INVENTORY', desc: 'The order lines show collected against required. Fill every line to unlock return.' },
+    hasDelivery
+      ? { label: 'DELIVER CARGO', desc: 'The next leg drops this cargo off. Payout unlocks after delivery.' }
+      : { label: 'RETURN HOME', desc: 'Return for recovery. Payout unlocks after landing.' },
   ]
 }
 
@@ -339,7 +332,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       )
       if (nowFilled && !hintedOrderFilledRef.current) {
         hintedOrderFilledRef.current = true
-        addToast('Order filled — tap RETURN', 'ok')
+        addToast('Order filled — tap the order to return', 'ok')
       }
     }
   }, [trainingMiningTry, addToast, mission.requires.minerals, minerals])
@@ -424,7 +417,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   )
   const [guideOpen, setGuideOpen] = useState(false)
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
-  const [overflowOpen, setOverflowOpen] = useState(false)
+  const palette = paletteForTarget(target)
 
   // SSL-333 opened the guide once on a first mining run. The Flight Plan owns
   // the Fire Laser training try now, so the guide remains opt-in there and
@@ -467,35 +460,17 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       : (isFreeOps && showFreeOpsMiningExplainer) ? 'explainer'
       : null
 
+  const orderLines = Object.entries(mission.requires.minerals)
+  const chargePct = MAX_CHARGES > 0 ? Math.max(0, Math.min(100, (laserCharges / MAX_CHARGES) * 100)) : 0
+  const holdScroll = (dx: number) => (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (sceneStatus !== 'ready') return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    scrollRef.current?.(dx)
+  }
+  const releaseScroll = () => { scrollRef.current?.(0) }
+
   return (
-    <div className="game-screen mining-screen theme-blueprint" data-training-active={trainingMiningTry ? 'true' : 'false'}>
-      <TopBar
-        eyebrow={`${target.name.toUpperCase()} · SURFACE`}
-        title="Mining Run"
-        onBack={() => onBack(cargoRef.current, laserChargesRef.current)}
-        glass
-        right={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><button
-          data-testid="mining-guide-btn"
-          onClick={() => setGuideOpen(o => !o)}
-          aria-label="Mining controls guide"
-          aria-expanded={guideOpen}
-          style={{
-            width: 44,
-            height: 44,
-            padding: 0,
-            borderRadius: 8,
-            border: '2px solid var(--ln-bp-ink, #0f2436)',
-            background: 'var(--ln-bp-paper, #fff)',
-            color: 'var(--ln-bp-ink, #0f2436)',
-            boxShadow: '2px 2px 0 var(--ln-bp-blue, #42a6df)',
-            fontFamily: 'var(--ln-font-display)',
-            fontSize: 16,
-            fontWeight: 800,
-            lineHeight: 1,
-            cursor: 'pointer',
-          }}
-        >?</button>{help.button}{isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : null}</span>}
-      />
+    <div className="game-screen mining-screen theme-blueprint" data-training-active={trainingMiningTry ? 'true' : 'false'} data-palette={palette.id}>
       {help.layer}
 
       {/* KES-283: self-directed mining requires a storage destination before
@@ -572,21 +547,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       {process.env.NODE_ENV === 'development' && (
         <button
           data-testid="dev-skip-mining-btn"
+          className="laser-dev-skip"
           onClick={handleDevSkip}
-          style={{
-            position: 'absolute', top: 'calc(var(--ln-topbar-h, 96px) + 8px)', right: 8, zIndex: 25,
-            minWidth: 44, minHeight: 44, padding: '8px 12px',
-            background: 'var(--ln-bp-paper)',
-            border: '1px solid var(--ln-bp-green)',
-            borderRadius: 6,
-            color: 'var(--ln-bp-green)',
-            fontFamily: 'var(--ln-font-mono)',
-            fontSize: 14,
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            cursor: 'pointer',
-            opacity: 0.8,
-          }}
         >
             SKIP MINING
         </button>
@@ -649,11 +611,69 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </div>
         </div>
       )}
+      <div className="laser-chrome">
+        <button type="button" className="ln-round laser-chrome__cog" aria-label="Settings" onClick={openSettings}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="ln-round laser-chrome__clock"
+          data-testid="mining-guide-btn"
+          aria-label="Mining controls guide"
+          aria-expanded={guideOpen}
+          onClick={() => setGuideOpen(o => !o)}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v6l4 2" />
+          </svg>
+        </button>
+        <button type="button" className="ln-round laser-chrome__cube" aria-label={`Cargo ${freeOpsCargoUnits} units`} data-testid="mining-cargo-chip">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" strokeWidth="2" />
+          </svg>
+        </button>
+        <button type="button" className="ln-round laser-chrome__people" aria-label="Friends" onClick={openFriends}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 00-3-3.87" />
+            <path d="M16 3.13a4 4 0 010 7.75" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="ln-round laser-chrome__arrow laser-chrome__arrow--left"
+          aria-label="Scroll slower"
+          disabled={sceneStatus !== 'ready'}
+          onPointerDown={holdScroll(-1)}
+          onPointerUp={releaseScroll}
+          onPointerCancel={releaseScroll}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+        </button>
+        <button
+          type="button"
+          className="ln-round laser-chrome__arrow laser-chrome__arrow--right"
+          aria-label="Scroll faster"
+          disabled={sceneStatus !== 'ready'}
+          onPointerDown={holdScroll(1)}
+          onPointerUp={releaseScroll}
+          onPointerCancel={releaseScroll}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+        </button>
+      </div>
+
       <div className="mining-stage">
-      <div className="mining-viewport">
-        <div className="mining-stars" />
+      <div className="mining-viewport" style={{ background: palette.skyCss }}>
         <MiningCanvas
           key={runKey}
+          palette={palette}
           rocketImageSrc={rocketImageSrc}
           minerals={depositMinerals}
           requiredMinerals={Object.keys(mission.requires.minerals)}
@@ -691,12 +711,23 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         <aside className="mining-guide-dock" aria-label="Mining controls">
           <Panel className="mining-guide-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
-            {miningGuide(deliveryTargetName).map(item => (
+            {miningGuide(!!deliveryTargetName).map(item => (
               <div key={item.label} className="mining-guide-row">
                 <strong>{item.label}</strong>
                 <span>{item.desc}</span>
               </div>
             ))}
+            <div className="mining-guide-actions">
+              <button type="button" className="mining-guide-close" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setGuideOpen(false); handleRecharge() }}>
+                {rechargeLabel}
+              </button>
+              {onAbandon && (
+                <button type="button" className="mining-guide-close" data-testid="mining-scrub-btn" onClick={() => { setGuideOpen(false); setConfirmingAbandon(true) }}>
+                  Scrub Mission
+                </button>
+              )}
+              {help.button}
+            </div>
             <button
               className="mining-guide-close"
               onClick={() => setGuideOpen(false)}
@@ -730,13 +761,33 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </Panel>
         )}
 
-        {/* ── Action row: Fire · Fill/Return · overflow ─────────────────────── */}
-        <div className="mining-action-row" data-ore-near={oreNear}>
+        <ScrollTrack scrollRef={scrollRef} disabled={sceneStatus !== 'ready'} slim />
+
+        <div className="laser-dock" data-ore-near={oreNear}>
+          <button
+            className="laser-dock__order"
+            type="button"
+            data-testid="return-home-btn"
+            data-mode={!isFreeOps && needsRecharge && !orderFilled ? 'recharge' : 'return'}
+            onClick={!isFreeOps && needsRecharge && !orderFilled ? handleRecharge : handleReturn}
+          >
+            <span className="laser-dock__lines" data-testid={isFreeOps ? 'freeops-cargo-progress' : 'mining-order-progress'}>
+              {isFreeOps ? (
+                <span>Cargo {freeOpsCargoUnits}</span>
+              ) : orderLines.map(([id, amount]) => (
+                <span key={id}>{minerals[id]?.name ?? id} {Math.min(cargo[id] ?? 0, amount)}/{amount}</span>
+              ))}
+            </span>
+            {isFreeOps && freeOpsDebrisReadout ? <span className="laser-dock__debris" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span> : null}
+            <span className="laser-dock__charge" data-testid="mining-charges" aria-hidden="true">
+              <span style={{ width: `${chargePct}%` }} />
+            </span>
+          </button>
           <button
             className={[
-              'mining-command mining-command--fire',
-              isCharging && 'mining-command--charging',
-              tapDenied && 'mining-command--tap-denied',
+              'laser-dock__fire',
+              isCharging && 'laser-dock__fire--charging',
+              tapDenied && 'laser-dock__fire--denied',
             ].filter(Boolean).join(' ')}
             type="button"
             disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
@@ -749,63 +800,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             onPointerCancel={endFireHold}
             onClick={e => { if (e.detail === 0) fireLaser() }}
           >
-            <span className="mining-command__label">{laserCharges <= 0 ? 'DEPLETED' : isCharging ? 'CHARGING' : 'FIRE LASER'}</span>
-            <span className="mining-command__meta" data-testid="mining-charges">
-              <LaserBoltIcon size={11} /> {laserCharges}/{MAX_CHARGES} charges
-            </span>
+            {laserCharges <= 0 ? 'Depleted' : isCharging ? 'Charging' : 'Fire laser'}
           </button>
-          <button
-            className="mining-command mining-command--return"
-            type="button"
-            aria-disabled={(!orderFilled && laserCharges > 0 && !needsRecharge) || undefined}
-            data-testid="return-home-btn"
-            data-mode={!isFreeOps && needsRecharge && !orderFilled ? 'recharge' : 'return'}
-            onClick={!isFreeOps && needsRecharge && !orderFilled ? handleRecharge : handleReturn}
-          >
-            <span className="mining-command__label">
-              {(() => {
-                const destination = deliveryTargetName ? `DELIVER TO ${deliveryTargetName.toUpperCase()}` : 'RETURN TO EARTH'
-                if (!isFreeOps && needsRecharge && !orderFilled) return rechargePrice > 0 ? `RECHARGE LASER · ${rechargePrice} FR` : 'RECHARGE LASER'
-                return isFreeOps || orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
-              })()}
-            </span>
-            <span className="mining-command__meta" data-testid={isFreeOps ? 'freeops-cargo-progress' : 'mining-order-progress'}>{isFreeOps ? `Cargo collected ${freeOpsCargoUnits} U` : `Order ${totalCollected}/${totalNeeded}`}</span>
-            {isFreeOps && freeOpsDebrisReadout && <span className="mining-command__meta" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span>}
-            <span className="mining-command__fill" aria-hidden="true">
-              <span style={{ width: `${isFreeOps ? Math.min(100, freeOpsCargoUnits * 10) : totalNeeded > 0 ? Math.min(100, (totalCollected / totalNeeded) * 100) : 0}%` }} />
-            </span>
-          </button>
-          <div className="mining-overflow">
-            <button
-              type="button"
-              className="mining-overflow__btn"
-              data-testid="mining-overflow-btn"
-              aria-label="More controls"
-              aria-expanded={overflowOpen}
-              onClick={() => setOverflowOpen(o => !o)}
-            >
-              {'\u22EF'}
-            </button>
-            {overflowOpen && (
-              <div className="mining-overflow__menu" data-testid="mining-overflow-menu" role="group" aria-label="More controls">
-                <ScrollTrack scrollRef={scrollRef} disabled={sceneStatus !== 'ready'} />
-                <button type="button" className="mining-overflow__scrub" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setOverflowOpen(false); handleRecharge() }}>
-                  {rechargeLabel}
-                </button>
-                {onAbandon && (
-                  <button type="button" className="mining-overflow__scrub" data-testid="mining-scrub-btn" onClick={() => { setOverflowOpen(false); setConfirmingAbandon(true) }}>
-                    Scrub Mission
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
       {confirmingRecharge && (
         <ActionConfirmBar
-          eyebrow="Mining Run"
+          eyebrow="Laser"
           title="Recharge Laser"
           description={rechargePrice > 0 ? `Refill to ${MAX_CHARGES} charges for ${rechargePrice} fr. Balance ${francs} fr, ${francs - rechargePrice} fr after. Your cargo is kept.` : `Refill to ${MAX_CHARGES} charges. Your cargo is kept.`}
           confirmLabel={rechargePrice > 0 ? `Pay ${rechargePrice} fr` : 'Recharge'}
@@ -816,7 +818,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
       {confirmingAbandon && onAbandon && (
         <ActionConfirmBar
-          eyebrow="Mining Run"
+          eyebrow="Laser"
           title="Scrub Mission"
           description={`Abandon this run? ${totalCollected} of ${totalNeeded} units collected will be lost.`}
           confirmLabel="Confirm Scrub"

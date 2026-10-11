@@ -84,6 +84,13 @@ export interface MiningControllerOptions {
   /** Element-symbol per mineral key (e.g. `Pt`, `H2O`). Rendered as a label on
    * every ore node — omit to leave ore unlabelled. */
   mineralSyms?: Record<string, string>
+  /** Beam tint for the projectile. Defaults to the original cyan. */
+  beamColor?: string
+  /** Surface rock-chip colours. Omit to keep the buried marker as the only ore graphic. */
+  chipFill?: number
+  chipShade?: number
+  /** Symbol ink. Light ground uses a dark ink. */
+  labelInk?: number
   onCollect: (mineral: string) => void
   /** Called when a laser exits the world without hitting any ore (miss). */
   onMiss?: () => void
@@ -144,6 +151,8 @@ interface OreEntity {
   renderer: ShapeRenderer | null
   sprite: Sprite | null
   label: Text | null
+  /** Surface rock drawn on the ground line. Collision stays at the buried node. */
+  chip: Graphics | null
   mineral: string
   hp: number
   maxHp: number
@@ -250,6 +259,7 @@ export class MiningController extends ScriptBehaviour {
     for (const ore of this.ores) {
       ore.go.transform.position.x -= dx
       if (ore.sprite) ore.sprite.x = ore.go.transform.position.x
+      if (ore.chip) ore.chip.x = ore.go.transform.position.x
       if (ore.label) ore.label.x = ore.go.transform.position.x
 
       if (ore.flashTimer > 0) {
@@ -299,7 +309,7 @@ export class MiningController extends ScriptBehaviour {
     })
     go.addComponent(
       new ShapeRenderer(
-        { shape: 'rect', width: LASER_SIZE.width, height: LASER_SIZE.height, color: LASER_COLOR },
+        { shape: 'rect', width: LASER_SIZE.width, height: LASER_SIZE.height, color: this.opts.beamColor ?? LASER_COLOR },
         this.opts.container
       )
     )
@@ -437,7 +447,7 @@ export class MiningController extends ScriptBehaviour {
     }
     this.gameObject.addChild(go)
     this.ores.push({
-      go, renderer, sprite, label: art ? null : this.createLabel(mineral, x, y, 11), mineral,
+      go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, 11), mineral,
       hp: 1, maxHp: 1, radius: art ? DEBRIS_RADIUS : 11, flashTimer: 0, mineralColor,
       fallSpeed: DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor),
       phase: 'fall', animTime: 0, variant,
@@ -599,6 +609,7 @@ export class MiningController extends ScriptBehaviour {
       sprite.tint = mineralColor
       sprite.x = x
       sprite.y = y
+      if (this.opts.chipFill != null) sprite.visible = false
       this.opts.container.addChild(sprite)
     } else {
       const shape: ShapeKind = this.opts.mineralShapes?.[mineral] ?? 'circle'
@@ -616,12 +627,30 @@ export class MiningController extends ScriptBehaviour {
       go.addComponent(renderer)
       go.start()
       renderer.setTint(mineralColor)
+      if (this.opts.chipFill != null) renderer.setShown(false)
     }
 
-    const label = this.createLabel(mineral, x, y, radius)
+    const chipY = (this.opts.surfaceY ?? SURFACE_Y) - 4
+    const chip = this.opts.chipFill != null ? this.createChip(x, chipY) : null
+    const label = this.createLabel(mineral, x, chip ? chipY - 2 : y, radius)
 
     this.gameObject.addChild(go)
-    this.ores.push({ go, renderer, sprite, label, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0 })
+    this.ores.push({ go, renderer, sprite, label, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0 })
+  }
+
+  /** Visible rubble sitting on the surface at the node's x. The hit test still uses the buried position. */
+  private createChip(x: number, y: number): Graphics {
+    const fill = this.opts.chipFill ?? 0x8a8078
+    const shade = this.opts.chipShade ?? 0x5c534c
+    const g = new Graphics()
+    g.circle(-12, 6, 12).fill(shade)
+    g.circle(10, 4, 14).fill(fill)
+    g.circle(0, 8, 11).fill(shade)
+    g.circle(4, 2, 8).fill({ color: fill, alpha: 0.9 })
+    g.x = x
+    g.y = y
+    this.opts.container.addChild(g)
+    return g
   }
 
   /** Ore sym label, sized to fit inside the node — longer syms (`H2O`) shrink. */
@@ -630,14 +659,15 @@ export class MiningController extends ScriptBehaviour {
     if (!sym) return null
 
     const fontSize = Math.max(7, Math.round(radius * (sym.length >= 3 ? 0.66 : 0.95)))
+    const ink = this.opts.labelInk ?? ORE_LABEL_FILL
     const label = new Text({
       text: sym,
       style: {
         fontFamily: 'monospace',
         fontSize,
         fontWeight: 'bold',
-        fill: ORE_LABEL_FILL,
-        stroke: { color: ORE_LABEL_HALO, width: 2, join: 'round' },
+        fill: ink,
+        stroke: { color: ink === ORE_LABEL_FILL ? ORE_LABEL_HALO : 0xffffff, width: 2, join: 'round' },
       },
     })
     label.anchor.set(0.5)
@@ -675,9 +705,11 @@ export class MiningController extends ScriptBehaviour {
           ore.go.active = false
           if (ore.phase) this.playDebrisMine(ore)
           if (ore.sprite) ore.sprite.visible = false
+          if (ore.chip) ore.chip.visible = false
           if (ore.label) ore.label.visible = false
-          if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor, ore.radius)
-          this.spawnPickup(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor)
+          const popY = ore.chip ? ore.chip.y : ore.go.transform.position.y
+          if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, popY, ore.mineralColor, ore.radius)
+          this.spawnPickup(ore.go.transform.position.x, popY, ore.mineralColor)
           this.opts.onCollect(ore.mineral)
         } else {
           ore.flashTimer = FLASH_DURATION
@@ -689,6 +721,7 @@ export class MiningController extends ScriptBehaviour {
   }
 
   private applyTint(ore: OreEntity, tint: number): void {
+    if (ore.chip) ore.chip.tint = tint
     if (ore.sprite) {
       ore.sprite.tint = tint
     } else {
@@ -708,6 +741,10 @@ export class MiningController extends ScriptBehaviour {
       if (ore.label) {
         this.opts.container.removeChild(ore.label)
         ore.label.destroy()
+      }
+      if (ore.chip) {
+        this.opts.container.removeChild(ore.chip)
+        ore.chip.destroy()
       }
       return false
     })

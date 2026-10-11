@@ -33,6 +33,7 @@ import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import { useHelpOpen } from '@/lib/help/open-state'
 import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
+import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
@@ -49,6 +50,17 @@ function GameChrome({ children }: { children: ReactNode }) {
   // GameApp's equivalent effect for the legacy route shell.
   useEffect(() => {
     initPostHog()
+  }, [])
+
+  useEffect(() => {
+    const openSettings = () => setSettingsOpen(true)
+    const openFriends = () => setFriendsOpen(true)
+    window.addEventListener(OPEN_SETTINGS_EVENT, openSettings)
+    window.addEventListener(OPEN_FRIENDS_EVENT, openFriends)
+    return () => {
+      window.removeEventListener(OPEN_SETTINGS_EVENT, openSettings)
+      window.removeEventListener(OPEN_FRIENDS_EVENT, openFriends)
+    }
   }, [])
 
   // SSL-342: this shell serves every live /game/* route, so the per-screen

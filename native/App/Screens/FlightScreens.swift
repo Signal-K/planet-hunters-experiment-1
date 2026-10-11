@@ -84,8 +84,10 @@ struct MiningScreen: View {
     @State private var scene: MiningScene?
     @State private var field: MiningField?
     @State private var toast: String?
-    @State private var dashCharge = 1.0
     @State private var confirmingScrub = false
+    @State private var showSettings = false
+    @State private var showGuide = false
+    @State private var scrollPos = 0.5
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// SSL-411: Return stays tappable (a dead button reads as a bug) and says what is still missing.
@@ -109,51 +111,98 @@ struct MiningScreen: View {
 
     var body: some View {
         GeometryReader { geo in
-            ZStack(alignment: .top) {
+            ZStack {
                 if let scene { SpriteView(scene: scene).ignoresSafeArea() }
                 if let field {
-                    VStack(spacing: 10) {
-                        HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Eyebrow(text: "Mining")
-                                Text(store.target?.name ?? "Target").font(AppFont.display(24)).foregroundStyle(Theme.ink)
-                            }
-                            Spacer()
-                            RailCard(symbol: "shippingbox") {
-                                Text("\(field.cargoUnits)/\(field.cargoCapacity)").font(AppFont.mono(14)).foregroundStyle(Theme.ink)
-                            }
-                        }
-                        SkyEventChip().frame(maxWidth: .infinity, alignment: .leading)
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(field.required.keys.sorted(), id: \.self) { id in
-                                    OrderChip(symbol: Minerals.byId[id]?.symbol ?? id, have: field.cargo[id, default: 0], need: field.required[id] ?? 0,
-                                              color: Theme.hex(UInt32(Minerals.byId[id]?.colorHex.dropFirst() ?? "ffffff", radix: 16) ?? 0xFFFFFF))
-                                }
-                            }.padding(.trailing, 4).padding(.bottom, 4)
-                        }
-                        Spacer()
-                        if let toast { Text(toast.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.crimson)
-                            .padding(.horizontal, 10).padding(.vertical, 6).background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.crimson, lineWidth: 1.5)) }
-                        HStack(alignment: .bottom) {
-                            Text("DRAG BELOW TO MOVE THE DRONE · TAP ORE TO FIRE").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.textDim)
-                                .padding(.horizontal, 8).padding(.vertical, 5).background(Theme.paper.opacity(0.85), in: Capsule())
-                            Spacer()
-                            DashButton(charge: dashCharge) { scene?.dash() }
-                        }
-                        MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true })
-                    }.padding(16)
+                    laserChrome(field)
                 }
             }
             .onAppear { if scene == nil { setup(geo.size) } }
         }
         .background(Theme.bg)
+        .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
+        .sheet(isPresented: $showGuide) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Controls").font(AppFont.display(18, "Bold")).foregroundStyle(Theme.ink)
+                Text("Hold an arrow or drag the slider so a chip crosses the beam, then fire.").font(AppFont.body(16)).foregroundStyle(Theme.ink)
+                Button("Recharge laser") { showGuide = false; scene?.refill(); say("Laser refilled. Cargo kept.") }
+                    .font(AppFont.display(16, "Bold")).frame(maxWidth: .infinity, minHeight: 44)
+                Button("Scrub mission", role: .destructive) { showGuide = false; confirmingScrub = true }
+                    .font(AppFont.display(16, "Bold")).frame(maxWidth: .infinity, minHeight: 44)
+                Button("Close") { showGuide = false }
+                    .font(AppFont.display(16, "Bold")).frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Theme.paper)
+        }
         .confirmationDialog("Scrub mission?", isPresented: $confirmingScrub, titleVisibility: .visible) {
             Button("Scrub mission", role: .destructive) { store.abandonMission() }
             Button("Keep mining", role: .cancel) {}
         } message: {
             Text("\(field?.cargoUnits ?? 0) units collected will be lost.")
         }
+    }
+
+    private func laserChrome(_ field: MiningField) -> some View {
+        ZStack {
+            VStack {
+                HStack(spacing: 8) {
+                    roundButton("gearshape.fill", "Settings") { showSettings = true }
+                    roundButton("clock", "Controls") { showGuide = true }
+                    Spacer(minLength: 8)
+                    roundButton("cube.fill", "Cargo \(field.cargoUnits) of \(field.cargoCapacity)", tint: Theme.green) {
+                        say("Cargo \(field.cargoUnits) of \(field.cargoCapacity)")
+                    }
+                    roundButton("person.2.fill", "Friends") { say("Friends open from home") }
+                }
+                SkyEventChip().frame(maxWidth: .infinity, alignment: .leading)
+                Spacer()
+            }
+            .padding(12)
+
+            HStack {
+                roundButton("chevron.left", "Scroll slower") { }
+                    .simultaneousGesture(DragGesture(minimumDistance: 0)
+                        .onChanged { _ in scene?.setScroll(-1) }
+                        .onEnded { _ in scene?.setScroll(0) })
+                Spacer()
+                roundButton("chevron.right", "Scroll faster") { }
+                    .simultaneousGesture(DragGesture(minimumDistance: 0)
+                        .onChanged { _ in scene?.setScroll(1) }
+                        .onEnded { _ in scene?.setScroll(0) })
+            }
+            .padding(.horizontal, 12)
+
+            VStack(spacing: 8) {
+                Spacer()
+                if let toast {
+                    Text(toast).font(AppFont.display(14)).foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .background(Theme.paper, in: Capsule())
+                        .overlay(Capsule().stroke(Theme.border, lineWidth: 1.5))
+                }
+                Slider(value: $scrollPos, in: 0...1, onEditingChanged: { editing in
+                    if !editing { scrollPos = 0.5; scene?.setScroll(0) }
+                })
+                .frame(maxWidth: 720, minHeight: 44)
+                .onChange(of: scrollPos) { _, value in scene?.setScroll(value * 2 - 1) }
+                MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, onFire: { scene?.fireLaser() })
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
+        }
+    }
+
+    private func roundButton(_ symbol: String, _ label: String, tint: Color = Theme.hudInk, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 18, weight: .bold)).foregroundStyle(tint)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(Theme.hudPanel))
+                .overlay(Circle().stroke(Theme.hudInk, lineWidth: 2))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     private func setup(_ size: CGSize) {
@@ -170,83 +219,65 @@ struct MiningScreen: View {
         // Meteor-shower debris joins the field only inside its window and the player's local night (SSL-475).
         let shower = SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now) / 2).rounded(.up)))) }
         let f = MiningField(target: target, required: mission.requires.minerals, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower)
-        let s = MiningScene(field: f, size: size)
+        let palette = LaserPalette.resolve(id: target.id, type: target.type, archetype: target.archetype)
+        let s = MiningScene(field: f, size: size, palette: palette)
         s.onChange = { f in
             field = f
             for id in SkyEvents.debrisResourceIds where f.cargo[id, default: 0] > 0 { store.debrisMined(id) }
         }
         s.reducedMotion = reduceMotion
-        s.onDash = { dashCharge = $0 }
         s.onFeedback = { msg in toast = msg; Task { try? await Task.sleep(for: .seconds(1.4)); if toast == msg { toast = nil } } }
         field = f; scene = s
     }
 }
 
-/// SSL-411 action row: one Return button that carries order progress and laser charge, plus a ... menu for rare actions.
+/// Order lines and the fire control. Scrub stays an accessibility action so the panel matches the approved dock.
 struct MiningActionRow: View {
     let field: MiningField
     let onReturn: () -> Void
     let onScrub: () -> Void
+    var onFire: () -> Void = {}
 
-    private var ready: Bool { field.isComplete || field.charge <= 0 }
-    private var need: Int { field.required.values.reduce(0, +) }
-    private var have: Int { field.required.reduce(0) { $0 + min($1.value, field.cargo[$1.key, default: 0]) } }
+    private var chargePct: Double { field.chargeCap > 0 ? Double(field.charge) / Double(field.chargeCap) : 0 }
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Button(action: onReturn) {
-                VStack(spacing: 4) {
-                    Text(ready ? (field.isComplete ? "CONTRACT FILLED · RETURN" : "OUT OF CHARGE · RETURN") : "FILL ORDER TO RETURN")
-                        .font(AppFont.display(14, "Bold")).tracking(1.0).lineLimit(1).minimumScaleFactor(0.9)
-                    HStack(spacing: 6) {
-                        Image(systemName: "bolt.fill").font(.system(size: 14))
-                        Text("\(field.charge)/\(field.chargeCap)").font(AppFont.mono(14))
-                        Text("· ORDER \(have)/\(need)").font(AppFont.mono(14))
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(field.required.keys.sorted(), id: \.self) { id in
+                        let need = field.required[id] ?? 0
+                        let have = min(need, field.cargo[id, default: 0])
+                        Text("\(Minerals.byId[id]?.name ?? id) \(have)/\(need)")
+                            .font(AppFont.body(16)).foregroundStyle(Theme.ink).lineLimit(1)
                     }
-                    ProgressTrack(value: need > 0 ? Double(have) / Double(need) : 0)
+                    GeometryReader { g in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Theme.paper)
+                            Capsule().fill(Theme.green).frame(width: max(4, g.size.width * chargePct))
+                        }
+                    }.frame(height: 8)
                 }
-                .foregroundStyle(ready ? Color.white : Theme.ink)
                 .padding(.horizontal, 12).padding(.vertical, 8)
-                .frame(maxWidth: .infinity, minHeight: 56)
-                .background(ready ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 2))
-                .background(RoundedRectangle(cornerRadius: 8).fill(Theme.blue).offset(x: 3, y: 3))
+                .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+                .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 16))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Return to Earth. Order \(have) of \(need). Laser charge \(field.charge) of \(field.chargeCap).")
-            Menu {
-                Button("Scrub mission", role: .destructive, action: onScrub)
-            } label: {
-                Image(systemName: "ellipsis").font(.system(size: 20, weight: .bold)).foregroundStyle(Theme.ink)
-                    .frame(width: 48, height: 56)
-                    .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 2))
+            .accessibilityLabel("Order. Laser charge \(field.charge) of \(field.chargeCap).")
+            .accessibilityAction(named: "Scrub mission", onScrub)
+            Button(action: onFire) {
+                Text(field.charge <= 0 ? "Depleted" : "Fire laser")
+                    .font(AppFont.display(20)).foregroundStyle(Theme.ink)
+                    .frame(maxWidth: .infinity, minHeight: 64)
+                    .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 16))
             }
-            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-            .accessibilityLabel("More controls")
+            .buttonStyle(.plain)
+            .disabled(field.charge <= 0)
+            .accessibilityLabel("Fire laser")
         }
-    }
-}
-
-/// Round dash button with a recharge ring, bottom-right of the mining HUD.
-struct DashButton: View {
-    let charge: Double
-    let action: () -> Void
-    var body: some View {
-        Button(action: action) {
-            ZStack {
-                Circle().fill(Theme.paper)
-                Circle().trim(from: 0, to: charge).stroke(charge >= 1 ? Theme.teal : Theme.blue, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                    .rotationEffect(.degrees(-90)).padding(3)
-                Image(systemName: "bolt.fill").font(.system(size: 20, weight: .bold)).foregroundStyle(charge >= 1 ? Theme.teal : Theme.textMuted)
-            }
-            .frame(width: 58, height: 58)
-            .overlay(Circle().stroke(Theme.border, lineWidth: 1.5))
-            .background(Circle().fill(Theme.blue).offset(x: 3, y: 3))
-        }
-        .buttonStyle(.plain).disabled(charge < 1)
-        .keyboardShortcut(.space, modifiers: [])
-        .accessibilityLabel("Dash")
+        .padding(10)
+        .frame(maxWidth: 720)
+        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Theme.border, lineWidth: 1))
     }
 }
 

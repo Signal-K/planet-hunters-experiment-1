@@ -231,7 +231,7 @@ extension View {
 }
 
 /// Settings gear destination: the screens the old MENU dock button listed.
-private struct SettingsSheet: View {
+struct SettingsSheet: View {
     @Environment(GameStore.self) private var store
     @Environment(AuthModel.self) private var auth
     @State private var showArchive = false
