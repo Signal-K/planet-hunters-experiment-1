@@ -113,10 +113,22 @@ public enum Transitions {
         return n
     }
 
-    public static func applyLandingTouchdown(_ s: GameState) -> GameState {
+    /// Web `TRANSPORT_LESSON_MISSIONS_DONE`.
+    public static let transportLessonMissionsDone = 1
+
+    public static func isStarterRoverMission(_ mission: Mission?) -> Bool {
+        mission?.onWorldVehicle == MissionGenerator.starterRoverVehicle
+    }
+
+    public static func isTutorialTransportLesson(_ mission: Mission?, player: Player) -> Bool {
+        player.missionsDone == transportLessonMissionsDone && mission?.deliveryTargetId != nil
+    }
+
+    /// Touchdown lands in the rover scene only for the tutorial transport lesson (web); all else is the laser field.
+    public static func applyLandingTouchdown(_ s: GameState, mission: Mission? = nil) -> GameState {
         guard s.screen == .landing, s.player.landingStartedAt != nil else { return s }
         var n = s
-        n.screen = .mining
+        n.screen = isTutorialTransportLesson(mission, player: s.player) ? .roverMining : .mining
         n.player.missionPhase = .mining
         n.player.landingStartedAt = nil
         n.player.hasLanded = true

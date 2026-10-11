@@ -385,3 +385,55 @@ import Foundation
         #expect(n.player.saturnImagerLaunchedAt == 700 && n.player.tessClassifications.keys.sorted() == ["toi-7"])
     }
 }
+
+@Suite struct MiningRouteTests {
+    let catalog = Catalog()
+    let t0 = 1_700_000_000_000.0
+
+    private func arrival(_ mission: Mission, missionsDone: Int = 4) -> GameState {
+        var s = GameState()
+        s.screen = .transit; s.missionId = mission.id; s.targetId = "eros"
+        s.player.missionsDone = missionsDone
+        s.player.missionPhase = .transit
+        return s
+    }
+
+    @Test func laserMissionsNeverResolveToTheRoverScene() {
+        let board = catalog.missions.filter { $0.onWorldVehicle == nil && $0.construction == nil && $0.payload == nil }
+        #expect(!board.isEmpty)
+        for m in board {
+            let out = Loop.transitArrived(arrival(m), catalog: catalog, now: t0)
+            #expect(out.screen != .roverMining, "\(m.id) routed to the rover scene")
+            // Includes drill tier 0 contracts: tier alone no longer picks the rover.
+            #expect(out.screen == .mining || out.screen == .debrief)
+        }
+    }
+
+    @Test func starterRoverLandingMissionResolvesToTheRoverScene() {
+        let rover = catalog.missions.filter { $0.id.contains("freeops-rover-landing") }
+        #expect(!rover.isEmpty)
+        for m in rover {
+            #expect(m.onWorldVehicle == "starter-rover")
+            let out = Loop.transitArrived(arrival(m), catalog: catalog, now: t0)
+            #expect(out.screen == .roverMining && out.player.missionPhase == .mining)
+        }
+        #expect(catalog.missions.filter { $0.onWorldVehicle != nil }.allSatisfy { $0.id.contains("freeops-rover-landing") })
+    }
+
+    @Test func tutorialTransportLessonAndLandingTouchdownUseTheRover() {
+        var lesson = catalog.missions.first { $0.onWorldVehicle == nil && $0.construction == nil && $0.payload == nil }!
+        lesson.deliveryTargetId = "mars"
+        #expect(Loop.usesRoverScene(lesson, player: { var p = Player(); p.missionsDone = 1; return p }()))
+        #expect(!Loop.usesRoverScene(lesson, player: { var p = Player(); p.missionsDone = 2; return p }()))
+        lesson.deliveryTargetId = nil
+        #expect(!Loop.usesRoverScene(lesson, player: { var p = Player(); p.missionsDone = 1; return p }()))
+
+        var s = GameState()
+        s.screen = .landing; s.player.landingStartedAt = t0; s.player.missionsDone = 1
+        lesson.deliveryTargetId = "mars"
+        #expect(Transitions.applyLandingTouchdown(s, mission: lesson).screen == .roverMining)
+        #expect(Transitions.applyLandingTouchdown(s, mission: nil).screen == .mining)
+        s.player.missionsDone = 4
+        #expect(Transitions.applyLandingTouchdown(s, mission: lesson).screen == .mining)
+    }
+}

@@ -153,6 +153,8 @@ public struct Mission: Codable, Equatable, Identifiable, Sendable {
     public var construction: MissionConstructionPlan?
     public var payload: MissionPayload?
     public var programReward: ProgramReward?
+    /// Web `survey.onWorldVehicle`: `"starter-rover"` only on the `freeops-rover-landing` template.
+    public var onWorldVehicle: String? = nil
     /// Player-owned operations pay no francs or affinity (no client).
     public var isOwnProgram: Bool { client == nil }
 }

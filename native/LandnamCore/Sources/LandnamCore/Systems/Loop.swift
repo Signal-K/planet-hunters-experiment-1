@@ -168,6 +168,12 @@ public enum Loop {
 
     // MARK: transit arrival
 
+    /// Mirrors web `MissionOperationRoutes`: the rover scene is only for the starter-rover survey
+    /// mission or the tutorial transport lesson; every other mission mines with the ship laser.
+    public static func usesRoverScene(_ mission: Mission?, player: Player) -> Bool {
+        Transitions.isStarterRoverMission(mission) || Transitions.isTutorialTransportLesson(mission, player: player)
+    }
+
     public static func transitArrived(_ s: GameState, catalog: Catalog, now: Double) -> GameState {
         guard s.screen == .transit else { return s }
         if s.player.returningToEarth { return Transitions.applyReturnArrived(s) }
@@ -207,7 +213,7 @@ public enum Loop {
             return n
         }
         n.player.missionPhase = .mining
-        n.screen = catalog.mission(s.missionId)?.requires.drillTier == 0 ? .roverMining : .mining
+        n.screen = usesRoverScene(mission, player: s.player) ? .roverMining : .mining
         return n
     }
 

@@ -20,6 +20,9 @@ public enum MissionGenerator {
     public static let freeOpsMissionSequence = 4
     public static let offlineMissionCount = 12
     public static let transportSequence = 2
+    public static let starterRoverTemplateId = "freeops-rover-landing"
+    public static let starterRoverVehicle = "starter-rover"
+    static func onWorldVehicle(for t: MissionTemplate) -> String? { t.id == starterRoverTemplateId ? starterRoverVehicle : nil }
 
     public static let templates: [MissionTemplate] = [
         MissionTemplate(id: "starter-bulk", tag: "STARTER", difficulty: "L1", mineralKeys: ["platinum", "palladium"], cargoRange: 4...8, drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, clientRole: .starter),
@@ -140,7 +143,8 @@ public enum MissionGenerator {
                     unlockAt: "Reach Free Operations",
                     requires: MissionRequirements(minerals: [mineral: amount], cargoMin: amount,
                                                   drillTier: requiredDrillTier([mineral], floor: t.drillTierMin), maxOrbit: t.orbitMax),
-                    payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: max(5, Int((8.0 + Double(amount) / 2).rounded()))))
+                    payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: max(5, Int((8.0 + Double(amount) / 2).rounded()))),
+                    onWorldVehicle: onWorldVehicle(for: t))
             }
         }
     }
@@ -161,7 +165,8 @@ public enum MissionGenerator {
                     unlockAt: "Reach Free Operations",
                     requires: MissionRequirements(minerals: [mineral: amount], cargoMin: amount,
                                                   drillTier: requiredDrillTier([mineral], floor: t.drillTierMin), maxOrbit: t.orbitMax),
-                    payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: 0))
+                    payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: 0),
+                    onWorldVehicle: onWorldVehicle(for: t))
             }
     }
 
