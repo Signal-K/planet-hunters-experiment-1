@@ -15,15 +15,15 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(errors).toEqual([])
     })
 
-    test('the underground deck keeps Surface and Launchpad above the tray', async ({ page }) => {
+    test('the base dock contains only switch, Build, and Hub while Exchange stays in the scene', async ({ page }) => {
       const { errors } = await stage(page, 'm1-hub', { chrome: true })
-      await page.getByTestId('hub-subsurface-btn').click()
-      await expect(page.getByTestId('hub-subsurface-view')).toBeVisible()
-      await expect(page.getByTestId('subsurface-surface-btn')).toBeVisible()
-      await expect(page.getByTestId('subsurface-launchpad-btn')).toBeVisible()
-      await page.getByTestId('subsurface-launchpad-btn').click()
-      await expect(page.locator('[data-stage-screen]')).toHaveAttribute('data-stage-screen', 'launchpad')
-      await expect(page.getByTestId('hub-subsurface-view')).toHaveCount(0)
+      await expect(page.getByRole('navigation', { name: 'Base dock' }).getByRole('button')).toHaveCount(3)
+      await expect(page.getByTestId('hub-switch-operation')).toBeVisible()
+      await expect(page.getByTestId('hub-build-btn')).toBeVisible()
+      await expect(page.getByTestId('hub-btn')).toBeVisible()
+      await expect(page.getByTestId('hub-subsurface-btn')).toHaveCount(0)
+      await expect(page.getByText('Exchange', { exact: true })).toBeVisible()
+      await page.screenshot({ path: `tests/.out/hub-dock-${vp}.png` })
       expect(errors).toEqual([])
     })
   })

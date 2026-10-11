@@ -67,7 +67,7 @@ describe('trainingCoachSteps', () => {
 
   it('points the storage coach at the hub card and then an open build plot', () => {
     expect(STORAGE_STEPS.map(step => [step.screen, step.coachId])).toEqual([
-      ['hub', 'hub-build-storage-silo'],
+      ['hub', 'hub-build-btn'],
       ['build', 'build-confirm|build-plot-open'],
     ])
   })

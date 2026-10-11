@@ -16,12 +16,11 @@ import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
-import { CrewWalkers } from '@/components/game/hub/CrewWalkers'
 import { EARTH_BASE_WIDE } from '@/lib/scene/compositions'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
-import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, MISSIONS, missionTypePrimer, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
+import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
@@ -37,116 +36,15 @@ import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SkyBadgeRow } from './SkyBadgeRow'
-import OpsHubSheet from '@/components/game/hub/OpsHubSheet'
-import { useHelp } from '@/components/ui/useHelp'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
 // (Francs/jobs/mineral-stash glyphs live in HUDStrip, which owns that readout.)
-function BuildGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 21h18M6 21V9l6-5 6 5v12M10 21v-6h4v6" /></svg>
-  )
-}
-function PlusGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
-  )
-}
-function HangarGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="7" width="16" height="13" rx="1.5" /><path d="M4 7l2-4h12l2 4" /></svg>
-  )
-}
-function UpgradeGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M13 2L4 14h6l-1 8 9-12h-6z" /></svg>
-  )
-}
 function SurfaceGlyph() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
   )
 }
-function SubsurfaceGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-  )
-}
-function HistoryGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 5h16v14H4z" /><path d="M8 9h8M8 13h6M8 17h4" /></svg>
-  )
-}
-function MarketGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 9h16v11H4z" /><path d="M3 9l2-5h14l2 5M8 13h8M8 17h5" /></svg>
-  )
-}
-/**
- * Docked bottom sheet, rebuilt 2026-08-21 (KES-226) — replaces the
- * floating `flexWrap` pill row (`.hub-action-rail`), which wrapped onto
- * the ground-level building labels/Subsurface pill once Edit Mode expanded
- * past ~3 buttons (KES-222, confirmed pre-existing, present on unmodified
- * code, and the likely cause of live taps mis-firing into Subsurface). A
- * fixed-height docked card with a defined row structure — title/CTA row,
- * then a non-wrapping icon-tab strip — cannot overlap anything below it,
- * by construction, at any button count or viewport width.
- *
- * Framed after tapnine.com's "Black Hole" (com.tapnine.blackhole)
- * reference: a title+status+primary-CTA row, then a row of small square
- * icon buttons — not tapnine's literal upgrade list, adapted to Landnam's
- * actual Hub actions (Build, Hangar, Upgrade, Subsurface, and the desktop-
- * only Market/Atlas/Skills destinations).
- */
-// Restyled 2026-08-23 from a vertical icon-over-label tile to a horizontal
-// icon-plate + label pill, taking layout cues from Out There: Ω Edition's
-// in-scene action buttons (a small dark icon plate beside an uppercase
-// label, inside a thin-outlined rounded rect) rather than a bare square tile.
-function DockIconBtn({ icon, label, onClick, active, accent, pulse, testId }: {
-  icon: React.ReactNode
-  label: string
-  onClick: () => void
-  active?: boolean
-  accent?: boolean
-  pulse?: boolean
-  testId?: string
-}) {
-  const on = active || accent
-  return (
-    <button
-      onClick={onClick}
-      data-testid={testId}
-      title={label}
-      aria-label={label}
-      style={{
-        flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 6,
-        background: on ? 'var(--hub-chalk-soft)' : 'color-mix(in srgb, var(--ln-text) 10%, transparent)',
-        border: `4px solid ${on ? 'var(--hub-chalk)' : 'color-mix(in srgb, var(--ln-text) 32%, transparent)'}`,
-        borderRadius: 14, padding: '4px 8px 4px 4px', cursor: 'pointer',
-      }}
-    >
-      <span style={{
-        width: 28, height: 28, borderRadius: 8, display: 'grid', placeItems: 'center', flexShrink: 0,
-        background: 'color-mix(in srgb, var(--ln-void) 55%, transparent)',
-        border: `4px solid ${on ? 'var(--hub-chalk)' : 'color-mix(in srgb, var(--ln-text) 28%, transparent)'}`,
-        color: on ? 'var(--hub-chalk)' : 'var(--hub-cyan)',
-        animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
-      }}>
-        {icon}
-      </span>
-      <span style={{
-        fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
-        letterSpacing: '0.06em', textTransform: 'uppercase', lineHeight: 1.1,
-        color: on ? 'var(--hub-chalk)' : 'color-mix(in srgb, var(--ln-text) 92%, transparent)',
-        whiteSpace: 'nowrap',
-      }}>
-        {label}
-      </span>
-    </button>
-  )
-}
-
 function DockPrimaryBtn({ children, onClick, testId, coachId, pulse }: { children: React.ReactNode; onClick: () => void; testId?: string; coachId?: string; pulse?: boolean }) {
   return (
     <button
@@ -208,16 +106,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   // dock is an overlay; the scene keeps its authored `--hub-ground` contact.
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const setSubsurface = (v: boolean) => onSubsurfaceChange?.(v)
-  const activeMissionDisplayLabel = (activeMission: NonNullable<Player['activeMission']>): string => {
-    const mission = MISSIONS.find(item => item.id === activeMission.id)
-    if (!mission) return activeMission.label
-    const target = activeMission.label.split('→').slice(1).join('→').trim()
-    const operation = missionTypePrimer(mission).label
-    return target ? `${operation} → ${target}` : operation
-  }
   const [upgradingBuilding, setUpgradingBuilding] = useState<UpgradableBuildingId | null>(null)
-  const [opsOpen, setOpsOpen] = useState(false)
-  const help = useHelp('hub')
   const { signals } = useInstrumentSignals(player)
   const asteroidQueueCount = signals.filter(signal => signal.kind === 'deep-space').length
   const placed = player.placed ?? []
@@ -355,7 +244,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     return null
   })()
   const showStorageSiloCta = !player.activeMission && awaitingStorageSilo(player) && !subsurface
-
   const structureProps = (kind: string) => {
     if (kind === 'launchpad') {
       return {
@@ -420,10 +308,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     }
   }
 
-  // The phone dock lays its actions out two per row: Ops, Help, Control, Subsurface, Mission Log and Market, plus
-  // Sites in Free Ops. Each extra row lifts the scene by the same amount (HubLayout.module.css) so the dock never
-  // sits on the buildings' hit boxes.
-  const dockRows = Math.ceil((player.freeOperations ? 7 : 6) / 2)
+  const dockRows = 2
 
   return (
     <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-dock-rows={dockRows} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
@@ -446,7 +331,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <HubWorldBackground phase={skyPhase} />
           <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
-          <CrewWalkers road={EARTH_BASE_WIDE.roadPaths?.[0]} />
           <SkyEventChip surface="base" />
           {!subsurface && <OrionidsTeaser />}
 
@@ -514,8 +398,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 // can't run off the edge of the scene.
                 const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
-                // In Edit mode a tap on an upgradable building opens its upgrade rail
-                // instead of navigating into the building.
                 const editable = editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind)
                   ? { ...building, onClick: () => setUpgradingBuilding(kind) }
                   : building
@@ -536,7 +418,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             </div>
           </div>
 
-          {/* Soil cross-section with subsurface button */}
+          {/* Soil cross-section */}
           <SoilCrossSection />
         </div>
 
@@ -610,13 +492,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           />
         )
       })()}
-      {/* Bottom dock — rebuilt 2026-08-21 (KES-226) as a docked sheet, not a
-          floating pill row (see DockIconBtn/DockPrimaryBtn doc comment for
-          why). It remains available during onboarding so the tutorial can
-          point at Missions without taking away the rest of the base controls. */}
-      {/* Navigation is part of the base, not a tutorial reward. Keeping this
-          dock mounted during M1 means the coach can point at Missions without
-          removing the rest of the player's controls. */}
+
+      {/* The surface dock is reserved for all-scene navigation only. Base-only
+          actions remain on their physical buildings or in their own surfaces. */}
       {(
         <div className="hub-bottom-dock" style={{
           position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: subsurface ? 40 : 20,
@@ -644,73 +522,16 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 )}
               </div>
             ) : (
-              <>
-                {/* Row 1 — status + primary CTA, the reference's
-                    "Facility Tier · status" + primary-action row. */}
-                <div className="hub-bottom-dock-main" data-testid={player.activeMission ? 'hub-resume-mission-banner' : undefined} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--hub-cyan)' }}>
-                      {player.activeMission ? 'Mission in progress' : 'Launchpad'}
-                    </div>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: player.activeMission ? 11 : 14, fontWeight: 800, color: 'var(--ln-text)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {player.activeMission ? activeMissionDisplayLabel(player.activeMission) : 'Ready'}
-                    </div>
-                  </div>
-                  {showStorageSiloCta ? (
-                    // SSL-332: the last training step. The Build screen is only
-                    // otherwise reachable from Edit, so the dock offers it.
-                    <DockPrimaryBtn testId="hub-build-storage-silo" coachId="hub-build-storage-silo" onClick={() => onOpenScene('build')} pulse>
-                      Build Silo
-                    </DockPrimaryBtn>
-                  ) : player.activeMission ? (
-                    <DockIconBtn testId="hub-resume-mission-btn" icon={<HistoryGlyph />} label="Resume" onClick={() => onOpenScene(missionResumeScreen(player))} accent />
-                  ) : (
-                    <DockPrimaryBtn testId="hub-edit-build-btn" onClick={() => setEditMode(v => !v)}>
-                      {editMode ? 'Done' : 'Build'}
-                    </DockPrimaryBtn>
-                  )}
-                </div>
-
-                {/* Row 2 — icon-tab strip. Non-wrapping by construction
-                    (fixed-width buttons, horizontal scroll as a safety net
-                    rather than flexWrap) so it can never overlap the scene
-                    below it, unlike the pill row it replaces. */}
-                <div className="hub-bottom-dock-actions" style={{ display: 'flex', gap: 4, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
-                  <DockIconBtn testId="hub-ops-btn" icon={<HistoryGlyph />} label="Ops" onClick={() => setOpsOpen(true)} />
-                  {help.button}
-                  <DockIconBtn testId="hub-control-station-btn" icon={<HistoryGlyph />} label="Control" onClick={() => onOpenScene('instrument-hub')} />
-                  {editMode && (
-                    <>
-                      <DockIconBtn testId="hub-new-structure-btn" icon={<PlusGlyph />} label="New" onClick={() => onFocusBuilding('build')} />
-                      {player.placed.includes('launchpad') && (
-                        <DockIconBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onFocusBuilding('hangar')} />
-                      )}
-                      {player.placed.includes('launchpad') && buildingLevel(player, 'launchpad') < MAX_BUILDING_LEVEL && onUpgradeBuilding && (
-                        <DockIconBtn icon={<UpgradeGlyph />} label="UPGRADE" onClick={() => setUpgradingBuilding('launchpad')} />
-                      )}
-                    </>
-                  )}
-                  <DockIconBtn testId="hub-subsurface-btn" icon={<SubsurfaceGlyph />} label="Subsurface" onClick={() => setSubsurface(true)} />
-                  <DockIconBtn testId="hub-mission-log-btn" icon={<HistoryGlyph />} label="Mission Log" onClick={() => onOpenScene('mission-history')} />
-                  <DockIconBtn testId="hub-market-btn" icon={<MarketGlyph />} label="Market" onClick={() => onOpenMarket?.()} />
-                  {player.freeOperations && (
-                    <DockIconBtn testId="hub-surface-ops" icon={<SurfaceGlyph />} label="Sites" onClick={() => onOpenScene('surface-ops')} />
-                  )}
-                </div>
-              </>
+              <nav aria-label="Base dock" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+                <DockPrimaryBtn testId="hub-switch-operation" onClick={() => onOpenScene(player.activeMission ? missionResumeScreen(player) : 'missions')}>
+                  « »
+                </DockPrimaryBtn>
+                <DockPrimaryBtn testId="hub-build-btn" coachId="hub-build-btn" onClick={() => showStorageSiloCta ? onOpenScene('build') : setEditMode(value => !value)}>Build</DockPrimaryBtn>
+                <DockPrimaryBtn testId="hub-btn" onClick={() => onOpenScene('instrument-hub')}>Hub</DockPrimaryBtn>
+              </nav>
             )}
           </div>
         </div>
-      )}
-      {help.layer}
-      {opsOpen && (
-        <OpsHubSheet
-          player={player}
-          downlinkCount={signals.length}
-          onClose={() => setOpsOpen(false)}
-          onOpenScene={screen => { setOpsOpen(false); onOpenScene(screen) }}
-          onFocusBuilding={kind => { setOpsOpen(false); onFocusBuilding(kind) }}
-        />
       )}
     </div>
   )
