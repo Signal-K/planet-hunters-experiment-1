@@ -36,6 +36,19 @@ describe('R1 mission setup', () => {
     expect(styles).not.toContain('.rocketBlueprint')
   })
 
+  it('lays the contract board out in two columns with a single WSW chip', () => {
+    const routes = read('./MissionSetupRoutes.tsx')
+    const styles = read('./MissionSetupRoutes.module.css')
+
+    expect(routes).toContain('contractMain')
+    expect(routes).toContain('contractAside')
+    expect(routes).toContain('variant="chip"')
+    expect(routes).not.toContain('WorldSpaceWeekChips')
+    expect(styles).toContain('grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr)')
+    expect(styles).toContain('.contractGallery .contractIdentity')
+    expect(styles).toMatch(/\.contractGallery \.contractIdentity[\s\S]*position: static/)
+  })
+
   it('keeps the Mission Board back control at the 44px touch-target floor', () => {
     const styles = read('./MissionSetupRoutes.module.css')
 

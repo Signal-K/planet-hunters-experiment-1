@@ -1,8 +1,24 @@
 import type { WswBanner, WswChip } from '@/lib/wsw'
 import styles from './WorldSpaceWeek.module.css'
 
-/** World Space Week banner: dates, tier rule, and how many of its badges are earned. */
-export function WorldSpaceWeekBanner({ banner, className }: { banner: WswBanner; className?: string }) {
+/** World Space Week banner: dates, tier rule, and how many of its badges are earned.
+ * `chip` is the one-line form for tight headers (mission board): WSW plus the count. */
+export function WorldSpaceWeekBanner({ banner, className, variant = 'banner' }: { banner: WswBanner; className?: string; variant?: 'banner' | 'chip' }) {
+  if (variant === 'chip') {
+    return (
+      <div
+        className={[styles.chip, styles.boardChip, className].filter(Boolean).join(' ')}
+        data-testid="wsw-banner"
+        data-variant="chip"
+        data-live={banner.live}
+        role="status"
+        aria-label={`${banner.title}. ${banner.earned} of ${banner.total} badges.`}
+      >
+        <b>WSW</b>
+        <span>{banner.earned}/{banner.total}</span>
+      </div>
+    )
+  }
   return (
     <div
       className={[styles.banner, className].filter(Boolean).join(' ')}

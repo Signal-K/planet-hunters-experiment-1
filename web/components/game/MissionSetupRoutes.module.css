@@ -69,6 +69,173 @@
 .launchArt[data-stage='workshop'] > img { left:31%; }
 .launchArt[data-stage='pad'] > img { left:70%; }
 @media (prefers-reduced-motion:reduce){ .launchArt > img { transition:none; } }
-.wswBanner { pointer-events:auto; flex:1 1 auto; min-width:0; max-width:520px; }
+.wswBanner { pointer-events:auto; flex:none; min-width:0; max-width:none; }
 .wswChips { margin-top:12px; }
-@media (max-width:720px),(max-height:520px){.wswBanner{padding:4px 8px;min-height:40px;gap:0 8px;}.wswBanner span:not(:last-child){display:none;}.wswChips{margin-top:8px;}}
+
+/* Contract board: two columns in landscape (client, title, two stats | cargo, rocket, accept).
+   Flow layout at every viewport so titles, chips and facts cannot paint on top of each other.
+   One WSW chip lives in the header, not in the card. */
+.contractGallery {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+  padding: 8px 4px;
+  overflow: hidden;
+}
+.contractGallery .contractSlide {
+  position: relative;
+  inset: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 8px 16px;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 8px 4px;
+  overflow: hidden;
+}
+.contractMain, .contractAside {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+.contractAside { justify-content: space-between; }
+.contractGallery .contractIdentity,
+.contractGallery .contractCopy,
+.contractGallery .contractFacts,
+.contractGallery .contractCargo {
+  position: static;
+  inset: auto;
+  width: auto;
+  max-width: none;
+  margin: 0;
+}
+.contractGallery .contractIdentity { display: flex; align-items: center; gap: 12px; }
+.contractGallery .contractIdentity > div { min-width: 0; gap: 4px; }
+.contractGallery .contractIdentity strong { font-size: clamp(16px, 2.2vw, 28px); line-height: 1.15; overflow-wrap: anywhere; }
+.contractGallery .contractCopy h2 { font-size: clamp(20px, 2.8vw, 40px); line-height: 1.05; overflow-wrap: anywhere; }
+.contractGallery .contractFacts { display: flex; flex-wrap: wrap; gap: 8px; }
+.contractGallery .contractFacts div {
+  display: grid;
+  gap: 2px;
+  align-content: center;
+  min-width: 96px;
+  min-height: 44px;
+  padding: 4px 10px;
+  border: 2px solid var(--mission-ink);
+  border-radius: 4px;
+  background: var(--mission-paper-bright);
+}
+.contractGallery .contractCargo { width: auto; }
+.contractGallery .contractRocket {
+  position: static;
+  display: block;
+  flex: 1 1 auto;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 150px;
+  min-height: 0;
+  object-fit: contain;
+  transform: none;
+  align-self: center;
+}
+.contractGallery .contractAside > .primary { position: static; width: 100%; min-width: 0; min-height: 44px; }
+.contractGallery .carouselArrow { position: static; top: auto; width: 44px; min-height: 44px; height: 64px; align-self: center; }
+.contractGallery .previous, .contractGallery .next { left: auto; right: auto; }
+.header { flex-wrap: nowrap; }
+.title { min-width: 0; flex: 1 1 auto; }
+.title h1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (orientation: portrait) {
+  .contractGallery .contractSlide {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .contractAside { justify-content: flex-start; }
+  .contractGallery .contractRocket { max-height: 160px; flex: none; }
+  .contractGallery .contractCopy h2 { font-size: 26px; }
+  .contractGallery .contractIdentity strong { font-size: 18px; }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .header { top: 4px; left: 8px; right: 8px; }
+  .header[data-dev-launcher='true'] { top: 4px; left: 52px; }
+  .title { min-height: 44px; padding: 4px 8px; }
+  .title span { display: none; }
+  .title h1 { font-size: 16px; }
+  .stage { top: 56px; right: 8px; bottom: 6px; left: 8px; }
+  .contractGallery { padding: 4px 2px; }
+  .contractGallery .contractSlide { gap: 4px 12px; padding: 4px 2px; }
+  .contractMain, .contractAside { gap: 4px; }
+  .contractGallery .contractIdentity { gap: 8px; }
+  .contractGallery .contractIdentity strong { font-size: 16px; }
+  .contractGallery .contractCopy h2 { font-size: 20px; }
+  .contractGallery .contractRocket { max-height: 88px; }
+  .contractGallery .contractFacts { gap: 6px; }
+  .contractGallery .contractFacts div { min-width: 0; min-height: 44px; padding: 2px 8px; }
+}
+
+@media (min-width: 1024px) and (min-height: 700px) {
+  .contractGallery .contractSlide { padding: 16px 12px; gap: 12px 28px; }
+  .contractMain, .contractAside { gap: 16px; }
+  .contractGallery .contractRocket { max-height: 220px; }
+}
+
+/* The contract header and the card stack in flow, so the WSW chip, the title
+   and the ops strip each keep their own band. */
+.root[data-setup='missions'] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+.root[data-setup='missions'] .header,
+.root[data-setup='missions'] .header[data-dev-launcher='true'] {
+  position: relative;
+  inset: auto;
+  flex: none;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto 44px;
+  align-items: center;
+  gap: 8px;
+  height: auto;
+  min-height: 44px;
+  margin: 0;
+}
+.root[data-setup='missions'] .back { grid-column: 1; grid-row: 1; width: 44px; height: 44px; }
+.root[data-setup='missions'] .title { grid-column: 2; grid-row: 1; min-width: 0; min-height: 44px; }
+.root[data-setup='missions'] .wswBanner { grid-column: 3; grid-row: 1; justify-self: end; }
+.root[data-setup='missions'] .help { grid-column: 4; grid-row: 1; margin-left: 0; }
+.root[data-setup='missions'] .stage {
+  position: relative;
+  inset: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+}
+@media (max-width: 1023px) {
+  .root[data-setup='missions'] .header[data-dev-launcher='true'] { padding-left: 48px; }
+}
+@media (orientation: portrait) and (max-width: 560px) {
+  .root[data-setup='missions'] .header,
+  .root[data-setup='missions'] .header[data-dev-launcher='true'] {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+  }
+  .root[data-setup='missions'] .wswBanner { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+  .root[data-setup='missions'] .help { grid-column: 3; grid-row: 1; }
+  .root[data-setup='missions'] .title span { display: none; }
+  .root[data-setup='missions'] .title h1 { font-size: 16px; }
+}

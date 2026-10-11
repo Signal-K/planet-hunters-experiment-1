@@ -61,3 +61,12 @@
 
 .chip[data-state$='-earned'] { background: var(--ln-blueprint-paper-2); }
 .chip[data-state^='silver'] { border-style: dashed; }
+
+.boardChip {
+  flex: none;
+  flex-wrap: nowrap;
+  width: max-content;
+  max-width: 100%;
+  min-height: 44px;
+  white-space: nowrap;
+}
