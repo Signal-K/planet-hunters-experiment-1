@@ -54,7 +54,8 @@ struct HubScreen: View {
                 skyCraft(width: w, height: h)
                 topLeftHud(insets: insets, portrait: portrait)
                 topRightHud(insets: insets)
-                dock(tile: layout.tile).padding(.bottom, insets.bottom + zones.dock.bottomInset)
+                BaseDock(tile: layout.tile, zones: zones.dock, locations: quickLocations, showLocations: $showLocations)
+                    .padding(.bottom, insets.bottom + zones.dock.bottomInset)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
         }
@@ -190,39 +191,6 @@ struct HubScreen: View {
         return out
     }
 
-    /// One floating dock, bottom-centre: « » quick access, Build, Hub.
-    private func dock(tile: CGFloat) -> some View {
-        let locations = quickLocations
-        return HStack(alignment: .top, spacing: zones.dock.gap) {
-            Button {
-                if locations.count == 1, let only = locations.first { store.go(only.screen) } else { showLocations = true }
-            } label: {
-                dockTile(tile, label: nil) { Text("«»").font(AppFont.display(tile * 0.5)).foregroundStyle(Theme.hudInk) }
-            }
-            .buttonStyle(.plain)
-            .disabled(locations.isEmpty).opacity(locations.isEmpty ? 0.4 : 1)
-            .accessibilityLabel("Go to a settlement or mission location")
-            .confirmationDialog("Go to", isPresented: $showLocations, titleVisibility: .visible) {
-                ForEach(Array(locations.enumerated()), id: \.offset) { _, loc in
-                    Button(loc.title) { store.go(loc.screen) }
-                }
-            }
-            Button { store.go(.build) } label: {
-                dockTile(tile, label: "Build") { Image(systemName: "hammer.fill").font(.system(size: tile * 0.5, weight: .black)).foregroundStyle(Theme.hudInk) }
-            }.buttonStyle(.plain).accessibilityLabel("Build")
-            Button { store.go(.instrumentHub) } label: {
-                dockTile(tile, label: "Hub") { Image(systemName: "globe").font(.system(size: tile * 0.5, weight: .bold)).foregroundStyle(Theme.hudInk) }
-            }.buttonStyle(.plain).accessibilityLabel("Open the instrument hub")
-        }
-        .padding(zones.dock.padding).hudPanel(radius: 14)
-    }
-
-    private func dockTile<Glyph: View>(_ size: CGFloat, label: String?, @ViewBuilder glyph: () -> Glyph) -> some View {
-        VStack(spacing: 2) {
-            glyph().frame(width: size, height: size).hudPanel(radius: 12)
-            Text((label ?? " ").uppercased()).font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.hudInk).lineLimit(1)
-        }
-    }
 }
 
 /// Contract card: active mission title plus progress. In portrait it collapses to a chip that expands on tap.

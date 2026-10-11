@@ -10,6 +10,7 @@ import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
 import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { BaseDock } from '@/components/game/hub/BaseDock'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
@@ -23,7 +24,6 @@ import type { BuildingCallout } from '@/components/game/hub/Building'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
-import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
@@ -36,34 +36,7 @@ import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SkyBadgeRow } from './SkyBadgeRow'
-
-// ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
-// Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
-// (Francs/jobs/mineral-stash glyphs live in HUDStrip, which owns that readout.)
-function SurfaceGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
-  )
-}
-function DockPrimaryBtn({ children, onClick, testId, coachId, pulse }: { children: React.ReactNode; onClick: () => void; testId?: string; coachId?: string; pulse?: boolean }) {
-  return (
-    <button
-      onClick={onClick}
-      data-testid={testId}
-      data-beacon={coachId}
-      style={{
-        flexShrink: 0, background: 'var(--hub-chalk-soft)',
-        border: '4px solid var(--hub-chalk)', borderRadius: 14, padding: '8px 16px',
-        fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14,
-        letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--hub-chalk)',
-        cursor: 'pointer', boxShadow: '0 4px 16px color-mix(in srgb, var(--hub-chalk) 25%, transparent)',
-        animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
-      }}
-    >
-      {children}
-    </button>
-  )
-}
+import { SCENE_NAMES } from '@/lib/ui-strings'
 
 /**
  * How far a building's status pill hangs below the ground line. `Building`
@@ -309,10 +282,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     }
   }
 
-  const dockRows = 2
-
   return (
-    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-dock-rows={dockRows} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
       {/* Base stays mounted at its authored camera frame while a tray is open.
           The former 200%-tall slider moved the whole world before revealing
@@ -446,20 +417,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       {/* Top HUD — always fixed above the slide. Rebuilt 2026-08-21 (KES-226)
           back to a dark scrim (the KES-220 light version was scrapped same
           day) — the persistent stacked HUD rail sits directly beneath the
-          title, top-left, matching the reference's fixed left-edge rail
+        title, top-left, matching the reference's fixed left-edge rail
           rather than corner-scattered readouts. Surface and subsurface now
           share the same dark treatment; no more light/dark split. */}
       <div className={layoutStyles.topHud}>
         <div className={layoutStyles.topRow}>
-          <div className={layoutStyles.titleBlock}>
-            {/* KES-173: DevShortcuts' fixed DEV toggle (top:8 left:8, dev-only,
-                roughly 120 pixels wide) sits directly over this eyebrow, clipping the
-                opening characters ("EARTH BASE" -> "H BASE"). Only reserve
-                the clearance when that badge can actually render. */}
-            <div className={layoutStyles.eyebrow} data-dev-launcher={isDevLauncherEnabled()}>
-              {subsurface ? 'BASE · SUBSURFACE' : `BASE · OPS ${player.missionsDone}`}
-            </div>
-          </div>
           {!subsurface && <HubClockWidget />}
         </div>
         {!subsurface && (
@@ -508,26 +470,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 24px color-mix(in srgb, var(--ln-void) 28%, transparent)',
             padding: '12px 16px 16px',
           }}>
-            {subsurface ? (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
-                <DockPrimaryBtn testId="subsurface-surface-btn" onClick={() => setSubsurface(false)}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><SurfaceGlyph />Surface</span>
-                </DockPrimaryBtn>
-                {player.placed.includes('launchpad') && (
-                  <DockPrimaryBtn testId="subsurface-launchpad-btn" onClick={() => onOpenScene('launchpad')}>
-                    Launchpad
-                  </DockPrimaryBtn>
-                )}
-              </div>
-            ) : (
-              <nav aria-label="Base dock" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
-                <DockPrimaryBtn testId="hub-switch-operation" onClick={() => onOpenScene(player.activeMission ? missionResumeScreen(player) : 'missions')}>
-                  « »
-                </DockPrimaryBtn>
-                <DockPrimaryBtn testId="hub-build-btn" coachId="hub-build-btn" onClick={() => showStorageSiloCta ? onOpenScene('build') : setEditMode(value => !value)}>Build</DockPrimaryBtn>
-                <DockPrimaryBtn testId="hub-btn" onClick={() => onOpenScene('instrument-hub')}>Hub</DockPrimaryBtn>
-              </nav>
-            )}
+            <BaseDock
+              onSwitchOperation={() => onOpenScene(player.activeMission ? missionResumeScreen(player) : 'missions')}
+              onBuild={() => showStorageSiloCta ? onOpenScene('build') : setEditMode(value => !value)}
+              onHub={() => onOpenScene('instrument-hub')}
+            />
           </div>
         </div>
       )}

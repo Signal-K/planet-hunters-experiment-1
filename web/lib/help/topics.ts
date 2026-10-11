@@ -1,4 +1,5 @@
 import type { Screen } from '@/lib/game-types'
+import { SCENE_NAMES } from '@/lib/ui-strings'
 
 /** One card in the help sheet. Body text renders at 14px or larger. */
 export interface HelpCard {
@@ -97,7 +98,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
   },
   hub: {
     id: 'base',
-    title: 'Base',
+    title: SCENE_NAMES.base,
     cards: [
       { title: 'Home of the program', body: 'The Base is where you stand between flights. Buildings, the launch tower, and the Menu are on this ground. After training, you do not need a client contract to keep playing.' },
       { title: 'Free Ops or a contract', body: 'Open the Launchpad. Launch your own instrument, scan a body, or mine for yourself. Available Contracts is the other branch from the same pad.' },

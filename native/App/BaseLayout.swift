@@ -15,7 +15,7 @@ struct BaseLayout {
     static let slots: [Slot] = [
         Slot(name: "Launchpad", sprite: "base/launchpad_flat.png", aspect: 192.0 / 318, baseWidth: 84, tap: .launchpad),
         Slot(name: "Hangar", sprite: "base/hangar_flat.png", aspect: 182.0 / 155, baseWidth: 176, tap: .hangar),
-        Slot(name: "Exchange", sprite: "base/exchange_flat.png", aspect: 1153.0 / 461, baseWidth: 210, tap: .market),
+        Slot(name: Strings.Scene.exchange, sprite: "base/exchange_flat.png", aspect: 1153.0 / 461, baseWidth: 210, tap: .market),
     ]
     /// Name pill under each structure (14pt text) and the sprite sits this far below the ground line.
     static let labelWidth: CGFloat = 104, labelBottom: CGFloat = 34, spriteDrop: CGFloat = 5
