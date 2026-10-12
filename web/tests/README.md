@@ -34,7 +34,7 @@ CI runs the same `npm run test:scenes` in the `scenes` job (see `docs/ci.md`) an
 | --- | --- | --- |
 | Fast per-PR | `npm run test:unit` + `npm run test:scenes` | every PR (CI `unit`, `scenes`) |
 | Phone smoke | `npm run test:scenes:phone` | local iteration |
-| Full staging prerelease | SSL-508 spec (not written yet) | before a release |
+| Full staging prerelease | `STAGING_BASE_URL=… STAGING_LANDNAM_PB_URL=… npm run test:staging` | before a release |
 
 `retries: 2` in `playwright.config.ts` absorbs browser crashes (see Known flakiness). A test that needed a retry is reported as flaky, not hidden.
 
@@ -44,8 +44,8 @@ CI runs the same `npm run test:scenes` in the `scenes` job (see `docs/ci.md`) an
 | --- | --- |
 | offline, features, ui-zones, tutorial-rail, interaction-order | Layout and overlap concerns are covered per screen by the scene checks. Step-by-step assertions are retired (they asserted the removed coach and old chrome). |
 | visual, visual-extended, release-matrix, responsive | Replaced by the scene screenshots at the three viewports. |
-| regression, journeys, clean-start-loop, staging-full, with-pb | **Not replaced yet.** Retired from the suite; end-to-end flow coverage is owed to SSL-508 (save, reconnect and sync). |
-| auth | Fixture-only route coverage exists; real sign-up, token expiry and 401 retry are **not replaced yet** and are owed to SSL-508. |
+| regression, journeys, clean-start-loop, staging-full, with-pb | The initial SSL-508 gate creates and purges a real `@landnam.test` account, uses the shipped M1–M3 handoff, asserts the saved `game_states` row, then reloads into Free Ops. Individual mining/scan/part interaction, offline replay, expiry recovery and cross-account coverage remain follow-up slices. |
+| auth | Fixture-only route coverage exists; the SSL-508 staging gate now covers real sign-up. Token expiry and 401 retry remain follow-up slices. |
 | surveys | **Not replaced yet.** Survey runtime gate has no browser test. |
 | smoke | Superseded by `scenes`. |
 
