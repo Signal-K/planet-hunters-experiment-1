@@ -32,9 +32,12 @@ struct BaseWorldScene: View {
             let cx = min(max(camera.x, 0), world.maxX)
             let lift = world.shift * camera.depth
             ZStack(alignment: .topLeading) {
+                // Only the violet top rows of the sky ramp show (the lower rows are a rose and orange sunset), matching web.
                 Art.view("base/layers/sky.png")
-                    .resizable().interpolation(.none)
-                    .frame(width: w, height: h)
+                    .resizable().interpolation(.low)
+                    .frame(width: w, height: h * 2.82, alignment: .top)
+                    .frame(width: w, height: h, alignment: .top)
+                    .clipped()
                 MeteorShowerWeather().frame(width: w, height: ground * 0.55).offset(y: -lift)
                 skyLayers(width: w, height: h, ground: ground).offset(y: -lift)
                 ZStack(alignment: .topLeading) {

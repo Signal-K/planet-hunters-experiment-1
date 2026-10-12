@@ -9,8 +9,9 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: url('/game/assets/base/layers/sky.png') center / 100% 100% no-repeat;
-  image-rendering: pixelated;
+  /* Only the violet top rows of the sky ramp are shown; its lower rows are the rose and orange sunset, which the base never wants. */
+  background: url('/game/assets/base/layers/sky.png') top / 100% 282% no-repeat;
+  image-rendering: auto;
 }
 
 .scene[data-time='dawn'] {
