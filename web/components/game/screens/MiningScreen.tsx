@@ -649,8 +649,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
       {activeOverlay === 'guide' && (
         <aside className="mining-guide-dock" aria-label="Mining controls">
-          <Panel className="mining-guide-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 16, display: 'flex', flexDirection: 'column', flex: '1 1 auto', minHeight: 0, overflow: 'hidden' }}>
-            <div className="mining-guide-title">Mining Controls</div>
+          <div className="mining-guide-panel">
+            <div className="mining-guide-title">Mining controls</div>
             <div className="mining-guide-scroll">
               {miningGuide(!!deliveryTargetName).map(item => (
                 <div key={item.label} className="mining-guide-row">
@@ -660,15 +660,17 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               ))}
             </div>
             <div className="mining-guide-actions">
-              <button type="button" className="mining-guide-close" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setGuideOpen(false); handleRecharge() }}>
-                {rechargeLabel}
-              </button>
-              {onAbandon && (
-                <button type="button" className="mining-guide-close" data-testid="mining-scrub-btn" onClick={() => { setGuideOpen(false); setConfirmingAbandon(true) }}>
-                  Scrub Mission
+              <div className="mining-guide-action-row">
+                <button type="button" className="mining-guide-close mining-guide-recharge" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setGuideOpen(false); handleRecharge() }}>
+                  <span>Recharge Laser</span>
+                  <span>{rechargePrice > 0 ? `${rechargePrice} fr` : 'Free'}</span>
                 </button>
-              )}
-              {help.button}
+                {onAbandon && (
+                  <button type="button" className="mining-guide-close" data-testid="mining-scrub-btn" onClick={() => { setGuideOpen(false); setConfirmingAbandon(true) }}>
+                    Scrub Mission
+                  </button>
+                )}
+              </div>
               <button
                 type="button"
                 className="mining-guide-close"
@@ -677,7 +679,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                 Close
               </button>
             </div>
-          </Panel>
+          </div>
         </aside>
       )}
       </div>

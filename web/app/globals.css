@@ -1843,67 +1843,102 @@ button { cursor: pointer; }
   min-width: 0;
   min-height: 0;
 }
-/* The field is edge-to-edge. The guide is a sheet under the order pill and
-   above the fire dock. Rows scroll; Close stays in its own row so it cannot
-   cover FIRE LASER / CHARGES (SSL-493, 402px). */
+/* The field is edge-to-edge. The guide is a settings-style card under the
+   order pill. On a tall phone it stops above the fire dock. On a short
+   landscape phone it covers the dock so the rows have room, and Close stays
+   in its own row (SSL-493, 402px). Tokens match docs/settings-style.md. */
 .mining-guide-dock {
+  --set-card: #ffffff;
+  --set-line: #e5e7eb;
+  --set-ink: #111827;
+  --set-muted: #4b5563;
+  --set-radius: 8px;
+  --set-pad: 20px;
+  --set-gap: 16px;
+  --set-max: 640px;
   position: absolute;
   z-index: 12;
   top: 128px;
-  right: 12px;
   bottom: 112px;
-  width: min(360px, calc(100% - 24px));
+  left: 50%;
+  width: min(var(--set-max), calc(100% - 32px));
+  transform: translateX(-50%);
   margin: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  color: var(--set-ink);
+  font-family: system-ui, sans-serif;
 }
 .mining-screen:has(.laser-dev-skip) .mining-guide-dock { top: 172px; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .mining-guide-dock {
+    z-index: 22;
+    top: 112px;
+    bottom: 8px;
+    --set-pad: 16px;
+  }
+}
+.mining-guide-panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--set-pad);
+  border: 1px solid var(--set-line);
+  border-radius: var(--set-radius);
+  background: var(--set-card);
+  box-shadow: none;
+}
 .mining-guide-title {
   flex: none;
-  margin: 0 0 12px;
-  color: var(--ln-cyan);
-  font: 800 14px/1.2 var(--ln-font-display);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  margin: 0 0 var(--set-gap);
+  color: var(--set-ink);
+  font: 600 20px/1.2 system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .mining-guide-scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 .mining-guide-row {
-  display: grid;
-  grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr);
-  gap: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   margin: 0;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--ln-hairline);
+  padding: var(--set-gap) 0;
+  border-bottom: 1px solid var(--set-line);
 }
+.mining-guide-row:first-child { padding-top: 0; }
+.mining-guide-row:last-child { border-bottom: 0; padding-bottom: 0; }
 .mining-guide-row strong {
-  color: var(--ln-cyan);
-  font: 800 14px/1.3 var(--ln-font-display);
+  color: var(--set-ink);
+  font: 600 16px/1.3 system-ui, sans-serif;
   letter-spacing: 0.04em;
 }
 .mining-guide-row span {
-  color: var(--ln-text-dim);
-  font: 14px/1.4 var(--ln-font-body);
+  color: var(--set-muted);
+  font: 400 16px/1.45 system-ui, sans-serif;
 }
 .mining-guide-actions {
   flex: none;
-  display: grid;
-  gap: 8px;
-  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-gap);
+  margin-top: var(--set-gap);
+}
+.mining-guide-action-row {
+  display: flex;
+  gap: var(--set-gap);
 }
 .mining-guide-dock button {
   position: static;
   min-height: 44px;
-}
-@media (max-width: 520px) {
-  .mining-guide-dock {
-    left: 12px;
-    width: auto;
-  }
 }
 .mining-viewport {
   position: relative; flex: 1; overflow: hidden; min-height: 0;
@@ -2176,13 +2211,12 @@ button { cursor: pointer; }
   background: var(--ln-mining-overlay);
 }
 .theme-blueprint.mining-screen .mining-guide-panel {
-  padding: var(--ln-s-4);
-  border: 1px solid var(--ln-bp-line-strong);
-  border-radius: var(--ln-r-lg);
-  background: var(--ln-mining-control-fill-strong);
-  box-shadow: var(--ln-shadow-panel);
+  padding: var(--set-pad);
+  border: 1px solid var(--set-line);
+  border-radius: var(--set-radius);
+  background: var(--set-card);
+  box-shadow: none;
 }
-.theme-blueprint.mining-screen .mining-guide-close,
 .theme-blueprint.mining-screen .mining-success-secondary,
 .theme-blueprint.mining-screen .mining-success-primary {
   font: 800 14px var(--ln-font-display);
@@ -2193,11 +2227,35 @@ button { cursor: pointer; }
 .theme-blueprint.mining-screen .mining-guide-close {
   width: 100%;
   min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--ln-cyan-border);
-  border-radius: var(--ln-r-md);
-  background: var(--ln-bp-paper);
-  color: var(--ln-bp-ink);
+  padding: 10px 12px;
+  border: 1px solid var(--set-line);
+  border-radius: var(--set-radius);
+  background: var(--set-card);
+  color: var(--set-ink);
+  font: 600 16px/1.2 system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: center;
+  white-space: normal;
+  cursor: pointer;
+}
+.theme-blueprint.mining-screen .mining-guide-close:disabled {
+  opacity: 1;
+  color: var(--set-muted);
+  cursor: not-allowed;
+}
+.theme-blueprint.mining-screen .mining-guide-action-row .mining-guide-close {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+}
+.theme-blueprint.mining-screen .mining-guide-recharge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  line-height: 1.15;
 }
 .theme-blueprint.mining-screen .mining-success-panel {
   background: var(--ln-mining-control-fill-strong) !important;

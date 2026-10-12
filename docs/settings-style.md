@@ -1,6 +1,6 @@
 # Settings style
 
-Web Settings (`web/components/game/SettingsSheet.tsx`) is the only screen that uses this look. It matches a light admin dashboard: white cards on a grey page, quiet controls, a separate danger card for reset. Native should use the same tokens when Settings is restyled there.
+Web Settings (`web/components/game/SettingsSheet.tsx`) is the screen this look was written for. The mining controls sheet on the laser scene reuses the same tokens for its card, type, and buttons. It matches a light admin dashboard: white cards on a grey page, quiet controls, a separate danger card for reset. Native should use the same tokens when Settings is restyled there.
 
 Colours live as custom properties on `.ops-settings` in `web/app/globals.css`. Components do not hardcode hex.
 
