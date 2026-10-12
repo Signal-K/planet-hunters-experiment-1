@@ -17,9 +17,7 @@ public enum Construction {
     public static let all: [StructureBlueprint] = [
         StructureBlueprint(id: "launchpad", name: "Launchpad", cost: 0, materials: [:], unlocksAt: "Always", summary: "Rocket assembly and launch operations."),
         StructureBlueprint(id: "surface-silo", name: "Surface Silo", cost: Economy.surfaceSiloPrice, materials: [:], unlocksAt: "Complete the guided missions",
-                           summary: "Small Earth-side mineral storage. Hold ore for a better market window or for refinery input."),
-        StructureBlueprint(id: "refinery", name: "Refinery", cost: Economy.refineryPrice, materials: ["aluminium": 20, "copper": 10],
-                           unlocksAt: "Surface Silo + Free Operations", summary: "Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day."),
+                           summary: "Small Earth-side mineral storage. Hold ore for a better market window."),
         StructureBlueprint(id: "astronaut-academy", name: "Astronaut Academy", cost: Economy.academyPrice, materials: ["aluminium": 24, "silicon": 12, "copper": 8],
                            unlocksAt: "Research after reaching client level 2 with two clients", summary: "Trains named astronauts, manages the roster, and coordinates Base staffing."),
     ]
@@ -35,7 +33,6 @@ public enum Construction {
         case "surface-silo": return p.freeOperations || p.missionsDone >= 2 || p.placed.contains("surface-silo")
         case "astronaut-academy": return p.academyResearched || p.placed.contains("astronaut-academy")
         case "launchpad": return true
-        case "refinery": return p.placed.contains("refinery") || (p.freeOperations && p.placed.contains("surface-silo"))
         default: return false
         }
     }
@@ -66,7 +63,6 @@ public enum Construction {
         n.player.placed.append(kind)
         n.player.placementPlots[kind] = plot
         n.player.underConstruction[kind] = now
-        if kind == "refinery" { n.player.refineryBuilt = true }
         if kind == "astronaut-academy" { n.player.academyFunded = true; n.player.crewUpkeepSettledDate = Academy.dateKey(now) }
         if !s.player.freeOperations && Transitions.freeOperationsUnlocked(n.player) {
             n.player.freeOperations = true; n.tutorial = false; n.popup = "tutorial-complete"

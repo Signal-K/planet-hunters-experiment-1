@@ -30,8 +30,8 @@ enum SceneCatalog {
     static func basePlayer() -> GameState {
         var gs = GameState()
         gs.player.freeOperations = true; gs.player.missionsDone = 4; gs.player.francs = 60_000_000
-        gs.player.placed = ["launchpad", "surface-silo", "refinery", "astronaut-academy"]
-        gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1, "refinery": 2, "astronaut-academy": 3]
+        gs.player.placed = ["launchpad", "surface-silo", "astronaut-academy"]
+        gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1, "astronaut-academy": 2]
         gs.player.stash = ["copper": 6, "gold": 3, "aluminium": 30, "silicon": 12]
         gs.player.clientMissions = ["vulcan": 6, "helios": 11]
         gs.player.academyResearched = true; gs.player.academyFunded = true; gs.player.researchXP = 180; gs.player.skillPoints = 2
@@ -93,11 +93,17 @@ enum SceneCatalog {
         scene("hub-desktop", 680, w: 1000) { HubScreen().environment(GameStore()) },
         scene("hub-biome-mountains-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .mountains).environment(GameStore()) },
         scene("hub-live", 874) { HubScreen().environment(GameStore()) },
+        scene("hub-live-built", 874) {
+            var gs = GameState()
+            gs.player.placed = ["launchpad", "hangar", "surface-silo", "astronaut-academy"]
+            gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1, "astronaut-academy": 2]
+            return HubScreen().environment(GameStore(state: gs))
+        },
         scene("hub-biome-mountains-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), biome: .mountains).environment(GameStore(state: landscapeBase())) },
         scene("hub-structures-phone", 874) {
             var gs = GameState()
-            gs.player.placed = ["launchpad", "surface-silo", "refinery", "astronaut-academy"]
-            gs.player.placementPlots = ["surface-silo": 0, "refinery": 1, "astronaut-academy": 3]
+            gs.player.placed = ["launchpad", "surface-silo", "astronaut-academy"]
+            gs.player.placementPlots = ["surface-silo": 0, "astronaut-academy": 2]
             return HubScreen().environment(GameStore(state: gs))
         },
         scene("hub-skycraft-phone", 874) {
@@ -232,12 +238,6 @@ enum SceneCatalog {
         },
         scene("rover-touchdown-phone", 874) {
             RoverFieldScreen(initial: Prospecting(requirements: ["iron": 2])).environment(GameStore(state: GameState()))
-        },
-        scene("refinery-phone", 1100) {
-            var gs = basePlayer()
-            gs = Refinery.applyStart(gs, recipeId: "refined-gold", now: t0 - 400_000)
-            gs.player.refinedGoods = ["refined-copper": 2]
-            return RefineryScreen(at: t0).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true)
         },
         scene("skill-tree-phone", 1300) {
             var gs = basePlayer(); gs.player.unlockedSkillNodes = ["laser-charge-1"]

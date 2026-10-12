@@ -7,30 +7,26 @@ struct BaseDock: View {
     let tile: CGFloat
     let zones: HUDZones.Zones.BottomNav
     /// Middle buttons; nil gives the base dock (Build, Hub).
-    var items: [(title: String, action: () -> Void)]?
+    var items: [(title: String, symbol: String, action: () -> Void)]?
 
-    private var middle: [(title: String, action: () -> Void)] {
-        items ?? [("Build", { store.go(.build) }), ("Hub", { store.go(.instrumentHub) })]
+    private var middle: [(title: String, symbol: String, action: () -> Void)] {
+        items ?? [("Build", "hammer.fill", { store.go(.build) }), ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) })]
     }
 
     var body: some View {
         HStack(spacing: zones.gap) {
             arrow("chevron.left", label: "Previous") { step(-1) }
-            Spacer(minLength: zones.gap)
-            ForEach(Array(middle.enumerated()), id: \.offset) { _, item in
-                Button(action: item.action) {
-                    Text(item.title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                        .frame(minWidth: 56, minHeight: 36)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(item.title)
+            Spacer(minLength: 0)
+            ForEach(Array(middle.enumerated()), id: \.offset) { index, item in
+                if index > 0 { Rectangle().fill(Theme.hudInk.opacity(0.4)).frame(width: 1, height: 24) }
+                DockButton(title: item.title, symbol: item.symbol, action: item.action)
             }
-            Spacer(minLength: zones.gap)
+            Spacer(minLength: 0)
             arrow("chevron.right", label: "Next") { step(1) }
         }
         .padding(.horizontal, zones.padding + 4)
         .padding(.vertical, 2)
-        .frame(width: items == nil ? 248 : 320, height: 44)
+        .frame(width: 328, height: 48)
         .background(Capsule().fill(Theme.hudPanel))
         .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
         .accessibilityElement(children: .contain)
@@ -62,5 +58,28 @@ struct BaseDock: View {
         let next = (index + delta + list.count) % list.count
         let target = list.indices.contains(next) ? list[next] : first
         store.go(target)
+    }
+}
+
+/// One dock action: its own pill with an icon and an uppercase label. Base and flight docks both use it.
+struct DockButton: View {
+    let title: String
+    let symbol: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: symbol).font(.system(size: 14, weight: .bold))
+                Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2)
+            }
+            .foregroundStyle(Theme.hudInk)
+            .padding(.horizontal, 12)
+            .frame(minWidth: 88, minHeight: 44)
+            .background(Capsule().fill(Theme.hudPanel))
+            .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
     }
 }

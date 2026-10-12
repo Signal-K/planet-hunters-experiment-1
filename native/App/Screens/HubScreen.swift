@@ -53,9 +53,7 @@ struct HubScreen: View {
         switch kind {
         case "launchpad": store.go(.launchpad)
         case "hangar", "garage": store.go(.hangar)
-        case "refinery": store.go(.refinery)
         case "astronaut-academy": store.go(.academy)
-        case "command": store.go(.instrumentHub)
         default: break
         }
     }

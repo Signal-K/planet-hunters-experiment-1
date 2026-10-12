@@ -20,7 +20,6 @@ struct RootView: View {
             case nil: WelcomeScreen()
             case .intro: IntroScreen()
             case .hub, .hubSubsurface: HubScreen()
-            case .refinery: RefineryScreen()
             case .skills: SkillTreeScreen()
             case .academy: AcademyScreen()
             case .missionHistory: MissionHistoryScreen()

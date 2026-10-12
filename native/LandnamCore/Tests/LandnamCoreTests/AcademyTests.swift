@@ -65,10 +65,8 @@ import Foundation
     @Test func staffingNeedsFitCrewAndMovesTheSeat() {
         var s = built()
         let a = "crew-starting-astronaut"
-        s = Academy.applyAssign(s, structureId: "refinery", crewId: a)
-        #expect(Refinery.isStaffed(s.player))
         s = Academy.applyAssign(s, structureId: "diplomacy", crewId: a)
-        #expect(!Refinery.isStaffed(s.player) && Academy.diplomacyActive(s.player))
+        #expect(Academy.diplomacyActive(s.player))
         s = Academy.applyAssign(s, structureId: "diplomacy", crewId: nil)
         #expect(!Academy.diplomacyActive(s.player))
     }
@@ -118,15 +116,6 @@ import Foundation
         #expect(Construction.occupied(s.player)["launchpad"] == 0)
         #expect(Construction.applyPlace(s, kind: "surface-silo", plot: 0, now: now) == s)
         #expect(Construction.applyPlace(s, kind: "surface-silo", plot: 9, now: now) == s)
-    }
-
-    @Test func refineryNeedsSiloFreeOpsAndMaterials() {
-        var s = GameState(); s.player.freeOperations = true; s.player.placed = ["launchpad", "surface-silo"]; s.player.francs = 20_000_000
-        let r = Construction.byId["refinery"]!
-        #expect(Construction.gaps(r, player: s.player) == ["20 more aluminium", "10 more copper"])
-        s.player.stash = ["aluminium": 20, "copper": 10]
-        let n = Construction.applyPlace(s, kind: "refinery", plot: 2, now: now)
-        #expect(n.player.refineryBuilt && n.player.stash["aluminium"] == 0 && n.player.francs == 12_000_000)
     }
 
     @Test func buildProgressRunsTenSeconds() {

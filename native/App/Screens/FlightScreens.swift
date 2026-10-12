@@ -37,11 +37,11 @@ struct TransitScreen: View {
                     HudChips(francs: store.player.francs)
                         .padding(.trailing, insets.trailing + zones.topRight.inset).padding(.top, insets.top + zones.topRight.inset)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                    VStack(spacing: 10) {
+                    VStack(spacing: 24) {
                         FlightProgressBar(value: p)
                         BaseDock(tile: 44, zones: zones.dock, items: [
-                            (p >= 1 ? "Arrive" : "Boost", { if p >= 1 { store.transitArrived() } }),
-                            ("Hub", { store.go(.instrumentHub) }),
+                            (p >= 1 ? "Arrive" : "Boost", p >= 1 ? "flag.fill" : "bolt.fill", { if p >= 1 { store.transitArrived() } }),
+                            ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
                         ])
                     }
                     .padding(.bottom, insets.bottom + zones.dock.bottomInset)

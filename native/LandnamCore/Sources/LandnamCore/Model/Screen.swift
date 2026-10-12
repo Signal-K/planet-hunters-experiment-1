@@ -6,7 +6,7 @@ public enum Screen: String, CaseIterable, Sendable {
     case intro, build, hub
     case hubSubsurface = "hub-subsurface"
     case missions, galaxy, targets, fab, transit, landing, mining, delivery, debrief
-    case refinery, market, hangar
+    case market, hangar
     case rocketBuy = "rocket-buy"
     case skills
     case roverSurvey = "rover-survey"
@@ -24,7 +24,7 @@ public enum Screen: String, CaseIterable, Sendable {
     public var isLocation: Bool {
         switch self {
         case .hub, .hubSubsurface, .launchpad, .transit, .landing, .mining, .roverSurvey,
-             .delivery, .refinery, .academy, .hangar, .surfaceOps, .galaxy,
+             .delivery, .academy, .hangar, .surfaceOps, .galaxy,
              .asteroidDiscovery, .saturnStormSearch, .instrumentHub:
             return true
         default:
