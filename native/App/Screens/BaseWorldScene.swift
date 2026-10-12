@@ -164,38 +164,49 @@ struct BaseWorldScene: View {
         .accessibilityLabel(kindLabel(kind)))
     }
 
-    /// Chunky launch stack: a wide white rocket flanked by two stretched gantry towers joined by cross-bracing.
+    /// Launch stack: the slim flight-scene rocket standing between two wide, clean steel gantry towers.
     private func padStack(padW: CGFloat, towerH: CGFloat) -> some View {
         let towerW = padW * 0.25
-        let rocketW = padW * 0.32
-        let rocketH = towerH * 0.92
-        let gap = rocketW * 0.5 + towerW * 0.5 - padW * 0.02
+        let rocketH = towerH * 0.88
+        let rocketW = rocketH * 22.0 / 72.0
+        let gap = padW * 0.5 - towerW * 0.5
         return ZStack(alignment: .bottom) {
-            Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none)
-                .frame(width: rocketW, height: rocketH)
             ForEach([-1.0, 1.0], id: \.self) { side in
-                Art.view("base/kit/starter-pad-rocket.png").resizable().interpolation(.none)
-                    .frame(width: towerW, height: towerH)
-                    .scaleEffect(x: CGFloat(side), y: 1)
+                gantryTower(width: towerW, height: towerH)
                     .offset(x: CGFloat(side) * gap)
             }
-            Canvas { ctx, size in
-                let ink = Color(red: 0.16, green: 0.26, blue: 0.5)
-                for i in 0..<5 {
-                    let y0 = size.height * (0.12 + 0.17 * CGFloat(i)), y1 = y0 + size.height * 0.17
-                    let x0 = size.width * 0.5 - gap + towerW * 0.4, x1 = size.width * 0.5 + gap - towerW * 0.4
-                    var path = Path()
-                    path.move(to: CGPoint(x: x0, y: y0)); path.addLine(to: CGPoint(x: x1, y: y1))
-                    path.move(to: CGPoint(x: x1, y: y0)); path.addLine(to: CGPoint(x: x0, y: y1))
-                    path.move(to: CGPoint(x: x0, y: y0)); path.addLine(to: CGPoint(x: x1, y: y0))
-                    ctx.stroke(path, with: .color(ink.opacity(0.75)), lineWidth: 3)
-                }
-            }
-            .frame(width: gap * 2 + towerW, height: towerH)
-            .allowsHitTesting(false)
-            .zIndex(-1)
+            Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none)
+                .frame(width: rocketW, height: rocketH)
         }
         .frame(width: padW, height: towerH, alignment: .bottom)
+    }
+
+    /// Light-grey steel lattice with thin blue trim; no texture noise.
+    private func gantryTower(width: CGFloat, height: CGFloat) -> some View {
+        Canvas { ctx, size in
+            let steel = Color(red: 0.90, green: 0.92, blue: 0.95)
+            let shade = Color(red: 0.74, green: 0.78, blue: 0.84)
+            let trim = Color(red: 0.22, green: 0.42, blue: 0.78)
+            let rail = size.width * 0.14
+            ctx.fill(Path(CGRect(x: 0, y: 0, width: rail, height: size.height)), with: .color(steel))
+            ctx.fill(Path(CGRect(x: size.width - rail, y: 0, width: rail, height: size.height)), with: .color(steel))
+            ctx.fill(Path(CGRect(x: rail, y: 0, width: 1.5, height: size.height)), with: .color(shade))
+            let bays = 8
+            let bh = size.height / CGFloat(bays)
+            var lattice = Path()
+            for i in 0..<bays {
+                let y0 = bh * CGFloat(i), y1 = y0 + bh
+                lattice.move(to: CGPoint(x: rail, y: y0)); lattice.addLine(to: CGPoint(x: size.width - rail, y: y1))
+                lattice.move(to: CGPoint(x: size.width - rail, y: y0)); lattice.addLine(to: CGPoint(x: rail, y: y1))
+                lattice.move(to: CGPoint(x: rail, y: y1)); lattice.addLine(to: CGPoint(x: size.width - rail, y: y1))
+            }
+            ctx.stroke(lattice, with: .color(shade), lineWidth: 2)
+            ctx.fill(Path(CGRect(x: 0, y: 0, width: size.width, height: 4)), with: .color(trim))
+            ctx.fill(Path(CGRect(x: 0, y: 0, width: 2, height: size.height)), with: .color(trim.opacity(0.8)))
+            ctx.fill(Path(CGRect(x: size.width - 2, y: 0, width: 2, height: size.height)), with: .color(trim.opacity(0.8)))
+        }
+        .frame(width: width, height: height)
+        .allowsHitTesting(false)
     }
 
     private func spriteName(_ kind: String) -> String? {
