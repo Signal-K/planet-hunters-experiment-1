@@ -20,7 +20,8 @@ struct BaseUnderground: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            tiled("ug-soil", 16, width: world.worldW, height: world.worldH - world.ground - d).offset(y: d)
+            tiled("ug-soil", 64, width: world.worldW, height: world.worldH - world.ground - d).offset(y: d)
+            tiled("ug-flecks", 64, width: world.worldW, height: world.worldH - world.ground - d).offset(y: d)
             if built { chamber } else { dig }
         }
         .frame(width: world.worldW, height: world.worldH - world.ground, alignment: .topLeading)

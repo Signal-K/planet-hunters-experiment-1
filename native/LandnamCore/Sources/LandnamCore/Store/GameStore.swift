@@ -95,7 +95,7 @@ public final class GameStore {
         guard state.player.tessClassifications[subjectId] == nil else { return }
         let marks = Tess.normalized(ranges)
         var n = state
-        if verdict == .planet, let candidate {
+        if verdict == .planet, let candidate, !subjectId.hasPrefix(MissionLog.trainingPrefix) {
             let t = Instruments.exoplanetTarget(candidate, measuredPeriodDays: Tess.periodFromRanges(marks))
             n.player.discoveredExoplanetTargets[t.id] = n.player.discoveredExoplanetTargets[t.id] ?? t
         }
@@ -103,8 +103,15 @@ public final class GameStore {
         WswBadges.grant(&n.player.badges, .citizenScience, at: clock())
         n.player.researchAnnotations += 1
         n.player.researchXP += Self.firstClassificationXP
+        FlightPlan.completeTry(&n, "scan")
         apply(n)
         onClassified?(.tess(subject: subjectId, verdict: verdict, ranges: marks))
+    }
+
+    /// Hangar: fit one module per ship stage; completes the part training try.
+    public func fitHangarModules(_ installed: [String: String]) {
+        let next = FlightPlan.applyFit(state, installed: installed)
+        if next != state { apply(next) }
     }
 
     /// Deep Space Telescope: one NEOCP verdict per candidate.

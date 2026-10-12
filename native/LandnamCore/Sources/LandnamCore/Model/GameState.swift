@@ -111,6 +111,8 @@ public struct Player: Codable, Equatable, Sendable {
     /// Installed Laser Capacitor level (SSL-462), bought with hauled ore at Debrief.
     public var laserCapacitorLevel: Int = 0
     public var flightPlan: FlightPlanProgress = FlightPlanProgress()
+    /// Hangar ship-customizer fit, room kind to part id (web `shipCustomizerParts`).
+    public var shipCustomizerParts: [String: String] = [:]
     /// Unported save fields, preserved verbatim.
     public var extras: [String: JSONValue] = [:]
 
@@ -163,7 +165,7 @@ public struct Player: Codable, Equatable, Sendable {
         get("loanOffered", &loanOffered); getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
         get("seenPlanets", &seenPlanets); get("researchXP", &researchXP); get("subsurfaceExcavated", &subsurfaceExcavated)
         get("subsurfaceBuilt", &subsurfaceBuilt); get("landingResearched", &landingResearched)
-        get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("laserCapacitorLevel", &laserCapacitorLevel)
+        get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("shipCustomizerParts", &shipCustomizerParts); get("laserCapacitorLevel", &laserCapacitorLevel)
         buildingLevels = BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)
         launchpadUpgraded = launchpadUpgraded || (buildingLevels["launchpad"] ?? 1) >= 2
         for key in c.allKeys where !consumed.contains(key.stringValue) {
@@ -209,7 +211,7 @@ public struct Player: Codable, Equatable, Sendable {
         try put("loanOffered", loanOffered); try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
         try put("seenPlanets", seenPlanets); try put("researchXP", researchXP); try put("subsurfaceExcavated", subsurfaceExcavated)
         try put("subsurfaceBuilt", subsurfaceBuilt); try put("landingResearched", landingResearched)
-        try put("licenseGrade", licenseGrade); try put("flightPlan", flightPlan); try put("laserCapacitorLevel", laserCapacitorLevel)
+        try put("licenseGrade", licenseGrade); try put("flightPlan", flightPlan); try put("shipCustomizerParts", shipCustomizerParts); try put("laserCapacitorLevel", laserCapacitorLevel)
     }
 }
 

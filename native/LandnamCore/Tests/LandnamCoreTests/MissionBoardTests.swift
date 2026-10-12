@@ -12,7 +12,7 @@ import Foundation
 
     @Test func catalogCarriesEveryAuthoredWebMission() {
         let ids = Set(catalog.missions.map(\.id))
-        for id in ["program-build-mars-mining-settlement", "program-build-remote-silo", "program-build-refinery", "story-astronaut-academy",
+        for id in ["program-build-mars-mining-settlement", "program-build-remote-silo", "story-astronaut-academy",
                    "lnm_m3_relay_bennu_vesta", "lnm_m3_relay_itokawa_eros", "lnm_relay_psyche_ceres",
                    "freeops-self-directed-mining", "freeops-crewed-prospecting"] {
             #expect(ids.contains(id), "missing \(id)")
@@ -53,16 +53,8 @@ import Foundation
         #expect(MissionBoard.gate(m, player: p, now: now) == nil)
     }
 
-    @Test func refineryBuildWaitsForSettlementAndSilo() {
-        var p = freeOpsPlayer()
-        let refinery = catalog.mission("program-build-refinery")!
-        p.stash = ["aluminium": 50, "copper": 50]
-        #expect(MissionBoard.gate(refinery, player: p, now: now)?.contains("settlement") == true)
-        for kind in ["mining-settlement", "mineral-silo"] {
-            p.extras["clientStructures"] = .array(((p.extras["clientStructures"].flatMap { v -> [JSONValue]? in if case .array(let a) = v { return a } else { return nil } }) ?? []) + [
-                .object(["targetId": .string("mars"), "structureKind": .string(kind), "clientId": .string("mission-control"), "state": .string("operational")])])
-        }
-        #expect(MissionBoard.gate(refinery, player: p, now: now) == nil)
+    @Test func refineryProgramBuildIsRemoved() {
+        #expect(catalog.mission("program-build-refinery") == nil)
     }
 
     @Test func buildMissionRefusedWithoutKitThenDeliversAndConsumesIt() {

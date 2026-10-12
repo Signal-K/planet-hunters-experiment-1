@@ -233,7 +233,8 @@ struct LaunchScreen: View {
     }
 
     private var pad: some View {
-        ScreenFrame(title: "Launchpad", back: { store.go(.hub) }) {
+        ScreenFrame(title: "Hangar", back: { store.go(.hub) }) {
+            HangarModulesPanel()
             if let m = store.mission {
                 Panel { Text(m.title).font(.headline); Text("Target: \(store.target?.name ?? "none")") }
             } else if store.player.stagedRockets.isEmpty {

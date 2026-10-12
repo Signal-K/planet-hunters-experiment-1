@@ -19,14 +19,18 @@ final class MiningScene: SKScene {
     private var laneX: [Int: CGFloat] = [:]
     private var track: CGFloat = 800
     private let world = SKNode()
-    private var stars: [(node: SKShapeNode, base: CGFloat, phase: CGFloat)] = []
-    private var dust: [(node: SKShapeNode, x: CGFloat, y: CGFloat, v: CGFloat)] = []
-    private var clouds: [(node: SKShapeNode, x: CGFloat, v: CGFloat)] = []
+    private var stars: [(node: SKSpriteNode, base: CGFloat, phase: CGFloat)] = []
+    private var dust: [(node: SKSpriteNode, x: CGFloat, y: CGFloat, v: CGFloat)] = []
+    private var clouds: [(node: SKSpriteNode, x: CGFloat, v: CGFloat)] = []
     private let ground = SKNode()
     private let near = SKNode()
     private let far = SKNode()
-    private let beam = SKShapeNode()
-    private let spark = SKShapeNode()
+    private let beam = SKNode()
+    private lazy var spark = sprite("spark-0")
+    private let px: CGFloat = 2
+    private lazy var flameFrames = (0..<2).map { SK.texture("laser/flame-\($0).png") }
+    private var ridgeTile: CGFloat { 128 * px }
+    private var soilTile: CGFloat { 64 * px }
     private let ship = SKNode()
     private var flashUntil: TimeInterval = 0
 
@@ -40,7 +44,7 @@ final class MiningScene: SKScene {
     required init?(coder: NSCoder) { fatalError() }
 
     private var beamX: CGFloat { min(96, max(72, size.width * 0.18)) }
-    private var surfaceY: CGFloat { max(168, size.height * 0.36) }
+    private var surfaceY: CGFloat { max(200, size.height * 0.5) }
     private var shipY: CGFloat { min(size.height * 0.72, surfaceY + min(210, size.height * 0.28)) }
 
     override func didMove(to view: SKView) {
@@ -66,6 +70,16 @@ final class MiningScene: SKScene {
 
     // MARK: layers
 
+    /// Pixel sprite from the laser kit (`Art/laser`), nearest-filtered. Parts authored in neutral grey take their world colour here.
+    private func sprite(_ name: String, tint: UInt32? = nil, alpha: CGFloat = 1, blend: CGFloat = 1) -> SKSpriteNode {
+        let node = SKSpriteNode(texture: SK.texture("laser/\(name).png"))
+        node.size = CGSize(width: node.texture?.size().width ?? 0, height: node.texture?.size().height ?? 0)
+        node.setScale(px)
+        if let tint { node.color = LaserPalette.sk(tint); node.colorBlendFactor = blend }
+        node.alpha = alpha
+        return node
+    }
+
     private func buildSky() {
         let sky = SKSpriteNode(texture: SK.gradient(top: LaserPalette.color(palette.skyTop), bottom: LaserPalette.color(palette.skyHorizon)))
         sky.size = size
@@ -73,12 +87,28 @@ final class MiningScene: SKScene {
         sky.zPosition = -20
         world.addChild(sky)
 
+        // Dithered bands across the gradient, each lighter than the sky behind it, so the sky reads as pixel steps.
+        let bandH = 4 * px
+        let zones = 6
+        for z in 0..<zones {
+            let t = (CGFloat(z) + 0.5) / CGFloat(zones)
+            let bandY = surfaceY + (size.height - surfaceY) * (1 - t)
+            let mix = LaserPalette.mix(palette.skyTop, palette.skyHorizon, 1 - t + 0.12)
+            let level = min(2, z / 2)
+            for c in 0..<Int((size.width / (16 * px)).rounded(.up)) {
+                let strip = sprite("sky-dither-\(level)", tint: mix, alpha: 0.55)
+                strip.anchorPoint = .zero
+                strip.position = CGPoint(x: CGFloat(c) * 16 * px, y: bandY - bandH / 2)
+                strip.zPosition = -19
+                world.addChild(strip)
+            }
+        }
+
         if palette.starAlpha > 0 {
             for i in 0..<64 {
-                let r: CGFloat = (i % 9 == 0) ? 1.8 : 1.1
-                let star = SKShapeNode(circleOfRadius: r)
-                star.fillColor = LaserPalette.sk(0xFFFFFF, palette.starAlpha)
-                star.strokeColor = .clear
+                let star = sprite("star", tint: 0xFFFFFF)
+                if i % 9 != 0 { star.setScale(px / 2) }
+                star.alpha = palette.starAlpha
                 star.position = CGPoint(x: CGFloat((i * 97) % Int(max(size.width, 1))), y: size.height * (0.42 + CGFloat((i * 53) % 50) / 100))
                 star.zPosition = -16
                 world.addChild(star)
@@ -88,16 +118,15 @@ final class MiningScene: SKScene {
 
         if let planet = palette.planet {
             let radius = size.width * planet.radius
+            let scale = max(1, (radius * 2 / 48).rounded())
             let crop = SKCropNode()
-            let mask = SKShapeNode(circleOfRadius: radius)
-            mask.fillColor = .white
+            let mask = SKSpriteNode(texture: SK.texture("laser/disc-48.png"))
+            mask.setScale(scale)
             crop.maskNode = mask
-            let bandH = (radius * 2) / CGFloat(max(planet.bands.count, 1))
+            let bandH = (48 * scale) / CGFloat(max(planet.bands.count, 1))
             for (i, band) in planet.bands.enumerated() {
-                let strip = SKShapeNode(rectOf: CGSize(width: radius * 2.2, height: bandH + 1))
-                strip.fillColor = LaserPalette.sk(band)
-                strip.strokeColor = .clear
-                strip.position = CGPoint(x: 0, y: radius - bandH * (CGFloat(i) + 0.5))
+                let strip = SKSpriteNode(color: LaserPalette.sk(band), size: CGSize(width: 48 * scale, height: bandH + 1))
+                strip.position = CGPoint(x: 0, y: 24 * scale - bandH * (CGFloat(i) + 0.5))
                 crop.addChild(strip)
             }
             crop.position = CGPoint(x: size.width * planet.cx, y: size.height * (1 - planet.cy))
@@ -106,9 +135,7 @@ final class MiningScene: SKScene {
         }
 
         if palette.lightAlpha > 0 {
-            let sun = SKShapeNode(circleOfRadius: 28)
-            sun.fillColor = LaserPalette.sk(palette.light, palette.lightAlpha)
-            sun.strokeColor = .clear
+            let sun = sprite("disc-24", tint: palette.light, alpha: palette.lightAlpha)
             sun.position = CGPoint(x: size.width * 0.62, y: surfaceY + size.height * 0.22)
             sun.zPosition = -14
             world.addChild(sun)
@@ -116,9 +143,10 @@ final class MiningScene: SKScene {
 
         if palette.clouds {
             for i in 0..<4 {
-                let cloud = SKShapeNode(ellipseOf: CGSize(width: 90 + CGFloat(i * 16), height: 22))
-                cloud.fillColor = LaserPalette.sk(0xFFFFFF, 0.55)
-                cloud.strokeColor = .clear
+                let cloud = SKSpriteNode(texture: SK.texture("base/layers/cloud.png"))
+                cloud.size = CGSize(width: 48, height: 18)
+                cloud.setScale(px + CGFloat(i % 2))
+                cloud.alpha = 0.7
                 cloud.position = CGPoint(x: size.width * CGFloat(i) / 4, y: surfaceY + 90 + CGFloat(i * 12))
                 cloud.zPosition = -12
                 world.addChild(cloud)
@@ -127,9 +155,7 @@ final class MiningScene: SKScene {
         }
 
         for i in 0..<18 {
-            let mote = SKShapeNode(circleOfRadius: 1.4)
-            mote.fillColor = LaserPalette.sk(palette.dust, 0.45)
-            mote.strokeColor = .clear
+            let mote = sprite("mote", tint: palette.dust, alpha: 0.6)
             mote.zPosition = 4
             let x = CGFloat((i * 113) % Int(max(size.width, 1)))
             let y = surfaceY * 0.4 + CGFloat((i * 29) % Int(max(surfaceY, 1)))
@@ -140,51 +166,47 @@ final class MiningScene: SKScene {
     }
 
     private func buildGround() {
-        let tile = size.width + 8
-        func silhouette(_ color: UInt32, _ lift: CGFloat, _ amp: CGFloat) -> SKShapeNode {
-            let path = CGMutablePath()
-            path.move(to: CGPoint(x: 0, y: 0))
-            let steps = 18
-            for i in 0...steps {
-                let x = tile * CGFloat(i) / CGFloat(steps)
-                let n = CGFloat((i * 17 + Int(palette.skyTop % 20)) % 7)
-                let y: CGFloat
-                switch palette.terrain {
-                case "ice": y = (i % 2 == 0 ? lift + amp + n * 3 : lift * 0.2)
-                case "dunes": y = lift * 0.45 + sin(CGFloat(i) * 0.7) * amp
-                default: y = n * (amp / 4)
-                }
-                path.addLine(to: CGPoint(x: x, y: y))
-            }
-            path.addLine(to: CGPoint(x: tile, y: 0))
-            path.closeSubpath()
-            let node = SKShapeNode(path: path)
-            node.fillColor = LaserPalette.sk(color)
-            node.strokeColor = .clear
-            return node
-        }
-
+        let ridgeName = "ridge-" + (palette.terrain == "ice" || palette.terrain == "dunes" ? palette.terrain : "rubble")
+        let copies = Int((size.width / ridgeTile).rounded(.up)) + 2
+        far.removeAllChildren(); near.removeAllChildren(); ground.removeAllChildren()   // a resize rebuilds the scene; drop the old layers
         far.zPosition = -8
         near.zPosition = -6
         ground.zPosition = 1
-        for copy in 0..<2 {
-            let farCopy = silhouette(palette.distant, 28, 18)
-            farCopy.position = CGPoint(x: CGFloat(copy) * tile, y: surfaceY - 8)
+        for copy in 0..<copies {
+            let farCopy = sprite(ridgeName, tint: palette.distant)
+            farCopy.anchorPoint = CGPoint(x: 0, y: 0)
+            farCopy.position = CGPoint(x: CGFloat(copy) * ridgeTile, y: surfaceY - 8)
             far.addChild(farCopy)
-            let nearCopy = silhouette(palette.nearRidge, 16, 12)
-            nearCopy.position = CGPoint(x: CGFloat(copy) * tile, y: surfaceY - 2)
+            let nearCopy = sprite(ridgeName, tint: palette.nearRidge)
+            nearCopy.anchorPoint = CGPoint(x: 0, y: 0)
+            nearCopy.xScale = -px
+            nearCopy.position = CGPoint(x: CGFloat(copy + 1) * ridgeTile, y: surfaceY - 2 - 8 * px)
             near.addChild(nearCopy)
-            let dirt = SKShapeNode(rectOf: CGSize(width: tile, height: surfaceY + 40))
-            dirt.fillColor = LaserPalette.sk(copy == 0 ? palette.ground : palette.groundDeep)
-            dirt.strokeColor = .clear
-            dirt.position = CGPoint(x: CGFloat(copy) * tile + tile / 2, y: surfaceY / 2 - 20)
-            ground.addChild(dirt)
-            for s in 0..<14 {
-                let speck = SKShapeNode(circleOfRadius: 3)
-                speck.fillColor = LaserPalette.sk(palette.groundSpeck)
-                speck.strokeColor = .clear
-                speck.position = CGPoint(x: CGFloat(copy) * tile + CGFloat(s) * tile / 14 + 12, y: surfaceY - 18 - CGFloat((s * 13) % 40))
-                ground.addChild(speck)
+        }
+        let cols = Int((size.width / soilTile).rounded(.up)) + 2
+        let rows = Int((surfaceY / soilTile).rounded(.up)) + 1
+        let crustH = 8 * px
+        for c in 0..<cols {
+            let cx = CGFloat(c) * soilTile
+            let lip = sprite("crust", tint: palette.groundSpeck, blend: 0.45)
+            lip.anchorPoint = CGPoint(x: 0, y: 0)
+            lip.position = CGPoint(x: cx, y: surfaceY - crustH)
+            lip.zPosition = 1
+            ground.addChild(lip)
+            for r in 0..<rows {
+                // Alternate the two ground tones by tile so neighbouring tiles read as different dirt, deeper rows darker.
+                let deep = r > 0 || c % 3 == 1
+                let soil = sprite("soil", tint: deep ? palette.groundDeep : palette.ground, blend: 0.55)
+                soil.anchorPoint = .zero
+                let y = surfaceY - crustH - CGFloat(r + 1) * soilTile
+                soil.position = CGPoint(x: cx, y: y)
+                if (c + r) % 2 == 1 { soil.xScale = -px; soil.position.x += soilTile }
+                ground.addChild(soil)
+                let flecks = sprite("soil-flecks")
+                flecks.anchorPoint = .zero
+                flecks.position = CGPoint(x: cx, y: y)
+                if (c + r) % 2 == 1 { flecks.xScale = -px; flecks.position.x += soilTile }
+                ground.addChild(flecks)
             }
         }
         world.addChild(far)
@@ -192,30 +214,32 @@ final class MiningScene: SKScene {
         world.addChild(ground)
     }
 
+    /// Deposits sit buried in the soil under the beam line, far apart so one pass shows one or two.
     private func buildChips() {
         let live = field.nodes.filter { !$0.isDepleted }.sorted { ($0.x + $0.y) < ($1.x + $1.y) }
-        let spacing: CGFloat = 118
+        let spacing: CGFloat = 280
         track = max(size.width + spacing, CGFloat(live.count) * spacing)
         let avg = (Double((palette.ground >> 16) & 255) + Double((palette.ground >> 8) & 255) + Double(palette.ground & 255)) / 3
         let ink = LaserPalette.sk(avg > 150 ? 0x1A2430 : 0xFFFFFF)
         for (i, n) in live.enumerated() {
-            let chip = SKShapeNode(circleOfRadius: 22)
-            chip.fillColor = LaserPalette.sk(palette.groundSpeck)
-            chip.strokeColor = LaserPalette.sk(palette.groundDeep)
-            chip.lineWidth = 3
+            let chip = sprite("deposit-0")
+            if let a = SK.texture("laser/deposit-0.png"), let b = SK.texture("laser/deposit-1.png") {
+                chip.run(.repeatForever(.animate(with: [a, b], timePerFrame: 0.6)))
+            }
             let meta = Minerals.byId[n.mineralId]
             let label = SKLabelNode(text: meta?.symbol ?? "?")
             label.fontName = "Oxanium-ExtraBold"
             label.fontSize = 14
             label.fontColor = ink
-            label.verticalAlignmentMode = .center
-            label.position = CGPoint(x: 0, y: -1)
+            label.verticalAlignmentMode = .top
+            label.setScale(1 / px)
+            label.position = CGPoint(x: 0, y: -8)
             chip.addChild(label)
             chip.zPosition = 10
             chip.name = "ore-\(n.id)"
             world.addChild(chip)
             nodeSprites[n.id] = chip
-            laneX[n.id] = beamX + 140 + CGFloat(i) * spacing
+            laneX[n.id] = beamX + 160 + CGFloat(i) * spacing
         }
         placeChips()
     }
@@ -223,48 +247,27 @@ final class MiningScene: SKScene {
     private func buildShip() {
         ship.position = CGPoint(x: beamX, y: shipY)
         ship.zPosition = 20
-        let hull = SKShapeNode(path: {
-            let p = CGMutablePath()
-            p.move(to: CGPoint(x: -28, y: 6))
-            p.addLine(to: CGPoint(x: -14, y: -12))
-            p.addLine(to: CGPoint(x: 20, y: -10))
-            p.addLine(to: CGPoint(x: 34, y: 0))
-            p.addLine(to: CGPoint(x: 18, y: 11))
-            p.addLine(to: CGPoint(x: -14, y: 11))
-            p.closeSubpath()
-            return p
-        }())
-        hull.fillColor = LaserPalette.sk(0xC8C2B8)
-        hull.strokeColor = LaserPalette.sk(0x5C584F)
-        hull.lineWidth = 1.5
-        let window = SKShapeNode(circleOfRadius: 3.5)
-        window.fillColor = LaserPalette.sk(0xD7EEF8)
-        window.strokeColor = .clear
-        window.position = CGPoint(x: 16, y: -1)
-        let plume = SKShapeNode(ellipseOf: CGSize(width: 22, height: 8))
-        plume.fillColor = LaserPalette.sk(palette.beam, 0.85)
-        plume.strokeColor = .clear
-        plume.position = CGPoint(x: -36, y: 0)
+        let plume = sprite("flame-0")
+        plume.anchorPoint = CGPoint(x: 1, y: 0.5)
+        plume.position = CGPoint(x: -19 * px, y: 0)
         plume.name = "plume"
         ship.addChild(plume)
-        ship.addChild(hull)
-        ship.addChild(window)
+        ship.addChild(sprite("ship"))
         world.addChild(ship)
     }
 
     private func buildBeam() {
-        let h = max(24, shipY - surfaceY)
-        beam.path = CGPath(rect: CGRect(x: -3, y: -h, width: 6, height: h), transform: nil)
-        beam.fillColor = LaserPalette.sk(palette.beam, 0.9)
-        beam.strokeColor = LaserPalette.sk(palette.beamCore, 0.9)
-        beam.lineWidth = 1
-        beam.position = CGPoint(x: beamX, y: shipY - 8)
+        let h = max(24, shipY - 14 * px - surfaceY)
+        beam.removeAllChildren()
+        for k in 0..<Int((h / (8 * px)).rounded(.up)) {
+            let seg = sprite("beam")
+            seg.anchorPoint = CGPoint(x: 0.5, y: 1)
+            seg.position = CGPoint(x: 0, y: -CGFloat(k) * 8 * px)
+            beam.addChild(seg)
+        }
+        beam.position = CGPoint(x: beamX, y: shipY - 8 * px)
         beam.zPosition = 18
         world.addChild(beam)
-        spark.path = CGPath(ellipseIn: CGRect(x: -8, y: -8, width: 16, height: 16), transform: nil)
-        spark.fillColor = LaserPalette.sk(palette.beamCore, 0.95)
-        spark.strokeColor = LaserPalette.sk(palette.beam, 0.7)
-        spark.lineWidth = 2
         spark.position = CGPoint(x: beamX, y: surfaceY)
         spark.zPosition = 19
         world.addChild(spark)
@@ -273,6 +276,12 @@ final class MiningScene: SKScene {
     // MARK: play
 
     func setScroll(_ input: Double) { scrollInput = max(-1, min(1, input)) }
+
+    /// Dock arrows: a short burst of faster or slower scroll.
+    func nudge(_ dir: Double) {
+        setScroll(dir)
+        run(.sequence([.wait(forDuration: 0.5), .run { [weak self] in self?.setScroll(0) }]), withKey: "nudge")
+    }
 
     func refill() {
         field.recharge(field.chargeCap)
@@ -306,9 +315,8 @@ final class MiningScene: SKScene {
     private func flashBeam(hit: Bool) {
         flashUntil = clock + 0.18
         beam.alpha = 1
-        beam.xScale = hit ? 1.8 : 1.3
-        beam.fillColor = hit ? LaserPalette.sk(palette.beam) : LaserPalette.sk(palette.beam, 0.45)
-        spark.setScale(hit ? 1.7 : 1.15)
+        beam.xScale = hit ? 1.5 : 1
+        spark.setScale(px * (hit ? 1.5 : 1))
         if hit { SK.burst(at: spark.position, color: LaserPalette.sk(palette.beam), count: 6, speed: 50, in: world) }
     }
 
@@ -337,7 +345,7 @@ final class MiningScene: SKScene {
             guard let lane = laneX[id] else { continue }
             var x = (lane - scrollX).truncatingRemainder(dividingBy: span)
             if x < -36 { x += span }
-            node.position = CGPoint(x: x, y: surfaceY + 18)
+            node.position = CGPoint(x: x, y: surfaceY - 8 * px - 4 * px - 14 * px)
         }
     }
 
@@ -354,21 +362,20 @@ final class MiningScene: SKScene {
         let speed = base + CGFloat(scrollInput) * (scrollInput > 0 ? 48 : 32)
         let dx = speed * CGFloat(dt)
         scrollX += dx
-        let tile = size.width + 8
-        shift(ground, by: dx, width: tile)
-        shift(near, by: dx * 0.45, width: tile)
-        shift(far, by: dx * 0.16, width: tile)
+        shift(ground, by: dx, width: soilTile)
+        shift(near, by: dx * 0.45, width: ridgeTile)
+        shift(far, by: dx * 0.16, width: ridgeTile)
         placeChips()
 
         let pulse = reducedMotion ? 1 : 0.82 + sin(clock * 9) * 0.18
         if clock >= flashUntil {
             beam.alpha = 0.72 + pulse * 0.28
-            beam.xScale = 0.9 + pulse * 0.15
-            spark.setScale(0.8 + pulse * 0.3)
+            beam.xScale = 1
+            spark.setScale(px)
         }
         if let plume = ship.childNode(withName: "plume") {
             plume.alpha = 0.7 + pulse * 0.3
-            plume.xScale = pulse
+            if let sprite = plume as? SKSpriteNode, !reducedMotion { sprite.texture = flameFrames[Int(clock * 10) % 2] }
         }
         ship.position.y = shipY + (reducedMotion ? 0 : sin(clock * 2.2) * 2)
 

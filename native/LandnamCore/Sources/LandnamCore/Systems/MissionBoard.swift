@@ -59,10 +59,6 @@ public enum MissionBoard {
         case AuthoredMissions.academyStoryId:
             if p.placed.contains("astronaut-academy") && !p.crew.isEmpty { return "Completed" }
             if !Academy.affinityUnlocked(p) { return "Reach client level 2 with two clients" }
-        case AuthoredMissions.refineryBuildId:
-            if !ConstructionMissions.delivered(p, kind: "mining-settlement", now: now) || !ConstructionMissions.delivered(p, kind: "mineral-silo", now: now) {
-                return "Deliver a mining settlement and a remote silo first"
-            }
         case AuthoredMissions.crewedProspectingId:
             if !p.placed.contains("astronaut-academy") { return "Build the Astronaut Academy first" }
             let c = crewStatus(m.requires.crew, crew: p.crew)
