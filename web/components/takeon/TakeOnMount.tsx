@@ -63,6 +63,8 @@ export interface TakeOnMountHandle {
   orderMine: (x: number, y: number) => void
   /** Start a manual drill on the column directly ahead of the rover. */
   mine: () => boolean
+  /** Scanner sweep. Takeon's own control is the X key on the field canvas. */
+  scan: () => void
   /**
    * Drive one tile in a screen-relative direction (0 right/SE, 1 down/SW,
    * 2 left/NW, 3 up/NE as seen). Clears any tap-to-drive order. False when
@@ -219,6 +221,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     plannedRouteLength: () => gameRef.current?.plannedRoute().length ?? 0,
     orderMine: (x, y) => gameRef.current?.orderMine(x, y),
     mine: () => gameRef.current?.mine() ?? false,
+    scan: () => { gameRef.current?.scan() },
     move: dir => gameRef.current?.move(dir) ?? false,
     rover: () => {
       const game = gameRef.current

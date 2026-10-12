@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { takeonBodyForTarget } from './RoverSurveyScreen'
-import { outcropNear, SURVEY_OUTCROPS } from '@/lib/rover/terrain'
+import { surveyRoverSpec, takeonBodyForTarget } from './RoverSurveyScreen'
 
 describe('RoverSurveyScreen host boundary', () => {
   it('maps Landnam mission targets to registered TakeOn bodies', () => {
@@ -10,9 +9,9 @@ describe('RoverSurveyScreen host boundary', () => {
     expect(takeonBodyForTarget({ id: 'unknown-planet', type: 'planet' })).toBe('mars')
   })
 
-  it('places survey outcrops on the driveable ridge, without an extraction order', () => {
-    expect(SURVEY_OUTCROPS.map(outcrop => outcrop.label)).toEqual(['OUTCROP A', 'OUTCROP B', 'OUTCROP C'])
-    expect(SURVEY_OUTCROPS.map(outcrop => outcrop.mineral)).toEqual(['iron', 'copper', 'aluminium'])
-    expect(outcropNear(SURVEY_OUTCROPS[1].x)?.id).toBe('outcrop-b')
+  it('fits the catalog deep radar on the stock scout so Takeon scan can run', () => {
+    expect(surveyRoverSpec().modules).toEqual(['tool-scoop', 'scan-deep'])
+    expect(surveyRoverSpec().chassis).toBe('chassis-scout')
+    expect(surveyRoverSpec().wheels).toBe('wheels-rocker')
   })
 })

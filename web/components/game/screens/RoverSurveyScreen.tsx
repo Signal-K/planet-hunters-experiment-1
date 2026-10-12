@@ -1,25 +1,43 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { defaultSpec } from '@takeon/engine'
 import type { Mission, SurfaceTarget, Target } from '@/lib/data'
+import { lifeStageForTarget } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import type { Player } from '@/lib/game-types'
 import type { FieldBuildInput, FieldIdentity } from '@/lib/systems/SandboxSystem'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { openSettings } from '@/lib/mining/openChrome'
 import { captureGameEvent } from '@/lib/posthog'
+import type { TakeonHostEvent } from '@/lib/takeon/events'
+import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
-import { DockArrowButton, DockWordButton } from '@/components/game/hub/BaseDock'
-import type { DriveInput, SurveyOutcrop } from '@/lib/rover/terrain'
-import RoverDriveCanvas from './RoverDriveCanvas'
+import { DockWordButton } from '@/components/game/hub/BaseDock'
 import styles from './RoverSurveyScreen.module.css'
 
 const TAKEON_BODY_BY_LANDNAM_TARGET: Record<string, string> = {
   bennu: 'bennu', itokawa: 'ironrock', vesta: 'ceres', ceres: 'ceres', eros: 'ironrock', psyche: 'ironrock', mars: 'mars', moon: 'moon', europa: 'europa', io: 'io',
 }
 
+function stableSeed(value: string): number {
+  let hash = 2166136261
+  for (const char of value) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619)
+  return hash >>> 0
+}
+
 export function takeonBodyForTarget(target: Pick<Target, 'id' | 'type'>): string {
   return TAKEON_BODY_BY_LANDNAM_TARGET[target.id] ?? (target.type === 'asteroid' ? 'ironrock' : 'mars')
+}
+
+/** Stock Takeon scout with the catalog deep radar, so a survey can use the engine scan. */
+export function surveyRoverSpec() {
+  return { ...defaultSpec(), modules: ['tool-scoop', 'scan-deep'] }
+}
+
+interface LoggedObservation {
+  id: string
+  name: string
 }
 
 interface RoverSurveyScreenProps {
@@ -35,71 +53,61 @@ interface RoverSurveyScreenProps {
   onSeedBiosphere?: (target: SurfaceTarget) => boolean
 }
 
-/** A rover is a surface survey instrument. It never extracts contract cargo. */
+/** Takeon's own field, full screen. The rover surveys; it does not extract contract cargo. */
 export default function RoverSurveyScreen({ mission, target, onComplete, onBack, player }: RoverSurveyScreenProps) {
-  const driveRef = useRef<DriveInput>(0)
-  const [near, setNear] = useState<SurveyOutcrop | null>(null)
-  const [logged, setLogged] = useState<SurveyOutcrop | null>(null)
-  const held = useRef({ left: false, right: false, keyLeft: false, keyRight: false })
-  const nearRef = useRef(near)
-  const loggedRef = useRef(logged)
-  nearRef.current = near
+  const rover = useMemo(() => surveyRoverSpec(), [])
+  const bodyId = useMemo(() => takeonBodyForTarget(target), [target])
+  const missionId = useMemo(() => `landnam-rover-survey-${mission.id}-${target.id}`, [mission.id, target.id])
+  const seed = useMemo(() => stableSeed(`${mission.id}:${target.id}:takeon`), [mission.id, target.id])
+  const lifeStage = lifeStageForTarget(target, player?.biosphereSeeds?.[target.id])
+  const takeonHandle = useRef<TakeOnMountHandle | null>(null)
+  const loggedRef = useRef<LoggedObservation | null>(null)
+  const [ready, setReady] = useState(false)
+  const [logged, setLogged] = useState<LoggedObservation | null>(null)
+  const [clearSweep, setClearSweep] = useState(false)
   loggedRef.current = logged
 
-  const syncDrive = useCallback(() => {
-    const left = held.current.left || held.current.keyLeft
-    const right = held.current.right || held.current.keyRight
-    driveRef.current = right === left ? 0 : right ? 1 : -1
-  }, [])
-
-  const scan = useCallback(() => {
-    const found = nearRef.current
-    if (!found || loggedRef.current) return
-    setLogged(found)
-    captureGameEvent('rover_outcrop_observed', { target_id: target.id, outcrop_id: found.id, mineral: found.mineral, mission_id: mission.id })
+  const handleTakeonEvent = useCallback((event: TakeonHostEvent) => {
+    if (event.type !== 'scan' || loggedRef.current) return
+    const found = event.payload.found[0]
+    if (!found) {
+      setClearSweep(true)
+      return
+    }
+    const observation = { id: found.id, name: found.name }
+    setLogged(observation)
+    setClearSweep(false)
+    captureGameEvent('rover_outcrop_observed', { target_id: target.id, outcrop_id: found.id, mineral: found.type, mission_id: mission.id })
   }, [mission.id, target.id])
 
-  useEffect(() => {
-    const down = (event: KeyboardEvent) => {
-      if (event.repeat) return
-      if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') held.current.keyLeft = true
-      if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') held.current.keyRight = true
-      if (event.key === ' ' || event.key === 'e' || event.key === 'E') {
-        event.preventDefault()
-        scan()
-      }
-      syncDrive()
-    }
-    const up = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') held.current.keyLeft = false
-      if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') held.current.keyRight = false
-      syncDrive()
-    }
-    window.addEventListener('keydown', down)
-    window.addEventListener('keyup', up)
-    return () => {
-      window.removeEventListener('keydown', down)
-      window.removeEventListener('keyup', up)
-    }
-  }, [scan, syncDrive])
-
-  const hold = (side: 'left' | 'right', on: boolean) => {
-    held.current[side] = on
-    syncDrive()
-  }
+  const scan = useCallback(() => {
+    if (!ready || loggedRef.current) return
+    takeonHandle.current?.scan()
+  }, [ready])
 
   const status = logged
-    ? `${logged.label} logged. The ship laser is ready for extraction.`
-    : near
-      ? `${near.label} beside the wheels. Scan it.`
-      : 'Drive the ridge. Scan an outcrop when the wheels are beside it.'
+    ? `OBSERVATION LOGGED · ${logged.name}`
+    : clearSweep
+      ? 'Scanner range is clear. Drive closer and scan again.'
+      : 'Drive the field. Scan when a formation is in range.'
 
   return (
-    <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="rover-survey-screen">
+    <div className={`game-screen theme-blueprint ln-scene-takeon ${styles.screen}`} data-testid="rover-survey-screen">
       <div className={styles.world} data-ui-zone={UI_ZONES.screenContent}>
-        <RoverDriveCanvas driveRef={driveRef} onPose={(_pose, next) => {
-          setNear(current => current?.id === next?.id ? current : next)
-        }} />
+        <TakeOnMount
+          ref={takeonHandle}
+          missionId={missionId}
+          bodyId={bodyId}
+          seed={seed}
+          rover={rover}
+          roverName="Mule Field Rover"
+          target={target}
+          lifeStage={lifeStage}
+          startView="iso"
+          onEvent={handleTakeonEvent}
+          onReady={() => setReady(true)}
+          className={styles.takeon}
+        />
       </div>
       <div className={styles.chrome}>
         <button type="button" className={styles.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
@@ -119,31 +127,13 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
           </span>
         </div>
         <div className={styles.hud}>
-          <p className={styles.readout} data-testid="rover-survey-readout">{logged ? 'OBSERVATION LOGGED' : status}</p>
+          <p className={styles.readout} data-testid="rover-survey-readout">{status}</p>
           <nav className={`scene-dock ${styles.dock}`} aria-label="Scene dock" data-testid="base-dock">
-            <DockArrowButton
-              direction="left"
-              data-testid="rover-drive-left"
-              aria-label="Drive left"
-              onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); hold('left', true) }}
-              onPointerUp={() => hold('left', false)}
-              onPointerCancel={() => hold('left', false)}
-              onLostPointerCapture={() => hold('left', false)}
-            />
-            <DockWordButton data-testid="rover-scan" disabled={!near || !!logged} onClick={scan}>Scan</DockWordButton>
+            <DockWordButton data-testid="rover-scan" disabled={!ready || !!logged} onClick={scan}>Scan</DockWordButton>
             <span className="scene-dock-rule" aria-hidden="true" />
             <DockWordButton data-testid="hub-btn" onClick={onBack}>Hub</DockWordButton>
             <span className="scene-dock-rule" aria-hidden="true" />
             <DockWordButton data-testid="rover-continue-to-laser" disabled={!logged} onClick={() => { captureGameEvent('rover_survey_complete', { target_id: target.id }); onComplete() }}>Laser</DockWordButton>
-            <DockArrowButton
-              direction="right"
-              data-testid="rover-drive-right"
-              aria-label="Drive right"
-              onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); hold('right', true) }}
-              onPointerUp={() => hold('right', false)}
-              onPointerCancel={() => hold('right', false)}
-              onLostPointerCapture={() => hold('right', false)}
-            />
           </nav>
         </div>
       </div>
