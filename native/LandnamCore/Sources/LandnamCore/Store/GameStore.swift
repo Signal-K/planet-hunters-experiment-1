@@ -73,6 +73,33 @@ public final class GameStore {
     public func go(_ screen: Screen) { var n = state; n.screen = screen; apply(n) }
     public func reset() { state = GameState(); persist() }
 
+    /// Settings: reopen one training try on the screen it is played on (web `openTrainingTry`).
+    public func replayTry(_ id: String) {
+        var n = state
+        n.player.flightPlan.replayTry = id
+        n.player.flightPlan.hidden = false
+        n.screen = id == "scan" ? .galaxy : id == "part" ? .hangar : .launchpad
+        apply(n)
+    }
+
+    /// Settings: mark all three tries done and open Free Ops (web `skipFlightPlan`).
+    public func skipTraining() {
+        var n = state
+        for id in FlightPlanProgress.tryIds { n.player.flightPlan.completed[id] = true }
+        n.player.flightPlan.replayTry = nil
+        n.player.flightPlan.hidden = true
+        n.player.freeOperations = true
+        n.tutorial = false
+        apply(n)
+    }
+
+    public func setFreeOps(_ on: Bool) {
+        var n = state
+        n.player.freeOperations = on
+        n.tutorial = !on
+        apply(n)
+    }
+
     // MARK: intents
     /// Research XP for the first classification of a TESS or NEOCP subject (mirrors web useGameLoop).
     static let firstClassificationXP = 15

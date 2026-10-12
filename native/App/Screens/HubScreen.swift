@@ -222,20 +222,20 @@ extension View {
     }
 }
 
-/// Settings gear destination: the screens the old MENU dock button listed.
+/// Settings gear destination, matching the web Settings sheet: account, training (replay, skip), reset, Free Ops, patch notes.
 struct SettingsSheet: View {
     @Environment(GameStore.self) private var store
     @Environment(AuthModel.self) private var auth
-    @State private var showArchive = false
     @State private var confirmSignOut = false
+    @State private var confirmSkip = false
+    @State private var confirmReset = false
+    @State private var showPatchNotes = false
     #if os(iOS)
     @AppStorage(OrientationPreference.storageKey) private var orientation = OrientationPreference.auto.rawValue
     #endif
     let onClose: () -> Void
 
-    private var destinations: [Screen] {
-        Screen.allCases.filter { !$0.needsMissionContext && $0 != .hub && $0 != .hubSubsurface && $0 != .missions && $0 != .market }
-    }
+    private static let tryNames = ["mining": "Mining", "scan": "Planet scan", "part": "Part tweak"]
 
     var body: some View {
         VStack(spacing: 0) {
@@ -252,17 +252,28 @@ struct SettingsSheet: View {
                     #if os(iOS)
                     orientationPicker
                     #endif
-                    row("Missions", .missions)
-                    ForEach(destinations, id: \.self) { row($0.rawValue.replacingOccurrences(of: "-", with: " ").capitalized, $0) }
-                    action("Archive: pathways and unlocks") { showArchive = true }
+                    section("Training")
+                    ForEach(FlightPlanProgress.tryIds, id: \.self) { trainingRow($0) }
+                    if !store.player.freeOperations {
+                        action(confirmSkip ? "Confirm: mark all tries done" : "Skip training", icon: "forward.end") {
+                            if confirmSkip { confirmSkip = false; onClose(); store.skipTraining() } else { confirmSkip = true }
+                        }
+                    }
+                    section("Game")
+                    toggleRow("Free Ops", on: store.player.freeOperations) { store.setFreeOps($0) }
+                    action("Patch notes", icon: "doc.text") { showPatchNotes = true }
+                    action(confirmReset ? "Confirm: erase all progress" : "Reset progress", icon: "arrow.counterclockwise", danger: true) {
+                        if confirmReset { confirmReset = false; onClose(); store.reset() } else { confirmReset = true }
+                    }
+                    section("Account")
                     if let email = auth.session?.email {
                         Text("Signed in as \(email)").font(AppFont.display(14)).foregroundStyle(Theme.textDim)
                     }
-                    action("Sign out") { confirmSignOut = true }
+                    action("Sign out", icon: "rectangle.portrait.and.arrow.right") { confirmSignOut = true }
                 }.padding(16)
             }
         }
-        .sheet(isPresented: $showArchive) { ArchiveScreen() }
+        .sheet(isPresented: $showPatchNotes) { PatchNotesSheet() }
         .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
             Button("Sign out", role: .destructive) { auth.signOut() }
             Button("Stay signed in", role: .cancel) {}
@@ -271,6 +282,43 @@ struct SettingsSheet: View {
         }
         .background(Theme.bg)
         .presentationDetents([.medium, .large])
+    }
+
+    private func section(_ title: String) -> some View {
+        Text(title.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.hudInk)
+            .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
+    }
+
+    private func trainingRow(_ id: String) -> some View {
+        let plan = store.player.flightPlan
+        let status = plan.completed[id] == true ? "Done" : plan.currentTry == id && !store.player.freeOperations ? "On air" : "Standby"
+        return Button { onClose(); store.replayTry(id) } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Self.tryNames[id] ?? id).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
+                    Text(status.uppercased()).font(AppFont.display(14)).foregroundStyle(Theme.textDim)
+                }
+                Spacer()
+                Text("REPLAY").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
+                Image(systemName: "play.fill").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.hudInk)
+            }
+            .padding(.horizontal, 14).frame(maxWidth: .infinity, minHeight: 52).hudPanel(radius: 10)
+        }.buttonStyle(.plain).accessibilityLabel("Replay \(Self.tryNames[id] ?? id)")
+    }
+
+    private func toggleRow(_ title: String, on: Bool, _ set: @escaping (Bool) -> Void) -> some View {
+        Button { set(!on) } label: {
+            HStack {
+                Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
+                Spacer()
+                Text(on ? "ON" : "OFF").font(AppFont.display(14)).tracking(1.2)
+                    .foregroundStyle(on ? Theme.hudPanel : Theme.hudInk)
+                    .frame(minWidth: 56, minHeight: 36)
+                    .background(on ? Theme.hudInk : Color.clear, in: RoundedRectangle(cornerRadius: 6))
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.hudInk, lineWidth: 1.5))
+            }
+            .padding(.horizontal, 14).frame(maxWidth: .infinity, minHeight: 48).hudPanel(radius: 10)
+        }.buttonStyle(.plain).accessibilityLabel("Free Ops \(on ? "on" : "off")").accessibilityAddTraits(on ? .isSelected : [])
     }
 
     #if os(iOS)
@@ -297,18 +345,48 @@ struct SettingsSheet: View {
     }
     #endif
 
-    private func row(_ title: String, _ screen: Screen) -> some View {
-        action(title) { onClose(); store.go(screen) }
-    }
-
-    private func action(_ title: String, _ run: @escaping () -> Void) -> some View {
+    private func action(_ title: String, icon: String, danger: Bool = false, _ run: @escaping () -> Void) -> some View {
         Button(action: run) {
             HStack {
                 Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
                 Spacer()
-                Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.hudInk)
+                Image(systemName: icon).font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.hudInk)
             }
             .padding(.horizontal, 14).frame(maxWidth: .infinity, minHeight: 48).hudPanel(radius: 10)
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(danger ? Theme.hudInk : Color.clear, lineWidth: 3))
         }.buttonStyle(.plain)
+    }
+}
+
+/// Native patch notes: newest first.
+struct PatchNotesSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    private static let notes: [(String, [String])] = [
+        ("Base and flight scenes", ["Pixel-art launchpad, hangar and underground silo", "Swipe down from the base to dig", "Shared dock and HUD on every scene"]),
+        ("Laser mining", ["Ship laser mining is the default", "Buried deposits spaced across the dig", "Layered strata ground"]),
+        ("Training", ["Replay or skip the three tries from Settings", "Free Ops opens when training is done"]),
+    ]
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("PATCH NOTES").font(AppFont.display(18)).tracking(1.4).foregroundStyle(Theme.hudInk)
+                Spacer()
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark").font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                }.buttonStyle(.plain).accessibilityLabel("Close")
+            }.padding(.horizontal, 16).padding(.top, 8)
+            ScrollView {
+                VStack(spacing: 8) {
+                    ForEach(Self.notes, id: \.0) { note in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(note.0.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
+                            ForEach(note.1, id: \.self) { Text("• \($0)").font(AppFont.display(14)).foregroundStyle(Theme.textDim) }
+                        }
+                        .padding(14).frame(maxWidth: .infinity, alignment: .leading).hudPanel(radius: 10)
+                    }
+                }.padding(16)
+            }
+        }.background(Theme.bg)
     }
 }
