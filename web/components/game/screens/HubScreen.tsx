@@ -191,7 +191,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     ? {
       title: 'Launch a transit telescope',
       body: 'Your program can put a telescope in orbit. It sends back planet candidates to review.',
-      cta: 'Open Launchpad',
+      cta: 'Open the tower',
       onCta: () => onOpenScene('launchpad'),
       onDismiss: onDismissHubPrompt ? () => onDismissHubPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined,
     }
@@ -211,7 +211,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       }
     }
     if (player.pendingLaunch) {
-      return { state: 'waiting', label: 'CRAFT ON PAD', ariaLabel: 'Open Launchpad: craft waiting on the pad', onOpen: () => onOpenScene('launchpad') }
+      return { state: 'waiting', label: 'CRAFT ON PAD', ariaLabel: 'Open the tower: craft waiting on the pad', onOpen: () => onOpenScene('launchpad') }
     }
     return null
   })()
@@ -219,7 +219,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   const structureProps = (kind: string) => {
     if (kind === 'launchpad') {
       return {
-        kind, label: 'Launchpad',
+        kind, label: 'Tower',
         sub: player.activeMission ? 'IN FLIGHT' : 'READY',
         status: (player.activeMission ? 'warn' : 'ok') as 'ok' | 'warn',
         hot: !!player.pendingLaunch,

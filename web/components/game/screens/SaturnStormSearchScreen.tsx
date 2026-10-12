@@ -98,7 +98,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
         status="NO IMAGER"
         messageTitle="Launch Saturn satellite"
         messageBody="Deploy the Saturn satellite from the Launchpad to start receiving Cassini frames."
-        answers={<PrimaryBtn testId="launch-saturn-imager-btn" onClick={onLaunchImager}>OPEN LAUNCHPAD</PrimaryBtn>}
+        answers={<PrimaryBtn testId="launch-saturn-imager-btn" onClick={onLaunchImager}>PREPARE LAUNCH</PrimaryBtn>}
       />
     )
   }

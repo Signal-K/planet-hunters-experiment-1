@@ -60,19 +60,19 @@ export function trainingTryStep(tryId: TrainingTryId, screen: string): TrainingT
 }
 
 export const EXTRACTION_STEPS: TutorialStep[] = [
-  { id: 0, screen: 'build',   title: 'Build a Launchpad',
+  { id: 0, screen: 'build',   title: 'Build the tower',
     body: 'Your first structure — all missions launch from here.',
     action: 'Tap a build pad, then confirm',
-    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-0', dir: 'down', cta: 'Build Launchpad',
+    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-0', dir: 'down', cta: 'Build the tower',
     desktopBody: 'Your first structure — all missions launch from here.',
     desktopAction: 'Click a build pad, then confirm placement',
     desktopCoachId: 'build-confirm|build-plot-0', desktopDir: 'down' },
   { id: 1, screen: 'hub',     title: 'Extraction',
     body: 'Your agency\'s first job: mine ore for a client and bring it home. Contracts are on the mission board.',
-    action: 'Tap the Launchpad',
-    anchor: 'bottom', spot: null, coachId: 'building-launchpad', dir: 'up', cta: 'Launchpad',
+    action: 'Tap the tower',
+    anchor: 'bottom', spot: null, coachId: 'building-launchpad', dir: 'up', cta: 'Tower',
     desktopBody: 'Your agency\'s first job: mine ore for a client and bring it home. Contracts are on the mission board.',
-    desktopAction: 'Click the Launchpad',
+    desktopAction: 'Click the tower',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
   // Sibling of step 1, same id — tapping the launchpad now opens its own
   // program screen first (STS-625) instead of going straight to Missions, so
@@ -123,10 +123,10 @@ export const EXTRACTION_STEPS: TutorialStep[] = [
 export const TRANSPORT_STEPS: TutorialStep[] = [
   { id: 30, screen: 'hub', title: 'Transport',
     body: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. The contract pays for both jobs.',
-    action: 'Tap the Launchpad',
-    anchor: 'bottom', spot: null, cta: 'Launchpad', coachId: 'building-launchpad', dir: 'up',
-    desktopBody: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. Click the Launchpad to begin.',
-    desktopAction: 'Click the Launchpad',
+    action: 'Tap the tower',
+    anchor: 'bottom', spot: null, cta: 'Tower', coachId: 'building-launchpad', dir: 'up',
+    desktopBody: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. Click the tower to begin.',
+    desktopAction: 'Click the tower',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
   // Sibling of step 30 — see the id:1 launchpad sibling above for why this exists.
   { id: 30, screen: 'launchpad', title: 'Transport',

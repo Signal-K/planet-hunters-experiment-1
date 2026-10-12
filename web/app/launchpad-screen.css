@@ -6,6 +6,8 @@
    specificity, so applying it unscoped blacked out that screen instead of
    only resetting the real Launchpad hub screen (LaunchpadScreen.tsx). */
 .ln-scene-launchpad:not(.mission-setup-screen--launchpad) { background: var(--hub-void, var(--ln-void)); }
+.ln-scene-launchpad .launchpad-shared-hud,
+.ln-scene-launchpad .launchpad-shared-dock { z-index: 40; }
 /* The launchpad is a destination, not a phone mockup floating on the desktop
    backdrop. The route adds this class in GameChrome so only this operations
    page escapes the generic 1320px rounded canvas. */
@@ -82,7 +84,7 @@ button.launchpad-scene-object { cursor: pointer; }
   border: 2px dashed rgba(112,217,234,.62); border-radius: 50% 50% 12px 12px; background: rgba(112,217,234,.06);
   box-shadow: inset 0 0 28px rgba(112,217,234,.08), 0 0 24px rgba(112,217,234,.08);
 }
-.launchpad-station.is-blueprint .launchpad-object-art img { opacity: .22; filter: grayscale(1) sepia(.2) hue-rotate(135deg) saturate(5) drop-shadow(0 0 8px rgba(112,217,234,.8)); }
+.launchpad-station.is-blueprint .launchpad-object-art img { opacity: .22; filter: grayscale(1) brightness(1.2) contrast(0.92) drop-shadow(0 0 8px rgba(112,217,234,.8)); }
 .launchpad-station.is-blueprint .launchpad-object-label { border-color: rgba(112,217,234,.8); }
 .launchpad-station.is-blueprint .launchpad-object-label strong { color: #86e7f4; }
 .launchpad-build-plus {
@@ -490,7 +492,7 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-rail-actions button.is-primary { min-width: 142px; }
 }
 @media (orientation: landscape) and (max-height: 600px) {
-  .launchpad-visual-scene { inset: 64px 0 62px; }
+  .launchpad-visual-scene { inset: 0; }
   .launchpad-scene-rail { height: 62px; padding: 7px 10px; }
   .launchpad-satellite { top: 2%; }
 }
@@ -602,7 +604,7 @@ button.launchpad-scene-object { cursor: pointer; }
    most of the height, and New Mission uses the whole game area so every
    option is on screen instead of in a clipped strip. */
 @media (orientation: landscape) and (max-height: 500px) {
-  .launchpad-visual-scene { inset: 48px 0 52px; }
+  .launchpad-visual-scene { inset: 0; }
   .launchpad-scene-rail { height: 52px; padding: 4px 8px; z-index: 30; }
   .launchpad-rail-actions button { height: 44px; min-height: 44px; }
   .launchpad-mission-menu {

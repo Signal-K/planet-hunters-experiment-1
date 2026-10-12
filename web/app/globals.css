@@ -55,11 +55,11 @@
   --ln-blueprint-ink: #0f2436;
   --ln-blueprint-blue: #1f78c1;
   --ln-blueprint-line-strong: rgba(15, 36, 54, 0.30);
-  --ln-amber: #f5a623;
-  --ln-amber-bright: #ffc25c;
-  --ln-amber-press: #d68a0d;
-  --ln-amber-soft: rgba(245, 166, 35, 0.14);
-  --ln-amber-border: rgba(245, 166, 35, 0.55);
+  --ln-amber: #175f9b;
+  --ln-amber-bright: #3d8fd4;
+  --ln-amber-press: #124d80;
+  --ln-amber-soft: rgba(23, 95, 155, 0.14);
+  --ln-amber-border: rgba(23, 95, 155, 0.55);
   --ln-map-sun: #eefcff;
   --ln-map-sun-soft: rgba(112, 217, 234, 0.35);
   --ln-crimson: #c8293e;
@@ -69,15 +69,15 @@
   --ln-crimson-border: rgba(200, 41, 62, 0.52);
   --ln-ok: #5ad07e;
   --ln-ok-soft: rgba(90, 208, 126, 0.18);
-  --ln-warn: #ffb347;
-  --ln-warn-soft: rgba(255, 179, 71, 0.18);
+  --ln-warn: #3d8fd4;
+  --ln-warn-soft: rgba(61, 143, 212, 0.18);
   --ln-crit: #ff5a6a;
   --ln-crit-soft: rgba(255, 90, 106, 0.18);
   --ln-mineral-silicon: #b9d8ff;
-  --ln-mineral-iron: #d97150;
+  --ln-mineral-iron: #5c7c99;
   --ln-mineral-ice: #9becff;
   --ln-mineral-carbon: #6a7280;
-  --ln-mineral-gold: #ffd166;
+  --ln-mineral-gold: #8ecae6;
   --ln-mineral-rare: #c084ff;
   --ln-text: #e9e9ec;
   --ln-text-dim: #b4b4bc;
@@ -130,7 +130,7 @@
   --ln-shadow-card:   0 2px 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.10), 0 8px 24px rgba(0,0,0,0.5);
   --ln-shadow-modal:  0 24px 64px rgba(0,0,0,0.7);
   --ln-glow-cyan:     0 0 0 1px rgba(112,217,234,0.6), 0 0 18px rgba(112,217,234,0.35);
-  --ln-glow-amber:    0 0 0 1px rgba(245,166,35,0.7), 0 0 18px rgba(245,166,35,0.4);
+  --ln-glow-amber:    0 0 0 1px rgba(23,95,155,0.7), 0 0 18px rgba(23,95,155,0.4);
   --ln-glow-ok:       0 0 12px rgba(90,208,126,0.7);
 
   --ln-s-0: 0;
@@ -252,10 +252,10 @@
 .theme-light {
   --ln-void:        #f4f1ea;
   --ln-bg:          #faf8f3;
-  --ln-bg-grid:     #f0ecE2;
+  --ln-bg-grid:     #eef2f6;
   --ln-surface:     #ffffff;
   --ln-surface-2:   #f2eee4;
-  --ln-surface-3:   #e8e2d3;
+  --ln-surface-3:   #e4ebf2;
   --ln-overlay:     rgba(244, 241, 234, 0.82);
 
   --ln-cyan:        #1c7fbf;
@@ -264,11 +264,11 @@
   --ln-cyan-soft:   rgba(28, 127, 191, 0.10);
   --ln-cyan-border: rgba(28, 127, 191, 0.32);
 
-  --ln-amber:        #b5730a;
-  --ln-amber-bright: #d68a0d;
-  --ln-amber-press:  #8f5a08;
-  --ln-amber-soft:   rgba(181, 115, 10, 0.12);
-  --ln-amber-border: rgba(181, 115, 10, 0.4);
+  --ln-amber:        #175f9b;
+  --ln-amber-bright: #3d8fd4;
+  --ln-amber-press:  #124d80;
+  --ln-amber-soft:   rgba(23, 95, 155, 0.12);
+  --ln-amber-border: rgba(23, 95, 155, 0.4);
 
   --ln-text:        #1c1a14;
   --ln-text-dim:    #4a4536;

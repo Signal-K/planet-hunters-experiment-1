@@ -40,8 +40,8 @@ export default function MissionHistoryScreen({ records, missions = [], player, o
     <section className="theme-light" data-testid="mission-history-screen" style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: '1 1 auto', minHeight: '100%', background: 'var(--ln-void)', color: 'var(--ln-text)' }}>
       <div className={styles.shell}>
         <header className={styles.header}>
-          <div><div className={styles.eyebrow}>MISSION LOG</div><h1>Mission Log</h1><p>A concise record of completed client work and program operations.</p></div>
-          <button className={styles.backButton} onClick={onBack}>Back to base</button>
+          <div><p>A concise record of completed client work and program operations.</p></div>
+          <button className={styles.backButton} onClick={onBack}>Back</button>
         </header>
         <nav className={styles.tabs} aria-label="Mission log sections"><a className={styles.tabActive} href="#operations">Operations <span>{lifetimeCompleted}</span></a></nav>
         <section className={styles.summary} id="operations"><span className={styles.count}>{lifetimeCompleted}</span><span><strong>MISSIONS COMPLETED</strong><br />{logIsPartial ? 'Detailed entries below cover your most recent operations.' : 'Your record stays available after the daily contract board refreshes.'}</span></section>

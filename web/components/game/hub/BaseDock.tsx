@@ -20,6 +20,8 @@ type BaseDockProps = {
   onBuildPointerLeave?: (event: PointerEvent<HTMLButtonElement>) => void
   onBuildPointerCancel?: (event: PointerEvent<HTMLButtonElement>) => void
   hubIcon?: ReactNode
+  hubLabel?: string
+  hubTestId?: string
   variant?: 'base' | 'flight'
 }
 
@@ -130,6 +132,8 @@ export function BaseDock({
   onBuildPointerLeave,
   onBuildPointerCancel,
   hubIcon,
+  hubLabel = 'Hub',
+  hubTestId = 'hub-btn',
   variant = 'base',
 }: BaseDockProps) {
   const flight = variant === 'flight'
@@ -160,9 +164,9 @@ export function BaseDock({
           <span>{label}</span>
         </DockWordButton>
         <span className="scene-dock-rule" aria-hidden="true" />
-        <DockWordButton data-testid="hub-btn" onClick={onHub}>
+        <DockWordButton data-testid={hubTestId} onClick={onHub}>
           {hubIcon ?? <RadioIcon />}
-          <span>Hub</span>
+          <span>{hubLabel}</span>
         </DockWordButton>
       </div>
       <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label="Next" />

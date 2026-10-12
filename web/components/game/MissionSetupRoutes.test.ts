@@ -7,7 +7,7 @@ describe('R1 mission setup', () => {
   it('keeps contract selection and launch review on one surface', () => {
     const routes = read('./MissionSetupRoutes.tsx')
 
-    expect(routes).toContain('CONTRACT → LAUNCH')
+    expect(routes).not.toContain('CONTRACT → LAUNCH')
     expect(routes).toContain('data-testid="mission-launch-review"')
     expect(routes).toContain('aria-label="Change mission setup"')
     expect(routes).toContain('DESTINATION')

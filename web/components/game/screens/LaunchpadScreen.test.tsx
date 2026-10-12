@@ -57,8 +57,11 @@ describe('Launchpad own-program actions', () => {
     expect(markup).toContain('DISMISS')
     expect(markup).toContain('aria-label="Jump back to active mission"')
     expect(markup).toContain('data-testid="launchpad-mission-log-btn"')
-    expect(markup).toContain('data-testid="launchpad-primary-mission-btn"')
-    expect(markup).toContain('NEW MISSION')
+    expect(markup).toContain('data-testid="base-dock"')
+    expect(markup).toContain('data-testid="launchpad-francs-chip"')
+    expect(markup).not.toContain('LAUNCHPAD')
+    expect(markup).not.toContain('FRANCS')
+    expect(markup).not.toContain('data-testid="launchpad-primary-mission-btn"')
   })
 
   it('does not paint the old program menu over the pad', () => {
@@ -107,11 +110,16 @@ describe('Launchpad own-program actions', () => {
     )
 
     expect(markup).toContain('data-testid="launchpad-new-mission-btn"')
-    expect(markup).toContain('data-testid="launchpad-primary-mission-btn"')
-    expect(markup).toContain('NEW MISSION')
+    expect(markup).toContain('data-testid="launchpad-open-hangar-btn"')
+    expect(markup).toContain('data-testid="settings-button"')
+    expect(markup).toContain('data-testid="hub-dock-prev"')
+    expect(markup).toContain('data-testid="hub-dock-next"')
+    expect(markup).not.toContain('NEW MISSION')
+    expect(markup).not.toContain('LAUNCHPAD')
+    expect(markup).not.toContain('data-testid="launchpad-primary-mission-btn"')
     expect(markup).not.toContain('data-testid="launchpad-create-mission-btn"')
     expect(markup).not.toContain('data-testid="launchpad-launch-infrastructure-btn"')
-    expect(markup).toContain('data-testid="launchpad-guide-open"')
+    expect(markup).not.toContain('data-testid="launchpad-guide-open"')
     expect(markup).not.toContain('data-testid="available-actions-panel"')
   })
 
@@ -181,7 +189,8 @@ describe('Launchpad own-program actions', () => {
       )
     })
 
-    expect(host.textContent).toContain('YOUR MISSION')
+    expect(host.textContent).not.toContain('YOUR MISSION')
+    expect(host.textContent).not.toContain('LAUNCHPAD')
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="launchpad-status-card"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))

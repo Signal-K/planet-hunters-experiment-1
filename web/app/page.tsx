@@ -36,7 +36,7 @@ export default function Home() {
             <span className={styles.crane}><i /><b /></span>
           </div>
           <ol className={styles.progress}>
-            <li><span>01</span> LAUNCHPAD</li>
+            <li><span>01</span> YARD</li>
             <li><span>02</span> STORAGE</li>
             <li><span>03</span> INSTRUMENTS</li>
           </ol>

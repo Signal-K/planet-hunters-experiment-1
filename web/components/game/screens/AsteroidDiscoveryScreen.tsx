@@ -105,7 +105,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         status="NO TELESCOPE"
         messageTitle="Launch Deep Space Telescope"
         messageBody="Deploy the Deep Space Telescope from the Launchpad to start receiving NEOCP asteroid candidates."
-        answers={<PrimaryBtn testId="launch-deep-space-telescope-btn" onClick={onLaunchTelescope}>OPEN LAUNCHPAD</PrimaryBtn>}
+        answers={<PrimaryBtn testId="launch-deep-space-telescope-btn" onClick={onLaunchTelescope}>PREPARE LAUNCH</PrimaryBtn>}
       />
     )
   }

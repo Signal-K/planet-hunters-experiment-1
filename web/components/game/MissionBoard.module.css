@@ -5,12 +5,12 @@
   --ln-board-lavender: #e7def8;
   --ln-board-lavender-deep: color-mix(in srgb, var(--ln-board-lavender) 55%, var(--ln-board-ink));
   --ln-board-teal: #14a39a;
-  --ln-board-amber: #f5a623;
+  --ln-board-amber: #175f9b;
   --ln-board-coral: #ef6f62;
   --ln-board-paper: #fffdf8;
   --ln-board-muted: #5e6872;
   --ln-board-live: #e23d3d;
-  --ln-board-gold: #ffd166;
+  --ln-board-gold: #8ecae6;
   --ln-board-silver: #c8cdd4;
   --ln-board-on-accent: #ffffff;
   --ln-board-ok: #1f9d57;

@@ -55,7 +55,7 @@ function ClockIcon() {
   )
 }
 
-export default function TopBar({ eyebrow, title, onBack, right, dense, solid, glass, scene, levelBadge, francs }: TopBarProps) {
+export default function TopBar({ onBack, right, solid, glass, scene, levelBadge, francs }: TopBarProps) {
   const devBadge = isDevLauncherEnabled()
   const ref = useRef<HTMLDivElement>(null)
   // Publish the bar's real height (it wraps to 2-4 lines on phones) so the
@@ -120,47 +120,10 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
           </span>
         )}
       </div>
-      <div style={{ flex: 1, pointerEvents: 'none' }}>
-        {eyebrow && (
-          <div className="top-bar__eyebrow" style={{
-            fontFamily: 'var(--ln-font-display)',
-            fontSize: 14,
-            fontWeight: 700,
-            letterSpacing: '0.24em',
-            textTransform: 'uppercase',
-            color: 'var(--ln-text-muted)',
-          }}>
-            {eyebrow}
-          </div>
-        )}
-        {title && (
-          <h1 className="top-bar__title" style={{
-            margin: '2px 0 0 0',
-            fontFamily: 'var(--ln-font-display)',
-            fontSize: dense ? 18 : 22,
-            fontWeight: 800,
-            letterSpacing: '-0.01em',
-            color: 'var(--ln-text)',
-            lineHeight: 1,
-            textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-          }}>
-            {title}
-          </h1>
-        )}
-      </div>
+      <div style={{ flex: 1, pointerEvents: 'none' }} />
       <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
         {francs !== undefined && (
-          <span style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            padding: '4px 9px', borderRadius: 999,
-            border: '1px solid rgba(39,184,224,0.4)',
-            background: 'rgba(39,184,224,0.08)',
-            color: 'var(--ln-amber)',
-            fontFamily: 'var(--ln-font-mono)', fontWeight: 800, fontSize: 14,
-            whiteSpace: 'nowrap',
-          }}>
-            FRANCS · {formatFrancs(francs, { compact: true })}
-          </span>
+          <span className="scene-chip">{formatFrancs(francs, { compact: true })}</span>
         )}
         {right}
       </div>

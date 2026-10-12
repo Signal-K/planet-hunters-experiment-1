@@ -129,7 +129,7 @@ function HangarAssemblyScene({ rocket, pendingLaunch }: { rocket: RocketModel; p
         <Step label="Shipment" status="RECEIVED" />
         <Step label="Stage" status="FITTED" />
         <Step label="Payload" status="SECURED" />
-        <Step label="Launchpad" status={pendingLaunch ? 'TRANSFER' : 'QUEUED'} />
+        <Step label="Pad" status={pendingLaunch ? 'TRANSFER' : 'QUEUED'} />
       </div>
       <p className={styles.recipeNote}>CLIENT-BUILT VEHICLES ARRIVE READY; SILO MATERIALS UNLOCK THE SAME HULL, BOOSTER, STAGE, AND PAYLOAD RECIPES.</p>
     </section>
@@ -157,14 +157,12 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
 
   return (
     <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="hangar-screen">
-      <TopBar eyebrow="HANGAR" title="Hangar" onBack={onBack} solid />
+      <TopBar onBack={onBack} solid />
       <div className={`screen-scroll ${styles.scroll}`} data-ui-zone={UI_ZONES.screenContent}>
         <div className={styles.inner}>
           <div className={styles.intro}>
             <div>
-              <div className={styles.eyebrow}>Launchpad · Vehicle Registry</div>
-              <h1 className={styles.title}>Hangar construction</h1>
-              <p className={styles.copy}>Receive client-built shipments, assemble staged vehicles, inspect their rooms and payload, then transfer them to the launchpad.</p>
+              <p className={styles.copy}>Receive client-built shipments, assemble staged vehicles, inspect their rooms and payload, then transfer them to the pad.</p>
             </div>
             <div className={styles.fleetReadout} data-testid="hangar-fleet-readout">
               <span className={styles.railLabel}>{pendingLaunch ? 'Vehicle in build' : 'Cleared fleet'}</span>
