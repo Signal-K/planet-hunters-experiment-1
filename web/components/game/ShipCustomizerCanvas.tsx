@@ -43,6 +43,7 @@ interface SlotAnim {
 
 interface SlotVisuals {
   border: Graphics
+  labelPlate: Graphics
   label: Text
   partSprite: Sprite
   anim: SlotAnim
@@ -198,9 +199,10 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
           fontSize: 14,
           fontWeight: '800',
           fill: 0x0f2436,
-          letterSpacing: 2,
-          stroke: { color: 0xffffff, width: 5 },
+          letterSpacing: 1,
         })
+        const labelPlate = new Graphics()
+        world.addChild(labelPlate)
         const label = new Text({ text: slot.label.toUpperCase(), style: labelStyle })
         label.anchor.set(0.5, 0.5)
         world.addChild(label)
@@ -211,7 +213,7 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
         world.addChild(partSprite)
 
         slotVisuals.set(slot.kind, {
-          border, label, partSprite,
+          border, labelPlate, label, partSprite,
           anim: { flyProgress: 1, animating: false, flashAlpha: 0 },
           dragging: false,
         })
@@ -491,15 +493,32 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
           }
 
           // ── Label ─────────────────────────────────────────────────────
-          vis.label.visible = !vis.dragging
-          vis.label.x = px + pw / 2
-          vis.label.y = py + ph / 2
-          // Only the active room is named on the canvas (the step tabs name
-          // the rest), counter-scaled so it stays 14px on screen however far
-          // the ship is scaled down to fit.
+          // Name the active room on an opaque paper plate. The plate sits at the
+          // bottom of the badge so the pixel-art room stays visible, and the ink
+          // is full strength (a fading label fell under 4.5:1 on the hull).
+          const showLabel = isActive && !vis.dragging
+          vis.label.visible = showLabel
+          vis.label.alpha = 1
+          vis.label.style.fill = 0x0f2436
           vis.label.scale.set(1 / (camZoom * fit))
-          vis.label.alpha = isDone || !isActive ? 0 : 0.7 + pulse * 0.3
-          vis.label.style.fill = isActive ? C_ACTIVE_BRIGHT : 0x1c4f78
+          if (showLabel) {
+            const scale = vis.label.scale.x
+            const lw = vis.label.width
+            const lh = vis.label.height
+            const padX = 6 * scale
+            const padY = 3 * scale
+            vis.label.x = px + pw / 2
+            vis.label.y = py + ph - lh / 2 - padY
+            vis.labelPlate.clear()
+            vis.labelPlate
+              .roundRect(vis.label.x - lw / 2 - padX, vis.label.y - lh / 2 - padY, lw + padX * 2, lh + padY * 2, 3 * scale)
+              .fill({ color: 0xffffff, alpha: 1 })
+            vis.labelPlate.visible = true
+            world.addChild(vis.labelPlate)
+            world.addChild(vis.label)
+          } else {
+            vis.labelPlate.visible = false
+          }
         }
 
         if (hashChanged) prevInstalledHash = installedHash

@@ -222,7 +222,7 @@
 }
 .ship-interior-preview .ship-part-option--selected {
   border: 2px solid var(--ln-bp-green);
-  background: var(--ln-bp-green-soft);
+  background: var(--ln-bp-paper);
   box-shadow: 3px 3px 0 var(--ln-bp-line-strong);
 }
 
@@ -442,6 +442,12 @@ body:has([data-screen="hub"]) {
 /* The setup dock is part of the paper surface, not a dark footer. */
 .theme-blueprint .sticky-actions {
   background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.94) 34%, var(--ln-bp-bg));
+}
+
+/* #1f78c1 is 4.2:1 on blueprint paper. The fitter uses the paper-readable blue the loop screens already use. */
+.theme-blueprint.ship-interior-preview {
+  --ln-bp-blue: #175f9b;
+  --ln-bp-blue-soft: rgba(23, 95, 155, 0.10);
 }
 
 /* Mission setup owns the surrounding desktop frame as well. Do not leave a

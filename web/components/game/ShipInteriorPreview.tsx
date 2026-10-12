@@ -197,14 +197,14 @@ export default function ShipInteriorPreview({
               data-testid={`ship-step-${item.kind}`}
               onClick={() => setStepIndex(index)}
               disabled={buildState.confirmed}
-              style={{
+                style={{
                 flex: '1 1 auto',
                 minHeight: 44,
                 padding: '0 12px',
                 borderRadius: 999,
-                border: `1px solid ${active ? 'var(--ln-bp-blue)' : done ? '#1d8a82' : 'var(--ln-glass-border)'}`,
-                background: active ? 'var(--ln-cyan)' : done ? 'rgba(29, 138, 130, 0.14)' : 'var(--ln-hairline)',
-                color: active ? 'var(--ln-text-on-cyan)' : done ? '#1d8a82' : 'var(--ln-bp-ink-dim)',
+                border: `1px solid ${active ? 'var(--ln-cyan)' : done ? 'var(--ln-bp-green)' : 'var(--ln-bp-line-strong)'}`,
+                background: active ? 'var(--ln-cyan)' : 'var(--ln-bp-paper)',
+                color: active ? 'var(--ln-text-on-cyan)' : done ? 'var(--ln-bp-green)' : 'var(--ln-bp-ink)',
                 fontFamily: 'var(--ln-font-display)',
                 fontSize: 14,
                 fontWeight: active ? 900 : 700,
@@ -275,12 +275,9 @@ export default function ShipInteriorPreview({
                   gap: 4,
                   padding: '8px 8px',
                   borderRadius: 8,
-                  border: selected ? '1px solid #1d8a82' : undefined,
-                  background: selected ? 'rgba(29, 138, 130, 0.14)' : undefined,
-                  color: 'var(--ln-text)',
+                  color: 'var(--ln-bp-ink)',
                   textAlign: 'left',
                   cursor: buildState.confirmed || !affordable ? 'not-allowed' : 'pointer',
-                  opacity: !affordable && !selected ? 0.45 : 1,
                   transition: 'border-color 120ms, background 120ms',
                   overflow: 'hidden',
                 }}
@@ -292,10 +289,10 @@ export default function ShipInteriorPreview({
                   {part.description}
                 </div>
                 <div style={{ flex: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 800, color: '#17639f' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 800, color: 'var(--ln-bp-blue)' }}>
                     {formatCurrency(part.price, { compact: true })}
                   </span>
-                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, color: selected ? '#1d8a82' : 'var(--ln-bp-blue)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, color: selected ? 'var(--ln-bp-green)' : 'var(--ln-bp-blue)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
                     {selected ? 'Installed' : `+${part.successBonus}%`}
                   </span>
                 </div>
@@ -325,8 +322,9 @@ export default function ShipInteriorPreview({
                 flex: 'none',
                 padding: '4px 8px',
                 borderRadius: 4,
-                border: `1px solid ${active ? 'var(--ln-bp-blue)' : part ? '#1d8a82' : 'var(--ln-glass-border)'}`,
-                color: active ? 'var(--ln-bp-blue)' : part ? '#1d8a82' : 'var(--ln-bp-ink-dim)',
+                border: `1px solid ${active ? 'var(--ln-bp-blue)' : part ? 'var(--ln-bp-green)' : 'var(--ln-bp-line-strong)'}`,
+                background: 'var(--ln-bp-paper)',
+                color: active ? 'var(--ln-bp-blue)' : part ? 'var(--ln-bp-green)' : 'var(--ln-bp-ink-dim)',
                 fontFamily: 'var(--ln-font-display)',
                 fontSize: 14,
                 fontWeight: 800,
@@ -347,11 +345,10 @@ export default function ShipInteriorPreview({
             disabled={isFirst || buildState.confirmed}
             style={{
               minHeight: 44, minWidth: 56, padding: '0 8px', borderRadius: 7,
-              border: '1px solid var(--ln-glass-border)', background: 'var(--ln-hairline)',
-              color: isFirst || buildState.confirmed ? 'var(--ln-bp-ink-dim)' : 'var(--ln-bp-ink-dim)',
+              border: '1px solid var(--ln-bp-line-strong)', background: 'var(--ln-bp-paper)',
+              color: 'var(--ln-bp-ink)',
               fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.1em',
               textTransform: 'uppercase', cursor: isFirst || buildState.confirmed ? 'not-allowed' : 'pointer',
-              opacity: isFirst || buildState.confirmed ? 0.7 : 1,
             }}
           >
             Back
@@ -366,13 +363,12 @@ export default function ShipInteriorPreview({
                 disabled={!currentInstalled}
                 style={{
                   minHeight: 44, borderRadius: 6,
-                  border: `1px solid ${currentInstalled ? 'var(--ln-crimson)' : 'var(--ln-hairline)'}`,
-                  background: currentInstalled ? 'var(--ln-crimson-soft)' : 'transparent',
-                  color: currentInstalled ? 'var(--ln-crimson)' : 'var(--ln-bp-ink-dim)',
+                  border: '1px solid var(--ln-bp-line-strong)',
+                  background: 'var(--ln-bp-paper)',
+                  color: currentInstalled ? 'var(--ln-bp-pink)' : 'var(--ln-bp-ink-dim)',
                   fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900,
                   letterSpacing: '0.1em', textTransform: 'uppercase',
                   cursor: currentInstalled ? 'pointer' : 'not-allowed',
-                  opacity: currentInstalled ? 1 : 0.7,
                 }}
               >
                 Refund Step
@@ -384,15 +380,12 @@ export default function ShipInteriorPreview({
               disabled={!readyToConfirm || buildState.confirmed}
               style={{
                 minHeight: 44, borderRadius: 6,
-                border: 'none',
-                background: readyToConfirm && !buildState.confirmed
-                  ? '#1d8a82'
-                  : 'rgba(29, 138, 130, 0.14)',
-                color: readyToConfirm && !buildState.confirmed ? 'var(--ln-text-inverse)' : '#1d8a82',
+                border: readyToConfirm && !buildState.confirmed ? 'none' : '1px solid var(--ln-bp-line-strong)',
+                background: readyToConfirm && !buildState.confirmed ? 'var(--ln-bp-green)' : 'var(--ln-bp-paper)',
+                color: readyToConfirm && !buildState.confirmed ? 'var(--ln-bp-paper)' : 'var(--ln-bp-ink)',
                 fontFamily: 'var(--ln-font-display)', fontSize: 14,
                 fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
                 cursor: readyToConfirm && !buildState.confirmed ? 'pointer' : 'not-allowed',
-                opacity: readyToConfirm || buildState.confirmed ? 1 : 0.7,
               }}
             >
               {buildState.confirmed ? 'Configuration Confirmed' : 'Confirm Configuration'}
@@ -405,11 +398,10 @@ export default function ShipInteriorPreview({
             disabled={isLast || buildState.confirmed}
             style={{
               minHeight: 44, minWidth: 56, padding: '0 8px', borderRadius: 7,
-              border: '1px solid var(--ln-bp-blue)', background: 'var(--ln-bp-blue-soft)',
+              border: '1px solid var(--ln-bp-blue)', background: 'var(--ln-bp-paper)',
               color: isLast || buildState.confirmed ? 'var(--ln-bp-ink-dim)' : 'var(--ln-bp-blue)',
               fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.1em',
               textTransform: 'uppercase', cursor: isLast || buildState.confirmed ? 'not-allowed' : 'pointer',
-              opacity: isLast || buildState.confirmed ? 0.7 : 1,
             }}
           >
             Next
