@@ -10,9 +10,9 @@ import { transitBodyShiftPercent } from '@/lib/pixi/transitFlight'
 import { FlightBody } from '@/components/game/screens/FlightBody'
 import { FlightFlame } from '@/components/game/screens/FlightFlame'
 import { FlightSky } from '@/components/game/screens/FlightSky'
+import { KitRocket } from '@/components/game/hub/KitRocket'
+import type { InstalledCustomizerPartsByKind } from '@/lib/data'
 import styles from './FlightScene.module.css'
-
-const PAD_ROCKET = '/game/assets/base/kit/pad-rocket.png'
 const FAKE_PROGRESS_START = 12
 const FAKE_PROGRESS_DURATION_MS = 4400
 const DELIVERY_FAKE_PROGRESS_DURATION_MS = 7000
@@ -31,6 +31,7 @@ interface Props {
   onAbandon?: () => void
   isDelivery?: boolean
   francs?: number
+  parts?: InstalledCustomizerPartsByKind | null
 }
 
 function CogIcon() {
@@ -71,6 +72,7 @@ export default function TransitScreen({
   onHub,
   isDelivery = false,
   francs = 0,
+  parts,
 }: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
@@ -164,7 +166,7 @@ export default function TransitScreen({
         <div className={styles.ship} data-boosting={boosting ? 'true' : 'false'}>
           <FlightFlame boosting={boosting} />
           <div className={styles.rocketWrap}>
-            <img className={styles.rocket} data-testid="transit-rocket" src={PAD_ROCKET} alt="" />
+            <KitRocket parts={parts} className={styles.rocket} testId="transit-rocket" />
           </div>
         </div>
         <div className={styles.body} style={{ ['--shift' as string]: shift }}>

@@ -20,10 +20,9 @@ export interface ShipRoomSlot {
   y: number
   w: number
   h: number
-  // Home grid cell (column/row, in `ShipGridConfig` cell units) — where this
-  // room sits the first time it's installed. The player can drag it to any
-  // other open cell afterwards (ShipCustomizerCanvas), so gx/gy is a default
-  // arrangement, not a fixed requirement the way kind-matching is.
+  // Home grid cell (column/row, in `ShipGridConfig` cell units). The hangar
+  // preview highlights this kind on the shared kit rocket; gx/gy stays a
+  // default arrangement, not a fixed requirement the way kind-matching is.
   gx: number
   gy: number
 }
@@ -110,9 +109,7 @@ export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
     grid: { cols: 9, rows: 3, area: { x: 7.0, y: 13.0, w: 86.0, h: 71.0 } },
     slots: [
       // x/y/w/h below are each room's home-cell rect in the same % units,
-      // kept only so existing bounds-checks/tests have a concrete rect;
-      // gx/gy (grid cell units) are what ShipCustomizerCanvas actually uses
-      // to place and drag rooms.
+      // kept only so existing bounds-checks/tests have a concrete rect.
       { id: 'explorer-cockpit', kind: 'cockpit',  label: 'Cockpit',     x:  7.0, y: 13.0, w: 19.1, h: 47.3, gx: 0, gy: 0 },
       { id: 'explorer-payload', kind: 'payload',  label: 'Payload Bay', x: 26.1, y: 13.0, w: 19.1, h: 47.3, gx: 2, gy: 0 },
       { id: 'explorer-booster', kind: 'booster',  label: 'Boosters',    x: 45.2, y: 13.0, w: 19.1, h: 23.7, gx: 4, gy: 0 },

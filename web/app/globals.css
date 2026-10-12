@@ -213,10 +213,18 @@
 .ship-interior-preview .sip-diagram {
   height: 100%;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 2px solid var(--set-ink);
   border-radius: var(--set-radius);
   background: var(--set-card);
   box-shadow: none;
+}
+.ship-interior-preview .sip-diagram [data-testid="kit-rocket-blueprint"] {
+  height: min(100%, 420px);
+  width: auto;
+  max-width: 100%;
 }
 .ship-interior-preview .ln-glass-panel,
 .ship-interior-preview .ship-part-option {

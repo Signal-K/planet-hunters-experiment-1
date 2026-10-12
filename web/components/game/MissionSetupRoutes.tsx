@@ -61,13 +61,13 @@ function LaunchGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c4 3 6 7 6 12l-6 7-6-7c0-5 2-9 6-12Z" /><circle cx="12" cy="10" r="2" /></svg>
 }
 
-function SetupFrame({ title, screen, onBack, children, eyebrow = 'CONTRACT → LAUNCH', aside }: { title: string; screen: Screen; onBack: () => void; children: ReactNode; eyebrow?: string; aside?: ReactNode }) {
+function SetupFrame({ title, screen, onBack, children, eyebrow = 'CONTRACT → LAUNCH', aside, parts }: { title: string; screen: Screen; onBack: () => void; children: ReactNode; eyebrow?: string; aside?: ReactNode; parts?: Game['player']['shipCustomizerParts'] }) {
   // SSL-432: shared "?" slot. Renders nothing until this screen has a help topic.
   const help = useHelp(screen)
   return <div className={`game-screen theme-blueprint ${styles.root}`} data-setup={screen} data-testid="mission-setup-scaffold">
     <div className={styles.landscape} data-testid="mission-setup-landscape" aria-hidden="true">
       <HubWorldBackground phase="day" composition="earth-base-wide" />
-      <div className={styles.launchpad}><LaunchpadModules /></div>
+      <div className={styles.launchpad}><LaunchpadModules parts={parts} /></div>
       <div className={styles.hangar}><HangarModules /></div>
     </div>
     <header className={styles.header} data-dev-launcher={isDevLauncherEnabled()}>
@@ -140,9 +140,9 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const preparationLabel = selectedRocket.costFrancs === 0 ? `PREPARE ${selectedRocket.name.toUpperCase()}` : `BUILD ${selectedRocket.name.toUpperCase()} · ${formatCurrency(selectedRocket.costFrancs, { compact: true })}`
 
   return <>
-    <SetupFrame title="Launch review" screen={screen} onBack={() => game.go('missions')} eyebrow={isFreeOpsHaul ? 'FREE OPS · OWN HAUL' : 'CONTRACT → LAUNCH'}>
+    <SetupFrame title="Launch review" screen={screen} onBack={() => game.go('missions')} eyebrow={isFreeOpsHaul ? 'FREE OPS · OWN HAUL' : 'CONTRACT → LAUNCH'} parts={game.player.shipCustomizerParts}>
       <section className={styles.review} data-testid="mission-launch-review">
-        <div className={styles.launchScene}><div className={styles.launchArt} data-testid="launch-art" data-stage={artStage}><HubWorldBackground phase="day" composition="earth-base-wide" /><div className={styles.launchpad} aria-hidden="true"><LaunchpadModules /></div><div className={styles.hangar} aria-hidden="true"><HangarModules /></div><div className={styles.workshop} aria-hidden="true"><b>WORKSHOP</b></div><img data-testid="launch-rocket" src={rocketDisplay.img} alt={`${selectedRocket.name} ${artStage === 'pad' ? 'on the launchpad' : 'in the workshop'}`} /></div><div className={styles.launchCaption}><span>{caption}</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
+        <div className={styles.launchScene}><div className={styles.launchArt} data-testid="launch-art" data-stage={artStage}><HubWorldBackground phase="day" composition="earth-base-wide" /><div className={styles.launchpad} aria-hidden="true"><LaunchpadModules parts={game.player.shipCustomizerParts} /></div><div className={styles.hangar} aria-hidden="true"><HangarModules /></div><div className={styles.workshop} aria-hidden="true"><b>WORKSHOP</b></div><img data-testid="launch-rocket" src={rocketDisplay.img} alt={`${selectedRocket.name} ${artStage === 'pad' ? 'on the launchpad' : 'in the workshop'}`} /></div><div className={styles.launchCaption}><span>{caption}</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
         <aside className={styles.reviewBrief}>
           <div className={styles.reviewHeading}><span>{game.mission.payload?.type === 'satellite' ? 'INSTRUMENT LAUNCH' : isFreeOpsHaul ? 'FREE OPS · OWN HAUL' : 'CLIENT CONTRACT'}</span><h2>{game.mission.title}</h2></div>
           <div className={styles.reviewMap} data-testid="launch-review-map" aria-label={`Route to ${target.name}`}>

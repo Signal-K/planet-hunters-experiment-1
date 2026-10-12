@@ -336,7 +336,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
 
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
-          <EarthBaseModules buildings={sceneBuildings} />
+          <EarthBaseModules buildings={sceneBuildings} parts={player.shipCustomizerParts} />
 
           {/* Surface buildings — hit areas + labels.
               zIndex 10 is load-bearing: every scene layer below is an

@@ -5,6 +5,7 @@ import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { LAUNCHPAD_SCENE_WIDTH_PCT, structureAnchorPercent, structureTierScale } from '@/lib/scene/base-world'
 import { structureBuildMs } from '@/lib/systems/HubConstructionSystem'
 import { PixelStructure } from '@/components/game/hub/PixelStructure'
+import type { InstalledCustomizerPartsByKind } from '@/lib/data'
 export interface HubBuildingDef {
   kind: string
   plotX: number
@@ -33,8 +34,8 @@ export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height:
   market: { width: 214, height: 124 },
 }
 
-export function LaunchpadModules({ className = '' }: { className?: string }) {
-  return <span className={className} style={{ display: 'block', width: '100%', height: '100%' }}><PixelStructure kind="launchpad" level={3} /></span>
+export function LaunchpadModules({ className = '', parts }: { className?: string; parts?: InstalledCustomizerPartsByKind | null }) {
+  return <span className={className} style={{ display: 'block', width: '100%', height: '100%' }}><PixelStructure kind="launchpad" level={3} parts={parts} /></span>
 }
 
 export function HangarModules({ className = '' }: { className?: string }) {
@@ -77,7 +78,7 @@ function ConstructionRig({ animDuration, animDelay }: { animDuration: string; an
   )
 }
 
-function StructureSprite({ kind, level = 1, active, buildStartedAt }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number }) {
+function StructureSprite({ kind, level = 1, active, buildStartedAt, parts }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number; parts?: InstalledCustomizerPartsByKind | null }) {
   const buildMs = structureBuildMs(kind)
   // `buildStartedAt` does not change when the build finishes, so a value
   // captured once at mount left `isBuilding` true forever and the cyan
@@ -109,7 +110,7 @@ function StructureSprite({ kind, level = 1, active, buildStartedAt }: { kind: st
         data-active={active ? 'true' : undefined}
         style={isBuilding ? { display: 'block', animationDuration: animDuration, animationDelay: animDelay } : { display: 'block', height: '100%' }}
       >
-        <PixelStructure kind={kind} level={level} />
+        <PixelStructure kind={kind} level={level} parts={parts} />
       </span>
       {rig}
     </>
@@ -143,7 +144,7 @@ export function structureHalfScene(kind: string, level = 1, sceneWidth = 402): n
 
 const HIDDEN_BASE_KINDS = new Set(['command', 'refinery', 'garage', 'deep-space-telescope', 'transit-telescope', 'astronaut-academy', 'market', 'surface-silo'])
 
-export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] }) {
+export function EarthBaseModules({ buildings, parts }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null }) {
   return (
     <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {
@@ -168,7 +169,7 @@ export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] })
               opacity: building.dimmed ? 0.6 : 1,
             }}
           >
-            <StructureSprite kind={building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} />
+            <StructureSprite kind={building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} parts={parts} />
           </span>
         )
       })}

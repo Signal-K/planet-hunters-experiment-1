@@ -72,6 +72,7 @@ export default function MissionOperationRoutes({
           returning={!!game.player.returningToEarth}
           isDelivery={!!game.player.headingToDelivery}
           francs={game.player.francs}
+          parts={game.player.shipCustomizerParts}
           onBack={() => game.go('hub')}
           onPrev={() => stepFlightDock(game, -1)}
           onNext={() => stepFlightDock(game, 1)}

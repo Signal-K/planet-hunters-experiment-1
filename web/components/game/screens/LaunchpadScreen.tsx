@@ -10,6 +10,7 @@ import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
+import { kitRocketSrc } from '@/lib/kit-rocket'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
@@ -76,7 +77,7 @@ const guideSteps = [
 ] as const
 
 export default function LaunchpadScreen({
-  onBack, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, hydrated = false, onAbandonMission,
+  onBack, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, player, selectedRocketName, francs, hydrated = false, onAbandonMission,
 }: LaunchpadScreenProps) {
   // This is the Launchpad route: a playable Earth Base composition. The
   // tower and hangar are the primary interactions; the rail only exposes
@@ -164,8 +165,7 @@ export default function LaunchpadScreen({
             stage, only this pad. The ring silently never appeared. */}
         <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" data-beacon="launchpad-view-contracts" data-action="primary-mission" onClick={openMissionBoard} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>
-            <LaunchpadModules />
-            {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
+            <LaunchpadModules parts={player.shipCustomizerParts} />
           </span>
           <span className="launchpad-primary-pad-control" data-testid="launchpad-primary-mission-btn">
             <small>LAUNCHPAD CONTROL</small>
@@ -227,7 +227,7 @@ export default function LaunchpadScreen({
               rebuilt) hangar structure alone. */}
           {player.pendingLaunch && (
             <span className="launchpad-rocket-art">
-              <img src={rocketImageSrc} alt="" />
+              <img src={kitRocketSrc(player.shipCustomizerParts)} alt="" />
               <i className="launchpad-rocket-glow" />
             </span>
           )}

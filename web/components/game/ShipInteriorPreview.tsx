@@ -1,8 +1,8 @@
 'use client'
 
 import { useRef, useState, type MouseEvent, type PointerEvent } from 'react'
-import { ShipCustomizerCanvas } from '@/components/game/ShipCustomizerCanvas'
-import ErrorBoundary from '@/components/ui/ErrorBoundary'
+import { KitRocket } from '@/components/game/hub/KitRocket'
+import type { KitRocketStage } from '@/lib/kit-rocket'
 import {
   canConfirmCustomizerBuild,
   chooseCustomizerPart,
@@ -151,19 +151,17 @@ export default function ShipInteriorPreview({
       </header>
 
       <div className="sip-ship">
-        <div className="sip-diagram">
-          <ErrorBoundary fallback={<div className="sip-diagram-fallback">Diagram unavailable</div>}>
-            <ShipCustomizerCanvas
-              layout={layout}
-              activeKind={stepKind}
-              installedParts={buildState.installed}
-              onSlotClick={kind => {
-                const idx = sequence.indexOf(kind)
-                if (idx >= 0) setStepIndex(idx)
-              }}
-              confirmed={buildState.confirmed}
-            />
-          </ErrorBoundary>
+        <div className="sip-diagram" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <KitRocket
+            blueprint
+            parts={buildState.installed}
+            active={stepKind}
+            onSelect={(kind: KitRocketStage) => {
+              const idx = sequence.indexOf(kind)
+              if (idx >= 0) setStepIndex(idx)
+            }}
+            testId="kit-rocket-blueprint"
+          />
         </div>
       </div>
 
