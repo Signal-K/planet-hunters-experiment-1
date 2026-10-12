@@ -8,7 +8,7 @@ Process
 1. Commits: commit ALL files with changes, in one commit, and only after real work (a finished, coherent unit: feature, fix, ticket). No tiny or frequent commits, no WIP, checkpoint, CI-poke or one-line churn commits. See "Commit" below for the format.
 2. Branching: work directly on `cycle/4`. No feature branches, no PRs. Never push to `main`.
 3. No waiting on CI. CI is typecheck, unit tests and build only. Do not poll or block on it.
-4. Done means proof: nothing is "done" without a viewed screenshot of the running build. Every ticket carries a "Done when" line.
+4. Done means proof: nothing is "done" without a viewed screenshot of the running build. Every ticket carries a "Done when" line. Close your own Linear tickets. When the fix is on `cycle/4` and your own checks pass (typecheck, the relevant tests, and screenshots you have looked at), mark the ticket Done with a short comment giving the commit and the proof. Do not leave it In Review waiting for real Safari or any check you cannot run; say in the comment what was not run.
 5. Compact sessions at about 150k tokens. Start new sessions at medium effort.
 
 Names and surfaces
@@ -84,10 +84,11 @@ npm run test:unit          # verify:scene-surfaces + vitest
 4. Unit tests alone never justify Done or "works". A green suite says nothing about whether the game plays.
 5. Never claim a check passed that you did not run. State what ran, what was skipped, and why. Heavy pipelines (20+ minute e2e) are not run per iteration: iterate with targeted local checks and push batched.
 6. Do not drive the user's own device or desktop (no osascript clicks, desktop captures, or launching windows). Test headless or in the iOS Simulator.
+7. Scene visual check, on every scene task: objects rest on their surfaces with no gaps, and anything that should animate does. Send a short clip or frame strip with the stills.
 
 ## Workflow
 
-- Linear `SSL-*` (Landnam team) is the only tracker. Read the ticket first; its scope and "Done when" line define the task. Move status as work progresses; set Done only when the "Done when" item is verified with a viewed screenshot. Put new work, blockers and handoffs (what changed, what was verified, what is left) in Linear, not in repo files.
+- Linear `SSL-*` (Landnam team) is the only tracker. Read the ticket first; its scope and "Done when" line define the task. Move status as work progresses. When the fix is on `cycle/4` and typecheck, the relevant tests, and the screenshots you looked at all pass, set the ticket Done yourself and comment the commit plus the proof. Do not park it In Review for Safari or any check you cannot run; name what was skipped in the comment. Put new work, blockers and handoffs (what changed, what was verified, what is left) in Linear, not in repo files.
 - Decisions: research in Craft, tracking in Linear, durable decisions and rules in ZenNotes (search ZenNotes first). Landnam has no local decision store.
 - Verify claims about existing state yourself (stashes, "pre-existing changes", ticket status that says In Review but has no code). Check `.github/workflows/*.yml` before removing dependencies.
 
@@ -95,5 +96,5 @@ npm run test:unit          # verify:scene-surfaces + vitest
 
 - One commit per finished unit of work, after real work only, staging ALL changes (`git add -A`; nothing left uncommitted, exclude only clearly unrelated work, secrets or generated output, and disclose exclusions). Inspect `git status --short` and `git diff --cached` first.
 - Subject: `🚀🐺 ↝ [SSL-123 SSL-456]: Concise outcome`. Two different emoji (no flags, no smiley or human faces), the exact `↝` arrow and spacing, every worked ticket key in one bracket pair separated by spaces. Never use `--no-verify`.
-- Then `git pull --rebase` and push to `cycle/4`. Post the handoff with the Linear MCP (`save_comment`) and set the status (`save_issue`).
+- Then `git pull --rebase` and push to `cycle/4`. Post the handoff with the Linear MCP (`save_comment`) and set the status to Done (`save_issue`) when your own checks pass. Do not leave the ticket In Review.
 - Landnam is a web app game and a native SwiftUI game. Nothing else; no Godot.
