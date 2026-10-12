@@ -1,7 +1,7 @@
 import SpriteKit
 import LandnamCore
 
-/// Side-on ship laser. The ship stays put; the ground and ore chips scroll under a vertical beam.
+/// Side-on ship laser. The ship flies level (nose right, parallel to the ground) and the beam drops from its belly; it stays put; the ground and ore chips scroll under a vertical beam.
 /// Rules stay in `MiningField`. A hit is a chip whose wrapped x sits on the beam.
 @MainActor
 final class MiningScene: SKScene {
@@ -30,8 +30,9 @@ final class MiningScene: SKScene {
     private let px: CGFloat = 2
     private lazy var flameFrames = (0..<2).map { SK.texture("laser/flame-\($0).png") }
     private var ridgeTile: CGFloat { 128 * px }
-    private var soilTile: CGFloat { 64 * px }
+    private var groundSpan: CGFloat = 1
     private let ship = SKNode()
+    private let hull = SKNode()
     private var flashUntil: TimeInterval = 0
 
     init(field: MiningField, size: CGSize, palette: LaserPalette.Spec = LaserPalette.bennu) {
@@ -66,6 +67,131 @@ final class MiningScene: SKScene {
     override func didChangeSize(_ oldSize: CGSize) {
         guard view != nil, oldSize != size, oldSize != .zero else { return }
         didMove(to: view!)
+    }
+
+
+    // MARK: pixel art
+
+    private func pixelTexture(width: Int, height: Int, _ pixel: (Int, Int) -> UInt32?) -> SKTexture {
+        var data = [UInt8](repeating: 0, count: width * height * 4)
+        for y in 0..<height {
+            for x in 0..<width {
+                guard let c = pixel(x, y) else { continue }
+                let i = (y * width + x) * 4
+                data[i] = UInt8((c >> 16) & 255); data[i + 1] = UInt8((c >> 8) & 255); data[i + 2] = UInt8(c & 255); data[i + 3] = 255
+            }
+        }
+        let cg = CGDataProvider(data: Data(data) as CFData).flatMap {
+            CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                    bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue), provider: $0, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
+        }
+        let tex = cg.map { SKTexture(cgImage: $0) } ?? SKTexture()
+        tex.filteringMode = .nearest
+        return tex
+    }
+
+    /// Deterministic hash noise in 0..<1.
+    private func hash(_ a: Int, _ b: Int, _ seed: Int) -> CGFloat {
+        var h = UInt64(truncatingIfNeeded: a &* 374761393 &+ b &* 668265263 &+ seed &* 2246822519)
+        h = (h ^ (h >> 13)) &* 1274126177
+        h ^= h >> 16
+        return CGFloat(h % 10007) / 10007
+    }
+
+    /// Smooth 1D noise that wraps at `period` cells, so the strip joins its own copy without a seam.
+    private func wrapNoise(_ x: CGFloat, cell: CGFloat, period: Int, seed: Int) -> CGFloat {
+        let u = x / cell
+        let i = Int(u.rounded(.down))
+        let f = u - CGFloat(i)
+        let t = f * f * (3 - 2 * f)
+        let a = hash(((i % period) + period) % period, 0, seed), b = hash((((i + 1) % period) + period) % period, 0, seed)
+        return a + (b - a) * t
+    }
+
+    private func strataTexture() -> SKTexture {
+        let cell = 24
+        let cells = max(8, Int((size.width * 3 / px) / CGFloat(cell)))
+        let w = cells * cell
+        let h = Int((surfaceY / px).rounded(.up)) + 2
+        let seed = palette.id.unicodeScalars.reduce(7) { ($0 &* 31 &+ Int($1.value)) & 0xFFFF }
+        // Layer boundaries: uneven thicknesses, each with its own wavy edge.
+        var tops: [CGFloat] = [], cursor: CGFloat = 5
+        var k = 0
+        while cursor < CGFloat(h) + 20 {
+            tops.append(cursor)
+            cursor += 9 + hash(k, 1, seed) * 26
+            k += 1
+        }
+        let waves = tops.indices.map { (amp: 2 + hash($0, 2, seed) * 6, cellW: CGFloat(14 + Int(hash($0, 3, seed) * 40))) }
+        let periods = waves.map { max(2, Int((CGFloat(w) / $0.cellW).rounded())) }
+        func edge(_ layer: Int, _ x: Int) -> CGFloat {
+            let p = periods[layer]
+            return tops[layer] + wrapNoise(CGFloat(x), cell: CGFloat(w) / CGFloat(p), period: p, seed: seed + layer * 7) * waves[layer].amp
+        }
+        var cols: [[CGFloat]] = (0..<tops.count).map { l in (0..<w).map { edge(l, $0) } }
+        for l in 1..<max(cols.count, 1) { for x in 0..<w { cols[l][x] = max(cols[l][x], cols[l - 1][x] + 3) } }   // layers never invert
+        let tone = tops.indices.map { hash($0, 4, seed) - 0.5 }
+        let topP = max(2, w / 18)
+        return pixelTexture(width: w, height: h) { x, y in
+            let rim = 1 + wrapNoise(CGFloat(x), cell: CGFloat(w) / CGFloat(topP), period: topP, seed: seed + 91) * 3
+            let fy = CGFloat(y)
+            if fy < rim { return nil }
+            var layer = 0
+            for l in cols.indices where cols[l][x] <= fy { layer = l }
+            let depth = min(1, fy / CGFloat(h))
+            var c = LaserPalette.mix(palette.ground, palette.groundDeep, depth * 0.85 + tone[layer] * 0.8)
+            if fy < rim + 3 { return LaserPalette.mix(c, palette.groundSpeck, 0.55) }          // crust lip
+            let into = fy - cols[layer][x]
+            if into < 1 { c = LaserPalette.mix(c, palette.groundSpeck, 0.3) }                  // lit upper edge
+            else if into >= 1, layer + 1 < cols.count, cols[layer + 1][x] - fy < 1.5 { c = LaserPalette.mix(c, palette.groundDeep, 0.5) }   // shadowed lower edge
+            let n = hash(x, y, seed)
+            if n < 0.03 { c = LaserPalette.mix(c, palette.groundDeep, 0.45) }
+            else if n > 0.975 { c = LaserPalette.mix(c, palette.groundSpeck, 0.4) }
+            // Embedded rock fragments and cracks, scattered irregularly (cell hash, not a grid pattern).
+            let gx = x / 17, gy = y / 13
+            if hash(gx, gy, seed + 5) > 0.72 {
+                let cx = gx * 17 + 3 + Int(hash(gx, gy, seed + 6) * 10), cy = gy * 13 + 3 + Int(hash(gx, gy, seed + 8) * 6)
+                let rx = 2 + Int(hash(gx, gy, seed + 9) * 3), ry = 1 + Int(hash(gx, gy, seed + 10) * 2)
+                let dx = CGFloat(x - cx) / CGFloat(rx), dy = CGFloat(y - cy) / CGFloat(ry)
+                if dx * dx + dy * dy < 1 { return LaserPalette.mix(c, palette.groundSpeck, dy < 0 ? 0.35 : -0.0 + 0.1) }
+            }
+            if hash(gx, gy, seed + 12) > 0.86 {
+                let x0 = gx * 17 + 2, y0 = gy * 13 + 2
+                if x - x0 >= 0, x - x0 < 8, y - y0 == (x - x0) / 2 { return LaserPalette.mix(c, palette.groundDeep, 0.65) }
+            }
+            return c
+        }
+    }
+
+    /// Ore deposit: a dark pocket in the rock holding a cluster of faceted crystals in the mineral's colour.
+    private func depositTexture(colorHex: String, variant: Int, glint: Bool) -> SKTexture {
+        let base = UInt32(colorHex.dropFirst(), radix: 16) ?? 0xCCCCCC
+        let lit = LaserPalette.mix(base, 0xFFFFFF, 0.5), dark = LaserPalette.mix(base, 0x10151C, 0.45)
+        let pocket = LaserPalette.mix(palette.groundDeep, 0x10151C, 0.5), rim = LaserPalette.mix(palette.groundDeep, 0x10151C, 0.25)
+        let w = 24, h = 18
+        // Crystal columns: (x, base y, width, height) per variant, chosen so each deposit reads differently.
+        let sets: [[(Int, Int, Int, Int)]] = [
+            [(5, 15, 5, 9), (10, 15, 5, 12), (15, 15, 4, 7)],
+            [(4, 15, 4, 6), (8, 15, 6, 11), (14, 15, 5, 8), (18, 15, 3, 5)],
+            [(6, 15, 4, 8), (11, 15, 4, 13), (16, 15, 4, 6)],
+        ]
+        let crystals = sets[variant % sets.count]
+        return pixelTexture(width: w, height: h) { x, y in
+            let dx = CGFloat(x) - 11.5, dy = CGFloat(y) - 9.5
+            let inPocket = (dx * dx) / 132 + (dy * dy) / 62 < 1
+            for (cx, by, cw, ch) in crystals {
+                let top = by - ch
+                guard x >= cx, x < cx + cw, y <= by, y >= top else { continue }
+                let tip = y - top < 2 && (x == cx || x == cx + cw - 1)
+                if tip { break }
+                if glint && x == cx + 1 && y == top + 2 { return 0xFFFFFF }
+                if x == cx || y == top { return lit }
+                if x == cx + cw - 1 || y == by { return dark }
+                return base
+            }
+            if !inPocket { return nil }
+            return (dx * dx) / 132 + (dy * dy) / 62 > 0.72 ? rim : pocket
+        }
     }
 
     // MARK: layers
@@ -183,39 +309,16 @@ final class MiningScene: SKScene {
             nearCopy.position = CGPoint(x: CGFloat(copy + 1) * ridgeTile, y: surfaceY - 2 - 8 * px)
             near.addChild(nearCopy)
         }
-        let cols = Int((size.width / soilTile).rounded(.up)) + 5
-        let rows = Int((surfaceY / soilTile).rounded(.up)) + 1
-        let crustH = 8 * px
-        for c in 0..<cols {
-            let cx = CGFloat(c) * soilTile
-            let lip = sprite("crust", tint: palette.groundSpeck, blend: 0.45)
-            lip.anchorPoint = CGPoint(x: 0, y: 0)
-            lip.position = CGPoint(x: cx, y: surfaceY - crustH)
-            lip.zPosition = 1
-            ground.addChild(lip)
-            for r in 0..<rows {
-                // Mirror every other tile on both axes so shared edges match and no strata seam shows; tint varies on a 4 tile period.
-                let variant = ((c % 4) * 3 + r * 5) % 4
-                let base = r == 0 ? palette.ground : palette.groundDeep
-                let tint = LaserPalette.mix(base, palette.groundDeep, 0.03 * CGFloat(variant))
-                let soil = sprite("soil", tint: tint, blend: 0.55)
-                soil.anchorPoint = .zero
-                let y = surfaceY - crustH - CGFloat(r + 1) * soilTile
-                soil.position = CGPoint(x: cx, y: y)
-                let flipX = c % 2 == 1, flipY = r % 2 == 1
-                if flipX { soil.xScale = -px; soil.position.x += soilTile }
-                if flipY { soil.yScale = -px; soil.position.y += soilTile }
-                ground.addChild(soil)
-                if variant != 2 {
-                    let flecks = sprite("soil-flecks")
-                    flecks.anchorPoint = .zero
-                    flecks.position = soil.position
-                    flecks.xScale = soil.xScale
-                    flecks.yScale = variant == 3 ? -soil.yScale : soil.yScale
-                    if variant == 3 { flecks.position.y = y + (flipY ? 0 : soilTile) }
-                    ground.addChild(flecks)
-                }
-            }
+        // One wide, seeded strata strip (three screens across) so no band repeats on screen; two copies wrap the scroll.
+        let strip = strataTexture()
+        groundSpan = strip.size().width * px
+        for copy in 0..<2 {
+            let slab = SKSpriteNode(texture: strip)
+            slab.size = strip.size()
+            slab.setScale(px)
+            slab.anchorPoint = CGPoint(x: 0, y: 1)
+            slab.position = CGPoint(x: CGFloat(copy) * groundSpan, y: surfaceY)
+            ground.addChild(slab)
         }
         world.addChild(far)
         world.addChild(near)
@@ -227,22 +330,14 @@ final class MiningScene: SKScene {
         let live = field.nodes.filter { !$0.isDepleted }.sorted { ($0.x + $0.y) < ($1.x + $1.y) }
         let spacing: CGFloat = 280
         track = max(size.width + spacing, CGFloat(live.count) * spacing)
-        let avg = (Double((palette.ground >> 16) & 255) + Double((palette.ground >> 8) & 255) + Double(palette.ground & 255)) / 3
-        let ink = LaserPalette.sk(avg > 150 ? 0x1A2430 : 0xFFFFFF)
         for (i, n) in live.enumerated() {
-            let chip = sprite("deposit-0")
-            if let a = SK.texture("laser/deposit-0.png"), let b = SK.texture("laser/deposit-1.png") {
-                chip.run(.repeatForever(.animate(with: [a, b], timePerFrame: 0.6)))
-            }
-            let meta = Minerals.byId[n.mineralId]
-            let label = SKLabelNode(text: meta?.symbol ?? "?")
-            label.fontName = "Oxanium-ExtraBold"
-            label.fontSize = 14
-            label.fontColor = ink
-            label.verticalAlignmentMode = .top
-            label.setScale(1 / px)
-            label.position = CGPoint(x: 0, y: -8)
-            chip.addChild(label)
+            let hex = Minerals.byId[n.mineralId]?.colorHex ?? "#C8CCD2"
+            let a = depositTexture(colorHex: hex, variant: n.id, glint: false)
+            let b = depositTexture(colorHex: hex, variant: n.id, glint: true)
+            let chip = SKSpriteNode(texture: a)
+            chip.size = a.size()
+            chip.setScale(px)
+            chip.run(.repeatForever(.animate(with: [a, a, a, b], timePerFrame: 0.5 + Double(n.id % 3) * 0.12)))
             chip.zPosition = 10
             chip.name = "ore-\(n.id)"
             world.addChild(chip)
@@ -255,6 +350,9 @@ final class MiningScene: SKScene {
     /// Slim cream-and-blue rocket, nose up, built from shapes so it stays upright and crisp at any scale.
     private func buildShip() {
         ship.removeAllChildren()
+        hull.removeAllChildren()
+        hull.zRotation = -.pi / 2   // nose right, flying parallel to the ground; plume trails left
+        ship.addChild(hull)
         ship.position = CGPoint(x: beamX, y: shipY)
         ship.zPosition = 20
         let outline = LaserPalette.sk(0x16293B)
@@ -267,7 +365,7 @@ final class MiningScene: SKScene {
             n.lineWidth = 2
             n.lineJoin = .round
             n.zPosition = z
-            ship.addChild(n)
+            hull.addChild(n)
         }
         func poly(_ pts: [(CGFloat, CGFloat)]) -> CGPath {
             let p = CGMutablePath()
@@ -284,7 +382,7 @@ final class MiningScene: SKScene {
         plume.setScale(px)
         plume.position = CGPoint(x: 0, y: -24)
         plume.zPosition = -1
-        ship.addChild(plume)
+        hull.addChild(plume)
         part(poly([(-9, -8), (-19, -22), (-9, -18)]), blue, z: 0)
         part(poly([(9, -8), (19, -22), (9, -18)]), blue, z: 0)
         part(poly([(-6, -20), (6, -20), (4, -26), (-4, -26)]), LaserPalette.sk(0x4B4F57), z: 0)
@@ -297,12 +395,19 @@ final class MiningScene: SKScene {
         win.lineWidth = 2
         win.position = CGPoint(x: 0, y: 3)
         win.zPosition = 3
-        ship.addChild(win)
+        hull.addChild(win)
+        // Laser cannon on the belly: the beam leaves from here, straight down.
+        let gun = SKShapeNode(path: poly([(-4, -17), (4, -17), (3, -24), (-3, -24)]))
+        gun.fillColor = LaserPalette.sk(0x4B4F57)
+        gun.strokeColor = outline
+        gun.lineWidth = 2
+        gun.zPosition = 4
+        ship.addChild(gun)
         world.addChild(ship)
     }
 
     private func buildBeam() {
-        let h = max(24, shipY - 26 - surfaceY)
+        let h = max(24, shipY - 26 - surfaceY + 3)
         beam.removeAllChildren()
         for k in 0..<Int((h / (8 * px)).rounded(.up)) {
             let seg = sprite("beam")
@@ -310,7 +415,7 @@ final class MiningScene: SKScene {
             seg.position = CGPoint(x: 0, y: -CGFloat(k) * 8 * px)
             beam.addChild(seg)
         }
-        beam.position = CGPoint(x: beamX, y: shipY - 30)
+        beam.position = CGPoint(x: beamX, y: shipY - 24)
         beam.zPosition = 18
         world.addChild(beam)
         spark.position = CGPoint(x: beamX, y: surfaceY)
@@ -390,7 +495,7 @@ final class MiningScene: SKScene {
             guard let lane = laneX[id] else { continue }
             var x = (lane - scrollX).truncatingRemainder(dividingBy: span)
             if x < -36 { x += span }
-            node.position = CGPoint(x: x, y: surfaceY - 8 * px - 4 * px - 14 * px)
+            node.position = CGPoint(x: x, y: surfaceY - 15 * px)
         }
     }
 
@@ -407,7 +512,7 @@ final class MiningScene: SKScene {
         let speed = base + CGFloat(scrollInput) * (scrollInput > 0 ? 48 : 32)
         let dx = speed * CGFloat(dt)
         scrollX += dx
-        shift(ground, by: dx, width: soilTile * 4)
+        shift(ground, by: dx, width: groundSpan)
         shift(near, by: dx * 0.45, width: ridgeTile)
         shift(far, by: dx * 0.16, width: ridgeTile)
         placeChips()
@@ -418,12 +523,13 @@ final class MiningScene: SKScene {
             beam.xScale = 1
             spark.setScale(px)
         }
-        if let plume = ship.childNode(withName: "plume") {
+        if let plume = ship.childNode(withName: "//plume") {
             plume.alpha = 0.7 + pulse * 0.3
             plume.xScale = px * (0.8 + pulse * 0.3)
             if let sprite = plume as? SKSpriteNode, !reducedMotion { sprite.texture = flameFrames[Int(clock * 10) % 2] }
         }
-        ship.position.y = shipY + (reducedMotion ? 0 : sin(clock * 2.2) * 4)
+        ship.position.y = shipY + (reducedMotion ? 0 : sin(clock * 2.2) * 1.5)
+        beam.position.y = ship.position.y - 24
 
         if !reducedMotion {
             for star in stars {
