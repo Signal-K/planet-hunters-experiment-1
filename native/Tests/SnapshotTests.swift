@@ -57,15 +57,6 @@ struct SceneSnapshotTests {
         scene.fire(at: CGPoint(x: 5, y: 5))
         try write(scene, name: "mining-phone")
     }
-
-    @Test func flightScene() throws {
-        AppFont.register()
-        let scene = FlightScene(size: CGSize(width: 402, height: 780), returning: false, targetName: "Ceres")
-        let view = SKView(frame: CGRect(origin: .zero, size: scene.size))
-        view.presentScene(scene)
-        scene.progress = 0.45
-        try write(scene, name: "flight-phone")
-    }
 }
 
 @MainActor

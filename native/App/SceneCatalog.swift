@@ -38,10 +38,10 @@ enum SceneCatalog {
         return gs
     }
 
-    /// The web `baseArt=starter` base: launchpad, hangar, command hut and refinery tank.
+    /// The web `baseArt=starter` base: launchpad and hangar (silo is underground only).
     static func starterState() -> GameState {
         var gs = GameState()
-        gs.player.placed = ["launchpad", "hangar", "command", "refinery"]
+        gs.player.placed = ["launchpad", "hangar"]
         return gs
     }
 
