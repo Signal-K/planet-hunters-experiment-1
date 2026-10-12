@@ -4411,7 +4411,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   overflow: auto;
 }
 .ops-settings__card {
-  width: min(var(--set-max), 100%);
+  width: 92%;
   margin: 0 auto;
   min-height: 100%;
   max-height: none !important;
@@ -4420,7 +4420,13 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   box-shadow: none !important;
   background: transparent;
   color: var(--set-ink);
-  padding: var(--set-pad) var(--set-pad) 32px;
+  padding: 12px 0 32px;
+  box-sizing: border-box;
+}
+@media (min-width: 1024px) {
+  .ops-settings__card {
+    width: min(720px, 92%);
+  }
 }
 @media (min-width: 768px) {
   .ops-settings.ln-page-surface--tray {
@@ -4431,11 +4437,16 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
     background: var(--set-bg);
   }
   .ops-settings.ln-page-surface--tray .ops-settings__card {
-    width: min(var(--set-max), 100%);
+    width: 92%;
     min-height: 100%;
     max-height: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+  }
+}
+@media (min-width: 1024px) {
+  .ops-settings.ln-page-surface--tray .ops-settings__card {
+    width: min(720px, 92%);
   }
 }
 .ops-settings__head {
@@ -4468,10 +4479,48 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .ops-settings__stack {
   display: grid;
-  gap: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 16px;
+  align-items: start;
+}
+.ops-settings__stack > *,
+.ops-settings__pair > * {
+  min-width: 0;
+}
+.ops-settings__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+.ops-settings__pair > section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ops-settings__pair .ops-settings__panel {
+  flex: 1;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+@media (max-width: 600px) {
+  .ops-settings__pair .ops-settings__row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .ops-settings__pair .ops-settings__btn {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+.ops-settings__pair .ops-settings__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .ops-settings__label {
-  margin: 24px 0 8px;
+  margin: 16px 0 8px;
   font: 800 14px/1 var(--ln-font-display), system-ui, sans-serif;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -4495,16 +4544,32 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px var(--set-gap);
+  gap: 8px 12px;
   min-height: 44px;
   margin: 0;
-  padding: 16px 0;
+  padding: 8px 0;
   border: 0;
   border-bottom: 2px solid var(--set-ink);
   border-radius: 0;
   background: transparent;
   color: var(--set-ink);
   text-align: left;
+  grid-template-columns: none;
+}
+.ops-settings__training .patch,
+.ops-settings__training .ops-settings__row {
+  padding: 0;
+  min-height: 44px;
+}
+.ops-settings__training .ops-settings__copy {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.ops-settings__training .patch-status,
+.ops-settings__training .ops-settings__sub {
+  margin: 0;
 }
 .ops-settings__panel > :last-child,
 .ops-settings__panel > .patch-shelf:last-child > :last-child,
@@ -4579,6 +4644,33 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   border-color: var(--set-danger);
   color: var(--set-danger);
   background: var(--set-card);
+}
+.ops-settings__btn--mini {
+  min-height: 44px;
+  padding: 0 12px;
+}
+.ops-settings__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (orientation: landscape) {
+  .ops-settings__stack {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .ops-settings__pair,
+  .ops-settings__wide {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 1024px) {
+  .ops-settings__stack {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .ops-settings__pair,
+  .ops-settings__wide {
+    grid-column: 1 / -1;
+  }
 }
 .ops-settings .ln-set-segment {
   flex: 0 0 auto;

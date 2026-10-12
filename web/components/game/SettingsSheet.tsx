@@ -112,7 +112,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
           <div className="ops-settings__stack">
             <section>
               <h3 className="ops-settings__label">Training</h3>
-              <div className="ops-settings__panel">
+              <div className="ops-settings__panel ops-settings__training">
                 <div className="patch-shelf" data-testid="training-patch-shelf" role="list" aria-label="Mission patches">
                   {TRAINING_TRY_IDS.map(tryId => {
                     const active = currentTrainingTry(game.player.flightPlan) === tryId
@@ -125,7 +125,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                           <div className="patch-name">{label}</div>
                           <div className="patch-status">{status}</div>
                         </div>
-                        <button type="button" className="ops-settings__btn" onClick={() => replay(tryId)}>Replay</button>
+                        <button type="button" className="ops-settings__btn ops-settings__btn--mini" onClick={() => replay(tryId)}>Replay</button>
                       </div>
                     )
                   })}
@@ -133,12 +133,12 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                 {!freeOps && (
                   <Row>
                     <div className="ops-settings__copy">
-                      <div className="ops-settings__name">Skip training</div>
+                      <div className="ops-settings__name">Skip</div>
                       <div className="ops-settings__sub">{confirmSkipTraining ? 'Confirm: mark all tries done' : 'Marks every try done'}</div>
                     </div>
                     <button
                       type="button"
-                      className="ops-settings__btn"
+                      className="ops-settings__btn ops-settings__btn--mini"
                       data-testid="skip-training"
                       onClick={() => {
                         if (!confirmSkipTraining) { setConfirmSkipTraining(true); return }
@@ -166,16 +166,39 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                     <button type="button" aria-pressed={freeOps} onClick={() => game.setFreeOps(true)}>On</button>
                   </div>
                 </Row>
-                <Row>
-                  <div className="ops-settings__copy">
-                    <div className="ops-settings__name">Patch notes</div>
-                    <div className="ops-settings__sub">What changed</div>
-                  </div>
-                  <button type="button" className="ops-settings__btn" data-testid="patch-notes-button" onClick={() => setShowPatchNotes(true)}>
-                    Open
-                  </button>
-                </Row>
               </div>
+            </section>
+
+            <div className="ops-settings__pair">
+              <section>
+                <h3 className="ops-settings__label">Patch notes</h3>
+                <div className="ops-settings__panel">
+                  <Row>
+                    <div className="ops-settings__copy">
+                      <div className="ops-settings__name">What changed</div>
+                      <div className="ops-settings__sub">This build</div>
+                    </div>
+                    <button type="button" className="ops-settings__btn ops-settings__btn--mini" data-testid="patch-notes-button" onClick={() => setShowPatchNotes(true)}>
+                      Open
+                    </button>
+                  </Row>
+                </div>
+              </section>
+              <section>
+                <h3 className="ops-settings__label">Account</h3>
+                <div className="ops-settings__panel">
+                  <Row>
+                    <div className="ops-settings__copy">
+                      <div className="ops-settings__name">{email ?? 'Email account'}</div>
+                      <div className="ops-settings__sub">{email ? 'Signed in' : 'Account details are loading'}</div>
+                    </div>
+                    <button type="button" className="ops-settings__btn ops-settings__btn--mini" onClick={handleSignOut}>Sign out</button>
+                  </Row>
+                </div>
+              </section>
+            </div>
+
+            <section className="ops-settings__wide">
               <div className="ops-settings__panel ops-settings__panel--danger">
                 <Row>
                   <div className="ops-settings__copy">
@@ -190,7 +213,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
             </section>
 
             {showFullscreen && (
-              <section>
+              <section className="ops-settings__wide">
                 <h3 className="ops-settings__label">Display</h3>
                 <div className="ops-settings__panel">
                   <Row>
@@ -207,7 +230,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
             )}
 
             {game.player.missionsDone > 0 && (
-              <section>
+              <section className="ops-settings__wide">
                 <h3 className="ops-settings__label">Program</h3>
                 <div className="ops-settings__panel">
                   <Row>
@@ -223,21 +246,8 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
               </section>
             )}
 
-            <section>
-              <h3 className="ops-settings__label">Account</h3>
-              <div className="ops-settings__panel">
-                <Row>
-                  <div className="ops-settings__copy">
-                    <div className="ops-settings__name">{email ?? 'Email account'}</div>
-                    <div className="ops-settings__sub">{email ? 'Signed in' : 'Account details are loading'}</div>
-                  </div>
-                  <button type="button" className="ops-settings__btn" onClick={handleSignOut}>Sign out</button>
-                </Row>
-              </div>
-            </section>
-
             {IS_DEV && (
-              <section>
+              <section className="ops-settings__wide">
                 <h3 className="ops-settings__label">Debug</h3>
                 <div className="ops-settings__panel">
                   <Row>

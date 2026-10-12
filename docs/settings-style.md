@@ -26,8 +26,8 @@ Colours live as custom properties on `:root` in `web/app/globals.css`. Component
 
 ## Layout
 
-- The page is a full-bleed flat scroll. No grid, no shadow.
-- The column is `min(640px, 100%)`, centred, with 16px side inset on a phone and 32px below the last card.
+- The page is a full-bleed flat scroll. No shadow.
+- On a phone the column is 92% of the viewport, centred. On desktop it caps at 720px. Landscape and desktop lay the cards in two columns. Patch notes and Account share one row. Reset stays a full-width card.
 - Cards are white, 2px solid `--set-ink`, 10px radius, 20px padding.
 - A row is the title and status on the left, the action on the right.
 - Actions are uppercase, right-aligned, with a black play triangle. Fill is white, border is 2px black, radius 10px.
