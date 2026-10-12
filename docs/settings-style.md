@@ -27,7 +27,7 @@ Colours live as custom properties on `:root` in `web/app/globals.css`. Component
 ## Layout
 
 - The page is a full-bleed flat scroll. No shadow.
-- On a phone the column is 92% of the viewport, centred. On desktop it caps at 720px. Landscape and desktop lay the cards in two columns. Patch notes and Account share one row. Reset stays a full-width card.
+- On a phone the column is 92% of the viewport, centred. On desktop it caps at 720px. Landscape and desktop lay the cards in two columns. Display (screen orientation: Auto, Portrait, Landscape) is the first full-width card. Patch notes and Account share one row on landscape and desktop. On a narrow phone they stack as two short rows so the full line sits beside the button. Reset stays a full-width card. The Debug preset list is hidden unless the page is opened with `?dev=1` on a dev or staging build.
 - Cards are white, 2px solid `--set-ink`, 10px radius, 20px padding.
 - A row is the title and status on the left, the action on the right.
 - Actions are uppercase, right-aligned, with a black play triangle. Fill is white, border is 2px black, radius 10px.

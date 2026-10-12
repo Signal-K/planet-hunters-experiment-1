@@ -4491,7 +4491,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 12px;
-  align-items: stretch;
+  align-items: start;
 }
 .ops-settings__pair > section {
   display: flex;
@@ -4499,25 +4499,27 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   min-width: 0;
 }
 .ops-settings__pair .ops-settings__panel {
-  flex: 1;
-  padding-left: 12px;
-  padding-right: 12px;
+  padding: 0 12px;
+}
+.ops-settings__pair .ops-settings__row {
+  padding: 8px 0;
+  min-height: 44px;
+}
+.ops-settings__pair .ops-settings__copy {
+  flex: 1 1 auto;
+  align-self: center;
+  gap: 0;
+}
+.ops-settings__pair .ops-settings__name,
+.ops-settings__pair .ops-settings__sub {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
 }
 @media (max-width: 600px) {
-  .ops-settings__pair .ops-settings__row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
+  .ops-settings__pair {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .ops-settings__pair .ops-settings__btn {
-    width: 100%;
-    margin-left: 0;
-  }
-}
-.ops-settings__pair .ops-settings__sub {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .ops-settings__label {
   margin: 16px 0 8px;
@@ -4679,6 +4681,26 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 .ops-settings .ln-set-segment > button {
   flex: 0 0 auto;
   min-width: 64px;
+}
+.ops-settings__orient {
+  display: grid;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 2px solid var(--set-ink);
+}
+.ops-settings__panel > .ops-settings__orient:last-child {
+  border-bottom: 0;
+}
+.ops-settings__orient .ln-set-segment {
+  width: 100%;
+  margin-left: 0;
+}
+.ops-settings__orient .ln-set-segment > button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 4px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 .ops-settings__note h3 {
   margin: 0 0 8px;

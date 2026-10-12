@@ -27,6 +27,7 @@ import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
+import { applyStoredOrientation } from '@/lib/orientation'
 
 function GameCanvas() {
   const game = useGame()
@@ -46,6 +47,10 @@ function GameCanvas() {
   // after the first client commit instead.
   useEffect(() => {
     initPostHog()
+  }, [])
+
+  useEffect(() => {
+    applyStoredOrientation()
   }, [])
 
   useEffect(() => {

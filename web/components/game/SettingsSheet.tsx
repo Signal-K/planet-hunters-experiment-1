@@ -5,6 +5,8 @@ import { useGame } from '@/game-context'
 import { pbShared } from '@/lib/pb'
 import { DEV_GROUPS } from '@/lib/devPresets'
 import { canOfferFullscreen, enterFullscreen, readFullscreenEnv } from '@/lib/fullscreen'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { readStoredOrientation, storeOrientation, type OrientationPreference } from '@/lib/orientation'
 import PageSurface from '@/components/ui/PageSurface'
 import { TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
 
@@ -12,7 +14,11 @@ interface SettingsSheetProps {
   onClose: () => void
 }
 
-const IS_DEV = process.env.NODE_ENV === 'development'
+const ORIENTATION_CHOICES: { id: OrientationPreference; label: string }[] = [
+  { id: 'auto', label: 'Auto' },
+  { id: 'portrait', label: 'Portrait' },
+  { id: 'landscape', label: 'Landscape' },
+]
 
 const PATCH_NOTES: { title: string; lines: string[] }[] = [
   { title: 'Base and flight scenes', lines: ['Pixel-art launchpad, hangar and underground silo', 'Swipe down from the base to dig', 'Shared dock and HUD on every scene'] },
@@ -40,10 +46,18 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   const [confirmSkipTraining, setConfirmSkipTraining] = useState(false)
   const [showPatchNotes, setShowPatchNotes] = useState(false)
   const [showFullscreen, setShowFullscreen] = useState(false)
+  const [orientation, setOrientation] = useState<OrientationPreference>('auto')
+  const [showDebug, setShowDebug] = useState(false)
   const email = pbShared.authStore.record?.email as string | undefined
   const freeOps = game.player.freeOperations
 
   useEffect(() => {
+    setOrientation(readStoredOrientation())
+    // Presets stay on the dev launcher. A normal player build, and ordinary
+    // play without ?dev=1, never shows the Debug section.
+    if (isDevLauncherEnabled() && new URLSearchParams(window.location.search).get('dev') === '1') {
+      setShowDebug(true)
+    }
     const update = () => setShowFullscreen(canOfferFullscreen(readFullscreenEnv()))
     update()
     const mq = window.matchMedia('(orientation: landscape)')
@@ -54,6 +68,11 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
       document.removeEventListener('fullscreenchange', update)
     }
   }, [])
+
+  function chooseOrientation(next: OrientationPreference) {
+    setOrientation(next)
+    storeOrientation(next)
+  }
 
   function handleSignOut() {
     onClose()
@@ -110,6 +129,41 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
           </header>
 
           <div className="ops-settings__stack">
+            <section className="ops-settings__wide">
+              <h3 className="ops-settings__label">Display</h3>
+              <div className="ops-settings__panel">
+                <div className="ops-settings__orient">
+                  <div className="ops-settings__copy">
+                    <div className="ops-settings__name">Screen orientation</div>
+                    <div className="ops-settings__sub">Lock to portrait or landscape</div>
+                  </div>
+                  <div className="ln-set-segment" role="group" aria-label="Screen orientation" data-testid="orientation-segment">
+                    {ORIENTATION_CHOICES.map(choice => (
+                      <button
+                        key={choice.id}
+                        type="button"
+                        aria-pressed={orientation === choice.id}
+                        onClick={() => chooseOrientation(choice.id)}
+                      >
+                        {choice.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {showFullscreen && (
+                  <Row>
+                    <div className="ops-settings__copy">
+                      <div className="ops-settings__name">Fullscreen</div>
+                      <div className="ops-settings__sub">Use the whole screen</div>
+                    </div>
+                    <button type="button" className="ops-settings__btn" onClick={() => { enterFullscreen().catch(() => {}) }}>
+                      Enter
+                    </button>
+                  </Row>
+                )}
+              </div>
+            </section>
+
             <section>
               <h3 className="ops-settings__label">Training</h3>
               <div className="ops-settings__panel ops-settings__training">
@@ -175,8 +229,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                 <div className="ops-settings__panel">
                   <Row>
                     <div className="ops-settings__copy">
-                      <div className="ops-settings__name">What changed</div>
-                      <div className="ops-settings__sub">This build</div>
+                      <div className="ops-settings__name">This build</div>
                     </div>
                     <button type="button" className="ops-settings__btn ops-settings__btn--mini" data-testid="patch-notes-button" onClick={() => setShowPatchNotes(true)}>
                       Open
@@ -189,8 +242,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                 <div className="ops-settings__panel">
                   <Row>
                     <div className="ops-settings__copy">
-                      <div className="ops-settings__name">{email ?? 'Email account'}</div>
-                      <div className="ops-settings__sub">{email ? 'Signed in' : 'Account details are loading'}</div>
+                      <div className="ops-settings__name">{email ?? 'Signed in'}</div>
                     </div>
                     <button type="button" className="ops-settings__btn ops-settings__btn--mini" onClick={handleSignOut}>Sign out</button>
                   </Row>
@@ -212,23 +264,6 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
               </div>
             </section>
 
-            {showFullscreen && (
-              <section className="ops-settings__wide">
-                <h3 className="ops-settings__label">Display</h3>
-                <div className="ops-settings__panel">
-                  <Row>
-                    <div className="ops-settings__copy">
-                      <div className="ops-settings__name">Fullscreen</div>
-                      <div className="ops-settings__sub">Use the whole screen</div>
-                    </div>
-                    <button type="button" className="ops-settings__btn" onClick={() => { enterFullscreen().catch(() => {}) }}>
-                      Enter
-                    </button>
-                  </Row>
-                </div>
-              </section>
-            )}
-
             {game.player.missionsDone > 0 && (
               <section className="ops-settings__wide">
                 <h3 className="ops-settings__label">Program</h3>
@@ -246,7 +281,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
               </section>
             )}
 
-            {IS_DEV && (
+            {showDebug && (
               <section className="ops-settings__wide">
                 <h3 className="ops-settings__label">Debug</h3>
                 <div className="ops-settings__panel">
