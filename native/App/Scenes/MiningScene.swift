@@ -30,7 +30,7 @@ final class MiningScene: SKScene {
     private let px: CGFloat = 2
     private lazy var flameFrames = (0..<2).map { SK.texture("laser/flame-\($0).png") }
     private var ridgeTile: CGFloat { 128 * px }
-    private var soilTile: CGFloat { 32 * px }
+    private var soilTile: CGFloat { 64 * px }
     private let ship = SKNode()
     private var flashUntil: TimeInterval = 0
 
@@ -86,6 +86,23 @@ final class MiningScene: SKScene {
         sky.position = CGPoint(x: size.width / 2, y: size.height / 2)
         sky.zPosition = -20
         world.addChild(sky)
+
+        // Dithered bands across the gradient, each lighter than the sky behind it, so the sky reads as pixel steps.
+        let bandH = 4 * px
+        let zones = 6
+        for z in 0..<zones {
+            let t = (CGFloat(z) + 0.5) / CGFloat(zones)
+            let bandY = surfaceY + (size.height - surfaceY) * (1 - t)
+            let mix = LaserPalette.mix(palette.skyTop, palette.skyHorizon, 1 - t + 0.12)
+            let level = min(2, z / 2)
+            for c in 0..<Int((size.width / (16 * px)).rounded(.up)) {
+                let strip = sprite("sky-dither-\(level)", tint: mix, alpha: 0.55)
+                strip.anchorPoint = .zero
+                strip.position = CGPoint(x: CGFloat(c) * 16 * px, y: bandY - bandH / 2)
+                strip.zPosition = -19
+                world.addChild(strip)
+            }
+        }
 
         if palette.starAlpha > 0 {
             for i in 0..<64 {
@@ -151,6 +168,7 @@ final class MiningScene: SKScene {
     private func buildGround() {
         let ridgeName = "ridge-" + (palette.terrain == "ice" || palette.terrain == "dunes" ? palette.terrain : "rubble")
         let copies = Int((size.width / ridgeTile).rounded(.up)) + 2
+        far.removeAllChildren(); near.removeAllChildren(); ground.removeAllChildren()   // a resize rebuilds the scene; drop the old layers
         far.zPosition = -8
         near.zPosition = -6
         ground.zPosition = 1
@@ -169,15 +187,26 @@ final class MiningScene: SKScene {
         let rows = Int((surfaceY / soilTile).rounded(.up)) + 1
         let crustH = 8 * px
         for c in 0..<cols {
+            let cx = CGFloat(c) * soilTile
             let lip = sprite("crust", tint: palette.groundSpeck, blend: 0.45)
             lip.anchorPoint = CGPoint(x: 0, y: 0)
-            lip.position = CGPoint(x: CGFloat(c) * soilTile, y: surfaceY - crustH)
+            lip.position = CGPoint(x: cx, y: surfaceY - crustH)
+            lip.zPosition = 1
             ground.addChild(lip)
             for r in 0..<rows {
-                let soil = sprite("soil", tint: r == 0 ? palette.ground : palette.groundDeep, blend: 0.55)
-                soil.anchorPoint = CGPoint(x: 0, y: 0)
-                soil.position = CGPoint(x: CGFloat(c) * soilTile, y: surfaceY - crustH - CGFloat(r + 1) * soilTile)
+                // Alternate the two ground tones by tile so neighbouring tiles read as different dirt, deeper rows darker.
+                let deep = r > 0 || c % 3 == 1
+                let soil = sprite("soil", tint: deep ? palette.groundDeep : palette.ground, blend: 0.55)
+                soil.anchorPoint = .zero
+                let y = surfaceY - crustH - CGFloat(r + 1) * soilTile
+                soil.position = CGPoint(x: cx, y: y)
+                if (c + r) % 2 == 1 { soil.xScale = -px; soil.position.x += soilTile }
                 ground.addChild(soil)
+                let flecks = sprite("soil-flecks")
+                flecks.anchorPoint = .zero
+                flecks.position = CGPoint(x: cx, y: y)
+                if (c + r) % 2 == 1 { flecks.xScale = -px; flecks.position.x += soilTile }
+                ground.addChild(flecks)
             }
         }
         world.addChild(far)

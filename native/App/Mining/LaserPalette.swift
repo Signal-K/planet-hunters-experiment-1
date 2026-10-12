@@ -32,6 +32,14 @@ enum LaserPalette {
         var planet: Planet?
     }
 
+    /// Linear mix of two palette colours, t clamped to 0...1.
+    static func mix(_ a: UInt32, _ b: UInt32, _ t: CGFloat) -> UInt32 {
+        let k = max(0, min(1, t))
+        func ch(_ s: UInt32) -> CGFloat { CGFloat(s & 255) }
+        func lerp(_ sa: UInt32, _ sb: UInt32) -> UInt32 { UInt32((ch(sa) + (ch(sb) - ch(sa)) * k).rounded()) }
+        return lerp(a >> 16, b >> 16) << 16 | lerp(a >> 8, b >> 8) << 8 | lerp(a, b)
+    }
+
     static func color(_ v: UInt32, _ a: Double = 1) -> Color { Theme.hex(v, a) }
     static func sk(_ v: UInt32, _ a: Double = 1) -> PlatformColor { Theme.hex(v, a).sk }
 
