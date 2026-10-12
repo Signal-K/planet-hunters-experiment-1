@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { exposedOutcrops, takeonBodyForTarget } from './RoverSurveyScreen'
+import { takeonBodyForTarget } from './RoverSurveyScreen'
+import { outcropNear, SURVEY_OUTCROPS } from '@/lib/rover/terrain'
 
-describe('RoverSurveyScreen TakeOn host boundary', () => {
+describe('RoverSurveyScreen host boundary', () => {
   it('maps Landnam mission targets to registered TakeOn bodies', () => {
     expect(takeonBodyForTarget({ id: 'bennu', type: 'asteroid' })).toBe('bennu')
     expect(takeonBodyForTarget({ id: 'itokawa', type: 'asteroid' })).toBe('ironrock')
@@ -9,10 +10,9 @@ describe('RoverSurveyScreen TakeOn host boundary', () => {
     expect(takeonBodyForTarget({ id: 'unknown-planet', type: 'planet' })).toBe('mars')
   })
 
-  it('places survey outcrops to observe, without an extraction order', () => {
-    const outcrops = exposedOutcrops({ x: 0, y: 31 })
-    expect(outcrops.map(outcrop => outcrop.label)).toEqual(['OUTCROP A', 'OUTCROP B', 'OUTCROP C'])
-    expect(outcrops.map(outcrop => outcrop.mineral)).toEqual(['iron', 'copper', 'aluminium'])
-    expect(new Set(outcrops.map(outcrop => outcrop.id)).size).toBe(3)
+  it('places survey outcrops on the driveable ridge, without an extraction order', () => {
+    expect(SURVEY_OUTCROPS.map(outcrop => outcrop.label)).toEqual(['OUTCROP A', 'OUTCROP B', 'OUTCROP C'])
+    expect(SURVEY_OUTCROPS.map(outcrop => outcrop.mineral)).toEqual(['iron', 'copper', 'aluminium'])
+    expect(outcropNear(SURVEY_OUTCROPS[1].x)?.id).toBe('outcrop-b')
   })
 })
