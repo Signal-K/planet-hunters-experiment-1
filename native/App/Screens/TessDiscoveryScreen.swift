@@ -20,7 +20,8 @@ struct TessDiscoveryScreen: View {
 
     /// Scan training try: the first classification is a local training subject, no telescope or Free Ops needed.
     private var training: Bool {
-        candidate == nil && !store.player.freeOperations && store.player.flightPlan.currentTry == "scan"
+        candidate == nil && !store.player.freeOperations
+            && (store.player.flightPlan.currentTry == "scan" || store.player.tessClassifications[Tess.trainingCandidate.id] != nil)
     }
 
     private var today: TessCandidate? {
@@ -37,6 +38,8 @@ struct TessDiscoveryScreen: View {
                      action: ("OPEN LAUNCHPAD", { store.go(.launchpad) }))
             } else if let c = today {
                 classify(c)
+            } else if training {
+                gate("Transit Logged", "Your classification is recorded. The scan try is complete.", action: ("BACK TO BASE", { store.go(.hub) }))
             } else if feed.tessPhase == .failed {
                 gate("Live Feed Unavailable", "The shared TESS subject feed could not be reached.", action: ("RETRY DOWNLINK", { Task { await feed.loadTess(force: true) } }))
             } else if feed.tessPhase == .ready {
@@ -45,7 +48,7 @@ struct TessDiscoveryScreen: View {
                 gate("Acquiring Signal", "Pulling the day's unresolved TESS transit anomaly from the shared feed.")
             }
         }
-        .task { if candidate == nil { await feed.loadTess() } }
+        .task { if candidate == nil && !training { await feed.loadTess() } }
     }
 
     private func gate(_ title: String, _ message: String, action: (String, () -> Void)? = nil) -> some View {

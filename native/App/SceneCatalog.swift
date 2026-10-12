@@ -355,7 +355,7 @@ enum SceneCatalog {
 struct SceneHost: View {
     let id: String
     var body: some View {
-        if let s = SceneCatalog.find(id), id.contains("-live") {
+        if let s = SceneCatalog.find(id), id.contains("-live") || id.hasPrefix("coach-") || id.hasPrefix("try-") {
             // Full-screen, real safe areas: what a player sees, without the fixed fixture frame.
             s.make().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.bg)
                 #if os(iOS)
