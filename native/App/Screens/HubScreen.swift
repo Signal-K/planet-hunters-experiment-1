@@ -240,6 +240,20 @@ struct SettingsSheet: View {
     private static let tryNames = ["mining": "Mining", "scan": "Planet scan", "part": "Part tweak"]
 
     var body: some View {
+        GeometryReader { geo in settingsBody(topInset: geo.safeAreaInsets.top) }
+            .sheet(isPresented: $showPatchNotes) { PatchNotesSheet() }
+            .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+                Button("Sign out", role: .destructive) { auth.signOut() }
+                Button("Stay signed in", role: .cancel) {}
+            } message: {
+                Text("Your progress stays saved on this device and in the cloud. Sign back in to continue.")
+            }
+            .background(SetStyle.bg.ignoresSafeArea())
+            .presentationDetents([.medium, .large])
+    }
+
+    /// The heading clears the status bar and clock when the sheet runs edge to edge (`topInset` is 0 when it already sits inside the safe area).
+    private func settingsBody(topInset: CGFloat) -> some View {
         VStack(spacing: 0) {
             HStack {
                 Text("Settings".uppercased()).font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SetStyle.ink)
@@ -248,18 +262,9 @@ struct SettingsSheet: View {
                     Image(systemName: "xmark").font(.system(size: 16, weight: .heavy)).foregroundStyle(SetStyle.ink)
                         .frame(width: 44, height: 44).contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityLabel("Close")
-            }.padding(.horizontal, 16).padding(.top, flat ? 24 : 8).setColumn()
-            if flat { content.frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { content } }
+            }.padding(.horizontal, 16).padding(.top, max(flat ? 24 : 8, topInset + 8)).setColumn()
+            if flat { content.frame(maxHeight: .infinity, alignment: .top) } else { ScrollView(showsIndicators: false) { content } }
         }
-        .sheet(isPresented: $showPatchNotes) { PatchNotesSheet() }
-        .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
-            Button("Sign out", role: .destructive) { auth.signOut() }
-            Button("Stay signed in", role: .cancel) {}
-        } message: {
-            Text("Your progress stays saved on this device and in the cloud. Sign back in to continue.")
-        }
-        .background(SetStyle.bg)
-        .presentationDetents([.medium, .large])
     }
 
     private var content: some View {
@@ -305,7 +310,7 @@ struct SettingsSheet: View {
             }
         }
         .frame(width: col)
-        .padding(.top, 8).padding(.bottom, 32)
+        .padding(.top, 8).padding(.bottom, 96)
         .frame(maxWidth: .infinity)
         .background(GeometryReader { g in Color.clear.onAppear { width = g.size.width }.onChange(of: g.size.width) { _, w in width = w } })
     }

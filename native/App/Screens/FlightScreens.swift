@@ -158,12 +158,6 @@ struct MiningScreen: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
 
-            if !narrow {
-                order
-                    .padding(.top, insets.top + zones.topLeft.inset)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            }
-
             HudChips(francs: store.player.francs)
                 .padding(.trailing, insets.trailing + zones.topRight.inset).padding(.top, insets.top + zones.topRight.inset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
@@ -230,18 +224,19 @@ struct MiningActionRow: View {
                         let need = field.required[id] ?? 0
                         let have = min(need, field.cargo[id, default: 0])
                         Text("\(Minerals.byId[id]?.name ?? id) \(have)/\(need)")
-                            .font(AppFont.body(16)).foregroundStyle(Theme.ink).lineLimit(1)
+                            .font(AppFont.mono(14)).foregroundStyle(Theme.hudInk).lineLimit(1)
                     }
                     GeometryReader { g in
                         ZStack(alignment: .leading) {
-                            Capsule().fill(Theme.paper)
-                            Capsule().fill(Theme.green).frame(width: max(4, g.size.width * chargePct))
+                            Capsule().fill(Theme.hudInk.opacity(0.15))
+                            Capsule().fill(Theme.hudInk).frame(width: max(4, g.size.width * chargePct))
                         }
                     }.frame(height: 8)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 8)
                 .frame(maxWidth: .infinity, minHeight: showFire ? 64 : 44, alignment: .leading)
-                .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 16))
+                .background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: 4))
+                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Order. Laser charge \(field.charge) of \(field.chargeCap).")
@@ -260,8 +255,8 @@ struct MiningActionRow: View {
         }
         .padding(showFire ? 10 : 4)
         .frame(maxWidth: 720)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 22))
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Theme.border, lineWidth: 1))
+        .background(showFire ? Theme.paper : .clear, in: RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(showFire ? Theme.border : .clear, lineWidth: 1))
     }
 }
 
