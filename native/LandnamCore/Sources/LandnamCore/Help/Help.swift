@@ -36,7 +36,24 @@ public enum Help {
     public static let minCards = 2
     public static let maxCards = 4
 
+    private static let launch = HelpTopic(id: "launch", title: "Launch review", cards: [
+        HelpCard(title: "Map and destination", body: "The map shows where each body sits. Lit bodies are in reach of this rocket. Tap one to pick it, or use the arrows. Check the minerals and the distance before you commit."),
+        HelpCard(title: "Rocket and cargo", body: "Each rocket class has its own cargo space and range. Pick one that carries the cargo this run needs and reaches the body. A contract shows its payout, so compare it with what the rocket costs."),
+        HelpCard(title: "Fit checks", body: "Clearance reads ALL PARAMETERS PASS when the rocket, fuel and cargo fit the trip. If it says BUILD HOLD, the line under it names what is missing. Change the rocket or the target to clear it."),
+        HelpCard(title: "What Launch commits", body: "Prepare rolls the rocket from the Workshop to the pad and spends its build cost. LAUNCH then starts the flight. A Free Ops haul and a client contract both leave from here."),
+    ])
+
     public static let topics: [Screen: HelpTopic] = [
+        .missions: HelpTopic(id: "contracts", title: "Contracts", cards: [
+            HelpCard(title: "Client or your own work", body: "This board is client work. A contract pays a set amount and may be locked until you meet its requirement. Skip it and fly your own mission from the pad."),
+            HelpCard(title: "Payout and bonus", body: "The payout is paid on delivery. A client bonus is extra, and only if the card lists one and you meet its terms. Misses cost the bonus, not the base payout."),
+            HelpCard(title: "Prepare, then launch", body: "Accept and prepare opens the launch review. The rocket stands in the Workshop, then rolls to the pad when you confirm."),
+        ]),
+        .targets: launch, .rocketBuy: launch, .fab: launch,
+        .hangar: HelpTopic(id: "hangar", title: "Hangar", cards: [
+            HelpCard(title: "Parts and builds", body: "Pick a part to see what it changes. Stat changes show next to the part. Build cost is the francs it takes to fit it."),
+            HelpCard(title: "Staged vehicles", body: "Assemble a staged vehicle here, then transfer it to the pad. Parts you have not unlocked stay greyed."),
+        ]),
         .instrumentHub: HelpTopic(id: "control-station", title: "Control Station", cards: [
             HelpCard(title: "Where things are", body: "The map shows each telescope and satellite you operate. A number means that equipment has items ready to classify."),
             HelpCard(title: "Open a project", body: "Filter by place, then open a row that has a count. That opens the review for those items."),

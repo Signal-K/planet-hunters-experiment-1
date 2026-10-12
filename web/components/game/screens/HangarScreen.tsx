@@ -11,6 +11,7 @@ import { formatCurrency } from '@/lib/format'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 import { captureGameEvent } from '@/lib/posthog'
 import { kitRocketBuilt, markRocketRolloutPending } from '@/lib/rocket-rollout'
+import { useHelp } from '@/components/ui/useHelp'
 import styles from './HangarScreen.module.css'
 
 interface HangarScreenProps {
@@ -147,6 +148,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
   // have not purchased the general-purpose customiser skill node.
   const customizerUnlocked = trainingPartTry || hasShipCustomizer(unlockedSkillNodes) || !!crewModuleResearched || !!landingResearched
   const [customizerOpen, setCustomizerOpen] = useState(false)
+  const help = useHelp('hangar')
   const installed = shipCustomizerParts ?? {}
   const sequence = getBuildSequence(missionsDone, crewModuleResearched, landingResearched)
   const installedIds = selectedCustomizerPartIds(installed, sequence)
@@ -158,7 +160,8 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
 
   return (
     <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="hangar-screen">
-      <TopBar onBack={onBack} solid />
+      {help.layer}
+      <TopBar onBack={onBack} solid right={help.button} />
       <div className={`screen-scroll ${styles.scroll}`} data-ui-zone={UI_ZONES.screenContent}>
         <div className={styles.inner}>
           <div className={styles.intro}>

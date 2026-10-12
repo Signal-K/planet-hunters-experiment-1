@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useHelp } from '@/components/ui/useHelp'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import type { MissionRelayCardModel } from '@/lib/hooks/useMissionRelayModels'
@@ -154,6 +155,7 @@ export default function MissionBoard({
   const [tab, setTab] = useState<MissionBoardTab>(() => takeMissionBoardTab() ?? 'contracts')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
+  const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
   const events = useMemo(() => eventsBoard(now, player.badges, orionidsNow), [now, orionidsNow, player.badges])
@@ -190,6 +192,7 @@ export default function MissionBoard({
     </div>
     <section className={styles.panel} data-testid="mission-board" aria-label="Mission board">
       <button type="button" className={`${styles.round} ${styles.close}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+      {help.button && <div className={styles.help}>{help.button}</div>}
       <nav className={styles.tabs} aria-label="Mission board">
         <button type="button" className={styles.tab} data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon />Contracts</button>
         <button type="button" className={styles.tab} data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => setTab('program')}><ClipboardIcon />Program</button>
@@ -290,6 +293,7 @@ export default function MissionBoard({
         </div>
       </div>
     </section>
+    {help.layer}
     {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
     {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
   </div>
