@@ -2,6 +2,7 @@ import Foundation
 
 /// One line of the Mission Log: a completed mission, or a transit the player classified.
 public struct MissionLogEntry: Equatable, Sendable {
+    public enum Kind: String, Equatable, Sendable { case mission, program, transit }
     public let title: String
     public let meta: String
     public let completedAt: Double
@@ -13,6 +14,7 @@ public struct MissionLogEntry: Equatable, Sendable {
     public var targetName: String? = nil
     /// Transit verdict, e.g. "Planet candidate".
     public var verdict: String? = nil
+    public var kind: Kind { isTransit ? .transit : isProgram ? .program : .mission }
 }
 
 /// Mission Log contents (mirrors web lib/mission-log.ts). The log only ever held completed

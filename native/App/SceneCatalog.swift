@@ -38,6 +38,25 @@ enum SceneCatalog {
         return gs
     }
 
+    /// Training fixtures: a screen with the coach strip below it, the way RootView lays it out.
+    static func coached<V: View>(_ view: V, _ gs: GameState, screen: Screen) -> some View { coached(view, GameStore(state: gs), screen: screen) }
+    static func coached<V: View>(_ view: V, _ store: GameStore, screen: Screen) -> some View {
+        view.environment(store).environment(offlineFeed)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if let c = FlightPlan.coach(store.player, screen: screen) { CoachStrip(coach: c).environment(store) }
+            }
+    }
+
+    static func scanState() -> GameState {
+        var gs = GameState(); gs.player.placed = ["launchpad"]; gs.player.flightPlan.complete("mining"); gs.screen = .galaxy
+        return gs
+    }
+
+    static func partState() -> GameState {
+        var gs = scanState(); gs.player.flightPlan.complete("scan"); gs.screen = .hangar
+        return gs
+    }
+
     /// The web `baseArt=starter` base: launchpad and hangar (silo is underground only).
     static func starterState() -> GameState {
         var gs = GameState()
@@ -240,6 +259,24 @@ enum SceneCatalog {
             let feed = offlineFeed
             feed.tess = (1...9).map { TessCandidate(id: "toi-\($0)", toi: "TOI \(100 + $0).01") }
             return TessDiscoveryScreen(candidate: tess).environment(GameStore(state: gs)).environment(feed).environment(\.flatLayout, true)
+        },
+        scene("coach-launchpad-phone", 874) { coached(BuildScreen(), GameState(), screen: .build) },
+        scene("coach-launchpad-landscape", 402, w: 874) { coached(BuildScreen(), GameState(), screen: .build) },
+        scene("coach-mining-phone", 874) {
+            var gs = GameState(); gs.player.placed = ["launchpad", "hangar"]; gs.player.placementPlots = ["launchpad": 0, "hangar": 1]
+            return coached(HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 0, trailing: 0)), gs, screen: .hub)
+        },
+        scene("try-scan-before-phone", 874) { coached(TessDiscoveryScreen(), scanState(), screen: .galaxy) },
+        scene("try-scan-done-phone", 874) {
+            let store = GameStore(state: scanState())
+            store.classifyTess("training-tess-1", verdict: .planet, ranges: [TransitRange(x1: 0.95, x2: 1.25)], candidate: Tess.trainingCandidate)
+            return coached(TessDiscoveryScreen(), store, screen: .galaxy)
+        },
+        scene("try-part-before-phone", 874) { coached(LaunchScreen(), partState(), screen: .hangar) },
+        scene("try-part-done-phone", 874) {
+            let store = GameStore(state: partState())
+            store.fitHangarModules(["engine": "ion-thruster-t1", "booster": "strap-booster-t1", "cockpit": "cockpit-command-t1", "payload": "cargo-payload-t1"])
+            return coached(LaunchScreen(), store, screen: .hangar)
         },
         scene("flight-live", 874) { TransitScreen().environment(GameStore(state: flightState())) },
         scene("flight-live-landscape", 402, w: 874) { TransitScreen().environment(GameStore(state: flightState())) },

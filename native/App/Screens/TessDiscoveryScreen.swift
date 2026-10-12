@@ -18,15 +18,21 @@ struct TessDiscoveryScreen: View {
         self.candidate = candidate; self.inspect = inspect; _ranges = State(initialValue: marks)
     }
 
+    /// Scan training try: the first classification is a local training subject, no telescope or Free Ops needed.
+    private var training: Bool {
+        candidate == nil && !store.player.freeOperations && store.player.flightPlan.currentTry == "scan"
+    }
+
     private var today: TessCandidate? {
-        candidate ?? Tess.today(candidates: feed.tess, player: store.player, dateKey: Saturn.dateKey(store.now), inspect: inspect)
+        if training { return store.player.tessClassifications[Tess.trainingCandidate.id] == nil ? Tess.trainingCandidate : nil }
+        return candidate ?? Tess.today(candidates: feed.tess, player: store.player, dateKey: Saturn.dateKey(store.now), inspect: inspect)
     }
 
     var body: some View {
         Group {
-            if candidate == nil && !store.player.freeOperations {
+            if candidate == nil && !training && !store.player.freeOperations {
                 gate("Free Operations Required", "TESS candidate downlinks unlock after the starter contract arc.")
-            } else if candidate == nil && store.player.transitSatelliteLaunchedAt == nil {
+            } else if candidate == nil && !training && store.player.transitSatelliteLaunchedAt == nil {
                 gate("Launch Transit Telescope", "Deploy your own telescope from the Launchpad. Its daily data will downlink here after the flight.",
                      action: ("OPEN LAUNCHPAD", { store.go(.launchpad) }))
             } else if let c = today {

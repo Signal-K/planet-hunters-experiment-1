@@ -13,10 +13,8 @@ public enum Transitions {
 
     // MARK: onboarding
 
-    public static let legacyFreeOpsMissionsDone = 3
-    public static func freeOperationsUnlocked(_ p: Player) -> Bool {
-        p.missionsDone >= legacyFreeOpsMissionsDone || p.flightPlan.isComplete
-    }
+    /// Free Ops opens when all three training tries (mining, scan, part) are done; contract count alone never opens it.
+    public static func freeOperationsUnlocked(_ p: Player) -> Bool { p.flightPlan.isComplete }
 
     // MARK: return leg
 

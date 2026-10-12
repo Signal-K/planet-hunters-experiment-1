@@ -247,10 +247,10 @@ struct BaseWorldScene: View {
                 ZStack(alignment: .bottom) {
                     Art.view("base/kit/pad-gantry-frame.png").resizable().interpolation(.none)
                         .frame(width: 120 * px, height: 92 * px)
-                        .offset(y: -16 * px)
+                        .offset(y: -17 * px)
                     Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none)
                         .frame(width: 44 * px, height: 72 * px)
-                        .offset(x: 22 * px, y: -22 * px)
+                        .offset(x: 22 * px, y: -19 * px)
                     Art.view("base/kit/pad-slab-concrete.png").resizable().interpolation(.none)
                         .frame(width: slabW, height: slabH)
                 }

@@ -91,7 +91,6 @@ struct MiningScreen: View {
     @State private var confirmingScrub = false
     @State private var showSettings = false
     @State private var showGuide = false
-    @State private var scrollPos = 0.5
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// SSL-411: Return stays tappable (a dead button reads as a bug) and says what is still missing.
@@ -118,7 +117,7 @@ struct MiningScreen: View {
             ZStack {
                 if let scene { SpriteView(scene: scene).ignoresSafeArea() }
                 if let field {
-                    laserChrome(field)
+                    laserChrome(field, insets: geo.safeAreaInsets, narrow: geo.size.width < 600).ignoresSafeArea()
                 }
             }
             .onAppear { if scene == nil { setup(geo.size) } }
@@ -128,7 +127,7 @@ struct MiningScreen: View {
         .sheet(isPresented: $showGuide) {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Controls").font(AppFont.display(18, "Bold")).foregroundStyle(Theme.ink)
-                Text("Hold an arrow or drag the slider so a chip crosses the beam, then fire.").font(AppFont.body(16)).foregroundStyle(Theme.ink)
+                Text("Tap the dock arrows to speed up or slow down the ground so a deposit sits under the beam, then fire. Hold the order card for this menu.").font(AppFont.body(16)).foregroundStyle(Theme.ink)
                 Button("Recharge laser") { showGuide = false; scene?.refill(); say("Laser refilled. Cargo kept.") }
                     .font(AppFont.display(16, "Bold")).frame(maxWidth: .infinity, minHeight: 44)
                 Button("Scrub mission", role: .destructive) { showGuide = false; confirmingScrub = true }
@@ -148,65 +147,53 @@ struct MiningScreen: View {
         }
     }
 
-    private func laserChrome(_ field: MiningField) -> some View {
-        ZStack {
-            VStack {
-                HStack(spacing: 8) {
-                    roundButton("gearshape.fill", "Settings") { showSettings = true }
-                    roundButton("clock", "Controls") { showGuide = true }
-                    Spacer(minLength: 8)
-                    roundButton("cube.fill", "Cargo \(field.cargoUnits) of \(field.cargoCapacity)", tint: Theme.green) {
-                        say("Cargo \(field.cargoUnits) of \(field.cargoCapacity)")
-                    }
-                    roundButton("person.2.fill", "Friends") { say("Friends open from home") }
-                }
+    private func laserChrome(_ field: MiningField, insets: EdgeInsets, narrow: Bool) -> some View {
+        let zones = HUDZones.standard
+        let order = MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false)
+            .frame(maxWidth: 220)
+            .onLongPressGesture { showGuide = true }
+        return ZStack {
+            VStack(alignment: .leading, spacing: 8) {
+                HudGearClock(onSettings: { showSettings = true })
+                if narrow { order }
                 SkyEventChip().frame(maxWidth: .infinity, alignment: .leading)
                 Spacer()
             }
-            .padding(12)
+            .padding(.leading, insets.leading + zones.topLeft.inset).padding(.top, insets.top + zones.topLeft.inset)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
-            HStack {
-                roundButton("chevron.left", "Scroll slower") { }
-                    .simultaneousGesture(DragGesture(minimumDistance: 0)
-                        .onChanged { _ in scene?.setScroll(-1) }
-                        .onEnded { _ in scene?.setScroll(0) })
-                Spacer()
-                roundButton("chevron.right", "Scroll faster") { }
-                    .simultaneousGesture(DragGesture(minimumDistance: 0)
-                        .onChanged { _ in scene?.setScroll(1) }
-                        .onEnded { _ in scene?.setScroll(0) })
+            if !narrow {
+                order
+                    .padding(.top, insets.top + zones.topLeft.inset)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
-            .padding(.horizontal, 12)
+
+            if !narrow {
+                order
+                    .padding(.top, insets.top + zones.topLeft.inset)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
+
+            HudChips(francs: store.player.francs)
+                .padding(.trailing, insets.trailing + zones.topRight.inset).padding(.top, insets.top + zones.topRight.inset)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 
             VStack(spacing: 8) {
                 Spacer()
                 if let toast {
-                    Text(toast).font(AppFont.display(14)).foregroundStyle(Theme.ink)
+                    Text(toast).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
                         .padding(.horizontal, 12).padding(.vertical, 8)
-                        .background(Theme.paper, in: Capsule())
-                        .overlay(Capsule().stroke(Theme.border, lineWidth: 1.5))
+                        .background(Capsule().fill(Theme.hudPanel))
+                        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
                 }
-                Slider(value: $scrollPos, in: 0...1, onEditingChanged: { editing in
-                    if !editing { scrollPos = 0.5; scene?.setScroll(0) }
-                })
-                .frame(maxWidth: 720, minHeight: 44)
-                .onChange(of: scrollPos) { _, value in scene?.setScroll(value * 2 - 1) }
-                MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, onFire: { scene?.fireLaser() })
+                BaseDock(tile: 44, zones: zones.dock, items: [
+                    ("Fire", "bolt.fill", { scene?.fireLaser() }),
+                    ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
+                ], onPrev: { scene?.nudge(-1) }, onNext: { scene?.nudge(1) })
             }
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
+            .padding(.bottom, insets.bottom + zones.dock.bottomInset)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
-    }
-
-    private func roundButton(_ symbol: String, _ label: String, tint: Color = Theme.hudInk, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 18, weight: .bold)).foregroundStyle(tint)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(Theme.hudPanel))
-                .overlay(Circle().stroke(Theme.hudInk, lineWidth: 2))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(label)
     }
 
     private func setup(_ size: CGSize) {
@@ -241,6 +228,7 @@ struct MiningActionRow: View {
     let onReturn: () -> Void
     let onScrub: () -> Void
     var onFire: () -> Void = {}
+    var showFire = true
 
     private var chargePct: Double { field.chargeCap > 0 ? Double(field.charge) / Double(field.chargeCap) : 0 }
 
@@ -262,12 +250,13 @@ struct MiningActionRow: View {
                     }.frame(height: 8)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 8)
-                .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: showFire ? 64 : 44, alignment: .leading)
                 .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 16))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Order. Laser charge \(field.charge) of \(field.chargeCap).")
             .accessibilityAction(named: "Scrub mission", onScrub)
+            if showFire {
             Button(action: onFire) {
                 Text(field.charge <= 0 ? "Depleted" : "Fire laser")
                     .font(AppFont.display(20)).foregroundStyle(Theme.ink)
@@ -277,8 +266,9 @@ struct MiningActionRow: View {
             .buttonStyle(.plain)
             .disabled(field.charge <= 0)
             .accessibilityLabel("Fire laser")
+            }
         }
-        .padding(10)
+        .padding(showFire ? 10 : 4)
         .frame(maxWidth: 720)
         .background(Theme.paper, in: RoundedRectangle(cornerRadius: 22))
         .overlay(RoundedRectangle(cornerRadius: 22).stroke(Theme.border, lineWidth: 1))
