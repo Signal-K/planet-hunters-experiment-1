@@ -34,8 +34,8 @@ export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height:
   market: { width: 214, height: 124 },
 }
 
-export function LaunchpadModules({ className = '', parts }: { className?: string; parts?: InstalledCustomizerPartsByKind | null }) {
-  return <span className={className} style={{ display: 'block', width: '100%', height: '100%' }}><PixelStructure kind="launchpad" level={3} parts={parts} /></span>
+export function LaunchpadModules({ className = '', parts, rocket = false }: { className?: string; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean }) {
+  return <span className={className} style={{ display: 'block', width: '100%', height: '100%' }}><PixelStructure kind="launchpad" level={3} parts={parts} rocket={rocket} /></span>
 }
 
 export function HangarModules({ className = '' }: { className?: string }) {

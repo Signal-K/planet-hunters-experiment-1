@@ -15,7 +15,7 @@ import { useBaseCamera } from '@/lib/hooks/useBaseCamera'
 import { useBaseSeason, useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES, structureCenterPercent, structureWidthPct } from '@/components/game/hub/EarthBaseModules'
 import { RocketRollout } from '@/components/game/hub/RocketRollout'
-import { consumeRocketRolloutPending, kitRocketBuilt } from '@/lib/rocket-rollout'
+import { consumeRocketRolloutPending } from '@/lib/rocket-rollout'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
@@ -84,7 +84,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
   const [rollingOut, setRollingOut] = useState(() => consumeRocketRolloutPending())
   const finishRollout = useCallback(() => setRollingOut(false), [])
-  const rocketOnPad = kitRocketBuilt(player.shipCustomizerParts) && !rollingOut
+  // The pad stays empty unless a mission or launch is in progress (docs/STYLE.md rule 6). Rollout draws its own rocket.
+  const rocketOnPad = (!!player.activeMission || !!player.pendingLaunch) && !rollingOut
   // The terrain baseline is part of the world composition. It must not move
   // when the dock grows or the mobile browser chrome changes height: doing so
   // pulled the launchpad up into the mountain range to make room for UI. The

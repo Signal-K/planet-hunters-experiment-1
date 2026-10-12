@@ -9,6 +9,8 @@ struct BaseWorldScene: View {
     var plots: [String: Int]
     var levels: [String: Int]
     var oreFraction: Double = 0
+    /// A rocket stands on the pad only while a build or mission is in progress; an idle pad is empty.
+    var padOccupied: Bool = false
     var insets: EdgeInsets = EdgeInsets()
     var camera: BaseCamera
     var onStructure: (String) -> Void
@@ -248,16 +250,18 @@ struct BaseWorldScene: View {
         let center = width * anchor(kind, plot: plots[kind] ?? 0, portrait: portrait)
         let px = pixelScale(height: height, portrait: portrait)
         if kind == "launchpad" {
-            // Pad slab with the connected gantry frame and the rocket standing on it, all kit sprites at one pixel scale.
+            // Pad slab with the connected gantry frame and the rocket only while one is in progress, all kit sprites at one pixel scale.
             let slabW = 120 * px, slabH = 20 * px, stackH = (16 + 92) * px
             return AnyView(Button { onStructure(kind) } label: {
                 ZStack(alignment: .bottom) {
                     Art.view("base/kit/pad-gantry-frame.png").resizable().interpolation(.none)
                         .frame(width: 120 * px, height: 92 * px)
                         .offset(y: -17 * px)
-                    Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none)
-                        .frame(width: 44 * px, height: 72 * px)
-                        .offset(x: 22 * px, y: -19 * px)
+                    if padOccupied {
+                        Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none)
+                            .frame(width: 44 * px, height: 72 * px)
+                            .offset(x: 22 * px, y: -19 * px)
+                    }
                     Art.view("base/kit/pad-slab-concrete.png").resizable().interpolation(.none)
                         .frame(width: slabW, height: slabH)
                 }

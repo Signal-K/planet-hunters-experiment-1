@@ -148,7 +148,7 @@ export default function LaunchpadScreen({
             stage, only this pad. The ring silently never appeared. */}
         <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" data-beacon="launchpad-view-contracts" data-action="primary-mission" onClick={openMissionBoard} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'} data-testid="launchpad-new-mission-btn">
-            <LaunchpadModules parts={player.shipCustomizerParts} />
+            <LaunchpadModules parts={player.shipCustomizerParts} rocket={!!player.pendingLaunch || !!player.activeMission} />
           </span>
         </button>
 

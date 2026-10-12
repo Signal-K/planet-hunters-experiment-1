@@ -46,6 +46,7 @@ struct HubScreen: View {
                 plots: store.player.placementPlots,
                 levels: store.player.buildingLevels,
                 oreFraction: oreFraction,
+                padOccupied: store.player.activeMission != nil,
                 insets: insets,
                 camera: camera,
                 onStructure: { openStructure($0) },

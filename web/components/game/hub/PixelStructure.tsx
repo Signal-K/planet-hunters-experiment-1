@@ -7,7 +7,6 @@ import type { InstalledCustomizerPartsByKind } from '@/lib/data'
 import styles from './BaseLayerScene.module.css'
 
 const KIT = '/game/assets/base/kit'
-const VENT_FRAMES = [0, 1, 2, 3].map(frame => `${KIT}/pad-vent-${frame}.png`)
 const EXHAUST_FRAMES = [0, 1, 2, 3].map(frame => `${KIT}/pad-exhaust-${frame}.png`)
 const SMOKE_FRAMES = [0, 1, 2, 3].map(frame => `${KIT}/pad-smoke-${frame}.png`)
 const ARM_FRAMES = [0, 1, 2, 3].map(frame => `${KIT}/pad-gantry-arms-${frame}.png`)
@@ -76,9 +75,7 @@ function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: nu
         </span>
       )}
       <img src={`${KIT}/pad-slab-concrete.png`} alt="" draggable={false} className={styles.padSlab} />
-      {launching
-        ? <SpriteLoop frames={SMOKE_FRAMES} intervalMs={140} className={styles.padSmoke} testId="pad-smoke" />
-        : <SpriteLoop frames={VENT_FRAMES} intervalMs={280} className={styles.padVent} testId="pad-vent" />}
+      {launching && <SpriteLoop frames={SMOKE_FRAMES} intervalMs={140} className={styles.padSmoke} testId="pad-smoke" />}
     </span>
   )
 }
