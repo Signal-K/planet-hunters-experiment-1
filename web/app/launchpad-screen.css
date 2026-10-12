@@ -101,29 +101,18 @@ button.launchpad-scene-object { cursor: pointer; }
   display: block;
   transform: translateX(-50%);
 }
-.earth-base-structure--launchpad {
-  width: min(55%, 920px);
-  height: 48px !important;
+.earth-base-structure--launchpad,
+.earth-base-structure--hangar {
+  width: auto;
+  height: auto !important;
   aspect-ratio: auto !important;
   overflow: visible;
 }
-.earth-base-structure--command,
-.earth-base-structure--refinery {
-  min-width: 44px;
-  min-height: 44px;
-}
 @media (orientation: portrait) and (max-width: 800px) {
-  /* Centres and widths keep every starter building inside a phone-width scene. */
-  .earth-base-structure--launchpad { width: min(30%, 200px) !important; height: 40px !important; left: 50% !important; }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--hangar,
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--garage { left: 14.5% !important; width: 26% !important; }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--command { left: 78% !important; width: 12% !important; }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--refinery { left: 93% !important; width: 11% !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-launchpad"] { left: 50% !important; width: min(30%, 200px) !important; min-width: 44px !important; max-width: none !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-hangar"],
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-garage"] { left: 14.5% !important; width: 26% !important; min-width: 44px !important; max-width: none !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-command"] { left: 78% !important; width: 12% !important; min-width: 44px !important; max-width: none !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-refinery"] { left: 93% !important; width: 11% !important; min-width: 44px !important; max-width: none !important; }
+  .earth-base-structure--launchpad { left: 66% !important; width: auto !important; height: auto !important; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--hangar { left: 19% !important; width: auto !important; height: auto !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-launchpad"] { left: 66% !important; width: calc(120 * var(--px, 2px)) !important; min-width: 44px !important; max-width: none !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-hangar"] { left: 19% !important; width: calc(72 * var(--px, 2px)) !important; min-width: 44px !important; max-width: none !important; }
 }
 .portrait-canvas:has([data-screen="hub"]) .earth-base-structure img {
   image-rendering: pixelated;

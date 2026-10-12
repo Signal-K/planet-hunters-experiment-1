@@ -12,16 +12,13 @@ import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
-import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { captureGameEvent, captureScreenView, initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
-import FriendsButton from '@/components/game/FriendsButton'
 import FriendsSheet from '@/components/game/FriendsSheet'
-import CommunityButton from '@/components/game/CommunityButton'
 import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import SuiteHopRail from '@/components/game/SuiteHopRail'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
@@ -172,11 +169,6 @@ function GameChrome({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coach?.id])
 
-  const showFeedback = currentScreen === 'hub'
-    && !game.subsurfaceView
-    && !game.popup
-    && !game.authGateOpen
-
   const resumeOperations = () => {
     if (game.player.activeMission) {
       const phase = game.player.missionPhase
@@ -251,7 +243,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             </div>
           )}
           <DevShortcuts />
-          {(currentScreen === 'hub' || currentScreen === 'launchpad') && !game.subsurfaceView && !game.authGateOpen && (
+          {currentScreen === 'launchpad' && !game.subsurfaceView && !game.authGateOpen && (
             <button
               type="button"
               className="settings-cog"
@@ -268,18 +260,8 @@ function GameChrome({ children }: { children: ReactNode }) {
             </button>
           )}
 
-          {/* Friends — same porting fix as Settings above (KES-233): the
-              legacy GameApp.tsx shell isn't what serves /game/hub, so KES-83's
-              corner button needs its own copy here too. Hub only. */}
-          {currentScreen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
-            <>
-              <FriendsButton onClick={() => setFriendsOpen(true)} />
-              <CommunityButton onClick={() => setCommunityOpen(true)} />
-            </>
-          )}
-
           {/* Suite return rail (SSL-296): hop back to the SSC garden / Spectra. */}
-          {(currentScreen === 'hub' || currentScreen === 'launchpad') && !(currentScreen === 'launchpad' && game.launchpadMissionMenuOpen) && !game.subsurfaceView && !game.authGateOpen && (
+          {currentScreen === 'launchpad' && !game.launchpadMissionMenuOpen && !game.subsurfaceView && !game.authGateOpen && (
             <SuiteHopRail signedIn={!!game.authUserId} />
           )}
 
@@ -318,7 +300,6 @@ function GameChrome({ children }: { children: ReactNode }) {
           {children}
 
           <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
-          {showFeedback && !coach && <FeedbackButton />}
           <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor || !isSurveySafeScreen(currentScreen)} />
 
         </div>

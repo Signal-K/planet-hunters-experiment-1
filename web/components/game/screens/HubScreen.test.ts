@@ -15,8 +15,8 @@ describe('Earth Base module composition', () => {
     // These are the authored CSS footprints for the current flat sprite
     // renders. Keep the test tied to the rendered assets rather than the
     // retired modular-kit dimensions.
-    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad.width).toBe(120)
-    expect(EARTH_BASE_STRUCTURE_SIZES.hangar.width).toBe(108)
+    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad).toEqual({ width: 120, height: 108 })
+    expect(EARTH_BASE_STRUCTURE_SIZES.hangar).toEqual({ width: 72, height: 44 })
     expect(EARTH_BASE_STRUCTURE_SIZES['surface-silo']).toEqual({ width: 48, height: 96 })
   })
 
@@ -31,12 +31,11 @@ describe('Earth Base module composition', () => {
 
   /** The launch complex stays the largest surface module. The silo footprint is the shaft, not a hall. */
   it('keeps structure sizes in a clear hierarchy', () => {
-    const { launchpad, hangar, refinery } = EARTH_BASE_STRUCTURE_SIZES
+    const { launchpad, hangar } = EARTH_BASE_STRUCTURE_SIZES
     const area = (s: { width: number; height: number }) => s.width * s.height
-    expect(launchpad.height).toBeGreaterThan(refinery.height)
     expect(area(launchpad)).toBeGreaterThan(area(hangar))
-    expect(area(hangar)).toBeGreaterThan(area(refinery))
-    expect(area(EARTH_BASE_STRUCTURE_SIZES['surface-silo'])).toBeLessThan(area(hangar))
+    expect(EARTH_BASE_STRUCTURE_SIZES.refinery).toBeUndefined()
+    expect(EARTH_BASE_STRUCTURE_SIZES.command).toBeUndefined()
   })
 
   it('carries an explicit height so nothing depends on intrinsic image size', () => {

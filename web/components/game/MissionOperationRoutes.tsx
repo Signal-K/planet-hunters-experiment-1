@@ -71,8 +71,7 @@ export default function MissionOperationRoutes({
           transitStartedAt={game.player.transitStartedAt}
           returning={!!game.player.returningToEarth}
           isDelivery={!!game.player.headingToDelivery}
-          ore={Object.values(game.player.stash ?? {}).reduce((sum, amount) => sum + Math.max(0, amount), 0)}
-          skillPoints={game.player.skillPoints ?? 0}
+          francs={game.player.francs}
           onBack={() => game.go('hub')}
           onPrev={() => stepFlightDock(game, -1)}
           onNext={() => stepFlightDock(game, 1)}

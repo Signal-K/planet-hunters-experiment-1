@@ -1,101 +1,27 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import styles from './FlightScene.module.css'
 
-const CORE = 'w'
-const MID = 'y'
-const OUTER = 'o'
+const FRAMES = [0, 1, 2] as const
 
-const FRAMES = [
-  [
-    '..o...',
-    '.oyy..',
-    'oyyyw.',
-    'oyyyw.',
-    '.oyy..',
-    '..o...',
-  ],
-  [
-    '.o....',
-    'oyy...',
-    'oyyyw.',
-    'oyyyyw',
-    'oyyyw.',
-    '.oy...',
-  ],
-  [
-    '..o...',
-    '.oyyo.',
-    'oyyyw.',
-    'wyyyw.',
-    '.oyy..',
-    '..o...',
-  ],
-]
-
-const BOOST = [
-  [
-    'o.....',
-    'oyy...',
-    'oyyyw.',
-    'oyyyyw',
-    'oyyyw.',
-    'oyy...',
-  ],
-  [
-    'oo....',
-    'oyyy..',
-    'oyyyyw',
-    'wyyyyw',
-    'oyyyyw',
-    '.oyy..',
-  ],
-]
-
-function read(canvas: HTMLCanvasElement, name: string): string {
-  return getComputedStyle(canvas).getPropertyValue(name).trim()
-}
-
+/** Native exhaust frames. Boosting only speeds the cycle. */
 export function FlightFlame({ boosting }: { boosting: boolean }) {
-  const ref = useRef<HTMLCanvasElement>(null)
-  const boostingRef = useRef(boosting)
-  boostingRef.current = boosting
-
+  const [frame, setFrame] = useState(0)
   useEffect(() => {
-    const canvas = ref.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    const colors = {
-      [CORE]: read(canvas, '--flame-core'),
-      [MID]: read(canvas, '--flame-mid'),
-      [OUTER]: read(canvas, '--flame-outer'),
-    }
-    let frame = 0
-    const draw = () => {
-      const rows = (boostingRef.current ? BOOST : FRAMES)[frame % (boostingRef.current ? BOOST.length : FRAMES.length)]
-      const w = rows[0].length
-      const h = rows.length
-      canvas.width = w
-      canvas.height = h
-      ctx.clearRect(0, 0, w, h)
-      rows.forEach((row, y) => {
-        for (let x = 0; x < row.length; x++) {
-          const cell = row[x]
-          if (cell === '.') continue
-          ctx.fillStyle = colors[cell as keyof typeof colors]
-          ctx.fillRect(x, y, 1, 1)
-        }
-      })
-    }
-    draw()
     const id = window.setInterval(() => {
-      frame += 1
-      draw()
-    }, 90)
+      setFrame(current => (current + 1) % FRAMES.length)
+    }, boosting ? 70 : 140)
     return () => window.clearInterval(id)
-  }, [])
+  }, [boosting])
 
-  return <canvas ref={ref} className={styles.flame} aria-hidden="true" />
+  return (
+    <img
+      src={`/game/assets/base/kit/flame-${FRAMES[frame]}.png`}
+      alt=""
+      draggable={false}
+      className={styles.flame}
+      aria-hidden="true"
+    />
+  )
 }

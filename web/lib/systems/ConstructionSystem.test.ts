@@ -3,7 +3,6 @@ import { DEFAULT_STATE } from '@/lib/game-state'
 import type { Mission } from '@/lib/data'
 import { applyConstructionCompletion, ownProgramStructureDelivered, resolveConstructionState } from './ConstructionSystem'
 import { OWN_PROGRAM_CLIENT_ID } from '@/lib/data'
-import { OWN_PROGRAM_BUILD_MISSIONS } from '@/lib/data/missions'
 
 const mission: Mission = {
   id: 'construct-fuel-depot', title: 'Fuel depot', brief: '', client: 'helios', tag: 'CONSTRUCT', difficulty: 'L2', locked: false, sequence: 4,
@@ -27,8 +26,11 @@ describe('ConstructionSystem', () => {
   })
 
   it('commissions an own-program refinery only at an active build-right site', () => {
-    const refineryMission = OWN_PROGRAM_BUILD_MISSIONS.find(candidate => candidate.id === 'program-build-refinery')
-    expect(refineryMission).toBeDefined()
+    const refineryMission: Mission = {
+      id: 'program-build-refinery', title: 'Commission an Off-world Refinery', brief: '', tag: 'PROGRAM', difficulty: 'L1', locked: false, sequence: 4,
+      construction: { structureKind: 'refinery', requiredMaterials: { aluminium: 20, copper: 10 }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
+      requires: { minerals: { aluminium: 20, copper: 10 }, cargo_min: 30, drill_tier: 1, max_orbit: 5 }, payout: { francs: 0, affinity: 0 },
+    }
     const player = {
       ...DEFAULT_STATE.player,
       siteRights: {

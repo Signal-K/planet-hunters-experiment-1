@@ -3,7 +3,6 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
   REFINING_VALUE_MULTIPLIER,
-  STRUCTURE_PRICES,
   sellCargo,
   suggestBuild,
   validateBuild,
@@ -21,7 +20,6 @@ import {
   PARTS,
   CLIENT_SLOTS,
   BASE_LASER_CHARGES,
-  canAffordStructure,
   canConfirmCustomizerBuild,
   canUnlockSkillNode,
   calculateShipSuccessChance,
@@ -46,7 +44,6 @@ import {
   REFINERY_RECIPES,
   refundCustomizerPart,
   selectedCustomizerPartIds,
-  structureUnlocked,
   travelDurationMs,
   DAILY_QUEST_TEMPLATES,
   getDailyQuestTemplate,
@@ -512,29 +509,10 @@ describe('seed bible v0 catalog', () => {
     }
   })
 
-  it('defines the Refinery structure seed data with Francs and material costs (KES-283)', () => {
-    const refinery = STRUCTURES.find(structure => structure.id === 'refinery')
-    expect(refinery).toMatchObject({
-      kind: 'refinery',
-      cost: STRUCTURE_PRICES.refinery,
-      costMaterials: { aluminium: 20, copper: 10 },
-      unlockTrigger: 'free-operations',
-    })
-    // KES-283: a normal Earth Base plot purchase (same unlock shape as the
-    // Surface Silo), not the KES-286 off-world site-commissioned structure
-    // whose unlock condition no mission ever satisfied — that dead trigger
-    // stays retired for good.
-    //
-    // SSL-332 makes this an immediate Free Ops activity. Its only live
-    // prerequisite is the Storage Silo that holds the refinery input.
-    expect(refinery && structureUnlocked(refinery, { placed: [] })).toBe(false)
-    expect(refinery && structureUnlocked(refinery, { freeOperations: true })).toBe(false)
-    expect(refinery && structureUnlocked(refinery, { freeOperations: true, placed: ['surface-silo'] })).toBe(true)
-    expect(refinery && structureUnlocked(refinery, { placed: ['refinery'] })).toBe(true)
-    expect(refinery && canAffordStructure(refinery, {
-      francs: STRUCTURE_PRICES.refinery,
-      stash: { aluminium: 20, copper: 10 },
-    })).toBe(true)
+  it('keeps the base catalog to launchpad, surface silo, and the parked academy', () => {
+    expect(STRUCTURES.map(structure => structure.id)).toEqual(['launchpad', 'surface-silo', 'astronaut-academy'])
+    expect(MISSIONS.some(mission => mission.id === 'program-build-refinery')).toBe(false)
+    expect(STRUCTURES.some(structure => structure.id === 'refinery' || structure.id === 'garage')).toBe(false)
   })
 
   it('keeps Landnam targets to real solar-system bodies for the seed catalog', () => {
@@ -626,11 +604,10 @@ describe('seed bible v0 catalog', () => {
     expect(CLIENT_SLOTS.some(c => c.id === relay?.client)).toBe(true)
   })
 
-  it('defines settlement, remote-silo, and refinery builds as own-program missions', () => {
+  it('defines settlement and remote-silo builds as own-program missions', () => {
     expect(OWN_PROGRAM_BUILD_MISSIONS.map(mission => mission.id)).toEqual([
       'program-build-mars-mining-settlement',
       'program-build-remote-silo',
-      'program-build-refinery',
     ])
 
     for (const mission of OWN_PROGRAM_BUILD_MISSIONS) {
@@ -650,9 +627,6 @@ describe('seed bible v0 catalog', () => {
     expect(OWN_PROGRAM_BUILD_MISSIONS[0]).toMatchObject({ targetId: 'mars', construction: { structureKind: 'mining-settlement' } })
     expect(OWN_PROGRAM_BUILD_MISSIONS[1]).toMatchObject({
       construction: { structureKind: 'mineral-silo' },
-    })
-    expect(OWN_PROGRAM_BUILD_MISSIONS[2]).toMatchObject({
-      construction: { structureKind: 'refinery', requiredMaterials: { aluminium: 20, copper: 10 } },
     })
   })
 })

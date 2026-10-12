@@ -41,27 +41,7 @@ export const STRUCTURES: StructureBlueprint[] = [
     // SSL-332: building it is the last guided step, and it is what opens Free Ops.
     unlocksAt: 'Complete the guided missions',
     unlockTrigger: 'onboarding-missions',
-    description: 'Small Earth-side mineral storage. Hold ore for a better market window or for refinery input.',
-  },
-  {
-    id: 'refinery',
-    name: 'Refinery',
-    kind: 'refinery',
-    cost: STRUCTURE_PRICES.refinery,
-    costMaterials: { aluminium: 20, copper: 10 },
-    unlocksAt: 'Surface Silo + an established mining settlement',
-    unlockTrigger: 'free-operations',
-    // KES-283: Level 1 only — processes one shipment of raw ore into refined
-    // goods per day (a queue, not instant conversion; see RefineryScreen /
-    // REFINERY_RECIPES). No multi-level tree or advanced recipes yet.
-    //
-    // SSL-74: gated on the Surface Silo (refining needs somewhere to hold
-    // input ore) plus an established off-world mining settlement (purchased
-    // site access — see SurfaceOpsSystem/applyPurchaseSiteAccess). A
-    // settlement lets a ferry bring home a full hold in one trip instead of
-    // repeated one-off mining runs; refining is the payoff for having made
-    // that investment, not a plain Free-Ops purchase.
-    description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day. Requires a Surface Silo for input storage and an established mining settlement — settlements ferry ore home in bulk, giving the Refinery a steady supply instead of one-off mining runs.',
+    description: 'Small Earth-side mineral storage. Hold ore from your own mining or a contract.',
   },
   {
     id: 'astronaut-academy',
@@ -73,7 +53,6 @@ export const STRUCTURES: StructureBlueprint[] = [
     unlockTrigger: 'academy-research',
     description: 'Trains named astronauts, manages the roster, and coordinates Base staffing.',
   },
-  { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: STRUCTURE_PRICES.garage, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
 ]
 
 /** One-off cost to permanently upgrade the launchpad. Previously duplicated as
@@ -88,18 +67,6 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
   if (structure.id === 'surface-silo') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   if (structure.unlockTrigger === 'always') return true
-  // KES-283: the Refinery is a normal Earth Base plot purchase (same unlock
-  // shape as the Surface Silo) rather than the KES-286 off-world
-  // site-commissioned structure whose unlock condition no mission ever
-  // satisfied — that broken trigger is retired for good.
-  //
-  // SSL-332 makes this an immediate Free Ops activity. The storage silo is
-  // the prerequisite because it provides the refinery's input buffer; an
-  // off-world settlement remains useful later, but is not a dead-end gate.
-  if (structure.id === 'refinery') {
-    return !!opts.placed?.includes('refinery')
-      || (!!opts.freeOperations && !!opts.placed?.includes('surface-silo'))
-  }
   return false
 }
 

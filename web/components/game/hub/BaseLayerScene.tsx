@@ -18,7 +18,6 @@ export function BaseLayerScene({
   time,
   biome = 'mountains',
   season,
-  paths = [],
   siloBuilt = false,
   onOpenSilo,
 }: {
@@ -27,8 +26,6 @@ export function BaseLayerScene({
   time?: WorldTimeGrade
   biome?: EarthBiomeId
   season?: Season
-  /** Scene-x percentages (0-100) where a short path meets the road. */
-  paths?: number[]
   siloBuilt?: boolean
   onOpenSilo?: () => void
 }) {
@@ -52,8 +49,6 @@ export function BaseLayerScene({
       aria-hidden={onOpenSilo ? undefined : true}
     >
       <div className={styles.sky} data-layer="sky" />
-      <div className={styles.luminary} data-layer="luminary" />
-      <div className={styles.stars} data-layer="stars" />
       <div className={styles.clouds} data-layer="clouds">
         <img src="/game/assets/base/layers/cloud.png" alt="" className={styles.cloud} style={{ top: '12%', animationDuration: '92s' }} />
         <img src="/game/assets/base/layers/cloud.png" alt="" className={styles.cloud} style={{ top: '34%', width: '16%', animationDuration: '128s', animationDelay: '-40s' }} />
@@ -82,13 +77,14 @@ export function BaseLayerScene({
       </div>
       <div className={styles.ground} data-layer="ground">
         <div className={styles.verge} />
-        {paths.map(x => <span key={x} className={styles.path} data-layer="path" style={{ left: `${x}%` }} />)}
         <div className={styles.road} data-layer="road" />
       </div>
-      <div className={styles.shaftWrap} data-layer="cutaway" data-silo={siloBuilt ? 'built' : 'shaft'}>
-        <img src="/game/assets/base/kit/underground-window.png" alt="" className={styles.shaftArt} data-layer="shaft" />
-      </div>
-      {onOpenSilo && (
+      {siloBuilt && (
+        <div className={styles.shaftWrap} data-layer="cutaway" data-silo="built">
+          <img src="/game/assets/base/kit/silo-cutaway.png" alt="" className={styles.shaftArt} data-layer="shaft" />
+        </div>
+      )}
+      {siloBuilt && onOpenSilo && (
         <button type="button" className={styles.shaftButton} data-testid="base-lift-shaft" aria-label="Open silo" onClick={onOpenSilo} />
       )}
     </div>

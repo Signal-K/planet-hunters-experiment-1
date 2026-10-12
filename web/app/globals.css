@@ -916,7 +916,7 @@ button { cursor: pointer; }
   .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 36px; bottom: auto !important; left: 12px; }
   .portrait-canvas:has([data-screen="hub"]) .hub-sky-craft-control { top: 56px; }
   .portrait-canvas:has([data-screen="hub"]) [data-testid="hub-clock-widget"] { display: flex !important; }
-  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 22%; }
+  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 20%; }
 
   .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock-inner {
     max-width: 440px !important;
@@ -3724,7 +3724,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   --hub-ground-far: #3d5a40; --hub-ground-near: #2f4c36;
   --hub-ground-lip: #6d8f62;
 }
-.portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 22%; }
+.portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 20%; }
 .portrait-canvas:has([data-screen="hub"]) .earth-base-structure { transform: translateX(-50%); transform-origin: center bottom; }
 .portrait-canvas:has([data-screen="hub"]) .earth-base-flat-sprite,
 .debrief-arrival-canvas canvas { image-rendering: auto; }
@@ -3755,7 +3755,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   color: var(--ln-world-outline);
 }
 .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock button {
-  min-height: 48px;
+  min-height: 44px;
   border-color: color-mix(in srgb, var(--ln-world-outline) 45%, transparent) !important;
   color: var(--ln-world-outline) !important;
   background: color-mix(in srgb, var(--ln-world-hull-lit) 88%, transparent) !important;
@@ -3763,13 +3763,16 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
 }
 .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-dock-arrow,
 .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-dock-word {
-  height: 32px;
-  min-height: 32px;
+  height: 44px;
+  min-height: 44px;
 }
 .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-dock-arrow {
-  width: 32px;
-  min-width: 32px;
+  width: 44px;
+  min-width: 44px;
   padding: 0;
+}
+.portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-dock-word {
+  min-width: 88px;
 }
 .scene-dock-arrow:active:not(:disabled),
 .scene-dock-word:active:not(:disabled),
@@ -3797,7 +3800,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
 }
 .hub-callout--clear button { min-height: 44px; }
 @media (max-width: 520px) and (orientation: portrait) {
-  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 22%; }
+  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 20%; }
   /* Percentage footprints are authored for a wide scene. Phone portrait keeps
      the same tier ratio and lifts it so a level-1 module stays readable. */
   /* A sparse base (one or two modules) can grow so a level-1 pad stays readable.
@@ -3827,7 +3830,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   }
 }
 @media (orientation: landscape) and (max-height: 500px) {
-  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 22%; --hub-structure-max: 9999px; }
+  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 20%; --hub-structure-max: 9999px; }
   .portrait-canvas:has([data-screen="hub"]) .earth-base-structure { transform: translateX(-50%); }
   .hub-callout--clear { top: 56px; bottom: auto; left: 24%; right: auto; width: min(250px, 34vw); }
 }
@@ -3944,6 +3947,27 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   font-weight: 700;
   flex-shrink: 0;
 }
+.scene-dock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(360px, calc(100vw - 16px));
+  min-height: 48px;
+  height: auto;
+  padding: 2px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 999px;
+  background: var(--ln-world-hull-lit);
+}
+.scene-dock-rule {
+  width: 1px;
+  align-self: stretch;
+  margin: 10px 2px;
+  background: color-mix(in srgb, var(--ln-world-outline) 35%, transparent);
+  flex: 0 0 1px;
+}
 .scene-dock-arrow,
 .scene-dock-word,
 .scene-dock-primary {
@@ -3963,21 +3987,29 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   text-transform: uppercase;
   white-space: nowrap;
 }
+.scene-dock-arrow,
+.scene-dock-word,
 .theme-blueprint .scene-dock-arrow,
 .theme-blueprint .scene-dock-word {
-  height: 32px;
-  min-height: 32px;
-  padding: 0 10px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 12px;
   border: 1px solid color-mix(in srgb, var(--ln-world-outline) 45%, transparent);
-  background: color-mix(in srgb, var(--ln-world-hull-lit) 88%, transparent);
+  background: var(--ln-world-hull-lit);
   color: var(--ln-world-outline);
 }
+.scene-dock-arrow,
 .theme-blueprint .scene-dock-arrow {
-  width: 32px;
-  min-width: 32px;
+  width: 44px;
+  min-width: 44px;
   padding: 0;
+  border-radius: 4px;
 }
-.theme-blueprint .scene-dock-word { min-width: 64px; }
+.scene-dock-word,
+.theme-blueprint .scene-dock-word {
+  min-width: 88px;
+  border-radius: 999px;
+}
 .theme-blueprint .scene-dock-primary {
   height: 48px;
   min-height: 48px;

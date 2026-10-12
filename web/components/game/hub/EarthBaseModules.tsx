@@ -24,12 +24,9 @@ export interface HubBuildingDef {
  *  The surface silo has no above-ground body; the lift shaft is the silo door. */
 export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height: number }> = {
   // Launchpad width is the low platform only. The rocket is a separate sprite on top of it.
-  launchpad: { width: 145, height: 48 },
+  launchpad: { width: 120, height: 108 },
   'surface-silo': { width: 48, height: 96 },
-  hangar: { width: 238, height: 129 },
-  garage: { width: 238, height: 129 },
-  refinery: { width: 81, height: 125 },
-  command: { width: 118, height: 127 },
+  hangar: { width: 72, height: 44 },
   'deep-space-telescope': { width: 74, height: 96 },
   'transit-telescope': { width: 64, height: 88 },
   'astronaut-academy': { width: 178, height: 86 },
@@ -129,7 +126,7 @@ export function structureWidthPct(kind: string, level = 1): number {
     const grow = level >= 3 ? 1.12 : level >= 2 ? 1.06 : 1
     return (starter[kind] ?? 8) * grow
   }
-  const size = EARTH_BASE_STRUCTURE_SIZES[kind] ?? EARTH_BASE_STRUCTURE_SIZES.command
+  const size = EARTH_BASE_STRUCTURE_SIZES[kind] ?? EARTH_BASE_STRUCTURE_SIZES.launchpad
   const tier = kind === 'market' ? Math.max(level, 2) : level
   return (size.width / SCENE_WIDTH_DIVISOR) * structureTierScale(tier)
 }
@@ -144,12 +141,15 @@ export function structureHalfScene(kind: string, level = 1, sceneWidth = 402): n
   return (structureWidthPct(kind, level) / 100) * sceneWidth / 2
 }
 
+const HIDDEN_BASE_KINDS = new Set(['command', 'refinery', 'garage', 'deep-space-telescope', 'transit-telescope', 'astronaut-academy', 'market', 'surface-silo'])
+
 export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] }) {
   return (
     <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {
-        if (building.kind === 'surface-silo') return null
-        const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.command
+        if (building.kind === 'surface-silo' || HIDDEN_BASE_KINDS.has(building.kind)) return null
+        const kit = building.kind === 'launchpad' || building.kind === 'hangar'
+        const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.launchpad
         const widthPct = structureWidthPct(building.kind, building.level ?? 1)
         const left = structureCenterPercent(building.kind, building.plotX, widthPct)
         return (
@@ -159,13 +159,12 @@ export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] })
             data-structure={building.kind}
             style={{
               left: `${left}%`,
-              bottom: 'var(--hub-ground)',
-              // Mobile keeps the authored scene-proportional scale. Desktop
-              // receives a viewport-aware cap so structures retain the same
-              // relationship to the terrain instead of ballooning with a 2K
-              // canvas (the background bricks are authored in CSS pixels).
-              width: building.kind === 'launchpad' ? undefined : `min(${widthPct}%, var(--hub-structure-max, 9999px))`,
-              aspectRatio: `${size.width} / ${size.height}`,
+              bottom: building.kind === 'launchpad'
+                ? 'calc(var(--hub-ground) - (4 * var(--px, 3px)))'
+                : 'var(--hub-ground)',
+              width: kit ? 'auto' : `min(${widthPct}%, var(--hub-structure-max, 9999px))`,
+              height: kit ? 'auto' : undefined,
+              aspectRatio: kit ? 'auto' : `${size.width} / ${size.height}`,
               opacity: building.dimmed ? 0.6 : 1,
             }}
           >

@@ -8,7 +8,6 @@ import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
-import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
 import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
 import { BaseDock } from '@/components/game/hub/BaseDock'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
@@ -25,14 +24,14 @@ import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
-import SkyEventChip from '@/components/game/SkyEventChip'
-import OrionidsTeaser from '@/components/game/OrionidsTeaser'
+import { openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
-import { SkyBadgeRow } from './SkyBadgeRow'
 import { SCENE_NAMES } from '@/lib/ui-strings'
+
+const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar'])
 
 /**
  * How far a building's status pill hangs below the ground line. `Building`
@@ -123,7 +122,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       const center = kind ? structureCenterPercent(kind, e.transform.position.x, widthPct) : sceneXPercent(e.transform.position.x, widthPct)
       return ({
         left: `${center}%`,
-        width: kind === 'launchpad' ? 'min(55%, 920px)' : `${widthPct}%`,
+        width: kind === 'launchpad' ? 'calc(120 * var(--px, 3px))' : kind === 'hangar' ? 'calc(72 * var(--px, 3px))' : `${widthPct}%`,
         minWidth: 44,
         maxWidth: 'none',
         bottom: 'var(--hub-ground)',
@@ -174,7 +173,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       buildStartedAt: startedAt,
     }]
   })
-  const launchpadPlot = hubBuildings.find(building => building.kind === 'launchpad')
+  const scenicHangar = placed.includes('launchpad') && !placed.includes('hangar') && !placed.includes('garage')
+  const sceneBuildings: HubBuildingDef[] = [
+    ...(scenicHangar ? [{ kind: 'hangar', plotX: 48, w: 72, level: 3, status: 'ok' as const }] : []),
+    ...hubBuildings.filter(building => BASE_SCENE_KINDS.has(building.kind)),
+  ]
   // The launchpad speaks only while the Base has no live run. Progression is
   // now exposed through contextual buildings and the persistent chrome rather
   // than a generic card laid over the landscape.
@@ -302,15 +305,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             season={skySeason}
             biome={player.earthBiome ?? 'mountains'}
             siloBuilt={(player.placed ?? []).includes('surface-silo') || (player.subsurfaceBuilt ?? []).length > 0}
-            paths={hubBuildings.filter(building => building.kind !== 'surface-silo').map(building => sceneXPercent(building.plotX))}
             onOpenSilo={() => setSubsurface(true)}
           />
-          <SkyEventChip surface="base" />
-          {!subsurface && <OrionidsTeaser />}
-
-          {/* Drifting ambient motes — replaces the old daylight cloud layer,
-              which read as overcast weather against the new deep-blue sky. */}
-          <AmbientMotes />
 
           {skyCraft && (
             <button
@@ -340,7 +336,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
 
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
-          <EarthBaseModules buildings={hubBuildings} />
+          <EarthBaseModules buildings={sceneBuildings} />
 
           {/* Surface buildings — hit areas + labels.
               zIndex 10 is load-bearing: every scene layer below is an
@@ -360,6 +356,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
               {plotStyles.map((style, plot) => {
                 const kind = structureForPlot(plot)
+                if (kind && !BASE_SCENE_KINDS.has(kind)) return null
                 if (!kind) {
                   if (!editMode) return null
                   return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onFocusBuilding('build')} />
@@ -383,6 +380,27 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 const pad = kind === 'launchpad'
                 return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={siloStyle} calloutAlign={calloutAlign} />
               })}
+              {scenicHangar && (
+                <Building
+                  kind="hangar"
+                  label="Hangar"
+                  sub="READY"
+                  status="ok"
+                  quiet
+                  w={72}
+                  hitH={88}
+                  onClick={() => onFocusBuilding('hangar')}
+                  active={activeBuilding === 'hangar'}
+                  onActiveChange={active => setActiveBuilding(active ? 'hangar' : null)}
+                  style={{
+                    left: '12%',
+                    width: 'calc(72 * var(--px, 3px))',
+                    minWidth: 44,
+                    bottom: 'var(--hub-ground)',
+                    transform: 'translateX(-50%)',
+                  }}
+                />
+              )}
             </div>
           </div>
 
@@ -416,7 +434,17 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           share the same dark treatment; no more light/dark split. */}
       <div className={layoutStyles.topHud}>
         <div className={layoutStyles.topRow}>
-          {!subsurface && <HubClockWidget />}
+          {!subsurface && (
+            <div className={layoutStyles.leftCluster}>
+              <button type="button" className={layoutStyles.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                </svg>
+              </button>
+              <HubClockWidget />
+            </div>
+          )}
           {!subsurface && (
             <div className={layoutStyles.chips}>
               <span className="scene-chip" data-testid="hub-francs-chip">{formatCurrency(player.francs, { compact: true })}</span>
@@ -430,7 +458,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           )}
         </div>
       </div>
-      {!subsurface && <SkyBadgeRow badges={player.badges} className={layoutStyles.badges} />}
 
       {upgradingBuilding && onUpgradeBuilding && (() => {
         const level = buildingLevel(player, upgradingBuilding)
@@ -457,19 +484,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           actions remain on their physical buildings or in their own surfaces. */}
       {(
         <div className="hub-bottom-dock" style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: subsurface ? 40 : 20,
+          position: 'absolute', left: 0, right: 0, bottom: 8, zIndex: subsurface ? 40 : 20,
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
         }}>
-          <div className="hub-bottom-dock-inner" style={{
-            pointerEvents: 'auto', width: 'min(440px, calc(100% - 16px))', maxWidth: 440,
-            maxHeight: '10%',
-            background: 'var(--ln-world-hull-lit)',
-            border: '1px solid var(--ln-world-outline)',
-            borderRadius: 6,
-            boxShadow: 'none',
-            padding: '2px 6px',
-            marginBottom: 6,
-          }}>
+          <div style={{ pointerEvents: 'auto' }}>
             <BaseDock
               onPrev={() => {
                 const stops = dockStops(player)

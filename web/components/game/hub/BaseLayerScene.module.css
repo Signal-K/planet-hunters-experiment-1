@@ -167,19 +167,6 @@
   image-rendering: pixelated;
 }
 
-.scene[data-biome='desert'] .band img,
-.scene[data-biome='coast'] .band img {
-  filter: saturate(0.72) contrast(0.96);
-}
-
-.scene[data-biome='mountains'] .band img,
-.scene[data-biome='tundra'] .band img {
-  filter: saturate(0.78) contrast(0.94);
-}
-
-.scene[data-biome='tundra'] .band img { filter: saturate(0.55) brightness(1.08); }
-.scene[data-biome='coast'] .band img { filter: saturate(0.7) hue-rotate(18deg); }
-
 .grade {
   position: absolute;
   inset: 0;
@@ -187,13 +174,13 @@
   pointer-events: none;
   background: var(--base-season);
   mix-blend-mode: soft-light;
-  opacity: 0.55;
+  opacity: 0.08;
 }
 
-.scene[data-season='spring'] { --base-season: color-mix(in srgb, var(--ln-world-grass) 55%, transparent); }
-.scene[data-season='summer'] { --base-season: color-mix(in srgb, var(--ln-world-hull-lit) 40%, transparent); }
-.scene[data-season='autumn'] { --base-season: color-mix(in srgb, var(--ln-world-soil) 50%, transparent); }
-.scene[data-season='winter'] { --base-season: color-mix(in srgb, var(--ln-mineral-ice) 42%, transparent); }
+.scene[data-season='spring'] { --base-season: color-mix(in srgb, var(--ln-world-grass) 30%, transparent); }
+.scene[data-season='summer'] { --base-season: color-mix(in srgb, var(--ln-world-hull-lit) 24%, transparent); }
+.scene[data-season='autumn'] { --base-season: color-mix(in srgb, var(--ln-world-hull-lit) 16%, transparent); }
+.scene[data-season='winter'] { --base-season: color-mix(in srgb, var(--ln-mineral-ice) 24%, transparent); }
 
 .timeShade {
   position: absolute;
@@ -204,11 +191,11 @@
 
 .scene[data-time='dawn'] .timeShade { background: color-mix(in srgb, var(--ln-world-dawn-top) 18%, transparent); }
 .scene[data-time='afternoon'] .timeShade { background: color-mix(in srgb, var(--ln-world-afternoon-top) 12%, transparent); }
-.scene[data-time='dusk'] .timeShade { background: color-mix(in srgb, var(--ln-world-dusk-horizon) 14%, transparent); }
-.scene[data-time='night'] .timeShade { background: color-mix(in srgb, var(--ln-world-night-top) 16%, transparent); }
-.scene[data-time='night'] .grade { opacity: 0.28; }
+.scene[data-time='dusk'] .timeShade { background: color-mix(in srgb, var(--ln-world-night-top) 4%, transparent); }
+.scene[data-time='night'] .timeShade { background: color-mix(in srgb, var(--ln-world-night-top) 28%, transparent); }
+.scene[data-time='night'] .grade { opacity: 0.04; }
 .scene[data-time='dusk'] .grade,
-.scene[data-time='dawn'] .grade { opacity: 0.4; }
+.scene[data-time='dawn'] .grade { opacity: 0.06; }
 
 .ground {
   position: absolute;
@@ -226,9 +213,9 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: -48px;
-  height: 22px;
-  background: url('/game/assets/base/kit/grass.png') left bottom / auto 22px repeat-x;
+  top: 0;
+  height: 28px;
+  background: url('/game/assets/base/kit/grass.png') left top / auto 28px repeat-x;
   image-rendering: pixelated;
 }
 
@@ -236,9 +223,9 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: -30px;
-  height: 30px;
-  background: url('/game/assets/base/kit/road-a.png') left center / auto 30px repeat-x;
+  top: 28px;
+  height: 36px;
+  background: url('/game/assets/base/kit/road-a.png') left center / auto 36px repeat-x;
   image-rendering: pixelated;
   box-shadow: none;
 }
@@ -287,10 +274,10 @@
 
 .shaftWrap {
   position: absolute;
-  left: 50%;
-  bottom: max(calc(10% + 10px), calc(var(--hub-ground) - 72px));
-  width: 88px;
-  height: 56px;
+  left: 82%;
+  bottom: 8px;
+  width: calc(44 * var(--px, 3px));
+  height: calc(36 * var(--px, 3px));
   transform: translateX(-50%);
   z-index: 9;
 }
@@ -364,10 +351,10 @@
 
 .shaftButton {
   position: absolute;
-  left: 50%;
-  bottom: max(calc(10% + 10px), calc(var(--hub-ground) - 72px));
-  width: 88px;
-  height: 56px;
+  left: 82%;
+  bottom: 8px;
+  width: max(44px, calc(44 * var(--px, 3px)));
+  height: max(44px, calc(36 * var(--px, 3px)));
   min-width: 44px;
   min-height: 44px;
   transform: translateX(-50%);
@@ -397,51 +384,46 @@
 .padStack {
   position: relative;
   display: block;
-  width: 100%;
-  height: 100%;
+  width: calc(120 * var(--px, 3px));
+  height: calc(108 * var(--px, 3px));
   overflow: visible;
 }
 
 .padSlab {
   position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: stretch;
+  left: 0;
+  bottom: 0;
+  width: calc(120 * var(--px, 3px));
+  height: calc(20 * var(--px, 3px));
+  image-rendering: pixelated;
   pointer-events: none;
 }
 
-.padFill {
-  flex: 1 1 auto;
-  min-width: 0;
-  background: url('/game/assets/base/kit/pad-tile.png') left bottom / 192px 48px repeat-x;
-  image-rendering: pixelated;
-}
-
-.padEnd {
-  flex: 0 0 auto;
-  height: 100%;
-  width: auto;
-  display: block;
-  image-rendering: pixelated;
-}
-
-.padCraft {
+.padGantry {
   position: absolute;
-  left: 50%;
-  bottom: 100%;
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: min(15.2vw, 220px);
-  transform: translateX(-50%);
+  left: 0;
+  bottom: calc(16 * var(--px, 3px));
+  width: calc(120 * var(--px, 3px));
+  height: calc(92 * var(--px, 3px));
+  image-rendering: pixelated;
   pointer-events: none;
 }
 
-.padGantry,
 .padRocket {
-  height: 100%;
-  width: auto;
+  position: absolute;
+  left: calc(50% + 22 * var(--px, 3px));
+  bottom: calc(22 * var(--px, 3px));
+  width: calc(44 * var(--px, 3px));
+  height: calc(72 * var(--px, 3px));
+  transform: translateX(-50%);
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.hangarSprite {
   display: block;
+  height: calc(44 * var(--px, 3px));
+  width: auto;
   image-rendering: pixelated;
 }
 
@@ -525,11 +507,10 @@
 }
 
 @media (max-height: 500px) {
-  /* Short landscape: the road sits on the ground line so the dirt under it stays a thin strip, and the shaft stays above the dock. */
-  .verge { height: 16px; top: -36px; background-size: auto 16px; }
-  .road { height: 22px; top: -22px; background-size: auto 22px; }
-  .shaftWrap { width: 72px; height: 44px; bottom: calc(10% + 6px); }
-  .shaftButton { bottom: calc(10% + 6px); width: 72px; height: 44px; }
+  .verge { height: 18px; top: 0; background-size: auto 18px; }
+  .road { height: 28px; top: 18px; background-size: auto 28px; }
+  .shaftWrap { bottom: 64px; }
+  .shaftButton { bottom: 64px; }
   .prop[data-prop='tree-a'] { height: 36px; }
   .prop[data-prop='tree-b'] { height: 28px; }
   .prop[data-prop='tree-c'] { height: 40px; }
@@ -537,8 +518,8 @@
 }
 
 @media (orientation: portrait) and (max-width: 800px) {
-  .padFill { background-size: 160px 40px; }
-  .padCraft { height: min(28vw, 150px); }
+  .shaftWrap,
+  .shaftButton { left: 94%; bottom: 64px; }
   .prop[data-prop='tree-a'] { left: 31%; height: 32px; }
   .prop[data-prop='tree-b'] { display: none; }
   .prop[data-prop='rock'] { left: 69%; height: 12px; display: block; }

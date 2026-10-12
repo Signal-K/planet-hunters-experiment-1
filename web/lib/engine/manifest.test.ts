@@ -93,11 +93,17 @@ describe('production hub, terrain and actor sprites', () => {
   it('has every shipped Earth Base, terrain and actor sprite registered in the manifest', () => {
     // The reverse of the dangling check: a sprite rendered but never added to
     // the manifest is invisible to AssetManager and silently unused.
+    // Native mountain plates are CSS backdrops, larger than the flat-sprite budget.
+    const cssPlates = new Set([
+      '/game/assets/base/layers/mountains-far.png',
+      '/game/assets/base/layers/mountains-mid.png',
+      '/game/assets/base/layers/mountains-near.png',
+    ])
     const registered = new Set(Object.values(manifest))
     const unregistered = RENDERED.flatMap(dir => walk(join(PUBLIC, dir)))
       .filter(f => extname(f) === '.png')
       .map(f => '/' + f.slice(PUBLIC.length + 1))
-      .filter(p => !registered.has(p))
+      .filter(p => !registered.has(p) && !cssPlates.has(p))
     expect(unregistered).toEqual([])
   })
 

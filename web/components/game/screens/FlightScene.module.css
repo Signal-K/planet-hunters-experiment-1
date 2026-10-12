@@ -1,4 +1,5 @@
 .screen {
+  --k: 3px;
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -11,6 +12,43 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+}
+
+.bands {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.starTile {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  image-rendering: pixelated;
+  pointer-events: none;
+  animation: pan 140s linear infinite;
+}
+
+.starTile[data-speed='far'] {
+  background-image: url('/game/assets/base/kit/stars-far.png');
+  background-size: 256px 256px;
+  animation-duration: 140s;
+}
+
+.starTile[data-speed='mid'] {
+  background-image: url('/game/assets/base/kit/stars-mid.png');
+  background-size: 256px 256px;
+  animation-duration: 90s;
+}
+
+.starTile[data-speed='near'] {
+  background-image: url('/game/assets/base/kit/stars-near.png');
+  background-size: 384px 384px;
+  animation-duration: 50s;
 }
 
 .wash {
@@ -81,24 +119,23 @@
   right: 0;
   top: 64px;
   bottom: 88px;
-  --ship-len: clamp(160px, 34vh, 248px);
 }
 
 .ship {
   position: absolute;
-  left: 14%;
-  top: 48%;
+  left: 36%;
+  top: 50%;
   z-index: 2;
   display: flex;
   align-items: center;
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
   animation: bob 3.2s ease-in-out infinite;
 }
 
 .rocketWrap {
   position: relative;
-  width: var(--ship-len);
-  height: calc(var(--ship-len) * 0.7);
+  width: calc(72 * var(--k));
+  height: calc(44 * var(--k));
   flex: 0 0 auto;
 }
 
@@ -106,36 +143,37 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: calc(var(--ship-len) * 0.7);
-  height: var(--ship-len);
+  width: calc(44 * var(--k));
+  height: calc(72 * var(--k));
   transform: translate(-50%, -50%) rotate(90deg);
   image-rendering: pixelated;
   pointer-events: none;
 }
 
 .flame {
-  --flame-core: var(--ln-map-sun);
-  --flame-mid: var(--ln-amber-bright);
-  --flame-outer: var(--ln-amber);
-  width: 64px;
-  height: 40px;
-  margin-right: -8px;
+  width: calc(18 * var(--k));
+  height: calc(9 * var(--k));
   image-rendering: pixelated;
   flex: 0 0 auto;
 }
 
-.ship[data-boosting='true'] .flame { width: 88px; }
-
 .body {
   position: absolute;
-  top: 46%;
-  right: 8%;
+  top: 50%;
+  right: 10%;
   z-index: 2;
-  width: clamp(128px, 30vh, 240px);
-  aspect-ratio: 1;
+  width: calc(48 * var(--k));
+  height: calc(40 * var(--k));
   transform: translate(var(--shift), -50%);
   animation: drift 9s ease-in-out infinite;
   pointer-events: none;
+}
+
+.bodySprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
 }
 
 .bodyCanvas {
@@ -202,7 +240,7 @@
   min-height: 44px;
   padding: 0;
   border: 1px solid var(--ln-world-outline);
-  border-radius: 12px;
+  border-radius: 4px;
   background: var(--ln-world-hull-lit);
   color: var(--ln-world-outline);
   cursor: pointer;
@@ -215,50 +253,22 @@
 .cluster :global(.scene-chip) {
   min-height: 44px;
   height: 44px;
-  border-radius: 12px;
+  border-radius: 4px;
   padding: 0 12px;
   font-size: 16px;
 }
-
-.dock :global(.scene-dock-arrow),
-.dock :global(.scene-dock-word) {
-  min-width: 44px;
-  min-height: 44px;
-  height: 44px;
-  border: none;
-  background: transparent;
-  color: var(--ln-world-outline);
-  border-radius: 12px;
-  text-transform: none;
-  letter-spacing: 0.02em;
-  font-size: 16px;
-}
-
-.dock :global(.scene-dock-arrow) {
-  width: 44px;
-  padding: 0;
-}
-
-.dock :global(.scene-dock-word) {
-  padding: 0 16px;
-}
-
-.rock { color: var(--ln-mineral-carbon); }
-.gem { color: var(--ln-blueprint-blue); }
-.boostIcon { color: var(--ln-amber); display: flex; }
 
 .dock {
   position: absolute;
   left: 50%;
   bottom: 8px;
   z-index: 5;
-  width: min(560px, calc(100% - 16px));
+  width: max-content;
+  max-width: calc(100% - 16px);
   transform: translateX(-50%);
-  box-sizing: border-box;
-  padding: 8px 12px;
-  border: 1px solid var(--ln-world-outline);
-  border-radius: 16px;
-  background: var(--ln-world-hull-lit);
+  padding: 0;
+  border: 0;
+  background: transparent;
   pointer-events: auto;
 }
 
@@ -273,8 +283,8 @@
 }
 
 @keyframes bob {
-  0%, 100% { transform: translateY(-50%); }
-  50% { transform: translateY(calc(-50% - 6px)); }
+  0%, 100% { transform: translate(-50%, -50%); }
+  50% { transform: translate(-50%, calc(-50% - 6px)); }
 }
 
 @keyframes drift {
@@ -283,29 +293,30 @@
 }
 
 @media (orientation: portrait) and (max-width: 800px) {
-  .stage { --ship-len: 128px; top: 72px; bottom: 112px; }
-  .ship { left: 2%; }
-  .body { width: 128px; right: 0; }
+  .screen { --k: 2px; }
+  .stage { top: 72px; bottom: 112px; }
+  .ship { left: 40%; top: 38%; }
+  .body { right: 4%; top: 38%; }
   .progress { bottom: 96px; width: min(320px, calc(100% - 32px)); }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
+  .screen { --k: 2px; }
   .top { padding-top: 8px; }
-  .stage { --ship-len: clamp(148px, 38vh, 196px); top: 56px; bottom: 96px; }
-  .ship { left: 14%; top: 46%; }
-  .body { width: min(200px, 44vh); right: 6%; top: 44%; }
+  .stage { top: 56px; bottom: 96px; }
+  .ship { left: 36%; top: 46%; }
+  .body { right: 8%; top: 46%; }
   .progress { bottom: 80px; }
-  .dock { bottom: 4px; padding: 4px 8px; }
+  .dock { bottom: 4px; }
 }
 
 @media (min-width: 1024px) {
-  .stage { --ship-len: 248px; }
-  .ship { left: 16%; }
-  .body { width: 280px; right: 10%; }
+  .screen { --k: 3px; }
+  .ship { left: 36%; }
+  .body { right: 12%; }
   .progress { width: min(560px, 42vw); bottom: 104px; }
-  .dock { width: min(640px, 48vw); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .starTrack, .dust, .ship, .body { animation: none; }
+  .starTrack, .starTile, .dust, .ship, .body { animation: none; }
 }

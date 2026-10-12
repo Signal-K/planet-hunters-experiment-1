@@ -5,8 +5,8 @@
 //
 //   Place Launchpad → Extraction → Transport → Build Storage Silo → Free Ops
 //
-// and Free Ops opens on three agency activities: client work, the space
-// telescope, and building a refinery.
+// and Free Ops opens on client work, the space telescope, transport, and
+// storage. The refinery is not a base structure and is not an activity.
 //
 // Free Ops starts once both guided missions are flown AND a storage silo is
 // placed (freeOperationsUnlocked). Players who reached Free Ops under the old
@@ -100,7 +100,7 @@ export function agencyTrainingTrack(player: AgencyTrainingPlayer): AgencyTrainin
  *  from the menu (the replayable review of training). */
 export const AGENCY_TRAINING_POPUP = 'agency-training'
 
-export type FreeOpsActivityId = 'client-work' | 'space-telescope' | 'build-refinery' | 'transport' | 'storage-silo'
+export type FreeOpsActivityId = 'client-work' | 'space-telescope' | 'transport' | 'storage-silo'
 
 export interface FreeOpsActivity {
   id: FreeOpsActivityId
@@ -108,9 +108,8 @@ export interface FreeOpsActivity {
   body: string
   cta: string
   /** Where the activity opens. The telescope starts at the Launchpad (where
-   *  its launch lives) until one is in orbit; the refinery starts at
-   *  placement until one is built. */
-  screen: 'missions' | 'launchpad' | 'instrument-hub' | 'build' | 'refinery'
+   *  its launch lives) until one is in orbit. */
+  screen: 'missions' | 'launchpad' | 'instrument-hub' | 'build'
 }
 
 export interface FreeOpsActivityPlayer {
@@ -137,15 +136,6 @@ export function freeOpsActivities(player: FreeOpsActivityPlayer): FreeOpsActivit
         : 'Launch a transit telescope and classify real observation data.',
       cta: telescopeUp ? 'Open control station' : 'Open launchpad',
       screen: telescopeUp ? 'instrument-hub' : 'launchpad',
-    },
-    {
-      id: 'build-refinery',
-      label: player.refineryBuilt ? 'Refinery' : 'Build refinery',
-      body: player.refineryBuilt
-        ? 'Turn ore from your silo into higher-value goods.'
-        : 'Construct a refinery at your base to turn stored ore into higher-value goods.',
-      cta: player.refineryBuilt ? 'Open refinery' : 'Open build',
-      screen: player.refineryBuilt ? 'refinery' : 'build',
     },
     {
       id: 'transport',

@@ -3,12 +3,11 @@ import type { Mission } from '@/lib/data/types'
 import type { Player } from '@/lib/game-types'
 import {
   ACADEMY_INTRO_MISSION_ID,
-  REFINERY_BUILD_MISSION_ID,
   RESOURCE_FOCUS_MISSION_ID,
   SELF_DIRECTED_MINING_MISSION_ID,
 } from '@/lib/data/missions'
 import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
-import { hasActiveBuildSiteRight, ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
+import { ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
 import {
   DEEP_SPACE_TELESCOPE_MISSION_ID,
   SATURN_IMAGER_MISSION_ID,
@@ -129,13 +128,7 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
   const builds = catalog.missions.filter(mission => mission.construction && !mission.client)
   for (const mission of builds) {
     const delivered = ownProgramStructureDelivered(player, mission.construction!.structureKind)
-    let lockLine: string | null = null
-    if (!delivered && !free) lockLine = mission.unlockAt ?? null
-    else if (!delivered && mission.id === REFINERY_BUILD_MISSION_ID) {
-      const structures = ownProgramStructureDelivered(player, 'mining-settlement') && ownProgramStructureDelivered(player, 'mineral-silo')
-      if (!structures) lockLine = 'Deliver a mining settlement and a remote silo first'
-      else if (!hasActiveBuildSiteRight(player, now)) lockLine = mission.unlockAt ?? null
-    }
+    const lockLine = !delivered && !free ? (mission.unlockAt ?? null) : null
     steps.push({
       id: mission.id,
       title: mission.title,

@@ -311,16 +311,16 @@ describe('applyConfirmShipCustomizerBuild', () => {
 })
 
 describe('Academy and staffing economy', () => {
-  it('leaves an unaffordable refinery placement unchanged', () => {
-    const refinery = STRUCTURES.find(structure => structure.id === 'refinery')!
+  it('leaves an unaffordable academy placement unchanged', () => {
+    const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
     const before = makeState({
-      francs: refinery.cost,
-      stash: { aluminium: 0, copper: 0 },
-      freeOperations: true,
+      francs: academy.cost,
+      stash: {},
+      academyResearched: true,
       placed: ['surface-silo'],
     })
 
-    expect(applyPlaceStructure(before, refinery, refinery.kind, 2)).toBe(before)
+    expect(applyPlaceStructure(before, academy, academy.kind, 2)).toBe(before)
   })
 
   it('charges the Academy build cost and materials only after research', () => {
@@ -362,10 +362,10 @@ describe('Academy and staffing economy', () => {
   })
 
   it('does not re-raise the Free Ops handoff when a Free Ops player builds another structure', () => {
-    const refinery = STRUCTURES.find(structure => structure.id === 'refinery')!
-    const state = { ...makeState({ francs: refinery.cost, stash: { ...refinery.costMaterials }, placed: ['surface-silo'] }), popup: null }
-    const built = applyPlaceStructure(state, refinery, refinery.kind, 2)
-    expect(built.player.placed).toContain('refinery')
+    const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
+    const state = { ...makeState({ francs: academy.cost, stash: { ...academy.costMaterials }, academyResearched: true, placed: ['surface-silo'] }), popup: null }
+    const built = applyPlaceStructure(state, academy, academy.kind, 2)
+    expect(built.player.placed).toContain('astronaut-academy')
     expect(built.popup).toBeNull()
   })
 

@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { STATIC_CATALOG } from '@/lib/catalog'
 import { DEFAULT_STATE } from '@/lib/game-state'
 import type { Player } from '@/lib/game-types'
-import { REFINERY_BUILD_MISSION_ID, RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/missions'
-import { OWN_PROGRAM_CLIENT_ID } from '@/lib/data/mission-primers'
+import { RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/missions'
 import {
   DEEP_SPACE_TELESCOPE_MISSION_ID,
   TRANSIT_TELESCOPE_MISSION_ID,
@@ -32,39 +31,6 @@ describe('mission board view', () => {
     expect(steps.find(step => step.id === DEEP_SPACE_TELESCOPE_MISSION_ID)?.state).toBe('current')
     expect(steps.find(step => step.kind === 'mining')?.state).toBe('available')
     expect(steps.filter(step => step.state === 'current')).toHaveLength(1)
-  })
-
-  it('locks the refinery until a settlement, a silo, and a build right exist', () => {
-    const base = player()
-    const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player: base })
-    const locked = programChain(catalog, base, NOW).find(step => step.id === REFINERY_BUILD_MISSION_ID)
-    expect(locked?.state).toBe('locked')
-    expect(locked?.lockLine).toBe('Deliver a mining settlement and a remote silo first')
-
-    const structuresOnly = player({
-      clientStructures: [
-        { targetId: 'mars', structureKind: 'mining-settlement', clientId: OWN_PROGRAM_CLIENT_ID, state: 'delivered', startedAt: 0 },
-        { targetId: 'mars', structureKind: 'mineral-silo', clientId: OWN_PROGRAM_CLIENT_ID, state: 'delivered', startedAt: 0 },
-      ],
-    })
-    const waitingOnSite = programChain(catalog, structuresOnly, NOW).find(step => step.id === REFINERY_BUILD_MISSION_ID)
-    expect(waitingOnSite?.state).toBe('locked')
-    expect(waitingOnSite?.lockLine).toMatch(/site you own or lease/)
-
-    const ready = player({
-      clientStructures: structuresOnly.clientStructures,
-      siteRights: {
-        territories: base.siteRights?.territories ?? {},
-        rights: {
-          'moon-build-right': {
-            id: 'moon-build-right', playerId: 'local-player', clientId: 'atlas-aggregate', targetId: 'moon', siteId: 'moon-south-pole',
-            mode: 'purchase' as const, activities: ['build' as const, 'mine' as const], acquiredAt: 0,
-          },
-        },
-      },
-    })
-    const open = programChain(catalog, ready, NOW).find(step => step.id === REFINERY_BUILD_MISSION_ID)
-    expect(open?.state).not.toBe('locked')
   })
 
   it('keeps a resource-focus haul available without making it the current step', () => {

@@ -260,7 +260,7 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
 }
 
 @media (max-width: 520px) and (orientation: portrait) {
-  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 35%; }
+  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 20%; }
   .hub-plot-anchor { bottom: var(--hub-ground) !important; }
   .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--market { transform: translateX(-50%); }
   .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 8px; right: 8px; flex-direction: row; }
@@ -268,7 +268,7 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
-  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 22%; }
+  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 20%; }
 
   .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 8px !important; flex-direction: row !important; }
   .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none !important; }

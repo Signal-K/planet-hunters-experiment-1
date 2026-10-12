@@ -14,7 +14,6 @@ import { agencyTrainingStage, agencyTrainingTrack, freeOpsActivities } from '@/l
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
-import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog, captureScreenView, captureGameEvent } from '@/lib/posthog'
@@ -172,11 +171,6 @@ function GameCanvas() {
     game.toasts.forEach(toast => game.dismissToast(toast.id))
   }, [game.dismissToast, game.screen, game.toasts])
 
-  const showFeedback = game.screen === 'hub'
-    && !game.subsurfaceView
-    && !game.popup
-    && !game.authGateOpen
-
   const surveyBlocked = !!coach
     || !!game.popup
     || !SURVEY_SAFE_SCREENS.includes(game.screen)
@@ -198,32 +192,6 @@ function GameCanvas() {
           <div data-ui-zone={UI_ZONES.ambientPrompt} className="hub-push-opt-in">
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>
-        )}
-        {/* Utility controls live in the top command cluster. Keeping them out
-            of the ground dock prevents the mission status row and bottom nav
-            from becoming their accidental hit target at narrow widths. */}
-        {game.screen === 'hub' && !game.subsurfaceView && (
-          <button
-            className="settings-cog"
-            data-testid="settings-button"
-            aria-label="Settings"
-            aria-haspopup="dialog"
-            aria-expanded={settingsOpen}
-            onClick={() => setSettingsOpen(true)}
-            style={{
-              position: 'absolute', top: 12, left: 12, zIndex: 22,
-              width: 44, height: 44, borderRadius: 999, cursor: 'pointer',
-              display: 'grid', placeItems: 'center', padding: 0,
-              background: 'var(--ln-world-hull-lit)',
-              border: '2px solid var(--ln-world-outline)',
-              color: 'var(--ln-world-outline)',
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-            </svg>
-          </button>
         )}
         <DevShortcuts />
         <div
@@ -266,7 +234,6 @@ function GameCanvas() {
         {!coach && !game.popup && !game.authGateOpen && (
           <MissionTicker player={game.player} screen={game.screen} onResume={game.go} />
         )}
-        {showFeedback && !coach && <FeedbackButton />}
         <SurveySheet blockWhile={surveyBlocked} />
 
         {game.popup === 'tutorial-complete' && !game.authGateOpen && (

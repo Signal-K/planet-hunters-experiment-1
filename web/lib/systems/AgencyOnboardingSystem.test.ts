@@ -74,8 +74,8 @@ describe('trainingCoachSteps', () => {
 })
 
 describe('freeOpsActivities', () => {
-  it('offers client work, science, refinery, transport and storage suggestions', () => {
-    expect(freeOpsActivities({}).map(activity => activity.id)).toEqual(['client-work', 'space-telescope', 'build-refinery', 'transport', 'storage-silo'])
+  it('offers client work, science, transport and storage suggestions', () => {
+    expect(freeOpsActivities({}).map(activity => activity.id)).toEqual(['client-work', 'space-telescope', 'transport', 'storage-silo'])
   })
 
   it('routes client work to the mission board', () => {
@@ -87,8 +87,4 @@ describe('freeOpsActivities', () => {
     expect(freeOpsActivities({ transitSatelliteLaunchedAt: 1 })[1].screen).toBe('instrument-hub')
   })
 
-  it('sends build refinery to placement until a refinery exists', () => {
-    expect(freeOpsActivities({ refineryBuilt: false })[2]).toMatchObject({ label: 'Build refinery', screen: 'build' })
-    expect(freeOpsActivities({ refineryBuilt: true })[2]).toMatchObject({ label: 'Refinery', screen: 'refinery' })
-  })
 })

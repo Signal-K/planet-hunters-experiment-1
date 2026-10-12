@@ -43,7 +43,6 @@ describe('TutorialCompleteSheet — Free Ops handoff (SSL-332)', () => {
     expect(buttons.map(button => button.getAttribute('data-testid'))).toEqual([
       'free-ops-activity-client-work',
       'free-ops-activity-space-telescope',
-      'free-ops-activity-build-refinery',
       'free-ops-activity-transport',
       'free-ops-activity-storage-silo',
     ])
