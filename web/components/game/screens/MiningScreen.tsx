@@ -649,14 +649,16 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
       {activeOverlay === 'guide' && (
         <aside className="mining-guide-dock" aria-label="Mining controls">
-          <Panel className="mining-guide-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
-            {miningGuide(!!deliveryTargetName).map(item => (
-              <div key={item.label} className="mining-guide-row">
-                <strong>{item.label}</strong>
-                <span>{item.desc}</span>
-              </div>
-            ))}
+          <Panel className="mining-guide-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 16, display: 'flex', flexDirection: 'column', flex: '1 1 auto', minHeight: 0, overflow: 'hidden' }}>
+            <div className="mining-guide-title">Mining Controls</div>
+            <div className="mining-guide-scroll">
+              {miningGuide(!!deliveryTargetName).map(item => (
+                <div key={item.label} className="mining-guide-row">
+                  <strong>{item.label}</strong>
+                  <span>{item.desc}</span>
+                </div>
+              ))}
+            </div>
             <div className="mining-guide-actions">
               <button type="button" className="mining-guide-close" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setGuideOpen(false); handleRecharge() }}>
                 {rechargeLabel}
@@ -667,13 +669,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                 </button>
               )}
               {help.button}
+              <button
+                type="button"
+                className="mining-guide-close"
+                onClick={() => setGuideOpen(false)}
+              >
+                Close
+              </button>
             </div>
-            <button
-              className="mining-guide-close"
-              onClick={() => setGuideOpen(false)}
-            >
-              Close
-            </button>
           </Panel>
         </aside>
       )}

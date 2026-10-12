@@ -1855,42 +1855,66 @@ button { cursor: pointer; }
   min-width: 0;
   min-height: 0;
 }
-/* The field is edge-to-edge (viewport is absolute). The guide is a right-hand
-   dock above the floating command bar, clear of the ship at x≈80 and of
-   FIRE LASER / FILL ORDER / SCROLL. */
+/* The field is edge-to-edge. The guide is a sheet under the order pill and
+   above the fire dock. Rows scroll; Close stays in its own row so it cannot
+   cover FIRE LASER / CHARGES (SSL-493, 402px). */
 .mining-guide-dock {
   position: absolute;
-  z-index: 8;
-  top: 72px;
+  z-index: 12;
+  top: 128px;
   right: 12px;
-  width: min(280px, calc(100% - 168px));
-  max-height: min(168px, calc(100% - 72px - 180px));
+  bottom: 112px;
+  width: min(360px, calc(100% - 24px));
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.mining-screen:has(.laser-dev-skip) .mining-guide-dock { top: 172px; }
+.mining-guide-title {
+  flex: none;
+  margin: 0 0 12px;
+  color: var(--ln-cyan);
+  font: 800 14px/1.2 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.mining-guide-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
 }
 .mining-guide-row {
   display: grid;
-  grid-template-columns: minmax(0, 112px) minmax(0, 1fr);
-  gap: 8px;
-  margin-bottom: 8px;
+  grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr);
+  gap: 8px 12px;
+  margin: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--ln-hairline);
 }
 .mining-guide-row strong {
   color: var(--ln-cyan);
   font: 800 14px/1.3 var(--ln-font-display);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
 }
 .mining-guide-row span {
   color: var(--ln-text-dim);
   font: 14px/1.4 var(--ln-font-body);
 }
-.mining-guide-dock button {
-  position: sticky;
-  bottom: 0;
-  background: var(--ln-panel);
+.mining-guide-actions {
+  flex: none;
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
 }
-@media (min-width: 1100px) {
+.mining-guide-dock button {
+  position: static;
+  min-height: 44px;
+}
+@media (max-width: 520px) {
   .mining-guide-dock {
-    width: min(280px, calc(100% - 168px));
+    left: 12px;
+    width: auto;
   }
 }
 .mining-viewport {
@@ -2178,19 +2202,19 @@ button { cursor: pointer; }
 .theme-blueprint.mining-screen .mining-guide-close,
 .theme-blueprint.mining-screen .mining-success-secondary,
 .theme-blueprint.mining-screen .mining-success-primary {
-  font: 800 10px var(--ln-font-display);
-  letter-spacing: var(--ln-tr-label);
+  font: 800 14px var(--ln-font-display);
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;
 }
 .theme-blueprint.mining-screen .mining-guide-close {
   width: 100%;
-  margin-top: var(--ln-s-1);
-  padding: var(--ln-s-2) 0;
+  min-height: 44px;
+  padding: 0 12px;
   border: 1px solid var(--ln-cyan-border);
   border-radius: var(--ln-r-md);
-  background: var(--ln-cyan-soft);
-  color: var(--ln-cyan);
+  background: var(--ln-bp-paper);
+  color: var(--ln-bp-ink);
 }
 .theme-blueprint.mining-screen .mining-success-panel {
   background: var(--ln-mining-control-fill-strong) !important;
@@ -3490,6 +3514,13 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* SSL-427: hangar customiser panel. Landscape puts the ship big on the left and the
    active step plus part cards on the right; portrait stacks them. */
 .sip-root{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(170px,34%) auto minmax(0,1fr) auto;grid-template-areas:"head" "ship" "tabs" "side" "foot"}
+@media (max-width: 520px) {
+  .sip-root { grid-template-rows: auto minmax(112px, 26%) auto minmax(0, 1fr) auto; }
+  .sip-root [data-testid="confirm-ship-config"],
+  .sip-root [data-testid="ship-refund-step"],
+  .sip-root [data-testid="ship-step-next"],
+  .sip-root [data-testid="ship-step-back"] { min-height: 44px !important; }
+}
 @media (orientation:landscape){
   .sip-root{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"head head" "ship side" "tabs side" "foot foot"}
   .sip-ship{padding:8px !important}
@@ -4165,12 +4196,12 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .laser-dev-skip {
   position: absolute;
-  top: 52px;
+  top: 116px;
   left: 8px;
-  z-index: 25;
+  z-index: 26;
   min-width: 44px;
-  min-height: 28px;
-  padding: 4px 8px;
+  min-height: 44px;
+  padding: 0 12px;
   background: var(--ln-world-hull-lit);
   border: 1px solid var(--ln-world-outline);
   border-radius: 4px;
@@ -4189,7 +4220,6 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   top: 52px;
   bottom: auto;
 }
-.mining-guide-actions { display: grid; gap: 8px; margin-top: 8px; }
 
 /* Settings only. PocketBase-admin cards. Tokens are specified in docs/settings-style.md. */
 .ops-settings {

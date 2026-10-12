@@ -343,7 +343,7 @@ export default function ShipInteriorPreview({
             onClick={() => setStepIndex(i => Math.max(0, i - 1))}
             disabled={isFirst || buildState.confirmed}
             style={{
-              minHeight: 36, minWidth: 56, padding: '0 8px', borderRadius: 7,
+              minHeight: 44, minWidth: 56, padding: '0 8px', borderRadius: 7,
               border: '1px solid var(--ln-glass-border)', background: 'var(--ln-hairline)',
               color: isFirst || buildState.confirmed ? 'var(--ln-bp-ink-dim)' : 'var(--ln-bp-ink-dim)',
               fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.1em',
@@ -362,7 +362,7 @@ export default function ShipInteriorPreview({
                 onClick={removeCurrentPart}
                 disabled={!currentInstalled}
                 style={{
-                  minHeight: 28, borderRadius: 6,
+                  minHeight: 44, borderRadius: 6,
                   border: `1px solid ${currentInstalled ? 'var(--ln-crimson)' : 'var(--ln-hairline)'}`,
                   background: currentInstalled ? 'var(--ln-crimson-soft)' : 'transparent',
                   color: currentInstalled ? 'var(--ln-crimson)' : 'var(--ln-bp-ink-dim)',
@@ -380,7 +380,7 @@ export default function ShipInteriorPreview({
               onClick={buildState.confirmed ? undefined : confirmBuild}
               disabled={!readyToConfirm || buildState.confirmed}
               style={{
-                minHeight: 28, borderRadius: 6,
+                minHeight: 44, borderRadius: 6,
                 border: 'none',
                 background: readyToConfirm && !buildState.confirmed
                   ? '#1d8a82'
@@ -401,7 +401,7 @@ export default function ShipInteriorPreview({
             onClick={() => setStepIndex(i => Math.min(buildSteps.length - 1, i + 1))}
             disabled={isLast || buildState.confirmed}
             style={{
-              minHeight: 36, minWidth: 56, padding: '0 8px', borderRadius: 7,
+              minHeight: 44, minWidth: 56, padding: '0 8px', borderRadius: 7,
               border: '1px solid var(--ln-bp-blue)', background: 'var(--ln-bp-blue-soft)',
               color: isLast || buildState.confirmed ? 'var(--ln-bp-ink-dim)' : 'var(--ln-bp-blue)',
               fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.1em',
