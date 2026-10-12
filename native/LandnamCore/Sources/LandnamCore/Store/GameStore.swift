@@ -213,7 +213,6 @@ public final class GameStore {
         return announce
     }
     public func buildSettlementPad(_ id: String, pad: Int) { apply(SurfaceOps.applyBuildPad(state, id, pad: pad, now: now)) }
-    public func recordSurfaceMined(_ id: String, mineral: String, amount: Int) { apply(SurfaceOps.applyMined(state, id, mineral: mineral, amount: amount)) }
     public func dispatchFerry(_ id: String) { apply(SurfaceOps.applyDispatch(state, id, now: now)) }
     public func retryFerry(_ id: String) { apply(SurfaceOps.applyRetry(state, id, now: now)) }
     public func reconcileFerry(_ id: String) { apply(SurfaceOps.applyReconcile(state, id, now: now)) }

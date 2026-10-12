@@ -315,17 +315,15 @@ enum SceneCatalog {
         scene("hangar-config-phone", 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
         scene("hangar-config-landscape", 402, w: 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
         scene("rover-field-phone", 874) {
-            var p = Prospecting(requirements: ["iron": 2, "copper": 1])
-            p.select("ore-a"); p.driveToSelected(); _ = p.drill(); _ = p.drill(); _ = p.drill(); p.startConstruction()
+            var p = Prospecting(); p.observe("ore-a")
             return RoverFieldScreen(initial: p, deployed: true).environment(GameStore(state: GameState()))
         },
         scene("rover-field-landscape", 402, w: 874) {
-            var p = Prospecting(requirements: ["iron": 2, "copper": 1])
-            p.select("ore-a"); p.driveToSelected(); _ = p.drill(); _ = p.drill()
+            var p = Prospecting(); p.observe("ore-b")
             return RoverFieldScreen(initial: p, deployed: true).environment(GameStore(state: GameState()))
         },
         scene("rover-touchdown-phone", 874) {
-            RoverFieldScreen(initial: Prospecting(requirements: ["iron": 2])).environment(GameStore(state: GameState()))
+            RoverFieldScreen(initial: Prospecting()).environment(GameStore(state: GameState()))
         },
         scene("skill-tree-phone", 1300) {
             var gs = basePlayer(); gs.player.unlockedSkillNodes = ["laser-charge-1"]

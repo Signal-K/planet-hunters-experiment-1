@@ -39,7 +39,6 @@ export function clearActiveRunPlayer(player: Player): Player {
     deliveryUnloadStartedAt: undefined,
     landingStartedAt: undefined,
     landingReturnStartedAt: undefined,
-    roverMiningStartedAt: undefined,
     arrivalAt: null,
     transitStartedAt: null,
     missionRocketSource: undefined,

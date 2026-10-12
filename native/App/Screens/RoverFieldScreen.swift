@@ -2,7 +2,7 @@ import SwiftUI
 import LandnamCore
 
 /// Starter-rover survey (mirrors web RoverSurveyScreen): deploy the Mule, scout the field, then continue to the ship laser. The rover does not extract contract cargo.
-/// The field fills the screen; only the hotbar, drive pad and drill control sit over it.
+/// The field fills the screen; only the hotbar, drive pad and survey readout sit over it.
 struct RoverFieldScreen: View {
     @Environment(GameStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -11,15 +11,11 @@ struct RoverFieldScreen: View {
 
     /// Snapshot tests pass a ready state; the app starts at touchdown.
     init(initial: Prospecting? = nil, deployed: Bool = false) {
-        _prospecting = State(initialValue: initial ?? Prospecting(requirements: [:]))
+        _prospecting = State(initialValue: initial ?? Prospecting())
         _deployed = State(initialValue: deployed)
     }
 
     private var targetName: String { store.target?.name ?? "Target" }
-    private var requirements: Cargo {
-        guard let m = store.mission, let t = store.target else { return prospecting.requirements }
-        return Prospecting.requirements(for: m, target: t)
-    }
 
     var body: some View {
         GeometryReader { geo in
@@ -31,7 +27,7 @@ struct RoverFieldScreen: View {
                     Spacer(minLength: 0)
                     if !deployed { touchdown }
                     else if geo.size.width > geo.size.height {
-                        // Landscape has no spare height: drive pad and drill on the left, readout beside them.
+                        // Landscape has no spare height: drive pad on the left, readout beside them.
                         HStack(alignment: .bottom, spacing: 12) { controls.frame(maxWidth: 330); readout }
                     } else { readout; controls }
                 }
@@ -39,7 +35,6 @@ struct RoverFieldScreen: View {
             }
         }
         .background(Theme.bg.ignoresSafeArea())
-        .onAppear { if prospecting.requirements.isEmpty { prospecting = Prospecting(requirements: requirements) } }
     }
 
     private var hotbar: some View {
@@ -51,7 +46,7 @@ struct RoverFieldScreen: View {
             }.buttonStyle(.plain)
             VStack(alignment: .leading, spacing: 2) {
                 Eyebrow(text: "Prospector · \(targetName)")
-                Text(prospecting.mineSite != nil ? "MINE SITE ACTIVE" : "\(prospecting.drillsToSite) DRILLS TO GUARANTEED SITE")
+                Text(prospecting.logged != nil ? "OBSERVATION LOGGED" : "SCOUTING")
                     .font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.ink)
             }
             .padding(8).background(Theme.paper.opacity(0.9), in: RoundedRectangle(cornerRadius: 8))
@@ -64,7 +59,7 @@ struct RoverFieldScreen: View {
             VStack(alignment: .leading, spacing: 10) {
                 Eyebrow(text: "Touchdown · \(targetName)")
                 Text("Deploy the Mule rover").font(AppFont.display(20))
-                Text("The Prospector is your rocket. The Mule is the rover in its hold. Deploy it to drive across the visible terrain and drill the client order.")
+                Text("The Prospector is your rocket. The Mule is the rover in its hold. Deploy it to scout the terrain and log one outcrop. Ship laser extraction begins after the survey.")
                     .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                 PrimaryButton(title: "DEPLOY MULE ROVER") { deployed = true }
             }
@@ -80,15 +75,6 @@ struct RoverFieldScreen: View {
             ForEach(Prospecting.outcrops) { o in
                 outcropButton(o).position(at(o.x, o.y))
             }
-            if let site = prospecting.mineSite.flatMap({ id in Prospecting.outcrops.first { $0.id == id } }) {
-                Button { prospecting.startConstruction() } label: {
-                    Text(prospecting.constructionStarted ? "FIRST MINE RIG · STARTED" : "START FIRST MINE RIG")
-                        .font(AppFont.display(14)).tracking(1.0).foregroundStyle(.white)
-                        .padding(.horizontal, 12).frame(minHeight: 44)
-                        .background(prospecting.constructionStarted ? Theme.teal : Theme.blue, in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
-                }.buttonStyle(.plain).position(CGPoint(x: size.width / 2, y: fieldTop - 8))
-            }
             Art.view("actors/road_rover.png").resizable().aspectRatio(1.5, contentMode: .fit).frame(width: 64)
                 .position(at(prospecting.rover.x, prospecting.rover.y + 0.0))
                 .offset(y: 52)
@@ -99,20 +85,20 @@ struct RoverFieldScreen: View {
     }
 
     private func outcropButton(_ o: Outcrop) -> some View {
-        let isSite = prospecting.mineSite == o.id, on = prospecting.selected == o.id
+        let on = prospecting.logged == o.id
         return Button {
-            prospecting.tapOutcrop(o.id)
+            prospecting.observe(o.id)
         } label: {
             VStack(spacing: 2) {
-                Image(systemName: isSite ? "flag.fill" : "triangle.fill").font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(isSite ? Theme.teal : Theme.blue)
-                Text(isSite ? "MINE SITE" : o.label).font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.ink)
+                Image(systemName: on ? "flag.fill" : "triangle.fill").font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(on ? Theme.teal : Theme.blue)
+                Text(o.label).font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.ink)
                     .padding(.horizontal, 6).background(Theme.paper, in: Capsule())
             }
             .frame(minWidth: 44, minHeight: 44)
             .padding(4)
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(on ? Theme.ink : .clear, lineWidth: 2.5))
-        }.buttonStyle(.plain).accessibilityLabel(isSite ? "Mine site" : o.label).accessibilityAddTraits(on ? .isSelected : [])
+        }.buttonStyle(.plain).accessibilityLabel(o.label).accessibilityAddTraits(on ? .isSelected : [])
     }
 
     // MARK: panels
@@ -121,24 +107,15 @@ struct RoverFieldScreen: View {
         Panel(accent: Theme.teal) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Eyebrow(text: "Drill results")
+                    Eyebrow(text: "Survey results")
                     Spacer()
-                    Text(prospecting.mineSite != nil ? "SITE LOCATED" : "PROSPECTING").font(AppFont.display(14)).tracking(1.0)
+                    Text(prospecting.logged != nil ? "OBSERVATION LOGGED" : "SCOUTING").font(AppFont.display(14)).tracking(1.0)
                 }
-                if prospecting.drillings.isEmpty {
-                    Text("Tap an exposed ore marker. The rover drives there and drills on arrival. A mine site is guaranteed by drill three.")
-                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                } else {
-                    // The latest result only: the full history pushed the drive pad off the screen.
-                    ForEach(prospecting.drillings.suffix(1)) { f in
-                        Text("DRILL \(f.attempt) · \(f.label)").font(AppFont.mono(14)).foregroundStyle(f.kind == .mineSite ? Theme.teal : Theme.ink)
-                    }
-                }
-                if prospecting.mineSite != nil {
-                    Text(prospecting.constructionStarted ? "FIRST MINE RIG IS STAKED ON THE FIELD." : "START THE FIRST RIG ON THE FIELD, OR RETURN THE PROSPECTOR.")
-                        .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.ink)
-                }
+                Text(prospecting.loggedOutcrop.map { "\($0.label) logged. The ship laser is ready for extraction." }
+                     ?? "Use the drive pad to scout the field, then tap an exposed outcrop to log a surface observation.")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                 PrimaryButton(title: "CONTINUE TO SHIP LASER") { store.roverSurveyComplete() }
+                    .disabled(!prospecting.canContinue).opacity(prospecting.canContinue ? 1 : 0.45)
             }
         }
     }
@@ -154,9 +131,7 @@ struct RoverFieldScreen: View {
                 }
             }
             Spacer(minLength: 0)
-            VStack(alignment: .trailing, spacing: 6) {
-                Eyebrow(text: prospecting.selectedOutcrop.map { "\($0.label) selected" } ?? "Select exposed ore")
-            }
+            Eyebrow(text: prospecting.loggedOutcrop.map { "\($0.label) logged" } ?? "Select an outcrop")
         }
     }
 

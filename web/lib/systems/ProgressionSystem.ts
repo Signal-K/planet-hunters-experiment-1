@@ -173,7 +173,6 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
       miningLaserCharges: undefined,
       landingStartedAt: undefined,
       landingReturnStartedAt: undefined,
-      roverMiningStartedAt: undefined,
       deliveryUnloadStartedAt: undefined,
       missionCrewIds: [],
       arrivalAt: null,

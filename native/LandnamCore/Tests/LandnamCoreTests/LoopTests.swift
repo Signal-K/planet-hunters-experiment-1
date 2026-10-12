@@ -167,10 +167,9 @@ import Foundation
     }
 
     @Test func roverSurveyDoesNotDeliverContractCargo() {
-        let order: Cargo = ["iron": 2]
-        var p = Prospecting(requirements: order)
-        _ = p.tapOutcrop("ore-a"); _ = p.tapOutcrop("ore-a")
-        #expect(p.canReturn && p.cargo == order)
+        var p = Prospecting()
+        p.observe("ore-a")
+        #expect(p.canContinue)
         var s = GameState()
         s.screen = .roverSurvey; s.missionId = "m"; s.targetId = "eros"
         let surveyed = Loop.roverSurveyComplete(s)

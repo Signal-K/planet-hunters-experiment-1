@@ -95,14 +95,8 @@ describe('applyMiningDone', () => {
     expect(next.player.miningCargoInProgress).toBeUndefined()
   })
 
-  it('clears the legacy rover timer when the laser run completes', () => {
-    const s = makeState({ screen: 'mining', player: { roverMiningStartedAt: Date.now() } })
-    const next = applyMiningDone(s, { nickel: 2 }, 1_000)
-    expect(next.player.roverMiningStartedAt).toBeUndefined()
-  })
-
   it('does not extract cargo from the rover survey screen', () => {
-    const s = makeState({ screen: 'rover-survey', player: { roverMiningStartedAt: Date.now() } })
+    const s = makeState({ screen: 'rover-survey' })
     expect(applyMiningDone(s, { ice: 3 }, 500)).toBe(s)
   })
 })

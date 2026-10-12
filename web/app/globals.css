@@ -2405,10 +2405,6 @@ button { cursor: pointer; }
   color: var(--ln-bp-ink-mute);
   box-shadow: none;
 }
-.theme-blueprint[data-testid="rover-survey-screen"] .rover-mining-hud {
-  background: linear-gradient(180deg, transparent, var(--ln-bp-bg) 18%);
-  border-top: 1px solid var(--ln-bp-line-strong);
-}
 
 /* KES-279: mining is a location scene, not a stacked form. Keep the field
    edge-to-edge and float the operator HUD over it; the old flex column made

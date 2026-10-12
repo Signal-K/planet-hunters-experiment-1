@@ -703,7 +703,6 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
       debriefPending: current.player.debriefPending,
       miningCargoInProgress: current.player.miningCargoInProgress,
       miningLaserCharges: current.player.miningLaserCharges,
-      roverMiningStartedAt: current.player.roverMiningStartedAt,
       landingStartedAt: current.player.landingStartedAt,
       landingReturnStartedAt: current.player.landingReturnStartedAt,
       pendingLaunch: false,

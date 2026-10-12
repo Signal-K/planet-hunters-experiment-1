@@ -236,9 +236,6 @@ export interface Player {
   // Laser charges left in the paused mining run (SSL-512). Without it, leaving
   // and resuming refilled the magazine, a free recharge.
   miningLaserCharges?: number
-  // Legacy timer field retained for save migration. Live rover missions now
-  // persist their field state through TakeOnMount/LandnamSync.
-  roverMiningStartedAt?: number
   // Legacy KES-110 observation field retained for save migration. The live
   // rover field now exposes deposits through the TakeOn scene itself.
   roverTerrainClassifications?: Record<string, RoverTerrainClass>
@@ -248,7 +245,7 @@ export interface Player {
   deliveryUnloadStartedAt?: number
   // Wall-clock start of the lander detach/descend sequence on arrival, and of
   // the ascend/redock sequence after mining completes. Same "derive progress
-  // from a persisted epoch" pattern as roverMiningStartedAt/deliveryUnloadStartedAt.
+  // from a persisted epoch" pattern as deliveryUnloadStartedAt.
   landingStartedAt?: number
   landingReturnStartedAt?: number
   // True once the player has completed at least one lander redock. Gates
