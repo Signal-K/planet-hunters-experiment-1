@@ -116,29 +116,19 @@ struct MiningScreen: View {
         GeometryReader { geo in
             ZStack {
                 if let scene { SpriteView(scene: scene).ignoresSafeArea() }
-                if let field {
+                if let field, !showGuide {
                     laserChrome(field, insets: geo.safeAreaInsets, narrow: geo.size.width < 600).ignoresSafeArea()
+                }
+                if showGuide {
+                    MiningGuide(onRecharge: { showGuide = false; scene?.refill(); say("Laser refilled. Cargo kept.") },
+                                onScrub: { showGuide = false; confirmingScrub = true },
+                                onClose: { showGuide = false })
                 }
             }
             .onAppear { if scene == nil { setup(geo.size) } }
         }
         .background(Theme.bg)
         .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
-        .sheet(isPresented: $showGuide) {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Controls").font(AppFont.display(18, "Bold")).foregroundStyle(Theme.ink)
-                Text("Tap the dock arrows to speed up or slow down the ground so a deposit sits under the beam, then fire. Hold the order card for this menu.").font(AppFont.body(16)).foregroundStyle(Theme.ink)
-                Button("Recharge laser") { showGuide = false; scene?.refill(); say("Laser refilled. Cargo kept.") }
-                    .font(AppFont.display(16, "Bold")).frame(maxWidth: .infinity, minHeight: 44)
-                Button("Scrub mission", role: .destructive) { showGuide = false; confirmingScrub = true }
-                    .font(AppFont.display(16, "Bold")).frame(maxWidth: .infinity, minHeight: 44)
-                Button("Close") { showGuide = false }
-                    .font(AppFont.display(16, "Bold")).frame(maxWidth: .infinity, minHeight: 44)
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(Theme.paper)
-        }
         .confirmationDialog("Scrub mission?", isPresented: $confirmingScrub, titleVisibility: .visible) {
             Button("Scrub mission", role: .destructive) { store.abandonMission() }
             Button("Keep mining", role: .cancel) {}
@@ -321,5 +311,74 @@ struct LaunchSequenceScreen: View {
             }
         }
         .background(Theme.bg)
+    }
+}
+
+/// Mining controls guide (mirrors web `mining-guide-dock`): full screen while open, one card per control with 24pt
+/// gaps, Recharge and Scrub as separate full-width buttons. The HUD and dock are removed while it shows.
+struct MiningGuide: View {
+    @Environment(\.flatLayout) private var flat
+    let onRecharge: () -> Void
+    let onScrub: () -> Void
+    let onClose: () -> Void
+
+    private static let items: [(String, String)] = [
+        ("Fire Laser", "Fires the vertical beam. Scroll ore under the beam, then fire."),
+        ("Charges", "The fire button reads Depleted when the laser is empty. Empty, with the order unfinished, the run stops."),
+        ("Order", "The order card lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty."),
+        ("Scroll", "The dock arrows change how fast the ground moves. They settle back to a steady crawl."),
+        ("Inventory", "The order lines show collected against required. Fill every line to unlock return."),
+        ("Return home", "Return for recovery. Payout unlocks after landing."),
+    ]
+
+    private var cards: some View {
+        VStack(spacing: SetStyle.gap) {
+            ForEach(Self.items, id: \.0) { item in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(item.0).font(AppFont.display(16, "Bold")).foregroundStyle(SetStyle.ink)
+                    Text(item.1).font(AppFont.body(16)).foregroundStyle(SetStyle.muted).fixedSize(horizontal: false, vertical: true)
+                }.setCard()
+            }
+        }.padding(.horizontal, 16).padding(.vertical, 8).setColumn()
+    }
+
+    private var buttons: some View {
+        VStack(spacing: SetStyle.gap) {
+            SetButton(title: "Recharge laser", solid: true, fill: true, action: onRecharge)
+            SetButton(title: "Scrub mission", color: SetStyle.danger, fill: true, action: onScrub)
+        }.padding(16)
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            let wide = geo.size.width > geo.size.height
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Controls".uppercased()).font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SetStyle.ink)
+                    Spacer()
+                    Button(action: onClose) {
+                        Image(systemName: "xmark").font(.system(size: 18, weight: .heavy)).foregroundStyle(SetStyle.ink)
+                            .frame(width: 44, height: 44)
+                            .background(SetStyle.card, in: RoundedRectangle(cornerRadius: SetStyle.radius))
+                            .overlay(RoundedRectangle(cornerRadius: SetStyle.radius).stroke(SetStyle.ink, lineWidth: SetStyle.border))
+                    }.buttonStyle(.plain).accessibilityLabel("Close")
+                }.padding(.horizontal, 16).padding(.vertical, 8).frame(minHeight: 60).setColumn(wide: wide)
+                if wide {
+                    HStack(alignment: .top, spacing: 0) {
+                        scroller { cards }
+                        buttons.frame(width: 300)
+                    }
+                } else {
+                    scroller { cards }
+                    buttons.setColumn()
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(SetStyle.bg.ignoresSafeArea())
+    }
+
+    @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
+        if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
     }
 }

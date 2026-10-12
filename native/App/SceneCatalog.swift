@@ -52,6 +52,12 @@ enum SceneCatalog {
         return gs
     }
 
+    static func exchangeState() -> GameState {
+        var gs = starterState(); gs.player.francs = 12500
+        gs.player.stash = ["iron": 14, "silicon": 6, "carbon": 3]; gs.screen = .market
+        return gs
+    }
+
     static func partState() -> GameState {
         var gs = scanState(); gs.player.flightPlan.complete("scan"); gs.screen = .hangar
         return gs
@@ -300,8 +306,14 @@ enum SceneCatalog {
         scene("hub-empty-live-landscape", 402, w: 874) { HubScreen().environment(GameStore(state: GameState())) },
         scene("hub-starter-live", 874) { HubScreen().environment(GameStore(state: starterState())) },
         scene("hub-starter-live-landscape", 402, w: 874) { HubScreen().environment(GameStore(state: starterState())) },
-        scene("settings-live", 1180) { SettingsSheet(onClose: {}).environment(GameStore(state: starterState())).environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore())).environment(\.flatLayout, true) },
-        scene("settings-live-landscape", 1100, w: 874) { SettingsSheet(onClose: {}).environment(GameStore(state: starterState())).environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore())).environment(\.flatLayout, true) },
+        scene("settings-live", 1500) { SettingsSheet(onClose: {}).environment(GameStore(state: starterState())).environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore())).environment(\.flatLayout, true) },
+        scene("settings-live-landscape", 1500, w: 874) { SettingsSheet(onClose: {}).environment(GameStore(state: starterState())).environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore())).environment(\.flatLayout, true) },
+        scene("mining-guide-phone", 1250) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
+        scene("mining-guide-landscape", 402, w: 874) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
+        scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("exchange-landscape", 402, w: 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("hangar-config-phone", 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
+        scene("hangar-config-landscape", 402, w: 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
         scene("rover-field-phone", 874) {
             var p = Prospecting(requirements: ["iron": 2, "copper": 1])
             p.select("ore-a"); p.driveToSelected(); _ = p.drill(); _ = p.drill(); _ = p.drill(); p.startConstruction()

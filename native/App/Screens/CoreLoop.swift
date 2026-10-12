@@ -221,12 +221,16 @@ struct MissionSlide: View {
 struct LaunchScreen: View {
     @Environment(GameStore.self) private var store
     @State private var launching = false
+    @State private var configuring: Bool?
+    private var needsConfig: Bool { !FlightPlan.moduleKinds.allSatisfy { store.player.shipCustomizerParts[$0] != nil } }
     private var variant: String {
         store.player.stagedRockets.first { $0.location == .launchpad }?.rocketId.contains("explorer") == true ? "explorer" : "prospector"
     }
     var body: some View {
         if launching {
             LaunchSequenceScreen(variant: variant) { store.launch() }
+        } else if configuring ?? needsConfig {
+            HangarModulesPanel(onClose: { configuring = false })
         } else {
             pad
         }
@@ -234,7 +238,7 @@ struct LaunchScreen: View {
 
     private var pad: some View {
         ScreenFrame(title: "Hangar", back: { store.go(.hub) }) {
-            HangarModulesPanel()
+            SetButton(title: "Build config", fill: true) { configuring = true }
             if let m = store.mission {
                 Panel { Text(m.title).font(.headline); Text("Target: \(store.target?.name ?? "none")") }
             } else if store.player.stagedRockets.isEmpty {
@@ -394,21 +398,61 @@ struct DebriefLedger: View {
 
 struct MarketScreen: View {
     @Environment(GameStore.self) private var store
+    @Environment(\.flatLayout) private var flat
+    @State private var showBuild = false
+    @State private var confirmSellAll = false
+
     var body: some View {
-        ScreenFrame(title: "Market", back: { store.go(.hub) }) {
-            Panel { Text("Funds: \(francs(store.player.francs))") }
-            ForEach(store.player.stash.keys.sorted(), id: \.self) { id in
-                let n = store.player.stash[id] ?? 0
-                Panel {
-                    Text("\(id) ×\(n)")
-                    PrimaryButton(title: "Sell all", enabled: n > 0) { store.sell(id, amount: n) }
+        let p = store.player
+        let held = p.stash.keys.sorted().filter { (p.stash[$0] ?? 0) > 0 }
+        let price = { (id: String) in Market.unitPrice(id, player: p, clientId: p.lastClient, now: store.now).price }
+        let total = held.reduce(0) { $0 + price($1) * (p.stash[$1] ?? 0) }
+        VStack(spacing: 0) {
+            SetHeader(back: { store.go(.hub) }, trailing: francs(p.francs))
+            scroller {
+                VStack(spacing: SetStyle.gap) {
+                    SetSegment(options: ["Cargo", "Build"], selected: showBuild ? 1 : 0) { showBuild = $0 == 1 }
+                    SetButton(title: confirmSellAll ? "Confirm · \(francs(total))" : "Sell all", solid: true, enabled: !held.isEmpty, fill: true) {
+                        if confirmSellAll { held.forEach { store.sell($0, amount: p.stash[$0] ?? 0) }; confirmSellAll = false } else { confirmSellAll = true }
+                    }
+                    if showBuild {
+                        let catalog = Construction.catalog(for: p)
+                        ForEach(catalog) { b in
+                            row(b.name, b.cost == 0 ? "Free" : francs(b.cost)) {
+                                SetButton(title: "Open") { store.go(.build) }
+                            }
+                        }
+                        if catalog.isEmpty { Text("NO STRUCTURES").font(AppFont.display(14, "Bold")).foregroundStyle(SetStyle.muted) }
+                    } else {
+                        ForEach(held, id: \.self) { id in
+                            let n = p.stash[id] ?? 0
+                            row(Minerals.byId[id]?.name ?? id, "\(n) held") {
+                                Text(francs(price(id) * n)).font(AppFont.display(16)).foregroundStyle(SetStyle.ink)
+                            }
+                        }
+                        if held.isEmpty { Text("NO CARGO").font(AppFont.display(14, "Bold")).tracking(1.1).foregroundStyle(SetStyle.muted) }
+                    }
                 }
+                .padding(.horizontal, 16).padding(.top, 16).padding(.bottom, 32)
+                .setColumn()
             }
-            if store.player.stash.isEmpty { Panel { Text("Nothing in storage.") } }
         }
+        .background(SetStyle.bg.ignoresSafeArea())
+        .foregroundStyle(SetStyle.ink)
+    }
+
+    private func row<A: View>(_ name: String, _ meta: String, @ViewBuilder trailing: () -> A) -> some View {
+        HStack(spacing: 16) {
+            SetRowText(title: name, status: meta)
+            Spacer(minLength: 8)
+            trailing()
+        }.setCard()
+    }
+
+    @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
+        if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
     }
 }
-
 
 /// SSL-462: names the link between the haul and the next build and spends it on the Laser Capacitor
 /// (mirrors web LaserCapacitorPanel).

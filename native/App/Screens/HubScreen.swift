@@ -222,17 +222,6 @@ extension View {
     }
 }
 
-/// Admin-dashboard palette for Settings: white cards on light grey, soft grey borders.
-private enum Admin {
-    static let page = Theme.hex(0xF4F5F7)
-    static let card = Color.white
-    static let border = Theme.hex(0xE1E4E8)
-    static let ink = Theme.hex(0x1B1F24)
-    static let muted = Theme.hex(0x6B7280)
-    static let danger = Theme.hex(0xD6303B)
-    static let primary = Theme.hex(0x1F78C1)
-}
-
 /// Settings gear destination, matching the web Settings sheet: account, training (replay, skip), reset, Free Ops, patch notes.
 struct SettingsSheet: View {
     @Environment(GameStore.self) private var store
@@ -252,13 +241,13 @@ struct SettingsSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Settings").font(AppFont.display(20)).foregroundStyle(Admin.ink)
+                Text("Settings".uppercased()).font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SetStyle.ink)
                 Spacer()
                 Button(action: onClose) {
-                    Image(systemName: "xmark").font(.system(size: 16, weight: .bold)).foregroundStyle(Admin.muted)
+                    Image(systemName: "xmark").font(.system(size: 16, weight: .heavy)).foregroundStyle(SetStyle.ink)
                         .frame(width: 44, height: 44).contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityLabel("Close")
-            }.padding(.horizontal, 20).padding(.top, flat ? 24 : 8)
+            }.padding(.horizontal, 16).padding(.top, flat ? 24 : 8).setColumn()
             if flat { content.frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { content } }
         }
         .sheet(isPresented: $showPatchNotes) { PatchNotesSheet() }
@@ -268,139 +257,77 @@ struct SettingsSheet: View {
         } message: {
             Text("Your progress stays saved on this device and in the cloud. Sign back in to continue.")
         }
-        .background(Admin.page)
+        .background(SetStyle.bg)
         .presentationDetents([.medium, .large])
     }
 
     private var content: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: SetStyle.gap) {
             #if os(iOS)
-            label("Display")
+            SetHeading(text: "Display")
             orientationCard
             #endif
-            label("Training")
-            VStack(spacing: 0) {
-                ForEach(Array(FlightPlanProgress.tryIds.enumerated()), id: \.element) { i, id in
-                    if i > 0 { Divider().overlay(Admin.border) }
-                    trainingRow(id)
-                }
-                if !store.player.freeOperations {
-                    Divider().overlay(Admin.border)
-                    HStack {
-                        rowText("Skip training", confirmSkip ? "Tap again to mark all tries done" : "Mark all tries as done")
-                        Spacer(minLength: 12)
-                        outlineButton(confirmSkip ? "Confirm" : "Skip", color: Admin.ink) {
-                            if confirmSkip { confirmSkip = false; onClose(); store.skipTraining() } else { confirmSkip = true }
-                        }
-                    }.padding(20)
-                }
-            }.card()
-            label("Game")
-            VStack(spacing: 0) {
-                HStack {
-                    rowText("Free Ops", "Play without a contract: mine, survey, build and trade on your own")
-                    Spacer(minLength: 12)
-                    let on = Binding(get: { store.player.freeOperations }, set: { store.setFreeOps($0) })
-                    if flat {
-                        // Headless snapshots cannot draw UIKit-backed controls; mirror the Toggle's look.
-                        Capsule().fill(on.wrappedValue ? Admin.primary : Admin.border).frame(width: 51, height: 31)
-                            .overlay(Circle().fill(Color.white).padding(2).frame(maxWidth: .infinity, alignment: on.wrappedValue ? .trailing : .leading))
-                    } else {
-                        Toggle("Free Ops", isOn: on).labelsHidden().tint(Admin.primary)
+            SetHeading(text: "Training")
+            ForEach(FlightPlanProgress.tryIds, id: \.self) { trainingRow($0) }
+            if !store.player.freeOperations {
+                row(SetRowText(title: "Skip training", status: confirmSkip ? "Tap again to mark all tries done" : "Mark all tries as done")) {
+                    SetButton(title: confirmSkip ? "Confirm" : "Skip") {
+                        if confirmSkip { confirmSkip = false; onClose(); store.skipTraining() } else { confirmSkip = true }
                     }
-                }.padding(20)
-                Divider().overlay(Admin.border)
-                HStack {
-                    rowText("Patch notes", "What changed in recent builds")
-                    Spacer(minLength: 12)
-                    outlineButton("View", color: Admin.ink) { showPatchNotes = true }
-                }.padding(20)
-            }.card()
-            label("Account")
-            VStack(spacing: 0) {
-                HStack {
-                    rowText("Account", auth.session?.email.map { "Signed in as \($0)" } ?? "Signed in")
-                    Spacer(minLength: 12)
-                    outlineButton("Sign out", color: Admin.ink) { confirmSignOut = true }
-                }.padding(20)
-            }.card()
-            label("Danger zone")
-            HStack {
-                rowText("Reset progress", confirmReset ? "Tap again to erase all progress. This cannot be undone." : "Erase all progress and start over", titleColor: Admin.danger)
-                Spacer(minLength: 12)
-                outlineButton(confirmReset ? "Confirm reset" : "Reset", color: Admin.danger) {
+                }
+            }
+            SetHeading(text: "Game")
+            row(SetRowText(title: "Free Ops", status: "Play without a contract")) {
+                let on = Binding(get: { store.player.freeOperations }, set: { store.setFreeOps($0) })
+                SetSegment(options: ["Off", "On"], selected: on.wrappedValue ? 1 : 0) { on.wrappedValue = $0 == 1 }
+                    .frame(width: 168)
+            }
+            row(SetRowText(title: "Patch notes", status: "What changed in recent builds")) {
+                SetButton(title: "View") { showPatchNotes = true }
+            }
+            SetHeading(text: "Account")
+            row(SetRowText(title: "Account", status: auth.session?.email.map { "Signed in as \($0)" } ?? "Signed in")) {
+                SetButton(title: "Sign out") { confirmSignOut = true }
+            }
+            row(SetRowText(title: "Reset progress", status: confirmReset ? "Tap again to erase all progress" : "Erase all progress and start over", titleColor: SetStyle.danger),
+                border: SetStyle.danger) {
+                SetButton(title: confirmReset ? "Confirm reset" : "Reset", color: SetStyle.danger) {
                     if confirmReset { confirmReset = false; onClose(); store.reset() } else { confirmReset = true }
                 }
-            }.padding(20).card(border: Admin.danger.opacity(0.35))
+            }
         }
-        .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 32)
-        .frame(maxWidth: 640)
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 32)
+        .setColumn()
     }
 
-    private func label(_ title: String) -> some View {
-        Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Admin.muted)
-            .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 12).padding(.bottom, -4)
-    }
-
-    private func rowText(_ title: String, _ subtitle: String, titleColor: Color = Admin.ink) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(AppFont.display(16)).foregroundStyle(titleColor)
-            Text(subtitle).font(AppFont.display(14)).foregroundStyle(Admin.muted).fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    private func outlineButton(_ title: String, color: Color, _ run: @escaping () -> Void) -> some View {
-        Button(action: run) {
-            Text(title).font(AppFont.display(14)).foregroundStyle(color)
-                .padding(.horizontal, 16).frame(minWidth: 88, minHeight: 44)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(color.opacity(0.6), lineWidth: 1))
-                .contentShape(Rectangle())
-        }.buttonStyle(.plain)
+    private func row<A: View>(_ text: SetRowText, border: Color = SetStyle.ink, @ViewBuilder action: () -> A) -> some View {
+        HStack(spacing: 16) {
+            text
+            Spacer(minLength: 8)
+            action()
+        }.setCard(border: border)
     }
 
     private func trainingRow(_ id: String) -> some View {
         let plan = store.player.flightPlan
         let status = plan.completed[id] == true ? "Done" : plan.currentTry == id && !store.player.freeOperations ? "On air" : "Standby"
-        return HStack {
-            rowText(Self.tryNames[id] ?? id, status)
-            Spacer(minLength: 12)
-            outlineButton("Replay", color: Admin.ink) { onClose(); store.replayTry(id) }
+        return row(SetRowText(title: Self.tryNames[id] ?? id, status: status)) {
+            SetButton(title: "Replay") { onClose(); store.replayTry(id) }
                 .accessibilityLabel("Replay \(Self.tryNames[id] ?? id)")
-        }.padding(20)
+        }
     }
 
     #if os(iOS)
     private var orientationCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            rowText("Screen orientation", "Lock the game to portrait or landscape")
-            HStack(spacing: 8) {
-                ForEach(OrientationPreference.allCases) { option in
-                    let on = OrientationPreference(stored: orientation) == option
-                    Button { orientation = option.rawValue } label: {
-                        Text(option.title).font(AppFont.display(14))
-                            .foregroundStyle(on ? Color.white : Admin.ink)
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                            .background(on ? Admin.primary : Color.clear, in: RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(on ? Admin.primary : Admin.border, lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Orientation \(option.title)")
-                    .accessibilityAddTraits(on ? .isSelected : [])
-                }
+        VStack(alignment: .leading, spacing: 16) {
+            SetRowText(title: "Screen orientation", status: "Lock to portrait or landscape")
+            SetSegment(options: OrientationPreference.allCases.map(\.title),
+                       selected: OrientationPreference.allCases.firstIndex(of: OrientationPreference(stored: orientation)) ?? 0) {
+                orientation = OrientationPreference.allCases[$0].rawValue
             }
-        }
-        .padding(20).frame(maxWidth: .infinity, alignment: .leading).card()
+        }.setCard()
     }
     #endif
-}
-
-private extension View {
-    func card(border: Color = Admin.border) -> some View {
-        frame(maxWidth: .infinity, alignment: .leading)
-            .background(Admin.card, in: RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(border, lineWidth: 1))
-    }
 }
 
 /// Native patch notes: newest first.
@@ -428,10 +355,10 @@ struct PatchNotesSheet: View {
                             Text(note.0.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
                             ForEach(note.1, id: \.self) { Text("• \($0)").font(AppFont.display(14)).foregroundStyle(Theme.textDim) }
                         }
-                        .padding(14).frame(maxWidth: .infinity, alignment: .leading).hudPanel(radius: 10)
+                        .setCard(padding: 16)
                     }
                 }.padding(16)
             }
-        }.background(Theme.bg)
+        }.background(SetStyle.bg)
     }
 }
