@@ -393,31 +393,127 @@
   position: absolute;
   left: 0;
   bottom: 0;
+  z-index: 5;
   width: calc(120 * var(--px, 3px));
   height: calc(20 * var(--px, 3px));
   image-rendering: pixelated;
   pointer-events: none;
 }
 
-.padGantry {
+.padGantryBox {
   position: absolute;
   left: 0;
   bottom: calc(16 * var(--px, 3px));
   width: calc(120 * var(--px, 3px));
   height: calc(92 * var(--px, 3px));
+  z-index: 3;
+  pointer-events: none;
+}
+
+.padGantry,
+.padArms {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   image-rendering: pixelated;
   pointer-events: none;
 }
 
-.padRocket {
+.padBeacon {
   position: absolute;
-  left: calc(50% + 22 * var(--px, 3px));
-  bottom: calc(22 * var(--px, 3px));
-  width: calc(44 * var(--px, 3px));
-  height: calc(72 * var(--px, 3px));
-  transform: translateX(-50%);
+  width: calc(2 * var(--px, 3px));
+  height: calc(2 * var(--px, 3px));
   image-rendering: pixelated;
   pointer-events: none;
+  animation: beaconBlink 1.1s steps(1, end) infinite;
+}
+
+/* The rocket's lowest nozzle pixels sit on the slab's deck row.
+   Visual left is 3 units left of centre so the gantry clamps meet the hull. */
+.padFlight {
+  position: absolute;
+  left: calc(50% - 3 * var(--px, 3px));
+  bottom: calc(18 * var(--px, 3px));
+  width: calc(44 * var(--px, 3px));
+  height: calc(72 * var(--px, 3px));
+  z-index: 4;
+  pointer-events: none;
+}
+
+.padFlight .padRocket {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.padExhaust {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  height: calc(20 * var(--px, 3px));
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.padVent,
+.padSmoke {
+  position: absolute;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.padVent {
+  left: calc(50% - 3 * var(--px, 3px));
+  bottom: calc(20 * var(--px, 3px));
+  width: calc(44 * var(--px, 3px));
+  height: calc(16 * var(--px, 3px));
+}
+
+.padSmoke {
+  left: calc(50% - 21 * var(--px, 3px));
+  bottom: calc(2 * var(--px, 3px));
+  width: calc(80 * var(--px, 3px));
+  height: calc(28 * var(--px, 3px));
+}
+
+.padStack[data-pad-phase='launch'] .padVent { visibility: hidden; }
+.padStack[data-pad-phase='launch'] .padFlight {
+  z-index: 7;
+  animation: padLiftoff 3.2s linear forwards;
+}
+
+.padLaunch {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  --px: 3px;
+  --hub-ground: 20%;
+}
+
+.padLaunchStack {
+  position: absolute;
+  left: 50%;
+  bottom: var(--hub-ground);
+  z-index: 2;
+  transform: translateX(-50%);
+}
+
+.padCloudDrift {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  animation: padCloudDrift 18s ease-in-out infinite alternate;
 }
 
 .hangarSprite {
@@ -490,6 +586,27 @@
   50%, 100% { opacity: 0.25; }
 }
 
+@keyframes beaconBlink {
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes padLiftoff {
+  0% { transform: translate3d(0, 0, 0); }
+  8% { transform: translate3d(calc(-1 * var(--px, 3px)), 0, 0); }
+  12% { transform: translate3d(var(--px, 3px), 0, 0); }
+  16% { transform: translate3d(calc(-1 * var(--px, 3px)), 0, 0); }
+  20% { transform: translate3d(var(--px, 3px), 0, 0); }
+  28% { transform: translate3d(0, 0, 0); }
+  42% { transform: translate3d(0, calc(-8 * var(--px, 3px)), 0); }
+  100% { transform: translate3d(0, -62vh, 0); }
+}
+
+@keyframes padCloudDrift {
+  from { transform: translateX(0); }
+  to { transform: translateX(18px); }
+}
+
 @keyframes steam {
   0% { opacity: 0; transform: translateY(6px) scale(0.7); }
   30% { opacity: 0.7; }
@@ -533,6 +650,9 @@
   .lane,
   .lift,
   .beacon,
+  .padBeacon,
+  .padFlight,
+  .padCloudDrift,
   .steam,
   .windowGlow,
   .dish,

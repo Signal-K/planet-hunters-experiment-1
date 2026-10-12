@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { buildLaunchScene, LAUNCH_W, LAUNCH_H, launchFrameDt } from '@/lib/pixi/launchScene'
+import { PadLaunchSequence } from '@/components/game/hub/PadLaunchSequence'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import SequenceDesktopFrame from '@/components/game/SequenceDesktopFrame'
 
@@ -86,7 +87,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
     if (!div) return
 
     const canvas = document.createElement('canvas')
-    canvas.style.cssText = 'display:block;width:100%;height:100%;'
+    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none;'
     div.appendChild(canvas)
 
     const app = new Application()
@@ -113,7 +114,10 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
         rocketName,
         rocketImageSrc,
         targetName,
-        onComplete: fireComplete,
+        // The pad sprite sequence owns the handoff to flight. The Pixi
+        // cinematic stays mounted for its watchdog, and must not cut the
+        // departure short.
+        onComplete: () => {},
       })
 
       app.ticker.add(t => {
@@ -155,7 +159,11 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
         { label: 'STATUS', value: 'NOMINAL' },
       ]}
       showClock
-      renderStage={style => <div ref={divRef} data-testid="launch-sequence-stage" style={{ background: '#d5ecf7', ...style }} />}
+      renderStage={style => (
+        <div ref={divRef} data-testid="launch-sequence-stage" style={{ background: '#d5ecf7', ...style }}>
+          <PadLaunchSequence onComplete={fireComplete} />
+        </div>
+      )}
     >
       {process.env.NODE_ENV === 'development' && (
         <button

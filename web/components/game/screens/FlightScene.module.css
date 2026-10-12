@@ -151,8 +151,8 @@
 }
 
 .flame {
-  width: calc(18 * var(--k));
-  height: calc(9 * var(--k));
+  width: calc(36 * var(--k));
+  height: calc(16 * var(--k));
   image-rendering: pixelated;
   flex: 0 0 auto;
 }

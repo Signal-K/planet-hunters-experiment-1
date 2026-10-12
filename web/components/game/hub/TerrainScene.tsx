@@ -3,6 +3,7 @@
 import React from 'react'
 import type { TimeOfDayPhase } from '@/lib/hooks/useTimeOfDay'
 import { groundOffsetCss, TERRAIN_KIT, brickSrc, type BrickPlacement, type SceneBand, type SceneComposition, type SceneRoadPath } from '@/lib/scene/terrain-kit'
+import sceneStyles from './BaseLayerScene.module.css'
 
 /**
  * Renders a `SceneComposition` from the modular Blender terrain kit (KES-260).
@@ -143,7 +144,19 @@ function Band({ band, palette }: { band: SceneBand; palette: Palette }) {
         zIndex: 1 + Math.round(band.depth * 10),
       }}
     >
-      {band.bricks.map((placement, i) => (
+      {band.id === 'clouds' ? (
+        <div className={sceneStyles.padCloudDrift}>
+          {band.bricks.map((placement, i) => (
+            <Brick
+              key={`${band.id}-${i}`}
+              placement={placement}
+              band={band}
+              haze={palette.haze}
+              hazeAmount={hazeAmount}
+            />
+          ))}
+        </div>
+      ) : band.bricks.map((placement, i) => (
         <Brick
           key={`${band.id}-${i}`}
           placement={placement}
