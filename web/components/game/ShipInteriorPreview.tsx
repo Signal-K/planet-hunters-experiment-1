@@ -138,8 +138,11 @@ export default function ShipInteriorPreview({
           </div>
           {onClose && (
             <button
+              type="button"
               onClick={onClose}
-              style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--ln-glass-border)', background: 'transparent', color: 'var(--ln-bp-ink-dim)', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+              aria-label="Close"
+              data-testid="ship-interior-close"
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 44, minHeight: 44, padding: 0, borderRadius: 6, border: '1px solid var(--ln-glass-border)', background: 'transparent', color: 'var(--ln-bp-ink-dim)', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
             >
               ✕
             </button>
@@ -196,7 +199,7 @@ export default function ShipInteriorPreview({
               disabled={buildState.confirmed}
               style={{
                 flex: '1 1 auto',
-                minHeight: 36,
+                minHeight: 44,
                 padding: '0 12px',
                 borderRadius: 999,
                 border: `1px solid ${active ? 'var(--ln-bp-blue)' : done ? '#1d8a82' : 'var(--ln-glass-border)'}`,

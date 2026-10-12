@@ -1187,11 +1187,11 @@ button { cursor: pointer; }
    anchor sat directly over the Francs rail on a real phone viewport. */
 .sky-event-wrap[data-testid="sky-event-base"] { top: 144px !important; }
 .ln-action-confirm__copy { min-width: 0; }
-.ln-action-confirm__copy > span { display: block; color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .22em; text-transform: uppercase; }
+.ln-action-confirm__copy > span { display: block; color: var(--ln-cyan); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; }
 .ln-action-confirm__copy > strong { display: block; margin-top: 2px; color: var(--ln-text); font: 800 16px var(--ln-font-display); text-transform: uppercase; }
-.ln-action-confirm__copy > p { margin: 4px 0 0; color: var(--ln-text-dim); font: 12px/1.4 var(--ln-font-body); }
+.ln-action-confirm__copy > p { margin: 4px 0 0; color: var(--ln-text-dim); font: var(--ln-fs-micro)/1.4 var(--ln-font-body); }
 .ln-action-confirm__actions { display: flex; align-items: center; gap: var(--ln-s-2); flex: 0 0 auto; }
-.ln-action-confirm__actions button { min-height: 40px; padding: 0 var(--ln-s-3); border: 1px solid var(--ln-hairline); background: var(--ln-surface-2); color: var(--ln-text-dim); font: 800 10px var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
+.ln-action-confirm__actions button { min-height: 44px; min-width: 44px; padding: 0 var(--ln-s-3); border: 1px solid var(--ln-hairline); background: var(--ln-surface-2); color: var(--ln-text-dim); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: .08em; cursor: pointer; }
 .ln-action-confirm__actions button.is-primary { border-color: var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-text-on-cyan); }
 @media (max-width: 640px) {
   .ln-action-confirm { align-items: stretch; flex-direction: column; }

@@ -76,7 +76,7 @@
 .commodityMeta,
 .rateLabel {
   font-family: var(--ln-font-display);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
@@ -189,7 +189,7 @@
 .quoteNote {
   color: var(--ln-text-dim);
   font-family: var(--ln-font-body);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.4;
 }
 
@@ -224,7 +224,7 @@
 
 .clientCard p {
   margin-top: 4px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .sectionHeader {
@@ -256,13 +256,13 @@
 
 .sellButton {
   flex: 0 0 auto;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .primaryButton {
   width: 100%;
   margin-top: var(--ln-s-4);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .sellButton:active,
@@ -314,7 +314,7 @@
   margin-top: 4px;
   color: var(--ln-text-muted);
   font-family: var(--ln-font-mono);
-  font-size: 11px;
+  font-size: 14px;
   letter-spacing: 0.03em;
   text-transform: none;
 }
@@ -350,7 +350,7 @@
   }
 
   .balanceValue {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .intro {
@@ -401,14 +401,15 @@
 }
 
 .recipeTab {
-  min-height: 36px;
+  min-height: 44px;
+  min-width: 44px;
   padding: 0 var(--ln-s-3);
   border: 1px solid var(--ln-divider);
   border-radius: 999px;
   background: transparent;
   color: var(--ln-text-muted);
   font-family: var(--ln-font-display);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
@@ -430,7 +431,7 @@
   border-radius: 999px;
   color: var(--ln-text-muted);
   font-family: var(--ln-font-display);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
@@ -442,7 +443,7 @@
   margin: 0;
   color: var(--ln-text-dim);
   font-family: var(--ln-font-body);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -458,13 +459,13 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ln-s-1);
-  min-height: 28px;
+  min-height: 32px;
   padding: 0 var(--ln-s-2);
   border: 1px solid var(--ln-divider);
   border-radius: 999px;
   color: var(--ln-text);
   font-family: var(--ln-font-mono);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
 }
 
