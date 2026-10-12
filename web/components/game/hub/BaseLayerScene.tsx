@@ -50,11 +50,6 @@ export function BaseLayerScene({
       aria-hidden={onOpenSilo ? undefined : true}
     >
       <div className={styles.sky} data-layer="sky" />
-      <div className={styles.clouds} data-layer="clouds">
-        <img src="/game/assets/base/layers/cloud.png" alt="" className={styles.cloud} style={{ top: '12%', animationDuration: '92s' }} />
-        <img src="/game/assets/base/layers/cloud.png" alt="" className={styles.cloud} style={{ top: '34%', width: '16%', animationDuration: '128s', animationDelay: '-40s' }} />
-        <img src="/game/assets/base/layers/cloud.png" alt="" className={styles.cloud} style={{ top: '6%', width: '12%', animationDuration: '110s', animationDelay: '-70s' }} />
-      </div>
       <MeteorShowerWeather />
       <div className={styles.horizon} data-layer="horizon">
         {layers.map((layer, index) => (

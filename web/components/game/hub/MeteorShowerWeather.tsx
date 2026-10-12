@@ -5,7 +5,7 @@ import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { activeDebrisPreset, orionidsDevForced, skyEventNow } from '@/lib/data/sky-events'
 import styles from './MeteorShowerWeather.module.css'
 
-const COUNT = 7
+const COUNT = 4
 
 /** True while the Orionids window is open (or the dev force flag is set). */
 function useOrionidsWeather(): boolean {
@@ -24,8 +24,8 @@ function useOrionidsWeather(): boolean {
 }
 
 /**
- * Orionids meteor-shower weather for the base sky (SSL-521). Pixel streaks on
- * stepped animation, cyan on the dusk sky. Seeded layout so SSR and client agree.
+ * Orionids meteor-shower weather for the base sky (SSL-521). Thin pixel streaks with
+ * fading tails on stepped animation. Seeded layout so SSR and client agree.
  */
 export function MeteorShowerWeather() {
   const on = useOrionidsWeather()
@@ -33,10 +33,10 @@ export function MeteorShowerWeather() {
     let seed = 1021
     const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff }
     return Array.from({ length: COUNT }, (_, i) => {
-      const dur = 5 + rnd() * 5
+      const dur = 8 + rnd() * 6
       return {
-        left: 18 + rnd() * 80,
-        top: 2 + rnd() * 30,
+        left: 30 + rnd() * 68,
+        top: 2 + rnd() * 26,
         dur,
         delay: -(i / COUNT) * dur - rnd(),
       }

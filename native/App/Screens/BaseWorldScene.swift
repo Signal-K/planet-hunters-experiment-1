@@ -138,16 +138,13 @@ struct BaseWorldScene: View {
         .position(x: x, y: world.h * 0.38 + 72)
     }
 
-    /// Mountains and clouds: they stay with the screen while the strip pans, and ride up with the ground when the camera dives.
+    /// Mountains: they stay with the screen while the strip pans, and ride up with the ground when the camera dives.
     private func skyLayers(width w: CGFloat, height h: CGFloat, ground: CGFloat) -> some View {
         TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { ctx in
             let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
             ZStack(alignment: .topLeading) {
                 mountain("base/layers/mountains-far.png", height: ground * 0.58, ground: ground, width: w, drift: t / 140)
                 mountain("base/layers/mountains-mid.png", height: ground * 0.40, ground: ground, width: w, drift: t / 96)
-                cloud(t: t, width: w, height: h, lane: 0.08, scale: 0.18, speed: 92)
-                cloud(t: t, width: w, height: h, lane: 0.16, scale: 0.14, speed: 120)
-                cloud(t: t, width: w, height: h, lane: 0.05, scale: 0.12, speed: 108)
             }
             .frame(width: w, height: h, alignment: .topLeading)
         }
@@ -164,16 +161,6 @@ struct BaseWorldScene: View {
             .frame(width: width, height: band, alignment: .leading)
             .clipped()
             .position(x: width / 2, y: ground - band / 2)
-            .allowsHitTesting(false)
-    }
-
-    private func cloud(t: Double, width: CGFloat, height: CGFloat, lane: CGFloat, scale: CGFloat, speed: Double) -> some View {
-        let travel = CGFloat(t.truncatingRemainder(dividingBy: speed) / speed)
-        let cw = width * scale
-        return Art.view("base/layers/cloud.png")
-            .resizable().interpolation(.none).scaledToFit()
-            .frame(width: cw)
-            .position(x: -cw + travel * (width + cw * 2), y: height * lane)
             .allowsHitTesting(false)
     }
 
