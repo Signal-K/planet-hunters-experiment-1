@@ -34,6 +34,7 @@ struct BaseWorldScene: View {
                 Art.view("base/layers/sky.png")
                     .resizable().interpolation(.none)
                     .frame(width: w, height: h)
+                MeteorShowerWeather().frame(width: w, height: ground * 0.55).offset(y: -lift)
                 skyLayers(width: w, height: h, ground: ground).offset(y: -lift)
                 ZStack(alignment: .topLeading) {
                     groundStack(width: world.worldW, height: world.worldH, ground: ground)

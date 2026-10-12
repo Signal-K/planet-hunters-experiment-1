@@ -11,6 +11,7 @@ import {
   type Season,
   type WorldTimeGrade,
 } from '@/lib/scene/base-world'
+import { MeteorShowerWeather } from './MeteorShowerWeather'
 import styles from './BaseLayerScene.module.css'
 
 export function BaseLayerScene({
@@ -54,6 +55,7 @@ export function BaseLayerScene({
         <img src="/game/assets/base/layers/cloud.png" alt="" className={styles.cloud} style={{ top: '34%', width: '16%', animationDuration: '128s', animationDelay: '-40s' }} />
         <img src="/game/assets/base/layers/cloud.png" alt="" className={styles.cloud} style={{ top: '6%', width: '12%', animationDuration: '110s', animationDelay: '-70s' }} />
       </div>
+      <MeteorShowerWeather />
       <div className={styles.horizon} data-layer="horizon">
         {layers.map((layer, index) => (
           <div
