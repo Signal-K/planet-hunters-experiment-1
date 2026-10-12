@@ -3,7 +3,6 @@
 import { useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import { ShipCustomizerCanvas } from '@/components/game/ShipCustomizerCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
-import Panel from '@/components/ui/Panel'
 import {
   canConfirmCustomizerBuild,
   chooseCustomizerPart,
@@ -152,7 +151,7 @@ export default function ShipInteriorPreview({
       </header>
 
       <div className="sip-ship">
-        <Panel surface="glass" style={{ padding: 0, overflow: 'hidden', height: '100%' }}>
+        <div className="sip-diagram">
           <ErrorBoundary fallback={<div className="sip-diagram-fallback">Diagram unavailable</div>}>
             <ShipCustomizerCanvas
               layout={layout}
@@ -165,7 +164,7 @@ export default function ShipInteriorPreview({
               confirmed={buildState.confirmed}
             />
           </ErrorBoundary>
-        </Panel>
+        </div>
       </div>
 
       <div style={{ display: 'none' }}>

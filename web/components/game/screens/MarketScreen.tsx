@@ -92,7 +92,18 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
         </span>
       </header>
 
-      <div className={styles.actions}>
+      <div className={styles.column}>
+        <div className="ln-set-segment" role="group" aria-label="Exchange view">
+          <button type="button" aria-pressed={!showBuild} onClick={() => setShowBuild(false)}>Cargo</button>
+          <button
+            type="button"
+            aria-pressed={showBuild}
+            data-testid="market-build-toggle"
+            onClick={() => setShowBuild(true)}
+          >
+            Build
+          </button>
+        </div>
         <button
           className={styles.sellButton}
           onClick={() => setSellAllConfirm(true)}
@@ -102,16 +113,6 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
         >
           Sell all
         </button>
-        <button
-          className={styles.buildToggle}
-          type="button"
-          aria-pressed={showBuild}
-          data-testid="market-build-toggle"
-          onClick={() => setShowBuild(open => !open)}
-        >
-          Build
-        </button>
-      </div>
 
       {showBuild ? (
         <section className={styles.list} data-testid="market-recipes" aria-label="Recipes">
@@ -147,8 +148,10 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
             const { price } = unitPrice(id)
             return (
               <div className={styles.row} key={id} data-testid={`commodity-${id}`}>
-                <span className={styles.name}>{meta.name}</span>
-                <span className={styles.qty}>{qty}</span>
+                <div className={styles.rowCopy}>
+                  <span className={styles.name}>{meta.name}</span>
+                  <span className={styles.meta}>{qty} held</span>
+                </div>
                 <span className={styles.price}>{formatCurrency(price * qty, { compact: true })}</span>
               </div>
             )
@@ -157,8 +160,10 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
             const qty = refinedGoods[recipe.id] ?? 0
             return (
               <div className={styles.row} key={recipe.id} data-testid={`refined-${recipe.id}`}>
-                <span className={styles.name}>{recipe.output.name}</span>
-                <span className={styles.qty}>{qty}</span>
+                <div className={styles.rowCopy}>
+                  <span className={styles.name}>{recipe.output.name}</span>
+                  <span className={styles.meta}>{qty} held</span>
+                </div>
                 <span className={styles.price}>{formatCurrency(recipe.output.price * qty, { compact: true })}</span>
               </div>
             )
@@ -166,6 +171,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           {!hasCargo && <p className={styles.empty}>No cargo</p>}
         </section>
       )}
+      </div>
 
       {sellAllConfirm && (
         <ActionConfirmBar

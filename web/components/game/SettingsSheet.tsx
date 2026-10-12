@@ -161,17 +161,10 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                     <div className="ops-settings__name">Free Ops</div>
                     <div className="ops-settings__sub">{freeOps ? 'On' : 'Off'}</div>
                   </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    className="ops-settings__switch"
-                    data-testid="free-ops-toggle"
-                    aria-checked={freeOps}
-                    aria-label="Free Ops"
-                    onClick={() => game.setFreeOps(!freeOps)}
-                  >
-                    <i aria-hidden="true" />
-                  </button>
+                  <div className="ln-set-segment" role="group" aria-label="Free Ops" data-testid="free-ops-toggle">
+                    <button type="button" aria-pressed={!freeOps} onClick={() => game.setFreeOps(false)}>Off</button>
+                    <button type="button" aria-pressed={freeOps} onClick={() => game.setFreeOps(true)}>On</button>
+                  </div>
                 </Row>
                 <Row>
                   <div className="ops-settings__copy">

@@ -206,21 +206,31 @@
 /* The fitter is a loop screen, not a legacy dark overlay. Keep every card
    readable against blueprint paper, including unselected part options. */
 .ship-interior-preview {
-  background-color: var(--ln-bp-bg);
+  background-color: var(--set-bg);
   background-image: none;
+  color: var(--set-ink);
+}
+.ship-interior-preview .sip-diagram {
+  height: 100%;
+  overflow: hidden;
+  border: 2px solid var(--set-ink);
+  border-radius: var(--set-radius);
+  background: var(--set-card);
+  box-shadow: none;
 }
 .ship-interior-preview .ln-glass-panel,
 .ship-interior-preview .ship-part-option {
-  border: 2px solid var(--ln-bp-line-strong);
-  background: var(--ln-bp-paper);
-  box-shadow: 3px 3px 0 var(--ln-bp-line-strong);
+  border: 2px solid var(--set-ink);
+  border-radius: var(--set-radius);
+  background: var(--set-card);
+  box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 .ship-interior-preview .ship-part-option--selected {
-  border: 2px solid var(--ln-bp-green);
-  background: var(--ln-bp-paper);
-  box-shadow: 3px 3px 0 var(--ln-bp-line-strong);
+  border: 2px solid var(--set-ink);
+  background: var(--set-card);
+  box-shadow: none;
 }
 
 /* Mission Board two-column "canvas + Contract Detail" layout — ported from
@@ -1846,14 +1856,6 @@ button { cursor: pointer; }
 /* Full-screen mining guide. It replaces the field, the HUD, and the dock
    while open. Tokens match docs/settings-style.md. No graph paper. */
 .mining-guide-dock {
-  --set-bg: #f3f4f6;
-  --set-card: #ffffff;
-  --set-line: #e5e7eb;
-  --set-ink: #111827;
-  --set-muted: #4b5563;
-  --set-danger: #c8293e;
-  --set-radius: 8px;
-  --set-max: 640px;
   position: absolute;
   z-index: 30;
   inset: 0;
@@ -1884,10 +1886,11 @@ button { cursor: pointer; }
   height: 44px;
   min-height: 44px;
   padding: 0;
-  border: 1px solid var(--set-line);
+  border: 2px solid var(--set-ink);
   border-radius: var(--set-radius);
   background: var(--set-card);
   color: var(--set-ink);
+  box-shadow: none;
   font-size: 16px;
   cursor: pointer;
 }
@@ -1917,9 +1920,10 @@ button { cursor: pointer; }
   align-items: start;
   margin: 0;
   padding: 20px;
-  border: 1px solid var(--set-line);
+  border: 2px solid var(--set-ink);
   border-radius: var(--set-radius);
   background: var(--set-card);
+  box-shadow: none;
 }
 .mining-guide-mark {
   display: block;
@@ -1932,7 +1936,7 @@ button { cursor: pointer; }
 .mining-guide-card strong {
   display: block;
   color: var(--set-ink);
-  font: 700 18px/1.3 system-ui, sans-serif;
+  font: 700 18px/1.3 var(--ln-font-display), system-ui, sans-serif;
   letter-spacing: 0;
   text-transform: none;
 }
@@ -1944,7 +1948,7 @@ button { cursor: pointer; }
 }
 .mining-guide-actions {
   flex: none;
-  border-top: 1px solid var(--set-line);
+  border-top: 2px solid var(--set-ink);
   background: var(--set-bg);
   padding: 16px 0;
 }
@@ -1952,6 +1956,18 @@ button { cursor: pointer; }
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .mining-guide-actions { padding-block: 8px; }
+  .mining-guide-actions .mining-guide-column {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .theme-blueprint.mining-screen .mining-guide-actions .mining-guide-close {
+    flex: 1 1 0;
+    width: auto;
+  }
 }
 .mining-guide-dock button {
   position: static;
@@ -2235,19 +2251,33 @@ button { cursor: pointer; }
   cursor: pointer;
 }
 .theme-blueprint.mining-screen .mining-guide-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
   min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--set-line);
+  padding: 10px 16px;
+  border: 2px solid var(--set-ink);
   border-radius: var(--set-radius);
   background: var(--set-card);
   color: var(--set-ink);
-  font: 600 16px/1.2 system-ui, sans-serif;
-  letter-spacing: 0;
-  text-transform: none;
+  box-shadow: none;
+  font: 800 16px/1.2 var(--ln-font-display), system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   text-align: center;
   white-space: normal;
   cursor: pointer;
+}
+.theme-blueprint.mining-screen .mining-guide-close::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 6px 0 6px 10px;
+  border-color: transparent transparent transparent currentColor;
 }
 .theme-blueprint.mining-screen .mining-guide-close:disabled {
   opacity: 1;
@@ -2255,6 +2285,7 @@ button { cursor: pointer; }
   cursor: not-allowed;
 }
 .theme-blueprint.mining-screen .mining-guide-scrub {
+  border-width: 2px;
   border-color: var(--set-danger);
   color: var(--set-danger);
 }
@@ -3555,7 +3586,7 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 
 /* Hangar build config: ship, the current stage, and one primary button.
    The training strip belongs to the hangar underneath, not this overlay. */
-.sip-root{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(180px,1fr) auto auto;grid-template-areas:"head" "ship" "side" "foot"}
+.sip-root{display:grid;height:100%;min-height:0;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(180px,1fr) auto auto;grid-template-areas:"head" "ship" "side" "foot"}
 .game-stage-main:has([data-testid="hangar-customizer-overlay"]) .flight-plan,
 .game-stage-main:has([data-testid="launch-review-customizer-overlay"]) .flight-plan,
 .game-stage-main:has(.mining-guide-dock) .flight-plan,
@@ -3568,13 +3599,13 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   justify-content: space-between;
   gap: 8px;
   min-height: 44px;
-  padding: 8px;
-  border-bottom: 2px solid var(--ln-bp-line-strong);
-  background: var(--ln-bp-paper);
+  padding: 8px 16px;
+  border-bottom: 2px solid var(--set-ink);
+  background: var(--set-bg);
 }
 .sip-budget { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-.sip-budget [data-testid="ship-budget"] { font: 800 18px/1.2 var(--ln-font-display); color: var(--ln-bp-ink); }
-.sip-budget-note { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-bp-ink-dim); }
+.sip-budget [data-testid="ship-budget"] { font: 800 18px/1.2 var(--ln-font-display); color: var(--set-ink); }
+.sip-budget-note { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--set-muted); }
 .sip-close, .sip-back {
   display: inline-flex;
   align-items: center;
@@ -3584,50 +3615,50 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   min-width: 44px;
   min-height: 44px;
   padding: 0;
-  border: 2px solid var(--ln-bp-ink);
-  border-radius: 2px;
-  background: var(--ln-bp-paper);
-  color: var(--ln-bp-ink);
-  box-shadow: 3px 3px 0 var(--ln-bp-line-strong);
+  border: 2px solid var(--set-ink);
+  border-radius: var(--set-radius);
+  background: var(--set-card);
+  color: var(--set-ink);
+  box-shadow: none;
   cursor: pointer;
   opacity: 1;
 }
-.sip-back:disabled, .sip-close:disabled, .sip-primary:disabled, .ship-interior-preview .ship-part-option:disabled { opacity: 1; color: var(--ln-bp-ink); background-color: var(--ln-bp-paper); cursor: not-allowed; }
+.sip-back:disabled, .sip-close:disabled, .sip-primary:disabled, .ship-interior-preview .ship-part-option:disabled { opacity: 1; color: var(--set-ink); background-color: var(--set-card); cursor: not-allowed; }
 .sip-ship { grid-area: ship; min-height: 0; overflow: hidden; padding: 8px; }
 .sip-diagram-fallback { height: 80px; display: flex; align-items: center; justify-content: center; font: 700 14px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-bp-ink-dim); background: var(--ln-bp-paper); }
 .sip-side { grid-area: side; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 0 8px 8px; }
 .sip-stage { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 .sip-stage-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.sip-stage-label { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-bp-blue); }
+.sip-stage-label { font: 800 16px/1.2 var(--ln-font-display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--set-ink); }
 .sip-dots { display: flex; align-items: center; gap: 8px; }
-.sip-dot { display: block; width: 8px; height: 8px; background: var(--ln-bp-paper); border: 2px solid var(--ln-bp-ink); }
-.sip-dot.is-done { background: var(--ln-bp-green); border-color: var(--ln-bp-green); }
-.sip-dot.is-current { width: 12px; height: 12px; background: var(--ln-bp-blue); border-color: var(--ln-bp-blue); }
-.sip-cards { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: min-content; align-content: start; gap: 8px; touch-action: pan-y; }
-.ship-interior-preview .ship-part-option { display: flex; flex-direction: column; gap: 4px; min-height: 44px; padding: 8px; border-radius: 2px; color: var(--ln-bp-ink); text-align: left; cursor: pointer; }
-.sip-part-name { font: 900 14px/1.2 var(--ln-font-display); color: var(--ln-bp-ink); }
-.sip-part-desc { font: 400 14px/1.3 var(--ln-font-body); color: var(--ln-bp-ink-dim); }
+.sip-dot { display: block; width: 8px; height: 8px; background: var(--set-card); border: 2px solid var(--set-ink); border-radius: 999px; }
+.sip-dot.is-done, .sip-dot.is-current { background: var(--set-ink); border-color: var(--set-ink); }
+.sip-dot.is-current { width: 12px; height: 12px; }
+.sip-cards { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: min-content; align-content: start; gap: 16px; touch-action: pan-y; }
+.ship-interior-preview .ship-part-option { display: flex; flex-direction: column; gap: 4px; min-height: 44px; padding: 16px; border-radius: var(--set-radius); color: var(--set-ink); text-align: left; cursor: pointer; }
+.sip-part-name { font: 700 16px/1.2 var(--ln-font-display); color: var(--set-ink); }
+.sip-part-desc { font: 400 14px/1.3 var(--ln-font-body); color: var(--set-muted); }
 .sip-part-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.sip-part-price, .sip-part-state { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ln-bp-blue); }
-.sip-part-state.is-installed { color: var(--ln-bp-green); }
-.sip-foot { grid-area: foot; padding: 8px; background: var(--ln-bp-paper); border-top: 2px solid var(--ln-bp-line-strong); }
+.sip-part-price, .sip-part-state { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--set-muted); }
+.sip-part-state.is-installed { color: var(--set-card); background: var(--set-ink); border-radius: 999px; padding: 2px 8px; }
+.sip-foot { grid-area: foot; padding: 16px; background: var(--set-bg); border-top: 2px solid var(--set-ink); }
 .sip-primary {
   width: 100%;
   min-height: 44px;
   padding: 0 16px;
-  border: 2px solid var(--ln-bp-blue);
-  border-radius: 2px;
-  background: var(--ln-bp-blue);
-  color: var(--ln-bp-paper);
-  box-shadow: 3px 3px 0 var(--ln-bp-ink);
-  font: 900 14px/1 var(--ln-font-display);
+  border: 2px solid var(--set-ink);
+  border-radius: var(--set-radius);
+  background: var(--set-ink);
+  color: var(--set-card);
+  box-shadow: none;
+  font: 800 16px/1 var(--ln-font-display);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
   opacity: 1;
 }
-.sip-primary--confirm:not(:disabled) { background: var(--ln-bp-green); border-color: var(--ln-bp-green); color: var(--ln-bp-paper); }
-.sip-primary:disabled { background: var(--ln-bp-paper); color: var(--ln-bp-ink); border-color: var(--ln-bp-line-strong); box-shadow: 3px 3px 0 var(--ln-bp-line-strong); }
+.sip-primary--confirm:not(:disabled) { background: var(--set-ink); border-color: var(--set-ink); color: var(--set-card); }
+.sip-primary:disabled { background: var(--set-card); color: var(--set-ink); border-color: var(--set-ink); box-shadow: none; }
 @media (orientation: portrait) {
   .sip-cards { max-height: 280px; }
 }
@@ -4329,21 +4360,46 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   bottom: auto;
 }
 
-/* Settings only. PocketBase-admin cards. Tokens are specified in docs/settings-style.md. */
-.ops-settings {
-  --set-bg: #f3f4f6;
+/* Shared panel style. Tokens are specified in docs/settings-style.md. */
+:root {
+  --set-bg: #eef2f6;
   --set-card: #ffffff;
-  --set-line: #e5e7eb;
-  --set-ink: #111827;
-  --set-muted: #4b5563;
+  --set-ink: #000000;
+  --set-muted: #4a5568;
+  --set-line: #000000;
   --set-danger: #c8293e;
-  --set-radius: 8px;
+  --set-radius: 10px;
   --set-pad: 20px;
-  --set-gap: 16px;
+  --set-gap: 24px;
   --set-max: 640px;
+}
+.ln-set-segment {
+  display: flex;
+  gap: 8px;
+}
+.ln-set-segment > button {
+  flex: 1 1 0;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  border: 2px solid var(--set-ink);
+  border-radius: 999px;
+  background: var(--set-card);
+  color: var(--set-ink);
+  box-shadow: none;
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ln-set-segment > button[aria-pressed="true"] {
+  background: var(--set-ink);
+  color: var(--set-card);
+}
+.ops-settings {
   background: var(--set-bg);
   color: var(--set-ink);
-  font-family: system-ui, sans-serif;
+  font-family: var(--ln-font-display), system-ui, sans-serif;
 }
 .ops-settings.ln-page-surface,
 .ops-settings.ln-page-surface--tray {
@@ -4390,9 +4446,9 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .ops-settings__page {
   margin: 0;
-  font: 600 20px/1.2 system-ui, sans-serif;
-  letter-spacing: 0;
-  text-transform: none;
+  font: 800 20px/1.2 var(--ln-font-display), system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--set-ink);
 }
 .ops-settings__close {
@@ -4401,10 +4457,11 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 1px solid var(--set-line);
+  border: 2px solid var(--set-ink);
   border-radius: var(--set-radius);
   background: var(--set-card);
-  color: var(--set-muted);
+  color: var(--set-ink);
+  box-shadow: none;
   cursor: pointer;
 }
 .ops-settings__stack {
@@ -4413,22 +4470,23 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .ops-settings__label {
   margin: 24px 0 8px;
-  font: 600 14px/1 system-ui, sans-serif;
-  letter-spacing: 0.08em;
+  font: 800 14px/1 var(--ln-font-display), system-ui, sans-serif;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--set-muted);
+  color: var(--set-ink);
 }
 .ops-settings__panel {
   display: grid;
   gap: 0;
   padding: 4px var(--set-pad);
-  border: 1px solid var(--set-line);
+  border: 2px solid var(--set-ink);
   border-radius: var(--set-radius);
   background: var(--set-card);
+  box-shadow: none;
 }
 .ops-settings__panel--danger {
   margin-top: var(--set-gap);
-  border-color: color-mix(in srgb, var(--set-danger) 45%, var(--set-line));
+  border-color: var(--set-danger);
 }
 .ops-settings__row,
 .ops-settings .patch {
@@ -4440,7 +4498,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   margin: 0;
   padding: 16px 0;
   border: 0;
-  border-bottom: 1px solid var(--set-line);
+  border-bottom: 2px solid var(--set-ink);
   border-radius: 0;
   background: transparent;
   color: var(--set-ink);
@@ -4463,41 +4521,55 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .ops-settings__name,
 .ops-settings .patch-name {
-  font: 600 14px/1.3 system-ui, sans-serif;
+  font: 700 16px/1.3 var(--ln-font-display), system-ui, sans-serif;
   letter-spacing: 0;
   text-transform: none;
   color: var(--set-ink);
 }
 .ops-settings__sub,
 .ops-settings .patch-status {
-  font: 400 14px/1.3 system-ui, sans-serif;
-  letter-spacing: 0;
-  text-transform: none;
+  font: 700 14px/1.3 var(--ln-font-display), system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--set-muted);
 }
 .ops-settings__btn,
 .ops-settings__preset {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin-left: auto;
   min-height: 44px;
   min-width: 44px;
   max-width: min(240px, 100%);
   padding: 10px 16px;
-  border: 1px solid var(--set-line);
+  border: 2px solid var(--set-ink);
   border-radius: var(--set-radius);
   background: var(--set-card);
   color: var(--set-ink);
-  font: 600 14px/1.2 system-ui, sans-serif;
-  letter-spacing: 0;
-  text-transform: none;
+  box-shadow: none;
+  font: 800 14px/1.2 var(--ln-font-display), system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   text-align: center;
   white-space: normal;
   cursor: pointer;
 }
+.ops-settings__btn::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 6px 0 6px 10px;
+  border-color: transparent transparent transparent currentColor;
+}
 .ops-settings__btn:focus-visible,
 .ops-settings__close:focus-visible,
-.ops-settings__switch:focus-visible,
-.ops-settings__preset:focus-visible {
+.ops-settings__preset:focus-visible,
+.ln-set-segment > button:focus-visible {
   outline: 2px solid var(--set-ink);
   outline-offset: 2px;
 }
@@ -4506,50 +4578,19 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   color: var(--set-danger);
   background: var(--set-card);
 }
-.ops-settings__switch {
-  position: relative;
-  flex: 0 0 64px;
-  width: 64px;
-  height: 44px;
+.ops-settings .ln-set-segment {
+  flex: 0 0 auto;
   margin-left: auto;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
 }
-.ops-settings__switch i {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 8px;
-  height: 28px;
-  border: 1px solid var(--set-line);
-  border-radius: 999px;
-  background: var(--set-line);
-}
-.ops-settings__switch i::after {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--set-card);
-}
-.ops-settings__switch[aria-checked="true"] i {
-  background: var(--set-ink);
-  border-color: var(--set-ink);
-}
-.ops-settings__switch[aria-checked="true"] i::after {
-  left: auto;
-  right: 2px;
+.ops-settings .ln-set-segment > button {
+  flex: 0 0 auto;
+  min-width: 64px;
 }
 .ops-settings__note h3 {
   margin: 0 0 8px;
-  font: 600 14px/1.3 system-ui, sans-serif;
-  letter-spacing: 0;
-  text-transform: none;
+  font: 800 14px/1.3 var(--ln-font-display), system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--set-ink);
 }
 .ops-settings__note ul {
@@ -4562,7 +4603,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .ops-settings__note li + li { margin-top: 4px; }
 .ops-settings__presets { padding: 12px 0; }
-.ops-settings__presets + .ops-settings__presets { border-top: 1px solid var(--set-line); }
+.ops-settings__presets + .ops-settings__presets { border-top: 2px solid var(--set-ink); }
 .ops-settings__preset-row {
   display: flex;
   flex-wrap: wrap;
