@@ -110,7 +110,6 @@ function HangarAssemblyScene({ rocket, pendingLaunch }: { rocket: RocketModel; p
   const status = pendingLaunch ? 'TRANSFER CLEARED' : 'ASSEMBLY IN PROGRESS'
   return (
     <section className={styles.constructionScene} aria-label={`${rocket.name} hangar assembly`} data-testid="hangar-construction-scene">
-      <div className={styles.constructionGrid} aria-hidden="true" />
       <div className={styles.shipment}>
         <span>CLIENT DELIVERY</span>
         <strong>SEALED SHIPMENT</strong>

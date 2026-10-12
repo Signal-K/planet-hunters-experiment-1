@@ -11,29 +11,35 @@ for (const vp of VIEWPORTS) {
   test.describe(`tap floor ${vp.name}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } })
 
-    test('exchange labels and recipe tabs', async ({ page }) => {
+    test('exchange cargo list and build toggle', async ({ page }) => {
       await page.goto('/game/stage?preset=ui-market&chrome=1')
       await expect(page.locator('[data-stage-ready="true"]')).toBeVisible()
-      const tab = page.locator('[data-testid="market-recipe-tab-road"]')
-      await expect(tab).toBeAttached()
-      const box = await tab.boundingBox()
-      expect(box && box.height >= 44 && box.width >= 44).toBe(true)
+      await expect(page.getByText('Commodity Exchange')).toHaveCount(0)
+      await expect(page.getByText('Base · Resource Desk')).toHaveCount(0)
+      const sell = await page.locator('[data-testid="sell-all-btn"]').boundingBox()
+      const build = await page.locator('[data-testid="market-build-toggle"]').boundingBox()
+      const back = await page.locator('[data-testid="market-back-btn"]').boundingBox()
+      expect(sell && sell.height >= 44 && sell.width >= 44).toBe(true)
+      expect(build && build.height >= 44 && build.width >= 44).toBe(true)
+      expect(back && back.height >= 44 && back.width >= 44).toBe(true)
+      const cargoSize = await page.locator('[data-testid="commodity-iron"] [class*="name"]').evaluate(el => parseFloat(getComputedStyle(el).fontSize))
+      await page.getByTestId('market-build-toggle').click()
+      await expect(page.locator('[data-testid="market-recipe-field-road"]')).toBeVisible()
       const fonts = await page.evaluate(() => {
         const size = (sel: string) => {
           const el = document.querySelector(sel)
           return el ? parseFloat(getComputedStyle(el).fontSize) : 0
         }
         return {
-          tab: size('[data-testid="market-recipe-tab-road"]'),
-          label: size('[class*="sectionLabel"]'),
-          note: size('[class*="quoteNote"]'),
-          balance: size('[class*="balanceValue"]'),
+          balance: size('[data-testid="market-balance"]'),
+          recipe: size('[data-testid="market-recipe-field-road"] [class*="name"]'),
+          sell: size('[data-testid="sell-all-btn"]'),
         }
       })
-      expect(fonts.tab).toBeGreaterThanOrEqual(14)
-      expect(fonts.label).toBeGreaterThanOrEqual(14)
-      expect(fonts.note).toBeGreaterThanOrEqual(14)
+      expect(cargoSize).toBeGreaterThanOrEqual(14)
       expect(fonts.balance).toBeGreaterThanOrEqual(14)
+      expect(fonts.recipe).toBeGreaterThanOrEqual(14)
+      expect(fonts.sell).toBeGreaterThanOrEqual(14)
     })
 
     test('hangar customiser chevron, close and primary', async ({ page }) => {

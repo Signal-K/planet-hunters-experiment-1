@@ -242,13 +242,6 @@ export function TerrainScene({
         background: `radial-gradient(ellipse 42% 26% at 76% 18%, color-mix(in srgb, ${palette.skyHorizon} 48%, transparent), transparent 72%), linear-gradient(180deg, ${palette.skyTop} 0%, ${palette.skyMid} 52%, ${palette.skyHorizon} 100%)`,
         transition: 'background 1.2s ease',
       }} />
-      <div style={{
-        position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.26,
-        backgroundImage: 'linear-gradient(90deg, color-mix(in srgb, var(--hub-outline) 45%, transparent) 1px, transparent 1px), linear-gradient(0deg, color-mix(in srgb, var(--hub-outline) 34%, transparent) 1px, transparent 1px)',
-        backgroundSize: '64px 64px',
-        maskImage: 'linear-gradient(to bottom, black, transparent 70%)', WebkitMaskImage: 'linear-gradient(to bottom, black, transparent 70%)',
-      }} />
-
       {/* The sky/ground shell used to be the only thing visible while the
           terrain PNGs were cold or unavailable, which read as an empty broken
           screen. Keep a restrained illustrated horizon underneath the authored

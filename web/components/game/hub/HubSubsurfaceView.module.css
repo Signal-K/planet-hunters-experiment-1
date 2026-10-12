@@ -107,11 +107,8 @@
   position: absolute;
   inset: 0;
   content: '';
-  opacity: 0.16;
-  background-image:
-    linear-gradient(var(--ln-hairline) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px);
-  background-size: 48px 48px;
+  opacity: 0;
+  background: none;
 }
 
 /* Ore veins scattered through the strata — semantic mineral tints (iron rust,
@@ -499,11 +496,7 @@
   border-top: 1px solid var(--ln-hairline);
   border-bottom: 1px solid var(--ln-hairline);
   border-radius: 0;
-  background:
-    linear-gradient(90deg, transparent 49%, color-mix(in srgb, var(--ln-cyan) 5%, transparent) 50%, transparent 51%),
-    linear-gradient(color-mix(in srgb, var(--ln-cyan) 5%, transparent) 1px, transparent 1px),
-    color-mix(in srgb, var(--ln-void) 88%, var(--ln-surface));
-  background-size: 48px 100%, 100% 32px, auto;
+  background: color-mix(in srgb, var(--ln-void) 88%, var(--ln-surface));
 }
 
 .roomScene::before {

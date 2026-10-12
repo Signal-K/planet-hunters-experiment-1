@@ -71,7 +71,6 @@ export default function SkillTreeScreen({
     <div className={`theme-blueprint ${styles.screen}`} data-testid="skill-tree-screen">
       <HubWorldBackground phase="night" composition="earth-base-wide" />
       <div className={styles.sceneWash} aria-hidden="true" />
-      <div className={styles.blueprintGrid} aria-hidden="true" />
 
       <TopBar eyebrow="ACADEMY" title="Skill Tree" onBack={onBack} glass />
 

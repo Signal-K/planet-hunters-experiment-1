@@ -207,10 +207,7 @@
    readable against blueprint paper, including unselected part options. */
 .ship-interior-preview {
   background-color: var(--ln-bp-bg);
-  background-image:
-    linear-gradient(var(--ln-bp-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ln-bp-line) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-image: none;
 }
 .ship-interior-preview .ln-glass-panel,
 .ship-interior-preview .ship-part-option {
@@ -367,12 +364,10 @@ body:has(.theme-blueprint) {
    so it re-skins for free under .theme-blueprint / .theme-light / the
    .theme-deep fallback. Scanline-sweep, reticle-glow and nebula-glow from
    the source kit were dropped outright: they're dark-HUD-only flourishes
-   with no equivalent in a flat cel-shaded light theme. The blueprint grid
-   survives because it doubles as literal engineering-blueprint texture. */
+   with no equivalent in a flat cel-shaded light theme. */
 .ln-con-grid {
-  background-image:
-    repeating-linear-gradient(0deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px),
-    repeating-linear-gradient(90deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px);
+  background-color: var(--ln-bp-bg, var(--ln-bg));
+  background-image: none;
 }
 .ln-con-well {
   background: var(--ln-panel-2);
@@ -486,12 +481,10 @@ body:has(.theme-blueprint) {
    so it re-skins for free under .theme-blueprint / .theme-light / the
    .theme-deep fallback. Scanline-sweep, reticle-glow and nebula-glow from
    the source kit were dropped outright: they're dark-HUD-only flourishes
-   with no equivalent in a flat cel-shaded light theme. The blueprint grid
-   survives because it doubles as literal engineering-blueprint texture. */
+   with no equivalent in a flat cel-shaded light theme. */
 .ln-con-grid {
-  background-image:
-    repeating-linear-gradient(0deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px),
-    repeating-linear-gradient(90deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px);
+  background-color: var(--ln-bp-bg, var(--ln-bg));
+  background-image: none;
 }
 .ln-con-well {
   background: var(--ln-panel-2);
@@ -1440,10 +1433,7 @@ button { cursor: pointer; }
    visible. */
 .screen-scroll--tall-actions { padding-bottom: 78px; }
 .blueprint-screen {
-  background:
-    repeating-linear-gradient(0deg, transparent 0 19px, rgba(255,255,255,0.05) 19px 20px),
-    repeating-linear-gradient(90deg, transparent 0 19px, rgba(255,255,255,0.05) 19px 20px),
-    linear-gradient(180deg, var(--ln-bg-grid), var(--ln-void));
+  background: var(--ln-void);
 }
 .assembly-scroll { display: flex; flex-direction: column; gap: var(--ln-s-3); }
 .ln-section-label, .ln-micro, .reward-label {
@@ -1514,11 +1504,7 @@ button { cursor: pointer; }
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    linear-gradient(115deg, transparent 0 44%, var(--ln-cyan-soft) 44.2% 44.35%, transparent 44.5%),
-    linear-gradient(25deg, transparent 0 62%, var(--ln-ok-soft) 62.2% 62.35%, transparent 62.5%),
-    repeating-linear-gradient(90deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px),
-    repeating-linear-gradient(0deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px);
+  background: none;
   opacity: 0.42;
   z-index: 0;
 }
@@ -1543,11 +1529,7 @@ button { cursor: pointer; }
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    linear-gradient(115deg, transparent 0 44%, var(--ln-cyan-soft) 44.2% 44.35%, transparent 44.5%),
-    linear-gradient(25deg, transparent 0 62%, var(--ln-ok-soft) 62.2% 62.35%, transparent 62.5%),
-    repeating-linear-gradient(90deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px),
-    repeating-linear-gradient(0deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px);
+  background: none;
   opacity: 0.42;
   z-index: 0;
 }
@@ -1969,12 +1951,7 @@ button { cursor: pointer; }
 .rocket-cutaway-board {
   overflow: hidden;
   border: 1px solid var(--ln-cyan-border);
-  background:
-    linear-gradient(var(--ln-hairline) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px),
-    radial-gradient(ellipse at 50% 58%, var(--ln-cyan-soft), transparent 64%),
-    var(--ln-surface);
-  background-size: 32px 32px, 32px 32px, auto, auto;
+  background: var(--ln-surface);
   box-shadow: inset 0 0 0 1px var(--ln-hairline), var(--ln-glow-cyan);
 }
 .rocket-cutaway-board::before,
