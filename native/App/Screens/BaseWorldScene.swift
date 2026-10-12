@@ -15,6 +15,7 @@ struct BaseWorldScene: View {
     var onShaft: () -> Void
     var onBuildSilo: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pinchStart: CGFloat?
     @State private var dragStartX: CGFloat?
     @State private var dragVertical: Bool?
     @State private var pulse = false
@@ -51,6 +52,7 @@ struct BaseWorldScene: View {
                 }
                 .frame(width: world.worldW, height: world.worldH, alignment: .topLeading)
                 .offset(x: -cx, y: -lift)
+                .scaleEffect(camera.zoom, anchor: .center)
                 Rectangle().fill(timeWash()).opacity(1 - camera.depth).allowsHitTesting(false)
                 Rectangle().fill(seasonWash()).opacity(1 - camera.depth).allowsHitTesting(false).blendMode(.softLight)
                 edgeHints(world: world, cx: cx)
@@ -60,7 +62,21 @@ struct BaseWorldScene: View {
             .clipped()
             .contentShape(Rectangle())
             .simultaneousGesture(pan(world: world))
+            .simultaneousGesture(pinch())
         }
+    }
+
+    /// Pinch zooms between the whole-base view and a close-up; releasing near the whole view snaps back to it.
+    private func pinch() -> some Gesture {
+        MagnifyGesture()
+            .onChanged { v in
+                if pinchStart == nil { pinchStart = camera.zoom }
+                camera.zoom = camera.clampZoom((pinchStart ?? 1) * v.magnification)
+            }
+            .onEnded { _ in
+                pinchStart = nil
+                if camera.zoom < 1.08 { withAnimation(.easeOut(duration: 0.25)) { camera.zoom = 1 } }
+            }
     }
 
     /// Drag pans along the base strip; a clear swipe up goes down to the cutaway and a swipe down comes back.

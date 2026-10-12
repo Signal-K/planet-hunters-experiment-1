@@ -11,6 +11,7 @@ import { readComponentNumber } from '@/lib/engine/registry'
 import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
 import { BaseDock } from '@/components/game/hub/BaseDock'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
+import { useBaseCamera } from '@/lib/hooks/useBaseCamera'
 import { useBaseSeason, useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES, structureCenterPercent, structureWidthPct } from '@/components/game/hub/EarthBaseModules'
 import { RocketRollout } from '@/components/game/hub/RocketRollout'
@@ -77,6 +78,7 @@ interface HubScreenProps {
 export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
+  const camera = useBaseCamera()
   const [editMode, setEditMode] = useState(false)
   const [dockStop, setDockStop] = useState(0)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -301,8 +303,13 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             any lift at all. */}
         <div
           className={layoutStyles.surface}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden' }}
+          ref={camera.ref}
+          data-testid="base-camera"
+          data-zoom={camera.cam.zoom.toFixed(2)}
+          {...camera.handlers}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden', touchAction: 'none' }}
         >
+          <div data-testid="base-camera-world" style={{ position: 'absolute', inset: 0, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <BaseLayerScene
             phase={skyPhase}
@@ -409,7 +416,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
               )}
             </div>
           </div>
-
+          </div>
         </div>
 
         {/* Subsurface is a tray over the still-mounted Base, never a camera slide. */}

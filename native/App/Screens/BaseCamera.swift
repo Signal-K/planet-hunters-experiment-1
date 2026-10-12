@@ -30,6 +30,9 @@ struct BaseWorld {
 final class BaseCamera {
     var x: CGFloat
     var depth: CGFloat
+    /// Pinch zoom: 1 is the whole-base view, `maxZoom` a close-up of one structure.
+    var zoom: CGFloat = 1
+    static let maxZoom: CGFloat = 2.6
     private var returnX: CGFloat = 0
     private(set) var diving: Bool
 
@@ -40,6 +43,8 @@ final class BaseCamera {
     var underground: Bool { diving }
 
     func clamp(_ value: CGFloat, _ world: BaseWorld) -> CGFloat { min(max(value, 0), world.maxX) }
+
+    func clampZoom(_ value: CGFloat) -> CGFloat { min(max(value, 1), Self.maxZoom) }
 
     func pan(by delta: CGFloat, _ world: BaseWorld, animated: Bool = true) {
         let target = clamp(x + delta, world)
