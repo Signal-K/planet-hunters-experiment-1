@@ -133,16 +133,16 @@ struct BaseWorldScene: View {
         let px = pixelScale(height: height, portrait: portrait)
         if kind == "launchpad" {
             // Pad slab with the connected gantry frame and the rocket standing on it, all kit sprites at one pixel scale.
-            let slabW = 124 * px, slabH = 20 * px, stackH = (16 + 84) * px
+            let slabW = 120 * px, slabH = 20 * px, stackH = (16 + 92) * px
             return AnyView(Button { onStructure(kind) } label: {
                 ZStack(alignment: .bottom) {
                     Art.view("base/kit/pad-gantry-frame.png").resizable().interpolation(.none)
-                        .frame(width: 96 * px, height: 84 * px)
+                        .frame(width: 120 * px, height: 92 * px)
                         .offset(y: -16 * px)
                     Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none)
-                        .frame(width: 22 * px, height: 72 * px)
-                        .offset(y: -16 * px)
-                    Art.view("base/kit/pad-slab-white.png").resizable().interpolation(.none)
+                        .frame(width: 44 * px, height: 72 * px)
+                        .offset(x: 22 * px, y: -22 * px)
+                    Art.view("base/kit/pad-slab-concrete.png").resizable().interpolation(.none)
                         .frame(width: slabW, height: slabH)
                 }
                 .frame(width: slabW, height: stackH, alignment: .bottom)

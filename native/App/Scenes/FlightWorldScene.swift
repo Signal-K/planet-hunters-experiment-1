@@ -64,9 +64,9 @@ struct FlightWorldScene: View {
     }
 
     private func rocket(w: CGFloat, h: CGFloat, t: Double) -> some View {
-        // pad-rocket.png is 22x72, nose up. Rotated 90 degrees clockwise it points right; the flame trails behind.
+        // pad-rocket.png is 44x72, nose up. Rotated 90 degrees clockwise it points right; the flame trails behind.
         let k = pixelScale(min(w * 0.30, 260), native: 72)
-        let len = 72 * k, thick = 22 * k
+        let len = 72 * k, thick = 44 * k
         let frame = reduceMotion ? 0 : Int(t * 12) % 3
         return ZStack {
             Art.view("base/kit/flame-\(frame).png").resizable().interpolation(.none)

@@ -10,13 +10,15 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 KIT = os.path.join(ROOT, "native/App/Resources/Art/base/kit")
 SHEET = os.path.join(ROOT, "docs/art/base-kit-v7")
 
-P = {  # kit palette, sampled from pad-rocket.png / asteroid-grey.png / starter-pad-platform.png
+P = {  # kit palette, sampled from the old pad-rocket.png; art-reference.png direction / asteroid-grey.png / starter-pad-platform.png
     ".": (0, 0, 0, 0), "K": (36, 32, 42, 255), "D": (52, 54, 62, 255), "S": (90, 96, 108, 255),
     "M": (176, 180, 188, 255), "L": (188, 194, 206, 255), "W": (242, 238, 230, 255),
     "B": (48, 108, 198, 255), "b": (28, 70, 146, 255), "C": (110, 188, 220, 255),
-    "O": (232, 140, 50, 255), "Y": (250, 214, 110, 255), "R": (210, 80, 40, 255),
+    "Y": (250, 214, 110, 255),
     "N": (22, 30, 48, 255), "G": (153, 153, 161, 255), "H": (102, 102, 110, 255), "J": (204, 204, 212, 255),
     "g": (51, 51, 59, 255),
+    "A": (146, 138, 128, 255), "a": (112, 106, 100, 255), "e": (176, 168, 156, 255), "d": (74, 70, 68, 255),
+    "F": (226, 218, 200, 255), "E": (186, 176, 158, 255),  # warm concrete greys, cream panel + panel shadow
 }
 
 class Img:
@@ -54,81 +56,116 @@ class Img:
             for x, c in enumerate(r): im.set(x, y, c)
         return im
 
-# ---- Gantry tower 20x84: white steel rails, lattice bays, blue cap and trim, orange beacon
+# ---- Reference-style pad stack (docs/art-reference.png): dark steel lattice gantry, cream/blue rocket with boosters,
+# chunky warm concrete pad, glazed cream hangar. No orange anywhere.
 def tower():
-    t = Img(20, 84)
-    for y in range(84):
-        for x, c in ((0, "K"), (1, "W"), (2, "M"), (17, "M"), (18, "W"), (19, "K")): t.set(x, y, c)
-    bay = 14
-    for i in range(6):
-        y0 = 4 + i * bay
+    t = Img(30, 92)
+    for y in range(92):
+        for x, c in ((0, "K"), (1, "S"), (2, "D"), (3, "K"), (26, "K"), (27, "D"), (28, "S"), (29, "K")): t.set(x, y, c)
+    bay = 10
+    for i in range(8):
+        y0 = 8 + i * bay
         for k in range(bay):
-            t.set(3 + k, y0 + k, "S"); t.set(16 - k, y0 + k, "S")      # X brace
-            if k + 1 < bay: t.set(4 + k, y0 + k, "M"); t.set(15 - k, y0 + k, "M")
-        t.rect(3, y0 + bay - 1, 16, y0 + bay - 1, "S")                  # strut
-    t.rect(0, 0, 19, 3, "B"); t.rect(0, 3, 19, 3, "b"); t.rect(0, 0, 19, 0, "K")
-    t.rect(8, 1, 11, 2, "O")
-    for y in (27, 55):
-        t.rect(1, y, 2, y + 2, "B"); t.rect(17, y, 18, y + 2, "B")
-    t.rect(0, 83, 19, 83, "K"); t.rect(0, 80, 19, 82, "D")
+            x = 4 + round(k * 21 / (bay - 1))
+            t.set(x, y0 + k, "S"); t.set(x + 1, y0 + k, "D")
+            t.set(25 - round(k * 21 / (bay - 1)), y0 + k, "S"); t.set(24 - round(k * 21 / (bay - 1)), y0 + k, "D")
+        t.rect(4, y0, 25, y0, "D")
+    for y in (28, 58):                                              # service platforms with rails
+        t.rect(0, y, 29, y, "S"); t.rect(0, y + 1, 29, y + 1, "D"); t.rect(0, y + 2, 29, y + 2, "K")
+        for x in range(2, 28, 5): t.rect(x, y - 3, x, y - 1, "K")
+        t.rect(0, y - 3, 29, y - 3, "K")
+    for y in (18, 48, 74):                                          # blue status lamps
+        t.rect(1, y, 2, y + 1, "B"); t.rect(27, y, 28, y + 1, "B")
+    t.rect(4, 6, 25, 7, "S"); t.rect(0, 6, 29, 6, "K")              # top deck
+    t.rect(13, 0, 15, 5, "D"); t.rect(14, 0, 14, 5, "S"); t.set(14, 0, "B")  # mast, blue beacon
+    t.rect(0, 87, 29, 91, "D"); t.rect(0, 87, 29, 87, "S"); t.rect(0, 91, 29, 91, "K")  # foot
     return t
 
-def walkway(w):
-    b = Img(w, 9)
-    b.rect(0, 0, w - 1, 0, "B")
-    for x in range(2, w, 6): b.set(x, 1, "M")
-    b.rect(0, 1, w - 1, 1, "M") if False else None
-    b.rect(0, 2, w - 1, 5, "W"); b.rect(0, 6, w - 1, 6, "S"); b.rect(0, 7, w - 1, 7, "K")
-    b.rect(0, 8, w - 1, 8, "."); 
-    for x in range(4, w, 8): b.set(x, 3, "M"); b.set(x, 4, "M")
-    return b
-
-def arm(left):
-    a = Img(17, 5)
-    a.rect(0, 0, 16, 1, "W"); a.rect(0, 2, 16, 2, "S"); a.rect(0, 3, 16, 3, "K")
-    tip = (14, 16) if left else (0, 2)
-    a.rect(tip[0], 0, tip[1], 3, "B"); a.set(tip[1] if left else tip[0], 1, "O")
+def arm(length, tip):
+    a = Img(length, 5)
+    a.rect(0, 0, length - 1, 0, "S"); a.rect(0, 1, length - 1, 2, "D"); a.rect(0, 3, length - 1, 3, "K")
+    for x in range(2, length - 6, 4): a.set(x, 1, "S"); a.set(x + 1, 2, "S")   # truss ticks
+    a.rect(length - 5, 0, length - 1, 4, "S"); a.rect(length - 5, 4, length - 1, 4, "K")
+    a.set(length - 1, 2, "B"); a.set(length - 1, 1, "B")
     return a
 
 def gantry_frame():
-    f = Img(96, 84)
-    f.paste(tower(), 0, 0); f.paste(tower(), 76, 0)
-    for y in (4, 44): f.paste(walkway(56), 20, y)
-    for y in (24, 62):
-        f.paste(arm(True), 20, y); f.paste(arm(False), 59, y)
+    f = Img(120, 92)
+    f.paste(tower(), 6, 0)
+    f.paste(arm(40, 0), 36, 24)          # reaches the core stage under the nose
+    f.paste(arm(28, 0), 36, 46)          # clamps to the left booster
+    f.paste(arm(28, 0), 36, 66)
+    f.rect(58, 86, 105, 91, "D"); f.rect(58, 86, 105, 86, "S"); f.rect(58, 91, 105, 91, "K")
+    for x in (62, 80, 98): f.rect(x, 88, x + 2, 89, "B")             # mount lamps
+    f.rect(54, 88, 57, 91, "K"); f.rect(106, 88, 109, 91, "K")
     return f
 
+def rocket():
+    r = Img(44, 72)
+    def cone(cx, y0, widths):
+        for i, w in enumerate(widths):
+            x0 = cx - w // 2
+            r.rect(x0, y0 + i, x0 + w - 1, y0 + i, "B")
+            r.set(x0, y0 + i, "C"); r.set(x0 + w - 1, y0 + i, "b")
+    def stage(x0, x1, y0, y1):
+        r.rect(x0, y0, x1, y1, "F"); r.rect(x0, y0, x0, y1, "W"); r.rect(x1 - 1, y0, x1, y1, "E")
+    # boosters (behind), core stage, nose cones
+    for bx in (4, 32):
+        stage(bx, bx + 7, 28, 63); cone(bx + 4, 20, [2, 4, 4, 6, 6, 8, 8, 8])
+        r.rect(bx, 46, bx + 7, 47, "B"); r.rect(bx, 48, bx + 7, 48, "b"); r.rect(bx, 38, bx + 7, 38, "E")
+        r.rect(bx + 1, 64, bx + 6, 69, "D"); r.rect(bx + 1, 64, bx + 6, 64, "S"); r.rect(bx + 2, 70, bx + 5, 70, "K")
+    for x0 in (12, 29):                                             # booster-to-core struts
+        for y in (34, 52): r.rect(x0, y, x0 + 2, y + 1, "D"); r.set(x0 + 1, y, "S")
+    stage(15, 28, 16, 63); cone(22, 4, [2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 14])
+    for y, c in ((18, "B"), (19, "B"), (20, "b"), (46, "B"), (47, "B"), (48, "b"), (58, "B"), (59, "b")): r.rect(15, y, 28, y, c)
+    for y in (28, 40, 52): r.rect(15, y, 28, y, "E")
+    r.rect(19, 30, 24, 35, "K"); r.rect(20, 31, 23, 34, "N"); r.rect(20, 31, 21, 32, "C")   # porthole
+    r.rect(16, 64, 27, 71, "D"); r.rect(15, 64, 28, 64, "S"); r.rect(18, 68, 25, 71, "D"); r.rect(16, 71, 27, 71, "K")
+    r.outline()
+    r.rect(21, 0, 22, 3, "S"); r.rect(21, 0, 22, 0, "K")            # antenna
+    return r
+
 def pad_slab():
-    w, h = 124, 20
+    w, h = 120, 20
     s = Img(w, h)
-    s.rect(2, 0, w - 3, 2, "W"); s.rect(2, 3, w - 3, 3, "B")
-    s.rect(0, 4, w - 1, 15, "L"); s.rect(0, 16, w - 1, 17, "S"); s.rect(2, 18, w - 3, 19, "D")
-    for x in range(10, w - 6, 12): s.rect(x, 5, x, 14, "M")
-    s.rect(0, 4, w - 1, 4, "W")
-    for x in range(8, w - 8, 24): s.rect(x, 1, x + 5, 1, "M")   # painted pad marks
-    s.rect(0, 4, 0, 15, "S"); s.rect(w - 1, 4, w - 1, 15, "S")
+    s.rect(2, 0, w - 3, 2, "e"); s.rect(2, 3, w - 3, 3, "A")
+    s.rect(0, 4, w - 1, 15, "A"); s.rect(0, 4, w - 1, 4, "e"); s.rect(0, 16, w - 1, 17, "a"); s.rect(2, 18, w - 3, 19, "d")
+    for x in range(14, w - 6, 20):                                   # panel seams and bolts
+        s.rect(x, 5, x, 15, "a"); s.set(x - 2, 7, "e"); s.set(x + 2, 7, "e"); s.set(x - 2, 13, "e"); s.set(x + 2, 13, "e")
+    s.rect(0, 9, w - 1, 9, "a")
+    for x in range(6, w - 10, 20): s.rect(x, 11, x + 5, 12, "b")      # blue trim plates
+    s.rect(0, 4, 0, 15, "a"); s.rect(w - 1, 4, w - 1, 15, "a")
     s.outline()
     return s
 
 def hangar():
     w, h = 72, 44
     s = Img(w, h)
-    for y, (a, b) in {6: (12, 59), 7: (8, 63), 8: (6, 65), 9: (4, 67), 10: (3, 68), 11: (2, 69)}.items():
-        s.rect(a, y, b, y, "W")
-    s.rect(2, 12, 69, 43, "W")
-    for x in range(10, 64, 8): s.rect(x, 8, x, 16, "M")          # roof panel seams
-    s.rect(6, 17, 65, 17, "M")
-    s.rect(2, 18, 69, 19, "B"); s.rect(2, 20, 69, 20, "b")
-    s.rect(2, 41, 69, 43, "b")
-    s.rect(14, 22, 57, 40, "B")                                     # door frame
-    s.rect(15, 23, 56, 39, "N")
-    for y in (27, 31, 35): s.rect(15, y, 56, y, "D")                # slats
-    s.rect(15, 38, 56, 39, "C"); s.rect(24, 32, 30, 37, "S"); s.rect(40, 30, 46, 37, "S")  # lit bay, cradle shapes
-    s.rect(14, 21, 57, 21, "O")
-    s.rect(2, 36, 11, 40, "L"); s.rect(60, 36, 69, 40, "L")         # side panels
-    s.rect(5, 38, 8, 38, "S"); s.rect(63, 38, 66, 38, "S")
-    for x in (8, 63):                                               # antenna masts
-        s.rect(x, 0, x, 6, "S"); s.set(x, 0, "O"); s.rect(x - 1, 1, x + 1, 1, "B")
+    for y, (a, b) in {5: (14, 57), 6: (10, 61), 7: (7, 64), 8: (5, 66), 9: (3, 68), 10: (2, 69), 11: (2, 69)}.items():
+        s.rect(a, y, b, y, "F")
+    s.rect(2, 12, 69, 43, "F"); s.rect(67, 12, 69, 43, "E")
+    s.rect(10, 7, 61, 7, "W")
+    for x0 in range(12, 60, 12):                                     # roof glass panels
+        s.rect(x0, 8, x0 + 9, 10, "B"); s.rect(x0, 8, x0 + 9, 8, "C"); s.rect(x0, 10, x0 + 9, 10, "b")
+    s.rect(3, 10, 8, 11, "B"); s.rect(63, 10, 68, 11, "b")
+    s.rect(2, 12, 69, 12, "E")
+    s.rect(2, 13, 69, 14, "B"); s.rect(2, 15, 69, 15, "b")           # blue trim band
+    for x0 in (5, 17, 44, 56):                                       # glazed upper windows
+        s.rect(x0, 17, x0 + 9, 24, "K"); s.rect(x0 + 1, 18, x0 + 8, 23, "B")
+        s.rect(x0 + 1, 18, x0 + 8, 19, "C"); s.rect(x0 + 4, 18, x0 + 4, 23, "K"); s.rect(x0 + 5, 18, x0 + 5, 23, "W")
+        s.rect(x0, 25, x0 + 9, 25, "E")
+    s.rect(29, 17, 42, 25, "K"); s.rect(30, 18, 41, 24, "C"); s.rect(35, 18, 36, 24, "W")  # glazed clerestory over the door
+    s.rect(18, 27, 53, 43, "K"); s.rect(19, 28, 52, 42, "D")         # door frame
+    for x0 in (20, 28, 36, 44):                                      # four glazed door panels
+        s.rect(x0, 29, x0 + 6, 41, "N"); s.rect(x0, 29, x0 + 6, 31, "B"); s.rect(x0 + 1, 29, x0 + 2, 30, "C")
+        s.rect(x0 + 2, 36, x0 + 4, 41, "S")
+    s.rect(2, 27, 15, 42, "E"); s.rect(3, 28, 14, 41, "F")          # side panels
+    s.rect(56, 27, 69, 42, "E"); s.rect(57, 28, 68, 41, "F")
+    for x in (8, 62): s.rect(x, 28, x, 41, "E")
+    for x0 in (4, 59): s.rect(x0, 30, x0 + 8, 36, "K"); s.rect(x0 + 1, 31, x0 + 7, 35, "B"); s.rect(x0 + 1, 31, x0 + 7, 31, "C")
+    s.rect(2, 41, 69, 43, "a"); s.rect(2, 43, 69, 43, "d")
+    for x in (10, 61):                                               # antenna masts, blue tips
+        s.rect(x, 0, x, 5, "S"); s.set(x, 0, "B"); s.rect(x - 1, 2, x + 1, 2, "D")
     s.outline()
     return s
 
@@ -168,33 +205,33 @@ def asteroid():
     a.outline()
     return a
 
-FLAME = [
+FLAME = [  # blue-white thruster flame, no orange
  ["..................",
-  "..........RR......",
-  "......RRRROOOO....",
-  "..RRRROOOOYYYYWW..",
-  "RRROOOOYYYYWWWWWW.",
-  "..RRRROOOOYYYYWW..",
-  "......RRRROOOO....",
-  "..........RR......",
+  "..........BB......",
+  "......BBBBCCCC....",
+  "..BBBBCCCCWWWWWW..",
+  "BBBCCCCWWWWWWWWWW.",
+  "..BBBBCCCCWWWWWW..",
+  "......BBBBCCCC....",
+  "..........BB......",
   ".................."],
  ["..................",
-  "............RR....",
-  "........RRROOO....",
-  "....RROOOOYYYYWW..",
-  "..RROOOOYYYYWWWWW.",
-  "....RROOOOYYYYWW..",
-  "........RRROOO....",
-  "............RR....",
+  "............BB....",
+  "........BBBCCC....",
+  "....BBCCCCWWWWWW..",
+  "..BBCCCCWWWWWWWWW.",
+  "....BBCCCCWWWWWW..",
+  "........BBBCCC....",
+  "............BB....",
   ".................."],
  ["..................",
-  "..........R.......",
-  "....RRRRROOOO.....",
-  "RRROOOOOYYYYYWWW..",
-  "RROOOOYYYYYWWWWWWW",
-  "RRRROOOOYYYYYWWW..",
-  "....RRRRROOOO.....",
-  "..........R.......",
+  "..........B.......",
+  "....BBBBBCCCC.....",
+  "BBBCCCCCWWWWWWWW..",
+  "BBCCCCWWWWWWWWWWWW",
+  "BBBBCCCCWWWWWWWW..",
+  "....BBBBBCCCC.....",
+  "..........B.......",
   ".................."],
 ]
 
@@ -230,7 +267,7 @@ def space_bands():
 def main():
     os.makedirs(SHEET, exist_ok=True)
     parts = {
-        "pad-gantry-frame": gantry_frame(), "pad-slab-white": pad_slab(), "hangar-white": hangar(),
+        "pad-gantry-frame": gantry_frame(), "pad-slab-concrete": pad_slab(), "hangar-white": hangar(), "pad-rocket": rocket(),
         "silo-cutaway": silo(), "asteroid-pixel": asteroid(),
         "flame-0": Img.grid(FLAME[0]), "flame-1": Img.grid(FLAME[1]), "flame-2": Img.grid(FLAME[2]),
         "stars-far": star_tile("stars-far"), "stars-mid": star_tile("stars-mid"), "stars-near": star_tile("stars-near"),
@@ -238,7 +275,7 @@ def main():
     for n, im in parts.items(): im.save(os.path.join(KIT, n + ".png"))
     space_bands().save(os.path.join(KIT, "space-bands.png"))
     # full sheet: parts laid out on a 4px-gutter row grid
-    order = ["pad-gantry-frame", "pad-slab-white", "hangar-white", "silo-cutaway", "asteroid-pixel", "flame-0", "flame-1", "flame-2"]
+    order = ["pad-gantry-frame", "pad-rocket", "pad-slab-concrete", "hangar-white", "silo-cutaway", "asteroid-pixel", "flame-0", "flame-1", "flame-2"]
     W = max(parts[n].w for n in order) + 8
     H = sum(parts[n].h + 4 for n in order) + 4
     sheet = Img(max(W, 140), H)
