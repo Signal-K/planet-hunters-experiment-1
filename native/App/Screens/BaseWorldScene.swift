@@ -269,15 +269,17 @@ struct BaseWorldScene: View {
             .position(x: center, y: ground - stackH / 2 + 4 * px)
             .accessibilityLabel(kindLabel(kind)))
         }
-        let artH = 44 * px
+        // On a phone the hangar drops to 1.5 kit pixels so the pad stays large and clear gaps fit across the screen.
+        let sx = portrait && kind != "launchpad" ? px * 0.75 : px
+        let artH = 44 * sx
         return AnyView(Button { onStructure(kind) } label: {
             Art.view(sprite).resizable().interpolation(.none)
-                .frame(width: 72 * px, height: artH)
+                .frame(width: 72 * sx, height: artH)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .position(x: center, y: ground - artH * 0.5 + 2 * px)
+        .position(x: center, y: ground - artH * 0.5 + 2 * sx)
         .accessibilityLabel(kindLabel(kind)))
     }
 
@@ -293,8 +295,8 @@ struct BaseWorldScene: View {
     /// Centres match the web anchors. Kinds without one spread across the remaining plots.
     private func anchor(_ kind: String, plot: Int, portrait: Bool) -> CGFloat {
         switch kind {
-        case "hangar", "garage": return portrait ? 0.19 : 0.12
-        case "launchpad": return portrait ? 0.66 : 0.52
+        case "hangar", "garage": return portrait ? 0.16 : 0.12
+        case "launchpad": return portrait ? 0.68 : 0.52
         default:
             let slots: [CGFloat] = portrait ? [0.16, 0.38, 0.62, 0.84] : [0.14, 0.36, 0.64, 0.86]
             return slots[min(max(plot, 0), 3)]

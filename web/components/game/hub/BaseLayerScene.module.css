@@ -550,8 +550,9 @@
 
 @media (orientation: portrait) and (max-width: 800px) {
   .rollout {
-    --hangar-x: 19%;
-    --pad-x: 66%;
+    --hangar-x: 16%;
+    --pad-x: 68%;
+    --hangar-scale: 0.75;
   }
 }
 .beaconDot {
