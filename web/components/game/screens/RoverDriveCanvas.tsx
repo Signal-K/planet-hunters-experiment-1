@@ -113,14 +113,15 @@ export default function RoverDriveCanvas({
       ctx.imageSmoothingEnabled = false
       ctx.clearRect(0, 0, viewW, viewH)
       if (images) {
+        const sprites = images
         const skyH = Math.max(viewH, baseline)
-        drawLayer(ctx, images.sky, cam, 0.05, viewW, skyH, skyH)
+        drawLayer(ctx, sprites.sky, cam, 0.05, viewW, skyH, skyH)
         ctx.save()
         ctx.beginPath()
         ctx.rect(0, 0, viewW, baseline - 40)
         ctx.clip()
-        drawLayer(ctx, images.far, cam, 0.18, viewW, baseline - 90, viewH * 0.28)
-        drawLayer(ctx, images.mid, cam, 0.36, viewW, baseline - 48, viewH * 0.22)
+        drawLayer(ctx, sprites.far, cam, 0.18, viewW, baseline - 90, viewH * 0.28)
+        drawLayer(ctx, sprites.mid, cam, 0.36, viewW, baseline - 48, viewH * 0.22)
         ctx.restore()
         ctx.save()
         ctx.beginPath()
@@ -131,11 +132,11 @@ export default function RoverDriveCanvas({
         ctx.lineTo(viewW + 8, viewH + 8)
         ctx.closePath()
         ctx.clip()
-        const dirtW = images.dirt.width * TILE
-        const dirtH = images.dirt.height * TILE
+        const dirtW = sprites.dirt.width * TILE
+        const dirtH = sprites.dirt.height * TILE
         const ox = -((cam * 0.5) % dirtW)
         for (let x = ox - dirtW; x < viewW + dirtW; x += dirtW) {
-          for (let y = baseline - 160; y < viewH + dirtH; y += dirtH) ctx.drawImage(images.dirt, x, y, dirtW, dirtH)
+          for (let y = baseline - 160; y < viewH + dirtH; y += dirtH) ctx.drawImage(sprites.dirt, x, y, dirtW, dirtH)
         }
         ctx.restore()
         ctx.save()
@@ -144,10 +145,10 @@ export default function RoverDriveCanvas({
         for (let x = to; x >= from; x -= 4) ctx.lineTo(x - cam, baseline + contactY(x) + 6)
         ctx.closePath()
         ctx.clip()
-        const grassW = images.grass.width * TILE
-        const grassH = images.grass.height * TILE
+        const grassW = sprites.grass.width * TILE
+        const grassH = sprites.grass.height * TILE
         for (let x = -(cam % grassW) - grassW; x < viewW + grassW; x += grassW) {
-          for (let y = baseline - 220; y < baseline + 180; y += grassH) ctx.drawImage(images.grass, x, y, grassW, grassH)
+          for (let y = baseline - 220; y < baseline + 180; y += grassH) ctx.drawImage(sprites.grass, x, y, grassW, grassH)
         }
         ctx.restore()
         const edge = ctx.getImageData(12, Math.max(0, viewH - 28), 1, 1).data
@@ -159,9 +160,9 @@ export default function RoverDriveCanvas({
         ctx.stroke()
         const placeRock = (x: number, scale: number) => {
           const y = baseline + contactY(x)
-          const w = images.rock.width * scale
-          const h = images.rock.height * scale
-          ctx.drawImage(images.rock, x - cam - w / 2, y - h + 2, w, h)
+          const w = sprites.rock.width * scale
+          const h = sprites.rock.height * scale
+          ctx.drawImage(sprites.rock, x - cam - w / 2, y - h + 2, w, h)
         }
         for (const x of ROCKS) placeRock(x, 3)
         for (const outcrop of SURVEY_OUTCROPS) {
@@ -172,7 +173,7 @@ export default function RoverDriveCanvas({
         for (const speck of dust) {
           const alpha = Math.max(0, speck.life / 0.45)
           ctx.globalAlpha = alpha
-          ctx.drawImage(images.dirt, 8, 8, 6, 6, speck.x - cam, speck.y, 5, 5)
+          ctx.drawImage(sprites.dirt, 8, 8, 6, 6, speck.x - cam, speck.y, 5, 5)
           ctx.globalAlpha = 1
         }
         const rw = 120
@@ -181,7 +182,7 @@ export default function RoverDriveCanvas({
         ctx.save()
         ctx.translate(pose.x - cam, baseline + pose.y + 2)
         ctx.rotate(pose.angle)
-        ctx.drawImage(images.rover, -rw * 0.46, -foot, rw, rh)
+        ctx.drawImage(sprites.rover, -rw * 0.46, -foot, rw, rh)
         ctx.restore()
       }
       if (ticks % 4 === 0) onPoseRef.current(pose, outcropNear(pose.x))

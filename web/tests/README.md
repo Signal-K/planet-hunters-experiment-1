@@ -6,7 +6,7 @@ Cypress was removed (SSL-506). The browser suite is Playwright scene tests.
 
 `tests/scenes/screens.spec.ts` mounts one screen at a time from fixture state (`/game/stage?preset=...`) at 390x844, 926x428 and 1440x900. For each it saves a screenshot and checks: no Next error overlay, no uncaught page errors, no page-level horizontal scroll, no visible text under 14px, no tap target under 44px, no two controls overlapping.
 
-It does **not** exercise sign-in, persistence, multi-step flows or the backend. The flow coverage that the old Cypress journeys, auth and regression profiles claimed is replaced by SSL-508 (staging playthrough), not by this suite.
+It does **not** exercise a real sign-in, durable persistence, sync, or the backend. A few focused specs seed an account-shaped local session to protect routes; that is not staging acceptance. The old Cypress journeys, auth and regression profiles are owed to SSL-508 (staging playthrough), not this suite.
 
 ## Commands
 
@@ -44,8 +44,8 @@ CI runs the same `npm run test:scenes` in the `scenes` job (see `docs/ci.md`) an
 | --- | --- |
 | offline, features, ui-zones, tutorial-rail, interaction-order | Layout and overlap concerns are covered per screen by the scene checks. Step-by-step assertions are retired (they asserted the removed coach and old chrome). |
 | visual, visual-extended, release-matrix, responsive | Replaced by the scene screenshots at the three viewports. |
-| regression, journeys, clean-start-loop, staging-full, with-pb | **Not replaced yet.** Retired from the suite; end-to-end flow coverage is owed to SSL-508. |
-| auth | **Not replaced yet.** Owed to SSL-508 (sign-up, token expiry, 401 retry). |
+| regression, journeys, clean-start-loop, staging-full, with-pb | **Not replaced yet.** Retired from the suite; end-to-end flow coverage is owed to SSL-508 (save, reconnect and sync). |
+| auth | Fixture-only route coverage exists; real sign-up, token expiry and 401 retry are **not replaced yet** and are owed to SSL-508. |
 | surveys | **Not replaced yet.** Survey runtime gate has no browser test. |
 | smoke | Superseded by `scenes`. |
 

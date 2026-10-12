@@ -8,11 +8,11 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
   test.describe(`flight plan ${vp}`, () => {
     test.use({ viewport: size })
 
-    test('mining try: Base shows the first step, then the launchpad step after tapping the Launchpad', async ({ page }, info) => {
+    test('mining try: Base directs the player to the launchpad tower', async ({ page }, info) => {
       const { errors } = await stage(page, 'm1-hub', { chrome: true, patch: { flightPlan: { completed: {}, hidden: false } } })
       await page.goto(page.url() + '&plan=1')
       await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
-      await expect(objective(page)).toContainText('Open client contracts')
+      await expect(objective(page)).toContainText('Tap the tower')
       await page.screenshot({ path: `tests/.out/flow-flightplan-mining-${vp}.png` })
       expect(errors).toEqual([])
     })
