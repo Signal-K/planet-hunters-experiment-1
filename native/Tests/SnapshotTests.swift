@@ -50,12 +50,17 @@ struct SceneSnapshotTests {
     @Test func miningScene() throws {
         AppFont.register()
         let t = Targets.all.first { $0.type == .asteroid }!
-        let f = MiningField(target: t, required: ["iron": 2, "silicon": 1], cargoCapacity: 6, laserTier: 1, seed: 3)
-        let scene = MiningScene(field: f, size: CGSize(width: 402, height: 780))
-        let view = SKView(frame: CGRect(origin: .zero, size: scene.size))
-        view.presentScene(scene)
-        scene.fire(at: CGPoint(x: 5, y: 5))
-        try write(scene, name: "mining-phone")
+        let sizes = [("phone", CGSize(width: 402, height: 780)), ("landscape", CGSize(width: 852, height: 393))]
+        for (label, size) in sizes {
+            for world in ["bennu", "mars"] {
+                let f = MiningField(target: t, required: ["iron": 2, "silicon": 1], cargoCapacity: 6, laserTier: 1, seed: 3)
+                let scene = MiningScene(field: f, size: size, palette: LaserPalette.named(world))
+                let view = SKView(frame: CGRect(origin: .zero, size: scene.size))
+                view.presentScene(scene)
+                scene.fire(at: CGPoint(x: 5, y: 5))
+                try write(scene, name: world == "bennu" ? "mining-\(label)" : "mining-\(world)-\(label)")
+            }
+        }
     }
 }
 

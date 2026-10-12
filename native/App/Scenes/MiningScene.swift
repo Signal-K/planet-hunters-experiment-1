@@ -183,7 +183,7 @@ final class MiningScene: SKScene {
             nearCopy.position = CGPoint(x: CGFloat(copy + 1) * ridgeTile, y: surfaceY - 2 - 8 * px)
             near.addChild(nearCopy)
         }
-        let cols = Int((size.width / soilTile).rounded(.up)) + 2
+        let cols = Int((size.width / soilTile).rounded(.up)) + 5
         let rows = Int((surfaceY / soilTile).rounded(.up)) + 1
         let crustH = 8 * px
         for c in 0..<cols {
@@ -194,19 +194,27 @@ final class MiningScene: SKScene {
             lip.zPosition = 1
             ground.addChild(lip)
             for r in 0..<rows {
-                // Alternate the two ground tones by tile so neighbouring tiles read as different dirt, deeper rows darker.
-                let deep = r > 0 || c % 3 == 1
-                let soil = sprite("soil", tint: deep ? palette.groundDeep : palette.ground, blend: 0.55)
+                // Mirror every other tile on both axes so shared edges match and no strata seam shows; tint varies on a 4 tile period.
+                let variant = ((c % 4) * 3 + r * 5) % 4
+                let base = r == 0 ? palette.ground : palette.groundDeep
+                let tint = LaserPalette.mix(base, palette.groundDeep, 0.03 * CGFloat(variant))
+                let soil = sprite("soil", tint: tint, blend: 0.55)
                 soil.anchorPoint = .zero
                 let y = surfaceY - crustH - CGFloat(r + 1) * soilTile
                 soil.position = CGPoint(x: cx, y: y)
-                if (c + r) % 2 == 1 { soil.xScale = -px; soil.position.x += soilTile }
+                let flipX = c % 2 == 1, flipY = r % 2 == 1
+                if flipX { soil.xScale = -px; soil.position.x += soilTile }
+                if flipY { soil.yScale = -px; soil.position.y += soilTile }
                 ground.addChild(soil)
-                let flecks = sprite("soil-flecks")
-                flecks.anchorPoint = .zero
-                flecks.position = CGPoint(x: cx, y: y)
-                if (c + r) % 2 == 1 { flecks.xScale = -px; flecks.position.x += soilTile }
-                ground.addChild(flecks)
+                if variant != 2 {
+                    let flecks = sprite("soil-flecks")
+                    flecks.anchorPoint = .zero
+                    flecks.position = soil.position
+                    flecks.xScale = soil.xScale
+                    flecks.yScale = variant == 3 ? -soil.yScale : soil.yScale
+                    if variant == 3 { flecks.position.y = y + (flipY ? 0 : soilTile) }
+                    ground.addChild(flecks)
+                }
             }
         }
         world.addChild(far)
@@ -244,20 +252,57 @@ final class MiningScene: SKScene {
         placeChips()
     }
 
+    /// Slim cream-and-blue rocket, nose up, built from shapes so it stays upright and crisp at any scale.
     private func buildShip() {
+        ship.removeAllChildren()
         ship.position = CGPoint(x: beamX, y: shipY)
         ship.zPosition = 20
-        let plume = sprite("flame-0")
-        plume.anchorPoint = CGPoint(x: 1, y: 0.5)
-        plume.position = CGPoint(x: -19 * px, y: 0)
+        let outline = LaserPalette.sk(0x16293B)
+        let cream = LaserPalette.sk(0xECE8DF)
+        let blue = LaserPalette.sk(0x2F6FA8)
+        func part(_ path: CGPath, _ fill: PlatformColor, z: CGFloat) {
+            let n = SKShapeNode(path: path)
+            n.fillColor = fill
+            n.strokeColor = outline
+            n.lineWidth = 2
+            n.lineJoin = .round
+            n.zPosition = z
+            ship.addChild(n)
+        }
+        func poly(_ pts: [(CGFloat, CGFloat)]) -> CGPath {
+            let p = CGMutablePath()
+            p.move(to: CGPoint(x: pts[0].0, y: pts[0].1))
+            for q in pts.dropFirst() { p.addLine(to: CGPoint(x: q.0, y: q.1)) }
+            p.closeSubpath()
+            return p
+        }
+        // Local origin sits mid-hull; beam leaves from the nozzle at y = -22.
+        let plume = SKSpriteNode(texture: flameFrames[0])
         plume.name = "plume"
+        plume.anchorPoint = CGPoint(x: 1, y: 0.5)
+        plume.zRotation = .pi / 2
+        plume.setScale(px)
+        plume.position = CGPoint(x: 0, y: -24)
+        plume.zPosition = -1
         ship.addChild(plume)
-        ship.addChild(sprite("ship"))
+        part(poly([(-9, -8), (-19, -22), (-9, -18)]), blue, z: 0)
+        part(poly([(9, -8), (19, -22), (9, -18)]), blue, z: 0)
+        part(poly([(-6, -20), (6, -20), (4, -26), (-4, -26)]), LaserPalette.sk(0x4B4F57), z: 0)
+        part(poly([(-9, -20), (9, -20), (9, 12), (-9, 12)]), cream, z: 1)
+        part(poly([(-9, 12), (9, 12), (5, 24), (0, 32), (-5, 24)]), blue, z: 1)
+        part(poly([(-9, -12), (9, -12), (9, -7), (-9, -7)]), blue, z: 2)
+        let win = SKShapeNode(circleOfRadius: 4)
+        win.fillColor = LaserPalette.sk(0x9FD6E4)
+        win.strokeColor = outline
+        win.lineWidth = 2
+        win.position = CGPoint(x: 0, y: 3)
+        win.zPosition = 3
+        ship.addChild(win)
         world.addChild(ship)
     }
 
     private func buildBeam() {
-        let h = max(24, shipY - 14 * px - surfaceY)
+        let h = max(24, shipY - 26 - surfaceY)
         beam.removeAllChildren()
         for k in 0..<Int((h / (8 * px)).rounded(.up)) {
             let seg = sprite("beam")
@@ -265,7 +310,7 @@ final class MiningScene: SKScene {
             seg.position = CGPoint(x: 0, y: -CGFloat(k) * 8 * px)
             beam.addChild(seg)
         }
-        beam.position = CGPoint(x: beamX, y: shipY - 8 * px)
+        beam.position = CGPoint(x: beamX, y: shipY - 30)
         beam.zPosition = 18
         world.addChild(beam)
         spark.position = CGPoint(x: beamX, y: surfaceY)
@@ -362,7 +407,7 @@ final class MiningScene: SKScene {
         let speed = base + CGFloat(scrollInput) * (scrollInput > 0 ? 48 : 32)
         let dx = speed * CGFloat(dt)
         scrollX += dx
-        shift(ground, by: dx, width: soilTile)
+        shift(ground, by: dx, width: soilTile * 4)
         shift(near, by: dx * 0.45, width: ridgeTile)
         shift(far, by: dx * 0.16, width: ridgeTile)
         placeChips()
@@ -375,9 +420,10 @@ final class MiningScene: SKScene {
         }
         if let plume = ship.childNode(withName: "plume") {
             plume.alpha = 0.7 + pulse * 0.3
+            plume.xScale = px * (0.8 + pulse * 0.3)
             if let sprite = plume as? SKSpriteNode, !reducedMotion { sprite.texture = flameFrames[Int(clock * 10) % 2] }
         }
-        ship.position.y = shipY + (reducedMotion ? 0 : sin(clock * 2.2) * 2)
+        ship.position.y = shipY + (reducedMotion ? 0 : sin(clock * 2.2) * 4)
 
         if !reducedMotion {
             for star in stars {

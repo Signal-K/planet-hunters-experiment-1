@@ -52,20 +52,20 @@
       "terrain": "rubble"
     },
     "mars": {
-      "skyTop": "#f6c7a4",
-      "skyHorizon": "#e08a62",
-      "starAlpha": 0,
-      "distant": "#c9846c",
-      "nearRidge": "#b46848",
-      "ground": "#a3482c",
-      "groundDeep": "#6e2e1c",
-      "groundSpeck": "#f4e6d0",
-      "beam": "#d8ffb0",
-      "beamCore": "#f7fff2",
-      "light": "#ffe7a8",
-      "lightAlpha": 1,
-      "dust": "#e0a070",
-      "clouds": true,
+      "skyTop": "#14123a",
+      "skyHorizon": "#4b3b8a",
+      "starAlpha": 0.8,
+      "distant": "#3a3472",
+      "nearRidge": "#4d4488",
+      "ground": "#6a68a0",
+      "groundDeep": "#2a2852",
+      "groundSpeck": "#d4d8f2",
+      "beam": "#5ce8ff",
+      "beamCore": "#f4fdff",
+      "light": "#9ad4ff",
+      "lightAlpha": 0,
+      "dust": "#8f8cc8",
+      "clouds": false,
       "terrain": "dunes"
     },
     "icy-moon": {
@@ -88,7 +88,7 @@
         "cx": 0.78,
         "cy": 0.34,
         "radius": 0.42,
-        "bands": ["#c4784a", "#f0d2a4", "#a85c38", "#f6e2c0", "#8d4a30", "#e2b888", "#c4784a"]
+        "bands": ["#4a5cb0", "#a9b8f0", "#3a3f8c", "#c8d2f6", "#2e2a72", "#8a90d8", "#4a5cb0"]
       }
     }
   },
