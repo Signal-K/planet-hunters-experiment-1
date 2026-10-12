@@ -8,6 +8,9 @@ struct BaseDock: View {
     let zones: HUDZones.Zones.BottomNav
     /// Middle buttons; nil gives the base dock (Build, Hub).
     var items: [(title: String, symbol: String, action: () -> Void)]?
+    /// When set, the arrows run these (the base dock scrolls the camera along the base) instead of stepping scenes.
+    var onPrev: (() -> Void)?
+    var onNext: (() -> Void)?
 
     private var middle: [(title: String, symbol: String, action: () -> Void)] {
         items ?? [("Build", "hammer.fill", { store.go(.build) }), ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) })]
@@ -15,14 +18,14 @@ struct BaseDock: View {
 
     var body: some View {
         HStack(spacing: zones.gap) {
-            arrow("chevron.left", label: "Previous") { step(-1) }
+            arrow("chevron.left", label: onPrev == nil ? "Previous" : "Scroll left") { if let onPrev { onPrev() } else { step(-1) } }
             Spacer(minLength: 0)
             ForEach(Array(middle.enumerated()), id: \.offset) { index, item in
                 if index > 0 { Rectangle().fill(Theme.hudInk.opacity(0.4)).frame(width: 1, height: 24) }
                 DockButton(title: item.title, symbol: item.symbol, action: item.action)
             }
             Spacer(minLength: 0)
-            arrow("chevron.right", label: "Next") { step(1) }
+            arrow("chevron.right", label: onNext == nil ? "Next" : "Scroll right") { if let onNext { onNext() } else { step(1) } }
         }
         .padding(.horizontal, zones.padding + 4)
         .padding(.vertical, 2)

@@ -45,6 +45,15 @@ enum SceneCatalog {
         return gs
     }
 
+    /// Starter base with the silo built and `ore` units stored, for the cutaway.
+    static func siloState(ore: Int) -> GameState {
+        var gs = starterState()
+        gs.player.placed = ["launchpad", "hangar", "surface-silo"]
+        gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1]
+        if ore > 0 { gs.player.stash = ["copper": ore] }
+        return gs
+    }
+
     /// Base player who owns one settlement, so the « » dock tile shows enabled.
     static func landscapeBase() -> GameState {
         var gs = basePlayer()
@@ -98,6 +107,34 @@ enum SceneCatalog {
             gs.player.placed = ["launchpad", "hangar", "surface-silo", "astronaut-academy"]
             gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1, "astronaut-academy": 2]
             return HubScreen().environment(GameStore(state: gs))
+        },
+        scene("hub-pan-right-phone", 874) {
+            let world = BaseWorld(w: phone, h: 874)
+            return HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), startX: world.maxX / 2).environment(GameStore(state: starterState()))
+        },
+        scene("hub-pan-mid-phone", 874) {
+            let world = BaseWorld(w: phone, h: 874)
+            return HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), startX: world.shaftFocusX / 2, startDepth: 0.5).environment(GameStore(state: siloState(ore: 0)))
+        },
+        scene("hub-ug-empty-phone", 874) {
+            let world = BaseWorld(w: phone, h: 874)
+            return HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), startX: world.shaftFocusX, startDepth: 1).environment(GameStore(state: starterState()))
+        },
+        scene("hub-ug-built-phone", 874) {
+            let world = BaseWorld(w: phone, h: 874)
+            return HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), startX: world.shaftFocusX, startDepth: 1).environment(GameStore(state: siloState(ore: 24)))
+        },
+        scene("hub-pan-mid-landscape", 402, w: 874) {
+            let world = BaseWorld(w: 874, h: 402)
+            return HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), startX: world.shaftFocusX / 2, startDepth: 0.5).environment(GameStore(state: siloState(ore: 0)))
+        },
+        scene("hub-ug-empty-landscape", 402, w: 874) {
+            let world = BaseWorld(w: 874, h: 402)
+            return HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), startX: world.shaftFocusX, startDepth: 1).environment(GameStore(state: starterState()))
+        },
+        scene("hub-ug-built-landscape", 402, w: 874) {
+            let world = BaseWorld(w: 874, h: 402)
+            return HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), startX: world.shaftFocusX, startDepth: 1).environment(GameStore(state: siloState(ore: 24)))
         },
         scene("hub-biome-mountains-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), biome: .mountains).environment(GameStore(state: landscapeBase())) },
         scene("hub-structures-phone", 874) {

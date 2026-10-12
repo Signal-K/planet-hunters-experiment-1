@@ -11,7 +11,15 @@ struct HubScreen: View {
     /// The default mountains biome is the web terrain kit. Other biomes are future kit variants; their layered assets stay unused for now.
     var biome: EarthBiome = .resolve()
     @State private var showSettings = false
+    @State private var camera: BaseCamera
     private let zones = HUDZones.standard
+
+    /// `startX` / `startDepth` set the opening camera (fixtures and screenshots); the game starts at the surface, x 0.
+    init(safeAreaOverride: EdgeInsets? = nil, biome: EarthBiome = .resolve(), startX: CGFloat = 0, startDepth: CGFloat = 0) {
+        self.safeAreaOverride = safeAreaOverride
+        self.biome = biome
+        _camera = State(initialValue: BaseCamera(x: startX, depth: startDepth))
+    }
 
     var body: some View {
         // Read the real safe area from the outer proxy, then draw edge to edge at the full size.
@@ -37,16 +45,36 @@ struct HubScreen: View {
                 placed: store.player.placed,
                 plots: store.player.placementPlots,
                 levels: store.player.buildingLevels,
+                oreFraction: oreFraction,
+                insets: insets,
+                camera: camera,
                 onStructure: { openStructure($0) },
-                onShaft: { store.go(.hubSubsurface) }
+                onShaft: { store.go(.hubSubsurface) },
+                onBuildSilo: { buildSilo() }
             )
             skyCraft(width: size.width, height: size.height)
             topLeftHud(insets: insets, portrait: portrait)
             topRightHud(insets: insets)
-            BaseDock(tile: layout.tile, zones: zones.dock)
+            BaseDock(tile: layout.tile, zones: zones.dock,
+                     onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
+                     onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) })
                 .padding(.bottom, insets.bottom + zones.dock.bottomInset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
+    }
+
+    /// Share of the silo's capacity holding ore, for the stored-ore crates in the cutaway.
+    private var oreFraction: Double {
+        let capacity = 40 * BuildingLevels.siloCapacityMultiplier(store.player.buildingLevels["surface-silo"] ?? 1)
+        let held = store.player.stash.values.reduce(0, +)
+        return min(1, Double(held) / Double(max(capacity, 1)))
+    }
+
+    /// Builds the silo on the first free plot; when it is locked or unaffordable the Build screen explains why.
+    private func buildSilo() {
+        let used = Set(Construction.occupied(store.player).values)
+        let plot = (0..<Construction.plotCount).first { !used.contains($0) } ?? 0
+        if !store.place("surface-silo", plot: plot) { store.go(.build) }
     }
 
     private func openStructure(_ kind: String) {

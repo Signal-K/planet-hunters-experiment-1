@@ -1,48 +1,137 @@
 import SwiftUI
 import LandnamCore
 
-/// Layered base: sky, mountain bands, road, grass, a thin dirt strip and a small lift shaft.
+/// Layered base world: sky, mountain bands, road, grass, props and structures along a strip wider than the screen,
+/// with an underground cutaway below (`BaseUnderground`). The camera (`BaseCamera`) pans along the strip and down to the cutaway.
 /// Structures render only when the player has built them. Level 1 uses the starter sprites.
 struct BaseWorldScene: View {
     var placed: [String]
     var plots: [String: Int]
     var levels: [String: Int]
+    var oreFraction: Double = 0
+    var insets: EdgeInsets = EdgeInsets()
+    var camera: BaseCamera
     var onStructure: (String) -> Void
     var onShaft: () -> Void
+    var onBuildSilo: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var dragStartX: CGFloat?
+    @State private var dragVertical: Bool?
+    @State private var pulse = false
+
+    private var siloBuilt: Bool { placed.contains("surface-silo") }
 
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width
             let h = geo.size.height
-            let portrait = h > w * 1.15
-            let ground = h * 0.80
-            TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { ctx in
-                let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
+            let world = BaseWorld(w: w, h: h)
+            let portrait = world.portrait
+            let ground = world.ground
+            let cx = min(max(camera.x, 0), world.maxX)
+            let lift = world.shift * camera.depth
+            ZStack(alignment: .topLeading) {
+                Art.view("base/layers/sky.png")
+                    .resizable().interpolation(.none)
+                    .frame(width: w, height: h)
+                skyLayers(width: w, height: h, ground: ground).offset(y: -lift)
                 ZStack(alignment: .topLeading) {
-                    Art.view("base/layers/sky.png")
-                        .resizable().interpolation(.none)
-                        .frame(width: w, height: h)
-                    mountain("base/layers/mountains-far.png", height: ground * 0.58, ground: ground, width: w, drift: t / 140)
-                    mountain("base/layers/mountains-mid.png", height: ground * 0.40, ground: ground, width: w, drift: t / 96)
-                    cloud(t: t, width: w, height: h, lane: 0.08, scale: 0.18, speed: 92)
-                    cloud(t: t, width: w, height: h, lane: 0.16, scale: 0.14, speed: 120)
-                    cloud(t: t, width: w, height: h, lane: 0.05, scale: 0.12, speed: 108)
-                    groundStack(width: w, height: h, ground: ground)
-                    props(width: w, ground: ground, portrait: portrait)
-                    if !placed.isEmpty { shaft(width: w, height: h) }
+                    groundStack(width: world.worldW, height: world.worldH, ground: ground)
+                    props(width: w, world: world, ground: ground, portrait: portrait)
+                    BaseUnderground(world: world, built: siloBuilt, oreFraction: oreFraction, onBuild: onBuildSilo, onOpen: onShaft)
+                        .offset(y: ground)
+                        .allowsHitTesting(camera.underground)
+                    shaftHead(world: world)
                     ForEach(placed, id: \.self) { kind in
                         if let sprite = spriteName(kind) {
                             structure(kind, sprite: sprite, width: w, height: h, ground: ground, portrait: portrait, level: levels[kind] ?? 1)
                         }
                     }
-                    Rectangle().fill(timeWash()).allowsHitTesting(false)
-                    Rectangle().fill(seasonWash()).allowsHitTesting(false).blendMode(.softLight)
                 }
-                .frame(width: w, height: h)
-                .clipped()
+                .frame(width: world.worldW, height: world.worldH, alignment: .topLeading)
+                .offset(x: -cx, y: -lift)
+                Rectangle().fill(timeWash()).opacity(1 - camera.depth).allowsHitTesting(false)
+                Rectangle().fill(seasonWash()).opacity(1 - camera.depth).allowsHitTesting(false).blendMode(.softLight)
+                edgeHints(world: world, cx: cx)
+                depthButton(world: world)
             }
+            .frame(width: w, height: h, alignment: .topLeading)
+            .clipped()
+            .contentShape(Rectangle())
+            .simultaneousGesture(pan(world: world))
         }
+    }
+
+    /// Drag pans along the base strip; a clear swipe up goes down to the cutaway and a swipe down comes back.
+    private func pan(world: BaseWorld) -> some Gesture {
+        DragGesture(minimumDistance: 12)
+            .onChanged { v in
+                if dragVertical == nil { dragVertical = abs(v.translation.height) > abs(v.translation.width); dragStartX = camera.x }
+                if dragVertical == false, let start = dragStartX { camera.x = camera.clamp(start - v.translation.width, world) }
+            }
+            .onEnded { v in
+                defer { dragVertical = nil; dragStartX = nil }
+                if dragVertical == true {
+                    if v.translation.height < -36 { camera.dive(true, world, reduceMotion: reduceMotion) }
+                    else if v.translation.height > 36 { camera.dive(false, world, reduceMotion: reduceMotion) }
+                } else if let start = dragStartX {
+                    let glide = camera.clamp(start - v.predictedEndTranslation.width, world)
+                    withAnimation(.easeOut(duration: 0.4)) { camera.x = glide }
+                }
+            }
+    }
+
+    /// Right-edge chevron: down to the cutaway at the surface, up from it underground.
+    private func depthButton(world: BaseWorld) -> some View {
+        let down = !camera.underground
+        return Button { camera.dive(down, world, reduceMotion: reduceMotion) } label: {
+            Image(systemName: down ? "chevron.down" : "chevron.up")
+                .font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.hudInk)
+                .frame(width: 44, height: 44)
+                .background(Capsule().fill(Theme.hudPanel))
+                .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(down ? "Go underground" : "Back to the surface")
+        .position(x: world.w - insets.trailing - 34, y: world.h * 0.38)
+    }
+
+    /// Faint chevrons at the screen edges while more of the base lies offscreen that way.
+    private func edgeHints(world: BaseWorld, cx: CGFloat) -> some View {
+        ZStack {
+            if cx > 2 { hint("chevron.left", x: insets.leading + 22, world: world) }
+            if cx < world.maxX - 2 { hint("chevron.right", x: world.w - insets.trailing - 22, world: world) }
+        }
+        .onAppear { if !reduceMotion { withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { pulse = true } } }
+    }
+
+    private func hint(_ symbol: String, x: CGFloat, world: BaseWorld) -> some View {
+        Button { camera.pan(by: symbol == "chevron.left" ? -world.w * 0.55 : world.w * 0.55, world) } label: {
+            Image(systemName: symbol).font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.hudInk)
+                .frame(width: 28, height: 56)
+                .background(Capsule().fill(Theme.hudPanel.opacity(0.55)))
+                .opacity(pulse ? 0.9 : 0.45)
+                .frame(width: 44, height: 56)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(symbol == "chevron.left" ? "Scroll left" : "Scroll right")
+        .position(x: x, y: world.h * 0.38 + 72)
+    }
+
+    /// Mountains and clouds: they stay with the screen while the strip pans, and ride up with the ground when the camera dives.
+    private func skyLayers(width w: CGFloat, height h: CGFloat, ground: CGFloat) -> some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { ctx in
+            let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
+            ZStack(alignment: .topLeading) {
+                mountain("base/layers/mountains-far.png", height: ground * 0.58, ground: ground, width: w, drift: t / 140)
+                mountain("base/layers/mountains-mid.png", height: ground * 0.40, ground: ground, width: w, drift: t / 96)
+                cloud(t: t, width: w, height: h, lane: 0.08, scale: 0.18, speed: 92)
+                cloud(t: t, width: w, height: h, lane: 0.16, scale: 0.14, speed: 120)
+                cloud(t: t, width: w, height: h, lane: 0.05, scale: 0.12, speed: 108)
+            }
+            .frame(width: w, height: h, alignment: .topLeading)
+        }
+        .allowsHitTesting(false)
     }
 
     private func mountain(_ path: String, height band: CGFloat, ground: CGFloat, width: CGFloat, drift: Double) -> some View {
@@ -82,9 +171,10 @@ struct BaseWorldScene: View {
         .allowsHitTesting(false)
     }
 
-    private func props(width: CGFloat, ground: CGFloat, portrait: Bool) -> some View {
+    private func props(width: CGFloat, world: BaseWorld, ground: CGFloat, portrait: Bool) -> some View {
         let treeH: CGFloat = portrait ? 40 : (ground < 400 ? 36 : 52)
         let midH: CGFloat = portrait ? 34 : (ground < 400 ? 40 : 58)
+        let w = world.w
         return ZStack {
             prop("base/kit/prop-tree-a.png", x: width * (portrait ? 0.31 : 0.015), ground: ground, height: portrait ? 32 : treeH)
             if !portrait {
@@ -96,6 +186,19 @@ struct BaseWorldScene: View {
             }
         }
         .allowsHitTesting(false)
+        // The rest of the strip, past the first screen: trees and rocks around the lift head.
+        .overlay(alignment: .topLeading) {
+            ZStack {
+                prop("base/kit/prop-tree-c.png", x: w * 1.04, ground: ground, height: midH)
+                prop("base/kit/prop-rock.png", x: w * 1.12, ground: ground, height: 14)
+                prop("base/kit/prop-tree-a.png", x: world.shaftX - 150 * world.u / 2 - 40, ground: ground, height: treeH)
+                prop("base/kit/prop-rock.png", x: world.shaftX + 120, ground: ground, height: 14)
+                prop("base/kit/prop-tree-b.png", x: world.shaftX + 190, ground: ground, height: ground < 400 ? 28 : 36)
+                prop("base/kit/prop-tree-a.png", x: world.worldW - 90, ground: ground, height: treeH)
+                prop("base/kit/prop-rock.png", x: world.worldW - 36, ground: ground, height: 14)
+            }
+            .allowsHitTesting(false)
+        }
     }
 
     private func prop(_ path: String, x: CGFloat, ground: CGFloat, height: CGFloat) -> some View {
@@ -105,24 +208,30 @@ struct BaseWorldScene: View {
             .position(x: x, y: ground - height / 2)
     }
 
-    /// Silo: underground only, a small cutaway sprite in the dirt strip to the side of the dock.
-    private func shaft(width: CGFloat, height: CGFloat) -> some View {
-        let portrait = height > width * 1.15
-        let ground = height * 0.80
-        let grass: CGFloat = height < 500 ? 18 : 28
-        let road: CGFloat = height < 500 ? 28 : 36
-        let dirtTop = ground + grass + road
-        let k = portrait ? 1 : max(1, min(2, ((height - dirtTop - 4) / 36).rounded(.down)))
-        let sh = 36 * k
-        return Button(action: onShaft) {
-            Art.view("base/kit/silo-cutaway.png").resizable().interpolation(.none)
-                .frame(width: 44 * k, height: sh)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
+    /// Surface marker over the shaft: the lift head once the silo is built, otherwise a dig-site sign and spoil mound.
+    private func shaftHead(world: BaseWorld) -> some View {
+        let u = world.u
+        return ZStack {
+            if siloBuilt {
+                Button(action: onShaft) {
+                    Art.view("base/kit/ug-hatch.png").resizable().interpolation(.none)
+                        .frame(width: 26 * u, height: 16 * u)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .position(x: world.shaftX, y: world.ground + 5 * u - 8 * u)
+                .accessibilityLabel("Open the lift")
+            } else {
+                Art.view("base/kit/ug-mound.png").resizable().interpolation(.none)
+                    .frame(width: 30 * u, height: 9 * u)
+                    .position(x: world.shaftX + 14 * u, y: world.ground + 5 * u - 4.5 * u)
+                Art.view("base/kit/ug-sign.png").resizable().interpolation(.none)
+                    .frame(width: 18 * u, height: 22 * u)
+                    .position(x: world.shaftX - 16 * u, y: world.ground + 5 * u - 11 * u)
+            }
         }
-        .buttonStyle(.plain)
-        .position(x: width * (portrait ? 0.94 : 0.82), y: dirtTop + 2 + sh / 2)
-        .accessibilityLabel("Open the lift")
+        .allowsHitTesting(camera.depth < 0.5)
     }
 
     /// Whole-number pixel scale for base sprites so they keep the kit's pixel grid.

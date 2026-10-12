@@ -35,6 +35,22 @@ enum Art {
         #endif
     }
 
+    private static var tileCache: [String: Image] = [:]
+
+    /// A tileable sprite whose point size is `scale` times its pixel size, for `.resizable(resizingMode: .tile)` at a whole-number pixel scale.
+    static func tiled(_ path: String, scale: CGFloat) -> Image {
+        let key = "\(path)@\(scale)"
+        if let hit = tileCache[key] { return hit }
+        #if canImport(UIKit)
+        guard let src = image(path), let cg = src.cgImage else { return view(path) }
+        let img = Image(platform: UIImage(cgImage: cg, scale: 1 / scale, orientation: .up))
+        tileCache[key] = img
+        return img
+        #else
+        return view(path)
+        #endif
+    }
+
     static func view(_ path: String) -> Image {
         image(path).map(Image.init(platform:)) ?? Image(systemName: "questionmark.square")
     }
