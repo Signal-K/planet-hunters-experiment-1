@@ -34,6 +34,8 @@ interface MarketScreenProps {
   fieldKits?: Record<string, number>
   /** Run a recipe's build action. True when something was built. */
   onBuildRecipe?: (recipe: CraftingRecipe) => boolean
+  /** Card on the live base. The full-page presentation is the old route. */
+  presentation?: 'page' | 'card'
 }
 
 function recipeAction(recipe: CraftingRecipe, affordable: boolean, placed: string[], kits: Record<string, number>): { label: string; disabled: boolean } | null {
@@ -67,7 +69,7 @@ function costLine(recipe: CraftingRecipe): string {
   return parts.join(' · ')
 }
 
-export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell, refinedGoods, onSellRefined, onBack, clientId, placedStructures = [], fieldKits = {}, onBuildRecipe }: MarketScreenProps) {
+export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell, refinedGoods, onSellRefined, onBack, clientId, placedStructures = [], fieldKits = {}, onBuildRecipe, presentation = 'page' }: MarketScreenProps) {
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
   const [showBuild, setShowBuild] = useState(false)
 
@@ -80,7 +82,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
   const hasCargo = entries.length > 0 || refinedEntries.length > 0
 
   return (
-    <div className={`theme-light market-screen ${styles.screen}`}>
+    <div className={`theme-light market-screen ${styles.screen} ${presentation === 'card' ? styles.asCard : ''}`}>
       <header className={styles.header} data-dev-launcher={isDevLauncherEnabled() || undefined}>
         <button className={styles.backButton} onClick={onBack} aria-label="Back" type="button" data-testid="market-back-btn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">

@@ -45,8 +45,7 @@ export function useUIActions(
   // leaves it (including a warm open of /game/launchpad) has to drop the
   // overlay in the same turn, or the Base stays buried under it (SSL-476).
   const syncSubsurface = useCallback((screen: Screen) => {
-    if (screen === 'hub-subsurface') setSubsurfaceView(true)
-    else if (screen !== 'mission-history') setSubsurfaceView(false)
+    if (screen !== 'mission-history') setSubsurfaceView(false)
   }, [])
 
   const go = useCallback((screen: Screen) => {

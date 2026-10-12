@@ -81,12 +81,18 @@ function LaunchpadKit({ tier, parts, phase = 'idle' }: { tier: number; parts?: I
   )
 }
 
-/** Side-on pixel structure. The base shows the launchpad and the glazed hangar only. */
+/** Side-on pixel structure. Launchpad, hangar, and the Exchange sit on the base. */
 export function PixelStructure({ kind, level = 1, parts, phase = 'idle' }: { kind: string; level?: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch' }) {
   const tier = structureTier(level)
   if (kind === 'launchpad') return <LaunchpadKit tier={tier} parts={parts} phase={phase} />
   if (kind === 'hangar') {
     return <img src={`${KIT}/hangar-white.png`} alt="" draggable={false} className={styles.hangarSprite} data-pixel-structure="hangar" data-tier={tier} />
+  }
+  if (kind === 'market') {
+    return <img src={`${KIT}/apartments.png`} alt="" draggable={false} className={styles.exchangeSprite} data-pixel-structure="exchange" data-tier={tier} />
+  }
+  if (kind === 'surface-silo') {
+    return <img src={`${KIT}/starter-silo.png`} alt="" draggable={false} className={styles.hangarSprite} data-pixel-structure="silo" data-tier={tier} />
   }
   return null
 }

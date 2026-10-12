@@ -17,6 +17,8 @@ export interface HubBuildingDef {
   dimmed?: boolean
   rocketVariant?: 'explorer' | 'prospector'
   active?: boolean
+  /** Translucent placement preview. Not a finished structure. */
+  ghost?: boolean
   /** When still under construction, the timestamp it started. Drives the build-reveal animation. */
   buildStartedAt?: number
 }
@@ -78,7 +80,7 @@ function ConstructionRig({ animDuration, animDelay }: { animDuration: string; an
   )
 }
 
-function StructureSprite({ kind, level = 1, active, buildStartedAt, parts }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number; parts?: InstalledCustomizerPartsByKind | null }) {
+function StructureSprite({ kind, level = 1, active, buildStartedAt, parts, ghost }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number; parts?: InstalledCustomizerPartsByKind | null; ghost?: boolean }) {
   const buildMs = structureBuildMs(kind)
   // `buildStartedAt` does not change when the build finishes, so a value
   // captured once at mount left `isBuilding` true forever and the cyan
@@ -102,7 +104,7 @@ function StructureSprite({ kind, level = 1, active, buildStartedAt, parts }: { k
     ? <ConstructionRig animDuration={animDuration} animDelay={animDelay} />
     : null
 
-  if (kind === 'surface-silo') return rig
+  if (kind === 'surface-silo' && !ghost) return rig
   return (
     <>
       <span
@@ -148,15 +150,16 @@ export function EarthBaseModules({ buildings, parts }: { buildings: HubBuildingD
   return (
     <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {
-        if (building.kind === 'surface-silo' || HIDDEN_BASE_KINDS.has(building.kind)) return null
-        const kit = building.kind === 'launchpad' || building.kind === 'hangar'
+        if (building.kind === 'surface-silo' && !building.ghost && building.status !== 'building') return null
+        if (building.kind !== 'market' && building.kind !== 'surface-silo' && HIDDEN_BASE_KINDS.has(building.kind)) return null
+        const kit = building.kind === 'launchpad' || building.kind === 'hangar' || building.kind === 'market'
         const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.launchpad
         const widthPct = structureWidthPct(building.kind, building.level ?? 1)
         const left = structureCenterPercent(building.kind, building.plotX, widthPct)
         return (
           <span
             key={`${building.kind}-${building.plotX}`}
-            className={`earth-base-structure earth-base-structure--${building.kind}`}
+            className={`earth-base-structure earth-base-structure--${building.kind}${building.ghost ? ' earth-base-structure--ghost' : ''}`}
             data-structure={building.kind}
             style={{
               left: `${left}%`,
@@ -166,10 +169,10 @@ export function EarthBaseModules({ buildings, parts }: { buildings: HubBuildingD
               width: kit ? 'auto' : `min(${widthPct}%, var(--hub-structure-max, 9999px))`,
               height: kit ? 'auto' : undefined,
               aspectRatio: kit ? 'auto' : `${size.width} / ${size.height}`,
-              opacity: building.dimmed ? 0.6 : 1,
+              opacity: building.ghost ? undefined : building.dimmed ? 0.6 : 1,
             }}
           >
-            <StructureSprite kind={building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} parts={parts} />
+            <StructureSprite kind={building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} parts={parts} ghost={building.ghost} />
           </span>
         )
       })}

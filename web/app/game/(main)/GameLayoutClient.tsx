@@ -202,7 +202,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   // (Missions, Market, Skills, ...) and reads as a modal over the game
   // itself when applied to a place the player is actually standing in.
   // See LOCATION_SCREENS.
-  const isImmersiveEarthBaseRoute = LOCATION_SCREENS.has(currentScreen as Screen)
+  const isImmersiveEarthBaseRoute = LOCATION_SCREENS.has(currentScreen as Screen) || (currentScreen === 'fab' && !game.mission)
 
   return (
     <main className="game-stage" aria-label="Landnam game">

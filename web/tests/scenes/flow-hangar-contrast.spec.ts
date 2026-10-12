@@ -18,21 +18,18 @@ function ratio(a: number[], b: number[]) {
 test.describe('hangar contrast', () => {
   test.use({ viewport: { width: 926, height: 428 } })
 
-  test('registry tier chips sit on paper at 4.5:1', async ({ page }) => {
+  test('hangar actions sit on the base at 4.5:1', async ({ page }) => {
     await page.goto('/game/stage?preset=ship-customizer&chrome=1')
-    await expect(page.locator('[data-testid="hangar-fleet-grid"]')).toBeVisible()
-    const tier = await page.locator('[data-testid="hangar-fleet-grid"]').evaluate(grid => {
-      const el = [...grid.querySelectorAll('[class*="tier"]')].find(node => (node.textContent || '').trim().startsWith('TIER'))
-      if (!el) return null
+    await expect(page.locator('[data-testid="base-layer-scene"]')).toBeVisible()
+    await expect(page.locator('[data-testid="hangar-fleet-grid"]')).toHaveCount(0)
+    const action = page.locator('[data-testid="open-ship-customizer"]')
+    await expect(action).toBeVisible()
+    const paint = await action.evaluate(el => {
       const s = getComputedStyle(el)
       return { color: s.color, background: s.backgroundColor, opacity: s.opacity }
     })
-    expect(tier).not.toBeNull()
-    expect(Number(tier!.opacity)).toBe(1)
-    expect(ratio(channel(tier!.color), channel(tier!.background))).toBeGreaterThanOrEqual(4.5)
-    const locked = page.locator('[data-testid="hangar-fleet-grid"] article').nth(2)
-    const faded = await locked.evaluate(el => getComputedStyle(el).opacity)
-    expect(Number(faded)).toBe(1)
+    expect(Number(paint.opacity)).toBe(1)
+    expect(ratio(channel(paint.color), channel(paint.background))).toBeGreaterThanOrEqual(4.5)
   })
 })
 

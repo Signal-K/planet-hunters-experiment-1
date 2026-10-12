@@ -41,6 +41,8 @@ export function structureAnchorPercent(kind: string): number | null {
       return 12
     case 'launchpad':
       return 52
+    case 'market':
+      return 30
     default:
       return null
   }

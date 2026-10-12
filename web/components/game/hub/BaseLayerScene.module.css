@@ -516,11 +516,25 @@
   animation: padCloudDrift 18s ease-in-out infinite alternate;
 }
 
-.hangarSprite {
+.hangarSprite,
+.exchangeSprite {
   display: block;
   height: calc(44 * var(--px, 3px));
   width: auto;
   image-rendering: pixelated;
+}
+
+.exchangeSprite {
+  height: calc(32 * var(--px, 3px));
+}
+
+:global(.earth-base-structure--ghost) {
+  opacity: 0.55;
+  animation: ghostPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ghostPulse {
+  50% { opacity: 0.85; }
 }
 
 .beaconDot {
@@ -653,6 +667,7 @@
   .padBeacon,
   .padFlight,
   .padCloudDrift,
+  :global(.earth-base-structure--ghost),
   .steam,
   .windowGlow,
   .dish,

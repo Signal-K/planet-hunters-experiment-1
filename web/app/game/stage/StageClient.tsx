@@ -70,7 +70,7 @@ function Stage() {
   }, [])
   const activeTry = currentTrainingTry(game.player.flightPlan)
   const planStep = plan && activeTry ? trainingTryStep(activeTry, game.screen) : undefined
-  const immersive = LOCATION_SCREENS.has(game.screen as Screen)
+  const immersive = LOCATION_SCREENS.has(game.screen as Screen) || (game.screen === 'fab' && !game.mission)
 
   return (
     <main className="game-stage" aria-label="Landnam stage" data-stage-ready={game.hydrated ? 'true' : 'false'} data-stage-screen={game.screen}>

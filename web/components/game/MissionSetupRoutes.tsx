@@ -13,7 +13,6 @@ import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import PixiGalaxyMap from '@/components/TargetPicker/PixiGalaxyMap'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
-import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
@@ -102,7 +101,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
     if (screen === 'fab' && game.mission && game.target && selectedVehicle?.location === 'hangar') onTransferToLaunchpad()
   }, [game.mission, game.target, onTransferToLaunchpad, screen, selectedVehicle?.location])
 
-  if (screen === 'fab' && (!game.mission || !game.target)) return <FreeOpsBuildScreen onBack={() => game.goBack()} onMissions={() => game.go('missions')} onInfrastructure={() => game.go('build')} />
+  if (screen === 'fab' && (!game.mission || !game.target)) return null
 
   if (screen === 'missions') {
     return <MissionBoard
