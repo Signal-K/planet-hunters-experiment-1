@@ -73,6 +73,7 @@ struct SetButton: View {
     var solid = false
     var enabled = true
     var fill = false
+    var compact = false
     let action: () -> Void
     var body: some View {
         Button(action: action) {
@@ -81,7 +82,7 @@ struct SetButton: View {
                 SetPlay(color: fg)
                 Text(title.uppercased()).font(AppFont.display(14)).tracking(14 * 0.08).foregroundStyle(fg)
             }
-            .padding(.horizontal, 16).frame(minWidth: 88, maxWidth: fill ? .infinity : nil, minHeight: 44)
+            .padding(.horizontal, compact ? 12 : 16).frame(minWidth: compact ? 0 : 88, maxWidth: fill ? .infinity : nil, minHeight: 44)
             .background(solid ? color : SetStyle.card, in: RoundedRectangle(cornerRadius: SetStyle.radius))
             .overlay(RoundedRectangle(cornerRadius: SetStyle.radius).stroke(enabled ? color : SetStyle.ink, lineWidth: SetStyle.border))
             .contentShape(Rectangle())

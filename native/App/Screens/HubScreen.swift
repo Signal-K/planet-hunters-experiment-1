@@ -231,6 +231,7 @@ struct SettingsSheet: View {
     @State private var confirmSkip = false
     @State private var confirmReset = false
     @State private var showPatchNotes = false
+    @State private var width: CGFloat = 390
     #if os(iOS)
     @AppStorage(OrientationPreference.storageKey) private var orientation = OrientationPreference.auto.rawValue
     #endif
@@ -262,42 +263,106 @@ struct SettingsSheet: View {
     }
 
     private var content: some View {
-        VStack(spacing: SetStyle.gap) {
-            #if os(iOS)
-            SetHeading(text: "Display")
-            orientationCard
-            #endif
-            SetHeading(text: "Training")
-            ForEach(FlightPlanProgress.tryIds, id: \.self) { trainingRow($0) }
-            if !store.player.freeOperations {
-                row(SetRowText(title: "Skip training", status: confirmSkip ? "Tap again to mark all tries done" : "Mark all tries as done")) {
-                    SetButton(title: confirmSkip ? "Confirm" : "Skip") {
-                        if confirmSkip { confirmSkip = false; onClose(); store.skipTraining() } else { confirmSkip = true }
+        let col = min(720, max(280, width * 0.92))
+        let wide = width >= 600
+        return VStack(spacing: SetStyle.gap) {
+            if wide {
+                HStack(alignment: .top, spacing: SetStyle.gap) {
+                    trainingSection
+                    VStack(spacing: SetStyle.gap) {
+                        #if os(iOS)
+                        displaySection
+                        #endif
+                        gameSection
+                    }
+                }
+            } else {
+                #if os(iOS)
+                displaySection
+                #endif
+                trainingSection
+                gameSection
+            }
+            HStack(alignment: .top, spacing: 16) {
+                VStack(spacing: 8) {
+                    SetHeading(text: "Patch notes")
+                    pairCard(SetRowText(title: "What changed", status: "This build")) {
+                        SetButton(title: "Open", compact: true) { showPatchNotes = true }
+                    }
+                }
+                VStack(spacing: 8) {
+                    SetHeading(text: "Account")
+                    pairCard(SetRowText(title: auth.session?.email ?? "Email account", status: "Signed in")) {
+                        SetButton(title: "Sign out", compact: true) { confirmSignOut = true }
                     }
                 }
             }
-            SetHeading(text: "Game")
-            row(SetRowText(title: "Free Ops", status: "Play without a contract")) {
-                let on = Binding(get: { store.player.freeOperations }, set: { store.setFreeOps($0) })
-                SetSegment(options: ["Off", "On"], selected: on.wrappedValue ? 1 : 0) { on.wrappedValue = $0 == 1 }
-                    .frame(width: 168)
-            }
-            row(SetRowText(title: "Patch notes", status: "What changed in recent builds")) {
-                SetButton(title: "View") { showPatchNotes = true }
-            }
-            SetHeading(text: "Account")
-            row(SetRowText(title: "Account", status: auth.session?.email.map { "Signed in as \($0)" } ?? "Signed in")) {
-                SetButton(title: "Sign out") { confirmSignOut = true }
-            }
             row(SetRowText(title: "Reset progress", status: confirmReset ? "Tap again to erase all progress" : "Erase all progress and start over", titleColor: SetStyle.danger),
                 border: SetStyle.danger) {
-                SetButton(title: confirmReset ? "Confirm reset" : "Reset", color: SetStyle.danger) {
+                SetButton(title: confirmReset ? "Confirm reset" : "Reset", color: SetStyle.danger, compact: true) {
                     if confirmReset { confirmReset = false; onClose(); store.reset() } else { confirmReset = true }
                 }
             }
         }
-        .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 32)
-        .setColumn()
+        .frame(width: col)
+        .padding(.top, 8).padding(.bottom, 32)
+        .frame(maxWidth: .infinity)
+        .background(GeometryReader { g in Color.clear.onAppear { width = g.size.width }.onChange(of: g.size.width) { _, w in width = w } })
+    }
+
+    private var trainingSection: some View {
+        VStack(spacing: 8) {
+            SetHeading(text: "Training")
+            VStack(spacing: 0) {
+                ForEach(Array(FlightPlanProgress.tryIds.enumerated()), id: \.element) { i, id in
+                    if i > 0 { Rectangle().fill(SetStyle.ink.opacity(0.15)).frame(height: 1) }
+                    trainingRow(id)
+                }
+                if !store.player.freeOperations {
+                    Rectangle().fill(SetStyle.ink.opacity(0.15)).frame(height: 1)
+                    inline(SetRowText(title: "Skip", status: confirmSkip ? "Tap again to confirm" : "Marks every try done")) {
+                        SetButton(title: confirmSkip ? "Confirm" : "Skip", compact: true) {
+                            if confirmSkip { confirmSkip = false; onClose(); store.skipTraining() } else { confirmSkip = true }
+                        }
+                    }
+                }
+            }.setCard(padding: 8)
+        }
+    }
+
+    private var gameSection: some View {
+        VStack(spacing: 8) {
+            SetHeading(text: "Game")
+            row(SetRowText(title: "Free Ops", status: "Play without a contract")) {
+                let on = Binding(get: { store.player.freeOperations }, set: { store.setFreeOps($0) })
+                SetSegment(options: ["Off", "On"], selected: on.wrappedValue ? 1 : 0) { on.wrappedValue = $0 == 1 }
+                    .frame(width: 140)
+            }
+        }
+    }
+
+    #if os(iOS)
+    private var displaySection: some View {
+        VStack(spacing: 8) {
+            SetHeading(text: "Display")
+            orientationCard
+        }
+    }
+    #endif
+
+    private func inline<A: View>(_ text: SetRowText, @ViewBuilder action: () -> A) -> some View {
+        HStack(spacing: 12) {
+            text
+            Spacer(minLength: 8)
+            action()
+        }.padding(.horizontal, 12).padding(.vertical, 6).frame(minHeight: 56)
+    }
+
+    private func pairCard<A: View>(_ text: SetRowText, @ViewBuilder action: () -> A) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            text
+            action()
+        }.setCard(padding: 16)
     }
 
     private func row<A: View>(_ text: SetRowText, border: Color = SetStyle.ink, @ViewBuilder action: () -> A) -> some View {
@@ -311,8 +376,8 @@ struct SettingsSheet: View {
     private func trainingRow(_ id: String) -> some View {
         let plan = store.player.flightPlan
         let status = plan.completed[id] == true ? "Done" : plan.currentTry == id && !store.player.freeOperations ? "On air" : "Standby"
-        return row(SetRowText(title: Self.tryNames[id] ?? id, status: status)) {
-            SetButton(title: "Replay") { onClose(); store.replayTry(id) }
+        return inline(SetRowText(title: Self.tryNames[id] ?? id, status: status)) {
+            SetButton(title: "Replay", compact: true) { onClose(); store.replayTry(id) }
                 .accessibilityLabel("Replay \(Self.tryNames[id] ?? id)")
         }
     }
