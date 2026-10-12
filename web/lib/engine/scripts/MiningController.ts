@@ -136,6 +136,8 @@ const ORE_TIER: Record<number, { radius: number; maxHp: number; depthMin: number
   2: { radius: 13, maxHp: 2, depthMin: 32, depthMax: 60 },
   3: { radius: 17, maxHp: 3, depthMin: 62, depthMax: 96 },
 }
+/** Native placeChips offset in source pixels: crust 8 + gap 4 + deposit 14. */
+const PIXEL_BURIAL_SRC = 26
 
 export interface MiningControllerOptions {
   container: Container
@@ -683,6 +685,41 @@ export class MiningController extends ScriptBehaviour {
     return { mineral: this.opts.minerals[this.oreCounter % this.opts.minerals.length], seeded: false }
   }
 
+  /**
+   * Pixel deposits follow the native burial (26 source px under the surface)
+   * and step up and down so they are not one line under the crust.
+   * Higher tiers sit below the previous laser so a stock beam cannot mine them.
+   */
+  private pixelDepositDepth(tier: number, salt: number): number {
+    const px = this.opts.pixelScale ?? 1
+    const wobble = (salt % (tier <= 1 ? 5 : 4)) * 4 * px
+    // Native center, then deeper. The shallowest sprite top stays a full crust under the lip.
+    const tier1 = PIXEL_BURIAL_SRC * px + wobble
+    if (tier <= 1) return this.clampPixelDepth(tier1, 0, px)
+    const laser1 = this.pixelLaserReach(1)
+    if (tier === 2) return this.clampPixelDepth(laser1 + 14 + wobble, laser1 + 14, px)
+    const laser2 = this.pixelLaserReach(2)
+    return this.clampPixelDepth(laser2 + 19 + wobble, laser2 + 19, px)
+  }
+
+  /** How far a pixel beam travels: just past that tier's deepest varied deposit. */
+  private pixelLaserReach(tier: number): number {
+    const px = this.opts.pixelScale ?? 1
+    const laser1 = PIXEL_BURIAL_SRC * px + 16 * px + 14
+    if (tier <= 1) return laser1
+    const laser2 = laser1 + 14 + 12 * px + 17
+    if (tier === 2) return laser2
+    return laser2 + 19 + 12 * px + 21
+  }
+
+  /** Keep the sprite inside the soil without pulling a locked tier up into the beam above it. */
+  private clampPixelDepth(depth: number, floor: number, px: number): number {
+    const surface = this.opts.surfaceY ?? SURFACE_Y
+    const room = this.opts.worldHeight - surface - 7 * px
+    if (room <= floor) return Math.max(depth, floor)
+    return Math.min(Math.max(depth, floor), room)
+  }
+
   private spawnOre(x: number): void {
     const picked = this.pickMineral()
     const mineral = picked.mineral
@@ -693,8 +730,7 @@ export class MiningController extends ScriptBehaviour {
     let depth = picked.seeded
       ? 8 + Math.random() * 14
       : cfg.depthMin + Math.random() * (cfg.depthMax - cfg.depthMin)
-    // Tier-1 pixel deposits sit just under the crust, still inside the tier-1 beam.
-    if (this.opts.pixelScale && tier === 1) depth = 24
+    if (this.opts.pixelScale) depth = this.pixelDepositDepth(tier, this.oreCounter + mineralSalt(mineral))
     const y = (this.opts.surfaceY ?? SURFACE_Y) + depth
 
     const colorHex = this.opts.mineralColors[mineral] ?? ORE_FILL
@@ -898,7 +934,7 @@ export class MiningController extends ScriptBehaviour {
     })
 
     const tier = this.opts.maxLaserTier ?? 3
-    const laserDepth = LASER_DEPTH_BY_TIER[tier] ?? LASER_DEPTH_BY_TIER[3]
+    const laserDepth = this.opts.pixelScale ? this.pixelLaserReach(tier) : (LASER_DEPTH_BY_TIER[tier] ?? LASER_DEPTH_BY_TIER[3])
     const laserFloor = (this.opts.surfaceY ?? SURFACE_Y) + laserDepth
     this.lasers = this.lasers.filter(laser => {
       if (laser.go.active && laser.go.transform.position.y < laserFloor) return true

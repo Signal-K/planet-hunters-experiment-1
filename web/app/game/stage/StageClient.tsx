@@ -10,6 +10,8 @@ import FlightPlan from '@/components/game/FlightPlan'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { trainingTryStep } from '@/lib/data/tutorial'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import SettingsSheet from '@/components/game/SettingsSheet'
+import { OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 
 // Minimal shell: same wrapper classes as the live game so CSS matches, but none
 // of the loop machinery (Flight Plan, auth gate, tickers, sync, analytics).
@@ -60,6 +62,12 @@ function Stage() {
   // ?plan=1 mounts the live Flight Plan strip (same step lookup as the live shell) so an objective can be asserted.
   const [plan, setPlan] = useState(false)
   useEffect(() => { setPlan(new URLSearchParams(window.location.search).get('plan') === '1') }, [])
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  useEffect(() => {
+    const open = () => setSettingsOpen(true)
+    window.addEventListener(OPEN_SETTINGS_EVENT, open)
+    return () => window.removeEventListener(OPEN_SETTINGS_EVENT, open)
+  }, [])
   const activeTry = currentTrainingTry(game.player.flightPlan)
   const planStep = plan && activeTry ? trainingTryStep(activeTry, game.screen) : undefined
   const immersive = LOCATION_SCREENS.has(game.screen as Screen)
@@ -90,6 +98,7 @@ function Stage() {
           {planStep && <FlightPlan key={planStep.id} stepIndex={['mining', 'scan', 'part'].indexOf(planStep.try)} step={planStep} total={3} onSkip={() => {}} />}
         </div>
       </div>
+      {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
     </main>
   )
 }

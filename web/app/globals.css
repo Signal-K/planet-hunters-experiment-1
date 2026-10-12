@@ -4190,3 +4190,179 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   bottom: auto;
 }
 .mining-guide-actions { display: grid; gap: 8px; margin-top: 8px; }
+
+/* Settings sheet. Same light hull, ink and 14px instrument type as the shared HUD. */
+.ops-settings {
+  background: var(--ln-world-hull-lit);
+  --ln-bp-paper: var(--ln-world-hull-lit);
+  --ln-bp-ink: var(--ln-world-outline);
+  --ln-bp-ink-dim: color-mix(in srgb, var(--ln-world-outline) 70%, var(--ln-world-hull-lit));
+  --ln-bp-line: color-mix(in srgb, var(--ln-world-outline) 28%, transparent);
+  --ln-bp-line-strong: color-mix(in srgb, var(--ln-world-outline) 45%, transparent);
+  --ln-bp-blue: var(--ln-world-trim-blue);
+  --ln-bp-green: var(--ln-world-grass);
+  --ln-bp-green-soft: color-mix(in srgb, var(--ln-world-grass) 16%, var(--ln-world-hull-lit));
+}
+.ops-settings.ln-page-surface--tray {
+  background: color-mix(in srgb, var(--ln-world-hull) 62%, transparent);
+}
+.ops-settings__card {
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  border: 1px solid var(--ln-world-outline);
+  padding: 8px 16px 16px;
+}
+.ops-settings__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  margin-bottom: 8px;
+}
+.ops-settings__title {
+  margin: 0;
+  font: 800 18px/1 var(--ln-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ln-world-outline);
+}
+.ops-settings__close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 8px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  cursor: pointer;
+}
+.ops-settings__stack {
+  display: grid;
+  gap: 8px;
+}
+.ops-settings__stack > section {
+  display: grid;
+  gap: 8px;
+}
+.ops-settings__label {
+  margin: 0;
+  font: 800 14px/16px var(--ln-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ln-world-outline);
+}
+.ops-settings .patch {
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 10px;
+  background: var(--ln-world-hull-lit);
+}
+.ops-settings__replay,
+.ops-settings__row,
+.ops-settings__preset {
+  min-height: 44px;
+  min-width: 44px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 10px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ops-settings__replay {
+  padding: 0 12px;
+}
+.ops-settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 0 14px;
+  text-align: left;
+}
+.ops-settings__row--static {
+  cursor: default;
+}
+.ops-settings__row--danger {
+  border-width: 3px;
+}
+.ops-settings__hint {
+  display: block;
+  margin-top: 2px;
+  font: 400 14px/1.3 var(--ln-font-body);
+  letter-spacing: 0;
+  text-transform: none;
+  color: color-mix(in srgb, var(--ln-world-outline) 72%, var(--ln-world-hull-lit));
+}
+.ops-settings__flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ln-world-outline);
+}
+.ops-settings__flag--on {
+  background: var(--ln-world-outline);
+  color: var(--ln-world-hull-lit);
+}
+.ops-settings__note {
+  padding: 14px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 10px;
+}
+.ops-settings__note h3 {
+  margin: 0 0 6px;
+  font: 800 14px/1.2 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ln-world-outline);
+}
+.ops-settings__note ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.ops-settings__note li {
+  font: 400 14px/1.4 var(--ln-font-body);
+  color: color-mix(in srgb, var(--ln-world-outline) 78%, var(--ln-world-hull-lit));
+}
+.ops-settings__presets {
+  display: grid;
+  gap: 8px;
+}
+.ops-settings__preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ops-settings__preset {
+  padding: 0 12px;
+}
+@media (max-height: 520px) {
+  .ops-settings.ln-page-surface--tray {
+    padding: 0;
+    align-items: stretch;
+  }
+  .ops-settings.ln-page-surface--tray .ops-settings__card,
+  .ops-settings__card {
+    width: 100%;
+    max-height: 100% !important;
+    border-radius: 0 !important;
+    padding: 0 12px 4px;
+  }
+  .ops-settings__head { margin-bottom: 0; }
+  .ops-settings__stack,
+  .ops-settings__stack > section {
+    gap: 2px;
+  }
+}

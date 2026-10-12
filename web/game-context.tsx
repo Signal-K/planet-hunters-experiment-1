@@ -433,6 +433,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       replayTrainingTry: tutorial.replayTrainingTry,
       openTrainingTry: tutorial.openTrainingTry,
       skipFlightPlan: tutorial.skipFlightPlan,
+      setFreeOps: tutorial.setFreeOps,
       // Economy
       sellMinerals: economy.sellMinerals,
       sellRefinedGoods: economy.sellRefinedGoods,

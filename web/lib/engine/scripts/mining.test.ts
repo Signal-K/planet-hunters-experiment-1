@@ -32,6 +32,16 @@ vi.mock('pixi.js', () => ({
     this.y = 0
     this.visible = true
   }),
+  Sprite: vi.fn().mockImplementation(function (this: Record<string, unknown>) {
+    this.anchor = { set: vi.fn() }
+    this.scale = { set: vi.fn() }
+    this.destroy = vi.fn()
+    this.x = 0
+    this.y = 0
+    this.tint = 0xffffff
+    this.visible = true
+    this.texture = null
+  }),
 }))
 
 import { Container, Text } from 'pixi.js'
@@ -261,6 +271,31 @@ describe('MiningController ore sym labels', () => {
     const { controller } = makeController(vi.fn(), { mineralSyms: SYMS, chipFill: 0x334455, chipShade: 0x112233 })
     controller.start()
     expect(labels()[0].y).toBeGreaterThan(320)
+  })
+
+  it('buries pixel deposits under the crust at varied depths the tier-1 laser can still reach', () => {
+    const onCollect = vi.fn()
+    const { controller, host } = makeController(onCollect, {
+      pixelScale: 2,
+      depositFrames: [{}, {}] as MiningControllerOptions['depositFrames'],
+      surfaceY: 200,
+      worldHeight: 640,
+      pinScroll: true,
+    })
+    controller.start()
+    const ores = (controller as unknown as { ores: { go: { transform: { position: { y: number } } } }[] }).ores
+    const depths = ores.map(ore => ore.go.transform.position.y - 200)
+    expect(new Set(depths).size).toBeGreaterThan(1)
+    for (const depth of depths) {
+      expect(depth - 14).toBeGreaterThan(16)
+      expect(depth).toBeGreaterThanOrEqual(52)
+      expect(depth).toBeLessThanOrEqual(84)
+    }
+    const ore = host.children.find(child => child.id === 'ore-0')!
+    ore.transform.position.x = SHIP_X
+    controller.fireLaser()
+    controller.update(0.4)
+    expect(onCollect).toHaveBeenCalled()
   })
 
   it('keeps deposits a native stride apart', () => {
