@@ -130,7 +130,9 @@ function GameChrome({ children }: { children: ReactNode }) {
   // replacement cannot tear down and recreate the background between steps.
   const currentScreen = game.screen
   const activeTry = currentTrainingTry(game.player.flightPlan)
-  const flightStep = activeTry ? trainingTryStep(activeTry, currentScreen) : undefined
+  const flightStep = activeTry
+    ? trainingTryStep(activeTry, currentScreen, { returning: !!game.player.returningToEarth })
+    : undefined
   const coach = useMemo(() => {
     // A Menu Replay re-arms its try even after Free Ops, when the tutorial flag is off.
     const routeCoach = (!game.player.freeOperations && game.tutorial) || game.player.flightPlan?.replayTry ? flightStep ?? null : null

@@ -454,6 +454,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           {!subsurface && (
             <div className={layoutStyles.chips}>
               <span className="scene-chip" data-testid="hub-francs-chip">{formatCurrency(player.francs, { compact: true })}</span>
+              {onOpenMarket && (
+                <button type="button" className="scene-chip" data-testid="hub-exchange" onClick={onOpenMarket} style={{ pointerEvents: 'auto' }}>
+                  Exchange
+                </button>
+              )}
               <span className="scene-chip" data-testid="hub-cargo-chip" aria-label="Cargo">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" />

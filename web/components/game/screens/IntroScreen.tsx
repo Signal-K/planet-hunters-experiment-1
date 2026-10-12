@@ -78,7 +78,7 @@ export default function IntroScreen({
               ))}
             </fieldset>
           )}
-          <button className="intro-begin-btn" onClick={() => onBegin(returning ? undefined : biome)} data-testid="intro-begin-btn">
+          <button className="intro-begin-btn" onClick={() => onBegin(returning ? undefined : biome)} data-testid="intro-begin-btn" data-beacon="intro-begin">
             {returning ? 'RESUME OPERATIONS' : 'BEGIN OPERATIONS'}
           </button>
         </div>

@@ -2903,6 +2903,7 @@ html[data-flight-target~="building-launchpad"] [data-beacon="building-launchpad"
 html[data-flight-target~="launchpad-view-contracts"] [data-beacon="launchpad-view-contracts"]::after,
 html[data-flight-target~="hub-build-btn"] [data-beacon="hub-build-btn"]::after,
 html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"]::after,
+html[data-flight-target~="intro-begin"] [data-beacon="intro-begin"]::after,
 html[data-flight-target~="build-plot-0"] [data-beacon="build-plot-0"]::after,
 html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"]::after,
 html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"]::after,

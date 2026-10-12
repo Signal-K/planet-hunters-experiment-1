@@ -63,6 +63,12 @@ describe('FlightPlanSystem', () => {
     }
     expect(trainingTryStep('part', 'hub')?.objective).toBe('Open the Hangar from Base')
     expect(trainingTryStep('scan', 'hub')?.objective).toBe('Open the Galaxy map')
+    expect(trainingTryStep('mining', 'intro')?.objective).toBe('Begin operations')
+    expect(trainingTryStep('mining', 'build')?.objective).toBe('Tap a build pad, then confirm')
+    expect(trainingTryStep('mining', 'hub')?.objective).toBe('Tap the tower')
+    expect(trainingTryStep('mining', 'transit')?.objective).toBe('Fly the cargo home')
+    expect(trainingTryStep('mining', 'transit', { returning: false })?.objective).toBe('Boost toward the target')
+    expect(trainingTryStep('mining', 'transit', { returning: true })?.objective).toBe('Fly the cargo home')
   })
 
   it('SSL-478: walking the whole plan by real events reaches complete with no stuck step', () => {

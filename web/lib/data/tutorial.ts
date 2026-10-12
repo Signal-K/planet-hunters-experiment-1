@@ -25,6 +25,9 @@ export interface TrainingTryStep {
  * named real game event completes a try. */
 export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-launchpad', try: 'mining', screen: 'launchpad', objective: 'Open client contracts', radio: 'The first try is a complete mine-and-return run.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
+  { id: 'mine-intro', try: 'mining', screen: 'intro', objective: 'Begin operations', radio: 'Choose a landscape, then place the launchpad.', beacon: 'intro-begin', doneOn: 'mining-debriefed' },
+  { id: 'mine-build', try: 'mining', screen: 'build', objective: 'Tap a build pad, then confirm', radio: 'The launchpad is the first structure. Missions leave from here.', beacon: 'build-plot-0|build-confirm', doneOn: 'mining-debriefed' },
+  { id: 'mine-hub', try: 'mining', screen: 'hub', objective: 'Tap the tower', radio: 'Client contracts open from the tower.', beacon: 'building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
   { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },
   { id: 'mine-target', try: 'mining', screen: 'targets', objective: 'Choose the highlighted target', radio: 'The target carries the mineral named by the order.', doneOn: 'mining-debriefed' },
@@ -47,16 +50,30 @@ const LOOP_SCREENS = new Set([
   'fab', 'rover-survey', 'targets', 'mining', 'debrief', 'transit', 'landing', 'delivery',
 ])
 
-export function trainingTryStep(tryId: TrainingTryId, screen: string): TrainingTryStep | undefined {
+export function trainingTryStep(
+  tryId: TrainingTryId,
+  screen: string,
+  options?: { returning?: boolean },
+): TrainingTryStep | undefined {
   const exact = TRAINING_TRIES.find(step => step.try === tryId && step.screen === screen)
-  if (exact) return exact
-  if (LOOP_SCREENS.has(screen)) {
-    return TRAINING_TRIES.find(step => step.try === 'mining' && step.screen === screen)
+  const step = exact
+    ?? (LOOP_SCREENS.has(screen)
+      ? TRAINING_TRIES.find(item => item.try === 'mining' && item.screen === screen)
+      : undefined)
+    // Hub, Launchpad, Hangar and Galaxy keep the try's own "open it" line.
+    // The mining try has no wildcard, so an unlisted screen falls back to its first step.
+    ?? TRAINING_TRIES.find(item => item.try === tryId && item.screen === '*')
+    ?? TRAINING_TRIES.find(item => item.try === tryId)
+  // Outbound and return share the transit screen. "Fly the cargo home" on the
+  // way out tells a new player the run is already finished.
+  if (step?.screen === 'transit' && options?.returning === false) {
+    return {
+      ...step,
+      objective: 'Boost toward the target',
+      radio: 'The ship is outbound. The laser run starts after arrival.',
+    }
   }
-  // Hub, Launchpad, Hangar and Galaxy keep the try's own "open it" line.
-  // The mining try has no wildcard, so Base falls back to its first step.
-  return TRAINING_TRIES.find(step => step.try === tryId && step.screen === '*')
-    ?? TRAINING_TRIES.find(step => step.try === tryId)
+  return step
 }
 
 export const EXTRACTION_STEPS: TutorialStep[] = [
