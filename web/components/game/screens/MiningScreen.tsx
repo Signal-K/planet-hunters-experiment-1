@@ -61,15 +61,34 @@ function useFreeOpsFirstSuccessAck() {
 // Thumb snaps back to center on release
 function miningGuide(hasDelivery: boolean) {
   return [
-    { label: 'FIRE LASER', desc: 'Fires the vertical beam. Scroll ore under the beam, then fire (Space/F).' },
-    { label: 'CHARGES', desc: 'The fire button reads Depleted when the laser is empty. Empty, with the order unfinished, the run stops.' },
-    { label: 'ORDER', desc: 'The order card lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty.' },
-    { label: 'SCROLL', desc: 'The dock arrows change how fast the ground moves. They settle back to a steady crawl. Drag the field the same way.' },
-    { label: 'INVENTORY', desc: 'The order lines show collected against required. Fill every line to unlock return.' },
+    { kind: 'fire', label: 'Fire Laser', desc: 'Fires the vertical beam. Scroll ore under the beam, then fire (Space/F).' },
+    { kind: 'charges', label: 'Charges', desc: 'The fire button reads Depleted when the laser is empty. Empty, with the order unfinished, the run stops.' },
+    { kind: 'order', label: 'Order', desc: 'The order card lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty.' },
+    { kind: 'scroll', label: 'Scroll', desc: 'The dock arrows change how fast the ground moves. They settle back to a steady crawl. Drag the field the same way.' },
+    { kind: 'inventory', label: 'Inventory', desc: 'The order lines show collected against required. Fill every line to unlock return.' },
     hasDelivery
-      ? { label: 'DELIVER CARGO', desc: 'The next leg drops this cargo off. Payout unlocks after delivery.' }
-      : { label: 'RETURN HOME', desc: 'Return for recovery. Payout unlocks after landing.' },
+      ? { kind: 'deliver', label: 'Deliver cargo', desc: 'The next leg drops this cargo off. Payout unlocks after delivery.' }
+      : { kind: 'return', label: 'Return home', desc: 'Return for recovery. Payout unlocks after landing.' },
   ]
+}
+
+function GuideMark({ kind }: { kind: string }) {
+  const blocks: Record<string, Array<[number, number, number, number]>> = {
+    fire: [[6, 0, 2, 4], [8, 2, 2, 2], [10, 3, 2, 3], [8, 5, 2, 2], [6, 6, 2, 2], [4, 7, 2, 3], [6, 9, 2, 5], [4, 13, 2, 2]],
+    charges: [[7, 1, 2, 2], [4, 3, 8, 1], [4, 3, 1, 11], [11, 3, 1, 11], [4, 13, 8, 1], [6, 8, 4, 4]],
+    order: [[2, 3, 12, 2], [2, 7, 12, 2], [2, 11, 8, 2]],
+    scroll: [[1, 7, 2, 2], [3, 5, 2, 2], [3, 9, 2, 2], [5, 3, 2, 2], [5, 11, 2, 2], [9, 3, 2, 2], [9, 11, 2, 2], [11, 5, 2, 2], [11, 9, 2, 2], [13, 7, 2, 2]],
+    inventory: [[3, 4, 10, 1], [3, 4, 1, 9], [12, 4, 1, 9], [3, 12, 10, 1], [5, 7, 6, 1], [7, 7, 2, 4]],
+    deliver: [[2, 4, 8, 1], [2, 4, 1, 8], [9, 4, 1, 8], [2, 11, 8, 1], [12, 6, 2, 2], [11, 4, 2, 2], [11, 8, 2, 2]],
+    return: [[7, 1, 2, 2], [5, 3, 6, 2], [3, 5, 10, 2], [4, 7, 8, 7], [7, 10, 2, 4]],
+  }
+  return (
+    <svg className="mining-guide-mark" viewBox="0 0 16 16" width="32" height="32" aria-hidden="true">
+      {(blocks[kind] ?? blocks.fire).map(([x, y, w, h], index) => (
+        <rect key={index} x={x} y={y} width={w} height={h} />
+      ))}
+    </svg>
+  )
 }
 
 export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, orionidsBadgeTier = null }: {
@@ -648,39 +667,40 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       </div>
 
       {activeOverlay === 'guide' && (
-        <aside className="mining-guide-dock" aria-label="Mining controls">
-          <div className="mining-guide-panel">
-            <div className="mining-guide-title">Mining controls</div>
-            <div className="mining-guide-scroll">
+        <div className="mining-guide-dock" role="dialog" aria-modal="true" aria-label="Mining controls">
+          <div className="mining-guide-top">
+            <button type="button" className="mining-guide-x" aria-label="Close" onClick={() => setGuideOpen(false)}>
+              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+                <path d="M4 4 L14 14 M14 4 L4 14" fill="none" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </button>
+          </div>
+          <div className="mining-guide-scroll">
+            <div className="mining-guide-column">
               {miningGuide(!!deliveryTargetName).map(item => (
-                <div key={item.label} className="mining-guide-row">
-                  <strong>{item.label}</strong>
-                  <span>{item.desc}</span>
-                </div>
+                <article key={item.label} className="mining-guide-card">
+                  <GuideMark kind={item.kind} />
+                  <div>
+                    <strong>{item.label}</strong>
+                    <span>{item.desc}</span>
+                  </div>
+                </article>
               ))}
             </div>
-            <div className="mining-guide-actions">
-              <div className="mining-guide-action-row">
-                <button type="button" className="mining-guide-close mining-guide-recharge" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setGuideOpen(false); handleRecharge() }}>
-                  <span>Recharge Laser</span>
-                  <span>{rechargePrice > 0 ? `${rechargePrice} fr` : 'Free'}</span>
-                </button>
-                {onAbandon && (
-                  <button type="button" className="mining-guide-close" data-testid="mining-scrub-btn" onClick={() => { setGuideOpen(false); setConfirmingAbandon(true) }}>
-                    Scrub Mission
-                  </button>
-                )}
-              </div>
-              <button
-                type="button"
-                className="mining-guide-close"
-                onClick={() => setGuideOpen(false)}
-              >
-                Close
+          </div>
+          <div className="mining-guide-actions">
+            <div className="mining-guide-column">
+              <button type="button" className="mining-guide-close" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setGuideOpen(false); handleRecharge() }}>
+                {rechargePrice > 0 ? `Recharge Laser · ${rechargePrice} fr` : 'Recharge Laser'}
               </button>
+              {onAbandon && (
+                <button type="button" className="mining-guide-close mining-guide-scrub" data-testid="mining-scrub-btn" onClick={() => { setGuideOpen(false); setConfirmingAbandon(true) }}>
+                  Scrub Mission
+                </button>
+              )}
             </div>
           </div>
-        </aside>
+        </div>
       )}
       </div>
 

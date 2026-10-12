@@ -1843,98 +1843,115 @@ button { cursor: pointer; }
   min-width: 0;
   min-height: 0;
 }
-/* The field is edge-to-edge. The guide is a settings-style card under the
-   order pill. On a tall phone it stops above the fire dock. On a short
-   landscape phone it covers the dock so the rows have room, and Close stays
-   in its own row (SSL-493, 402px). Tokens match docs/settings-style.md. */
+/* Full-screen mining guide. It replaces the field, the HUD, and the dock
+   while open. Tokens match docs/settings-style.md. No graph paper. */
 .mining-guide-dock {
+  --set-bg: #f3f4f6;
   --set-card: #ffffff;
   --set-line: #e5e7eb;
   --set-ink: #111827;
   --set-muted: #4b5563;
+  --set-danger: #c8293e;
   --set-radius: 8px;
-  --set-pad: 20px;
-  --set-gap: 16px;
   --set-max: 640px;
   position: absolute;
-  z-index: 12;
-  top: 128px;
-  bottom: 112px;
-  left: 50%;
-  width: min(var(--set-max), calc(100% - 32px));
-  transform: translateX(-50%);
-  margin: 0;
+  z-index: 30;
+  inset: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--set-bg);
+  background-image: none;
   color: var(--set-ink);
   font-family: system-ui, sans-serif;
 }
-.mining-screen:has(.laser-dev-skip) .mining-guide-dock { top: 172px; }
-@media (orientation: landscape) and (max-height: 520px) {
-  .mining-guide-dock {
-    z-index: 22;
-    top: 112px;
-    bottom: 8px;
-    --set-pad: 16px;
-  }
+.mining-screen:has(.mining-guide-dock) .laser-chrome,
+.mining-screen:has(.mining-guide-dock) .laser-hud,
+.mining-screen:has(.mining-guide-dock) .laser-cue,
+.mining-screen:has(.mining-guide-dock) .laser-dev-skip {
+  display: none;
 }
-.mining-guide-panel {
+.mining-guide-top {
+  flex: none;
   display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  padding: var(--set-pad);
+  justify-content: flex-end;
+  padding: 8px;
+}
+.mining-guide-x {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
   border: 1px solid var(--set-line);
   border-radius: var(--set-radius);
   background: var(--set-card);
-  box-shadow: none;
-}
-.mining-guide-title {
-  flex: none;
-  margin: 0 0 var(--set-gap);
   color: var(--set-ink);
-  font: 600 20px/1.2 system-ui, sans-serif;
-  letter-spacing: 0;
-  text-transform: none;
+  font-size: 16px;
+  cursor: pointer;
 }
 .mining-guide-scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
-  display: flex;
-  flex-direction: column;
+  overscroll-behavior: contain;
 }
-.mining-guide-row {
+.mining-guide-column {
+  box-sizing: border-box;
+  width: min(var(--set-max), 100%);
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+.mining-guide-scroll .mining-guide-column {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 24px;
+  padding-top: 8px;
+  padding-bottom: 24px;
+}
+.mining-guide-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
   margin: 0;
-  padding: var(--set-gap) 0;
-  border-bottom: 1px solid var(--set-line);
+  padding: 20px;
+  border: 1px solid var(--set-line);
+  border-radius: var(--set-radius);
+  background: var(--set-card);
 }
-.mining-guide-row:first-child { padding-top: 0; }
-.mining-guide-row:last-child { border-bottom: 0; padding-bottom: 0; }
-.mining-guide-row strong {
+.mining-guide-mark {
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin-top: 2px;
+  fill: var(--set-ink);
+  shape-rendering: crispEdges;
+}
+.mining-guide-card strong {
+  display: block;
   color: var(--set-ink);
-  font: 600 16px/1.3 system-ui, sans-serif;
-  letter-spacing: 0.04em;
+  font: 700 18px/1.3 system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
 }
-.mining-guide-row span {
+.mining-guide-card span {
+  display: block;
+  margin-top: 4px;
   color: var(--set-muted);
   font: 400 16px/1.45 system-ui, sans-serif;
 }
 .mining-guide-actions {
   flex: none;
+  border-top: 1px solid var(--set-line);
+  background: var(--set-bg);
+  padding: 16px 0;
+}
+.mining-guide-actions .mining-guide-column {
   display: flex;
   flex-direction: column;
-  gap: var(--set-gap);
-  margin-top: var(--set-gap);
-}
-.mining-guide-action-row {
-  display: flex;
-  gap: var(--set-gap);
+  gap: 24px;
 }
 .mining-guide-dock button {
   position: static;
@@ -2210,13 +2227,6 @@ button { cursor: pointer; }
 .theme-blueprint.mining-screen .mining-failure-overlay {
   background: var(--ln-mining-overlay);
 }
-.theme-blueprint.mining-screen .mining-guide-panel {
-  padding: var(--set-pad);
-  border: 1px solid var(--set-line);
-  border-radius: var(--set-radius);
-  background: var(--set-card);
-  box-shadow: none;
-}
 .theme-blueprint.mining-screen .mining-success-secondary,
 .theme-blueprint.mining-screen .mining-success-primary {
   font: 800 14px var(--ln-font-display);
@@ -2244,18 +2254,9 @@ button { cursor: pointer; }
   color: var(--set-muted);
   cursor: not-allowed;
 }
-.theme-blueprint.mining-screen .mining-guide-action-row .mining-guide-close {
-  flex: 1 1 0;
-  width: auto;
-  min-width: 0;
-}
-.theme-blueprint.mining-screen .mining-guide-recharge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  line-height: 1.15;
+.theme-blueprint.mining-screen .mining-guide-scrub {
+  border-color: var(--set-danger);
+  color: var(--set-danger);
 }
 .theme-blueprint.mining-screen .mining-success-panel {
   background: var(--ln-mining-control-fill-strong) !important;
@@ -3557,6 +3558,7 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 .sip-root{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(180px,1fr) auto auto;grid-template-areas:"head" "ship" "side" "foot"}
 .game-stage-main:has([data-testid="hangar-customizer-overlay"]) .flight-plan,
 .game-stage-main:has([data-testid="launch-review-customizer-overlay"]) .flight-plan,
+.game-stage-main:has(.mining-guide-dock) .flight-plan,
 .portrait-canvas:has([data-testid="hangar-customizer-overlay"]) .sync-status,
 .portrait-canvas:has([data-testid="launch-review-customizer-overlay"]) .sync-status { display: none; }
 .sip-head {

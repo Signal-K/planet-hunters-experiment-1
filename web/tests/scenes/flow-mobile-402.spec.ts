@@ -31,35 +31,47 @@ test.describe('402px mobile layout', () => {
     await page.goto('/game/stage?preset=m1-mining&click=mining-guide-btn')
     await expect(page.locator('.mining-guide-dock')).toBeVisible()
     const report = await page.evaluate(() => {
-      const dock = document.querySelector('.mining-guide-dock')!.getBoundingClientRect()
-      const close = [...document.querySelectorAll('.mining-guide-close')].find(el => (el.textContent || '').trim().toLowerCase() === 'close')!
+      const dockEl = document.querySelector('.mining-guide-dock')!
+      const dock = dockEl.getBoundingClientRect()
+      const close = document.querySelector('.mining-guide-x')!
       const cr = close.getBoundingClientRect()
       const scroll = document.querySelector('.mining-guide-scroll')!.getBoundingClientRect()
-      const covered = [...document.querySelectorAll('.mining-guide-row')].filter(row => {
+      const hits = (a: DOMRect, b: DOMRect) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 2 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2
+      const covered = [...document.querySelectorAll('.mining-guide-card')].filter(row => {
         const r = row.getBoundingClientRect()
         const top = Math.max(r.top, scroll.top)
         const bottom = Math.min(r.bottom, scroll.bottom)
         if (bottom - top < 8) return false
-        const w = Math.min(r.right, cr.right) - Math.max(r.left, cr.left)
-        const h = Math.min(bottom, cr.bottom) - Math.max(top, cr.top)
-        return w > 2 && h > 2
+        const visible = new DOMRect(r.left, top, r.width, bottom - top)
+        return hits(visible, cr)
       }).map(row => (row.textContent || '').slice(0, 24))
-      const order = document.querySelector('.laser-order')?.getBoundingClientRect()
-      const orderHit = order ? Math.min(order.bottom, dock.bottom) - Math.max(order.top, dock.top) > 2 && Math.min(order.right, dock.right) - Math.max(order.left, dock.left) > 2 : false
+      const hud = document.querySelector('.laser-hud')
+      const order = document.querySelector('.laser-order')
+      const recharge = document.querySelector('[data-testid="mining-overflow-recharge-btn"]')!.getBoundingClientRect()
+      const scrub = document.querySelector('[data-testid="mining-scrub-btn"]')!.getBoundingClientRect()
       return {
         covered,
-        orderHit,
-        closeInView: cr.top >= 0 && cr.bottom <= innerHeight && cr.height >= 44,
+        hudHidden: !hud || getComputedStyle(hud).display === 'none',
+        orderHidden: !order || order.getClientRects().length === 0,
+        closeInView: cr.top >= 0 && cr.bottom <= innerHeight && cr.height >= 44 && cr.width >= 44,
         closeFont: parseFloat(getComputedStyle(close).fontSize),
         dockH: dock.height,
-        chargesVisible: [...document.querySelectorAll('.mining-guide-row')].some(row => /CHARGES/.test(row.textContent || '') && row.getBoundingClientRect().top < scroll.bottom - 8),
+        dockW: dock.width,
+        flat: getComputedStyle(dockEl).backgroundImage === 'none',
+        stackedActions: scrub.top >= recharge.bottom + 8 && Math.abs(scrub.width - recharge.width) < 2,
+        chargesVisible: [...document.querySelectorAll('.mining-guide-card')].some(row => /charges/i.test(row.textContent || '') && row.getBoundingClientRect().top < scroll.bottom - 8),
       }
     })
     expect(report.covered).toEqual([])
-    expect(report.orderHit).toBe(false)
+    expect(report.hudHidden).toBe(true)
+    expect(report.orderHidden).toBe(true)
     expect(report.closeInView).toBe(true)
     expect(report.closeFont).toBeGreaterThanOrEqual(14)
     expect(report.dockH).toBeGreaterThan(300)
+    expect(report.dockW).toBeGreaterThan(390)
+    expect(report.flat).toBe(true)
+    expect(report.stackedActions).toBe(true)
+    expect(report.chargesVisible).toBe(true)
   })
 
   test('skip mining stays clear of the guide control and the order pill', async ({ page }) => {
