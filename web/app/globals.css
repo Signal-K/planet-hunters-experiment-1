@@ -4100,14 +4100,19 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .laser-cue {
   position: absolute;
-  z-index: 6;
-  top: 56px;
-  left: 16px;
-  right: 16px;
+  z-index: 18;
+  top: auto;
+  bottom: 72px;
+  left: 50%;
+  right: auto;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  transform: translateX(-50%);
   margin: 0;
   text-align: center;
   color: var(--ln-world-hull-lit);
   font: 700 14px/18px var(--ln-font-body);
+  text-shadow: 0 1px 0 var(--ln-world-outline);
   pointer-events: none;
 }
 .mining-screen[data-palette="mars"] .laser-cue { color: var(--ln-world-outline); }

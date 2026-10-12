@@ -196,34 +196,21 @@ export async function buildLaserField(opts: {
   const ground = new Container()
   const cols = Math.ceil(worldW / soilW) + 2
   const rows = Math.ceil(Math.max(40, worldH - surfaceY) / soilW) + 1
-  for (let c = 0; c < cols; c++) {
-    const cx = c * soilW
-    for (let r = 0; r < rows; r++) {
-      const deep = r > 0 || c % 3 === 1
-      const flip = (c + r) % 2 === 1
-      const soil = new Sprite(soilTex)
-      soil.anchor.set(0, 0)
-      soil.scale.set(flip ? -px : px, px)
-      soil.tint = shadeTint(deep ? palette.groundDeep : palette.ground, deep ? 0.62 : 0.26)
-      soil.x = flip ? cx + soilW : cx
-      soil.y = crustH + r * soilW
-      ground.addChild(soil)
-      const flecks = new Sprite(fleckTex)
-      flecks.anchor.set(0, 0)
-      flecks.scale.set(flip ? -px : px, px)
-      flecks.x = soil.x
-      flecks.y = soil.y
-      ground.addChild(flecks)
-    }
-    const lip = new Sprite(crustTex)
-    lip.anchor.set(0, 0)
-    lip.scale.set(px)
-    lip.tint = shadeTint(palette.groundSpeck, 0.32)
-    lip.width = 64 * px
-    lip.height = crustH
-    lip.x = cx
-    lip.y = 0
-    ground.addChild(lip)
+  const span = cols * 64
+  const lip = new TilingSprite({ texture: crustTex, width: span, height: 8 })
+  lip.scale.set(px)
+  lip.tint = shadeTint(palette.groundSpeck, 0.32)
+  ground.addChild(lip)
+  for (let r = 0; r < rows; r++) {
+    const soil = new TilingSprite({ texture: soilTex, width: span, height: 64 })
+    soil.scale.set(px)
+    soil.y = crustH + r * soilW
+    soil.tint = shadeTint(r === 0 ? palette.ground : palette.groundDeep, r === 0 ? 0.3 : 0.48)
+    ground.addChild(soil)
+    const flecks = new TilingSprite({ texture: fleckTex, width: span, height: 64 })
+    flecks.scale.set(px)
+    flecks.y = soil.y
+    ground.addChild(flecks)
   }
   ground.y = surfaceY
   backdrop.addChild(ground)
