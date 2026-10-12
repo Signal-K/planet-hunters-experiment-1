@@ -10,6 +10,7 @@ import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
 import { formatCurrency } from '@/lib/format'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 import { captureGameEvent } from '@/lib/posthog'
+import { kitRocketBuilt, markRocketRolloutPending } from '@/lib/rocket-rollout'
 import styles from './HangarScreen.module.css'
 
 interface HangarScreenProps {
@@ -212,6 +213,10 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
             onConfirm={onConfirmShipCustomizerBuild ? (installed, prevInstalled) => {
               const ok = onConfirmShipCustomizerBuild(installed, prevInstalled)
               captureGameEvent('hangar_customizer_build_confirmed', { success: ok })
+              if (ok && kitRocketBuilt(installed)) {
+                markRocketRolloutPending()
+                onBack()
+              }
               return ok
             } : onConfirmShipCustomizerBuild}
             onClose={() => setCustomizerOpen(false)}

@@ -523,6 +523,36 @@
   image-rendering: pixelated;
 }
 
+/* Hangar door to pad. Wheels sit on --hub-ground until --lift raises the nozzles onto the slab. */
+.rollout {
+  --hangar-x: 12%;
+  --pad-x: 52%;
+  --pad-scale: 1;
+  --hangar-scale: 1;
+  --scale: calc(var(--hangar-scale) + (var(--pad-scale) - var(--hangar-scale)) * var(--grow, 0));
+  position: absolute;
+  z-index: 15;
+  left: calc((var(--hangar-x) + 30 * var(--px, 3px) * var(--hangar-scale)) * (1 - var(--t, 0)) + (var(--pad-x) + 19 * var(--px, 3px) * var(--pad-scale)) * var(--t, 0));
+  bottom: calc(var(--hub-ground) + (18 * var(--pad-scale) - 4) * var(--px, 3px) * var(--lift, 0));
+  width: calc(var(--fw, 72) * var(--px, 3px) * var(--scale));
+  transform: translateX(-50%);
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.rollout img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+@media (orientation: portrait) and (max-width: 800px) {
+  .rollout {
+    --hangar-x: 19%;
+    --pad-x: 66%;
+  }
+}
 .beaconDot {
   position: absolute;
   left: 31%;

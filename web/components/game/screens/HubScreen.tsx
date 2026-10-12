@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import { awaitingStorageSilo } from '@/lib/systems/AgencyOnboardingSystem'
@@ -13,6 +13,8 @@ import { BaseDock } from '@/components/game/hub/BaseDock'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { useBaseSeason, useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES, structureCenterPercent, structureWidthPct } from '@/components/game/hub/EarthBaseModules'
+import { RocketRollout } from '@/components/game/hub/RocketRollout'
+import { consumeRocketRolloutPending, kitRocketBuilt } from '@/lib/rocket-rollout'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
@@ -78,6 +80,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   const [editMode, setEditMode] = useState(false)
   const [dockStop, setDockStop] = useState(0)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
+  const [rollingOut, setRollingOut] = useState(() => consumeRocketRolloutPending())
+  const finishRollout = useCallback(() => setRollingOut(false), [])
+  const rocketOnPad = kitRocketBuilt(player.shipCustomizerParts) && !rollingOut
   // The terrain baseline is part of the world composition. It must not move
   // when the dock grows or the mobile browser chrome changes height: doing so
   // pulled the launchpad up into the mountain range to make room for UI. The
@@ -336,7 +341,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
 
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
-          <EarthBaseModules buildings={sceneBuildings} parts={player.shipCustomizerParts} />
+          <EarthBaseModules buildings={sceneBuildings} parts={player.shipCustomizerParts} padRocket={rocketOnPad} />
+          {rollingOut && <RocketRollout onDone={finishRollout} />}
 
           {/* Surface buildings — hit areas + labels.
               zIndex 10 is load-bearing: every scene layer below is an

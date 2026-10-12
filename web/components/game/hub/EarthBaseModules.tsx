@@ -78,7 +78,7 @@ function ConstructionRig({ animDuration, animDelay }: { animDuration: string; an
   )
 }
 
-function StructureSprite({ kind, level = 1, active, buildStartedAt, parts }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number; parts?: InstalledCustomizerPartsByKind | null }) {
+function StructureSprite({ kind, level = 1, active, buildStartedAt, parts, rocket }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean }) {
   const buildMs = structureBuildMs(kind)
   // `buildStartedAt` does not change when the build finishes, so a value
   // captured once at mount left `isBuilding` true forever and the cyan
@@ -110,7 +110,7 @@ function StructureSprite({ kind, level = 1, active, buildStartedAt, parts }: { k
         data-active={active ? 'true' : undefined}
         style={isBuilding ? { display: 'block', animationDuration: animDuration, animationDelay: animDelay } : { display: 'block', height: '100%' }}
       >
-        <PixelStructure kind={kind} level={level} parts={parts} />
+        <PixelStructure kind={kind} level={level} parts={parts} rocket={kind === 'launchpad' ? rocket : true} />
       </span>
       {rig}
     </>
@@ -144,7 +144,7 @@ export function structureHalfScene(kind: string, level = 1, sceneWidth = 402): n
 
 const HIDDEN_BASE_KINDS = new Set(['command', 'refinery', 'garage', 'deep-space-telescope', 'transit-telescope', 'astronaut-academy', 'market', 'surface-silo'])
 
-export function EarthBaseModules({ buildings, parts }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null }) {
+export function EarthBaseModules({ buildings, parts, padRocket = true }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null; padRocket?: boolean }) {
   return (
     <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {
@@ -169,7 +169,7 @@ export function EarthBaseModules({ buildings, parts }: { buildings: HubBuildingD
               opacity: building.dimmed ? 0.6 : 1,
             }}
           >
-            <StructureSprite kind={building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} parts={parts} />
+            <StructureSprite kind={building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} parts={parts} rocket={building.kind === 'launchpad' ? padRocket : true} />
           </span>
         )
       })}

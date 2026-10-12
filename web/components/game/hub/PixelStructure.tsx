@@ -50,11 +50,11 @@ function SpriteLoop({ frames, intervalMs, className, testId }: { frames: string[
 }
 
 /** Native pad stack: concrete slab, lattice gantry, cream rocket. Sizes follow --px. */
-function LaunchpadKit({ tier, parts, phase = 'idle' }: { tier: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch' }) {
+function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch'; rocket?: boolean }) {
   const launching = phase === 'launch'
   const arm = useSpriteFrame(ARM_FRAMES.length, 180, true, launching)
   return (
-    <span data-pixel-structure="launchpad" data-tier={tier} data-pad-phase={phase} className={styles.padStack}>
+    <span data-pixel-structure="launchpad" data-tier={tier} data-pad-phase={phase} data-pad-rocket={rocket ? 'built' : 'empty'} className={styles.padStack}>
       <span className={styles.padGantryBox}>
         <img src={`${KIT}/pad-gantry-tower.png`} alt="" draggable={false} className={styles.padGantry} />
         <img src={ARM_FRAMES[launching ? arm : 0]} alt="" draggable={false} className={styles.padArms} data-testid="pad-gantry-arms" />
@@ -69,10 +69,12 @@ function LaunchpadKit({ tier, parts, phase = 'idle' }: { tier: number; parts?: I
           />
         ))}
       </span>
-      <span className={styles.padFlight}>
-        <KitRocket parts={parts} className={styles.padRocket} testId="pad-rocket" />
-        {launching && <SpriteLoop frames={EXHAUST_FRAMES} intervalMs={90} className={styles.padExhaust} testId="pad-exhaust" />}
-      </span>
+      {rocket && (
+        <span className={styles.padFlight}>
+          <KitRocket parts={parts} className={styles.padRocket} testId="pad-rocket" />
+          {launching && <SpriteLoop frames={EXHAUST_FRAMES} intervalMs={90} className={styles.padExhaust} testId="pad-exhaust" />}
+        </span>
+      )}
       <img src={`${KIT}/pad-slab-concrete.png`} alt="" draggable={false} className={styles.padSlab} />
       {launching
         ? <SpriteLoop frames={SMOKE_FRAMES} intervalMs={140} className={styles.padSmoke} testId="pad-smoke" />
@@ -82,9 +84,9 @@ function LaunchpadKit({ tier, parts, phase = 'idle' }: { tier: number; parts?: I
 }
 
 /** Side-on pixel structure. The base shows the launchpad and the glazed hangar only. */
-export function PixelStructure({ kind, level = 1, parts, phase = 'idle' }: { kind: string; level?: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch' }) {
+export function PixelStructure({ kind, level = 1, parts, phase = 'idle', rocket = true }: { kind: string; level?: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch'; rocket?: boolean }) {
   const tier = structureTier(level)
-  if (kind === 'launchpad') return <LaunchpadKit tier={tier} parts={parts} phase={phase} />
+  if (kind === 'launchpad') return <LaunchpadKit tier={tier} parts={parts} phase={phase} rocket={rocket} />
   if (kind === 'hangar') {
     return <img src={`${KIT}/hangar-white.png`} alt="" draggable={false} className={styles.hangarSprite} data-pixel-structure="hangar" data-tier={tier} />
   }
