@@ -99,19 +99,15 @@ export type Screen =
 // mission run through one) get the full, edge-to-edge viewport on desktop —
 // they are locations, not menus, and boxing them in the device-card chrome
 // reads as a modal sitting over the game rather than the game itself.
-// Screens NOT in this set ('intro', 'missions', 'targets', 'fab',
-// 'rocket-buy', 'debrief') are menus/UI concepts and keep
-// the boxed card treatment. Build, Market, and Research sit on the base.
-// Debrief in particular is a mission-results
+// Screens NOT in this set ('intro', 'build', 'missions', 'targets', 'fab',
+// 'market', 'skills', 'rocket-buy', 'debrief') are menus/UI concepts and keep
+// the boxed card treatment. Debrief in particular is a mission-results
 // summary/paperwork screen, not a place — it was wrongly added here in
 // KES-261 and got full-screen treatment it never should have (KES-265).
 // See `.portrait-canvas--full-page` in globals.css.
 export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'hub',
   'hub-subsurface',
-  'build',
-  'market',
-  'skills',
   'launchpad',
   'transit',
   'landing',

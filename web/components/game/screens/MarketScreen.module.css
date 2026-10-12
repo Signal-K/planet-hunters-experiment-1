@@ -7,16 +7,6 @@
   background-image: none;
 }
 
-.asCard {
-  position: relative;
-  inset: auto;
-  max-height: min(420px, calc(100% - var(--hub-ground) - 96px));
-  overflow: auto;
-  border: 2px solid var(--set-ink);
-  border-radius: var(--set-radius);
-  background: var(--set-card);
-}
-
 .header {
   position: sticky;
   top: 0;

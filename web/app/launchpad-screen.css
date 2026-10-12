@@ -113,22 +113,10 @@ button.launchpad-scene-object { cursor: pointer; }
   overflow: visible;
 }
 @media (orientation: portrait) and (max-width: 800px) {
-  /* Three structures share the phone ground: hangar, Exchange, pad. Scale keeps each sprite on its own slab. */
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--hangar {
-    left: 12% !important; width: auto !important; height: auto !important;
-    transform: translateX(-50%) scale(0.66) !important; transform-origin: center bottom !important;
-  }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--market {
-    left: 38% !important; width: auto !important; height: auto !important; aspect-ratio: auto !important; overflow: visible !important;
-    transform: translateX(-50%) scale(0.82) !important; transform-origin: center bottom !important;
-  }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad {
-    left: 76% !important; width: auto !important; height: auto !important;
-    transform: translateX(-50%) scale(0.78) !important; transform-origin: center bottom !important;
-  }
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-launchpad"] { left: 76% !important; width: calc(96 * var(--px, 2px)) !important; min-width: 44px !important; max-width: none !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-hangar"] { left: 12% !important; width: 80px !important; min-width: 44px !important; max-width: none !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-market"] { left: 38% !important; width: 80px !important; min-width: 44px !important; max-width: none !important; }
+  .earth-base-structure--launchpad { left: 66% !important; width: auto !important; height: auto !important; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--hangar { left: 19% !important; width: auto !important; height: auto !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-launchpad"] { left: 66% !important; width: calc(120 * var(--px, 2px)) !important; min-width: 44px !important; max-width: none !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-hangar"] { left: 19% !important; width: calc(72 * var(--px, 2px)) !important; min-width: 44px !important; max-width: none !important; }
 }
 .portrait-canvas:has([data-screen="hub"]) .earth-base-structure img {
   image-rendering: pixelated;
