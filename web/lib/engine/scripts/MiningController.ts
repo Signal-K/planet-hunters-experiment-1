@@ -149,8 +149,7 @@ export interface MiningControllerOptions {
   /** Drawn first, in order, each one deposit-gap apart. `?ores=mixed` uses
    * this so iron, carbon and ice each get their own stretch of soil. */
   leadMinerals?: string[]
-  /** Preview offset in screen-widths. Deposits are two screens apart, so
-   * `?scroll=0` shows the first, `?scroll=1` the empty stretch, `?scroll=2` the next. */
+  /** Preview offset in screen-widths. Shifts the field by that many viewports. */
   scrollScreens?: number
   /** When set (the `?scroll=` preview), the field stays put until the player scrolls. */
   pinScroll?: boolean
@@ -173,6 +172,11 @@ export interface MiningControllerOptions {
   /** Surface rock-chip colours. Omit to keep the buried marker as the only ore graphic. */
   chipFill?: number
   chipShade?: number
+  /** Shared pixel deposit frames. Drawn at pixelScale, unstretched and untinted. */
+  depositFrames?: Texture[]
+  pixelScale?: number
+  /** The scene beam sprite is the shot. Hide the collision bolt graphic. */
+  pixelBeam?: boolean
   /** Symbol ink. Light ground uses a dark ink. */
   labelInk?: number
   onCollect: (mineral: string) => void
@@ -249,6 +253,7 @@ interface OreEntity {
   phase?: 'fall' | 'land' | 'intact'
   animTime: number
   variant: number
+  frames?: Texture[] | null
 }
 
 interface LaserEntity {
@@ -335,14 +340,14 @@ export class MiningController extends ScriptBehaviour {
     }
   }
 
-  /** Where the first deposit sits when `?scroll=0`, clear of the ship. */
+  /** Where the first deposit sits when `?scroll=0`, clear of the beam. */
   private depositAnchor(): number {
-    return Math.max(SHIP_X + 150, Math.round(this.opts.worldWidth * 0.42))
+    return SHIP_X + 160
   }
 
-  /** Centre-to-centre gap: two screen-widths, so `?scroll=2` lands on the next deposit. */
+  /** Native stride. A phone-width pass shows one or two deposits. */
   private depositGap(): number {
-    return Math.round(this.opts.worldWidth * 2)
+    return 280
   }
 
   update(realDt: number): void {
@@ -355,6 +360,11 @@ export class MiningController extends ScriptBehaviour {
 
     for (const ore of this.ores) {
       ore.go.transform.position.x -= dx
+      if (ore.frames && ore.frames.length > 1 && ore.sprite) {
+        ore.animTime += dt
+        const frame = ore.frames[Math.floor(ore.animTime / 0.6) % ore.frames.length]
+        if (ore.sprite.texture !== frame) ore.sprite.texture = frame
+      }
       if (ore.sprite) ore.sprite.x = ore.go.transform.position.x
       if (ore.chip) ore.chip.x = ore.go.transform.position.x
       if (ore.label) ore.label.x = ore.go.transform.position.x
@@ -404,14 +414,14 @@ export class MiningController extends ScriptBehaviour {
     const go = new GameObject(`laser-${this.laserCounter++}`, 'Laser', {
       position: { x: SHIP_X, y: (this.opts.shipY ?? SHIP_Y) + 16 },
     })
-    go.addComponent(
-      new ShapeRenderer(
-        { shape: 'rect', width: LASER_SIZE.width, height: LASER_SIZE.height, color: this.opts.beamColor ?? LASER_COLOR },
-        this.opts.container
-      )
+    const bolt = new ShapeRenderer(
+      { shape: 'rect', width: LASER_SIZE.width, height: LASER_SIZE.height, color: this.opts.beamColor ?? LASER_COLOR },
+      this.opts.container
     )
+    go.addComponent(bolt)
     this.gameObject.addChild(go)
     go.start()
+    if (this.opts.pixelBeam) bolt.setShown(false)
     this.lasers.push({ go, prevY: go.transform.position.y })
   }
 
@@ -680,9 +690,11 @@ export class MiningController extends ScriptBehaviour {
     const cfg = ORE_TIER[tier] ?? ORE_TIER[1]
     const radius = cfg.radius
     const maxHp = cfg.maxHp
-    const depth = picked.seeded
+    let depth = picked.seeded
       ? 8 + Math.random() * 14
       : cfg.depthMin + Math.random() * (cfg.depthMax - cfg.depthMin)
+    // Tier-1 pixel deposits sit just under the crust, still inside the tier-1 beam.
+    if (this.opts.pixelScale && tier === 1) depth = 24
     const y = (this.opts.surfaceY ?? SURFACE_Y) + depth
 
     const colorHex = this.opts.mineralColors[mineral] ?? ORE_FILL
@@ -690,11 +702,20 @@ export class MiningController extends ScriptBehaviour {
 
     const go = new GameObject(`ore-${this.oreCounter++}`, 'Ore', { position: { x, y } })
 
-    const texture = this.opts.mineralTextures?.[mineral]
+    const frames = this.opts.depositFrames
+    const texture = frames?.[0] ?? this.opts.mineralTextures?.[mineral]
     let renderer: ShapeRenderer | null = null
     let sprite: Sprite | null = null
 
-    if (texture) {
+    if (texture && frames && this.opts.pixelScale) {
+      sprite = new Sprite(texture)
+      sprite.anchor.set(0.5)
+      sprite.scale.set(this.opts.pixelScale)
+      sprite.tint = 0xffffff
+      sprite.x = x
+      sprite.y = y
+      this.opts.container.addChild(sprite)
+    } else if (texture) {
       sprite = new Sprite(texture)
       const size = radius * 2
       sprite.width = size
@@ -730,10 +751,10 @@ export class MiningController extends ScriptBehaviour {
     const surface = this.opts.surfaceY ?? SURFACE_Y
     const parts = blobParts(mineral, this.oreCounter)
     const chip = this.opts.chipFill != null ? this.createChip(x, surface, mineral, parts) : null
-    const label = this.createLabel(mineral, x, chip ? surface + LABEL_DEPTH : y, radius)
+    const label = this.createLabel(mineral, x, chip ? surface + LABEL_DEPTH : y + (frames && this.opts.pixelScale ? 12 : 0), radius)
 
     this.gameObject.addChild(go)
-    this.ores.push({ go, renderer, sprite, label, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0 })
+    this.ores.push({ go, renderer, sprite, label, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: frames ?? null })
   }
 
   /** Faceted nodules, seams and crystals inside the soil, with a sym disc on the mass. */
@@ -850,7 +871,7 @@ export class MiningController extends ScriptBehaviour {
   private applyTint(ore: OreEntity, tint: number): void {
     if (ore.chip) ore.chip.tint = tint
     if (ore.sprite) {
-      ore.sprite.tint = tint
+      if (!this.opts.pixelScale) ore.sprite.tint = tint
     } else {
       ore.renderer?.setTint(tint)
     }

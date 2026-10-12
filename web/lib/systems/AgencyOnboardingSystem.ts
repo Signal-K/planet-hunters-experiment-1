@@ -12,6 +12,7 @@
 // placed (freeOperationsUnlocked). Players who reached Free Ops under the old
 // three-mission onboarding keep it without a silo, so nobody loses an unlock.
 
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { isTrainingComplete, type FlightPlanProgress, type TrainingTryId } from './FlightPlanSystem'
 
 /** The structure whose placement completes the Storage stage. Kept here (not
@@ -66,10 +67,12 @@ export function freeOperationsUnlocked(player: AgencyTrainingPlayer): boolean {
   return finiteMissionsDone(player) >= LEGACY_FREE_OPS_MISSIONS_DONE
 }
 
-/** True while the player has flown both guided missions but has not yet
- *  placed the storage silo that opens Free Ops. */
+/** True after both guided missions, until the Surface Silo is placed.
+ *  The hub Build button opens the build screen. Placing the silo does not
+ *  unlock Free Ops. */
 export function awaitingStorageSilo(player: AgencyTrainingPlayer): boolean {
-  return false
+  if ((player.placed ?? []).includes('surface-silo')) return false
+  return finiteMissionsDone(player) >= FREE_OPS_START_MISSIONS_DONE
 }
 
 /** The training stage the player is currently on (the first incomplete one). */

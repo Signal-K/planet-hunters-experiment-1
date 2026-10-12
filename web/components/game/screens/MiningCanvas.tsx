@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
-import { Application } from 'pixi.js'
+import { Application, Container } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
@@ -13,7 +13,7 @@ import { activeDebrisPreset, debrisRatePerMinute, type DebrisEventPreset } from 
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { loadOrionidsArt } from '@/lib/orionids/loadArt'
 import { miningCanvasIsDark } from '@/lib/orionids/theme'
-import { buildLaserField, GROUND_TILE_W } from '@/lib/mining/laserLayers'
+import { buildLaserField } from '@/lib/mining/laserLayers'
 import type { LaserPalette } from '@/lib/mining/laserPalette'
 
 // Minimum gap between shots: long enough that a mashed tap reads as
@@ -145,10 +145,12 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
         // SURFACE_Y=320 → 208px gap) and let any extra height become ground
         // (tileH below), which already reads as filled/intentional via the
         // dirt texture rather than empty.
-        const shipY = Math.round(Math.min(worldH * 0.2, 120))
-        // Keep the surface above the bottom dock so ore chips stay clear of the fire panel.
-        const groundH = Math.round(Math.min(Math.max(worldH * 0.32, 150), worldH * 0.46))
-        const surfaceY = worldH - groundH
+        // Same proportions as the native laser scene: surface halfway down
+        // (never less than 200px of ground), ship hovering above it.
+        const surfaceFromBottom = Math.max(200, worldH * 0.5)
+        const surfaceY = Math.round(worldH - surfaceFromBottom)
+        const shipFromBottom = Math.min(worldH * 0.72, surfaceFromBottom + Math.min(210, worldH * 0.28))
+        const shipY = Math.round(worldH - shipFromBottom)
 
         const [sceneData] = await Promise.all([
           Scene.load('/game/scenes/mining.scene.json'),
@@ -164,8 +166,18 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
         ])
         if (destroyed) return
 
-        const field = buildLaserField({ worldW, worldH, surfaceY, shipX: SHIP_X, shipY, palette })
+        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: SHIP_X, shipY, palette })
+        if (destroyed) {
+          field.backdrop.destroy({ children: true })
+          field.beam.destroy({ children: true })
+          field.dig.destroy({ children: true })
+          field.spark.destroy()
+          field.ship.destroy({ children: true })
+          return
+        }
+        const oreLayer = new Container()
         app.stage.addChild(field.backdrop)
+        app.stage.addChild(oreLayer)
 
         const { scene, entityData } = Scene.fromData(sceneData)
         wireShapeRenderers(app.stage, entityData, scene)
@@ -182,7 +194,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
         if (destroyed) return
         const controllerObj = scene.find('mining-controller')
         const controller = new MiningController(new RuntimeContext(), {
-          container: app.stage,
+          container: oreLayer,
           worldWidth: worldW,
           worldHeight: worldH,
           surfaceY,
@@ -198,8 +210,9 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
           mineralShapes: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.shape ?? 'circle'])),
           mineralSyms: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.sym])),
           beamColor: palette.beamCss,
-          chipFill: palette.ground,
-          chipShade: palette.groundDeep,
+          depositFrames: field.depositFrames,
+          pixelScale: field.pixelScale,
+          pixelBeam: true,
           labelInk: palette.labelInk,
           onCollect: mineral => onCollectRef.current(mineral),
           onMiss: () => {
@@ -208,9 +221,9 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
           },
           onHit: () => onHitRef.current?.(),
           onScroll: scrollX => {
-            field.ground.x = -(scrollX % GROUND_TILE_W)
-            field.near.x = -(scrollX * 0.45 % field.nearW)
-            field.far.x = -(scrollX * 0.16 % field.farW)
+            field.ground.x = -(scrollX % field.soilW)
+            field.near.x = -((scrollX * 0.45) % field.ridgeW)
+            field.far.x = -((scrollX * 0.16) % field.ridgeW)
           },
           onOreNearby: (near) => { oreNearRef?.current?.(near) },
           neededMineralsRef,
@@ -236,7 +249,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
           const firing = lastFireAt > 0 && performance.now() - lastFireAt < 180
           field.step(sceneTime, prefersReducedMotion(), firing)
           const kick = prefersReducedMotion() || lastFireAt < 0 ? 0 : recoilOffset((performance.now() - lastFireAt) / 1000)
-          field.ship.y = shipY + kick
+          field.ship.y = shipY + kick + field.hover
           if (shakeState.timer > 0) {
             shakeState.timer -= ticker.deltaMS / 1000
             const t = Math.max(0, shakeState.timer / 0.28)

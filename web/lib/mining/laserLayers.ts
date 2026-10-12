@@ -1,10 +1,10 @@
-import { Container, Graphics } from 'pixi.js'
+import { Assets, Container, Sprite, Texture, TilingSprite } from 'pixi.js'
 import type { LaserPalette } from './laserPalette'
 
-export const GROUND_TILE_W = 320
-const RIDGE_TILE_W = 320
-/** Pre-Oct-5 surface profile. Period is 20 steps of 16px, so a 320px tile meets itself. */
-const RIDGE_H = [0, -10, -14, -7, -18, -11, -5, -16, -12, -8, -15, -9, -19, -6, -13, -10, -17, -4, -11, -8]
+/** Native laser kit is authored at 1px and drawn at 2. */
+export const LASER_PX = 2
+
+const KIT = '/game/assets/laser'
 
 function lerp(a: number, b: number, t: number): number {
   const mix = (shift: number) => {
@@ -15,307 +15,315 @@ function lerp(a: number, b: number, t: number): number {
   return (mix(16) << 16) | (mix(8) << 8) | mix(0)
 }
 
-function rng(seed: number): () => number {
-  let s = seed >>> 0
-  return () => {
-    s = (s + 1831567221) >>> 0
-    let t = Math.imul(s ^ (s >>> 15), 1 | s)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
+/** Multiply-tint keeps the grey kit's shading. Full replacement would flatten it. */
+function shadeTint(color: number, blend: number): number {
+  return lerp(0xffffff, color, blend)
 }
 
-/** Low, smooth skyline. The ends meet so tiled copies do not step. Peaks point up (negative y). */
-function smoothHorizon(g: Graphics, width: number, color: number, amp: number): void {
-  const yAt = (x: number) => Math.round(-amp * (0.55 + 0.45 * Math.sin((x / width) * Math.PI * 2)))
-  const pts: number[] = []
-  for (let x = 0; x <= width; x += 24) pts.push(x, yAt(x))
-  pts.push(width, 0, 0, 0)
-  g.poly(pts).fill(color)
+async function tex(name: string): Promise<Texture> {
+  const texture = await Assets.load<Texture>(`${KIT}/${name}.png`)
+  texture.source.scaleMode = 'nearest'
+  texture.source.addressMode = 'repeat'
+  return texture
 }
 
-/** Jagged distant ridge from the pre-Oct-5 surface profile. Nothing crosses below y = 0. */
-function jaggedRidge(g: Graphics, width: number, color: number, scale: number): void {
-  const pts: number[] = [0, 0]
-  for (let x = 0; x <= width; x += 16) {
-    pts.push(x, Math.round(RIDGE_H[Math.floor(x / 16) % RIDGE_H.length] * scale))
-  }
-  pts.push(width, 0)
-  g.poly(pts).fill(color)
+function tile(texture: Texture, copies: number, px: number, flip = false): TilingSprite {
+  const strip = new TilingSprite({
+    texture,
+    width: copies * texture.width,
+    height: texture.height,
+  })
+  strip.scale.set(flip ? -px : px, px)
+  if (flip) strip.x = copies * texture.width * px
+  return strip
 }
 
-/** Cutaway soil. y = 0 is the surface; every mark sits strictly below it. */
-function paintGroundBands(g: Graphics, width: number, height: number, palette: LaserPalette, tile: number): void {
-  const rand = rng((tile + 1) * 997 + palette.ground)
-  const edge = lerp(palette.ground, 0xffffff, 0.55)
-  const crust = lerp(palette.ground, 0xffffff, 0.28)
-  const crustShade = lerp(palette.ground, palette.groundDeep, 0.12)
-  const mid = palette.ground
-  const midLite = lerp(palette.ground, palette.groundSpeck, 0.18)
-  const lower = lerp(palette.ground, palette.groundDeep, 0.42)
-  const deep = palette.groundDeep
-  const crustH = Math.max(22, Math.round(height * 0.18))
-  const midH = Math.max(32, Math.round(height * 0.3))
-  const lowerH = Math.max(26, Math.round(height * 0.22))
-  g.rect(0, 0, width, height).fill(deep)
-  g.rect(0, crustH + midH, width, lowerH).fill(lower)
-  g.rect(0, crustH, width, midH).fill(mid)
-  g.rect(0, crustH, width, Math.round(midH * 0.28)).fill({ color: midLite, alpha: 0.55 })
-  g.rect(0, 5, width, crustH).fill(crust)
-  g.rect(0, 5 + Math.round(crustH * 0.55), width, Math.max(6, Math.round(crustH * 0.28))).fill({ color: crustShade, alpha: 0.65 })
-  g.rect(0, 0, width, 4).fill(edge)
-
-  const pebble = lerp(palette.ground, palette.groundSpeck, 0.42)
-  const fossil = lerp(palette.groundDeep, palette.groundSpeck, 0.35)
-  for (let n = 0; n < 7; n++) {
-    const x = 12 + rand() * (width - 24)
-    const y = 14 + rand() * (height - 28)
-    const rx = 3 + rand() * 5
-    const ry = 2 + rand() * 3
-    g.ellipse(x, y, rx, ry).fill({ color: pebble, alpha: 0.28 })
-  }
-  for (let n = 0; n < 2; n++) {
-    const x = 20 + rand() * (width - 40)
-    const y = 28 + rand() * (height * 0.55)
-    g.ellipse(x, y, 8, 3.5).stroke({ color: fossil, width: 1.25, alpha: 0.34 })
-    g.circle(x - 2, y, 1.2).fill({ color: fossil, alpha: 0.4 })
-  }
-}
-
-function paintSky(w: number, h: number, palette: LaserPalette): Graphics {
-  const g = new Graphics()
-  const steps = 28
-  for (let i = 0; i < steps; i++) {
-    const t = i / (steps - 1)
-    g.rect(0, (h * i) / steps, w, h / steps + 1).fill(lerp(palette.skyTop, palette.skyHorizon, t * t))
-  }
-  return g
-}
-
-interface Mote { g: Graphics; x: number; y: number; vx: number; bob: number }
+interface Drifter { node: Sprite; x: number; y: number; v: number }
 
 export interface LaserField {
   backdrop: Container
   far: Container
   near: Container
   ground: Container
-  beam: Graphics
+  beam: Container
   dig: Container
-  spark: Graphics
+  spark: Sprite
   ship: Container
-  plume: Graphics
-  farW: number
-  nearW: number
+  plume: Sprite
+  soilW: number
+  ridgeW: number
+  pixelScale: number
+  depositFrames: Texture[]
+  hover: number
   step: (time: number, reduced: boolean, firing: boolean) => void
 }
 
-export function buildLaserField(opts: {
+export async function buildLaserField(opts: {
   worldW: number
   worldH: number
   surfaceY: number
   shipX: number
   shipY: number
   palette: LaserPalette
-}): LaserField {
+}): Promise<LaserField> {
   const { worldW, worldH, surfaceY, shipX, shipY, palette } = opts
-  const rand = rng(palette.id.length * 97 + palette.skyTop)
+  const px = LASER_PX
+  const soilW = 64 * px
+  const ridgeW = 128 * px
+  const crustH = 8 * px
+
+  const [
+    dither0, dither1, dither2, starTex, disc48, disc24, moteTex,
+    ridgeTex, crustTex, soilTex, fleckTex, shipTex, flame0, flame1, beamTex, sparkTex,
+    deposit0, deposit1,
+  ] = await Promise.all([
+    tex('sky-dither-0'), tex('sky-dither-1'), tex('sky-dither-2'),
+    tex('star'), tex('disc-48'), tex('disc-24'), tex('mote'),
+    tex(palette.terrain === 'ice' || palette.terrain === 'dunes' ? `ridge-${palette.terrain}` : 'ridge-rubble'),
+    tex('crust'), tex('soil'), tex('soil-flecks'),
+    tex('ship'), tex('flame-0'), tex('flame-1'), tex('beam'), tex('spark-0'),
+    tex('deposit-0'), tex('deposit-1'),
+  ])
+  const dither = [dither0, dither1, dither2]
+  const cloudTex = palette.clouds ? await Assets.load<Texture>('/game/assets/base/layers/cloud.png') : null
+  if (cloudTex) {
+    cloudTex.source.scaleMode = 'nearest'
+  }
+
   const backdrop = new Container()
+  const bandH = 4 * px
+  const bands = Math.max(1, Math.ceil(surfaceY / bandH))
+  for (let r = 0; r < bands; r++) {
+    const t = bands <= 1 ? 0 : r / (bands - 1)
+    const sky = lerp(palette.skyTop, palette.skyHorizon, t * t)
+    const strip = new TilingSprite({
+      texture: dither[Math.min(2, Math.floor(t * 3))],
+      width: Math.ceil(worldW / (16 * px)) * 16,
+      height: 4,
+    })
+    strip.scale.set(px)
+    strip.y = r * bandH
+    strip.tint = lerp(sky, 0xffffff, 0.28)
+    strip.alpha = 0.82
+    backdrop.addChild(strip)
+  }
 
-  backdrop.addChild(paintSky(worldW, worldH, palette))
-
-  const stars: { g: Graphics; base: number; phase: number }[] = []
+  const stars: { node: Sprite; base: number; phase: number }[] = []
   if (palette.starAlpha > 0) {
-    const layer = new Container()
-    for (let i = 0; i < 70; i++) {
-      const g = new Graphics()
-      const r = rand() > 0.86 ? 1.8 : 1
-      const base = (0.35 + rand() * 0.65) * palette.starAlpha
-      g.circle(0, 0, r).fill({ color: 0xffffff, alpha: base })
-      g.x = rand() * worldW
-      g.y = rand() * (surfaceY - 12)
-      layer.addChild(g)
-      stars.push({ g, base, phase: rand() * Math.PI * 2 })
+    for (let i = 0; i < 64; i++) {
+      const star = new Sprite(starTex)
+      star.anchor.set(0.5)
+      star.scale.set(i % 9 === 0 ? px : px / 2)
+      star.tint = 0xffffff
+      const fromBottom = 0.42 + ((i * 53) % 50) / 100
+      star.x = (i * 97) % Math.max(1, worldW)
+      star.y = Math.min(surfaceY - 10, worldH * (1 - fromBottom))
+      if (star.y < 4) star.y = 8 + (i * 13) % Math.max(8, surfaceY - 16)
+      const base = palette.starAlpha * (0.45 + (i % 5) * 0.12)
+      star.alpha = base
+      backdrop.addChild(star)
+      stars.push({ node: star, base, phase: i })
     }
-    backdrop.addChild(layer)
   }
 
   if (palette.planet) {
-    const p = palette.planet
-    const radius = p.radius * Math.min(worldW, worldH) * 0.5
-    const body = new Graphics()
-    body.circle(0, 0, radius + 10).fill({ color: p.bands[0], alpha: 0.28 })
-    body.circle(0, 0, radius).fill(p.bands[0])
-    p.bands.forEach((band, i) => {
-      const y = -radius + ((i + 0.5) / p.bands.length) * radius * 2
-      const half = Math.sqrt(Math.max(0, radius * radius - y * y))
-      const h = (radius * 2) / p.bands.length * 0.72
-      body.ellipse(0, y, half, h).fill(band)
-    })
-    body.x = p.cx * worldW
-    body.y = p.cy * surfaceY
+    const radius = worldW * palette.planet.radius
+    const scale = Math.max(1, Math.round((radius * 2) / 48))
+    const body = new Sprite(disc48)
+    body.anchor.set(0.5)
+    body.scale.set(scale)
+    body.tint = palette.planet.bands[0] ?? 0xffffff
+    body.x = worldW * palette.planet.cx
+    body.y = worldH * palette.planet.cy
     backdrop.addChild(body)
   }
 
   if (palette.lightAlpha > 0) {
-    const sun = new Graphics()
-    sun.circle(0, 0, 36).fill({ color: palette.light, alpha: 0.35 * palette.lightAlpha })
-    sun.circle(0, 0, 22).fill({ color: palette.light, alpha: 0.95 * palette.lightAlpha })
+    const sun = new Sprite(disc24)
+    sun.anchor.set(0.5)
+    sun.scale.set(px)
+    sun.tint = palette.light
+    sun.alpha = palette.lightAlpha
     sun.x = worldW * 0.62
-    sun.y = surfaceY * 0.42
+    sun.y = Math.max(24, surfaceY * 0.28)
     backdrop.addChild(sun)
   }
 
-  const clouds: Mote[] = []
-  if (palette.clouds) {
-    for (let i = 0; i < 5; i++) {
-      const g = new Graphics()
-      const w = 50 + rand() * 70
-      g.ellipse(0, 0, w, 10 + rand() * 8).fill({ color: 0xfff6ee, alpha: 0.45 })
-      g.ellipse(-w * 0.3, 4, w * 0.55, 8).fill({ color: 0xfff6ee, alpha: 0.35 })
-      g.x = rand() * worldW
-      g.y = surfaceY * (0.25 + rand() * 0.35)
-      backdrop.addChild(g)
-      clouds.push({ g, x: g.x, y: g.y, vx: 6 + rand() * 10, bob: rand() * 4 })
+  const clouds: Drifter[] = []
+  if (cloudTex) {
+    for (let i = 0; i < 4; i++) {
+      const cloud = new Sprite(cloudTex)
+      cloud.anchor.set(0.5)
+      cloud.scale.set(px + (i % 2))
+      cloud.alpha = 0.7
+      cloud.x = (worldW * i) / 4
+      cloud.y = surfaceY * (0.22 + i * 0.08)
+      backdrop.addChild(cloud)
+      clouds.push({ node: cloud, x: cloud.x, y: cloud.y, v: 8 + i * 3 })
     }
   }
 
-  for (let i = 0; i < 4; i++) {
-    const g = new Graphics()
-    g.circle(0, 0, 1.4).fill({ color: palette.dust, alpha: 0.35 })
-    g.x = rand() * worldW
-    g.y = surfaceY * (0.15 + rand() * 0.7)
-    backdrop.addChild(g)
-    clouds.push({ g, x: g.x, y: g.y, vx: 4 + rand() * 8, bob: rand() * 6 })
+  const dust: Drifter[] = []
+  for (let i = 0; i < 18; i++) {
+    const mote = new Sprite(moteTex)
+    mote.anchor.set(0.5)
+    mote.scale.set(px)
+    mote.tint = palette.dust
+    mote.alpha = 0.6
+    const x = (i * 113) % Math.max(1, worldW)
+    const y = 12 + ((i * 29) % Math.max(1, Math.round(surfaceY * 0.7)))
+    mote.x = x
+    mote.y = y
+    backdrop.addChild(mote)
+    dust.push({ node: mote, x, y, v: 10 + (i % 5) * 6 })
   }
 
-  const horizon = lerp(palette.distant, palette.skyHorizon, 0.35)
-  const farW = RIDGE_TILE_W
+  const ridgeCopies = Math.ceil(worldW / ridgeW) + 2
   const far = new Container()
-  const farCopies = Math.ceil(worldW / farW) + 2
-  for (let i = 0; i < farCopies; i++) {
-    const g = new Graphics()
-    smoothHorizon(g, farW, horizon, 16)
-    jaggedRidge(g, farW, lerp(palette.distant, palette.skyHorizon, 0.2), 1.35)
-    g.x = i * farW
-    far.addChild(g)
-  }
-  far.y = surfaceY
+  const farStrip = tile(ridgeTex, ridgeCopies, px)
+  farStrip.tint = shadeTint(palette.distant, 0.42)
+  far.addChild(farStrip)
+  far.y = surfaceY + 8 - 48 * px
   backdrop.addChild(far)
 
-  const nearW = RIDGE_TILE_W
   const near = new Container()
-  const nearCopies = Math.ceil(worldW / nearW) + 2
-  for (let i = 0; i < nearCopies; i++) {
-    const g = new Graphics()
-    jaggedRidge(g, nearW, palette.nearRidge, 0.85)
-    g.x = i * nearW
-    near.addChild(g)
-  }
-  near.y = surfaceY
+  const nearStrip = tile(ridgeTex, ridgeCopies, px, true)
+  nearStrip.tint = shadeTint(palette.nearRidge, 0.5)
+  near.addChild(nearStrip)
+  near.y = surfaceY + 2 + 8 * px - 48 * px
   backdrop.addChild(near)
 
-  const haze = new Graphics()
-  haze.rect(0, surfaceY - 18, worldW, 18).fill({ color: palette.skyHorizon, alpha: 0.28 })
-  backdrop.addChild(haze)
-
-  const groundH = Math.max(40, worldH - surfaceY)
   const ground = new Container()
-  const tiles = Math.ceil(worldW / GROUND_TILE_W) + 2
-  for (let i = 0; i < tiles; i++) {
-    const g = new Graphics()
-    paintGroundBands(g, GROUND_TILE_W, groundH, palette, i)
-    g.x = i * GROUND_TILE_W
-    ground.addChild(g)
+  const cols = Math.ceil(worldW / soilW) + 2
+  const rows = Math.ceil(Math.max(40, worldH - surfaceY) / soilW) + 1
+  for (let c = 0; c < cols; c++) {
+    const cx = c * soilW
+    for (let r = 0; r < rows; r++) {
+      const deep = r > 0 || c % 3 === 1
+      const flip = (c + r) % 2 === 1
+      const soil = new Sprite(soilTex)
+      soil.anchor.set(0, 0)
+      soil.scale.set(flip ? -px : px, px)
+      soil.tint = shadeTint(deep ? palette.groundDeep : palette.ground, deep ? 0.62 : 0.26)
+      soil.x = flip ? cx + soilW : cx
+      soil.y = crustH + r * soilW
+      ground.addChild(soil)
+      const flecks = new Sprite(fleckTex)
+      flecks.anchor.set(0, 0)
+      flecks.scale.set(flip ? -px : px, px)
+      flecks.x = soil.x
+      flecks.y = soil.y
+      ground.addChild(flecks)
+    }
+    const lip = new Sprite(crustTex)
+    lip.anchor.set(0, 0)
+    lip.scale.set(px)
+    lip.tint = shadeTint(palette.groundSpeck, 0.32)
+    lip.width = 64 * px
+    lip.height = crustH
+    lip.x = cx
+    lip.y = 0
+    ground.addChild(lip)
   }
   ground.y = surfaceY
   backdrop.addChild(ground)
 
-  const beamH = Math.max(24, surfaceY - shipY - 8)
-  const beam = new Graphics()
-  beam.rect(-11, 0, 22, beamH).fill({ color: palette.beam, alpha: 0.28 })
-  beam.rect(-4, 0, 8, beamH).fill({ color: palette.beam, alpha: 0.9 })
-  beam.rect(-1.5, 0, 3, beamH).fill({ color: palette.beamCore, alpha: 0.98 })
+  const beam = new Container()
+  const beamSpan = Math.max(24, surfaceY - (shipY + 8 * px))
+  const segH = 8 * px
+  for (let k = 0; k < Math.ceil(beamSpan / segH); k++) {
+    const seg = new Sprite(beamTex)
+    seg.anchor.set(0.5, 0)
+    seg.scale.set(px)
+    seg.y = k * segH
+    seg.tint = palette.beam
+    beam.addChild(seg)
+  }
   beam.x = shipX
-  beam.y = shipY + 10
+  beam.y = shipY + 8 * px
 
-  const digH = 96
   const dig = new Container()
-  const digGlow = new Graphics()
-  digGlow.rect(-18, 0, 36, digH).fill({ color: palette.beam, alpha: 0.16 })
-  digGlow.rect(-7, 0, 14, digH).fill({ color: palette.beam, alpha: 0.38 })
-  digGlow.rect(-2, 0, 4, digH).fill({ color: palette.beamCore, alpha: 0.95 })
-  dig.addChild(digGlow)
-  const motes: { g: Graphics; base: number; speed: number }[] = []
-  for (let i = 0; i < 7; i++) {
-    const g = new Graphics()
-    g.circle(0, 0, i % 3 === 0 ? 2.2 : 1.3).fill({ color: palette.beamCore, alpha: 0.9 })
-    g.x = (i - 3) * 3
-    g.y = 8 + i * 12
-    g.alpha = 0
-    dig.addChild(g)
-    motes.push({ g, base: g.y, speed: 28 + i * 9 })
+  for (let k = 0; k < 4; k++) {
+    const seg = new Sprite(beamTex)
+    seg.anchor.set(0.5, 0)
+    seg.scale.set(px)
+    seg.y = k * segH
+    seg.tint = palette.beam
+    dig.addChild(seg)
+  }
+  const digMotes: { node: Sprite; base: number }[] = []
+  for (let i = 0; i < 6; i++) {
+    const mote = new Sprite(moteTex)
+    mote.anchor.set(0.5)
+    mote.scale.set(px * 2)
+    mote.tint = palette.beamCore
+    mote.x = (i - 2.5) * 4
+    mote.y = 6 + i * 8
+    dig.addChild(mote)
+    digMotes.push({ node: mote, base: mote.y })
   }
   dig.x = shipX
   dig.y = surfaceY
   dig.alpha = 0
 
-  const spark = new Graphics()
-  spark.circle(0, 0, 10).fill({ color: palette.beam, alpha: 0.45 })
-  spark.circle(0, 0, 4).fill({ color: palette.beamCore, alpha: 0.95 })
+  const spark = new Sprite(sparkTex)
+  spark.anchor.set(0.5)
+  spark.scale.set(px)
   spark.x = shipX
   spark.y = surfaceY
 
-  const ship = buildShip(palette)
+  const ship = new Container()
+  const plume = new Sprite(flame0)
+  plume.anchor.set(1, 0.5)
+  plume.scale.set(px)
+  plume.x = -19 * px
+  ship.addChild(plume)
+  const hull = new Sprite(shipTex)
+  hull.anchor.set(0.5)
+  hull.scale.set(px)
+  ship.addChild(hull)
   ship.x = shipX
   ship.y = shipY
-  const plume = ship.children[0] as Graphics
 
-  return {
-    backdrop, far, near, ground, beam, dig, spark, ship, plume, farW, nearW,
+  const flameFrames = [flame0, flame1]
+  const field: LaserField = {
+    backdrop, far, near, ground, beam, dig, spark, ship, plume,
+    soilW, ridgeW, pixelScale: px, depositFrames: [deposit0, deposit1], hover: 0,
     step(time, reduced, firing) {
       const tw = reduced ? 0 : 1
       for (const star of stars) {
         const flick = 0.55 + 0.45 * Math.abs(Math.sin(time * 2.4 + star.phase))
-        star.g.alpha = star.base * (1 - tw + tw * flick)
+        star.node.alpha = star.base * (1 - tw + tw * flick)
       }
-      for (const cloud of clouds) {
-        if (!reduced) cloud.x += cloud.vx * 0.016
-        if (cloud.x > worldW + 80) cloud.x = -80
-        cloud.g.x = cloud.x
+      if (!reduced) {
+        for (const cloud of clouds) {
+          cloud.x += cloud.v * 0.016
+          if (cloud.x > worldW + 80) cloud.x = -80
+          cloud.node.x = cloud.x
+        }
+        for (const mote of dust) {
+          mote.x -= mote.v * 0.016
+          if (mote.x < -8) mote.x = worldW + 8
+          mote.node.x = mote.x
+          mote.node.y = mote.y + Math.sin(time + mote.v) * 3
+        }
       }
       const pulse = reduced ? 1 : 0.82 + Math.sin(time * 9) * 0.18
       beam.alpha = firing ? 1 : 0.72 + pulse * 0.28
-      beam.scale.x = firing ? 1.45 : 0.9 + pulse * 0.15
+      beam.scale.x = firing ? 1.45 : 1
       dig.alpha = firing ? 1 : 0
       if (firing && !reduced) {
-        for (const mote of motes) {
-          mote.g.alpha = 0.45 + 0.55 * Math.abs(Math.sin(time * 6 + mote.base))
-          mote.g.y = (mote.base + time * mote.speed) % digH
+        for (const mote of digMotes) {
+          mote.node.alpha = 0.45 + 0.55 * Math.abs(Math.sin(time * 6 + mote.base))
+          mote.node.y = (mote.base + time * 40) % 48
         }
       }
-      spark.scale.set(firing ? 1.6 : 0.75 + pulse * 0.35)
+      spark.scale.set(px * (firing ? 1.5 : 0.85 + pulse * 0.2))
       spark.alpha = firing ? 1 : 0.7 + pulse * 0.3
-      plume.scale.set(pulse, 0.85 + pulse * 0.2)
-      plume.alpha = 0.75 + pulse * 0.25
+      plume.alpha = 0.7 + pulse * 0.3
+      if (!reduced) plume.texture = flameFrames[Math.floor(time * 10) % 2]
+      field.hover = reduced ? 0 : Math.sin(time * 2.2) * 2
     },
   }
-}
-
-function buildShip(palette: LaserPalette): Container {
-  const root = new Container()
-  const plume = new Graphics()
-  plume.ellipse(-8, 0, 16, 7).fill({ color: palette.beam, alpha: 0.35 })
-  plume.ellipse(-4, 0, 10, 4).fill({ color: palette.beamCore, alpha: 0.9 })
-  plume.x = -34
-  root.addChild(plume)
-
-  const hull = new Graphics()
-  hull.poly([-30, 7, -16, -12, 18, -11, 36, -1, 18, 12, -16, 12]).fill(0xc8c2b8)
-  hull.poly([-30, 7, -22, -2, -22, 10]).fill(0x8e8880)
-  hull.poly([6, -11, 16, -20, 22, -11]).fill(0xb4aea6)
-  hull.poly([-8, 12, 4, 20, 14, 12]).fill(0x9a948c)
-  hull.rect(-4, -6, 14, 8).fill(0x6e8ea0)
-  hull.circle(18, -1, 3.5).fill(0xd7eef8)
-  root.addChild(hull)
-  return root
+  return field
 }

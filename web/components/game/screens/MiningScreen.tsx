@@ -6,11 +6,11 @@ import { FREE_OPS_START_MISSIONS_DONE, REMOTE_MINERAL_SILO_CAPACITY } from '@/li
 import { miningNeedsRecharge, unitsStillNeeded, rechargeCost } from '@/lib/systems/mining-charges'
 import { useHelp } from '@/components/ui/useHelp'
 import Panel from '@/components/ui/Panel'
+import { formatCurrency } from '@/lib/format'
 import { paletteById, paletteForTarget } from '@/lib/mining/laserPalette'
-import { openFriends, openSettings } from '@/lib/mining/openChrome'
+import { openSettings } from '@/lib/mining/openChrome'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
-import { DockArrowButton, DockPrimaryButton, DockWordButton } from '@/components/game/hub/BaseDock'
-import FriendsButton from '@/components/game/FriendsButton'
+import { BaseDock, DockWordButton } from '@/components/game/hub/BaseDock'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
 import SkyEventChip from '@/components/game/SkyEventChip'
@@ -63,8 +63,8 @@ function miningGuide(hasDelivery: boolean) {
   return [
     { label: 'FIRE LASER', desc: 'Fires the vertical beam. Scroll ore under the beam, then fire (Space/F).' },
     { label: 'CHARGES', desc: 'The fire button reads Depleted when the laser is empty. Empty, with the order unfinished, the run stops.' },
-    { label: 'ORDER', desc: 'The left side of the dock lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty.' },
-    { label: 'SCROLL', desc: 'The side arrows change how fast the ground moves. Release to return to a steady crawl. Drag the field the same way.' },
+    { label: 'ORDER', desc: 'The order card lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty.' },
+    { label: 'SCROLL', desc: 'The dock arrows change how fast the ground moves. They settle back to a steady crawl. Drag the field the same way.' },
     { label: 'INVENTORY', desc: 'The order lines show collected against required. Fill every line to unlock return.' },
     hasDelivery
       ? { label: 'DELIVER CARGO', desc: 'The next leg drops this cargo off. Payout unlocks after delivery.' }
@@ -411,12 +411,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       : null
 
   const orderLines = Object.entries(mission.requires.minerals)
-  const holdScroll = (dx: number) => (e: React.PointerEvent<HTMLButtonElement>) => {
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const nudge = (dir: number) => {
     if (sceneStatus !== 'ready') return
-    e.currentTarget.setPointerCapture(e.pointerId)
-    scrollRef.current?.(dx)
+    scrollRef.current?.(dir)
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current)
+    nudgeTimer.current = setTimeout(() => { scrollRef.current?.(0) }, 500)
   }
-  const releaseScroll = () => { scrollRef.current?.(0) }
+  useEffect(() => () => { if (nudgeTimer.current) clearTimeout(nudgeTimer.current) }, [])
 
   return (
     <div className="game-screen mining-screen theme-blueprint" data-training-active={trainingMiningTry ? 'true' : 'false'} data-palette={palette.id} data-scroll={pinScroll ? String(scrollScreens) : undefined} style={{ background: palette.skyCss }}>
@@ -577,31 +579,31 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         >
           <HubClockWidget />
         </button>
-        <button type="button" className="scene-chip laser-chrome__cube" aria-label={`Cargo ${freeOpsCargoUnits} units`} data-testid="mining-cargo-chip">
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-            <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" strokeWidth="2" />
-          </svg>
-        </button>
-        <FriendsButton className="scene-chip" onClick={openFriends} />
-        <DockArrowButton
-          direction="left"
-          className="laser-chrome__arrow laser-chrome__arrow--left"
-          aria-label="Scroll slower"
-          disabled={sceneStatus !== 'ready'}
-          onPointerDown={holdScroll(-1)}
-          onPointerUp={releaseScroll}
-          onPointerCancel={releaseScroll}
-        />
-        <DockArrowButton
-          direction="right"
-          className="laser-chrome__arrow laser-chrome__arrow--right"
-          aria-label="Scroll faster"
-          disabled={sceneStatus !== 'ready'}
-          onPointerDown={holdScroll(1)}
-          onPointerUp={releaseScroll}
-          onPointerCancel={releaseScroll}
-        />
+        <div className="laser-chrome__chips">
+          <span className="scene-chip" data-testid="mining-francs-chip">{formatCurrency(francs, { compact: true })}</span>
+          <span className="scene-chip" aria-label={`Cargo ${freeOpsCargoUnits} units`} data-testid="mining-cargo-chip">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+              <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" strokeWidth="2" />
+            </svg>
+          </span>
+        </div>
+        <DockWordButton
+          className="laser-order"
+          data-testid="return-home-btn"
+          data-mode={!isFreeOps && needsRecharge && !orderFilled ? 'recharge' : 'return'}
+          onClick={!isFreeOps && needsRecharge && !orderFilled ? handleRecharge : handleReturn}
+        >
+          <span className="laser-dock__lines" data-testid={isFreeOps ? 'freeops-cargo-progress' : 'mining-order-progress'}>
+            {isFreeOps ? (
+              <span>Cargo {freeOpsCargoUnits}</span>
+            ) : (
+              orderLines.map(([id, amount]) => (
+                <span key={id}>{`${minerals[id]?.name ?? id} ${Math.min(cargo[id] ?? 0, amount)}/${amount}`}</span>
+              ))
+            )}
+          </span>
+        </DockWordButton>
       </div>
 
       <div className="mining-stage">
@@ -702,38 +704,28 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </Panel>
         )}
 
-        <div className="scene-dock-pill" data-ore-near={oreNear}>
-          <DockWordButton
-            className="laser-dock__order"
-            data-testid="return-home-btn"
-            data-mode={!isFreeOps && needsRecharge && !orderFilled ? 'recharge' : 'return'}
-            onClick={!isFreeOps && needsRecharge && !orderFilled ? handleRecharge : handleReturn}
-          >
-            <span className="laser-dock__lines" data-testid={isFreeOps ? 'freeops-cargo-progress' : 'mining-order-progress'}>
-              {isFreeOps ? (
-                <span>Cargo {freeOpsCargoUnits}</span>
-              ) : (
-                orderLines.map(([id, amount]) => (
-                  <span key={id}>{`${minerals[id]?.name ?? id} ${Math.min(cargo[id] ?? 0, amount)}/${amount}`}</span>
-                ))
-              )}
-            </span>
-            {isFreeOps && freeOpsDebrisReadout ? <span className="laser-dock__debris" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span> : null}
-          </DockWordButton>
-          <DockPrimaryButton
-            disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
-            data-testid="fire-laser-btn"
-            data-beacon="mining-fire-laser"
-            data-charging={isCharging}
-            onPointerDown={e => { if (e.button === 0) beginFireHold() }}
-            onPointerUp={endFireHold}
-            onPointerLeave={endFireHold}
-            onPointerCancel={endFireHold}
-            onClick={e => { if (e.detail === 0) fireLaser() }}
-          >
-            {laserCharges <= 0 ? 'Depleted' : isCharging ? 'Charging' : 'Fire laser'}
-          </DockPrimaryButton>
-        </div>
+        <BaseDock
+          variant="flight"
+          buildLabel={laserCharges <= 0 ? 'Depleted' : isCharging ? 'Charging' : 'Fire'}
+          buildTestId="fire-laser-btn"
+          buildBeacon="mining-fire-laser"
+          buildDisabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
+          buildCharging={isCharging}
+          buildIcon={(
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+              <path d="M13 2 L4 14 h7 l-1 8 10-14 h-7 l0-6 z" />
+            </svg>
+          )}
+          onPrev={() => nudge(-1)}
+          onNext={() => nudge(1)}
+          onBuild={event => { if (!event || event.detail === 0) fireLaser() }}
+          onBuildPointerDown={event => { if (event.button === 0) beginFireHold() }}
+          onBuildPointerUp={endFireHold}
+          onBuildPointerLeave={endFireHold}
+          onBuildPointerCancel={endFireHold}
+          onHub={() => onBack(cargoRef.current, laserChargesRef.current)}
+        />
+        {isFreeOps && freeOpsDebrisReadout ? <span className="laser-dock__debris" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span> : null}
       </div>
 
       {confirmingRecharge && (

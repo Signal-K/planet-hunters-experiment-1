@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { EXTRACTION_STEPS, STORAGE_STEPS, TRANSPORT_STEPS, trainingCoachSteps } from '@/lib/data/tutorial'
+import { EXTRACTION_STEPS, TRANSPORT_STEPS, trainingCoachSteps } from '@/lib/data/tutorial'
 import {
   AGENCY_TRAINING_STAGES,
   LEGACY_FREE_OPS_MISSIONS_DONE,
   agencyTrainingStage,
   agencyTrainingTrack,
+  awaitingStorageSilo,
   freeOperationsUnlocked,
   freeOpsActivities,
   TRANSPORT_LESSON_MISSIONS_DONE,
@@ -61,15 +62,16 @@ describe('trainingCoachSteps', () => {
     expect(trainingCoachSteps('launchpad')).toBe(EXTRACTION_STEPS)
     expect(trainingCoachSteps('extraction')).toBe(EXTRACTION_STEPS)
     expect(trainingCoachSteps('transport')).toBe(TRANSPORT_STEPS)
-    expect(trainingCoachSteps('storage')).toBe(STORAGE_STEPS)
+    expect(trainingCoachSteps('storage')).toEqual([])
     expect(trainingCoachSteps('free-ops')).toEqual([])
   })
+})
 
-  it('points the storage coach at the hub card and then an open build plot', () => {
-    expect(STORAGE_STEPS.map(step => [step.screen, step.coachId])).toEqual([
-      ['hub', 'hub-build-btn'],
-      ['build', 'build-confirm|build-plot-open'],
-    ])
+describe('awaitingStorageSilo', () => {
+  it('opens the silo build after both guided missions until the silo is placed', () => {
+    expect(awaitingStorageSilo({ placed: ['launchpad'], missionsDone: 1 })).toBe(false)
+    expect(awaitingStorageSilo({ placed: ['launchpad'], missionsDone: 2 })).toBe(true)
+    expect(awaitingStorageSilo({ placed: ['launchpad', 'surface-silo'], missionsDone: 2 })).toBe(false)
   })
 })
 

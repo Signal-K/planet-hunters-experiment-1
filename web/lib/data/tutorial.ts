@@ -1,10 +1,10 @@
 // Landnam game data — tutorial steps
 //
 // SSL-332 agency training: EXTRACTION_STEPS (place the launchpad, then the
-// first mine-and-return contract), TRANSPORT_STEPS (the two-stop mine-and-haul
-// contract) and STORAGE_STEPS (build the Earth silo that opens Free Ops). The
-// old M2 Prospector steps are retired. Stage selection lives in
-// trainingCoachSteps below.
+// first mine-and-return contract) and TRANSPORT_STEPS (the two-stop
+// mine-and-haul contract). The Surface Silo is a Build action on the hub
+// after both guided missions, not a coach script. The old M2 Prospector
+// steps are retired. Stage selection lives in trainingCoachSteps below.
 
 import type { TutorialStep } from './types'
 import type { AgencyTrainingStage } from '@/lib/systems/AgencyOnboardingSystem'
@@ -149,33 +149,16 @@ export const TRANSPORT_STEPS: TutorialStep[] = [
     anchor: 'top', spot: null, cta: 'Got it' },
 ]
 
-export const STORAGE_STEPS: TutorialStep[] = [
-  { id: 40, screen: 'hub', title: 'Build a Storage Silo',
-    body: 'Your agency can mine and haul. Now give it somewhere to keep ore on Earth. Building the silo opens Free Ops.',
-    action: 'Tap Build Silo',
-    anchor: 'bottom', spot: null, cta: 'Build Silo', coachId: 'hub-build-btn', dir: 'up',
-    desktopAction: 'Click Build Silo',
-    desktopCoachId: 'hub-build-btn', desktopDir: 'up' },
-  { id: 41, screen: 'build', title: 'Place the Silo',
-    body: 'Pick an open plot for the Surface Silo, then confirm.',
-    action: 'Tap an open plot, then confirm',
-    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-open', dir: 'down', cta: 'Build Surface Silo',
-    desktopAction: 'Click an open plot, then confirm placement',
-    desktopCoachId: 'build-confirm|build-plot-open', desktopDir: 'down' },
-]
-
 export const PROGRESSION_STEPS: TutorialStep[] = [
   ...EXTRACTION_STEPS,
   ...TRANSPORT_STEPS,
-  ...STORAGE_STEPS,
 ]
 
 /** Coach steps for an agency training stage. Launchpad placement is the
- *  first beat of the Extraction step list; Free Ops has no coach. */
+ *  first beat of the Extraction step list. Storage and Free Ops have no coach. */
 export function trainingCoachSteps(stage: AgencyTrainingStage): TutorialStep[] {
   if (stage === 'launchpad' || stage === 'extraction') return EXTRACTION_STEPS
   if (stage === 'transport') return TRANSPORT_STEPS
-  if (stage === 'storage') return STORAGE_STEPS
   return []
 }
 
@@ -183,4 +166,4 @@ export function trainingCoachSteps(stage: AgencyTrainingStage): TutorialStep[] {
 // selects the same agency stages through trainingCoachSteps.
 export const M1_STEPS = EXTRACTION_STEPS
 export const M2_STEPS = TRANSPORT_STEPS
-export const M3_STEPS = STORAGE_STEPS
+export const M3_STEPS: TutorialStep[] = []

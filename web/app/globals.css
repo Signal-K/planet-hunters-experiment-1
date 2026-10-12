@@ -1876,12 +1876,12 @@ button { cursor: pointer; }
 }
 .mining-guide-row strong {
   color: var(--ln-cyan);
-  font: 800 10px/1.3 var(--ln-font-display);
+  font: 800 14px/1.3 var(--ln-font-display);
   letter-spacing: 0.08em;
 }
 .mining-guide-row span {
   color: var(--ln-text-dim);
-  font: 12px/1.4 var(--ln-font-body);
+  font: 14px/1.4 var(--ln-font-body);
 }
 .mining-guide-dock button {
   position: sticky;
@@ -4021,7 +4021,8 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
 .theme-blueprint .scene-dock-primary:active:not(:disabled) {
   background: color-mix(in srgb, var(--ln-world-outline) 22%, var(--ln-world-trim-teal));
 }
-.theme-blueprint .scene-dock-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+.theme-blueprint .scene-dock-primary:disabled,
+.scene-dock-word:disabled { opacity: 0.55; cursor: not-allowed; }
 .scene-dock-pill {
   display: flex;
   align-items: center;
@@ -4056,30 +4057,42 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
 .mining-screen .laser-chrome .settings-cog { top: 8px; left: 8px; }
 .laser-chrome__clock {
   top: 8px;
-  left: 56px;
+  left: 60px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
 }
 .mining-screen .laser-chrome [data-testid="hub-clock-widget"] { margin: 0 !important; }
-.laser-chrome__cube { top: 8px; right: 60px; }
-.laser-chrome .scene-chip.game-friends-button {
+.laser-chrome__chips {
+  position: absolute;
   top: 8px;
   right: 8px;
-  left: auto;
-  width: 44px;
-  min-width: 44px;
-  height: 44px;
-  min-height: 44px;
-  padding: 0;
-  gap: 0;
-  justify-content: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 17;
 }
-.laser-chrome .scene-chip.game-friends-button span { display: none; }
-.laser-chrome__arrow { top: calc(50% - 16px); }
-.laser-chrome__arrow--left { left: 8px; }
-.laser-chrome__arrow--right { right: 8px; }
+.laser-chrome__chips .scene-chip {
+  pointer-events: auto;
+  min-height: 44px;
+  height: 44px;
+}
+.mining-screen .laser-order.scene-dock-word {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 17;
+  pointer-events: auto;
+  height: auto;
+  min-height: 44px;
+  max-width: min(320px, calc(100vw - 16px));
+  white-space: normal;
+}
 .portrait-canvas--mining .sync-status { display: none; }
 html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="mining-fire-laser"]::after {
   content: none;
@@ -4099,19 +4112,21 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .mining-screen[data-palette="mars"] .laser-cue { color: var(--ln-world-outline); }
 .laser-hud {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
   z-index: 20;
-  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   box-sizing: border-box;
   width: 100%;
-  height: 52px;
-  max-height: 14vh;
+  height: auto;
+  max-height: none;
   padding: 0 8px;
   background: transparent;
   pointer-events: none;
-}
-@media (orientation: portrait) {
-  .laser-hud { max-height: 12vh; }
 }
 .laser-hud > * { pointer-events: auto; }
 .laser-hud .scene-dock-primary { flex: 0 0 auto; }

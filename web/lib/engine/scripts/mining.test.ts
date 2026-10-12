@@ -263,14 +263,15 @@ describe('MiningController ore sym labels', () => {
     expect(labels()[0].y).toBeGreaterThan(320)
   })
 
-  it('keeps deposits at least two screen-widths apart', () => {
+  it('keeps deposits a native stride apart', () => {
     const { controller } = makeController(vi.fn(), { worldWidth: 600, mineralSyms: SYMS, chipFill: 0x334455 })
     controller.start()
     const ores = (controller as unknown as { ores: { go: { transform: { position: { x: number } } } }[] }).ores
     for (let i = 1; i < ores.length; i++) {
       const gap = ores[i].go.transform.position.x - ores[i - 1].go.transform.position.x
-      expect(gap).toBeGreaterThanOrEqual(600 * 2)
+      expect(gap).toBe(280)
     }
+    expect(ores[0].go.transform.position.x).toBe(SHIP_X + 160)
   })
 
   it('keeps the label on the ore as the terrain scrolls', () => {
@@ -297,7 +298,7 @@ describe('MiningController ore sym labels', () => {
     expect(labels()[0].visible).toBe(false)
   })
 
-  it('treats ?scroll= as screen-widths, so two screens later is the next deposit', () => {
+  it('treats ?scroll= as screen-widths and keeps the native stride', () => {
     const width = 400
     const placed = (screens: number) => {
       const { controller } = makeController(vi.fn(), {
@@ -311,17 +312,15 @@ describe('MiningController ore sym labels', () => {
       controller.start()
       return (controller as unknown as { ores: { mineral: string; go: { transform: { position: { x: number } } } }[] }).ores
     }
-    const anchor = Math.max(SHIP_X + 150, Math.round(width * 0.42))
+    const anchor = SHIP_X + 160
     const first = placed(0)
     expect(first[0].mineral).toBe('iron')
     expect(first[0].go.transform.position.x).toBe(anchor)
-    const mid = placed(1).filter(ore => ore.go.transform.position.x > 0 && ore.go.transform.position.x < width)
-    expect(mid).toHaveLength(0)
-    const next = placed(2).find(ore => ore.go.transform.position.x === anchor)
-    expect(next?.mineral).toBe('carbon')
+    expect(first[1].go.transform.position.x - first[0].go.transform.position.x).toBe(280)
+    expect(placed(1)[0].go.transform.position.x).toBe(anchor - width)
   })
 
-  it('places lead minerals first, each at least two screen-widths apart', () => {
+  it('places lead minerals first, each a stride apart', () => {
     const { controller } = makeController(vi.fn(), {
       worldWidth: 390,
       leadMinerals: ['iron', 'carbon', 'ice'],
@@ -332,10 +331,9 @@ describe('MiningController ore sym labels', () => {
     const ores = (controller as unknown as { ores: { mineral: string; go: { transform: { position: { x: number } } } }[] }).ores
     expect(ores.slice(0, 3).map(ore => ore.mineral)).toEqual(['iron', 'carbon', 'ice'])
     const xs = ores.slice(0, 3).map(ore => ore.go.transform.position.x)
-    expect(xs[0]).toBeGreaterThan(40)
-    expect(xs[0]).toBeLessThan(390)
-    expect(xs[1] - xs[0]).toBeGreaterThanOrEqual(390 * 2)
-    expect(xs[2] - xs[1]).toBeGreaterThanOrEqual(390 * 2)
+    expect(xs[0]).toBe(SHIP_X + 160)
+    expect(xs[1] - xs[0]).toBe(280)
+    expect(xs[2] - xs[1]).toBe(280)
   })
 
   it('does not spawn shower debris when the event is off', () => {

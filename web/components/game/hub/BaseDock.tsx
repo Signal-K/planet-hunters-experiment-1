@@ -1,17 +1,24 @@
 'use client'
 
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, MouseEvent, PointerEvent, ReactNode } from 'react'
 import { UI_ZONES } from '@/lib/ui-zones'
 
 type BaseDockProps = {
   onPrev: () => void
   onNext: () => void
-  onBuild: () => void
+  onBuild: (event?: MouseEvent<HTMLButtonElement>) => void
   onHub: () => void
-  /** Flight reuses this dock with Boost in the Build slot. */
+  /** Flight reuses this dock with Boost in the Build slot. Mining uses Fire. */
   buildLabel?: string
   buildTestId?: string
   buildIcon?: ReactNode
+  buildBeacon?: string
+  buildDisabled?: boolean
+  buildCharging?: boolean
+  onBuildPointerDown?: (event: PointerEvent<HTMLButtonElement>) => void
+  onBuildPointerUp?: (event: PointerEvent<HTMLButtonElement>) => void
+  onBuildPointerLeave?: (event: PointerEvent<HTMLButtonElement>) => void
+  onBuildPointerCancel?: (event: PointerEvent<HTMLButtonElement>) => void
   hubIcon?: ReactNode
   variant?: 'base' | 'flight'
 }
@@ -115,6 +122,13 @@ export function BaseDock({
   buildLabel = 'Build',
   buildTestId = 'hub-build-btn',
   buildIcon,
+  buildBeacon = 'hub-build-btn',
+  buildDisabled = false,
+  buildCharging = false,
+  onBuildPointerDown,
+  onBuildPointerUp,
+  onBuildPointerLeave,
+  onBuildPointerCancel,
   hubIcon,
   variant = 'base',
 }: BaseDockProps) {
@@ -131,7 +145,17 @@ export function BaseDock({
     >
       <DockArrowButton direction="left" data-testid="hub-dock-prev" onClick={onPrev} aria-label="Previous" />
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <DockWordButton data-testid={flight ? buildTestId : 'hub-build-btn'} data-beacon="hub-build-btn" onClick={onBuild}>
+        <DockWordButton
+          data-testid={flight ? buildTestId : 'hub-build-btn'}
+          data-beacon={buildBeacon}
+          data-charging={buildCharging || undefined}
+          disabled={buildDisabled}
+          onClick={onBuild}
+          onPointerDown={onBuildPointerDown}
+          onPointerUp={onBuildPointerUp}
+          onPointerLeave={onBuildPointerLeave}
+          onPointerCancel={onBuildPointerCancel}
+        >
           {buildIcon ?? <HammerIcon />}
           <span>{label}</span>
         </DockWordButton>

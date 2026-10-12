@@ -147,20 +147,19 @@ body:has([data-screen="hub"]) {
 /* Top bar back control and any loop button: 44px floor. */
 .theme-blueprint button { min-height: 44px; }
 .theme-blueprint .top-bar button { min-width: 44px; }
-/* The mining laser hud is a 14%/12% strip. Its buttons cannot keep the 44px
-   floor or the strip outgrows the scene. Edge icons stay at the shared 40px. */
-.theme-blueprint.mining-screen .laser-hud button {
-  min-height: 0;
-  min-width: 0;
+.theme-blueprint.mining-screen .laser-hud .scene-dock-arrow,
+.theme-blueprint.mining-screen .laser-hud .scene-dock-word {
+  min-height: 44px;
+  height: 44px;
 }
-.theme-blueprint.mining-screen .laser-hud .scene-dock-primary,
-.theme-blueprint.mining-screen .laser-hud .laser-dock__order {
-  min-height: 48px;
-  height: 48px;
+.theme-blueprint.mining-screen .laser-hud .scene-dock-arrow {
+  min-width: 44px;
+  width: 44px;
 }
 .theme-blueprint.mining-screen .laser-chrome .settings-cog {
-  min-height: 40px;
-  height: 40px;
+  min-height: 44px;
+  height: 44px;
+  width: 44px;
 }
 
 /* Shared Panel: the light blueprint card is a 2px ink outline with an offset
