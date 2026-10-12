@@ -39,6 +39,23 @@ export async function expectSound(page: Page, errors: string[] = []) {
       const own = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent?.trim())
       if (own && parseFloat(getComputedStyle(el).fontSize) < 13.9 && !el.closest('canvas,svg')) out.small.push(label(el))
     }
+    const clipsAxis = (v: string) => v === 'hidden' || v === 'clip' || v === 'auto' || v === 'scroll'
+    // Layout boxes of overflowed controls still intersect neighbours. Compare the painted part.
+    const painted = (el: Element) => {
+      let r = el.getBoundingClientRect()
+      for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+        const s = getComputedStyle(p)
+        const cx = clipsAxis(s.overflowX), cy = clipsAxis(s.overflowY)
+        if (!cx && !cy) continue
+        const pr = p.getBoundingClientRect()
+        const left = cx ? Math.max(r.left, pr.left) : r.left
+        const right = cx ? Math.min(r.right, pr.right) : r.right
+        const top = cy ? Math.max(r.top, pr.top) : r.top
+        const bottom = cy ? Math.min(r.bottom, pr.bottom) : r.bottom
+        r = new DOMRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top))
+      }
+      return r
+    }
     const buttons = [...document.querySelectorAll('button,a[href],[role=button]')].filter(visible)
     for (const b of buttons) {
       const r = b.getBoundingClientRect()
@@ -47,9 +64,11 @@ export async function expectSound(page: Page, errors: string[] = []) {
     for (let i = 0; i < buttons.length; i++) for (let j = i + 1; j < buttons.length; j++) {
       const a = buttons[i], b = buttons[j]
       if (a.contains(b) || b.contains(a)) continue
-      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect()
+      const la = a.getBoundingClientRect(), lb = b.getBoundingClientRect()
       // Scene hotspots (a whole building) are tall hit boxes by design; compare controls only.
-      if (ra.height > 150 || rb.height > 150) continue
+      if (la.height > 150 || lb.height > 150) continue
+      const ra = painted(a), rb = painted(b)
+      if (ra.width < 1 || ra.height < 1 || rb.width < 1 || rb.height < 1) continue
       const w = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left), h = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top)
       if (w > 4 && h > 4) out.overlaps.push(`${label(a)} x ${label(b)}`)
     }

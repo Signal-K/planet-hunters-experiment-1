@@ -79,7 +79,8 @@ export async function checkContrast(page: Page, root = 'body'): Promise<CheckRes
   }, root)
 }
 
-/** Visible text that is cut off by an overflow:hidden/clip ancestor (its own box or a parent's). Intentional text-overflow:ellipsis is ignored. */
+/** Visible text that is cut off by an overflow:hidden/clip ancestor (its own box or a parent's). Intentional text-overflow:ellipsis is ignored.
+ *  Screen-reader-only text and text the player can scroll into view are not cut off. */
 export async function checkClipping(page: Page, root = 'body'): Promise<CheckResult> {
   return page.evaluate((rootSel) => {
     const failures: string[] = []
@@ -93,7 +94,7 @@ export async function checkClipping(page: Page, root = 'body'): Promise<CheckRes
     for (const el of scope.querySelectorAll('*')) {
       if (!visible(el)) continue
       if (!([...el.childNodes].some(n => n.nodeType === 3 && n.textContent?.trim()))) continue
-      if (el.closest('canvas,svg')) continue
+      if (el.closest('canvas,svg,.ln-sr-only')) continue
       const er = el.getBoundingClientRect()
       // Own box: text wider/taller than its own clipped box.
       const s = getComputedStyle(el)
@@ -102,9 +103,12 @@ export async function checkClipping(page: Page, root = 'body'): Promise<CheckRes
         else if (clips(s.overflowY) && el.scrollHeight > el.clientHeight + 1) failures.push(`text taller than its box ${label(el)} (${el.scrollHeight}>${el.clientHeight})`)
       }
       // Ancestor clip: the element's box pokes outside a clipping ancestor, hiding part of the text.
+      // A scroll container between the text and a later frame means the player can scroll it into view.
+      let inScroller = false
       for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
         const ps = getComputedStyle(p)
-        if (!clips(ps.overflowX) && !clips(ps.overflowY)) continue
+        const scrolls = ps.overflowX === 'auto' || ps.overflowX === 'scroll' || ps.overflowY === 'auto' || ps.overflowY === 'scroll'
+        if (!clips(ps.overflowX) && !clips(ps.overflowY)) { if (scrolls) inScroller = true; continue }
         const pr = p.getBoundingClientRect()
         const cutX = clips(ps.overflowX) && (er.left < pr.left - 2 || er.right > pr.right + 2)
         const cutY = clips(ps.overflowY) && (er.top < pr.top - 2 || er.bottom > pr.bottom + 2)
@@ -112,7 +116,7 @@ export async function checkClipping(page: Page, root = 'body'): Promise<CheckRes
           // Only a failure if the clipped part is a meaningful share of the element (ignores decorative bleed).
           const ix = Math.max(0, Math.min(er.right, pr.right) - Math.max(er.left, pr.left)), iy = Math.max(0, Math.min(er.bottom, pr.bottom) - Math.max(er.top, pr.top))
           const shown = (ix * iy) / (er.width * er.height)
-          if (shown < 0.95 && shown > 0) failures.push(`clipped by ${p.tagName.toLowerCase()} (${Math.round((1 - shown) * 100)}% hidden) ${label(el)}`)
+          if (!inScroller && shown < 0.95 && shown > 0) failures.push(`clipped by ${p.tagName.toLowerCase()} (${Math.round((1 - shown) * 100)}% hidden) ${label(el)}`)
           break
         }
       }
@@ -155,13 +159,31 @@ export async function collectStructural(page: Page): Promise<{ small: string[]; 
       const own = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent?.trim())
       if (own && parseFloat(getComputedStyle(el).fontSize) < 13.9 && !el.closest('canvas,svg')) out.small.push(label(el))
     }
+    const clipsAxis = (v: string) => v === 'hidden' || v === 'clip' || v === 'auto' || v === 'scroll'
+    const painted = (el: Element) => {
+      let r = el.getBoundingClientRect()
+      for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+        const s = getComputedStyle(p)
+        const cx = clipsAxis(s.overflowX), cy = clipsAxis(s.overflowY)
+        if (!cx && !cy) continue
+        const pr = p.getBoundingClientRect()
+        const left = cx ? Math.max(r.left, pr.left) : r.left
+        const right = cx ? Math.min(r.right, pr.right) : r.right
+        const top = cy ? Math.max(r.top, pr.top) : r.top
+        const bottom = cy ? Math.min(r.bottom, pr.bottom) : r.bottom
+        r = new DOMRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top))
+      }
+      return r
+    }
     const buttons = [...document.querySelectorAll('button,a[href],[role=button]')].filter(visible)
     for (const b of buttons) { const r = b.getBoundingClientRect(); if (r.width < 43.5 || r.height < 43.5) out.taps.push(`${Math.round(r.width)}x${Math.round(r.height)} ${label(b)}`) }
     for (let i = 0; i < buttons.length; i++) for (let j = i + 1; j < buttons.length; j++) {
       const a = buttons[i], b = buttons[j]
       if (a.contains(b) || b.contains(a)) continue
-      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect()
-      if (ra.height > 150 || rb.height > 150) continue
+      const la = a.getBoundingClientRect(), lb = b.getBoundingClientRect()
+      if (la.height > 150 || lb.height > 150) continue
+      const ra = painted(a), rb = painted(b)
+      if (ra.width < 1 || ra.height < 1 || rb.width < 1 || rb.height < 1) continue
       const w = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left), h = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top)
       if (w > 4 && h > 4) out.overlaps.push(`${label(a)} x ${label(b)}`)
     }

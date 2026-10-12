@@ -15,13 +15,16 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(errors).toEqual([])
     })
 
-    test('the base dock contains only switch, Build, and Hub while Exchange stays in the scene', async ({ page }) => {
+    test('the scene dock is Previous, Build, Hub, and Next while Exchange stays in the scene', async ({ page }) => {
       const { errors } = await stage(page, 'm1-hub', { chrome: true })
-      await expect(page.getByRole('navigation', { name: 'Base dock' }).getByRole('button')).toHaveCount(3)
-      await expect(page.getByTestId('hub-switch-operation')).toBeVisible()
-      await expect(page.getByTestId('hub-build-btn')).toBeVisible()
-      await expect(page.getByTestId('hub-btn')).toBeVisible()
+      const dock = page.getByRole('navigation', { name: 'Scene dock' })
+      await expect(dock.getByRole('button')).toHaveCount(4)
+      await expect(dock.getByTestId('hub-dock-prev')).toBeVisible()
+      await expect(dock.getByTestId('hub-build-btn')).toBeVisible()
+      await expect(dock.getByTestId('hub-btn')).toBeVisible()
+      await expect(dock.getByTestId('hub-dock-next')).toBeVisible()
       await expect(page.getByTestId('hub-subsurface-btn')).toHaveCount(0)
+      await expect(dock.getByText('Exchange', { exact: true })).toHaveCount(0)
       await expect(page.getByText('Exchange', { exact: true })).toBeVisible()
       await page.screenshot({ path: `tests/.out/hub-dock-${vp}.png` })
       expect(errors).toEqual([])

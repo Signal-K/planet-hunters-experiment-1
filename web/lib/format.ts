@@ -16,14 +16,14 @@ const BILLION = 1_000_000_000
 const MILLION = 1_000_000
 
 export interface FrancFormatOptions {
-  /** Abbreviate to `1.5B` / `250M` above a million. Use in HUD strips, cards, and summary rows. */
+  /** Abbreviate to `1.5B` / `26.4M` above a million. Use in HUD strips, cards, and summary rows. */
   compact?: boolean
 }
 
 /** Bare number, no currency mark — for places supplying their own unit label. */
 export function formatFrancs(value: number, options: FrancFormatOptions = {}): string {
   if (options.compact && Math.abs(value) >= BILLION) return `${(value / BILLION).toFixed(1)}B`
-  if (options.compact && Math.abs(value) >= MILLION) return `${(value / MILLION).toFixed(0)}M`
+  if (options.compact && Math.abs(value) >= MILLION) return `${(value / MILLION).toFixed(1)}M`
   return value.toLocaleString()
 }
 
@@ -32,7 +32,7 @@ export interface CurrencyFormatOptions extends FrancFormatOptions {
   signed?: boolean
 }
 
-/** A franc amount with its currency mark — `₣1.5B`, `+₣250M`, `−₣1,300`. */
+/** A franc amount with its currency mark — `₣1.5B`, `+₣250.0M`, `−₣1,300`. */
 export function formatCurrency(value: number, options: CurrencyFormatOptions = {}): string {
   const magnitude = `${FRANC}${formatFrancs(Math.abs(value), options)}`
   if (!options.signed) return value < 0 ? `−${magnitude}` : magnitude
