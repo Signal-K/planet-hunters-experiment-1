@@ -195,21 +195,19 @@ export default function ShipInteriorPreview({
               <path d="M12 3 L6 9 L12 15" fill="none" stroke="currentColor" strokeWidth="2" />
             </svg>
           </button>
-          <div className="sip-stage-copy">
-            <span className="sip-stage-label">{stageName} {stepIndex + 1}/{sequence.length}</span>
-            <span className="sip-dots" aria-hidden="true">
-              {sequence.map((kind, index) => {
-                const done = !!buildState.installed[kind]
-                const current = index === stepIndex
-                return (
-                  <i
-                    key={kind}
-                    className={current ? 'sip-dot is-current' : done ? 'sip-dot is-done' : 'sip-dot'}
-                  />
-                )
-              })}
-            </span>
-          </div>
+          <span className="sip-stage-label">{stageName} {stepIndex + 1}/{sequence.length}</span>
+          <span className="sip-dots" aria-hidden="true">
+            {sequence.map((kind, index) => {
+              const done = !!buildState.installed[kind]
+              const current = index === stepIndex
+              return (
+                <i
+                  key={kind}
+                  className={current ? 'sip-dot is-current' : done ? 'sip-dot is-done' : 'sip-dot'}
+                />
+              )
+            })}
+          </span>
         </div>
 
         <div className="sip-cards">

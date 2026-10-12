@@ -35,6 +35,8 @@
      authored against (2026-09-08 design feedback, KES-343). */
   --hub-ground: 20%;
 }
+.launchpad-rocket .launchpad-object-label,
+.launchpad-tower .launchpad-primary-pad-control { display: none; }
 /* Shares the Hub's own backdrop instead of a separately hand-rolled one
    (KES-233) — scaled up from the bottom-center so the ground line stays
    anchored where this screen's foreground objects expect it (see

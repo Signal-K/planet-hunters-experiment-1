@@ -20,7 +20,7 @@ export function KitRocket({ parts, blueprint = false, active, onSelect, classNam
   return (
     <div
       className={[styles.root, blueprint ? styles.blueprint : '', className].filter(Boolean).join(' ')}
-      style={blueprint ? { aspectRatio: KIT_ROCKET_ASPECT, height: '100%', width: 'auto', maxWidth: '100%', maxHeight: '100%', flex: '0 0 auto' } : undefined}
+      style={blueprint ? { aspectRatio: KIT_ROCKET_ASPECT, width: 'auto', maxWidth: '100%', maxHeight: '100%', flex: '0 0 auto' } : undefined}
       data-testid={testId ?? 'kit-rocket'}
       data-sprite={src}
     >
