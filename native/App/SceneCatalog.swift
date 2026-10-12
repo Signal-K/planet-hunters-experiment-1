@@ -300,8 +300,8 @@ enum SceneCatalog {
         scene("hub-empty-live-landscape", 402, w: 874) { HubScreen().environment(GameStore(state: GameState())) },
         scene("hub-starter-live", 874) { HubScreen().environment(GameStore(state: starterState())) },
         scene("hub-starter-live-landscape", 402, w: 874) { HubScreen().environment(GameStore(state: starterState())) },
-        scene("settings-live", 874) { SettingsSheet(onClose: {}).environment(GameStore(state: starterState())).environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore())) },
-        scene("settings-live-landscape", 402, w: 874) { SettingsSheet(onClose: {}).environment(GameStore(state: starterState())).environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore())) },
+        scene("settings-live", 1180) { SettingsSheet(onClose: {}).environment(GameStore(state: starterState())).environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore())).environment(\.flatLayout, true) },
+        scene("settings-live-landscape", 1100, w: 874) { SettingsSheet(onClose: {}).environment(GameStore(state: starterState())).environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore())).environment(\.flatLayout, true) },
         scene("rover-field-phone", 874) {
             var p = Prospecting(requirements: ["iron": 2, "copper": 1])
             p.select("ore-a"); p.driveToSelected(); _ = p.drill(); _ = p.drill(); _ = p.drill(); p.startConstruction()

@@ -222,10 +222,22 @@ extension View {
     }
 }
 
+/// Admin-dashboard palette for Settings: white cards on light grey, soft grey borders.
+private enum Admin {
+    static let page = Theme.hex(0xF4F5F7)
+    static let card = Color.white
+    static let border = Theme.hex(0xE1E4E8)
+    static let ink = Theme.hex(0x1B1F24)
+    static let muted = Theme.hex(0x6B7280)
+    static let danger = Theme.hex(0xD6303B)
+    static let primary = Theme.hex(0x1F78C1)
+}
+
 /// Settings gear destination, matching the web Settings sheet: account, training (replay, skip), reset, Free Ops, patch notes.
 struct SettingsSheet: View {
     @Environment(GameStore.self) private var store
     @Environment(AuthModel.self) private var auth
+    @Environment(\.flatLayout) private var flat
     @State private var confirmSignOut = false
     @State private var confirmSkip = false
     @State private var confirmReset = false
@@ -240,38 +252,14 @@ struct SettingsSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("SETTINGS").font(AppFont.display(18)).tracking(1.4).foregroundStyle(Theme.hudInk)
+                Text("Settings").font(AppFont.display(20)).foregroundStyle(Admin.ink)
                 Spacer()
                 Button(action: onClose) {
-                    Image(systemName: "xmark").font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
+                    Image(systemName: "xmark").font(.system(size: 16, weight: .bold)).foregroundStyle(Admin.muted)
                         .frame(width: 44, height: 44).contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityLabel("Close")
-            }.padding(.horizontal, 16).padding(.top, 8)
-            ScrollView {
-                VStack(spacing: 8) {
-                    #if os(iOS)
-                    orientationPicker
-                    #endif
-                    section("Training")
-                    ForEach(FlightPlanProgress.tryIds, id: \.self) { trainingRow($0) }
-                    if !store.player.freeOperations {
-                        action(confirmSkip ? "Confirm: mark all tries done" : "Skip training", icon: "forward.end") {
-                            if confirmSkip { confirmSkip = false; onClose(); store.skipTraining() } else { confirmSkip = true }
-                        }
-                    }
-                    section("Game")
-                    toggleRow("Free Ops", on: store.player.freeOperations) { store.setFreeOps($0) }
-                    action("Patch notes", icon: "doc.text") { showPatchNotes = true }
-                    action(confirmReset ? "Confirm: erase all progress" : "Reset progress", icon: "arrow.counterclockwise", danger: true) {
-                        if confirmReset { confirmReset = false; onClose(); store.reset() } else { confirmReset = true }
-                    }
-                    section("Account")
-                    if let email = auth.session?.email {
-                        Text("Signed in as \(email)").font(AppFont.display(14)).foregroundStyle(Theme.textDim)
-                    }
-                    action("Sign out", icon: "rectangle.portrait.and.arrow.right") { confirmSignOut = true }
-                }.padding(16)
-            }
+            }.padding(.horizontal, 20).padding(.top, flat ? 24 : 8)
+            if flat { content.frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { content } }
         }
         .sheet(isPresented: $showPatchNotes) { PatchNotesSheet() }
         .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
@@ -280,60 +268,121 @@ struct SettingsSheet: View {
         } message: {
             Text("Your progress stays saved on this device and in the cloud. Sign back in to continue.")
         }
-        .background(Theme.bg)
+        .background(Admin.page)
         .presentationDetents([.medium, .large])
     }
 
-    private func section(_ title: String) -> some View {
-        Text(title.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.hudInk)
-            .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
+    private var content: some View {
+        VStack(spacing: 16) {
+            #if os(iOS)
+            label("Display")
+            orientationCard
+            #endif
+            label("Training")
+            VStack(spacing: 0) {
+                ForEach(Array(FlightPlanProgress.tryIds.enumerated()), id: \.element) { i, id in
+                    if i > 0 { Divider().overlay(Admin.border) }
+                    trainingRow(id)
+                }
+                if !store.player.freeOperations {
+                    Divider().overlay(Admin.border)
+                    HStack {
+                        rowText("Skip training", confirmSkip ? "Tap again to mark all tries done" : "Mark all tries as done")
+                        Spacer(minLength: 12)
+                        outlineButton(confirmSkip ? "Confirm" : "Skip", color: Admin.ink) {
+                            if confirmSkip { confirmSkip = false; onClose(); store.skipTraining() } else { confirmSkip = true }
+                        }
+                    }.padding(20)
+                }
+            }.card()
+            label("Game")
+            VStack(spacing: 0) {
+                HStack {
+                    rowText("Free Ops", "Play without a contract: mine, survey, build and trade on your own")
+                    Spacer(minLength: 12)
+                    let on = Binding(get: { store.player.freeOperations }, set: { store.setFreeOps($0) })
+                    if flat {
+                        // Headless snapshots cannot draw UIKit-backed controls; mirror the Toggle's look.
+                        Capsule().fill(on.wrappedValue ? Admin.primary : Admin.border).frame(width: 51, height: 31)
+                            .overlay(Circle().fill(Color.white).padding(2).frame(maxWidth: .infinity, alignment: on.wrappedValue ? .trailing : .leading))
+                    } else {
+                        Toggle("Free Ops", isOn: on).labelsHidden().tint(Admin.primary)
+                    }
+                }.padding(20)
+                Divider().overlay(Admin.border)
+                HStack {
+                    rowText("Patch notes", "What changed in recent builds")
+                    Spacer(minLength: 12)
+                    outlineButton("View", color: Admin.ink) { showPatchNotes = true }
+                }.padding(20)
+            }.card()
+            label("Account")
+            VStack(spacing: 0) {
+                HStack {
+                    rowText("Account", auth.session?.email.map { "Signed in as \($0)" } ?? "Signed in")
+                    Spacer(minLength: 12)
+                    outlineButton("Sign out", color: Admin.ink) { confirmSignOut = true }
+                }.padding(20)
+            }.card()
+            label("Danger zone")
+            HStack {
+                rowText("Reset progress", confirmReset ? "Tap again to erase all progress. This cannot be undone." : "Erase all progress and start over", titleColor: Admin.danger)
+                Spacer(minLength: 12)
+                outlineButton(confirmReset ? "Confirm reset" : "Reset", color: Admin.danger) {
+                    if confirmReset { confirmReset = false; onClose(); store.reset() } else { confirmReset = true }
+                }
+            }.padding(20).card(border: Admin.danger.opacity(0.35))
+        }
+        .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 32)
+        .frame(maxWidth: 640)
+        .frame(maxWidth: .infinity)
+    }
+
+    private func label(_ title: String) -> some View {
+        Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Admin.muted)
+            .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 12).padding(.bottom, -4)
+    }
+
+    private func rowText(_ title: String, _ subtitle: String, titleColor: Color = Admin.ink) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(AppFont.display(16)).foregroundStyle(titleColor)
+            Text(subtitle).font(AppFont.display(14)).foregroundStyle(Admin.muted).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func outlineButton(_ title: String, color: Color, _ run: @escaping () -> Void) -> some View {
+        Button(action: run) {
+            Text(title).font(AppFont.display(14)).foregroundStyle(color)
+                .padding(.horizontal, 16).frame(minWidth: 88, minHeight: 44)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(color.opacity(0.6), lineWidth: 1))
+                .contentShape(Rectangle())
+        }.buttonStyle(.plain)
     }
 
     private func trainingRow(_ id: String) -> some View {
         let plan = store.player.flightPlan
         let status = plan.completed[id] == true ? "Done" : plan.currentTry == id && !store.player.freeOperations ? "On air" : "Standby"
-        return Button { onClose(); store.replayTry(id) } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(Self.tryNames[id] ?? id).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                    Text(status.uppercased()).font(AppFont.display(14)).foregroundStyle(Theme.textDim)
-                }
-                Spacer()
-                Text("REPLAY").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                Image(systemName: "play.fill").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.hudInk)
-            }
-            .padding(.horizontal, 14).frame(maxWidth: .infinity, minHeight: 52).hudPanel(radius: 10)
-        }.buttonStyle(.plain).accessibilityLabel("Replay \(Self.tryNames[id] ?? id)")
-    }
-
-    private func toggleRow(_ title: String, on: Bool, _ set: @escaping (Bool) -> Void) -> some View {
-        Button { set(!on) } label: {
-            HStack {
-                Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                Spacer()
-                Text(on ? "ON" : "OFF").font(AppFont.display(14)).tracking(1.2)
-                    .foregroundStyle(on ? Theme.hudPanel : Theme.hudInk)
-                    .frame(minWidth: 56, minHeight: 36)
-                    .background(on ? Theme.hudInk : Color.clear, in: RoundedRectangle(cornerRadius: 6))
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.hudInk, lineWidth: 1.5))
-            }
-            .padding(.horizontal, 14).frame(maxWidth: .infinity, minHeight: 48).hudPanel(radius: 10)
-        }.buttonStyle(.plain).accessibilityLabel("Free Ops \(on ? "on" : "off")").accessibilityAddTraits(on ? .isSelected : [])
+        return HStack {
+            rowText(Self.tryNames[id] ?? id, status)
+            Spacer(minLength: 12)
+            outlineButton("Replay", color: Admin.ink) { onClose(); store.replayTry(id) }
+                .accessibilityLabel("Replay \(Self.tryNames[id] ?? id)")
+        }.padding(20)
     }
 
     #if os(iOS)
-    private var orientationPicker: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("SCREEN ORIENTATION").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
+    private var orientationCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            rowText("Screen orientation", "Lock the game to portrait or landscape")
             HStack(spacing: 8) {
                 ForEach(OrientationPreference.allCases) { option in
                     let on = OrientationPreference(stored: orientation) == option
                     Button { orientation = option.rawValue } label: {
-                        Text(option.title.uppercased()).font(AppFont.display(14)).tracking(1.0)
-                            .foregroundStyle(on ? Theme.hudPanel : Theme.hudInk)
+                        Text(option.title).font(AppFont.display(14))
+                            .foregroundStyle(on ? Color.white : Admin.ink)
                             .frame(maxWidth: .infinity, minHeight: 44)
-                            .background(on ? Theme.hudInk : Color.clear, in: RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.hudInk, lineWidth: 1.5))
+                            .background(on ? Admin.primary : Color.clear, in: RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(on ? Admin.primary : Admin.border, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Orientation \(option.title)")
@@ -341,20 +390,16 @@ struct SettingsSheet: View {
                 }
             }
         }
-        .padding(14).frame(maxWidth: .infinity, alignment: .leading).hudPanel(radius: 10)
+        .padding(20).frame(maxWidth: .infinity, alignment: .leading).card()
     }
     #endif
+}
 
-    private func action(_ title: String, icon: String, danger: Bool = false, _ run: @escaping () -> Void) -> some View {
-        Button(action: run) {
-            HStack {
-                Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                Spacer()
-                Image(systemName: icon).font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.hudInk)
-            }
-            .padding(.horizontal, 14).frame(maxWidth: .infinity, minHeight: 48).hudPanel(radius: 10)
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(danger ? Theme.hudInk : Color.clear, lineWidth: 3))
-        }.buttonStyle(.plain)
+private extension View {
+    func card(border: Color = Admin.border) -> some View {
+        frame(maxWidth: .infinity, alignment: .leading)
+            .background(Admin.card, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(border, lineWidth: 1))
     }
 }
 
