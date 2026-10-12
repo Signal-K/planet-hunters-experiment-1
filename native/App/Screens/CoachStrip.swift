@@ -9,6 +9,7 @@ struct CoachStrip: View {
 
     var body: some View {
         HStack(spacing: 12) {
+            opsBadge
             VStack(alignment: .leading, spacing: 2) {
                 Text(coach.kicker).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.teal)
                 Text(coach.objective).font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink)
@@ -30,6 +31,21 @@ struct CoachStrip: View {
         .overlay(alignment: .top) { Rectangle().fill(Theme.hudInk).frame(height: 1) }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(coach.kicker). \(coach.objective). \(coach.radio)")
+    }
+}
+
+extension CoachStrip {
+    /// Ops call-sign badge (mirrors web .ops-badge): square pixel tile with three signal bars.
+    var opsBadge: some View {
+        HStack(spacing: 4) {
+            Text("OPS").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+            HStack(alignment: .bottom, spacing: 2) {
+                ForEach([6, 10, 14], id: \.self) { h in Rectangle().fill(Theme.teal).frame(width: 3, height: CGFloat(h)) }
+            }
+        }
+        .padding(.horizontal, 8).frame(minHeight: 44)
+        .background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+        .accessibilityHidden(true)
     }
 }
 
