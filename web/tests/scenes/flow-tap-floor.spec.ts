@@ -36,13 +36,37 @@ for (const vp of VIEWPORTS) {
       expect(fonts.balance).toBeGreaterThanOrEqual(14)
     })
 
-    test('hangar customiser tabs and close', async ({ page }) => {
+    test('hangar customiser chevron, close and primary', async ({ page }) => {
       await page.goto('/game/stage?preset=ship-customizer&plan=1&click=open-ship-customizer')
-      await expect(page.locator('[data-testid="ship-step-engine"]')).toBeVisible()
-      const step = await page.locator('[data-testid="ship-step-engine"]').boundingBox()
+      await expect(page.locator('[data-testid="ship-primary"]')).toBeVisible()
+      await expect(page.locator('[data-testid="ship-step-engine"]')).toHaveCount(0)
+      await expect(page.getByText(/build config/i)).toHaveCount(0)
+      const back = await page.locator('[data-testid="ship-step-back"]').boundingBox()
       const close = await page.locator('[data-testid="ship-interior-close"]').boundingBox()
-      expect(step && step.height >= 44 && step.width >= 44).toBe(true)
+      const primary = await page.locator('[data-testid="ship-primary"]').boundingBox()
+      const card = await page.locator('.ship-part-option').first().boundingBox()
+      expect(back && back.width >= 44 && back.height >= 44).toBe(true)
       expect(close && close.width >= 44 && close.height >= 44).toBe(true)
+      expect(primary && primary.height >= 44).toBe(true)
+      expect(card && card.height >= 44 && card.width >= 44).toBe(true)
+      const fonts = await page.evaluate(() => {
+        const size = (sel: string) => {
+          const el = document.querySelector(sel)
+          return el ? parseFloat(getComputedStyle(el).fontSize) : 0
+        }
+        return {
+          stage: size('.sip-stage-label'),
+          name: size('.sip-part-name'),
+          desc: size('.sip-part-desc'),
+          budget: size('[data-testid="ship-budget"]'),
+          primary: size('[data-testid="ship-primary"]'),
+        }
+      })
+      expect(fonts.stage).toBeGreaterThanOrEqual(14)
+      expect(fonts.name).toBeGreaterThanOrEqual(14)
+      expect(fonts.desc).toBeGreaterThanOrEqual(14)
+      expect(fonts.budget).toBeGreaterThanOrEqual(14)
+      expect(fonts.primary).toBeGreaterThanOrEqual(14)
     })
   })
 }

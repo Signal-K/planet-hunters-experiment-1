@@ -77,33 +77,39 @@ test.describe('402px mobile layout', () => {
     expect(hit.h).toBeGreaterThanOrEqual(44)
   })
 
-  test('customiser confirm and next stay above the training strip', async ({ page }) => {
+  test('customiser primary stays in view and the training strip is hidden', async ({ page }) => {
     const patch = encodeURIComponent(JSON.stringify({ flightPlan: { completed: { mining: true, scan: true }, hidden: false } }))
     await page.goto(`/game/stage?preset=ship-customizer&plan=1&click=open-ship-customizer&patch=${patch}`)
-    await expect(page.getByTestId('confirm-ship-config')).toBeVisible()
+    await expect(page.getByTestId('ship-primary')).toBeVisible()
+    await expect(page.locator('.flight-plan')).toBeHidden()
+    await expect(page.getByTestId('ship-refund-step')).toHaveCount(0)
     const report = await page.evaluate(() => {
-      const box = (sel: string) => document.querySelector(sel)!.getBoundingClientRect()
-      const confirm = box('[data-testid="confirm-ship-config"]')
-      const next = box('[data-testid="ship-step-next"]')
-      const plan = box('.flight-plan')
-      const over = (a: DOMRect, b: DOMRect) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 2 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2
+      const primary = document.querySelector('[data-testid="ship-primary"]')!.getBoundingClientRect()
       const card = document.querySelector('.ship-part-option') as HTMLElement
       return {
-        confirmPlan: over(confirm, plan),
-        nextPlan: over(next, plan),
-        confirmH: confirm.height,
-        nextH: next.height,
-        confirmBottom: confirm.bottom,
-        planTop: plan.top,
+        primaryH: primary.height,
+        primaryTop: primary.top,
+        primaryBottom: primary.bottom,
+        viewH: window.innerHeight,
         cardBg: getComputedStyle(card).backgroundColor,
       }
     })
-    expect(report.confirmPlan).toBe(false)
-    expect(report.nextPlan).toBe(false)
-    expect(report.confirmH).toBeGreaterThanOrEqual(44)
-    expect(report.nextH).toBeGreaterThanOrEqual(44)
-    expect(report.confirmBottom).toBeLessThanOrEqual(report.planTop)
+    expect(report.primaryH).toBeGreaterThanOrEqual(44)
+    expect(report.primaryTop).toBeGreaterThanOrEqual(0)
+    expect(report.primaryBottom).toBeLessThanOrEqual(report.viewH)
     expect(report.cardBg).toBe('rgb(255, 255, 255)')
+    await page.getByTestId('choose-ion-thruster-t1').click()
+    await expect(page.getByTestId('choose-ion-thruster-t1')).toContainText('Installed')
+    await expect(page.getByTestId('ship-primary')).toHaveText('NEXT')
+    await page.getByTestId('ship-primary').click()
+    await expect(page.getByTestId('ship-stage')).toContainText('2/4')
+    await page.getByTestId('choose-strap-booster-t1').click()
+    await page.getByTestId('ship-primary').click()
+    await page.getByTestId('choose-cockpit-command-t1').click()
+    await page.getByTestId('ship-primary').click()
+    await page.getByTestId('choose-cargo-payload-t1').click()
+    await expect(page.getByTestId('ship-primary')).toHaveText('CONFIRM')
+    await expect(page.getByTestId('ship-stage')).toContainText('4/4')
   })
 
   test('exchange dev badge stays off the back chevron', async ({ page }) => {

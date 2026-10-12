@@ -1,23 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import { ShipCustomizerCanvas } from '@/components/game/ShipCustomizerCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import Panel from '@/components/ui/Panel'
-import StatusPill from '@/components/ui/StatusPill'
 import {
-  calculateShipSuccessChance,
   canConfirmCustomizerBuild,
   chooseCustomizerPart,
   confirmCustomizerBuild,
   createCustomizerBuildState,
   customizerPartById,
   getBuildSequence,
-  getRoomDetailArt,
   getShipInteriorLayout,
   partsForKind,
-  refundCustomizerPart,
-  selectedCustomizerPartIds,
 } from '@/lib/data'
 import type { CustomizerPart, InstalledCustomizerPartsByKind, ShipRoomKind } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
@@ -33,23 +28,17 @@ interface ShipInteriorPreviewProps {
   landingResearched?: boolean
 }
 
-interface BuildStep {
-  kind: ShipRoomKind
-  title: string
-  body: string
-}
-
-const STEP_DETAILS: Record<ShipRoomKind, Omit<BuildStep, 'kind'>> = {
-  engine:        { title: 'Engine / Thrusters',  body: 'Sets reach, thrust margin, and base launch reliability.' },
-  booster:       { title: 'Boosters',             body: 'Adds ascent force so the rocket clears atmosphere with heavier modules.' },
-  cockpit:       { title: 'Command',              body: 'Adds guidance, navigation, comms, and launch authority.' },
-  payload:       { title: 'Payload',              body: 'Defines what this rocket can actually do on mission.' },
-  'fuel-stage':  { title: 'Propellant Stage',     body: 'Sets total delta-v and burn duration. Required for orbital insertion.' },
-  fairing:       { title: 'Payload Fairing',      body: 'Nose cone protects cargo during ascent. Jettisoned at separation altitude.' },
-  'docking-port':{ title: 'Docking Port',         body: 'Enables cargo transfer at orbital stations or relay depots.' },
-  'heat-shield': { title: 'Re-entry Shield',      body: 'Protects the return vehicle and payload during atmospheric deceleration.' },
-  'crew-module': { title: 'Crew Quarters',         body: 'Adds two pressurised seats for qualified astronauts on larger hulls.' },
-  lander:        { title: 'Lander Module',         body: 'Detaches to descend and land on a target, then re-docks with the ship in orbit.' },
+const STAGE_LABEL: Record<ShipRoomKind, string> = {
+  engine: 'Engine',
+  booster: 'Booster',
+  cockpit: 'Command',
+  payload: 'Payload',
+  'fuel-stage': 'Propellant',
+  fairing: 'Fairing',
+  'docking-port': 'Docking',
+  'heat-shield': 'Shield',
+  'crew-module': 'Crew',
+  lander: 'Lander',
 }
 
 export default function ShipInteriorPreview({
@@ -68,24 +57,23 @@ export default function ShipInteriorPreview({
     installed: installedParts ?? {},
   }))
   const [stepIndex, setStepIndex] = useState(0)
+  const swipe = useRef<{ x: number; y: number } | null>(null)
+  const suppressClick = useRef(false)
   if (!layout) return null
 
   const sequence = getBuildSequence(missionsDone, crewModuleResearched, landingResearched)
-  const buildSteps: BuildStep[] = sequence.map(kind => ({ kind, ...STEP_DETAILS[kind] }))
-  const step = buildSteps[stepIndex]
-  const installedIds = selectedCustomizerPartIds(buildState.installed, sequence)
-  const chance = calculateShipSuccessChance(installedIds, sequence)
+  const stepKind = sequence[stepIndex]
   const readyToConfirm = canConfirmCustomizerBuild(buildState.installed, sequence)
-  const currentInstalled = buildState.installed[step.kind]
-    ? customizerPartById(buildState.installed[step.kind]!)
+  const currentInstalled = buildState.installed[stepKind]
+    ? customizerPartById(buildState.installed[stepKind]!)
     : undefined
-  const availableParts = partsForKind(step.kind, missionsDone)
+  const availableParts = partsForKind(stepKind, missionsDone)
+  const isFirst = stepIndex === 0
+  const isLast = stepIndex === sequence.length - 1
+  const stageName = STAGE_LABEL[stepKind]
 
   function choosePart(part: CustomizerPart) {
     setBuildState(s => chooseCustomizerPart(s, part.id).state)
-  }
-  function removeCurrentPart() {
-    setBuildState(s => refundCustomizerPart(s, step.kind).state)
   }
   function confirmBuild() {
     const result = confirmCustomizerBuild(buildState, sequence)
@@ -98,69 +86,80 @@ export default function ShipInteriorPreview({
     setBuildState(result.state)
     onClose?.()
   }
+  function go(delta: number) {
+    if (buildState.confirmed) return
+    setStepIndex(i => Math.min(sequence.length - 1, Math.max(0, i + delta)))
+  }
+  function onPrimary() {
+    if (buildState.confirmed) return
+    if (!isLast) {
+      go(1)
+      return
+    }
+    confirmBuild()
+  }
 
-  const isFirst = stepIndex === 0
-  const isLast = stepIndex === buildSteps.length - 1
+  function onPointerDown(event: PointerEvent) {
+    swipe.current = { x: event.clientX, y: event.clientY }
+  }
+  function onPointerUp(event: PointerEvent) {
+    const start = swipe.current
+    swipe.current = null
+    if (!start) return
+    const dx = event.clientX - start.x
+    const dy = event.clientY - start.y
+    if (Math.abs(dx) < 56 || Math.abs(dx) <= Math.abs(dy)) return
+    suppressClick.current = true
+    go(dx < 0 ? 1 : -1)
+  }
+  function onClickCapture(event: MouseEvent) {
+    if (!suppressClick.current) return
+    suppressClick.current = false
+    event.preventDefault()
+    event.stopPropagation()
+  }
+
+  const primaryDisabled = buildState.confirmed || (isLast && !readyToConfirm)
+  const primaryLabel = buildState.confirmed ? 'CONFIRMED' : isLast ? 'CONFIRM' : 'NEXT'
 
   return (
-    // Full-screen overlay — caller must position this (position: absolute; inset: 0)
     <div
       data-testid={`ship-interior-${rocketId}`}
       className="ln-starfield theme-blueprint ship-interior-preview sip-root"
       style={{ height: '100%' }}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onClickCapture={onClickCapture}
     >
-      {/* ── HEADER (glass topbar) ─────────────────────────────────── */}
-      <div className="ln-glass-panel" style={{
-        gridArea: 'head',
-        display: 'grid',
-        gridTemplateColumns: '1fr auto',
-        alignItems: 'center',
-        gap: 8,
-        padding: '8px 16px 8px',
-        borderLeft: 'none',
-        borderRight: 'none',
-        borderTop: 'none',
-      }}>
-        <div>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.18em', color: 'var(--ln-bp-ink-dim)', textTransform: 'uppercase' }}>
-            Build Config · Explorer
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 1 }}>
-            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: 'var(--ln-text)' }} data-testid="ship-budget">
-              {formatCurrency(buildState.balance, { compact: true })}
-            </span>
-            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, color: 'var(--ln-bp-ink-dim)' }}>remaining</span>
-          </div>
+      <header className="sip-head">
+        <div className="sip-budget">
+          <span data-testid="ship-budget">{formatCurrency(buildState.balance, { compact: true })}</span>
+          <span className="sip-budget-note">remaining</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div data-testid="ship-success-chance">
-            <StatusPill kind="ok">{chance}%</StatusPill>
-          </div>
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              data-testid="ship-interior-close"
-              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 44, minHeight: 44, padding: 0, borderRadius: 6, border: '1px solid var(--ln-glass-border)', background: 'transparent', color: 'var(--ln-bp-ink-dim)', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            data-testid="ship-interior-close"
+            className="sip-close"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3 3 L13 13 M13 3 L3 13" fill="none" stroke="currentColor" strokeWidth="2" />
+            </svg>
+          </button>
+        )}
+      </header>
 
-      {/* ── SHIP DIAGRAM (PixiJS, glass-framed with corner brackets) ── */}
-      <div className="sip-ship" style={{ gridArea: 'ship', minHeight: 0, overflow: 'hidden', padding: 6 }}>
-        {/* SSL-472: bounded height, otherwise the canvas panel grows past this box and sits over the module cards. */}
+      <div className="sip-ship">
         <Panel surface="glass" style={{ padding: 0, overflow: 'hidden', height: '100%' }}>
-          <ErrorBoundary fallback={<div style={{ height: 80, background: 'var(--ln-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 14, color: 'var(--ln-bp-ink-dim)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
+          <ErrorBoundary fallback={<div className="sip-diagram-fallback">Diagram unavailable</div>}>
             <ShipCustomizerCanvas
               layout={layout}
-              activeKind={step.kind}
+              activeKind={stepKind}
               installedParts={buildState.installed}
               onSlotClick={kind => {
-                const idx = buildSteps.findIndex(s => s.kind === kind)
+                const idx = sequence.indexOf(kind)
                 if (idx >= 0) setStepIndex(idx)
               }}
               confirmed={buildState.confirmed}
@@ -169,7 +168,6 @@ export default function ShipInteriorPreview({
         </Panel>
       </div>
 
-      {/* data-testid anchors for Cypress slot tests (invisible, mirrors slot state) */}
       <div style={{ display: 'none' }}>
         {layout.slots.map(slot => (
           <span
@@ -180,234 +178,83 @@ export default function ShipInteriorPreview({
         ))}
       </div>
 
-      {/* ── STEP TABS (pill row, cyan current / lime done) ──────────── */}
-      <div className="sip-tabs" style={{
-        gridArea: 'tabs',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 6,
-        padding: '4px 8px 8px',
-      }}>
-        {buildSteps.map((item, index) => {
-          const active = index === stepIndex
-          const done = !!buildState.installed[item.kind]
-          return (
-            <button
-              key={item.kind}
-              data-testid={`ship-step-${item.kind}`}
-              onClick={() => setStepIndex(index)}
-              disabled={buildState.confirmed}
-                style={{
-                flex: '1 1 auto',
-                minHeight: 44,
-                padding: '0 12px',
-                borderRadius: 999,
-                border: `1px solid ${active ? 'var(--ln-cyan)' : done ? 'var(--ln-bp-green)' : 'var(--ln-bp-line-strong)'}`,
-                background: active ? 'var(--ln-cyan)' : 'var(--ln-bp-paper)',
-                color: active ? 'var(--ln-text-on-cyan)' : done ? 'var(--ln-bp-green)' : 'var(--ln-bp-ink)',
-                fontFamily: 'var(--ln-font-display)',
-                fontSize: 14,
-                fontWeight: active ? 900 : 700,
-                letterSpacing: '0.07em',
-                textTransform: 'uppercase',
-                cursor: buildState.confirmed ? 'default' : 'pointer',
-                transition: 'border-color 120ms, background 120ms, color 120ms',
-              }}
-            >
-              {done ? '✓' : index + 1}. {item.kind.replace('-', '‑')}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* ── STEP CONTENT (fills remaining) ───────────────────────────── */}
-      <div data-testid="ship-build-step" className="sip-side" style={{ gridArea: 'side', minHeight: 0, display: 'flex', flexDirection: 'column', padding: '8px 8px 8px' }}>
-        {/* Step title + desc, with the room's full interior diorama as a
-            detail preview — the walls/floor/furniture art that's too
-            low-contrast to read at grid-cell scale gets real screen space
-            here instead (see SHIP_ROOM_DETAIL_ASSETS vs SHIP_ROOM_ASSETS). */}
-        <div style={{ flex: 'none', marginBottom: 6, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-          <img
-            src={getRoomDetailArt(step.kind, buildState.installed[step.kind])}
-            alt={`${step.title} interior preview`}
-            data-testid="ship-step-detail-image"
-            className="sip-detail"
-            style={{
-              flex: 'none',
-              borderRadius: 8,
-              border: '1px solid var(--ln-glass-border)',
-              background: 'var(--ln-overlay)',
-              objectFit: 'cover',
-            }}
-          />
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.16em', color: 'var(--ln-bp-blue)', textTransform: 'uppercase' }}>
-              Step {stepIndex + 1} / {buildSteps.length}
-            </div>
-            <h3 style={{ margin: '4px 0 4px', fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-text)', lineHeight: 1.1 }}>
-              {step.title}
-            </h3>
-            <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-bp-ink-dim)', lineHeight: 1.35 }}>
-              {step.body}
-            </p>
+      <div data-testid="ship-build-step" className="sip-side">
+        <div
+          className="sip-stage"
+          data-testid="ship-stage"
+          data-kind={stepKind}
+          data-index={stepIndex + 1}
+          data-total={sequence.length}
+        >
+          <button
+            type="button"
+            data-testid="ship-step-back"
+            className="sip-back"
+            aria-label="Previous stage"
+            onClick={() => go(-1)}
+            disabled={isFirst || buildState.confirmed}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+              <path d="M12 3 L6 9 L12 15" fill="none" stroke="currentColor" strokeWidth="2" />
+            </svg>
+          </button>
+          <div className="sip-stage-copy">
+            <span className="sip-stage-label">{stageName} {stepIndex + 1}/{sequence.length}</span>
+            <span className="sip-dots" aria-hidden="true">
+              {sequence.map((kind, index) => {
+                const done = !!buildState.installed[kind]
+                const current = index === stepIndex
+                return (
+                  <i
+                    key={kind}
+                    className={current ? 'sip-dot is-current' : done ? 'sip-dot is-done' : 'sip-dot'}
+                  />
+                )
+              })}
+            </span>
           </div>
         </div>
 
-        {/* Part cards — flex 1, fill space. Glass-HUD variant cards: cyan
-            border by default, lime border + "Installed" state when selected. */}
-        {/* Scrolls internally: in a short landscape viewport the cards would otherwise
-            spill under the footer controls, where a real pointer cannot reach them. */}
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridAutoRows: 'min-content', alignContent: 'start', gap: 6 }}>
+        <div className="sip-cards">
           {availableParts.map(part => {
-            const selected = buildState.installed[step.kind] === part.id
+            const selected = buildState.installed[stepKind] === part.id
             const swapCost = currentInstalled && currentInstalled.id !== part.id ? currentInstalled.price : 0
             const affordable = buildState.balance + swapCost >= part.price
             return (
               <button
                 key={part.id}
+                type="button"
                 data-testid={`choose-${part.id}`}
                 disabled={buildState.confirmed || !affordable}
                 onClick={() => choosePart(part)}
-                className={selected ? 'ship-part-option ship-part-option--selected' : 'ln-glass-panel ship-part-option'}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 4,
-                  padding: '8px 8px',
-                  borderRadius: 8,
-                  color: 'var(--ln-bp-ink)',
-                  textAlign: 'left',
-                  cursor: buildState.confirmed || !affordable ? 'not-allowed' : 'pointer',
-                  transition: 'border-color 120ms, background 120ms',
-                  overflow: 'hidden',
-                }}
+                className={selected ? 'ship-part-option ship-part-option--selected' : 'ship-part-option'}
               >
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, lineHeight: 1.1, flex: 'none' }}>
-                  {part.name}
-                </div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-bp-ink-dim)', lineHeight: 1.3, flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                  {part.description}
-                </div>
-                <div style={{ flex: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 14, fontWeight: 800, color: 'var(--ln-bp-blue)' }}>
-                    {formatCurrency(part.price, { compact: true })}
-                  </span>
-                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, color: selected ? 'var(--ln-bp-green)' : 'var(--ln-bp-blue)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+                <span className="sip-part-name">{part.name}</span>
+                <span className="sip-part-desc">{part.description}</span>
+                <span className="sip-part-meta">
+                  <span className="sip-part-price">{formatCurrency(part.price, { compact: true })}</span>
+                  <span className={selected ? 'sip-part-state is-installed' : 'sip-part-state'}>
                     {selected ? 'Installed' : `+${part.successBonus}%`}
                   </span>
-                </div>
+                </span>
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* ── FOOTER (glass) ──────────────────────────────────────────── */}
-      <div className="ln-glass-panel" style={{
-        gridArea: 'foot',
-        borderLeft: 'none',
-        borderRight: 'none',
-        borderBottom: 'none',
-      }}>
-        {/* Stage summary chips */}
-        <div style={{ display: 'flex', gap: 3, padding: '4px 8px 0', overflowX: 'auto', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span data-testid="ship-review" data-installed={installedIds.length} data-total={buildSteps.length} style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, color: 'var(--ln-bp-ink-dim)', fontWeight: 700, letterSpacing: '0.08em', marginRight: 4 }}>
-            {buildState.confirmed ? 'Configuration confirmed' : `${installedIds.length}/${buildSteps.length} stages selected`}
-          </span>
-          {buildSteps.map(item => {
-            const part = buildState.installed[item.kind] ? customizerPartById(buildState.installed[item.kind]!) : undefined
-            const active = item.kind === step.kind
-            return (
-              <div key={item.kind} style={{
-                flex: 'none',
-                padding: '4px 8px',
-                borderRadius: 4,
-                border: `1px solid ${active ? 'var(--ln-bp-blue)' : part ? 'var(--ln-bp-green)' : 'var(--ln-bp-line-strong)'}`,
-                background: 'var(--ln-bp-paper)',
-                color: active ? 'var(--ln-bp-blue)' : part ? 'var(--ln-bp-green)' : 'var(--ln-bp-ink-dim)',
-                fontFamily: 'var(--ln-font-display)',
-                fontSize: 14,
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                whiteSpace: 'nowrap',
-              }}>
-                {part ? part.name : item.kind}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Nav row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 6, padding: '4px 8px 8px', alignItems: 'center' }}>
-          <button
-            data-testid="ship-step-back"
-            onClick={() => setStepIndex(i => Math.max(0, i - 1))}
-            disabled={isFirst || buildState.confirmed}
-            style={{
-              minHeight: 44, minWidth: 56, padding: '0 8px', borderRadius: 7,
-              border: '1px solid var(--ln-bp-line-strong)', background: 'var(--ln-bp-paper)',
-              color: 'var(--ln-bp-ink)',
-              fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.1em',
-              textTransform: 'uppercase', cursor: isFirst || buildState.confirmed ? 'not-allowed' : 'pointer',
-            }}
-          >
-            Back
-          </button>
-
-          {/* Centre: refund + confirm stacked */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {!buildState.confirmed && (
-              <button
-                data-testid="ship-refund-step"
-                onClick={removeCurrentPart}
-                disabled={!currentInstalled}
-                style={{
-                  minHeight: 44, borderRadius: 6,
-                  border: '1px solid var(--ln-bp-line-strong)',
-                  background: 'var(--ln-bp-paper)',
-                  color: currentInstalled ? 'var(--ln-bp-pink)' : 'var(--ln-bp-ink-dim)',
-                  fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900,
-                  letterSpacing: '0.1em', textTransform: 'uppercase',
-                  cursor: currentInstalled ? 'pointer' : 'not-allowed',
-                }}
-              >
-                Refund Step
-              </button>
-            )}
-            <button
-              data-testid="confirm-ship-config"
-              onClick={buildState.confirmed ? undefined : confirmBuild}
-              disabled={!readyToConfirm || buildState.confirmed}
-              style={{
-                minHeight: 44, borderRadius: 6,
-                border: readyToConfirm && !buildState.confirmed ? 'none' : '1px solid var(--ln-bp-line-strong)',
-                background: readyToConfirm && !buildState.confirmed ? 'var(--ln-bp-green)' : 'var(--ln-bp-paper)',
-                color: readyToConfirm && !buildState.confirmed ? 'var(--ln-bp-paper)' : 'var(--ln-bp-ink)',
-                fontFamily: 'var(--ln-font-display)', fontSize: 14,
-                fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
-                cursor: readyToConfirm && !buildState.confirmed ? 'pointer' : 'not-allowed',
-              }}
-            >
-              {buildState.confirmed ? 'Configuration Confirmed' : 'Confirm Configuration'}
-            </button>
-          </div>
-
-          <button
-            data-testid="ship-step-next"
-            onClick={() => setStepIndex(i => Math.min(buildSteps.length - 1, i + 1))}
-            disabled={isLast || buildState.confirmed}
-            style={{
-              minHeight: 44, minWidth: 56, padding: '0 8px', borderRadius: 7,
-              border: '1px solid var(--ln-bp-blue)', background: 'var(--ln-bp-paper)',
-              color: isLast || buildState.confirmed ? 'var(--ln-bp-ink-dim)' : 'var(--ln-bp-blue)',
-              fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 900, letterSpacing: '0.1em',
-              textTransform: 'uppercase', cursor: isLast || buildState.confirmed ? 'not-allowed' : 'pointer',
-            }}
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      <footer className="sip-foot">
+        <button
+          type="button"
+          data-testid="ship-primary"
+          data-action={isLast ? 'confirm' : 'next'}
+          className={isLast ? 'sip-primary sip-primary--confirm' : 'sip-primary'}
+          onClick={onPrimary}
+          disabled={primaryDisabled}
+        >
+          {primaryLabel}
+        </button>
+      </footer>
     </div>
   )
 }

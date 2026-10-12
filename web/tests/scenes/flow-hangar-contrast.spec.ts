@@ -36,18 +36,45 @@ test.describe('hangar contrast', () => {
   })
 })
 
-test('customiser controls clear 4.5:1 at 402px', async ({ page }) => {
-  await page.setViewportSize({ width: 402, height: 874 })
-  await page.goto('/game/stage?preset=ship-customizer&plan=1&click=open-ship-customizer')
-  await expect(page.locator('[data-testid="confirm-ship-config"]')).toBeVisible()
-  const blue = await page.locator('.ship-interior-preview').evaluate(el => getComputedStyle(el).getPropertyValue('--ln-bp-blue').trim())
-  expect(blue).toBe('#175f9b')
-  for (const sel of ['[data-testid="confirm-ship-config"]', '[data-testid="ship-step-back"]', '[data-testid="ship-step-next"]', '[data-testid="ship-refund-step"]']) {
-    const paint = await page.locator(sel).evaluate(el => {
-      const s = getComputedStyle(el)
-      return { color: s.color, background: s.backgroundColor, opacity: s.opacity }
+for (const vp of [{ name: '402', width: 402, height: 874 }, { name: 'landscape', width: 926, height: 428 }] as const) {
+  test(`customiser controls clear 4.5:1 at ${vp.name}`, async ({ page }) => {
+    await page.setViewportSize({ width: vp.width, height: vp.height })
+    await page.goto('/game/stage?preset=ship-customizer&plan=1&click=open-ship-customizer')
+    await expect(page.locator('[data-testid="ship-primary"]')).toBeVisible()
+    const blue = await page.locator('.ship-interior-preview').evaluate(el => getComputedStyle(el).getPropertyValue('--ln-bp-blue').trim())
+    expect(blue).toBe('#175f9b')
+    const paints = await page.evaluate(() => {
+      const opaque = (el: Element) => {
+        let node: Element | null = el
+        while (node) {
+          const bg = getComputedStyle(node).backgroundColor
+          const parts = bg.replace(/rgba?\(|\)/g, '').split(',').map(n => parseFloat(n))
+          const alpha = parts.length === 4 ? parts[3] : 1
+          if (alpha > 0.9) return bg
+          node = node.parentElement
+        }
+        return 'rgb(255, 255, 255)'
+      }
+      const read = (sel: string) => {
+        const el = document.querySelector(sel)
+        if (!el) return null
+        const s = getComputedStyle(el)
+        return { color: s.color, background: opaque(el), opacity: s.opacity }
+      }
+      return {
+        primary: read('[data-testid="ship-primary"]'),
+        back: read('[data-testid="ship-step-back"]'),
+        stage: read('.sip-stage-label'),
+        budget: read('[data-testid="ship-budget"]'),
+        note: read('.sip-budget-note'),
+        part: read('.sip-part-name'),
+        price: read('.sip-part-price'),
+      }
     })
-    expect(Number(paint.opacity)).toBe(1)
-    expect(ratio(channel(paint.color), channel(paint.background))).toBeGreaterThanOrEqual(4.5)
-  }
-})
+    for (const paint of Object.values(paints)) {
+      expect(paint).not.toBeNull()
+      expect(Number(paint!.opacity)).toBe(1)
+      expect(ratio(channel(paint!.color), channel(paint!.background))).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+}

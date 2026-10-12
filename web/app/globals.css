@@ -3517,22 +3517,87 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   cursor: pointer;
 }
 
-/* SSL-427: hangar customiser panel. Landscape puts the ship big on the left and the
-   active step plus part cards on the right; portrait stacks them. */
-.sip-root{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(170px,34%) auto minmax(0,1fr) auto;grid-template-areas:"head" "ship" "tabs" "side" "foot"}
-@media (max-width: 520px) {
-  .sip-root { grid-template-rows: auto minmax(112px, 26%) auto minmax(0, 1fr) auto; }
-  .sip-root [data-testid="confirm-ship-config"],
-  .sip-root [data-testid="ship-refund-step"],
-  .sip-root [data-testid="ship-step-next"],
-  .sip-root [data-testid="ship-step-back"] { min-height: 44px !important; }
+/* Hangar build config: ship, the current stage, and one primary button.
+   The training strip belongs to the hangar underneath, not this overlay. */
+.sip-root{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(180px,1fr) auto auto;grid-template-areas:"head" "ship" "side" "foot"}
+.game-stage-main:has([data-testid="hangar-customizer-overlay"]) .flight-plan,
+.game-stage-main:has([data-testid="launch-review-customizer-overlay"]) .flight-plan,
+.portrait-canvas:has([data-testid="hangar-customizer-overlay"]) .sync-status,
+.portrait-canvas:has([data-testid="launch-review-customizer-overlay"]) .sync-status { display: none; }
+.sip-head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px;
+  border-bottom: 2px solid var(--ln-bp-line-strong);
+  background: var(--ln-bp-paper);
 }
-@media (orientation:landscape){
-  .sip-root{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"head head" "ship side" "tabs side" "foot foot"}
-  .sip-ship{padding:8px !important}
-  .sip-detail{width:132px !important;height:132px !important}
+.sip-budget { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.sip-budget [data-testid="ship-budget"] { font: 800 18px/1.2 var(--ln-font-display); color: var(--ln-bp-ink); }
+.sip-budget-note { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-bp-ink-dim); }
+.sip-close, .sip-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 2px solid var(--ln-bp-ink);
+  border-radius: 2px;
+  background: var(--ln-bp-paper);
+  color: var(--ln-bp-ink);
+  box-shadow: 3px 3px 0 var(--ln-bp-line-strong);
+  cursor: pointer;
+  opacity: 1;
 }
-.sip-detail{width:72px;height:72px}
+.sip-back:disabled, .sip-close:disabled, .sip-primary:disabled, .ship-interior-preview .ship-part-option:disabled { opacity: 1; color: var(--ln-bp-ink); background-color: var(--ln-bp-paper); cursor: not-allowed; }
+.sip-ship { grid-area: ship; min-height: 0; overflow: hidden; padding: 8px; }
+.sip-diagram-fallback { height: 80px; display: flex; align-items: center; justify-content: center; font: 700 14px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-bp-ink-dim); background: var(--ln-bp-paper); }
+.sip-side { grid-area: side; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 0 8px 8px; }
+.sip-stage { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.sip-stage-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sip-stage-label { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-bp-blue); }
+.sip-dots { display: flex; align-items: center; gap: 8px; }
+.sip-dot { display: block; width: 8px; height: 8px; background: var(--ln-bp-paper); border: 2px solid var(--ln-bp-ink); }
+.sip-dot.is-done { background: var(--ln-bp-green); border-color: var(--ln-bp-green); }
+.sip-dot.is-current { width: 12px; height: 12px; background: var(--ln-bp-blue); border-color: var(--ln-bp-blue); }
+.sip-cards { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: min-content; align-content: start; gap: 8px; touch-action: pan-y; }
+.ship-interior-preview .ship-part-option { display: flex; flex-direction: column; gap: 4px; min-height: 44px; padding: 8px; border-radius: 2px; color: var(--ln-bp-ink); text-align: left; cursor: pointer; }
+.sip-part-name { font: 900 14px/1.2 var(--ln-font-display); color: var(--ln-bp-ink); }
+.sip-part-desc { font: 400 14px/1.3 var(--ln-font-body); color: var(--ln-bp-ink-dim); }
+.sip-part-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sip-part-price, .sip-part-state { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ln-bp-blue); }
+.sip-part-state.is-installed { color: var(--ln-bp-green); }
+.sip-foot { grid-area: foot; padding: 8px; background: var(--ln-bp-paper); border-top: 2px solid var(--ln-bp-line-strong); }
+.sip-primary {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid var(--ln-bp-blue);
+  border-radius: 2px;
+  background: var(--ln-bp-blue);
+  color: var(--ln-bp-paper);
+  box-shadow: 3px 3px 0 var(--ln-bp-ink);
+  font: 900 14px/1 var(--ln-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: 1;
+}
+.sip-primary--confirm:not(:disabled) { background: var(--ln-bp-green); border-color: var(--ln-bp-green); color: var(--ln-bp-paper); }
+.sip-primary:disabled { background: var(--ln-bp-paper); color: var(--ln-bp-ink); border-color: var(--ln-bp-line-strong); box-shadow: 3px 3px 0 var(--ln-bp-line-strong); }
+@media (orientation: portrait) {
+  .sip-cards { max-height: 280px; }
+}
+@media (orientation: landscape) {
+  .sip-root { grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.9fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "head head" "ship side" "foot foot"; }
+  .sip-side { padding-top: 8px; }
+}
 
 /* SSL-462: on wide landscape the result cards sit in the right half so they never cover the docked rocket. */
 @media (min-width: 900px) and (orientation: landscape) {
