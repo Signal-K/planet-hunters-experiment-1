@@ -33,10 +33,24 @@ interface HangarScreenProps {
 }
 
 const VEHICLES = [
-  { id: 'rover', rocketId: null, src: '/art/scenes/hangar/hangar-vehicle-rover.png', label: 'Rover' },
-  { id: ROCKET_IDS.explorer, rocketId: ROCKET_IDS.explorer, src: '/art/scenes/hangar/hangar-vehicle-rocket.png', label: 'Explorer' },
-  { id: ROCKET_IDS.prospector, rocketId: ROCKET_IDS.prospector, src: '/art/scenes/hangar/hangar-vehicle-rocket-alt.png', label: 'Prospector' },
+  { id: ROCKET_IDS.explorer, rocketId: ROCKET_IDS.explorer, label: 'Explorer' },
+  { id: ROCKET_IDS.prospector, rocketId: ROCKET_IDS.prospector, label: 'Prospector' },
 ] as const
+
+function RocketThumbnail({ cargo }: { cargo: boolean }) {
+  return (
+    <svg className={styles.vehicleIcon} viewBox="0 0 210 107" aria-hidden="true" shapeRendering="crispEdges">
+      <g stroke="var(--ln-world-outline)" strokeWidth="4" strokeLinejoin="round">
+        <path d="M24 42h114l44 11-44 12H24z" fill="var(--ln-world-hull-lit)" />
+        <path d="M43 42 30 26l30 16M43 65 30 81l30-16" fill="var(--ln-world-trim-blue)" />
+        <path d="M18 44h12v19H18z" fill="var(--ln-world-asphalt)" />
+        <path d="M110 43h10v21h-10z" fill="var(--ln-world-trim-blue)" stroke="none" />
+        <rect x="76" y="48" width="13" height="10" rx="4" fill="var(--ln-world-glass)" strokeWidth="2" />
+        {cargo && <path d="M91 30h38v12H91z" fill="var(--ln-world-trim-blue)" />}
+      </g>
+    </svg>
+  )
+}
 
 function GearIcon() {
   return (
@@ -107,7 +121,7 @@ export default function HangarScreen({
               aria-label={sealed ? `${vehicle.label}, sealed` : vehicle.label}
               onClick={() => choose(vehicle.rocketId)}
             >
-              <img src={vehicle.src} alt="" />
+              <RocketThumbnail cargo={vehicle.id === ROCKET_IDS.prospector} />
             </button>
           )
         })}

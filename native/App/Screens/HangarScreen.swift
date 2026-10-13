@@ -39,10 +39,26 @@ struct HangarScreen: View {
             ZStack {
                 Image("scene-hangar-plate-bay")
                     .resizable()
+                    .interpolation(.none)
                     .scaledToFill()
                     .frame(width: geo.size.width, height: geo.size.height)
                     .clipped()
+                    .saturation(1.18)
+                    .hueRotation(.degrees(8))
                     .accessibilityHidden(true)
+                    .overlay {
+                        LinearGradient(
+                            stops: [
+                                .init(color: Theme.blueBright.opacity(0.18), location: 0),
+                                .init(color: .clear, location: 0.46),
+                                .init(color: Theme.blue.opacity(0.2), location: 1),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        .blendMode(.color)
+                        .allowsHitTesting(false)
+                    }
                 assembly(in: geo)
             }
             .overlay(alignment: .topLeading) {
@@ -70,15 +86,17 @@ struct HangarScreen: View {
                     .offset(y: short ? -36 : -48)
                 }
             }
-            .frame(width: geo.size.width, height: geo.size.height)
-            .clipped()
-            .overlay(alignment: .top) { hud(short: short) }
+        .frame(width: geo.size.width, height: geo.size.height)
+        .clipped()
+        .overlay(alignment: .top) { hud(short: short) }
             .overlay(alignment: .bottom) {
                 BaseDock(tile: 44, zones: zones.dock, onPrev: { store.go(.hub) }, onNext: { store.go(.launchpad) })
                     .padding(.bottom, short ? 4 : 8)
             }
         }
         .foregroundStyle(Theme.ink)
+        .ignoresSafeArea()
+        .statusBarHidden()
         .accessibilityElement(children: .contain)
     }
 
@@ -86,10 +104,18 @@ struct HangarScreen: View {
         let height = geo.size.height * (geo.size.height < 500 ? 0.92 : 0.86)
         return Image("scene-hangar-sheet")
             .resizable()
+            .interpolation(.none)
             .scaledToFill()
         .frame(width: geo.size.width, height: height * 1.34, alignment: .top)
         .frame(width: geo.size.width, height: height, alignment: .top)
         .clipped()
+        .overlay {
+            Rectangle()
+                .fill(Theme.blue)
+                .blendMode(.color)
+                .opacity(0.5)
+                .allowsHitTesting(false)
+        }
         .mask(
             LinearGradient(stops: [
                 .init(color: .black, location: 0),
@@ -119,23 +145,19 @@ struct HangarScreen: View {
     }
 
     private func cards(short: Bool, narrow: Bool) -> some View {
-        let vehicles: [(id: String, name: String, asset: String)] = [
-            ("rover", "Rover", "scene-hangar-vehicle-rover"),
-            ("explorer", "Explorer", "scene-hangar-vehicle-rocket"),
-            ("prospector", "Prospector", "scene-hangar-vehicle-rocket-alt"),
+        let vehicles: [(id: String, name: String)] = [
+            ("explorer", "Explorer"),
+            ("prospector", "Prospector"),
         ]
         return HStack(spacing: short ? 12 : 20) {
             ForEach(vehicles, id: \.id) { vehicle in
                 Button { focused = vehicle.id } label: {
-                    Image(vehicle.asset)
-                        .resizable()
-                        .interpolation(.none)
-                        .scaledToFit()
+                    HangarRocketThumbnail(cargo: vehicle.id == "prospector")
                         .frame(maxWidth: .infinity)
                         .frame(height: short ? 72 : (narrow ? 88 : 120))
                         .padding(short ? 8 : 16)
                         .frame(maxWidth: .infinity, minHeight: short ? 96 : 120)
-                        .background(Theme.paper)
+                        .background(Theme.paper2)
                         .overlay(Rectangle().stroke(focused == vehicle.id ? Theme.ink : Theme.blue, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
@@ -151,5 +173,42 @@ struct HangarScreen: View {
             HudChips(francs: store.player.francs)
         }
         .padding(short ? 8 : 12)
+    }
+}
+
+private struct HangarRocketThumbnail: View {
+    let cargo: Bool
+
+    var body: some View {
+        Canvas { context, size in
+            let transform = CGAffineTransform(scaleX: size.width / 210, y: size.height / 107)
+            context.concatenate(transform)
+            let outline = Theme.ink
+            let hull = Theme.paper
+            let blue = Theme.blue
+            let glass = Theme.blueBright
+            let asphalt = Theme.ink
+            func polygon(_ points: [CGPoint], color: Color, lineWidth: CGFloat = 4) {
+                var path = Path()
+                path.addLines(points)
+                path.closeSubpath()
+                context.fill(path, with: .color(color))
+                context.stroke(path, with: .color(outline), lineWidth: lineWidth)
+            }
+            polygon([CGPoint(x: 24, y: 42), CGPoint(x: 138, y: 42), CGPoint(x: 182, y: 53), CGPoint(x: 138, y: 65), CGPoint(x: 24, y: 65)], color: hull)
+            polygon([CGPoint(x: 43, y: 42), CGPoint(x: 30, y: 26), CGPoint(x: 60, y: 42)], color: blue)
+            polygon([CGPoint(x: 43, y: 65), CGPoint(x: 30, y: 81), CGPoint(x: 60, y: 65)], color: blue)
+            let engine = Path(CGRect(x: 18, y: 44, width: 12, height: 19))
+            context.fill(engine, with: .color(asphalt))
+            context.stroke(engine, with: .color(outline), lineWidth: 3)
+            context.fill(Path(CGRect(x: 110, y: 43, width: 10, height: 21)), with: .color(blue))
+            let window = Path(roundedRect: CGRect(x: 76, y: 48, width: 13, height: 10), cornerRadius: 4)
+            context.fill(window, with: .color(glass))
+            context.stroke(window, with: .color(outline), lineWidth: 2)
+            if cargo {
+                polygon([CGPoint(x: 91, y: 30), CGPoint(x: 129, y: 30), CGPoint(x: 129, y: 42), CGPoint(x: 91, y: 42)], color: blue)
+            }
+        }
+        .accessibilityHidden(true)
     }
 }

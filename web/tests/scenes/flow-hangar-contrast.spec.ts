@@ -18,17 +18,18 @@ function ratio(a: number[], b: number[]) {
 test.describe('hangar contrast', () => {
   test.use({ viewport: { width: 926, height: 428 } })
 
-  test('vehicle cards and the francs chip sit on light panels at 4.5:1', async ({ page }) => {
+  test('rocket cards and the francs chip sit on cool panels at 4.5:1', async ({ page }) => {
     await page.goto('/game/stage?preset=ship-customizer&chrome=1')
     const grid = page.locator('[data-testid="hangar-fleet-grid"]')
     await expect(grid).toBeVisible()
     await expect(page.locator('[data-testid="hangar-screen"]').getByRole('heading')).toHaveCount(0)
     const cards = grid.locator('button')
-    await expect(cards).toHaveCount(3)
+    await expect(cards).toHaveCount(2)
     const paint = await cards.evaluateAll(nodes => nodes.map(el => {
       const s = getComputedStyle(el)
       return {
         text: (el.textContent || '').trim(),
+        icons: el.querySelectorAll('svg').length,
         images: el.querySelectorAll('img').length,
         opacity: s.opacity,
         color: s.color,
@@ -37,10 +38,14 @@ test.describe('hangar contrast', () => {
     }))
     for (const card of paint) {
       expect(card.text).toBe('')
-      expect(card.images).toBe(1)
+      expect(card.icons).toBe(1)
+      expect(card.images).toBe(0)
       expect(Number(card.opacity)).toBe(1)
       expect(ratio(channel(card.color), channel(card.background))).toBeGreaterThanOrEqual(4.5)
     }
+    await expect(cards.nth(0)).toHaveAccessibleName('Explorer')
+    await expect(cards.nth(1)).toHaveAccessibleName('Prospector')
+    await expect(grid.locator('img[src*="rover"]')).toHaveCount(0)
     const chip = await page.locator('[data-testid="hangar-francs-chip"]').evaluate(el => {
       const s = getComputedStyle(el)
       return { color: s.color, background: s.backgroundColor, opacity: s.opacity }
