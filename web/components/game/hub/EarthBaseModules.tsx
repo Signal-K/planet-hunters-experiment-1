@@ -144,7 +144,7 @@ export function structureHalfScene(kind: string, level = 1, sceneWidth = 402): n
 
 const HIDDEN_BASE_KINDS = new Set(['command', 'refinery', 'garage', 'deep-space-telescope', 'transit-telescope', 'astronaut-academy', 'market', 'surface-silo'])
 
-export function EarthBaseModules({ buildings, parts, padRocket = true }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null; padRocket?: boolean | 'core' }) {
+export function EarthBaseModules({ buildings, parts, padRocket = false }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null; padRocket?: boolean | 'core' }) {
   return (
     <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {

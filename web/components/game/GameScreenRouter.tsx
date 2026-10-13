@@ -570,6 +570,20 @@ function ScreenBody({
           rocketImageSrc={rocketDisplay.img}
           selectedRocketName={rocketDisplay.name}
           francs={game.player.francs}
+          mission={game.mission ? { title: game.mission.title } : null}
+          target={game.target}
+          rocket={game.rocket}
+          onInstallLoadout={(next, prev) => game.confirmShipCustomizerBuild(next, prev)}
+          onRequestLaunch={() => {
+            const vehicle = game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId)
+            if (!vehicle || vehicle.location !== 'launchpad') {
+              game.onPurchaseRocket(rocketModelForConfig(game.rocket).id)
+              return
+            }
+            handleLaunch()
+          }}
+          launching={launchPending}
+          onLaunchComplete={handleLaunchComplete}
         />
       )
       }

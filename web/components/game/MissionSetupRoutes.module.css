@@ -1,3 +1,4 @@
+.builderHost { position: absolute; inset: 0; }
 .root { --mission-paper: var(--ln-blueprint-paper-2); --mission-paper-bright: var(--ln-blueprint-paper); --mission-paper-muted: var(--ln-blueprint-bg); --mission-ink: var(--ln-blueprint-ink); --mission-green: var(--ln-ok); position:absolute; inset:0; overflow:hidden; color:var(--mission-ink); isolation:isolate; }
 .landscape { position:absolute; inset:0; z-index:0; overflow:hidden; filter:saturate(1.08) contrast(1.03); }
 .launchpad,.hangar { position:absolute; z-index:1; bottom:19%; }.launchpad { right:2%; left:auto; width:31%; aspect-ratio:172/118; }.hangar { left:4%; right:auto; width:38%; aspect-ratio:226/116; }.launchpad :global(.earth-base-flat-sprite),.hangar :global(.earth-base-flat-sprite){width:100%;height:100%;object-fit:contain;}

@@ -510,7 +510,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const onLaunch = useCallback(() => {
     const current = stateRef.current
     const selectedVehicle = current.player.stagedRockets?.find(vehicle => vehicle.id === current.player.selectedStagedRocketId)
-    if (current.screen !== 'fab' || !current.missionId || !current.targetId || current.player.activeMission || !selectedVehicle || selectedVehicle.location === 'hangar') return
+    if ((current.screen !== 'fab' && current.screen !== 'launchpad') || !current.missionId || !current.targetId || current.player.activeMission || !selectedVehicle || selectedVehicle.location === 'hangar') return
     const currentMission = catalog.missions.find(m => m.id === current.missionId)
       ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
       ?? null
@@ -523,7 +523,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     let earnedLaunchBadge: 'gold' | 'silver' | null = null
     setState(s => {
       const vehicle = s.player.stagedRockets?.find(candidate => candidate.id === s.player.selectedStagedRocketId)
-      if (s.screen !== 'fab' || !s.missionId || !s.targetId || s.player.activeMission || !vehicle || vehicle.location !== 'launchpad') return s
+      if ((s.screen !== 'fab' && s.screen !== 'launchpad') || !s.missionId || !s.targetId || s.player.activeMission || !vehicle || vehicle.location !== 'launchpad') return s
       const mission = s.missionId
         ? (catalog.missions.find(m => m.id === s.missionId)
            ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)

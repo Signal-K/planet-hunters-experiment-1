@@ -1,35 +1,27 @@
 import { expect, test } from '@playwright/test'
 import { VIEWPORTS, stage } from './helpers'
 
-// SSL-375: the rocket stands in the Workshop while it is prepared and rolls to the pad in-scene on confirm,
-// all inside the two-sheet setup (contract, launch review) with no extra sheet.
+// SSL-560: launch review is the rocket builder. Preparing still buys the vehicle and then offers Launch.
 for (const [vp, size] of Object.entries(VIEWPORTS)) {
   test.describe(`workshop rollout ${vp}`, () => {
     test.use({ viewport: size })
-    test('rocket starts in the Workshop and rolls to the pad on build', async ({ page }, info) => {
+    test('the builder prepares the vehicle and then offers launch', async ({ page }, info) => {
       await stage(page, 'ui-target-picker', { patch: { francs: 500_000_000 } })
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
-      const art = page.getByTestId('launch-art')
-      await expect(art).toHaveAttribute('data-stage', 'workshop')
-      const rocket = page.getByTestId('launch-rocket')
-      const startX = (await rocket.boundingBox())!.x
+      await expect(page.getByTestId('rocket-builder')).toBeVisible()
+      const before = await page.getByTestId('rocket-builder-stats').getAttribute('data-range')
+      await page.getByTestId('builder-part-engine').click()
+      await expect(page.getByTestId('rocket-builder-stats')).not.toHaveAttribute('data-range', before ?? '')
       await page.screenshot({ path: info.outputPath(`workshop-${vp}.png`) })
       await page.getByTestId('prepare-launch-btn').click()
-      await expect(art).toHaveAttribute('data-stage', 'pad')
-      await page.waitForTimeout(700)
-      await page.screenshot({ path: info.outputPath(`rolling-${vp}.png`) })
       await expect(page.getByTestId('launch-btn')).toBeVisible({ timeout: 6000 })
-      await page.waitForTimeout(1700)
-      const endX = (await rocket.boundingBox())!.x
-      expect(endX).toBeGreaterThan(startX + 20)
       await page.screenshot({ path: info.outputPath(`pad-${vp}.png`) })
     })
-    test('Customise opens the existing ship customiser from the launch review', async ({ page }, info) => {
+    test('part cards update the blueprint loadout on the launch review', async ({ page }, info) => {
       await stage(page, 'ui-target-picker', { patch: { francs: 500_000_000, crewModuleResearched: true } })
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
-      await page.getByTestId('launch-review-customize-btn').click()
-      await expect(page.getByTestId('launch-review-customizer-overlay')).toBeVisible()
-      await page.waitForTimeout(500)
+      await page.getByTestId('builder-part-cargo-hold').click()
+      await expect(page.getByTestId('builder-part-cargo-hold')).toHaveAttribute('data-part', 'cargo-payload-t1')
       await page.screenshot({ path: info.outputPath(`customiser-${vp}.png`) })
     })
   })

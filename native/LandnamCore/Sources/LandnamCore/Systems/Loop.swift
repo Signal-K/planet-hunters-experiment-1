@@ -142,7 +142,7 @@ public enum Loop {
     }
 
     public static func launch(_ s: GameState, catalog: Catalog, now: Double) -> GameState {
-        guard s.screen == .fab, s.player.activeMission == nil,
+        guard s.screen == .fab || s.screen == .launchpad, s.player.activeMission == nil,
               let missionId = s.missionId, let targetId = s.targetId,
               let selectedId = s.player.selectedStagedRocketId,
               let vehicle = s.player.stagedRockets.first(where: { $0.id == selectedId }), vehicle.location == .launchpad,

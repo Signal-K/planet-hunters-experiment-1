@@ -264,4 +264,11 @@ public final class GameStore {
     public func collectRefined(_ recipeId: String) { apply(Refinery.applyCollect(state, recipeId: recipeId, now: now)) }
     public func sellRefined(_ recipeId: String, amount: Int) { apply(Refinery.applySell(state, recipeId: recipeId, amount: amount)) }
     public func sell(_ mineralId: String, amount: Int) { apply(Market.applySell(state, mineralId: mineralId, amount: amount, now: now)) }
+    /// Cycles one rocket-builder slot and saves it on `shipCustomizerParts`.
+    @discardableResult public func installBuilderPart(_ slot: String) -> Bool {
+        let next = RocketBuilder.install(state, slot: slot)
+        guard next != state else { return false }
+        apply(next)
+        return true
+    }
 }

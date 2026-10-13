@@ -1,0 +1,382 @@
+.root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--ln-blueprint-ink);
+  background: var(--ln-blueprint-bg);
+}
+
+:global(.ln-scene-launchpad.rocket-builder-host) {
+  background: var(--ln-blueprint-bg);
+  color: var(--ln-blueprint-ink);
+}
+
+.land {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--lb-sky-top), var(--lb-sky-horizon) 58%, var(--lb-ground));
+}
+
+.plate,
+.piece,
+.ground,
+.wash {
+  position: absolute;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.plateLeft {
+  left: 0;
+  bottom: 12%;
+  width: min(34vw, 280px);
+  height: auto;
+}
+
+.plateRight {
+  right: 0;
+  bottom: 16%;
+  width: min(28vw, 240px);
+  height: auto;
+}
+
+.ground {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 22%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.piece {
+  bottom: 16%;
+  width: 88px;
+  height: auto;
+  transform-origin: bottom center;
+}
+
+.wash {
+  inset: 0;
+  background: var(--lb-tint);
+  mix-blend-mode: multiply;
+  opacity: 0.38;
+}
+
+.tower {
+  position: absolute;
+  left: 16px;
+  bottom: 196px;
+  z-index: 2;
+  width: min(22vw, 140px);
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tower img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.actions {
+  position: absolute;
+  z-index: 6;
+  top: 64px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.actions > * {
+  pointer-events: auto;
+}
+
+.launch {
+  min-width: 132px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid var(--ln-blueprint-ink);
+  border-radius: 8px;
+  background: var(--ln-blueprint-blue);
+  color: var(--ln-blueprint-paper);
+  font: 700 14px/1 var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.launch:disabled {
+  cursor: default;
+  background: var(--ln-blueprint-paper-2);
+  color: var(--ln-blueprint-ink);
+}
+
+.target {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 132px;
+  max-width: 220px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 2px solid var(--ln-blueprint-ink);
+  border-radius: 8px;
+  background: var(--ln-blueprint-paper);
+  color: var(--ln-blueprint-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.target span,
+.card span,
+.stats,
+.label {
+  font: 700 14px/1.2 var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+}
+
+.target strong {
+  font: 700 14px/1.2 var(--ln-font-body, var(--ln-font-display));
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.blueprint {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 120px;
+  bottom: 176px;
+  transform: translateX(-50%);
+  width: min(720px, calc(100% - 220px));
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px;
+  border: 3px solid var(--ln-blueprint-ink);
+  border-radius: 12px;
+  background-color: var(--ln-blueprint-paper-2);
+  background-image: url('/art/scenes/launchpad/launchpad-blueprint-panel.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.sheet {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.rocketWrap {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+}
+
+.rocketWrap img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.labels {
+  width: min(168px, 38%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  margin: 0;
+  padding: 2px 8px;
+  border: 2px solid var(--ln-blueprint-ink);
+  border-radius: 6px;
+  background: var(--ln-blueprint-paper);
+  color: var(--ln-blueprint-ink);
+  opacity: 0.55;
+}
+
+.label[data-fitted='true'] {
+  opacity: 1;
+}
+
+.label[data-selected='true'] {
+  border-color: var(--ln-blueprint-blue);
+  box-shadow: inset 0 0 0 1px var(--ln-blueprint-blue);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--ln-blueprint-paper);
+  color: var(--ln-blueprint-ink);
+}
+
+.notice {
+  margin: 4px 0 0;
+  font: 700 14px/1.2 var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  color: var(--ln-blueprint-ink);
+}
+
+.tray {
+  position: absolute;
+  z-index: 4;
+  left: 8px;
+  right: 8px;
+  bottom: 64px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 4px 8px;
+}
+
+.card {
+  flex: 1 0 132px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 132px;
+  max-width: 220px;
+  min-height: 112px;
+  padding: 8px;
+  border: 2px solid var(--ln-blueprint-ink);
+  border-radius: 12px;
+  background: var(--ln-blueprint-paper);
+  color: var(--ln-blueprint-ink);
+  cursor: pointer;
+}
+
+.card img {
+  width: auto;
+  max-width: 100%;
+  height: 64px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.card[data-selected='true'] {
+  border-color: var(--ln-blueprint-blue);
+  box-shadow: inset 0 0 0 2px var(--ln-blueprint-blue);
+  background: color-mix(in srgb, var(--ln-blueprint-blue) 12%, var(--ln-blueprint-paper));
+}
+
+.card:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+:global(.rocket-builder-host) :global(.launchpad-active-mission) {
+  background: var(--ln-blueprint-paper);
+  color: var(--ln-blueprint-ink);
+  border-color: var(--ln-blueprint-ink);
+}
+
+:global(.rocket-builder-host) :global(.launchpad-active-mission) h2,
+:global(.rocket-builder-host) :global(.launchpad-active-mission) p,
+:global(.rocket-builder-host) :global(.launchpad-active-mission) button {
+  font-size: 14px;
+  color: var(--ln-blueprint-ink);
+}
+
+:global(.rocket-builder-host) :global(.launchpad-active-mission__resume) {
+  background: var(--ln-blueprint-blue);
+  border-color: var(--ln-blueprint-ink);
+  color: var(--ln-blueprint-paper);
+}
+
+@media (max-width: 800px) {
+  .blueprint {
+    left: 80px;
+    transform: none;
+    width: calc(100% - 92px);
+    top: 116px;
+  }
+  .tower {
+    width: 64px;
+    bottom: 176px;
+  }
+  .plateLeft,
+  .plateRight {
+    width: 120px;
+  }
+}
+
+@media (max-height: 520px) {
+  .actions {
+    top: 56px;
+  }
+  .blueprint {
+    top: 108px;
+    bottom: 148px;
+    width: min(560px, calc(100% - 200px));
+    padding: 8px;
+  }
+  .tray {
+    bottom: 56px;
+  }
+  .card {
+    min-height: 88px;
+    flex-basis: 112px;
+    min-width: 112px;
+  }
+  .card img {
+    height: 44px;
+  }
+  .tower {
+    width: 56px;
+    bottom: 156px;
+    top: auto;
+  }
+  .labels {
+    width: 132px;
+  }
+}
+
+@media (orientation: portrait) {
+  .blueprint {
+    left: 80px;
+    transform: none;
+    width: calc(100% - 92px);
+  }
+  .tower {
+    bottom: auto;
+    top: 28%;
+  }
+}
