@@ -1,5 +1,6 @@
 'use client'
 
+import { cacheSave, dropCachedSave, readCachedSave } from '@/lib/offline/stateCache'
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Screen, GameState, GameActions } from '@/lib/game-types'
@@ -209,6 +210,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     if (skipNextLocalPersist.current) {
       skipNextLocalPersist.current = false
       localStorage.removeItem(STORAGE_KEY)
+      void dropCachedSave(gameStateStorageKey(STORAGE_KEY, auth.authUserId))
       return
     }
     // updatedAt (STS-635) is stamped only in the serialized write, not fed back
@@ -216,9 +218,23 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     // on next load via loadState()/normalizeState() and used as a tie-breaker
     // in mergeRemoteState when local and remote missionsDone are equal.
     const key = gameStateStorageKey(STORAGE_KEY, auth.authUserId)
-    localStorage.setItem(key, JSON.stringify({ ...state, updatedAt: Date.now() }))
+    const json = JSON.stringify({ ...state, updatedAt: Date.now() })
+    try { localStorage.setItem(key, json) } catch { /* quota: the IndexedDB copy below still lands */ }
+    void cacheSave(key, json)
     if (key !== STORAGE_KEY) localStorage.removeItem(STORAGE_KEY)
   }, [state, hydrated, auth.authUserId])
+  // Offline fallback: localStorage evicted but the IndexedDB copy survived (SSL-554).
+  const restoredFromCache = useRef(false)
+  useEffect(() => {
+    if (!hydrated || isPreview.current || restoredFromCache.current) return
+    restoredFromCache.current = true
+    const key = gameStateStorageKey(STORAGE_KEY, auth.authUserId)
+    if (localStorage.getItem(key)) return
+    void readCachedSave(key).then(raw => {
+      if (!raw) return
+      try { setState(current => current.player.missionsDone > 0 || current.player.placed.length > 0 ? current : normalizeAndRepair(JSON.parse(raw))) } catch { /* corrupt copy */ }
+    })
+  }, [hydrated, auth.authUserId]) // eslint-disable-line react-hooks/exhaustive-deps
   useConfirmedDiscoveryPoll({
     stateRef,
     setState,

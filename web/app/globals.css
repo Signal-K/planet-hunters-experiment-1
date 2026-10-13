@@ -1029,13 +1029,19 @@ button { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   gap: var(--ln-s-1);
-  color: var(--ln-amber);
-  font: 700 8px var(--ln-font-display);
+  /* SSL-554: HUD chip (cream panel, navy ink, blue dot; brick red when offline). No amber. */
+  padding: 3px 7px;
+  border: 1px solid #1a2a3c;
+  border-radius: 4px;
+  background: #f4f1ea;
+  color: #1a2a3c;
+  font: 700 9px var(--ln-font-display);
   letter-spacing: var(--ln-tr-label);
   text-transform: uppercase;
   pointer-events: none;
 }
-.sync-status span { width: 5px; height: 5px; border-radius: var(--ln-r-pill); background: currentColor; }
+.sync-status span { width: 6px; height: 6px; border-radius: var(--ln-r-pill); background: #3f80f2; }
+.sync-status[data-offline='true'] span { background: #9b3b32; }
 /* Mission setup: compact layouts start the stage at 56px (one 40px header
    row), so the coach anchors to the stage's inner top-left and the sync
    note sits in the gutter under the stage. */

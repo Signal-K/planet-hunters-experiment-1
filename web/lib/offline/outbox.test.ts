@@ -174,5 +174,7 @@ describe('outbox', () => {
     expect(syncLabel(true, { waiting: 3, failed: 0, flushing: true })).toBe('UPLOADING…')
     expect(syncLabel(true, { waiting: 0, failed: 1, flushing: false })).toBe('NOT SYNCED')
     expect(syncLabel(false, { waiting: 0, failed: 0, flushing: false })).toBe('NOT SYNCED')
+    expect(syncLabel(true, { waiting: 0, failed: 0, flushing: false }, false)).toBe('OFFLINE')
+    expect(syncLabel(true, { waiting: 2, failed: 0, flushing: false }, false)).toBe('OFFLINE · 2')
   })
 })

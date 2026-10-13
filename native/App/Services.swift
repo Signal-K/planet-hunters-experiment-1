@@ -64,6 +64,10 @@ final class Services {
     private let unauthorized = UnauthorizedBox()
     private weak var auth: AuthModel?
     private static let ownerKey = "landnam.saveOwner"
+    /// HUD sync chip state: offline, uploading queued writes, or idle (nil).
+    private(set) var online = true
+    private(set) var pendingWrites = 0
+    private(set) var failedWrites = 0
 
     init() {
         let box = token, sbox = sharedToken
@@ -92,6 +96,23 @@ final class Services {
             Task { await sync.save(state) }
             Task { @MainActor in gc.report(state.player) }
         }
+        // mission_runs receipts (create on launch, phase/cargo, close on settle or abandon) and the shared mission_log.
+        let ses = { [weak self] in self?.session }
+        store.onTransition = { old, new, payout in
+            guard let session = ses() else { return }
+            let now = Date().timeIntervalSince1970 * 1000
+            let ops = MissionRuns.ops(old: old, new: new, userId: session.userId, now: now, payout: payout)
+            let log = session.sharedUserId.flatMap { MissionRuns.logOp(old: old, new: new, sharedUserId: $0, payout: payout, now: now) }
+            if !ops.isEmpty { Task { for op in ops { await sync.enqueue(op) } } }
+            if let log { Task { await shared.enqueue(log); await shared.flush() } }
+        }
+        Task { @MainActor [weak self] in
+            while true {
+                let snap = await sync.snapshot()
+                self?.pendingWrites = snap.waiting; self?.failedWrites = snap.failed
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
         store.onSiteDeed = { siteId in Task { await sync.enqueue(SiteDeed.op(siteId: siteId)) } }
         store.onClassified = { verdict in
             // Local save already happened. Without a shared login (Apple sign-in) the verdict stays local.
@@ -99,7 +120,9 @@ final class Services {
             Task { await shared.enqueue(op); await shared.flush() }
         }
         monitor.pathUpdateHandler = { path in
-            if path.status == .satisfied { Task { @MainActor in self.pullIfNeeded(); await sync.flush(); await shared.flush() } }
+            let up = path.status == .satisfied
+            Task { @MainActor in self.online = up }
+            if up { Task { @MainActor in self.pullIfNeeded(); await sync.flush(); await shared.flush() } }
         }
         monitor.start(queue: .global(qos: .utility))
     }
@@ -134,12 +157,13 @@ final class Services {
 
     private func pulledKey(_ id: String) -> String { "landnam.cloudPulled.\(id)" }
 
-    /// Reads the account's web/cloud save once per account per install, then enables pushing.
-    /// Offline or failing: local play continues, pushes stay held, and the next reachable moment retries.
+    /// Loads the account's PocketBase save on every sign-in and reconnect (the local file is only the offline cache),
+    /// merges it with the web conflict rule, repairs stuck `mission_runs`, then enables pushing.
+    /// Offline or failing: local play continues; once this account has been read on this device its writes queue in the outbox.
     func pullIfNeeded() {
         guard let session, let store, !pulling else { return }
         let id = session.userId
-        if UserDefaults.standard.bool(forKey: pulledKey(id)) { Task { await sync.setUser(id); await sync.flush() }; return }
+        if UserDefaults.standard.bool(forKey: pulledKey(id)) { Task { await sync.setUser(id) } }
         pulling = true
         let base = api.baseURL, tok = session.token, sync = sync
         Task { @MainActor in
@@ -147,9 +171,12 @@ final class Services {
             let result = await CloudPull.fetch(baseURL: base, token: tok, userId: id)
             guard self.session?.userId == id else { return }
             switch result {
-            case .found(let remote): store.adoptRemote(remote)
+            case .found(let remote): store.mergeRemote(remote)
             case .none: break
             case .unavailable: return
+            }
+            if let runs = await MissionRuns.fetchOpen(baseURL: base, token: tok, userId: id), self.session?.userId == id {
+                for op in store.repairRuns(runs) { await sync.enqueue(op) }
             }
             UserDefaults.standard.set(true, forKey: pulledKey(id))
             await sync.setUser(id)

@@ -32,8 +32,12 @@ struct HudGearClock: View {
 /// Francs and cargo chips shared by the base and flight scenes (top-right).
 struct HudChips: View {
     let francs: Int
+    @Environment(Services.self) private var services: Services?
     var body: some View {
         HStack(spacing: 8) {
+            if let label = SyncChip.label(online: services?.online ?? true, pending: services?.pendingWrites ?? 0, failed: services?.failedWrites ?? 0) {
+                SyncChip(label: label, warn: !(services?.online ?? true) || (services?.failedWrites ?? 0) > 0)
+            }
             Text(Economy.format(francs: francs)).font(AppFont.mono(14)).foregroundStyle(Theme.hudInk)
                 .padding(.horizontal, 8).frame(minWidth: 44, minHeight: 36)
                 .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
@@ -45,5 +49,27 @@ struct HudChips: View {
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
                 .accessibilityLabel("Cargo")
         }
+    }
+}
+
+/// Offline / syncing state next to the francs chip (web LandnamSyncStatus). Blue while uploading, brick red offline.
+struct SyncChip: View {
+    let label: String
+    var warn = false
+    static func label(online: Bool, pending: Int, failed: Int) -> String? {
+        if !online { return pending > 0 ? "OFFLINE · \(pending)" : "OFFLINE" }
+        if pending > 0 { return "SYNCING \(pending)" }
+        if failed > 0 { return "NOT SYNCED" }
+        return nil
+    }
+    var body: some View {
+        HStack(spacing: 5) {
+            Circle().fill(warn ? Color(red: 0.608, green: 0.231, blue: 0.196) : Color(red: 0.25, green: 0.5, blue: 0.95)).frame(width: 7, height: 7)
+            Text(label).font(AppFont.mono(11)).foregroundStyle(Theme.hudInk)
+        }
+        .padding(.horizontal, 8).frame(minHeight: 36)
+        .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
+        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
+        .accessibilityElement(children: .combine).accessibilityLabel("Sync status \(label)")
     }
 }

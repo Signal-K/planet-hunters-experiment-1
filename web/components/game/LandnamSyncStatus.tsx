@@ -6,7 +6,9 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import { getOutbox } from '@/lib/offline/pbOutbox'
 import type { OutboxSnapshot } from '@/lib/offline/outbox'
 
-export function syncLabel(landnamSynced: boolean, outbox: OutboxSnapshot): string | null {
+export function syncLabel(landnamSynced: boolean, outbox: OutboxSnapshot, online = true): string | null {
+  // Offline play keeps going on the local cache; the outbox replays on reconnect (SSL-554).
+  if (!online) return outbox.waiting > 0 ? `OFFLINE · ${outbox.waiting}` : 'OFFLINE'
   if (outbox.flushing && outbox.waiting > 0) return 'UPLOADING…'
   if (outbox.waiting > 0) return `${outbox.waiting} ${outbox.waiting === 1 ? 'CHANGE' : 'CHANGES'} WAITING`
   if (outbox.failed > 0 || !landnamSynced) return 'NOT SYNCED'
@@ -31,6 +33,14 @@ export default function LandnamSyncStatus() {
   const [mounted, setMounted] = useState(false)
   const [outbox, setOutbox] = useState<OutboxSnapshot>({ waiting: 0, failed: 0, flushing: false })
   useEffect(() => setMounted(true), [])
+  const [online, setOnline] = useState(true)
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine)
+    update()
+    window.addEventListener('online', update)
+    window.addEventListener('offline', update)
+    return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update) }
+  }, [])
   useEffect(() => {
     const box = getOutbox()
     const unsubscribe = box.subscribe(setOutbox)
@@ -38,11 +48,11 @@ export default function LandnamSyncStatus() {
     return () => { unsubscribe(); stop() }
   }, [])
 
-  const label = syncLabel(game.landnamSynced, outbox)
+  const label = syncLabel(game.landnamSynced, outbox, online)
   if (!mounted || !game.authUserId || !label) return null
 
   return (
-    <div data-ui-zone={UI_ZONES.statusUtility} className="sync-status" title="Progress is saved on this device and uploads when this reconnects">
+    <div data-ui-zone={UI_ZONES.statusUtility} className="sync-status" data-offline={online ? undefined : 'true'} title="Progress is saved on this device and uploads when this reconnects">
       <span aria-hidden="true" />
       {label}
     </div>

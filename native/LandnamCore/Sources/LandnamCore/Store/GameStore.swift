@@ -17,6 +17,9 @@ public final class GameStore {
     /// Fires after a site deed is bought locally, so the app can queue the treasury call (offline safe).
     public var onSiteDeed: ((String) -> Void)?
     public var onClassified: ((SharedClassification) -> Void)?
+    /// Every persisted transition (old, new, settled payout) so the app can write `mission_runs` receipts.
+    public var onTransition: ((GameState, GameState, Int?) -> Void)?
+    private var pendingPayout: Int?
 
     public init(state: GameState = GameState(), catalog: Catalog = Catalog(), saveURL: URL? = nil,
                 clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 * 1000 }) {
@@ -43,9 +46,13 @@ public final class GameStore {
     private func apply(_ next: GameState) {
         guard next != state else { return }
         var n = next
+        MissionRuns.stamp(old: state, new: &n)
         n.updatedAt = clock()
+        let old = state
         state = n
         persist()
+        onTransition?(old, n, pendingPayout)
+        pendingPayout = nil
         onChange?(n)
     }
 
@@ -65,6 +72,21 @@ public final class GameStore {
         n.extras[CloudPull.welcomeKey] = .bool(true)
         apply(n)
         return true
+    }
+
+    /// Sign-in load: merges the account's PocketBase save into the local cache with the web conflict rule.
+    /// A first adoption on this device (no local progress) shows the mobile welcome, like `adoptRemote`.
+    public func mergeRemote(_ remote: GameState) {
+        if !CloudPull.hasProgress(state) { adoptRemote(remote); return }
+        var n = CloudMerge.merge(local: state, remote: remote)
+        if n.player.activeMission == nil, state.player.activeMission == nil { n.missionId = state.missionId; n.targetId = state.targetId }
+        apply(n)
+    }
+    /// Applies the sign-in `mission_runs` repair (reattaches a resumable receipt) and returns the closing writes.
+    public func repairRuns(_ runs: [MissionRuns.Record]) -> [OutboxOp] {
+        let r = MissionRuns.repair(runs, state: state, catalog: catalog, now: now)
+        if r.state != state { var n = r.state; n.updatedAt = clock(); state = n; persist(); onChange?(n) }
+        return r.ops
     }
 
     public var welcomePending: Bool { if case .bool(true)? = state.extras[CloudPull.welcomeKey] { return true } else { return false } }
@@ -176,6 +198,7 @@ public final class GameStore {
     public func roverSurveyComplete() { apply(Loop.roverSurveyComplete(state)) }
     public func deliveryUnloadComplete() { apply(Loop.deliveryUnloadComplete(state, catalog: catalog, now: now)) }
     public func debriefDone(payout: Int, affinity: Int, consumed: Cargo = [:], disposition: HaulDisposition? = nil) {
+        pendingPayout = payout
         apply(Loop.debriefDone(state, payout: payout, affinity: affinity, consumed: consumed, disposition: disposition, catalog: catalog, now: now))
     }
     /// SSL-553: settle the delivery sheet. Market and silo shares settle here; the client share runs through the debrief ledger.
@@ -186,6 +209,7 @@ public final class GameStore {
         let payout = HomeDelivery.clientPayout(mission, split: split, demand: demand, missionsDone: state.player.missionsDone)
         let affinity = payout > 0 ? max(0, mission?.payout.affinity ?? 0) : 0
         let settled = HomeDelivery.apply(state, split: split, now: now)
+        pendingPayout = payout
         apply(Loop.debriefDone(settled.state, payout: payout, affinity: affinity, consumed: settled.consumed, catalog: catalog, now: now))
     }
     public func buyLaserCapacitor(expectedLevel: Int, reservedUnits: Int = 0) { apply(LaserCapacitor.applyBuy(state, expectedLevel: expectedLevel, reservedUnits: reservedUnits)) }
