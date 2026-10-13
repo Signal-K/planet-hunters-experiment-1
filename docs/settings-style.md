@@ -26,11 +26,10 @@ Colours live as custom properties on `:root` in `web/app/globals.css`. Component
 
 ## Layout
 
-- The page is a full-bleed flat scroll. No shadow.
-- On a phone the column is 92% of the viewport, centred. On desktop it caps at 720px. Landscape and desktop lay the cards in two columns. Display (screen orientation: Auto, Portrait, Landscape) is the first full-width card. Patch notes and Account share one row on landscape and desktop. On a narrow phone they stack as two short rows so the full line sits beside the button. Reset stays a full-width card. The Debug preset list is hidden unless the page is opened with `?dev=1` on a dev or staging build.
-- Cards are white, 2px solid `--set-ink`, 10px radius, 20px padding.
-- A row is the title and status on the left, the action on the right.
-- Actions are uppercase, right-aligned, with a black play triangle. Fill is white, border is 2px black, radius 10px.
-- Segmented controls are outlined pills (2px black, radius 999px). The selected pill is solid black with white text.
-- Reset progress is its own card. Border and label use `--set-danger`.
-- Skip training and reset progress still take two taps. The confirm phrase stays visible before the action runs.
+- Settings is a centered instrument card over the live scene. The scene and the shared HUD stay visible. The card caps at 640px, with a pixel sky header (cream and blue only) and a sticky Settings title.
+- Display is the first card. On a narrow card the orientation choices stack full width so Landscape is never clipped. When the card is wide enough they sit in one row. Training is one row, Replay tutorials, which starts again from mining. Patch notes is a text link, not a card. Account and reset stay their own cards. The Debug preset list is hidden unless the page is opened with `?dev=1` on a dev or staging build.
+- Cards are white, 2px solid `--set-ink`, square corners, 24px padding, with space between them.
+- A row is the title and status on the left and the action on the right. On a narrow card the action drops under the title and spans the row.
+- Actions are uppercase, at least 52px tall, with a play triangle. Fill is white, border is 2px ink.
+- Segmented controls are square (2px ink). The selected choice is solid blueprint blue with white text.
+- Reset progress is its own card. Border and label use `--set-danger`. Reset still takes two taps. The confirm phrase stays visible before the action runs.

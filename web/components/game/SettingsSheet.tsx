@@ -9,7 +9,7 @@ import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { readStoredOrientation, storeOrientation, type OrientationPreference } from '@/lib/orientation'
 import PageSurface from '@/components/ui/PageSurface'
 import { PushOptIn } from '@/components/game/PushOptIn'
-import { TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
+import { type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
 
 interface SettingsSheetProps {
   onClose: () => void
@@ -24,7 +24,7 @@ const ORIENTATION_CHOICES: { id: OrientationPreference; label: string }[] = [
 const PATCH_NOTES: { title: string; lines: string[] }[] = [
   { title: 'Base and flight scenes', lines: ['Pixel-art launchpad, hangar and underground silo', 'Swipe down from the base to dig', 'Shared dock and HUD on every scene'] },
   { title: 'Laser mining', lines: ['Ship laser mining is the default', 'Buried deposits spaced across the dig', 'Layered strata ground'] },
-  { title: 'Training', lines: ['Replay or skip the three tries from Settings', 'Free Ops opens when training is done'] },
+  { title: 'Training', lines: ['Replay the three tries from Settings', 'Free Ops opens when training is done'] },
 ]
 
 function CloseButton({ onClick, label = 'Close' }: { onClick: () => void; label?: string }) {
@@ -41,10 +41,56 @@ function Row({ children }: { children: React.ReactNode }) {
   return <div className="ops-settings__row">{children}</div>
 }
 
+/** Cream and blue pixel horizon. No green, yellow, or orange. */
+function SettingsSky() {
+  return (
+    <div className="ops-settings__sky" aria-hidden="true">
+      <svg viewBox="0 0 320 96" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <rect width="320" height="96" fill="var(--ln-blueprint-paper-2)" />
+        <rect width="320" height="34" fill="var(--ln-blueprint-blue)" opacity="0.28" />
+        <rect y="34" width="320" height="14" fill="var(--ln-blueprint-blue)" opacity="0.12" />
+        <g fill="var(--ln-blueprint-ink)">
+          <rect x="16" y="12" width="3" height="3" />
+          <rect x="58" y="22" width="2" height="2" />
+          <rect x="112" y="8" width="3" height="3" />
+          <rect x="176" y="18" width="2" height="2" />
+          <rect x="230" y="10" width="3" height="3" />
+          <rect x="292" y="20" width="2" height="2" />
+        </g>
+        <g fill="var(--ln-blueprint-blue)">
+          <rect x="0" y="56" width="40" height="40" />
+          <rect x="28" y="44" width="28" height="52" />
+          <rect x="52" y="60" width="24" height="36" />
+          <rect x="72" y="38" width="32" height="58" />
+          <rect x="100" y="52" width="22" height="44" />
+          <rect x="188" y="48" width="28" height="48" />
+          <rect x="210" y="34" width="36" height="62" />
+          <rect x="242" y="54" width="24" height="42" />
+          <rect x="262" y="42" width="30" height="54" />
+          <rect x="288" y="58" width="32" height="38" />
+        </g>
+        <g fill="var(--ln-blueprint-ink)">
+          <rect x="0" y="74" width="52" height="22" />
+          <rect x="40" y="66" width="36" height="30" />
+          <rect x="72" y="78" width="44" height="18" />
+          <rect x="108" y="70" width="28" height="26" />
+          <rect x="196" y="72" width="40" height="24" />
+          <rect x="228" y="62" width="36" height="34" />
+          <rect x="260" y="76" width="60" height="20" />
+        </g>
+        <g fill="var(--ln-blueprint-paper)">
+          <rect x="146" y="80" width="32" height="6" />
+          <rect x="158" y="62" width="6" height="18" />
+        </g>
+        <polygon points="158,62 161,52 164,62" fill="var(--ln-blueprint-ink)" />
+      </svg>
+    </div>
+  )
+}
+
 export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   const game = useGame()
   const [confirmReset, setConfirmReset] = useState(false)
-  const [confirmSkipTraining, setConfirmSkipTraining] = useState(false)
   const [showPatchNotes, setShowPatchNotes] = useState(false)
   const [showFullscreen, setShowFullscreen] = useState(false)
   const [orientation, setOrientation] = useState<OrientationPreference>('auto')
@@ -105,6 +151,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
       testId="settings-sheet"
       ariaLabel="Settings"
     >
+      <SettingsSky />
       {showPatchNotes ? (
         <>
           <header className="ops-settings__head">
@@ -130,15 +177,15 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
           </header>
 
           <div className="ops-settings__stack">
-            <section className="ops-settings__wide">
+            <section>
               <h3 className="ops-settings__label">Display</h3>
               <div className="ops-settings__panel">
-                <div className="ops-settings__orient">
+                <div className="ops-settings__field ops-settings__field--orient">
                   <div className="ops-settings__copy">
                     <div className="ops-settings__name">Screen orientation</div>
                     <div className="ops-settings__sub">Lock to portrait or landscape</div>
                   </div>
-                  <div className="ln-set-segment" role="group" aria-label="Screen orientation" data-testid="orientation-segment">
+                  <div className="ln-set-segment ops-settings__choices ops-settings__choices--three" role="group" aria-label="Screen orientation" data-testid="orientation-segment">
                     {ORIENTATION_CHOICES.map(choice => (
                       <button
                         key={choice.id}
@@ -167,99 +214,58 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
 
             <section>
               <h3 className="ops-settings__label">Training</h3>
-              <div className="ops-settings__panel ops-settings__training">
-                <div className="patch-shelf" data-testid="training-patch-shelf" role="list" aria-label="Mission patches">
-                  {TRAINING_TRY_IDS.map(tryId => {
-                    const active = currentTrainingTry(game.player.flightPlan) === tryId
-                    const done = !!game.player.flightPlan?.completed?.[tryId]
-                    const status = done ? 'Done' : active ? 'On air' : 'Standby'
-                    const label = tryId === 'part' ? 'Part tweak' : tryId === 'scan' ? 'Planet scan' : 'Mining'
-                    return (
-                      <div key={tryId} role="listitem" className="patch" data-state={done ? 'done' : active ? 'active' : 'standby'}>
-                        <div className="ops-settings__copy" data-testid={`training-${tryId}-status`}>
-                          <div className="patch-name">{label}</div>
-                          <div className="patch-status">{status}</div>
-                        </div>
-                        <button type="button" className="ops-settings__btn ops-settings__btn--mini" onClick={() => replay(tryId)}>Replay</button>
-                      </div>
-                    )
-                  })}
-                </div>
-                {!freeOps && (
-                  <Row>
-                    <div className="ops-settings__copy">
-                      <div className="ops-settings__name">Skip</div>
-                      <div className="ops-settings__sub">{confirmSkipTraining ? 'Confirm: mark all tries done' : 'Marks every try done'}</div>
-                    </div>
-                    <button
-                      type="button"
-                      className="ops-settings__btn ops-settings__btn--mini"
-                      data-testid="skip-training"
-                      onClick={() => {
-                        if (!confirmSkipTraining) { setConfirmSkipTraining(true); return }
-                        game.skipFlightPlan()
-                        onClose()
-                      }}
-                    >
-                      {confirmSkipTraining ? 'Confirm' : 'Skip'}
-                    </button>
-                  </Row>
-                )}
+              <div className="ops-settings__panel">
+                <Row>
+                  <div className="ops-settings__copy">
+                    <div className="ops-settings__name">Replay tutorials</div>
+                    <div className="ops-settings__sub">Mining, scan, and the part tweak</div>
+                  </div>
+                  <button type="button" className="ops-settings__btn" data-testid="replay-tutorials" onClick={() => replay('mining')}>
+                    Replay
+                  </button>
+                </Row>
               </div>
             </section>
 
             <section>
               <h3 className="ops-settings__label">Game</h3>
               <div className="ops-settings__panel">
-                <Row>
+                <div className="ops-settings__field">
                   <div className="ops-settings__copy">
                     <div className="ops-settings__name">Free Ops</div>
                     <div className="ops-settings__sub">{freeOps ? 'On' : 'Off'}</div>
                   </div>
-                  <div className="ln-set-segment" role="group" aria-label="Free Ops" data-testid="free-ops-toggle">
+                  <div className="ln-set-segment ops-settings__choices ops-settings__choices--two" role="group" aria-label="Free Ops" data-testid="free-ops-toggle">
                     <button type="button" aria-pressed={!freeOps} onClick={() => game.setFreeOps(false)}>Off</button>
                     <button type="button" aria-pressed={freeOps} onClick={() => game.setFreeOps(true)}>On</button>
                   </div>
-                </Row>
+                </div>
                 {game.player.freeOperations && (
                   <Row>
                     <div className="ops-settings__copy">
                       <div className="ops-settings__name">Mission alerts</div>
                     </div>
-                    <PushOptIn userId={game.authUserId ?? undefined} />
+                    <div className="ops-settings__alerts">
+                      <PushOptIn userId={game.authUserId ?? undefined} />
+                    </div>
                   </Row>
                 )}
               </div>
             </section>
 
-            <div className="ops-settings__pair">
-              <section>
-                <h3 className="ops-settings__label">Patch notes</h3>
-                <div className="ops-settings__panel">
-                  <Row>
-                    <div className="ops-settings__copy">
-                      <div className="ops-settings__name">This build</div>
-                    </div>
-                    <button type="button" className="ops-settings__btn ops-settings__btn--mini" data-testid="patch-notes-button" onClick={() => setShowPatchNotes(true)}>
-                      Open
-                    </button>
-                  </Row>
-                </div>
-              </section>
-              <section>
-                <h3 className="ops-settings__label">Account</h3>
-                <div className="ops-settings__panel">
-                  <Row>
-                    <div className="ops-settings__copy">
-                      <div className="ops-settings__name">{email ?? 'Signed in'}</div>
-                    </div>
-                    <button type="button" className="ops-settings__btn ops-settings__btn--mini" onClick={handleSignOut}>Sign out</button>
-                  </Row>
-                </div>
-              </section>
-            </div>
+            <section>
+              <h3 className="ops-settings__label">Account</h3>
+              <div className="ops-settings__panel">
+                <Row>
+                  <div className="ops-settings__copy">
+                    <div className="ops-settings__name">{email ?? 'Signed in'}</div>
+                  </div>
+                  <button type="button" className="ops-settings__btn" onClick={handleSignOut}>Sign out</button>
+                </Row>
+              </div>
+            </section>
 
-            <section className="ops-settings__wide">
+            <section>
               <div className="ops-settings__panel ops-settings__panel--danger">
                 <Row>
                   <div className="ops-settings__copy">
@@ -274,7 +280,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
             </section>
 
             {game.player.missionsDone > 0 && (
-              <section className="ops-settings__wide">
+              <section>
                 <h3 className="ops-settings__label">Program</h3>
                 <div className="ops-settings__panel">
                   <Row>
@@ -291,7 +297,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
             )}
 
             {showDebug && (
-              <section className="ops-settings__wide">
+              <section>
                 <h3 className="ops-settings__label">Debug</h3>
                 <div className="ops-settings__panel">
                   <Row>
@@ -316,6 +322,10 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                 </div>
               </section>
             )}
+
+            <button type="button" className="ops-settings__notes-link" data-testid="patch-notes-button" onClick={() => setShowPatchNotes(true)}>
+              Patch notes
+            </button>
           </div>
         </>
       )}

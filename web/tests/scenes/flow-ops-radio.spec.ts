@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { VIEWPORTS, stage } from './helpers'
 
-// SSL-442: Ops radio skin on the Flight Plan strip, Ops briefing on the "?" sheet, Mission patch shelf in Menu > Training.
+// SSL-442 / SSL-556: Ops radio skin on the Flight Plan strip, Ops briefing on the "?" sheet, one Replay tutorials row in Settings.
 const seededToken = () => {
   const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url')
   return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ id: 'e2euser0000001', exp: 4102444800 })}.sig`
@@ -34,7 +34,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.screenshot({ path: info.outputPath(`ops-strip-${vp}.png`) })
     })
 
-    test('Menu > Training is a patch shelf with 44px Replay targets', async ({ page }, info) => {
+    test('Menu > Training is one Replay tutorials row', async ({ page }, info) => {
       const record = { id: 'e2euser0000001', collectionId: '_pb_users_auth_', collectionName: 'users', email: 'e2e@example.test', verified: true }
       await page.route(/\/api\/(collections|realtime|health)/, route =>
         /auth-refresh/.test(route.request().url())
@@ -52,12 +52,14 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.goto('/game')
       await page.getByTestId('settings-button').click({ timeout: 30_000 })
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
-      const shelf = page.getByTestId('training-patch-shelf')
-      await shelf.scrollIntoViewIfNeeded()
-      await expect(shelf.locator('.patch')).toHaveCount(3)
-      await expect(shelf.locator('.patch[data-state="done"]')).toHaveCount(1)
-      await expect(shelf.locator('.patch[data-state="active"]')).toHaveCount(1)
-      for (const b of await shelf.getByRole('button', { name: 'Replay' }).all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+      await expect(page.getByTestId('skip-training')).toHaveCount(0)
+      const replay = page.getByTestId('replay-tutorials')
+      await replay.scrollIntoViewIfNeeded()
+      await expect(replay).toBeVisible()
+      await expect(page.getByText('Replay tutorials')).toBeVisible()
+      const box = (await replay.boundingBox())!
+      expect(box.height).toBeGreaterThanOrEqual(44)
+      expect(box.width).toBeGreaterThanOrEqual(44)
       await page.screenshot({ path: info.outputPath(`patch-shelf-${vp}.png`) })
     })
 

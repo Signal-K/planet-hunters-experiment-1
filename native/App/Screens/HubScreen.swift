@@ -39,7 +39,7 @@ struct HubScreen: View {
                 .position(x: full.width / 2 - origin.width, y: full.height / 2 - origin.height)
         }
         .background(Theme.bg.ignoresSafeArea())
-        .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
+        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
     }
 
     private func scene(size: CGSize, insets: EdgeInsets) -> some View {
@@ -232,13 +232,11 @@ extension View {
     }
 }
 
-/// Settings gear destination, matching the web Settings sheet: account, training (replay, skip), reset, Free Ops, patch notes.
+/// Settings gear destination, matching the web Settings sheet: account, one replay row, reset, Free Ops, a patch-notes link.
 struct SettingsSheet: View {
     @Environment(GameStore.self) private var store
     @Environment(AuthModel.self) private var auth
-    @Environment(\.flatLayout) private var flat
     @State private var confirmSignOut = false
-    @State private var confirmSkip = false
     @State private var confirmReset = false
     @State private var showPatchNotes = false
     @State private var width: CGFloat = 390
@@ -247,198 +245,172 @@ struct SettingsSheet: View {
     #endif
     let onClose: () -> Void
 
-    private static let tryNames = ["mining": "Mining", "scan": "Planet scan", "part": "Part tweak"]
-
     var body: some View {
-        GeometryReader { geo in settingsBody(topInset: geo.safeAreaInsets.top) }
-            .sheet(isPresented: $showPatchNotes) { PatchNotesSheet() }
+        GeometryReader { geo in
+            let landscape = geo.size.width > geo.size.height
+            let card = min(640, geo.size.width - (landscape ? 48 : 32))
+            settingsBody(short: geo.size.height < 500)
+                .frame(width: card)
+                .frame(maxHeight: .infinity)
+                .background(SettingsStyle.bg)
+                .overlay(Rectangle().stroke(SettingsStyle.ink, lineWidth: 3))
+                .background(SettingsStyle.ink.offset(x: 6, y: 6))
+                .padding(.top, landscape ? 68 : 84)
+                .padding(.bottom, landscape ? 84 : 100)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onAppear { width = card }
+                .onChange(of: geo.size) { _, size in width = min(640, size.width - (size.width > size.height ? 48 : 32)) }
+        }
             .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
                 Button("Sign out", role: .destructive) { auth.signOut() }
                 Button("Stay signed in", role: .cancel) {}
             } message: {
                 Text("Your progress stays saved on this device and in the cloud. Sign back in to continue.")
             }
-            .background(SetStyle.bg.ignoresSafeArea())
-            .presentationDetents([.medium, .large])
+
     }
 
-    /// The heading clears the status bar and clock when the sheet runs edge to edge (`topInset` is 0 when it already sits inside the safe area).
-    private func settingsBody(topInset: CGFloat) -> some View {
+    private func settingsBody(short: Bool) -> some View {
         VStack(spacing: 0) {
+            SettingsSkyHeader().frame(height: short ? 64 : 88).clipped()
+                .overlay(alignment: .bottom) { Rectangle().fill(SettingsStyle.ink).frame(height: 3) }
             HStack {
-                Text("Settings".uppercased()).font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SetStyle.ink)
+                Text(showPatchNotes ? "PATCH NOTES" : "SETTINGS").font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SettingsStyle.ink)
                 Spacer()
-                Button(action: onClose) {
-                    Image(systemName: "xmark").font(.system(size: 16, weight: .heavy)).foregroundStyle(SetStyle.ink)
-                        .frame(width: 44, height: 44).contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityLabel("Close")
-            }.padding(.horizontal, 16).padding(.top, max(flat ? 24 : 8, topInset + 8)).setColumn()
-            if flat { content.frame(maxHeight: .infinity, alignment: .top) } else { ScrollView(showsIndicators: false) { content } }
+                Button { if showPatchNotes { showPatchNotes = false } else { onClose() } } label: {
+                    Image(systemName: showPatchNotes ? "chevron.left" : "xmark").font(.system(size: 16, weight: .heavy)).foregroundStyle(SettingsStyle.ink)
+                        .frame(width: 48, height: 48)
+                        .background(SettingsStyle.card, in: RoundedRectangle(cornerRadius: 2))
+                        .overlay(RoundedRectangle(cornerRadius: 2).stroke(SettingsStyle.ink, lineWidth: 2))
+                        .contentShape(Rectangle())
+                }.buttonStyle(.plain).accessibilityLabel(showPatchNotes ? "Back" : "Close")
+            }.padding(.horizontal, 20).padding(.vertical, 12)
+                .background(SettingsStyle.card)
+                .overlay(alignment: .top) { Rectangle().fill(SettingsStyle.blue).frame(height: 4) }
+                .overlay(alignment: .bottom) { Rectangle().fill(SettingsStyle.ink).frame(height: 3) }
+            ScrollView { if showPatchNotes { SettingsPatchNotes() } else { content } }
         }
     }
 
     private var content: some View {
-        let col = min(720, max(280, width * 0.92))
-        let wide = width >= 600
-        return VStack(spacing: SetStyle.gap) {
-            if wide {
-                HStack(alignment: .top, spacing: SetStyle.gap) {
-                    trainingSection
-                    VStack(spacing: SetStyle.gap) {
-                        #if os(iOS)
-                        displaySection
-                        #endif
-                        gameSection
-                    }
-                }
-            } else {
-                #if os(iOS)
-                displaySection
-                #endif
-                trainingSection
-                gameSection
-            }
-            HStack(alignment: .top, spacing: 16) {
-                VStack(spacing: 8) {
-                    SetHeading(text: "Patch notes")
-                    pairCard(SetRowText(title: "What changed", status: "This build")) {
-                        SetButton(title: "Open", compact: true) { showPatchNotes = true }
-                    }
-                }
-                VStack(spacing: 8) {
-                    SetHeading(text: "Account")
-                    pairCard(SetRowText(title: auth.session?.email ?? "Email account", status: "Signed in")) {
-                        SetButton(title: "Sign out", compact: true) { confirmSignOut = true }
-                    }
+        let col = max(0, width - 48)
+        let wideChoices = width >= 560
+        return VStack(spacing: SettingsStyle.gap) {
+            #if os(iOS)
+            displaySection(wide: wideChoices)
+            #endif
+            trainingSection
+            gameSection
+            VStack(spacing: 16) {
+                SettingsHeading(text: "Account")
+                row(SettingsRowText(title: auth.session?.email ?? "Email account", status: "Signed in")) {
+                    SettingsButton(title: "Sign out", fill: !wideChoices) { confirmSignOut = true }
                 }
             }
-            row(SetRowText(title: "Reset progress", status: confirmReset ? "Tap again to erase all progress" : "Erase all progress and start over", titleColor: SetStyle.danger),
-                border: SetStyle.danger) {
-                SetButton(title: confirmReset ? "Confirm reset" : "Reset", color: SetStyle.danger, compact: true) {
+            row(SettingsRowText(title: "Reset progress", status: confirmReset ? "Tap again to erase all progress" : "Erases the saved game", titleColor: SettingsStyle.danger),
+                border: SettingsStyle.danger) {
+                SettingsButton(title: confirmReset ? "Confirm reset" : "Reset progress", color: SettingsStyle.danger, fill: !wideChoices) {
                     if confirmReset { confirmReset = false; onClose(); store.reset() } else { confirmReset = true }
                 }
             }
+            Button { showPatchNotes = true } label: {
+                Text("Patch notes")
+                    .font(AppFont.display(16, "Bold"))
+                    .underline()
+                    .foregroundStyle(SettingsStyle.blue)
+                    .frame(minWidth: 48, minHeight: 48)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+            .accessibilityLabel("Patch notes")
         }
         .frame(width: col)
-        .padding(.top, 8).padding(.bottom, 96)
+        .padding(.top, 28).padding(.bottom, 32)
         .frame(maxWidth: .infinity)
-        .background(GeometryReader { g in Color.clear.onAppear { width = g.size.width }.onChange(of: g.size.width) { _, w in width = w } })
     }
 
     private var trainingSection: some View {
-        VStack(spacing: 8) {
-            SetHeading(text: "Training")
-            VStack(spacing: 0) {
-                ForEach(Array(FlightPlanProgress.tryIds.enumerated()), id: \.element) { i, id in
-                    if i > 0 { Rectangle().fill(SetStyle.ink.opacity(0.15)).frame(height: 1) }
-                    trainingRow(id)
-                }
-                if !store.player.freeOperations {
-                    Rectangle().fill(SetStyle.ink.opacity(0.15)).frame(height: 1)
-                    inline(SetRowText(title: "Skip", status: confirmSkip ? "Tap again to confirm" : "Marks every try done")) {
-                        SetButton(title: confirmSkip ? "Confirm" : "Skip", compact: true) {
-                            if confirmSkip { confirmSkip = false; onClose(); store.skipTraining() } else { confirmSkip = true }
-                        }
-                    }
-                }
-            }.setCard(padding: 8)
+        VStack(spacing: 16) {
+            SettingsHeading(text: "Training")
+            row(SettingsRowText(title: "Replay tutorials", status: "Mining, scan, and the part tweak")) {
+                SettingsButton(title: "Replay", fill: width < 560) { onClose(); store.replayTry("mining") }
+                    .accessibilityLabel("Replay tutorials")
+            }
         }
     }
 
     private var gameSection: some View {
-        VStack(spacing: 8) {
-            SetHeading(text: "Game")
-            row(SetRowText(title: "Free Ops", status: "Play without a contract")) {
-                let on = Binding(get: { store.player.freeOperations }, set: { store.setFreeOps($0) })
-                SetSegment(options: ["Off", "On"], selected: on.wrappedValue ? 1 : 0) { on.wrappedValue = $0 == 1 }
-                    .frame(width: 140)
-            }
+        VStack(spacing: 16) {
+            SettingsHeading(text: "Game")
+            VStack(alignment: .leading, spacing: 16) {
+                SettingsRowText(title: "Free Ops", status: store.player.freeOperations ? "On" : "Off")
+                SettingsSegment(options: ["Off", "On"], selected: store.player.freeOperations ? 1 : 0) { store.setFreeOps($0 == 1) }
+            }.settingsCard()
         }
     }
 
     #if os(iOS)
-    private var displaySection: some View {
-        VStack(spacing: 8) {
-            SetHeading(text: "Display")
-            orientationCard
-        }
-    }
-    #endif
-
-    private func inline<A: View>(_ text: SetRowText, @ViewBuilder action: () -> A) -> some View {
-        HStack(spacing: 12) {
-            text
-            Spacer(minLength: 8)
-            action()
-        }.padding(.horizontal, 12).padding(.vertical, 6).frame(minHeight: 56)
-    }
-
-    private func pairCard<A: View>(_ text: SetRowText, @ViewBuilder action: () -> A) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            text
-            action()
-        }.setCard(padding: 16)
-    }
-
-    private func row<A: View>(_ text: SetRowText, border: Color = SetStyle.ink, @ViewBuilder action: () -> A) -> some View {
-        HStack(spacing: 16) {
-            text
-            Spacer(minLength: 8)
-            action()
-        }.setCard(border: border)
-    }
-
-    private func trainingRow(_ id: String) -> some View {
-        let plan = store.player.flightPlan
-        let status = plan.completed[id] == true ? "Done" : plan.currentTry == id && !store.player.freeOperations ? "On air" : "Standby"
-        return inline(SetRowText(title: Self.tryNames[id] ?? id, status: status)) {
-            SetButton(title: "Replay", compact: true) { onClose(); store.replayTry(id) }
-                .accessibilityLabel("Replay \(Self.tryNames[id] ?? id)")
+    private func displaySection(wide: Bool) -> some View {
+        VStack(spacing: 16) {
+            SettingsHeading(text: "Display")
+            VStack(alignment: .leading, spacing: 16) {
+                SettingsRowText(title: "Screen orientation", status: "Lock to portrait or landscape")
+                orientationChoices(wide: wide)
+            }.settingsCard()
         }
     }
 
-    #if os(iOS)
-    private var orientationCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            SetRowText(title: "Screen orientation", status: "Lock to portrait or landscape")
-            SetSegment(options: OrientationPreference.allCases.map(\.title),
-                       selected: OrientationPreference.allCases.firstIndex(of: OrientationPreference(stored: orientation)) ?? 0) {
-                orientation = OrientationPreference.allCases[$0].rawValue
+    private func orientationChoices(wide: Bool) -> some View {
+        let options = OrientationPreference.allCases
+        let selected = options.firstIndex(of: OrientationPreference(stored: orientation)) ?? 0
+        let layout = wide ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 12))
+        return layout {
+            ForEach(Array(options.enumerated()), id: \.offset) { i, pref in
+                let on = i == selected
+                Button { orientation = pref.rawValue } label: {
+                    Text(pref.title.uppercased()).font(AppFont.display(14)).tracking(14 * 0.06)
+                        .foregroundStyle(on ? SettingsStyle.card : SettingsStyle.ink)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, minHeight: 52)
+                        .background(on ? SettingsStyle.blue : SettingsStyle.card, in: RoundedRectangle(cornerRadius: 2))
+                        .overlay(RoundedRectangle(cornerRadius: 2).stroke(SettingsStyle.ink, lineWidth: 2))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(pref.title)
+                .accessibilityAddTraits(on ? .isSelected : [])
             }
-        }.setCard()
+        }
     }
     #endif
+
+    private func row<A: View>(_ text: SettingsRowText, border: Color = SettingsStyle.ink, @ViewBuilder action: () -> A) -> some View {
+        let narrow = width < 560
+        let layout = narrow ? AnyLayout(VStackLayout(alignment: .leading, spacing: 16)) : AnyLayout(HStackLayout(spacing: 16))
+        return layout {
+            text
+            if !narrow { Spacer(minLength: 8) }
+            action()
+        }.settingsCard(border: border)
+    }
 }
 
 /// Native patch notes: newest first.
-struct PatchNotesSheet: View {
-    @Environment(\.dismiss) private var dismiss
+struct SettingsPatchNotes: View {
     private static let notes: [(String, [String])] = [
         ("Base and flight scenes", ["Pixel-art launchpad, hangar and underground silo", "Swipe down from the base to dig", "Shared dock and HUD on every scene"]),
         ("Laser mining", ["Ship laser mining is the default", "Buried deposits spaced across the dig", "Layered strata ground"]),
-        ("Training", ["Replay or skip the three tries from Settings", "Free Ops opens when training is done"]),
+        ("Training", ["Replay the three tries from Settings", "Free Ops opens when training is done"]),
     ]
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("PATCH NOTES").font(AppFont.display(18)).tracking(1.4).foregroundStyle(Theme.hudInk)
-                Spacer()
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark").font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
-                        .frame(width: 44, height: 44).contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityLabel("Close")
-            }.padding(.horizontal, 16).padding(.top, 8)
-            ScrollView {
-                VStack(spacing: 8) {
-                    ForEach(Self.notes, id: \.0) { note in
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(note.0.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                            ForEach(note.1, id: \.self) { Text("• \($0)").font(AppFont.display(14)).foregroundStyle(Theme.textDim) }
-                        }
-                        .setCard(padding: 16)
-                    }
-                }.padding(16)
+        VStack(spacing: 24) {
+            ForEach(Self.notes, id: \.0) { note in
+                VStack(alignment: .leading, spacing: 8) {
+                    SettingsHeading(text: note.0)
+                    ForEach(note.1, id: \.self) { Text("• \($0)").font(AppFont.body(14)).foregroundStyle(SettingsStyle.ink) }
+                }.settingsCard(padding: 24)
             }
-        }.background(SetStyle.bg)
+        }.padding(24)
     }
 }

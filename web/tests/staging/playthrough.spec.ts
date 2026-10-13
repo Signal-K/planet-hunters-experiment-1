@@ -82,9 +82,8 @@ test.describe('staging playthrough', () => {
       // This minimal first slice exercises the shipped M1–M3 completion
       // control; individual mining, scan and part interactions remain a
       // follow-up slice rather than an admin-written save fixture.
-      await page.getByTestId('settings-button').click()
-      await page.getByTestId('skip-training').click()
-      await page.getByTestId('skip-training').click()
+      await page.getByTestId('flight-plan-objective').click()
+      await page.getByTestId('flight-plan-skip').click()
       await expect(page.locator('[data-screen="hub"]')).toBeVisible({ timeout: 30_000 })
       await attachScreenshot(page, info, '02-free-ops')
 

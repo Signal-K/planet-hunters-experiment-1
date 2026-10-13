@@ -51,6 +51,7 @@
   --ln-cyan-border: rgba(112, 217, 234, 0.4);
   --ln-blueprint-bg: #eef3f8;
   --ln-blueprint-paper: #ffffff;
+  --ln-settings-paper: #f2eee4;
   --ln-blueprint-paper-2: #dfe9f3;
   --ln-blueprint-ink: #0f2436;
   --ln-blueprint-blue: #1f78c1;
@@ -4409,56 +4410,83 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   background: var(--set-ink);
   color: var(--set-card);
 }
+/* SSL-556: Settings is an instrument overlay; keep the live scene and HUD visible. */
 .ops-settings {
-  background: var(--set-bg);
+  --set-bg: var(--ln-settings-paper);
+  --set-card: var(--ln-blueprint-paper);
+  --set-ink: var(--ln-blueprint-ink);
+  --set-muted: var(--ln-blueprint-ink);
+  --set-radius: 2px;
   color: var(--set-ink);
   font-family: var(--ln-font-display), system-ui, sans-serif;
 }
 .ops-settings.ln-page-surface,
 .ops-settings.ln-page-surface--tray {
-  display: block;
-  padding: 0;
-  background: var(--set-bg);
-  overflow: auto;
-}
-.ops-settings__card {
-  width: 92%;
-  margin: 0 auto;
-  min-height: 100%;
-  max-height: none !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+  inset: 76px 0 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
   background: transparent;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ops-settings.ln-page-surface .ops-settings__card {
+  width: min(640px, 100%);
+  min-height: 0;
+  max-height: 100% !important;
+  margin: 0;
+  padding: 0;
+  border: 3px solid var(--set-ink);
+  border-radius: 2px !important;
+  background: var(--set-bg);
+  box-shadow: 6px 6px 0 var(--ln-blueprint-ink) !important;
+  overflow: auto;
+  pointer-events: auto;
   color: var(--set-ink);
-  padding: 12px 0 32px;
-  box-sizing: border-box;
 }
-@media (min-width: 1024px) {
-  .ops-settings__card {
-    width: min(720px, 92%);
-  }
+.ops-settings__sky {
+  height: 96px;
+  overflow: hidden;
+  border-bottom: 3px solid var(--set-ink);
+  background: var(--ln-blueprint-paper-2);
+  line-height: 0;
 }
-@media (min-width: 768px) {
-  .ops-settings.ln-page-surface--tray {
-    display: block;
-    align-items: stretch;
-    justify-content: flex-start;
-    padding: 0;
-    background: var(--set-bg);
-  }
-  .ops-settings.ln-page-surface--tray .ops-settings__card {
-    width: 92%;
-    min-height: 100%;
-    max-height: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-  }
+.ops-settings__sky svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
-@media (min-width: 1024px) {
-  .ops-settings.ln-page-surface--tray .ops-settings__card {
-    width: min(720px, 92%);
-  }
+.ops-settings__card .ops-settings__head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 12px 20px;
+  border-bottom: 3px solid var(--set-ink);
+  background: var(--ln-blueprint-paper);
+  box-shadow: inset 0 4px 0 var(--ln-blueprint-blue);
+}
+.ops-settings__card .ops-settings__stack { padding: 28px 24px 32px; }
+.ops-settings__card .ops-settings__panel { box-shadow: 4px 4px 0 var(--ln-blueprint-paper-2); }
+.ops-settings .ln-set-segment > button { border-radius: 2px; }
+.ops-settings .ln-set-segment > button[aria-pressed="true"] {
+  background: var(--ln-blueprint-blue);
+  color: var(--ln-blueprint-paper);
+  border-color: var(--set-ink);
+}
+.ops-settings__card .ops-settings__btn { color: var(--ln-blueprint-blue); }
+@media (max-height: 500px) {
+  .ops-settings.ln-page-surface { inset: 60px 0 76px; padding: 8px 24px; }
+  .ops-settings__sky { height: 24px; }
+  .ops-settings__card .ops-settings__head { padding: 0 12px; min-height: 44px; }
+  .ops-settings__close { width: 44px; height: 44px; }
+  .ops-settings__card .ops-settings__stack { padding: 4px 16px 8px; gap: 8px; }
+  .ops-settings__label { margin-bottom: 4px; }
+  .ops-settings__panel { padding: 8px 12px; gap: 8px; }
+  .ops-settings__field { gap: 8px; }
+  .ops-settings__field--orient .ops-settings__sub { display: none; }
+  .ops-settings__copy { gap: 4px; }
 }
 .ops-settings__head {
   display: flex;
@@ -4478,8 +4506,8 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 .ops-settings__close {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   padding: 0;
   border: 2px solid var(--set-ink);
   border-radius: var(--set-radius);
@@ -4489,51 +4517,16 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   cursor: pointer;
 }
 .ops-settings__stack {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0 16px;
-  align-items: start;
-}
-.ops-settings__stack > *,
-.ops-settings__pair > * {
-  min-width: 0;
-}
-.ops-settings__pair {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-}
-.ops-settings__pair > section {
   display: flex;
   flex-direction: column;
+  gap: 32px;
+  align-items: stretch;
+}
+.ops-settings__stack > * {
   min-width: 0;
 }
-.ops-settings__pair .ops-settings__panel {
-  padding: 0 12px;
-}
-.ops-settings__pair .ops-settings__row {
-  padding: 8px 0;
-  min-height: 44px;
-}
-.ops-settings__pair .ops-settings__copy {
-  flex: 1 1 auto;
-  align-self: center;
-  gap: 0;
-}
-.ops-settings__pair .ops-settings__name,
-.ops-settings__pair .ops-settings__sub {
-  overflow: visible;
-  text-overflow: unset;
-  white-space: normal;
-}
-@media (max-width: 600px) {
-  .ops-settings__pair {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 .ops-settings__label {
-  margin: 16px 0 8px;
+  margin: 0 0 16px;
   font: 800 14px/1 var(--ln-font-display), system-ui, sans-serif;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -4541,15 +4534,15 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .ops-settings__panel {
   display: grid;
-  gap: 0;
-  padding: 4px var(--set-pad);
+  gap: 24px;
+  padding: 24px;
   border: 2px solid var(--set-ink);
   border-radius: var(--set-radius);
   background: var(--set-card);
   box-shadow: none;
+  container-type: inline-size;
 }
 .ops-settings__panel--danger {
-  margin-top: var(--set-gap);
   border-color: var(--set-danger);
 }
 .ops-settings__row,
@@ -4557,47 +4550,33 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 12px;
-  min-height: 44px;
+  gap: 16px 20px;
+  min-height: 52px;
   margin: 0;
-  padding: 8px 0;
+  padding: 0;
   border: 0;
-  border-bottom: 2px solid var(--set-ink);
   border-radius: 0;
   background: transparent;
   color: var(--set-ink);
   text-align: left;
   grid-template-columns: none;
 }
-.ops-settings__training .patch,
-.ops-settings__training .ops-settings__row {
-  padding: 0;
-  min-height: 44px;
-}
-.ops-settings__training .ops-settings__copy {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-}
-.ops-settings__training .patch-status,
-.ops-settings__training .ops-settings__sub {
-  margin: 0;
-}
-.ops-settings__panel > :last-child,
-.ops-settings__panel > .patch-shelf:last-child > :last-child,
-.ops-settings__row:last-child {
-  border-bottom: 0;
-}
-.ops-settings .patch-shelf {
-  display: grid;
-  gap: 0;
+@container (max-width: 440px) {
+  .ops-settings__row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .ops-settings__row .ops-settings__btn {
+    width: 100%;
+    margin-left: 0;
+  }
 }
 .ops-settings__copy {
   flex: 1 1 8rem;
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 8px;
 }
 .ops-settings__name,
 .ops-settings .patch-name {
@@ -4621,16 +4600,16 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   justify-content: center;
   gap: 8px;
   margin-left: auto;
-  min-height: 44px;
-  min-width: 44px;
-  max-width: min(240px, 100%);
-  padding: 10px 16px;
+  min-height: 52px;
+  min-width: 52px;
+  max-width: 100%;
+  padding: 12px 20px;
   border: 2px solid var(--set-ink);
   border-radius: var(--set-radius);
   background: var(--set-card);
   color: var(--set-ink);
   box-shadow: none;
-  font: 800 14px/1.2 var(--ln-font-display), system-ui, sans-serif;
+  font: 800 16px/1.2 var(--ln-font-display), system-ui, sans-serif;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-align: center;
@@ -4653,65 +4632,83 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   outline: 2px solid var(--set-ink);
   outline-offset: 2px;
 }
-.ops-settings__btn--danger {
+.ops-settings__card .ops-settings__btn--danger {
   border-color: var(--set-danger);
   color: var(--set-danger);
   background: var(--set-card);
 }
 .ops-settings__btn--mini {
-  min-height: 44px;
-  padding: 0 12px;
+  min-height: 52px;
+  padding: 12px 16px;
 }
 .ops-settings__name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-@media (orientation: landscape) {
-  .ops-settings__stack {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-  .ops-settings__pair,
-  .ops-settings__wide {
-    grid-column: 1 / -1;
-  }
-}
-@media (min-width: 1024px) {
-  .ops-settings__stack {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-  .ops-settings__pair,
-  .ops-settings__wide {
-    grid-column: 1 / -1;
-  }
-}
-.ops-settings .ln-set-segment {
-  flex: 0 0 auto;
-  margin-left: auto;
-}
-.ops-settings .ln-set-segment > button {
-  flex: 0 0 auto;
-  min-width: 64px;
-}
-.ops-settings__orient {
+.ops-settings__field {
   display: grid;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 2px solid var(--set-ink);
+  gap: 16px;
+  container-type: inline-size;
 }
-.ops-settings__panel > .ops-settings__orient:last-child {
-  border-bottom: 0;
-}
-.ops-settings__orient .ln-set-segment {
+.ops-settings .ln-set-segment.ops-settings__choices {
+  display: grid;
   width: 100%;
-  margin-left: 0;
+  margin: 0;
+  gap: 12px;
 }
-.ops-settings__orient .ln-set-segment > button {
-  flex: 1 1 0;
+.ops-settings .ops-settings__choices > button {
+  width: 100%;
   min-width: 0;
-  padding: 0 4px;
-  letter-spacing: 0.04em;
+  min-height: 52px;
+  padding: 12px 16px;
+  letter-spacing: 0.06em;
   white-space: nowrap;
+}
+.ops-settings__choices--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.ops-settings__choices--three {
+  grid-template-columns: 1fr;
+}
+@container (min-width: 480px) {
+  .ops-settings__choices--three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-height: 500px) {
+  .ops-settings__choices--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ops-settings .ops-settings__choices > button {
+    min-height: 48px;
+    padding: 8px 10px;
+    letter-spacing: 0.02em;
+  }
+}
+.ops-settings__notes-link {
+  justify-self: center;
+  align-self: center;
+  min-height: 48px;
+  min-width: 48px;
+  margin-top: 8px;
+  padding: 12px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--ln-blueprint-blue);
+  font: 700 16px/1.2 var(--ln-font-display), system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.ops-settings__notes-link:focus-visible {
+  outline: 2px solid var(--set-ink);
+  outline-offset: 2px;
+}
+.ops-settings__alerts button {
+  min-height: 52px !important;
+  min-width: 52px;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
 }
 .ops-settings__note h3 {
   margin: 0 0 8px;
@@ -4737,15 +4734,9 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   gap: 8px;
   margin-top: 8px;
 }
-.ops-settings__stack > :first-child > .ops-settings__label { margin-top: 8px; }
-.ops-settings__stack--notes { gap: var(--set-gap); }
-.ops-settings__panel.ops-settings__note { padding: var(--set-pad); }
-.ops-settings .patch[data-state='active'] .patch-status,
-.ops-settings .patch[data-state='done'] .patch-status {
-  color: var(--set-muted);
-  font-weight: 400;
-}
-.ops-settings__presets .ops-settings__label { margin: 0 0 8px; }
+.ops-settings__stack--notes { gap: 24px; }
+.ops-settings__panel.ops-settings__note { padding: 24px; }
+.ops-settings__presets .ops-settings__label { margin: 0 0 12px; }
 
 /* SSL-536: terrain bump feedback in the mining scene (brick red, never orange). */
 .mining-bump-note {
