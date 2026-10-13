@@ -1,0 +1,64 @@
+/* Mining d-pad (rover style) and laser gauge. Blue/teal for normal, brick red for low. No orange. */
+.dpad {
+  position: absolute;
+  left: max(16px, env(safe-area-inset-left));
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  z-index: 6;
+  display: grid;
+  grid-template-columns: 52px 52px 52px;
+  grid-template-rows: 52px 52px 52px;
+  grid-template-areas:
+    ". up ."
+    "left hub right"
+    ". down .";
+  touch-action: none;
+  user-select: none;
+}
+.pad {
+  min-width: 52px;
+  min-height: 52px;
+  padding: 0;
+  border: 2px solid #1a2a3c;
+  background: #f4f1ea;
+  color: #1a2a3c;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 0 #1a2a3c;
+}
+.pad:active { background: #d7e6f7; color: #2f6fa8; transform: translateY(1px); box-shadow: none; }
+.pad:disabled { opacity: 0.45; cursor: default; }
+.pad:focus-visible { outline: 2px solid #2f6fa8; outline-offset: 2px; }
+.up { grid-area: up; border-radius: 14px 14px 0 0; }
+.left { grid-area: left; border-radius: 14px 0 0 14px; }
+.right { grid-area: right; border-radius: 0 14px 14px 0; }
+.down { grid-area: down; border-radius: 0 0 14px 14px; }
+.hub { grid-area: hub; background: #f4f1ea; border-top: 2px solid #1a2a3c; border-bottom: 2px solid #1a2a3c; }
+
+.gauge {
+  position: absolute;
+  left: 50%;
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 6;
+  width: min(280px, 60vw);
+  padding: 8px 12px 10px;
+  border: 2px solid #1a2a3c;
+  border-radius: 14px;
+  background: rgba(244, 241, 234, 0.94);
+  color: #1a2a3c;
+}
+.gaugeHead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.gaugeLabel { font: 800 14px/1 var(--ln-font-display, system-ui); letter-spacing: 0.08em; text-transform: uppercase; }
+.gaugeValue { font: 700 14px/1 var(--ln-font-display, system-ui); font-variant-numeric: tabular-nums; }
+.track { position: relative; height: 12px; border-radius: 6px; background: #c9d3de; overflow: hidden; }
+.fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #2f6fa8, #3fb6c4); transition: width 160ms linear; }
+.recharge { position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent); animation: sweep 420ms linear infinite; }
+.gauge[data-firing] .fill { filter: brightness(1.2); }
+.gauge[data-state='low'] { border-color: #9b3b32; }
+.gauge[data-state='low'] .fill { background: #9b3b32; animation: pulse 0.9s ease-in-out infinite; }
+.gauge[data-state='empty'] { border-color: #9b3b32; }
+.warn { display: block; margin-top: 6px; font: 800 14px/1 var(--ln-font-display, system-ui); letter-spacing: 0.06em; text-transform: uppercase; color: #9b3b32; }
+@keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@keyframes pulse { 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .recharge, .gauge[data-state='low'] .fill { animation: none; } }

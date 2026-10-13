@@ -140,5 +140,22 @@
   "base_kit_pad_smoke_1": "/game/assets/base/kit/pad-smoke-1.png",
   "base_kit_pad_smoke_2": "/game/assets/base/kit/pad-smoke-2.png",
   "base_kit_pad_smoke_3": "/game/assets/base/kit/pad-smoke-3.png",
-  "base_kit_pad_smoke_sheet": "/game/assets/base/kit/pad-smoke-sheet.png"
+  "base_kit_pad_smoke_sheet": "/game/assets/base/kit/pad-smoke-sheet.png",
+  "base_plot_build_empty": "/game/assets/base/plot_build_empty.png",
+  "base_plot_build_hover": "/game/assets/base/plot_build_hover.png",
+  "base_plot_build_selected": "/game/assets/base/plot_build_selected.png",
+  "base_silo_underground": "/game/assets/base/silo_underground.png",
+  "mining_deposit_cobalt": "/game/assets/mining/deposit_cobalt.png",
+  "mining_deposit_ice": "/game/assets/mining/deposit_ice.png",
+  "mining_deposit_iron": "/game/assets/mining/deposit_iron.png",
+  "mining_deposit_nickel": "/game/assets/mining/deposit_nickel.png",
+  "mining_terrain_mountain": "/game/assets/mining/terrain_mountain.png",
+  "mining_terrain_ridge": "/game/assets/mining/terrain_ridge.png",
+  "mining_terrain_strata": "/game/assets/mining/terrain_strata.png",
+  "galaxy_galaxy_map_bg": "/game/assets/galaxy/galaxy_map_bg.png",
+  "galaxy_map_node_available": "/game/assets/galaxy/map_node_available.png",
+  "galaxy_map_node_hover": "/game/assets/galaxy/map_node_hover.png",
+  "galaxy_map_node_locked": "/game/assets/galaxy/map_node_locked.png",
+  "galaxy_map_node_selected": "/game/assets/galaxy/map_node_selected.png",
+  "galaxy_map_route_dash": "/game/assets/galaxy/map_route_dash.png"
 }

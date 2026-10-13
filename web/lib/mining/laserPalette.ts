@@ -1,4 +1,5 @@
 import raw from './laser-palettes.json'
+import type { LandscapeSpec } from './landscape'
 
 export type LaserTerrain = 'rubble' | 'dunes' | 'ice'
 
@@ -31,6 +32,8 @@ export interface LaserPalette {
   planet?: LaserPlanet
   /** Ink for ore symbols. The label sits in the sky above the outcrop, so a light sky needs dark ink. */
   labelInk: number
+  /** Per-world terrain tint, layout seed and deposit weights (SSL-536). */
+  landscape?: LandscapeSpec
 }
 
 interface RawPalette {
@@ -50,9 +53,10 @@ interface RawPalette {
   clouds: boolean
   terrain: LaserTerrain
   planet?: { cx: number; cy: number; radius: number; bands: string[] }
+  landscape?: LandscapeSpec
 }
 
-const file = raw as { palettes: Record<string, RawPalette>; worlds: Record<string, string> }
+const file = raw as unknown as { palettes: Record<string, RawPalette>; worlds: Record<string, string> }
 
 function hex(value: string): number {
   return parseInt(value.replace('#', ''), 16)
@@ -86,6 +90,7 @@ function compile(id: string, src: RawPalette): LaserPalette {
     planet: src.planet
       ? { cx: src.planet.cx, cy: src.planet.cy, radius: src.planet.radius, bands: src.planet.bands.map(hex) }
       : undefined,
+    landscape: src.landscape,
     labelInk: channelAverage(hex(src.skyHorizon)) > 120 ? 0x1a2430 : 0xffffff,
   }
 }

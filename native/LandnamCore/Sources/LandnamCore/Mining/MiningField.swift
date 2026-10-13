@@ -99,4 +99,6 @@ public struct MiningField: Equatable, Sendable {
     }
 
     public mutating func recharge(_ amount: Int = 1) { charge = min(chargeCap, charge + amount) }
+    /// Hull clipped terrain (SSL-536): costs charge, never ends the run.
+    public mutating func bump(_ cost: Int = 1) { charge = max(0, charge - cost) }
 }

@@ -12,6 +12,16 @@ final class MiningScene: SKScene {
 
     private let palette: LaserPalette.Spec
     private var scrollInput = 0.0
+    private var climbInput = 0.0
+    private var altitude: CGFloat = 0
+    private var bumpCooldown: TimeInterval = 0
+    var onBump: (() -> Void)?
+    /// True while the laser recharges between shots (drives the gauge sweep).
+    var onCharging: ((Bool) -> Void)?
+    private var triggerHeld = false
+    private var nextShotAt: TimeInterval = 0
+    private var wasCharging = false
+    private static let fireCooldown: TimeInterval = 0.42
     private var scrollX: CGFloat = 0
     private var clock: TimeInterval = 0
     private var lastTime: TimeInterval?
@@ -25,6 +35,9 @@ final class MiningScene: SKScene {
     private let ground = SKNode()
     private let near = SKNode()
     private let far = SKNode()
+    private let mid = SKNode()
+    private var midW: CGFloat = 1
+    private let landscapeKey: String
     private let beam = SKNode()
     private lazy var spark = sprite("spark-0")
     private let px: CGFloat = 2
@@ -35,9 +48,10 @@ final class MiningScene: SKScene {
     private let hull = SKNode()
     private var flashUntil: TimeInterval = 0
 
-    init(field: MiningField, size: CGSize, palette: LaserPalette.Spec = LaserPalette.bennu) {
+    init(field: MiningField, size: CGSize, palette: LaserPalette.Spec = LaserPalette.bennu, landscapeKey: String? = nil) {
         self.field = field
         self.palette = palette
+        self.landscapeKey = landscapeKey ?? palette.id
         super.init(size: size)
         scaleMode = .resizeFill
         backgroundColor = LaserPalette.sk(palette.skyTop)
@@ -45,7 +59,8 @@ final class MiningScene: SKScene {
     required init?(coder: NSCoder) { fatalError() }
 
     private var beamX: CGFloat { min(96, max(72, size.width * 0.18)) }
-    private var surfaceY: CGFloat { max(200, size.height * 0.5) }
+    /// Ground is the bottom third (min 150pt) so there is sky to fly in (SSL-536).
+    private var surfaceY: CGFloat { max(150, size.height * 0.33) }
     private var shipY: CGFloat { min(size.height * 0.72, surfaceY + min(210, size.height * 0.28)) }
 
     override func didMove(to view: SKView) {
@@ -292,9 +307,10 @@ final class MiningScene: SKScene {
     }
 
     private func buildGround() {
-        let ridgeName = "ridge-" + (palette.terrain == "ice" || palette.terrain == "dunes" ? palette.terrain : "rubble")
+        // ridge-ice carries snow pines; barren bodies get no plants, so ice reuses the rubble ridge (SSL-536).
+        let ridgeName = palette.terrain == "dunes" ? "ridge-dunes" : "ridge-rubble"
         let copies = Int((size.width / ridgeTile).rounded(.up)) + 2
-        far.removeAllChildren(); near.removeAllChildren(); ground.removeAllChildren()   // a resize rebuilds the scene; drop the old layers
+        far.removeAllChildren(); mid.removeAllChildren(); near.removeAllChildren(); ground.removeAllChildren()   // a resize rebuilds the scene; drop the old layers
         far.zPosition = -8
         near.zPosition = -6
         ground.zPosition = 1
@@ -320,9 +336,64 @@ final class MiningScene: SKScene {
             slab.position = CGPoint(x: CGFloat(copy) * groundSpan, y: surfaceY)
             ground.addChild(slab)
         }
+        buildLandscape()
         world.addChild(far)
+        world.addChild(mid)
         world.addChild(near)
         world.addChild(ground)
+    }
+
+    private var obstacles: [(x: CGFloat, halfW: CGFloat, height: CGFloat, kind: String)] = []
+
+    /// Landscape height above the surface at a screen x (0 when clear). Mirrors web `obstacleHeightAt`.
+    private func obstacleHeight(_ x: CGFloat) -> CGFloat {
+        let local = x - mid.position.x
+        var best: CGFloat = 0
+        for o in obstacles {
+            for shift in [-midW, 0, midW] {
+                let dx = abs(local - (o.x + shift))
+                guard dx < o.halfW else { continue }
+                let t = dx / o.halfW
+                let h: CGFloat = o.kind == "mountain" ? o.height * (1 - t) : o.kind == "ridge" ? o.height * (1 - t * t) : (t < 0.85 ? o.height : 0)
+                best = max(best, h)
+            }
+        }
+        return best
+    }
+
+    /// Seeded terrain pieces and surface deposits, tinted per world, between the far and near ridges (SSL-536).
+    private func buildLandscape() {
+        let layout = Landscape.layout(palette.landscape, key: landscapeKey)
+        midW = CGFloat(layout.period) * px
+        obstacles = layout.pieces.map { p in
+            let h = Landscape.pieceHeight[p.kind] ?? 48
+            return (CGFloat(p.x) * px, 64 * px * CGFloat(p.scale) * 0.9, h * px * CGFloat(p.scale) * 0.92 - h * 0.04 * px - 4, p.kind)
+        }
+        mid.zPosition = -7
+        let copies = Int((size.width / midW).rounded(.up)) + 1
+        for c in 0..<copies {
+            for p in layout.pieces {
+                guard let tex = SK.texture("mining/terrain_\(p.kind).png") else { continue }
+                let node = SKSpriteNode(texture: tex)
+                node.size = tex.size()
+                node.anchorPoint = CGPoint(x: 0.5, y: 0)
+                node.xScale = px * CGFloat(p.scale) * (p.flip ? -1 : 1)
+                node.yScale = px * CGFloat(p.scale)
+                node.position = CGPoint(x: CGFloat(c) * midW + CGFloat(p.x) * px, y: surfaceY - 4 - (Landscape.pieceHeight[p.kind] ?? 48) * 0.04 * px)
+                node.color = LaserPalette.sk(layout.tint)
+                node.colorBlendFactor = CGFloat(layout.shade)
+                mid.addChild(node)
+            }
+            for d in layout.deposits {
+                guard let tex = SK.texture("mining/deposit_\(d.kind).png") else { continue }
+                let node = SKSpriteNode(texture: tex)
+                node.size = tex.size()
+                node.anchorPoint = CGPoint(x: 0.5, y: 0)
+                node.setScale(px * 0.6)
+                node.position = CGPoint(x: CGFloat(c) * midW + CGFloat(d.x) * px, y: surfaceY - 4 - Landscape.depositHeight * 0.1 * px)
+                mid.addChild(node)
+            }
+        }
     }
 
     /// Deposits sit buried in the soil under the beam line, far apart so one pass shows one or two.
@@ -332,12 +403,17 @@ final class MiningScene: SKScene {
         track = max(size.width + spacing, CGFloat(live.count) * spacing)
         for (i, n) in live.enumerated() {
             let hex = Minerals.byId[n.mineralId]?.colorHex ?? "#C8CCD2"
-            let a = depositTexture(colorHex: hex, variant: n.id, glint: false)
-            let b = depositTexture(colorHex: hex, variant: n.id, glint: true)
+            let kind = Landscape.depositKind(for: n.mineralId)
+            let art = SK.texture("mining/deposit_\(kind).png")
+            let a = art ?? depositTexture(colorHex: hex, variant: n.id, glint: false)
             let chip = SKSpriteNode(texture: a)
             chip.size = a.size()
-            chip.setScale(px)
-            chip.run(.repeatForever(.animate(with: [a, a, a, b], timePerFrame: 0.5 + Double(n.id % 3) * 0.12)))
+            // Deposits v2 art is 64px; draw it near the old chip footprint.
+            chip.setScale(art != nil ? px * 30 / 64 : px)
+            if art == nil {
+                let b = depositTexture(colorHex: hex, variant: n.id, glint: true)
+                chip.run(.repeatForever(.animate(with: [a, a, a, b], timePerFrame: 0.5 + Double(n.id % 3) * 0.12)))
+            }
             chip.zPosition = 10
             chip.name = "ore-\(n.id)"
             world.addChild(chip)
@@ -426,6 +502,11 @@ final class MiningScene: SKScene {
     // MARK: play
 
     func setScroll(_ input: Double) { scrollInput = max(-1, min(1, input)) }
+    /// d-pad / keys: -1 climb, 0 hold, 1 descend. The ship stays level.
+    func setClimb(_ input: Double) { climbInput = max(-1, min(1, input)) }
+    var isFiring: Bool { clock < flashUntil }
+    /// Press-and-hold trigger: fires on press, then again each time the laser recharges, until release.
+    func setTrigger(_ held: Bool) { triggerHeld = held }
 
     /// Dock arrows: a short burst of faster or slower scroll.
     func nudge(_ dir: Double) {
@@ -515,21 +596,47 @@ final class MiningScene: SKScene {
         shift(ground, by: dx, width: groundSpan)
         shift(near, by: dx * 0.45, width: ridgeTile)
         shift(far, by: dx * 0.16, width: ridgeTile)
+        shift(mid, by: dx * 0.3, width: midW)
         placeChips()
 
         let pulse = reducedMotion ? 1 : 0.82 + sin(clock * 9) * 0.18
         if clock >= flashUntil {
-            beam.alpha = 0.72 + pulse * 0.28
+            // Beam shows only while the trigger is held; no idle stream.
+            beam.alpha = 0
+            spark.alpha = 0
             beam.xScale = 1
             spark.setScale(px)
-        }
+        } else { spark.alpha = 1 }
         if let plume = ship.childNode(withName: "//plume") {
             plume.alpha = 0.7 + pulse * 0.3
             plume.xScale = px * (0.8 + pulse * 0.3)
             if let sprite = plume as? SKSpriteNode, !reducedMotion { sprite.texture = flameFrames[Int(clock * 10) % 2] }
         }
-        ship.position.y = shipY + (reducedMotion ? 0 : sin(clock * 2.2) * 1.5)
+        // Altitude (SpriteKit is y-up: positive climbs). Clamp between sky ceiling and just above ground.
+        altitude += CGFloat(-climbInput) * 180 * CGFloat(dt)
+        altitude = max(surfaceY + 56 - shipY, min(size.height - 64 - shipY, altitude))
+        if bumpCooldown > 0 { bumpCooldown -= dt }
+        if triggerHeld, clock >= nextShotAt {
+            nextShotAt = clock + Self.fireCooldown
+            fireLaser()
+        }
+        let charging = clock < nextShotAt
+        if charging != wasCharging { wasCharging = charging; onCharging?(charging) }
+        let clear = [beamX - 30, beamX, beamX + 30].map(obstacleHeight).max() ?? 0
+        let belly = shipY + altitude - 14
+        if clear > 0, belly < surfaceY + clear {
+            altitude = surfaceY + clear + 14 + 18 - shipY
+            if bumpCooldown <= 0 {
+                bumpCooldown = 0.9
+                field.bump()
+                onBump?()
+                onChange?(field)
+                world.run(.sequence([.moveBy(x: 4, y: -3, duration: 0.04), .moveBy(x: -8, y: 4, duration: 0.06), .moveBy(x: 4, y: -1, duration: 0.05)]))
+            }
+        }
+        ship.position.y = shipY + altitude + (reducedMotion ? 0 : sin(clock * 2.2) * 1.5)
         beam.position.y = ship.position.y - 24
+        beam.yScale = max(0.05, (ship.position.y - 24 - surfaceY) / max(24, shipY - 24 - surfaceY))
 
         if !reducedMotion {
             for star in stars {

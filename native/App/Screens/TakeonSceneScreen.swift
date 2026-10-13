@@ -136,7 +136,9 @@ struct TakeonSceneScreen: View {
                 model.tick(dt: min(0.25, dt))
             }
         }
+        #if os(iOS)
         .statusBarHidden(false)
+        #endif
     }
 
     @ViewBuilder private func overlay(_ geo: GeometryProxy) -> some View {

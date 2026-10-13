@@ -13,7 +13,7 @@ import { activeDebrisPreset, debrisRatePerMinute, type DebrisEventPreset } from 
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { loadOrionidsArt } from '@/lib/orionids/loadArt'
 import { miningCanvasIsDark } from '@/lib/orionids/theme'
-import { buildLaserField } from '@/lib/mining/laserLayers'
+import { buildLaserField, depositKindFor, obstacleHeightAt } from '@/lib/mining/laserLayers'
 import type { LaserPalette } from '@/lib/mining/laserPalette'
 
 // Minimum gap between shots: long enough that a mashed tap reads as
@@ -22,6 +22,8 @@ const FIRE_COOLDOWN_MS = 420
 
 interface MiningCanvasProps {
   palette: LaserPalette
+  /** Target id; varies the landscape arrangement (SSL-536). */
+  landscapeKey?: string
   rocketImageSrc?: string
   minerals: string[]
   leadMinerals?: string[]
@@ -41,6 +43,10 @@ interface MiningCanvasProps {
   /** Direct canvas tap/click must route back through the screen's fireLaser() so the charge-budget and gate checks it owns aren't bypassed — see the pointerdown handler below. */
   onFireRequest?: () => void
   scrollRef: React.MutableRefObject<((dx: number) => void) | null>
+  /** Climb (-1), hold (0) or descend (1). Set by the d-pad, keys and vertical drags (SSL-536). */
+  altitudeRef?: React.MutableRefObject<((dir: number) => void) | null>
+  /** The hull clipped a mountain or ridge: bumped up and damaged, never an instant fail. */
+  onBump?: () => void
   oreNearRef?: React.MutableRefObject<((near: boolean) => void) | null>
   /** Live-updating set of mineral keys still needed to fill the order — see MiningControllerOptions.neededMineralsRef. */
   neededMineralsRef?: React.MutableRefObject<Set<string> | null>
@@ -51,7 +57,7 @@ interface MiningCanvasProps {
   debrisPreset?: DebrisEventPreset | null
 }
 
-export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, altitudeRef, onBump, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
   void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
@@ -61,6 +67,8 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
   const onFireRequestRef = useRef(onFireRequest)
   onFireRequestRef.current = onFireRequest
   const onReadyRef = useRef(onReady)
+  const onBumpRef = useRef(onBump)
+  onBumpRef.current = onBump
   onReadyRef.current = onReady
   const onFailureRef = useRef(onFailure)
   onFailureRef.current = onFailure
@@ -147,7 +155,8 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
         // dirt texture rather than empty.
         // Same proportions as the native laser scene: surface halfway down
         // (never less than 200px of ground), ship hovering above it.
-        const surfaceFromBottom = Math.max(200, worldH * 0.5)
+        // Ground is the bottom third (min 150px) so there is sky to fly in (SSL-536).
+        const surfaceFromBottom = Math.max(150, worldH * 0.33)
         const surfaceY = Math.round(worldH - surfaceFromBottom)
         const shipFromBottom = Math.min(worldH * 0.72, surfaceFromBottom + Math.min(210, worldH * 0.28))
         const shipY = Math.round(worldH - shipFromBottom)
@@ -166,7 +175,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
         ])
         if (destroyed) return
 
-        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: SHIP_X, shipY, palette })
+        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: SHIP_X, shipY, palette, landscapeKey })
         if (destroyed) {
           field.backdrop.destroy({ children: true })
           field.beam.destroy({ children: true })
@@ -211,6 +220,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
           mineralSyms: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.sym])),
           beamColor: palette.beamCss,
           depositFrames: field.depositFrames,
+          depositArtFor: mineral => field.depositArt[depositKindFor(mineral)],
           pixelScale: field.pixelScale,
           pixelBeam: true,
           labelInk: palette.labelInk,
@@ -224,6 +234,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
             field.ground.x = -(scrollX % field.soilW)
             field.near.x = -((scrollX * 0.45) % field.ridgeW)
             field.far.x = -((scrollX * 0.16) % field.ridgeW)
+            field.mid.x = -((scrollX * 0.3) % field.midW)
           },
           onOreNearby: (near) => { oreNearRef?.current?.(near) },
           neededMineralsRef,
@@ -243,13 +254,47 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
         })
 
         let sceneTime = 0
+        const CLIMB_SPEED = 180
+        const SHIP_BELLY = 14
+        const SHIP_HALF_W = 30
+        const BUMP_KICK = 18
+        let altitude = 0
+        let climb = 0
+        let bumpCooldown = 0
+        const minAlt = Math.min(0, 64 - shipY)
+        const maxAlt = Math.max(0, surfaceY - 56 - shipY)
+        const beamTop = field.beam.y
+        const beamSpan = Math.max(24, surfaceY - beamTop)
+        if (altitudeRef) altitudeRef.current = (dir: number) => { climb = Math.max(-1, Math.min(1, dir)) }
         let lastFireAt = -1
         app.ticker.add(ticker => {
           sceneTime += ticker.deltaMS / 1000
           const firing = lastFireAt > 0 && performance.now() - lastFireAt < 180
           field.step(sceneTime, prefersReducedMotion(), firing)
           const kick = prefersReducedMotion() || lastFireAt < 0 ? 0 : recoilOffset((performance.now() - lastFireAt) / 1000)
-          field.ship.y = shipY + kick + field.hover
+          // The ship stays level; altitude moves it between the sky ceiling and just above the ground.
+          const dt = ticker.deltaMS / 1000
+          altitude = Math.max(minAlt, Math.min(maxAlt, altitude + climb * CLIMB_SPEED * dt))
+          if (bumpCooldown > 0) bumpCooldown -= dt
+          const clear = Math.max(
+            obstacleHeightAt(field, SHIP_X - SHIP_HALF_W),
+            obstacleHeightAt(field, SHIP_X),
+            obstacleHeightAt(field, SHIP_X + SHIP_HALF_W),
+          )
+          if (clear > 0 && shipY + altitude + SHIP_BELLY > surfaceY - clear) {
+            altitude = Math.max(minAlt, surfaceY - clear - SHIP_BELLY - shipY - BUMP_KICK)
+            if (bumpCooldown <= 0) {
+              bumpCooldown = 0.9
+              shakeState.timer = 0.32
+              onBumpRef.current?.()
+            }
+          }
+          field.ship.y = shipY + altitude + kick + field.hover
+          field.beam.y = beamTop + altitude
+          field.beam.scale.y = Math.max(0.05, (beamSpan - altitude) / beamSpan)
+          // Beam shows only while the trigger is held (fire pulse), never as an idle stream.
+          field.beam.visible = firing
+          field.spark.visible = firing
           if (shakeState.timer > 0) {
             shakeState.timer -= ticker.deltaMS / 1000
             const t = Math.max(0, shakeState.timer / 0.28)
@@ -293,24 +338,33 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
         // field returns to normal speed on release.
         canvas.style.touchAction = 'none'
         let dragStartX: number | null = null
+        let dragStartY = 0
         let dragging = false
+        let steering = false
         const DRAG_THRESHOLD_PX = 10
         const DRAG_FULL_SPEED_PX = 120
         const endDrag = () => {
           if (dragging) scrollRef.current?.(0)
+          if (steering) altitudeRef?.current?.(0)
           dragStartX = null
           dragging = false
+          steering = false
         }
         input.onAny(event => {
           if (event.type === 'pointerdown') {
             dragStartX = event.screen.x
+            dragStartY = event.screen.y
             dragging = false
+            steering = false
           } else if (event.type === 'pointermove' && dragStartX !== null) {
             const delta = event.screen.x - dragStartX
+            const dy = event.screen.y - dragStartY
+            if (!dragging && !steering && Math.abs(dy) >= DRAG_THRESHOLD_PX && Math.abs(dy) > Math.abs(delta)) steering = true
+            if (steering) { altitudeRef?.current?.(Math.max(-1, Math.min(1, dy / 60))); return }
             if (!dragging && Math.abs(delta) >= DRAG_THRESHOLD_PX) dragging = true
             if (dragging) scrollRef.current?.(Math.max(-1, Math.min(1, -delta / DRAG_FULL_SPEED_PX)))
           } else if (event.type === 'pointerup') {
-            const wasDrag = dragging
+            const wasDrag = dragging || steering
             endDrag()
             // A direct canvas tap must go through the screen's fireLaser(), not
             // straight to attemptFire(), so the charge-budget and gate checks
@@ -352,6 +406,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
       chargingRef?.current?.(false)
       fireRef.current = null
       scrollRef.current = null
+      if (altitudeRef) altitudeRef.current = null
       if (oreNearRef) oreNearRef.current = null
       controllerRef.current = null
       loop?.stop()
@@ -363,7 +418,7 @@ export default function MiningCanvas({ palette, rocketImageSrc, minerals, leadMi
       // else: async init returns early (destroyed=true), canvas stays briefly then is GC'd with parent
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [palette.id, rocketImageSrc, fitKey, leadMinerals?.join(','), scrollScreens, pinScroll])
+  }, [palette.id, landscapeKey, rocketImageSrc, fitKey, leadMinerals?.join(','), scrollScreens, pinScroll])
 
   return (
     <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" data-palette={palette.id} data-training-mining={trainingMiningTry || undefined}>

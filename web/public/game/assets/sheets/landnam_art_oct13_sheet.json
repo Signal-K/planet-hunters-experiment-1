@@ -1,0 +1,98 @@
+{
+ "plot_build_empty": [
+  0,
+  0,
+  96,
+  64
+ ],
+ "plot_build_hover": [
+  100,
+  0,
+  96,
+  64
+ ],
+ "plot_build_selected": [
+  200,
+  0,
+  96,
+  64
+ ],
+ "silo_underground": [
+  300,
+  0,
+  192,
+  96
+ ],
+ "map_node_available": [
+  0,
+  100,
+  32,
+  32
+ ],
+ "map_node_hover": [
+  36,
+  100,
+  32,
+  32
+ ],
+ "map_node_locked": [
+  72,
+  100,
+  32,
+  32
+ ],
+ "map_node_selected": [
+  108,
+  100,
+  32,
+  32
+ ],
+ "map_route_dash": [
+  144,
+  100,
+  64,
+  8
+ ],
+ "deposit_cobalt": [
+  212,
+  100,
+  64,
+  48
+ ],
+ "deposit_ice": [
+  280,
+  100,
+  64,
+  48
+ ],
+ "deposit_iron": [
+  348,
+  100,
+  64,
+  48
+ ],
+ "deposit_nickel": [
+  416,
+  100,
+  64,
+  48
+ ],
+ "terrain_mountain": [
+  0,
+  152,
+  128,
+  112
+ ],
+ "terrain_ridge": [
+  132,
+  152,
+  128,
+  48
+ ],
+ "terrain_strata": [
+  264,
+  152,
+  128,
+  56
+ ]
+}

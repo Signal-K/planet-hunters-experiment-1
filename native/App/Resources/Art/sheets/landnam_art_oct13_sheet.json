@@ -2,103 +2,97 @@
  "plot_build_empty": [
   0,
   0,
-  64,
+  96,
   64
  ],
  "plot_build_hover": [
-  68,
+  100,
   0,
-  64,
+  96,
   64
  ],
  "plot_build_selected": [
-  136,
+  200,
   0,
-  64,
-  64
- ],
- "deposit_iron": [
-  204,
-  0,
-  64,
-  64
- ],
- "deposit_nickel": [
-  272,
-  0,
-  64,
-  64
- ],
- "deposit_ice": [
-  340,
-  0,
-  64,
-  64
- ],
- "deposit_cobalt": [
-  408,
-  0,
-  64,
-  64
- ],
- "terrain_mountain": [
-  0,
-  68,
-  128,
-  64
- ],
- "terrain_ridge": [
-  132,
-  68,
-  128,
-  64
- ],
- "terrain_flat_strata": [
-  264,
-  68,
-  128,
+  96,
   64
  ],
  "silo_underground": [
-  396,
-  68,
-  64,
-  128
- ],
- "galaxy_map_bg": [
+  300,
   0,
-  200,
-  256,
-  144
+  192,
+  96
  ],
  "map_node_available": [
-  260,
-  200,
+  0,
+  100,
   32,
   32
  ],
  "map_node_hover": [
-  296,
-  200,
-  32,
-  32
- ],
- "map_node_selected": [
-  332,
-  200,
+  36,
+  100,
   32,
   32
  ],
  "map_node_locked": [
-  368,
-  200,
+  72,
+  100,
+  32,
+  32
+ ],
+ "map_node_selected": [
+  108,
+  100,
   32,
   32
  ],
  "map_route_dash": [
-  404,
-  200,
+  144,
+  100,
   64,
-  16
+  8
+ ],
+ "deposit_cobalt": [
+  212,
+  100,
+  64,
+  48
+ ],
+ "deposit_ice": [
+  280,
+  100,
+  64,
+  48
+ ],
+ "deposit_iron": [
+  348,
+  100,
+  64,
+  48
+ ],
+ "deposit_nickel": [
+  416,
+  100,
+  64,
+  48
+ ],
+ "terrain_mountain": [
+  0,
+  152,
+  128,
+  112
+ ],
+ "terrain_ridge": [
+  132,
+  152,
+  128,
+  48
+ ],
+ "terrain_strata": [
+  264,
+  152,
+  128,
+  56
  ]
 }

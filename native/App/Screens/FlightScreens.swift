@@ -88,6 +88,8 @@ struct MiningScreen: View {
     @State private var scene: MiningScene?
     @State private var field: MiningField?
     @State private var toast: String?
+    @State private var laserCharging = false
+    @FocusState private var keysFocused: Bool
     @State private var confirmingScrub = false
     @State private var showSettings = false
     @State private var showGuide = false
@@ -125,7 +127,31 @@ struct MiningScreen: View {
                                 onClose: { showGuide = false })
                 }
             }
-            .onAppear { if scene == nil { setup(geo.size) } }
+            .onAppear { if scene == nil { setup(geo.size) }; keysFocused = true }
+            // Hardware keyboard (iOS keyboard / macOS): W/S or arrows steer altitude, A/D or arrows speed, Space/F fire while held.
+            .focusable()
+            .focused($keysFocused)
+            .focusEffectDisabled()
+            .onKeyPress(phases: [.down, .up]) { press in
+                let down = press.phase == .down
+                switch press.key {
+                case .upArrow: scene?.setClimb(down ? -1 : 0)
+                case .downArrow: scene?.setClimb(down ? 1 : 0)
+                case .leftArrow: scene?.setScroll(down ? -1 : 0)
+                case .rightArrow: scene?.setScroll(down ? 1 : 0)
+                case .space: scene?.setTrigger(down)
+                default:
+                    switch press.characters.lowercased() {
+                    case "w": scene?.setClimb(down ? -1 : 0)
+                    case "s": scene?.setClimb(down ? 1 : 0)
+                    case "a": scene?.setScroll(down ? -1 : 0)
+                    case "d": scene?.setScroll(down ? 1 : 0)
+                    case "f": scene?.setTrigger(down)
+                    default: return .ignored
+                    }
+                }
+                return .handled
+            }
         }
         .background(Theme.bg)
         .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
@@ -162,8 +188,14 @@ struct MiningScreen: View {
                 .padding(.trailing, insets.trailing + zones.topRight.inset).padding(.top, insets.top + zones.topRight.inset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 
+            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSpeed: { scene?.setScroll($0) })
+                .padding(.leading, insets.leading + 16)
+                .padding(.bottom, insets.bottom + zones.dock.bottomInset + 88)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+
             VStack(spacing: 8) {
                 Spacer()
+                LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging)
                 if let toast {
                     Text(toast).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
                         .padding(.horizontal, 12).padding(.vertical, 8)
@@ -171,9 +203,9 @@ struct MiningScreen: View {
                         .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
                 }
                 BaseDock(tile: 44, zones: zones.dock, items: [
-                    ("Fire", "bolt.fill", { scene?.fireLaser() }),
+                    ("Fire", "bolt.fill", {}),
                     ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
-                ], onPrev: { scene?.nudge(-1) }, onNext: { scene?.nudge(1) })
+                ], onPrev: { scene?.nudge(-1) }, onNext: { scene?.nudge(1) }, holdFirst: { scene?.setTrigger($0) })
             }
             .padding(.bottom, insets.bottom + zones.dock.bottomInset)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -195,12 +227,14 @@ struct MiningScreen: View {
         let shower = SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now) / 2).rounded(.up)))) }
         let f = MiningField(target: target, required: mission.requires.minerals, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower)
         let palette = LaserPalette.resolve(id: target.id, type: target.type, archetype: target.archetype)
-        let s = MiningScene(field: f, size: size, palette: palette)
+        let s = MiningScene(field: f, size: size, palette: palette, landscapeKey: target.id)
         s.onChange = { f in
             field = f
             for id in SkyEvents.debrisResourceIds where f.cargo[id, default: 0] > 0 { store.debrisMined(id) }
         }
         s.reducedMotion = reduceMotion
+        s.onBump = { say("Hull bumped: −1 charge") }
+        s.onCharging = { c in laserCharging = c }
         s.onFeedback = { msg in toast = msg; Task { try? await Task.sleep(for: .seconds(1.4)); if toast == msg { toast = nil } } }
         field = f; scene = s
     }

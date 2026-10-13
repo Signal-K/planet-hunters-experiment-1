@@ -14,6 +14,7 @@ import { BaseDock, DockWordButton } from '@/components/game/hub/BaseDock'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
 import SkyEventChip from '@/components/game/SkyEventChip'
+import { LaserGauge, MiningDPad } from './MiningControls'
 import { useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
 
@@ -174,6 +175,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const gateOpen = !!isFreeHaulEligible && earthDisposition == null
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
+  const altitudeRef = useRef<((dir: number) => void) | null>(null)
+  const [bumpNote, setBumpNote] = useState(false)
+  const [firingHeld, setFiringHeld] = useState(false)
   const [laserCharges, setLaserCharges] = useState(() => initialCharges != null ? Math.max(0, Math.min(MAX_CHARGES, initialCharges)) : MAX_CHARGES)
   const laserChargesRef = useRef(laserCharges)
   laserChargesRef.current = laserCharges
@@ -322,10 +326,25 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       if (e.code === 'Space' || e.code === 'KeyF') {
         e.preventDefault()
         fireLaser()
+      } else if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+        e.preventDefault()
+        altitudeRef.current?.(-1)
+      } else if (e.code === 'KeyS' || e.code === 'ArrowDown') {
+        e.preventDefault()
+        altitudeRef.current?.(1)
+      } else if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
+        scrollRef.current?.(-1)
+      } else if (e.code === 'KeyD' || e.code === 'ArrowRight') {
+        scrollRef.current?.(1)
       }
     }
+    function onKeyUp(e: KeyboardEvent) {
+      if (['KeyW', 'ArrowUp', 'KeyS', 'ArrowDown'].includes(e.code)) altitudeRef.current?.(0)
+      if (['KeyA', 'ArrowLeft', 'KeyD', 'ArrowRight'].includes(e.code)) scrollRef.current?.(0)
+    }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('keyup', onKeyUp)
+    return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('keyup', onKeyUp) }
   }, [laserCharges, sceneStatus, isCharging])
 
   function handleReturn() {
@@ -630,6 +649,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         <MiningCanvas
           key={runKey}
           palette={palette}
+          landscapeKey={target?.id}
           rocketImageSrc={rocketImageSrc}
           minerals={depositMinerals}
           leadMinerals={mixedOres ? ['iron', 'carbon', 'ice'] : undefined}
@@ -644,12 +664,26 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           fireRef={fireRef}
           onFireRequest={() => fireLaser()}
           scrollRef={scrollRef}
+          altitudeRef={altitudeRef}
+          onBump={() => {
+            // Clipping terrain dents the hull and costs a laser charge; never an instant fail (SSL-536).
+            setLaserCharges(c => Math.max(0, c - 1))
+            setBumpNote(true)
+            window.setTimeout(() => setBumpNote(false), 1200)
+          }}
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
           chargingRef={chargingRef}
           trainingMiningTry={trainingMiningTry}
           debrisPreset={debrisPreset}
         />
+        <MiningDPad
+          disabled={sceneStatus !== 'ready'}
+          onAltitude={dir => altitudeRef.current?.(dir)}
+          onSpeed={dir => scrollRef.current?.(dir)}
+        />
+        <LaserGauge charges={laserCharges} max={MAX_CHARGES} charging={isCharging} firing={firingHeld} />
+        {bumpNote ? <div className="mining-bump-note" role="status" data-testid="mining-bump">Hull bumped: −1 charge</div> : null}
         <SkyEventChip
           surface="mining"
           debrisCount={cargo.orionid_debris ?? 0}
@@ -744,10 +778,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           onPrev={() => nudge(-1)}
           onNext={() => nudge(1)}
           onBuild={event => { if (!event || event.detail === 0) fireLaser() }}
-          onBuildPointerDown={event => { if (event.button === 0) beginFireHold() }}
-          onBuildPointerUp={endFireHold}
-          onBuildPointerLeave={endFireHold}
-          onBuildPointerCancel={endFireHold}
+          onBuildPointerDown={event => { if (event.button === 0) { setFiringHeld(true); beginFireHold() } }}
+          onBuildPointerUp={() => { setFiringHeld(false); endFireHold() }}
+          onBuildPointerLeave={() => { setFiringHeld(false); endFireHold() }}
+          onBuildPointerCancel={() => { setFiringHeld(false); endFireHold() }}
           onHub={() => onBack(cargoRef.current, laserChargesRef.current)}
         />
         {isFreeOps && freeOpsDebrisReadout ? <span className="laser-dock__debris" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span> : null}

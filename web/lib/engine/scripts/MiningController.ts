@@ -176,6 +176,8 @@ export interface MiningControllerOptions {
   chipShade?: number
   /** Shared pixel deposit frames. Drawn at pixelScale, unstretched and untinted. */
   depositFrames?: Texture[]
+  /** Deposits v2 art per mineral; wins over `depositFrames` when present (SSL-536). */
+  depositArtFor?: (mineral: string) => Texture | undefined
   pixelScale?: number
   /** The scene beam sprite is the shot. Hide the collision bolt graphic. */
   pixelBeam?: boolean
@@ -739,14 +741,16 @@ export class MiningController extends ScriptBehaviour {
     const go = new GameObject(`ore-${this.oreCounter++}`, 'Ore', { position: { x, y } })
 
     const frames = this.opts.depositFrames
-    const texture = frames?.[0] ?? this.opts.mineralTextures?.[mineral]
+    const art = this.opts.depositArtFor?.(mineral)
+    const texture = art ?? frames?.[0] ?? this.opts.mineralTextures?.[mineral]
     let renderer: ShapeRenderer | null = null
     let sprite: Sprite | null = null
 
     if (texture && frames && this.opts.pixelScale) {
       sprite = new Sprite(texture)
       sprite.anchor.set(0.5)
-      sprite.scale.set(this.opts.pixelScale)
+      // Deposits v2 art is authored at 64px; draw it near the old 22px chip footprint.
+      sprite.scale.set(art ? this.opts.pixelScale * (30 / art.width) : this.opts.pixelScale)
       sprite.tint = 0xffffff
       sprite.x = x
       sprite.y = y
@@ -790,7 +794,7 @@ export class MiningController extends ScriptBehaviour {
     const label = this.createLabel(mineral, x, chip ? surface + LABEL_DEPTH : y + (frames && this.opts.pixelScale ? 12 : 0), radius)
 
     this.gameObject.addChild(go)
-    this.ores.push({ go, renderer, sprite, label, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: frames ?? null })
+    this.ores.push({ go, renderer, sprite, label, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: art ? null : frames ?? null })
   }
 
   /** Faceted nodules, seams and crystals inside the soil, with a sym disc on the mass. */

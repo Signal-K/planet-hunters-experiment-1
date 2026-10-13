@@ -30,6 +30,7 @@ enum LaserPalette {
         var clouds: Bool
         var terrain: String
         var planet: Planet?
+        var landscape: Landscape.Spec? = nil
     }
 
     /// Linear mix of two palette colours, t clamped to 0...1.
@@ -106,7 +107,8 @@ enum LaserPalette {
             dust: u32(raw["dust"] as? String),
             clouds: (raw["clouds"] as? NSNumber)?.boolValue ?? false,
             terrain: raw["terrain"] as? String ?? "rubble",
-            planet: planet
+            planet: planet,
+            landscape: Landscape.parse(raw["landscape"] as? [String: Any])
         )
     }
 

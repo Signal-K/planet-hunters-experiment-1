@@ -11,6 +11,8 @@ struct BaseDock: View {
     /// When set, the arrows run these (the base dock scrolls the camera along the base) instead of stepping scenes.
     var onPrev: (() -> Void)?
     var onNext: (() -> Void)?
+    /// When set, the first middle button is press-and-hold (true on press, false on release) instead of a tap. Mining Fire uses this.
+    var holdFirst: ((Bool) -> Void)?
 
     private var middle: [(title: String, symbol: String, action: () -> Void)] {
         items ?? [("Build", "hammer.fill", { store.go(.build) }), ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) })]
@@ -22,7 +24,11 @@ struct BaseDock: View {
             Spacer(minLength: 0)
             ForEach(Array(middle.enumerated()), id: \.offset) { index, item in
                 if index > 0 { Rectangle().fill(Theme.hudInk.opacity(0.4)).frame(width: 1, height: 24) }
-                DockButton(title: item.title, symbol: item.symbol, action: item.action)
+                if index == 0, let holdFirst {
+                    HoldDockButton(title: item.title, symbol: item.symbol, hold: holdFirst)
+                } else {
+                    DockButton(title: item.title, symbol: item.symbol, action: item.action)
+                }
             }
             Spacer(minLength: 0)
             arrow("chevron.right", label: onNext == nil ? "Next" : "Scroll right") { if let onNext { onNext() } else { step(1) } }
@@ -65,6 +71,33 @@ struct BaseDock: View {
 }
 
 /// One dock action: its own pill with an icon and an uppercase label. Base and flight docks both use it.
+/// Press-and-hold dock button: fires while held, stops on release (SSL-536).
+struct HoldDockButton: View {
+    let title: String
+    let symbol: String
+    let hold: (Bool) -> Void
+    @State private var down = false
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: symbol).font(.system(size: 14, weight: .bold))
+            Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2)
+        }
+        .foregroundStyle(Theme.hudInk)
+        .padding(.horizontal, 12)
+        .frame(minWidth: 88, minHeight: 44)
+        .background(Capsule().fill(down ? Theme.hex(0xD7E6F7) : Theme.hudPanel))
+        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+        .contentShape(Capsule())
+        .gesture(DragGesture(minimumDistance: 0)
+            .onChanged { _ in if !down { down = true; hold(true) } }
+            .onEnded { _ in down = false; hold(false) })
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { hold(true); hold(false) }
+    }
+}
+
 struct DockButton: View {
     let title: String
     let symbol: String

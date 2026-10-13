@@ -1,5 +1,8 @@
 import { Assets, Container, Sprite, Texture, TilingSprite } from 'pixi.js'
 import type { LaserPalette } from './laserPalette'
+import { DEPOSIT_SIZE, PIECE_SIZE, layoutForPalette, type DepositKind, type TerrainPiece } from './landscape'
+
+export interface Obstacle { x: number; halfW: number; height: number; kind: TerrainPiece }
 
 /** Native laser kit is authored at 1px and drawn at 2. */
 export const LASER_PX = 2
@@ -18,6 +21,12 @@ function lerp(a: number, b: number, t: number): number {
 /** Multiply-tint keeps the grey kit's shading. Full replacement would flatten it. */
 function shadeTint(color: number, blend: number): number {
   return lerp(0xffffff, color, blend)
+}
+
+async function artTex(name: string): Promise<Texture> {
+  const texture = await Assets.load<Texture>(`/game/assets/mining/${name}.png`)
+  texture.source.scaleMode = 'nearest'
+  return texture
 }
 
 async function tex(name: string): Promise<Texture> {
@@ -44,6 +53,13 @@ export interface LaserField {
   backdrop: Container
   far: Container
   near: Container
+  /** Seeded terrain pieces + surface deposits for this world (SSL-536). Wraps every `midW`. */
+  mid: Container
+  midW: number
+  /** Collision profile of the mid pieces in mid-local px, one wrap period (`midW`). */
+  obstacles: Obstacle[]
+  /** Deposits v2 art by kind, used for the buried ore chips. */
+  depositArt: Record<DepositKind, Texture>
   ground: Container
   beam: Container
   dig: Container
@@ -65,6 +81,8 @@ export async function buildLaserField(opts: {
   shipX: number
   shipY: number
   palette: LaserPalette
+  /** Target id; varies the terrain arrangement within one palette. */
+  landscapeKey?: string
 }): Promise<LaserField> {
   const { worldW, worldH, surfaceY, shipX, shipY, palette } = opts
   const px = LASER_PX
@@ -79,7 +97,8 @@ export async function buildLaserField(opts: {
   ] = await Promise.all([
     tex('sky-dither-0'), tex('sky-dither-1'), tex('sky-dither-2'),
     tex('star'), tex('disc-48'), tex('disc-24'), tex('mote'),
-    tex(palette.terrain === 'ice' || palette.terrain === 'dunes' ? `ridge-${palette.terrain}` : 'ridge-rubble'),
+    // ridge-ice carries snow pines; barren bodies get no plants, so ice reuses the rubble ridge (SSL-536).
+    tex(palette.terrain === 'dunes' ? 'ridge-dunes' : 'ridge-rubble'),
     tex('crust'), tex('soil'), tex('soil-flecks'),
     tex('ship'), tex('flame-0'), tex('flame-1'), tex('beam'), tex('spark-0'),
     tex('deposit-0'), tex('deposit-1'),
@@ -186,6 +205,47 @@ export async function buildLaserField(opts: {
   far.y = surfaceY + 8 - 48 * px
   backdrop.addChild(far)
 
+  // Landscape pieces: tinted per world, arranged per target, between the far and near ridges.
+  const layout = layoutForPalette(palette, opts.landscapeKey ?? palette.id)
+  const pieceTex = Object.fromEntries(await Promise.all(
+    (['mountain', 'ridge', 'strata'] as const).map(async k => [k, await artTex(`terrain_${k}`)] as const),
+  ))
+  const depositTex = Object.fromEntries(await Promise.all(
+    (['iron', 'nickel', 'ice', 'cobalt'] as const).map(async k => [k, await artTex(`deposit_${k}`)] as const),
+  ))
+  const mid = new Container()
+  const midW = layout.period * px
+  const obstacles: Obstacle[] = layout.pieces.map(p => ({
+    kind: p.kind,
+    x: p.x * px,
+    halfW: (PIECE_SIZE[p.kind][0] / 2) * px * p.scale * 0.9,
+    height: PIECE_SIZE[p.kind][1] * px * p.scale * 0.92 - PIECE_SIZE[p.kind][1] * 0.04 * px - 4,
+  }))
+  const pieceTint = shadeTint(layout.tint, layout.shade)
+  const midCopies = Math.ceil(worldW / midW) + 1
+  for (let c = 0; c < midCopies; c++) {
+    for (const p of layout.pieces) {
+      const [, h] = PIECE_SIZE[p.kind]
+      const node = new Sprite(pieceTex[p.kind])
+      node.anchor.set(0.5, 1)
+      node.scale.set(px * p.scale * (p.flip ? -1 : 1), px * p.scale)
+      node.x = c * midW + p.x * px
+      node.y = h * 0.04 * px
+      node.tint = pieceTint
+      mid.addChild(node)
+    }
+    for (const d of layout.deposits) {
+      const node = new Sprite(depositTex[d.kind])
+      node.anchor.set(0.5, 1)
+      node.scale.set(px * 0.6)
+      node.x = c * midW + d.x * px
+      node.y = DEPOSIT_SIZE[1] * 0.1 * px
+      mid.addChild(node)
+    }
+  }
+  mid.y = surfaceY + 4
+  backdrop.addChild(mid)
+
   const near = new Container()
   const nearStrip = tile(ridgeTex, ridgeCopies, px, true)
   nearStrip.tint = shadeTint(palette.nearRidge, 0.5)
@@ -274,7 +334,7 @@ export async function buildLaserField(opts: {
 
   const flameFrames = [flame0, flame1]
   const field: LaserField = {
-    backdrop, far, near, ground, beam, dig, spark, ship, plume,
+    backdrop, far, near, mid, midW, obstacles, depositArt: depositTex as Record<DepositKind, Texture>, ground, beam, dig, spark, ship, plume,
     soilW, ridgeW, pixelScale: px, depositFrames: [deposit0, deposit1], hover: 0,
     step(time, reduced, firing) {
       const tw = reduced ? 0 : 1
@@ -313,4 +373,29 @@ export async function buildLaserField(opts: {
     },
   }
   return field
+}
+
+/** Height of the landscape above the surface line at a world x (0 when clear). Mountains are peaks, ridges domes, strata flat slabs. */
+export function obstacleHeightAt(field: Pick<LaserField, 'mid' | 'midW' | 'obstacles'>, worldX: number): number {
+  const local = worldX - field.mid.x
+  let best = 0
+  for (const o of field.obstacles) {
+    for (const shift of [-field.midW, 0, field.midW]) {
+      const dx = Math.abs(local - (o.x + shift))
+      if (dx >= o.halfW) continue
+      const t = dx / o.halfW
+      const h = o.kind === 'mountain' ? o.height * (1 - t) : o.kind === 'ridge' ? o.height * (1 - t * t) : (t < 0.85 ? o.height : 0)
+      if (h > best) best = h
+    }
+  }
+  return best
+}
+
+/** Which deposits-v2 art a mineral uses. */
+export function depositKindFor(mineral: string): DepositKind {
+  const m = mineral.toLowerCase()
+  if (/ice|water|ammonia|methane|nitrogen|volatile/.test(m)) return 'ice'
+  if (/cobalt|titan|sapph|lithium/.test(m)) return 'cobalt'
+  if (/iron|carbon|copper|hematite|regolith|basalt/.test(m)) return 'iron'
+  return 'nickel'
 }

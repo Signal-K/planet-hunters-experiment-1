@@ -4736,3 +4736,21 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   font-weight: 400;
 }
 .ops-settings__presets .ops-settings__label { margin: 0 0 8px; }
+
+/* SSL-536: terrain bump feedback in the mining scene (brick red, never orange). */
+.mining-bump-note {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  z-index: 7;
+  padding: 8px 14px;
+  border: 2px solid #9b3b32;
+  border-radius: 999px;
+  background: rgba(244, 241, 234, 0.95);
+  color: #9b3b32;
+  font: 800 14px/1 var(--ln-font-display, system-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
