@@ -178,6 +178,16 @@ public final class GameStore {
     public func debriefDone(payout: Int, affinity: Int, consumed: Cargo = [:], disposition: HaulDisposition? = nil) {
         apply(Loop.debriefDone(state, payout: payout, affinity: affinity, consumed: consumed, disposition: disposition, catalog: catalog, now: now))
     }
+    /// SSL-553: settle the delivery sheet. Market and silo shares settle here; the client share runs through the debrief ledger.
+    public func homeDelivery(_ split: HomeDelivery.Split) {
+        guard state.screen == .debrief, state.player.homeDeliveryPending, let cargo = state.lastCargo else { return }
+        let mission = catalog.mission(state.missionId)
+        let demand = HomeDelivery.demand(mission, cargo: cargo)
+        let payout = HomeDelivery.clientPayout(mission, split: split, demand: demand, missionsDone: state.player.missionsDone)
+        let affinity = payout > 0 ? max(0, mission?.payout.affinity ?? 0) : 0
+        let settled = HomeDelivery.apply(state, split: split, now: now)
+        apply(Loop.debriefDone(settled.state, payout: payout, affinity: affinity, consumed: settled.consumed, catalog: catalog, now: now))
+    }
     public func buyLaserCapacitor(expectedLevel: Int, reservedUnits: Int = 0) { apply(LaserCapacitor.applyBuy(state, expectedLevel: expectedLevel, reservedUnits: reservedUnits)) }
     public func abandonMission() { apply(state.player.activeMission == nil ? Loop.cancelSetup(state) : Loop.abandonMission(state)) }
     public func openAcademy() { apply(Academy.settleEconomy(Academy.migrate(state, now: now), now: now)) }

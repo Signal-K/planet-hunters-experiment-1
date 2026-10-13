@@ -49,7 +49,7 @@ function SpriteLoop({ frames, intervalMs, className, testId }: { frames: string[
 }
 
 /** Native pad stack: concrete slab, lattice gantry, cream rocket. Sizes follow --px. */
-function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch'; rocket?: boolean }) {
+function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch'; rocket?: boolean | 'core' }) {
   const launching = phase === 'launch'
   const arm = useSpriteFrame(ARM_FRAMES.length, 180, true, launching)
   return (
@@ -70,7 +70,7 @@ function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: nu
       </span>
       {rocket && (
         <span className={styles.padFlight}>
-          <KitRocket parts={parts} className={styles.padRocket} testId="pad-rocket" />
+          <KitRocket parts={parts} space={rocket === 'core'} className={styles.padRocket} testId="pad-rocket" />
           {launching && <SpriteLoop frames={EXHAUST_FRAMES} intervalMs={90} className={styles.padExhaust} testId="pad-exhaust" />}
         </span>
       )}
@@ -81,7 +81,7 @@ function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: nu
 }
 
 /** Side-on pixel structure. The base shows the launchpad and the glazed hangar only. */
-export function PixelStructure({ kind, level = 1, parts, phase = 'idle', rocket = true }: { kind: string; level?: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch'; rocket?: boolean }) {
+export function PixelStructure({ kind, level = 1, parts, phase = 'idle', rocket = true }: { kind: string; level?: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch'; rocket?: boolean | 'core' }) {
   const tier = structureTier(level)
   if (kind === 'launchpad') return <LaunchpadKit tier={tier} parts={parts} phase={phase} rocket={rocket} />
   if (kind === 'hangar') {

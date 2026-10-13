@@ -376,7 +376,7 @@ export function normalizeState(input: PartialSave): GameState {
 // PocketBase's m2-silicon). A save caught mid-run on one has no mission to
 // resume, so drop that run and hand the player back to the Hub, where the
 // Transport lesson picks up as guided mission 2.
-function isRetiredOnboardingMission(id: string | null | undefined): boolean {
+export function isRetiredOnboardingMission(id: string | null | undefined): boolean {
   return !!id && (id.startsWith('generated-s2-') || id === 'm2-silicon')
 }
 

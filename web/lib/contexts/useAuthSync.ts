@@ -6,7 +6,7 @@ import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
 import { getOutbox, isQueuedUpsert, queueUpdate, queueUpsert } from '@/lib/offline/pbOutbox'
 import { dropSettledMissionRuns, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { identifyUser, captureGameEvent } from '@/lib/posthog'
-import { DEFAULT_STATE, loadState, type PartialSave } from '@/lib/game-state'
+import { DEFAULT_STATE, isRetiredOnboardingMission, loadState, type PartialSave } from '@/lib/game-state'
 import {
   isSignInPlaceholder,
   localAccountSlotIsRealSave,
@@ -558,9 +558,17 @@ export function useAuthSync({
         .then(run => {
           const missionId = typeof run.mission_id === 'string' ? run.mission_id : null
           const targetId = typeof run.target_id === 'string' ? run.target_id : null
-          if (!missionId || !targetId) return
-          const mission = MISSIONS.find(candidate => candidate.id === missionId)
-          const target = TARGETS.find(candidate => candidate.id === targetId)
+          const mission = missionId ? MISSIONS.find(candidate => candidate.id === missionId) : undefined
+          const target = targetId ? TARGETS.find(candidate => candidate.id === targetId) : undefined
+          // SSL-553: a receipt that can never be resumed (no ids, a retired
+          // onboarding mission, or a contract no longer in the catalog or the
+          // player's daily pool) used to stay in_progress forever while the
+          // save said activeMission = null. Close it instead of skipping it.
+          const pooled = !!missionId && (stateRef.current.player.dailyClientPool?.missions ?? []).some(m => m.id === missionId)
+          if (!missionId || !targetId || !target || (!mission && !pooled) || isRetiredOnboardingMission(missionId)) {
+            queueUpdate('mission_runs', run.id, { status: 'abandoned', completed_at: new Date().toISOString() })
+            return
+          }
           const launchedAt = typeof run.launched_at === 'string' ? new Date(run.launched_at).getTime() : NaN
           const phase = ['transit', 'landing', 'survey', 'mining', 'delivery', 'debrief'].includes(run.phase)
             ? run.phase as NonNullable<GameState['player']['missionPhase']>

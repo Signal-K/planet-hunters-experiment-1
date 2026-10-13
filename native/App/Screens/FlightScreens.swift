@@ -20,15 +20,25 @@ private struct OrderChip: View {
 struct TransitScreen: View {
     @Environment(GameStore.self) private var store
     @State private var showSettings = false
+    /// Untimed legs (the trip home, SSL-553) fly a short local course: ~4.4 s, and each Boost skips ahead.
+    @State private var flightStart = Date()
+    @State private var boost: Double = 0
     private let zones = HUDZones.standard
+    private static let untimedSeconds = 4.4
+
+    private func progress(_ date: Date) -> Double {
+        if let end = store.player.arrivalAt {
+            let start = store.player.transitStartedAt ?? store.now
+            return end > start ? min(1, max(0, (date.timeIntervalSince1970 * 1000 - start) / (end - start))) : 1
+        }
+        return min(1, max(0, date.timeIntervalSince(flightStart) / Self.untimedSeconds + boost))
+    }
 
     var body: some View {
         GeometryReader { outer in
             let insets = outer.safeAreaInsets
             TimelineView(.animation(minimumInterval: 0.25)) { ctx in
-                let start = store.player.transitStartedAt ?? store.now
-                let end = store.player.arrivalAt ?? start
-                let p = end > start ? min(1, max(0, (ctx.date.timeIntervalSince1970 * 1000 - start) / (end - start))) : 1
+                let p = progress(ctx.date)
                 ZStack(alignment: .topLeading) {
                     FlightWorldScene(progress: p, returning: store.player.returningToEarth ?? false)
                     HudGearClock(onSettings: { showSettings = true })
@@ -40,7 +50,7 @@ struct TransitScreen: View {
                     VStack(spacing: 24) {
                         FlightProgressBar(value: p)
                         BaseDock(tile: 44, zones: zones.dock, items: [
-                            (p >= 1 ? "Arrive" : "Boost", p >= 1 ? "flag.fill" : "bolt.fill", { if p >= 1 { store.transitArrived() } }),
+                            (p >= 1 ? "Arrive" : "Boost", p >= 1 ? "flag.fill" : "bolt.fill", { if p >= 1 { store.transitArrived() } else if store.player.arrivalAt == nil { boost += 0.14 } }),
                             ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
                         ])
                     }

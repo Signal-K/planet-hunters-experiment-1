@@ -71,6 +71,7 @@
   "base_kit_pad_gantry_frame": "/game/assets/base/kit/pad-gantry-frame.png",
   "base_kit_pad_gantry": "/game/assets/base/kit/pad-gantry.png",
   "base_kit_pad_rocket": "/game/assets/base/kit/pad-rocket.png",
+  "base_kit_space_rocket": "/game/assets/base/kit/space-rocket.png",
   "base_kit_rollout_0": "/game/assets/base/kit/rollout-0.png",
   "base_kit_rollout_1": "/game/assets/base/kit/rollout-1.png",
   "base_kit_rollout_2": "/game/assets/base/kit/rollout-2.png",

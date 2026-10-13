@@ -166,7 +166,7 @@ export default function TransitScreen({
         <div className={styles.ship} data-boosting={boosting ? 'true' : 'false'}>
           <FlightFlame boosting={boosting} />
           <div className={styles.rocketWrap}>
-            <KitRocket parts={parts} className={styles.rocket} testId="transit-rocket" />
+            <KitRocket parts={parts} space className={styles.rocket} testId="transit-rocket" />
           </div>
         </div>
         <div className={styles.body} style={{ ['--shift' as string]: shift }}>

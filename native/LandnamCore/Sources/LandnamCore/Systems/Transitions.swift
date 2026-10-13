@@ -63,6 +63,8 @@ public enum Transitions {
         n.player.transitStartedAt = nil
         n.player.missionPhase = .debrief
         n.player.debriefPending = false
+        // SSL-553: a mined haul lands on the Earth pad and is settled on the delivery sheet.
+        n.player.homeDeliveryPending = !s.player.cargoSettledOffworld && cargo.values.contains { $0 > 0 }
         n.player.returningToEarth = false
         n.player.shipDestroyed = false
         n.screen = .debrief

@@ -15,6 +15,9 @@ struct BaseWorldScene: View {
     var secondTank: Bool = false
     /// A rocket stands on the pad only while a build or mission is in progress; an idle pad is empty.
     var padOccupied: Bool = false
+    /// The returning core stage (no boosters) stands on the pad; `padLift` raises it for the touchdown animation (SSL-553).
+    var padCore: Bool = false
+    var padLift: CGFloat = 0
     var insets: EdgeInsets = EdgeInsets()
     var camera: BaseCamera
     var onStructure: (String) -> Void
@@ -263,9 +266,16 @@ struct BaseWorldScene: View {
                         .frame(width: 120 * px, height: 92 * px)
                         .offset(y: -17 * px)
                     if padOccupied {
-                        Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none)
-                            .frame(width: 44 * px, height: 72 * px)
-                            .offset(x: 22 * px, y: -19 * px)
+                        ZStack(alignment: .bottom) {
+                            if padLift > 0 {
+                                Art.view("base/kit/flame-\(Int(padLift / 6) % 3).png").resizable().interpolation(.none)
+                                    .frame(width: 9 * px, height: 18 * px).rotationEffect(.degrees(-90))
+                                    .offset(y: 14 * px)
+                            }
+                            Art.view(padCore ? "base/kit/space-rocket.png" : "base/kit/pad-rocket.png").resizable().interpolation(.none)
+                                .frame(width: 44 * px, height: 72 * px)
+                        }
+                        .offset(x: 22 * px, y: -19 * px - padLift)
                     }
                     Art.view("base/kit/pad-slab-concrete.png").resizable().interpolation(.none)
                         .frame(width: slabW, height: slabH)

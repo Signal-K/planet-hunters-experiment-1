@@ -11,12 +11,17 @@ struct HubScreen: View {
     /// The default mountains biome is the web terrain kit. Other biomes are future kit variants; their layered assets stay unused for now.
     var biome: EarthBiome = .resolve()
     @State private var showSettings = false
+    /// Homecoming (SSL-553): the core stage lands on the pad behind the delivery sheet.
+    var homecoming = false
+    var padLift: CGFloat = 0
     @State private var camera: BaseCamera
     private let zones = HUDZones.standard
 
     /// `startX` / `startDepth` set the opening camera (fixtures and screenshots); the game starts at the surface, x 0.
-    init(safeAreaOverride: EdgeInsets? = nil, biome: EarthBiome = .resolve(), startX: CGFloat = 0, startDepth: CGFloat = 0) {
+    init(safeAreaOverride: EdgeInsets? = nil, biome: EarthBiome = .resolve(), startX: CGFloat = 0, startDepth: CGFloat = 0, homecoming: Bool = false, padLift: CGFloat = 0) {
         self.safeAreaOverride = safeAreaOverride
+        self.homecoming = homecoming
+        self.padLift = padLift
         self.biome = biome
         _camera = State(initialValue: BaseCamera(x: startX, depth: startDepth))
     }
@@ -49,6 +54,8 @@ struct HubScreen: View {
                 excavated: store.player.subsurfaceExcavated || !store.player.subsurfaceBuilt.isEmpty,
                 secondTank: store.player.subsurfaceBuilt.contains("mineral-vault"),
                 padOccupied: store.player.activeMission != nil,
+                padCore: homecoming,
+                padLift: padLift,
                 insets: insets,
                 camera: camera,
                 onStructure: { openStructure($0) },
@@ -112,7 +119,7 @@ struct HubScreen: View {
     /// Storyboard 2026-09-24: a craft that needs a tap hangs in the sky and opens its mission step.
     private func skyCraft(width: CGFloat, height: CGFloat) -> some View {
         TimelineView(.periodic(from: .now, by: 1)) { _ in
-            if let craft = SkyCraft.current(for: store.player, now: store.now) {
+            if !homecoming, let craft = SkyCraft.current(for: store.player, now: store.now) {
                 ZStack {
                     Capsule().fill(Theme.blue.opacity(0.6)).offset(x: 3, y: 3)
                     Button { store.go(craft.opens) } label: {

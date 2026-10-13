@@ -693,3 +693,32 @@
     animation: none;
   }
 }
+
+/* SSL-553: touchdown on the Earth pad after the trip home. The rocket drops in on its exhaust and settles. */
+:global([data-pad-landing='true']) .padFlight {
+  animation: padTouchdown 2.6s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+:global([data-pad-landing='true']) .padFlight::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  height: calc(20 * var(--px, 3px));
+  background: url('/game/assets/base/kit/pad-exhaust-1.png') center / 100% 100% no-repeat;
+  image-rendering: pixelated;
+  animation: padTouchdownFlame 2.6s steps(6) both;
+}
+@keyframes padTouchdown {
+  0% { transform: translateY(-120vh); }
+  70% { transform: translateY(calc(-4 * var(--px, 3px))); }
+  100% { transform: translateY(0); }
+}
+@keyframes padTouchdownFlame {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :global([data-pad-landing='true']) .padFlight, :global([data-pad-landing='true']) .padFlight::after { animation: none; }
+  :global([data-pad-landing='true']) .padFlight::after { opacity: 0; }
+}

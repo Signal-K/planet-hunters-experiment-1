@@ -109,6 +109,24 @@ enum SceneCatalog {
         return gs
     }
 
+    /// SSL-553: untimed trip home.
+    static func returnState() -> GameState { var gs = transitState(returning: true); gs.player.arrivalAt = nil; return gs }
+    /// SSL-553: landed back on the pad with the haul to settle (surface silo built).
+    static func homeState() -> GameState {
+        var gs = transitState(returning: true)
+        let cat = Catalog()
+        let need = cat.mission(gs.missionId)?.requires.minerals ?? [:]
+        var haul = need; if let first = need.keys.sorted().first { haul[first, default: 0] += 3 }; haul["nickel", default: 0] += 2
+        gs.player.placed = ["launchpad", "hangar", "surface-silo"]
+        gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1]
+        gs.player.stash = haul.merging(["cobalt": 3]) { $0 + $1 }
+        gs.lastCargo = haul
+        gs.player.homeDeliveryPending = true
+        gs.player.returningToEarth = false
+        gs.screen = .debrief
+        return gs
+    }
+
     static func miningState(rover: Bool, target: String? = nil) -> GameState {
         var gs = transitState(returning: false)
         if let target { gs.targetId = target }
@@ -286,6 +304,10 @@ enum SceneCatalog {
         },
         scene("flight-live", 874) { TransitScreen().environment(GameStore(state: flightState())) },
         scene("flight-live-landscape", 402, w: 874) { TransitScreen().environment(GameStore(state: flightState())) },
+        scene("return-live", 874) { TransitScreen().environment(GameStore(state: returnState())) },
+        scene("return-live-landscape", 402, w: 874) { TransitScreen().environment(GameStore(state: returnState())) },
+        scene("home-live", 874) { HomecomingScreen().environment(GameStore(state: homeState())) },
+        scene("home-live-landscape", 402, w: 874) { HomecomingScreen().environment(GameStore(state: homeState())) },
         scene("transit-live", 874) {
             let st = GameStore(state: transitState(returning: false))
             return TransitScreen().environment(st)

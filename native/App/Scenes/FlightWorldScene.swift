@@ -64,7 +64,7 @@ struct FlightWorldScene: View {
     }
 
     private func rocket(w: CGFloat, h: CGFloat, t: Double) -> some View {
-        // pad-rocket.png is 44x72, nose up. Rotated 90 degrees clockwise it points right; the flame trails behind.
+        // space-rocket.png is 44x72, nose up, the core stage without side boosters (they stay on Earth). Rotated 90 degrees clockwise it points right; the flame trails behind.
         let k = pixelScale(min(w * 0.30, 260), native: 72)
         let len = 72 * k, thick = 44 * k
         let frame = reduceMotion ? 0 : Int(t * 12) % 3
@@ -72,7 +72,7 @@ struct FlightWorldScene: View {
             Art.view("base/kit/flame-\(frame).png").resizable().interpolation(.none)
                 .frame(width: 18 * k, height: 9 * k)
                 .offset(x: -len / 2 - 9 * k + k)
-            Art.view("base/kit/pad-rocket.png").resizable().interpolation(.none)
+            Art.view("base/kit/space-rocket.png").resizable().interpolation(.none)
                 .frame(width: thick, height: len)
                 .rotationEffect(.degrees(90))
         }

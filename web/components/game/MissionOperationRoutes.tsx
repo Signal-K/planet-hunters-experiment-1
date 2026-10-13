@@ -8,6 +8,7 @@ import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
 import RoverSurveyScreen from '@/components/game/screens/RoverSurveyScreen'
+import HomecomingScreen from '@/components/game/screens/HomecomingScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
 import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
@@ -274,6 +275,18 @@ export default function MissionOperationRoutes({
 
     case 'debrief':
       if (!game.mission || !game.target) return null
+      if (game.player.homeDeliveryPending && game.lastCargo) {
+        return (
+          <HomecomingScreen
+            player={game.player}
+            mission={game.mission}
+            cargo={game.lastCargo}
+            minerals={game.catalog.minerals}
+            clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
+            onConfirm={game.onHomeDelivery}
+          />
+        )
+      }
       return (
         <DebriefScreen
           mission={game.mission}

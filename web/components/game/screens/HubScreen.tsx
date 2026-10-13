@@ -72,10 +72,14 @@ interface HubScreenProps {
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
   onOpenMarket?: () => void
   subsurface?: boolean
+  /** SSL-553: the rocket is touching down on the pad after the trip home. */
+  padLanding?: boolean
+  /** SSL-553: back from a run: core stage on the pad, no craft chip. */
+  homecoming?: boolean
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   const camera = useBaseCamera()
@@ -85,7 +89,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   const [rollingOut, setRollingOut] = useState(() => consumeRocketRolloutPending())
   const finishRollout = useCallback(() => setRollingOut(false), [])
   // The pad stays empty unless a mission or launch is in progress (docs/STYLE.md rule 6). Rollout draws its own rocket.
-  const rocketOnPad = (!!player.activeMission || !!player.pendingLaunch) && !rollingOut
+  const rocketOnPad = padLanding || ((!!player.activeMission || !!player.pendingLaunch) && !rollingOut)
   // The terrain baseline is part of the world composition. It must not move
   // when the dock grows or the mobile browser chrome changes height: doing so
   // pulled the launchpad up into the mountain range to make room for UI. The
@@ -207,6 +211,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
 
   // One sky control for the craft: flying, arrived and waiting on the pad.
   const skyCraft: { state: 'mining' | 'arrived' | 'transit' | 'waiting'; label: string; ariaLabel: string; onOpen: () => void } | null = (() => {
+    if (padLanding || homecoming) return null
     if (player.activeMission) {
       const resume = missionResumeScreen(player)
       const arrived = (player.missionPhase ?? 'transit') === 'transit' && resume !== 'transit'
@@ -289,7 +294,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   }
 
   return (
-    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-time={skyGrade} data-season={skySeason} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
       {/* Base stays mounted at its authored camera frame while a tray is open.
           The former 200%-tall slider moved the whole world before revealing
@@ -349,7 +354,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
 
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
-          <EarthBaseModules buildings={sceneBuildings} parts={player.shipCustomizerParts} padRocket={rocketOnPad} />
+          <EarthBaseModules buildings={sceneBuildings} parts={player.shipCustomizerParts} padRocket={padLanding || homecoming ? 'core' : rocketOnPad} />
           {rollingOut && <RocketRollout onDone={finishRollout} />}
 
           {/* Surface buildings — hit areas + labels.

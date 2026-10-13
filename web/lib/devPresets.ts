@@ -111,6 +111,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'm1-fab',    label: 'Fab',     hint: 'First generated mission + Eros picked, at fab', stage: 'tutorial' },
       { key: 'm1-mining', label: 'Mining',  hint: 'In mining with iron target', stage: 'tutorial' },
       { key: 'm1-debrief',label: 'Debrief', hint: 'Post-mine debrief, 6 iron', stage: 'tutorial' },
+      { key: 'm1-return', label: 'Return',  hint: 'Flying home with the haul', stage: 'tutorial' },
+      { key: 'm1-home',   label: 'Home',    hint: 'Touchdown on the pad, delivery sheet', stage: 'tutorial' },
     ],
   },
   {
@@ -220,6 +222,32 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }
+
+    case 'm1-return':
+      return {
+        screen: 'transit',
+        player: { ...BASE_PLAYER, missionsDone: 0, activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, returningToEarth: true, debriefPending: true, missionPhase: 'transit', transitStartedAt: Date.now(), arrivalAt: null },
+        tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true },
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: { ...FIRST_MISSION.requires.minerals, [FIRST_MINERAL]: (FIRST_MISSION.requires.minerals[FIRST_MINERAL] ?? 1) + 3, nickel: 2 }, popup: null,
+      }
+
+    case 'm1-home': {
+      const haul = { ...FIRST_MISSION.requires.minerals, [FIRST_MINERAL]: (FIRST_MISSION.requires.minerals[FIRST_MINERAL] ?? 1) + 3, nickel: 2 }
+      return {
+        screen: 'debrief',
+        player: {
+          ...BASE_PLAYER, missionsDone: 0, stash: { ...haul, cobalt: 3 },
+          placed: [...(BASE_PLAYER.placed ?? []), 'surface-silo'],
+          activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, missionPhase: 'debrief', homeDeliveryPending: true,
+        },
+        tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true },
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: haul, popup: null,
+      }
+    }
 
     case 'm1-debrief':
       return {

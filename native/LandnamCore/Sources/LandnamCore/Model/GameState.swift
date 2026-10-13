@@ -48,6 +48,8 @@ public struct Player: Codable, Equatable, Sendable {
     public var deepSpaceTelescopeBuilt: Bool = false
     public var saturnImagerLaunchedAt: Double?
     public var debriefPending: Bool = false
+    /// Back on the Earth pad with cargo to settle on the delivery sheet (SSL-553).
+    public var homeDeliveryPending: Bool = false
     public var cargoSettledOffworld: Bool = false
     public var freeHaulDisposition: HaulDisposition?
     public var returningToEarth: Bool = false
@@ -142,7 +144,7 @@ public struct Player: Codable, Equatable, Sendable {
         get("rocketPurchaseCounts", &rocketPurchaseCounts); getOpt("missionRocketSource", &missionRocketSource)
         get("placed", &placed); get("placementPlots", &placementPlots); get("controlBuilt", &controlBuilt)
         get("missionsDone", &missionsDone); get("skillPoints", &skillPoints); get("unlockedSkillNodes", &unlockedSkillNodes)
-        get("freeOperations", &freeOperations); get("debriefPending", &debriefPending)
+        get("freeOperations", &freeOperations); get("debriefPending", &debriefPending); get("homeDeliveryPending", &homeDeliveryPending)
         getOpt("transitSatelliteLaunchedAt", &transitSatelliteLaunchedAt); get("deepSpaceTelescopeBuilt", &deepSpaceTelescopeBuilt)
         getOpt("saturnImagerLaunchedAt", &saturnImagerLaunchedAt)
         get("cargoSettledOffworld", &cargoSettledOffworld); getOpt("freeHaulDisposition", &freeHaulDisposition)
@@ -203,7 +205,7 @@ public struct Player: Codable, Equatable, Sendable {
         try put("rocketPurchaseCounts", rocketPurchaseCounts); try putOpt("missionRocketSource", missionRocketSource)
         try put("placed", placed); try put("placementPlots", placementPlots); try put("controlBuilt", controlBuilt)
         try put("missionsDone", missionsDone); try put("skillPoints", skillPoints); try put("unlockedSkillNodes", unlockedSkillNodes)
-        try put("freeOperations", freeOperations); try put("debriefPending", debriefPending)
+        try put("freeOperations", freeOperations); try put("debriefPending", debriefPending); try put("homeDeliveryPending", homeDeliveryPending)
         try putOpt("transitSatelliteLaunchedAt", transitSatelliteLaunchedAt); try put("deepSpaceTelescopeBuilt", deepSpaceTelescopeBuilt)
         try putOpt("saturnImagerLaunchedAt", saturnImagerLaunchedAt)
         try put("cargoSettledOffworld", cargoSettledOffworld); try putOpt("freeHaulDisposition", freeHaulDisposition)

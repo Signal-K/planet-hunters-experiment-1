@@ -53,6 +53,8 @@ export function applyReturnArrived(s: GameState): GameState {
       transitStartedAt: null,
       missionPhase: 'debrief',
       debriefPending: false,
+      // SSL-553: a mined haul lands on the Earth pad and is settled on the delivery sheet.
+      homeDeliveryPending: !s.player.cargoSettledOffworld && Object.values(s.lastCargo).some(units => units > 0),
       returningToEarth: false,
       // KES-321: this was unconditionally `true`, so DebriefScreen's
       // "HULL LOST · CARGO RECOVERED" branch fired on every single

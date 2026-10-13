@@ -219,8 +219,11 @@ public enum Loop {
     }
 
     public static func miningDone(_ s: GameState, cargo: Cargo, catalog: Catalog, now: Double) -> GameState {
-        let nextLeg = s.deliveryTargetId != nil ? catalog.target(s.deliveryTargetId) : catalog.target(s.targetId)
-        let arrival = travelArrival(target: nextLeg, player: s.player, now: now)
+        // SSL-553: the trip home is a short playable flight (boost to arrive); only a delivery leg runs on the clock.
+        guard s.deliveryTargetId != nil else {
+            return Transitions.applyMiningDone(s, cargo: cargo, arrivalAt: nil, transitStartedAt: now, now: now)
+        }
+        let arrival = travelArrival(target: catalog.target(s.deliveryTargetId), player: s.player, now: now)
         return Transitions.applyMiningDone(s, cargo: cargo, arrivalAt: arrival, transitStartedAt: s.player.freeOperations ? now : nil, now: now)
     }
 
@@ -289,6 +292,7 @@ public enum Loop {
         n.player.missionRunId = nil
         n.player.missionPhase = nil
         n.player.debriefPending = false
+        n.player.homeDeliveryPending = false
         n.player.cargoSettledOffworld = false
         n.player.returningToEarth = false
         n.player.deliveryUnloadStartedAt = nil

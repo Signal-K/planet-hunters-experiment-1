@@ -34,7 +34,7 @@ struct RootView: View {
             case .roverSurvey: if TakeonSceneFlag.enabled && takeonGoRuntimeAvailable { TakeonSceneScreen(onExit: { store.go(.hub) }) } else { RoverFieldScreen() }
             case .mining, .landing: MiningScreen()
             case .delivery: DeliveryScreen()
-            case .debrief: DebriefScreen()
+            case .debrief: if store.player.homeDeliveryPending { HomecomingScreen() } else { DebriefScreen() }
             case .market: MarketScreen()
             case .instrumentHub: ControlStationScreen()
             case .saturnStormSearch: SaturnStormSearchScreen()
