@@ -434,6 +434,7 @@ function ScreenBody({
           onHub={() => game.go('instrument-hub')}
           onNext={() => game.go(game.player.activeMission ? 'launchpad' : 'missions')}
           clientId={game.player.lastClient}
+          biome={game.player.earthBiome}
         />
       )
 

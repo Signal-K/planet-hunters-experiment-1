@@ -7,6 +7,7 @@ import LandnamCore
 /// Swift was not compiled in the environment that wrote this file.
 struct MarketScreen: View {
     @Environment(GameStore.self) private var store
+    private let biome = EarthBiome.resolve()
     @State private var showSettings = false
     @State private var armed = false
     @State private var shownFrancs = 0
@@ -22,12 +23,20 @@ struct MarketScreen: View {
             let short = geo.size.height < 520
             let wide = geo.size.width >= 900 && geo.size.height >= 640
             ZStack(alignment: .topLeading) {
-                Image("scene-exchange-sheet")
+                Image("scene-exchange-plate-dock")
                     .resizable()
                     .interpolation(.none)
                     .scaledToFill()
                     .frame(width: geo.size.width, height: geo.size.height)
                     .clipped()
+                LinearGradient(stops: [
+                    .init(color: Theme.blue.opacity(0.18), location: 0),
+                    .init(color: Theme.blue.opacity(0.38), location: 0.48),
+                    .init(color: Theme.hudTrack.opacity(0.78), location: 0.68),
+                    .init(color: Theme.blue.opacity(0.34), location: 1),
+                ], startPoint: .top, endPoint: .bottom)
+                .blendMode(.multiply)
+                .allowsHitTesting(false)
                 play(size: geo.size, short: short, wide: wide)
                     .padding(.top, short ? 60 : 76)
                     .padding(.bottom, short ? 76 : 88)
@@ -84,6 +93,7 @@ struct MarketScreen: View {
                     board.frame(width: 360, alignment: .top)
                     window
                 }
+                .frame(height: max(220, size.height * 0.36))
                 belt.frame(height: 188)
                 floor(compact: false).frame(height: 168)
             }
@@ -96,7 +106,7 @@ struct MarketScreen: View {
                         .padding(.leading, 8)
                         .padding(.bottom, 12)
                 }
-                .frame(maxHeight: .infinity)
+                .frame(height: min(320, max(180, size.height * 0.36)))
                 belt.frame(minHeight: 132)
                 floor(compact: false)
             }
@@ -104,15 +114,34 @@ struct MarketScreen: View {
     }
 
     private var window: some View {
-        Image("scene-exchange-plate-window-landscape")
-            .resizable()
-            .interpolation(.none)
-            .scaledToFill()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        GeometryReader { proxy in
+            ZStack(alignment: .bottom) {
+                LinearGradient(colors: biome == .desert || biome == .coast
+                               ? [Theme.bluePress, Theme.skyMid, Theme.horizon]
+                               : [Theme.skyTop, Theme.skyMid, Theme.horizon], startPoint: .top, endPoint: .bottom)
+                ForEach(Array(biome.backBands.enumerated()), id: \.offset) { index, band in
+                    Image(band.asset)
+                        .resizable()
+                        .interpolation(.none)
+                        .scaledToFill()
+                        .frame(width: proxy.size.width, height: proxy.size.height * (index == 0 ? 0.54 : 0.43), alignment: .bottom)
+                        .saturation(band.saturation)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                        .padding(.bottom, proxy.size.height * 0.18)
+                }
+                Image(biome.ground.asset)
+                    .resizable()
+                    .interpolation(.none)
+                    .scaledToFill()
+                    .frame(width: proxy.size.width, height: proxy.size.height * 0.22, alignment: .top)
+                    .clipped()
+                    .overlay(alignment: .top) { Rectangle().fill(Theme.blue.opacity(0.8)).frame(height: 3) }
+            }
             .clipped()
             .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
             .overlay(Rectangle().stroke(Theme.blue, lineWidth: 3).padding(3))
-            .accessibilityHidden(true)
+        }
+        .accessibilityHidden(true)
     }
 
     private var board: some View {
@@ -323,7 +352,7 @@ struct MarketScreen: View {
             if trend == .up {
                 Triangle().fill(Theme.blue).frame(width: 14, height: 10)
             } else if trend == .down {
-                Triangle().rotationEffect(.degrees(180)).fill(Theme.ink).frame(width: 14, height: 10)
+                Triangle().fill(Theme.ink).rotationEffect(.degrees(180)).frame(width: 14, height: 10)
             } else {
                 Rectangle().fill(Theme.ink).frame(width: 14, height: 3)
             }
@@ -449,7 +478,7 @@ private struct Triangle: Shape {
 }
 
 private struct PadFrameKey: PreferenceKey {
-    static var defaultValue: CGRect = .zero
+    static let defaultValue: CGRect = .zero
     static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
         let next = nextValue()
         if next != .zero { value = next }

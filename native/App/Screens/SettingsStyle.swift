@@ -57,8 +57,8 @@ struct SettingsSkyHeader: View {
                 path.closeSubpath()
                 context.fill(path, with: .color(color))
             }
-            ridge([0.62, 0.48, 0.66, 0.42, 0.58, 0.7, 0.5, 0.38, 0.56, 0.46, 0.64], SettingsStyle.blue)
-            ridge([0.82, 0.72, 0.86, 0.74, 0.9, 0.78, 0.7, 0.84, 0.76], SettingsStyle.ink)
+            ridge([0.62, 0.48, 0.66, 0.42, 0.58, 0.7, 0.5, 0.38, 0.56, 0.46, 0.64], color: SettingsStyle.blue)
+            ridge([0.82, 0.72, 0.86, 0.74, 0.9, 0.78, 0.7, 0.84, 0.76], color: SettingsStyle.ink)
             let px = snap(w * 0.5)
             context.fill(Path(CGRect(x: px - 16, y: h - 10, width: 32, height: 6)), with: .color(SettingsStyle.card))
             context.fill(Path(CGRect(x: px - 3, y: h - 28, width: 6, height: 18)), with: .color(SettingsStyle.card))
@@ -159,4 +159,3 @@ struct SettingsSegment: View {
         }
     }
 }
-

@@ -6,6 +6,18 @@
   background: var(--ln-blueprint-bg);
 }
 
+.scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-world-trim-blue) 54%, transparent) 0 53%, transparent 65%),
+    linear-gradient(180deg, transparent 48%, color-mix(in srgb, var(--ln-world-asphalt) 44%, var(--ln-world-trim-teal)) 100%);
+  mix-blend-mode: multiply;
+}
+
 .backdrop {
   position: absolute;
   inset: 0;
@@ -85,7 +97,58 @@
   overflow: hidden;
   border: 3px solid var(--ln-blueprint-ink);
   box-shadow: inset 0 0 0 3px var(--ln-blueprint-blue);
-  background: var(--ln-blueprint-paper-2);
+  isolation: isolate;
+  background: var(--ln-world-glass);
+  pointer-events: none;
+}
+
+.windowSky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(180deg, var(--ln-world-day-top), var(--ln-world-day-mid) 58%, var(--ln-world-day-horizon));
+}
+
+.windowBand {
+  position: absolute;
+  left: 0;
+  bottom: 16%;
+  display: block;
+  width: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.windowGround {
+  position: absolute;
+  inset: auto 0 0;
+  height: 20%;
+  border-top: 3px solid var(--ln-world-trim-teal);
+  background: repeating-linear-gradient(90deg, var(--ln-world-concrete) 0 28px, var(--ln-world-asphalt) 28px 32px);
+}
+
+.window[data-biome='desert'] .windowSky,
+.window[data-biome='coast'] .windowSky {
+  background: linear-gradient(180deg, var(--ln-world-afternoon-top), var(--ln-world-afternoon-mid) 58%, var(--ln-world-afternoon-horizon));
+}
+
+.window[data-biome='tundra'] .windowSky {
+  background: linear-gradient(180deg, var(--ln-world-dawn-top), var(--ln-world-dawn-mid) 58%, var(--ln-world-dawn-horizon));
+}
+
+.window[data-biome='tundra'] .windowGround {
+  background: repeating-linear-gradient(90deg, var(--ln-blueprint-paper-2) 0 28px, var(--ln-world-glass) 28px 32px);
+}
+
+.window[data-biome='coast'] .windowBand {
+  filter: saturate(.78) hue-rotate(12deg);
+}
+
+.window[data-biome='desert'] .windowGround,
+.window[data-biome='coast'] .windowGround {
+  background: repeating-linear-gradient(90deg, var(--ln-world-soil) 0 28px, var(--ln-world-concrete) 28px 32px);
 }
 
 .window img {
@@ -364,12 +427,17 @@
 
 .dock {
   position: absolute;
-  left: 50%;
+  left: 8px;
+  right: 8px;
   bottom: 8px;
   z-index: 6;
-  width: max-content;
-  max-width: calc(100% - 16px);
-  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.dock :global(.scene-dock) {
+  max-width: 100%;
 }
 
 .ghost,

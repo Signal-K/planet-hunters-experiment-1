@@ -10,6 +10,7 @@ import { formatCurrency, formatFrancs, FRANC } from '@/lib/format'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { openSettings } from '@/lib/mining/openChrome'
 import { captureGameEvent } from '@/lib/posthog'
+import { biomeLayers, sanitizeEarthBiome, type EarthBiomeId } from '@/lib/scene/base-world'
 import styles from './MarketScreen.module.css'
 
 const ART = '/art/scenes/exchange'
@@ -78,12 +79,15 @@ interface MarketScreenProps {
   onHub: () => void
   onNext: () => void
   clientId?: string
+  biome?: EarthBiomeId
 }
 
 export default function MarketScreen({
   stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell,
-  refinedGoods, onSellRefined, onBack, onBuild, onHub, onNext, clientId,
+  refinedGoods, onSellRefined, onBack, onBuild, onHub, onNext, clientId, biome = 'mountains',
 }: MarketScreenProps) {
+  const landscape = sanitizeEarthBiome(biome)
+  const landscapeLayers = biomeLayers(landscape)
   const priceContext = { marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot }
   const lots: CargoLot[] = []
   for (const [id, qty] of Object.entries(stash)) {
@@ -188,7 +192,7 @@ export default function MarketScreen({
 
   return (
     <div className={`market-screen ${styles.scene}`} data-testid="exchange-scene">
-      <img className={styles.backdrop} src={`${ART}/exchange-sheet.png`} alt="" draggable={false} />
+      <img className={styles.backdrop} src={`${ART}/exchange-plate-dock.png`} alt="" draggable={false} />
 
       <div className={styles.hud} data-dev-launcher={isDevLauncherEnabled() ? 'true' : 'false'}>
         <div className={styles.cluster}>
@@ -224,8 +228,20 @@ export default function MarketScreen({
           ))}
         </section>
 
-        <div className={styles.window} aria-hidden="true">
-          <img src={`${ART}/exchange-plate-window-landscape.png`} alt="" draggable={false} />
+        <div className={styles.window} data-biome={landscape} aria-hidden="true">
+          <div className={styles.windowSky} />
+          {landscapeLayers.map((layer, index) => (
+            <img
+              key={layer.id}
+              className={styles.windowBand}
+              data-layer={layer.id}
+              src={layer.src}
+              alt=""
+              draggable={false}
+              style={{ height: layer.height, zIndex: index + 1 }}
+            />
+          ))}
+          <div className={styles.windowGround} />
         </div>
 
         <div className={styles.belt} data-testid="exchange-belt" aria-label="Cargo on the conveyor">
