@@ -24,7 +24,7 @@ public enum Screen: String, CaseIterable, Sendable {
     public var isLocation: Bool {
         switch self {
         case .hub, .hubSubsurface, .launchpad, .transit, .landing, .mining, .roverSurvey,
-             .delivery, .academy, .hangar, .surfaceOps, .galaxy,
+             .delivery, .academy, .hangar, .surfaceOps, .galaxy, .market,
              .asteroidDiscovery, .saturnStormSearch, .instrumentHub:
             return true
         default:

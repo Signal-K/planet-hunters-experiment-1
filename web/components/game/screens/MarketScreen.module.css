@@ -1,179 +1,535 @@
-.screen {
+.scene {
   position: absolute;
   inset: 0;
-  overflow-y: auto;
-  color: var(--set-ink);
-  background: var(--set-bg);
-  background-image: none;
+  overflow: hidden;
+  color: var(--ln-blueprint-ink);
+  background: var(--ln-blueprint-bg);
 }
 
-.header {
-  position: sticky;
+.backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 62%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hud {
+  position: absolute;
   top: 0;
-  z-index: 10;
+  left: 0;
+  right: 0;
+  z-index: 6;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 12px 0;
+  pointer-events: none;
+}
+
+.hud[data-dev-launcher='true'] {
+  padding-left: 72px;
+}
+
+.cluster {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 60px;
-  padding: 8px 16px;
-  background: var(--set-bg);
-  border-bottom: 2px solid var(--set-ink);
+  min-width: 0;
+  pointer-events: auto;
 }
 
-.header[data-dev-launcher='true'] {
-  padding-left: 64px;
-}
-
-.column {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  width: min(var(--set-max), 100%);
-  margin: 0 auto;
-  padding: 16px 16px 32px;
-}
-
-.backButton,
-.sellButton,
-.buildButton {
-  font-family: var(--ln-font-display), system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  box-shadow: none;
-}
-
-.backButton {
-  display: inline-grid;
-  flex: 0 0 auto;
+.cog {
+  display: grid;
+  place-items: center;
   width: 44px;
   height: 44px;
-  place-items: center;
-  color: var(--set-ink);
-  background: var(--set-card);
-  border: 2px solid var(--set-ink);
-  border-radius: var(--set-radius);
-}
-
-.balance {
-  margin-left: auto;
-  color: var(--set-ink);
-  font-family: var(--ln-font-display), system-ui, sans-serif;
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.sellButton,
-.buildButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 44px;
   min-width: 44px;
-  padding: 0 16px;
-  border-radius: var(--set-radius);
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 4px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  cursor: pointer;
 }
 
-.sellButton::before,
-.buildButton::before {
-  content: "";
-  flex: 0 0 auto;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 6px 0 6px 10px;
-  border-color: transparent transparent transparent currentColor;
+.cluster :global(.scene-chip) {
+  min-height: 44px;
+  height: 44px;
+  border-radius: 4px;
+  padding: 0 12px;
+  font-size: 16px;
 }
 
-.sellButton {
-  color: var(--set-card);
-  background: var(--set-ink);
-  border: 2px solid var(--set-ink);
+.play {
+  position: absolute;
+  z-index: 2;
+  inset: 68px 16px 80px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(220px, 1.15fr) auto auto;
+  gap: 12px;
+  min-height: 0;
 }
 
-.sellButton:disabled,
-.buildButton:disabled {
-  opacity: 1;
-  color: var(--set-muted);
-  background: var(--set-card);
-  border: 2px solid var(--set-ink);
-  cursor: not-allowed;
+.window {
+  grid-column: 1;
+  grid-row: 1;
+  min-height: 0;
+  overflow: hidden;
+  border: 3px solid var(--ln-blueprint-ink);
+  box-shadow: inset 0 0 0 3px var(--ln-blueprint-blue);
+  background: var(--ln-blueprint-paper-2);
 }
 
-.buildButton {
-  flex: none;
-  margin-left: auto;
-  color: var(--set-ink);
-  background: var(--set-card);
-  border: 2px solid var(--set-ink);
+.window img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 60%;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 
-.list {
+.board {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: end;
+  justify-self: start;
+  z-index: 3;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 8px;
+  width: min(100% - 16px, 340px);
+  max-height: min(196px, 46%);
+  margin: 0 0 12px 8px;
+  overflow: auto;
+  padding: 16px;
+  background: var(--ln-blueprint-paper);
+  border: 3px solid var(--ln-blueprint-ink);
+  box-shadow: inset 0 0 0 2px var(--ln-blueprint-blue);
 }
 
-.row {
+.quote {
   display: flex;
   align-items: center;
-  gap: 16px;
-  min-height: 44px;
-  padding: 16px 20px;
-  border: 2px solid var(--set-ink);
-  border-radius: var(--set-radius);
-  background: var(--set-card);
-  box-shadow: none;
-}
-
-.rowCopy {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.name {
-  color: var(--set-ink);
-  font-family: var(--ln-font-display), system-ui, sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.meta,
-.empty {
-  color: var(--set-muted);
-  font-family: var(--ln-font-display), system-ui, sans-serif;
+  gap: 8px;
+  min-height: 36px;
   font-size: 14px;
-  font-weight: 700;
+}
+
+.quote img {
+  width: 28px;
+  height: 24px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex: 0 0 auto;
+}
+
+.mineral,
+.quiet,
+.empty,
+.count,
+.sellAll,
+.unit {
+  font-family: var(--ln-font-display), system-ui, sans-serif;
   letter-spacing: 0.08em;
-  line-height: 1.3;
   text-transform: uppercase;
 }
 
-.price {
-  margin-left: auto;
-  color: var(--set-ink);
-  font-family: var(--ln-font-display), system-ui, sans-serif;
+.mineral {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.unit {
   font-size: 16px;
   font-weight: 800;
-  line-height: 1.3;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
-.empty {
-  margin: 0;
+.trend {
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  margin-left: 4px;
 }
 
-.backButton:focus-visible,
-.sellButton:focus-visible,
-.buildButton:focus-visible {
-  outline: 2px solid var(--set-ink);
+.trend[data-trend='up'] {
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 10px solid var(--ln-blueprint-blue);
+}
+
+.trend[data-trend='down'] {
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid var(--ln-blueprint-ink);
+}
+
+.trend[data-trend='flat'] {
+  width: 14px;
+  height: 3px;
+  background: var(--ln-blueprint-ink);
+}
+
+.quiet,
+.empty {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ln-blueprint-ink);
+}
+
+.belt {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  min-height: 132px;
+  padding: 8px 8px 10px;
+  overflow-x: auto;
+  background:
+    url('/art/scenes/exchange/exchange-conveyor.png') center bottom / 100% 64px no-repeat;
+  image-rendering: pixelated;
+}
+
+.stack {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 88px;
+  min-width: 72px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ln-blueprint-ink);
+  cursor: grab;
+  touch-action: none;
+}
+
+.stack:active {
+  cursor: grabbing;
+}
+
+.pile {
+  position: relative;
+  width: 76px;
+  height: 108px;
+}
+
+.pile img {
+  position: absolute;
+  left: 0;
+  width: 76px;
+  height: 68px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.count {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  transform: translateX(-50%);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 4px 8px;
+  background: var(--ln-blueprint-paper);
+  border: 2px solid var(--ln-blueprint-ink);
+}
+
+.floor {
+  grid-column: 1;
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 16px;
+  row-gap: 8px;
+  align-items: end;
+  min-height: 0;
+}
+
+.pad {
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  width: min(100%, 420px);
+  justify-self: start;
+  align-self: end;
+  min-width: 0;
+}
+
+.machine {
+  display: contents;
+}
+
+.face {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  width: min(100%, 320px);
+  justify-self: end;
+  align-self: end;
+}
+
+.pad > img:first-child,
+.face > img {
+  display: block;
+  width: 100%;
+  height: 112px;
+  object-fit: cover;
+  object-position: center 70%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.onPad {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  width: 72px;
+  height: 80px;
+  transform: translateX(-50%);
+  object-fit: contain;
+  image-rendering: pixelated;
+  animation: land 280ms ease-out;
+}
+
+.digits {
+  position: absolute;
+  right: 6%;
+  bottom: 18%;
+  max-width: 88%;
+  padding: 4px 8px;
+  background: var(--ln-blueprint-paper);
+  border: 2px solid var(--ln-blueprint-ink);
+  color: var(--ln-blueprint-ink);
+  font-family: var(--ln-font-mono), ui-monospace, monospace;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sellAll {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  min-width: 88px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid var(--ln-blueprint-ink);
+  border-radius: 2px;
+  background: var(--ln-blueprint-paper);
+  color: var(--ln-blueprint-ink);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sellAll:disabled {
+  color: color-mix(in srgb, var(--ln-blueprint-ink) 45%, var(--ln-blueprint-paper));
+  cursor: not-allowed;
+}
+
+.sellAll:focus-visible,
+.stack:focus-visible,
+.cog:focus-visible {
+  outline: 2px solid var(--ln-blueprint-blue);
   outline-offset: 2px;
+}
+
+.dock {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  z-index: 6;
+  width: max-content;
+  max-width: calc(100% - 16px);
+  transform: translateX(-50%);
+}
+
+.ghost,
+.flight {
+  position: fixed;
+  z-index: 8;
+  width: 72px;
+  height: 64px;
+  margin-left: -36px;
+  margin-top: -48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.flight {
+  animation: fly 320ms ease-in forwards;
+}
+
+@keyframes fly {
+  from { transform: translate(var(--dx), var(--dy)); }
+  to { transform: translate(0, 0); }
+}
+
+@keyframes land {
+  from { transform: translateX(-50%) translateY(-16px) scale(0.86); }
+  to { transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+@media (min-width: 900px) and (min-height: 640px) {
+  .play {
+    grid-template-columns: 360px minmax(0, 1fr);
+    grid-template-rows: minmax(200px, 1fr) 168px auto;
+    gap: 16px 24px;
+    inset: 76px 32px 88px;
+  }
+
+  .board {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    justify-self: stretch;
+    width: auto;
+    max-height: none;
+    margin: 0;
+  }
+
+  .window {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .belt {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    min-height: 148px;
+  }
+
+  .floor {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    column-gap: 24px;
+  }
+
+  .pad > img:first-child,
+  .face > img {
+    height: auto;
+    object-fit: contain;
+    object-position: center bottom;
+  }
+
+  .digits {
+    font-size: 22px;
+    right: 8%;
+    bottom: 22%;
+  }
+}
+
+@media (max-height: 520px) {
+  .hud {
+    padding-top: 8px;
+  }
+
+  .play {
+    grid-template-columns: minmax(168px, 220px) minmax(0, 1fr) minmax(168px, 220px);
+    grid-template-rows: minmax(0, 1fr) 116px;
+    gap: 8px;
+    inset: 60px 12px 76px;
+  }
+
+  .board {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: stretch;
+    justify-self: stretch;
+    width: auto;
+    max-height: none;
+    margin: 0;
+    padding: 8px;
+  }
+
+  .window {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .floor {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    align-items: end;
+    row-gap: 8px;
+  }
+
+  .pad {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+  }
+
+  .face {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .sellAll {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .pad > img:first-child,
+  .face > img {
+    height: auto;
+    max-height: 72px;
+    object-fit: contain;
+    object-position: center bottom;
+  }
+
+  .belt {
+    grid-column: 1 / 3;
+    grid-row: 2;
+    min-height: 0;
+    background-size: 100% 44px;
+  }
+
+  .pile {
+    height: 80px;
+  }
+
+  .digits {
+    bottom: 14%;
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flight,
+  .onPad {
+    animation: none;
+  }
 }

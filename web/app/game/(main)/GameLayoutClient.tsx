@@ -199,14 +199,14 @@ function GameChrome({ children }: { children: ReactNode }) {
   // Location screens (physical places in the game world, and the mission-run
   // sequence through them) own the full viewport instead of sitting inside
   // the generic desktop device-card — that boxed treatment is for menus
-  // (Missions, Market, Skills, ...) and reads as a modal over the game
+  // (Missions, Skills, ...) and reads as a modal over the game
   // itself when applied to a place the player is actually standing in.
   // See LOCATION_SCREENS.
   const isImmersiveEarthBaseRoute = LOCATION_SCREENS.has(currentScreen as Screen)
 
   return (
     <main className="game-stage" aria-label="Landnam game">
-      {/* Boxed/menu screens (Mission Board, Market, Skills, Debrief, ...)
+      {/* Boxed/menu screens (Mission Board, Skills, Debrief, ...)
           leave real margin around the device-card on desktop — that used to
           be a flat neutral gradient, which read as a blank grey void behind
           the modal instead of the game continuing underneath it. Earth Base

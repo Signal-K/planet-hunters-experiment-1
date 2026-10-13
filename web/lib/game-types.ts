@@ -100,8 +100,9 @@ export type Screen =
 // they are locations, not menus, and boxing them in the device-card chrome
 // reads as a modal sitting over the game rather than the game itself.
 // Screens NOT in this set ('intro', 'build', 'missions', 'targets', 'fab',
-// 'market', 'skills', 'rocket-buy', 'debrief') are menus/UI concepts and keep
-// the boxed card treatment. Debrief in particular is a mission-results
+// 'skills', 'rocket-buy', 'debrief') are menus/UI concepts and keep
+// the boxed card treatment. The Exchange is a cargo dock, so it is a place.
+// Debrief in particular is a mission-results
 // summary/paperwork screen, not a place — it was wrongly added here in
 // KES-261 and got full-screen treatment it never should have (KES-265).
 // See `.portrait-canvas--full-page` in globals.css.
@@ -122,6 +123,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'asteroid-discovery',
   'saturn-storm-search',
   'instrument-hub',
+  'market',
   // Mission Log is a tray over the still-mounted Base (SSL-347), so the Base
   // must keep its full-viewport frame while the tray is open.
   'mission-history',

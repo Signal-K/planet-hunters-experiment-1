@@ -11,20 +11,19 @@ for (const vp of VIEWPORTS) {
   test.describe(`tap floor ${vp.name}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } })
 
-    test('exchange cargo list and build toggle', async ({ page }) => {
+    test('exchange crates, prices and sell pad stay tappable', async ({ page }) => {
       await page.goto('/game/stage?preset=ui-market&chrome=1')
       await expect(page.locator('[data-stage-ready="true"]')).toBeVisible()
       await expect(page.getByText('Commodity Exchange')).toHaveCount(0)
       await expect(page.getByText('Base · Resource Desk')).toHaveCount(0)
+      await expect(page.getByText(/open the tower/i)).toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Cargo', exact: true })).toHaveCount(0)
       const sell = await page.locator('[data-testid="sell-all-btn"]').boundingBox()
-      const build = await page.locator('[data-testid="market-build-toggle"]').boundingBox()
-      const back = await page.locator('[data-testid="market-back-btn"]').boundingBox()
+      const crate = await page.locator('[data-testid="exchange-crate-iron"]').boundingBox()
+      const cog = await page.locator('[data-testid="settings-button"]').boundingBox()
       expect(sell && sell.height >= 44 && sell.width >= 44).toBe(true)
-      expect(build && build.height >= 44 && build.width >= 44).toBe(true)
-      expect(back && back.height >= 44 && back.width >= 44).toBe(true)
-      const cargoSize = await page.locator('[data-testid="commodity-iron"] [class*="name"]').evaluate(el => parseFloat(getComputedStyle(el).fontSize))
-      await page.getByTestId('market-build-toggle').click()
-      await expect(page.locator('[data-testid="market-recipe-field-road"]')).toBeVisible()
+      expect(crate && crate.height >= 44 && crate.width >= 44).toBe(true)
+      expect(cog && cog.height >= 44 && cog.width >= 44).toBe(true)
       const fonts = await page.evaluate(() => {
         const size = (sel: string) => {
           const el = document.querySelector(sel)
@@ -32,14 +31,15 @@ for (const vp of VIEWPORTS) {
         }
         return {
           balance: size('[data-testid="market-balance"]'),
-          recipe: size('[data-testid="market-recipe-field-road"] [class*="name"]'),
+          mineral: size('[data-testid="exchange-price-iron"]'),
           sell: size('[data-testid="sell-all-btn"]'),
+          count: size('[data-testid="exchange-crate-iron"]'),
         }
       })
-      expect(cargoSize).toBeGreaterThanOrEqual(14)
       expect(fonts.balance).toBeGreaterThanOrEqual(14)
-      expect(fonts.recipe).toBeGreaterThanOrEqual(14)
+      expect(fonts.mineral).toBeGreaterThanOrEqual(14)
       expect(fonts.sell).toBeGreaterThanOrEqual(14)
+      expect(fonts.count).toBeGreaterThanOrEqual(14)
     })
 
     test('hangar customiser chevron, close and primary', async ({ page }) => {
