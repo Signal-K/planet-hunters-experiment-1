@@ -60,6 +60,7 @@ const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 
 interface HubScreenProps {
   player: Player
+  onBuild?: () => void
   rocketVariant?: HubBuildingDef['rocketVariant']
   onboardingActive?: boolean
   onFocusBuilding: (b: string) => void
@@ -79,7 +80,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   const camera = useBaseCamera()
@@ -525,7 +526,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 setDockStop(next)
                 onOpenScene(stops[next])
               }}
-              onBuild={() => showStorageSiloCta ? onOpenScene('build') : setEditMode(value => !value)}
+              onBuild={() => onBuild ? onBuild() : showStorageSiloCta ? onOpenScene('build') : setEditMode(value => !value)}
               onHub={() => onOpenScene('instrument-hub')}
             />
           </div>

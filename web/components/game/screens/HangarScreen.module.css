@@ -2,9 +2,11 @@
   background: var(--ln-bg);
   /* The hangar sits on light paper but resolves the default token set, whose cyan and grey are pale.
      Pin the blueprint ink values here so every label clears 4.5:1 on paper and ice. */
-  --hangar-accent: #17639f;
-  --ln-text-muted: #48596a;
-  --ln-text-dim: #34475a;
+  --hangar-accent: var(--ln-blueprint-blue);
+  --ln-bp-paper: var(--ln-world-hull-lit);
+  --ln-bp-blue: var(--ln-amber);
+  --ln-text-muted: var(--ln-bp-ink-dim);
+  --ln-text-dim: var(--ln-bp-ink-dim);
 }
 
 .scroll {
@@ -178,125 +180,53 @@
 .rail { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; padding: 10px 12px; border-top: 2px solid rgba(112,217,234,.22); color: var(--ln-text-muted); font: 700 14px/1.2 var(--ln-font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .railValue { color: var(--ln-text); }
 
+
+/* SSL-555: a bounded workshop instrument over the live base, with its shared HUD and dock. */
+.scroll { position: absolute; inset: 80px 24px 88px; padding: 0; pointer-events: none; overflow: hidden; }
+.inner { width: min(1040px, 100%); max-height: 100%; overflow: auto; pointer-events: auto; padding: 24px; border: 3px solid var(--ln-bp-ink); background: var(--ln-bp-paper); box-shadow: 6px 6px 0 var(--ln-bp-blue); scrollbar-color: var(--ln-bp-blue) var(--ln-bp-paper-2); }
+.overlayHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: -24px -24px 24px; padding: 8px 16px; border-bottom: 3px solid var(--ln-bp-ink); background: var(--ln-bp-paper-2); }
+.overlayHeader h1 { font: 800 22px/1.2 var(--ln-font-mono); letter-spacing: .12em; color: var(--ln-bp-ink); }
+.overlayHeader > div { display: flex; align-items: center; gap: 8px; }
+.close { min-width: 44px; min-height: 44px; color: var(--ln-bp-ink); font-size: 28px; border: 2px solid var(--ln-bp-ink); background: var(--ln-bp-paper); cursor: pointer; }
+.intro { padding: 0; border: 0; box-shadow: none; background: transparent; }
+.copy { margin: 0; }
+.fleetReadout, .customizer, .constructionScene, .card { border: 2px solid var(--ln-bp-ink); }
+.fleetReadout { padding: 8px; }
+.customizer { min-height: 64px; border-left: 8px solid var(--hangar-accent); }
+.constructionScene { padding: 16px; gap: 16px; background: var(--ln-bp-paper-2); }
+.assemblyBay { grid-column: 2; grid-row: 1 / span 3; min-height: 200px; border: 2px solid var(--ln-bp-ink); }
+.assemblyRocket { animation: none; image-rendering: pixelated; }
+.assemblyGlow { filter: none; height: 3px; }
+.fleetGrid { padding: 0; border: 0; box-shadow: none; gap: 16px; background: transparent; }
+.cardImage { min-height: 112px; border-bottom: 2px solid var(--ln-bp-ink); }
+.cardImage img { max-width: 100%; image-rendering: pixelated; }
+.cardBody { padding: 16px; }
+.cardTop { flex-wrap: wrap; }
+.cardName, .sectionHeader, .customizerTitle, .constructionReadout strong { font-family: var(--ln-font-mono); text-transform: uppercase; }
+.cost { min-height: 44px; min-width: 44px; background: var(--ln-bp-paper); border: 2px solid var(--ln-bp-blue); }
+.rail { flex-wrap: wrap; border-color: var(--ln-bp-ink); }
 @media (max-width: 620px) {
-  .intro { grid-template-columns: 1fr; }
-  .fleetReadout { text-align: left; }
-  .scroll { padding-left: 12px; padding-right: 12px; }
-  .fleetGrid { grid-template-columns: 1fr; }
-  .constructionScene { grid-template-columns: 1fr; }.assemblyBay { grid-row: auto; min-height: 170px; }.shipment { width: 100%; }.constructionSteps { grid-template-columns: repeat(4, minmax(0, 1fr)); }.constructionStep { padding: 6px; }.constructionStep strong { font-size: 14px; }
+ .scroll { inset: 88px 16px 88px; }
+ .inner { padding: 16px; }
+ .overlayHeader { margin: -16px -16px 16px; padding: 8px; gap: 8px; }
+ .overlayHeader h1 { font-size: 18px; }
+ .intro { grid-template-columns: 1fr auto; gap: 8px; }
+ .fleetReadout { min-width: 76px; }
+ .fleetValue { font-size: 18px; }
+ .constructionScene { grid-template-columns: 1fr; }
+ .assemblyBay { grid-column: 1; grid-row: 1; min-height: 176px; }
+ .constructionSteps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+ .shipment { width: 100%; }
+ .fleetGrid { grid-template-columns: 1fr; }
+ .sectionHeader { gap: 8px; }
 }
-
-@media (orientation: landscape) and (max-height: 700px), (min-width: 900px) {
-  .scroll { padding-top: 64px; padding-bottom: 8px; }
-  .intro { margin-bottom: 8px; padding: 12px; }
-  .copy { margin-top: 4px; }
-  .constructionScene { min-height: 152px; }
-  .assemblyBay { min-height: 126px; }
-  .recipeNote { display: none; }
-  .rail { margin-top: 8px; }
-}
-
-/* Phone landscape has enough width for the split construction view but not
-   enough height for its desktop rhythm. Compact the animated vehicle scene
-   before fixed chrome can crowd it out of view. */
-@media (max-height: 560px) and (max-width: 899px) {
-  .scroll { padding: 56px 12px 12px; }
-  .intro { gap: 8px; margin-bottom: 8px; padding: 12px; }
-  .title { font-size: 20px; }
-  .copy { margin-top: 4px; font-size: 14px; }
-  .constructionScene { min-height: 202px; gap: 8px; margin-bottom: 8px; padding: 8px; }
-  .assemblyBay { min-height: 178px; }
-  .shipment { padding: 6px 8px; }
-  .constructionReadout { padding: 8px; }
-  .constructionReadout strong { font-size: 15px; }
-  .constructionReadout p { margin-top: 4px; }
-  .constructionSteps { gap: 4px; }
-  .constructionStep { padding: 5px 6px; }
-  .recipeNote { display: none; }
-  .sectionHeader { margin-bottom: 6px; }
-  .fleetGrid { gap: 8px; padding: 12px; }
-  .cardImage { min-height: 100px; }
-  .rail { margin-top: 8px; }
-}
-
-/* At landscape phone height the registry is a glanceable fleet board, not a
-   vertically stacked catalogue. All five vehicles stay visible in one row;
-   selecting a purchasable vehicle still uses its existing control. */
 @media (orientation: landscape) and (max-height: 500px) {
-  .scroll { padding: 58px 10px 6px; }
-  .intro { padding: 8px 10px; gap: 8px; margin-bottom: 6px; }
-  .eyebrow { font-size: 14px; }
-  .title { margin-top: 2px; font-size: 18px; }
-  .copy { display: none; }
-  .fleetReadout { min-width: 100px; padding: 6px 8px; }
-  .fleetValue { font-size: 16px; }
-  .customizer { min-height: 44px; margin-bottom: 6px; padding: 6px 8px; }
-  .customizerIcon { width: 44px; height: 44px; }
-  .customizerIcon svg { width: 20px; height: 20px; }
-  .customizerTitle, .customizerSummary { font-size: 14px; }
-  .constructionScene { min-height: 96px; margin-bottom: 6px; padding: 8px; }
-  .assemblyBay { min-height: 80px; }
-  .shipment { padding: 4px 6px; font-size: 14px; }
-  .shipment span, .shipment small { font-size: 14px; }
-  .constructionReadout { padding: 6px; }
-  .constructionReadout strong { font-size: 14px; }
-  .constructionReadout p { display: none; }
-  .constructionSteps { gap: 3px; }
-  .constructionStep { padding: 4px; }
-  .constructionStep span, .constructionStep strong { font-size: 14px; }
-  .sectionHeader { margin-bottom: 4px; font-size: 14px; }
-  .fleetGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 4px; }
-  .cardImage { min-height: 40px; }
-  .cardImage::after { inset: 4px; }
-  .cardImage img { width: 82px !important; }
-  .tier, .locked { top: 4px; font-size: 14px; }
-  .tier { left: 4px; }.locked { right: 4px; }
-  .lockedTier { font-size: 14px; }
-  .lockedHint { margin-top: 2px; font-size: 14px; }
-  .cardBody { padding: 5px; }
-  .cardTop { gap: 4px; }
-  .cardName { font-size: 14px; }
-  .standard, .cost { min-height: 44px; padding: 6px; font-size: 14px; }
-  .stats, .rail { display: none; }
+ .scroll { inset: 64px 56px 72px; }
+ .inner { padding: 16px; }
+ .overlayHeader { margin: -16px -16px 16px; }
+ .fleetGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+ .constructionScene { min-height: 200px; }
 }
+@media (prefers-reduced-motion: reduce) { .crane i, .assemblyGlow { animation: none; } }
 
-/* Registry stays a single-screen inspection surface on ordinary landscape
-   displays too. The detailed customiser remains available through its compact
-   command, while fleet comparison changes from a tall catalogue to five
-   simultaneous vehicle instruments. */
-@media (orientation: landscape) and (max-height: 800px) {
-  .scroll { padding: 60px 10px 6px; }
-  .intro { margin-bottom: 6px; padding: 8px 10px; }
-  .title { margin-top: 2px; font-size: 19px; }
-  .copy { margin-top: 2px; font-size: 14px; line-height: 1.25; }
-  .customizer { min-height: 44px; margin-bottom: 6px; padding: 5px 8px; }
-  .customizerIcon { width: 44px; height: 44px; }
-  .customizerIcon svg { width: 20px; height: 20px; }
-  .customizerTitle, .customizerSummary { font-size: 14px; }
-  .constructionScene { height: 132px; min-height: 0; margin-bottom: 5px; padding: 8px; }
-  .assemblyBay { min-height: 0; height: 114px; }
-  .assemblyRocket { max-height: 86px; width: auto; }
-  .crane { height: 64%; }
-  .shipment { padding: 4px 6px; font-size: 14px; }
-  .shipment span, .shipment small { font-size: 14px; }
-  .constructionReadout { padding: 6px; }
-  .constructionReadout strong { font-size: 14px; }
-  .constructionReadout p { margin-top: 2px; font-size: 14px; }
-  .constructionSteps { gap: 3px; }
-  .constructionStep { padding: 4px; }
-  .constructionStep span, .constructionStep strong { font-size: 14px; }
-  .sectionHeader { margin-bottom: 4px; font-size: 14px; }
-  .fleetGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 4px; }
-  .cardImage { min-height: 46px; }
-  .cardImage::after { inset: 4px; }
-  .cardImage img { width: 96px !important; }
-  .tier, .locked { top: 4px; font-size: 14px; }
-  .tier { left: 4px; }.locked { right: 4px; }
-  .lockedTier { font-size: 14px; }
-  .lockedHint { margin-top: 2px; font-size: 14px; }
-  .cardBody { padding: 5px; }
-  .cardTop { gap: 4px; }
-  .cardName { font-size: 14px; }
-  .standard, .cost { min-height: 44px; padding: 6px; font-size: 14px; }
-  .stats, .rail { display: none; }
-}
+.screen :global([data-testid="base-camera-world"]) { filter: grayscale(1); }

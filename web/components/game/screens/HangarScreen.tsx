@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
-import TopBar from '@/components/ui/TopBar'
+import type { ReactNode } from 'react'
 import { ROCKET_MODELS, hasShipCustomizer, calculateShipSuccessChance, selectedCustomizerPartIds, getBuildSequence } from '@/lib/data'
 import type { RocketModel, InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
@@ -15,6 +15,7 @@ import { useHelp } from '@/components/ui/useHelp'
 import styles from './HangarScreen.module.css'
 
 interface HangarScreenProps {
+  baseScene: ReactNode
   francs: number
   missionsDone: number
   unlockedSkillNodes?: string[]
@@ -142,7 +143,7 @@ function Step({ label, status }: { label: string; status: string }) {
   return <div className={styles.constructionStep}><span>{label}</span><strong>{status}</strong></div>
 }
 
-export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched, pendingLaunch, pendingRocketName, trainingPartTry = false, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
+export default function HangarScreen({ baseScene, francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched, pendingLaunch, pendingRocketName, trainingPartTry = false, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
   // Academy research is a second, explicit unlock path: a player who has
   // researched Crew Quarters must be able to enter the fitter even if they
   // have not purchased the general-purpose customiser skill node.
@@ -161,9 +162,10 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
   return (
     <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="hangar-screen">
       {help.layer}
-      <TopBar onBack={onBack} solid right={help.button} />
-      <div className={`screen-scroll ${styles.scroll}`} data-ui-zone={UI_ZONES.screenContent}>
+      {baseScene}
+      <div className={styles.scroll} data-ui-zone={UI_ZONES.screenContent}>
         <div className={styles.inner}>
+          <header className={styles.overlayHeader}><h1>VEHICLE WORKSHOP</h1><div>{help.button}<button className={styles.close} onClick={onBack} aria-label="Close hangar">×</button></div></header>
           <div className={styles.intro}>
             <div>
               <p className={styles.copy}>Receive client-built shipments, assemble staged vehicles, inspect their rooms and payload, then transfer them to the pad.</p>
