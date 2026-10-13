@@ -1,7 +1,7 @@
 import SwiftUI
 import LandnamCore
 
-/// Transit Telescope classify screen (mirrors web TessDiscoveryScreen, SSL-497): drag across each
+/// Space Telescope classify screen (mirrors web TessDiscoveryScreen, SSL-497): drag across each
 /// dip on the light curve, then Confirm Transit, Mark Noise or Skip. Sector chips and the SECTOR
 /// command window the curve the same way the web does.
 struct TessDiscoveryScreen: View {
@@ -34,7 +34,7 @@ struct TessDiscoveryScreen: View {
             if candidate == nil && !training && !store.player.freeOperations {
                 gate("Free Operations Required", "TESS candidate downlinks unlock after the starter contract arc.")
             } else if candidate == nil && !training && store.player.transitSatelliteLaunchedAt == nil {
-                gate("Launch Transit Telescope", "Deploy your own telescope from the Launchpad. Its daily data will downlink here after the flight.",
+                gate("Launch Space Telescope", "Deploy your own telescope from the Launchpad. Its daily data will downlink here after the flight.",
                      action: ("OPEN LAUNCHPAD", { store.go(.launchpad) }))
             } else if let c = today {
                 classify(c)
@@ -52,7 +52,7 @@ struct TessDiscoveryScreen: View {
     }
 
     private func gate(_ title: String, _ message: String, action: (String, () -> Void)? = nil) -> some View {
-        InstrumentGate(screenTitle: "Transit Telescope", title: title, message: message, action: action.map { (title: $0.0, run: $0.1) })
+        InstrumentGate(screenTitle: "Space Telescope", title: title, message: message, action: action.map { (title: $0.0, run: $0.1) })
     }
 
     private func classify(_ c: TessCandidate) -> some View {

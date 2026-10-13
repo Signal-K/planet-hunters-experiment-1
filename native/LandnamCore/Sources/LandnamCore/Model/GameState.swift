@@ -168,9 +168,24 @@ public struct Player: Codable, Equatable, Sendable {
         get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("shipCustomizerParts", &shipCustomizerParts); get("laserCapacitorLevel", &laserCapacitorLevel)
         buildingLevels = BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)
         launchpadUpgraded = launchpadUpgraded || (buildingLevels["launchpad"] ?? 1) >= 2
+        Self.mergeTelescope(&self)
         for key in c.allKeys where !consumed.contains(key.stringValue) {
             extras[key.stringValue] = try? c.decode(JSONValue.self, forKey: key)
         }
+    }
+
+    /// Whether the single space telescope (the former transit and deep space telescopes) is launched.
+    public var telescopeLaunched: Bool {
+        (transitSatelliteLaunchedAt ?? 0) > 0 || (deepSpaceTelescopeLaunchedAt ?? 0) > 0 || deepSpaceTelescopeBuilt
+    }
+
+    /// Old saves tracked two telescopes; either marks the one telescope launched, with both feeds unlocked.
+    static func mergeTelescope(_ p: inout Player) {
+        guard p.telescopeLaunched else { return }
+        let at = [p.transitSatelliteLaunchedAt, p.deepSpaceTelescopeLaunchedAt].compactMap { $0 }.filter { $0 > 0 }.min() ?? Date().timeIntervalSince1970 * 1000
+        p.transitSatelliteLaunchedAt = p.transitSatelliteLaunchedAt ?? at
+        p.deepSpaceTelescopeLaunchedAt = p.deepSpaceTelescopeLaunchedAt ?? at
+        p.deepSpaceTelescopeBuilt = true
     }
 
     public func encode(to encoder: Encoder) throws {

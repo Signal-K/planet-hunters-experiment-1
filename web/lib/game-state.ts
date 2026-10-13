@@ -280,7 +280,7 @@ export function normalizeState(input: PartialSave): GameState {
   // booleans are conveniences derived from it. They can disagree: a save made
   // before `applyPlaceStructure` started setting a flag has the structure in
   // `placed` and the flag false, which is why the hub kept telling players to
-  // "Build a Transit Telescope" they had already built. Derive the
+  // "Build a Space Telescope" they had already built. Derive the
   // flags from `placed` so the two can never drift again — and OR rather than
   // overwrite, so a flag set by any other route still counts.
   const savedPlaced = Array.isArray(player.placed) ? player.placed : DEFAULT_STATE.player.placed
@@ -302,7 +302,9 @@ export function normalizeState(input: PartialSave): GameState {
   const buildingLevels = sanitizeBuildingLevels(player.buildingLevels, !!player.launchpadUpgraded)
   const launchpadUpgraded = !!player.launchpadUpgraded || (buildingLevels.launchpad ?? 1) >= 2
   const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
-  const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt)
+  // The transit and deep space telescopes are one instrument: either flag marks it launched.
+  const telescopeLaunchedAt = player.transitSatelliteLaunchedAt ?? player.deepSpaceTelescopeLaunchedAt ?? null
+  const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt) || !!telescopeLaunchedAt
   const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
   // KES-177: Free Operations is a progression boundary, not a freely
   // persisted toggle. Older/incorrect remote saves can have the flag set
@@ -355,6 +357,8 @@ export function normalizeState(input: PartialSave): GameState {
         ? `legacy-${player.pendingRocketId}-${missionId}-${targetId}`
         : undefined)),
       deepSpaceTelescopeBuilt, refineryBuilt,
+      transitSatelliteLaunchedAt: telescopeLaunchedAt ?? (player.deepSpaceTelescopeBuilt ? Date.now() : null),
+      deepSpaceTelescopeLaunchedAt: telescopeLaunchedAt ?? (player.deepSpaceTelescopeBuilt ? Date.now() : null),
       earthBiome: sanitizeEarthBiome(player.earthBiome),
     },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },

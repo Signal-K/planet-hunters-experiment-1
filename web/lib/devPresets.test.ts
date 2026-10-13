@@ -15,7 +15,7 @@ describe('DEV_GROUPS', () => {
     expect(labels).toContain('Transport')
     expect(labels).toContain('Storage Silo')
     // Post-onboarding story mission (telescope launch) — replayable once
-    // free ops + the transit telescope are built.
+    // free ops + the space telescope are built.
     expect(labels).toContain('First Satellite Launch')
     expect(labels).toContain('Recent UI')
     expect(labels).toHaveLength(5)

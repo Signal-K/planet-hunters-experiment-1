@@ -73,6 +73,7 @@ public enum CloudPull {
         n.player.deepSpaceTelescopeLaunchedAt = earliest(n.player.deepSpaceTelescopeLaunchedAt, local.player.deepSpaceTelescopeLaunchedAt)
         n.player.saturnImagerLaunchedAt = earliest(n.player.saturnImagerLaunchedAt, local.player.saturnImagerLaunchedAt)
         n.player.deepSpaceTelescopeBuilt = n.player.deepSpaceTelescopeBuilt || local.player.deepSpaceTelescopeBuilt
+        Player.mergeTelescope(&n.player)
         return n
     }
 }

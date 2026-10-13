@@ -859,7 +859,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     captureGameEvent('tess_classification_submitted', { subject_id: subjectId, verdict })
   }, [addToast, setState, stateRef])
 
-  // Deep Space Telescope's asteroid-discovery classification (STS-622) — a
+  // Space Telescope's asteroid-discovery classification (STS-622) — a
   // passive digest, so unlike submitTessClassification there's no
   // ranges/discoveredTarget/satelliteTargetId to thread through, just the
   // verdict record itself.
@@ -1257,8 +1257,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           transitSatelliteLevel: mission?.payload?.instrumentId === 'transit-telescope'
             ? Math.max(1, s.player.transitSatelliteLevel ?? 1) + 1
             : s.player.transitSatelliteLevel,
-          deepSpaceTelescopeBuilt: mission?.payload?.instrumentId === 'deep-space-telescope' || s.player.deepSpaceTelescopeBuilt,
-          deepSpaceTelescopeLaunchedAt: mission?.payload?.instrumentId === 'deep-space-telescope'
+          // One telescope: launching it brings the transit and asteroid feeds online together.
+          deepSpaceTelescopeBuilt: mission?.payload?.instrumentId === 'transit-telescope' || s.player.deepSpaceTelescopeBuilt,
+          deepSpaceTelescopeLaunchedAt: mission?.payload?.instrumentId === 'transit-telescope'
             ? (s.player.deepSpaceTelescopeLaunchedAt ?? Date.now())
             : s.player.deepSpaceTelescopeLaunchedAt,
           saturnImagerLaunchedAt: mission?.payload?.instrumentId === 'saturn-imager'

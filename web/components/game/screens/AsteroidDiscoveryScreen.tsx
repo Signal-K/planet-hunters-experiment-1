@@ -85,7 +85,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
         eyebrow="LOCKED"
-        title="Deep Space Telescope"
+        title="Space Telescope"
         onBack={onBack}
         status="LOCKED"
         messageTitle="Free Operations Required"
@@ -100,11 +100,11 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
         eyebrow="TELESCOPE REQUIRED"
-        title="Deep Space Telescope"
+        title="Space Telescope"
         onBack={onBack}
         status="NO TELESCOPE"
-        messageTitle="Launch Deep Space Telescope"
-        messageBody="Deploy the Deep Space Telescope from the Launchpad to start receiving NEOCP asteroid candidates."
+        messageTitle="Launch Space Telescope"
+        messageBody="Deploy the Space Telescope from the Launchpad to start receiving NEOCP asteroid candidates."
         answers={<PrimaryBtn testId="launch-deep-space-telescope-btn" onClick={onLaunchTelescope}>PREPARE LAUNCH</PrimaryBtn>}
       />
     )
@@ -116,7 +116,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
         eyebrow="DAILY DOWNLINK"
-        title="Deep Space Telescope"
+        title="Space Telescope"
         onBack={onBack}
         status="ACQUIRING"
         messageTitle="Acquiring Signal"
@@ -132,7 +132,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
         eyebrow="DAILY DOWNLINK"
-        title="Deep Space Telescope"
+        title="Space Telescope"
         onBack={onBack}
         status={loadFailed ? 'FEED OFFLINE' : 'EMPTY FEED'}
         messageTitle={misconfigured ? 'Feed Not Configured' : loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Candidate'}

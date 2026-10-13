@@ -156,7 +156,7 @@ describe('InstrumentFeedSystem', () => {
       expect(tomorrow.map(candidate => candidate.id)).not.toEqual(today.map(candidate => candidate.id))
     })
 
-    it('is an independent instrument from the transit telescope digest', () => {
+    it('is an independent instrument from the space telescope digest', () => {
       const tessCandidates = ['a', 'b', 'c', 'd'].map(candidate)
       const mixedPlayer = player({ transitSatelliteLevel: 2, deepSpaceTelescopeLevel: 1 })
 
@@ -164,7 +164,7 @@ describe('InstrumentFeedSystem', () => {
       expect(deepSpaceInstrumentDigest(asteroids, mixedPlayer, '2026-07-30')).toHaveLength(1)
     })
 
-    it('persists its own notification marker, independent of the transit telescope marker (KES-128)', () => {
+    it('persists its own notification marker, independent of the space telescope marker (KES-128)', () => {
       const initial = player()
       const marked = markInstrumentDigestNotified(initial, 'deep-space-telescope', '2026-07-30')
       const duplicate = markInstrumentDigestNotified(marked, 'deep-space-telescope', '2026-07-30')

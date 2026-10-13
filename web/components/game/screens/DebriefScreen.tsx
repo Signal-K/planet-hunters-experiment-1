@@ -67,7 +67,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   // Mineral Vault; without one the haul can only be sold on return.
   const isFreeHaul = isFreeHaulMission(mission, cargo)
   const isEarlyMission = (missionsDone ?? 0) < FREE_OPS_START_MISSIONS_DONE
-  // The Transit Telescope is the payload, not the launch vehicle. It remains
+  // The Space Telescope is the payload, not the launch vehicle. It remains
   // in Earth orbit, so this completion must never use cargo-recovery imagery.
   const isOrbitalInstrumentDeployment = mission.payload?.type === 'satellite'
   // An ordinary rocket must remain visibly intact until the player authorises

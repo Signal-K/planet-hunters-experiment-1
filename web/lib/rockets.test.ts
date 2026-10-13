@@ -11,13 +11,13 @@ import {
 
 const telescopeLaunch: Mission = {
   id: 'story-transit-telescope-launch',
-  title: 'Launch Transit Telescope',
+  title: 'Launch Space Telescope',
   brief: 'Deploy your own TESS-class telescope into Earth orbit.',
   tag: 'STORY',
   difficulty: 'L1',
   locked: false,
   sequence: 4,
-  payload: { type: 'satellite', name: 'Transit Telescope', cargoCost: 0 },
+  payload: { type: 'satellite', name: 'Space Telescope', cargoCost: 0 },
   requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 1 },
   payout: { francs: 0, affinity: 0 },
 }

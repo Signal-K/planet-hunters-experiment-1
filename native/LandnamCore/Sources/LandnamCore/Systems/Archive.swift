@@ -213,10 +213,8 @@ public enum Archive {
                          rewards: ["Daily instrument feed for citizen-science classification"], missionId: mission)
         }
         return [
-            inst("transit", "Transit Telescope", "A TESS-class telescope in Earth orbit. Classify real light curves for exoplanet transits.",
-                 launched: p.transitSatelliteLaunchedAt != nil, feed: "Open the Control Station and classify a transit candidate.", mission: Instruments.transitMissionId),
-            inst("deep-space", "Deep Space Telescope", "A survey instrument that opens asteroid-discovery classification from the Minor Planet Center feed.",
-                 launched: p.deepSpaceTelescopeLaunchedAt != nil || p.deepSpaceTelescopeBuilt, feed: "Open the Control Station and review a new asteroid candidate.", mission: Instruments.deepSpaceMissionId),
+            inst("transit", "Space Telescope", "A TESS-class telescope in Earth orbit. Classify real light curves for exoplanet transits and review new asteroid candidates from the Minor Planet Center feed.",
+                 launched: p.transitSatelliteLaunchedAt != nil || p.deepSpaceTelescopeLaunchedAt != nil || p.deepSpaceTelescopeBuilt, feed: "Open the Control Station and classify a transit or asteroid candidate.", mission: Instruments.transitMissionId),
             inst("saturn", "Saturn Imager", "Downlinks archived Cassini frames for storm-cloud review.",
                  launched: p.saturnImagerLaunchedAt != nil, feed: "Open the Control Station and mark storm clouds in a frame.", mission: Instruments.saturnMissionId),
         ]
@@ -243,9 +241,9 @@ public enum Archive {
                 summary = "Classify a real Cassini frame of Saturn."
                 steps = ["Launch the Saturn Imager (Free Operations).", "Open the Control Station → Saturn Imager.", "Mark storm clouds and submit a verdict."]
             case .asteroidClassification:
-                reqs.append(req("Deep Space Telescope", (p.deepSpaceTelescopeLaunchedAt != nil || p.deepSpaceTelescopeBuilt) ? "Launched" : "Launch the Deep Space Telescope first", p.deepSpaceTelescopeLaunchedAt != nil || p.deepSpaceTelescopeBuilt))
+                reqs.append(req("Space Telescope", (p.deepSpaceTelescopeLaunchedAt != nil || p.deepSpaceTelescopeBuilt) ? "Launched" : "Launch the Space Telescope first", p.deepSpaceTelescopeLaunchedAt != nil || p.deepSpaceTelescopeBuilt))
                 summary = "Review a new asteroid candidate on the new-moon night."
-                steps = ["Launch the Deep Space Telescope (Free Operations).", "Open the Control Station → Deep Space Telescope.", "Classify a candidate and submit your verdict."]
+                steps = ["Launch the Space Telescope (Free Operations).", "Open the Control Station → Space Telescope.", "Classify a candidate and submit your verdict."]
             case .debrisMining:
                 summary = "Mine meteor-shower debris while the shower is active."
                 steps = ["Fly any mining contract during the window.", "In the field, collect the glowing debris chunks.", "The first chunk earns the badge."]

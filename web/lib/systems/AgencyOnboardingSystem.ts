@@ -136,7 +136,7 @@ export function freeOpsActivities(player: FreeOpsActivityPlayer): FreeOpsActivit
       label: 'Space telescope',
       body: telescopeUp
         ? 'Review new observations from your telescope in orbit.'
-        : 'Launch a transit telescope and classify real observation data.',
+        : 'Launch a space telescope and classify real observation data.',
       cta: telescopeUp ? 'Open control station' : 'Open launchpad',
       screen: telescopeUp ? 'instrument-hub' : 'launchpad',
     },

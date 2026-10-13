@@ -9,7 +9,6 @@ import {
 import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
 import { ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
 import {
-  DEEP_SPACE_TELESCOPE_MISSION_ID,
   SATURN_IMAGER_MISSION_ID,
   TRANSIT_TELESCOPE_MISSION_ID,
 } from '@/lib/runtimeCatalog'
@@ -55,14 +54,8 @@ export interface EventsBoard {
 const INSTRUMENTS: Array<{ id: string; title: string; detail: string; unlockAt: string }> = [
   {
     id: TRANSIT_TELESCOPE_MISSION_ID,
-    title: 'Launch Transit Telescope',
-    detail: 'Transit telescope online · daily instrument feed unlocked',
-    unlockAt: 'Reach Free Operations',
-  },
-  {
-    id: DEEP_SPACE_TELESCOPE_MISSION_ID,
-    title: 'Launch Deep Space Telescope',
-    detail: 'Deep Space Telescope online · asteroid discovery unlocked',
+    title: 'Launch Space Telescope',
+    detail: 'Space telescope online · daily instrument feed unlocked',
     unlockAt: 'Reach Free Operations',
   },
   {
@@ -80,10 +73,7 @@ function missionById(catalog: Catalog, id: string): Mission | undefined {
 }
 
 function instrumentDone(player: Player, id: string): boolean {
-  if (id === TRANSIT_TELESCOPE_MISSION_ID) return !!player.transitSatelliteLaunchedAt
-  if (id === DEEP_SPACE_TELESCOPE_MISSION_ID) {
-    return !!player.deepSpaceTelescopeLaunchedAt || !!player.deepSpaceTelescopeBuilt || (player.placed ?? []).includes('deep-space-telescope')
-  }
+  if (id === TRANSIT_TELESCOPE_MISSION_ID) return !!player.transitSatelliteLaunchedAt || !!player.deepSpaceTelescopeLaunchedAt || !!player.deepSpaceTelescopeBuilt
   if (id === SATURN_IMAGER_MISSION_ID) return !!player.saturnImagerLaunchedAt
   return false
 }

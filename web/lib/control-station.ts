@@ -19,7 +19,7 @@ import { WSW_EVENT_IDS, wswChip, wswEventIdsForInstrument, type WswChip } from '
  * Ground telescopes exist only once the player has built one (their structure id
  * is in `player.placed`). Until then the station shows a build prompt in their
  * place, not a standing row. A built ground telescope reads the same unresolved
- * NEOCP digest the Deep Space Telescope publishes after the player launches it
+ * NEOCP digest the Space Telescope publishes after the player launches it
  * (signal kind `deep-space`), and Open on its row forwards the first ready
  * signal to the existing asteroid-discovery screen. The digest stays gated on
  * that launch because the classify screen will not review candidates before
@@ -127,7 +127,7 @@ export const CONTROL_STATION_EQUIPMENT: readonly StationEquipment[] = [
   },
   {
     id: 'transit-telescope',
-    name: 'Transit Telescope',
+    name: 'Space Telescope',
     locationId: 'earth-orbit',
     projectIds: ['exoplanet-hunters'],
     presence: 'transitSatelliteLaunchedAt',
@@ -139,7 +139,7 @@ export const CONTROL_STATION_EQUIPMENT: readonly StationEquipment[] = [
   },
   {
     id: 'deep-space-telescope',
-    name: 'Deep Space Telescope',
+    name: 'Space Telescope',
     locationId: 'earth-orbit',
     projectIds: ['asteroid-discovery'],
     presence: 'deepSpaceTelescopeBuilt',

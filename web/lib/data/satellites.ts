@@ -7,7 +7,7 @@
 // actually flies it.
 //
 // Do not add cost/stats fields here beyond what the mission payload already
-// defines (`cargoCost: 0` in runtimeCatalog.ts) — the Transit Telescope has no
+// defines (`cargoCost: 0` in runtimeCatalog.ts) — the Space Telescope has no
 // Francs cost and no cargo/orbit/drill stats; it is not a rocket.
 
 export interface SatelliteModel {
@@ -20,12 +20,12 @@ export interface SatelliteModel {
 export const SATELLITE_MODELS: SatelliteModel[] = [
   {
     id: 'transit-telescope',
-    name: 'Transit Telescope',
+    name: 'Space Telescope',
     unlockHint: 'Reach Free Operations',
   },
   {
     id: 'deep-space-telescope',
-    name: 'Deep Space Telescope',
+    name: 'Space Telescope',
     unlockHint: 'Reach Free Operations',
   },
   {

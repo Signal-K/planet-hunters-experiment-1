@@ -1,6 +1,6 @@
 import Foundation
 
-/// Transit Telescope feed (mirrors web lib/data/tess-candidates.ts): a light curve the player
+/// Space Telescope feed (mirrors web lib/data/tess-candidates.ts): a light curve the player
 /// marks dips on, then calls Confirm Transit / Mark Noise / Skip.
 public enum TessVerdict: String, Codable, CaseIterable, Sendable { case planet, notPlanet = "not_planet", unsure }
 

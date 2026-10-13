@@ -13,8 +13,8 @@ type MissionShape = Pick<Mission, 'payload' | 'construction'>
 
 const mining: MissionShape = {}
 const saturn: MissionShape = { payload: { type: 'satellite', name: 'Saturn satellite', cargoCost: 1, instrumentId: 'saturn-imager' } }
-const deepSpace: MissionShape = { payload: { type: 'deep-space-survey', name: 'Deep Space Telescope', cargoCost: 1, instrumentId: 'deep-space-telescope' } }
-const transit: MissionShape = { payload: { type: 'satellite', name: 'Transit Telescope', cargoCost: 1, instrumentId: 'transit-telescope' } }
+const deepSpace: MissionShape = { payload: { type: 'deep-space-survey', name: 'Space Telescope', cargoCost: 1, instrumentId: 'deep-space-telescope' } }
+const transit: MissionShape = { payload: { type: 'satellite', name: 'Space Telescope', cargoCost: 1, instrumentId: 'transit-telescope' } }
 const rover: MissionShape = { payload: { type: 'rover', name: 'Rover', cargoCost: 1 } }
 
 const oct8 = Date.UTC(2026, 9, 8, 12)

@@ -66,10 +66,10 @@ describe('own-program missions', () => {
   const telescope: Mission = {
     ...base,
     id: 'story-transit-telescope-launch',
-    title: 'Launch Transit Telescope',
+    title: 'Launch Space Telescope',
     client: OWN_PROGRAM_CLIENT_ID,
     tag: 'STORY',
-    payload: { type: 'satellite', name: 'Transit Telescope', cargoCost: 0 },
+    payload: { type: 'satellite', name: 'Space Telescope', cargoCost: 0 },
   }
 
   it('treats a satellite launch as the player\'s own operation', () => {
@@ -136,7 +136,7 @@ describe('partitionByOwner', () => {
   }
   const satellite: Mission = {
     ...base, id: 'sat',
-    payload: { type: 'satellite', name: 'Transit Telescope', cargoCost: 1 },
+    payload: { type: 'satellite', name: 'Space Telescope', cargoCost: 1 },
   }
 
   it('splits client work from the player’s own program', () => {

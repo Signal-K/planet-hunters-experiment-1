@@ -117,7 +117,7 @@ public final class GameStore {
         onClassified?(.saturn(frame: candidateId, verdict: verdict))
     }
 
-    /// Transit Telescope: one verdict per subject with the dip marks that justified it.
+    /// Space Telescope: one verdict per subject with the dip marks that justified it.
     public func classifyTess(_ subjectId: String, verdict: TessVerdict, ranges: [TransitRange], candidate: TessCandidate? = nil) {
         guard state.player.tessClassifications[subjectId] == nil else { return }
         let marks = Tess.normalized(ranges)
@@ -141,7 +141,7 @@ public final class GameStore {
         if next != state { apply(next) }
     }
 
-    /// Deep Space Telescope: one NEOCP verdict per candidate.
+    /// Space Telescope: one NEOCP verdict per candidate.
     public func classifyAsteroid(_ candidateId: String, verdict: AsteroidVerdict) {
         guard state.player.asteroidClassifications[candidateId] == nil else { return }
         var n = state

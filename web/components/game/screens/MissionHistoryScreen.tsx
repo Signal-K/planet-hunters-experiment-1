@@ -60,11 +60,11 @@ export default function MissionHistoryScreen({ records, missions = [], player, o
               {open && (
                 <div className={styles.debrief} data-testid="mission-log-debrief">
                   <div className={styles.eyebrow}>DEBRIEF</div>
-                  <p>{record.kind === 'transit' ? 'You classified a light curve from your Transit Telescope.' : mission ? canonicalSaturnLabel(mission.brief) : 'This operation was completed and filed to your record.'}</p>
+                  <p>{record.kind === 'transit' ? 'You classified a light curve from your Space Telescope.' : mission ? canonicalSaturnLabel(mission.brief) : 'This operation was completed and filed to your record.'}</p>
                   <dl>
                     <div><dt>Result</dt><dd>Completed {formatCompletedAt(record.completedAt)}</dd></div>
                     {record.targetName && <div><dt>{record.kind === 'transit' ? 'Verdict' : 'Target'}</dt><dd>{record.targetName}</dd></div>}
-                    <div><dt>Type</dt><dd>{record.kind === 'transit' ? 'Transit Telescope classification' : record.kind === 'program' ? 'Own program, no client' : record.clientName ?? 'Client operation'}</dd></div>
+                    <div><dt>Type</dt><dd>{record.kind === 'transit' ? 'Space Telescope classification' : record.kind === 'program' ? 'Own program, no client' : record.clientName ?? 'Client operation'}</dd></div>
                     {mission && record.kind !== 'program' && mission.payout.francs > 0 && <div><dt>Payout</dt><dd>{formatCurrency(mission.payout.francs)}</dd></div>}
                     {mission?.programReward && <div><dt>Outcome</dt><dd>{canonicalSaturnLabel(mission.programReward.outcome)}</dd></div>}
                   </dl>

@@ -197,9 +197,9 @@ public enum Loop {
             case "transit-telescope":
                 n.player.transitSatelliteLaunchedAt = s.player.transitSatelliteLaunchedAt ?? now
                 n.player.transitSatelliteLevel = max(1, s.player.transitSatelliteLevel ?? 1)
-            case "deep-space-telescope":
+                // One telescope: the asteroid feed comes online with the transit feed.
                 n.player.deepSpaceTelescopeBuilt = true
-                n.player.deepSpaceTelescopeLaunchedAt = s.player.deepSpaceTelescopeLaunchedAt ?? now
+                n.player.deepSpaceTelescopeLaunchedAt = s.player.deepSpaceTelescopeLaunchedAt ?? n.player.transitSatelliteLaunchedAt
             case "saturn-imager":
                 n.player.saturnImagerLaunchedAt = s.player.saturnImagerLaunchedAt ?? now
             default: break

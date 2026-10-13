@@ -98,8 +98,9 @@ export default function MissionOperationRoutes({
                 transitSatelliteLevel: game.mission?.payload?.instrumentId === 'transit-telescope'
                   ? Math.max(1, player.transitSatelliteLevel ?? 1)
                   : player.transitSatelliteLevel,
-                deepSpaceTelescopeBuilt: game.mission?.payload?.instrumentId === 'deep-space-telescope' || player.deepSpaceTelescopeBuilt,
-                deepSpaceTelescopeLaunchedAt: game.mission?.payload?.instrumentId === 'deep-space-telescope'
+                // One telescope: launching it brings the transit and asteroid feeds online together.
+                deepSpaceTelescopeBuilt: game.mission?.payload?.instrumentId === 'transit-telescope' || player.deepSpaceTelescopeBuilt,
+                deepSpaceTelescopeLaunchedAt: game.mission?.payload?.instrumentId === 'transit-telescope'
                   ? (player.deepSpaceTelescopeLaunchedAt ?? Date.now())
                   : player.deepSpaceTelescopeLaunchedAt,
                 saturnImagerLaunchedAt: game.mission?.payload?.instrumentId === 'saturn-imager'

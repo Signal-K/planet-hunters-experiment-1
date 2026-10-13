@@ -364,7 +364,7 @@ export interface Player {
   // an assumed migration.
   transitSatelliteLevel?: number
   transitSatelliteLaunchedAt?: number | null
-  // Deep Space Telescope: a separately launched orbital instrument which
+  // Space Telescope: a separately launched orbital instrument which
   // gates the asteroid-discovery (NEOCP) instrument feed.
   deepSpaceTelescopeBuilt?: boolean
   deepSpaceTelescopeLevel?: number
@@ -375,7 +375,7 @@ export interface Player {
   tessClassifications?: Record<string, TessClassification>
   // One-shot late-game narrative beat after a high-level TESS confirmation.
   artifactNarrativeSeenAt?: number | null
-  // Deep Space Telescope's asteroid-discovery (NEOCP) classifications
+  // Space Telescope's asteroid-discovery (NEOCP) classifications
   // (STS-622) — same shape/role as tessClassifications above, keyed by
   // asteroid_candidates record id, but a separate map since it's a
   // genuinely second instrument, not a variant of the transit feed.

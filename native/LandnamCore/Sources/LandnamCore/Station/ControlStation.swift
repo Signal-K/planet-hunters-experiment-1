@@ -47,8 +47,8 @@ public enum ControlStation {
     ]
     static let equipment = [
         Equipment(id: "ground-telescopes", name: "Ground telescopes", locationId: "earth-surface", projectIds: ["asteroid-discovery"], presence: nil, structureId: groundTelescopeStructureId, feed: .deepSpace, readyLabel: "Observing", x: 148, y: 172),
-        Equipment(id: "transit-telescope", name: "Transit Telescope", locationId: "earth-orbit", projectIds: ["exoplanet-hunters"], presence: .transit, structureId: nil, feed: .transit, readyLabel: "Observing", x: 188, y: 68),
-        Equipment(id: "deep-space-telescope", name: "Deep Space Telescope", locationId: "earth-orbit", projectIds: ["asteroid-discovery"], presence: .deepSpace, structureId: nil, feed: .deepSpace, readyLabel: "Observing", x: 252, y: 178),
+        Equipment(id: "transit-telescope", name: "Space Telescope", locationId: "earth-orbit", projectIds: ["exoplanet-hunters"], presence: .transit, structureId: nil, feed: .transit, readyLabel: "Observing", x: 188, y: 68),
+        Equipment(id: "deep-space-telescope", name: "Space Telescope", locationId: "earth-orbit", projectIds: ["asteroid-discovery"], presence: .deepSpace, structureId: nil, feed: .deepSpace, readyLabel: "Observing", x: 252, y: 178),
         Equipment(id: "saturn-imager", name: "Saturn satellite", locationId: "saturn", projectIds: ["saturn-storms"], presence: .saturn, structureId: nil, feed: .saturn, readyLabel: "Frame ready", x: 608, y: 248),
     ]
 

@@ -4,8 +4,8 @@ import { DEFAULT_STATE } from '@/lib/game-state'
 import type { Player } from '@/lib/game-types'
 import { RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/missions'
 import {
-  DEEP_SPACE_TELESCOPE_MISSION_ID,
   TRANSIT_TELESCOPE_MISSION_ID,
+  SATURN_IMAGER_MISSION_ID,
   buildRuntimeCatalog,
 } from '@/lib/runtimeCatalog'
 import { contractWswMark, eventsBoard, programChain } from './mission-board-view'
@@ -28,7 +28,7 @@ describe('mission board view', () => {
     const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player: current })
     const steps = programChain(catalog, current, NOW)
     expect(steps.find(step => step.id === TRANSIT_TELESCOPE_MISSION_ID)?.state).toBe('done')
-    expect(steps.find(step => step.id === DEEP_SPACE_TELESCOPE_MISSION_ID)?.state).toBe('current')
+    expect(steps.find(step => step.id === SATURN_IMAGER_MISSION_ID)?.state).toBe('current')
     expect(steps.find(step => step.kind === 'mining')?.state).toBe('available')
     expect(steps.filter(step => step.state === 'current')).toHaveLength(1)
   })

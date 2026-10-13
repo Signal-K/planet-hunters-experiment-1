@@ -122,7 +122,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         testId="tess-discovery-standby"
         sceneClassName="ln-scene-tess-discovery"
         eyebrow="LOCKED"
-        title="Transit Telescope"
+        title="Space Telescope"
         onBack={onBack}
         status="LOCKED"
         messageTitle="Free Operations Required"
@@ -137,10 +137,10 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         testId="tess-discovery-standby"
         sceneClassName="ln-scene-tess-discovery"
         eyebrow="TELESCOPE"
-        title="Transit Telescope"
+        title="Space Telescope"
         onBack={onBack}
         status="NO TELESCOPE"
-        messageTitle="Launch Transit Telescope"
+        messageTitle="Launch Space Telescope"
         messageBody="Deploy your own telescope from the Program tab. Its daily data will downlink here after the flight."
         answers={<PrimaryBtn testId="open-transit-telescope-program-btn" onClick={onOpenProgram}>Open Program</PrimaryBtn>}
       />
@@ -153,7 +153,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         testId="tess-discovery-standby"
         sceneClassName="ln-scene-tess-discovery"
         eyebrow="DAILY DOWNLINK"
-        title="Transit Telescope"
+        title="Space Telescope"
         onBack={onBack}
         status="ACQUIRING"
         messageTitle="Acquiring Signal"
@@ -169,7 +169,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         testId="tess-discovery-standby"
         sceneClassName="ln-scene-tess-discovery"
         eyebrow="DAILY DOWNLINK"
-        title="Transit Telescope"
+        title="Space Telescope"
         onBack={onBack}
         status={loadFailed ? 'FEED OFFLINE' : 'EMPTY FEED'}
         messageTitle={misconfigured ? 'Feed Not Configured' : loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Anomaly'}

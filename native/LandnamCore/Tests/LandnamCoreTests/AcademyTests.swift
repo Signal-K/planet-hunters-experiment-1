@@ -188,17 +188,29 @@ import Foundation
         return GameStore(state: gs, clock: { 1_760_000_000_000 })
     }
 
-    @Test func instrumentLaunchesAreNotLockedForMissingTargets() {
+    @Test func telescopeLaunchIsNotLockedForMissingTargets() {
         let st = freeOps()
         let board = MissionBoard.programBoard(catalog: st.catalog, player: st.player, now: 0)
-        let dst = board.first { $0.mission.id == Instruments.deepSpaceMissionId }
-        #expect(dst?.unlocked == true)
-        #expect((dst?.feasibleTargets ?? 0) > 0)
+        let t = board.first { $0.mission.id == Instruments.transitMissionId }
+        #expect(t?.unlocked == true)
+        #expect((t?.feasibleTargets ?? 0) > 0)
+        #expect(st.catalog.mission(Instruments.deepSpaceMissionId) == nil)
+    }
+
+    @Test func oldSaveWithEitherTelescopeFlagShowsOneTelescopeOnline() throws {
+        var p = Player(); p.freeOperations = true; p.transitSatelliteLaunchedAt = 1_758_000_000_000
+        let q = try JSONDecoder().decode(Player.self, from: JSONEncoder().encode(p))
+        #expect(q.deepSpaceTelescopeBuilt && q.deepSpaceTelescopeLaunchedAt != nil)
+        var d = Player(); d.deepSpaceTelescopeBuilt = true
+        let r = try JSONDecoder().decode(Player.self, from: JSONEncoder().encode(d))
+        #expect(r.transitSatelliteLaunchedAt != nil)
+        let board = MissionBoard.programBoard(catalog: Instruments.runtime(Catalog(), player: q, missionId: nil, targetId: nil), player: q, now: 0)
+        #expect(board.first { $0.mission.id == Instruments.transitMissionId } == nil)
     }
 
     @Test func offersTheThreeInstrumentLaunchesOnlyInFreeOps() {
         let on = freeOps().catalog
-        for id in [Instruments.transitMissionId, Instruments.deepSpaceMissionId, Instruments.saturnMissionId] { #expect(on.mission(id) != nil) }
+        for id in [Instruments.transitMissionId, Instruments.saturnMissionId] { #expect(on.mission(id) != nil) }
         #expect(GameStore().catalog.mission(Instruments.transitMissionId) == nil)
     }
 

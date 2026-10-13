@@ -48,7 +48,7 @@ export function transitInstrumentLevel(player: InstrumentFeedPlayer): number {
 }
 
 /**
- * The authoritative UTC-daily digest for the player's transit telescope.
+ * The authoritative UTC-daily digest for the player's space telescope.
  * Candidate selection remains deterministic and level-scaled; this wrapper
  * keeps the Hub badge, feed screen, and notification pipeline in agreement.
  */
@@ -87,7 +87,7 @@ export function deepSpaceInstrumentLevel(player: DeepSpaceInstrumentFeedPlayer):
 }
 
 /**
- * The Deep Space Telescope's daily asteroid-discovery (NEOCP) digest
+ * The Space Telescope's daily asteroid-discovery (NEOCP) digest
  * (STS-622) — a second, independent instrument feed alongside the transit
  * telescope above. No pointing-target concept: unlike the transit satellite,
  * the telescope digest is a passive downlink, not player-aimed.

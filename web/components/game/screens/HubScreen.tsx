@@ -158,8 +158,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   const HIT_H: Record<string, number> = { launchpad: 260, 'surface-silo': 70, refinery: 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
   // Post-tutorial Hub prominence pass (STS-631): telescope/satellite
   // buildings recede visually while they're unlocked but still in their
-  // early, not-yet-actively-producing state — Transit Telescope
-  // before the transit satellite launches, Deep Space Telescope before it's
+  // early, not-yet-actively-producing state — Space Telescope
+  // before the transit satellite launches, Space Telescope before it's
   // built — so the Launchpad keeps reading as the base's primary structure.
   const isDimmedBuildingKind = (kind: string): boolean => {
     if (kind === 'deep-space-telescope') return !player.deepSpaceTelescopeBuilt
@@ -189,7 +189,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   // The launchpad speaks only while the Base has no live run. Progression is
   // now exposed through contextual buildings and the persistent chrome rather
   // than a generic card laid over the landscape.
-  // After the first run the launchpad offers the transit telescope, the one
+  // After the first run the launchpad offers the space telescope, the one
   // prompt that used to live on a Home card. It is dismissible and goes away
   // once the satellite has launched.
   const offersTransitTelescope = !onboardingActive && !player.activeMission && player.missionsDone > 0
@@ -197,7 +197,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     && !isHubPromptDismissed(player, HUB_PROMPT_TRANSIT_TELESCOPE)
   const launchpadCallout: BuildingCallout | undefined = offersTransitTelescope
     ? {
-      title: 'Launch a transit telescope',
+      title: 'Launch a space telescope',
       body: 'Your program can put a telescope in orbit. It sends back planet candidates to review.',
       cta: 'Open the tower',
       onCta: () => onOpenScene('launchpad'),

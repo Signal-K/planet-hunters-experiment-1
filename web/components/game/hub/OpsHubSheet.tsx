@@ -84,7 +84,7 @@ export default function OpsHubSheet({
   }
 
   if (player.transitSatelliteLaunchedAt) {
-    rows.push({ id: 'orbit-tess', location: 'Orbit', name: 'Transit telescope', level: 1, state: player.activeScan ? 'working' : 'idle', detail: 'Owned instrument', open: () => go('instrument-hub') })
+    rows.push({ id: 'orbit-tess', location: 'Orbit', name: 'Space telescope', level: 1, state: player.activeScan ? 'working' : 'idle', detail: 'Owned instrument', open: () => go('instrument-hub') })
   }
   if (player.deepSpaceTelescopeLaunchedAt || player.deepSpaceTelescopeBuilt) {
     rows.push({ id: 'orbit-deep', location: 'Orbit', name: 'Deep space telescope', level: 1, state: downlinkCount > 0 ? 'working' : 'idle', detail: 'Owned instrument', open: () => go('instrument-hub') })

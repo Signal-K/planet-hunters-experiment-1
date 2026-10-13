@@ -142,7 +142,7 @@ struct MissionHistoryScreen: View {
 
     private func debrief(_ r: MissionLogEntry, mission: Mission?) -> some View {
         let day = Self.date(r.completedAt)
-        let type = r.isTransit ? "Transit Telescope classification" : r.isProgram ? "Own program, no client" : r.clientName ?? "Client operation"
+        let type = r.isTransit ? "Space Telescope classification" : r.isProgram ? "Own program, no client" : r.clientName ?? "Client operation"
         func row(_ k: String, _ v: String) -> some View {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 label(k, color: Light.muted)
@@ -153,7 +153,7 @@ struct MissionHistoryScreen: View {
         return VStack(alignment: .leading, spacing: 8) {
             Rectangle().fill(Light.hairline).frame(height: 1)
             label("Debrief", color: Light.cyan)
-            Text(r.isTransit ? "You classified a light curve from your Transit Telescope." : mission?.brief ?? "This operation was completed and filed to your record.")
+            Text(r.isTransit ? "You classified a light curve from your Space Telescope." : mission?.brief ?? "This operation was completed and filed to your record.")
                 .font(AppFont.body(14, "Regular")).foregroundStyle(Light.dim).fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
             VStack(spacing: 6) {

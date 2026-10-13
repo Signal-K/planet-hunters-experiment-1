@@ -225,7 +225,7 @@ describe('game state hydration normalization', () => {
     expect(normalized.screen).toBe('build')
   })
 
-  it('preserves active transit telescope mission context on hydration', () => {
+  it('preserves active space telescope mission context on hydration', () => {
     const normalized = normalizeAndRepair({
       screen: 'debrief',
       missionId: 'story-transit-telescope-launch',

@@ -344,7 +344,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                       <StructureIcon kind={c.id} size={20} />
                     </span>
                     <div style={{ minWidth: 0 }}>
-                      {/* Names like "Deep Space Telescope" / "Astronaut Academy" got
+                      {/* Names like "Space Telescope" / "Astronaut Academy" got
                           truncated to "Deep Space ..." under a fixed 120px max-width
                           + nowrap ellipsis. Wrapping to 2 lines instead of eliding
                           reads the full name at any card width, current or future. */}

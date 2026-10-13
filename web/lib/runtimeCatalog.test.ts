@@ -28,7 +28,7 @@ describe('buildRuntimeCatalog', () => {
     expect(mission?.requires.minerals).toEqual({ aluminium: 11, copper: 8 })
     expect(mission?.requires.cargo_min).toBe(19)
   })
-  it('adds the transit telescope launch mission before the satellite is launched', () => {
+  it('adds the space telescope launch mission before the satellite is launched', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
       freeOperations: true,
@@ -46,7 +46,7 @@ describe('buildRuntimeCatalog', () => {
     expect(catalog.clients['mission-control']).toBeUndefined()
   })
 
-  it('keeps the active transit telescope target in the catalog during route repair', () => {
+  it('keeps the active space telescope target in the catalog during route repair', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
       freeOperations: true,
@@ -62,42 +62,16 @@ describe('buildRuntimeCatalog', () => {
     expect(activeTelescopeMission).toMatchObject({ programReward: expect.any(Object) })
   })
 
-  it('adds the Deep Space Telescope deployment as a Free Operations instrument launch', () => {
-    const player = {
-      ...DEFAULT_STATE.player,
-      freeOperations: true,
-    }
-    const catalog = buildRuntimeCatalog({
-      catalog: STATIC_CATALOG,
-      freeOperations: true,
-      missionsDone: 4,
-      player,
-    })
+  it('has no separate deep space telescope launch: one telescope covers transits and asteroids', () => {
+    const player = { ...DEFAULT_STATE.player, freeOperations: true }
+    const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 4, player })
 
-    expect(catalog.targets.some(target => target.id === DEEP_SPACE_TELESCOPE_TARGET_ID)).toBe(true)
-    const deploymentMission = catalog.missions.find(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)
-    expect(deploymentMission).not.toHaveProperty('client')
-    expect(deploymentMission).toMatchObject({
-      tag: 'STORY',
-      payload: { type: 'satellite', instrumentId: 'deep-space-telescope' },
-      payout: { francs: 0, affinity: 0 },
-      programReward: expect.objectContaining({ outcome: expect.stringContaining('online') }),
-    })
+    expect(catalog.targets.some(target => target.id === DEEP_SPACE_TELESCOPE_TARGET_ID)).toBe(false)
+    expect(catalog.missions.some(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)).toBe(false)
+    expect(catalog.missions.some(mission => mission.id === TRANSIT_TELESCOPE_MISSION_ID)).toBe(true)
   })
 
-  it('offers the Deep Space Telescope launch without an existing telescope or client level', () => {
-    const player = { ...DEFAULT_STATE.player, freeOperations: true, transitSatelliteLevel: 1, clientMissions: {} }
-    const catalog = buildRuntimeCatalog({
-      catalog: STATIC_CATALOG,
-      freeOperations: true,
-      missionsDone: 4,
-      player,
-    })
-
-    expect(catalog.missions.some(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)).toBe(true)
-  })
-
-  it('stops offering the Deep Space Telescope mission once launched or already owned in a legacy save', () => {
+  it('stops offering the Space Telescope mission once launched or already owned in a legacy save', () => {
     const completedPlayer = {
       ...DEFAULT_STATE.player,
       freeOperations: true,

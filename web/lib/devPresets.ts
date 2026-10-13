@@ -38,7 +38,7 @@ const TRANSPORT_DONE: Record<number, boolean> = { ...EXTRACTION_DONE, 30: true, 
 const TRAINING_DONE: Record<number, boolean> = { ...TRANSPORT_DONE, 40: true, 41: true }
 
 // Story mission synthesized at runtime in game-context.tsx once free ops +
-// the transit telescope are unlocked — not in MISSIONS, so these
+// the space telescope are unlocked — not in MISSIONS, so these
 // presets set the ids directly rather than looking a mission up by sequence.
 const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -53,7 +53,7 @@ const POST_ONBOARDING_PLAYER: Player = {
   transitSatelliteLaunchedAt: null,
 }
 
-// Deep Space Telescope built alongside the transit satellite (STS-622) —
+// Space Telescope built alongside the transit satellite (STS-622) —
 // asteroid-discovery presets need both instruments' unlock gates cleared,
 // since deepSpaceTelescopeUnlocked() also checks transitSatelliteLevel.
 const ASTEROID_DISCOVERY_PLAYER: Player = {
@@ -146,7 +146,7 @@ export const DEV_GROUPS: DevGroup[] = [
     // decision doc for why these are two unrelated screens sharing a word.
     shots: [
       { key: 'telescope-hub',      label: 'Hub',      hint: 'Post-onboarding, Free Ops unlocked, telescope built, story mission on the board', stage: 'free-ops' },
-      { key: 'telescope-fab',      label: 'Fab',      hint: 'Transit telescope mission accepted, at fab — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'telescope-fab',      label: 'Fab',      hint: 'Space telescope mission accepted, at fab — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-transit',  label: 'Transit',  hint: 'Rocket physically en route to Earth orbit to deploy the telescope — dev "Skip ▸" button fast-forwards this. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-debrief',  label: 'Debrief',  hint: 'Telescope deployed, satellite launched — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-tess-discovery',  label: 'Console',  hint: 'Satellite already in orbit — point it (star map) and review the daily transit-photometry candidate. Stationary, no travel. Use the on-screen dev "+1 DAY" control to preview future days without waiting. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -160,13 +160,13 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
       { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-target-picker', label: 'Launch Review', hint: 'Launch review (the target picker is folded in) with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
-      { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Transit telescope classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Space telescope classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-rover-survey', label: 'Rover Survey', hint: 'Starter-rover live TakeOn field — survey before ship-laser extraction', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
       { key: 'ui-instrument-hub', label: 'Control Station', hint: 'One hub for telescopes and satellites. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Deep Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Market with a stocked stash to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -329,7 +329,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         const transitStartedAt = Date.now() - 30_000
       return {
         screen: 'transit',
-        player: { ...POST_ONBOARDING_PLAYER, activeMission: { id: TRANSIT_TELESCOPE_MISSION_ID, label: 'Launch Transit Telescope → Earth Orbit' }, transitStartedAt, arrivalAt: transitStartedAt + 90_000 },
+        player: { ...POST_ONBOARDING_PLAYER, activeMission: { id: TRANSIT_TELESCOPE_MISSION_ID, label: 'Launch Space Telescope → Earth Orbit' }, transitStartedAt, arrivalAt: transitStartedAt + 90_000 },
         tutorial: false, doneSteps: TRAINING_DONE,
         missionId: TRANSIT_TELESCOPE_MISSION_ID, targetId: TRANSIT_TELESCOPE_TARGET_ID,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
