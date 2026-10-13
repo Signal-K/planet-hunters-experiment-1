@@ -248,18 +248,15 @@ struct SettingsSheet: View {
     var body: some View {
         GeometryReader { geo in
             let landscape = geo.size.width > geo.size.height
-            let card = min(640, geo.size.width - (landscape ? 48 : 32))
+            let pageWidth = geo.size.width
             settingsBody(short: geo.size.height < 500)
-                .frame(width: card)
-                .frame(maxHeight: .infinity)
+                .frame(width: pageWidth, height: max(0, geo.size.height - (landscape ? 152 : 184)))
                 .background(SettingsStyle.bg)
-                .overlay(Rectangle().stroke(SettingsStyle.ink, lineWidth: 3))
-                .background(SettingsStyle.ink.offset(x: 6, y: 6))
                 .padding(.top, landscape ? 68 : 84)
                 .padding(.bottom, landscape ? 84 : 100)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onAppear { width = card }
-                .onChange(of: geo.size) { _, size in width = min(640, size.width - (size.width > size.height ? 48 : 32)) }
+                .onAppear { width = pageWidth }
+                .onChange(of: geo.size) { _, size in width = size.width }
         }
             .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
                 Button("Sign out", role: .destructive) { auth.signOut() }
@@ -272,7 +269,7 @@ struct SettingsSheet: View {
 
     private func settingsBody(short: Bool) -> some View {
         VStack(spacing: 0) {
-            SettingsSkyHeader().frame(height: short ? 64 : 88).clipped()
+            SettingsSkyHeader().frame(height: short ? 20 : 44).clipped()
                 .overlay(alignment: .bottom) { Rectangle().fill(SettingsStyle.ink).frame(height: 3) }
             HStack {
                 Text(showPatchNotes ? "PATCH NOTES" : "SETTINGS").font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SettingsStyle.ink)
@@ -289,13 +286,14 @@ struct SettingsSheet: View {
                 .overlay(alignment: .top) { Rectangle().fill(SettingsStyle.blue).frame(height: 4) }
                 .overlay(alignment: .bottom) { Rectangle().fill(SettingsStyle.ink).frame(height: 3) }
             ScrollView { if showPatchNotes { SettingsPatchNotes() } else { content } }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
     }
 
     private var content: some View {
-        let col = max(0, width - 48)
         let wideChoices = width >= 560
-        return VStack(spacing: SettingsStyle.gap) {
+        let columns = Array(repeating: GridItem(.flexible(minimum: 0), spacing: 24, alignment: .topLeading), count: width >= 720 ? 2 : 1)
+        return LazyVGrid(columns: columns, alignment: .center, spacing: SettingsStyle.gap) {
             #if os(iOS)
             displaySection(wide: wideChoices)
             #endif
@@ -325,10 +323,13 @@ struct SettingsSheet: View {
             .frame(maxWidth: .infinity)
             .accessibilityLabel("Patch notes")
         }
-        .frame(width: col)
-        .padding(.top, 28).padding(.bottom, 32)
+        .frame(maxWidth: 1280)
+        .padding(.horizontal, width >= 720 ? 40 : 16)
+        .padding(.top, shortPageInset).padding(.bottom, 32)
         .frame(maxWidth: .infinity)
     }
+
+    private var shortPageInset: CGFloat { width > 700 ? 24 : 16 }
 
     private var trainingSection: some View {
         VStack(spacing: 16) {

@@ -6,7 +6,7 @@ import { VIEWPORTS } from './helpers'
 for (const [name, viewport] of Object.entries(VIEWPORTS)) {
   test.describe(`settings overlay ${name}`, () => {
     test.use({ viewport })
-    test('cog preserves the scene and HUD; settings scroll and close', async ({ page }, info) => {
+    test('cog opens a full utility page; settings scroll and close', async ({ page }, info) => {
       const record = { id: 'e2euser0000001', collectionId: '_pb_users_auth_', collectionName: 'users', email: 'settings@example.test', verified: true }
       const b64 = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url')
       const token = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ id: record.id, exp: 4102444800 })}.sig`
@@ -33,10 +33,10 @@ for (const [name, viewport] of Object.entries(VIEWPORTS)) {
       })
       expect(geometry.top).toBeGreaterThanOrEqual(60)
       expect(geometry.bottom).toBeLessThanOrEqual(viewport.height - 76)
-      expect(geometry.left).toBeGreaterThanOrEqual(16)
-      expect(geometry.right).toBeLessThanOrEqual(viewport.width - 16)
-      expect(geometry.background).toBe('rgba(0, 0, 0, 0)')
-      expect(geometry.border).toBe('3px')
+      expect(geometry.left).toBe(0)
+      expect(geometry.right).toBe(viewport.width)
+      expect(geometry.background).not.toBe('rgba(0, 0, 0, 0)')
+      expect(geometry.border).toBe('0px')
       expect(geometry.scroll).toBe(false)
       expect(geometry.small).toBe(0)
       expect(geometry.targets).toBe(0)

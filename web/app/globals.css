@@ -4410,7 +4410,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   background: var(--set-ink);
   color: var(--set-card);
 }
-/* SSL-556: Settings is an instrument overlay; keep the live scene and HUD visible. */
+/* SSL-556: Settings owns a full utility page between the persistent HUD and dock. */
 .ops-settings {
   --set-bg: var(--ln-settings-paper);
   --set-card: var(--ln-blueprint-paper);
@@ -4422,31 +4422,32 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .ops-settings.ln-page-surface,
 .ops-settings.ln-page-surface--tray {
-  inset: 76px 0 92px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: transparent;
+  inset: 68px 0 84px;
+  display: block;
+  padding: 0;
+  background: var(--set-bg);
   overflow: hidden;
-  pointer-events: none;
+  pointer-events: auto;
 }
 .ops-settings.ln-page-surface .ops-settings__card {
-  width: min(640px, 100%);
-  min-height: 0;
-  max-height: 100% !important;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  max-height: none !important;
   margin: 0;
   padding: 0;
-  border: 3px solid var(--set-ink);
-  border-radius: 2px !important;
+  border: 0;
+  border-radius: 0 !important;
   background: var(--set-bg);
-  box-shadow: 6px 6px 0 var(--ln-blueprint-ink) !important;
-  overflow: auto;
+  box-shadow: none !important;
+  overflow: hidden;
   pointer-events: auto;
   color: var(--set-ink);
 }
 .ops-settings__sky {
-  height: 96px;
+  height: 44px;
   overflow: hidden;
   border-bottom: 3px solid var(--set-ink);
   background: var(--ln-blueprint-paper-2);
@@ -4458,16 +4459,29 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   height: 100%;
 }
 .ops-settings__card .ops-settings__head {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 1;
   margin: 0;
-  padding: 12px 20px;
+  padding: 8px clamp(16px, 4vw, 48px);
   border-bottom: 3px solid var(--set-ink);
   background: var(--ln-blueprint-paper);
   box-shadow: inset 0 4px 0 var(--ln-blueprint-blue);
 }
-.ops-settings__card .ops-settings__stack { padding: 28px 24px 32px; }
+.ops-settings__card .ops-settings__stack {
+  width: min(1280px, 100%);
+  height: 100%;
+  margin: 0 auto;
+  padding: 24px clamp(16px, 4vw, 48px) 32px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
+  align-items: start;
+  gap: 24px;
+  overflow-y: auto;
+}
+.ops-settings__card .ops-settings__stack > section { min-width: 0; }
+.ops-settings__card .ops-settings__stack > section:first-child { grid-column: 1 / -1; }
 .ops-settings__card .ops-settings__panel { box-shadow: 4px 4px 0 var(--ln-blueprint-paper-2); }
 .ops-settings .ln-set-segment > button { border-radius: 2px; }
 .ops-settings .ln-set-segment > button[aria-pressed="true"] {
@@ -4477,16 +4491,20 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .ops-settings__card .ops-settings__btn { color: var(--ln-blueprint-blue); }
 @media (max-height: 500px) {
-  .ops-settings.ln-page-surface { inset: 60px 0 76px; padding: 8px 24px; }
-  .ops-settings__sky { height: 24px; }
+  .ops-settings.ln-page-surface { inset: 60px 0 76px; }
+  .ops-settings__sky { height: 20px; }
   .ops-settings__card .ops-settings__head { padding: 0 12px; min-height: 44px; }
   .ops-settings__close { width: 44px; height: 44px; }
-  .ops-settings__card .ops-settings__stack { padding: 4px 16px 8px; gap: 8px; }
+  .ops-settings__card .ops-settings__stack { padding: 8px 16px 16px; gap: 12px; }
   .ops-settings__label { margin-bottom: 4px; }
   .ops-settings__panel { padding: 8px 12px; gap: 8px; }
   .ops-settings__field { gap: 8px; }
   .ops-settings__field--orient .ops-settings__sub { display: none; }
   .ops-settings__copy { gap: 4px; }
+}
+@media (max-width: 639px) {
+  .ops-settings__card .ops-settings__stack { grid-template-columns: minmax(0, 1fr); }
+  .ops-settings__card .ops-settings__stack > section:first-child { grid-column: auto; }
 }
 .ops-settings__head {
   display: flex;
