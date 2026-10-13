@@ -51,6 +51,7 @@
   --ln-cyan-border: rgba(112, 217, 234, 0.4);
   --ln-blueprint-bg: #eef3f8;
   --ln-blueprint-paper: #ffffff;
+  --ln-settings-paper: #f2eee4;
   --ln-blueprint-paper-2: #dfe9f3;
   --ln-blueprint-ink: #0f2436;
   --ln-blueprint-blue: #1f78c1;
@@ -4409,56 +4410,63 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   background: var(--set-ink);
   color: var(--set-card);
 }
+/* SSL-556: Settings is an instrument overlay; keep the live scene and HUD visible. */
 .ops-settings {
-  background: var(--set-bg);
+  --set-bg: var(--ln-settings-paper);
+  --set-card: var(--ln-blueprint-paper);
+  --set-ink: var(--ln-blueprint-ink);
+  --set-muted: var(--ln-blueprint-ink);
+  --set-radius: 2px;
   color: var(--set-ink);
   font-family: var(--ln-font-display), system-ui, sans-serif;
 }
 .ops-settings.ln-page-surface,
 .ops-settings.ln-page-surface--tray {
-  display: block;
-  padding: 0;
-  background: var(--set-bg);
-  overflow: auto;
-}
-.ops-settings__card {
-  width: 92%;
-  margin: 0 auto;
-  min-height: 100%;
-  max-height: none !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+  inset: 76px 0 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
   background: transparent;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ops-settings.ln-page-surface .ops-settings__card {
+  width: min(760px, 100%);
+  min-height: 0;
+  max-height: 100% !important;
+  margin: 0;
+  padding: 0;
+  border: 3px solid var(--set-ink);
+  border-radius: 2px !important;
+  background: var(--set-bg);
+  box-shadow: 6px 6px 0 var(--ln-blueprint-ink) !important;
+  overflow: auto;
+  pointer-events: auto;
   color: var(--set-ink);
-  padding: 12px 0 32px;
-  box-sizing: border-box;
 }
-@media (min-width: 1024px) {
-  .ops-settings__card {
-    width: min(720px, 92%);
-  }
+.ops-settings__card .ops-settings__head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 16px;
+  border-bottom: 3px solid var(--set-ink);
+  background: var(--ln-blueprint-paper-2);
+  box-shadow: inset 0 4px 0 var(--ln-blueprint-blue);
 }
-@media (min-width: 768px) {
-  .ops-settings.ln-page-surface--tray {
-    display: block;
-    align-items: stretch;
-    justify-content: flex-start;
-    padding: 0;
-    background: var(--set-bg);
-  }
-  .ops-settings.ln-page-surface--tray .ops-settings__card {
-    width: 92%;
-    min-height: 100%;
-    max-height: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-  }
+.ops-settings__card .ops-settings__stack { padding: 8px 16px 24px; }
+.ops-settings__card .ops-settings__panel { box-shadow: 3px 3px 0 var(--ln-blueprint-paper-2); }
+.ops-settings .ln-set-segment > button { border-radius: 2px; }
+.ops-settings .ln-set-segment > button[aria-pressed="true"] {
+  background: var(--ln-blueprint-blue);
+  color: var(--ln-blueprint-paper);
 }
-@media (min-width: 1024px) {
-  .ops-settings.ln-page-surface--tray .ops-settings__card {
-    width: min(720px, 92%);
-  }
+.ops-settings__card .ops-settings__btn { color: var(--ln-blueprint-blue); }
+.ops-settings__card .ops-settings__training .patch { min-height: 72px; padding-block: 8px; }
+.ops-settings__card .ops-settings__training .ops-settings__copy { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+@media (max-height: 500px) {
+  .ops-settings.ln-page-surface { inset: 60px 0 76px; padding: 8px 24px; }
 }
 .ops-settings__head {
   display: flex;

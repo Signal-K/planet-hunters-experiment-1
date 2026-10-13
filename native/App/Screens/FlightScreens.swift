@@ -60,7 +60,7 @@ struct TransitScreen: View {
             }
         }
         .background(Color(red: 0.05, green: 0.04, blue: 0.16).ignoresSafeArea())
-        .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
+        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
     }
 }
 
@@ -164,7 +164,7 @@ struct MiningScreen: View {
             }
         }
         .background(Theme.bg)
-        .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
+        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
         .confirmationDialog("Scrub mission?", isPresented: $confirmingScrub, titleVisibility: .visible) {
             Button("Scrub mission", role: .destructive) { store.abandonMission() }
             Button("Keep mining", role: .cancel) {}
