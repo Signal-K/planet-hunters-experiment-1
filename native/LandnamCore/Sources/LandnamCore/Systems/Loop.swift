@@ -70,7 +70,7 @@ public enum Loop {
 
     static func pickTargetState(_ s: GameState, id: String, catalog: Catalog) -> GameState {
         guard let mission = catalog.mission(s.missionId), let target = catalog.target(id) else { return s }
-        let feasible = Targets.feasible(for: mission, parts: catalog.parts, missionsDone: s.player.missionsDone,
+        let feasible = Targets.feasible(for: mission, targets: catalog.targets, parts: catalog.parts, missionsDone: s.player.missionsDone,
                                         launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"), skills: s.player.unlockedSkillNodes)
         guard feasible.contains(where: { $0.id == id }) else { return s }
         let suggested = catalog.parts.suggestBuild(mission: mission, target: target, missionsDone: s.player.missionsDone,
@@ -95,7 +95,7 @@ public enum Loop {
     public static func finishQuickSetup(_ s: GameState, catalog: Catalog) -> GameState {
         var n = s
         if n.screen == .targets, let mission = catalog.mission(n.missionId) {
-            let feasible = Targets.feasible(for: mission, parts: catalog.parts, missionsDone: n.player.missionsDone,
+            let feasible = Targets.feasible(for: mission, targets: catalog.targets, parts: catalog.parts, missionsDone: n.player.missionsDone,
                                             launchpadUpgraded: n.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(n.player, "launchpad"), skills: n.player.unlockedSkillNodes)
             guard let pick = feasible.first(where: { $0.recommended == true }) ?? feasible.first else { return n }
             n = pickTargetState(n, id: pick.id, catalog: catalog)

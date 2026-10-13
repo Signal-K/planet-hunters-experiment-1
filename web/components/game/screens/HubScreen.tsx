@@ -317,7 +317,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             time={skyGrade}
             season={skySeason}
             biome={player.earthBiome ?? 'mountains'}
-            siloBuilt={(player.placed ?? []).includes('surface-silo') || (player.subsurfaceBuilt ?? []).length > 0}
+            siloBuilt={!!player.subsurfaceExcavated || (player.subsurfaceBuilt ?? []).length > 0}
             onOpenSilo={() => setSubsurface(true)}
           />
 

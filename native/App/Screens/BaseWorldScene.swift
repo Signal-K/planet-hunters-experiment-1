@@ -9,6 +9,10 @@ struct BaseWorldScene: View {
     var plots: [String: Int]
     var levels: [String: Int]
     var oreFraction: Double = 0
+    /// The underground chamber exists only once the subsurface is excavated or has a module built; owning the surface silo alone is not enough.
+    var excavated: Bool = false
+    /// Extra storage tank (mineral vault) built below; the chamber starts with one tank.
+    var secondTank: Bool = false
     /// A rocket stands on the pad only while a build or mission is in progress; an idle pad is empty.
     var padOccupied: Bool = false
     var insets: EdgeInsets = EdgeInsets()
@@ -22,7 +26,8 @@ struct BaseWorldScene: View {
     @State private var dragVertical: Bool?
     @State private var pulse = false
 
-    private var siloBuilt: Bool { placed.contains("surface-silo") }
+    private var siloPlaced: Bool { placed.contains("surface-silo") }
+    private var siloBuilt: Bool { siloPlaced && excavated }
 
     var body: some View {
         GeometryReader { geo in
@@ -45,7 +50,7 @@ struct BaseWorldScene: View {
                 ZStack(alignment: .topLeading) {
                     groundStack(width: world.worldW, height: world.worldH, ground: ground)
                     props(width: w, world: world, ground: ground, portrait: portrait)
-                    BaseUnderground(world: world, built: siloBuilt, oreFraction: oreFraction, onBuild: onBuildSilo, onOpen: onShaft)
+                    BaseUnderground(world: world, built: siloBuilt, siloPlaced: siloPlaced, secondTank: secondTank, oreFraction: oreFraction, onBuild: onBuildSilo, onOpen: onShaft)
                         .offset(y: ground)
                         .allowsHitTesting(camera.underground)
                     shaftHead(world: world)

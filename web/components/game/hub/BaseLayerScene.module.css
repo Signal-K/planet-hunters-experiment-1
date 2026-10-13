@@ -275,7 +275,7 @@
 
 .shaftWrap {
   position: absolute;
-  left: 82%;
+  left: 68%;
   bottom: 8px;
   width: calc(44 * var(--px, 3px));
   height: calc(36 * var(--px, 3px));
@@ -352,7 +352,7 @@
 
 .shaftButton {
   position: absolute;
-  left: 82%;
+  left: 68%;
   bottom: 8px;
   width: max(44px, calc(44 * var(--px, 3px)));
   height: max(44px, calc(36 * var(--px, 3px)));
@@ -668,7 +668,7 @@
 
 @media (orientation: portrait) and (max-width: 800px) {
   .shaftWrap,
-  .shaftButton { left: 94%; bottom: 64px; }
+  .shaftButton { left: 80%; bottom: 64px; }
   .prop[data-prop='tree-a'] { left: 31%; height: 32px; }
   .prop[data-prop='tree-b'] { display: none; }
   .prop[data-prop='rock'] { left: 69%; height: 12px; display: block; }

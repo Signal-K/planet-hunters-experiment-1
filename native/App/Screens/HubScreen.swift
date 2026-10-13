@@ -46,6 +46,8 @@ struct HubScreen: View {
                 plots: store.player.placementPlots,
                 levels: store.player.buildingLevels,
                 oreFraction: oreFraction,
+                excavated: store.player.subsurfaceExcavated || !store.player.subsurfaceBuilt.isEmpty,
+                secondTank: store.player.subsurfaceBuilt.contains("mineral-vault"),
                 padOccupied: store.player.activeMission != nil,
                 insets: insets,
                 camera: camera,

@@ -6,6 +6,8 @@ import SwiftUI
 struct BaseUnderground: View {
     let world: BaseWorld
     let built: Bool
+    var siloPlaced: Bool = false
+    var secondTank: Bool = false
     /// 0...1 of the silo's capacity currently holding ore.
     let oreFraction: Double
     var onBuild: () -> Void
@@ -45,7 +47,7 @@ struct BaseUnderground: View {
             }
             .buttonStyle(.plain).accessibilityLabel("Open the silo")
             .offset(x: x0 + 14 * u, y: top + (76 - 56) * u)
-            sprite("ug-tank-small", 30, 44).offset(x: x0 + 62 * u, y: top + (76 - 44) * u)
+            if secondTank { sprite("ug-tank-small", 30, 44).offset(x: x0 + 62 * u, y: top + (76 - 44) * u) }
             ForEach(Array(Self.slots.enumerated()), id: \.offset) { i, px in
                 sprite("ug-crate", 16, 8).offset(x: x0 + px * u, y: top + 68 * u)
                 if i < filled { ore(slot: i).offset(x: x0 + px * u, y: top + 63 * u) }
@@ -101,7 +103,7 @@ struct BaseUnderground: View {
             sprite("ug-prop", 8, 56).offset(x: x0, y: top + 4 * u)
             sprite("ug-prop", 8, 56).offset(x: x0 + 88 * u, y: top + 4 * u)
             drill.offset(x: world.shaftX - 13 * u, y: top + 34 * u)
-            DockButton(title: "Build silo", symbol: "hammer.fill", action: onBuild)
+            DockButton(title: siloPlaced ? "Excavate" : "Build silo", symbol: "hammer.fill", action: siloPlaced ? onOpen : onBuild)
                 .position(x: world.shaftX, y: top + 60 * u + 34)
         }
     }

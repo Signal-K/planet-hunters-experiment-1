@@ -26,7 +26,7 @@ struct LaunchReviewScreen: View {
     }
     private var targets: [Target] {
         guard let mission else { return [] }
-        return Targets.feasible(for: mission, parts: store.catalog.parts, missionsDone: store.player.missionsDone,
+        return Targets.feasible(for: mission, targets: store.catalog.targets, parts: store.catalog.parts, missionsDone: store.player.missionsDone,
                                 launchpadUpgraded: store.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(store.player, "launchpad"), skills: store.player.unlockedSkillNodes)
     }
     private var onPad: Bool { selected?.location == .launchpad }

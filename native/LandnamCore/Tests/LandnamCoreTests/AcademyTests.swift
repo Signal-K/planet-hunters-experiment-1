@@ -188,6 +188,14 @@ import Foundation
         return GameStore(state: gs, clock: { 1_760_000_000_000 })
     }
 
+    @Test func instrumentLaunchesAreNotLockedForMissingTargets() {
+        let st = freeOps()
+        let board = MissionBoard.programBoard(catalog: st.catalog, player: st.player, now: 0)
+        let dst = board.first { $0.mission.id == Instruments.deepSpaceMissionId }
+        #expect(dst?.unlocked == true)
+        #expect((dst?.feasibleTargets ?? 0) > 0)
+    }
+
     @Test func offersTheThreeInstrumentLaunchesOnlyInFreeOps() {
         let on = freeOps().catalog
         for id in [Instruments.transitMissionId, Instruments.deepSpaceMissionId, Instruments.saturnMissionId] { #expect(on.mission(id) != nil) }
