@@ -12,6 +12,7 @@ public struct MissionLogEntry: Equatable, Sendable {
     public var isProgram: Bool = false
     public var clientName: String? = nil
     public var targetName: String? = nil
+    public var targetId: String? = nil
     /// Transit verdict, e.g. "Planet candidate".
     public var verdict: String? = nil
     public var kind: Kind { isTransit ? .transit : isProgram ? .program : .mission }
@@ -43,7 +44,7 @@ public enum MissionLog {
             MissionLogEntry(title: r.title,
                             meta: (r.kind == .program ? "OWN PROGRAM" : (r.clientName ?? "CLIENT OPERATION")) + (r.targetName.map { " · \($0)" } ?? ""),
                             completedAt: r.completedAt, isTransit: false,
-                            missionId: r.id, isProgram: r.kind == .program, clientName: r.clientName, targetName: r.targetName)
+                            missionId: r.id, isProgram: r.kind == .program, clientName: r.clientName, targetName: r.targetName, targetId: r.targetId)
         }
         return (missions + transitEntries(p)).sorted { $0.completedAt > $1.completedAt }
     }

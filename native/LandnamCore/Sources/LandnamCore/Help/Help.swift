@@ -54,6 +54,10 @@ public enum Help {
             HelpCard(title: "Parts and builds", body: "Pick a part to see what it changes. Stat changes show next to the part. Build cost is the francs it takes to fit it."),
             HelpCard(title: "Staged vehicles", body: "Assemble a staged vehicle here, then transfer it to the pad. Parts you have not unlocked stay greyed."),
         ]),
+        .debrief: HelpTopic(id: "debrief", title: "After the haul", cards: [
+            HelpCard(title: "The haul is home", body: "Debrief pays the run and puts ore in your stash, or sells it if that was the plan."),
+            HelpCard(title: "Next is the ground", body: "Collect, then you are back on the ground. Spend the francs and ore on a build, or launch again. A new contract is optional."),
+        ]),
         .instrumentHub: HelpTopic(id: "control-station", title: "Control Station", cards: [
             HelpCard(title: "Where things are", body: "The map shows each telescope and satellite you operate. A number means that equipment has items ready to classify."),
             HelpCard(title: "Open a project", body: "Filter by place, then open a row that has a count. That opens the review for those items."),

@@ -276,131 +276,224 @@ struct DeliveryScreen: View {
 
 struct DebriefScreen: View {
     @Environment(GameStore.self) private var store
+    @State private var showSettings = false
+    @State private var collecting = false
+    @State private var scrapped = false
+
     var body: some View {
         let m = store.mission
-        let payout = m.map { MissionGenerator.calibrateOnboardingPayout(raw: $0.payout.francs, missionsDone: store.player.missionsDone) } ?? 0
-        let client = m?.client.flatMap { id in Clients.all.first { $0.id == id } }
         let cargo = store.state.lastCargo ?? [:]
-        ScreenFrame(title: "Debrief") {
-            DebriefStrip(title: m?.title ?? "Contract", from: store.target?.name)
-            if let client { DebriefClientPanel(client: client, xp: m?.payout.affinity ?? 0) }
-            if let m, !m.requires.minerals.isEmpty { DebriefManifest(title: m.title, required: m.requires.minerals, delivered: cargo) }
-            DebriefLedger(payout: m?.payload == nil ? payout : nil, reward: m?.programReward)
-            if let m, !m.isOwnProgram, store.player.missionsDone >= 2, LaserCapacitor.units(store.player.stash) > 0 || !cargo.isEmpty {
-                LaserCapacitorPanel(level: store.player.laserCapacitorLevel,
-                                    haulUnits: LaserCapacitor.units(cargo),
-                                    stashUnits: LaserCapacitor.units(store.player.stash),
-                                    reservedUnits: m.requires.minerals.values.reduce(0, +)) {
-                    store.buyLaserCapacitor(expectedLevel: store.player.laserCapacitorLevel, reservedUnits: m.requires.minerals.values.reduce(0, +))
+        let haulUnits = cargo.values.reduce(0) { $0 + max(0, $1) }
+        let payout = m.map { MissionGenerator.calibrateOnboardingPayout(raw: $0.payout.francs, missionsDone: store.player.missionsDone) } ?? 0
+        let isFreeHaul = (m?.isOwnProgram == true && m?.deliveryTargetId == nil && m?.construction == nil) && cargo.values.contains { $0 > 0 }
+        let orbital = m?.payload?.type == .satellite
+        let program = m?.isOwnProgram == true && !isFreeHaul
+        let stored = Market.earthStorageBuilt(store.player)
+        let disposition = store.player.freeHaulDisposition ?? (stored ? HaulDisposition.store : .sell)
+        let willStore = isFreeHaul && disposition == .store && stored
+        let sale = HomeDelivery.marketValue(store.player, units: cargo, now: store.now)
+        let overflow = max(0, Market.storedUnits(store.player.stash) - Market.storageCapacity(store.player))
+        let target = store.target
+        let status = store.player.shipDestroyed ? "Hull lost · cargo recovered" : program ? "Commissioned · instrument online" : "Docked · mission complete"
+        let reserved = m?.requires.minerals.values.reduce(0, +) ?? 0
+        let showLaser = m?.isOwnProgram == false && store.player.missionsDone >= 2 && (LaserCapacitor.units(store.player.stash) > 0 || !cargo.isEmpty)
+
+        GeometryReader { geo in
+            let portrait = geo.size.height > geo.size.width
+            let short = geo.size.height < 520
+            ZStack(alignment: .topLeading) {
+                if let target {
+                    DestinationVista(
+                        targetId: target.id,
+                        type: target.type,
+                        archetype: target.archetype,
+                        crates: cargo.filter { $0.value > 0 }.prefix(4).map { (file: CrateArt.file(for: $0.key), count: min(5, max(1, $0.value))) }
+                    )
+                    .ignoresSafeArea()
+                } else {
+                    RecordCream.paper.ignoresSafeArea()
                 }
-            }
-            PrimaryButton(title: m?.payload?.type == .satellite ? "Open control station" : (m?.isOwnProgram == true && m?.client == nil && m?.programReward != nil ? "File report" : "Collect payout")) {
-                store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: cargo)
+
+                ScrollView {
+                VStack(alignment: .leading, spacing: short ? 16 : 24) {
+                    if orbital {
+                        CreamCard {
+                            statusLine("Commissioned · instrument online", crit: false)
+                            Text(m?.title ?? "Instrument").font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                            Text("PROGRAM OUTCOME").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                            if let outcome = m?.programReward?.outcome {
+                                Text(outcome).font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                            }
+                            Text("\((m?.payload?.name ?? "Instrument")) remains in Earth orbit. The sky-side status indicator marks the downlink. Stationed at \(target?.name ?? "Earth").")
+                                .font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                        }
+                    } else {
+                        CreamCard {
+                            statusLine(status, crit: store.player.shipDestroyed)
+                            HStack(alignment: .top, spacing: 28) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("MISSION").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                                    Text(m?.title ?? "Contract").font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                                }
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(program ? "STATIONED AT" : "RETURNED FROM").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                                    Text(target?.name ?? "—").font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                                }
+                            }
+                        }
+                    }
+
+                    if !orbital && isFreeHaul {
+                        CreamCard {
+                            Text("FREE OPS HAUL").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                            if sale > 0 {
+                                ledgerRow("Mining fee · your program", Economy.format(francs: sale / 2))
+                                ledgerRow("Transport fee · return", Economy.format(francs: sale - sale / 2))
+                            }
+                            Text(willStore ? "Earth storage" : "sell on Earth return").font(AppFont.display(18)).foregroundStyle(Theme.ink).padding(.top, 8)
+                            if willStore {
+                                ledgerRow("Silo", "\(min(Market.storedUnits(store.player.stash), Market.storageCapacity(store.player))) / \(Market.storageCapacity(store.player)) U")
+                                if overflow > 0 {
+                                    Text("\(overflow) units over capacity are sold.").font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                                }
+                            } else {
+                                HStack(alignment: .firstTextBaseline) {
+                                    Text("SALE VALUE").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                                    Spacer(minLength: 12)
+                                    AnimatedFrancs(value: sale)
+                                }.padding(.top, 8)
+                            }
+                            if !stored {
+                                Text("Build a Mineral Vault to keep ore on Earth.").font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                            }
+                        }
+                    } else if !orbital, let reward = m?.programReward, program {
+                        CreamCard {
+                            Text("PROGRAM OUTCOME").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                            Text(reward.outcome).font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                            Text("+\(reward.researchXP) XP").font(AppFont.display(18)).foregroundStyle(Theme.ink)
+                        }
+                    } else if !orbital && m?.payload == nil {
+                        CreamCard {
+                            Text("LEDGER").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                            ledgerRow("Contract value", Economy.format(francs: m?.payout.francs ?? payout))
+                            HStack(alignment: .firstTextBaseline) {
+                                Text("NET").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                                Spacer(minLength: 12)
+                                AnimatedFrancs(value: payout)
+                            }.padding(.top, 8)
+                        }
+                    }
+
+                    if showLaser, let m {
+                        LaserCapacitorPanel(
+                            level: store.player.laserCapacitorLevel,
+                            stashUnits: LaserCapacitor.units(store.player.stash),
+                            reservedUnits: reserved
+                        ) {
+                            store.buyLaserCapacitor(expectedLevel: store.player.laserCapacitorLevel, reservedUnits: reserved)
+                        }
+                    }
+                }
+                .padding(.horizontal, portrait ? 16 : 24)
+                .padding(.bottom, 8)
+                }
+                .padding(.top, portrait ? 0 : (short ? 64 : 88))
+                .padding(.bottom, short ? 84 : 96)
+                .padding(.trailing, portrait ? 0 : 24)
+                .frame(maxWidth: portrait ? .infinity : min(440, short ? geo.size.width * 0.48 : 440))
+                .frame(maxHeight: portrait ? geo.size.height * 0.58 : .infinity, alignment: .top)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: portrait ? .bottom : .topTrailing)
+
             }
         }
+        .overlay(alignment: .top) {
+            HStack(alignment: .top) {
+                HudGearClock { showSettings = true }
+                Spacer(minLength: 8)
+                Text("\(haulUnits) U")
+                    .font(AppFont.mono(14)).foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 10)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .background(RecordCream.paper)
+                    .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+                    .padding(.trailing, 56)
+                    .accessibilityLabel("Cargo units")
+            }
+            .padding(16)
+        }
+        .overlay(alignment: .bottom) {
+            HStack(spacing: 8) {
+                if !orbital {
+                    RecordDockButton(title: scrapped ? "Dismantled" : "Teardown", filled: false, enabled: !scrapped) { scrapped = true }
+                }
+                RecordDockButton(title: collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
+                    guard !collecting else { return }
+                    collecting = true
+                    store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: cargo, disposition: isFreeHaul ? disposition : nil)
+                }
+            }
+            .padding(8)
+            .background(RecordCream.paper)
+            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+            .padding(.bottom, 16)
+        }
+        .helpable(.debrief)
+        .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
+    }
+
+    private func collectTitle(free: Bool, store: Bool, overflow: Int, sale: Int, program: Bool, payout: Int) -> String {
+        if free {
+            if store { return overflow > 0 ? "Store haul · sell \(overflow) over cap" : "Keep haul on Earth" }
+            return "Collect \(Economy.format(francs: sale))"
+        }
+        if program { return "Log Program Outcome" }
+        return "Collect \(Economy.format(francs: payout))"
+    }
+
+    private func statusLine(_ text: String, crit: Bool) -> some View {
+        HStack(spacing: 10) {
+            Rectangle().fill(crit ? Theme.crimson : Theme.blue).frame(width: 8, height: 8)
+            Text(text.uppercased()).font(AppFont.mono(14)).tracking(1.4).foregroundStyle(crit ? Theme.crimson : Theme.blue)
+        }
+    }
+
+    private func ledgerRow(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(label.uppercased()).font(AppFont.display(14)).foregroundStyle(Theme.ink)
+            Spacer(minLength: 12)
+            Text(value).font(AppFont.mono(14)).foregroundStyle(Theme.ink)
+        }
+        .padding(.top, 12)
     }
 }
 
-/// Status strip: docked, which mission, where it returned from (mirrors web debrief-mission-strip).
-struct DebriefStrip: View {
+private struct RecordDockButton: View {
     let title: String
-    let from: String?
+    var filled: Bool
+    var wide = false
+    var enabled = true
+    let action: () -> Void
     var body: some View {
-        Panel(accent: Theme.teal) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Circle().fill(Theme.teal).frame(width: 10, height: 10)
-                    Text("DOCKED · MISSION COMPLETE").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.teal)
-                }
-                Eyebrow(text: "Mission")
-                Text(title).font(AppFont.display(18)).foregroundStyle(Theme.ink)
-                if let from { Eyebrow(text: "Returned from"); Text(from).font(AppFont.display(16)).foregroundStyle(Theme.ink) }
-            }
+        Button(action: action) {
+            Text(title.uppercased())
+                .font(AppFont.display(14)).tracking(1.2)
+                .foregroundStyle(filled ? RecordCream.paper : Theme.ink)
+                .frame(maxWidth: wide ? .infinity : nil)
+                .frame(minWidth: 148, minHeight: 48)
+                .padding(.horizontal, 12)
+                .background(filled ? Theme.blue : RecordCream.paper)
+                .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
         }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.55)
     }
 }
 
-struct DebriefClientPanel: View {
-    let client: Client
-    let xp: Int
-    var body: some View {
-        Panel {
-            VStack(alignment: .leading, spacing: 10) {
-                Eyebrow(text: "Client")
-                HStack(spacing: 12) {
-                    Text(client.initial).font(AppFont.display(16)).foregroundStyle(Theme.ink)
-                        .frame(width: 44, height: 44)
-                        .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(client.name).font(AppFont.display(16)).foregroundStyle(Theme.ink)
-                        Text("CLIENT WORK COMPLETE").font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.textMuted)
-                    }
-                    Spacer(minLength: 0)
-                    if xp > 0 { Text("+\(xp) XP").font(AppFont.mono(14)).foregroundStyle(Theme.bluePress) }
-                }
-            }
-        }
-    }
-}
-
-/// Cargo manifest: each ordered mineral with delivered / required and a DONE or SHORT chip.
-struct DebriefManifest: View {
-    let title: String
-    let required: Cargo
-    let delivered: Cargo
-    var body: some View {
-        let delivered = delivered
-        Panel(accent: Theme.blue) {
-            VStack(alignment: .leading, spacing: 10) {
-                Eyebrow(text: "Manifest · \(title)")
-                ForEach(required.keys.sorted(), id: \.self) { id in
-                    let need = required[id] ?? 0, have = delivered[id] ?? 0
-                    let meta = Minerals.all.first { $0.id == id }
-                    HStack(spacing: 10) {
-                        Text(meta?.symbol ?? id.prefix(2).capitalized).font(AppFont.mono(14)).foregroundStyle(Theme.ink)
-                            .frame(width: 44, height: 36).background(Theme.paper2, in: RoundedRectangle(cornerRadius: 6))
-                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.ink, lineWidth: 1.5))
-                        Text(meta?.name ?? id).font(AppFont.display(16)).foregroundStyle(Theme.ink)
-                        Text("\(min(have, need)) / \(need)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
-                        Spacer(minLength: 0)
-                        Text(have >= need ? "DONE" : "SHORT").font(AppFont.display(14)).tracking(1.2)
-                            .foregroundStyle(have >= need ? Theme.teal : Theme.crimson)
-                            .padding(.horizontal, 10).padding(.vertical, 4)
-                            .background((have >= need ? Theme.teal : Theme.crimson).opacity(0.12), in: Capsule())
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct DebriefLedger: View {
-    let payout: Int?
-    let reward: ProgramReward?
-    var body: some View {
-        if payout != nil || reward != nil {
-            Panel(accent: Theme.teal) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Eyebrow(text: "Ledger")
-                    if let payout {
-                        HStack { Text("Contract value").foregroundStyle(Theme.textDim); Spacer(); Text(Economy.format(francs: payout)).font(AppFont.mono(16)).foregroundStyle(Theme.ink) }
-                    }
-                    if let reward {
-                        Text(reward.outcome).foregroundStyle(Theme.textDim)
-                        HStack { Text("Research").foregroundStyle(Theme.textDim); Spacer(); Text("+\(reward.researchXP) XP").font(AppFont.mono(16)).foregroundStyle(Theme.bluePress) }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/// SSL-462: names the link between the haul and the next build and spends it on the Laser Capacitor
-/// (mirrors web LaserCapacitorPanel).
+/// SSL-462: spend hauled ore on the next Laser Capacitor. Cream card, dark ink, one line of copy.
 struct LaserCapacitorPanel: View {
     let level: Int
-    let haulUnits: Int
     let stashUnits: Int
     let reservedUnits: Int
     let install: () -> Void
@@ -409,23 +502,17 @@ struct LaserCapacitorPanel: View {
         let spare = max(0, stashUnits - reservedUnits)
         if let next = LaserCapacitor.next(level) {
             let canAfford = spare >= next.costUnits
-            Panel(accent: canAfford ? Theme.teal : Theme.blue) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Eyebrow(text: "Next build · \(next.name)")
-                    Text(canAfford
-                         ? "You brought \(haulUnits) ore, enough for \(next.name) (\(next.costUnits) ore). It adds \(next.bonusCharges - LaserCapacitor.bonus(level)) laser charges, so your next run lasts longer and brings home more."
-                         : "You brought \(haulUnits) ore. \(next.name) needs \(next.costUnits) spare ore and you hold \(spare). Keep firing after the order is filled to bring home the rest.")
-                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                    PrimaryButton(title: canAfford ? "Install \(next.name) · \(next.costUnits) ore" : "Need \(next.costUnits - spare) more ore", enabled: canAfford, action: install)
-                }
+            CreamCard {
+                Text("NEXT BUILD").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                Text(next.name).font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                Text("\(next.costUnits) ore").font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                RecordDockButton(title: canAfford ? "Install · \(next.costUnits) ore" : "Need \(next.costUnits - spare) more ore", filled: true, wide: true, enabled: canAfford, action: install)
             }
         } else {
-            Panel(accent: Theme.teal) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Eyebrow(text: "Next build · Laser Capacitor")
-                    Text("\(LaserCapacitor.tiers.last { $0.level == level }?.name ?? "Laser Capacitor") is installed: +\(LaserCapacitor.bonus(level)) laser charges on every run. Fully upgraded.")
-                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                }
+            CreamCard {
+                Text("NEXT BUILD").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                Text(LaserCapacitor.tiers.last { $0.level == level }?.name ?? "Laser Capacitor").font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                Text("\(LaserCapacitor.bonus(level)) charges on every run.").font(AppFont.body(14)).foregroundStyle(Theme.ink)
             }
         }
     }

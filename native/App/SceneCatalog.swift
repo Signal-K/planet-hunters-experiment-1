@@ -222,7 +222,7 @@ enum SceneCatalog {
             let st = GameStore()
             st.go(.missions)
             if let id = st.catalog.missions.first(where: { !$0.locked && !$0.isOwnProgram })?.id { st.pickMission(id) }
-            return LaserCapacitorPanel(level: 0, haulUnits: 9, stashUnits: 9, reservedUnits: 0) {}.padding(16).environment(st)
+            return LaserCapacitorPanel(level: 0, stashUnits: 9, reservedUnits: 0) {}.padding(16).environment(st)
         },
         scene("mining-actionrow-phone", 110) {
             let t = Targets.all.first { $0.type == .asteroid }!
