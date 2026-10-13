@@ -62,7 +62,11 @@ final class MiningScene: SKScene {
 
     private var beamX: CGFloat { min(96, max(72, size.width * 0.18)) }
     /// Ground is the bottom third (min 150pt) so there is sky to fly in (SSL-536).
-    private var surfaceY: CGFloat { max(150, size.height * 0.33) }
+    /// Ground line. Phones keep a clear control strip under the deposits so the d-pad and gauge never cover them (SSL-538).
+    private var surfaceY: CGFloat {
+        if size.height > size.width { return max(330, size.height * 0.33) }
+        return max(size.height < 520 ? 215 : 150, size.height * 0.33)
+    }
     private var shipY: CGFloat { min(size.height * 0.72, surfaceY + min(210, size.height * 0.28)) }
 
     override func didMove(to view: SKView) {
@@ -239,7 +243,7 @@ final class MiningScene: SKScene {
             let mix = LaserPalette.mix(palette.skyTop, palette.skyHorizon, 1 - t + 0.12)
             let level = min(2, z / 2)
             for c in 0..<Int((size.width / (16 * px)).rounded(.up)) {
-                let strip = sprite("sky-dither-\(level)", tint: mix, alpha: 0.55)
+                let strip = sprite("sky-dither-\(level)", tint: mix, alpha: 0.4)
                 strip.anchorPoint = .zero
                 strip.position = CGPoint(x: CGFloat(c) * 16 * px, y: bandY - bandH / 2)
                 strip.zPosition = -19
@@ -380,9 +384,11 @@ final class MiningScene: SKScene {
     private func buildLandscape() {
         let layout = Landscape.layout(palette.landscape, key: landscapeKey)
         midW = CGFloat(layout.period) * px
+        // Short (phone landscape) skies get lower terrain so the ship can clear it under the HUD.
+        let ts: CGFloat = size.height < 520 ? 0.6 : 1
         obstacles = layout.pieces.map { p in
             let h = Landscape.pieceHeight[p.kind] ?? 48
-            return (CGFloat(p.x) * px, 64 * px * CGFloat(p.scale) * 0.9, h * px * CGFloat(p.scale) * 0.92 - h * 0.04 * px - 4, p.kind)
+            return (CGFloat(p.x) * px, 64 * px * CGFloat(p.scale) * ts * 0.9, (h * px * CGFloat(p.scale) * 0.92 - h * 0.04 * px - 4) * ts, p.kind)
         }
         mid.zPosition = -7
         let copies = Int((size.width / midW).rounded(.up)) + 1
@@ -392,8 +398,8 @@ final class MiningScene: SKScene {
                 let node = SKSpriteNode(texture: tex)
                 node.size = tex.size()
                 node.anchorPoint = CGPoint(x: 0.5, y: 0)
-                node.xScale = px * CGFloat(p.scale) * (p.flip ? -1 : 1)
-                node.yScale = px * CGFloat(p.scale)
+                node.xScale = px * CGFloat(p.scale) * ts * (p.flip ? -1 : 1)
+                node.yScale = px * CGFloat(p.scale) * ts
                 node.position = CGPoint(x: CGFloat(c) * midW + CGFloat(p.x) * px, y: surfaceY - 4 - (Landscape.pieceHeight[p.kind] ?? 48) * 0.04 * px)
                 node.color = LaserPalette.sk(layout.tint)
                 node.colorBlendFactor = CGFloat(layout.shade)
@@ -672,7 +678,8 @@ final class MiningScene: SKScene {
         }
         // Altitude (SpriteKit is y-up: positive climbs). Clamp between sky ceiling and just above ground.
         altitude += CGFloat(-climbInput) * 180 * CGFloat(dt)
-        altitude = max(surfaceY + 56 - shipY, min(size.height - 64 - shipY, altitude))
+        let ceiling = size.height - (size.height < 520 ? 100 : 64) - shipY   // stay under the HUD
+        altitude = max(surfaceY + 56 - shipY, min(ceiling, altitude))
         if bumpCooldown > 0 { bumpCooldown -= dt }
         if triggerHeld, clock >= nextShotAt {
             nextShotAt = clock + Self.fireCooldown
@@ -683,7 +690,7 @@ final class MiningScene: SKScene {
         let clear = [beamX - 30, beamX, beamX + 30].map(obstacleHeight).max() ?? 0
         let belly = shipY + altitude - 14
         if clear > 0, belly < surfaceY + clear {
-            altitude = surfaceY + clear + 14 + 18 - shipY
+            altitude = min(ceiling, surfaceY + clear + 14 + 18 - shipY)
             if bumpCooldown <= 0 {
                 bumpCooldown = 1.6
                 field.bump()

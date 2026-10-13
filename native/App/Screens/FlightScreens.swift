@@ -119,7 +119,7 @@ struct MiningScreen: View {
             ZStack {
                 if let scene { SpriteView(scene: scene).ignoresSafeArea() }
                 if let field, !showGuide {
-                    laserChrome(field, insets: geo.safeAreaInsets, narrow: geo.size.width < 600).ignoresSafeArea()
+                    laserChrome(field, insets: geo.safeAreaInsets, narrow: geo.size.width < 600, short: geo.size.height < 520).ignoresSafeArea()
                 }
                 if showGuide {
                     MiningGuide(onRecharge: { showGuide = false; scene?.refill(); say("Laser refilled. Cargo kept.") },
@@ -163,7 +163,8 @@ struct MiningScreen: View {
         }
     }
 
-    private func laserChrome(_ field: MiningField, insets: EdgeInsets, narrow: Bool) -> some View {
+    private func laserChrome(_ field: MiningField, insets: EdgeInsets, narrow: Bool, short: Bool = false) -> some View {
+        let compact = narrow || short
         let zones = HUDZones.standard
         let order = MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false)
             .frame(maxWidth: 220)
@@ -188,9 +189,10 @@ struct MiningScreen: View {
                 .padding(.trailing, insets.trailing + zones.topRight.inset).padding(.top, insets.top + zones.topRight.inset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 
-            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSpeed: { scene?.setScroll($0) })
+            // Phones: compact pad and gauge in the clear strip under the ground deposits.
+            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSpeed: { scene?.setScroll($0) }, tile: short ? 36 : compact ? 40 : 52)
                 .padding(.leading, insets.leading + 16)
-                .padding(.bottom, insets.bottom + zones.dock.bottomInset + 88)
+                .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 16))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
 
             // Hint sits up top, clear of the d-pad, gauge and deposits (SSL-538 phone layout).
@@ -204,10 +206,10 @@ struct MiningScreen: View {
             }
 
             // Gauge: centred on wide screens; on phones it moves right, level with the d-pad, well above the ground.
-            LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging)
-                .padding(.trailing, narrow ? insets.trailing + 16 : 0)
-                .padding(.bottom, insets.bottom + zones.dock.bottomInset + (narrow ? 96 : 84))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: narrow ? .bottomTrailing : .bottom)
+            LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging, width: compact ? 160 : 260)
+                .padding(.trailing, compact ? insets.trailing + 16 : 0)
+                .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 84))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: compact ? .bottomTrailing : .bottom)
 
             VStack(spacing: 8) {
                 Spacer()

@@ -6,7 +6,7 @@ import LandnamCore
 struct MiningDPad: View {
     var onAltitude: (Double) -> Void
     var onSpeed: (Double) -> Void
-    private let tile: CGFloat = 52
+    var tile: CGFloat = 52
     private static let ink = Theme.hex(0x1A2A3C)
     private static let paper = Theme.hex(0xF4F1EA)
     private static let pressed = Theme.hex(0xD7E6F7)
@@ -65,6 +65,7 @@ struct LaserGauge: View {
     let charge: Int
     let cap: Int
     var charging = false
+    var width: CGFloat = 260
     @State private var sweep: CGFloat = -1
     private var pct: Double { cap > 0 ? max(0, min(1, Double(charge) / Double(cap))) : 0 }
     private var low: Bool { pct <= 0.25 }
@@ -104,7 +105,7 @@ struct LaserGauge: View {
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 8)
-        .frame(width: 260)
+        .frame(width: width)
         .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hex(0xF4F1EA, 0.94)))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(low ? Self.brick : Self.ink, lineWidth: 2))
         .accessibilityElement(children: .ignore)

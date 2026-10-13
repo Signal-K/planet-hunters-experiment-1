@@ -118,14 +118,15 @@ export async function buildLaserField(opts: {
     const t = bands <= 1 ? 0 : r / (bands - 1)
     const sky = lerp(palette.skyTop, palette.skyHorizon, t * t)
     const strip = new TilingSprite({
-      texture: dither[Math.min(2, Math.floor(t * 3))],
+      // Staggered crossfade between dither densities so no band has a hard edge (SSL-538).
+      texture: dither[Math.max(0, Math.min(2, Math.floor(t * 3 + (((r * 7) % 5) / 5 - 0.4) * 0.9)))],
       width: Math.ceil(worldW / (16 * px)) * 16,
       height: 4,
     })
     strip.scale.set(px)
     strip.y = r * bandH
     strip.tint = lerp(sky, 0xffffff, 0.28)
-    strip.alpha = 0.82
+    strip.alpha = 0.35
     backdrop.addChild(strip)
   }
 
@@ -233,11 +234,13 @@ export async function buildLaserField(opts: {
   ))
   const mid = new Container()
   const midW = layout.period * px
+  // Short (phone landscape) skies get lower terrain so the ship can clear it under the HUD.
+  const ts = worldH < 520 ? 0.6 : 1
   const obstacles: Obstacle[] = layout.pieces.map(p => ({
     kind: p.kind,
     x: p.x * px,
-    halfW: (PIECE_SIZE[p.kind][0] / 2) * px * p.scale * 0.9,
-    height: PIECE_SIZE[p.kind][1] * px * p.scale * 0.92 - PIECE_SIZE[p.kind][1] * 0.04 * px - 4,
+    halfW: (PIECE_SIZE[p.kind][0] / 2) * px * p.scale * ts * 0.9,
+    height: (PIECE_SIZE[p.kind][1] * px * p.scale * 0.92 - PIECE_SIZE[p.kind][1] * 0.04 * px - 4) * ts,
   }))
   const pieceTint = shadeTint(layout.tint, layout.shade)
   const midCopies = Math.ceil(worldW / midW) + 1
@@ -246,7 +249,7 @@ export async function buildLaserField(opts: {
       const [, h] = PIECE_SIZE[p.kind]
       const node = new Sprite(pieceTex[p.kind])
       node.anchor.set(0.5, 1)
-      node.scale.set(px * p.scale * (p.flip ? -1 : 1), px * p.scale)
+      node.scale.set(px * p.scale * ts * (p.flip ? -1 : 1), px * p.scale * ts)
       node.x = c * midW + p.x * px
       node.y = h * 0.04 * px
       node.tint = pieceTint
