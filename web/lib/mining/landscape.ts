@@ -8,7 +8,7 @@ export const TERRAIN_PIECES: TerrainPiece[] = ['mountain', 'ridge', 'strata']
 export const DEPOSIT_KINDS: DepositKind[] = ['iron', 'nickel', 'ice', 'cobalt']
 /** Native pixel size of each piece. */
 export const PIECE_SIZE: Record<TerrainPiece, [number, number]> = { mountain: [128, 112], ridge: [128, 48], strata: [128, 56] }
-export const DEPOSIT_SIZE: [number, number] = [64, 48]
+export const DEPOSIT_SIZE: [number, number] = [28, 22]
 
 export interface LandscapeSpec {
   tint: string
@@ -22,7 +22,7 @@ export interface LandscapeSpec {
 }
 
 export interface PlacedPiece { kind: TerrainPiece; x: number; scale: number; flip: boolean }
-export interface PlacedDeposit { kind: DepositKind; x: number }
+export interface PlacedDeposit { kind: DepositKind; x: number; /** Rough tonnage shown on the label. */ amount: number }
 export interface LandscapeLayout { tint: number; shade: number; period: number; pieces: PlacedPiece[]; deposits: PlacedDeposit[] }
 
 export const DEFAULT_LANDSCAPE: LandscapeSpec = {
@@ -85,10 +85,13 @@ export function landscapeLayout(spec: LandscapeSpec | undefined, targetKey: stri
   const dCount = Math.max(1, Math.round(count / 2))
   for (let i = 0; i < dCount; i++) {
     const kind = pick(s.deposits, DEPOSIT_KINDS, next())
-    deposits.push({ kind, x: Math.round((i + next()) * (period / dCount)) })
+    const x = Math.round((i + next()) * (period / dCount))
+    deposits.push({ kind, x, amount: 2 + Math.floor(next() * 7) })
   }
   return { tint: parseInt(s.tint.replace('#', ''), 16), shade: s.shade, period, pieces, deposits }
 }
+
+export const DEPOSIT_NAMES: Record<DepositKind, string> = { iron: 'Iron', nickel: 'Nickel', ice: 'Ice', cobalt: 'Cobalt' }
 
 export function layoutForPalette(palette: Pick<LaserPalette, 'landscape'>, targetKey: string, period?: number): LandscapeLayout {
   return landscapeLayout(palette.landscape, targetKey, period)

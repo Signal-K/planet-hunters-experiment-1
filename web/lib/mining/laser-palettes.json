@@ -153,9 +153,9 @@
       "clouds": false,
       "terrain": "ice",
       "planet": {
-        "cx": 0.78,
-        "cy": 0.34,
-        "radius": 0.42,
+        "cx": 0.76,
+        "cy": 0.24,
+        "radius": 0.2,
         "bands": [
           "#4a5cb0",
           "#a9b8f0",

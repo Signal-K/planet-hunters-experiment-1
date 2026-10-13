@@ -161,9 +161,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // the skill-based cap could ever supply, making the mission mathematically unwinnable.
   const totalOreNeeded = Object.values(mission.requires.minerals).reduce((sum, v) => sum + v, 0)
   const isOnboarding = typeof mission.sequence === 'number' && mission.sequence <= FREE_OPS_START_MISSIONS_DONE
-  const MAX_CHARGES = (isOnboarding
+  // A full charge lasts about twice as long as before (SSL-538).
+  const MAX_CHARGES = ((isOnboarding
     ? Math.max(80, totalOreNeeded * 16)
-    : Math.max(laserChargeCap ?? 5, totalOreNeeded * 4)) + laserBonusCharges
+    : Math.max(laserChargeCap ?? 5, totalOreNeeded * 4)) + laserBonusCharges) * 2
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>(initialCargo ?? {})
   const [cargo, setCargo] = useState<Record<string, number>>(initialCargo ?? {})

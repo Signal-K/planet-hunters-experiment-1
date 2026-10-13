@@ -1,6 +1,6 @@
-import { Assets, Container, Sprite, Texture, TilingSprite } from 'pixi.js'
+import { Assets, Container, Graphics, Sprite, Text, Texture, TilingSprite } from 'pixi.js'
 import type { LaserPalette } from './laserPalette'
-import { DEPOSIT_SIZE, PIECE_SIZE, layoutForPalette, type DepositKind, type TerrainPiece } from './landscape'
+import { DEPOSIT_NAMES, PIECE_SIZE, layoutForPalette, type DepositKind, type TerrainPiece } from './landscape'
 
 export interface Obstacle { x: number; halfW: number; height: number; kind: TerrainPiece }
 
@@ -55,6 +55,8 @@ export interface LaserField {
   near: Container
   /** Seeded terrain pieces + surface deposits for this world (SSL-536). Wraps every `midW`. */
   mid: Container
+  /** Surface deposits; scrolls with the ground, wraps every `midW`. */
+  surface: Container
   midW: number
   /** Collision profile of the mid pieces in mid-local px, one wrap period (`midW`). */
   obstacles: Obstacle[]
@@ -146,14 +148,30 @@ export async function buildLaserField(opts: {
   }
 
   if (palette.planet) {
-    const radius = worldW * palette.planet.radius
-    const scale = Math.max(1, Math.round((radius * 2) / 48))
-    const body = new Sprite(disc48)
-    body.anchor.set(0.5)
-    body.scale.set(scale)
-    body.tint = palette.planet.bands[0] ?? 0xffffff
-    body.x = worldW * palette.planet.cx
-    body.y = worldH * palette.planet.cy
+    // Whole planet sits in the sky: sized off the sky's short side, banded, soft halo, no hard edges (SSL-536).
+    const sky = Math.max(80, surfaceY)
+    const radius = Math.min(96, Math.min(worldW, sky) * palette.planet.radius * 0.65)
+    const cx = worldW * palette.planet.cx
+    const cy = Math.max(radius + 12, Math.min(sky - radius - 24, sky * palette.planet.cy + radius * 0.2))
+    const halo = new Graphics()
+    for (let k = 3; k >= 1; k--) halo.circle(0, 0, radius + k * 6).fill({ color: palette.planet.bands[1] ?? 0xffffff, alpha: 0.05 })
+    halo.x = cx
+    halo.y = cy
+    backdrop.addChild(halo)
+    const body = new Container()
+    const bands = palette.planet.bands
+    const bandH = (radius * 2) / Math.max(1, bands.length)
+    const strips = new Graphics()
+    bands.forEach((c, i) => { strips.rect(-radius, -radius + i * bandH, radius * 2, bandH + 1).fill({ color: lerp(c, palette.skyTop, 0.25) }) })
+    const mask = new Graphics().circle(0, 0, radius).fill(0xffffff)
+    strips.mask = mask
+    body.addChild(strips, mask)
+    const shade = new Graphics().circle(radius * 0.35, radius * 0.3, radius).fill({ color: palette.skyTop, alpha: 0.28 })
+    shade.mask = new Graphics().circle(0, 0, radius).fill(0xffffff)
+    body.addChild(shade, shade.mask as Graphics)
+    body.alpha = 0.9
+    body.x = cx
+    body.y = cy
     backdrop.addChild(body)
   }
 
@@ -234,14 +252,6 @@ export async function buildLaserField(opts: {
       node.tint = pieceTint
       mid.addChild(node)
     }
-    for (const d of layout.deposits) {
-      const node = new Sprite(depositTex[d.kind])
-      node.anchor.set(0.5, 1)
-      node.scale.set(px * 0.6)
-      node.x = c * midW + d.x * px
-      node.y = DEPOSIT_SIZE[1] * 0.1 * px
-      mid.addChild(node)
-    }
   }
   mid.y = surfaceY + 4
   backdrop.addChild(mid)
@@ -274,6 +284,25 @@ export async function buildLaserField(opts: {
   }
   ground.y = surfaceY
   backdrop.addChild(ground)
+
+  // Surface deposits ride the ground layer (same scroll), sit on the surface line partly
+  // embedded, at the terrain's native pixel scale (nearest-neighbour), never on the ridges.
+  const surface = new Container()
+  for (let c = 0; c < midCopies; c++) {
+    for (const d of layout.deposits) {
+      const tex = depositTex[d.kind]
+      tex.source.scaleMode = 'nearest'
+      const node = new Sprite(tex)
+      node.anchor.set(0.5, 1)
+      node.scale.set(px)
+      node.x = c * midW + d.x * px
+      node.y = Math.round(tex.height * 0.35) * px
+      surface.addChild(node)
+      surface.addChild(depositTag(`${DEPOSIT_NAMES[d.kind]} · ~${d.amount}t`, node.x, node.y - tex.height * px - 12))
+    }
+  }
+  surface.y = surfaceY
+  backdrop.addChild(surface)
 
   const beam = new Container()
   const beamSpan = Math.max(24, surfaceY - (shipY + 8 * px))
@@ -334,7 +363,7 @@ export async function buildLaserField(opts: {
 
   const flameFrames = [flame0, flame1]
   const field: LaserField = {
-    backdrop, far, near, mid, midW, obstacles, depositArt: depositTex as Record<DepositKind, Texture>, ground, beam, dig, spark, ship, plume,
+    backdrop, far, near, mid, surface, midW, obstacles, depositArt: depositTex as Record<DepositKind, Texture>, ground, beam, dig, spark, ship, plume,
     soilW, ridgeW, pixelScale: px, depositFrames: [deposit0, deposit1], hover: 0,
     step(time, reduced, firing) {
       const tw = reduced ? 0 : 1
@@ -398,4 +427,18 @@ export function depositKindFor(mineral: string): DepositKind {
   if (/cobalt|titan|sapph|lithium/.test(m)) return 'cobalt'
   if (/iron|carbon|copper|hematite|regolith|basalt/.test(m)) return 'iron'
   return 'nickel'
+}
+
+/** Small roomy label pill (cream on navy outline, 14px). Shared by surface and buried deposits. */
+export function depositTag(text: string, x: number, y: number): Container {
+  const tag = new Container()
+  const label = new Text({ text, style: { fontFamily: 'Oxanium, system-ui, sans-serif', fontSize: 14, fontWeight: '700', fill: 0x1a2a3c } })
+  label.anchor.set(0.5)
+  const w = label.width + 14
+  const h = label.height + 6
+  const pill = new Graphics().roundRect(-w / 2, -h / 2, w, h, h / 2).fill({ color: 0xf4f1ea, alpha: 0.9 }).stroke({ color: 0x1a2a3c, width: 1.5, alpha: 0.8 })
+  tag.addChild(pill, label)
+  tag.x = Math.round(x)
+  tag.y = Math.round(y)
+  return tag
 }

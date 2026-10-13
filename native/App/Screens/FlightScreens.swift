@@ -193,15 +193,24 @@ struct MiningScreen: View {
                 .padding(.bottom, insets.bottom + zones.dock.bottomInset + 88)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
 
+            // Hint sits up top, clear of the d-pad, gauge and deposits (SSL-538 phone layout).
+            if let toast {
+                Text(toast).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .background(Capsule().fill(Theme.hudPanel))
+                    .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+                    .padding(.top, insets.top + zones.topLeft.inset + (narrow ? 112 : 64))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
+
+            // Gauge: centred on wide screens; on phones it moves right, level with the d-pad, well above the ground.
+            LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging)
+                .padding(.trailing, narrow ? insets.trailing + 16 : 0)
+                .padding(.bottom, insets.bottom + zones.dock.bottomInset + (narrow ? 96 : 84))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: narrow ? .bottomTrailing : .bottom)
+
             VStack(spacing: 8) {
                 Spacer()
-                LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging)
-                if let toast {
-                    Text(toast).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
-                        .padding(.horizontal, 12).padding(.vertical, 8)
-                        .background(Capsule().fill(Theme.hudPanel))
-                        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
-                }
                 BaseDock(tile: 44, zones: zones.dock, items: [
                     ("Fire", "bolt.fill", {}),
                     ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
@@ -220,9 +229,10 @@ struct MiningScreen: View {
         let tier = parts.drill.first { $0.id == rocket.drill }?.tier ?? 1
         // Same charge budget as web MiningScreen: onboarding runs are generous, later runs add the Laser Capacitor bonus (SSL-462).
         let ore = mission.requires.minerals.values.reduce(0, +)
-        let charges = mission.sequence <= 2
+        // SSL-538: a full charge lasts about twice as long (matches web MAX_CHARGES * 2).
+        let charges = 2 * (mission.sequence <= 2
             ? max(80, ore * 16)
-            : max(Skills.laserChargeCap(store.player.unlockedSkillNodes), ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel)
+            : max(Skills.laserChargeCap(store.player.unlockedSkillNodes), ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel))
         // Meteor-shower debris joins the field only inside its window and the player's local night (SSL-475).
         let shower = SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now) / 2).rounded(.up)))) }
         let f = MiningField(target: target, required: mission.requires.minerals, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower)

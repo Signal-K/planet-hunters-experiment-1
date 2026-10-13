@@ -7,7 +7,8 @@ enum Landscape {
     static let pieces = ["mountain", "ridge", "strata"]
     static let deposits = ["iron", "nickel", "ice", "cobalt"]
     static let pieceHeight: [String: CGFloat] = ["mountain": 112, "ridge": 48, "strata": 56]
-    static let depositHeight: CGFloat = 48
+    static let depositHeight: CGFloat = 22
+    static let depositNames = ["iron": "Iron", "nickel": "Nickel", "ice": "Ice", "cobalt": "Cobalt"]
 
     struct Spec {
         var tint: UInt32 = 0xDCC8B0
@@ -19,7 +20,7 @@ enum Landscape {
     }
 
     struct Piece { var kind: String; var x: Double; var scale: Double; var flip: Bool }
-    struct Deposit { var kind: String; var x: Double }
+    struct Deposit { var kind: String; var x: Double; var amount: Int = 2 }
     struct Layout { var tint: UInt32; var shade: Double; var period: Double; var pieces: [Piece]; var deposits: [Deposit] }
 
     /// Which deposits-v2 art a mineral uses. Mirrors web `depositKindFor`.
@@ -88,7 +89,8 @@ enum Landscape {
         var deps: [Deposit] = []
         for i in 0..<dCount {
             let kind = pick(s.deposits, deposits, rng.next())
-            deps.append(Deposit(kind: kind, x: ((Double(i) + rng.next()) * (period / Double(dCount))).rounded(.toNearestOrAwayFromZero)))
+            let x = ((Double(i) + rng.next()) * (period / Double(dCount))).rounded(.toNearestOrAwayFromZero)
+            deps.append(Deposit(kind: kind, x: x, amount: 2 + Int((rng.next() * 7).rounded(.down))))
         }
         return Layout(tint: s.tint, shade: s.shade, period: period, pieces: out, deposits: deps)
     }

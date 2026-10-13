@@ -196,6 +196,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         )
 
         const shakeState = { timer: 0 }
+        const pulse = { timer: 0 }
         const shower = debrisPresetRef.current ?? activeDebrisPreset(debrisNow())
         const debrisArt = shower?.eventId === 'orionids-2026'
           ? await loadOrionidsArt(miningCanvasIsDark(palette.skyTop) ? 'dark' : 'blueprint')
@@ -218,6 +219,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           maxLaserTier: laserTier,
           mineralShapes: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.shape ?? 'circle'])),
           mineralSyms: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.sym])),
+          mineralNames: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.name])),
           beamColor: palette.beamCss,
           depositFrames: field.depositFrames,
           depositArtFor: mineral => field.depositArt[depositKindFor(mineral)],
@@ -229,12 +231,13 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
             shakeState.timer = 0.28
             onMissRef.current?.()
           },
-          onHit: () => onHitRef.current?.(),
+          onHit: () => { pulse.timer = 0.16; onHitRef.current?.() },
           onScroll: scrollX => {
             field.ground.x = -(scrollX % field.soilW)
             field.near.x = -((scrollX * 0.45) % field.ridgeW)
             field.far.x = -((scrollX * 0.16) % field.ridgeW)
             field.mid.x = -((scrollX * 0.3) % field.midW)
+            field.surface.x = -(scrollX % field.midW)
           },
           onOreNearby: (near) => { oreNearRef?.current?.(near) },
           neededMineralsRef,
@@ -284,7 +287,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           if (clear > 0 && shipY + altitude + SHIP_BELLY > surfaceY - clear) {
             altitude = Math.max(minAlt, surfaceY - clear - SHIP_BELLY - shipY - BUMP_KICK)
             if (bumpCooldown <= 0) {
-              bumpCooldown = 0.9
+              bumpCooldown = 1.6
               shakeState.timer = 0.32
               onBumpRef.current?.()
             }
@@ -295,6 +298,12 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           // Beam shows only while the trigger is held (fire pulse), never as an idle stream.
           field.beam.visible = firing
           field.spark.visible = firing
+          // Subtle hit pulse: a 1% zoom that eases back (SSL-538).
+          if (pulse.timer > 0 && !prefersReducedMotion()) {
+            pulse.timer -= ticker.deltaMS / 1000
+            const k = 1 + 0.01 * Math.max(0, pulse.timer / 0.16)
+            app.stage.scale.set(k)
+          } else if (app.stage.scale.x !== 1) app.stage.scale.set(1)
           if (shakeState.timer > 0) {
             shakeState.timer -= ticker.deltaMS / 1000
             const t = Math.max(0, shakeState.timer / 0.28)

@@ -57,7 +57,8 @@ public struct MiningField: Equatable, Sendable {
         var nextId = 0
         func place(_ mineral: String) {
             let tier = Minerals.byId[mineral]?.laserAccess ?? 1
-            let maxHp = 2 + tier
+            _ = tier
+            let maxHp = 1   // SSL-538: one accepted laser hit always mines the deposit
             // Rejection-sample so nodes never overlap (taps must be unambiguous); fall back to the last try if packed.
             var x = 0.5, y = 0.3
             for _ in 0..<40 {

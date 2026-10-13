@@ -4274,8 +4274,13 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 .laser-cue {
   position: absolute;
   z-index: 18;
-  top: auto;
-  bottom: 72px;
+  /* Hint sits up in the sky under the HUD, clear of the d-pad, gauge and deposits (SSL-538). */
+  top: calc(124px + env(safe-area-inset-top));
+  bottom: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(26, 42, 60, 0.82);
+  color: #f4f1ea;
   left: 50%;
   right: auto;
   width: max-content;
@@ -4283,12 +4288,11 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   transform: translateX(-50%);
   margin: 0;
   text-align: center;
-  color: var(--ln-world-hull-lit);
   font: 700 14px/18px var(--ln-font-body);
   text-shadow: 0 1px 0 var(--ln-world-outline);
   pointer-events: none;
 }
-.mining-screen[data-palette="mars"] .laser-cue { color: var(--ln-world-outline); }
+.mining-screen p.laser-cue { color: #f4f1ea; }
 .laser-hud {
   position: absolute;
   left: 0;

@@ -1,3 +1,4 @@
+import { depositTag } from '@/lib/mining/laserLayers'
 import { Container, Graphics, Sprite, Text, type Texture } from 'pixi.js'
 import { ScriptBehaviour } from '../components/ScriptBehaviour'
 import { ShapeRenderer } from '../components/ShapeRenderer'
@@ -133,8 +134,8 @@ function blobParts(mineral: string, salt: number): OreBlob[] {
 /** Per-laser-tier ore properties: radius, hp, depth range within rock surface */
 const ORE_TIER: Record<number, { radius: number; maxHp: number; depthMin: number; depthMax: number }> = {
   1: { radius: 10, maxHp: 1, depthMin: 8,  depthMax: 30 },
-  2: { radius: 13, maxHp: 2, depthMin: 32, depthMax: 60 },
-  3: { radius: 17, maxHp: 3, depthMin: 62, depthMax: 96 },
+  2: { radius: 13, maxHp: 1, depthMin: 32, depthMax: 60 },
+  3: { radius: 17, maxHp: 1, depthMin: 62, depthMax: 96 },
 }
 /** Native placeChips offset in source pixels: crust 8 + gap 4 + deposit 14. */
 const PIXEL_BURIAL_SRC = 26
@@ -169,6 +170,8 @@ export interface MiningControllerOptions {
   /** Element-symbol per mineral key (e.g. `Pt`, `H2O`). Rendered as a label on
    * every ore node — omit to leave ore unlabelled. */
   mineralSyms?: Record<string, string>
+  /** Display names, for the deposit labels (`Platinum · 1u`). */
+  mineralNames?: Record<string, string>
   /** Beam tint for the projectile. Defaults to the original cyan. */
   beamColor?: string
   /** Surface rock-chip colours. Omit to keep the buried marker as the only ore graphic. */
@@ -750,7 +753,8 @@ export class MiningController extends ScriptBehaviour {
       sprite = new Sprite(texture)
       sprite.anchor.set(0.5)
       // Deposits v2 art is authored at 64px; draw it near the old 22px chip footprint.
-      sprite.scale.set(art ? this.opts.pixelScale * (30 / art.width) : this.opts.pixelScale)
+      if (art) art.source.scaleMode = 'nearest'
+      sprite.scale.set(this.opts.pixelScale)
       sprite.tint = 0xffffff
       sprite.x = x
       sprite.y = y
@@ -845,6 +849,13 @@ export class MiningController extends ScriptBehaviour {
   private createLabel(mineral: string, x: number, y: number, radius: number): Text | null {
     const sym = this.opts.mineralSyms?.[mineral]
     if (!sym) return null
+    const name = this.opts.mineralNames?.[mineral]
+    if (name && this.opts.depositArtFor) {
+      // Clean pill: mineral name + rough amount (one hit-set yields one unit) (SSL-536).
+      const tag = depositTag(`${name} · ${sym} ×1`, x, y)
+      this.opts.container.addChild(tag)
+      return tag as unknown as Text
+    }
 
     const fontSize = Math.max(14, Math.round(radius * (sym.length >= 3 ? 1.15 : 1.7)))
     const ink = this.opts.labelInk ?? ORE_LABEL_FILL
@@ -887,6 +898,8 @@ export class MiningController extends ScriptBehaviour {
         ore.hp -= 1
         laser.go.active = false
         this.opts.onHit?.()
+        // Impact: small spark burst on every hit (SSL-538).
+        this.spawnParticleBurst(ox, ore.chip ? ore.chip.y : oy, 0xd8f2ff, ore.radius * 0.6)
         this.freeze(ore.hp <= 0 ? 'collect' : 'hit')
 
         if (ore.hp <= 0) {
@@ -898,6 +911,7 @@ export class MiningController extends ScriptBehaviour {
           const popY = ore.chip ? ore.chip.y : ore.go.transform.position.y
           if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, popY, ore.mineralColor, ore.radius)
           this.spawnPickup(ore.go.transform.position.x, popY, ore.mineralColor)
+          this.spawnPopup(ore.go.transform.position.x, popY - 18, `+1 ${this.opts.mineralSyms?.[ore.mineral] ?? ore.mineral}`)
           this.opts.onCollect(ore.mineral)
         } else {
           ore.flashTimer = FLASH_DURATION
@@ -912,6 +926,8 @@ export class MiningController extends ScriptBehaviour {
     if (ore.chip) ore.chip.tint = tint
     if (ore.sprite) {
       if (!this.opts.pixelScale) ore.sprite.tint = tint
+      // Untinted pixel art flashes by brightening its alpha pulse instead of a tint.
+      else ore.sprite.alpha = tint === 0xffffff ? 0.6 : 1
     } else {
       ore.renderer?.setTint(tint)
     }
@@ -964,6 +980,24 @@ export class MiningController extends ScriptBehaviour {
       const life = 0.3 + Math.random() * 0.15
       this.particles.push({ g, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life, maxLife: life })
     }
+  }
+
+  /** Floating `+1 Pt` that drifts up and fades. */
+  private spawnPopup(x: number, y: number, text: string): void {
+    const t = new Text({ text, style: { fontFamily: 'Oxanium, system-ui, sans-serif', fontSize: 16, fontWeight: '800', fill: 0xf4f1ea, stroke: { color: 0x1a2a3c, width: 4, join: 'round' } } })
+    t.anchor.set(0.5)
+    t.x = x
+    t.y = y
+    this.opts.container.addChild(t)
+    let life = 0.8
+    const tick = () => {
+      life -= 1 / 60
+      t.y -= 0.6
+      t.alpha = Math.max(0, life / 0.8)
+      if (life <= 0) { this.opts.container.removeChild(t); t.destroy(); return }
+      requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
   }
 
   private freeze(kind: HitKind): void {

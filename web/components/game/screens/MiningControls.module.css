@@ -62,3 +62,15 @@
 @keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 @keyframes pulse { 50% { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .recharge, .gauge[data-state='low'] .fill { animation: none; } }
+
+/* Phones: compact pad and gauge tucked into the corners beside/above the dock, clear of deposits (SSL-538). */
+@media (max-width: 600px) {
+  .dpad { grid-template-columns: 40px 40px 40px; grid-template-rows: 40px 40px 40px; bottom: calc(68px + env(safe-area-inset-bottom)); left: 12px; }
+  .pad { min-width: 40px; min-height: 40px; }
+  .gauge { left: auto; right: 12px; transform: none; width: 150px; bottom: calc(68px + env(safe-area-inset-bottom)); padding: 6px 10px 8px; }
+}
+@media (max-height: 520px) {
+  .dpad { grid-template-columns: 44px 44px 44px; grid-template-rows: 44px 44px 44px; bottom: calc(8px + env(safe-area-inset-bottom)); left: 12px; }
+  .pad { min-width: 44px; min-height: 44px; }
+  .gauge { left: auto; right: 12px; transform: none; width: 170px; bottom: calc(8px + env(safe-area-inset-bottom)); padding: 6px 10px 8px; }
+}

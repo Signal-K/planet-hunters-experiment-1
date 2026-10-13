@@ -103,7 +103,8 @@ struct ReachTests {
         let far = n.x < 0.5 ? 1.0 : 0.0
         #expect(f.strike(nodeId: n.id, roverX: far) == .outOfRange)
         #expect(f.charge == f.chargeCap)
-        if case .hit = f.strike(nodeId: n.id, roverX: n.x) {} else if case .mined = f.strike(nodeId: n.id, roverX: n.x) {} else { Issue.record("in-range strike should connect") }
+        // One in-range hit always mines (SSL-538).
+        if case .mined = f.strike(nodeId: n.id, roverX: n.x) {} else { Issue.record("in-range strike should mine") }
     }
 }
 

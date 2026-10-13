@@ -36,6 +36,8 @@ final class MiningScene: SKScene {
     private let near = SKNode()
     private let far = SKNode()
     private let mid = SKNode()
+    /// Surface deposits: scroll with the ground, sit on the surface line (SSL-538).
+    private let surfaceDeposits = SKNode()
     private var midW: CGFloat = 1
     private let landscapeKey: String
     private let beam = SKNode()
@@ -258,8 +260,18 @@ final class MiningScene: SKScene {
         }
 
         if let planet = palette.planet {
-            let radius = size.width * planet.radius
+            // Soft and whole in the sky: capped by the sky band, not the screen width (SSL-538).
+            let sky = max(80, size.height - surfaceY)
+            let radius = min(96, min(size.width, sky) * planet.radius * 0.65)
             let scale = max(1, (radius * 2 / 48).rounded())
+            let halo = SKSpriteNode(texture: SK.texture("laser/disc-48.png"))
+            halo.setScale(scale * 1.12)
+            halo.color = LaserPalette.sk(planet.bands.first ?? 0x9FB7D0)
+            halo.colorBlendFactor = 1
+            halo.alpha = 0.16
+            halo.position = CGPoint(x: size.width * planet.cx, y: size.height * (1 - planet.cy))
+            halo.zPosition = -16
+            world.addChild(halo)
             let crop = SKCropNode()
             let mask = SKSpriteNode(texture: SK.texture("laser/disc-48.png"))
             mask.setScale(scale)
@@ -272,6 +284,7 @@ final class MiningScene: SKScene {
             }
             crop.position = CGPoint(x: size.width * planet.cx, y: size.height * (1 - planet.cy))
             crop.zPosition = -15
+            crop.alpha = 0.9
             world.addChild(crop)
         }
 
@@ -310,7 +323,7 @@ final class MiningScene: SKScene {
         // ridge-ice carries snow pines; barren bodies get no plants, so ice reuses the rubble ridge (SSL-536).
         let ridgeName = palette.terrain == "dunes" ? "ridge-dunes" : "ridge-rubble"
         let copies = Int((size.width / ridgeTile).rounded(.up)) + 2
-        far.removeAllChildren(); mid.removeAllChildren(); near.removeAllChildren(); ground.removeAllChildren()   // a resize rebuilds the scene; drop the old layers
+        far.removeAllChildren(); mid.removeAllChildren(); surfaceDeposits.removeAllChildren(); near.removeAllChildren(); ground.removeAllChildren()   // a resize rebuilds the scene; drop the old layers
         far.zPosition = -8
         near.zPosition = -6
         ground.zPosition = 1
@@ -339,6 +352,8 @@ final class MiningScene: SKScene {
         buildLandscape()
         world.addChild(far)
         world.addChild(mid)
+        surfaceDeposits.zPosition = 2
+        world.addChild(surfaceDeposits)
         world.addChild(near)
         world.addChild(ground)
     }
@@ -386,12 +401,18 @@ final class MiningScene: SKScene {
             }
             for d in layout.deposits {
                 guard let tex = SK.texture("mining/deposit_\(d.kind).png") else { continue }
+                tex.filteringMode = .nearest
                 let node = SKSpriteNode(texture: tex)
                 node.size = tex.size()
                 node.anchorPoint = CGPoint(x: 0.5, y: 0)
-                node.setScale(px * 0.6)
-                node.position = CGPoint(x: CGFloat(c) * midW + CGFloat(d.x) * px, y: surfaceY - 4 - Landscape.depositHeight * 0.1 * px)
-                mid.addChild(node)
+                node.setScale(px)   // terrain pixel scale, nearest-neighbour
+                // Anchored on the ground surface, about a third embedded; never on the ridges.
+                let x = CGFloat(c) * midW + CGFloat(d.x) * px
+                node.position = CGPoint(x: x, y: surfaceY - (tex.size().height * 0.35).rounded() * px)
+                surfaceDeposits.addChild(node)
+                let tag = Self.depositTag("\(Landscape.depositNames[d.kind] ?? d.kind.capitalized) · ~\(d.amount)t")
+                tag.position = CGPoint(x: x, y: node.position.y + tex.size().height * px + 14)
+                surfaceDeposits.addChild(tag)
             }
         }
     }
@@ -407,9 +428,13 @@ final class MiningScene: SKScene {
             let art = SK.texture("mining/deposit_\(kind).png")
             let a = art ?? depositTexture(colorHex: hex, variant: n.id, glint: false)
             let chip = SKSpriteNode(texture: a)
+            a.filteringMode = .nearest
             chip.size = a.size()
-            // Deposits v2 art is 64px; draw it near the old chip footprint.
-            chip.setScale(art != nil ? px * 30 / 64 : px)
+            chip.setScale(px)   // terrain pixel scale
+            let tag = Self.depositTag("\(Minerals.byId[n.mineralId]?.name ?? n.mineralId) · \(Minerals.byId[n.mineralId]?.symbol ?? "") ×1")
+            tag.setScale(1 / px)
+            tag.position = CGPoint(x: 0, y: -a.size().height / 2 - 10 / px)
+            chip.addChild(tag)
             if art == nil {
                 let b = depositTexture(colorHex: hex, variant: n.id, glint: true)
                 chip.run(.repeatForever(.animate(with: [a, a, a, b], timePerFrame: 0.5 + Double(n.id % 3) * 0.12)))
@@ -536,9 +561,9 @@ final class MiningScene: SKScene {
         case .tooHard(let tier): onFeedback?("Needs a tier \(tier) laser")
         case .outOfRange: onFeedback?("Not on the beam")
         case .miss: onFeedback?("Miss")
-        case .hit(let id, _): if let sp = nodeSprites[id] { crack(sp) }
+        case .hit(let id, _): if let sp = nodeSprites[id] { crack(sp); hitFeedback(sp) }
         case .mined(let id, let mineral):
-            if let sp = nodeSprites[id] { pop(sp, id: id, mineral: mineral) }
+            if let sp = nodeSprites[id] { hitFeedback(sp); pop(sp, id: id, mineral: mineral) }
         }
         onChange?(field)
     }
@@ -549,6 +574,38 @@ final class MiningScene: SKScene {
         beam.xScale = hit ? 1.5 : 1
         spark.setScale(px * (hit ? 1.5 : 1))
         if hit { SK.burst(at: spark.position, color: LaserPalette.sk(palette.beam), count: 6, speed: 50, in: world) }
+    }
+
+    /// Hit feedback: impact sparks, a brief deposit flash, a subtle screen pulse, and a light haptic on iOS.
+    private func hitFeedback(_ sp: SKNode) {
+        SK.burst(at: sp.position, color: LaserPalette.sk(palette.beamCore), count: 8, speed: 70, in: world)
+        if let s = sp as? SKSpriteNode {
+            s.color = .white
+            s.run(.sequence([.colorize(withColorBlendFactor: 0.6, duration: 0.03), .colorize(withColorBlendFactor: 0, duration: 0.14)]))
+        }
+        if !reducedMotion {
+            world.run(.sequence([.scale(to: 1.01, duration: 0.05), .scale(to: 1, duration: 0.12)]), withKey: "pulse")
+        }
+        #if os(iOS)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        #endif
+    }
+
+    /// Small, roomy cream-on-navy label pill (mineral name + rough amount). No orange.
+    static func depositTag(_ text: String) -> SKNode {
+        let label = SKLabelNode(text: text)
+        label.fontName = "Oxanium-SemiBold"
+        label.fontSize = 11
+        label.fontColor = LaserPalette.sk(0xF4F1EA)
+        label.verticalAlignmentMode = .center
+        let w = label.frame.width + 14
+        let pill = SKShapeNode(rectOf: CGSize(width: w, height: 18), cornerRadius: 9)
+        pill.fillColor = LaserPalette.sk(0x1A2A3C, 0.82)
+        pill.strokeColor = LaserPalette.sk(0x9FB7D0, 0.5)
+        pill.lineWidth = 1
+        pill.addChild(label)
+        pill.zPosition = 30
+        return pill
     }
 
     private func crack(_ sp: SKNode) {
@@ -597,6 +654,7 @@ final class MiningScene: SKScene {
         shift(near, by: dx * 0.45, width: ridgeTile)
         shift(far, by: dx * 0.16, width: ridgeTile)
         shift(mid, by: dx * 0.3, width: midW)
+        shift(surfaceDeposits, by: dx, width: midW)
         placeChips()
 
         let pulse = reducedMotion ? 1 : 0.82 + sin(clock * 9) * 0.18
@@ -627,7 +685,7 @@ final class MiningScene: SKScene {
         if clear > 0, belly < surfaceY + clear {
             altitude = surfaceY + clear + 14 + 18 - shipY
             if bumpCooldown <= 0 {
-                bumpCooldown = 0.9
+                bumpCooldown = 1.6
                 field.bump()
                 onBump?()
                 onChange?(field)
