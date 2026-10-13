@@ -18,21 +18,35 @@ function ratio(a: number[], b: number[]) {
 test.describe('hangar contrast', () => {
   test.use({ viewport: { width: 926, height: 428 } })
 
-  test('registry tier chips sit on paper at 4.5:1', async ({ page }) => {
+  test('vehicle cards and the francs chip sit on light panels at 4.5:1', async ({ page }) => {
     await page.goto('/game/stage?preset=ship-customizer&chrome=1')
-    await expect(page.locator('[data-testid="hangar-fleet-grid"]')).toBeVisible()
-    const tier = await page.locator('[data-testid="hangar-fleet-grid"]').evaluate(grid => {
-      const el = [...grid.querySelectorAll('[class*="tier"]')].find(node => (node.textContent || '').trim().startsWith('TIER'))
-      if (!el) return null
+    const grid = page.locator('[data-testid="hangar-fleet-grid"]')
+    await expect(grid).toBeVisible()
+    await expect(page.locator('[data-testid="hangar-screen"]').getByRole('heading')).toHaveCount(0)
+    const cards = grid.locator('button')
+    await expect(cards).toHaveCount(3)
+    const paint = await cards.evaluateAll(nodes => nodes.map(el => {
+      const s = getComputedStyle(el)
+      return {
+        text: (el.textContent || '').trim(),
+        images: el.querySelectorAll('img').length,
+        opacity: s.opacity,
+        color: s.color,
+        background: s.backgroundColor,
+      }
+    }))
+    for (const card of paint) {
+      expect(card.text).toBe('')
+      expect(card.images).toBe(1)
+      expect(Number(card.opacity)).toBe(1)
+      expect(ratio(channel(card.color), channel(card.background))).toBeGreaterThanOrEqual(4.5)
+    }
+    const chip = await page.locator('[data-testid="hangar-francs-chip"]').evaluate(el => {
       const s = getComputedStyle(el)
       return { color: s.color, background: s.backgroundColor, opacity: s.opacity }
     })
-    expect(tier).not.toBeNull()
-    expect(Number(tier!.opacity)).toBe(1)
-    expect(ratio(channel(tier!.color), channel(tier!.background))).toBeGreaterThanOrEqual(4.5)
-    const locked = page.locator('[data-testid="hangar-fleet-grid"] article').nth(2)
-    const faded = await locked.evaluate(el => getComputedStyle(el).opacity)
-    expect(Number(faded)).toBe(1)
+    expect(Number(chip.opacity)).toBe(1)
+    expect(ratio(channel(chip.color), channel(chip.background))).toBeGreaterThanOrEqual(4.5)
   })
 })
 

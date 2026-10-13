@@ -469,6 +469,9 @@ function ScreenBody({
           trainingPartTry={game.player.flightPlan?.replayTry === 'part' || (!game.player.flightPlan?.completed?.part && !!game.player.flightPlan?.completed?.scan)}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
           onBack={onBackFromHangar ?? game.returnFromHangar}
+          onBuild={() => game.go('build')}
+          onHub={() => game.go('instrument-hub')}
+          onNext={() => game.go('launchpad')}
         />
       )
 
