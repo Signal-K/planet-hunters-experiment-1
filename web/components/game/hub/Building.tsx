@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { structureBuildMs, hubConstructionProgress } from '@/lib/systems/HubConstructionSystem'
 import { useSharedSecond } from '@/lib/hooks/useSharedSecond'
@@ -136,7 +136,31 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
     calloutAlign === 'start' ? -CALLOUT_TAIL_INSET
       : calloutAlign === 'end' ? -(CALLOUT_W - CALLOUT_TAIL_INSET)
         : -CALLOUT_W / 2
-  const tailLeft = -bubbleLeft
+  // Keep an anchored bubble inside the viewport (a tower near the screen edge
+  // on a 390px phone otherwise pushes it off-screen). The tail moves the
+  // opposite way so it still points at the building.
+  const bubbleRef = useRef<HTMLDivElement | null>(null)
+  const [nudge, setNudge] = useState(0)
+  useLayoutEffect(() => {
+    if (!calloutOpen || callout?.placement === 'viewport-clear') { setNudge(0); return }
+    const measure = () => {
+      const el = bubbleRef.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      const margin = 8
+      const vw = document.documentElement.clientWidth || window.innerWidth
+      const left = r.left - nudge, right = r.right - nudge
+      let next = 0
+      if (right > vw - margin) next = vw - margin - right
+      if (left + next < margin) next = margin - left
+      next = Math.max(-CALLOUT_W, Math.min(CALLOUT_W, next))
+      if (Math.abs(next - nudge) > 0.5) setNudge(next)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [calloutOpen, callout?.placement, nudge])
+  const tailLeft = Math.max(CALLOUT_TAIL_INSET, Math.min(CALLOUT_W - CALLOUT_TAIL_INSET, -bubbleLeft - nudge))
 
   // Small delay so it reads as the base speaking up, rather than slamming
   // into view on load. Matches the mockup's 900ms auto-open.
@@ -262,6 +286,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             const bubble = (
           <div
             className={clear ? 'hub-callout hub-callout--clear' : undefined}
+            ref={clear ? undefined : bubbleRef}
             data-testid={`building-${kind}-callout`}
             onClick={e => e.stopPropagation()}
             style={clear ? {
@@ -270,7 +295,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
               visibility: calloutOpen ? 'visible' : 'hidden',
             } : {
               position: 'absolute',
-              left: `calc(50% + ${bubbleLeft}px)`,
+              left: `calc(50% + ${bubbleLeft + nudge}px)`,
               bottom: 'calc(100% + 16px)',
               transform: calloutOpen ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.96)',
               transformOrigin: `bottom ${tailLeft}px`,

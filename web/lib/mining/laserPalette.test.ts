@@ -10,8 +10,9 @@ describe('laser palettes', () => {
     expect(bennu.starAlpha).toBeGreaterThan(0)
     expect(bennu.planet).toBeUndefined()
     expect(mars.id).toBe('mars')
-    expect(mars.lightAlpha).toBeGreaterThan(0)
-    expect(mars.clouds).toBe(true)
+    // SSL-518: Mars uses the dark dusk palette, so no daylight wash and no clouds.
+    expect(mars.lightAlpha).toBe(0)
+    expect(mars.clouds).toBe(false)
     expect(europa.id).toBe('icy-moon')
     expect(europa.planet?.bands.length).toBeGreaterThan(3)
     expect(europa.terrain).toBe('ice')
@@ -26,7 +27,8 @@ describe('laser palettes', () => {
   it('inks ore labels for the sky behind them', () => {
     expect(paletteForTarget({ id: 'bennu', type: 'asteroid' }).labelInk).toBe(0xffffff)
     expect(paletteForTarget({ id: 'europa', type: 'planet', archetype: 'icy' }).labelInk).toBe(0xffffff)
-    expect(paletteForTarget({ id: 'mars', type: 'planet' }).labelInk).toBe(0x1a2430)
+    // SSL-518: Mars' dusk horizon is dark, so its ore labels ink white.
+    expect(paletteForTarget({ id: 'mars', type: 'planet' }).labelInk).toBe(0xffffff)
   })
 
   it('resolves a ?palette= id and rejects an unknown one', () => {

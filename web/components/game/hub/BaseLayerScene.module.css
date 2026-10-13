@@ -9,7 +9,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  /* Only the violet top rows of the sky ramp are shown; its lower rows are the rose and orange sunset, which the base never wants. */
+  /* Cool blue to cream sky ramp (SSL-519): no purple, no orange. Only the top rows show. */
   background: url('/game/assets/base/layers/sky.png') top / 100% 282% no-repeat;
   image-rendering: auto;
 }

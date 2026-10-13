@@ -78,7 +78,7 @@
   --ln-mineral-ice: #9becff;
   --ln-mineral-carbon: #6a7280;
   --ln-mineral-gold: #8ecae6;
-  --ln-mineral-rare: #c084ff;
+  --ln-mineral-rare: #66c2ff;
   --ln-text: #e9e9ec;
   --ln-text-dim: #b4b4bc;
   --ln-text-muted: #7c7c86;
@@ -94,8 +94,8 @@
   --ln-panel-2: #25252a;
   --ln-border: rgba(255, 255, 255, 0.22);
   --ln-payout: #d8ff55;
-  --ln-play: #fa49ca;
-  --ln-purple-depth: #25123d;
+  --ln-play: #2ec4b6;
+  --ln-purple-depth: #12233d;
   --ln-r-xs: 2px;
   --ln-r-sm: 4px;
   --ln-r-md: 6px;
@@ -290,8 +290,8 @@
   --ln-panel-2:      #f2eee4;
   --ln-border:       rgba(28, 26, 20, 0.28);
   --ln-payout:       #6a8a1a;
-  --ln-play:         #a0288f;
-  --ln-purple-depth: #d9d0f0;
+  --ln-play:         #285aa0;
+  --ln-purple-depth: #d0ddf0;
   --ln-text-inverse: #f4f1ea;
 }
 .theme-blueprint,

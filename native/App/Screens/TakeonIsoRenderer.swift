@@ -28,15 +28,15 @@ struct TakeonIsoRenderer {
     private struct Tone { var top: UInt32, left: UInt32, right: UInt32 }
     private static func tone(_ m: Int) -> Tone {
         switch m {
-        case TakeonMaterial.regolith: Tone(top: 0x6B4E9E, left: 0x3F2D6B, right: 0x2F2556)
+        case TakeonMaterial.regolith: Tone(top: 0x4E6F9E, left: 0x2D476B, right: 0x253956)
         case TakeonMaterial.rock: Tone(top: 0x59508F, left: 0x362F63, right: 0x282552)
         case TakeonMaterial.basalt: Tone(top: 0x45407C, left: 0x2A2755, right: 0x1F1E48)
         case TakeonMaterial.ice, TakeonMaterial.snow: Tone(top: 0x8FB4E8, left: 0x5779B8, right: 0x42609E)
-        case TakeonMaterial.silica: Tone(top: 0x8A78C2, left: 0x574890, right: 0x433878)
-        case TakeonMaterial.dust, TakeonMaterial.sand: Tone(top: 0x7C5C9C, left: 0x4C3670, right: 0x3A2A5C)
+        case TakeonMaterial.silica: Tone(top: 0x7897C2, left: 0x486690, right: 0x385378)
+        case TakeonMaterial.dust, TakeonMaterial.sand: Tone(top: 0x7C5C9C, left: 0x364E70, right: 0x2A3F5C)
         case TakeonMaterial.sulfur: Tone(top: 0x9A7A86, left: 0x624A66, right: 0x4C3A56)
         case TakeonMaterial.grass: Tone(top: 0x4F7F9A, left: 0x2F536E, right: 0x264260)
-        default: Tone(top: 0x5E4A94, left: 0x372B66, right: 0x2A2358)
+        default: Tone(top: 0x4A6994, left: 0x2B4466, right: 0x2A2358)
         }
     }
     private static func color(_ hex: UInt32, shade: Double = 1, a: Double = 1) -> Color {
@@ -55,7 +55,7 @@ struct TakeonIsoRenderer {
         let (tw, th) = (Self.tw, Self.th)
         // Deep violet void behind and beyond the terrain, with a soft vignette.
         ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(
-            Gradient(colors: [Self.color(0x1A1240), Self.color(0x2A1A5C), Self.color(0x120C2E)]),
+            Gradient(colors: [Self.color(0x122540), Self.color(0x1A355C), Self.color(0x120C2E)]),
             startPoint: .zero, endPoint: CGPoint(x: size.width * 0.3, y: size.height)))
 
         let rp = state.roverPosition
@@ -116,7 +116,7 @@ struct TakeonIsoRenderer {
         var tone = Self.tone(m)
         if !TakeonMaterial.isOre(m), hv > 0.80 { // some blocks lean blue, others magenta: painterly variety
             let blue = hv > 0.90
-            tone = Tone(top: blue ? 0x40529E : 0x7A4A96, left: blue ? 0x27336A : 0x4E2E62, right: blue ? 0x1D2757 : 0x3C2552)
+            tone = Tone(top: blue ? 0x40529E : 0x4A6A96, left: blue ? 0x27336A : 0x2E4462, right: blue ? 0x1D2757 : 0x253852)
         }
         let ore = TakeonMaterial.isOre(m)
         let jitter = (0.80 + Double(min(h, 10)) * 0.045) * (0.9 + hv * 0.22)
@@ -206,19 +206,19 @@ struct TakeonIsoRenderer {
         wheel(-14, 14); wheel(22, 4)
         // Mast + lamp.
         ctx.stroke(Path { p in p.move(to: CGPoint(x: c.x - 8, y: c.y - 30)); p.addLine(to: CGPoint(x: c.x - 8, y: c.y - 48)) }, with: .color(Self.color(0x2A2744)), lineWidth: 2.4)
-        let lamp = state.rover.mining != nil ? 0xFFB347 : 0x5EDBA8
+        let lamp = state.rover.mining != nil ? 0x47DAFF : 0x5EDBA8
         ctx.fill(Path(ellipseIn: CGRect(x: c.x - 12, y: c.y - 54, width: 8, height: 8)), with: .color(Self.color(UInt32(lamp))))
         // Drill arm + beam toward the target tile.
         if let m = state.rover.mining {
             let t = Self.project(Double(m.pos.x) + 0.5, Double(m.pos.y) + 0.5, Double(terrain.height(m.pos.x, m.pos.y)) + 0.6)
             let tp = CGPoint(x: o.x + t.x, y: o.y + t.y)
             let arm = CGPoint(x: c.x + 6, y: c.y - 20)
-            ctx.stroke(Path { p in p.move(to: arm); p.addLine(to: tp) }, with: .color(Self.color(0xFFC857, a: 0.35)), lineWidth: 9)
+            ctx.stroke(Path { p in p.move(to: arm); p.addLine(to: tp) }, with: .color(Self.color(0x57DDFF, a: 0.35)), lineWidth: 9)
             ctx.stroke(Path { p in p.move(to: arm); p.addLine(to: tp) }, with: .color(Self.color(0xFFF1B8)), lineWidth: 3)
             for i in 0..<7 {
                 let a = time * 9 + Double(i) * 1.7
                 let r = CGFloat(6 + 8 * abs(sin(a)))
-                ctx.fill(Path(ellipseIn: CGRect(x: tp.x + CGFloat(cos(a * 1.3)) * r - 2, y: tp.y + CGFloat(sin(a)) * r * 0.7 - 6 - CGFloat(i), width: 3.5, height: 3.5)), with: .color(Self.color(0xFFC857)))
+                ctx.fill(Path(ellipseIn: CGRect(x: tp.x + CGFloat(cos(a * 1.3)) * r - 2, y: tp.y + CGFloat(sin(a)) * r * 0.7 - 6 - CGFloat(i), width: 3.5, height: 3.5)), with: .color(Self.color(0x57DDFF)))
             }
         }
         // Facing marker.

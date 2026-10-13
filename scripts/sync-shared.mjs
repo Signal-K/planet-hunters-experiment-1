@@ -97,12 +97,12 @@ const start = css.indexOf(begin);
 const finish = css.indexOf(end);
 if (start < 0 || finish < start) throw new Error("globals.css is missing generated shared-token markers");
 const nextCss = `${css.slice(0, start)}${cssBlock()}${css.slice(finish + end.length)}`;
-for (const anchor of ["--ln-void: #0a0a0c", "--ln-amber: #f5a623", "--ln-map-sun: #eefcff", "--ln-blueprint-bg: #eef3f8", "--ln-play: #fa49ca"]) {
+for (const anchor of ["--ln-void: #0a0a0c", "--ln-amber: #175f9b", "--ln-map-sun: #eefcff", "--ln-blueprint-bg: #eef3f8", "--ln-play: #2ec4b6"]) {
   if (!nextCss.includes(anchor)) throw new Error(`Generated palette dropped ${anchor}`);
 }
 // SSL-520 dusk scene rules live outside the generated block. Regenerating tokens must not delete them.
 if (css.includes("SSL-520:")) {
-  for (const anchor of ["SSL-520: close side-on Base", "--ln-world-dusk-top: #2a2766", "--ln-world-dusk-horizon: #6b3fa0", "--hub-sky-top: var(--ln-world-dusk-top)"]) {
+  for (const anchor of ["SSL-520: close side-on Base", "--ln-world-dusk-top: #2a2766", "--hub-sky-top: var(--ln-world-dusk-top)"]) {
     if (!nextCss.includes(anchor)) throw new Error(`Generated CSS would drop the dusk restyle anchor: ${anchor}`);
   }
 }

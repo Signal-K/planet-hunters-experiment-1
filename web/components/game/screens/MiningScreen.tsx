@@ -667,7 +667,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       </div>
 
       {activeOverlay === 'guide' && (
-        <div className="mining-guide-dock" role="dialog" aria-modal="true" aria-label="Mining controls">
+        <div className="mining-guide-dock" role="region" aria-label="Mining controls">
           <div className="mining-guide-top">
             <button type="button" className="mining-guide-x" aria-label="Close" onClick={() => setGuideOpen(false)}>
               <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">

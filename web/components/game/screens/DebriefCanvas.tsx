@@ -74,7 +74,7 @@ export default function DebriefCanvas({ rocketImageSrc, scene = 'berth' }: Debri
         app.stage.addChild(world)
         const colors = {
           skyTop: tokenColor('--ln-world-dusk-top', 0x161a38),
-          skyHorizon: tokenColor('--ln-world-dusk-horizon', 0x4c315b),
+          skyHorizon: tokenColor('--ln-world-dusk-horizon', 0x31425b),
           floor: tokenColor('--ln-world-asphalt', 0x343b46),
           floorEdge: tokenColor('--ln-world-outline', 0x16293b),
           trim: tokenColor('--ln-world-trim-teal', 0x2a9aa3),

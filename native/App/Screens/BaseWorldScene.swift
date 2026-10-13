@@ -39,7 +39,7 @@ struct BaseWorldScene: View {
             let cx = min(max(camera.x, 0), world.maxX)
             let lift = world.shift * camera.depth
             ZStack(alignment: .topLeading) {
-                // Only the violet top rows of the sky ramp show (the lower rows are a rose and orange sunset), matching web.
+                // Cool blue to cream sky ramp (SSL-519): no purple, no orange. Only the top rows show, matching web.
                 Art.view("base/layers/sky.png")
                     .resizable().interpolation(.low)
                     .frame(width: w, height: h * 2.82, alignment: .top)
