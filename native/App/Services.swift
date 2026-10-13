@@ -1,6 +1,7 @@
 import SwiftUI
 import Network
 import GameKit
+import UserNotifications
 import LandnamCore
 
 /// Game Center: sign-in is automatic and optional; the game never depends on it.
@@ -62,10 +63,11 @@ final class Services {
     private var session: AuthSession?
     private var pulling = false
     private let unauthorized = UnauthorizedBox()
+    private let mergedBox: MergedBox
     private weak var auth: AuthModel?
     private static let ownerKey = "landnam.saveOwner"
     /// HUD sync chip state: offline, uploading queued writes, or idle (nil).
-    private(set) var online = true
+    private(set) var online = !PocketBaseExecutor.forceOffline
     private(set) var pendingWrites = 0
     private(set) var failedWrites = 0
 
@@ -74,6 +76,9 @@ final class Services {
         let bad = unauthorized
         var exec = PocketBaseExecutor(baseURL: api.baseURL, token: { box.value })
         exec.onUnauthorized = { bad.fire() }
+        let merged = MergedBox()
+        mergedBox = merged
+        exec.onMerged = { st in merged.fire(st) }
         sync = CloudSync(outbox: Outbox(store: FileOutboxStore(url: FileOutboxStore.defaultURL()), execute: exec.executor))
         // Citizen-science verdicts go to the shared backend with the shared login, in their own queue
         // so a slow shared backend never holds up the game save.
@@ -89,6 +94,7 @@ final class Services {
         self.store = store
         self.auth = auth
         // A server 401 means the token aged out: renew it, or ask the player to sign in again.
+        mergedBox.handler = { [weak store] st in Task { @MainActor in store?.mergeRemote(st) } }
         unauthorized.handler = { [weak auth] in Task { @MainActor in await auth?.refreshSession() } }
         attach(auth.session)
         let sync = sync, gc = gameCenter, shared = shared, user = sharedUser
@@ -105,6 +111,11 @@ final class Services {
             let log = session.sharedUserId.flatMap { MissionRuns.logOp(old: old, new: new, sharedUserId: $0, payout: payout, now: now) }
             if !ops.isEmpty { Task { for op in ops { await sync.enqueue(op) } } }
             if let log { Task { await shared.enqueue(log); await shared.flush() } }
+            for n in NativeRecords.notifications(old: old, new: new) {
+                LocalNotifications.schedule(title: n.title, body: n.body, at: n.at)
+                let op = NativeRecords.scheduledNotification(endpoint: LocalNotifications.endpoint, title: n.title, body: n.body, at: n.at)
+                Task { await sync.enqueue(op) }
+            }
         }
         Task { @MainActor [weak self] in
             while true {
@@ -113,6 +124,12 @@ final class Services {
                 try? await Task.sleep(for: .seconds(1))
             }
         }
+        TakeonPersistence.upload = { target, seed, state, snapshot in
+            guard let session = ses() else { return }
+            let ops = NativeRecords.voxelWorld(userId: session.userId, targetId: target, seed: seed, state: state, snapshot: snapshot)
+            Task { for op in ops { await sync.enqueue(op) } }
+        }
+        LocalNotifications.requestProvisional()
         store.onSiteDeed = { siteId in Task { await sync.enqueue(SiteDeed.op(siteId: siteId)) } }
         store.onClassified = { verdict in
             // Local save already happened. Without a shared login (Apple sign-in) the verdict stays local.
@@ -120,7 +137,7 @@ final class Services {
             Task { await shared.enqueue(op); await shared.flush() }
         }
         monitor.pathUpdateHandler = { path in
-            let up = path.status == .satisfied
+            let up = path.status == .satisfied && !PocketBaseExecutor.forceOffline
             Task { @MainActor in self.online = up }
             if up { Task { @MainActor in self.pullIfNeeded(); await sync.flush(); await shared.flush() } }
         }
@@ -175,6 +192,11 @@ final class Services {
             case .none: break
             case .unavailable: return
             }
+            await sync.enqueue(NativeRecords.pushSubscription(userId: id, endpoint: LocalNotifications.endpoint))
+            if TakeonPersistence.load("moon") == nil,
+               let (_, snap) = await NativeRecords.fetchWorld(baseURL: base, token: tok, userId: id, targetId: "moon"), let snap {
+                TakeonPersistence.storeLocal("moon", snap)
+            }
             if let runs = await MissionRuns.fetchOpen(baseURL: base, token: tok, userId: id), self.session?.userId == id {
                 for op in store.repairRuns(runs) { await sync.enqueue(op) }
             }
@@ -194,7 +216,31 @@ final class UnauthorizedBox: @unchecked Sendable {
     func fire() { handler?() }
 }
 
+/// Carries a merged save from the executor back to the store (SSL-559).
+final class MergedBox: @unchecked Sendable {
+    private let lock = NSLock(); private var h: (@Sendable (GameState) -> Void)?
+    var handler: (@Sendable (GameState) -> Void)? { get { lock.withLock { h } } set { lock.withLock { h = newValue } } }
+    func fire(_ s: GameState) { handler?(s) }
+}
+
 final class TokenBox: @unchecked Sendable {
     private let lock = NSLock(); private var v: String?
     var value: String? { get { lock.withLock { v } } set { lock.withLock { v = newValue } } }
+}
+
+/// Local iOS notifications (SSL-559). Delivered by iOS itself, so they work offline; each one is mirrored to
+/// `scheduled_notifications`. Without an APNs entitlement the device registers a local-only endpoint.
+@MainActor
+enum LocalNotifications {
+    static var endpoint: String { "ios-local:" + Ledger.deviceId() }
+    static func requestProvisional() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .provisional]) { _, _ in }
+    }
+    static func schedule(title: String, body: String, at ms: Double) {
+        let c = UNMutableNotificationContent(); c.title = title; c.body = body
+        let wait = max(1, ms / 1000 - Date().timeIntervalSince1970)
+        let req = UNNotificationRequest(identifier: "landnam-\(Int(ms))-\(title.hashValue)", content: c,
+                                        trigger: UNTimeIntervalNotificationTrigger(timeInterval: wait, repeats: false))
+        UNUserNotificationCenter.current().add(req)
+    }
 }

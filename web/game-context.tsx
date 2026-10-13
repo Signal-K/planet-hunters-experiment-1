@@ -1,11 +1,14 @@
 'use client'
 
+import { stampLedger } from '@/lib/sync/ledger'
+import { deviceId } from '@/lib/sync/deviceId'
 import { cacheSave, dropCachedSave, readCachedSave } from '@/lib/offline/stateCache'
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Screen, GameState, GameActions } from '@/lib/game-types'
 import { MISSIONS, TARGETS, getLaserChargeCap } from '@/lib/data'
-import { DEFAULT_STATE, loadState, normalizeAndRepair } from '@/lib/game-state'
+import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair } from '@/lib/game-state'
+import { REMOTE_MERGED_EVENT, sameContent } from '@/lib/sync/casSave'
 import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
 import { resolvePreset, DEV_GROUPS } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
@@ -42,7 +45,14 @@ const STORAGE_KEY = GAME_STATE_STORAGE_KEY
 const GameContext = createContext<(GameState & GameActions) | null>(null)
 
 export function GameProvider({ children, urlSync = true }: { children: React.ReactNode; /** false = never push the router (isolated dev stage keeps its own URL). */ urlSync?: boolean }) {
-  const [state, setState] = useState<GameState>(DEFAULT_STATE)
+  const [state, setStateRaw] = useState<GameState>(DEFAULT_STATE)
+  // SSL-559: every local change is stamped onto this device's ledger entry (idempotent; merges record nothing).
+  const setState = useCallback<React.Dispatch<React.SetStateAction<GameState>>>(update => {
+    setStateRaw(s => {
+      const next = typeof update === 'function' ? (update as (prev: GameState) => GameState)(s) : update
+      return next === s ? s : stampLedger(next, deviceId())
+    })
+  }, [])
   const stateRef = useRef(state)
   stateRef.current = state
 
@@ -148,20 +158,33 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     // localStorage. Hydrate only that account's private slot; the unscoped
     // key is the guest/legacy slot and must not bleed into a new account
     // while remote sync is warming up (KES-324).
-    const loadedState = loadState(gameStateStorageKey(STORAGE_KEY, pbShared.authStore.record?.id))
-    // `/game` resolves returning players to Earth Base before this provider
-    // hydrates. Keep that entry decision authoritative; otherwise hydration
-    // restores the previous Contracts screen and the URL-sync effect pushes
-    // the player straight back to `/game/missions` (KES-226).
-    // SSL-476: /game/launchpad is a stable destination too. Without this a cold
-    // load restored the saved screen (e.g. hub-subsurface) and the URL sync
-    // rewrote the path to it, so the Launchpad opened the underground.
-    const entryScreen = entryScreenForPath(window.location.pathname, loadedState.player.placed)
-    const entryState = entryScreen ? { ...loadedState, screen: entryScreen } : loadedState
-    setState(entryState)
-    setHydrated(true)
-    const record = pbShared.authStore.record
-    if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
+    // SSL-559: IndexedDB is the primary offline cache, localStorage the fallback (and the
+    // fresher copy wins if a tab died between the two writes). PocketBase reconciles afterwards.
+    const slotKey = gameStateStorageKey(STORAGE_KEY, pbShared.authStore.record?.id)
+    void (async () => {
+      const fallback = loadState(slotKey)
+      const cachedRaw = await readCachedSave(slotKey)
+      let loadedState = fallback
+      if (cachedRaw) {
+        try {
+          const cached = normalizeAndRepair(JSON.parse(cachedRaw))
+          if (!localStorage.getItem(slotKey) || (cached.updatedAt ?? 0) >= (fallback.updatedAt ?? 0)) loadedState = cached
+        } catch { /* corrupt cache: localStorage copy */ }
+      }
+      // `/game` resolves returning players to Earth Base before this provider
+      // hydrates. Keep that entry decision authoritative; otherwise hydration
+      // restores the previous Contracts screen and the URL-sync effect pushes
+      // the player straight back to `/game/missions` (KES-226).
+      // SSL-476: /game/launchpad is a stable destination too. Without this a cold
+      // load restored the saved screen (e.g. hub-subsurface) and the URL sync
+      // rewrote the path to it, so the Launchpad opened the underground.
+      const entryScreen = entryScreenForPath(window.location.pathname, loadedState.player.placed)
+      const entryState = entryScreen ? { ...loadedState, screen: entryScreen } : loadedState
+      setState(entryState)
+      setHydrated(true)
+      const record = pbShared.authStore.record
+      if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
+    })()
   }, [])
 
   // Survey on return visit
@@ -223,18 +246,19 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     void cacheSave(key, json)
     if (key !== STORAGE_KEY) localStorage.removeItem(STORAGE_KEY)
   }, [state, hydrated, auth.authUserId])
-  // Offline fallback: localStorage evicted but the IndexedDB copy survived (SSL-554).
-  const restoredFromCache = useRef(false)
+  // SSL-559: a save write merged in another device's progress; fold it into the live state.
   useEffect(() => {
-    if (!hydrated || isPreview.current || restoredFromCache.current) return
-    restoredFromCache.current = true
-    const key = gameStateStorageKey(STORAGE_KEY, auth.authUserId)
-    if (localStorage.getItem(key)) return
-    void readCachedSave(key).then(raw => {
-      if (!raw) return
-      try { setState(current => current.player.missionsDone > 0 || current.player.placed.length > 0 ? current : normalizeAndRepair(JSON.parse(raw))) } catch { /* corrupt copy */ }
-    })
-  }, [hydrated, auth.authUserId]) // eslint-disable-line react-hooks/exhaustive-deps
+    const onMerged = (event: Event) => {
+      const merged = (event as CustomEvent<GameState>).detail
+      if (!merged?.player) return
+      setState(current => {
+        const next = mergeRemoteState(current, merged)
+        return sameContent(next, current) ? current : next
+      })
+    }
+    window.addEventListener(REMOTE_MERGED_EVENT, onMerged)
+    return () => window.removeEventListener(REMOTE_MERGED_EVENT, onMerged)
+  }, [setState])
   useConfirmedDiscoveryPoll({
     stateRef,
     setState,

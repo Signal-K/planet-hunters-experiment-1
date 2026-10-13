@@ -41,7 +41,8 @@ export async function GET(req: NextRequest) {
     const now = Date.now()
     const records = await withPbRetry(() =>
       pb.collection('scheduled_notifications').getFullList({
-        filter: `scheduled_for <= ${now} && sent = false`,
+        // SSL-559: native iOS rows are delivered on-device (ios-local:/apns:), only Web Push endpoints go through here.
+        filter: `scheduled_for <= ${now} && sent = false && endpoint ~ "https://"`,
       })
     )
 

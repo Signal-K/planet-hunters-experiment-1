@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
+import { casUpdateGameState } from '@/lib/sync/casSave'
 import { getOutbox, isQueuedUpsert, queueUpdate, queueUpsert } from '@/lib/offline/pbOutbox'
 import { dropSettledMissionRuns, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { identifyUser, captureGameEvent } from '@/lib/posthog'
@@ -277,7 +278,7 @@ export function useAuthSync({
     }
     const payload = { user: userId, state: nextState, missions_done: nextState.player.missionsDone }
     if (backendRecordId.current) {
-      await pbLandnam.collection('game_states').update(backendRecordId.current, payload)
+      await casUpdateGameState(pbLandnam.collection('game_states'), backendRecordId.current, userId, nextState)
       return { wrote: true }
     }
 
@@ -306,7 +307,7 @@ export function useAuthSync({
         remoteSaveProtected.current = true
         return { wrote: false, existing: existingState ?? undefined }
       }
-      await pbLandnam.collection('game_states').update(existing.id, payload)
+      await casUpdateGameState(pbLandnam.collection('game_states'), existing.id, userId, nextState)
       return { wrote: true }
     }
   }, [])

@@ -45,7 +45,7 @@ describe('/api/push/cron', () => {
     expect(response.status).toBe(200)
     expect(authWithPassword).toHaveBeenCalledWith('cron@example.test', 'cron-password')
     expect(getFullList).toHaveBeenCalledWith(expect.objectContaining({
-      filter: expect.stringMatching(/^scheduled_for <= \d+ && sent = false$/),
+      filter: expect.stringMatching(/^scheduled_for <= \d+ && sent = false && endpoint ~ "https:\/\/"$/),
     }))
     expect(await response.json()).toEqual({ sent: 0, failed: 0 })
   })

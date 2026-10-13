@@ -16,6 +16,7 @@ public enum CloudPull {
     public static let welcomeKey = "nativeWelcomePending"
 
     public static func fetch(baseURL: URL, token: String, userId: String, session: URLSession = .shared) async -> Result {
+        if PocketBaseExecutor.forceOffline { return .unavailable }
         var comps = URLComponents(url: baseURL.appendingPathComponent("api/collections/game_states/records"), resolvingAgainstBaseURL: false)!
         comps.queryItems = [.init(name: "filter", value: "user = \"\(userId)\""), .init(name: "perPage", value: "1")]
         var req = URLRequest(url: comps.url!)

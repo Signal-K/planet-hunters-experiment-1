@@ -20,6 +20,8 @@ public final class GameStore {
     /// Every persisted transition (old, new, settled payout) so the app can write `mission_runs` receipts.
     public var onTransition: ((GameState, GameState, Int?) -> Void)?
     private var pendingPayout: Int?
+    /// This install's ledger entry id (SSL-559).
+    public var deviceId: String = Ledger.deviceId()
 
     public init(state: GameState = GameState(), catalog: Catalog = Catalog(), saveURL: URL? = nil,
                 clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 * 1000 }) {
@@ -47,6 +49,7 @@ public final class GameStore {
         guard next != state else { return }
         var n = next
         MissionRuns.stamp(old: state, new: &n)
+        n = Ledger.stamp(n, device: deviceId)
         n.updatedAt = clock()
         let old = state
         state = n
@@ -80,6 +83,7 @@ public final class GameStore {
         if !CloudPull.hasProgress(state) { adoptRemote(remote); return }
         var n = CloudMerge.merge(local: state, remote: remote)
         if n.player.activeMission == nil, state.player.activeMission == nil { n.missionId = state.missionId; n.targetId = state.targetId }
+        if PocketBaseExecutor.sameContent(n, state) { return }   // nothing new: don't re-save (avoids a write loop)
         apply(n)
     }
     /// Applies the sign-in `mission_runs` repair (reattaches a resumable receipt) and returns the closing writes.

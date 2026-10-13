@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useGame } from '@/game-context'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { getOutbox } from '@/lib/offline/pbOutbox'
@@ -49,12 +50,50 @@ export default function LandnamSyncStatus() {
   }, [])
 
   const label = syncLabel(game.landnamSynced, outbox, online)
+  const host = useChipSlot(mounted && !!game.authUserId && !!label)
   if (!mounted || !game.authUserId || !label) return null
 
-  return (
-    <div data-ui-zone={UI_ZONES.statusUtility} className="sync-status" data-offline={online ? undefined : 'true'} title="Progress is saved on this device and uploads when this reconnects">
-      <span aria-hidden="true" />
-      {label}
-    </div>
+  const chip = (
+    <span
+      data-ui-zone={UI_ZONES.statusUtility}
+      data-testid="sync-chip"
+      className={host ? 'scene-chip sync-chip' : 'scene-chip sync-chip sync-chip--floating'}
+      data-offline={online ? undefined : 'true'}
+      title="Progress is saved on this device and uploads when this reconnects"
+      aria-label={String(label)}
+    >
+      <span aria-hidden="true" className="sync-chip__dot" />
+      <span className="sync-chip__label">{label}</span>
+    </span>
   )
+  return host ? createPortal(chip, host) : chip
+}
+
+/**
+ * SSL-559: the chip sits in the screen's own top-right chip row, just left of the
+ * francs chip (same place as native), in every layout. Screens own that row, so
+ * this keeps a slot element in front of whichever francs chip is on screen and
+ * follows route changes; with no chip row it floats top-right.
+ */
+function useChipSlot(active: boolean): HTMLElement | null {
+  const [host, setHost] = useState<HTMLElement | null>(null)
+  useEffect(() => {
+    if (!active) { setHost(null); return }
+    let frame = 0
+    const place = () => {
+      frame = 0
+      const francs = Array.from(document.querySelectorAll<HTMLElement>('[data-testid$="-francs-chip"], .top-bar .scene-chip'))
+        .find(el => el.offsetParent !== null)
+      let slot = document.querySelector<HTMLElement>('[data-sync-slot]')
+      if (!francs) { slot?.remove(); setHost(null); return }
+      if (!slot) { slot = document.createElement('span'); slot.setAttribute('data-sync-slot', ''); slot.style.display = 'contents' }
+      if (slot.nextElementSibling !== francs) francs.parentElement?.insertBefore(slot, francs)
+      setHost(current => current === slot ? current : slot)
+    }
+    place()
+    const observer = new MutationObserver(() => { if (!frame) frame = requestAnimationFrame(place) })
+    observer.observe(document.body, { childList: true, subtree: true })
+    return () => { observer.disconnect(); if (frame) cancelAnimationFrame(frame); document.querySelector('[data-sync-slot]')?.remove() }
+  }, [active])
+  return host
 }

@@ -105,12 +105,14 @@ public enum CloudMerge {
     static func maxRec(_ a: [String: Int], _ b: [String: Int]) -> [String: Int] { a.merging(b) { max($0, $1) } }
 
     public static func merge(local: GameState, remote: GameState) -> GameState {
-        if !CloudPull.hasProgress(remote) { return local }
-        if !CloudPull.hasProgress(local) { return remote }
+        if !CloudPull.hasProgress(remote) && Ledger.untouched(remote) { return local }
+        if !CloudPull.hasProgress(local) && Ledger.untouched(local) { return remote }
         var n: GameState
-        if local.player.missionsDone > remote.player.missionsDone {
+        // SSL-559: with the ledger on both sides no side wins wholesale; everything goes field by field.
+        let both = Ledger.get(local) != nil && Ledger.get(remote) != nil
+        if !both && local.player.missionsDone > remote.player.missionsDone {
             n = local
-        } else if remote.player.missionsDone > local.player.missionsDone {
+        } else if !both && remote.player.missionsDone > local.player.missionsDone {
             n = CloudPull.reconcile(remote: remote, keeping: local)
         } else {
             let remoteNewer = (remote.updatedAt ?? 0) > (local.updatedAt ?? 0)
@@ -138,7 +140,7 @@ public enum CloudMerge {
         n.player.asteroidClassifications = r.asteroidClassifications.merging(l.asteroidClassifications) { _, mine in mine }
         n.player.saturnClassifications = r.saturnClassifications.merging(l.saturnClassifications) { _, mine in mine }
         // Run resumability: keep a local in-flight run unless the remote stage moved past it; adopt a remote run when local has none.
-        if l.activeMission != nil, r.missionsDone <= l.missionsDone {
+        if l.activeMission != nil, both || r.missionsDone <= l.missionsDone {
             n.player.activeMission = l.activeMission; n.player.missionPhase = l.missionPhase
             n.player.transitStartedAt = l.transitStartedAt; n.player.arrivalAt = l.arrivalAt
             n.player.returningToEarth = l.returningToEarth; n.player.debriefPending = l.debriefPending
@@ -156,13 +158,14 @@ public enum CloudMerge {
         }
         n.screen = local.screen
         n.updatedAt = max(local.updatedAt ?? 0, remote.updatedAt ?? 0)
-        return n
+        return Ledger.apply(n, local: local, remote: remote)
     }
 }
 
 extension MissionRuns {
     /// Reads the account's open receipts (`status = "in_progress"`); nil when offline or failing.
     public static func fetchOpen(baseURL: URL, token: String, userId: String, session: URLSession = .shared) async -> [Record]? {
+        if PocketBaseExecutor.forceOffline { return nil }
         var comps = URLComponents(url: baseURL.appendingPathComponent("api/collections/mission_runs/records"), resolvingAgainstBaseURL: false)!
         comps.queryItems = [.init(name: "filter", value: "user = \"\(userId)\" && status = \"in_progress\""),
                             .init(name: "sort", value: "-launched_at"), .init(name: "perPage", value: "50")]

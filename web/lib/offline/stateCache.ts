@@ -1,5 +1,5 @@
 /**
- * Offline cache of the full game save in IndexedDB (SSL-554).
+ * Offline cache of the full game save in IndexedDB (SSL-554; primary hydration source since SSL-559).
  *
  * localStorage stays the synchronous hydration source, but browsers evict it
  * (Safari ITP, storage pressure) and its quota is small. Every persisted save
@@ -35,7 +35,12 @@ export async function cacheSave(key: string, json: string): Promise<void> {
   }
 }
 
-export async function readCachedSave(key: string): Promise<string | null> {
+/** Hydration must never hang on a stuck IndexedDB open (Safari): give up after `timeoutMs`. */
+export function readCachedSave(key: string, timeoutMs = 800): Promise<string | null> {
+  return Promise.race([readCachedSaveNow(key), new Promise<null>(resolve => setTimeout(() => resolve(null), timeoutMs))])
+}
+
+async function readCachedSaveNow(key: string): Promise<string | null> {
   if (typeof indexedDB === 'undefined') return null
   try {
     const db = await openDb()

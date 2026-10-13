@@ -82,7 +82,7 @@ final class RunBox<T>: @unchecked Sendable { var value: T; init(_ v: T) { value 
         #expect(n.player.stash == ["nickel": 4, "cobalt": 3])
         #expect(Set(n.player.placed) == ["launchpad", "surface-silo"])
         remote.player.missionsDone = 3; remote.player.francs = 100
-        #expect(CloudMerge.merge(local: local, remote: remote).player.francs == 100)  // the stage ahead wins
+        #expect(CloudMerge.merge(local: local, remote: remote).player.francs == 900)  // SSL-559: legacy saves never lose francs
     }
 
     @Test func offlineRunReplaysInOrderOnReconnect() async {

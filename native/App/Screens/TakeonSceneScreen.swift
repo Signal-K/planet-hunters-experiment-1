@@ -21,10 +21,20 @@ final class TakeonSceneModel {
     private var noticeUntil = 0.0
     static let half = 20
 
-    init(engine: TakeonEngine = makeDefaultTakeonEngine(), target: String = "moon", seed: UInt64 = 4212) {
+    let target: String
+    let seed: UInt64
+    private var lastSave = 0.0
+
+    init(engine: TakeonEngine = makeDefaultTakeonEngine(), target: String = "moon", seed: UInt64 = 4212, persist: Bool = true) {
         self.engine = engine
+        self.target = target; self.seed = seed
         guard takeonGoRuntimeAvailable else { failure = "Rover sim unavailable in this build"; return }
-        do { try engine.loadWorld(TakeonWorldSeed(targetId: target, seed: seed)); refresh(force: true) }
+        do {
+            try engine.loadWorld(TakeonWorldSeed(targetId: target, seed: seed))
+            // SSL-559: resume the saved world (local cache, or the account's world pulled from PocketBase).
+            if persist, let snap = TakeonPersistence.load(target) { try? engine.restore(snap) }
+            refresh(force: true)
+        }
         catch { failure = "Takeon runtime unavailable: \(error)" }
     }
 
@@ -37,6 +47,14 @@ final class TakeonSceneModel {
             if let n = Self.notice(for: e) { notice = n; noticeUntil = accum + 4 } }
         if notice != nil, accum > noticeUntil { notice = nil }
         refresh(force: !events.isEmpty)
+        if accum - lastSave > 15 { save() }
+    }
+
+    /// Saves the world locally and queues the PocketBase upload.
+    func save() {
+        lastSave = accum
+        guard failure == nil, let st = try? engine.state() else { return }
+        TakeonPersistence.save(target: target, seed: seed, state: st, snapshot: try? engine.snapshot())
     }
 
     func refresh(force: Bool = false) {
@@ -69,7 +87,7 @@ final class TakeonSceneModel {
 
     // MARK: intents
     func mineSelected() { if let s = selected, engine.orderMine(x: s.x, y: s.y) { heading = state?.rover.facing ?? heading } }
-    func bank() { _ = engine.bank(); refresh(force: true) }
+    func bank() { _ = engine.bank(); refresh(force: true); save() }
     func turn(_ delta: Int) { heading = (heading + delta + 4) % 4 }
     func driveAhead() { _ = try? engine.order("move", arg: heading); refresh() }
 

@@ -1,3 +1,4 @@
+import { applyMergedLedger } from './sync/ledger'
 import { STARTING_FRANCS } from '@/lib/data/economy'
 import { mergeBuildingLevels, sanitizeBuildingLevels } from '@/lib/data/building-levels'
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
@@ -564,8 +565,11 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   }
 
   const remoteMissionsDone = remoteState.player?.missionsDone ?? -1
-  const isTie = current.player.missionsDone === remoteMissionsDone
-  if (current.player.missionsDone > remoteMissionsDone) {
+  // SSL-559: once both sides carry the progress ledger, no side "wins" wholesale. Every
+  // field goes through the per-field merge below and additive progress comes from the ledger.
+  const bothLedgered = !!current.syncLedger && !!(remoteState as Partial<GameState>).syncLedger
+  const isTie = bothLedgered || current.player.missionsDone === remoteMissionsDone
+  if (!bothLedgered && current.player.missionsDone > remoteMissionsDone) {
     // Local strictly ahead — unchanged from prior behavior: local player
     // wholesale, only placed/placementPlots unioned (construction is
     // monotonic within an onboarding stage; see the comment below).
@@ -578,7 +582,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     }
     merged.tutorial = current.tutorial
     merged.doneSteps = current.doneSteps
-  } else if (isTie) {
+  } else if (isTie && !(remoteMissionsDone > current.player.missionsDone && !bothLedgered)) {
     // A genuine tie (same missionsDone on both sides, e.g. an offline session
     // on one device while another device also played at the same mission
     // count) previously discarded every remote field but placed/placementPlots
@@ -726,7 +730,10 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     )
   }
 
-  return normalizeAndRepair(merged)
+  // SSL-559: additive progress (francs, XP, missions done, stash, refined goods) from the CRDT ledger,
+  // so two devices that played offline at the same time both count and nothing is double counted.
+  const withLedger = applyMergedLedger(merged, current, { player: (remoteState.player ?? {}) as Record<string, unknown>, syncLedger: (remoteState as Partial<GameState>).syncLedger })
+  return normalizeAndRepair(withLedger)
 }
 
 /** Completions are append-only. A stale remote save must not forget a collected run. */

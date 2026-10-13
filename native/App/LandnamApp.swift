@@ -23,7 +23,17 @@ struct LandnamApp: App {
                 if let scene = SceneHost.requested { SceneHost(id: scene).environment(store) } else { RootView() }
             }
                 .environment(store).environment(auth).environment(services.feed).environment(surveys).environment(services)
-                .task { if SceneHost.requested == nil { services.start(store: store, auth: auth) } }
+                .task {
+                    if SceneHost.requested == nil {
+                        #if DEBUG
+                        DebugSession.prepare()
+                        #endif
+                        services.start(store: store, auth: auth)
+                        #if DEBUG
+                        await DebugSession.run(store: store, auth: auth)
+                        #endif
+                    }
+                }
                 .onChange(of: auth.session) { _, s in services.attach(s) }
                 .onChange(of: scenePhase) { _, p in if p == .active { services.flush() } }
                 #if canImport(UIKit)

@@ -521,6 +521,8 @@ export interface GameState {
   // reads the record's system timestamp directly). missionsDone remains the
   // primary onboarding-stage signal; this only disambiguates true ties.
   updatedAt?: number
+  /** SSL-559 conflict-free progress ledger (see lib/sync/ledger.ts). */
+  syncLedger?: import('./sync/ledger').SyncLedger | null
   /** Dev-preset-only data switch. Never set by normal gameplay or persistence. */
   visualFixture?: 'tess' | 'asteroid'
 }
