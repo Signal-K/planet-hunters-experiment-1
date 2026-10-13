@@ -6,7 +6,10 @@ import { calibrateOnboardingPayout, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMissio
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
-import TopBar from '@/components/ui/TopBar'
+import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
+import { openSettings } from '@/lib/mining/openChrome'
+import { Settings } from 'lucide-react'
+import styles from './DebriefScreen.module.css'
 import { useHelp } from '@/components/ui/useHelp'
 import StatusPill from '@/components/ui/StatusPill'
 import MineralChip from '@/components/game/MineralChip'
@@ -113,7 +116,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const netTotal = total - vehicleCost - loanRepayment
   const manifestAccent = isFreeHaul || isProgramOperation
     ? 'var(--ln-cyan)'
-    : delivered ? 'var(--ln-ok)' : 'var(--ln-crimson)'
+    : delivered ? 'var(--ln-cyan)' : 'var(--ln-crimson)'
   const cargoEntries = Object.entries(cargo).filter(([, units]) => units > 0)
   const willStore = isFreeHaul && disposition === 'store' && !!hasEarthStorage
   // SSL-462: the haul funds the next build. Ore a client is still owed, or a
@@ -125,13 +128,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
     && (!isFreeHaul || willStore) && (cargoEntries.length > 0 || stashUnits > 0)
 
   return (
-    <div className="game-screen theme-blueprint debrief-game">
+    <div className={`game-screen theme-blueprint debrief-game ${styles.screen}`}>
       <DebriefCanvas rocketImageSrc={rocketDisplay.img} scene={isOrbitalInstrumentDeployment ? 'orbit' : 'berth'} />
       <div className="debrief-game__world-shade" aria-hidden="true" />
 
-      <TopBar
-        right={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{help.button}</span>}
-      />
+      <div className={styles.hud}>
+        <div className={styles.cluster}><button aria-label="Settings" onClick={openSettings}><Settings size={20} /></button><HubClockWidget /></div>
+        <div className={styles.cluster}><span className="scene-chip">{haulUnits} U</span>{help.button}</div>
+      </div>
       {help.layer}
 
       <div className={`debrief-game__content screen-scroll`} data-ui-zone={UI_ZONES.screenContent}>
@@ -212,7 +216,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               />
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0 2px', marginTop: 2, borderTop: '1px solid var(--ln-hairline)' }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: shipDestroyed ? 'var(--ln-crimson)' : 'var(--ln-ok)' }} />
+              <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: shipDestroyed ? 'var(--ln-crimson)' : 'var(--ln-cyan)' }} />
               <span style={{ fontFamily: 'var(--ln-font-body)', fontWeight: 500, fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.3 }}>
                 {shipDestroyed
                   ? <><strong style={{ color: 'var(--ln-text)' }}>Hull lost</strong> · recovery crews are dismantling what remains</>
@@ -221,7 +225,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             </div>
             <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--ln-hairline-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Net</span>
-              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 26, fontWeight: 800, lineHeight: 1, color: netTotal >= 0 ? 'var(--ln-amber)' : 'var(--ln-crimson)' }}>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 26, fontWeight: 800, lineHeight: 1, color: netTotal >= 0 ? 'var(--ln-cyan)' : 'var(--ln-crimson)' }}>
                 {formatCurrency(netTotal, { signed: true })}
               </span>
             </div>
@@ -242,7 +246,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {/* ── Overview: client (if any) + cargo manifest ─────────────────── */}
         <div className="debrief-overview" style={(client && !isStoryMission) ? undefined : { gridTemplateColumns: 'minmax(0, 1fr)' }}>
         {client && !isStoryMission && (
-          <Panel className="debrief-client-panel" accent={client.color} surface="solid">
+          <Panel className="debrief-client-panel" accent="var(--ln-cyan)" surface="solid">
             <div className="ln-section-label" style={{ marginBottom: 10 }}>Client</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{
@@ -303,7 +307,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         </>}
 
         {!isOrbitalInstrumentDeployment && (
-          <Panel accent={hasEarthStorage ? 'var(--ln-ok)' : 'var(--ln-cyan)'} surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+          <Panel accent={hasEarthStorage ? 'var(--ln-cyan)' : 'var(--ln-cyan)'} surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
             <div className="ln-section-label" style={{ marginBottom: 8 }}>Vehicle Recovery</div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
               {isEarlyMission && !hasEarthStorage
@@ -448,7 +452,7 @@ function CargoDestinationPanel({
             <div style={{ height: 12, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--ln-surface-2)', border: '1px solid var(--ln-hairline)' }} aria-hidden="true">
               {priorUnits > 0 && <span style={{ width: `${Math.min(100, (priorUnits / cap) * 100)}%`, background: 'var(--ln-cyan)', opacity: 0.5 }} />}
               {segments.map(([id, units]) => (
-                <span key={id} style={{ width: `${Math.min(100, (units / cap) * 100)}%`, background: minerals[id]?.color ?? 'var(--ln-cyan)' }} />
+                <span key={id} style={{ width: `${Math.min(100, (units / cap) * 100)}%`, background: 'var(--ln-cyan)' }} />
               ))}
             </div>
             {overflowUnits > 0 && (
@@ -460,7 +464,7 @@ function CargoDestinationPanel({
         ) : (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <span style={{ font: '700 14px var(--ln-font-display)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Sale value</span>
-            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-amber)', lineHeight: 1 }}>{formatCurrency(haulMarketValue)}</span>
+            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-cyan)', lineHeight: 1 }}>{formatCurrency(haulMarketValue)}</span>
           </div>
         )}
       </div>

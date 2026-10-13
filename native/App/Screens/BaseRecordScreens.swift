@@ -24,8 +24,7 @@ struct IntroScreen: View {
     }
 }
 
-/// Completed client work and own-programme runs (mirrors web MissionHistoryScreen: the web screen is
-/// `theme-light`, so it sits on the warm paper surface with flat hairline cards, no offset shadows).
+/// Completed work stays in a cream instrument overlay above the live base.
 struct MissionHistoryScreen: View {
     @Environment(GameStore.self) private var store
     @Environment(\.flatLayout) private var flat
@@ -58,18 +57,17 @@ struct MissionHistoryScreen: View {
         let ordered = MissionLog.entries(store.player)
         let missionEntries = ordered.filter { !$0.isTransit }.count
         let lifetime = max(store.player.missionsDone, missionEntries)
-        scroller {
+        MissionRecordOverlay {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    label("Base · Mission log", color: Light.cyan).padding(.bottom, 8)
-                    Text("Mission Log").font(AppFont.display(26)).foregroundStyle(Light.text)
+                    Text("MISSION LOG").font(AppFont.mono(26)).foregroundStyle(Light.text)
                     Text("A concise record of completed client work and program operations.")
                         .font(AppFont.body(15, "Regular")).foregroundStyle(Light.dim).padding(.top, 12)
                         .fixedSize(horizontal: false, vertical: true)
                     Button { store.go(.hub) } label: {
                         label("Back to base", color: Light.cyan).padding(.horizontal, 14).frame(minHeight: 44)
-                            .background(Light.surface2, in: RoundedRectangle(cornerRadius: 6))
-                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Light.cyanBorder, lineWidth: 1))
+                            .background(Light.surface2, in: RoundedRectangle(cornerRadius: 0))
+                            .overlay(RoundedRectangle(cornerRadius: 0).stroke(Light.cyanBorder, lineWidth: 2))
                     }.buttonStyle(.plain).accessibilityLabel("Back to base").padding(.top, 16)
                 }.padding(.bottom, 24)
 
@@ -78,8 +76,8 @@ struct MissionHistoryScreen: View {
                     Text("\(lifetime)").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Light.dim)
                 }
                 .padding(.horizontal, 14).frame(minHeight: 44)
-                .background(Light.cyanSoft, in: RoundedRectangle(cornerRadius: 6))
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Light.cyanBorder, lineWidth: 1))
+                .background(Light.cyanSoft, in: RoundedRectangle(cornerRadius: 0))
+                .overlay(RoundedRectangle(cornerRadius: 0).stroke(Light.cyanBorder, lineWidth: 2))
                 .padding(.bottom, 16)
 
                 HStack(spacing: 16) {
@@ -91,16 +89,16 @@ struct MissionHistoryScreen: View {
                     }
                 }
                 .padding(16).frame(maxWidth: .infinity, alignment: .leading)
-                .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Light.hairlineStrong, lineWidth: 1))
+                .background(Theme.paper, in: RoundedRectangle(cornerRadius: 0))
+                .overlay(RoundedRectangle(cornerRadius: 0).stroke(Light.cyan, lineWidth: 2))
                 .padding(.bottom, 16)
 
                 if ordered.isEmpty {
                     Text("No completed missions yet. Choose a contract from the Mission Board to start your log.")
                         .font(AppFont.body(14, "Regular")).foregroundStyle(Light.dim).multilineTextAlignment(.center)
                         .padding(.vertical, 32).padding(.horizontal, 16).frame(maxWidth: .infinity)
-                        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Light.hairlineStrong, style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
+                        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 0))
+                        .overlay(RoundedRectangle(cornerRadius: 0).stroke(Light.cyan, style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
                 } else {
                     VStack(spacing: 8) {
                         ForEach(Array(ordered.enumerated()), id: \.offset) { i, r in record(r, index: i, total: ordered.count) }
@@ -110,7 +108,7 @@ struct MissionHistoryScreen: View {
             .padding(.horizontal, 16).padding(.top, 24).padding(.bottom, 48)
             .frame(maxWidth: 1040, alignment: .leading).frame(maxWidth: .infinity)
         }
-        .background(Light.void.ignoresSafeArea())
+        
     }
 
     @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
@@ -125,8 +123,8 @@ struct MissionHistoryScreen: View {
                 HStack(alignment: .center, spacing: 12) {
                     label(String(format: "%02d", total - i), color: Light.muted)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(r.title).font(AppFont.display(15)).foregroundStyle(Light.text).lineLimit(1)
-                        Text(r.meta.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Light.dim).lineLimit(1)
+                        Text(r.title).font(AppFont.display(15)).foregroundStyle(Light.text).fixedSize(horizontal: false, vertical: true)
+                        Text(r.meta.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Light.dim).fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 0)
                     label(Self.date(r.completedAt), color: Light.cyan)
@@ -136,8 +134,8 @@ struct MissionHistoryScreen: View {
             if open { debrief(r, mission: mission) }
         }
         .padding(.horizontal, 16).padding(.vertical, 14).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
-        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Light.hairline, lineWidth: 1))
+        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 0))
+        .overlay(RoundedRectangle(cornerRadius: 0).stroke(Light.cyan, lineWidth: 2))
     }
 
     private func debrief(_ r: MissionLogEntry, mission: Mission?) -> some View {
@@ -218,4 +216,40 @@ struct NarrativeLedgerScreen: View {
     }
 
     private func color(_ s: LedgerState) -> Color { s == .live ? Theme.teal : s == .adapt ? Theme.blueBright : Theme.textMuted }
+}
+
+/// These record screens keep the same live scene, clock, resource chips and dock as the base.
+struct MissionRecordOverlay<Content: View>: View {
+    @ViewBuilder var content: Content
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                HubScreen()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) { content }
+                        .padding(20)
+                        .frame(maxWidth: 680, alignment: .leading)
+                        .background(Theme.paper)
+                        .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+                        .overlay(alignment: .top) { Rectangle().fill(Theme.blue).frame(height: 5) }
+                        .padding(4)
+                        .frame(maxWidth: .infinity, alignment: geo.size.width > 700 ? .trailing : .center)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, geo.size.height < 500 ? 64 : 104)
+                .padding(.bottom, 88)
+            }
+        }
+    }
+}
+
+struct DebriefRecordPanel<Content: View>: View {
+    var accent: Color = Theme.blue
+    @ViewBuilder var content: Content
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) { content }
+            .font(AppFont.body(14)).padding(20).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.paper)
+            .overlay(Rectangle().stroke(Theme.blue, lineWidth: 2))
+    }
 }

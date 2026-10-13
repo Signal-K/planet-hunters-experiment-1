@@ -1,0 +1,16 @@
+
+.screen.screen { --ln-text: var(--ln-blueprint-ink); --ln-text-dim: var(--ln-blueprint-ink); --ln-text-muted: var(--ln-blueprint-blue); --ln-cyan: var(--ln-blueprint-blue); --ln-panel: var(--ln-world-hull-lit); --ln-bp-paper: var(--ln-world-hull-lit); --ln-bp-ink: var(--ln-blueprint-ink); --ln-bp-ink-dim: var(--ln-blueprint-ink); --ln-ok: var(--ln-blueprint-blue); }
+.hud { position: absolute; inset: 16px 16px auto; z-index: 25; display: flex; justify-content: space-between; pointer-events: none; }
+.cluster { display: flex; align-items: center; gap: 8px; pointer-events: auto; }
+.cluster button { min-width: 44px; min-height: 44px; display: grid; place-items: center; background: var(--ln-world-hull-lit); color: var(--ln-blueprint-ink); border: 2px solid var(--ln-blueprint-ink); }
+.screen :global(.debrief-game__content), .screen :global(.debrief-game__content:has(.debrief-result-panel)) { inset: 80px 0 100px; padding: 16px; overflow-y: auto; display: block; }
+.screen :global(.debrief-game__content > *:not(.debrief-overview)), .screen :global(.debrief-overview > *) { border: 3px solid var(--ln-blueprint-ink) !important; border-radius: 0; box-shadow: inset 0 5px var(--ln-blueprint-blue), 4px 4px 0 var(--ln-blueprint-ink); padding: 20px; margin-bottom: 16px; background: var(--ln-world-hull-lit) !important; color: var(--ln-blueprint-ink); }
+.screen :global(.debrief-game__content > *) { width: min(100%, 620px); margin-left: auto; margin-right: 16px; }
+.screen :global(.debrief-result-panel *) { color: var(--ln-blueprint-ink); }
+.screen :global(.debrief-mission-strip__status), .screen :global(.debrief-result-panel__status) { color: var(--ln-blueprint-blue); }
+.screen :global(.debrief-mission-strip__route strong) { white-space: normal; line-height: 1.4; }
+.screen :global(.ln-section-label), .screen :global(h2) { font-family: var(--ln-font-mono); text-transform: uppercase; }
+.screen :global(.debrief-command-dock) { left: 50%; right: auto; bottom: 16px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); padding: 8px; gap: 8px; background: var(--ln-world-hull-lit) !important; border: 3px solid var(--ln-blueprint-ink) !important; border-radius: 0; }
+.screen :global(.debrief-command-dock [data-testid="collect-reward-btn"]) { background: var(--ln-blueprint-blue) !important; color: var(--ln-world-hull-lit) !important; box-shadow: none !important; }
+@media(max-width: 640px) { .screen :global(.debrief-game__content > *) { margin-right: 0; } .screen :global(.debrief-game__content) { padding-top: 80px; } }
+@media(orientation: landscape) and (max-height: 500px) { .screen :global(.debrief-game__content), .screen :global(.debrief-game__content:has(.debrief-result-panel)) { inset: 64px 0 80px; } .screen :global(.debrief-game__content > *) { width: 56%; } }
