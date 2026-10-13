@@ -1,6 +1,39 @@
 # AGENTS (canonical, Landnam)
 
-This is the single source of agent instructions for the Landnam repo. `CLAUDE.md` carries identical content (keep the two files in sync); `web/AGENTS.md` and `web/CLAUDE.md` are thin pointers. Do not copy rules into other files.
+## Read first: token budget and repo map
+
+Agents (Codex, Claude Code, Cursor) pay for every byte they read. This repo is ~117 MB tracked but only ~7 MB is text, and most of that is not what you need.
+
+Rules (mandatory)
+- Read only what the task needs. Start from the map below and the area file (`web/AGENTS.md`, `native/AGENTS.md`, `pocketbase/AGENTS.md`), not from a repo scan.
+- Search with `rg -n PATTERN path/` (respects `.ignore`), then read a window (`sed -n '120,200p' file`). Never `cat` a whole large file and never chain several `cat`s in one command.
+- Never cat or open: `web/app/globals.css` (190 KB, use `rg -n 'token-name' web/app/globals.css`), `web/package-lock.json`, `*-sheet.json`, `web/lib/contexts/useGameLoop.ts` / `pocketbase/main.go` whole (rg first), anything in `.ignore` / `.cursorignore`.
+- Images: view the art reference as `docs/art-reference-sm.jpg` (129 KB), not `docs/art-reference.png` (1.9 MB, ~15x the tokens). View one screenshot at a time, never contact sheets of full-res captures.
+- Tests: run the single file you touched (`cd web && npm run test:file -- lib/foo.test.ts`, `swift test --filter LoopTests` in `native/LandnamCore`). Run the full suite once, at the end.
+- Noise paths are listed in `.cursorignore` (Cursor), `.ignore` (ripgrep, so Codex/Claude Code/Cursor search) and `.claude/settings.json` (Claude Code deny-read). Keep the three in sync. `archive/` holds dead art and docs; do not read it.
+
+Standing rules (short form; details below)
+- One commit with ALL changed files, only after real work. Subject: two different emoji + `↝ [SSL-123]: outcome`. Push to `cycle/4`.
+- No scene titles in UI. One shared HUD on every screen (web `components/game/hub/` + `SyncStatus`, native `App/Screens/SharedHud.swift`), never a per-screen HUD.
+- No orange or green UI colour (user rule, newest wins over older docs). Colours only from CSS variables / `shared/tokens`.
+- PocketBase is the only state store (via the outbox, no direct client writes). No TestFlight uploads.
+
+Map (where things live)
+
+| Feature | Web (`web/`) | Native (`native/`) |
+|---|---|---|
+| Shell / routing | `components/game/GameApp.tsx`, `GameScreenRouter.tsx`, `lib/game-screens.ts` | `App/RootView.swift`, `LandnamCore/.../Model/Screen.swift` |
+| Base (hub) | `components/game/screens/HubScreen.tsx`, `components/game/hub/*` (BaseDock, BaseLayerScene) | `App/Screens/HubScreen.swift`, `BaseWorldScene.swift`, `BaseDock.swift`, `BaseCamera.swift` |
+| Mining (laser) | `screens/MiningScreen.tsx`, `MiningCanvas.tsx`, `MiningControls.tsx`, `lib/mining/*`, `lib/engine/scripts/MiningController.ts`, `lib/systems/MiningSystem.ts` | `App/Scenes/MiningScene.swift`, `App/Mining/*`, `LandnamCore/.../Mining/*` |
+| Mission flow | `MissionSetupRoutes.tsx`, `MissionOperationRoutes.tsx`, `MISSION_SETUP_FLOW.md`, `lib/mission-flow.ts`, `lib/data/mission-generator.ts`, `lib/systems/MissionRunLifecycle.ts`, screens `Launchpad/Transit/Landing/Delivery/Debrief` | `App/Screens/CoreLoop.swift`, `FlightScreens.swift`, `LandnamCore/.../Systems/Loop.swift`, `MissionBoard.swift` |
+| Hangar | `screens/HangarScreen.tsx`, `lib/data/shipCustomizer.ts`, `lib/rockets.ts` | `App/Screens/CoreLoop.swift` (rocket yard), `LandnamCore/.../Data/Rockets.swift` |
+| Exchange (Market) | `screens/MarketScreen.tsx`, `lib/systems/EconomySystem.ts` | `LandnamCore/.../Systems/Market.swift`, `Data/Economy.swift` |
+| Settings | `components/game/SettingsSheet.tsx` | `App/Screens/HubScreen.swift` (settings sheet), `App/OrientationPreference.swift` |
+| Sync / state | `game-context.tsx`, `lib/game-state*.ts`, `lib/sync/*`, `lib/offline/*`, `lib/contexts/useAuthSync.ts`, `components/game/LandnamSyncStatus.tsx` | `LandnamCore/.../Sync/*`, `Store/GameStore.swift` |
+| Backend | `lib/pb*.ts` | `pocketbase/` (Go hooks, `pb_migrations/`) |
+| Design tokens | `app/globals.css` (rg only), `shared/tokens/tokens.json` -> `npm run sync:shared` | `App/Theme.swift` (`Theme.generated.swift` is generated) |
+
+This is the single source of agent instructions for the Landnam repo. `CLAUDE.md` imports this file; `web/AGENTS.md` and `web/CLAUDE.md` are thin pointers. Do not copy rules into other files.
 
 ## Rules of the game (Liam, standing, mandatory)
 

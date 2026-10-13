@@ -90,3 +90,8 @@ __pycache__/
 
 # Written by tests/scenes/flow-landscape-height.spec.ts on every run
 /docs/landscape-playfield/
+
+# Shared Claude Code project settings (agent deny-read list) are tracked
+!.claude/
+.claude/*
+!.claude/settings.json

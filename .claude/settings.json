@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Read(./web/node_modules/**)",
+      "Read(./node_modules/**)",
+      "Read(./web/.next/**)",
+      "Read(./web/.open-next/**)",
+      "Read(./web/.wrangler/**)",
+      "Read(./native/**/.build/**)",
+      "Read(./**/DerivedData/**)",
+      "Read(./native/Landnam.xcodeproj/**)",
+      "Read(./web/tests/.out/**)",
+      "Read(./web/tests/.report/**)",
+      "Read(./**/test-results/**)",
+      "Read(./pocketbase/pb_data/**)",
+      "Read(./web/package-lock.json)",
+      "Read(./pocketbase/go.sum)",
+      "Read(./native/App/Theme.generated.swift)",
+      "Read(./**/*-sheet.json)",
+      "Read(./web/public/game/assets/**)",
+      "Read(./native/App/Resources/Art/**)",
+      "Read(./native/App/Assets.xcassets/**)",
+      "Read(./web/vendor/**)",
+      "Read(./tools/sprites/output/**)",
+      "Read(./docs/landscape-playfield/**)",
+      "Read(./.agents/skills/landnam-design/_ds_bundle.js)",
+      "Read(./.agents/skills/landnam-design/_ds_manifest.json)",
+      "Read(./.agents/skills/landnam-design/ui_kits/landnam-portrait/screens-pre.tsx)",
+      "Read(./archive/**)",
+      "Read(./**/*.log)",
+      "Read(./.env)",
+      "Read(./web/.env*)"
+    ]
+  }
+}

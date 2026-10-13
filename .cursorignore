@@ -1,0 +1,80 @@
+# Agent noise list (Cursor index + search). Kept in sync with .ignore (ripgrep, used by
+# Codex / Claude Code / Cursor search) and .claude/settings.json deny list. See AGENTS.md.
+# Files here are still readable on purpose by explicit path; they are just not indexed/scanned.
+
+# Dependencies and build output
+node_modules/
+**/node_modules/
+web/.next/
+web/.next-*/
+web/.open-next/
+web/.wrangler/
+web/out/
+web/tsconfig.tsbuildinfo
+**/.build/
+**/DerivedData/
+native/Landnam.xcodeproj/
+**/*.xcodeproj/
+build/
+dist/
+coverage/
+__pycache__/
+pocketbase/pb_data/
+sandbox/
+
+# Test output, logs, snapshots
+web/tests/.out/
+web/tests/.report/
+test-results/
+**/__snapshots__/
+*.log
+*.snap
+
+# Lockfiles and sums
+web/package-lock.json
+**/package-lock.json
+**/go.sum
+
+# Generated code and data (edit the source, not these)
+native/App/Theme.generated.swift
+**/*-sheet.json
+web/public/game/assets/
+native/App/Resources/Art/
+native/App/Assets.xcassets/
+native/**/Fixtures/
+web/vendor/
+tools/sprites/output/
+docs/landscape-playfield/
+
+# Design-kit bundles (huge, generated; the skill README/SKILL.md stay visible)
+.agents/skills/landnam-design/_ds_bundle.js
+.agents/skills/landnam-design/_ds_manifest.json
+.agents/skills/landnam-design/ui_kits/landnam-portrait/screens-pre.tsx
+.agents/skills/landnam-design/preview/
+.agents/skills/landnam-design/fonts/
+.agents/skills/landnam-design/assets/
+
+# Archived / legacy
+archive/
+
+# Binary art and media
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.psd
+*.blend
+*.glb
+*.gltf
+*.mp3
+*.wav
+*.ogg
+*.mp4
+*.ttf
+*.otf
+*.woff
+*.woff2
+*.zip
+*.tar.gz
+*.pdf
