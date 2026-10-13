@@ -13,7 +13,6 @@ import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import { agencyTrainingStage, agencyTrainingTrack, freeOpsActivities } from '@/lib/systems/AgencyOnboardingSystem'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
-import { PushOptIn } from '@/components/game/PushOptIn'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog, captureScreenView, captureGameEvent } from '@/lib/posthog'
@@ -25,7 +24,6 @@ import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsSheet from '@/components/game/FriendsSheet'
 import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
-import { UI_ZONES } from '@/lib/ui-zones'
 import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 import { applyStoredOrientation } from '@/lib/orientation'
 
@@ -190,14 +188,6 @@ function GameCanvas() {
       <TakeOnPwaPreload />
       <div className="portrait-canvas">
         <LandnamSyncStatus />
-        {/* Mission alerts have a reserved desktop slot to the left of the
-            horizontal resource HUD. They are hidden at compact widths rather
-            than wrapping over progression controls. */}
-        {game.player.freeOperations && game.screen === 'hub' && !game.subsurfaceView && (
-          <div data-ui-zone={UI_ZONES.ambientPrompt} className="hub-push-opt-in">
-            <PushOptIn userId={game.authUserId ?? undefined} />
-          </div>
-        )}
         <DevShortcuts />
         <div
           className="game-screen-area"

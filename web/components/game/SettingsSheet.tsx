@@ -8,6 +8,7 @@ import { canOfferFullscreen, enterFullscreen, readFullscreenEnv } from '@/lib/fu
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { readStoredOrientation, storeOrientation, type OrientationPreference } from '@/lib/orientation'
 import PageSurface from '@/components/ui/PageSurface'
+import { PushOptIn } from '@/components/game/PushOptIn'
 import { TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
 
 interface SettingsSheetProps {
@@ -220,6 +221,14 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                     <button type="button" aria-pressed={freeOps} onClick={() => game.setFreeOps(true)}>On</button>
                   </div>
                 </Row>
+                {game.player.freeOperations && (
+                  <Row>
+                    <div className="ops-settings__copy">
+                      <div className="ops-settings__name">Mission alerts</div>
+                    </div>
+                    <PushOptIn userId={game.authUserId ?? undefined} />
+                  </Row>
+                )}
               </div>
             </section>
 

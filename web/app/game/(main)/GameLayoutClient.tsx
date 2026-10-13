@@ -11,7 +11,6 @@ import { AGENCY_TRAINING_POPUP, agencyTrainingStage, agencyTrainingTrack, freeOp
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
-import { PushOptIn } from '@/components/game/PushOptIn'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { captureGameEvent, captureScreenView, initPostHog } from '@/lib/posthog'
@@ -22,7 +21,6 @@ import FriendsSheet from '@/components/game/FriendsSheet'
 import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import SuiteHopRail from '@/components/game/SuiteHopRail'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
-import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
 import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
@@ -233,17 +231,6 @@ function GameChrome({ children }: { children: ReactNode }) {
             nav — a bottom row in portrait, a left rail on landscape phones. */}
         <div className="game-stage-main">
           <LandnamSyncStatus />
-          {/* Mission alerts have a reserved desktop slot to the left of the
-              horizontal resource HUD. They are hidden at compact widths rather
-              than wrapping over progression controls. Base-surface only — Hub
-              renders Subsurface as a slide within the same 'hub' route rather
-              than a real navigation (see game.subsurfaceView), so the screen
-              check alone can't tell the two apart. */}
-          {game.player.freeOperations && currentScreen === 'hub' && !game.subsurfaceView && (
-            <div data-ui-zone={UI_ZONES.ambientPrompt} className="hub-push-opt-in">
-              <PushOptIn userId={game.authUserId ?? undefined} />
-            </div>
-          )}
           <DevShortcuts />
           {/* Suite return rail (SSL-296): hop back to the SSC garden / Spectra. */}
           {currentScreen === 'launchpad' && !game.launchpadMissionMenuOpen && !game.subsurfaceView && !game.authGateOpen && (
