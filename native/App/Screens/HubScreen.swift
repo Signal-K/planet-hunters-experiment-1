@@ -552,7 +552,7 @@ private struct PatchRingView: View {
         ZStack {
             ForEach(0..<max(1, count), id: \.self) { index in
                 Circle().trim(from: CGFloat(index) / CGFloat(max(1, count)), to: (CGFloat(index) + 0.72) / CGFloat(max(1, count)))
-                    .stroke(index < stitched ? Theme.green : Theme.border, style: StrokeStyle(lineWidth: 3, lineCap: .butt))
+                    .stroke(index < stitched ? Theme.teal : Theme.border, style: StrokeStyle(lineWidth: 3, lineCap: .butt))
                     .rotationEffect(.degrees(-90))
             }
             if silhouette { Text("◇").font(AppFont.display(22)).foregroundStyle(Theme.textDim) }

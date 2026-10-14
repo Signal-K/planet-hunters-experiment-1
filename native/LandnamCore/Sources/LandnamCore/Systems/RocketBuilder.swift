@@ -10,6 +10,22 @@ public enum RocketBuilder {
         public let power: Int
         public let successBonus: Int
         public let unlockedAt: Int
+
+        /// Display name from the id ("ion-thruster-t1" -> "Ion Thruster T1").
+        public var name: String {
+            id.split(separator: "-").map { $0.count <= 2 && $0.first == "t" ? $0.uppercased() : $0.prefix(1).uppercased() + $0.dropFirst() }.joined(separator: " ")
+        }
+
+        /// What the part adds, in the same integer steps as `stats` and the web `partEffectLabel`.
+        public var effect: String {
+            switch slot {
+            case "engine": return "+\(power / 5) range"
+            case "fuel-tank": return "+\(successBonus / 7) range"
+            case "cargo-hold": return "+\(successBonus / 10) capacity"
+            case "mining-laser": return "Laser \(power)"
+            default: return "+\(power / 4) range"
+            }
+        }
     }
 
     public static let slots: [(id: String, label: String, module: String)] = [
@@ -57,6 +73,9 @@ public enum RocketBuilder {
         parts.filter { $0.slot == slot && $0.unlockedAt <= missionsDone }
     }
 
+    /// Every part a slot can hold, unlocked or not.
+    public static func allOptions(_ slot: String) -> [Part] { parts.filter { $0.slot == slot } }
+
     public static func partId(_ loadout: [String: String], slot: String) -> String? {
         switch slot {
         case "mining-laser":
@@ -83,8 +102,13 @@ public enum RocketBuilder {
 
     /// Charges the price delta and writes `shipCustomizerParts`, the same field the web confirm saves.
     public static func install(_ s: GameState, slot: String) -> GameState {
-        guard let partId = nextId(slot, loadout: s.player.shipCustomizerParts, missionsDone: s.player.missionsDone),
-              let part = parts.first(where: { $0.id == partId }) else { return s }
+        guard let partId = nextId(slot, loadout: s.player.shipCustomizerParts, missionsDone: s.player.missionsDone) else { return s }
+        return install(s, slot: slot, partId: partId)
+    }
+
+    /// Fits a chosen part. Locked or unaffordable parts leave the state unchanged.
+    public static func install(_ s: GameState, slot: String, partId: String) -> GameState {
+        guard let part = parts.first(where: { $0.id == partId && $0.slot == slot }), part.unlockedAt <= s.player.missionsDone else { return s }
         let previous = self.partId(s.player.shipCustomizerParts, slot: slot)
         let previousPrice = parts.first { $0.id == previous }?.price ?? 0
         let delta = part.price - previousPrice

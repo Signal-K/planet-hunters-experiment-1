@@ -13,7 +13,7 @@ struct CoachStrip: View {
         HStack(spacing: 12) {
             opsBadge(isDone: copyStep != nil)
             VStack(alignment: .leading, spacing: 2) {
-                Text(copyStep ?? coach.kicker).font(AppFont.display(14)).tracking(1.2).foregroundStyle(copyStep == nil ? Theme.teal : Theme.green)
+                Text(copyStep ?? coach.kicker).font(AppFont.display(14)).tracking(1.2).foregroundStyle(copyStep == nil ? Theme.teal : Theme.teal)
                 Text(copyStep == nil ? coach.objective : "+1 stitch · \(coach.objective)").font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink)
                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
@@ -50,13 +50,13 @@ extension CoachStrip {
     /// Ops call-sign badge (mirrors web .ops-badge): square pixel tile with three signal bars.
     func opsBadge(isDone: Bool) -> some View {
         HStack(spacing: 4) {
-            Text("OPS").font(AppFont.display(14)).tracking(1.2).foregroundStyle(isDone ? Theme.green : Theme.ink)
+            Text("OPS").font(AppFont.display(14)).tracking(1.2).foregroundStyle(isDone ? Theme.teal : Theme.ink)
             HStack(alignment: .bottom, spacing: 2) {
-                ForEach([6, 10, 14], id: \.self) { h in Rectangle().fill(isDone ? Theme.green : Theme.teal).frame(width: 3, height: CGFloat(h)) }
+                ForEach([6, 10, 14], id: \.self) { h in Rectangle().fill(isDone ? Theme.teal : Theme.teal).frame(width: 3, height: CGFloat(h)) }
             }
         }
         .padding(.horizontal, 8).frame(minHeight: 44)
-        .background(Theme.paper).overlay(Rectangle().stroke(isDone ? Theme.green : Theme.ink, lineWidth: 2))
+        .background(Theme.paper).overlay(Rectangle().stroke(isDone ? Theme.teal : Theme.ink, lineWidth: 2))
         .accessibilityHidden(true)
     }
 }

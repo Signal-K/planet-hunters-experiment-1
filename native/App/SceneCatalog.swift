@@ -271,6 +271,9 @@ enum SceneCatalog {
         scene("mission-board-wsw-phone", 874) {
             MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },
+        scene("mission-program-phone", 1400) {
+            MissionsScreen(startTab: 1).environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
+        },
         scene("sky-badges-phone", 1000) {
             var gs = GameState()
             gs.player.freeOperations = true; gs.player.deepSpaceTelescopeBuilt = true
@@ -399,6 +402,14 @@ enum SceneCatalog {
             let gs = Academy.migrate(basePlayer(), now: t0)
             let st = GameStore(state: Academy.applyHire(gs, sourceId: "nasa", now: t0), clock: { 1_760_000_000_000 })
             return AcademyScreen(at: t0).environment(st).environment(\.flatLayout, true)
+        },
+        scene("launchpad-phone", 874) {
+            var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.missionsDone = 3
+            return RocketBuilderScreen(launchEnabled: false, onLaunch: {}, onChooseMission: {}).environment(GameStore(state: gs)).environment(\.flatLayout, true)
+        },
+        scene("launchpad-landscape", 402, w: 874) {
+            var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.missionsDone = 3
+            return RocketBuilderScreen(launchEnabled: false, onLaunch: {}, onChooseMission: {}).environment(GameStore(state: gs)).environment(\.flatLayout, true)
         },
         scene("build-phone", 874) {
             var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.placementPlots = ["launchpad": 0]

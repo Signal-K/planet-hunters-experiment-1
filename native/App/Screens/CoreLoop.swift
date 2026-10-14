@@ -11,6 +11,9 @@ struct MissionsScreen: View {
     @State private var archiveFocus: String?
     @State private var showArchive = false
     @State private var selected = 0
+    @State private var tab: Int
+
+    init(startTab: Int = 0) { _tab = State(initialValue: startTab) }
 
     var body: some View {
         let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
@@ -18,6 +21,10 @@ struct MissionsScreen: View {
         scroller {
             VStack(alignment: .leading, spacing: 12) {
                 header
+                tabs
+                if tab == 1 {
+                    ProgramRoadmap { archiveFocus = $0; showArchive = true }
+                } else {
                 WorldSpaceWeekBanner(banner: WorldSpaceWeek.banner(badges: store.player.badges, now: store.now))
                 if entries.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
@@ -38,6 +45,7 @@ struct MissionsScreen: View {
                     .stage(accent: mixWhite(e.mission.client.flatMap { Clients.byId[$0]?.colorHex } ?? "#17703F", 0.12, fallback: Theme.paper))
                 }
                 PrimaryButton(title: "Archive · pathways and unlocks") { archiveFocus = nil; showArchive = true }
+                }
             }
             .padding(.horizontal, 16).padding(.top, 16).padding(.bottom, 32)
             .frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
@@ -49,6 +57,20 @@ struct MissionsScreen: View {
 
     @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
         if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
+    }
+
+    private var tabs: some View {
+        HStack(spacing: 8) {
+            ForEach(Array(["CONTRACTS", "PROGRAM"].enumerated()), id: \.offset) { i, title in
+                Button { tab = i } label: {
+                    Text(title).font(AppFont.display(14, "ExtraBold")).tracking(1.2)
+                        .foregroundStyle(tab == i ? Theme.paper : Theme.ink)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(tab == i ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.ink, lineWidth: 2))
+                }.buttonStyle(.plain).accessibilityAddTraits(tab == i ? .isSelected : [])
+            }
+        }
     }
 
     private var header: some View {
@@ -65,7 +87,7 @@ struct MissionsScreen: View {
             .padding(.vertical, 8).padding(.leading, 12).padding(.trailing, 12).frame(minHeight: 48, alignment: .leading)
             .background(Theme.paper)
             .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.ink, lineWidth: 3))
-            .overlay(alignment: .leading) { Rectangle().fill(Theme.green).frame(width: 7).padding(.vertical, 1.5) }
+            .overlay(alignment: .leading) { Rectangle().fill(Theme.blue).frame(width: 7).padding(.vertical, 1.5) }
             .background(RoundedRectangle(cornerRadius: 4).fill(Theme.ink.opacity(0.42)).offset(y: 4))
         }
         .padding(.bottom, 4)
@@ -179,7 +201,7 @@ struct MissionSlide: View {
                     Text("ACCEPT & PREPARE").font(AppFont.display(14)).tracking(1.7)
                 }
                 .foregroundStyle(.white).frame(maxWidth: .infinity, minHeight: 48)
-                .background(Theme.green, in: RoundedRectangle(cornerRadius: 4))
+                .background(Theme.teal, in: RoundedRectangle(cornerRadius: 4))
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.ink, lineWidth: 3))
                 .background(RoundedRectangle(cornerRadius: 4).fill(Theme.ink.opacity(0.72)).offset(y: 4))
                 .padding(.bottom, 4)
