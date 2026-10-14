@@ -19,6 +19,7 @@ import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBase
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { useHelp } from '@/components/ui/useHelp'
 import MissionBoard from '@/components/game/MissionBoard'
+import MissionPlanScene, { type PlanStep } from '@/components/game/MissionPlanScene'
 import styles from './MissionSetupRoutes.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -88,6 +89,8 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   // SSL-375: the rocket stands in the Workshop while it is prepared, then rolls to the pad in-scene on confirm.
   const [rolling, setRolling] = useState<string | null>(null)
   const [customizing, setCustomizing] = useState(false)
+  // The setup runs target map -> rocket and cargo -> review. A vehicle already prepared (fab) opens on the review.
+  const [step, setStep] = useState<PlanStep>(screen === 'fab' ? 'review' : 'target')
   const purchaseRef = useRef(game.onPurchaseRocket)
   purchaseRef.current = game.onPurchaseRocket
   useEffect(() => {
@@ -141,23 +144,33 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
 
   return <>
     <SetupFrame title="Launch review" screen={screen} onBack={() => game.go('missions')} parts={game.player.shipCustomizerParts}>
-      <section className={styles.review} data-testid="mission-launch-review">
-        <div className={styles.launchScene}><div className={styles.launchArt} data-testid="launch-art" data-stage={artStage}><HubWorldBackground phase="day" composition="earth-base-wide" /><div className={styles.launchpad} aria-hidden="true"><LaunchpadModules parts={game.player.shipCustomizerParts} /></div><div className={styles.hangar} aria-hidden="true"><HangarModules /></div><div className={styles.workshop} aria-hidden="true"><b>WORKSHOP</b></div><img data-testid="launch-rocket" src={rocketDisplay.img} alt={`${selectedRocket.name} ${artStage === 'pad' ? 'on the launchpad' : 'in the workshop'}`} /></div><div className={styles.launchCaption}><span>{caption}</span><strong>{selectedRocket.name.toUpperCase()}</strong></div></div>
-        <aside className={styles.reviewBrief}>
-          <div className={styles.reviewHeading}><span>{game.mission.payload?.type === 'satellite' ? 'INSTRUMENT LAUNCH' : isFreeOpsHaul ? 'FREE OPS · OWN HAUL' : 'CLIENT CONTRACT'}</span><h2>{game.mission.title}</h2></div>
-          <div className={styles.reviewMap} data-testid="launch-review-map" aria-label={`Route to ${target.name}`}>
-            <PixiGalaxyMap mission={game.mission} targets={game.catalog.targets} compatibleIds={compatibleIds} pickedId={target.id} onPick={game.onPickTarget} />
-          </div>
-          <dl className={styles.reviewFacts}><div><dt>DESTINATION</dt><dd>{target.name} · {targetTypeLabel(target.type)}</dd></div><div><dt>VEHICLE</dt><dd>{selectedRocket.name}</dd></div>{!isFreeOpsHaul && <div><dt>REQUIRED CARGO</dt><dd><RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} /></dd></div>}</dl>
-          <div className={styles.inlineChoices} aria-label="Change mission setup">
-            <div><span>DESTINATION</span><strong>{target.name}</strong><nav><button type="button" onClick={() => switchTarget(-1)} disabled={compatibleTargets.length < 2} aria-label="Previous destination"><ArrowGlyph direction="previous" /></button><button type="button" onClick={() => switchTarget(1)} disabled={compatibleTargets.length < 2} aria-label="Next destination"><ArrowGlyph direction="next" /></button></nav></div>
-            <div><span>VEHICLE</span><strong>{selectedRocket.name}</strong><nav><button type="button" onClick={() => switchRocket(-1)} disabled={selectableRockets.length < 2} aria-label="Previous vehicle"><ArrowGlyph direction="previous" /></button><button type="button" onClick={() => switchRocket(1)} disabled={selectableRockets.length < 2} aria-label="Next vehicle"><ArrowGlyph direction="next" /></button></nav></div>
-          </div>
-          <div className={styles.clearance} data-ready={launchReady && !preparing}><span>LAUNCH CLEARANCE</span><strong>{preparing ? 'PREPARING VEHICLE' : launchReady ? 'ALL PARAMETERS PASS' : 'BUILD HOLD'}</strong>{!launchReady && <small>{crewStatus.reason ?? 'MISSION REQUIREMENTS NOT MET'}</small>}</div>
-          {preparing && (hasShipCustomizer(game.player.unlockedSkillNodes ?? []) || !!game.player.crewModuleResearched || !!game.player.landingResearched) && <button type="button" className={styles.primary} data-testid="launch-review-customize-btn" disabled={!!rolling} onClick={() => setCustomizing(true)}>CUSTOMISE VEHICLE</button>}
-          <button type="button" className={styles.primary} data-testid={preparing ? 'prepare-launch-btn' : 'launch-btn'} disabled={!!rolling || selectedVehicle?.location === 'hangar' || (!preparing && !launchReady)} onClick={() => preparing ? setRolling(selectedRocket.id) : onLaunch()}><LaunchGlyph /> {preparing ? preparationLabel : 'LAUNCH'}</button>
-        </aside>
-      </section>
+      <MissionPlanScene
+        step={step}
+        onStep={setStep}
+        mission={game.mission}
+        target={target}
+        catalog={game.catalog}
+        compatibleTargets={compatibleTargets}
+        onPickTarget={game.onPickTarget}
+        vehicle={{ id: selectedRocket.id, name: selectedRocket.name }}
+        vehicles={selectableRockets.map(model => ({ id: model.id, name: model.name }))}
+        onPickVehicle={game.onPurchaseRocket}
+        rocketImg={rocketDisplay.img}
+        rocketAlt={`${selectedRocket.name} ${artStage === 'pad' ? 'on the launchpad' : 'in the workshop'}`}
+        artStage={artStage}
+        padParts={game.player.shipCustomizerParts}
+        freeHaul={isFreeOpsHaul}
+        preparing={preparing}
+        ready={launchReady}
+        holdReason={crewStatus.reason ?? undefined}
+        busy={!!rolling}
+        canCustomize={preparing && (hasShipCustomizer(game.player.unlockedSkillNodes ?? []) || !!game.player.crewModuleResearched || !!game.player.landingResearched)}
+        onCustomize={() => setCustomizing(true)}
+        primaryLabel={preparing ? preparationLabel : 'LAUNCH'}
+        primaryDisabled={!!rolling || selectedVehicle?.location === 'hangar' || (!preparing && !launchReady)}
+        primaryTestId={preparing ? 'prepare-launch-btn' : 'launch-btn'}
+        onPrimary={() => preparing ? setRolling(selectedRocket.id) : onLaunch()}
+      />
     </SetupFrame>
     {customizing && <div data-testid="launch-review-customizer-overlay" style={{ position: 'fixed', inset: 0, zIndex: 40 }}><ShipInteriorPreview rocketId="explorer" startingFrancs={game.player.francs} missionsDone={game.player.missionsDone} installedParts={game.player.shipCustomizerParts ?? {}} crewModuleResearched={game.player.crewModuleResearched} landingResearched={game.player.landingResearched} onConfirm={game.confirmShipCustomizerBuild} onClose={() => setCustomizing(false)} /></div>}
     {launchPending && <ErrorBoundary fallback={null} onError={onLaunchComplete}><LaunchSequenceCanvas rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={target.name} onComplete={onLaunchComplete} /></ErrorBoundary>}

@@ -9,11 +9,13 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test('rocket starts in the Workshop and rolls to the pad on build', async ({ page }, info) => {
       await stage(page, 'ui-target-picker', { patch: { francs: 500_000_000 } })
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
+      await page.getByTestId('plan-next').click()
       const art = page.getByTestId('launch-art')
       await expect(art).toHaveAttribute('data-stage', 'workshop')
       const rocket = page.getByTestId('launch-rocket')
       const startX = (await rocket.boundingBox())!.x
       await page.screenshot({ path: info.outputPath(`workshop-${vp}.png`) })
+      await page.getByTestId('plan-next').click()
       await page.getByTestId('prepare-launch-btn').click()
       await expect(art).toHaveAttribute('data-stage', 'pad')
       await page.waitForTimeout(700)
@@ -27,6 +29,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test('Customise opens the existing ship customiser from the launch review', async ({ page }, info) => {
       await stage(page, 'ui-target-picker', { patch: { francs: 500_000_000, crewModuleResearched: true } })
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
+      await page.getByTestId('plan-next').click()
       await page.getByTestId('launch-review-customize-btn').click()
       await expect(page.getByTestId('launch-review-customizer-overlay')).toBeVisible()
       await page.waitForTimeout(500)
