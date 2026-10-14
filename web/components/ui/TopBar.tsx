@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect, useRef } from 'react'
-import { IconBtn } from './Button'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatFrancs } from '@/lib/format'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
@@ -105,7 +104,24 @@ export default function TopBar({ onBack, right, solid, glass, scene, levelBadge,
       <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
         {/* Screens without a back action leave this slot empty. Account access
             is owned by the shared shell's persistent MENU control. */}
-        {onBack && <IconBtn onClick={onBack} ariaLabel="back" testId="top-bar-back"><BackIcon /></IconBtn>}
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="back"
+            data-testid="top-bar-back"
+            style={{
+              height: 44, minWidth: 44, padding: '0 16px 0 10px', flexShrink: 0,
+              display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+              borderRadius: 999, border: '2px solid var(--ln-world-outline, #14213d)',
+              background: 'var(--ln-world-hull-lit, #f4f1e8)', color: 'var(--ln-world-outline, #14213d)',
+              fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14,
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+            }}
+          >
+            <BackIcon /> Back
+          </button>
+        )}
         {levelBadge && (
           <span style={{
             display: 'flex', alignItems: 'center', gap: 4,

@@ -42,6 +42,8 @@ final class MiningScene: SKScene {
     private let landscapeKey: String
     private let beam = SKNode()
     private lazy var spark = sprite("spark-0")
+    private let opsBrackets = SKShapeNode()
+    var showsOpsBrackets = false
     private let px: CGFloat = 2
     private lazy var flameFrames = (0..<2).map { SK.texture("laser/flame-\($0).png") }
     private var ridgeTile: CGFloat { 128 * px }
@@ -528,6 +530,22 @@ final class MiningScene: SKScene {
         spark.position = CGPoint(x: beamX, y: surfaceY)
         spark.zPosition = 19
         world.addChild(spark)
+        opsBrackets.removeFromParent()
+        guard showsOpsBrackets else { return }
+        let rect = CGRect(x: beamX - 30, y: surfaceY - 22, width: 60, height: 44)
+        let corner: CGFloat = 12
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY + corner)); path.addLine(to: CGPoint(x: rect.minX, y: rect.minY)); path.addLine(to: CGPoint(x: rect.minX + corner, y: rect.minY))
+        path.move(to: CGPoint(x: rect.maxX - corner, y: rect.minY)); path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY)); path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + corner))
+        path.move(to: CGPoint(x: rect.minX, y: rect.maxY - corner)); path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY)); path.addLine(to: CGPoint(x: rect.minX + corner, y: rect.maxY))
+        path.move(to: CGPoint(x: rect.maxX - corner, y: rect.maxY)); path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY)); path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - corner))
+        opsBrackets.path = path
+        opsBrackets.strokeColor = LaserPalette.sk(palette.beamCore)
+        opsBrackets.lineWidth = 3
+        opsBrackets.lineCap = .square
+        opsBrackets.fillColor = .clear
+        opsBrackets.zPosition = 21
+        addChild(opsBrackets)
     }
 
     // MARK: play

@@ -250,6 +250,7 @@ struct MiningScreen: View {
         let f = MiningField(target: target, required: mission.requires.minerals, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower)
         let palette = LaserPalette.resolve(id: target.id, type: target.type, archetype: target.archetype)
         let s = MiningScene(field: f, size: size, palette: palette, landscapeKey: target.id)
+        s.showsOpsBrackets = !store.player.freeOperations && store.player.flightPlan.currentTry == "mining"
         s.onChange = { f in
             field = f
             for id in SkyEvents.debrisResourceIds where f.cargo[id, default: 0] > 0 { store.debrisMined(id) }
