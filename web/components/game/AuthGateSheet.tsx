@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import { PRODUCT_DESCRIPTOR, PRODUCT_WORDMARK } from '@/lib/brand'
-import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 
 interface AuthGateSheetProps {
   error: string | null
@@ -79,18 +78,13 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
 
         <div className="auth-gate__scene" aria-hidden="true">
           <div className="auth-gate__scene-copy">
-            <span className="auth-gate__eyebrow">LANDNAM // LINK</span>
-            <span className="auth-gate__scene-title">PROGRAM MAP</span>
-            <span className="auth-gate__scene-status"><i /> SYSTEM LINK READY</span>
+            <span className="auth-gate__eyebrow">SPACE AGENCY</span>
+            <span className="auth-gate__scene-title">LANDNAM</span>
+            <span className="auth-gate__scene-status">ACCOUNT ACCESS</span>
           </div>
           <div className="auth-gate__orbit auth-gate__orbit--outer" />
           <div className="auth-gate__orbit auth-gate__orbit--inner" />
           <div className="auth-gate__planet" />
-          <img className="auth-gate__ship" src={ROCKET_ASSETS.explorer.exterior} alt="" />
-          <div className="auth-gate__telemetry">
-            <span>PROGRAM LINK</span><strong>READY</strong>
-            <span>ACCESS ROUTE</span><strong>FIELD LINK</strong>
-          </div>
         </div>
 
         <div className="auth-gate__content">
@@ -157,7 +151,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !email.trim() || !password}
             data-testid="auth-gate-submit"
             className="auth-gate__primary"
           >

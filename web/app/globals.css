@@ -1236,7 +1236,13 @@ button { cursor: pointer; }
 
 .ln-sheet--bottom { align-items: flex-end; }
 .ln-sheet__scrim { position: absolute; inset: 0; background: rgba(8, 8, 10, 0.72); }
-.auth-gate__scrim { position: absolute; inset: 0; background: rgba(8, 8, 10, 0.72); }
+.auth-gate__scrim {
+  position: absolute;
+  inset: 0;
+  background-color: color-mix(in srgb, var(--ln-bp-paper-2) 84%, transparent);
+  background-image: repeating-linear-gradient(0deg, transparent 0 31px, color-mix(in srgb, var(--ln-bp-blue) 7%, transparent) 31px 32px), repeating-linear-gradient(90deg, transparent 0 31px, color-mix(in srgb, var(--ln-bp-blue) 7%, transparent) 31px 32px);
+  backdrop-filter: blur(3px);
+}
 .ln-sheet__panel { position: relative; background: linear-gradient(180deg, #232327, #0f0f11); border: 1px solid var(--ln-hairline); box-shadow: var(--ln-shadow-modal); }
 .ln-sheet__handle-wrap { display: flex; justify-content: center; margin-bottom: 14px; }
 .ln-sheet__handle { width: 40px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.22); }
@@ -1259,10 +1265,10 @@ button { cursor: pointer; }
   max-height: min(680px, calc(100dvh - 48px));
   overflow: hidden;
   padding: 0;
-  background: var(--ln-panel);
-  border: 1px solid var(--ln-cyan-border-strong);
-  border-radius: var(--ln-r-xl);
-  box-shadow: var(--ln-shadow-modal), 0 0 56px rgba(63,169,255,.14);
+  background: var(--ln-bp-paper);
+  border: 2px solid var(--ln-bp-ink);
+  border-radius: 16px;
+  box-shadow: 4px 4px 0 var(--ln-bp-line-strong), 0 18px 52px rgba(15,36,54,.2);
   animation: gate-up 360ms cubic-bezier(.16,1,.3,1);
 }
 
@@ -1273,9 +1279,9 @@ button { cursor: pointer; }
   .auth-gate__panel {
     width: min(900px, calc(100vw - 48px));
     padding: 0;
-    border: 1px solid var(--ln-cyan-border-strong);
-    border-radius: var(--ln-r-xl);
-    box-shadow: var(--ln-shadow-modal), 0 0 56px rgba(63,169,255,.14);
+    border: 2px solid var(--ln-bp-ink);
+    border-radius: 16px;
+    box-shadow: 4px 4px 0 var(--ln-bp-line-strong), 0 18px 52px rgba(15,36,54,.2);
   }
   .auth-gate__handle { display: none; }
   .auth-gate .ln-sheet__handle-wrap { display: none; }
@@ -1288,8 +1294,8 @@ button { cursor: pointer; }
     max-height: calc(100dvh - 32px);
     overflow: hidden;
     grid-template-columns: minmax(0, .76fr) minmax(0, 1.24fr);
-    border-bottom: 1px solid var(--ln-cyan-border-strong);
-    border-radius: var(--ln-r-xl);
+    border-bottom: 2px solid var(--ln-bp-ink);
+    border-radius: 16px;
   }
   /* Keep the approved mission-control card composition at compact widths.
      The scene and account controls remain side by side, so this breakpoint
@@ -1299,7 +1305,7 @@ button { cursor: pointer; }
   .auth-gate__scene { min-height: 0; border-right: 1px solid var(--ln-hairline); border-bottom: 0; }
   .auth-gate__scene-copy { left: var(--ln-s-3); top: var(--ln-s-3); gap: var(--ln-s-1); }
   .auth-gate__scene-title { font-size: 18px; }
-  .auth-gate__scene-status { font-size: 8px; }
+  .auth-gate__scene-status { font-size: 14px; }
   .auth-gate__orbit--outer { width: 220px; height: 100px; left: -8%; top: 48%; }
   .auth-gate__orbit--inner { width: 150px; height: 68px; left: 14%; top: 53%; }
   .auth-gate__planet { width: 64px; height: 64px; left: 31%; top: 46%; }
@@ -1322,12 +1328,8 @@ button { cursor: pointer; }
   .auth-gate__scene { display: none; }
 }
 
-/* SSL-299: at a phone in landscape (844x390) the two-column card is ~551px
-   of content inside a ~342px box with overflow hidden, so Password / Confirm
-   / Create Account render below the clip edge with no scroll path — a new
-   player literally cannot sign up. The scene column is decorative; drop it
-   and let the account column scroll inside the bounded panel, the same
-   bounded-inner-scroll shape SSL-27 used for the discovery screens. */
+/* SSL-299: compact landscape keeps the account controls scrollable inside the
+   card so the password fields and submit action remain reachable. */
 @media (orientation: landscape) and (max-height: 520px) {
   .auth-gate { align-items: center; padding: var(--ln-s-2); }
   .auth-gate__panel {
@@ -1352,8 +1354,9 @@ button { cursor: pointer; }
   min-height: 520px;
   overflow: hidden;
   isolation: isolate;
-  background: linear-gradient(180deg, rgba(10,18,29,.12), rgba(10,18,29,.92)), url('/game/assets/backgrounds/starmap.png') center / cover;
-  border-right: 1px solid var(--ln-hairline);
+  background-color: var(--ln-bp-paper-2);
+  background-image: repeating-linear-gradient(0deg, transparent 0 27px, color-mix(in srgb, var(--ln-bp-blue) 12%, transparent) 27px 28px), repeating-linear-gradient(90deg, transparent 0 27px, color-mix(in srgb, var(--ln-bp-blue) 12%, transparent) 27px 28px), linear-gradient(135deg, var(--ln-bp-paper), var(--ln-bp-paper-2));
+  border-right: 2px solid var(--ln-bp-ink);
 }
 
 .auth-gate__scene::after {
@@ -1361,36 +1364,32 @@ button { cursor: pointer; }
   inset: 0;
   z-index: -1;
   content: '';
-  background: linear-gradient(135deg, rgba(63,169,255,.12), transparent 42%), linear-gradient(0deg, var(--ln-void), transparent 46%);
+  background: radial-gradient(circle at 58% 50%, color-mix(in srgb, var(--ln-bp-blue) 12%, transparent), transparent 48%);
 }
 
 .auth-gate__scene-copy { position: absolute; left: var(--ln-s-6); top: var(--ln-s-6); display: grid; gap: var(--ln-s-2); }
-.auth-gate__eyebrow, .auth-gate__scene-status, .auth-gate__telemetry { font: 700 11px var(--ln-font-display); letter-spacing: .16em; text-transform: uppercase; }
-.auth-gate__eyebrow { color: var(--ln-cyan); }
-.auth-gate__scene-title { color: var(--ln-text); font: 700 30px var(--ln-font-display); letter-spacing: .08em; }
-.auth-gate__scene-status { color: var(--ln-ok); font-size: 10px; }
-.auth-gate__scene-status i { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--ln-ok); box-shadow: 0 0 12px var(--ln-ok); }
-.auth-gate__orbit { position: absolute; border: 1px solid rgba(63,169,255,.32); border-radius: 50%; transform: rotate(-24deg); }
+.auth-gate__eyebrow, .auth-gate__scene-status { font: 700 14px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; }
+.auth-gate__eyebrow { color: var(--ln-bp-blue); }
+.auth-gate__scene-title { color: var(--ln-bp-ink); font: 800 30px var(--ln-font-display); letter-spacing: .08em; }
+.auth-gate__scene-status { color: var(--ln-bp-ink-dim); }
+.auth-gate__orbit { position: absolute; border: 2px solid color-mix(in srgb, var(--ln-bp-blue) 30%, transparent); border-radius: 50%; transform: rotate(-24deg); }
 .auth-gate__orbit--outer { width: 390px; height: 180px; left: 2%; top: 42%; }
 .auth-gate__orbit--inner { width: 260px; height: 120px; left: 18%; top: 48%; border-color: rgba(54,198,226,.36); }
-.auth-gate__planet { position: absolute; width: 112px; height: 112px; left: 36%; top: 44%; border-radius: 50%; background: radial-gradient(circle at 32% 28%, var(--ln-cyan-bright), var(--ln-cyan-press) 46%, var(--ln-void) 78%); box-shadow: 0 0 42px rgba(63,169,255,.32); }
-.auth-gate__ship { position: absolute; width: 130px; left: 54%; top: 33%; transform: rotate(18deg); filter: drop-shadow(0 0 14px rgba(63,169,255,.55)); }
-.auth-gate__telemetry { position: absolute; bottom: var(--ln-s-6); left: var(--ln-s-6); display: grid; grid-template-columns: auto auto; gap: var(--ln-s-2) var(--ln-s-5); color: var(--ln-text-muted); font-size: 9px; }
-.auth-gate__telemetry strong { color: var(--ln-text-dim); font-weight: 700; }
+.auth-gate__planet { position: absolute; width: 112px; height: 112px; left: 36%; top: 44%; border: 2px solid var(--ln-bp-blue); border-radius: 50%; background: color-mix(in srgb, var(--ln-bp-paper) 55%, transparent); box-shadow: 4px 4px 0 var(--ln-bp-line-strong); }
 .auth-gate__content { align-self: center; padding: var(--ln-s-7); }
 .auth-gate__heading { margin-top: var(--ln-s-2); color: var(--ln-text); font: 700 34px var(--ln-font-display); letter-spacing: -.02em; }
 .auth-gate__intro { margin: var(--ln-s-3) 0 var(--ln-s-5); color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); }
 .auth-gate__tabs { display: flex; gap: var(--ln-s-2); margin-bottom: var(--ln-s-5); }
-.auth-gate__tab { flex: 1; padding: var(--ln-s-3); color: var(--ln-text-muted); background: transparent; border: 1px solid var(--ln-hairline); border-radius: var(--ln-r-md); cursor: pointer; font: 700 12px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
-.auth-gate__tab.is-active { color: var(--ln-cyan); background: rgba(63,169,255,.12); border-color: var(--ln-cyan-border-strong); }
+.auth-gate__tab { flex: 1; min-height: 44px; padding: var(--ln-s-3); color: var(--ln-bp-ink-dim); background: var(--ln-bp-paper); border: 1.5px solid var(--ln-bp-line-strong); border-radius: 8px; cursor: pointer; font: 700 14px var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.auth-gate__tab.is-active { color: var(--ln-bp-ink); background: var(--ln-bp-paper-2); border: 2px solid var(--ln-bp-blue); box-shadow: 2px 2px 0 var(--ln-bp-line-strong); }
 .auth-gate__form { display: flex; flex-direction: column; gap: var(--ln-s-3); }
-.auth-gate__input { width: 100%; box-sizing: border-box; padding: var(--ln-s-4); color: var(--ln-text); background: var(--ln-void); border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-md); outline: none; font: 400 16px var(--ln-font-body); }
+.auth-gate__input { width: 100%; min-height: 48px; box-sizing: border-box; padding: var(--ln-s-4); color: var(--ln-bp-ink); background: var(--ln-bp-paper); border: 1.5px solid var(--ln-bp-line-strong); border-radius: 8px; outline: none; font: 400 16px var(--ln-font-body); }
 .auth-gate__input:focus { border-color: var(--ln-cyan); box-shadow: 0 0 0 2px rgba(63,169,255,.14), 0 0 18px rgba(63,169,255,.12); }
 .auth-gate__input::placeholder { color: var(--ln-text-muted); }
-.auth-gate__error { padding: var(--ln-s-3); color: var(--ln-crit); background: rgba(255,90,106,.1); border: 1px solid rgba(255,90,106,.36); border-radius: var(--ln-r-md); font: 400 12px/1.4 var(--ln-font-body); }
-.auth-gate__primary { width: 100%; padding: var(--ln-s-4); margin-top: var(--ln-s-1); color: var(--ln-void); background: var(--ln-cyan); border: 0; border-radius: var(--ln-r-md); cursor: pointer; font: 800 13px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; box-shadow: 0 3px 0 rgba(0,0,0,.28); }
+.auth-gate__error { padding: var(--ln-s-3); color: var(--ln-crit); background: rgba(255,90,106,.1); border: 1px solid rgba(255,90,106,.36); border-radius: var(--ln-r-md); font: 400 14px/1.4 var(--ln-font-body); }
+.auth-gate__primary { width: 100%; min-height: 48px; padding: var(--ln-s-4); margin-top: var(--ln-s-1); color: white; background: var(--ln-bp-blue); border: 2px solid var(--ln-bp-ink); border-radius: 8px; cursor: pointer; font: 800 14px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; box-shadow: 3px 3px 0 var(--ln-bp-line-strong); }
 .auth-gate__primary:hover { background: var(--ln-cyan-bright); }
-.auth-gate__primary:disabled { cursor: not-allowed; opacity: .55; }
+.auth-gate__primary:disabled { cursor: not-allowed; color: var(--ln-bp-ink); background: var(--ln-bp-paper-2); opacity: 1; box-shadow: none; }
 
 /* After the base auth-gate rules so compact-landscape stretch/scroll wins
    over `.auth-gate__content { align-self: center }` and the 520px scene
@@ -1401,6 +1400,7 @@ button { cursor: pointer; }
     padding: var(--ln-s-2);
   }
   .auth-gate__panel {
+    display: grid;
     width: 100%;
     max-height: calc(100dvh - 16px);
     height: calc(100dvh - 16px);
@@ -1408,14 +1408,16 @@ button { cursor: pointer; }
     grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
   }
   .auth-gate__scene {
+    display: block;
     min-height: 0;
   }
   .auth-gate__content {
     align-self: stretch;
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     padding: var(--ln-s-3) var(--ln-s-4);
   }
   .auth-gate__content > .auth-gate__eyebrow { display: none; }
@@ -1424,9 +1426,7 @@ button { cursor: pointer; }
   .auth-gate__tabs { margin-bottom: var(--ln-s-2); }
   .auth-gate__tab { padding: var(--ln-s-2); }
   .auth-gate__form {
-    min-height: 0;
-    overflow-y: auto;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
   }
   .auth-gate__input { padding: var(--ln-s-2) var(--ln-s-3); }
   .auth-gate__primary { padding: var(--ln-s-2) var(--ln-s-3); }

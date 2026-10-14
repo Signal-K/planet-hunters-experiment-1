@@ -23,7 +23,8 @@ describe('AuthGateSheet', () => {
     })
 
     expect(host.querySelector('.auth-gate')?.classList.contains('theme-blueprint')).toBe(true)
-    expect(host.textContent).toContain('PROGRAM MAP')
+    expect(host.textContent).toContain('SPACE AGENCY')
+    expect(host.textContent).toContain('ACCOUNT ACCESS')
     expect(host.textContent).not.toContain('command deck')
 
     await act(async () => root.unmount())
