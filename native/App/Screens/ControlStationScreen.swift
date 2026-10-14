@@ -19,6 +19,16 @@ struct ControlStationScreen: View {
             StationMap(model: m).coachTarget("station-map")
             filters(m).coachTarget("station-filters")
             if let empty = m.emptyLabel { Panel { Text(empty).foregroundStyle(Theme.textDim) } }
+            if store.player.freeOperations && !store.player.placed.contains("ground-telescope") {
+                Panel(accent: Theme.blueBright) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Eyebrow(text: "Earth surface")
+                        Text("No ground telescope is built.").font(AppFont.display(16))
+                        Text("Add one from Build Hub to receive asteroid-discovery work here.").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                        PrimaryButton(title: "Open Build Hub") { store.go(.build) }
+                    }
+                }
+            }
             ForEach(m.groups) { group in
                 VStack(alignment: .leading, spacing: 10) {
                     Eyebrow(text: group.label)

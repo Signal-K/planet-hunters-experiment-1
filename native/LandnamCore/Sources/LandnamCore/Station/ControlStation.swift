@@ -18,7 +18,7 @@ public enum ControlStation {
     public struct Body: Sendable, Identifiable { public let id: String, name: String; public let x, y, r: Double; public let ringed: Bool }
     public struct Location: Sendable { let id: String, bodyId: String, groupLabel: String }
     public struct Project: Sendable { public let id: String, label: String; let signalKind: SignalKind }
-    enum Flag: Sendable { case always, transit, deepSpace, saturn }
+    enum Flag: Sendable { case always, ground, transit, deepSpace, saturn }
     struct Equipment: Sendable {
         let id: String, name: String, locationId: String
         let projectIds: [String]
@@ -43,7 +43,7 @@ public enum ControlStation {
         Project(id: "saturn-storms", label: "Saturn storms", signalKind: .saturn),
     ]
     static let equipment = [
-        Equipment(id: "ground-telescopes", name: "Ground telescopes", locationId: "earth-surface", projectIds: ["asteroid-discovery"], presence: nil, feed: .deepSpace, readyLabel: "Observing", x: 148, y: 172),
+        Equipment(id: "ground-telescopes", name: "Ground telescopes", locationId: "earth-surface", projectIds: ["asteroid-discovery"], presence: .ground, feed: .deepSpace, readyLabel: "Observing", x: 148, y: 172),
         Equipment(id: "transit-telescope", name: "Transit Telescope", locationId: "earth-orbit", projectIds: ["exoplanet-hunters"], presence: .transit, feed: .transit, readyLabel: "Observing", x: 188, y: 68),
         Equipment(id: "deep-space-telescope", name: "Deep Space Telescope", locationId: "earth-orbit", projectIds: ["asteroid-discovery"], presence: .deepSpace, feed: .deepSpace, readyLabel: "Observing", x: 252, y: 178),
         Equipment(id: "saturn-imager", name: "Saturn satellite", locationId: "saturn", projectIds: ["saturn-storms"], presence: .saturn, feed: .saturn, readyLabel: "Frame ready", x: 608, y: 248),
@@ -71,6 +71,7 @@ public enum ControlStation {
     static func on(_ f: Flag, _ p: Player) -> Bool {
         switch f {
         case .always: true
+        case .ground: p.placed.contains("ground-telescope")
         case .transit: (p.transitSatelliteLaunchedAt ?? 0) > 0
         case .deepSpace: p.deepSpaceTelescopeBuilt
         case .saturn: (p.saturnImagerLaunchedAt ?? 0) > 0

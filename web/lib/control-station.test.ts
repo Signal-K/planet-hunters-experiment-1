@@ -16,6 +16,7 @@ const signal = (partial: Pick<InstrumentSignal, 'id' | 'kind'> & Partial<Instrum
 
 const launched: StationPlayer = {
   freeOperations: true,
+  groundTelescopeBuilt: true,
   transitSatelliteLaunchedAt: 1,
   deepSpaceTelescopeBuilt: true,
   saturnImagerLaunchedAt: 1,
@@ -57,18 +58,17 @@ describe('control station registry', () => {
     expect(row(launched, 'saturn-imager')?.openSignal?.inspectorScreen).toBe('saturn-storm-search')
   })
 
-  it('keeps ground telescopes visible and closed until the shared feed is live', () => {
+  it('does not invent an unbuilt ground telescope', () => {
     const player: StationPlayer = { freeOperations: true }
     const model = buildControlStation({ player, signals, bodyId: 'all' })
-    expect(model.groups.flatMap(group => group.rows).map(item => item.equipmentId)).toEqual(['ground-telescopes'])
-    expect(model.groups[0]?.rows[0]).toMatchObject({ status: 'Standing by', readyCount: 0, openSignal: null })
-    expect(model.filters.map(filter => filter.id)).toEqual(['all', 'earth'])
+    expect(model.groups).toEqual([])
+    expect(model.filters.map(filter => filter.id)).toEqual(['all'])
   })
 
   it('hides a player-launched instrument until that launch', () => {
     const player: StationPlayer = { freeOperations: true, deepSpaceTelescopeBuilt: true }
     const ids = buildControlStation({ player, signals, bodyId: 'all' }).groups.flatMap(group => group.rows).map(item => item.equipmentId)
-    expect(ids).toEqual(['ground-telescopes', 'deep-space-telescope'])
+    expect(ids).toEqual(['deep-space-telescope'])
   })
 
   it('filters the list by body and leaves the map on the full station', () => {

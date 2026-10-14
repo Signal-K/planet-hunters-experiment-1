@@ -305,6 +305,7 @@ function ScreenBody({
       return (
         <InstrumentHubScreen
           player={game.player}
+          onBuildGroundTelescope={() => game.go('build')}
           onClaimSurveyPlot={game.claimSaturnSurveyTerritory}
           targets={game.catalog.targets}
           onStartScan={game.startSurveyScan}

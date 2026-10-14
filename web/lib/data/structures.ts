@@ -33,6 +33,7 @@ export const REFINERY_RECIPES: RefineryRecipe[] = [
 
 export const STRUCTURES: StructureBlueprint[] = [
   { id: 'launchpad', name: 'Launchpad', kind: 'launchpad', cost: 0, unlocksAt: 'always', unlockTrigger: 'always', description: 'Rocket assembly and launch operations.' },
+  { id: 'ground-telescope', name: 'Ground Telescope', kind: 'ground-telescope', cost: 0, unlocksAt: 'Free Operations', unlockTrigger: 'free-operations', description: 'Earth-surface telescope for asteroid-discovery observations.' },
   {
     id: 'surface-silo',
     name: 'Surface Silo',
@@ -87,6 +88,7 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
   // Free Ops. Existing players retain access through their saved unlock.
   if (structure.id === 'surface-silo') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
+  if (structure.id === 'ground-telescope') return !!opts.freeOperations || !!opts.placed?.includes('ground-telescope')
   if (structure.unlockTrigger === 'always') return true
   // KES-283: the Refinery is a normal Earth Base plot purchase (same unlock
   // shape as the Surface Silo) rather than the KES-286 off-world

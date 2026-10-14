@@ -1,10 +1,12 @@
 'use client'
 
 import type { CompletedMissionRecord, Player } from '@/lib/game-types'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Client, Mission, Target } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
+import { pbLandnam } from '@/lib/pb-landnam'
+import { mergeMissionLog, projectMissionLog, type MissionLogRow } from '@/lib/mission-log'
 import styles from './MissionHistoryScreen.module.css'
 
 interface MissionHistoryScreenProps {
@@ -25,8 +27,18 @@ function formatCompletedAt(value: number): string {
 
 export default function MissionHistoryScreen({ records, missions = [], player, onBack }: MissionHistoryScreenProps) {
   const [openKey, setOpenKey] = useState<string | null>(null)
+  const [durableRecords, setDurableRecords] = useState<CompletedMissionRecord[]>([])
+  useEffect(() => {
+    if (!pbLandnam.authStore.isValid) return
+    let active = true
+    void pbLandnam.collection('mission_log').getFullList<MissionLogRow>({ sort: '-completed_at', requestKey: 'mission-log-history' })
+      .then(rows => { if (active) setDurableRecords(projectMissionLog(rows, missions)) })
+      // Offline history remains usable from the game-state blob.
+      .catch(() => {})
+    return () => { active = false }
+  }, [missions])
   const recordKey = (record: CompletedMissionRecord) => record.runId ?? `${record.id}-${record.completedAt}`
-  const ordered = [...records].sort((a, b) => b.completedAt - a.completedAt)
+  const ordered = mergeMissionLog(records, durableRecords).sort((a, b) => b.completedAt - a.completedAt)
   // The detailed log below only holds the most recent runs (capped, and only
   // populated since this record-keeping shipped), so a long-lived account's
   // true lifetime count (missionsDone) can exceed ordered.length — show the

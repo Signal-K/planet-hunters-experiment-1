@@ -27,10 +27,11 @@ import type { InstrumentSignal, InstrumentSignalKind } from '@/lib/systems/Instr
 export const MAP_WIDTH = 640
 export const MAP_HEIGHT = 320
 
-export type StationPlayerFlag = 'transitSatelliteLaunchedAt' | 'deepSpaceTelescopeBuilt' | 'saturnImagerLaunchedAt'
+export type StationPlayerFlag = 'groundTelescopeBuilt' | 'transitSatelliteLaunchedAt' | 'deepSpaceTelescopeBuilt' | 'saturnImagerLaunchedAt'
 
 export interface StationPlayer {
   freeOperations?: boolean
+  groundTelescopeBuilt?: boolean
   transitSatelliteLaunchedAt?: number | null
   deepSpaceTelescopeBuilt?: boolean
   saturnImagerLaunchedAt?: number | null
@@ -104,7 +105,7 @@ export const CONTROL_STATION_EQUIPMENT: readonly StationEquipment[] = [
     name: 'Ground telescopes',
     locationId: 'earth-surface',
     projectIds: ['asteroid-discovery'],
-    presence: 'standing',
+    presence: 'groundTelescopeBuilt',
     feedFlag: 'deepSpaceTelescopeBuilt',
     observingLabel: 'Observing',
     readyLabel: 'Observing',

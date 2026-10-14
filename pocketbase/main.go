@@ -414,12 +414,11 @@ func ensureCollections(app core.App) {
 	// mission_log — append-only completed-mission log; one row per mission finished
 	if _, err := app.FindCollectionByNameOrId("mission_log"); err != nil {
 		missionLog := core.NewBaseCollection("mission_log")
-		// Append-only, write-only from the client (see useGameLoop.ts — only
-		// `.create()` is ever called). No client read path exists, so list/view/
-		// update/delete are superuser-only (nil), while create is scoped to the
-		// authenticated owner.
-		missionLog.ListRule = nil
-		missionLog.ViewRule = nil
+		// Completed operations are append-only, but the owner can read their own
+		// history. The Mission Log uses this as a repairable projection when a
+		// device did not retain its local game-state entry.
+		missionLog.ListRule = types.Pointer("user = @request.auth.id")
+		missionLog.ViewRule = types.Pointer("user = @request.auth.id")
 		missionLog.CreateRule = types.Pointer("@request.auth.id != \"\" && user = @request.auth.id")
 		missionLog.UpdateRule = nil
 		missionLog.DeleteRule = nil
@@ -798,12 +797,13 @@ func migrateMissionLog(app core.App) {
 	changed := false
 	const createRule = "@request.auth.id != \"\" && user = @request.auth.id"
 
-	if col.ListRule != nil {
-		col.ListRule = nil
+	const ownerReadRule = "user = @request.auth.id"
+	if col.ListRule == nil || *col.ListRule != ownerReadRule {
+		col.ListRule = types.Pointer(ownerReadRule)
 		changed = true
 	}
-	if col.ViewRule != nil {
-		col.ViewRule = nil
+	if col.ViewRule == nil || *col.ViewRule != ownerReadRule {
+		col.ViewRule = types.Pointer(ownerReadRule)
 		changed = true
 	}
 	if col.CreateRule == nil || *col.CreateRule != createRule {

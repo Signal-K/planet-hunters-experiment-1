@@ -28,6 +28,7 @@ describe('ControlStationBoard', () => {
     const model = buildControlStation({
       player: {
         freeOperations: true,
+        groundTelescopeBuilt: true,
         transitSatelliteLaunchedAt: 1,
         deepSpaceTelescopeBuilt: true,
       },

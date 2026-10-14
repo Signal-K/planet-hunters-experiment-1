@@ -234,7 +234,8 @@ import Foundation
         var p = Player(); p.freeOperations = true
         let sig = InstrumentSignal(id: "a", kind: .deepSpace, title: "NEOCP")
         var m = ControlStation.build(player: p, signals: [sig], bodyId: "all")
-        #expect(m.groups.count == 1 && m.groups[0].rows[0].status == "Standing by" && m.groups[0].rows[0].open == nil)
+        #expect(m.groups.isEmpty)
+        p.placed.append("ground-telescope")
         p.deepSpaceTelescopeBuilt = true
         m = ControlStation.build(player: p, signals: [sig], bodyId: "all")
         #expect(m.groups.flatMap(\.rows).filter { $0.open != nil }.count == 2)

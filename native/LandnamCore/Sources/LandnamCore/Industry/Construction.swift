@@ -16,6 +16,7 @@ public enum Construction {
 
     public static let all: [StructureBlueprint] = [
         StructureBlueprint(id: "launchpad", name: "Launchpad", cost: 0, materials: [:], unlocksAt: "Always", summary: "Rocket assembly and launch operations."),
+        StructureBlueprint(id: "ground-telescope", name: "Ground Telescope", cost: 0, materials: [:], unlocksAt: "Free Operations", summary: "Earth-surface telescope for asteroid-discovery observations."),
         StructureBlueprint(id: "surface-silo", name: "Surface Silo", cost: Economy.surfaceSiloPrice, materials: [:], unlocksAt: "Complete the guided missions",
                            summary: "Small Earth-side mineral storage. Hold ore for a better market window or for refinery input."),
         StructureBlueprint(id: "refinery", name: "Refinery", cost: Economy.refineryPrice, materials: ["aluminium": 20, "copper": 10],
@@ -35,6 +36,7 @@ public enum Construction {
         case "surface-silo": return p.freeOperations || p.missionsDone >= 2 || p.placed.contains("surface-silo")
         case "astronaut-academy": return p.academyResearched || p.placed.contains("astronaut-academy")
         case "launchpad": return true
+        case "ground-telescope": return p.freeOperations || p.placed.contains("ground-telescope")
         case "refinery": return p.placed.contains("refinery") || (p.freeOperations && p.placed.contains("surface-silo"))
         default: return false
         }

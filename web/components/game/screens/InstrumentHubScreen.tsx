@@ -19,6 +19,7 @@ import styles from './InstrumentHubScreen.module.css'
 interface InstrumentHubScreenProps {
   player: Player
   onBack: () => void
+  onBuildGroundTelescope?: () => void
   onInspect: (signal: InstrumentSignal) => void
   onSnoozePing?: () => void
   /** Claim the Enceladus plot from the stored survey chart. */
@@ -33,14 +34,14 @@ interface InstrumentHubScreenProps {
  * Control Station. The route id stays `instrument-hub` so existing entry
  * points land here. This is the equipment station, not `player.controlBuilt`.
  */
-export default function InstrumentHubScreen({ player, onBack, onInspect, onClaimSurveyPlot, targets = [], onStartScan, onResolveScan }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onBuildGroundTelescope, onInspect, onClaimSurveyPlot, targets = [], onStartScan, onResolveScan }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [bodyId, setBodyId] = useState('all')
   const help = useHelp('instrument-hub')
   const awaitingFeed = loading && signals.length === 0
   const model = useMemo(
     () => buildControlStation({
-      player,
+      player: { ...player, groundTelescopeBuilt: player.placed.includes('ground-telescope') },
       signals,
       bodyId,
       loading: awaitingFeed,
@@ -65,6 +66,13 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onClaim
       {help.layer}
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
         <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} />
+        {player.freeOperations && !player.placed.includes('ground-telescope') && onBuildGroundTelescope && (
+          <section data-testid="ground-telescope-build-prompt" style={{ padding: 12, border: '1px solid var(--ln-hairline-strong)', borderRadius: 8, background: 'var(--ln-panel)', display: 'grid', gap: 8 }}>
+            <div className="ln-section-label">Earth surface</div>
+            <p style={{ margin: 0 }}>No ground telescope is built. Add one from Build Hub to receive asteroid-discovery work here.</p>
+            <button type="button" onClick={onBuildGroundTelescope} style={{ minHeight: 44, font: '800 14px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Open Build Hub</button>
+          </section>
+        )}
         {onStartScan && onResolveScan && player.freeOperations && (
           <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />
         )}
