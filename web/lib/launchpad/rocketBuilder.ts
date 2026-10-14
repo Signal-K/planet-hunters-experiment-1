@@ -91,6 +91,22 @@ export function partsForSlot(slot: BuilderSlot, missionsDone: number): Customize
   })
 }
 
+/** Every part a slot can hold, in catalog order, whether or not it is unlocked yet. */
+export function allPartsForSlot(slot: BuilderSlot): CustomizerPart[] {
+  return CUSTOMIZER_PARTS.filter(part => part.kind === slot.kind && (!slot.match || part.id.includes(slot.match)))
+}
+
+/** What a part adds to the rocket, in the same integer steps `rocketBuilderStats` uses. */
+export function partEffectLabel(slot: BuilderSlot, part: CustomizerPart): string {
+  switch (slot.id) {
+    case 'engine': return `+${Math.floor(part.power / 5)} range`
+    case 'fuel-tank': return `+${Math.floor(part.successBonus / 7)} range`
+    case 'cargo-hold': return `+${Math.floor(part.successBonus / 10)} capacity`
+    case 'mining-laser': return `Laser ${part.power}`
+    case 'booster': return `+${Math.floor(part.power / 4)} range`
+  }
+}
+
 export function partIdForSlot(installed: BuilderLoadout, slot: BuilderSlot): string | undefined {
   if (slot.id === 'mining-laser') {
     if (installed['mining-laser']) return installed['mining-laser']

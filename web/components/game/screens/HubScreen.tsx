@@ -224,6 +224,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       title: 'Launch a space telescope',
       body: 'Your program can put a telescope in orbit. It sends back planet candidates to review.',
       cta: 'Open the tower',
+      // The pad is tall: a bubble anchored to it ran off the top of the screen. Sit it in open sky instead.
+      placement: 'viewport-clear',
       onCta: () => onOpenScene('launchpad'),
       onDismiss: onDismissHubPrompt ? () => onDismissHubPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined,
     }

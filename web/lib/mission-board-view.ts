@@ -18,6 +18,7 @@ import {
   orionidsLocalStartMs,
   type PlayerBadge,
 } from '@/lib/data/sky-events'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { WSW_EVENT_IDS, wswBanner, wswChipsForMission } from '@/lib/wsw'
 
 export type ProgramStepState = 'done' | 'current' | 'available' | 'locked'
@@ -31,6 +32,8 @@ export interface ProgramStep {
   lockLine: string | null
   state: ProgramStepState
   kind: ProgramStepKind
+  /** How far the player is toward the gate on a locked step (for example guided missions flown). */
+  progress: { have: number; need: number; label: string } | null
 }
 
 export type SkyBoardStatus = 'upcoming' | 'live' | 'ended'
@@ -82,6 +85,16 @@ function plural(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? '' : 's'}`
 }
 
+/** Progress toward a Free Operations gate: the guided missions flown so far. */
+function gateProgress(step: Omit<ProgramStep, 'progress'> & { progress?: ProgramStep['progress'] }, player: Player): ProgramStep['progress'] {
+  if (step.state !== 'locked' || !step.lockLine || !/free operations/i.test(step.lockLine)) return null
+  return {
+    have: Math.min(player.missionsDone, FREE_OPS_START_MISSIONS_DONE),
+    need: FREE_OPS_START_MISSIONS_DONE,
+    label: 'Guided missions flown',
+  }
+}
+
 /**
  * Own-program chain for the Program tab. Instruments, the academy story and
  * builds stay in progression order. The first step that can be started is
@@ -89,7 +102,7 @@ function plural(n: number, word: string): string {
  */
 export function programChain(catalog: Catalog, player: Player, now = Date.now()): ProgramStep[] {
   const free = !!player.freeOperations
-  const steps: ProgramStep[] = INSTRUMENTS.map(spec => {
+  const steps: Array<Omit<ProgramStep, 'progress'> & { progress?: ProgramStep['progress'] }> = INSTRUMENTS.map(spec => {
     const mission = missionById(catalog, spec.id)
     const done = instrumentDone(player, spec.id)
     const locked = !done && !free
@@ -152,7 +165,8 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
   }
 
   let marked = false
-  return steps.map(step => {
+  return steps.map(raw => {
+    const step = { ...raw, progress: raw.progress ?? gateProgress(raw, player) }
     if (step.state !== 'available' || step.kind === 'mining' || step.kind === 'focus') return step
     if (marked) return step
     marked = true

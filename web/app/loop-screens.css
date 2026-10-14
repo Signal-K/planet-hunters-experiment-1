@@ -195,9 +195,12 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
   border-color: color-mix(in srgb, var(--dusk-ink) 42%, transparent) !important;
 }
 .hub-callout--clear {
-  background: var(--dusk-panel);
-  color: var(--dusk-ink);
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
 }
+/* The callout text colours are inline dusk tokens (light). On the cream card they need the world ink. */
+.hub-callout--clear, .hub-callout--clear * { color: var(--ln-world-outline) !important; }
+.hub-callout--clear [aria-label="Dismiss"] > span { background: color-mix(in srgb, var(--ln-world-outline) 14%, transparent) !important; }
 .scene-icon-btn {
   display: grid;
   place-items: center;

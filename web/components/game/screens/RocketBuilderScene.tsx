@@ -14,11 +14,12 @@ import styles from './RocketBuilderScene.module.css'
 import {
   BLUEPRINT_MODULES,
   BUILDER_SLOTS,
+  allPartsForSlot,
   asLoadout,
   builderLandscape,
   fittedModules,
   installSlot,
-  nextPartId,
+  partEffectLabel,
   partIdForSlot,
   rocketBuilderStats,
   type BuilderLoadout,
@@ -45,6 +46,8 @@ interface RocketBuilderSceneProps {
   launchRocketName?: string
   launchRocketSrc?: string
   onLaunchComplete?: () => void
+  /** Tutorial player: walk the slots one at a time instead of offering the whole builder. */
+  guided?: boolean
 }
 
 export default function RocketBuilderScene({
@@ -67,6 +70,7 @@ export default function RocketBuilderScene({
   launchRocketName = 'Explorer',
   launchRocketSrc = '',
   onLaunchComplete,
+  guided = false,
 }: RocketBuilderSceneProps) {
   const help = useHelp(helpScreen)
   const loadout = asLoadout(installed)
@@ -78,18 +82,18 @@ export default function RocketBuilderScene({
   const fittedCount = BUILDER_SLOTS.filter(slot => partIdForSlot(loadout, slot)).length
   const targetLabel = target ? target.name : 'Choose a mission'
 
-  const choosePart = (slotId: BuilderSlotId) => {
-    const slot = BUILDER_SLOTS.find(item => item.id === slotId)
-    if (!slot) return
-    setSelected(slotId)
-    const partId = nextPartId(slot, loadout, missionsDone)
-    if (!partId || !onInstall) {
-      setNotice(partId ? '' : 'LOCKED')
-      return
-    }
-    const next = installSlot(loadout, slot, partId)
-    const ok = onInstall(next, loadout)
-    setNotice(ok ? '' : 'CANNOT AFFORD THIS PART')
+  const guidedSlot = guided ? BUILDER_SLOTS.find(slot => !partIdForSlot(loadout, slot)) ?? null : null
+  const activeSlotId: BuilderSlotId = selected ?? guidedSlot?.id ?? BUILDER_SLOTS[0].id
+  const activeSlot = BUILDER_SLOTS.find(slot => slot.id === activeSlotId) ?? BUILDER_SLOTS[0]
+  const options = allPartsForSlot(activeSlot)
+  const fittedId = partIdForSlot(loadout, activeSlot)
+  const fittedPart = options.find(part => part.id === fittedId)
+
+  const fitPart = (partId: string, unlockedAt: number) => {
+    if (unlockedAt > missionsDone) { setNotice(`Unlocks after ${unlockedAt} missions`); return }
+    if (!onInstall) return
+    const ok = onInstall(installSlot(loadout, activeSlot, partId), loadout)
+    setNotice(ok ? '' : 'Not enough francs for this part')
   }
 
   return (
@@ -98,6 +102,7 @@ export default function RocketBuilderScene({
       data-testid="rocket-builder"
       data-palette={land.paletteId}
       data-mission={missionTitle ?? ''}
+      data-guided={guided ? 'true' : 'false'}
       style={{
         '--lb-sky-top': land.skyTop,
         '--lb-sky-horizon': land.skyHorizon,
@@ -137,7 +142,7 @@ export default function RocketBuilderScene({
             <button type="button" className={flight.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06-.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
               </svg>
             </button>
             <div className={flight.clock}><HubClockWidget /></div>
@@ -156,64 +161,99 @@ export default function RocketBuilderScene({
       </div>
       {help.layer}
 
-      <div className={styles.actions}>
-        <div className={styles.leftGroup}>
+      <div className={styles.stage}>
+        <div className={styles.actions}>
           {onBack && <button type="button" className={styles.back} data-testid="top-bar-back" aria-label="back" onClick={onBack}>&lsaquo; Back</button>}
           <button type="button" className={styles.launch} data-testid={launchTestId} disabled={launchDisabled} onClick={onLaunch}>Launch</button>
+          <button type="button" className={styles.target} data-testid="rocket-builder-target" onClick={onChooseMission}>
+            <span>Target</span>
+            <strong>{targetLabel}</strong>
+          </button>
         </div>
-        <button type="button" className={styles.target} data-testid="rocket-builder-target" onClick={onChooseMission}>
-          <span>Target</span>
-          <strong>{targetLabel}</strong>
-        </button>
-      </div>
 
-      <section className={styles.blueprint} aria-label="Rocket blueprint" data-fitted-count={fittedCount}>
-        <div className={styles.sheet}>
-          <div className={styles.rocketWrap}>
-            <img src="/art/scenes/launchpad/launchpad-rocket-multistage.png" alt="" data-testid="launch-rocket" style={{ opacity: 0.55 + fittedCount * 0.09 }} />
-          </div>
-          <div className={styles.labels}>
-            {BLUEPRINT_MODULES.map(module => (
-              <p
-                key={module.id}
-                className={styles.label}
-                data-module={module.id}
-                data-fitted={fitted[module.id] ? 'true' : 'false'}
-                data-selected={selected === module.id || (module.id === 'engines' && selected === 'engine') ? 'true' : 'false'}
-              >
-                {module.label}
-              </p>
-            ))}
-          </div>
+        {guided && (
+          <p className={styles.guide} data-testid="rocket-builder-guide">
+            {guidedSlot
+              ? `Step ${fittedCount + 1} of ${BUILDER_SLOTS.length} · Fit your ${guidedSlot.label.toLowerCase()}`
+              : 'Rocket ready · Press Launch'}
+          </p>
+        )}
+
+        <div className={styles.body}>
+          <section className={styles.blueprint} aria-label="Rocket blueprint" data-fitted-count={fittedCount}>
+            <div className={styles.rocketWrap}>
+              <img src="/art/scenes/launchpad/launchpad-rocket-multistage.png" alt="" data-testid="launch-rocket" style={{ opacity: 0.55 + fittedCount * 0.09 }} />
+            </div>
+            <ul className={styles.stats} data-testid="rocket-builder-stats" data-capacity={stats.capacity} data-range={stats.range} data-laser={stats.laser}>
+              <li><span>Capacity</span><strong>{stats.capacity}</strong></li>
+              <li><span>Range</span><strong>{stats.range}</strong></li>
+              <li><span>Laser</span><strong>{stats.laser}</strong></li>
+            </ul>
+          </section>
+
+          <section className={styles.choices} aria-label="Part choices">
+            <div className={styles.tabs} role="tablist" data-testid="rocket-builder-tray">
+              {BUILDER_SLOTS.map(slot => {
+                const partId = partIdForSlot(loadout, slot)
+                const partName = allPartsForSlot(slot).find(part => part.id === partId)?.name
+                const lockedByGuide = guided && guidedSlot != null && slot.id !== guidedSlot.id && !partId
+                return (
+                  <button
+                    key={slot.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeSlotId === slot.id}
+                    className={styles.tab}
+                    data-testid={`builder-part-${slot.id}`}
+                    data-selected={activeSlotId === slot.id ? 'true' : 'false'}
+                    data-part={partId ?? ''}
+                    disabled={lockedByGuide}
+                    onClick={() => { setSelected(slot.id); setNotice('') }}
+                  >
+                    <img src={slot.card} alt="" />
+                    <span className={styles.tabLabel}>{slot.label}</span>
+                    <span className={styles.tabPart}>{partName ?? 'Empty'}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className={styles.optionsHead}>
+              <h2>{activeSlot.label}</h2>
+              <p>{fittedPart ? `Fitted: ${fittedPart.name}` : 'Nothing fitted yet. Choose a part.'}</p>
+            </div>
+            <ul className={styles.options} data-testid="rocket-builder-options">
+              {options.map(part => {
+                const locked = (part.unlockedAtMissions ?? 0) > missionsDone
+                const fittedNow = part.id === fittedId
+                return (
+                  <li key={part.id}>
+                    <button
+                      type="button"
+                      className={styles.option}
+                      data-testid={`builder-option-${part.id}`}
+                      data-fitted={fittedNow ? 'true' : 'false'}
+                      data-locked={locked ? 'true' : 'false'}
+                      aria-disabled={locked}
+                      onClick={() => fitPart(part.id, part.unlockedAtMissions ?? 0)}
+                    >
+                      <img src={part.img ?? activeSlot.card} alt="" onError={event => { event.currentTarget.src = activeSlot.card }} />
+                      <span className={styles.optionText}>
+                        <strong>{part.name}</strong>
+                        <span>{part.description}</span>
+                      </span>
+                      <span className={styles.optionMeta}>
+                        <em>{partEffectLabel(activeSlot, part)}</em>
+                        <b>{fittedNow ? 'Fitted' : locked ? `After ${part.unlockedAtMissions} missions` : part.price === 0 ? 'Free' : formatCurrency(part.price, { compact: true })}</b>
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+            {notice ? <p className={styles.notice} role="status">{notice}</p> : null}
+          </section>
         </div>
-        <p className={styles.stats} data-testid="rocket-builder-stats" data-capacity={stats.capacity} data-range={stats.range} data-laser={stats.laser}>
-          <span>Capacity {stats.capacity}</span>
-          <span>Range {stats.range}</span>
-          <span>Laser {stats.laser}</span>
-        </p>
-        {notice ? <p className={styles.notice}>{notice}</p> : null}
-      </section>
-
-      <div className={styles.tray} data-testid="rocket-builder-tray">
-        {BUILDER_SLOTS.map(slot => {
-          const partId = partIdForSlot(loadout, slot)
-          const locked = nextPartId(slot, loadout, missionsDone) == null && !partId
-          return (
-            <button
-              key={slot.id}
-              type="button"
-              className={styles.card}
-              data-testid={`builder-part-${slot.id}`}
-              data-selected={selected === slot.id ? 'true' : 'false'}
-              data-part={partId ?? ''}
-              disabled={locked}
-              onClick={() => choosePart(slot.id)}
-            >
-              <img src={slot.card} alt="" />
-              <span>{slot.label}</span>
-            </button>
-          )
-        })}
       </div>
 
       {launching && onLaunchComplete && (

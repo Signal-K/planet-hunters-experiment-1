@@ -308,7 +308,14 @@ struct SettingsSheet: View {
     #if os(iOS)
     @AppStorage(OrientationPreference.storageKey) private var orientation = OrientationPreference.auto.rawValue
     #endif
+    /// Optional focus used by the native scene catalog to render the relocation acceptance surface directly.
+    let initialScrollTarget: String?
     let onClose: () -> Void
+
+    init(onClose: @escaping () -> Void, initialScrollTarget: String? = nil) {
+        self.onClose = onClose
+        self.initialScrollTarget = initialScrollTarget
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -350,8 +357,15 @@ struct SettingsSheet: View {
                 .background(SettingsStyle.card)
                 .overlay(alignment: .top) { Rectangle().fill(SettingsStyle.blue).frame(height: 4) }
                 .overlay(alignment: .bottom) { Rectangle().fill(SettingsStyle.ink).frame(height: 3) }
-            ScrollView { if showPatchNotes { SettingsPatchNotes() } else { content } }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            ScrollViewReader { proxy in
+                ScrollView { if showPatchNotes { SettingsPatchNotes() } else { content } }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .task {
+                        guard let initialScrollTarget else { return }
+                        await Task<Never, Never>.yield()
+                        proxy.scrollTo(initialScrollTarget, anchor: .top)
+                    }
+            }
         }
     }
 
@@ -364,7 +378,7 @@ struct SettingsSheet: View {
             #endif
             trainingSection
             gameSection
-            if !store.player.placed.isEmpty && !store.player.earthBiomeMoveUsed { baseLandscapeSection }
+            if !store.player.placed.isEmpty && !store.player.earthBiomeMoveUsed { baseLandscapeSection.id("base-landscape-move") }
             VStack(spacing: 16) {
                 SettingsHeading(text: "Account")
                 row(SettingsRowText(title: auth.session?.email ?? "Email account", status: "Signed in")) {
@@ -458,7 +472,10 @@ struct SettingsSheet: View {
                     ForEach(["mountains", "desert", "tundra", "coast"], id: \.self) { id in
                         Button { moveBiome = id; confirmMoveBase = false } label: {
                             VStack(spacing: 4) {
-                                Image("Biome/\(id)-layer-far").resizable().scaledToFill().frame(height: 48).clipped()
+                                GeometryReader { geometry in
+                                    Image("Biome/\(id)-layer-far").resizable().scaledToFill()
+                                        .frame(width: geometry.size.width, height: 48).clipped()
+                                }.frame(height: 48).clipped()
                                 Text(id.capitalized).font(AppFont.display(14)).lineLimit(1)
                             }.frame(maxWidth: .infinity).padding(6)
                                 .background(moveBiome == id ? Theme.hudPanel : Theme.paper)

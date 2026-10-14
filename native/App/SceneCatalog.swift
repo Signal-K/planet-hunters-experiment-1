@@ -25,9 +25,9 @@ enum SceneCatalog {
         CatalogScene(id: id, size: CGSize(width: w, height: h), make: { AnyView(build()) })
     }
 
-    private static func settingsOverlay() -> some View {
+    private static func settingsOverlay(focusBaseMove: Bool = false) -> some View {
         HubScreen(safeAreaOverride: EdgeInsets())
-            .overlay { SettingsSheet(onClose: {}) }
+            .overlay { SettingsSheet(onClose: {}, initialScrollTarget: focusBaseMove ? "base-landscape-move" : nil) }
             .environment(GameStore(state: starterState()))
             .environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore()))
     }
@@ -366,6 +366,9 @@ enum SceneCatalog {
         scene("settings-live", 844, w: 390) { settingsOverlay() },
         scene("settings-live-landscape", 428, w: 926) { settingsOverlay() },
         scene("settings-live-desktop", 900, w: 1440) { settingsOverlay() },
+        scene("settings-base-move-live", 844, w: 390) { settingsOverlay(focusBaseMove: true) },
+        scene("settings-base-move-landscape", 428, w: 926) { settingsOverlay(focusBaseMove: true) },
+        scene("settings-base-move-desktop", 900, w: 1440) { settingsOverlay(focusBaseMove: true) },
         scene("mining-guide-phone", 1250) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
         scene("mining-guide-landscape", 402, w: 874) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
         scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },

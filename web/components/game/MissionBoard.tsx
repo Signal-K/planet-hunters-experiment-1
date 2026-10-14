@@ -88,6 +88,9 @@ function DownIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
 }
 
+const STEP_KIND_LABEL: Record<ProgramStep['kind'], string> = { instrument: 'Instrument', academy: 'Crew', build: 'Build', mining: 'Mining', focus: 'Focus' }
+const STEP_STATE_LABEL: Record<ProgramStep['state'], string> = { done: 'Done', current: 'Next up', available: 'Open', locked: 'Locked' }
+
 function StepGlyph({ kind }: { kind: ProgramStep['kind'] }) {
   if (kind === 'academy') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3" /><path d="M5 19c1.5-3 4-4.5 7-4.5S17.5 16 19 19" /><path d="M4 11h16" /></svg>
   if (kind === 'build') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 20V9l6-5 6 5v11" /><path d="M10 20v-5h4v5" /></svg>
@@ -246,22 +249,44 @@ export default function MissionBoard({
           </div>)}
 
           {tab === 'program' && <div className={styles.chain} data-testid="mission-board-program">
-            {steps.map((step, stepIndex) => <div key={step.id}>
-              <article className={styles.step} data-state={step.state} data-testid={`program-step-${step.id}`}>
-                <span className={styles.glyph} aria-hidden="true"><StepGlyph kind={step.kind} /></span>
-                <div>
-                  <h3>{step.title}</h3>
-                  <p>{step.detail}</p>
-                  {step.state === 'locked' && step.lockLine && <p>{step.lockLine}</p>}
-                </div>
-                <div className={styles.mark}>
-                  {step.state === 'done' && <span className={styles.doneMark} aria-label="Done"><CheckIcon /></span>}
-                  {step.state === 'locked' && <span aria-label="Locked"><LockIcon /></span>}
-                  {(step.state === 'current' || step.state === 'available') && <button type="button" className={styles.start} data-testid={`program-start-${step.id}`} onClick={() => startStep(step)}>{step.state === 'current' ? 'START' : 'ACCEPT'}</button>}
-                </div>
-              </article>
-              {stepIndex < steps.length - 1 && <div className={styles.join} aria-hidden="true"><DownIcon /></div>}
-            </div>)}
+            <header className={styles.chainHead} data-testid="program-summary">
+              <div>
+                <h2>Your space program</h2>
+                <p>{steps.filter(step => step.state === 'done').length} of {steps.length} steps complete</p>
+              </div>
+              <div className={styles.meter} role="progressbar" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={steps.filter(step => step.state === 'done').length} aria-label="Program progress">
+                <i style={{ width: `${(steps.filter(step => step.state === 'done').length / Math.max(steps.length, 1)) * 100}%` }} />
+              </div>
+            </header>
+            <ol className={styles.roadmap}>
+              {steps.map((step, stepIndex) => <li key={step.id} className={styles.roadStep} data-state={step.state}>
+                <span className={styles.node} aria-hidden="true">{step.state === 'done' ? <CheckIcon /> : stepIndex + 1}</span>
+                <article className={styles.step} data-state={step.state} data-testid={`program-step-${step.id}`}>
+                  <span className={styles.glyph} aria-hidden="true"><StepGlyph kind={step.kind} /></span>
+                  <div className={styles.stepBody}>
+                    <span className={styles.kicker}>{STEP_KIND_LABEL[step.kind]} · {STEP_STATE_LABEL[step.state]}</span>
+                    <h3>{step.title}</h3>
+                    <p className={styles.reward}><b>Unlocks</b> {step.detail}</p>
+                    {step.state === 'locked' && step.lockLine && (
+                      <div className={styles.gate}>
+                        <span><LockIcon /> Needs: {step.lockLine}</span>
+                        {step.progress && (
+                          <span className={styles.gateMeter}>
+                            <i style={{ width: `${(step.progress.have / step.progress.need) * 100}%` }} />
+                            <em>{step.progress.label} {step.progress.have}/{step.progress.need}</em>
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.mark}>
+                    {step.state === 'done' && <span className={styles.doneMark} aria-label="Done"><CheckIcon /></span>}
+                    {step.state === 'locked' && <span aria-label="Locked"><LockIcon /></span>}
+                    {(step.state === 'current' || step.state === 'available') && <button type="button" className={styles.start} data-testid={`program-start-${step.id}`} onClick={() => startStep(step)}>{step.state === 'current' ? 'START' : 'ACCEPT'}</button>}
+                  </div>
+                </article>
+              </li>)}
+            </ol>
           </div>}
 
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">

@@ -13,6 +13,8 @@ import type { BuilderLoadout } from '@/lib/launchpad/rocketBuilder'
 
 interface LaunchpadScreenProps {
   onBack: () => void
+  /** Tutorial player: the builder walks one slot at a time. */
+  guided?: boolean
   onPick: (id: string, freeHaulDisposition?: 'store' | 'sell') => void
   onViewContracts: () => void
   onLaunchpadAction: () => void
@@ -62,7 +64,7 @@ const STARTER_ROCKET: RocketConfig = { chassis: 'hull-mk1', propulsion: 'ion-a1'
 export default function LaunchpadScreen({
   onBack, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, player, rocketImageSrc = '', selectedRocketName = 'Explorer', francs = 0, hydrated = false, onAbandonMission,
   mission = null, target = null, rocket = STARTER_ROCKET, onInstallLoadout, onRequestLaunch, launching = false, onLaunchComplete, helpScreen = 'launchpad', launchTestId = 'launch-btn', launchDisabled = false,
-  missionsDone,
+  missionsDone, guided = false,
 }: LaunchpadScreenProps) {
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
@@ -108,6 +110,7 @@ export default function LaunchpadScreen({
         launchRocketName={selectedRocketName}
         launchRocketSrc={rocketImageSrc}
         onLaunchComplete={onLaunchComplete}
+        guided={guided}
       />
 
       {player.activeMission && onResumeMission && !activeMissionCalloutDismissed && !missionRunsOpen && (

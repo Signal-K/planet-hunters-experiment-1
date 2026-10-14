@@ -3,6 +3,8 @@ import { applyConfirmShipCustomizerBuild } from '@/lib/systems/EconomySystem'
 import type { GameState } from '@/lib/game-types'
 import {
   BUILDER_SLOTS,
+  allPartsForSlot,
+  partEffectLabel,
   builderLandscape,
   installSlot,
   nextPartId,
@@ -70,5 +72,16 @@ describe('rocket builder loadout', () => {
     expect(builderLandscape({ id: 'eros', type: 'asteroid' }).paletteId).not.toBe(
       builderLandscape({ id: 'mars', type: 'planet' }).paletteId,
     )
+  })
+})
+
+describe('rocket builder choices', () => {
+  it('lists every part a slot can hold and labels what each adds', () => {
+    for (const slot of BUILDER_SLOTS) {
+      const parts = allPartsForSlot(slot)
+      expect(parts.length).toBeGreaterThan(0)
+      for (const part of parts) expect(partEffectLabel(slot, part)).toMatch(/range|capacity|Laser/)
+    }
+    expect(allPartsForSlot(BUILDER_SLOTS[3]).every(part => part.id.includes('laser'))).toBe(true)
   })
 })

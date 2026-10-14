@@ -4015,14 +4015,15 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   right: auto;
   width: min(300px, 32vw);
   padding: 14px 14px 12px;
-  border: 2px solid var(--ln-world-hull-lit);
+  border: 2px solid var(--ln-world-outline);
   border-radius: 12px;
-  background: #152033;
-  color: #f4efe4;
-  box-shadow: 4px 4px 0 #0c1424, 0 18px 36px rgba(6, 10, 20, 0.5);
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--ln-world-outline) 35%, transparent);
   text-align: left;
 }
 .hub-callout--clear button { min-height: 44px; }
+.hub-callout--clear span, .hub-callout--clear div { color: var(--ln-world-outline) !important; }
 @media (max-width: 520px) and (orientation: portrait) {
   .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 20%; }
   /* Percentage footprints are authored for a wide scene. Phone portrait keeps

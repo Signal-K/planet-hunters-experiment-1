@@ -561,6 +561,7 @@ function ScreenBody({
           mission={game.mission ? { title: game.mission.title } : null}
           target={game.target}
           rocket={game.rocket}
+          guided={onboardingActive}
           onInstallLoadout={(next, prev) => game.confirmShipCustomizerBuild(next, prev)}
           onRequestLaunch={() => {
             const vehicle = game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId)

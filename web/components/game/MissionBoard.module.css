@@ -27,7 +27,7 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: color-mix(in srgb, var(--ln-board-ink) 42%, transparent);
+  background: color-mix(in srgb, var(--ln-board-ink) 12%, transparent);
   pointer-events: none;
 }
 
@@ -694,3 +694,66 @@ button.start {
   .fact strong { font-size: 28px; }
   .rocket { height: auto; max-height: 220px; align-self: center; }
 }
+
+/* Full-screen scene, not a popup: the board fills the whole screen at every size (HUD floats above its top padding). */
+.panel {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  background-color: transparent;
+  /* Soft lavender wash: solid enough behind text, with the base landscape showing through lower down. */
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--ln-board-lavender) 96%, transparent) 0%, color-mix(in srgb, var(--ln-board-lavender) 90%, transparent) 55%, color-mix(in srgb, var(--ln-board-lavender) 55%, transparent) 100%);
+}
+@media (orientation: portrait) and (max-width: 700px) {
+  .panel { top: 0; left: 0; right: 0; height: 100%; border-radius: 0; padding-top: 64px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .panel { top: 0; height: 100%; border-radius: 0; padding-top: 54px; }
+}
+@media (min-width: 701px) {
+  .body { padding-inline: 68px; }
+}
+@media (min-width: 701px) {
+  .prev { left: 116px; }
+  .body { padding-inline: 72px; }
+}
+
+/* Program roadmap: numbered path, state colours, what each step unlocks and how far the gate is. */
+.chain { max-width: 960px; gap: 12px; }
+.chainHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 12px 14px; border: 2px solid var(--ln-board-ink); border-radius: 16px; background-color: var(--ln-board-paper); }
+.chainHead h2 { margin: 0; font: 800 18px/1.1 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; }
+.chainHead p { margin: 2px 0 0; font: 600 14px/1.3 var(--ln-font-body); color: var(--ln-board-muted); }
+.meter, .gateMeter { position: relative; display: block; min-width: 160px; height: 14px; border: 2px solid var(--ln-board-ink); border-radius: 999px; background-color: var(--ln-board-lavender); overflow: hidden; }
+.meter i, .gateMeter i { display: block; height: 100%; background-color: var(--ln-board-teal); }
+.roadmap { list-style: none; margin: 0; padding: 0 0 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; position: relative; }
+.roadStep { position: relative; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 8px; align-items: start; }
+.roadStep:not(:last-child)::after { content: ''; position: absolute; left: 17px; top: 38px; bottom: -14px; width: 4px; border-radius: 2px; background-color: color-mix(in srgb, var(--ln-board-ink) 25%, transparent); }
+.roadStep[data-state='done']:not(:last-child)::after { background-color: var(--ln-board-teal); }
+.node { display: grid; place-items: center; width: 34px; height: 34px; margin-top: 10px; border: 2px solid var(--ln-board-ink); border-radius: 999px; background-color: var(--ln-board-paper); font: 800 14px/1 var(--ln-font-display); z-index: 1; }
+.node svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 3; }
+.roadStep[data-state='done'] .node { background-color: var(--ln-board-teal); color: var(--ln-board-on-accent); }
+.roadStep[data-state='current'] .node { background-color: var(--ln-board-amber); color: var(--ln-board-on-accent); }
+.step { grid-template-columns: 80px minmax(0, 1fr) auto; min-height: 104px; }
+.glyph { width: 72px; height: 72px; border-radius: 18px; }
+.glyph svg { width: 40px; height: 40px; }
+.step[data-state='done'] .glyph { background-color: var(--ln-board-teal); }
+.step[data-state='current'] .glyph { background-color: var(--ln-board-amber); }
+.step[data-state='available'] .glyph { background-color: var(--ln-board-lavender-deep); }
+.step[data-state='locked'] .glyph { background-color: color-mix(in srgb, var(--ln-board-ink) 40%, var(--ln-board-silver)); }
+.stepBody { display: flex; flex-direction: column; gap: 4px; }
+.kicker { font: 800 14px/1.1 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-board-muted); }
+.step h3 { font-size: 18px; }
+.step p.reward { margin: 0; }
+.reward b { font: 800 14px/1.3 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ln-board-ink); margin-right: 4px; }
+.gate { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 2px; font: 700 14px/1.3 var(--ln-font-body); color: var(--ln-board-ink); }
+.gate > span:first-child { display: inline-flex; align-items: center; gap: 6px; }
+.gate svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; }
+.gateMeter { min-width: 150px; height: 22px; }
+.gateMeter em { position: absolute; inset: 0; display: grid; place-items: center; font: 800 14px/1 var(--ln-font-display); font-style: normal; color: var(--ln-board-ink); }
+@media (min-width: 1100px) { .roadmap { grid-template-columns: repeat(2, minmax(0, 1fr)); } .roadStep:not(:last-child)::after { display: none; } }
+@media (orientation: portrait) and (max-width: 700px) { .step { grid-template-columns: 56px minmax(0, 1fr); } .step .mark { grid-column: 1 / -1; justify-content: stretch; } button.start { width: 100%; } .glyph { width: 52px; height: 52px; } .glyph svg { width: 30px; height: 30px; } }
