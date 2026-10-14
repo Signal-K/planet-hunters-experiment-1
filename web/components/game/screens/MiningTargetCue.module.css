@@ -1,0 +1,4 @@
+.targetCueStatus {
+  color: var(--ln-bp-ink, #0f2436);
+  font-weight: 800;
+}

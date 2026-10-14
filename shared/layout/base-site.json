@@ -1,0 +1,425 @@
+{
+  "version": 1,
+  "about": "Base site map shared by web (web/lib/scene/base-site.json, copied by scripts/sync-base-site.mjs) and native (bundled). Kit units: the base strip is 520 units wide; one unit is `kitScale` pt on screen. Sprites come from tools/blender/models/base_v7.py; their metrics below are the Blender camera frames. A fresh base has no structures: the player places the launchpad first, on the pad site.",
+  "strip": {
+    "width": 520,
+    "propMargin": 2
+  },
+  "kitScale": {
+    "phone": 2,
+    "large": 3,
+    "largeMinHeight": 600,
+    "rule": "2 pt per unit in portrait or when the view is under 600 pt tall, else 3"
+  },
+  "ground": {
+    "lineFromBottom": 0.2,
+    "tileWidth": 160,
+    "styles": {
+      "mountains": {
+        "src": "base/v7/ground/ground-mountains.png",
+        "above": 13.965,
+        "below": 38.312,
+        "deep": "#4a3f38"
+      },
+      "tundra": {
+        "src": "base/v7/ground/ground-tundra.png",
+        "above": 13.965,
+        "below": 38.312,
+        "deep": "#3a3835"
+      },
+      "desert": {
+        "src": "base/v7/ground/ground-desert.png",
+        "above": 13.965,
+        "below": 38.312,
+        "deep": "#6e5044"
+      },
+      "coast": {
+        "src": "base/v7/ground/ground-coast.png",
+        "above": 13.965,
+        "below": 38.312,
+        "deep": "#3a3835"
+      },
+      "apron": {
+        "src": "base/v7/ground/ground-apron.png",
+        "above": 13.344,
+        "below": 38.312,
+        "deep": "#4a3f38"
+      }
+    },
+    "segments": [
+      {
+        "from": 121,
+        "to": 259,
+        "style": "apron",
+        "builtWith": "launchpad"
+      }
+    ]
+  },
+  "structures": {
+    "launchpad": {
+      "site": "pad",
+      "src": "base/v7/structures/launchpad.png",
+      "width": 132,
+      "height": 135.028,
+      "foot": 0.968,
+      "mount": {
+        "x": 71,
+        "z": 13.5
+      }
+    },
+    "hangar": {
+      "site": "hall",
+      "src": "base/v7/structures/hangar.png",
+      "width": 78,
+      "height": 55.393,
+      "foot": 0.968
+    },
+    "market": {
+      "site": "exchange",
+      "src": "base/v7/structures/exchange.png",
+      "width": 116,
+      "height": 47.502,
+      "foot": 0.968
+    },
+    "surface-silo": {
+      "site": "shaft"
+    }
+  },
+  "sites": [
+    {
+      "id": "hall",
+      "x": 60,
+      "half": 39,
+      "plot": null,
+      "label": "Hangar"
+    },
+    {
+      "id": "pad",
+      "x": 190,
+      "half": 66,
+      "plot": 0,
+      "label": "Launchpad"
+    },
+    {
+      "id": "exchange",
+      "x": 340,
+      "half": 58,
+      "plot": 1,
+      "label": "Exchange"
+    },
+    {
+      "id": "shaft",
+      "x": 466,
+      "half": 26,
+      "plot": 2,
+      "label": "Silo"
+    }
+  ],
+  "props": {
+    "sprites": {
+      "pine-tall": {
+        "src": "base/v7/props/pine-tall.png",
+        "width": 23.3,
+        "height": 33.232,
+        "foot": 0.468
+      },
+      "pine-short": {
+        "src": "base/v7/props/pine-short.png",
+        "width": 15.82,
+        "height": 22.562,
+        "foot": 0.468
+      },
+      "pine-snow": {
+        "src": "base/v7/props/pine-snow.png",
+        "width": 19.22,
+        "height": 27.412,
+        "foot": 0.468
+      },
+      "rock": {
+        "src": "base/v7/props/rock.png",
+        "width": 16.93,
+        "height": 10.802,
+        "foot": 0.468
+      },
+      "rock-sand": {
+        "src": "base/v7/props/rock-sand.png",
+        "width": 16.94,
+        "height": 9.822,
+        "foot": 0.468
+      },
+      "snow-rock": {
+        "src": "base/v7/props/snow-rock.png",
+        "width": 16.93,
+        "height": 10.802,
+        "foot": 0.468
+      },
+      "boulder": {
+        "src": "base/v7/props/boulder.png",
+        "width": 24.92,
+        "height": 13.952,
+        "foot": 0.468
+      }
+    },
+    "biomes": {
+      "mountains": [
+        {
+          "sprite": "pine-short",
+          "x": 9
+        },
+        {
+          "sprite": "rock",
+          "x": 111
+        },
+        {
+          "sprite": "rock",
+          "x": 269
+        },
+        {
+          "sprite": "pine-tall",
+          "x": 419
+        },
+        {
+          "sprite": "boulder",
+          "x": 507
+        }
+      ],
+      "tundra": [
+        {
+          "sprite": "snow-rock",
+          "x": 10
+        },
+        {
+          "sprite": "snow-rock",
+          "x": 111
+        },
+        {
+          "sprite": "snow-rock",
+          "x": 269
+        },
+        {
+          "sprite": "pine-snow",
+          "x": 419
+        },
+        {
+          "sprite": "snow-rock",
+          "x": 507
+        }
+      ],
+      "desert": [
+        {
+          "sprite": "rock-sand",
+          "x": 10
+        },
+        {
+          "sprite": "rock-sand",
+          "x": 111
+        },
+        {
+          "sprite": "rock-sand",
+          "x": 269
+        },
+        {
+          "sprite": "rock-sand",
+          "x": 419
+        },
+        {
+          "sprite": "rock-sand",
+          "x": 507
+        }
+      ],
+      "coast": [
+        {
+          "sprite": "rock",
+          "x": 10
+        },
+        {
+          "sprite": "rock",
+          "x": 111
+        },
+        {
+          "sprite": "rock",
+          "x": 269
+        },
+        {
+          "sprite": "boulder",
+          "x": 419
+        },
+        {
+          "sprite": "rock",
+          "x": 507
+        }
+      ]
+    }
+  },
+  "backdrop": {
+    "tileWidth": 480,
+    "lift": 9,
+    "biomes": {
+      "mountains": [
+        {
+          "id": "far",
+          "src": "base/v7/bands/band-mountains-far.png",
+          "height": 85.04,
+          "parallax": 0.18
+        },
+        {
+          "id": "near",
+          "src": "base/v7/bands/band-mountains-near.png",
+          "height": 30.92,
+          "parallax": 0.45
+        }
+      ],
+      "tundra": [
+        {
+          "id": "far",
+          "src": "base/v7/bands/band-tundra-far.png",
+          "height": 58.47,
+          "parallax": 0.18
+        },
+        {
+          "id": "near",
+          "src": "base/v7/bands/band-tundra-near.png",
+          "height": 30.78,
+          "parallax": 0.45
+        }
+      ],
+      "desert": [
+        {
+          "id": "far",
+          "src": "base/v7/bands/band-desert-far.png",
+          "height": 51.42,
+          "parallax": 0.18
+        },
+        {
+          "id": "near",
+          "src": "base/v7/bands/band-desert-near.png",
+          "height": 21.13,
+          "parallax": 0.45
+        }
+      ],
+      "coast": [
+        {
+          "id": "far",
+          "src": "base/v7/bands/band-coast-far.png",
+          "height": 43.92,
+          "parallax": 0.18
+        },
+        {
+          "id": "near",
+          "src": "base/v7/bands/band-coast-near.png",
+          "height": 30.0,
+          "parallax": 0.45
+        }
+      ]
+    }
+  },
+  "sky": {
+    "about": "Six local-time grades. Gradient top, mid, horizon; the luminary is the sun by day and the moon at night, at x, y as fractions of the sky. Clouds drift; stars show from dusk to dawn. Clouds drift right across the strip and wrap; `y` is from the top of the sky, `seconds` one full crossing.",
+    "grades": {
+      "dawn": {
+        "top": "#3d6290",
+        "mid": "#8eb4d4",
+        "horizon": "#d7a8b0",
+        "luminary": {
+          "kind": "sun",
+          "x": 0.18,
+          "y": 0.62
+        },
+        "stars": 0.3,
+        "clouds": 0.7,
+        "shade": 0.12
+      },
+      "morning": {
+        "top": "#5b93c4",
+        "mid": "#b7d4ea",
+        "horizon": "#e7f0ea",
+        "luminary": {
+          "kind": "sun",
+          "x": 0.32,
+          "y": 0.26
+        },
+        "stars": 0,
+        "clouds": 1,
+        "shade": 0
+      },
+      "midday": {
+        "top": "#6ea4d4",
+        "mid": "#b9d3e8",
+        "horizon": "#e4eee6",
+        "luminary": {
+          "kind": "sun",
+          "x": 0.52,
+          "y": 0.1
+        },
+        "stars": 0,
+        "clouds": 1,
+        "shade": 0
+      },
+      "afternoon": {
+        "top": "#4e7eae",
+        "mid": "#8fafc6",
+        "horizon": "#c9d5d2",
+        "luminary": {
+          "kind": "sun",
+          "x": 0.7,
+          "y": 0.28
+        },
+        "stars": 0,
+        "clouds": 0.9,
+        "shade": 0.06
+      },
+      "dusk": {
+        "top": "#10182c",
+        "mid": "#1a3d62",
+        "horizon": "#c45b6a",
+        "luminary": {
+          "kind": "sun",
+          "x": 0.84,
+          "y": 0.66
+        },
+        "stars": 0.5,
+        "clouds": 0.55,
+        "shade": 0.22
+      },
+      "night": {
+        "top": "#0e1528",
+        "mid": "#1a2744",
+        "horizon": "#2a3d55",
+        "luminary": {
+          "kind": "moon",
+          "x": 0.24,
+          "y": 0.16
+        },
+        "stars": 1,
+        "clouds": 0.25,
+        "shade": 0.42
+      }
+    },
+    "clouds": [
+      {
+        "src": "base/v7/sky/cloud-0.png",
+        "width": 84.0,
+        "height": 20.89,
+        "y": 0.16,
+        "x": 40,
+        "seconds": 210
+      },
+      {
+        "src": "base/v7/sky/cloud-1.png",
+        "width": 68.0,
+        "height": 22.95,
+        "y": 0.3,
+        "x": 230,
+        "seconds": 160
+      },
+      {
+        "src": "base/v7/sky/cloud-2.png",
+        "width": 104.0,
+        "height": 21.0,
+        "y": 0.08,
+        "x": 390,
+        "seconds": 260
+      }
+    ]
+  }
+}
