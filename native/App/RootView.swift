@@ -27,7 +27,7 @@ struct RootView: View {
             case .missions: MissionsScreen().helpable(.missions)
             case .targets, .rocketBuy, .fab: LaunchReviewScreen().helpable(.targets)
             case .launchpad: LaunchReviewScreen()
-            case .hangar: LaunchScreen().helpable(.hangar)
+            case .hangar: HangarScreen().helpable(.hangar)
             case .build: BuildScreen()
             case .surfaceOps: SurfaceOpsScreen()
             case .transit: TransitScreen()

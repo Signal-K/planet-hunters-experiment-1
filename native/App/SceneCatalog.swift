@@ -334,6 +334,9 @@ enum SceneCatalog {
         scene("mining-guide-landscape", 402, w: 874) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
         scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-landscape", 402, w: 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("hangar-workshop-phone", 844, w: 390) { HangarScreen().environment(GameStore(state: partState())) },
+        scene("hangar-workshop-landscape", 428, w: 926) { HangarScreen().environment(GameStore(state: partState())) },
+        scene("hangar-workshop-desktop", 900, w: 1440) { HangarScreen().environment(GameStore(state: partState())) },
         scene("hangar-config-phone", 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
         scene("hangar-config-landscape", 402, w: 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
         scene("rover-field-phone", 874) {

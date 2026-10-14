@@ -458,6 +458,7 @@ function ScreenBody({
     case 'hangar':
       return (
         <HangarScreen
+          baseScene={<HubScreen player={game.player} onBuild={() => game.go("build")} onOpenScene={screen => game.go(screen)} onFocusBuilding={() => game.go("build")} />}
           francs={game.player.francs}
           missionsDone={game.player.missionsDone}
           unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
