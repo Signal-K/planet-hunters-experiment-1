@@ -14,6 +14,15 @@ import Foundation
         #expect((first?.payout.francs ?? .max) <= Int(15_000_000 * 1.18) + 1)
     }
 
+    @Test func everyMissionHasAStableBoardCategory() {
+        let missions = MissionGenerator.everything()
+        #expect(!missions.isEmpty)
+        #expect(missions.allSatisfy { MissionCategory.allCases.contains($0.category) })
+        #expect(missions.contains { $0.category == .contracts })
+        #expect(missions.contains { $0.category == .freeMining })
+        #expect(MissionGenerator.category(for: missions.first { $0.tag == "STORY" }!) == .missions)
+    }
+
     @Test func onboardingIsAsteroidOnlyAndMineralMatched() {
         let m = MissionGenerator.generate().first { $0.sequence == 1 }!
         let targets = Targets.compatible(with: m)

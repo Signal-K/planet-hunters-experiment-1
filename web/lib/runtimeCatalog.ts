@@ -2,6 +2,7 @@ import type { Catalog } from './catalog'
 import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from './data'
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
+import { tagMissionCategories } from './data/mission-generator'
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -228,6 +229,6 @@ export function buildRuntimeCatalog({
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: [...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...surveyMissions, ...jointMissions, ...resourceFocusMissions],
+    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...surveyMissions, ...jointMissions, ...resourceFocusMissions]),
   }
 }

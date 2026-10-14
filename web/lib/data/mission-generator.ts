@@ -1,5 +1,5 @@
 import { CARGO_BONUS_RATE } from './economy'
-import type { ClientSlot, MineralMeta, Mission, MissionTemplate, MissionConstructionPlan } from './types'
+import type { ClientSlot, MineralMeta, Mission, MissionCategory, MissionTemplate, MissionConstructionPlan } from './types'
 import { normalizeMissionPayout } from './payouts'
 
 // SSL-332: onboarding is Extraction (M1) then Transport (M2), followed by a
@@ -27,6 +27,22 @@ export interface MissionGeneratorInput {
   minerals: Record<string, MineralMeta>
   templates?: MissionTemplate[]
   complexityBands?: MissionComplexity[]
+}
+
+/** Assign every mission to the board's shared six-category contract. */
+export function missionCategory(mission: Pick<Mission, 'category' | 'client' | 'tag' | 'construction'>): MissionCategory {
+  if (mission.category) return mission.category
+  if (mission.client) return 'contracts'
+  if (mission.construction) return 'construction'
+  const tag = mission.tag.trim().toUpperCase()
+  if (tag === 'FREE OPS') return 'free-mining'
+  if (tag === 'EXPLORE' || tag === 'SCIENCE') return 'explore'
+  if (tag === 'CITIZEN SCIENCE HUB') return 'citizen-science-hubs'
+  return 'missions'
+}
+
+export function tagMissionCategories<T extends Mission>(missions: T[]): Array<T & { category: MissionCategory }> {
+  return missions.map(mission => ({ ...mission, category: missionCategory(mission) }))
 }
 
 export interface PocketBaseMissionTemplateSeed {

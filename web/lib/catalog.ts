@@ -2,6 +2,7 @@ import { pbLandnam } from './pb-landnam'
 import type { Target, Mission, Part, MineralMeta, Client, StructureBlueprint } from './data'
 import { TARGETS, MISSIONS, AUTHORED_MISSIONS, TRANSPORT_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions, generateSelfDirectedMiningPool, isOwnProgramMission } from './data'
 import { normalizeMissionPayout } from './data/payouts'
+import { tagMissionCategories } from './data/mission-generator'
 
 export interface Catalog {
   targets: Target[]
@@ -14,7 +15,7 @@ export interface Catalog {
 
 export const STATIC_CATALOG: Catalog = {
   targets: TARGETS,
-  missions: MISSIONS,
+  missions: tagMissionCategories(MISSIONS),
   parts: PARTS,
   minerals: MINERAL_META,
   clients: CLIENTS,
@@ -267,7 +268,7 @@ export async function fetchCatalog(): Promise<Catalog> {
 
   return {
     targets: locations.filter(isSolarTarget).map(toTarget),
-    missions: allMissions,
+    missions: tagMissionCategories(allMissions),
     parts: {
       chassis:    parts.filter(p => p.part_type === 'chassis').map(toPart),
       propulsion: parts.filter(p => p.part_type === 'propulsion').map(toPart),

@@ -28,6 +28,14 @@ export interface MissionConstructionPlan {
   buildTimeMs: number
 }
 
+export type MissionCategory =
+  | 'free-mining'
+  | 'construction'
+  | 'contracts'
+  | 'explore'
+  | 'citizen-science-hubs'
+  | 'missions'
+
 export type TargetStructureState = 'delivered' | 'under-construction' | 'operational'
 
 export interface TargetStructureBlueprint {
@@ -87,6 +95,8 @@ export interface Mission {
   brief: string
   client?: string
   tag: string
+  /** Stable board grouping; optional on legacy records and derived when absent. */
+  category?: MissionCategory
   difficulty: string
   locked: boolean
   sequence: number

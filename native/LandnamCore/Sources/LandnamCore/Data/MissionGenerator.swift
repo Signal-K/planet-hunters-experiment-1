@@ -1,5 +1,18 @@
 import Foundation
 
+public enum MissionCategory: String, Codable, CaseIterable, Sendable {
+    case freeMining = "free-mining"
+    case construction
+    case contracts
+    case explore
+    case citizenScienceHubs = "citizen-science-hubs"
+    case missions
+}
+
+public extension Mission {
+    var category: MissionCategory { MissionGenerator.category(for: self) }
+}
+
 public struct MissionTemplate: Equatable, Sendable {
     public let id: String
     public let tag: String
@@ -15,6 +28,17 @@ public struct MissionTemplate: Equatable, Sendable {
 /// Deterministic offline mission board (port of `mission-generator.ts`). The same
 /// bands produce the same ids on every device, so saves stay compatible with web.
 public enum MissionGenerator {
+    public static func category(for mission: Mission) -> MissionCategory {
+        if mission.client != nil { return .contracts }
+        if mission.construction != nil { return .construction }
+        switch mission.tag.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() {
+        case "FREE OPS": return .freeMining
+        case "EXPLORE", "SCIENCE": return .explore
+        case "CITIZEN SCIENCE HUB": return .citizenScienceHubs
+        default: return .missions
+        }
+    }
+
     public static let freeOpsStartMissionsDone = 2
     public static let onboardingSequenceCount = 2
     public static let freeOpsMissionSequence = 4
