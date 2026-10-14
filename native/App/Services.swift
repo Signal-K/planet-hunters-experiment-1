@@ -94,8 +94,9 @@ final class Services {
         self.store = store
         self.auth = auth
         // A server 401 means the token aged out: renew it, or ask the player to sign in again.
-        mergedBox.handler = { [weak store] st in Task { @MainActor in store?.mergeRemote(st) } }
+        mergedBox.handler = { [weak store] st in Task { @MainActor in store?.mergeRemote(st); store?.leaveOrphanedMissionScreen() } }
         unauthorized.handler = { [weak auth] in Task { @MainActor in await auth?.refreshSession() } }
+        store.leaveOrphanedMissionScreen()
         attach(auth.session)
         let sync = sync, gc = gameCenter, shared = shared, user = sharedUser
         store.onChange = { state in
@@ -188,7 +189,7 @@ final class Services {
             let result = await CloudPull.fetch(baseURL: base, token: tok, userId: id)
             guard self.session?.userId == id else { return }
             switch result {
-            case .found(let remote): store.mergeRemote(remote)
+            case .found(let remote): store.mergeRemote(remote); store.leaveOrphanedMissionScreen()
             case .none: break
             case .unavailable: return
             }
