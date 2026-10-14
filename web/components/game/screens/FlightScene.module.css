@@ -143,7 +143,7 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: calc(44 * var(--k));
+  width: calc(18 * var(--k));
   height: calc(72 * var(--k));
   transform: translate(-50%, -50%) rotate(90deg);
   image-rendering: pixelated;
@@ -162,8 +162,8 @@
   top: 50%;
   right: 10%;
   z-index: 2;
-  width: calc(48 * var(--k));
-  height: calc(40 * var(--k));
+  width: calc(64 * var(--k));
+  height: calc(53.3 * var(--k));
   transform: translate(var(--shift), -50%);
   animation: drift 9s ease-in-out infinite;
   pointer-events: none;
@@ -296,7 +296,7 @@
   .screen { --k: 2px; }
   .stage { top: 72px; bottom: 112px; }
   .ship { left: 40%; top: 38%; }
-  .body { right: 4%; top: 38%; }
+  .body { right: 6%; top: 38%; }
   .progress { bottom: 96px; width: min(320px, calc(100% - 32px)); }
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import type { ShipRoomKind } from '@/lib/data/shipRooms'
-import { KIT_ROCKET_ASPECT, KIT_ROCKET_BANDS, KIT_ROCKET_STAGES, kitRocketSrc, type KitRocketStage } from '@/lib/kit-rocket'
+import { KIT_ROCKET_ASPECT, KIT_ROCKET_FLIGHT, KIT_ROCKET_BANDS, KIT_ROCKET_STAGES, kitRocketSrc, type KitRocketStage } from '@/lib/kit-rocket'
 import styles from './KitRocket.module.css'
 
 interface KitRocketProps {
@@ -12,15 +12,17 @@ interface KitRocketProps {
   onSelect?: (kind: KitRocketStage) => void
   className?: string
   testId?: string
+  /** In flight the boosters have dropped away: core stack only. */
+  core?: boolean
 }
 
 /** The base-kit pixel rocket. Blueprint mode tints it and outlines one stage. */
-export function KitRocket({ parts, blueprint = false, active, onSelect, className, testId }: KitRocketProps) {
-  const src = kitRocketSrc(parts)
+export function KitRocket({ parts, blueprint = false, active, onSelect, className, testId, core = false }: KitRocketProps) {
+  const src = core ? KIT_ROCKET_FLIGHT : kitRocketSrc(parts)
   return (
     <div
       className={[styles.root, blueprint ? styles.blueprint : '', className].filter(Boolean).join(' ')}
-      style={blueprint ? { aspectRatio: KIT_ROCKET_ASPECT, width: 'auto', maxWidth: '100%', maxHeight: '100%', flex: '0 0 auto' } : undefined}
+      style={blueprint ? { aspectRatio: KIT_ROCKET_ASPECT, KIT_ROCKET_FLIGHT, width: 'auto', maxWidth: '100%', maxHeight: '100%', flex: '0 0 auto' } : undefined}
       data-testid={testId ?? 'kit-rocket'}
       data-sprite={src}
     >

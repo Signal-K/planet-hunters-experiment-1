@@ -3,6 +3,9 @@ import type { ShipRoomKind } from '@/lib/data/shipRooms'
 /** Cream and blue pixel rocket from the base kit. Pad, flight, and the hangar preview share this sprite. */
 export const KIT_ROCKET_CORE = '/game/assets/base/kit/pad-rocket.png'
 
+/** Core stack only (no side boosters), used once the boosters have separated. */
+export const KIT_ROCKET_FLIGHT = '/game/assets/base/kit/flight-rocket.png'
+
 export const KIT_ROCKET_STAGES = ['engine', 'booster', 'cockpit', 'payload'] as const
 export type KitRocketStage = (typeof KIT_ROCKET_STAGES)[number]
 
