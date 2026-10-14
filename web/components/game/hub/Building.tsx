@@ -360,10 +360,12 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
   )
 }
 
-export function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?: React.CSSProperties; onClick: () => void; plot?: number }) {
+export function EmptyPlot({ w = 90, style, onClick, plot, selected = false }: { w?: number; style?: React.CSSProperties; onClick: () => void; plot?: number; selected?: boolean }) {
   return (
     <button
       data-testid={plot != null ? `build-plot-${plot}` : 'build-plot'}
+      data-beacon={plot != null ? `build-plot-${plot}` : undefined}
+      aria-pressed={selected}
       onClick={onClick}
       style={{
         position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
@@ -377,7 +379,7 @@ export function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?
           // 0.04 trailing gradient stop has no matching --ln-* token (nothing
           // that faint exists); left as a literal fade-out, not swapped.
           background: 'radial-gradient(ellipse at 50% 35%, var(--ln-cyan-soft), rgba(112,217,234,0.04) 70%)',
-          border: '2px dashed var(--ln-cyan-border)',
+          border: `2px ${selected ? 'solid' : 'dashed'} ${selected ? 'var(--ln-cyan-bright)' : 'var(--ln-cyan-border)'}`,
           display: 'grid', placeItems: 'center',
           animation: 'hub-pad-pulse 2s ease-in-out infinite',
         }}>
@@ -389,7 +391,7 @@ export function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?
         padding: 'var(--ln-s-1) var(--ln-s-2)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14,
         letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--hub-cyan)', whiteSpace: 'nowrap',
       }}>
-        Build
+        + Build
       </div>
     </button>
   )

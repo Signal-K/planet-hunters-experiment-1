@@ -22,7 +22,6 @@ const ScreenLoading = () => <div className="game-screen-loading" aria-hidden="tr
 
 const MissionSetupRoutes = dynamic(() => import('@/components/game/MissionSetupRoutes'), { loading: ScreenLoading })
 const MissionOperationRoutes = dynamic(() => import('@/components/game/MissionOperationRoutes'), { loading: ScreenLoading })
-const BuildPlaceScreen = dynamic(() => import('@/components/game/screens/BuildPlaceScreen'), { loading: ScreenLoading })
 const RefineryScreen = dynamic(() => import('@/components/game/screens/RefineryScreen'), { loading: ScreenLoading })
 const MarketScreen = dynamic(() => import('@/components/game/screens/MarketScreen'), { loading: ScreenLoading })
 const HangarScreen = dynamic(() => import('@/components/game/screens/HangarScreen'), { loading: ScreenLoading })
@@ -169,40 +168,6 @@ function ScreenBody({
       )
 
     case 'build':
-      return (
-        <BuildPlaceScreen
-          onBack={() => game.goBack()}
-          player={{
-            francs: game.player.francs,
-            stash: game.player.stash,
-            placed: game.player.placed,
-            freeOperations: game.player.freeOperations,
-            refineryUnlocked: !!game.player.refineryUnlocked,
-            academyResearched: !!game.player.academyResearched,
-            missionsDone: game.player.missionsDone,
-            placementPlots: game.player.placementPlots,
-            transitSatelliteLevel: game.player.transitSatelliteLevel,
-            clientMissions: game.player.clientMissions,
-            deepSpaceTelescopeMissionCompletedAt: game.player.deepSpaceTelescopeMissionCompletedAt,
-            hasMiningSettlement: hasEstablishedMiningSettlement(game.player),
-          }}
-          onPlaced={(kind, plot) => {
-            const structure = game.catalog.structures.find(s => s.id === kind)
-            const enteringFreeOps = !game.player.freeOperations
-              && freeOperationsUnlocked({ missionsDone: game.player.missionsDone, placed: [...game.player.placed, kind] })
-            const placed = game.placeStructure(structure, kind, plot)
-            if (!placed) return false
-            game.completeStep(0)
-            captureGameEvent('structure_placed', { structure_kind: kind })
-            if (enteringFreeOps) captureFreeOpsUnlocked(game.player.missionsDone, 'silo')
-            enqueueSurvey('lnm_base_building', 1200)
-            if (kind === 'astronaut-academy') enqueueSurvey('lnm_crew_academy_built', 1200)
-            game.go('hub')
-            return true
-          }}
-        />
-      )
-
     case 'hub':
     case 'hub-subsurface':
     case 'mission-history': {
@@ -269,6 +234,22 @@ function ScreenBody({
             game.addToast(`${label} added to focus`, 'info')
             requestMissionBoardTab('program')
             game.goToMissions()
+          }}
+          editing={screen === 'build'}
+          onDoneEditing={() => game.go('hub')}
+          onPlaceStructure={(kind: string, plot: number) => {
+            const structure = game.catalog.structures.find(s => s.id === kind)
+            const enteringFreeOps = !game.player.freeOperations
+              && freeOperationsUnlocked({ missionsDone: game.player.missionsDone, placed: [...game.player.placed, kind] })
+            const placed = game.placeStructure(structure, kind, plot)
+            if (!placed) return false
+            game.completeStep(0)
+            captureGameEvent('structure_placed', { structure_kind: kind })
+            if (enteringFreeOps) captureFreeOpsUnlocked(game.player.missionsDone, 'silo')
+            enqueueSurvey('lnm_base_building', 1200)
+            if (kind === 'astronaut-academy') enqueueSurvey('lnm_crew_academy_built', 1200)
+            game.go('hub')
+            return true
           }}
           subsurface={game.subsurfaceView}
           onSubsurfaceChange={open => game.go(open ? 'hub-subsurface' : 'hub')}

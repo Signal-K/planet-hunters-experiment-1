@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 // bottom navigation from the shell (GameChromeBars). No loop screen may mount
 // its own bottom nav or a one-off header.
 const LOOP_SCREENS = [
-  'HubScreen', 'LaunchpadScreen', 'TransitScreen', 'MiningScreen', 'DebriefScreen', 'BuildPlaceScreen',
+  'HubScreen', 'LaunchpadScreen', 'TransitScreen', 'MiningScreen', 'DebriefScreen',
 ]
 const screensDir = join(__dirname, '..', 'game', 'screens')
 

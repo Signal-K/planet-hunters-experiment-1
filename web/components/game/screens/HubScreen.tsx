@@ -3,13 +3,13 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
-import { awaitingStorageSilo } from '@/lib/systems/AgencyOnboardingSystem'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
 import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
 import { BaseDock } from '@/components/game/hub/BaseDock'
+import { BaseEditBar } from '@/components/game/hub/BaseEditBar'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { useBaseCamera } from '@/lib/hooks/useBaseCamera'
 import { useBaseSeason, useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
@@ -20,7 +20,7 @@ export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModul
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
-import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
+import { SURFACE_SILO_CAPACITY, siloCapacityMultiplier, BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
@@ -73,13 +73,19 @@ interface HubScreenProps {
   onOpenMarket?: () => void
   subsurface?: boolean
   onSubsurfaceChange?: (v: boolean) => void
+  /** Base editing over the live landscape (the /game/build route). */
+  editing?: boolean
+  onPlaceStructure?: (kind: string, plot: number) => boolean
+  onDoneEditing?: () => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, editing = false, onPlaceStructure, onDoneEditing }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   const camera = useBaseCamera()
-  const [editMode, setEditMode] = useState(false)
+  const editMode = editing
+  const [editPlot, setEditPlot] = useState<number | null>(null)
+  const [previewKind, setPreviewKind] = useState<string | null>(null)
   const [dockStop, setDockStop] = useState(0)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
   const [rollingOut, setRollingOut] = useState(() => consumeRocketRolloutPending())
@@ -182,7 +188,12 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     }]
   })
   const scenicHangar = placed.includes('launchpad') && !placed.includes('hangar') && !placed.includes('garage')
+  const previewBuilding: HubBuildingDef[] = editMode && previewKind && editPlot != null && sortedEntities[editPlot]
+    ? [{ kind: previewKind, plotX: sortedEntities[editPlot].transform.position.x, w: BUILDING_W[previewKind] ?? 78, status: 'ok' as const }]
+    : []
+  const openPlots = sortedEntities.map((_, plot) => plot).filter(plot => !structureForPlot(plot))
   const sceneBuildings: HubBuildingDef[] = [
+    ...previewBuilding,
     ...(scenicHangar ? [{ kind: 'hangar', plotX: 48, w: 72, level: 3, status: 'ok' as const }] : []),
     ...hubBuildings.filter(building => BASE_SCENE_KINDS.has(building.kind)),
   ]
@@ -223,12 +234,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     }
     return null
   })()
-  const showStorageSiloCta = !player.activeMission && awaitingStorageSilo(player) && !subsurface
   const structureProps = (kind: string) => {
     if (kind === 'launchpad') {
       return {
         kind, label: 'Tower',
-        sub: player.activeMission ? 'IN FLIGHT' : 'READY',
+        sub: `LV ${buildingLevel(player, 'launchpad')}/${MAX_BUILDING_LEVEL} · ${player.activeMission ? 'IN FLIGHT' : 'READY'}`,
         status: (player.activeMission ? 'warn' : 'ok') as 'ok' | 'warn',
         hot: !!player.pendingLaunch,
         // Match the rendered mobile footprint of the authored sprite. The
@@ -250,9 +260,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     }
     if (kind === 'surface-silo') {
       const used = Object.values(player.stash ?? {}).reduce((sum, amount) => sum + Math.max(0, amount), 0)
+      const siloCap = SURFACE_SILO_CAPACITY * siloCapacityMultiplier(buildingLevel(player, 'surface-silo'))
       return {
         kind, label: 'Surface Silo',
-        sub: `${Math.min(used, 40)} / 40 U`,
+        sub: `LV ${buildingLevel(player, 'surface-silo')}/${MAX_BUILDING_LEVEL} · ${Math.min(used, siloCap)} / ${siloCap} U`,
         status: 'ok' as const,
         w: 62,
         onClick: () => onFocusBuilding('build'),
@@ -373,7 +384,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 if (kind && !BASE_SCENE_KINDS.has(kind)) return null
                 if (!kind) {
                   if (!editMode) return null
-                  return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onFocusBuilding('build')} />
+                  return <EmptyPlot key={plot} plot={plot} w={78} style={style} selected={editPlot === plot} onClick={() => setEditPlot(editPlot === plot ? null : plot)} />
                 }
                 const startedAt = player.underConstruction?.[kind]
                 const building = isUnderConstruction(startedAt, kind)
@@ -501,7 +512,28 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
 
       {/* The surface dock is reserved for all-scene navigation only. Base-only
           actions remain on their physical buildings or in their own surfaces. */}
-      {(
+      {editMode && !subsurface ? (
+        <div className="hub-bottom-dock" style={{
+          position: 'absolute', left: 0, right: 0, bottom: 8, zIndex: 20,
+          display: 'flex', justifyContent: 'center', pointerEvents: 'none',
+        }}>
+          <BaseEditBar
+            player={player}
+            plot={editPlot}
+            firstOpenPlot={openPlots[0] ?? null}
+            openNew={false}
+            onPlotChange={setEditPlot}
+            onPreview={setPreviewKind}
+            onPlace={(kind, plot) => {
+              const ok = onPlaceStructure?.(kind, plot) ?? false
+              if (ok) { setEditPlot(null); setPreviewKind(null) }
+              return ok
+            }}
+            onUpgrade={setUpgradingBuilding}
+            onDone={() => { setEditPlot(null); setPreviewKind(null); onDoneEditing?.() }}
+          />
+        </div>
+      ) : (
         <div className="hub-bottom-dock" style={{
           position: 'absolute', left: 0, right: 0, bottom: 8, zIndex: subsurface ? 40 : 20,
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
@@ -520,7 +552,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
                 setDockStop(next)
                 onOpenScene(stops[next])
               }}
-              onBuild={() => showStorageSiloCta ? onOpenScene('build') : setEditMode(value => !value)}
+              onBuild={() => onOpenScene('build')}
               onHub={() => onOpenScene('instrument-hub')}
             />
           </div>
