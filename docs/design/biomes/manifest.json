@@ -1,0 +1,782 @@
+{
+  "root": "/workspace/art/base-overhaul/biomes",
+  "scale_note": "<biome>/*.png are 2x Lanczos upscales of <biome>/src/*.png (1x keyed from the source JPEGs)",
+  "residue_check": "count of pixels with alpha>0 and (strict) R>150,G<100,B>150 / (loose) R-G>50 and B-G>50; pink_rim = keylib4.pink_rim: edge pixels (alpha>=64, <=8px from transparency) whose chroma along the source bg direction exceeds the local 90th pct of the clean interior by >20 (catches salmon fringes on yellow/green art that the R,B>G tests miss)",
+  "seam_score_note": "seam_score: mean |first col - last col| / median adjacent-column diff (premultiplied RGBA); ~1 = the wrap joint is as smooth as an interior column step. blend_zone_score: worst column-to-column tone step (blurred, sigma 3) inside the blend overlap / 95th pct of the same outside it; <=1 = nothing in the blend zone steps harder than normal image content. The blend: min-cost seam inside an ~8-9% overlap (tile_h from bg-layers) + low-frequency tone crossfade across the overlap (tile_h2).",
+  "files": [
+    {
+      "file": "mountains/layer-far.png",
+      "src": "mountains/src/layer-far.png",
+      "biome": "mountains",
+      "kind": "band",
+      "width": 2332,
+      "height": 368,
+      "src_width": 1166,
+      "src_height": 184,
+      "tileable": true,
+      "parallax_depth": 0.1,
+      "seam_score": 1.049,
+      "seam_score_src": 0.999,
+      "blend_zone_score": 1.08,
+      "blend_zone_score_src": 1.076,
+      "overlap_px_src": 114,
+      "overlap_frac": 0.0891,
+      "src_crop_rows": [
+        477,
+        660
+      ],
+      "src_crop_cols": [
+        0,
+        1279
+      ],
+      "src_bg_rgb": [
+        251.5,
+        0.0,
+        248.0
+      ],
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "mountains/layer-hills.png",
+      "src": "mountains/src/layer-hills.png",
+      "biome": "mountains",
+      "kind": "band",
+      "width": 2344,
+      "height": 350,
+      "src_width": 1172,
+      "src_height": 175,
+      "tileable": true,
+      "parallax_depth": 0.25,
+      "seam_score": 0.842,
+      "seam_score_src": 0.8,
+      "blend_zone_score": 1.126,
+      "blend_zone_score_src": 0.981,
+      "overlap_px_src": 108,
+      "overlap_frac": 0.0844,
+      "src_crop_rows": [
+        464,
+        638
+      ],
+      "src_crop_cols": [
+        0,
+        1279
+      ],
+      "src_bg_rgb": [
+        251.0,
+        22.0,
+        227.0
+      ],
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "mountains/layer-treeline.png",
+      "src": "mountains/src/layer-treeline.png",
+      "biome": "mountains",
+      "kind": "band",
+      "width": 2196,
+      "height": 422,
+      "src_width": 1098,
+      "src_height": 211,
+      "tileable": true,
+      "parallax_depth": 0.4,
+      "seam_score": 1.192,
+      "seam_score_src": 1.152,
+      "blend_zone_score": 1.172,
+      "blend_zone_score_src": 1.115,
+      "overlap_px_src": 98,
+      "overlap_frac": 0.0819,
+      "src_crop_rows": [
+        393,
+        603
+      ],
+      "src_crop_cols": [
+        43,
+        1238
+      ],
+      "src_bg_rgb": [
+        248.0,
+        6.0,
+        228.0
+      ],
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "mountains/layer-ground.png",
+      "src": "mountains/src/layer-ground.png",
+      "biome": "mountains",
+      "kind": "band",
+      "width": 2036,
+      "height": 922,
+      "src_width": 1018,
+      "src_height": 461,
+      "tileable": true,
+      "parallax_depth": 1.0,
+      "seam_score": 0.911,
+      "seam_score_src": 0.877,
+      "blend_zone_score": 1.021,
+      "blend_zone_score_src": 1.04,
+      "overlap_px_src": 81,
+      "overlap_frac": 0.0796,
+      "src_crop_rows": [
+        259,
+        719
+      ],
+      "src_crop_cols": [
+        9,
+        1107
+      ],
+      "src_bg_rgb": [
+        251.0,
+        0.0,
+        168.0
+      ],
+      "dash_period_src": 127.0,
+      "tile_dash_periods": 8,
+      "dash_rows_src": [
+        143,
+        146
+      ],
+      "dash_rows": [
+        286,
+        293
+      ],
+      "dash_mismatch_px_src": 0,
+      "dash_seam_check_src": {
+        "dash_len_median": 70,
+        "gap_median": 57,
+        "dash_len_range": [
+          69,
+          71
+        ],
+        "gap_range": [
+          56,
+          58
+        ]
+      },
+      "note": "top edge transparent above the verge; flat opaque bottom",
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "mountains/rock-1.png",
+      "src": "mountains/src/rock-1.png",
+      "biome": "mountains",
+      "kind": "prop",
+      "width": 702,
+      "height": 542,
+      "src_width": 351,
+      "src_height": 271,
+      "tileable": false,
+      "parallax_depth": 0.7,
+      "footprint_width": 520,
+      "bottom_contact_y": 531,
+      "footprint_x0": 71,
+      "anchor": [
+        330.5,
+        531
+      ],
+      "src_footprint_width": 259,
+      "src_bottom_contact_y": 265,
+      "src_anchor": [
+        165.0,
+        265
+      ],
+      "sheet_pos_src": [
+        55,
+        105
+      ],
+      "merged_satellites": 0,
+      "padding_px": 8,
+      "src_padding_px": 4,
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "mountains/rock-2.png",
+      "src": "mountains/src/rock-2.png",
+      "biome": "mountains",
+      "kind": "prop",
+      "width": 312,
+      "height": 418,
+      "src_width": 156,
+      "src_height": 209,
+      "tileable": false,
+      "parallax_depth": 0.7,
+      "footprint_width": 233,
+      "bottom_contact_y": 406,
+      "footprint_x0": 37,
+      "anchor": [
+        153.0,
+        406
+      ],
+      "src_footprint_width": 116,
+      "src_bottom_contact_y": 203,
+      "src_anchor": [
+        76.5,
+        203
+      ],
+      "sheet_pos_src": [
+        445,
+        161
+      ],
+      "merged_satellites": 0,
+      "padding_px": 8,
+      "src_padding_px": 4,
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "mountains/rock-3.png",
+      "src": "mountains/src/rock-3.png",
+      "biome": "mountains",
+      "kind": "prop",
+      "width": 420,
+      "height": 330,
+      "src_width": 210,
+      "src_height": 165,
+      "tileable": false,
+      "parallax_depth": 0.7,
+      "footprint_width": 272,
+      "bottom_contact_y": 318,
+      "footprint_x0": 56,
+      "anchor": [
+        191.5,
+        318
+      ],
+      "src_footprint_width": 135,
+      "src_bottom_contact_y": 159,
+      "src_anchor": [
+        96.0,
+        159
+      ],
+      "sheet_pos_src": [
+        638,
+        207
+      ],
+      "merged_satellites": 0,
+      "padding_px": 8,
+      "src_padding_px": 4,
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "mountains/rock-4.png",
+      "src": "mountains/src/rock-4.png",
+      "biome": "mountains",
+      "kind": "prop",
+      "width": 356,
+      "height": 488,
+      "src_width": 178,
+      "src_height": 244,
+      "tileable": false,
+      "parallax_depth": 0.7,
+      "footprint_width": 260,
+      "bottom_contact_y": 477,
+      "footprint_x0": 24,
+      "anchor": [
+        153.5,
+        477
+      ],
+      "src_footprint_width": 130,
+      "src_bottom_contact_y": 238,
+      "src_anchor": [
+        76.5,
+        238
+      ],
+      "sheet_pos_src": [
+        880,
+        128
+      ],
+      "merged_satellites": 0,
+      "padding_px": 8,
+      "src_padding_px": 4,
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "mountains/rock-5.png",
+      "src": "mountains/src/rock-5.png",
+      "biome": "mountains",
+      "kind": "prop",
+      "width": 286,
+      "height": 186,
+      "src_width": 143,
+      "src_height": 93,
+      "tileable": false,
+      "parallax_depth": 0.7,
+      "footprint_width": 170,
+      "bottom_contact_y": 174,
+      "footprint_x0": 51,
+      "anchor": [
+        135.5,
+        174
+      ],
+      "src_footprint_width": 78,
+      "src_bottom_contact_y": 87,
+      "src_anchor": [
+        69.5,
+        87
+      ],
+      "sheet_pos_src": [
+        1087,
+        278
+      ],
+      "merged_satellites": 0,
+      "padding_px": 8,
+      "src_padding_px": 4,
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "mountains/shrub-1.png",
+      "src": "mountains/src/shrub-1.png",
+      "biome": "mountains",
+      "kind": "prop",
+      "width": 592,
+      "height": 424,
+      "src_width": 296,
+      "src_height": 212,
+      "tileable": false,
+      "parallax_depth": 0.7,
+      "footprint_width": 426,
+      "bottom_contact_y": 413,
+      "footprint_x0": 59,
+      "anchor": [
+        271.5,
+        413
+      ],
+      "src_footprint_width": 214,
+      "src_bottom_contact_y": 206,
+      "src_anchor": [
+        135.5,
+        206
+      ],
+      "sheet_pos_src": [
+        257,
+        425
+      ],
+      "merged_satellites": 0,
+      "padding_px": 8,
+      "src_padding_px": 4,
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 2
+      }
+    },
+    {
+      "file": "mountains/shrub-2.png",
+      "src": "mountains/src/shrub-2.png",
+      "biome": "mountains",
+      "kind": "prop",
+      "width": 650,
+      "height": 394,
+      "src_width": 325,
+      "src_height": 197,
+      "tileable": false,
+      "parallax_depth": 0.7,
+      "footprint_width": 487,
+      "bottom_contact_y": 383,
+      "footprint_x0": 88,
+      "anchor": [
+        331.0,
+        383
+      ],
+      "src_footprint_width": 237,
+      "src_bottom_contact_y": 191,
+      "src_anchor": [
+        162.0,
+        191
+      ],
+      "sheet_pos_src": [
+        684,
+        440
+      ],
+      "merged_satellites": 0,
+      "padding_px": 8,
+      "src_padding_px": 4,
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "desert/layer-far.png",
+      "src": "desert/src/layer-far.png",
+      "biome": "desert",
+      "kind": "band",
+      "width": 2332,
+      "height": 416,
+      "src_width": 1166,
+      "src_height": 208,
+      "tileable": true,
+      "parallax_depth": 0.1,
+      "seam_score": 1.219,
+      "seam_score_src": 1.196,
+      "blend_zone_score": 1.2,
+      "blend_zone_score_src": 1.193,
+      "overlap_px_src": 114,
+      "overlap_frac": 0.0891,
+      "src_crop_rows": [
+        372,
+        579
+      ],
+      "src_crop_cols": [
+        0,
+        1279
+      ],
+      "src_bg_rgb": [
+        251.0,
+        2.5,
+        220.5
+      ],
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "desert/layer-ground.png",
+      "src": "desert/src/layer-ground.png",
+      "biome": "desert",
+      "kind": "band",
+      "width": 2148,
+      "height": 1118,
+      "src_width": 1074,
+      "src_height": 559,
+      "tileable": true,
+      "parallax_depth": 1.0,
+      "seam_score": 1.15,
+      "seam_score_src": 1.06,
+      "blend_zone_score": 1.144,
+      "blend_zone_score_src": 0.942,
+      "overlap_px_src": 88,
+      "overlap_frac": 0.0819,
+      "src_crop_rows": [
+        161,
+        719
+      ],
+      "src_crop_cols": [
+        25,
+        1186
+      ],
+      "src_bg_rgb": [
+        216.0,
+        29.0,
+        199.0
+      ],
+      "dash_period_src": 107.0,
+      "tile_dash_periods": 10,
+      "dash_rows_src": [
+        211,
+        213
+      ],
+      "dash_rows": [
+        422,
+        427
+      ],
+      "dash_mismatch_px_src": 0,
+      "dash_seam_check_src": {
+        "dash_len_median": 54,
+        "gap_median": 54,
+        "dash_len_range": [
+          53,
+          54
+        ],
+        "gap_range": [
+          53,
+          54
+        ]
+      },
+      "note": "top edge transparent above the verge; flat opaque bottom",
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "tundra/layer-far.png",
+      "src": "tundra/src/layer-far.png",
+      "biome": "tundra",
+      "kind": "band",
+      "width": 2352,
+      "height": 316,
+      "src_width": 1176,
+      "src_height": 158,
+      "tileable": true,
+      "parallax_depth": 0.1,
+      "seam_score": 0.688,
+      "seam_score_src": 0.653,
+      "blend_zone_score": 1.196,
+      "blend_zone_score_src": 1.305,
+      "overlap_px_src": 104,
+      "overlap_frac": 0.0813,
+      "src_crop_rows": [
+        461,
+        618
+      ],
+      "src_crop_cols": [
+        0,
+        1279
+      ],
+      "src_bg_rgb": [
+        247.0,
+        0.0,
+        255.0
+      ],
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "tundra/layer-ground.png",
+      "src": "tundra/src/layer-ground.png",
+      "biome": "tundra",
+      "kind": "band",
+      "width": 2202,
+      "height": 1106,
+      "src_width": 1101,
+      "src_height": 553,
+      "tileable": true,
+      "parallax_depth": 1.0,
+      "seam_score": 1.167,
+      "seam_score_src": 1.095,
+      "blend_zone_score": 1.065,
+      "blend_zone_score_src": 1.075,
+      "overlap_px_src": 88,
+      "overlap_frac": 0.0799,
+      "src_crop_rows": [
+        167,
+        719
+      ],
+      "src_crop_cols": [
+        0,
+        1188
+      ],
+      "src_bg_rgb": [
+        247.0,
+        0.0,
+        231.0
+      ],
+      "dash_period_src": 122.5,
+      "tile_dash_periods": 9,
+      "dash_rows_src": [
+        182,
+        189
+      ],
+      "dash_rows": [
+        364,
+        379
+      ],
+      "dash_mismatch_px_src": 0,
+      "dash_seam_check_src": {
+        "dash_len_median": 78,
+        "gap_median": 44,
+        "dash_len_range": [
+          77,
+          79
+        ],
+        "gap_range": [
+          43,
+          45
+        ]
+      },
+      "note": "top edge transparent above the verge; flat opaque bottom",
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "coast/layer-far.png",
+      "src": "coast/src/layer-far.png",
+      "biome": "coast",
+      "kind": "band",
+      "width": 2332,
+      "height": 356,
+      "src_width": 1166,
+      "src_height": 178,
+      "tileable": true,
+      "parallax_depth": 0.1,
+      "seam_score": 1.041,
+      "seam_score_src": 0.7,
+      "blend_zone_score": 1.014,
+      "blend_zone_score_src": 1.068,
+      "overlap_px_src": 114,
+      "overlap_frac": 0.0891,
+      "src_crop_rows": [
+        278,
+        455
+      ],
+      "src_crop_cols": [
+        0,
+        1279
+      ],
+      "src_bg_rgb": [
+        255.0,
+        5.0,
+        204.0
+      ],
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    },
+    {
+      "file": "coast/layer-ground.png",
+      "src": "coast/src/layer-ground.png",
+      "biome": "coast",
+      "kind": "band",
+      "width": 2254,
+      "height": 956,
+      "src_width": 1127,
+      "src_height": 478,
+      "tileable": true,
+      "parallax_depth": 1.0,
+      "seam_score": 1.039,
+      "seam_score_src": 0.954,
+      "blend_zone_score": 1.091,
+      "blend_zone_score_src": 1.081,
+      "overlap_px_src": 90,
+      "overlap_frac": 0.0799,
+      "src_crop_rows": [
+        242,
+        719
+      ],
+      "src_crop_cols": [
+        0,
+        1216
+      ],
+      "src_bg_rgb": [
+        231.0,
+        0.0,
+        128.0
+      ],
+      "dash_period_src": 102.0,
+      "tile_dash_periods": 11,
+      "dash_rows_src": [
+        165,
+        167
+      ],
+      "dash_rows": [
+        330,
+        335
+      ],
+      "dash_mismatch_px_src": 0,
+      "dash_seam_check_src": {
+        "dash_len_median": 56,
+        "gap_median": 47,
+        "dash_len_range": [
+          54,
+          57
+        ],
+        "gap_range": [
+          45,
+          48
+        ]
+      },
+      "note": "top edge transparent above the verge; flat opaque bottom",
+      "magenta_residue": {
+        "strict": 0,
+        "loose": 0,
+        "src_strict": 0,
+        "src_loose": 0,
+        "pink_rim": 0,
+        "src_pink_rim": 0
+      }
+    }
+  ],
+  "footprint_note": "props: footprint_width = horizontal span of alpha>=128 px in the bottom 8% of the opaque height; bottom_contact_y measured from the PNG top (incl. padding); anchor = [footprint centre x, bottom_contact_y]; unprefixed values are for the delivered 2x file, src_* for 1x",
+  "previews": {
+    "mountains": "/workspace/art/base-overhaul/biomes/mountains/preview.png",
+    "desert": "/workspace/art/base-overhaul/biomes/desert/preview.png",
+    "tundra": "/workspace/art/base-overhaul/biomes/tundra/preview.png",
+    "coast": "/workspace/art/base-overhaul/biomes/coast/preview.png"
+  },
+  "preview_note": "2400x1100 stacked: pale sky gradient, bands tiled back-to-front (src 1x), ground at the bottom; mountains adds 3 rocks on the verge. No buildings, no captions."
+}
