@@ -66,6 +66,7 @@ struct SyncChip: View {
         HStack(spacing: 5) {
             Circle().fill(warn ? Color(red: 0.608, green: 0.231, blue: 0.196) : Color(red: 0.25, green: 0.5, blue: 0.95)).frame(width: 7, height: 7)
             Text(label).font(AppFont.mono(11)).foregroundStyle(Theme.hudInk)
+                .fixedSize(horizontal: true, vertical: false).layoutPriority(1)
         }
         .padding(.horizontal, 8).frame(minHeight: 36)
         .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))

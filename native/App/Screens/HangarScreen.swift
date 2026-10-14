@@ -28,7 +28,7 @@ struct HangarScreen: View {
             HangarModulesPanel(onClose: { configuring = false })
         } else {
             bay
-                .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
+                .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
         }
     }
 

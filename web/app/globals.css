@@ -4495,7 +4495,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .ops-settings.ln-page-surface,
 .ops-settings.ln-page-surface--tray {
-  inset: 68px 0 84px;
+  inset: 0;
   display: block;
   padding: 0;
   background: var(--set-bg);
@@ -4563,8 +4563,9 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   border-color: var(--set-ink);
 }
 .ops-settings__card .ops-settings__btn { color: var(--ln-blueprint-blue); }
+.ops-settings .base-biome-option img { filter: grayscale(1); }
+.ops-settings .patch-ring text { font-size: 14px; }
 @media (max-height: 500px) {
-  .ops-settings.ln-page-surface { inset: 60px 0 76px; }
   .ops-settings__sky { height: 20px; }
   .ops-settings__card .ops-settings__head { padding: 0 12px; min-height: 44px; }
   .ops-settings__close { width: 44px; height: 44px; }
@@ -4572,7 +4573,6 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   .ops-settings__label { margin-bottom: 4px; }
   .ops-settings__panel { padding: 8px 12px; gap: 8px; }
   .ops-settings__field { gap: 8px; }
-  .ops-settings__field--orient .ops-settings__sub { display: none; }
   .ops-settings__copy { gap: 4px; }
 }
 
@@ -4646,6 +4646,10 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   box-shadow: none;
   container-type: inline-size;
 }
+.ops-settings__panel.ops-settings__training { padding: 12px; }
+.ops-settings .patch[data-state='done'] .patch-ring { color: var(--ln-blueprint-blue); }
+.ops-settings .patch[data-state='done'] .patch-ring-segment[data-stitched='true'] { stroke: var(--ln-blueprint-blue); }
+.ops-settings .patch[data-state='done'] .patch-status { color: var(--ln-blueprint-blue); }
 .ops-settings__panel--danger {
   border-color: var(--set-danger);
 }
@@ -4864,6 +4868,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 .scene-chip.sync-chip { gap: 5px; font: 700 10px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; white-space: nowrap; pointer-events: none; }
 .sync-chip__dot { width: 7px; height: 7px; border-radius: 999px; background: #3f80f2; flex: none; }
 .sync-chip[data-offline='true'] .sync-chip__dot { background: #9b3b32; }
-/* Narrow portrait: the chip row is full, so the chip collapses to its status dot. */
-@media (max-width: 520px) { .scene-chip.sync-chip:not(.sync-chip--floating) .sync-chip__label { display: none; } .scene-chip.sync-chip:not(.sync-chip--floating) { min-width: 0; padding-inline: 10px; } }
+/* Keep the sync state readable at every width; the dot alone is ambiguous. */
+.scene-chip.sync-chip:not(.sync-chip--floating) .sync-chip__label { display: inline; }
+.scene-chip.sync-chip:not(.sync-chip--floating) { min-width: max-content; }
 .sync-chip--floating { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); right: calc(env(safe-area-inset-right, 0px) + 12px); z-index: 96; }

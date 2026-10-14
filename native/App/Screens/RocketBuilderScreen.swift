@@ -60,7 +60,7 @@ struct RocketBuilderScreen: View {
             }
         }
         .background(Theme.paper)
-        .sheet(isPresented: $showSettings) { SettingsSheet { showSettings = false } }
+                .overlay { if showSettings { SettingsSheet { showSettings = false } } }
     }
 
     private var actions: some View {

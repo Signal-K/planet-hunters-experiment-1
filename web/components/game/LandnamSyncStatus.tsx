@@ -63,7 +63,7 @@ export default function LandnamSyncStatus() {
       aria-label={String(label)}
     >
       <span aria-hidden="true" className="sync-chip__dot" />
-      <span className="sync-chip__label">{label}</span>
+      <span className="sync-chip__label" style={{ display: 'inline' }}>{label}</span>
     </span>
   )
   return host ? createPortal(chip, host) : chip

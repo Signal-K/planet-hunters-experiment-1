@@ -62,7 +62,7 @@ struct MarketScreen: View {
             .coordinateSpace(name: "exchange")
         }
         .background(Theme.tokenBlueprintBg.ignoresSafeArea())
-        .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
+        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
         .task(id: store.player.francs) { await tickFrancs(to: store.player.francs) }
         .task(id: padLot) {
             guard padLot != nil else { return }

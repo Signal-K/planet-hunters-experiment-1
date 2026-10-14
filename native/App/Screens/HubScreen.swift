@@ -319,17 +319,15 @@ struct SettingsSheet: View {
 
     var body: some View {
         GeometryReader { geo in
-            let landscape = geo.size.width > geo.size.height
             let pageWidth = geo.size.width
             settingsBody(short: geo.size.height < 500)
-                .frame(width: pageWidth, height: max(0, geo.size.height - (landscape ? 152 : 184)))
+                .frame(width: pageWidth, height: geo.size.height)
                 .background(SettingsStyle.bg)
-                .padding(.top, landscape ? 68 : 84)
-                .padding(.bottom, landscape ? 84 : 100)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .onAppear { width = pageWidth }
                 .onChange(of: geo.size) { _, size in width = size.width }
         }
+        .ignoresSafeArea()
             .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
                 Button("Sign out", role: .destructive) { auth.signOut() }
                 Button("Stay signed in", role: .cancel) {}
@@ -450,7 +448,7 @@ struct SettingsSheet: View {
                         }.accessibilityLabel(confirmSkipTraining ? "Confirm skip training" : "Skip training")
                     }
                 }
-            }.settingsCard()
+            }.settingsCard(padding: width < 560 ? 12 : 18)
         }
     }
 
@@ -474,6 +472,7 @@ struct SettingsSheet: View {
                             VStack(spacing: 4) {
                                 GeometryReader { geometry in
                                     Image("Biome/\(id)-layer-far").resizable().scaledToFill()
+                                        .saturation(0)
                                         .frame(width: geometry.size.width, height: 48).clipped()
                                 }.frame(height: 48).clipped()
                                 Text(id.capitalized).font(AppFont.display(14)).lineLimit(1)
@@ -579,7 +578,7 @@ private struct TrainingPatchRing: View {
                     .stroke(index < stitched ? SettingsStyle.blue : SettingsStyle.ink.opacity(0.2), style: StrokeStyle(lineWidth: 3, lineCap: .round))
                     .rotationEffect(.degrees(-90))
             }
-            Text(String(format: "%02d", stitched)).font(AppFont.display(11, "Bold")).foregroundStyle(SettingsStyle.ink)
+            Text(String(format: "%02d", stitched)).font(AppFont.display(14, "Bold")).foregroundStyle(SettingsStyle.ink)
         }
         .accessibilityElement(children: .ignore)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: stitched)

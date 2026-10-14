@@ -153,6 +153,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
       tray
       className="ops-settings"
       contentClassName="ops-settings__card"
+      style={{ inset: 0, position: 'fixed', zIndex: 110 }}
       testId="settings-sheet"
       ariaLabel="Settings"
     >
@@ -188,7 +189,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                 <div className="ops-settings__field ops-settings__field--orient">
                   <div className="ops-settings__copy">
                     <div className="ops-settings__name">Screen orientation</div>
-                    <div className="ops-settings__sub">Lock to portrait or landscape</div>
+                    <div className="ops-settings__sub" style={{ display: 'block' }}>Lock to portrait or landscape</div>
                   </div>
                   <div className="ln-set-segment ops-settings__choices ops-settings__choices--three" role="group" aria-label="Screen orientation" data-testid="orientation-segment">
                     {ORIENTATION_CHOICES.map(choice => (
@@ -219,7 +220,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
 
             <section>
               <h3 className="ops-settings__label">Training</h3>
-              <div className="ops-settings__panel ops-settings__training">
+              <div className="ops-settings__panel ops-settings__training" style={{ padding: 12 }}>
                 <div className="patch-shelf" data-testid="training-patch-shelf" role="list" aria-label="Mission patches">
                   {TRAINING_TRY_IDS.map(tryId => {
                     const active = currentTrainingTry(game.player.flightPlan) === tryId
@@ -229,17 +230,17 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                     const label = tryId === 'part' ? 'Part tweak' : tryId === 'scan' ? 'Planet scan' : 'Mining'
                     return (
                       <div key={tryId} role="listitem" className="patch" data-state={done ? 'done' : active ? 'active' : 'standby'}>
-                        <svg className="patch-ring" viewBox="0 0 44 44" role="img" aria-label={`${label}: ${stitched} of ${total} steps stitched`}>
+                        <svg className="patch-ring" style={done ? { color: 'var(--ln-blueprint-blue)' } : undefined} viewBox="0 0 44 44" role="img" aria-label={`${label}: ${stitched} of ${total} steps stitched`}>
                           <circle className="patch-ring-track" cx="22" cy="22" r="16" />
                           {Array.from({ length: total }, (_, index) => {
                             const circumference = 2 * Math.PI * 16
                             const length = circumference / total * 0.72
-                            return <circle key={index} className="patch-ring-segment" data-stitched={index < stitched} cx="22" cy="22" r="16" strokeDasharray={`${length} ${circumference}`} transform={`rotate(${index * 360 / total} 22 22)`} />
+                            return <circle key={index} className="patch-ring-segment" data-stitched={index < stitched} style={done && index < stitched ? { stroke: 'var(--ln-blueprint-blue)' } : undefined} cx="22" cy="22" r="16" strokeDasharray={`${length} ${circumference}`} transform={`rotate(${index * 360 / total} 22 22)`} />
                           })}
-                          <text x="22" y="26" textAnchor="middle">{String(stitched).padStart(2, '0')}</text>
+                          <text x="22" y="26" textAnchor="middle" style={{ fontSize: 14 }}>{String(stitched).padStart(2, '0')}</text>
                         </svg>
                         <div className="ops-settings__copy" data-testid={`training-${tryId}-status`}>
-                          <div className="patch-name">{label}</div><div className="patch-status">{status}</div>
+                          <div className="patch-name">{label}</div><div className="patch-status" style={done ? { color: 'var(--ln-blueprint-blue)' } : undefined}>{status}</div>
                         </div>
                         <button type="button" className="ops-settings__btn ops-settings__btn--mini" onClick={() => replay(tryId)}>Replay</button>
                       </div>

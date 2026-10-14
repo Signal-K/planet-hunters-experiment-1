@@ -461,7 +461,7 @@ struct DebriefScreen: View {
             .padding(.bottom, 16)
         }
         .helpable(.debrief)
-        .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
+        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
     }
 
     private func collectTitle(free: Bool, store: Bool, overflow: Int, sale: Int, program: Bool, payout: Int) -> String {
