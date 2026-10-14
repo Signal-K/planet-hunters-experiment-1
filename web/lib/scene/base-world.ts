@@ -116,13 +116,21 @@ export function coarseSkyPhase(grade: WorldTimeGrade): TimeOfDayPhase {
 
 let previewTime: WorldTimeGrade | null = null
 let previewSeasonLock: Season | null = null
+let previewSky: string[] = []
 
-/** Remember `?time=` and `?season=` before a preset load strips the query. */
+/** Remember `?time=`, `?season=` and `?sky=` (forced sky events and weather, dev previews) before a preset load
+ *  strips the query. */
 export function lockBaseWorldPreview(params: { get(name: string): string | null }): void {
   const time = sanitizeWorldTime(params.get('time'))
   const season = sanitizeSeason(params.get('season'))
+  const sky = params.get('sky')
   if (time) previewTime = time
   if (season) previewSeasonLock = season
+  if (sky) previewSky = sky.split(',').map(s => s.trim()).filter(s => /^[a-z-]{2,20}$/.test(s)).slice(0, 8)
+}
+
+export function lockedSky(): readonly string[] {
+  return previewSky
 }
 
 export function lockedWorldTime(): WorldTimeGrade | null {

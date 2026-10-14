@@ -3,8 +3,8 @@ import type { EarthBiomeId, WorldTimeGrade } from './base-world'
 
 /**
  * Base site map (shared/layout/base-site.json, copied here by scripts/sync-base-site.mjs; native reads the
- * same file). Every structure has one home site on a 520-unit strip, props sit only in the gaps, and the
- * concrete apron exists only once the pad is built. A fresh base is empty land with one pad site.
+ * same file). The base is a paved launch complex on flat land. Every structure has one home site on a
+ * 520-unit strip; a fresh base is the empty paved site with one marked pad site.
  */
 export const BASE_SITE = site
 export const STRIP_W = site.strip.width
@@ -17,9 +17,8 @@ export const aboveGround = (n: number) => `calc(var(--hub-ground) + ${n} * var(-
 
 export type SiteId = 'hall' | 'pad' | 'exchange' | 'shaft'
 export interface BaseSite { id: SiteId; x: number; half: number; plot: number | null; label: string }
-export interface StructureSprite { site: SiteId; src?: string; width?: number; height?: number; foot?: number; mount?: { x: number; z: number } }
-export interface PropPlacement { sprite: string; x: number }
-export interface PropSprite { src: string; width: number; height: number; foot: number }
+/** `body` is the structure's own width; the sprite (`left`, `width`) is wider by the shadow it casts to the right. */
+export interface StructureSprite { site: SiteId; src?: string; body?: number; left?: number; width?: number; height?: number; foot?: number; mount?: { x: number; z: number } }
 export interface SkyGrade {
   top: string
   mid: string
@@ -32,12 +31,25 @@ export interface SkyGrade {
 
 export const SITES = site.sites as BaseSite[]
 const STRUCTURES = site.structures as Record<string, StructureSprite>
-const PROP_SPRITES = site.props.sprites as Record<string, PropSprite>
 
-/** Points per kit unit: 2 on phones (portrait, or under 600 pt tall), else 3. Native uses the same rule. */
+/** Points per kit unit. Portrait fits the hangar and pad across the width (between 1.5 and 2); landscape is 2
+ *  under 600 pt tall, else 3. Native uses the same rule. */
 export function kitScale(view: { w: number; h: number }): number {
-  const portrait = view.h > view.w * 1.15
-  return portrait || view.h < site.kitScale.largeMinHeight ? site.kitScale.phone : site.kitScale.large
+  const k = site.kitScale
+  if (view.h > view.w * 1.15) return Math.round(Math.min(k.phone, Math.max(k.portraitMin, view.w / k.portraitFit)) * 100) / 100
+  return view.h < k.largeMinHeight ? k.phone : k.large
+}
+
+/** Strip x (kit units) the camera starts centred on: the middle of everything built, or the pad site on a fresh
+ *  base. When the built span is wider than the view, the pad stays in frame. */
+export function homeCenter(kinds: readonly string[], viewUnits: number): number {
+  const sites = kinds.map(homeSite).filter((s): s is BaseSite => !!s && s.id !== 'shaft')
+  const pad = siteById('pad')
+  if (!sites.length) return pad.x
+  const l = Math.min(...sites.map(s => s.x - s.half))
+  const r = Math.max(...sites.map(s => s.x + s.half))
+  if (r - l <= viewUnits) return (l + r) / 2
+  return Math.min(Math.max((l + r) / 2, pad.x + pad.half - viewUnits / 2), pad.x - pad.half + viewUnits / 2)
 }
 
 export function structureSprite(kind: string): StructureSprite | null {
@@ -54,42 +66,28 @@ export function siteById(id: SiteId): BaseSite {
   return SITES.find(s => s.id === id)!
 }
 
-export function propsFor(biome: EarthBiomeId): Array<PropPlacement & PropSprite> {
-  const list = (site.props.biomes as Record<string, PropPlacement[]>)[biome] ?? []
-  return list.map(p => ({ ...p, ...PROP_SPRITES[p.sprite] }))
+/** Offset from the site centre to the sprite centre, in kit units (the sprite carries its shadow on the right). */
+export function spriteCenterOffset(sprite: StructureSprite): number {
+  if (sprite.body == null || sprite.left == null || sprite.width == null) return 0
+  return sprite.left + sprite.width / 2 - sprite.body / 2
 }
 
-export interface GroundRun { from: number; to: number; style: string; src: string; above: number; below: number; deep: string }
+export const GROUND = site.ground
 
-/** Ground runs across the strip for a biome: the biome tile everywhere, the apron under the pad once it is built. */
-export function groundRuns(biome: EarthBiomeId, placed: readonly string[]): GroundRun[] {
-  const styles = site.ground.styles as Record<string, { src: string; above: number; below: number; deep: string }>
-  const overlays = site.ground.segments.filter(seg => !seg.builtWith || placed.includes(seg.builtWith)).sort((a, b) => a.from - b.from)
-  const runs: GroundRun[] = []
-  let x = 0
-  const push = (from: number, to: number, style: string) => { if (to > from) runs.push({ from, to, style, ...styles[style] }) }
-  for (const seg of overlays) {
-    push(x, seg.from, biome)
-    push(seg.from, seg.to, seg.style)
-    x = seg.to
-  }
-  push(x, STRIP_W, biome)
-  return runs
-}
+export interface BackdropBand { id: string; src: string; bottom: number; height: number; parallax: number }
 
-export function backdropFor(biome: EarthBiomeId): Array<{ id: string; src: string; height: number; parallax: number }> {
-  return (site.backdrop.biomes as Record<string, Array<{ id: string; src: string; height: number; parallax: number }>>)[biome] ?? []
+export function backdropFor(biome: EarthBiomeId): BackdropBand[] {
+  return (site.backdrop.biomes as Record<string, BackdropBand[]>)[biome] ?? []
 }
 
 export function skyGrade(grade: WorldTimeGrade): SkyGrade {
   return (site.sky.grades as Record<string, SkyGrade>)[grade]
 }
 
-/** Every problem with the site map: sites overlapping each other or the strip edge, structure sprites wider
- *  than their site, props off the strip, on a site, or on a paved segment. Empty when the map is sound. */
+/** Every problem with the site map: sites overlapping each other or the strip edge, structures wider than
+ *  their site, or a structure without a site. Empty when the map is sound. */
 export function validateBaseSite(): string[] {
   const problems: string[] = []
-  const margin = site.strip.propMargin
   const sorted = SITES.slice().sort((a, b) => a.x - b.x)
   for (const s of sorted) {
     if (s.x - s.half < 0 || s.x + s.half > STRIP_W) problems.push(`site ${s.id} runs off the strip`)
@@ -102,26 +100,12 @@ export function validateBaseSite(): string[] {
   for (const [kind, sprite] of Object.entries(STRUCTURES)) {
     const home = SITES.find(s => s.id === sprite.site)
     if (!home) { problems.push(`${kind} has no site ${sprite.site}`); continue }
-    if (sprite.width && sprite.width / 2 > home.half) problems.push(`${kind} is wider than site ${home.id}`)
+    if (sprite.body && sprite.body / 2 > home.half) problems.push(`${kind} is wider than site ${home.id}`)
   }
-  for (const seg of site.ground.segments) {
-    const owner = seg.builtWith ? homeSite(seg.builtWith) : null
-    if (owner && (seg.from > owner.x - owner.half || seg.to < owner.x + owner.half)) problems.push(`${seg.style} does not cover the ${owner.id} site`)
-  }
-  for (const [biome, list] of Object.entries(site.props.biomes as Record<string, PropPlacement[]>)) {
-    for (const p of list) {
-      const sprite = PROP_SPRITES[p.sprite]
-      if (!sprite) { problems.push(`${biome}: unknown prop ${p.sprite}`); continue }
-      const l = p.x - sprite.width / 2
-      const r = p.x + sprite.width / 2
-      if (l < 0 || r > STRIP_W) problems.push(`${biome}: ${p.sprite} at ${p.x} runs off the strip`)
-      for (const s of SITES) {
-        if (l < s.x + s.half + margin && r > s.x - s.half - margin) problems.push(`${biome}: ${p.sprite} at ${p.x} stands on site ${s.id}`)
-      }
-      for (const seg of site.ground.segments) {
-        if (l < seg.to && r > seg.from) problems.push(`${biome}: ${p.sprite} at ${p.x} stands on the ${seg.style}`)
-      }
-    }
+  const ground = site.ground
+  if (ground.left > 0 || ground.left + ground.width < STRIP_W) problems.push('the paved ground does not cover the strip')
+  for (const [biome, bands] of Object.entries(site.backdrop.biomes as Record<string, BackdropBand[]>)) {
+    if (bands.some(b => b.bottom > ground.above)) problems.push(`${biome}: the far ground floats above the paving`)
   }
   return problems
 }

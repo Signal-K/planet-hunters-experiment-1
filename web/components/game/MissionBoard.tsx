@@ -24,7 +24,10 @@ import {
 import { takeMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
-import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
+import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
+import { homeCenter, kitScale } from '@/lib/scene/base-site'
+import { sanitizeEarthBiome } from '@/lib/scene/base-world'
+import { useViewSize } from '@/lib/hooks/useViewSize'
 import { EarthBaseModules } from '@/components/game/hub/EarthBaseModules'
 import { buildHubBuildingDefs } from '@/lib/hub-building-defs'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
@@ -185,6 +188,10 @@ export default function MissionBoard({
     () => buildHubBuildingDefs(player, BASE_PLOTS).filter(building => BOARD_BASE_KINDS.has(building.kind)),
     [player],
   )
+  // The board's backdrop is the base itself: same world, same structures, framed on what is built.
+  const view = useViewSize()
+  const boardPx = kitScale(view)
+  const boardCamX = view.w / 2 - homeCenter(baseBuildings.map(b => b.kind), view.w / boardPx) * boardPx
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
   const tabButtons = <>
     <button type="button" className={styles.tab} data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon />Contracts</button>
@@ -197,9 +204,11 @@ export default function MissionBoard({
   </>
 
   return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab}>
-    <div className={styles.sky} aria-hidden="true">
-      <BaseLayerScene time={grade} biome={player.earthBiome ?? 'mountains'} />
-      <EarthBaseModules buildings={baseBuildings} parts={player.shipCustomizerParts} padRocket />
+    <div className={styles.sky} aria-hidden="true" style={{ '--px': `${boardPx}px`, '--hub-ground': '20%' } as CSSProperties}>
+      <BaseWorldCanvas px={boardPx} camera={{ x: boardCamX, y: 0, zoom: 1 }} time={grade} biome={sanitizeEarthBiome(player.earthBiome)} />
+      <div style={{ position: 'absolute', inset: 0, transform: `translateX(${boardCamX}px)` }}>
+        <EarthBaseModules buildings={baseBuildings} parts={player.shipCustomizerParts} padRocket />
+      </div>
       {tab !== 'contracts' && <div className={styles.dim} />}
     </div>
     <div className={styles.chrome}>

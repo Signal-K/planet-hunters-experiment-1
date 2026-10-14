@@ -86,13 +86,10 @@
   pointer-events: none;
 }
 
-/* A backdrop band: one tileable image repeated across the strip, with a margin each side for the parallax shift. */
+/* Far ground: one wide image, wider than the strip so the parallax shift never shows an edge. */
 .band {
   position: absolute;
-  left: calc(-480 * var(--px, 3px));
-  right: calc(-480 * var(--px, 3px));
-  background-repeat: repeat-x;
-  background-position: calc(480 * var(--px, 3px)) bottom;
+  max-width: none;
   pointer-events: none;
 }
 
@@ -112,9 +109,9 @@
   pointer-events: none;
 }
 
-.groundRun {
+.groundArt {
   position: absolute;
-  background-repeat: repeat-x;
+  max-width: none;
 }
 
 .groundDeep {
@@ -122,18 +119,6 @@
   left: 0;
   right: 0;
   bottom: 0;
-}
-
-.props {
-  position: absolute;
-  inset: 0;
-  z-index: 8;
-  pointer-events: none;
-}
-
-.prop {
-  position: absolute;
-  height: auto;
 }
 
 .lane {

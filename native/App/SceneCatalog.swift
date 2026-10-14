@@ -444,7 +444,7 @@ enum SceneCatalog {
             return MissionHistoryScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
         },
         scene("ledger-phone", 1900) { NarrativeLedgerScreen().environment(GameStore(state: GameState())).environment(\.flatLayout, true) },
-    ] }
+    ] + baseWorldScenes }
 
     static func find(_ id: String) -> CatalogScene? { all.first { $0.id == id } }
 }

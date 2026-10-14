@@ -1,0 +1,416 @@
+{
+  "version": 1,
+  "about": "Base world scene (SSL-423): every background piece is a game object. Web (lib/world) and native (LandnamCore World) load this file, step the same physics and draw entities in depth order. Units: kit units; x along the strip, y height above the ground line, depth is the parallax factor (1 moves with the strip, 0 stays with the screen). Sprites carry their Blender frame: w, h, x0 (left edge from the entity x), v0 (bottom edge from the entity y). Nothing here is built by the player; structures are drawn on top from base-site.json.",
+  "physics": {
+    "gravity": -60,
+    "fixedStep": 0.0166667,
+    "groundY": 0,
+    "windScale": 1
+  },
+  "sprites": {
+    "escarpment-a-mid": {
+      "src": "base/v7/world/escarpment-a-mid.png",
+      "w": 236.0,
+      "h": 26.43,
+      "x0": -8.0,
+      "v0": -0.5
+    },
+    "escarpment-a-far": {
+      "src": "base/v7/world/escarpment-a-far.png",
+      "w": 236.0,
+      "h": 26.43,
+      "x0": -8.0,
+      "v0": -0.5
+    },
+    "escarpment-b-mid": {
+      "src": "base/v7/world/escarpment-b-mid.png",
+      "w": 166.0,
+      "h": 20.509,
+      "x0": -8.0,
+      "v0": -0.5
+    },
+    "escarpment-b-far": {
+      "src": "base/v7/world/escarpment-b-far.png",
+      "w": 166.0,
+      "h": 20.509,
+      "x0": -8.0,
+      "v0": -0.5
+    },
+    "escarpment-c-mid": {
+      "src": "base/v7/world/escarpment-c-mid.png",
+      "w": 316.0,
+      "h": 17.557,
+      "x0": -8.0,
+      "v0": -0.5
+    },
+    "escarpment-c-far": {
+      "src": "base/v7/world/escarpment-c-far.png",
+      "w": 316.0,
+      "h": 17.557,
+      "x0": -8.0,
+      "v0": -0.5
+    },
+    "escarpment-butte-mid": {
+      "src": "base/v7/world/escarpment-butte-mid.png",
+      "w": 76.0,
+      "h": 22.385,
+      "x0": -8.0,
+      "v0": -0.5
+    },
+    "escarpment-butte-far": {
+      "src": "base/v7/world/escarpment-butte-far.png",
+      "w": 76.0,
+      "h": 22.385,
+      "x0": -8.0,
+      "v0": -0.5
+    },
+    "steppe-plain": {
+      "src": "base/v7/world/steppe-plain.jpg",
+      "w": 680.0,
+      "h": 47.933,
+      "x0": 0.0,
+      "v0": 10.161
+    },
+    "ground-complex": {
+      "src": "base/v7/ground/ground-complex.jpg",
+      "w": 680.0,
+      "h": 64.351,
+      "x0": 0.0,
+      "v0": -53.223
+    },
+    "tussock-0": {
+      "src": "base/v7/world/tussock-0.png",
+      "w": 18.0,
+      "h": 9.849,
+      "x0": -9.0,
+      "v0": 1.152
+    },
+    "tussock-1": {
+      "src": "base/v7/world/tussock-1.png",
+      "w": 15.0,
+      "h": 10.759,
+      "x0": -7.5,
+      "v0": 1.152
+    },
+    "tussock-2": {
+      "src": "base/v7/world/tussock-2.png",
+      "w": 22.0,
+      "h": 10.747,
+      "x0": -11.0,
+      "v0": 1.152
+    },
+    "balloon": {
+      "src": "base/v7/world/balloon.png",
+      "w": 14.0,
+      "h": 27.675,
+      "x0": -7.0,
+      "v0": 1.677
+    },
+    "far-rocket": {
+      "src": "base/v7/world/far-rocket.png",
+      "w": 6.0,
+      "h": 19.57,
+      "x0": -3.0,
+      "v0": 0.71
+    },
+    "cloud-0": {
+      "src": "base/v7/sky/cloud-0.png",
+      "w": 84.0,
+      "h": 20.894,
+      "x0": -12.0,
+      "v0": -1.0
+    },
+    "cloud-1": {
+      "src": "base/v7/sky/cloud-1.png",
+      "w": 68.0,
+      "h": 22.954,
+      "x0": -12.0,
+      "v0": -1.0
+    },
+    "cloud-2": {
+      "src": "base/v7/sky/cloud-2.png",
+      "w": 104.0,
+      "h": 20.996,
+      "x0": -12.0,
+      "v0": -1.0
+    }
+  },
+  "entities": [
+    {
+      "id": "escarpment-far-1",
+      "sprite": "escarpment-c-far",
+      "x": -60,
+      "y": 56,
+      "depth": 0.12,
+      "layer": 10
+    },
+    {
+      "id": "escarpment-far-2",
+      "sprite": "escarpment-b-far",
+      "x": 300,
+      "y": 56.5,
+      "depth": 0.12,
+      "layer": 10
+    },
+    {
+      "id": "escarpment-far-3",
+      "sprite": "escarpment-butte-far",
+      "x": 520,
+      "y": 56,
+      "depth": 0.12,
+      "layer": 10
+    },
+    {
+      "id": "escarpment-mid-1",
+      "sprite": "escarpment-a-mid",
+      "x": 90,
+      "y": 54,
+      "depth": 0.2,
+      "layer": 11
+    },
+    {
+      "id": "escarpment-mid-2",
+      "sprite": "escarpment-butte-mid",
+      "x": 430,
+      "y": 54.5,
+      "depth": 0.2,
+      "layer": 11
+    },
+    {
+      "id": "steppe",
+      "sprite": "steppe-plain",
+      "x": -80,
+      "y": 0,
+      "depth": 0.6,
+      "layer": 20
+    },
+    {
+      "id": "tussock-1",
+      "sprite": "tussock-0",
+      "x": 40,
+      "y": 30,
+      "depth": 0.7,
+      "scale": 0.6,
+      "layer": 21
+    },
+    {
+      "id": "tussock-2",
+      "sprite": "tussock-2",
+      "x": 150,
+      "y": 38,
+      "depth": 0.66,
+      "scale": 0.5,
+      "layer": 21
+    },
+    {
+      "id": "tussock-3",
+      "sprite": "tussock-1",
+      "x": 268,
+      "y": 26,
+      "depth": 0.74,
+      "scale": 0.7,
+      "layer": 21
+    },
+    {
+      "id": "tussock-4",
+      "sprite": "tussock-0",
+      "x": 392,
+      "y": 34,
+      "depth": 0.68,
+      "scale": 0.55,
+      "layer": 21
+    },
+    {
+      "id": "tussock-5",
+      "sprite": "tussock-2",
+      "x": 470,
+      "y": 22,
+      "depth": 0.78,
+      "scale": 0.75,
+      "layer": 21
+    },
+    {
+      "id": "ground",
+      "sprite": "ground-complex",
+      "x": -80,
+      "y": 0,
+      "depth": 1,
+      "layer": 30
+    },
+    {
+      "id": "cloud-1",
+      "sprite": "cloud-0",
+      "x": 40,
+      "y": 150,
+      "depth": 0.05,
+      "layer": 5,
+      "body": {
+        "wind": 1,
+        "vx": 2
+      },
+      "wrap": [
+        -140,
+        660
+      ],
+      "sky": true
+    },
+    {
+      "id": "cloud-2",
+      "sprite": "cloud-1",
+      "x": 260,
+      "y": 120,
+      "depth": 0.07,
+      "layer": 5,
+      "body": {
+        "wind": 1,
+        "vx": 3
+      },
+      "wrap": [
+        -140,
+        660
+      ],
+      "sky": true
+    },
+    {
+      "id": "cloud-3",
+      "sprite": "cloud-2",
+      "x": 470,
+      "y": 168,
+      "depth": 0.04,
+      "layer": 5,
+      "body": {
+        "wind": 1,
+        "vx": 1.5
+      },
+      "wrap": [
+        -140,
+        660
+      ],
+      "sky": true
+    }
+  ],
+  "prefabs": {
+    "meteor": {
+      "shape": "streak",
+      "colour": "#f4f8fb",
+      "length": 26,
+      "width": 1.4,
+      "layer": 4,
+      "depth": 0,
+      "sky": true,
+      "body": {
+        "gravity": 0,
+        "life": 0.9
+      }
+    },
+    "raindrop": {
+      "shape": "line",
+      "colour": "#d6e2ec",
+      "length": 5,
+      "width": 1,
+      "alpha": 0.7,
+      "layer": 40,
+      "depth": 0.9,
+      "body": {
+        "gravity": 1.2,
+        "wind": 0.6,
+        "ground": "splash",
+        "life": 3
+      }
+    },
+    "splash": {
+      "shape": "puff",
+      "colour": "#d6e2ec",
+      "radius": 0.9,
+      "alpha": 0.6,
+      "layer": 41,
+      "depth": 0.9,
+      "body": {
+        "gravity": 0,
+        "life": 0.25
+      }
+    },
+    "bolt": {
+      "shape": "bolt",
+      "colour": "#f6f8ff",
+      "width": 2,
+      "layer": 9,
+      "depth": 0.1,
+      "body": {
+        "gravity": 0,
+        "life": 0.22
+      }
+    },
+    "plume": {
+      "shape": "puff",
+      "colour": "#f3f1ea",
+      "radius": 1.4,
+      "alpha": 0.8,
+      "layer": 12,
+      "depth": 0.15,
+      "body": {
+        "gravity": 0,
+        "wind": 0.35,
+        "drag": 0.6,
+        "grow": 0.22,
+        "fade": true,
+        "life": 14
+      }
+    },
+    "far-rocket": {
+      "sprite": "far-rocket",
+      "layer": 13,
+      "depth": 0.15,
+      "scale": 0.7,
+      "body": {
+        "gravity": 0,
+        "ay": 1.6,
+        "pitch": 0.012,
+        "life": 70
+      },
+      "emit": {
+        "prefab": "plume",
+        "every": 0.12
+      }
+    },
+    "balloon": {
+      "sprite": "balloon",
+      "layer": 14,
+      "depth": 0.5,
+      "scale": 0.8,
+      "body": {
+        "gravity": 0,
+        "ay": 0.6,
+        "vy": 2,
+        "wind": 0.8,
+        "drag": 0.2,
+        "life": 240
+      }
+    },
+    "satellite": {
+      "shape": "dot",
+      "colour": "#ffffff",
+      "radius": 1.1,
+      "layer": 3,
+      "depth": 0,
+      "sky": true,
+      "body": {
+        "gravity": 0,
+        "life": 60
+      }
+    },
+    "fog": {
+      "shape": "bank",
+      "colour": "#e4ebf0",
+      "alpha": 0.55,
+      "height": 26,
+      "layer": 25,
+      "depth": 0.6,
+      "body": {
+        "gravity": 0,
+        "wind": 0.3,
+        "life": 600
+      }
+    }
+  }
+}

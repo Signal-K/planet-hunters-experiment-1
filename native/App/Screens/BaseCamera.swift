@@ -2,20 +2,29 @@ import SwiftUI
 
 /// Where everything sits in the base world, which is wider than the screen (pan along it) and taller than the screen
 /// (pan down to the underground cutaway). Surface coordinates match the screen at camera x 0, depth 0.
+/// The surface is the 520-unit strip from `shared/layout/base-site.json` at `px` points per unit (web uses the same map).
 struct BaseWorld {
     let w: CGFloat, h: CGFloat
 
     var portrait: Bool { h > w * 1.15 }
-    var ground: CGFloat { h * 0.80 }
-    var grass: CGFloat { h < 500 ? 18 : 28 }
-    var road: CGFloat { h < 500 ? 28 : 36 }
-    /// Distance from the ground line to the top of the dirt.
-    var dirtDepth: CGFloat { grass + road }
+    /// Points per kit unit (web `kitScale`).
+    var px: CGFloat { CGFloat(WorldAssets.site?.scale(w: Double(w), h: Double(h)) ?? 2) }
+    var ground: CGFloat { h * CGFloat(1 - (WorldAssets.site?.ground.lineFromBottom ?? 0.2)) }
+    /// Distance from the ground line to the top of the soil: at the surface the paving fills the screen to its
+    /// bottom edge (as web); the soil and cutaway only show when the camera dives.
+    var dirtDepth: CGFloat { max(h - ground, 20 * px) }
     var dirtTop: CGFloat { ground + dirtDepth }
     /// Underground pixel scale: whole numbers so sprites keep the kit's pixel grid.
     var u: CGFloat { h >= 600 ? 3 : 2 }
-    var shaftX: CGFloat { w * 1.25 }
-    var worldW: CGFloat { shaftX + 164 * u }
+    var stripW: CGFloat { CGFloat(WorldAssets.site?.strip.width ?? 520) * px }
+    var shaftX: CGFloat { CGFloat(WorldAssets.site?.site("shaft")?.x ?? 466) * px }
+    var worldW: CGFloat { max(stripW, shaftX + 164 * u) }
+    /// Camera x that centres what is built (the pad site on a fresh base), as web `homeCenter`.
+    func homeX(_ kinds: [String]) -> CGFloat {
+        let units = Double(w / px)
+        let centre = WorldAssets.site?.homeCenter(kinds, viewUnits: units) ?? 190
+        return min(max(CGFloat(centre) * px - w / 2, 0), maxX)
+    }
     var maxX: CGFloat { max(0, worldW - w) }
     var chamberTop: CGFloat { dirtTop + 12 * u }
     /// How far the world moves up when the camera is fully underground: centres the chamber between the HUD and the dock.
@@ -32,6 +41,8 @@ final class BaseCamera {
     var depth: CGFloat
     /// Pinch zoom: 1 is the whole-base view, `maxZoom` a close-up of one structure.
     var zoom: CGFloat = 1
+    /// Set once the camera has been framed on what is built, so it does not jump back when the player pans.
+    var homed = false
     static let maxZoom: CGFloat = 2.6
     private var returnX: CGFloat = 0
     private(set) var diving: Bool

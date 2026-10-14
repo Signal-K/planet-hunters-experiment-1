@@ -250,6 +250,48 @@ def scene_v_top(pad=2.0):
     return top + pad
 
 
+def shadow_mat():
+    """Flat navy at 22% (spec section 3): baked under structures so it darkens whatever ground it lands on."""
+    if "v7_shadow" in bpy.data.materials:
+        return bpy.data.materials["v7_shadow"]
+    m = bpy.data.materials.new("v7_shadow")
+    m.use_nodes = True
+    nt = m.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    emit = nt.nodes.new("ShaderNodeEmission")
+    emit.inputs["Color"].default_value = rgb(PALETTE["outline"])
+    transp = nt.nodes.new("ShaderNodeBsdfTransparent")
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    mix.inputs["Fac"].default_value = 0.22
+    nt.links.new(transp.outputs["BSDF"], mix.inputs[1])
+    nt.links.new(emit.outputs["Emission"], mix.inputs[2])
+    nt.links.new(mix.outputs["Shader"], out.inputs["Surface"])
+    try:
+        m.surface_render_method = "BLENDED"
+    except AttributeError:
+        m.blend_method = "BLEND"
+    return m
+
+
+def cast_shadow(name, x0, x1, y0, y1, reach):
+    """Shadow lying on the ground: the footprint x0..x1, y0..y1, pushed `reach` units right and toward the viewer
+    (light from the top left and behind the camera's shoulder)."""
+    me = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    pts = [(x0, y1), (x1, y1), (x1 + reach, y1 - reach * 0.5), (x1 + reach, y0 - reach * 0.5), (x0 + reach, y0 - reach * 0.5), (x0, y0)]
+    verts = [bm.verts.new((x, y, 0.02)) for x, y in pts]
+    f = bm.faces.new(verts)
+    if f.normal.z < 0:
+        f.normal_flip()
+    bm.to_mesh(me)
+    bm.free()
+    o = bpy.data.objects.new(name, me)
+    bpy.context.collection.objects.link(o)
+    o.data.materials.append(shadow_mat())
+    return o
+
+
 def camera_for(x0, x1, v0, v1=None):
     """Orthographic side camera tipped down TILT_DEG. Frames kit x0..x1 across and screen-v v0..v1 up
     (see `screen_v`; v1 defaults to the top of the geometry). The bottom pixel row is exactly v0, so the
@@ -280,17 +322,34 @@ def camera_for(x0, x1, v0, v1=None):
     return cam
 
 
-def render(name, subdir=""):
-    """Render the current camera to web and native at the same path (base/v7/<subdir>/<name>.png)."""
+def render(name, subdir="", opaque_bg=None):
+    """Render the current camera to web and native at the same path (base/v7/<subdir>/<name>.png).
+    `opaque_bg` (a palette name) renders a fully covered image as JPEG on that colour instead: flat ground and
+    plains compress to a fraction of the PNG size and stay under the 250 KB sprite budget."""
     scene = bpy.context.scene
+    settings = scene.render.image_settings
+    if opaque_bg:
+        scene.render.film_transparent = False
+        bg = next(n for n in scene.world.node_tree.nodes if n.type == "BACKGROUND")
+        bg.inputs[0].default_value = rgb(PALETTE.get(opaque_bg, opaque_bg))
+        bg.inputs[1].default_value = 1.0
+        settings.file_format = "JPEG"
+        settings.color_mode = "RGB"
+        settings.quality = 86
+    else:
+        settings.file_format = "PNG"
+        settings.color_mode = "RGBA"
+        settings.compression = 100
     paths = []
+    ext = "jpg" if opaque_bg else "png"
     for root in (WEB_OUT, NATIVE_OUT):
         folder = os.path.join(root, subdir) if subdir else root
         os.makedirs(folder, exist_ok=True)
-        path = os.path.join(folder, f"{name}.png")
+        path = os.path.join(folder, f"{name}.{ext}")
         scene.render.filepath = path
         bpy.ops.render.render(write_still=True)
         paths.append(path)
+    scene.render.film_transparent = True
     return paths
 
 

@@ -67,6 +67,7 @@ struct HubScreen: View {
                 onShaft: { store.go(.hubSubsurface) },
                 onBuildSilo: { buildSilo() },
                 placing: placing,
+                pickedKind: picked ?? options.first?.id,
                 onSlot: { placeOnSlot($0) }
             )
             skyCraft(width: size.width, height: size.height)
@@ -116,7 +117,10 @@ struct HubScreen: View {
                     .padding(.horizontal, 12).padding(.vertical, 6)
                     .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
             }
-            if options.isEmpty {
+            if options.count == 1 && placeNote == nil {
+                // One choice: the site marker in the scene already names it (web hides the chip too).
+                EmptyView()
+            } else if options.isEmpty {
                 Text("Nothing to build yet").font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))

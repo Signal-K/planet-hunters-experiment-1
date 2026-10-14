@@ -51,9 +51,9 @@ Names and surfaces
 9. Exchange (Market) stays a real building on the base, not a menu item.
 
 Base scene
-10. No planet in the base sky. No people walking at this stage.
-11. Backgrounds and scenes are modular, tileable layers, never a single whole-scene image. Everything is animated.
-12. Base kit direction is the approved `base-kit-v6`: angular and modular, about 40% No Man's Sky, white panelled hulls, blue/orange trim (less orange), silos underground only, a bird's-eye toggle, an industrial and natural mix ground.
+10. No planet discs in the base sky (a planet is only a point of light from the sky calendar). No people walking at this stage.
+11. The background is game objects, never a whole-scene image (Liam, 14 Oct): every piece (escarpments, steppe, paved ground, clouds, weather, sky events) is an entity in `shared/scenes/base-world.json`, stepped by the shared world sim (web `lib/world`, native `LandnamCore/World`, pinned by `world-fixture.json`). Sky events come from `shared/scenes/sky-events.json`. Everything is animated.
+12. Setting and kit (14 Oct, replaces base-kit-v6): a paved launch complex on flat steppe with low escarpments on the horizon (Baikonur, not mountains, not forest). The world starts empty; buildings are only what the player builds, on fixed sites from `shared/layout/base-site.json`. Art is kit v7 (`tools/blender/kit_v7.py`, `models/base_v7.py`, `terrain_v7.py`, `steppe_v7.py`), built and checked in the live Blender: Crashlands / Out There: Omega surface, Tiny Space Program / Starbound side view tipped 14 degrees, white panelled hulls with blue trim, navy ink outline, no orange or green. Silos underground only.
 13. Palette is the deep dusk palette in `docs/design/game-theme-spec.md` (section 2). No flat constant colour.
 
 Platforms

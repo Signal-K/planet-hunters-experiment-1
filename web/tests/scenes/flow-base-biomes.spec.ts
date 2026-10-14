@@ -7,15 +7,12 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
   test.describe(`base biomes ${vp}`, () => {
     test.use({ viewport: size })
     for (const biome of biomes) {
-      test(`${biome} uses its chosen skyline and ground`, async ({ page }, info) => {
+      test(`${biome} draws the base world for its landscape`, async ({ page }, info) => {
         await stage(page, 'm1-hub', { patch: { earthBiome: biome }, chrome: true })
         expect(await page.evaluate(() => innerWidth)).toBe(size.width)
-        const scene = page.locator('[data-testid="base-layer-scene"]')
-        await expect(scene).toHaveAttribute('data-biome', biome)
-        if (biome === 'tundra' || biome === 'coast') {
-          await expect(scene.locator('[data-layer="horizon"] img').first()).toHaveAttribute('src', `/game/assets/biomes/${biome}/layer-far.png`)
-          await expect(scene.locator('[data-layer="ground"] img')).toHaveAttribute('src', `/game/assets/biomes/${biome}/layer-ground.png`)
-        }
+        // The world is game objects on a canvas (SSL-423): the canvas carries the biome it draws.
+        const world = page.getByTestId('base-world-canvas')
+        await expect(world).toHaveAttribute('data-biome', biome)
         await page.screenshot({ path: info.outputPath(`base-biome-${biome}-${vp}.png`) })
       })
     }
@@ -49,7 +46,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.getByRole('button', { name: 'Confirm move' }).click()
       await expect(choices).toHaveCount(0)
       await page.getByTestId('settings-close').click()
-      await expect(page.getByTestId('base-layer-scene')).toHaveAttribute('data-biome', 'coast')
+      await expect(page.getByTestId('base-world-canvas')).toHaveAttribute('data-biome', 'coast')
       await page.screenshot({ path: info.outputPath(`biome-relocation-${vp}.png`) })
     })
   })

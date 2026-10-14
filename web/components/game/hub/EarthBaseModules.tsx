@@ -1,6 +1,6 @@
 'use client'
 
-import { aboveGround, homeSite, structureSprite, units } from '@/lib/scene/base-site'
+import { aboveGround, homeSite, spriteCenterOffset, structureSprite, units } from '@/lib/scene/base-site'
 import React, { useEffect, useState } from 'react'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { LAUNCHPAD_SCENE_WIDTH_PCT, structureAnchorPercent, structureTierScale } from '@/lib/scene/base-world'
@@ -156,7 +156,7 @@ export function EarthBaseModules({ buildings, parts, padRocket = false }: { buil
         // Kit structures stand on their home site on the strip (shared site map); others keep the plot percentage.
         const site = kit ? homeSite(building.kind) : null
         const sprite = kit ? structureSprite(building.kind) : null
-        const left = site ? units(site.x) : `${structureCenterPercent(building.kind, building.plotX, widthPct)}%`
+        const left = site && sprite ? units(site.x + spriteCenterOffset(sprite)) : `${structureCenterPercent(building.kind, building.plotX, widthPct)}%`
         return (
           <span
             key={`${building.kind}-${building.plotX}`}

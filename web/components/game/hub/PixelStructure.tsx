@@ -55,7 +55,7 @@ function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: nu
       style={{ width: units(pad.width!), height: units(pad.height!) }}
     >
       <img src={`${ASSET_ROOT}${pad.src}`} alt="" draggable={false} className={styles.padArt} />
-      <span className={styles.padBeacon} style={{ left: units(34.5), bottom: units(129) }} />
+      <span className={styles.padBeacon} style={{ left: units(34.5), bottom: units(130.5) }} />
       {rocket && (
         <span className={styles.padFlight} style={{ left: units(pad.mount!.x - 22), bottom: units(pad.mount!.z + 2) }}>
           <KitRocket parts={parts} space={rocket === 'core'} className={styles.padRocket} testId="pad-rocket" />

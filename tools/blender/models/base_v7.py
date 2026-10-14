@@ -141,6 +141,8 @@ def flat_patch(name, points_xy, z, colour):
 PAD_W = 120.0  # kit units, matches the 120-unit pad slab of the shipped kit so layout code keeps its footprint
 # Every structure's front face stands this far behind the ground front edge; its sprite starts at that foot.
 STRUCT_Y = 4.0
+# Structure sprites start a little below their foot so the baked shadow in front of them is not cut off.
+SHADOW_V0 = screen_v(STRUCT_Y - 6, 0)
 
 
 def build_launchpad(with_gantry=True, fresh=True, frame=True):
@@ -174,8 +176,9 @@ def build_launchpad(with_gantry=True, fresh=True, frame=True):
             box(f"chev{i}", 31 + i * 7.6, 7.4, 7.6, 2.0, d=0.5, y=STRUCT_Y + 4.6, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
     # Fuel line from the gantry foot to the mount.
     box("fuel", 37, 8.5, 18, 1.6, d=1.6, y=14, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.5)
+    cast_shadow("pad_shadow", 0, PAD_W, STRUCT_Y, STRUCT_Y + 34, 10)
     if frame:
-        camera_for(-6, PAD_W + 6, screen_v(STRUCT_Y, 0))
+        camera_for(-6, PAD_W + 14, SHADOW_V0)
     return "launchpad"
 
 
@@ -274,8 +277,9 @@ def build_hangar(fresh=True, frame=True):
         box(f"vent{x}", x, 37, 5, 3.5, d=5, y=y + 14, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
     box("antenna", 60, 37, 1.2, 12, d=1.2, y=y + 14, colours=("steel_lit", "steel", "steel_dark"), outline=0.4)
     box("antenna_tip", 59.4, 49, 2.4, 1.8, d=2.4, y=y + 13.4, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.4)
+    cast_shadow("hangar_shadow", 0, HANGAR_W, STRUCT_Y, STRUCT_Y + 30, 10)
     if frame:
-        camera_for(-3, HANGAR_W + 3, screen_v(STRUCT_Y, 0))
+        camera_for(-3, HANGAR_W + 13, SHADOW_V0)
     return "hangar"
 
 
@@ -490,8 +494,9 @@ def build_exchange(fresh=True, frame=True):
     box("board", 12, 30, 22, 13, d=1.6, y=y + 12, colours=("trim_blue_dark", "trim_blue_dark", "outline"), outline=0.7)
     for r in range(3):
         box(f"row{r}", 14, 32 + r * 3.6, 18 - r * 4, 1.6, d=0.4, y=y + 11.7, colours=("trim_teal", "trim_teal", "trim_teal"), outline=0)
+    cast_shadow("exchange_shadow", 0, EXCHANGE_W, STRUCT_Y, STRUCT_Y + 26, 8)
     if frame:
-        camera_for(-3, EXCHANGE_W + 3, screen_v(STRUCT_Y, 0))
+        camera_for(-3, EXCHANGE_W + 11, SHADOW_V0)
     return "exchange"
 
 

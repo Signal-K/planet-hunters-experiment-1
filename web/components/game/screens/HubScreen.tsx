@@ -9,6 +9,8 @@ import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
 import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
+import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
+import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 import { BaseDock } from '@/components/game/hub/BaseDock'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { useBaseCamera } from '@/lib/hooks/useBaseCamera'
@@ -20,7 +22,7 @@ export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModul
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building } from '@/components/game/hub/Building'
 import { SiteMarker } from '@/components/game/hub/SiteMarker'
-import { STRIP_W, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
+import { STRIP_W, homeCenter, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
@@ -105,7 +107,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const [viewSize, setViewSize] = useState(() => (typeof window === 'undefined' ? { w: 1440, h: 900 } : { w: window.innerWidth, h: window.innerHeight }))
   const px = kitScale(viewSize)
   const worldW = STRIP_W * px
-  const camera = useBaseCamera({ worldWidth: worldW, homeX: siteById('pad').x * px })
+  const builtKinds = [...(player.placed ?? []), ...((player.placed ?? []).includes('launchpad') ? ['hangar'] : [])]
+  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(builtKinds, viewSize.w / px) * px })
   const [editMode, setEditMode] = useState(placementMode)
   const [pickedBuild, setPickedBuild] = useState<string | null>(null)
   const [placeNote, setPlaceNote] = useState<string | null>(null)
@@ -161,7 +164,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       }
       return ({
         left: units(site.x),
-        width: units(sprite?.width ?? site.half * 2),
+        width: units(sprite?.body ?? site.half * 2),
         minWidth: 44,
         maxWidth: 'none',
         bottom: 'var(--hub-ground)',
@@ -382,16 +385,11 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           {...camera.handlers}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden', touchAction: 'none' }}
         >
+          {/* The world itself: sky, steppe, paved ground, weather and sky events as game objects, behind the camera's DOM layer. */}
+          <BaseWorldCanvas px={px} camera={camera.cam} time={skyGrade} biome={sanitizeEarthBiome(player.earthBiome)} />
           <div data-testid="base-camera-world" data-world-width={worldW} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: worldW, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
-          {/* World background: sky, starfield, ridge parallax, ground, plateau */}
+          {/* Silo surface pieces on the strip. */}
           <BaseLayerScene
-            phase={skyPhase}
-            time={skyGrade}
-            season={skySeason}
-            biome={player.earthBiome ?? 'mountains'}
-            placed={placed}
-            panX={camera.cam.x}
-            zoom={camera.cam.zoom}
             siloBuilt={!!player.subsurfaceExcavated || (player.subsurfaceBuilt ?? []).length > 0}
             onOpenSilo={() => setSubsurface(true)}
           />

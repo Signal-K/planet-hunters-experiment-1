@@ -1,9 +1,10 @@
 import SwiftUI
 import LandnamCore
 
-/// Layered base world: sky, mountain bands, road, grass, props and structures along a strip wider than the screen,
-/// with an underground cutaway below (`BaseUnderground`). The camera (`BaseCamera`) pans along the strip and down to the cutaway.
-/// Structures render only when the player has built them. Level 1 uses the starter sprites.
+/// The base: the world as game objects (`BaseWorldCanvas`: sky, steppe, escarpments, paved ground, weather and sky
+/// events) with the player's structures standing on their home sites from `shared/layout/base-site.json`, and the
+/// underground cutaway below (`BaseUnderground`). The camera (`BaseCamera`) pans along the strip and down to the
+/// cutaway. A fresh base has no structures; in placement mode the picked structure's one site is marked.
 struct BaseWorldScene: View {
     var biome: EarthBiome = .mountains
     var placed: [String]
@@ -26,8 +27,9 @@ struct BaseWorldScene: View {
     var onStructure: (String) -> Void
     var onShaft: () -> Void
     var onBuildSilo: () -> Void
-    /// Placement mode: free slots that do not overlap a structure are drawn and tappable.
+    /// Placement mode: the picked structure's home site is marked while it is free.
     var placing: Bool = false
+    var pickedKind: String? = nil
     var onSlot: (Int) -> Void = { _ in }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pinchStart: CGFloat?
@@ -48,38 +50,28 @@ struct BaseWorldScene: View {
             let w = geo.size.width
             let h = geo.size.height
             let world = BaseWorld(w: w, h: h)
-            let portrait = world.portrait
             let ground = world.ground
             let cx = min(max(camera.x, 0), world.maxX)
             let lift = world.shift * camera.depth
             ZStack(alignment: .topLeading) {
-                // Cool blue to cream sky ramp (SSL-519): no purple, no orange. Only the top rows show, matching web.
-                Art.view("base/layers/sky.png")
-                    .resizable().interpolation(.low)
-                    .frame(width: w, height: h * 2.82, alignment: .top)
-                    .frame(width: w, height: h, alignment: .top)
-                    .clipped()
-                MeteorShowerWeather().frame(width: w, height: ground * 0.55).offset(y: -lift)
-                skyLayers(width: w, height: h, ground: ground, biome: biome).offset(y: -lift)
                 ZStack(alignment: .topLeading) {
-                    groundStack(width: world.worldW, height: world.worldH, ground: ground, biome: biome)
-                    props(width: w, world: world, ground: ground, portrait: portrait, biome: biome)
+                    // The world rides inside the camera container (so it dives and zooms with the structures) but
+                    // counter-offsets the pan: it draws its own parallax from `camX`.
+                    BaseWorldCanvas(px: world.px, camX: -cx, biome: biome.rawValue)
+                        .frame(width: w, height: h)
+                        .offset(x: cx)
                     BaseUnderground(world: world, built: siloBuilt, siloPlaced: siloPlaced, secondTank: secondTank, oreFraction: oreFraction, onBuild: onBuildSilo, onOpen: onShaft)
                         .offset(y: ground)
                         .allowsHitTesting(camera.underground)
                     shaftHead(world: world)
                     ForEach(shownKinds, id: \.self) { kind in
-                        if let sprite = spriteName(kind) {
-                            structure(kind, sprite: sprite, width: w, height: h, ground: ground, portrait: portrait, level: levels[kind] ?? 1)
-                        }
+                        structure(kind, world: world)
                     }
-                    if placing { slots(width: w, height: h, ground: ground, portrait: portrait) }
+                    if placing { siteMarker(world: world) }
                 }
                 .frame(width: world.worldW, height: world.worldH, alignment: .topLeading)
                 .offset(x: -cx, y: -lift)
                 .scaleEffect(camera.zoom, anchor: .center)
-                Rectangle().fill(timeWash()).opacity(1 - camera.depth).allowsHitTesting(false)
-                Rectangle().fill(seasonWash()).opacity(1 - camera.depth).allowsHitTesting(false).blendMode(.softLight)
                 if showsControls {
                     edgeHints(world: world, cx: cx)
                     depthButton(world: world)
@@ -90,6 +82,15 @@ struct BaseWorldScene: View {
             .contentShape(Rectangle())
             .simultaneousGesture(pan(world: world))
             .simultaneousGesture(pinch())
+            .onAppear {
+                // Frame what is built (the pad site on a fresh base) once; the player pans from there.
+                if !camera.homed && camera.x == 0 && camera.depth == 0 { camera.x = world.homeX(shownKinds) }
+                camera.homed = true
+            }
+            .onChange(of: placed) { old, now in
+                // The first launchpad brings the hangar with it: reframe so both stand in view.
+                if now.contains("launchpad") && !old.contains("launchpad") { withAnimation(.easeInOut(duration: 0.5)) { camera.x = world.homeX(now + ["hangar"]) } }
+            }
         }
     }
 
@@ -162,101 +163,7 @@ struct BaseWorldScene: View {
         .position(x: x, y: world.h * 0.38 + 72)
     }
 
-    /// Mountains: they stay with the screen while the strip pans, and ride up with the ground when the camera dives.
-    private func skyLayers(width w: CGFloat, height h: CGFloat, ground: CGFloat, biome: EarthBiome) -> some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { ctx in
-            let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
-            ZStack(alignment: .topLeading) {
-                if biome == .mountains {
-                    mountain("base/layers/mountains-far.png", height: ground * 0.58, ground: ground, width: w, drift: t / 140)
-                    mountain("base/layers/mountains-mid.png", height: ground * 0.40, ground: ground, width: w, drift: t / 96)
-                } else {
-                    ForEach(Array(biome.backBands.enumerated()), id: \.offset) { _, band in
-                        Image(band.asset).resizable().interpolation(.high).saturation(band.saturation)
-                            .frame(width: w, height: min(ground * 0.6, CGFloat(band.size.height) * 0.18))
-                            .clipped().position(x: w / 2, y: ground - min(ground * 0.6, CGFloat(band.size.height) * 0.18) / 2)
-                    }
-                }
-            }
-            .frame(width: w, height: h, alignment: .topLeading)
-        }
-        .allowsHitTesting(false)
-    }
-
-    private func mountain(_ path: String, height band: CGFloat, ground: CGFloat, width: CGFloat, drift: Double) -> some View {
-        let shift = CGFloat(drift.truncatingRemainder(dividingBy: 1)) * width
-        // Web: two copies side by side, each as wide as the scene, cover-fit to the bottom edge.
-        let copy = Art.view(path).resizable().interpolation(.none).scaledToFill()
-            .frame(width: width, height: band, alignment: .bottom).clipped()
-        return HStack(spacing: 0) { copy; copy }
-            .offset(x: -shift)
-            .frame(width: width, height: band, alignment: .leading)
-            .clipped()
-            .position(x: width / 2, y: ground - band / 2)
-            .allowsHitTesting(false)
-    }
-
-    private func groundStack(width: CGFloat, height: CGFloat, ground: CGFloat, biome: EarthBiome) -> some View {
-        let grass: CGFloat = height < 500 ? 18 : 28
-        let road: CGFloat = height < 500 ? 28 : 36
-        return ZStack(alignment: .top) {
-            if biome != .mountains {
-                Image(biome.ground.asset).resizable().interpolation(.high).scaledToFill()
-                    .frame(width: width, height: height - ground).clipped()
-            } else {
-            Art.view("base/layers/dirt.png").resizable(resizingMode: .tile).interpolation(.none)
-                .padding(.top, grass + road)
-            Art.view("base/kit/grass.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: grass)
-            Art.view("base/kit/road-a.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: road).offset(y: grass)
-            }
-        }
-        .frame(width: width, height: height - ground, alignment: .top)
-        .position(x: width / 2, y: ground + (height - ground) / 2)
-        .allowsHitTesting(false)
-    }
-
-    private func props(width: CGFloat, world: BaseWorld, ground: CGFloat, portrait: Bool, biome: EarthBiome) -> some View {
-        let treeH: CGFloat = portrait ? 40 : (ground < 400 ? 36 : 52)
-        let midH: CGFloat = portrait ? 34 : (ground < 400 ? 40 : 58)
-        let w = world.w
-        return ZStack {
-            if biome == .mountains {
-            prop("base/kit/prop-tree-a.png", x: width * (portrait ? 0.31 : 0.015), ground: ground, height: portrait ? 32 : treeH)
-            if !portrait {
-                prop("base/kit/prop-tree-b.png", x: width * 0.203, ground: ground, height: ground < 400 ? 28 : 36)
-            }
-            prop("base/kit/prop-rock.png", x: width * (portrait ? 0.68 : 0.788), ground: ground, height: 14)
-            if !portrait {
-                prop("base/kit/prop-tree-c.png", x: width * 0.904, ground: ground, height: midH)
-            }
-            }
-        }
-        .allowsHitTesting(false)
-        // The rest of the strip, past the first screen: trees and rocks around the lift head.
-        .overlay(alignment: .topLeading) {
-            ZStack {
-                if biome == .mountains {
-                prop("base/kit/prop-tree-c.png", x: w * 1.04, ground: ground, height: midH)
-                prop("base/kit/prop-rock.png", x: w * 1.12, ground: ground, height: 14)
-                prop("base/kit/prop-tree-a.png", x: world.shaftX - 150 * world.u / 2 - 40, ground: ground, height: treeH)
-                prop("base/kit/prop-rock.png", x: world.shaftX + 120, ground: ground, height: 14)
-                prop("base/kit/prop-tree-b.png", x: world.shaftX + 190, ground: ground, height: ground < 400 ? 28 : 36)
-                prop("base/kit/prop-tree-a.png", x: world.worldW - 90, ground: ground, height: treeH)
-                prop("base/kit/prop-rock.png", x: world.worldW - 36, ground: ground, height: 14)
-                }
-            }
-            .allowsHitTesting(false)
-        }
-    }
-
-    private func prop(_ path: String, x: CGFloat, ground: CGFloat, height: CGFloat) -> some View {
-        Art.view(path)
-            .resizable().interpolation(.none).scaledToFit()
-            .frame(height: height)
-            .position(x: x, y: ground - height / 2)
-    }
-
-    /// Surface marker over the shaft: the lift head once the silo is built, otherwise a dig-site sign and spoil mound.
+    /// Surface marker over the shaft: the lift head once the silo is built. Nothing stands there before (the world starts empty).
     private func shaftHead(world: BaseWorld) -> some View {
         let u = world.u
         return ZStack {
@@ -270,124 +177,9 @@ struct BaseWorldScene: View {
                 .buttonStyle(.plain)
                 .position(x: world.shaftX, y: world.ground + 5 * u - 8 * u)
                 .accessibilityLabel("Open the lift")
-            } else {
-                Art.view("base/kit/ug-mound.png").resizable().interpolation(.none)
-                    .frame(width: 30 * u, height: 9 * u)
-                    .position(x: world.shaftX + 14 * u, y: world.ground + 5 * u - 4.5 * u)
-                Art.view("base/kit/ug-sign.png").resizable().interpolation(.none)
-                    .frame(width: 18 * u, height: 22 * u)
-                    .position(x: world.shaftX - 16 * u, y: world.ground + 5 * u - 11 * u)
             }
         }
         .allowsHitTesting(camera.depth < 0.5)
-    }
-
-    /// Whole-number pixel scale for base sprites so they keep the kit's pixel grid.
-    private func pixelScale(height: CGFloat, portrait: Bool) -> CGFloat { portrait || height < 600 ? 2 : 3 }
-
-    private func structure(_ kind: String, sprite: String, width: CGFloat, height: CGFloat, ground: CGFloat, portrait: Bool, level: Int) -> AnyView {
-        let center = width * anchor(kind, plot: plots[kind] ?? 0, portrait: portrait)
-        let px = pixelScale(height: height, portrait: portrait)
-        if kind == "launchpad" {
-            // Pad slab with the connected gantry frame and the rocket only while one is in progress, all kit sprites at one pixel scale.
-            let slabW = 120 * px, slabH = 20 * px, stackH = (16 + 92) * px
-            return AnyView(Button { onStructure(kind) } label: {
-                ZStack(alignment: .bottom) {
-                    Art.view("base/kit/pad-gantry-frame.png").resizable().interpolation(.none)
-                        .frame(width: 120 * px, height: 92 * px)
-                        .offset(y: -17 * px)
-                    if padOccupied {
-                        ZStack(alignment: .bottom) {
-                            if padLift > 0 {
-                                Art.view("base/kit/flame-\(Int(padLift / 6) % 3).png").resizable().interpolation(.none)
-                                    .frame(width: 9 * px, height: 18 * px).rotationEffect(.degrees(-90))
-                                    .offset(y: 14 * px)
-                            }
-                            Art.view(padCore ? "base/kit/space-rocket.png" : "base/kit/pad-rocket.png").resizable().interpolation(.none)
-                                .frame(width: 44 * px, height: 72 * px)
-                        }
-                        .offset(x: 22 * px, y: -19 * px - padLift)
-                    }
-                    Art.view("base/kit/pad-slab-concrete.png").resizable().interpolation(.none)
-                        .frame(width: slabW, height: slabH)
-                }
-                .frame(width: slabW, height: stackH, alignment: .bottom)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .position(x: center, y: ground - stackH / 2 + 4 * px)
-            .accessibilityLabel(kindLabel(kind)))
-        }
-        // On a phone the hangar drops to 1.5 kit pixels so the pad stays large and clear gaps fit across the screen.
-        let sx = portrait && kind != "launchpad" ? px * 0.75 : px
-        let artH = 44 * sx
-        return AnyView(Button { onStructure(kind) } label: {
-            Art.view(sprite).resizable().interpolation(.none)
-                .frame(width: (kind == "market" ? 115 : 72) * sx, height: kind == "market" ? 46 * sx : artH)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .position(x: center, y: ground - artH * 0.5 + 2 * sx)
-        .accessibilityLabel(kindLabel(kind)))
-    }
-
-    /// Half-width of a structure's drawn footprint, in points.
-    private func halfWidth(_ kind: String, px: CGFloat, portrait: Bool) -> CGFloat {
-        switch kind {
-        case "launchpad": return 60 * px
-        case "market": return 57 * (portrait ? px * 0.75 : px)
-        default: return 36 * (portrait ? px * 0.75 : px)
-        }
-    }
-
-    /// Free plots, drawn only where no structure stands. The pad is wider than its plot, so slots are measured, not assumed.
-    @ViewBuilder private func slots(width: CGFloat, height: CGFloat, ground: CGFloat, portrait: Bool) -> some View {
-        let px = pixelScale(height: height, portrait: portrait)
-        let used = Set(plots.values).union(placed.contains("launchpad") && plots["launchpad"] == nil ? [0] : [])
-        let boxes: [(CGFloat, CGFloat)] = shownKinds.filter { spriteName($0) != nil }.map { kind in
-            (width * anchor(kind, plot: plots[kind] ?? 0, portrait: portrait), halfWidth(kind, px: px, portrait: portrait))
-        }
-        let slotHalf: CGFloat = 39 * (portrait ? px * 0.75 : px)
-        ForEach(0..<Construction.plotCount, id: \.self) { plot in
-            let cxSlot = width * anchor("slot", plot: plot, portrait: portrait)
-            if !used.contains(plot), !boxes.contains(where: { abs($0.0 - cxSlot) < $0.1 + slotHalf + 6 }) {
-                Button { onSlot(plot) } label: {
-                    ZStack {
-                        Ellipse().fill(Theme.hudPanel.opacity(0.7)).overlay(Ellipse().stroke(Theme.hudInk, style: StrokeStyle(lineWidth: 2, dash: [5, 4])))
-                        Image(systemName: "plus").font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.hudInk)
-                    }
-                    .frame(width: slotHalf * 2, height: 30)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .position(x: cxSlot, y: ground - 8)
-                .accessibilityLabel("Build slot \(plot + 1)")
-            }
-        }
-    }
-
-    private func spriteName(_ kind: String) -> String? {
-        switch kind {
-        case "market": return "base/kit/exchange-dock.png"
-        case "launchpad": return "base/kit/pad-rocket.png"
-        case "hangar", "garage": return "base/kit/hangar-white.png"
-        default: return nil
-        }
-    }
-
-
-    /// Centres match the web anchors. Kinds without one spread across the remaining plots.
-    private func anchor(_ kind: String, plot: Int, portrait: Bool) -> CGFloat {
-        switch kind {
-        case "hangar", "garage": return portrait ? 0.16 : 0.12
-        case "launchpad": return portrait ? 0.68 : 0.52
-        default:
-            let slots: [CGFloat] = portrait ? [0.16, 0.38, 0.62, 0.84] : [0.14, 0.36, 0.64, 0.86]
-            return slots[min(max(plot, 0), 3)]
-        }
     }
 
     private func kindLabel(_ kind: String) -> String {
@@ -400,21 +192,70 @@ struct BaseWorldScene: View {
         }
     }
 
-    private func timeWash() -> Color {
-        let hour = Calendar.current.component(.hour, from: Date())
-        switch hour {
-        case 5..<8: return Color.white.opacity(0.10)
-        case 8..<17: return Color.white.opacity(0.16)
-        case 17..<20: return Color.white.opacity(0.04)
-        default: return Color.black.opacity(0.32)
+    /// A built structure on its home site (v7 sprite, shadow included). The rocket stands on the launch mount only
+    /// while a build or mission is in progress; the idle pad is empty (web `PixelStructure`).
+    private func structure(_ kind: String, world: BaseWorld) -> AnyView {
+        guard let map = WorldAssets.site, let site = map.homeSite(kind), let sprite = map.structure(kind),
+              let src = sprite.src, let sw = sprite.width, let sh = sprite.height else { return AnyView(EmptyView()) }
+        let px = world.px
+        let width = CGFloat(sw) * px, height = CGFloat(sh) * px
+        let centerX = CGFloat(site.x + sprite.centerOffset) * px
+        let bottom = world.ground - CGFloat(sprite.foot ?? 0) * px
+        return AnyView(Button { onStructure(kind) } label: {
+            ZStack(alignment: .bottomLeading) {
+                Art.view(src).resizable().interpolation(.high)
+                    .frame(width: width, height: height)
+                if kind == "launchpad", padOccupied, let mount = sprite.mount {
+                    ZStack(alignment: .bottom) {
+                        if padLift > 0 {
+                            Art.view("base/kit/flame-\(Int(padLift / 6) % 3).png").resizable().interpolation(.none)
+                                .frame(width: 9 * px, height: 18 * px).rotationEffect(.degrees(-90))
+                                .offset(y: 14 * px)
+                        }
+                        Art.view(padCore ? "base/kit/space-rocket.png" : "base/kit/pad-rocket.png").resizable().interpolation(.none)
+                            .frame(width: 44 * px, height: 72 * px)
+                    }
+                    .offset(x: CGFloat(mount.x - 22) * px, y: -CGFloat(mount.z + 2) * px - padLift)
+                }
+            }
+            .frame(width: width, height: height, alignment: .bottomLeading)
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .position(x: centerX, y: bottom - height / 2)
+        .accessibilityLabel(kindLabel(kind)))
     }
 
-    private func seasonWash() -> Color {
-        switch Calendar.current.component(.month, from: Date()) {
-        case 12, 1, 2: return Color.white.opacity(0.22)
-        case 3, 4, 5: return Color.white.opacity(0.08)
-        default: return Color.white.opacity(0.05)
+    /// The picked structure's one site, marked on the ground at its real footprint while it is free (web `SiteMarker`).
+    /// A fresh base shows exactly this, on the pad site: the first build has an obvious place.
+    @ViewBuilder private func siteMarker(world: BaseWorld) -> some View {
+        if let map = WorldAssets.site, let kind = pickedKind, let site = map.homeSite(kind), let plot = site.plot,
+           !shownKinds.contains(kind), !plots.values.contains(plot) {
+            let px = world.px
+            let width = max(44, CGFloat(site.half * 2) * px)
+            Button { onSlot(plot) } label: {
+                VStack(spacing: 8) {
+                    HStack(spacing: 8) {
+                        Text("+").font(AppFont.display(16)).foregroundStyle(Theme.hudPanel)
+                            .frame(width: 22, height: 22).background(Circle().fill(Theme.blue))
+                        Text("PLACE \(kindLabel(kind).uppercased())").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.hudInk)
+                    }
+                    .padding(.horizontal, 16).frame(minHeight: 44)
+                    .background(Capsule().fill(Theme.hudPanel))
+                    .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Theme.hudPanel.opacity(0.3))
+                        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudPanel, style: StrokeStyle(lineWidth: 2, dash: [6, 4])))
+                        .frame(width: width, height: 6 * px)
+                        .opacity(pulse ? 1 : 0.65)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .position(x: CGFloat(site.x) * px, y: world.ground - 22 - 3 * px)
+            .accessibilityLabel("Place \(kindLabel(kind)) here")
+            .onAppear { if !reduceMotion { withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { pulse = true } } }
         }
     }
 }

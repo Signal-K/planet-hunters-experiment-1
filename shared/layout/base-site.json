@@ -1,85 +1,58 @@
 {
   "version": 1,
-  "about": "Base site map shared by web (web/lib/scene/base-site.json, copied by scripts/sync-base-site.mjs) and native (bundled). Kit units: the base strip is 520 units wide; one unit is `kitScale` pt on screen. Sprites come from tools/blender/models/base_v7.py; their metrics below are the Blender camera frames. A fresh base has no structures: the player places the launchpad first, on the pad site.",
+  "about": "Base site map shared by web (web/lib/scene/base-site.json, copied by scripts/sync-base-site.mjs) and native (bundled). Kit units: the base strip is 520 units wide; one unit is `kitScale` pt on screen. Art comes from tools/blender/models/base_v7.py and terrain_v7.py; sprite metrics are the Blender camera frames. The base is a paved launch complex on flat land: no mountains, no forest, no buildings until the player builds them. A fresh base asks for the launchpad first, on the pad site.",
   "strip": {
-    "width": 520,
-    "propMargin": 2
+    "width": 520
   },
   "kitScale": {
     "phone": 2,
     "large": 3,
     "largeMinHeight": 600,
-    "rule": "2 pt per unit in portrait or when the view is under 600 pt tall, else 3"
+    "portraitFit": 250,
+    "portraitMin": 1.5,
+    "rule": "Portrait: view width / portraitFit, kept between portraitMin and phone, so the hangar and pad both fit. Landscape: phone (2) under 600 pt tall, else large (3)."
   },
   "ground": {
     "lineFromBottom": 0.2,
-    "tileWidth": 160,
-    "styles": {
-      "mountains": {
-        "src": "base/v7/ground/ground-mountains.png",
-        "above": 13.965,
-        "below": 38.312,
-        "deep": "#4a3f38"
-      },
-      "tundra": {
-        "src": "base/v7/ground/ground-tundra.png",
-        "above": 13.965,
-        "below": 38.312,
-        "deep": "#3a3835"
-      },
-      "desert": {
-        "src": "base/v7/ground/ground-desert.png",
-        "above": 13.965,
-        "below": 38.312,
-        "deep": "#6e5044"
-      },
-      "coast": {
-        "src": "base/v7/ground/ground-coast.png",
-        "above": 13.965,
-        "below": 38.312,
-        "deep": "#3a3835"
-      },
-      "apron": {
-        "src": "base/v7/ground/ground-apron.png",
-        "above": 13.344,
-        "below": 38.312,
-        "deep": "#4a3f38"
-      }
-    },
-    "segments": [
-      {
-        "from": 121,
-        "to": 259,
-        "style": "apron",
-        "builtWith": "launchpad"
-      }
-    ]
+    "about": "One paved ground image under the whole strip (concrete apron, service road, drains). `above` and `below` are kit units above and below the ground line (the strip's front edge); `left` is where the image starts on the strip. Below the image the ground continues in `deep`.",
+    "src": "base/v7/ground/ground-complex.jpg",
+    "left": -80,
+    "width": 680,
+    "above": 11.128,
+    "below": 53.223,
+    "deep": "#a39d92"
   },
   "structures": {
     "launchpad": {
       "site": "pad",
       "src": "base/v7/structures/launchpad.png",
-      "width": 132,
-      "height": 135.028,
-      "foot": 0.968,
+      "body": 120,
+      "left": -6,
+      "width": 140,
+      "height": 136.48,
+      "foot": -0.484,
       "mount": {
         "x": 71,
-        "z": 13.5
+        "z": 15
       }
     },
     "hangar": {
       "site": "hall",
       "src": "base/v7/structures/hangar.png",
-      "width": 78,
-      "height": 55.393,
-      "foot": 0.968
+      "body": 72,
+      "left": -3,
+      "width": 88,
+      "height": 56.845,
+      "foot": -0.484
     },
     "market": {
       "site": "exchange",
       "src": "base/v7/structures/exchange.png",
-      "width": 116,
-      "height": 47.502,
-      "foot": 0.968
+      "body": 110,
+      "left": -3,
+      "width": 124,
+      "height": 48.954,
+      "foot": -0.484
     },
     "surface-silo": {
       "site": "shaft"
@@ -115,200 +88,45 @@
       "label": "Silo"
     }
   ],
-  "props": {
-    "sprites": {
-      "pine-tall": {
-        "src": "base/v7/props/pine-tall.png",
-        "width": 23.3,
-        "height": 33.232,
-        "foot": 0.468
-      },
-      "pine-short": {
-        "src": "base/v7/props/pine-short.png",
-        "width": 15.82,
-        "height": 22.562,
-        "foot": 0.468
-      },
-      "pine-snow": {
-        "src": "base/v7/props/pine-snow.png",
-        "width": 19.22,
-        "height": 27.412,
-        "foot": 0.468
-      },
-      "rock": {
-        "src": "base/v7/props/rock.png",
-        "width": 16.93,
-        "height": 10.802,
-        "foot": 0.468
-      },
-      "rock-sand": {
-        "src": "base/v7/props/rock-sand.png",
-        "width": 16.94,
-        "height": 9.822,
-        "foot": 0.468
-      },
-      "snow-rock": {
-        "src": "base/v7/props/snow-rock.png",
-        "width": 16.93,
-        "height": 10.802,
-        "foot": 0.468
-      },
-      "boulder": {
-        "src": "base/v7/props/boulder.png",
-        "width": 24.92,
-        "height": 13.952,
-        "foot": 0.468
-      }
-    },
-    "biomes": {
-      "mountains": [
-        {
-          "sprite": "pine-short",
-          "x": 9
-        },
-        {
-          "sprite": "rock",
-          "x": 111
-        },
-        {
-          "sprite": "rock",
-          "x": 269
-        },
-        {
-          "sprite": "pine-tall",
-          "x": 419
-        },
-        {
-          "sprite": "boulder",
-          "x": 507
-        }
-      ],
-      "tundra": [
-        {
-          "sprite": "snow-rock",
-          "x": 10
-        },
-        {
-          "sprite": "snow-rock",
-          "x": 111
-        },
-        {
-          "sprite": "snow-rock",
-          "x": 269
-        },
-        {
-          "sprite": "pine-snow",
-          "x": 419
-        },
-        {
-          "sprite": "snow-rock",
-          "x": 507
-        }
-      ],
-      "desert": [
-        {
-          "sprite": "rock-sand",
-          "x": 10
-        },
-        {
-          "sprite": "rock-sand",
-          "x": 111
-        },
-        {
-          "sprite": "rock-sand",
-          "x": 269
-        },
-        {
-          "sprite": "rock-sand",
-          "x": 419
-        },
-        {
-          "sprite": "rock-sand",
-          "x": 507
-        }
-      ],
-      "coast": [
-        {
-          "sprite": "rock",
-          "x": 10
-        },
-        {
-          "sprite": "rock",
-          "x": 111
-        },
-        {
-          "sprite": "rock",
-          "x": 269
-        },
-        {
-          "sprite": "boulder",
-          "x": 419
-        },
-        {
-          "sprite": "rock",
-          "x": 507
-        }
-      ]
-    }
-  },
   "backdrop": {
-    "tileWidth": 480,
-    "lift": 9,
+    "about": "Far ground from the strip's back edge to a low horizon, one image per biome, drawn behind the paved ground with a slower parallax. `bottom` is its lowest row in kit units above the ground line. Every biome is flat.",
+    "left": -80,
+    "width": 680,
     "biomes": {
       "mountains": [
         {
-          "id": "far",
-          "src": "base/v7/bands/band-mountains-far.png",
-          "height": 85.04,
-          "parallax": 0.18
-        },
-        {
-          "id": "near",
-          "src": "base/v7/bands/band-mountains-near.png",
-          "height": 30.92,
-          "parallax": 0.45
+          "id": "plain",
+          "src": "base/v7/ground/plain-mountains.jpg",
+          "bottom": 10.161,
+          "height": 47.933,
+          "parallax": 0.6
         }
       ],
       "tundra": [
         {
-          "id": "far",
-          "src": "base/v7/bands/band-tundra-far.png",
-          "height": 58.47,
-          "parallax": 0.18
-        },
-        {
-          "id": "near",
-          "src": "base/v7/bands/band-tundra-near.png",
-          "height": 30.78,
-          "parallax": 0.45
+          "id": "plain",
+          "src": "base/v7/ground/plain-tundra.jpg",
+          "bottom": 10.161,
+          "height": 47.933,
+          "parallax": 0.6
         }
       ],
       "desert": [
         {
-          "id": "far",
-          "src": "base/v7/bands/band-desert-far.png",
-          "height": 51.42,
-          "parallax": 0.18
-        },
-        {
-          "id": "near",
-          "src": "base/v7/bands/band-desert-near.png",
-          "height": 21.13,
-          "parallax": 0.45
+          "id": "plain",
+          "src": "base/v7/ground/plain-desert.jpg",
+          "bottom": 10.161,
+          "height": 47.933,
+          "parallax": 0.6
         }
       ],
       "coast": [
         {
-          "id": "far",
-          "src": "base/v7/bands/band-coast-far.png",
-          "height": 43.92,
-          "parallax": 0.18
-        },
-        {
-          "id": "near",
-          "src": "base/v7/bands/band-coast-near.png",
-          "height": 30.0,
-          "parallax": 0.45
+          "id": "plain",
+          "src": "base/v7/ground/plain-coast.jpg",
+          "bottom": 10.161,
+          "height": 47.933,
+          "parallax": 0.6
         }
       ]
     }

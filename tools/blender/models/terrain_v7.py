@@ -26,11 +26,16 @@ NEAR_Y = -220.0
 STRIP_BACK = 44.0   # matches base_v7.TOP_DEPTH: the back edge of the strip the structures stand on
 PAVE_BACK = 146.0   # the paved complex ends here; beyond is open ground to the horizon
 FAR_Y = 236.0       # horizon kept low: the sky stays big, as in Tiny Space Program
-SLAB_W, SLAB_D = 24.0, 14.0
+SLAB_W, SLAB_D = 40.0, 20.0
 
-CONCRETE = ["#c2c0b9", "#bcbab3", "#c8c6bf", "#b8b6af", "#c0beb7"]
-JOINT = "#8f8d87"
-STAIN = "#a5a39c"
+CONCRETE = ["#cdc7bb", "#c8c2b6", "#d2ccc0", "#c5bfb3", "#cbc5b9"]
+JOINT = "#b1ab9f"
+STAIN = "#bdb7ab"
+NEAR_DARK = "#a39d92"   # paving darkens a little toward the viewer
+EDGE_BLUE = "#2f6fa8"
+SHOULDER = ["#a29b8c", "#968f80", "#aea798"]
+FAR_LAND = "#8fa1b3"
+SHADOW = "#9e9a94"
 ASPHALT = "#55595f"
 ASPHALT_LIT = "#62666c"
 LANE = "#e9ecee"
@@ -40,6 +45,7 @@ RAIL = "#6b7076"
 
 # Ground beyond the perimeter, per biome: base, patch, haze toward the horizon (all flat).
 OPEN_GROUND = {
+    "steppe": {"base": "#b5a47f", "patch": "#a3926d", "haze": "#c9d6df"},
     "mountains": {"base": "#a9a496", "patch": "#9a9587", "haze": "#cbd6df"},
     "grassland": {"base": "#b3a989", "patch": "#a49a7b", "haze": "#cbd6df"},
     "desert": {"base": "#d6c19b", "patch": "#c7ae86", "haze": "#e2d6c6"},
@@ -93,6 +99,8 @@ class Painter:
     def quad(self, x0, y0, x1, y1, colour, z=0.0, haze_with=None):
         if haze_with:
             colour = _hex_mix(colour, haze_with, _haze((y0 + y1) / 2))
+        elif (y0 + y1) / 2 < 0:
+            colour = _hex_mix(colour, NEAR_DARK, min(0.35, -(y0 + y1) / 2 / 220 * 0.35))
         if colour not in self.index:
             self.index[colour] = len(self.colours)
             self.colours.append(colour)
@@ -184,6 +192,37 @@ def _open_ground(p, rng, spec, y0, y1):
         y += d
 
 
+def _apron_edge(p):
+    """Blue edge line along the front of the strip the structures stand on, with a white keyline."""
+    p.quad(-40, -3.2, FIELD_W + 40, -1.6, EDGE_BLUE, z=0.06)
+    p.quad(-40, -1.6, FIELD_W + 40, -1.0, LANE, z=0.06)
+
+
+def _perimeter(p, rng, spec):
+    """Where the paving stops: a curb, a gravel shoulder, open ground, then a distant land line under haze.
+    The coast swaps the land line for the sea."""
+    haze = spec["haze"]
+    p.quad(-40, PAVE_BACK, FIELD_W + 40, PAVE_BACK + 1.2, RAIL, z=0.09, haze_with=haze)
+    x = -40.0
+    while x < FIELD_W + 40:
+        w = rng.uniform(4, 10)
+        p.quad(x, PAVE_BACK + 1.2, x + w, PAVE_BACK + 9, rng.choice(SHOULDER), z=0.05, haze_with=haze)
+        x += w
+    far = FAR_Y - 22
+    if spec.get("sea"):
+        _open_ground(p, rng, spec, PAVE_BACK + 9, far - 10)
+        p.quad(-40, far - 10, FIELD_W + 40, FAR_Y + 60, _hex_mix(spec["sea"], haze, 0.3), z=0.02)
+        for i in range(26):
+            yy = rng.uniform(far - 6, FAR_Y)
+            xx = rng.uniform(0, FIELD_W)
+            p.quad(xx, yy, xx + rng.uniform(8, 22), yy + 1.0, _hex_mix(spec["sea_lit"], haze, 0.35), z=0.03)
+    else:
+        _open_ground(p, rng, spec, PAVE_BACK + 9, far)
+        # Distant land: one smooth low band in haze. No blocks: a broken top reads as a skyline of buildings.
+        p.quad(-40, far, FIELD_W + 40, FAR_Y, _hex_mix(FAR_LAND, haze, 0.45), z=0.02)
+        p.quad(-40, FAR_Y - 6, FIELD_W + 40, FAR_Y, _hex_mix(FAR_LAND, haze, 0.62), z=0.03)
+
+
 def _camera(v0, v1):
     scene = bpy.context.scene
     cam_data = bpy.data.cameras.new("v7_cam")
@@ -218,22 +257,14 @@ def build_field(biome="grassland", part="ground", seed=21):
         _pave(p, rng, y0, y1, None)
         _road(p, -64, -40)
         _grates(p, rng, -16)
+        _apron_edge(p)
     else:
         y0, y1 = STRIP_BACK - 2, FAR_Y
         _pave(p, rng, y0, 98, haze)
         _crawlerway(p, rng, 60, 76, haze)
         _road(p, 98, 110, haze)
         _pave(p, rng, 110, PAVE_BACK, haze)
-        # Perimeter: a thin fence line where the paving ends.
-        p.quad(-40, PAVE_BACK, FIELD_W + 40, PAVE_BACK + 0.8, RAIL, z=0.09, haze_with=haze)
-        sea_from = FAR_Y * 0.7 if spec.get("sea") else FAR_Y
-        _open_ground(p, rng, spec, PAVE_BACK + 0.8, sea_from)
-        if spec.get("sea"):
-            p.quad(-40, sea_from, FIELD_W + 40, FAR_Y + 200, _hex_mix(spec["sea"], haze, 0.25), z=0.02)
-            for i in range(26):
-                yy = rng.uniform(sea_from + 6, FAR_Y)
-                xx = rng.uniform(0, FIELD_W)
-                p.quad(xx, yy, xx + rng.uniform(8, 22), yy + 1.2, _hex_mix(spec["sea_lit"], haze, 0.3), z=0.03)
+        _perimeter(p, rng, spec)
     p.finish()
     v0 = screen_v(y0, 0)
     v1 = screen_v(y1, 0) + (0 if part == "ground" else 1.0)
@@ -255,8 +286,8 @@ def build_scene_preview(biome="grassland", view=(463, 214), built=("launchpad", 
     _crawlerway(p, rng, 60, 76, spec["haze"])
     _road(p, 98, 110, spec["haze"])
     _pave(p, rng, 110, PAVE_BACK, spec["haze"])
-    p.quad(-40, PAVE_BACK, FIELD_W + 40, PAVE_BACK + 0.8, RAIL, z=0.09, haze_with=spec["haze"])
-    _open_ground(p, rng, spec, PAVE_BACK + 0.8, FAR_Y)
+    _perimeter(p, rng, spec)
+    _apron_edge(p)
     p.finish()
     sites = {"hangar": 60, "launchpad": 190, "market": 340}
     for kind in built:

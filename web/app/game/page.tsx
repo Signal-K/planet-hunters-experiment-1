@@ -42,7 +42,7 @@ function GameRouteBridge() {
     if (presetName) params.set('preset', presetName)
     // Preview art switches are read once during hydration. Keep them on the
     // canonical route; dropping them here leaves the base on the default grade.
-    for (const key of ['baseArt', 'biome', 'time', 'season'] as const) {
+    for (const key of ['baseArt', 'biome', 'time', 'season', 'sky'] as const) {
       const value = searchParams.get(key)
       if (value) params.set(key, value)
     }
