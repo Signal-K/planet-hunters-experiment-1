@@ -418,6 +418,21 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
             />
           )}
 
+          {/* SSL-575: Surface Ops (sites, ferries, settlement) opens from a survey
+              beacon planted on the base ground, never from the dock. */}
+          {player.freeOperations && (
+            <button
+              type="button"
+              className="hub-surface-beacon"
+              data-testid="hub-surface-ops"
+              aria-label="Open surface sites, ferries and settlement"
+              onClick={() => onOpenScene('surface-ops')}
+            >
+              <span className="hub-surface-beacon__mast" aria-hidden="true" />
+              <span className="hub-surface-beacon__label">SITES</span>
+            </button>
+          )}
+
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
           <EarthBaseModules buildings={sceneBuildings} parts={player.shipCustomizerParts} padRocket={padLanding || homecoming ? 'core' : rocketOnPad} />

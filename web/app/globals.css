@@ -4867,3 +4867,10 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 /* Narrow portrait: the chip row is full, so the chip collapses to its status dot. */
 @media (max-width: 520px) { .scene-chip.sync-chip:not(.sync-chip--floating) .sync-chip__label { display: none; } .scene-chip.sync-chip:not(.sync-chip--floating) { min-width: 0; padding-inline: 10px; } }
 .sync-chip--floating { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); right: calc(env(safe-area-inset-right, 0px) + 12px); z-index: 96; }
+
+/* SSL-575: in-scene survey beacon that opens Surface Ops from the base ground. */
+.hub-surface-beacon { position:absolute; z-index:12; left:25%; bottom:calc(var(--hub-ground, 24%) + 2px); display:flex; flex-direction:column; align-items:center; gap:4px; min-width:44px; min-height:44px; padding:0 4px; border:0; background:transparent; cursor:pointer; }
+.hub-surface-beacon__mast { width:4px; height:34px; border-radius:2px; background:var(--ln-world-outline); box-shadow:0 0 8px var(--ln-cyan-border); animation:hub-surface-beacon-pulse 2.4s ease-in-out infinite; order:2; }
+.hub-surface-beacon__label { order:1; padding:4px 8px; border:1px solid var(--ln-world-outline); border-radius:6px; background:var(--ln-world-hull-lit); color:var(--ln-world-outline); font:800 14px var(--ln-font-display); letter-spacing:.08em; }
+@keyframes hub-surface-beacon-pulse { 50% { opacity:.55; } }
+@media (prefers-reduced-motion: reduce) { .hub-surface-beacon__mast { animation:none; } }

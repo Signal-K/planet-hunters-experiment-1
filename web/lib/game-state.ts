@@ -305,8 +305,14 @@ export function normalizeState(input: PartialSave): GameState {
   const launchpadUpgraded = !!player.launchpadUpgraded || (buildingLevels.launchpad ?? 1) >= 2
   const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
   // The transit and deep space telescopes are one instrument: either flag marks it launched.
-  const telescopeLaunchedAt = player.transitSatelliteLaunchedAt ?? player.deepSpaceTelescopeLaunchedAt ?? null
-  const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt) || !!telescopeLaunchedAt
+  // SSL-569: same rule as native Player.mergeTelescope. Each feed keeps its own stamp;
+  // a missing one takes the earliest launch so both feeds unlock together.
+  const positiveStamp = (v: number | null | undefined): number | null => (typeof v === 'number' && v > 0 ? v : null)
+  const transitAt = positiveStamp(player.transitSatelliteLaunchedAt)
+  const deepAt = positiveStamp(player.deepSpaceTelescopeLaunchedAt)
+  const stamps = [transitAt, deepAt].filter((v): v is number => v !== null)
+  const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt) || stamps.length > 0
+  const telescopeLaunchedAt = stamps.length > 0 ? Math.min(...stamps) : (deepSpaceTelescopeBuilt ? Date.now() : null)
   const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
   // KES-177: Free Operations is a progression boundary, not a freely
   // persisted toggle. Older/incorrect remote saves can have the flag set
@@ -359,8 +365,8 @@ export function normalizeState(input: PartialSave): GameState {
         ? `legacy-${player.pendingRocketId}-${missionId}-${targetId}`
         : undefined)),
       deepSpaceTelescopeBuilt, refineryBuilt,
-      transitSatelliteLaunchedAt: telescopeLaunchedAt ?? (player.deepSpaceTelescopeBuilt ? Date.now() : null),
-      deepSpaceTelescopeLaunchedAt: telescopeLaunchedAt ?? (player.deepSpaceTelescopeBuilt ? Date.now() : null),
+      transitSatelliteLaunchedAt: transitAt ?? telescopeLaunchedAt,
+      deepSpaceTelescopeLaunchedAt: deepAt ?? telescopeLaunchedAt,
       earthBiome: sanitizeEarthBiome(player.earthBiome),
       earthBiomeMoveUsed: player.earthBiomeMoveUsed === true,
     },

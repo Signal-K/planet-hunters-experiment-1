@@ -65,6 +65,7 @@ struct HubScreen: View {
                 camera: camera,
                 onStructure: { openStructure($0) },
                 onShaft: { store.go(.hubSubsurface) },
+                onSurfaceOps: store.player.freeOperations ? { store.go(.surfaceOps) } : nil,
                 onBuildSilo: { buildSilo() },
                 placing: placing,
                 onSlot: { placeOnSlot($0) }
@@ -460,6 +461,15 @@ struct SettingsSheet: View {
             VStack(alignment: .leading, spacing: 16) {
                 SettingsRowText(title: "Free Ops", status: store.player.freeOperations ? "On" : "Off")
                 SettingsSegment(options: ["Off", "On"], selected: store.player.freeOperations ? 1 : 0) { store.setFreeOps($0 == 1) }
+                // SSL-575: earned record screens that had no native entry (web opens Skills from Settings too).
+                ForEach([("Skills", Screen.skills), ("Mission log", Screen.missionHistory), ("Narrative ledger", Screen.narrativeLedger)], id: \.0) { row in
+                    HStack {
+                        SettingsRowText(title: row.0, status: "")
+                        Spacer(minLength: 8)
+                        SettingsButton(title: "Open", fill: false) { onClose(); store.go(row.1) }
+                            .accessibilityLabel("Open \(row.0.lowercased())")
+                    }.frame(minHeight: 48)
+                }
             }.settingsCard()
         }
     }

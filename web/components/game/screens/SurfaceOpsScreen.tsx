@@ -224,8 +224,7 @@ export default function SurfaceOpsScreen({
   return (
     <div className={`theme-deep ln-scene-surface-ops ${styles.screen}`} data-testid="surface-ops-screen" data-view={view}>
       <TopBar
-        eyebrow="SURFACE OPS · CLIENT TERRITORY"
-        title="Surface Operations"
+        eyebrow="CLIENT TERRITORY"
         onBack={onBack}
         solid
         francs={player.francs}

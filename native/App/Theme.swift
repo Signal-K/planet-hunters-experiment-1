@@ -131,7 +131,7 @@ struct ScreenFrame<Content: View>: View {
                                 .frame(minWidth: 44, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                         }.buttonStyle(.plain).accessibilityLabel("Back to base")
                     }
-                    Text(title).font(AppFont.display(23)).foregroundStyle(Theme.ink)
+                    if !title.isEmpty { Text(title).font(AppFont.display(23)).foregroundStyle(Theme.ink) }
                 }
                 content
             }

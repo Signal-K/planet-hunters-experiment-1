@@ -23,6 +23,8 @@ struct BaseWorldScene: View {
     var camera: BaseCamera
     var onStructure: (String) -> Void
     var onShaft: () -> Void
+    /// SSL-575: Surface Ops opens from a survey beacon on the base ground, never from the dock.
+    var onSurfaceOps: (() -> Void)? = nil
     var onBuildSilo: () -> Void
     /// Placement mode: free slots that do not overlap a structure are drawn and tappable.
     var placing: Bool = false
@@ -61,6 +63,7 @@ struct BaseWorldScene: View {
                         .offset(y: ground)
                         .allowsHitTesting(camera.underground)
                     shaftHead(world: world)
+                    if let onSurfaceOps { surfaceBeacon(ground: ground, action: onSurfaceOps) }
                     ForEach(placed, id: \.self) { kind in
                         if let sprite = spriteName(kind) {
                             structure(kind, sprite: sprite, width: w, height: h, ground: ground, portrait: portrait, level: levels[kind] ?? 1)
@@ -114,6 +117,25 @@ struct BaseWorldScene: View {
                     withAnimation(.easeOut(duration: 0.4)) { camera.x = glide }
                 }
             }
+    }
+
+    /// Survey beacon planted on the ground; the label is the action, never a scene title.
+    private func surfaceBeacon(ground: CGFloat, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Text("SITES").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(Theme.hudPanel))
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.hudInk, lineWidth: 1))
+                Rectangle().fill(Theme.hudInk).frame(width: 4, height: 34)
+                    .opacity(pulse ? 0.55 : 1)
+            }
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Open surface sites, ferries and settlement")
+        .position(x: 64, y: ground - 32)
     }
 
     /// Right-edge chevron: down to the cutaway at the surface, up from it underground.
