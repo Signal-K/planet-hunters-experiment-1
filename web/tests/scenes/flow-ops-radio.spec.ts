@@ -117,8 +117,9 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
 
     test('TESS briefing starts Show me only on request and tracks the two transmissions', async ({ page }, info) => {
       await stage(page, 'ui-tess-discovery')
+      await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
       await expect(page.getByTestId('help-coach')).toHaveCount(0)
-      await page.getByTestId('help-button').click()
+      await page.locator('[data-testid="help-button"]:visible').first().click()
       await expect(page.getByTestId('help-sheet')).toBeVisible()
       await page.getByTestId('help-show-me').click()
       await expect(page.getByTestId('help-coach-hint')).toContainText('Show me · 1 of 2')

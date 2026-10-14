@@ -4173,7 +4173,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   max-width: min(360px, calc(100vw - 16px));
   min-height: 48px;
   height: auto;
-  padding: 2px;
+  padding: 4px;
   border: 1px solid var(--ln-world-outline);
   border-radius: 999px;
   background: var(--ln-world-hull-lit);
@@ -4220,7 +4220,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   width: 44px;
   min-width: 44px;
   padding: 0;
-  border-radius: 4px;
+  border-radius: 999px;
 }
 .scene-dock-word,
 .theme-blueprint .scene-dock-word {

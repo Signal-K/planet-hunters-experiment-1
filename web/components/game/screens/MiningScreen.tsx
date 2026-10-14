@@ -747,10 +747,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
       {trainingMiningTry && (
         <div className="laser-cue" data-testid="mining-training-tip">
-          <span className="ops-badge" data-testid="ops-badge" aria-hidden="true">OPS<span className="ops-bars"><i /><i /><i /></span></span>
+          <span className="ops-badge" data-state={laserCopy ? 'done' : 'live'} data-testid="ops-badge" aria-hidden="true">OPS<span className="ops-bars"><i /><i /><i /></span></span>
           <span className="flight-plan-text">
             <span className="flight-plan-kicker" data-state={laserCopy ? 'done' : 'live'} data-testid="flight-plan-kicker">{laserCopy ? 'Copy · Step 5 done' : 'Mining Ops · Step 5/6'}</span>
-            <span className="flight-plan-action">Fire when ore crosses the beam</span>
+            <span className="flight-plan-action">{laserCopy ? '+1 stitch · Fire when ore crosses the beam' : 'Fire when ore crosses the beam'}</span>
           </span>
         </div>
       )}

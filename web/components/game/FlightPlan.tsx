@@ -106,8 +106,8 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
         >
           <span className="ops-badge" data-state={doneStep ? 'done' : 'live'} data-testid="ops-badge" aria-hidden="true">OPS<span className="ops-bars"><i /><i /><i /></span></span>
           <span className="flight-plan-text">
-          <span key={`${step.id}-${doneStep ?? 'live'}`} className="flight-plan-kicker" data-state={doneStep ? 'done' : 'live'} data-testid="flight-plan-kicker">{doneStep ? `Copy · Step ${doneStep} done` : `${isTryStep ? step.try : step.title} Ops · Step ${displayIndex + 1}/${displayTotal}`}</span>
-          <span key={`${step.id}-${doneStep ?? 'live'}`} className="flight-plan-action">{doneStep ? `+1 stitch · ${action}` : action}</span>
+          <span key={`${step.id}-kicker-${doneStep ?? 'live'}`} className="flight-plan-kicker" data-state={doneStep ? 'done' : 'live'} data-testid="flight-plan-kicker">{doneStep ? `Copy · Step ${doneStep} done` : `${isTryStep ? step.try : step.title} Ops · Step ${displayIndex + 1}/${displayTotal}`}</span>
+          <span key={`${step.id}-action-${doneStep ?? 'live'}`} className="flight-plan-action">{doneStep ? `+1 stitch · ${action}` : action}</span>
           </span>
         </button>
         {go && <button type="button" className="flight-plan-go" data-testid="flight-plan-go" data-coach-id="flight-plan-go" onClick={go.run}>{go.label}</button>}

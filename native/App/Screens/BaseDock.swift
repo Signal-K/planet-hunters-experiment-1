@@ -39,8 +39,8 @@ struct BaseDock: View {
             arrow("chevron.right", label: onNext == nil ? "Next" : "Scroll right") { if let onNext { onNext() } else { step(1) } }
         }
         .padding(.horizontal, zones.padding + 4)
-        .padding(.vertical, 2)
-        .frame(width: 328, height: 48)
+        .padding(.vertical, 4)
+        .frame(width: 328, height: 52)
         .background(Capsule().fill(Theme.hudPanel))
         .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
         .accessibilityElement(children: .contain)
@@ -51,8 +51,8 @@ struct BaseDock: View {
         Button(action: action) {
             Image(systemName: symbol).font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.hudInk)
                 .frame(width: 44, height: 44)
-                .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
+                .background(Circle().fill(Theme.hudPanel))
+                .overlay(Circle().stroke(Theme.hudInk, lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
