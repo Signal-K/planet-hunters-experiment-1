@@ -2,7 +2,7 @@
 
 import { type ReactNode, useMemo, useEffect, useRef, useState } from 'react'
 import { GameProvider, useGame } from '@/game-context'
-import { trainingTryStep } from '@/lib/data'
+import { STORAGE_STEPS, storageLessonDoneSteps, storageLessonSteps, trainingTryStep } from '@/lib/data'
 import FlightPlan from '@/components/game/FlightPlan'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
@@ -131,25 +131,32 @@ function GameChrome({ children }: { children: ReactNode }) {
   const flightStep = activeTry
     ? trainingTryStep(activeTry, currentScreen, { returning: !!game.player.returningToEarth })
     : undefined
+  // SSL-576: the storage lesson follows the first missions beside Free Ops.
+  const storageSteps = storageLessonSteps(game.player, game.doneSteps)
+  const storageDone = storageLessonDoneSteps(game.player, game.doneSteps)
+  const storageStep = storageSteps.find(step => step.screen === currentScreen && !storageDone[step.id])
   const coach = useMemo(() => {
     // A Menu Replay re-arms its try even after Free Ops, when the tutorial flag is off.
-    const routeCoach = (!game.player.freeOperations && game.tutorial) || game.player.flightPlan?.replayTry ? flightStep ?? null : null
+    const tryCoach = (!game.player.freeOperations && game.tutorial) || game.player.flightPlan?.replayTry ? flightStep ?? null : null
+    const routeCoach = tryCoach ?? storageStep ?? null
     if (currentScreen === 'hub' && game.subsurfaceView) return null
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
     if (settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, settingsOpen])
+  }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, settingsOpen, storageStep])
 
-  const coachIndex = flightStep ? ['mining', 'scan', 'part'].indexOf(flightStep.try) : -1
+  const isStorageCoach = !!coach && !('try' in coach)
+  const coachIndex = coach && !('try' in coach) ? STORAGE_STEPS.findIndex(step => step.id === coach.id) : flightStep ? ['mining', 'scan', 'part'].indexOf(flightStep.try) : -1
+  const coachTotal = isStorageCoach ? STORAGE_STEPS.length : 3
   const onboardingActive = !!coach
 
   // SSL-432: the 8s hint waits while a help sheet or "Show me" run is open and
   // restarts its clock when help closes.
   const helpOpen = useHelpOpen()
   useEffect(() => {
-    if (!coach) return
+    if (!coach || !('try' in coach)) return
     game.startFlightPlan()
     if (helpOpen) return
     const timer = window.setTimeout(() => game.showFlightPlanHint(), 8_000)
@@ -164,7 +171,7 @@ function GameChrome({ children }: { children: ReactNode }) {
       step_id: coach.id,
       screen: coach.screen,
       step_index: coachIndex,
-      total_steps: 3,
+      total_steps: coachTotal,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coach?.id])
@@ -251,11 +258,12 @@ function GameChrome({ children }: { children: ReactNode }) {
             key={coach.id}
             stepIndex={coachIndex}
               step={coach}
-            total={3}
+            total={coachTotal}
             hidden={game.player.flightPlan?.hidden}
             onHiddenChange={hidden => game.setPlayer(player => ({ ...player, flightPlan: { ...(player.flightPlan ?? { completed: {} }), hidden } }))}
-            hint={activeTry && game.player.flightPlan?.hintShownFor === activeTry ? coach.hint : undefined}
-            go={'try' in coach && coach.screen === '*' && game.screen === 'hub'
+            hint={activeTry && game.player.flightPlan?.hintShownFor === activeTry && 'try' in coach ? coach.hint : undefined}
+            go={!('try' in coach) && coach.manual ? { label: coach.cta || 'Got it', run: () => game.completeStep(coach.id) }
+              : 'try' in coach && coach.screen === '*' && game.screen === 'hub'
               ? (coach.try === 'part' ? { label: 'Open Hangar', run: () => game.go('hangar') }
                 : coach.try === 'scan' ? { label: 'Open Galaxy', run: () => game.go('galaxy') } : undefined)
               : undefined}
@@ -264,8 +272,9 @@ function GameChrome({ children }: { children: ReactNode }) {
                 step_id: coach.id,
                 screen: coach.screen,
                 step_index: coachIndex,
-                total_steps: 3,
+                total_steps: coachTotal,
               })
+              if (isStorageCoach) { game.skipTutorial(STORAGE_STEPS.map(step => step.id)); return }
               game.skipFlightPlan()
             }}
           />

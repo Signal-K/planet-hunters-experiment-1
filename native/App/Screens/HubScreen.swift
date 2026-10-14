@@ -76,7 +76,12 @@ struct HubScreen: View {
             BaseDock(tile: layout.tile, zones: zones.dock,
                      onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
-                     onBuild: { placeNote = nil; placing.toggle() })
+                     onBuild: {
+                         placeNote = nil
+                         // SSL-576: while the storage lesson waits on the silo, Build opens the build surface the coach follows.
+                         if store.screen == .hub, FlightPlan.awaitingStorageSilo(store.state) { store.go(.build); return }
+                         placing.toggle()
+                     })
                 .padding(.bottom, insets.bottom + zones.dock.bottomInset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
@@ -93,7 +98,7 @@ struct HubScreen: View {
     private func buildSilo() {
         let used = Set(Construction.occupied(store.player).values)
         let plot = (0..<Construction.plotCount).first { !used.contains($0) } ?? 0
-        if !store.place("surface-silo", plot: plot) { placing = true }
+        if !store.place("surface-silo", plot: plot) { placing = true } else if store.screen == .build { placing = false; store.go(.hub) }
     }
 
     /// Unlocked structures that are not yet on the base. Locked ones are not offered.
@@ -106,7 +111,7 @@ struct HubScreen: View {
         if !Construction.canAfford(b, player: store.player) {
             placeNote = "\(b.name) · Need \(Construction.gaps(b, player: store.player).joined(separator: ", "))"; return
         }
-        if store.place(id, plot: plot) { placeNote = nil; picked = nil; placing = false } else { placeNote = "That could not be placed. Try another slot." }
+        if store.place(id, plot: plot) { placeNote = nil; picked = nil; placing = false; if store.screen == .build { store.go(.hub) } } else { placeNote = "That could not be placed. Try another slot." }
     }
 
     private func picker(width: CGFloat, insets: EdgeInsets) -> some View {

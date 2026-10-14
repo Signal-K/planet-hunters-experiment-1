@@ -338,7 +338,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       patch: (p: Partial<GameState['player']>) => setState(s => ({ ...s, player: { ...s.player, ...p } })),
       goto: (screen: GameState['screen'], ids?: { missionId?: string | null; targetId?: string | null }) =>
         setState(s => ({ ...s, screen, missionId: ids?.missionId ?? s.missionId, targetId: ids?.targetId ?? s.targetId })),
-      skipTutorial: () => tutorial.skipTutorial([0, 1, 2, 3, 4, 5, 6, 8, 9, 30, 31, 32, 33, 40, 41]),
+      skipTutorial: () => tutorial.skipTutorial([0, 1, 2, 3, 4, 5, 6, 8, 9, 30, 31, 32, 33, 40, 41, 42, 43]),
       // Load any DEV preset (m1-mining, ui-rover-survey, ship-customizer, ...)
       // into the live signed-in session. Returns false for an unknown key.
       scenario: (name: string) => {

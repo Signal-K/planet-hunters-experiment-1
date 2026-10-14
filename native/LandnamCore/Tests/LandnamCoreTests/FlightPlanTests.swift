@@ -56,4 +56,25 @@ struct FlightPlanTests {
         p.tessClassifications["s1"] = TessClassification(subjectId: "s1", verdict: .planet, ranges: [], submittedAt: 5)
         #expect(MissionLog.entries(p).first?.kind == .transit)
     }
+
+    /// SSL-576: storage lesson mirrors web STORAGE_STEPS and never gates Free Ops.
+    @Test func storageLessonGuidesSiloThenStoreThenSellLater() {
+        var gs = GameState()
+        gs.player.placed = ["launchpad"]; gs.player.missionsDone = 1; gs.player.freeOperations = true
+        #expect(FlightPlan.storageCoach(gs, screen: .hub) == nil)
+        gs.player.missionsDone = 2
+        #expect(FlightPlan.coach(gs, screen: .hub)?.kicker == "STORAGE OPS · STEP 1/4")
+        #expect(FlightPlan.coach(gs, screen: .build)?.kicker == "STORAGE OPS · STEP 2/4")
+        #expect(FlightPlan.awaitingStorageSilo(gs))
+        gs.player.placed.append("surface-silo")
+        #expect(!FlightPlan.awaitingStorageSilo(gs))
+        let store = GameStore(state: gs)
+        #expect(FlightPlan.coach(store.state, screen: .hub)?.go?.completesStep == 42)
+        store.completeStep(42)
+        let sell = FlightPlan.coach(store.state, screen: .hub)
+        #expect(sell?.kicker == "STORAGE OPS · STEP 4/4")
+        #expect(sell?.radio.contains("Exchange") == true)
+        store.completeStep(43)
+        #expect(FlightPlan.coach(store.state, screen: .hub) == nil)
+    }
 }

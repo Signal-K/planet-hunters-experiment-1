@@ -100,6 +100,9 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const skySeason = useBaseSeason()
   const camera = useBaseCamera()
   const [editMode, setEditMode] = useState(placementMode)
+  // The hub and build routes share this mounted scene, so entering the
+  // build route (SSL-576 storage lesson) must open placement here too.
+  useEffect(() => { setEditMode(placementMode) }, [placementMode])
   const [pickedBuild, setPickedBuild] = useState<string | null>(null)
   const [placeNote, setPlaceNote] = useState<string | null>(null)
   const [overlappedPlots, setOverlappedPlots] = useState<number[]>([])
@@ -569,7 +572,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         <div data-testid="build-picker" style={{ position: 'absolute', left: 0, right: 0, bottom: 72, zIndex: 21, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, pointerEvents: 'none', padding: '0 12px' }}>
           {placeNote && <span style={{ pointerEvents: 'auto', padding: '6px 12px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>{placeNote}</span>}
           {underground && firstFreePlot !== undefined && (
-            <button type="button" data-testid="build-place-underground" onClick={() => placeOnPlot(firstFreePlot)}
+            <button type="button" data-testid="build-place-underground" data-beacon="build-place-underground" onClick={() => placeOnPlot(firstFreePlot)}
               style={{ pointerEvents: 'auto', minHeight: 44, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1 var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Place silo
             </button>
@@ -583,6 +586,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
                     key={option.id}
                     type="button"
                     data-testid={`build-option-${option.id}`}
+                    data-beacon={`build-option-${option.id}`}
                     aria-pressed={pickedBuild === option.id}
                     onClick={() => { setPickedBuild(option.id); setPlaceNote(option.affordable ? null : `${option.name} · ${option.reason ?? 'Not enough resources'}`) }}
                     style={{
@@ -623,7 +627,13 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
                 setDockStop(next)
                 onOpenScene(stops[next])
               }}
-              onBuild={() => { setPlaceNote(null); setEditMode(value => !value) }}
+              onBuild={() => {
+                setPlaceNote(null)
+                // SSL-576: while the storage lesson waits on the silo, Build
+                // opens the placement surface the coach follows.
+                if (!placementMode && awaitingStorageSilo(player)) { onFocusBuilding('build'); return }
+                setEditMode(value => !value)
+              }}
               onHub={() => onOpenScene('instrument-hub')}
             />
           </div>

@@ -2913,6 +2913,8 @@ html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"]::after,
 html[data-flight-target~="intro-begin"] [data-beacon="intro-begin"]::after,
 html[data-flight-target~="build-plot-0"] [data-beacon="build-plot-0"]::after,
 html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"]::after,
+html[data-flight-target~="build-option-surface-silo"] [data-beacon="build-option-surface-silo"]::after,
+html[data-flight-target~="build-place-underground"] [data-beacon="build-place-underground"]::after,
 html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"]::after,
 .lock-on::after {
   content: '';

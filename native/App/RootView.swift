@@ -44,7 +44,7 @@ struct RootView: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !store.welcomePending, let coach = FlightPlan.coach(store.player, screen: store.screen) { CoachStrip(coach: coach) }
+            if !store.welcomePending, let coach = FlightPlan.coach(store.state, screen: store.screen) { CoachStrip(coach: coach) }
         }
         .tint(Theme.accent)
         // Someone confirmed a planet: flag a re-point on the exoplanet target flow (web useConfirmedDiscoveryPoll).

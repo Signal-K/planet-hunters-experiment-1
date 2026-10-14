@@ -50,7 +50,7 @@ enum SceneCatalog {
     static func coached<V: View>(_ view: V, _ store: GameStore, screen: Screen) -> some View {
         view.environment(store).environment(offlineFeed)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if let c = FlightPlan.coach(store.player, screen: screen) { CoachStrip(coach: c).environment(store) }
+                if let c = FlightPlan.coach(store.state, screen: screen) { CoachStrip(coach: c).environment(store) }
             }
     }
 

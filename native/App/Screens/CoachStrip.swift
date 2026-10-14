@@ -19,7 +19,7 @@ struct CoachStrip: View {
             }
             Spacer(minLength: 0)
             if let go = coach.go {
-                Button { store.go(go.screen) } label: {
+                Button { if let step = go.completesStep { store.completeStep(step) } else { store.go(go.screen) } } label: {
                     Text(go.label).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
                         .padding(.horizontal, 12).frame(minHeight: 44)
                         .background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))

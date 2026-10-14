@@ -2,12 +2,15 @@
 //
 // SSL-332 agency training: EXTRACTION_STEPS (place the launchpad, then the
 // first mine-and-return contract) and TRANSPORT_STEPS (the two-stop
-// mine-and-haul contract). The Surface Silo is a Build action on the hub
-// after both guided missions, not a coach script. The old M2 Prospector
-// steps are retired. Stage selection lives in trainingCoachSteps below.
+// mine-and-haul contract) and STORAGE_STEPS (SSL-576: build the Surface Silo
+// in the base scene, store ore instead of selling it, sell it later at the
+// Exchange). Storage runs after the first missions and never gates Free Ops.
+// The old M2 Prospector steps are retired. Stage selection lives in
+// trainingCoachSteps and storageLessonSteps below.
 
 import type { TutorialStep } from './types'
 import type { AgencyTrainingStage } from '@/lib/systems/AgencyOnboardingSystem'
+import { FREE_OPS_START_MISSIONS_DONE } from './mission-generator'
 import type { TrainingTryId } from '@/lib/systems/FlightPlanSystem'
 
 export interface TrainingTryStep {
@@ -204,16 +207,74 @@ export const TRANSPORT_STEPS: TutorialStep[] = [
     anchor: 'top', spot: null, cta: 'Got it' },
 ]
 
+/** SSL-576 storage lesson. Build happens inside the base scene: the dock
+ *  Build control opens placement, the silo goes underground, then two short
+ *  notes cover storing ore and selling it later at the Exchange. */
+export const STORAGE_STEPS: TutorialStep[] = [
+  { id: 40, screen: 'hub', title: 'Storage',
+    body: 'Your agency can mine and haul. Now give it somewhere to keep ore at home: a Surface Silo.',
+    action: 'Tap Build',
+    anchor: 'bottom', spot: null, cta: 'Build', coachId: 'hub-build-btn', dir: 'up',
+    desktopAction: 'Click Build',
+    desktopCoachId: 'hub-build-btn', desktopDir: 'up' },
+  { id: 41, screen: 'build', title: 'Storage',
+    body: 'Pick the Surface Silo. It is dug in under the base, so it needs no open plot.',
+    action: 'Pick Surface Silo, then tap Place silo',
+    anchor: 'bottom', spot: null, cta: 'Place silo', coachId: 'build-option-surface-silo|build-place-underground', dir: 'down',
+    desktopAction: 'Pick Surface Silo, then click Place silo',
+    desktopCoachId: 'build-option-surface-silo|build-place-underground', desktopDir: 'down' },
+  { id: 42, screen: 'hub', title: 'Storage',
+    body: 'Ore you bring home can now go into the silo instead of being sold straight away.',
+    action: 'Store ore in the silo instead of selling it',
+    manual: true,
+    anchor: 'top', spot: null, cta: 'Got it' },
+  { id: 43, screen: 'hub', title: 'Storage',
+    body: 'When the price suits you, sell stored ore at the Exchange, the trading building on your base.',
+    action: 'Sell stored ore later at the Exchange',
+    manual: true,
+    anchor: 'top', spot: null, cta: 'Got it' },
+]
+
+/** Step ids the silo placement itself completes. */
+export const STORAGE_BUILD_STEP_IDS: readonly number[] = [40, 41]
+export const STORAGE_LAST_STEP_ID = 43
+
+export interface StorageLessonPlayer {
+  placed?: string[]
+  missionsDone: number
+}
+
+/** SSL-576: the storage lesson runs once the first missions are flown and
+ *  stays until its last note is read or skipped. It sits beside Free Ops and
+ *  never gates it. */
+export function storageLessonSteps(player: StorageLessonPlayer, doneSteps: Record<number, boolean>): TutorialStep[] {
+  const missions = Number.isFinite(player.missionsDone) ? player.missionsDone : 0
+  if (missions < FREE_OPS_START_MISSIONS_DONE || doneSteps[STORAGE_LAST_STEP_ID]) return []
+  return STORAGE_STEPS
+}
+
+/** Done map for the storage coach: placing the silo (from any surface)
+ *  finishes the build steps. */
+export function storageLessonDoneSteps(player: StorageLessonPlayer, doneSteps: Record<number, boolean>): Record<number, boolean> {
+  if (!(player.placed ?? []).includes('surface-silo')) return doneSteps
+  const next = { ...doneSteps }
+  for (const id of STORAGE_BUILD_STEP_IDS) next[id] = true
+  return next
+}
+
 export const PROGRESSION_STEPS: TutorialStep[] = [
   ...EXTRACTION_STEPS,
   ...TRANSPORT_STEPS,
+  ...STORAGE_STEPS,
 ]
 
 /** Coach steps for an agency training stage. Launchpad placement is the
- *  first beat of the Extraction step list. Storage and Free Ops have no coach. */
+ *  first beat of the Extraction step list. Storage is selected separately
+ *  (storageLessonSteps) so it never gates Free Ops. */
 export function trainingCoachSteps(stage: AgencyTrainingStage): TutorialStep[] {
   if (stage === 'launchpad' || stage === 'extraction') return EXTRACTION_STEPS
   if (stage === 'transport') return TRANSPORT_STEPS
+  if (stage === 'storage') return STORAGE_STEPS
   return []
 }
 
@@ -221,4 +282,4 @@ export function trainingCoachSteps(stage: AgencyTrainingStage): TutorialStep[] {
 // selects the same agency stages through trainingCoachSteps.
 export const M1_STEPS = EXTRACTION_STEPS
 export const M2_STEPS = TRANSPORT_STEPS
-export const M3_STEPS: TutorialStep[] = []
+export const M3_STEPS = STORAGE_STEPS

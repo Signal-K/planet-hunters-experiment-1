@@ -34,7 +34,13 @@ public enum FlightPlan {
         public let objective: String
         public let radio: String
         public let go: Go?
-        public struct Go: Equatable, Sendable { public let label: String; public let screen: Screen }
+        public struct Go: Equatable, Sendable {
+            public let label: String
+            public let screen: Screen
+            /// When set, the button marks this coach step done instead of navigating (manual "Got it" notes).
+            public var completesStep: Int? = nil
+            public init(label: String, screen: Screen, completesStep: Int? = nil) { self.label = label; self.screen = screen; self.completesStep = completesStep }
+        }
     }
 
     /// Part kinds fitted in the Hangar, in web CUSTOMIZER_BUILD_SEQUENCE order, with the starter module for each.
@@ -48,6 +54,46 @@ public enum FlightPlan {
 
     /// Screens that belong to a live cargo run; the scan and part lines never show here (web LOOP_SCREENS).
     private static let loopScreens: Set<Screen> = [.fab, .roverSurvey, .targets, .mining, .debrief, .transit, .landing, .delivery, .rocketBuy]
+
+    /// The coach for the whole game state: the active try first, then the SSL-576 storage lesson.
+    public static func coach(_ s: GameState, screen: Screen) -> Coach? {
+        coach(s.player, screen: screen) ?? storageCoach(s, screen: screen)
+    }
+
+    /// SSL-576 storage lesson (web STORAGE_STEPS, ids 40-43): build the Surface Silo inside the base
+    /// scene, store ore instead of selling it, then sell it later at the Exchange. It runs once the
+    /// first missions are flown, sits beside Free Ops and never gates it.
+    public static let storageStepIds = [40, 41, 42, 43]
+
+    public static func storageLessonActive(_ s: GameState) -> Bool {
+        s.player.missionsDone >= MissionGenerator.freeOpsStartMissionsDone && s.doneSteps["43"] != true
+    }
+
+    /// True while the lesson waits on the silo: the dock Build control opens the build surface.
+    public static func awaitingStorageSilo(_ s: GameState) -> Bool {
+        storageLessonActive(s) && !s.player.placed.contains("surface-silo")
+    }
+
+    public static func storageCoach(_ s: GameState, screen: Screen) -> Coach? {
+        guard storageLessonActive(s) else { return nil }
+        func c(_ step: Int, _ objective: String, _ radio: String, go: Coach.Go? = nil) -> Coach {
+            Coach(kicker: "STORAGE OPS · STEP \(step)/4", objective: objective, radio: radio, go: go)
+        }
+        if !s.player.placed.contains("surface-silo") {
+            switch screen {
+            case .hub: return c(1, "Tap Build", "Your agency can mine and haul. Now give it somewhere to keep ore at home: a Surface Silo.")
+            case .build: return c(2, "Pick Surface Silo, then tap Place silo", "Pick the Surface Silo. It is dug in under the base, so it needs no open plot.")
+            default: return nil
+            }
+        }
+        guard screen == .hub else { return nil }
+        if s.doneSteps["42"] != true {
+            return c(3, "Store ore in the silo instead of selling it", "Ore you bring home can now go into the silo instead of being sold straight away.",
+                     go: .init(label: "GOT IT", screen: .hub, completesStep: 42))
+        }
+        return c(4, "Sell stored ore later at the Exchange", "When the price suits you, sell stored ore at the Exchange, the trading building on your base.",
+                 go: .init(label: "GOT IT", screen: .hub, completesStep: 43))
+    }
 
     public static func coach(_ p: Player, screen: Screen) -> Coach? {
         guard !p.freeOperations, !p.flightPlan.hidden, let current = p.flightPlan.currentTry,

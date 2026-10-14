@@ -116,6 +116,8 @@ public final class GameStore {
     public func finishWelcome() { var n = state; n.extras[CloudPull.welcomeKey] = nil; if n.screen == .intro { n.screen = .hub }; apply(n) }
 
     public func go(_ screen: Screen) { var n = state; n.screen = screen; apply(n) }
+    /// Marks a coach step done (web completeStep), e.g. the SSL-576 storage notes.
+    public func completeStep(_ id: Int) { var n = state; n.doneSteps[String(id)] = true; apply(n) }
     public func setEarthBiome(_ biome: String, asMove: Bool = false) {
         guard ["mountains", "desert", "tundra", "coast"].contains(biome), !state.player.earthBiomeMoveUsed || !asMove else { return }
         var n = state; n.player.earthBiome = biome

@@ -3,7 +3,7 @@
 import { useMemo, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GameProvider, useGame } from '@/game-context'
-import { trainingCoachSteps } from '@/lib/data'
+import { storageLessonDoneSteps, storageLessonSteps, trainingCoachSteps } from '@/lib/data'
 import type { Screen } from '@/lib/game-types'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import FlightPlan from '@/components/game/FlightPlan'
@@ -128,19 +128,26 @@ function GameCanvas() {
     void schedule().catch(() => {})
   }, [game.screen, game.lastCargo, game.mission, game.target])
 
+  // SSL-576: the storage lesson follows the first missions alongside Free Ops.
+  const storageSteps = useMemo(() => storageLessonSteps(game.player, game.doneSteps), [game.player, game.doneSteps])
   const coachSteps = useMemo(() => {
+    if (storageSteps.length) return storageSteps
     if (!game.tutorial || game.player.freeOperations) return []
     return trainingCoachSteps(agencyTrainingStage(game.player))
-  }, [game.player, game.tutorial])
+  }, [game.player, game.tutorial, storageSteps])
+  const coachDone = useMemo(
+    () => (storageSteps.length ? storageLessonDoneSteps(game.player, game.doneSteps) : game.doneSteps),
+    [game.player, game.doneSteps, storageSteps],
+  )
 
   const coach = useMemo(() => {
-    const activeCoach = coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
+    const activeCoach = coachSteps.find(step => step.screen === game.screen && !coachDone[step.id]) ?? null
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
     if (game.subsurfaceView || settingsOpen || friendsOpen || hubOpen || game.popup || game.authGateOpen || (game.screen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return activeCoach
-  }, [coachSteps, friendsOpen, hubOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
+  }, [coachSteps, coachDone, friendsOpen, hubOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const onboardingActive = !!coach
@@ -209,6 +216,7 @@ function GameCanvas() {
               stepIndex={coachIndex}
               step={coach}
               total={coachSteps.length}
+              go={coach.manual ? { label: coach.cta || 'Got it', run: () => game.completeStep(coach.id) } : undefined}
               onSkip={() => {
                 // Distinct from a step being completed in the normal flow —
                 // this is the player bailing out of onboarding entirely, which

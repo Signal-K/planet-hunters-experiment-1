@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EXTRACTION_STEPS, TRANSPORT_STEPS, trainingCoachSteps } from '@/lib/data/tutorial'
+import { EXTRACTION_STEPS, STORAGE_STEPS, TRANSPORT_STEPS, storageLessonDoneSteps, storageLessonSteps, trainingCoachSteps } from '@/lib/data/tutorial'
 import {
   AGENCY_TRAINING_STAGES,
   LEGACY_FREE_OPS_MISSIONS_DONE,
@@ -62,8 +62,29 @@ describe('trainingCoachSteps', () => {
     expect(trainingCoachSteps('launchpad')).toBe(EXTRACTION_STEPS)
     expect(trainingCoachSteps('extraction')).toBe(EXTRACTION_STEPS)
     expect(trainingCoachSteps('transport')).toBe(TRANSPORT_STEPS)
-    expect(trainingCoachSteps('storage')).toEqual([])
+    expect(trainingCoachSteps('storage')).toBe(STORAGE_STEPS)
     expect(trainingCoachSteps('free-ops')).toEqual([])
+  })
+})
+
+describe('storage lesson (SSL-576)', () => {
+  it('builds the silo in the base scene, then teaches store and sell-later at the Exchange', () => {
+    expect(STORAGE_STEPS.map(step => [step.id, step.screen])).toEqual([[40, 'hub'], [41, 'build'], [42, 'hub'], [43, 'hub']])
+    expect(STORAGE_STEPS[0].coachId).toBe('hub-build-btn')
+    expect(STORAGE_STEPS[1].coachId).toContain('build-option-surface-silo')
+    expect(STORAGE_STEPS[3].body).toContain('Exchange')
+    expect(STORAGE_STEPS.slice(2).every(step => step.manual)).toBe(true)
+  })
+
+  it('runs after the first missions until the last note is read', () => {
+    expect(storageLessonSteps({ placed: ['launchpad'], missionsDone: 1 }, {})).toEqual([])
+    expect(storageLessonSteps({ placed: ['launchpad'], missionsDone: 2 }, {})).toBe(STORAGE_STEPS)
+    expect(storageLessonSteps({ placed: ['launchpad'], missionsDone: 5 }, { 43: true })).toEqual([])
+  })
+
+  it('treats a placed silo as the finished build steps', () => {
+    expect(storageLessonDoneSteps({ placed: ['surface-silo'], missionsDone: 2 }, {})).toEqual({ 40: true, 41: true })
+    expect(storageLessonDoneSteps({ placed: [], missionsDone: 2 }, { 7: true })).toEqual({ 7: true })
   })
 })
 
