@@ -61,3 +61,16 @@
 .debrief dl div { display: flex; justify-content: space-between; gap: 12px; }
 .debrief dt { color: var(--ln-text-muted); font: 800 14px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
 .debrief dd { margin: 0; color: var(--ln-text); text-align: right; }
+
+/* SSL-558: the live base and its HUD remain visible around the log. */
+:global([data-testid="mission-history-tray"]) { inset: 88px 16px 88px; padding: 0; background: transparent; pointer-events: none; align-items: flex-start; }
+:global([data-testid="mission-history-tray"] .ln-page-surface__content) { width: min(760px, 100%); min-height: 0; max-height: 100% !important; border-radius: 0 !important; box-shadow: none !important; pointer-events: auto; }
+.screen { --ln-text: var(--ln-blueprint-ink); --ln-text-dim: var(--ln-blueprint-ink); --ln-text-muted: var(--ln-blueprint-blue); --ln-cyan: var(--ln-blueprint-blue); --ln-panel: var(--ln-world-hull-lit); --ln-surface-2: var(--ln-blueprint-paper-2); }
+.shell { padding: 24px; background: var(--ln-world-hull-lit); border: 3px solid var(--ln-blueprint-ink); box-shadow: inset 0 6px var(--ln-blueprint-blue); }
+.header h1 { font-family: var(--ln-font-mono); font-size: 26px; letter-spacing: .08em; }
+.record, .summary, .empty, .backButton, .tabActive { border: 2px solid var(--ln-blueprint-blue); border-radius: 0; }
+.record { padding: 16px; background: var(--ln-blueprint-paper); }
+.list { gap: 16px; }
+.recordTitle, .recordMeta { white-space: normal; overflow-wrap: anywhere; }
+@media(max-width: 640px) { .shell { padding: 16px; } .header { display: flex; gap: 8px; } .backButton { margin-top: 0; } .header p { margin-top: 8px; } .recordButton { flex-wrap: wrap; } .recordButton .date { margin-left: 32px; } }
+@media(orientation: landscape) and (max-height: 500px) { :global([data-testid="mission-history-tray"]) { inset: 64px 20% 72px 16px; } }

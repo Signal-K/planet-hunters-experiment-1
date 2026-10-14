@@ -77,9 +77,9 @@ export default function DebriefCanvas({ rocketImageSrc, scene = 'berth' }: Debri
           skyHorizon: tokenColor('--ln-world-dusk-horizon', 0x31425b),
           floor: tokenColor('--ln-world-asphalt', 0x343b46),
           floorEdge: tokenColor('--ln-world-outline', 0x16293b),
-          trim: tokenColor('--ln-world-trim-teal', 0x2a9aa3),
+          trim: tokenColor('--ln-world-trim-blue', 0x1f78c1),
           light: tokenColor('--ln-world-hull-lit', 0xfaf7f0),
-          grass: tokenColor('--ln-world-grass', 0x3e6a46),
+          grass: tokenColor('--ln-world-asphalt', 0x343b46),
         }
 
         const background = new Graphics()

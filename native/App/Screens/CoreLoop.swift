@@ -281,7 +281,8 @@ struct DebriefScreen: View {
         let payout = m.map { MissionGenerator.calibrateOnboardingPayout(raw: $0.payout.francs, missionsDone: store.player.missionsDone) } ?? 0
         let client = m?.client.flatMap { id in Clients.all.first { $0.id == id } }
         let cargo = store.state.lastCargo ?? [:]
-        ScreenFrame(title: "Debrief") {
+        MissionRecordOverlay {
+            Text("MISSION DEBRIEF").font(AppFont.mono(24)).foregroundStyle(Theme.ink)
             DebriefStrip(title: m?.title ?? "Contract", from: store.target?.name)
             if let client { DebriefClientPanel(client: client, xp: m?.payout.affinity ?? 0) }
             if let m, !m.requires.minerals.isEmpty { DebriefManifest(title: m.title, required: m.requires.minerals, delivered: cargo) }
@@ -306,11 +307,11 @@ struct DebriefStrip: View {
     let title: String
     let from: String?
     var body: some View {
-        Panel(accent: Theme.teal) {
+        DebriefRecordPanel(accent: Theme.blue) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
-                    Circle().fill(Theme.teal).frame(width: 10, height: 10)
-                    Text("DOCKED · MISSION COMPLETE").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.teal)
+                    Circle().fill(Theme.blue).frame(width: 10, height: 10)
+                    Text("DOCKED · MISSION COMPLETE").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.blue)
                 }
                 Eyebrow(text: "Mission")
                 Text(title).font(AppFont.display(18)).foregroundStyle(Theme.ink)
@@ -324,7 +325,7 @@ struct DebriefClientPanel: View {
     let client: Client
     let xp: Int
     var body: some View {
-        Panel {
+        DebriefRecordPanel {
             VStack(alignment: .leading, spacing: 10) {
                 Eyebrow(text: "Client")
                 HStack(spacing: 12) {
@@ -351,7 +352,7 @@ struct DebriefManifest: View {
     let delivered: Cargo
     var body: some View {
         let delivered = delivered
-        Panel(accent: Theme.blue) {
+        DebriefRecordPanel(accent: Theme.blue) {
             VStack(alignment: .leading, spacing: 10) {
                 Eyebrow(text: "Manifest · \(title)")
                 ForEach(required.keys.sorted(), id: \.self) { id in
@@ -365,9 +366,9 @@ struct DebriefManifest: View {
                         Text("\(min(have, need)) / \(need)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
                         Spacer(minLength: 0)
                         Text(have >= need ? "DONE" : "SHORT").font(AppFont.display(14)).tracking(1.2)
-                            .foregroundStyle(have >= need ? Theme.teal : Theme.crimson)
+                            .foregroundStyle(have >= need ? Theme.blue : Theme.crimson)
                             .padding(.horizontal, 10).padding(.vertical, 4)
-                            .background((have >= need ? Theme.teal : Theme.crimson).opacity(0.12), in: Capsule())
+                            .background((have >= need ? Theme.blue : Theme.crimson).opacity(0.12), in: Capsule())
                     }
                 }
             }
@@ -380,7 +381,7 @@ struct DebriefLedger: View {
     let reward: ProgramReward?
     var body: some View {
         if payout != nil || reward != nil {
-            Panel(accent: Theme.teal) {
+            DebriefRecordPanel(accent: Theme.blue) {
                 VStack(alignment: .leading, spacing: 8) {
                     Eyebrow(text: "Ledger")
                     if let payout {

@@ -37,10 +37,10 @@ export default function MissionHistoryScreen({ records, missions = [], player, o
   const logIsPartial = lifetimeCompleted > missionEntries
 
   return (
-    <section className="theme-light" data-testid="mission-history-screen" style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: '1 1 auto', minHeight: '100%', background: 'var(--ln-void)', color: 'var(--ln-text)' }}>
+    <section className={styles.screen} data-testid="mission-history-screen" style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: '1 1 auto', minHeight: '100%', color: 'var(--ln-text)' }}>
       <div className={styles.shell}>
         <header className={styles.header}>
-          <div><p>A concise record of completed client work and program operations.</p></div>
+          <div><h1>MISSION LOG</h1><p>A concise record of completed client work and program operations.</p></div>
           <button className={styles.backButton} onClick={onBack}>Back</button>
         </header>
         <nav className={styles.tabs} aria-label="Mission log sections"><a className={styles.tabActive} href="#operations">Operations <span>{lifetimeCompleted}</span></a></nav>
