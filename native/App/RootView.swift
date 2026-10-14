@@ -14,36 +14,40 @@ struct RootView: View {
 
     private var game: some View {
         Group {
-            switch store.welcomePending ? nil : store.screen {
-            case nil: WelcomeScreen()
-            case .intro: IntroScreen()
-            case .hub, .hubSubsurface: HubScreen()
-            case .refinery: RefineryScreen()
-            case .skills: SkillTreeScreen()
-            case .academy: AcademyScreen()
-            case .missionHistory: MissionHistoryScreen()
-            case .narrativeLedger: NarrativeLedgerScreen()
-            case .missions: MissionsScreen()
-            case .targets, .rocketBuy, .fab, .launchpad: LaunchReviewScreen()
-            case .hangar: LaunchScreen()
-            case .build: BuildScreen()
-            case .surfaceOps: SurfaceOpsScreen()
-            case .transit: TransitScreen()
-            case .roverMining: RoverFieldScreen()
-            case .mining, .landing: MiningScreen()
-            case .delivery: DeliveryScreen()
-            case .debrief: DebriefScreen()
-            case .market: MarketScreen()
-            case .instrumentHub: ControlStationScreen()
-            case .saturnStormSearch: SaturnStormSearchScreen()
-            case .asteroidDiscovery: AsteroidDiscoveryScreen()
-            case .galaxy: TessDiscoveryScreen()
-            default: StubScreen(screen: store.screen)
-            }
+            if store.welcomePending { WelcomeScreen() }
+            else { RouteTransition(screen: store.screen) { routedScreen($0) } }
         }
         .tint(Theme.accent)
         // Someone confirmed a planet: flag a re-point on the exoplanet target flow (web useConfirmedDiscoveryPoll).
         .task { await feed.pollConfirmed(store: store) }
+    }
+
+    @ViewBuilder private func routedScreen(_ screen: Screen) -> some View {
+        switch screen {
+        case .intro: IntroScreen()
+        case .hub, .hubSubsurface: HubScreen()
+        case .refinery: RefineryScreen()
+        case .skills: SkillTreeScreen()
+        case .academy: AcademyScreen()
+        case .missionHistory: MissionHistoryScreen()
+        case .narrativeLedger: NarrativeLedgerScreen()
+        case .missions: MissionsScreen()
+        case .targets, .rocketBuy, .fab, .launchpad: LaunchReviewScreen()
+        case .hangar: LaunchScreen()
+        case .build: BuildScreen()
+        case .surfaceOps: SurfaceOpsScreen()
+        case .transit: TransitScreen()
+        case .roverMining: RoverFieldScreen()
+        case .mining, .landing: MiningScreen()
+        case .delivery: DeliveryScreen()
+        case .debrief: DebriefScreen()
+        case .market: MarketScreen()
+        case .instrumentHub: ControlStationScreen()
+        case .saturnStormSearch: SaturnStormSearchScreen()
+        case .asteroidDiscovery: AsteroidDiscoveryScreen()
+        case .galaxy: TessDiscoveryScreen()
+        default: StubScreen(screen: screen)
+        }
     }
 }
 

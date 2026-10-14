@@ -143,12 +143,16 @@ struct HubScreen: View {
         let x = w * (portrait ? [0.15, 0.38, 0.62, 0.85] : [0.08, 0.30, 0.70, 0.92] as [CGFloat])[min(max(plot, 0), 3)], y = groundY
         switch kind {
         case "refinery":
-            structure("Refinery", art: StructureShape(kind: .refinery), width: 70 * k, x: x, groundY: y) { store.go(.refinery) }
+            structure("Refinery", art: StructureShape(kind: .refinery), width: 70 * k, x: x, groundY: y) { openStructure(kind) }
         case "astronaut-academy":
-            structure("Academy", art: StructureShape(kind: .academy), width: 70 * k, x: x, groundY: y) { store.go(.academy) }
+            structure("Academy", art: StructureShape(kind: .academy), width: 70 * k, x: x, groundY: y) { openStructure(kind) }
         default:
-            building("Silo", sprite: "base/surface_silo_flat.png", aspect: 192.0 / 205, width: 62 * k * 0.62, x: x, groundY: y) { store.go(.market) }
+            building("Silo", sprite: "base/surface_silo_flat.png", aspect: 192.0 / 205, width: 62 * k * 0.62, x: x, groundY: y) { openStructure(kind) }
         }
+    }
+
+    private func openStructure(_ kind: String) {
+        if let destination = Screen.hubStructureDestination(kind) { store.go(destination) }
     }
 
     private func structure(_ name: String, art: StructureShape, width: CGFloat, x: CGFloat, groundY: CGFloat, tap: @escaping () -> Void) -> some View {

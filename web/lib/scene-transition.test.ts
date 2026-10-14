@@ -27,6 +27,7 @@ describe('scene transitions', () => {
   })
 
   it('fades every other hop, including leaving a surface for the return burn', () => {
+    expect(transitionKind('hub', 'build')).toBe('fade')
     expect(transitionKind('fab', 'launch')).toBe('fade')
     expect(transitionKind('hub', 'missions')).toBe('fade')
     expect(transitionKind('missions', 'targets')).toBe('fade')

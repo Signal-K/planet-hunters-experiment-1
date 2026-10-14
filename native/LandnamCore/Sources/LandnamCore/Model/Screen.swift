@@ -41,4 +41,17 @@ public enum Screen: String, Codable, CaseIterable, Sendable {
     public var needsTargetContext: Bool {
         [.rocketBuy, .fab, .transit, .mining, .roverMining, .delivery, .debrief].contains(self)
     }
+
+    /// Base structures are interaction surfaces, not decoration. Keeping this
+    /// mapping in the shared route model prevents native and web destinations
+    /// from drifting apart.
+    public static func hubStructureDestination(_ kind: String) -> Screen? {
+        switch kind {
+        case "launchpad": .launchpad
+        case "surface-silo": .build
+        case "refinery": .refinery
+        case "astronaut-academy": .academy
+        default: nil
+        }
+    }
 }
