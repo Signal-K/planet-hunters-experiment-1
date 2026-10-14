@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { captureGameEvent } from '@/lib/posthog'
 import { useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { ORIONIDS_VARIANTS, orionidsVariantForSurface } from '@/lib/orionids/theme'
-import type { BadgeTier } from '@/lib/data/sky-events'
+import { WORLD_SPACE_WEEK_PLAYER_LINKS, type BadgeTier } from '@/lib/data/sky-events'
 import styles from './SkyEventChip.module.css'
 
 const seenSurfaces = new Set<string>()
@@ -82,7 +82,14 @@ export default function SkyEventChip({
         )}
         {open && (
           <div className={styles.note} role="status">
-            {preset.label} falls while you mine tonight. Laser it after it lands, then sell it at the Market spot price. It does not count toward the mining order.
+            <p>{preset.label} falls while you mine tonight. Laser it after it lands, then sell it at the Market spot price. It does not count toward the mining order.</p>
+            {preset.eventId === 'draconids-2026' && (
+              <nav className={styles.playerLinks} aria-label="Continue World Space Week in other games">
+                {WORLD_SPACE_WEEK_PLAYER_LINKS.map(link => (
+                  <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a>
+                ))}
+              </nav>
+            )}
           </div>
         )}
         {orionids && debrisCount > 0 && (
