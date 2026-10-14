@@ -7,12 +7,17 @@ import {
   type ControlStationModel,
   type StationBody,
 } from '@/lib/control-station'
+import { WorldSpaceWeekBanner, WorldSpaceWeekChips } from '@/components/game/WorldSpaceWeek'
+import type { WswBanner } from '@/lib/wsw'
 import styles from './ControlStationBoard.module.css'
 
 interface ControlStationBoardProps {
   model: ControlStationModel
   onBody: (bodyId: string) => void
   onOpen: (signal: InstrumentSignal) => void
+  /** Opens the Build screen from a row that asks the player to build equipment. */
+  onBuild: () => void
+  banner: WswBanner
 }
 
 const STARS: readonly { x: number; y: number; r: number }[] = [
@@ -90,9 +95,11 @@ function EquipmentPreview({ kind }: { kind: InstrumentSignalKind }) {
   )
 }
 
-export function ControlStationBoard({ model, onBody, onOpen }: ControlStationBoardProps) {
+export function ControlStationBoard({ model, onBody, onOpen, onBuild, banner }: ControlStationBoardProps) {
   return (
     <div className={styles.workspace} data-testid="control-station">
+      <WorldSpaceWeekBanner banner={banner} />
+      <WorldSpaceWeekChips chips={model.skyBadges} />
       <div className={styles.map} data-testid="control-station-map" aria-hidden="true">
         <div className={styles.stage}>
           <svg className={styles.diagram} viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} aria-hidden="true">
@@ -170,6 +177,7 @@ export function ControlStationBoard({ model, onBody, onOpen }: ControlStationBoa
                       <i className={row.live ? styles.pipOn : styles.pip} aria-hidden="true" />
                       {row.status}
                     </span>
+                    <WorldSpaceWeekChips chips={row.wsw} />
                     {row.projects.length > 0 && (
                       <span className={styles.tags}>
                         {row.projects.map(project => (
@@ -178,6 +186,19 @@ export function ControlStationBoard({ model, onBody, onOpen }: ControlStationBoa
                       </span>
                     )}
                   </div>
+                  {row.buildPrompt && (
+                    <div className={styles.actions}>
+                      <button
+                        type="button"
+                        className={styles.open}
+                        data-testid="control-station-build"
+                        aria-label={`Build ${row.name}`}
+                        onClick={onBuild}
+                      >
+                        Build
+                      </button>
+                    </div>
+                  )}
                   {row.openSignal && row.previewKind && (
                     <div className={styles.actions}>
                       <span className={styles.thumb}>

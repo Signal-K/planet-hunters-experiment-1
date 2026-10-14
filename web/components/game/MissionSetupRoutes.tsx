@@ -18,6 +18,9 @@ import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { useHelp } from '@/components/ui/useHelp'
+import { WorldSpaceWeekBanner, WorldSpaceWeekChips } from '@/components/game/WorldSpaceWeek'
+import { skyEventNow } from '@/lib/data/sky-events'
+import { wswBanner, wswChipsForMission } from '@/lib/wsw'
 import styles from './MissionSetupRoutes.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -60,7 +63,7 @@ function LaunchGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c4 3 6 7 6 12l-6 7-6-7c0-5 2-9 6-12Z" /><circle cx="12" cy="10" r="2" /></svg>
 }
 
-function SetupFrame({ title, screen, onBack, children, eyebrow = 'CONTRACT → LAUNCH' }: { title: string; screen: Screen; onBack: () => void; children: ReactNode; eyebrow?: string }) {
+function SetupFrame({ title, screen, onBack, children, eyebrow = 'CONTRACT → LAUNCH', aside }: { title: string; screen: Screen; onBack: () => void; children: ReactNode; eyebrow?: string; aside?: ReactNode }) {
   // SSL-432: shared "?" slot. Renders nothing until this screen has a help topic.
   const help = useHelp(screen)
   return <div className={`game-screen theme-blueprint ${styles.root}`} data-testid="mission-setup-scaffold">
@@ -72,6 +75,7 @@ function SetupFrame({ title, screen, onBack, children, eyebrow = 'CONTRACT → L
     <header className={styles.header} data-dev-launcher={isDevLauncherEnabled()}>
       <button type="button" className={styles.back} onClick={onBack} aria-label="Back"><ArrowGlyph direction="previous" /></button>
       <div className={styles.title}><span>{eyebrow}</span><h1>{title}</h1></div>
+      {aside}
       {help.button && <div className={styles.help}>{help.button}</div>}
     </header>
     {help.layer}
@@ -107,13 +111,15 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
     const client = model?.client
     const clientJobs = client ? game.player.clientMissions[client.id] ?? 0 : 0
     const clientLevel = client ? clientAffinityLevel(clientJobs) : 0
-    return <SetupFrame title="Choose a contract" screen="missions" onBack={() => game.goBack()}>
+    const now = skyEventNow(isDevLauncherEnabled())
+    const wswChips = model ? wswChipsForMission(model.mission, game.player.badges, now) : []
+    return <SetupFrame title="Choose a contract" screen="missions" onBack={() => game.goBack()} aside={<WorldSpaceWeekBanner banner={wswBanner(game.player.badges, now)} className={styles.wswBanner} />}>
       <section className={styles.contractGallery} data-testid="mission-board-section-client" style={{ '--client-accent': client?.color ?? 'var(--ln-ok)' } as CSSProperties}>
         {model ? <>
           <button type="button" className={`${styles.carouselArrow} ${styles.previous}`} onClick={() => relay.selectRelativeSignal(-1)} disabled={relay.cardModels.length < 2} aria-label="Previous contract"><ArrowGlyph direction="previous" /></button>
           <article className={styles.contractSlide} aria-live="polite">
             <div className={styles.contractIdentity}><ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-cyan)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={88} /><div><span>{model.mission.payload?.type === 'satellite' ? 'INSTRUMENT LAUNCH' : `CLIENT CONTRACT ${relay.selectedIndex + 1} / ${relay.cardModels.length}`}</span><strong>{model.mission.payload?.type === 'satellite' ? model.mission.payload.name : client?.name ?? 'YOUR PROGRAM'}</strong></div></div>
-            <div className={styles.contractCopy}><h2>{model.mission.title}</h2><span className={styles.contractRoute} data-testid="contract-route">{model.routeLabel ?? `${model.targetCount} ELIGIBLE TARGET${model.targetCount === 1 ? '' : 'S'}`}</span><p>{model.mission.brief}</p></div>
+            <div className={styles.contractCopy}><h2>{model.mission.title}</h2><span className={styles.contractRoute} data-testid="contract-route">{model.routeLabel ?? `${model.targetCount} ELIGIBLE TARGET${model.targetCount === 1 ? '' : 'S'}`}</span><WorldSpaceWeekChips chips={wswChips} className={styles.wswChips} /><p>{model.mission.brief}</p></div>
             <dl className={styles.contractFacts}><div><dt>VALUE</dt><dd>{formatCurrency(model.displayPayout, { compact: true })}</dd></div><div><dt>CLIENT LEVEL</dt><dd>{client ? `L${clientLevel}` : 'PROGRAM'}</dd></div><div><dt>MISSION TIER</dt><dd>{model.mission.difficulty}</dd></div></dl>
             <div className={styles.contractCargo}><span>REQUIRED CARGO</span><RequiredCargo minerals={model.mission.requires.minerals} catalog={game.catalog.minerals} /></div>
             <img className={styles.contractRocket} src={rocketDisplayForConfig(game.rocket).img} alt="" />

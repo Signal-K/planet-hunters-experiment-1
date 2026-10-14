@@ -13,6 +13,9 @@ struct CatalogScene: Identifiable {
     let make: @MainActor () -> AnyView
 }
 
+/// 8 Oct 2026, 12:00 UTC: inside World Space Week.
+private let wswNoon: Double = 1791460800000
+
 @MainActor
 enum SceneCatalog {
     static let phone = CGFloat(402)
@@ -136,7 +139,17 @@ enum SceneCatalog {
             var gs = GameState()
             gs.player.freeOperations = true; gs.player.deepSpaceTelescopeBuilt = true; gs.player.saturnImagerLaunchedAt = 1
             let sigs = [InstrumentSignal(id: "n", kind: .deepSpace, title: "NEOCP"), InstrumentSignal(id: "s", kind: .saturn, title: "Frame")]
-            return ControlStationScreen(signals: sigs).environment(GameStore(state: gs)).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
+            return ControlStationScreen(signals: sigs).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
+        },
+        scene("control-station-built-phone", 874) {
+            var gs = GameState()
+            gs.player.freeOperations = true; gs.player.placed = ["ground-telescope"]; gs.player.deepSpaceTelescopeBuilt = true; gs.player.saturnImagerLaunchedAt = 1
+            gs.player.badges = ["rocket-revolution-2026": PlayerBadge(eventId: "rocket-revolution-2026", tier: .gold, earnedAt: wswNoon)]
+            let sigs = [InstrumentSignal(id: "n", kind: .deepSpace, title: "NEOCP"), InstrumentSignal(id: "s", kind: .saturn, title: "Frame")]
+            return ControlStationScreen(signals: sigs).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
+        },
+        scene("mission-board-wsw-phone", 874) {
+            MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },
         scene("sky-badges-phone", 1000) {
             var gs = GameState()
@@ -228,6 +241,8 @@ enum SceneCatalog {
             var gs = basePlayer()
             gs.player.completedMissions = [CompletedMissionRecord(id: "m1", title: "Iron for the pad", targetId: "ceres", clientName: "Vulcan", targetName: "Ceres", completedAt: t0, runId: "r1", kind: .client),
                                            CompletedMissionRecord(id: "m2", title: "Own survey run", targetId: "eros", clientName: nil, targetName: "Eros", completedAt: t0 - 86_400_000, runId: "r2", kind: .program)]
+            gs.player.transitSatelliteLaunchedAt = t0 - 200_000_000
+            gs.player.tessClassifications = ["toi-4": TessClassification(subjectId: "toi-4", verdict: .planet, ranges: [], submittedAt: t0 - 3_600_000)]
             return MissionHistoryScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
         },
         scene("ledger-phone", 1900) { NarrativeLedgerScreen().environment(GameStore(state: GameState())).environment(\.flatLayout, true) },

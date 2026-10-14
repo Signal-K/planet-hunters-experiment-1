@@ -1,4 +1,6 @@
 import type { InstrumentSignal, InstrumentSignalKind } from '@/lib/systems/InstrumentFeedSystem'
+import type { PlayerBadge } from '@/lib/data/sky-events'
+import { WSW_EVENT_IDS, wswChip, wswEventIdsForInstrument, type WswChip } from '@/lib/wsw'
 
 /**
  * Control Station registry (SSL-496).
@@ -14,14 +16,14 @@ import type { InstrumentSignal, InstrumentSignalKind } from '@/lib/systems/Instr
  * Name collision: this station is the instrument-hub route. It is not the
  * retired job-board building stored on `player.controlBuilt`.
  *
- * Ground telescopes are a standing Earth-surface network. They have no
- * candidate pool of their own. They read the same unresolved NEOCP digest the
- * Deep Space Telescope publishes after the player launches it (signal kind
- * `deep-space`). Both rows show that one queue, and Open on either row
- * forwards the first ready signal to the existing asteroid-discovery screen.
- * The digest stays gated on that launch because the classify screen will not
- * review candidates before then, and this station does not change those
- * screens. Before the launch the ground row is listed with nothing to open.
+ * Ground telescopes exist only once the player has built one (their structure id
+ * is in `player.placed`). Until then the station shows a build prompt in their
+ * place, not a standing row. A built ground telescope reads the same unresolved
+ * NEOCP digest the Deep Space Telescope publishes after the player launches it
+ * (signal kind `deep-space`), and Open on its row forwards the first ready
+ * signal to the existing asteroid-discovery screen. The digest stays gated on
+ * that launch because the classify screen will not review candidates before
+ * then, and this station does not change those screens.
  */
 
 export const MAP_WIDTH = 640
@@ -29,8 +31,13 @@ export const MAP_HEIGHT = 320
 
 export type StationPlayerFlag = 'transitSatelliteLaunchedAt' | 'deepSpaceTelescopeBuilt' | 'saturnImagerLaunchedAt'
 
+/** Structure id a player places to own ground telescopes. */
+export const GROUND_TELESCOPE_STRUCTURE_ID = 'ground-telescope'
+
 export interface StationPlayer {
   freeOperations?: boolean
+  placed?: readonly string[]
+  badges?: Record<string, PlayerBadge>
   transitSatelliteLaunchedAt?: number | null
   deepSpaceTelescopeBuilt?: boolean
   saturnImagerLaunchedAt?: number | null
@@ -64,8 +71,14 @@ export interface StationEquipment {
   locationId: string
   /** Projects this piece feeds, first project wins when several have items. */
   projectIds: readonly string[]
-  /** `standing` is on the station without a launch. A flag appears after that launch. */
-  presence: 'standing' | StationPlayerFlag
+  /**
+   * `built` needs `structureId` in `player.placed`. `standing` is on the
+   * station with no action by the player; no current equipment uses it. A flag
+   * appears after that launch.
+   */
+  presence: 'standing' | 'built' | StationPlayerFlag
+  /** Structure the player builds to own this equipment, for `presence: 'built'`. */
+  structureId?: string
   /** Which launch makes this piece's queue live. `always` needs no launch. */
   feedFlag: StationPlayerFlag | 'always'
   observingLabel: string
@@ -104,7 +117,8 @@ export const CONTROL_STATION_EQUIPMENT: readonly StationEquipment[] = [
     name: 'Ground telescopes',
     locationId: 'earth-surface',
     projectIds: ['asteroid-discovery'],
-    presence: 'standing',
+    presence: 'built',
+    structureId: GROUND_TELESCOPE_STRUCTURE_ID,
     feedFlag: 'deepSpaceTelescopeBuilt',
     observingLabel: 'Observing',
     readyLabel: 'Observing',
@@ -170,6 +184,10 @@ export interface ControlStationRow {
   readyCount: number
   openSignal: InstrumentSignal | null
   previewKind: InstrumentSignalKind | null
+  /** True for the placeholder shown where the player has not built this equipment yet. */
+  buildPrompt: boolean
+  /** World Space Week badges this equipment serves. */
+  wsw: WswChip[]
 }
 
 export interface ControlStationGroup {
@@ -198,6 +216,8 @@ export interface ControlStationModel {
   markers: ControlStationMarker[]
   groups: ControlStationGroup[]
   emptyLabel: string | null
+  /** Every World Space Week sky-event badge with its earned or open state. */
+  skyBadges: WswChip[]
 }
 
 function flagOn(player: StationPlayer, flag: StationPlayerFlag | 'always'): boolean {
@@ -206,10 +226,19 @@ function flagOn(player: StationPlayer, flag: StationPlayerFlag | 'always'): bool
   return value === true || (typeof value === 'number' && value > 0)
 }
 
-function isListed(equipment: StationEquipment, player: StationPlayer): boolean {
-  if (!player.freeOperations) return false
+function isBuilt(equipment: StationEquipment, player: StationPlayer): boolean {
   if (equipment.presence === 'standing') return true
+  if (equipment.presence === 'built') return !!equipment.structureId && !!player.placed?.includes(equipment.structureId)
   return flagOn(player, equipment.presence)
+}
+
+function isListed(equipment: StationEquipment, player: StationPlayer): boolean {
+  return !!player.freeOperations && isBuilt(equipment, player)
+}
+
+/** Equipment the player can build but has not: shown as a prompt, never as a live row. */
+function isBuildPrompt(equipment: StationEquipment, player: StationPlayer): boolean {
+  return !!player.freeOperations && equipment.presence === 'built' && !isBuilt(equipment, player)
 }
 
 function readySignals(
@@ -238,7 +267,9 @@ function rowFor(
   signals: readonly InstrumentSignal[],
   player: StationPlayer,
   hold: boolean,
+  now: number,
 ): ControlStationRow {
+  const wsw = wswEventIdsForInstrument(equipment.id).flatMap(id => wswChip(id, player.badges, now) ?? [])
   const feedLive = flagOn(player, equipment.feedFlag)
   const tags = equipment.projectIds.flatMap(projectId => {
     const project = projects.find(item => item.id === projectId)
@@ -261,6 +292,26 @@ function rowFor(
     readyCount: ready.length,
     openSignal: ready[0] ?? null,
     previewKind: ready[0]?.kind ?? null,
+    buildPrompt: false,
+    wsw,
+  }
+}
+
+function promptRow(equipment: StationEquipment, projects: readonly StationProject[]): ControlStationRow {
+  return {
+    equipmentId: equipment.id,
+    name: equipment.name,
+    status: 'None built',
+    live: false,
+    projects: equipment.projectIds.flatMap(projectId => {
+      const project = projects.find(item => item.id === projectId)
+      return project ? [{ id: project.id, label: project.label }] : []
+    }),
+    readyCount: 0,
+    openSignal: null,
+    previewKind: null,
+    buildPrompt: true,
+    wsw: [],
   }
 }
 
@@ -271,12 +322,15 @@ export function buildControlStation(input: {
   /** True only while the first feed response is still outstanding. */
   loading?: boolean
   catalog?: ControlStationCatalog
+  now?: number
 }): ControlStationModel {
+  const now = input.now ?? Date.now()
   const catalog = input.catalog ?? CONTROL_STATION_CATALOG
   const hold = !!input.loading
   const listed = catalog.equipment.filter(equipment => isListed(equipment, input.player))
+  const prompts = catalog.equipment.filter(equipment => isBuildPrompt(equipment, input.player))
   const locationOf = (equipment: StationEquipment) => catalog.locations.find(location => location.id === equipment.locationId)
-  const bodyIds = new Set(listed.flatMap(equipment => {
+  const bodyIds = new Set([...listed, ...prompts].flatMap(equipment => {
     const location = locationOf(equipment)
     return location ? [location.bodyId] : []
   }))
@@ -286,6 +340,7 @@ export function buildControlStation(input: {
     ...bodies.map(body => ({ id: body.id, label: body.name })),
   ]
   const activeBodyId = filters.some(filter => filter.id === input.bodyId) ? input.bodyId : 'all'
+  const inBody = (equipment: StationEquipment) => activeBodyId === 'all' || locationOf(equipment)?.bodyId === activeBodyId
   const visible = listed.filter(equipment => {
     if (activeBodyId === 'all') return true
     return locationOf(equipment)?.bodyId === activeBodyId
@@ -293,15 +348,18 @@ export function buildControlStation(input: {
 
   const groups: ControlStationGroup[] = []
   for (const location of catalog.locations) {
-    const rows = visible
-      .filter(equipment => equipment.locationId === location.id)
-      .map(equipment => rowFor(equipment, catalog.projects, input.signals, input.player, hold))
+    const rows = [
+      ...prompts.filter(equipment => equipment.locationId === location.id && inBody(equipment)).map(equipment => promptRow(equipment, catalog.projects)),
+      ...visible
+        .filter(equipment => equipment.locationId === location.id)
+        .map(equipment => rowFor(equipment, catalog.projects, input.signals, input.player, hold, now)),
+    ]
     if (rows.length === 0) continue
     groups.push({ locationId: location.id, label: location.groupLabel, rows })
   }
 
   const markers: ControlStationMarker[] = listed.map(equipment => {
-    const row = rowFor(equipment, catalog.projects, input.signals, input.player, hold)
+    const row = rowFor(equipment, catalog.projects, input.signals, input.player, hold, now)
     return {
       equipmentId: equipment.id,
       name: equipment.name,
@@ -317,5 +375,6 @@ export function buildControlStation(input: {
       ? 'No equipment at this location.'
       : 'Equipment links once Free Operations is open.'
 
-  return { filters, activeBodyId, bodies, markers, groups, emptyLabel }
+  const skyBadges = WSW_EVENT_IDS.flatMap(id => wswChip(id, input.player.badges, now) ?? [])
+  return { filters, activeBodyId, bodies, markers, groups, emptyLabel, skyBadges }
 }

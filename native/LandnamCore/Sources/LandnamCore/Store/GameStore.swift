@@ -58,7 +58,7 @@ public final class GameStore {
     /// The player lands on the hub with the mobile welcome pending; navigation from the web is dropped.
     @discardableResult public func adoptRemote(_ remote: GameState) -> Bool {
         guard CloudPull.shouldAdopt(local: state, remote: remote) else { return false }
-        var n = remote
+        var n = CloudPull.reconcile(remote: remote, keeping: state)
         n.screen = .hub; n.menuOpen = false; n.popup = nil
         // A web mission in flight keeps its mission and target so the hub can resume it.
         if remote.player.activeMission == nil { n.missionId = nil; n.targetId = nil }
