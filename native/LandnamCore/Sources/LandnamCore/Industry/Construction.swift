@@ -11,7 +11,7 @@ public struct StructureBlueprint: Equatable, Sendable, Identifiable {
 
 /// Earth Base plots and structures (port of `STRUCTURES`, `structureUnlocked`, `applyPlaceStructure`).
 public enum Construction {
-    public static let plotCount = 4
+    public static let plotCount = 10
     public static let buildMs = 10_000.0
 
     public static let all: [StructureBlueprint] = [

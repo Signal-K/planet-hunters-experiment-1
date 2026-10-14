@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Which landscape the Earth Base stands in. Stored by raw value so an unknown or missing value reads as `.mountains`.
-/// There is no picker yet (SSL-502); `-biome <name>` on the launch line overrides it for snapshots and QA.
+/// Which landscape the Earth Base stands in. Stored in the shared player save;
+/// `-biome <name>` remains a snapshot-only override for QA.
 enum EarthBiome: String, CaseIterable, Codable {
     case mountains, desert, tundra, coast
 
@@ -10,6 +10,10 @@ enum EarthBiome: String, CaseIterable, Codable {
     static func resolve(arguments: [String] = ProcessInfo.processInfo.arguments, defaults: UserDefaults = .standard) -> EarthBiome {
         if let i = arguments.firstIndex(of: "-biome"), arguments.indices.contains(i + 1), let b = EarthBiome(rawValue: arguments[i + 1]) { return b }
         return defaults.string(forKey: defaultsKey).flatMap { EarthBiome(rawValue: $0) } ?? .mountains
+    }
+
+    static func fromPlayer(_ value: String?, fallback: EarthBiome = .mountains) -> EarthBiome {
+        value.flatMap(EarthBiome.init(rawValue:)) ?? fallback
     }
 
     /// One tiled horizontal band of the background. Pixel sizes are the delivered 2x files (docs/design/biomes/manifest.json).
@@ -61,6 +65,36 @@ enum EarthBiome: String, CaseIterable, Codable {
         return [p("rock-1", 702, 542, 330.5, 531), p("rock-2", 312, 418, 153, 406), p("rock-3", 420, 330, 191.5, 318),
                 p("rock-4", 356, 488, 153.5, 477), p("rock-5", 286, 186, 135.5, 174),
                 p("shrub-1", 592, 424, 271.5, 413), p("shrub-2", 650, 394, 331, 383)]
+    }
+}
+
+struct EarthBiomePicker: View {
+    @Binding var biome: EarthBiome
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("AGENCY LANDSCAPE").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.textDim)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                ForEach(EarthBiome.allCases, id: \.self) { option in
+                    Button { biome = option } label: {
+                        HStack(spacing: 7) {
+                            Rectangle().fill(option.swatch).frame(width: 16, height: 16).overlay(Rectangle().stroke(Theme.hudInk, lineWidth: 1))
+                            Text(option.rawValue.uppercased()).font(AppFont.display(14)).tracking(0.8)
+                            Spacer(minLength: 0)
+                        }
+                        .foregroundStyle(Theme.hudInk).padding(.horizontal, 9).frame(minHeight: 44)
+                        .background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(option == biome ? Theme.teal : Theme.hudInk.opacity(0.35), lineWidth: option == biome ? 3 : 1.5))
+                    }.buttonStyle(.plain).accessibilityLabel("Choose \(option.rawValue) landscape")
+                }
+            }
+        }
+    }
+}
+
+private extension EarthBiome {
+    var swatch: Color {
+        switch self { case .mountains: Theme.chalk; case .desert: Theme.hex(0xBD8D4C); case .tundra: Theme.hex(0x84906E); case .coast: Theme.hex(0x356C63) }
     }
 }
 

@@ -26,7 +26,7 @@ export const PREFABS: readonly Prefab[] = [
     id: 'build-plot',
     name: 'Build Plot',
     category: 'site',
-    description: 'A placement slot at Earth Base. Four sit in a row on the hub surface; each holds at most one structure.',
+    description: 'A placement slot at Earth Base. Ten sit across two shallow side-on rows; each holds at most one structure.',
     components: [{ type: 'BuildPlot', index: 0 }],
   },
   {
@@ -125,14 +125,12 @@ export function instantiate(prefab: Prefab, opts: InstantiateOptions): EntityDat
 }
 
 /**
- * The four Earth Base build plots, in index order. The single definition the
+ * The ten Earth Base build plots, in index order. The single definition the
  * hub scene, the build-place screen and the hub screen should all read.
  */
 export const BUILD_PLOT_POSITIONS: readonly Vector2[] = [
-  { x: 60, y: 570 },
-  { x: 154, y: 570 },
-  { x: 248, y: 570 },
-  { x: 342, y: 570 },
+  { x: 60, y: 570 }, { x: 154, y: 570 }, { x: 248, y: 570 }, { x: 342, y: 570 }, { x: 362, y: 538 },
+  { x: 42, y: 610 }, { x: 122, y: 610 }, { x: 202, y: 610 }, { x: 282, y: 610 }, { x: 362, y: 610 },
 ]
 
 export function buildPlotEntities(): EntityData[] {

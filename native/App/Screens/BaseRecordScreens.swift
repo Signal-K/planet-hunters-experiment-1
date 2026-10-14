@@ -4,6 +4,7 @@ import LandnamCore
 /// Opening scene (mirrors web IntroScreen): wordmark, one sentence, one button into the base.
 struct IntroScreen: View {
     @Environment(GameStore.self) private var store
+    @State private var biome: EarthBiome = .mountains
     var body: some View {
         let p = store.player
         let returning = p.missionsDone > 0
@@ -16,7 +17,11 @@ struct IntroScreen: View {
                  ? "Missions completed: \(p.missionsDone) · Total earned: \(Economy.format(francs: p.francs))"
                  : "Build your base. Mine the asteroids. Fulfill the contract. The belt is waiting.")
                 .font(AppFont.body(16)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center).frame(maxWidth: 420)
-            PrimaryButton(title: returning ? "Resume operations" : "Begin operations") { store.go(returning || !p.placed.isEmpty ? .hub : .build) }.frame(maxWidth: 320)
+            if !returning && p.placed.isEmpty { EarthBiomePicker(biome: $biome).frame(maxWidth: 420) }
+            PrimaryButton(title: returning ? "Resume operations" : "Begin operations") {
+                if !returning && p.placed.isEmpty { store.state.player.earthBiome = biome.rawValue }
+                store.go(returning || !p.placed.isEmpty ? .hub : .build)
+            }.frame(maxWidth: 320)
             Spacer(minLength: 0)
         }
         .padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)

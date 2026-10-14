@@ -7,6 +7,8 @@ import { DEV_GROUPS } from '@/lib/devPresets'
 import PageSurface from '@/components/ui/PageSurface'
 import { TRAINING_TRIES } from '@/lib/data'
 import { TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
+import { AgencyBiomePicker } from '@/components/game/hub/AgencyBiomePicker'
+import { earthBiome } from '@/lib/base-biome'
 
 interface SettingsSheetProps {
   onClose: () => void
@@ -146,6 +148,11 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
             </Row>
           </Section>
         )}
+
+        <Section label="Agency landscape">
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)', marginBottom: 8 }}>Move your agency to a different Earth biome.</div>
+          <AgencyBiomePicker compact value={earthBiome(game.player.earthBiome)} onChange={biome => game.setPlayer(player => ({ ...player, earthBiome: biome }))} />
+        </Section>
 
         <Section label="Training">
           <div className="patch-shelf" data-testid="training-patch-shelf" role="list" aria-label="Mission patches">

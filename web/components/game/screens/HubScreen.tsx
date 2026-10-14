@@ -16,7 +16,6 @@ import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
-import { CrewWalkers } from '@/components/game/hub/CrewWalkers'
 import { EARTH_BASE_WIDE } from '@/lib/scene/compositions'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
@@ -39,6 +38,7 @@ import { missionResumeScreen } from '@/lib/mission-resume'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import OpsHubSheet from '@/components/game/hub/OpsHubSheet'
 import { useHelp } from '@/components/ui/useHelp'
+import { earthBiome } from '@/lib/base-biome'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
@@ -301,6 +301,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       status: isUnderConstruction(startedAt, kind) ? ('building' as const) : ('ok' as const),
       dimmed: isDimmedBuildingKind(kind),
       active: activeBuilding === kind,
+      upgradeLevel: kind === 'launchpad' ? (player.launchpadUpgraded ? 2 : 1) : kind === 'deep-space-telescope' ? (player.deepSpaceTelescopeLevel ?? 1) : kind === 'surface-silo' && player.subsurfaceBuilt?.includes('deep-mineral-vault') ? 2 : 1,
       buildStartedAt: startedAt,
     }]
   })
@@ -439,9 +440,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden' }}
         >
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
-          <HubWorldBackground phase={skyPhase} />
+          <HubWorldBackground phase={skyPhase} biome={earthBiome(player.earthBiome)} />
           <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
-          <CrewWalkers road={EARTH_BASE_WIDE.roadPaths?.[0]} />
           <SkyEventChip surface="base" />
           {!subsurface && <OrionidsTeaser />}
 

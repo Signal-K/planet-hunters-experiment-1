@@ -50,6 +50,36 @@
       "components": [
         { "type": "BuildPlot", "index": 3 }
       ]
+    },
+    {
+      "id": "plot-4", "name": "Plot 4",
+      "transform": { "position": { "x": 362, "y": 538 }, "rotation": 0, "scale": { "x": 1, "y": 1 } },
+      "components": [{ "type": "BuildPlot", "index": 4 }]
+    },
+    {
+      "id": "plot-5", "name": "Plot 5",
+      "transform": { "position": { "x": 42, "y": 610 }, "rotation": 0, "scale": { "x": 1, "y": 1 } },
+      "components": [{ "type": "BuildPlot", "index": 5 }]
+    },
+    {
+      "id": "plot-6", "name": "Plot 6",
+      "transform": { "position": { "x": 122, "y": 610 }, "rotation": 0, "scale": { "x": 1, "y": 1 } },
+      "components": [{ "type": "BuildPlot", "index": 6 }]
+    },
+    {
+      "id": "plot-7", "name": "Plot 7",
+      "transform": { "position": { "x": 202, "y": 610 }, "rotation": 0, "scale": { "x": 1, "y": 1 } },
+      "components": [{ "type": "BuildPlot", "index": 7 }]
+    },
+    {
+      "id": "plot-8", "name": "Plot 8",
+      "transform": { "position": { "x": 282, "y": 610 }, "rotation": 0, "scale": { "x": 1, "y": 1 } },
+      "components": [{ "type": "BuildPlot", "index": 8 }]
+    },
+    {
+      "id": "plot-9", "name": "Plot 9",
+      "transform": { "position": { "x": 362, "y": 610 }, "rotation": 0, "scale": { "x": 1, "y": 1 } },
+      "components": [{ "type": "BuildPlot", "index": 9 }]
     }
   ]
 }

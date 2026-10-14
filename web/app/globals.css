@@ -180,6 +180,30 @@
   --ln-glass-blur:     blur(8px);
 }
 
+/* TSP Earth Base: a close side-on agency ground scene, deliberately warm and
+   terrestrial rather than the retired icy-blue panorama. Each band tiles on
+   its own axis so a wider viewport adds landscape instead of stretching it. */
+.agency-biome-backdrop { position: absolute; inset: 0; overflow: hidden; z-index: 0; --biome-sky: #b9d9ee; --biome-horizon: #e7f1ea; --biome-far: #8da982; --biome-mid: #4d7351; --biome-ground: #5d7c38; --biome-road: #41484a; --biome-rock: #596160; }
+.agency-biome-backdrop > span { position: absolute; inset-inline: 0; display: block; pointer-events: none; }
+.agency-biome-backdrop__sky { inset-block: 0 44%; background: radial-gradient(ellipse at 74% 18%, rgba(255,255,255,.86) 0 8%, transparent 22%), radial-gradient(ellipse at 16% 30%, rgba(255,255,255,.7) 0 6%, transparent 18%), linear-gradient(180deg, var(--biome-sky), var(--biome-horizon)); }
+.agency-biome-backdrop__far { top: 29%; bottom: 38%; background: linear-gradient(135deg, transparent 0 8%, var(--biome-far) 8% 18%, transparent 18% 23%, var(--biome-far) 23% 36%, transparent 36% 42%, var(--biome-far) 42% 56%, transparent 56% 62%, var(--biome-far) 62% 77%, transparent 77%); background-size: 720px 100%; opacity: .8; }
+.agency-biome-backdrop__mid { top: 43%; bottom: 31%; background: repeating-linear-gradient(90deg, transparent 0 14px, var(--biome-mid) 14px 24px, transparent 24px 33px), linear-gradient(12deg, transparent 0 43%, var(--biome-mid) 44% 100%); opacity: .95; }
+.agency-biome-backdrop__verge { top: 61%; bottom: 22%; background: repeating-linear-gradient(90deg, transparent 0 8px, color-mix(in srgb, var(--biome-ground) 72%, var(--biome-mid)) 8px 14px, transparent 14px 22px), var(--biome-ground); }
+.agency-biome-backdrop__road { top: 76%; bottom: 15%; background: repeating-linear-gradient(90deg, transparent 0 34px, rgba(255,255,255,.8) 34px 52px, transparent 52px 76px), var(--biome-road); border-block: 3px solid var(--hub-outline); }
+.agency-biome-backdrop__grass { top: 85%; bottom: 0; background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--biome-ground) 92%, #111) 0 2px, transparent 2px 6px), var(--biome-ground); }
+.agency-biome-backdrop__rocks { inset: auto 0 18% !important; height: 34px; background: radial-gradient(ellipse at 8% 90%, var(--biome-rock) 0 13px, transparent 14px), radial-gradient(ellipse at 91% 80%, var(--biome-rock) 0 18px, transparent 19px), radial-gradient(ellipse at 47% 92%, var(--biome-rock) 0 9px, transparent 10px); }
+.agency-biome-backdrop[data-biome='desert'] { --biome-sky: #d8e4e2; --biome-horizon: #f3dfb7; --biome-far: #bd9d6d; --biome-mid: #9a7549; --biome-ground: #bd8d4c; --biome-road: #55493d; --biome-rock: #765a42; }
+.agency-biome-backdrop[data-biome='tundra'] { --biome-sky: #cfdbe2; --biome-horizon: #eff1e8; --biome-far: #99a69f; --biome-mid: #667874; --biome-ground: #84906e; --biome-road: #465054; --biome-rock: #6c746e; }
+.agency-biome-backdrop[data-biome='coast'] { --biome-sky: #acd7df; --biome-horizon: #e8efd8; --biome-far: #779f93; --biome-mid: #356c63; --biome-ground: #6f914d; --biome-road: #46515b; --biome-rock: #586d68; }
+.agency-biome-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; width: min(100%, 400px); }
+.agency-biome-picker__option { min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 2px solid var(--hub-outline); border-radius: 8px; background: var(--hub-panel); color: var(--ln-text); cursor: pointer; font: 800 12px/1 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; }
+.agency-biome-picker__option[data-active] { border-color: var(--hub-chalk); box-shadow: 3px 3px 0 var(--hub-chalk); }
+.agency-biome-picker__swatch { width: 18px; height: 18px; border: 1px solid var(--hub-outline); background: var(--hub-chalk); }
+.agency-biome-picker__option[data-biome='desert'] .agency-biome-picker__swatch { background: #bd8d4c; }.agency-biome-picker__option[data-biome='tundra'] .agency-biome-picker__swatch { background: #84906e; }.agency-biome-picker__option[data-biome='coast'] .agency-biome-picker__swatch { background: #356c63; }
+.agency-biome-picker--compact { width: 100%; }.agency-biome-picker--compact .agency-biome-picker__option { font-size: 10px; }
+.intro-biome-choice { display: grid; gap: 8px; width: min(100%, 400px); margin-top: 4px; color: var(--ln-text); font: 800 11px/1 var(--ln-font-display); letter-spacing: .1em; text-align: left; }
+.earth-base-structure__upgrade-stripe { position: absolute; z-index: 3; top: 16%; left: 16%; right: 16%; height: max(4px, 5%); border: 1px solid var(--hub-outline); background: var(--hub-mint); box-shadow: 0 0 0 2px color-mix(in srgb, var(--hub-panel) 72%, transparent); }
+
 .ln-starfield {
   position: relative;
   background-color: var(--ln-shell);
@@ -3563,4 +3587,3 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 .patch-status { font: 14px/1.3 var(--ln-font-body); color: var(--ln-bp-ink-dim, #48596a); margin-top: 2px; }
 .patch[data-state='active'] .patch-status { color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font-weight: 700; }
 .patch[data-state='done'] .patch-status { color: var(--ln-bp-green, #17703f); }
-

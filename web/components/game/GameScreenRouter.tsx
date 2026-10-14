@@ -170,6 +170,8 @@ function ScreenBody({
       return (
         <IntroScreen
           onBegin={() => game.go('build')}
+          biome={game.player.earthBiome}
+          onBiomeChange={biome => game.setPlayer(player => ({ ...player, earthBiome: biome }))}
           returning={game.player.missionsDone > 0 || game.player.placed.length > 0}
           missionsDone={game.player.missionsDone}
           totalEarned={game.player.francs}
@@ -448,7 +450,7 @@ function ScreenBody({
               const structure = game.catalog.structures.find(s => s.id === kind)
               const occupied = new Set(Object.values(game.player.placementPlots ?? {}))
               if (game.player.placed.includes('launchpad') && game.player.placementPlots?.launchpad == null) occupied.add(0)
-              const plot = [0, 1, 2, 3].find(i => !occupied.has(i))
+              const plot = Array.from({ length: 10 }, (_, i) => i).find(i => !occupied.has(i))
               if (plot == null) { game.addToast('Every Base plot is taken.', 'warn'); return false }
               const placed = game.placeStructure(structure, kind, plot)
               game.addToast(placed ? `${recipe.name} placed at the Base. It finishes building in a few seconds.` : `${recipe.name} cannot be built yet. Check its unlock and cost.`, placed ? 'ok' : 'warn')

@@ -12,6 +12,8 @@ export interface HubBuildingDef {
   dimmed?: boolean
   rocketVariant?: 'explorer' | 'prospector'
   active?: boolean
+  /** A saturated service stripe makes an installed upgrade readable on the structure itself. */
+  upgradeLevel?: number
   /** When still under construction, the timestamp it started. Drives the build-reveal animation. */
   buildStartedAt?: number
 }
@@ -162,6 +164,7 @@ export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] })
             key={`${building.kind}-${building.plotX}`}
             className={`earth-base-structure earth-base-structure--${building.kind}`}
             data-structure={building.kind}
+            data-upgrade-level={building.upgradeLevel && building.upgradeLevel > 1 ? building.upgradeLevel : undefined}
             style={{
               left: `${left}%`,
               bottom: 'var(--hub-ground)',
@@ -173,9 +176,10 @@ export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] })
               aspectRatio: `${size.width} / ${size.height}`,
               opacity: building.dimmed ? 0.6 : 1,
             }}
-          >
-            <StructureSprite kind={building.kind} active={building.active} buildStartedAt={building.buildStartedAt} />
-          </span>
+            >
+              <StructureSprite kind={building.kind} active={building.active} buildStartedAt={building.buildStartedAt} />
+              {!!building.upgradeLevel && building.upgradeLevel > 1 && <span className="earth-base-structure__upgrade-stripe" aria-hidden />}
+            </span>
         )
       })}
     </div>

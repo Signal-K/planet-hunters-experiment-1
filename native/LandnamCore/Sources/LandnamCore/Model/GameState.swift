@@ -19,6 +19,8 @@ public enum LicenseGrade: String, Codable, Sendable { case one = "Grade I", two 
 /// save can move between clients. Fields not yet ported live in `extras` and are
 /// written back untouched.
 public struct Player: Codable, Equatable, Sendable {
+    /// Home landscape is selected during onboarding and shared with the web save.
+    public var earthBiome: String?
     public var francs: Int = Economy.startingFrancs
     public var activeMission: ActiveMission?
     public var missionRunId: String?
@@ -128,7 +130,7 @@ public struct Player: Codable, Equatable, Sendable {
             consumed.insert(key)
             if let value = try? c.decodeIfPresent(T.self, forKey: AnyKey(key)) { keep = value }
         }
-        get("francs", &francs); getOpt("activeMission", &activeMission); getOpt("missionRunId", &missionRunId)
+        getOpt("earthBiome", &earthBiome); get("francs", &francs); getOpt("activeMission", &activeMission); getOpt("missionRunId", &missionRunId)
         getOpt("missionPhase", &missionPhase); getOpt("miningCargoInProgress", &miningCargoInProgress)
         getOpt("deliveryUnloadStartedAt", &deliveryUnloadStartedAt); getOpt("landingStartedAt", &landingStartedAt)
         getOpt("landingReturnStartedAt", &landingReturnStartedAt); getOpt("hasLanded", &hasLanded)
@@ -172,7 +174,7 @@ public struct Player: Codable, Equatable, Sendable {
         for (key, value) in extras { try c.encode(value, forKey: AnyKey(key)) }
         func put<T: Encodable>(_ key: String, _ value: T) throws { try c.encode(value, forKey: AnyKey(Player.renamed[key] ?? key)) }
         func putOpt<T: Encodable>(_ key: String, _ value: T?) throws { if let value { try c.encode(value, forKey: AnyKey(key)) } }
-        try put("francs", francs); try putOpt("activeMission", activeMission); try putOpt("missionRunId", missionRunId)
+        try putOpt("earthBiome", earthBiome); try put("francs", francs); try putOpt("activeMission", activeMission); try putOpt("missionRunId", missionRunId)
         try putOpt("missionPhase", missionPhase); try putOpt("miningCargoInProgress", miningCargoInProgress)
         try putOpt("deliveryUnloadStartedAt", deliveryUnloadStartedAt); try putOpt("landingStartedAt", landingStartedAt)
         try putOpt("landingReturnStartedAt", landingReturnStartedAt); try putOpt("hasLanded", hasLanded)

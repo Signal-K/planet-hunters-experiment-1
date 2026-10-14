@@ -2,6 +2,8 @@
 
 import { PRODUCT_OPERATIONS_LABEL, PRODUCT_WORDMARK } from '@/lib/brand'
 import { formatCurrency } from '@/lib/format'
+import { AgencyBiomePicker } from '@/components/game/hub/AgencyBiomePicker'
+import type { EarthBiome } from '@/lib/base-biome'
 
 interface IntroScreenProps {
   onBegin: () => void
@@ -9,6 +11,8 @@ interface IntroScreenProps {
   missionsDone?: number
   totalEarned?: number
   awaitingRemoteState?: boolean
+  biome?: EarthBiome
+  onBiomeChange?: (biome: EarthBiome) => void
 }
 
 export default function IntroScreen({
@@ -17,6 +21,8 @@ export default function IntroScreen({
   missionsDone = 0,
   totalEarned = 0,
   awaitingRemoteState = false,
+  biome = 'mountains',
+  onBiomeChange,
 }: IntroScreenProps) {
   return (
     <div className="game-screen intro-screen theme-blueprint">
@@ -43,6 +49,12 @@ export default function IntroScreen({
               ? `Missions completed: ${missionsDone} · Total earned: ${formatCurrency(totalEarned, { compact: true })}`
               : 'Build your base. Mine the asteroids. Fulfill the contract. The belt is waiting.'}
           </p>
+          {!returning && onBiomeChange && (
+            <div className="intro-biome-choice">
+              <span>CHOOSE YOUR AGENCY LANDSCAPE</span>
+              <AgencyBiomePicker value={biome} onChange={onBiomeChange} />
+            </div>
+          )}
           <button className="intro-begin-btn" onClick={onBegin} data-testid="intro-begin-btn">
             {returning ? 'RESUME OPERATIONS' : 'BEGIN OPERATIONS'}
           </button>

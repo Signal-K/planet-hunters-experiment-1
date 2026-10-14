@@ -214,6 +214,8 @@ export interface ResourceFocus {
 }
 
 export interface Player {
+  /** Home landscape is a player choice, shared with the native Earth Base. */
+  earthBiome?: 'mountains' | 'desert' | 'tundra' | 'coast'
   francs: number
   activeMission: { id: string; label: string } | null
   /** Paused operational contexts. There is intentionally no artificial cap. */

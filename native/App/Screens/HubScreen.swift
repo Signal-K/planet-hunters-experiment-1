@@ -37,8 +37,9 @@ struct HubScreen: View {
             let layout = BaseLayout(size: size, insets: insets, zones: zones, hasPlaced: store.player.placed.contains { $0 != "launchpad" && store.player.placementPlots[$0] != nil })
             let portrait = layout.portrait
             let k = layout.k, groundY = layout.groundY
+            let selectedBiome = EarthBiome.fromPlayer(store.player.earthBiome, fallback: biome)
             ZStack(alignment: .topLeading) {
-                BiomeBackdrop(layout: BiomeLayout(biome: biome, size: size, roadY: layout.roadY, exclusions: layout.exclusions))
+                BiomeBackdrop(layout: BiomeLayout(biome: selectedBiome, size: size, roadY: layout.roadY, exclusions: layout.exclusions))
                 ForEach(Array(BaseLayout.slots.enumerated()), id: \.offset) { i, slot in
                     building(slot.name, sprite: slot.sprite, aspect: slot.aspect, width: layout.width(slot),
                              x: layout.centreX(i), groundY: layout.structureY) { store.go(slot.tap) }
@@ -140,7 +141,9 @@ struct HubScreen: View {
 
     /// Player-placed structures stand on the four apron plots, nearer the camera than the main buildings.
     @ViewBuilder private func placedStructure(_ kind: String, plot: Int, width w: CGFloat, groundY: CGFloat, k: CGFloat, portrait: Bool) -> some View {
-        let x = w * (portrait ? [0.15, 0.38, 0.62, 0.85] : [0.08, 0.30, 0.70, 0.92] as [CGFloat])[min(max(plot, 0), 3)], y = groundY
+        let portraitSlots: [CGFloat] = [0.10, 0.30, 0.50, 0.70, 0.90, 0.10, 0.30, 0.50, 0.70, 0.90]
+        let landscapeSlots: [CGFloat] = [0.06, 0.16, 0.28, 0.40, 0.52, 0.64, 0.76, 0.88, 0.22, 0.82]
+        let x = w * (portrait ? portraitSlots : landscapeSlots)[min(max(plot, 0), 9)], y = groundY
         switch kind {
         case "refinery":
             structure("Refinery", art: StructureShape(kind: .refinery), width: 70 * k, x: x, groundY: y) { store.go(.refinery) }
