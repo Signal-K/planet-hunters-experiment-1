@@ -2961,7 +2961,9 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
   flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: row; align-items: center; gap: 10px;
   text-align: left; background: transparent; border: 0; padding: 0 4px; color: inherit; cursor: pointer;
 }
-.flight-plan-text { display: flex; flex-direction: column; min-width: 0; }
+.flight-plan-text { display: flex; flex-direction: column; min-width: 0; animation: ops-fade 200ms ease-out both; }
+@keyframes ops-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .flight-plan-text { animation: none; } }
 .flight-plan-kicker { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); }
 .flight-plan-kicker[data-state='done'] { color: var(--ln-bp-green, #17703f); }
 /* SSL-442 Ops call-sign badge: OPS plus three signal bars that tick up in 240ms. */
@@ -2971,6 +2973,7 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 .ops-bars i:nth-child(1) { height: 3px; } .ops-bars i:nth-child(2) { height: 5px; animation-delay: 80ms; } .ops-bars i:nth-child(3) { height: 8px; animation-delay: 160ms; }
 @keyframes ops-bar { from { opacity: 0; transform: scaleY(.2); transform-origin: bottom; } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .ops-bars i { animation: none; } }
+.ops-badge[data-state='done'] { border-color: var(--ln-bp-green, #17703f); color: var(--ln-bp-green, #17703f); background: color-mix(in srgb, var(--ln-bp-green, #17703f) 10%, transparent); }
 .flight-plan-action { font-size: 14px; line-height: 1.3; }
 .flight-plan-go { min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: 8px; cursor: pointer; background: var(--ln-bp-blue, #1f78c1); color: var(--ln-bp-paper, #fff); border: 1px solid var(--ln-bp-blue, #1f78c1); font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; }
 .flight-plan-btn, .flight-plan-skip, .flight-plan-chip {

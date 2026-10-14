@@ -6,12 +6,16 @@ import LandnamCore
 struct CoachStrip: View {
     @Environment(GameStore.self) private var store
     let coach: FlightPlan.Coach
+    /// Step number just finished; shows "COPY, STEP n DONE" with a green badge for 1.5s (mirrors web).
+    @State private var doneStep: Int?
+    @State private var lastStep: Int?
 
     var body: some View {
         HStack(spacing: 12) {
-            opsBadge
+            opsBadge(done: doneStep != nil)
             VStack(alignment: .leading, spacing: 2) {
-                Text(coach.kicker).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.teal)
+                Text(doneStep.map { "COPY, STEP \($0) DONE" } ?? coach.kicker).font(AppFont.display(14)).tracking(1.2)
+                    .foregroundStyle(doneStep != nil ? Theme.green : Theme.teal)
                 Text(coach.objective).font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink)
                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
@@ -29,6 +33,14 @@ struct CoachStrip: View {
         .frame(maxWidth: .infinity, minHeight: 56)
         .background(Theme.hudPanel)
         .overlay(alignment: .top) { Rectangle().fill(Theme.hudInk).frame(height: 1) }
+        .onAppear { lastStep = Self.stepNumber(coach.kicker) }
+        .onChange(of: coach.kicker) { _, kicker in
+            let n = Self.stepNumber(kicker)
+            defer { lastStep = n }
+            guard let prev = lastStep, let n, n > prev else { return }
+            doneStep = prev
+            Task { try? await Task.sleep(for: .milliseconds(1500)); doneStep = nil }
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(coach.kicker). \(coach.objective). \(coach.radio)")
     }
@@ -36,15 +48,19 @@ struct CoachStrip: View {
 
 extension CoachStrip {
     /// Ops call-sign badge (mirrors web .ops-badge): square pixel tile with three signal bars.
-    var opsBadge: some View {
+    static func stepNumber(_ kicker: String) -> Int? {
+        kicker.components(separatedBy: "STEP ").last.flatMap { Int($0.prefix { $0.isNumber }) }
+    }
+
+    func opsBadge(done: Bool) -> some View {
         HStack(spacing: 4) {
-            Text("OPS").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+            Text("OPS").font(AppFont.display(14)).tracking(1.2).foregroundStyle(done ? Theme.green : Theme.ink)
             HStack(alignment: .bottom, spacing: 2) {
-                ForEach([6, 10, 14], id: \.self) { h in Rectangle().fill(Theme.teal).frame(width: 3, height: CGFloat(h)) }
+                ForEach([6, 10, 14], id: \.self) { h in Rectangle().fill(done ? Theme.green : Theme.teal).frame(width: 3, height: CGFloat(h)) }
             }
         }
         .padding(.horizontal, 8).frame(minHeight: 44)
-        .background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+        .background(Theme.paper).overlay(Rectangle().stroke(done ? Theme.green : Theme.ink, lineWidth: 2))
         .accessibilityHidden(true)
     }
 }

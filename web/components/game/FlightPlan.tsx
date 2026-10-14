@@ -100,9 +100,9 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
           aria-expanded={expanded}
           onClick={() => setExpanded(v => !v)}
         >
-          <span className="ops-badge" data-testid="ops-badge" aria-hidden="true">OPS<span className="ops-bars"><i /><i /><i /></span></span>
-          <span className="flight-plan-text">
-          <span className="flight-plan-kicker" data-state={doneStep ? 'done' : 'live'} data-testid="flight-plan-kicker">{doneStep ? `Copy · Step ${doneStep} done` : `${isTryStep ? step.try : step.title} Ops · Step ${stepIndex + 1}/${total}`}</span>
+          <span className="ops-badge" data-testid="ops-badge" data-state={doneStep ? 'done' : 'live'} aria-hidden="true">OPS<span className="ops-bars" key={step.id}><i /><i /><i /></span></span>
+          <span className="flight-plan-text" key={`${step.id}-${doneStep ?? 'live'}`}>
+          <span className="flight-plan-kicker" data-state={doneStep ? 'done' : 'live'} data-testid="flight-plan-kicker">{doneStep ? `Copy, step ${doneStep} done` : `${isTryStep ? step.try : step.title} Ops · Step ${stepIndex + 1}/${total}`}</span>
           <span className="flight-plan-action">{action}</span>
           </span>
         </button>
