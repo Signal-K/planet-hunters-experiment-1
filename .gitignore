@@ -95,3 +95,6 @@ __pycache__/
 !.claude/
 .claude/*
 !.claude/settings.json
+# Retired runner output retained locally, never committed
+/web/cypress/screenshots/
+/web/cypress/videos/

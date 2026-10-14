@@ -146,11 +146,21 @@ enum SceneCatalog {
 
     static var all: [CatalogScene] { [
         scene("intro-phone", 700) { IntroScreen().environment(GameStore(state: GameState())) },
+        scene("intro-biome-phone", 874) { IntroScreen().environment(GameStore(state: GameState())) },
+        scene("intro-biome-landscape", 402, w: 874) { IntroScreen().environment(GameStore(state: GameState())) },
+        scene("intro-biome-desktop", 900, w: 1440) { IntroScreen().environment(GameStore(state: GameState())) },
         scene("takeon-live", 874) { TakeonSceneScreen(onExit: {}).environment(GameStore()) },
         scene("hub-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore()) },
         scene("hub-phone-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)).environment(GameStore(state: landscapeBase())) },
         scene("hub-desktop", 680, w: 1000) { HubScreen().environment(GameStore()) },
         scene("hub-biome-mountains-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .mountains).environment(GameStore()) },
+        scene("hub-biome-desert-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .desert).environment(GameStore()) },
+        scene("hub-biome-tundra-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .tundra).environment(GameStore()) },
+        scene("hub-biome-coast-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .coast).environment(GameStore()) },
+        scene("hub-biome-mountains-desktop", 900, w: 1440) { HubScreen(biome: .mountains).environment(GameStore()) },
+        scene("hub-biome-desert-desktop", 900, w: 1440) { HubScreen(biome: .desert).environment(GameStore()) },
+        scene("hub-biome-tundra-desktop", 900, w: 1440) { HubScreen(biome: .tundra).environment(GameStore()) },
+        scene("hub-biome-coast-desktop", 900, w: 1440) { HubScreen(biome: .coast).environment(GameStore()) },
         scene("hub-live", 874) { HubScreen().environment(GameStore()) },
         scene("hub-live-built", 874) {
             var gs = GameState()
@@ -187,6 +197,9 @@ enum SceneCatalog {
             return HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), startX: world.shaftFocusX, startDepth: 1).environment(GameStore(state: siloState(ore: 24)))
         },
         scene("hub-biome-mountains-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), biome: .mountains).environment(GameStore(state: landscapeBase())) },
+        scene("hub-biome-desert-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), biome: .desert).environment(GameStore(state: landscapeBase())) },
+        scene("hub-biome-tundra-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), biome: .tundra).environment(GameStore(state: landscapeBase())) },
+        scene("hub-biome-coast-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), biome: .coast).environment(GameStore(state: landscapeBase())) },
         scene("hub-structures-phone", 874) {
             var gs = GameState()
             gs.player.placed = ["launchpad", "surface-silo", "astronaut-academy"]
@@ -296,6 +309,21 @@ enum SceneCatalog {
         scene("coach-mining-phone", 874) {
             var gs = GameState(); gs.player.placed = ["launchpad", "hangar"]; gs.player.placementPlots = ["launchpad": 0, "hangar": 1]
             return coached(HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 0, trailing: 0)), gs, screen: .hub)
+        },
+        scene("coach-mining-laser-phone", 874) {
+            var gs = miningState(rover: false); gs.player.freeOperations = false; gs.player.missionsDone = 0
+            gs.player.placed = ["launchpad"]
+            return coached(MiningScreen(), gs, screen: .mining)
+        },
+        scene("coach-mining-laser-landscape", 402, w: 874) {
+            var gs = miningState(rover: false); gs.player.freeOperations = false; gs.player.missionsDone = 0
+            gs.player.placed = ["launchpad"]
+            return coached(MiningScreen(), gs, screen: .mining)
+        },
+        scene("coach-mining-laser-desktop", 900, w: 1440) {
+            var gs = miningState(rover: false); gs.player.freeOperations = false; gs.player.missionsDone = 0
+            gs.player.placed = ["launchpad"]
+            return coached(MiningScreen(), gs, screen: .mining)
         },
         scene("try-scan-before-phone", 874) { coached(TessDiscoveryScreen(), scanState(), screen: .galaxy) },
         scene("try-scan-done-phone", 874) {

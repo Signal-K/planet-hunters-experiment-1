@@ -17,4 +17,16 @@ import Foundation
         #expect(reloaded.screen == .transit)
         #expect(reloaded.player.activeMission?.id == m.id)
     }
+    @Test func catalogRefreshesAfterCloudAdoptionAndReset() {
+        let store = GameStore()
+        var remote = GameState()
+        remote.player.missionsDone = 8
+        remote.player.freeOperations = true
+        remote.player.saturnImagerLaunchedAt = 1
+        #expect(store.adoptRemote(remote))
+        #expect(store.catalog.mission(Instruments.transitMissionId) != nil)
+        #expect(store.catalog.mission(Instruments.saturnMissionId) == nil)
+        store.reset()
+        #expect(store.catalog.mission(Instruments.transitMissionId) == nil)
+    }
 }

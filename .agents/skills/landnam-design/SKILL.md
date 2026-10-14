@@ -1,21 +1,20 @@
 ---
 name: landnam-design
-description: Use this skill to generate well-branded interfaces and assets for Landnam (the mining/exploration minigame in the Star Sailors ecosystem), either for production or throwaway prototypes/mocks/etc. Contains essential design guidelines, colors, type, fonts, assets, and UI kit components for prototyping.
+description: Design Landnam web and native game scenes and interface assets using the current shared palette, scene kit and parity contract.
 user-invocable: true
 ---
 
-> STALE-ASSET NOTICE: Landnam is a Next.js web app plus a SwiftUI native app, not Godot, and is not portrait-only. This skill's colors, dark palette and Godot prompts are historical reference only. The repo root `AGENTS.md` (light blueprint style, 14px text floor, 44px targets, real scenes, phone portrait/landscape/desktop) overrides anything below.
+# Landnam design
 
-Read the `README.md` file at the root of this skill first — it covers the brand context, content fundamentals, visual foundations, and iconography. Then explore the other available files.
+Read the repository [AGENTS.md](../../../AGENTS.md) and the relevant section of [game-theme-spec.md](../../../docs/design/game-theme-spec.md). They define the current rules. Implement each acceptance slice on web and native consecutively.
 
-Key files:
-- `colors_and_type.css` — all design tokens (color, type, radii, spacing, motion). Mirrors the in-engine `DS.gd`. Import this in every mock.
-- `fonts/` — Oxanium (display/body) + Turret Road (atlas/mono).
-- `assets/` — real SVG nav icons, the game-art rocket-part tiles (`parts/`), the painted Earth Base backdrop (`scenes/`), and the source screenshots (`reference/`).
-- `preview/` — small token-spec cards (the Design System tab).
-- `ui_kits/landnam-portrait/` — the canonical portrait mobile prototype: full Build → Hub → Mission → Target → Fab → Launch → Mine → Debrief loop, the Mission Coach tutorial, and the deferred unlock popups. Read `app.tsx` for the state machine and the per-file headers for component maps. `storyboard.html` lays out every state as labelled frames.
-- `ui_kits/landnam-portrait/GODOT_*.md` — paste-ready Claude Code prompts that replicate the home scene and the tutorial in the Godot project.
+Current source map:
+- Palette input: `shared/tokens/tokens.json`; generated web tokens in `web/app/globals.css`, native aliases in `native/App/Theme.generated.swift`. Run `node scripts/sync-shared.mjs --check` after changes. World tokens outside the generated block still follow the game-theme spec.
+- Web scenes: `web/components/game/GameScreenRouter.tsx`, `web/components/game/hub/TerrainScene.tsx`, `web/lib/scene/`.
+- Native scenes: `native/App/RootView.swift`, `native/App/Terrain.swift`, `native/App/Screens/`.
+- Shared layout: `shared/layout/`; snapshot fixtures: `web/tests/scenes/` and `native/App/SceneCatalog.swift`.
+- Fonts: shipped web fonts are the source; native faces are synchronized by `scripts/sync-native-fonts.mjs`.
 
-If creating visual artifacts (slides, mocks, throwaway prototypes), copy assets out and build static HTML files for the user to view. If working on production Godot code, copy assets and read the rules here to design accurately with this brand — always source color/size/spacing from `DS.gd` in-engine (1:1 with `colors_and_type.css`).
+Use the approved deep dusk world palette with blueprint interface chrome. Compare the same real screen state on web and native; verify the viewport, object contact with surfaces, readable text, touch targets and animation as required by AGENTS.md.
 
-This game is **mobile-first and portrait**, built in Godot. It is a game, not a website — no dashboards or sidebars. Everything must be readable on a phone. If the user invokes this skill without other guidance, ask what they want to build, ask a few focused questions, and act as an expert designer who outputs HTML artifacts _or_ production code depending on the need.
+The bundled README, `colors_and_type.css`, previews and `ui_kits/landnam-portrait/` are historical design references. They are not current tokens, app architecture or implementation instructions. Do not import the old CSS into new work or follow Godot prompts. Inspect legacy art individually before reusing it; use current modular scene layers rather than a whole-scene background image.

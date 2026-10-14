@@ -191,6 +191,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [confirmingRecharge, setConfirmingRecharge] = useState(false)
   const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
   const [sceneStatus, setSceneStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
+  const [laserCopy, setLaserCopy] = useState(false)
   const firedRef = useRef(false)
   const hintedFirstHitRef = useRef(false)
   const hintedWrongOreRef = useRef(false)
@@ -251,6 +252,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     setCargo({})
     setLaserCharges(MAX_CHARGES)
     firedRef.current = false
+    setLaserCopy(false)
     setSceneStatus('loading')
     setRunKey(k => k + 1)
     if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
@@ -304,8 +306,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     }
     setLaserCharges(c => c - 1)
     fireRef.current?.()
+    help.reportAction('fire')
     if (!firedRef.current && trainingMiningTry) {
       firedRef.current = true
+      setLaserCopy(true)
+      window.setTimeout(() => setLaserCopy(false), 1500)
     }
   }
 
@@ -608,6 +613,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
           </svg>
         </button>
+        <div className="laser-chrome__help">{help.button}</div>
         <button
           type="button"
           className="laser-chrome__clock"
@@ -740,7 +746,13 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       </div>
 
       {trainingMiningTry && (
-        <p className="laser-cue" data-testid="mining-training-tip">Fire when ore crosses the beam</p>
+        <div className="laser-cue" data-testid="mining-training-tip">
+          <span className="ops-badge" data-testid="ops-badge" aria-hidden="true">OPS<span className="ops-bars"><i /><i /><i /></span></span>
+          <span className="flight-plan-text">
+            <span className="flight-plan-kicker" data-state={laserCopy ? 'done' : 'live'} data-testid="flight-plan-kicker">{laserCopy ? 'Copy · Step 5 done' : 'Mining Ops · Step 5/6'}</span>
+            <span className="flight-plan-action">Fire when ore crosses the beam</span>
+          </span>
+        </div>
       )}
       <div className="laser-hud" data-testid="mining-controls">
         {/* SSL-411: the stat row is gone. Per-mineral progress is kept for

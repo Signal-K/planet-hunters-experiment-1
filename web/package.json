@@ -9,7 +9,7 @@
     "preview:cf": "opennextjs-cloudflare preview",
     "deploy:cf": "opennextjs-cloudflare build && wrangler deploy",
     "start": "next start -p 3001",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "sync:shared": "node ../scripts/sync-all-shared.mjs",
     "sync:native-assets": "node ../scripts/sync-native-assets.mjs",
     "verify:scene-surfaces": "node scripts/verify-scene-surfaces.mjs",

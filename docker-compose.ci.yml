@@ -18,7 +18,9 @@ services:
     working_dir: /repo/web
     volumes:
       - ./web:/repo/web
+      - ./native:/repo/native:ro
       - ./pocketbase:/repo/pocketbase:ro
+      - ./shared:/repo/shared:ro
       - web_ci_nm:/repo/web/node_modules
     command: >
       sh -c "

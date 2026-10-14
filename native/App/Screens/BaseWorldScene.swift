@@ -5,6 +5,7 @@ import LandnamCore
 /// with an underground cutaway below (`BaseUnderground`). The camera (`BaseCamera`) pans along the strip and down to the cutaway.
 /// Structures render only when the player has built them. Level 1 uses the starter sprites.
 struct BaseWorldScene: View {
+    var biome: EarthBiome = .mountains
     var placed: [String]
     var plots: [String: Int]
     var levels: [String: Int]
@@ -49,10 +50,10 @@ struct BaseWorldScene: View {
                     .frame(width: w, height: h, alignment: .top)
                     .clipped()
                 MeteorShowerWeather().frame(width: w, height: ground * 0.55).offset(y: -lift)
-                skyLayers(width: w, height: h, ground: ground).offset(y: -lift)
+                skyLayers(width: w, height: h, ground: ground, biome: biome).offset(y: -lift)
                 ZStack(alignment: .topLeading) {
-                    groundStack(width: world.worldW, height: world.worldH, ground: ground)
-                    props(width: w, world: world, ground: ground, portrait: portrait)
+                    groundStack(width: world.worldW, height: world.worldH, ground: ground, biome: biome)
+                    props(width: w, world: world, ground: ground, portrait: portrait, biome: biome)
                     BaseUnderground(world: world, built: siloBuilt, siloPlaced: siloPlaced, secondTank: secondTank, oreFraction: oreFraction, onBuild: onBuildSilo, onOpen: onShaft)
                         .offset(y: ground)
                         .allowsHitTesting(camera.underground)
@@ -149,12 +150,20 @@ struct BaseWorldScene: View {
     }
 
     /// Mountains: they stay with the screen while the strip pans, and ride up with the ground when the camera dives.
-    private func skyLayers(width w: CGFloat, height h: CGFloat, ground: CGFloat) -> some View {
+    private func skyLayers(width w: CGFloat, height h: CGFloat, ground: CGFloat, biome: EarthBiome) -> some View {
         TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { ctx in
             let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
             ZStack(alignment: .topLeading) {
-                mountain("base/layers/mountains-far.png", height: ground * 0.58, ground: ground, width: w, drift: t / 140)
-                mountain("base/layers/mountains-mid.png", height: ground * 0.40, ground: ground, width: w, drift: t / 96)
+                if biome == .mountains {
+                    mountain("base/layers/mountains-far.png", height: ground * 0.58, ground: ground, width: w, drift: t / 140)
+                    mountain("base/layers/mountains-mid.png", height: ground * 0.40, ground: ground, width: w, drift: t / 96)
+                } else {
+                    ForEach(Array(biome.backBands.enumerated()), id: \.offset) { _, band in
+                        Image(band.asset).resizable().interpolation(.high).saturation(band.saturation)
+                            .frame(width: w, height: min(ground * 0.6, CGFloat(band.size.height) * 0.18))
+                            .clipped().position(x: w / 2, y: ground - min(ground * 0.6, CGFloat(band.size.height) * 0.18) / 2)
+                    }
+                }
             }
             .frame(width: w, height: h, alignment: .topLeading)
         }
@@ -174,25 +183,31 @@ struct BaseWorldScene: View {
             .allowsHitTesting(false)
     }
 
-    private func groundStack(width: CGFloat, height: CGFloat, ground: CGFloat) -> some View {
+    private func groundStack(width: CGFloat, height: CGFloat, ground: CGFloat, biome: EarthBiome) -> some View {
         let grass: CGFloat = height < 500 ? 18 : 28
         let road: CGFloat = height < 500 ? 28 : 36
         return ZStack(alignment: .top) {
+            if biome != .mountains {
+                Image(biome.ground.asset).resizable().interpolation(.high).scaledToFill()
+                    .frame(width: width, height: height - ground).clipped()
+            } else {
             Art.view("base/layers/dirt.png").resizable(resizingMode: .tile).interpolation(.none)
                 .padding(.top, grass + road)
             Art.view("base/kit/grass.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: grass)
             Art.view("base/kit/road-a.png").resizable(resizingMode: .tile).interpolation(.none).frame(height: road).offset(y: grass)
+            }
         }
         .frame(width: width, height: height - ground, alignment: .top)
         .position(x: width / 2, y: ground + (height - ground) / 2)
         .allowsHitTesting(false)
     }
 
-    private func props(width: CGFloat, world: BaseWorld, ground: CGFloat, portrait: Bool) -> some View {
+    private func props(width: CGFloat, world: BaseWorld, ground: CGFloat, portrait: Bool, biome: EarthBiome) -> some View {
         let treeH: CGFloat = portrait ? 40 : (ground < 400 ? 36 : 52)
         let midH: CGFloat = portrait ? 34 : (ground < 400 ? 40 : 58)
         let w = world.w
         return ZStack {
+            if biome == .mountains {
             prop("base/kit/prop-tree-a.png", x: width * (portrait ? 0.31 : 0.015), ground: ground, height: portrait ? 32 : treeH)
             if !portrait {
                 prop("base/kit/prop-tree-b.png", x: width * 0.203, ground: ground, height: ground < 400 ? 28 : 36)
@@ -201,11 +216,13 @@ struct BaseWorldScene: View {
             if !portrait {
                 prop("base/kit/prop-tree-c.png", x: width * 0.904, ground: ground, height: midH)
             }
+            }
         }
         .allowsHitTesting(false)
         // The rest of the strip, past the first screen: trees and rocks around the lift head.
         .overlay(alignment: .topLeading) {
             ZStack {
+                if biome == .mountains {
                 prop("base/kit/prop-tree-c.png", x: w * 1.04, ground: ground, height: midH)
                 prop("base/kit/prop-rock.png", x: w * 1.12, ground: ground, height: 14)
                 prop("base/kit/prop-tree-a.png", x: world.shaftX - 150 * world.u / 2 - 40, ground: ground, height: treeH)
@@ -213,6 +230,7 @@ struct BaseWorldScene: View {
                 prop("base/kit/prop-tree-b.png", x: world.shaftX + 190, ground: ground, height: ground < 400 ? 28 : 36)
                 prop("base/kit/prop-tree-a.png", x: world.worldW - 90, ground: ground, height: treeH)
                 prop("base/kit/prop-rock.png", x: world.worldW - 36, ground: ground, height: 14)
+                }
             }
             .allowsHitTesting(false)
         }

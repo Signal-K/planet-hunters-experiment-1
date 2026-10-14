@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * SSL-430: native contrast floor. Parses the colour tokens in native/App/Theme.swift and fails when
+ * SSL-430: native contrast floor. Reads native aliases from shared/tokens/tokens.json and fails when
  * a text colour drops under 4.5:1 on any light surface (bg, paper, paper2), when white label text on
  * a filled button colour drops under 4.5:1, or when Text/Button lines use a decorative colour
  * (blueBright) as their foreground. Icons and strokes are not text and are not checked.
@@ -10,11 +10,11 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'native', 'App')
-const theme = fs.readFileSync(path.join(ROOT, 'Theme.swift'), 'utf8')
+const tokens = JSON.parse(fs.readFileSync(path.join(ROOT, '../../shared/tokens/tokens.json'), 'utf8'))
 const tok = (name) => {
-  const m = theme.match(new RegExp(`static let ${name}\\s*=\\s*hex\\(0x([0-9A-Fa-f]{6})\\)`))
-  if (!m) throw new Error(`Theme.${name} not found`)
-  return parseInt(m[1], 16)
+  const value = tokens.colors[tokens.nativeAliases[name]] ?? tokens.nativePreserved?.[name]
+  if (!/^#[0-9a-f]{6}$/i.test(value ?? '')) throw new Error(`Theme.${name} has no shared opaque color`)
+  return parseInt(value.slice(1), 16)
 }
 const lum = (h) => {
   const v = [16, 8, 0].map(s => ((h >> s) & 255) / 255).map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))

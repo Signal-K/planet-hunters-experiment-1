@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { PRODUCT_OPERATIONS_LABEL, PRODUCT_WORDMARK } from '@/lib/brand'
 import { formatCurrency } from '@/lib/format'
 import type { EarthBiomeId } from '@/lib/scene/base-world'
+import { biomeLayers } from '@/lib/scene/base-world'
 
 interface IntroScreenProps {
   onBegin: (biome?: EarthBiomeId) => void
@@ -16,6 +17,8 @@ interface IntroScreenProps {
 const BIOME_CHOICES: { id: EarthBiomeId; label: string }[] = [
   { id: 'mountains', label: 'Mountains' },
   { id: 'desert', label: 'Desert' },
+  { id: 'tundra', label: 'Tundra' },
+  { id: 'coast', label: 'Coast' },
 ]
 
 export default function IntroScreen({
@@ -52,27 +55,18 @@ export default function IntroScreen({
               : 'Build your base. Mine the asteroids. Fulfill the contract. The belt is waiting.'}
           </p>
           {!returning && (
-            <fieldset data-testid="base-biome-choice" style={{ border: '2px solid var(--ln-bp-ink)', borderRadius: 12, margin: '16px 0', padding: 12, display: 'grid', gap: 8 }}>
-              <legend style={{ padding: '0 8px', font: '800 14px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Landscape</legend>
+            <fieldset className="base-biome-choice" data-testid="base-biome-choice">
+              <legend style={{ padding: '0 8px', font: '800 14px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ln-bp-ink, #0f2436)' }}>Landscape</legend>
               {BIOME_CHOICES.map(choice => (
                 <button
                   key={choice.id}
                   type="button"
+                  className="base-biome-option"
                   aria-pressed={biome === choice.id}
                   data-testid={`base-biome-${choice.id}`}
                   onClick={() => setBiome(choice.id)}
-                  style={{
-                    minHeight: 44,
-                    font: '800 14px var(--ln-font-display)',
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    color: 'var(--ln-bp-ink)',
-                    background: biome === choice.id ? 'var(--ln-bp-paper-2)' : 'var(--ln-bp-paper)',
-                    border: '2px solid var(--ln-bp-ink)',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                  }}
                 >
+                  <img src={biomeLayers(choice.id)[0].src} alt="" draggable={false} />
                   {choice.label}
                 </button>
               ))}

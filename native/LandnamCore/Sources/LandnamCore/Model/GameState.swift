@@ -44,6 +44,9 @@ public struct Player: Codable, Equatable, Sendable {
     public var skillPoints: Int = 0
     public var unlockedSkillNodes: [String] = []
     public var freeOperations: Bool = false
+    /// Earth base landscape chosen in onboarding or by the one-time move action.
+    public var earthBiome: String = "mountains"
+    public var earthBiomeMoveUsed: Bool = false
     public var transitSatelliteLaunchedAt: Double?
     public var deepSpaceTelescopeBuilt: Bool = false
     public var saturnImagerLaunchedAt: Double?
@@ -144,7 +147,7 @@ public struct Player: Codable, Equatable, Sendable {
         get("rocketPurchaseCounts", &rocketPurchaseCounts); getOpt("missionRocketSource", &missionRocketSource)
         get("placed", &placed); get("placementPlots", &placementPlots); get("controlBuilt", &controlBuilt)
         get("missionsDone", &missionsDone); get("skillPoints", &skillPoints); get("unlockedSkillNodes", &unlockedSkillNodes)
-        get("freeOperations", &freeOperations); get("debriefPending", &debriefPending); get("homeDeliveryPending", &homeDeliveryPending)
+        get("freeOperations", &freeOperations); get("earthBiome", &earthBiome); get("earthBiomeMoveUsed", &earthBiomeMoveUsed); get("debriefPending", &debriefPending); get("homeDeliveryPending", &homeDeliveryPending)
         getOpt("transitSatelliteLaunchedAt", &transitSatelliteLaunchedAt); get("deepSpaceTelescopeBuilt", &deepSpaceTelescopeBuilt)
         getOpt("saturnImagerLaunchedAt", &saturnImagerLaunchedAt)
         get("cargoSettledOffworld", &cargoSettledOffworld); getOpt("freeHaulDisposition", &freeHaulDisposition)
@@ -205,7 +208,7 @@ public struct Player: Codable, Equatable, Sendable {
         try put("rocketPurchaseCounts", rocketPurchaseCounts); try putOpt("missionRocketSource", missionRocketSource)
         try put("placed", placed); try put("placementPlots", placementPlots); try put("controlBuilt", controlBuilt)
         try put("missionsDone", missionsDone); try put("skillPoints", skillPoints); try put("unlockedSkillNodes", unlockedSkillNodes)
-        try put("freeOperations", freeOperations); try put("debriefPending", debriefPending); try put("homeDeliveryPending", homeDeliveryPending)
+        try put("freeOperations", freeOperations); try put("earthBiome", earthBiome); try put("earthBiomeMoveUsed", earthBiomeMoveUsed); try put("debriefPending", debriefPending); try put("homeDeliveryPending", homeDeliveryPending)
         try putOpt("transitSatelliteLaunchedAt", transitSatelliteLaunchedAt); try put("deepSpaceTelescopeBuilt", deepSpaceTelescopeBuilt)
         try putOpt("saturnImagerLaunchedAt", saturnImagerLaunchedAt)
         try put("cargoSettledOffworld", cargoSettledOffworld); try putOpt("freeHaulDisposition", freeHaulDisposition)

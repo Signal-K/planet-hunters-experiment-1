@@ -8,7 +8,7 @@ public final class GameStore {
     public private(set) var state: GameState
     public let baseCatalog: Catalog
     /// The live catalog: the authored one plus instrument launches and discovered-planet surveys.
-    public var catalog: Catalog { Instruments.runtime(baseCatalog, player: state.player, missionId: state.missionId, targetId: state.targetId) }
+    public private(set) var catalog: Catalog
     private let saveURL: URL?
     private let clock: @Sendable () -> Double
     /// Called after every persisted change; the app wires cloud sync and Game Center here.
@@ -26,11 +26,14 @@ public final class GameStore {
     public init(state: GameState = GameState(), catalog: Catalog = Catalog(), saveURL: URL? = nil,
                 clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 * 1000 }) {
         self.baseCatalog = catalog; self.saveURL = saveURL; self.clock = clock
+        let initialState: GameState
         if let saveURL, let data = try? Data(contentsOf: saveURL), let loaded = try? JSONDecoder().decode(GameState.self, from: data) {
-            self.state = loaded
+            initialState = loaded
         } else {
-            self.state = state
+            initialState = state
         }
+        self.state = initialState
+        self.catalog = Instruments.runtime(catalog, player: initialState.player, missionId: initialState.missionId, targetId: initialState.targetId)
     }
 
     public static var defaultSaveURL: URL {
@@ -52,11 +55,27 @@ public final class GameStore {
         n = Ledger.stamp(n, device: deviceId)
         n.updatedAt = clock()
         let old = state
+        refreshCatalog(for: n)
         state = n
         persist()
         onTransition?(old, n, pendingPayout)
         pendingPayout = nil
         onChange?(n)
+    }
+
+    // Rebuild once on relevant transitions, never on every SwiftUI property read.
+    private func refreshCatalog(for next: GameState) {
+        let p = state.player, n = next.player
+        if state.missionId != next.missionId || state.targetId != next.targetId
+            || p.freeOperations != n.freeOperations || p.missionsDone != n.missionsDone
+            || p.transitSatelliteLaunchedAt != n.transitSatelliteLaunchedAt
+            || p.deepSpaceTelescopeLaunchedAt != n.deepSpaceTelescopeLaunchedAt
+            || p.deepSpaceTelescopeBuilt != n.deepSpaceTelescopeBuilt
+            || p.placed.contains("deep-space-telescope") != n.placed.contains("deep-space-telescope")
+            || p.saturnImagerLaunchedAt != n.saturnImagerLaunchedAt
+            || p.discoveredExoplanetTargets != n.discoveredExoplanetTargets {
+            catalog = Instruments.runtime(baseCatalog, player: n, missionId: next.missionId, targetId: next.targetId)
+        }
     }
 
     private func persist() {
@@ -97,7 +116,13 @@ public final class GameStore {
     public func finishWelcome() { var n = state; n.extras[CloudPull.welcomeKey] = nil; if n.screen == .intro { n.screen = .hub }; apply(n) }
 
     public func go(_ screen: Screen) { var n = state; n.screen = screen; apply(n) }
-    public func reset() { state = GameState(); persist() }
+    public func setEarthBiome(_ biome: String, asMove: Bool = false) {
+        guard ["mountains", "desert", "tundra", "coast"].contains(biome), !state.player.earthBiomeMoveUsed || !asMove else { return }
+        var n = state; n.player.earthBiome = biome
+        if asMove { n.player.earthBiomeMoveUsed = true }
+        apply(n)
+    }
+    public func reset() { let next = GameState(); refreshCatalog(for: next); state = next; persist() }
 
     /// Settings: reopen one training try on the screen it is played on (web `openTrainingTry`).
     public func replayTry(_ id: String) {

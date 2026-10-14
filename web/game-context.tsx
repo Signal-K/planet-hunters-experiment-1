@@ -3,13 +3,13 @@
 import { stampLedger } from '@/lib/sync/ledger'
 import { deviceId } from '@/lib/sync/deviceId'
 import { cacheSave, dropCachedSave, readCachedSave } from '@/lib/offline/stateCache'
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Screen, GameState, GameActions } from '@/lib/game-types'
 import { MISSIONS, TARGETS, getLaserChargeCap } from '@/lib/data'
 import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair } from '@/lib/game-state'
 import { REMOTE_MERGED_EVENT, sameContent } from '@/lib/sync/casSave'
-import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
+import { useRuntimeCatalog } from '@/lib/contexts/useRuntimeCatalog'
 import { resolvePreset, DEV_GROUPS } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { identifyUser } from '@/lib/posthog'
@@ -268,16 +268,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
   useDailyEconomySync(setState, hydrated, isPreview.current)
-  const runtimeCatalog = useMemo(() => buildRuntimeCatalog({
-    catalog,
-    discoveredTargets: state.player.discoveredExoplanetTargets,
-    freeOperations: state.player.freeOperations,
-    transitSatelliteLaunchedAt: state.player.transitSatelliteLaunchedAt,
-    missionId: state.missionId,
-    targetId: state.targetId,
-    missionsDone: state.player.missionsDone,
-    player: state.player,
-  }), [catalog, state.missionId, state.player, state.targetId])
+  const runtimeCatalog = useRuntimeCatalog(catalog, state)
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))

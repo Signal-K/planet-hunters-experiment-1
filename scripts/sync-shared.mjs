@@ -31,7 +31,7 @@ function cssBlock() {
   const text = Object.entries(tokens.text).map(([key, value]) => `  --ln-fs-${key}: ${value};`);
   return [
     "  /* BEGIN GENERATED SHARED TOKENS — run npm run sync:shared */",
-    "  /* Accent naming: blueprintBlue is canonical; --ln-cyan remains a legacy web alias. Amber is the warm selection/currency accent. The Sun (--ln-map-sun) is ice-white with a cyan glow. */",
+    "  /* Accent naming: blueprintBlue is canonical; --ln-cyan remains a legacy web alias. Legacy amber aliases use blueprint blue for controls; use payout for rewards. The Sun (--ln-map-sun) is ice-white with a cyan glow. */",
     ...colors, ...radii, ...text,
     "  /* END GENERATED SHARED TOKENS */"
   ].join("\n");
@@ -106,5 +106,7 @@ if (css.includes("SSL-520:")) {
     if (!nextCss.includes(anchor)) throw new Error(`Generated CSS would drop the dusk restyle anchor: ${anchor}`);
   }
 }
-const stale = (await sync(cssFile, nextCss)) || (await sync(swiftFile, swiftFileContents()));
+const cssStale = await sync(cssFile, nextCss);
+const swiftStale = await sync(swiftFile, swiftFileContents());
+const stale = cssStale || swiftStale;
 if (stale) process.exitCode = 1;

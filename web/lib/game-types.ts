@@ -335,6 +335,8 @@ export interface Player {
   buildingLevels?: BuildingLevels
   /** Earth Base landscape. Missing saves read as mountains. */
   earthBiome?: EarthBiomeId
+  /** Set after an existing player uses their one-time base relocation. */
+  earthBiomeMoveUsed?: boolean
   lastClient?: string
   /** Mirrors treasury.loans[...].outstandingFrancs for this player; treasury is authoritative. */
   loanDebt: number

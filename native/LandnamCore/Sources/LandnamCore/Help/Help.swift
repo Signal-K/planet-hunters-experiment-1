@@ -58,6 +58,13 @@ public enum Help {
             HelpCard(title: "The haul is home", body: "Debrief pays the run and puts ore in your stash, or sells it if that was the plan."),
             HelpCard(title: "Next is the ground", body: "Collect, then you are back on the ground. Spend the francs and ore on a build, or launch again. A new contract is optional."),
         ]),
+        .mining: HelpTopic(id: "mining", title: "Mining operations", cards: [
+            HelpCard(title: "Hit the requested ore", body: "Wait for a coloured seam to pass under the ship, then fire the laser. The first seams contain the mineral this run asked for."),
+            HelpCard(title: "Charges and cargo stay", body: "Shots spend laser charges. Leaving or reloading keeps the cargo and remaining charges. Recharge spends francs."),
+            HelpCard(title: "Bring the haul home", body: "Return when you are ready on a Free Ops haul. A client order waits until the requested ore is in the hold."),
+        ], coach: [
+            HelpCoachStep(id: "fire", targets: ["mining-fire-laser"], anchor: "mining-fire-laser", hint: "Wait for a coloured seam to pass the fixed laser line, then fire.", completeOn: "fire"),
+        ]),
         .instrumentHub: HelpTopic(id: "control-station", title: "Control Station", cards: [
             HelpCard(title: "Where things are", body: "The map shows each telescope and satellite you operate. A number means that equipment has items ready to classify."),
             HelpCard(title: "Open a project", body: "Filter by place, then open a row that has a count. That opens the review for those items."),

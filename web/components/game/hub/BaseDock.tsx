@@ -152,6 +152,7 @@ export function BaseDock({
         <DockWordButton
           data-testid={flight ? buildTestId : 'hub-build-btn'}
           data-beacon={buildBeacon}
+          data-coach-target={flight ? buildBeacon : undefined}
           data-charging={buildCharging || undefined}
           disabled={buildDisabled}
           onClick={onBuild}

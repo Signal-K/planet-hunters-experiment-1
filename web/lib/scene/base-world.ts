@@ -20,6 +20,11 @@ export interface BiomeLayer {
   parallaxSeconds: number
 }
 
+export function biomeGround(biome: EarthBiomeId): string | null {
+  if (biome === 'tundra' || biome === 'coast') return `/game/assets/biomes/${biome}/layer-ground.png`
+  return null
+}
+
 /** Two sunset ridges: far purple, nearer and darker. The green treeline stays out of this set. */
 const MOUNTAIN_LAYERS: readonly BiomeLayer[] = [
   { id: 'far', src: '/game/assets/base/layers/mountains-far.png', height: '58%', parallaxSeconds: 140 },
@@ -50,9 +55,11 @@ const DESERT_LAYERS: readonly BiomeLayer[] = [
   { id: 'far', src: '/game/assets/biomes/desert/layer-far.png', height: '32%', parallaxSeconds: 140 },
 ]
 
-/** Layer set for a biome. Tundra borrows the mountain bands; coast borrows the desert band. */
+/** Each Earth biome has its own skyline layer. */
 export function biomeLayers(biome: EarthBiomeId): readonly BiomeLayer[] {
-  if (biome === 'desert' || biome === 'coast') return DESERT_LAYERS
+  if (biome === 'desert') return DESERT_LAYERS
+  if (biome === 'tundra') return [{ id: 'far', src: '/game/assets/biomes/tundra/layer-far.png', height: '36%', parallaxSeconds: 140 }]
+  if (biome === 'coast') return [{ id: 'far', src: '/game/assets/biomes/coast/layer-far.png', height: '38%', parallaxSeconds: 140 }]
   return MOUNTAIN_LAYERS
 }
 

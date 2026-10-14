@@ -9,7 +9,7 @@ import {
   skipFlightPlan,
   startFlightPlan,
 } from './FlightPlanSystem'
-import { trainingTryStep } from '@/lib/data/tutorial'
+import { trainingTryPosition, trainingTryStep } from '@/lib/data/tutorial'
 
 describe('FlightPlanSystem', () => {
   it('starts mining and reveals only one idle hint after eight seconds', () => {
@@ -69,6 +69,16 @@ describe('FlightPlanSystem', () => {
     expect(trainingTryStep('mining', 'transit')?.objective).toBe('Fly the cargo home')
     expect(trainingTryStep('mining', 'transit', { returning: false })?.objective).toBe('Boost toward the target')
     expect(trainingTryStep('mining', 'transit', { returning: true })?.objective).toBe('Fly the cargo home')
+  })
+
+  it('SSL-447: places the laser at step 5 of the six-milestone mining run', () => {
+    const position = (screen: string) => trainingTryPosition(trainingTryStep('mining', screen)!)
+    expect(position('missions')).toEqual({ index: 1, total: 6 })
+    expect(position('fab')).toEqual({ index: 2, total: 6 })
+    expect(position('targets')).toEqual({ index: 3, total: 6 })
+    expect(position('rover-survey')).toEqual({ index: 4, total: 6 })
+    expect(position('mining')).toEqual({ index: 5, total: 6 })
+    expect(position('delivery')).toEqual({ index: 6, total: 6 })
   })
 
   it('SSL-478: walking the whole plan by real events reaches complete with no stuck step', () => {

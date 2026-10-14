@@ -8,8 +8,7 @@ struct HubScreen: View {
     @Environment(GameStore.self) private var store
     /// Snapshots have no real safe area; fixtures pass the device insets they want to show.
     var safeAreaOverride: EdgeInsets?
-    /// The default mountains biome is the web terrain kit. Other biomes are future kit variants; their layered assets stay unused for now.
-    var biome: EarthBiome = .resolve()
+    var biome: EarthBiome?
     @State private var showSettings = false
     /// Homecoming (SSL-553): the core stage lands on the pad behind the delivery sheet.
     var homecoming = false
@@ -47,6 +46,7 @@ struct HubScreen: View {
         let portrait = layout.portrait
         return ZStack(alignment: .topLeading) {
             BaseWorldScene(
+                biome: biome ?? EarthBiome(rawValue: store.player.earthBiome) ?? .mountains,
                 placed: store.player.placed,
                 plots: store.player.placementPlots,
                 levels: store.player.buildingLevels,
@@ -238,6 +238,8 @@ struct SettingsSheet: View {
     @Environment(AuthModel.self) private var auth
     @State private var confirmSignOut = false
     @State private var confirmReset = false
+    @State private var moveBiome = "mountains"
+    @State private var confirmMoveBase = false
     @State private var showPatchNotes = false
     @State private var width: CGFloat = 390
     #if os(iOS)
@@ -299,6 +301,7 @@ struct SettingsSheet: View {
             #endif
             trainingSection
             gameSection
+            if !store.player.placed.isEmpty && !store.player.earthBiomeMoveUsed { baseLandscapeSection }
             VStack(spacing: 16) {
                 SettingsHeading(text: "Account")
                 row(SettingsRowText(title: auth.session?.email ?? "Email account", status: "Signed in")) {
@@ -351,6 +354,37 @@ struct SettingsSheet: View {
         }
     }
 
+    private var baseLandscapeSection: some View {
+        VStack(spacing: 16) {
+            SettingsHeading(text: "Base landscape")
+            VStack(spacing: 16) {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                    ForEach(["mountains", "desert", "tundra", "coast"], id: \.self) { id in
+                        Button { moveBiome = id; confirmMoveBase = false } label: {
+                            VStack(spacing: 4) {
+                                Image("Biome/\(id)-layer-far").resizable().scaledToFill().frame(height: 48).clipped()
+                                Text(id.capitalized).font(AppFont.display(14)).lineLimit(1)
+                            }.frame(maxWidth: .infinity).padding(6)
+                                .background(moveBiome == id ? Theme.hudPanel : Theme.paper)
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(moveBiome == id ? Theme.blue : SettingsStyle.ink, lineWidth: 2))
+                        }.buttonStyle(.plain).frame(minHeight: 68)
+                    }
+                }
+                HStack(spacing: 16) {
+                    SettingsRowText(title: "Move base", status: confirmMoveBase ? "Confirm relocation" : "Available once")
+                    Spacer(minLength: 8)
+                    SettingsButton(title: confirmMoveBase ? "Confirm move" : "Move", fill: false) {
+                        if confirmMoveBase {
+                            store.setEarthBiome(moveBiome, asMove: true)
+                            confirmMoveBase = false
+                        } else { confirmMoveBase = true }
+                    }
+                }
+            }.settingsCard()
+        }
+        .onAppear { moveBiome = store.player.earthBiome }
+    }
+
     #if os(iOS)
     private func displaySection(wide: Bool) -> some View {
         VStack(spacing: 16) {
@@ -394,6 +428,26 @@ struct SettingsSheet: View {
             if !narrow { Spacer(minLength: 8) }
             action()
         }.settingsCard(border: border)
+    }
+}
+
+private struct PatchRingView: View {
+    let count: Int
+    let stitched: Int
+    var silhouette = false
+    var body: some View {
+        ZStack {
+            ForEach(0..<max(1, count), id: \.self) { index in
+                Circle().trim(from: CGFloat(index) / CGFloat(max(1, count)), to: (CGFloat(index) + 0.72) / CGFloat(max(1, count)))
+                    .stroke(index < stitched ? Theme.green : Theme.border, style: StrokeStyle(lineWidth: 3, lineCap: .butt))
+                    .rotationEffect(.degrees(-90))
+            }
+            if silhouette { Text("◇").font(AppFont.display(22)).foregroundStyle(Theme.textDim) }
+            else { Text(String(format: "%02d", stitched)).font(AppFont.display(9, "Bold")).foregroundStyle(Theme.ink) }
+        }
+        .frame(width: 44, height: 44)
+        .accessibilityElement()
+        .accessibilityLabel(silhouette ? "Free Ops patch" : "\(stitched) of \(count) steps stitched")
     }
 }
 

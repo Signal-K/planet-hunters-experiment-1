@@ -111,26 +111,28 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
       <div style={{ ...shade, top: holeBottom, left: 0, right: 0, bottom: 0 }} />
       <div style={{ ...shade, top: Math.max(0, hole.top), left: 0, width: Math.max(0, hole.left), height: hole.height }} />
       <div style={{ ...shade, top: Math.max(0, hole.top), left: holeRight, right: 0, height: hole.height }} />
-      <div aria-hidden style={{ position: 'absolute', top: hole.top, left: hole.left, width: hole.width, height: hole.height, borderRadius: 'var(--ln-r-md)', border: '3px solid var(--ln-blueprint-blue, #1f78c1)', pointerEvents: 'none' }} />
+      <div aria-hidden className="help-coach-brackets" style={{ position: 'absolute', top: hole.top - 7, left: hole.left - 7, width: hole.width + 14, height: hole.height + 14 }} />
       <div
         role="status"
-        aria-label={`Hint ${index + 1} of ${total}`}
+        aria-label={`Show me, ${index + 1} of ${total}`}
         data-testid="help-coach-hint"
+        className="help-coach-dock"
         style={{
           position: 'absolute', ...pos, pointerEvents: 'auto',
           padding: 'var(--ln-s-3) var(--ln-s-4)', background: 'var(--ln-blueprint-paper, #fff)', color: 'var(--ln-text)',
           border: '2px solid var(--ln-cyan-border)', borderRadius: 'var(--ln-r-md)', boxShadow: '4px 4px 0 var(--ln-blueprint-blue, #1f78c1)',
         }}
       >
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, color: 'var(--ln-cyan-bright)' }}>
-          Step {index + 1} of {total}
+        <div className="help-coach-dock-head">
+          <span className="ops-badge" aria-hidden="true">OPS</span>
+          <span className="help-coach-dock-kicker">Show me · {index + 1} of {total}</span>
         </div>
         <div data-testid="help-coach-hint-text" style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.35, margin: '4px 0 var(--ln-s-3)' }}>
           {step.hint}
         </div>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button type="button" data-testid="help-coach-stop" onClick={onStop} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-panel)', color: 'var(--ln-text)' }}>
-            Stop
+            Skip
           </button>
           <button type="button" data-testid="help-coach-next" onClick={onNext} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)', color: 'var(--ln-cyan-bright)' }}>
             {last ? 'Done' : 'Next'}

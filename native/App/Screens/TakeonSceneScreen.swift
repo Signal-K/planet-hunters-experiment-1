@@ -205,7 +205,7 @@ struct TakeonSceneScreen: View {
     private var objectiveChip: some View {
         panel(12) {
             VStack(alignment: .trailing, spacing: 1) {
-                Text("MISSION OBJECTIVE").font(AppFont.display(11, "Bold")).tracking(1).foregroundStyle(Theme.textMuted)
+                Text("MISSION OBJECTIVE").font(AppFont.display(14, "Bold")).tracking(1).foregroundStyle(Theme.textMuted)
                 if let o = model.objective {
                     Text("\(o.label) \(Int(o.current))/\(Int(o.target))").font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
                 } else { Text("—").font(AppFont.display(14)) }
@@ -222,8 +222,8 @@ struct TakeonSceneScreen: View {
             panel(12) {
                 HStack(spacing: 4) {
                     Circle().fill(Theme.hudMint).frame(width: 8, height: 8).overlay(Circle().stroke(Theme.hudInk, lineWidth: 1))
-                    Text(model.activeLabel).font(AppFont.display(9)).foregroundStyle(Theme.hudInk).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                }.frame(width: 62).padding(.vertical, 6).padding(.horizontal, 2)
+                    Text(model.activeLabel).font(AppFont.display(14)).foregroundStyle(Theme.hudInk).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                }.frame(width: 88).padding(.vertical, 6).padding(.horizontal, 2)
             }
         }
     }
@@ -232,12 +232,12 @@ struct TakeonSceneScreen: View {
         panel(12) {
             VStack(spacing: 2) {
                 Image(systemName: symbol).font(.system(size: 20, weight: .semibold)).foregroundStyle(Theme.hudInk).frame(height: 24)
-                Text(label).font(AppFont.display(9, "Bold")).foregroundStyle(Theme.hudInk)
+                Text(label).font(AppFont.display(14, "Bold")).foregroundStyle(Theme.hudInk)
                 if let level {
                     Capsule().fill(Theme.hudTrack).frame(width: 40, height: 4)
                         .overlay(alignment: .leading) { Capsule().fill(Theme.hudMint).frame(width: 40 * max(0, min(1, level)), height: 4) }
                 }
-            }.frame(width: 62, height: 58)
+            }.frame(width: 88, height: 64)
         }.accessibilityElement(children: .combine)
     }
 
@@ -256,7 +256,7 @@ struct TakeonSceneScreen: View {
             RoundedRectangle(cornerRadius: 6).fill(Theme.hudTrack).frame(width: 16, height: 66)
                 .overlay(alignment: .bottom) { RoundedRectangle(cornerRadius: 6).fill(Theme.hudMint).frame(height: 66 * max(0.03, min(1, v))) }
                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.hudInk, lineWidth: 1.2))
-            Text(label).font(AppFont.display(9, "Bold")).foregroundStyle(Theme.hudInk).fixedSize()
+            Text(label).font(AppFont.display(14, "Bold")).foregroundStyle(Theme.hudInk).fixedSize()
         }
     }
 

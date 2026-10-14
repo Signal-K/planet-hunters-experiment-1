@@ -31,9 +31,35 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await stage(page, 'm1-mining', { patch: { flightPlan: { completed: { mining: true, scan: true }, hidden: false } } })
       await page.goto(page.url() + '&plan=1')
       await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
+      await expect(page.getByTestId('mining-scene-status')).toHaveCount(0, { timeout: 30_000 })
+      // onReady is raised as the Pixi loop starts; let its first visible frame paint.
+      await page.waitForTimeout(800)
       await expect(objective(page)).toContainText('Fire the laser')
+      await expect(page.getByTestId('flight-plan-kicker')).toHaveText(/Mining Ops · Step 5\/6/i)
+      await expect(page.getByTestId('ops-badge')).toBeVisible()
+      await expect(page.getByTestId('mining-training-tip')).toBeVisible()
       await expect(objective(page)).not.toContainText('Fit a module')
       await expect(page.getByText(/Fit a module/i)).toHaveCount(0)
+    })
+
+    test('live mining try shows the Ops laser step and Copy completion', async ({ page }, info) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      await stage(page, 'm1-mining', { patch: { flightPlan: { completed: {}, hidden: false } } })
+      await page.goto(page.url() + '&plan=1')
+      await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
+      await expect(page.getByTestId('mining-scene-status')).toHaveCount(0, { timeout: 30_000 })
+      await page.waitForTimeout(800)
+      const cue = page.getByTestId('mining-training-tip')
+      await expect(cue).toBeVisible()
+      await expect(cue.getByTestId('ops-badge')).toBeVisible()
+      const badgeBox = (await cue.getByTestId('ops-badge').boundingBox())!
+      expect(badgeBox.width).toBeGreaterThanOrEqual(44)
+      expect(badgeBox.height).toBeGreaterThanOrEqual(44)
+      await expect(cue.getByTestId('flight-plan-kicker')).toHaveText(/Mining Ops · Step 5\/6/i)
+      expect(await cue.locator('.ops-bars i').first().evaluate(el => getComputedStyle(el).animationName)).toBe('none')
+      await page.screenshot({ path: info.outputPath(`flow-flightplan-laser-${vp}.png`) })
+      await page.getByTestId('fire-laser-btn').click()
+      await expect(cue.getByTestId('flight-plan-kicker')).toHaveText('Copy · Step 5 done')
     })
 
     test('part try on the Hangar screen says fit a module, not the Base instruction', async ({ page }) => {

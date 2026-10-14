@@ -67,6 +67,7 @@ export const DEFAULT_STATE: GameState = {
     launchpadUpgraded: false,
     buildingLevels: {},
     earthBiome: 'mountains',
+    earthBiomeMoveUsed: false,
     loanDebt: 0,
     loanOffered: false,
     seen_planets: [],
@@ -361,6 +362,7 @@ export function normalizeState(input: PartialSave): GameState {
       transitSatelliteLaunchedAt: telescopeLaunchedAt ?? (player.deepSpaceTelescopeBuilt ? Date.now() : null),
       deepSpaceTelescopeLaunchedAt: telescopeLaunchedAt ?? (player.deepSpaceTelescopeBuilt ? Date.now() : null),
       earthBiome: sanitizeEarthBiome(player.earthBiome),
+      earthBiomeMoveUsed: player.earthBiomeMoveUsed === true,
     },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     // The retired private emergency-loan popup must not survive an old save.

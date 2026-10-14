@@ -1,17 +1,18 @@
 import SwiftUI
 import LandnamCore
 
-/// Step coach strip (mirrors web FlightPlan): "MINING OPS · STEP 1/3", the current objective and, when the
+/// Step coach strip (mirrors web FlightPlan): "MINING OPS · STEP 1/6", the current objective and, when the
 /// step lives on another screen, a button that goes there. Sits in layout flow above the dock, never over a control.
 struct CoachStrip: View {
     @Environment(GameStore.self) private var store
     let coach: FlightPlan.Coach
+    @State private var copyStep: String?
 
     var body: some View {
         HStack(spacing: 12) {
-            opsBadge
+            opsBadge(isDone: copyStep != nil)
             VStack(alignment: .leading, spacing: 2) {
-                Text(coach.kicker).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.teal)
+                Text(copyStep ?? coach.kicker).font(AppFont.display(14)).tracking(1.2).foregroundStyle(copyStep == nil ? Theme.teal : Theme.green)
                 Text(coach.objective).font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink)
                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
@@ -31,20 +32,29 @@ struct CoachStrip: View {
         .overlay(alignment: .top) { Rectangle().fill(Theme.hudInk).frame(height: 1) }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(coach.kicker). \(coach.objective). \(coach.radio)")
+        .onChange(of: coach.kicker) { old, _ in
+            guard let part = old.components(separatedBy: "STEP ").last,
+                  let step = part.split(separator: "/").first else { return }
+            let next = "Copy · Step \(step) done"
+            copyStep = next
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                if copyStep == next { copyStep = nil }
+            }
+        }
     }
 }
 
 extension CoachStrip {
     /// Ops call-sign badge (mirrors web .ops-badge): square pixel tile with three signal bars.
-    var opsBadge: some View {
+    func opsBadge(isDone: Bool) -> some View {
         HStack(spacing: 4) {
-            Text("OPS").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+            Text("OPS").font(AppFont.display(14)).tracking(1.2).foregroundStyle(isDone ? Theme.green : Theme.ink)
             HStack(alignment: .bottom, spacing: 2) {
-                ForEach([6, 10, 14], id: \.self) { h in Rectangle().fill(Theme.teal).frame(width: 3, height: CGFloat(h)) }
+                ForEach([6, 10, 14], id: \.self) { h in Rectangle().fill(isDone ? Theme.green : Theme.teal).frame(width: 3, height: CGFloat(h)) }
             }
         }
         .padding(.horizontal, 8).frame(minHeight: 44)
-        .background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+        .background(Theme.paper).overlay(Rectangle().stroke(isDone ? Theme.green : Theme.ink, lineWidth: 2))
         .accessibilityHidden(true)
     }
 }

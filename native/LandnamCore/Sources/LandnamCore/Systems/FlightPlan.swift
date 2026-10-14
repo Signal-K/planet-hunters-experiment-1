@@ -6,7 +6,7 @@ import Foundation
 public enum FlightPlan {
     public static let tryLabels = ["mining": "Mining", "scan": "Scan", "part": "Part"]
 
-    /// What the coach strip shows: kicker ("MINING OPS · STEP 1/3"), the objective and the radio line, plus an
+    /// What the coach strip shows: kicker ("MINING OPS · STEP 1/6"), the objective and the radio line, plus an
     /// optional button that takes the player to the screen the step needs.
     public struct Coach: Equatable, Sendable {
         public let kicker: String
@@ -31,7 +31,8 @@ public enum FlightPlan {
     public static func coach(_ p: Player, screen: Screen) -> Coach? {
         guard !p.freeOperations, !p.flightPlan.hidden, let current = p.flightPlan.currentTry,
               let index = FlightPlanProgress.tryIds.firstIndex(of: current) else { return nil }
-        let kicker = "\((tryLabels[current] ?? current).uppercased()) OPS · STEP \(index + 1)/\(FlightPlanProgress.tryIds.count)"
+        let position = current == "mining" ? miningPosition(screen) : (index + 1, FlightPlanProgress.tryIds.count)
+        let kicker = "\((tryLabels[current] ?? current).uppercased()) OPS · STEP \(position.0)/\(position.1)"
         func c(_ objective: String, _ radio: String, go: Coach.Go? = nil) -> Coach { Coach(kicker: kicker, objective: objective, radio: radio, go: go) }
         switch current {
         case "mining":
@@ -61,6 +62,21 @@ public enum FlightPlan {
             return screen == .hangar
                 ? c("Fit a module in each ship stage", "Choose a module for engine, booster, cockpit and payload, then confirm.")
                 : c("Open the Hangar from Base", "The Hangar is where ship modules are fitted.", go: .init(label: "HANGAR", screen: .hangar))
+        }
+    }
+
+    /// Six milestones in the real mining loop: take a client order, prepare,
+    /// choose a target, scout, fire the laser, then settle the cargo at home.
+    /// The laser is therefore 5/6, not the superseded 2/6 concept placement.
+    private static func miningPosition(_ screen: Screen) -> (Int, Int) {
+        switch screen {
+        case .intro, .build, .hub, .launchpad, .missions: return (1, 6)
+        case .rocketBuy, .fab: return (2, 6)
+        case .targets: return (3, 6)
+        case .roverSurvey: return (4, 6)
+        case .mining: return (5, 6)
+        case .debrief, .transit, .landing, .delivery: return (6, 6)
+        default: return (1, 6)
         }
     }
 

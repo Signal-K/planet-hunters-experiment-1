@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Which landscape the Earth Base stands in. Stored by raw value so an unknown or missing value reads as `.mountains`.
-/// There is no picker yet (SSL-502); `-biome <name>` on the launch line overrides it for snapshots and QA.
+/// `-biome <name>` on the launch line overrides the saved landscape for snapshots and QA.
 enum EarthBiome: String, CaseIterable, Codable {
     case mountains, desert, tundra, coast
 
@@ -11,6 +11,8 @@ enum EarthBiome: String, CaseIterable, Codable {
         if let i = arguments.firstIndex(of: "-biome"), arguments.indices.contains(i + 1), let b = EarthBiome(rawValue: arguments[i + 1]) { return b }
         return defaults.string(forKey: defaultsKey).flatMap { EarthBiome(rawValue: $0) } ?? .mountains
     }
+
+    static func resolve(value: String) -> EarthBiome { EarthBiome(rawValue: value) ?? .mountains }
 
     /// One tiled horizontal band of the background. Pixel sizes are the delivered 2x files (docs/design/biomes/manifest.json).
     struct Band {

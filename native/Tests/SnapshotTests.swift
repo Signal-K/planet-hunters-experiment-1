@@ -21,6 +21,21 @@ struct SnapshotTests {
         try #require(data).write(to: URL(fileURLWithPath: dir).appendingPathComponent("\(name).png"))
     }
 
+    /// Shared acceptance sizes; keep these aligned with web/tests/scenes/helpers.ts.
+    @Test func parityViewports() throws {
+        let sizes: [(String, CGSize)] = [
+            ("phone", CGSize(width: 390, height: 844)),
+            ("landscape", CGSize(width: 926, height: 428)),
+            ("desktop", CGSize(width: 1440, height: 900)),
+        ]
+        for id in ["hub-starter-live", "transit-live", "exchange-phone"] {
+            let scene = try #require(SceneCatalog.all.first { $0.id == id })
+            for (viewport, size) in sizes {
+                try render(scene.make(), size: size, name: "parity-\(id)-\(viewport)")
+            }
+        }
+    }
+
     /// Renders every scene in SceneCatalog, or only the comma-separated ids in $SCENE.
     /// Scenes are fixtures, so this needs no loop, save file or network.
     @Test func catalog() throws {

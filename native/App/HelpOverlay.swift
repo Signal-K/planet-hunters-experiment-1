@@ -27,10 +27,26 @@ private struct CoachFrames: PreferenceKey {
     }
 }
 
+private struct LockOnBrackets: Shape {
+    func path(in rect: CGRect) -> Path {
+        let h: CGFloat = 12
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY + h)); path.addLine(to: CGPoint(x: rect.minX, y: rect.minY)); path.addLine(to: CGPoint(x: rect.minX + h, y: rect.minY))
+        path.move(to: CGPoint(x: rect.maxX - h, y: rect.minY)); path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY)); path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + h))
+        path.move(to: CGPoint(x: rect.minX, y: rect.maxY - h)); path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY)); path.addLine(to: CGPoint(x: rect.minX + h, y: rect.maxY))
+        path.move(to: CGPoint(x: rect.maxX - h, y: rect.maxY)); path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY)); path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - h))
+        return path
+    }
+}
+
 extension View {
     /// Marks a control the "Show me" run can light up.
     func coachTarget(_ id: String) -> some View {
         anchorPreference(key: CoachFrames.self, value: .bounds) { [id: $0] }
+    }
+
+    @ViewBuilder func coachTargetIfPresent(_ id: String?) -> some View {
+        if let id { coachTarget(id) } else { self }
     }
 
     /// Adds the "?" button, the help sheet and the coach overlay for a screen that has a topic.
@@ -84,25 +100,39 @@ struct HelpSheet: View {
     let onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(topic.title).font(AppFont.display(23)).foregroundStyle(Theme.ink)
-                Spacer()
+                Text("OPS").font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.blue)
+                    .frame(width: 44, height: 44).background(Theme.mix(0.12))
+                    .overlay(Rectangle().stroke(Theme.blue, lineWidth: 2))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("OPS BRIEFING").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.blue)
+                    Text(topic.title).font(AppFont.display(20)).foregroundStyle(Theme.ink).lineLimit(1)
+                }
+                Spacer(minLength: 4)
                 Button("CLOSE", action: onClose).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress)
                     .frame(minWidth: 44, minHeight: 44).buttonStyle(.plain)
             }
-            ForEach(topic.cards, id: \.title) { card in
-                Panel {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(card.title).font(AppFont.display(16, "Bold")).foregroundStyle(Theme.ink)
-                        Text(card.body).font(AppFont.body(15)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
-                    }.frame(maxWidth: .infinity, alignment: .leading)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(Array(topic.cards.enumerated()), id: \.offset) { index, card in
+                        Panel {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                    Text(String(format: "%02d", index + 1)).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.blue)
+                                    Text(card.title).font(AppFont.display(15, "Bold")).foregroundStyle(Theme.ink)
+                                }
+                                Text(card.body).font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+                            }.frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
                 }
             }
             if let onShowMe { PrimaryButton(title: "Show me", enabled: true, action: onShowMe) }
             Spacer(minLength: 0)
         }
         .padding(16)
+        .frame(maxWidth: 520, maxHeight: .infinity, alignment: .topLeading)
         .background(Theme.bg.ignoresSafeArea())
     }
 }
@@ -136,7 +166,7 @@ struct CoachMarks: View {
                 .contentShape(dim, eoFill: true)
                 .onTapGesture {}
             if let hole {
-                RoundedRectangle(cornerRadius: 10).stroke(Theme.blue, lineWidth: 3)
+                LockOnBrackets().stroke(Theme.blue, style: StrokeStyle(lineWidth: 2, lineCap: .square))
                     .frame(width: hole.width, height: hole.height).position(x: hole.midX, y: hole.midY)
                     .allowsHitTesting(false)
             }

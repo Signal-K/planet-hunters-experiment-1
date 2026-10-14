@@ -76,6 +76,24 @@ export function trainingTryStep(
   return step
 }
 
+/** Six real milestones within the mining try. The first milestone covers
+ * establishing the pad and taking a client order; the last covers bringing
+ * the recovered cargo home and settling the order. This puts the laser at
+ * 5/6, matching the playable sequence rather than the stale 2/6 concept. */
+const MINING_OPS_STEP_BY_SCREEN: Readonly<Record<string, number>> = {
+  intro: 1, build: 1, hub: 1, launchpad: 1, missions: 1,
+  'rocket-buy': 2, fab: 2,
+  targets: 3,
+  'rover-survey': 4,
+  mining: 5,
+  debrief: 6, transit: 6, landing: 6, delivery: 6,
+}
+
+export function trainingTryPosition(step: TrainingTryStep): { index: number; total: number } {
+  if (step.try === 'mining') return { index: MINING_OPS_STEP_BY_SCREEN[step.screen] ?? 1, total: 6 }
+  return { index: step.try === 'scan' ? 2 : 3, total: 3 }
+}
+
 export const EXTRACTION_STEPS: TutorialStep[] = [
   { id: 0, screen: 'build',   title: 'Build the tower',
     body: 'Your first structure — all missions launch from here.',

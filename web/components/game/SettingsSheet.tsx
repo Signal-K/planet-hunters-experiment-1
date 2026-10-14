@@ -9,7 +9,9 @@ import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { readStoredOrientation, storeOrientation, type OrientationPreference } from '@/lib/orientation'
 import PageSurface from '@/components/ui/PageSurface'
 import { PushOptIn } from '@/components/game/PushOptIn'
-import { type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
+import { TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
+import { TRAINING_TRIES, trainingTryStep } from '@/lib/data/tutorial'
+import { EARTH_BIOMES, biomeLayers } from '@/lib/scene/base-world'
 
 interface SettingsSheetProps {
   onClose: () => void
@@ -91,6 +93,9 @@ function SettingsSky() {
 export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   const game = useGame()
   const [confirmReset, setConfirmReset] = useState(false)
+  const [confirmSkipTraining, setConfirmSkipTraining] = useState(false)
+  const [moveBiome, setMoveBiome] = useState(game.player.earthBiome ?? 'mountains')
+  const [confirmMoveBase, setConfirmMoveBase] = useState(false)
   const [showPatchNotes, setShowPatchNotes] = useState(false)
   const [showFullscreen, setShowFullscreen] = useState(false)
   const [orientation, setOrientation] = useState<OrientationPreference>('auto')
@@ -214,18 +219,68 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
 
             <section>
               <h3 className="ops-settings__label">Training</h3>
-              <div className="ops-settings__panel">
-                <Row>
-                  <div className="ops-settings__copy">
-                    <div className="ops-settings__name">Replay tutorials</div>
-                    <div className="ops-settings__sub">Mining, scan, and the part tweak</div>
+              <div className="ops-settings__panel ops-settings__training">
+                <div className="patch-shelf" data-testid="training-patch-shelf" role="list" aria-label="Mission patches">
+                  {TRAINING_TRY_IDS.map(tryId => {
+                    const active = currentTrainingTry(game.player.flightPlan) === tryId
+                    const done = !!game.player.flightPlan?.completed?.[tryId]
+                    const steps = TRAINING_TRIES.filter(step => step.try === tryId)
+                    const currentStep = active ? trainingTryStep(tryId, game.screen)?.id : undefined
+                    const currentIndex = currentStep ? steps.findIndex(step => step.id === currentStep) : -1
+                    const stitched = done ? steps.length : active ? Math.max(0, currentIndex) : 0
+                    const status = done ? 'Done' : active ? 'On air' : `Locked · After ${TRAINING_TRY_IDS.indexOf(tryId)}`
+                    const label = tryId === 'part' ? 'Part tweak' : tryId === 'scan' ? 'Planet scan' : 'Mining'
+                    return (
+                      <div key={tryId} role="listitem" className="patch" data-state={done ? 'done' : active ? 'active' : 'standby'}>
+                        <svg className="patch-ring" viewBox="0 0 44 44" role="img" aria-label={`${label}: ${stitched} of ${steps.length} steps stitched`}>
+                          <circle className="patch-ring-track" cx="22" cy="22" r="16" />
+                          {steps.map((step, index) => {
+                            const circumference = 2 * Math.PI * 16
+                            const length = circumference / steps.length * 0.72
+                            return <circle key={step.id} className="patch-ring-segment" data-stitched={index < stitched} cx="22" cy="22" r="16" strokeDasharray={`${length} ${circumference}`} transform={`rotate(${index * 360 / steps.length} 22 22)`} />
+                          })}
+                          <text x="22" y="26" textAnchor="middle">{String(stitched).padStart(2, '0')}</text>
+                        </svg>
+                        <div className="ops-settings__copy" data-testid={`training-${tryId}-status`}>
+                          <div className="patch-name">{label}</div><div className="patch-status">{status}</div>
+                        </div>
+                        <button type="button" className="ops-settings__btn ops-settings__btn--mini" onClick={() => replay(tryId)}>Replay</button>
+                      </div>
+                    )
+                  })}
+                  <div role="listitem" className="patch patch--free-ops" data-state={freeOps ? 'done' : 'standby'}>
+                    <span className="patch-ring patch-ring--silhouette" aria-hidden="true">◇</span>
+                    <div className="ops-settings__copy"><div className="patch-name">Free Ops</div><div className="patch-status">{freeOps ? 'Unlocked' : 'Locked · After 3'}</div></div>
                   </div>
-                  <button type="button" className="ops-settings__btn" data-testid="replay-tutorials" onClick={() => replay('mining')}>
-                    Replay
-                  </button>
-                </Row>
+                </div>
+                {!freeOps && <Row>
+                  <div className="ops-settings__copy"><div className="ops-settings__name">Skip</div><div className="ops-settings__sub">{confirmSkipTraining ? 'Confirm: mark all tries done' : 'Marks every try done'}</div></div>
+                  <button type="button" className="ops-settings__btn ops-settings__btn--mini" data-testid="skip-training" onClick={() => {
+                    if (!confirmSkipTraining) { setConfirmSkipTraining(true); return }
+                    game.skipFlightPlan(); onClose()
+                  }}>{confirmSkipTraining ? 'Confirm' : 'Skip'}</button>
+                </Row>}
               </div>
             </section>
+
+            {game.player.placed.length > 0 && !game.player.earthBiomeMoveUsed && <section>
+              <h3 className="ops-settings__label">Base landscape</h3>
+              <div className="ops-settings__panel">
+                <div className="base-biome-move-grid" role="group" aria-label="Choose a new base landscape">
+                  {EARTH_BIOMES.map(id => <button key={id} type="button" className="base-biome-option" aria-pressed={moveBiome === id} onClick={() => { setMoveBiome(id); setConfirmMoveBase(false) }}>
+                    <img src={biomeLayers(id)[0].src} alt="" draggable={false} />{id}
+                  </button>)}
+                </div>
+                <Row>
+                  <div className="ops-settings__copy"><div className="ops-settings__name">Move base</div><div className="ops-settings__sub">Available once</div></div>
+                  <button type="button" className="ops-settings__btn" onClick={() => {
+                    if (!confirmMoveBase) { setConfirmMoveBase(true); return }
+                    game.setPlayer(current => ({ ...current, earthBiome: moveBiome, earthBiomeMoveUsed: true }))
+                    setConfirmMoveBase(false)
+                  }}>{confirmMoveBase ? 'Confirm move' : 'Move'}</button>
+                </Row>
+              </div>
+            </section>}
 
             <section>
               <h3 className="ops-settings__label">Game</h3>

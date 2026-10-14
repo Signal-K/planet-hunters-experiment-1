@@ -35,10 +35,12 @@ enum Theme {
 
 enum AppFont {
     /// Registers bundled Oxanium and Turret Road once (works on macOS and iOS).
-    static func register() {
+    static func register() { _ = registeredFonts }
+
+    private static let registeredFonts: Void = {
         guard let urls = Bundle.main.urls(forResourcesWithExtension: "ttf", subdirectory: nil) else { return }
         for url in urls { CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil) }
-    }
+    }()
 
     static func display(_ size: CGFloat, _ weight: String = "ExtraBold") -> Font { .custom("Oxanium-\(weight)", size: size) }
     static func body(_ size: CGFloat, _ weight: String = "Medium") -> Font { .custom("Oxanium-\(weight)", size: size) }

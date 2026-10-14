@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { VIEWPORTS, stage } from './helpers'
 
-// SSL-442 / SSL-556: Ops radio skin on the Flight Plan strip, Ops briefing on the "?" sheet, one Replay tutorials row in Settings.
+// SSL-442: Ops radio skin, shared Ops briefing and the Menu mission patch shelf.
 const seededToken = () => {
   const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url')
   return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ id: 'e2euser0000001', exp: 4102444800 })}.sig`
@@ -22,7 +22,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       const box = (await badge.boundingBox())!
       expect(box.width).toBeGreaterThanOrEqual(44)
       expect(box.height).toBeGreaterThanOrEqual(44)
-      await expect(page.getByTestId('flight-plan-kicker')).toHaveText(/mining Ops · Step 1\/3/i)
+      await expect(page.getByTestId('flight-plan-kicker')).toHaveText(/mining Ops · Step 1\/6/i)
       const m = await page.evaluate(() => ({
         kicker: parseFloat(getComputedStyle(document.querySelector('[data-testid=flight-plan-kicker]')!).fontSize),
         action: parseFloat(getComputedStyle(document.querySelector('.flight-plan-action')!).fontSize),
@@ -34,7 +34,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.screenshot({ path: info.outputPath(`ops-strip-${vp}.png`) })
     })
 
-    test('Menu > Training is one Replay tutorials row', async ({ page }, info) => {
+    test('Menu > Training shows one patch per try and 44px replay/skip controls', async ({ page }, info) => {
       const record = { id: 'e2euser0000001', collectionId: '_pb_users_auth_', collectionName: 'users', email: 'e2e@example.test', verified: true }
       await page.route(/\/api\/(collections|realtime|health)/, route =>
         /auth-refresh/.test(route.request().url())
@@ -52,14 +52,17 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.goto('/game')
       await page.getByTestId('settings-button').click({ timeout: 30_000 })
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
-      await expect(page.getByTestId('skip-training')).toHaveCount(0)
-      const replay = page.getByTestId('replay-tutorials')
-      await replay.scrollIntoViewIfNeeded()
-      await expect(replay).toBeVisible()
-      await expect(page.getByText('Replay tutorials')).toBeVisible()
-      const box = (await replay.boundingBox())!
-      expect(box.height).toBeGreaterThanOrEqual(44)
-      expect(box.width).toBeGreaterThanOrEqual(44)
+      const shelf = page.getByTestId('training-patch-shelf')
+      await shelf.scrollIntoViewIfNeeded()
+      await expect(shelf.locator('.patch')).toHaveCount(4)
+      await expect(shelf.locator('.patch[data-state="done"]')).toHaveCount(1)
+      await expect(shelf.locator('.patch[data-state="active"]')).toHaveCount(1)
+      await expect(shelf.locator('.patch-ring-segment')).toHaveCount(17)
+      await expect(shelf.getByText('Locked · After 3')).toBeVisible()
+      for (const button of await shelf.getByRole('button', { name: 'Replay' }).all()) {
+        expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+      }
+      expect((await page.getByTestId('skip-training').boundingBox())!.height).toBeGreaterThanOrEqual(44)
       await page.screenshot({ path: info.outputPath(`patch-shelf-${vp}.png`) })
     })
 
@@ -71,12 +74,45 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await expect(page.getByTestId('help-card').first()).toContainText('01')
       const hit = await page.evaluate(() => {
         const sheet = document.querySelector('[data-testid=help-sheet]')!
+        const scrim = document.querySelector('[data-testid=help-scrim]')!
         const r = sheet.getBoundingClientRect()
         const top = document.elementFromPoint(r.left + r.width / 2, r.top + 20)
-        return { box: [r.left, r.top, r.width, r.height], covered: !sheet.contains(top), top: top?.tagName }
+        const s = getComputedStyle(scrim)
+        return { box: [r.left, r.top, r.width, r.height], covered: !sheet.contains(top), top: top?.tagName, backdrop: s.backgroundColor }
       })
       expect(hit.covered, JSON.stringify(hit)).toBe(false)
+      if (vp === 'desktop') {
+        expect(hit.box[0]).toBeGreaterThan(size.width * 0.65)
+        expect(hit.box[0] + hit.box[2]).toBe(size.width)
+        expect(hit.backdrop).toBe('rgba(0, 0, 0, 0)')
+      }
       await page.screenshot({ path: info.outputPath(`ops-briefing-${vp}.png`) })
+    })
+
+    test('Show me uses an Ops dock with a 44px skip control and static reduced-motion brackets', async ({ page }, info) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      await stage(page, 'm1-mining')
+      await expect(page.getByTestId('help-button')).toBeVisible()
+      await page.getByTestId('help-button').click()
+      await page.getByTestId('help-show-me').click()
+      const hint = page.getByTestId('help-coach-hint')
+      await expect(hint).toBeVisible()
+      await expect(hint).toContainText('OPS')
+      await expect(hint).toContainText('Show me · 1 of 1')
+      const metrics = await page.evaluate(() => {
+        const skip = document.querySelector<HTMLElement>('[data-testid="help-coach-stop"]')!
+        const bracket = document.querySelector<HTMLElement>('.help-coach-brackets')!
+        const dock = document.querySelector<HTMLElement>('[data-testid="help-coach-hint"]')!
+        return {
+          skipHeight: skip.getBoundingClientRect().height,
+          bracketMotion: getComputedStyle(bracket).animationName,
+          kickerSize: parseFloat(getComputedStyle(dock.querySelector('.help-coach-dock-kicker')!).fontSize),
+        }
+      })
+      expect(metrics.skipHeight).toBeGreaterThanOrEqual(44)
+      expect(metrics.bracketMotion).toBe('none')
+      expect(metrics.kickerSize).toBeGreaterThanOrEqual(14)
+      await page.screenshot({ path: info.outputPath(`show-me-dock-${vp}.png`) })
     })
   })
 }

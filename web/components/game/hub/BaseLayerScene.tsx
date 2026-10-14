@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import type { TimeOfDayPhase } from '@/lib/hooks/useTimeOfDay'
 import {
   biomeLayers,
+  biomeGround,
   sanitizeEarthBiome,
   seasonForDate,
   worldTimeGrade,
@@ -39,6 +40,7 @@ export function BaseLayerScene({
   const shownTime = time ?? worldTimeGrade(phase)
   const landscape = sanitizeEarthBiome(biome)
   const layers = biomeLayers(landscape)
+  const ground = biomeGround(landscape)
 
   return (
     <div
@@ -73,6 +75,7 @@ export function BaseLayerScene({
         <img src="/game/assets/base/kit/prop-tree-c.png" alt="" draggable={false} className={styles.prop} data-prop="tree-c" />
       </div>
       <div className={styles.ground} data-layer="ground">
+        {ground && <img className={styles.biomeGround} src={ground} alt="" draggable={false} />}
         <div className={styles.verge} />
         <div className={styles.road} data-layer="road" />
       </div>

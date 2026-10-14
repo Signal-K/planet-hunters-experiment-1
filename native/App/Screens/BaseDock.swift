@@ -4,6 +4,7 @@ import LandnamCore
 /// Floating dock. A left arrow sits at the far left, Build and Hub in the middle, a right arrow at the far right.
 struct BaseDock: View {
     @Environment(GameStore.self) private var store
+    @Environment(\.coach) private var coach
     let tile: CGFloat
     let zones: HUDZones.Zones.BottomNav
     /// Middle buttons; nil gives the base dock (Build, Hub).
@@ -27,7 +28,11 @@ struct BaseDock: View {
                 if index == 0, let holdFirst {
                     HoldDockButton(title: item.title, symbol: item.symbol, hold: holdFirst)
                 } else {
-                    DockButton(title: item.title, symbol: item.symbol, action: item.action)
+                    let coachTarget = item.title == "Fire" ? "mining-fire-laser" : nil
+                    DockButton(title: item.title, symbol: item.symbol, action: {
+                        item.action()
+                        if coachTarget != nil { coach?.report("fire") }
+                    }, coachTarget: coachTarget)
                 }
             }
             Spacer(minLength: 0)
@@ -45,7 +50,7 @@ struct BaseDock: View {
     private func arrow(_ symbol: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol).font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.hudInk)
-                .frame(width: 36, height: 36)
+                .frame(width: 44, height: 44)
                 .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
         }
@@ -102,20 +107,22 @@ struct DockButton: View {
     let title: String
     let symbol: String
     let action: () -> Void
+    var coachTarget: String? = nil
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: symbol).font(.system(size: 14, weight: .bold))
-                Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2)
+                Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).lineLimit(1).fixedSize()
             }
             .foregroundStyle(Theme.hudInk)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 8)
             .frame(minWidth: 88, minHeight: 44)
             .background(Capsule().fill(Theme.hudPanel))
             .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
+        .coachTargetIfPresent(coachTarget)
     }
 }

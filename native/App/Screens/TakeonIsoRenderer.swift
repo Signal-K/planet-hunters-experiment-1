@@ -95,8 +95,19 @@ struct TakeonIsoRenderer {
                 let c = corners(sel.x, sel.y, z: Double(h + 1), o: o)
                 var top = Path(); top.addLines([c.n, c.e, c.s, c.w]); top.closeSubpath()
                 ctx.fill(top, with: .color(Theme.hudMint.opacity(0.28)))
-                ctx.stroke(top, with: .color(Theme.hudInk), lineWidth: 5)
-                ctx.stroke(top, with: .color(Theme.hudMint), lineWidth: 3)
+                var lock = Path()
+                let points = [c.n, c.e, c.s, c.w]
+                for i in points.indices {
+                    let vertex = points[i]
+                    let previous = points[(i + points.count - 1) % points.count]
+                    let next = points[(i + 1) % points.count]
+                    let inset: CGFloat = 0.22
+                    lock.move(to: CGPoint(x: vertex.x + (previous.x - vertex.x) * inset, y: vertex.y + (previous.y - vertex.y) * inset))
+                    lock.addLine(to: vertex)
+                    lock.addLine(to: CGPoint(x: vertex.x + (next.x - vertex.x) * inset, y: vertex.y + (next.y - vertex.y) * inset))
+                }
+                ctx.stroke(lock, with: .color(Theme.hudInk), style: StrokeStyle(lineWidth: 4, lineCap: .square, lineJoin: .miter))
+                ctx.stroke(lock, with: .color(Theme.hudMint), style: StrokeStyle(lineWidth: 2, lineCap: .square, lineJoin: .miter))
             }
         }
         // Edge vignette keeps the eye on the rover.

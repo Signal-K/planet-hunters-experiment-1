@@ -1,26 +1,12 @@
 #!/usr/bin/env node
-/**
- * Blueprint palette hue check (SSL-425).
- *
- * The light blueprint theme is cyan / teal / ice only: no orange, no purple.
- * Fails on any hex or rgb()/rgba() colour whose hue falls in 12-48 deg
- * (orange/amber) or 250-325 deg (purple/magenta) and that is saturated enough
- * to read as a hue (greys, creams and near-white/black are ignored).
- *
- * Scans tokens, CSS, SVG and canvas palettes (#rrggbb, 0xrrggbb, rgb()) in TS/TSX/JS sources and
- * the native Swift sources (hex strings, Color(red:green:blue:)).
- * Run: npm run verify:hue-palette
+/** Blueprint chrome hue guard. World art may use the approved dusk palette.
+ * Check shared UI tokens, not every world pixel or historical asset.
  */
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const WEB_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const SCAN_DIRS = ['app', 'components', 'lib', 'public']
-const EXTENSIONS = /\.(css|tsx?|svg|mjs|swift)$/
-// Native (SwiftUI/SpriteKit) sources are scanned too so web and native share one palette rule.
-const NATIVE_DIRS = ['../native/App', '../native/LandnamCore/Sources']
-const SKIP = /node_modules|\.next|\.test\.|\.spec\.|__tests__|design-reference/
 const BANNED_HUES = [[12, 48], [250, 325]]
 const MIN_SATURATION = 0.3
 const MIN_LIGHTNESS = 0.12
@@ -77,31 +63,14 @@ export function scanText(text) {
   return hits
 }
 
-function walk(dir, out) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name)
-    if (SKIP.test(full)) continue
-    if (entry.isDirectory()) walk(full, out)
-    else if (EXTENSIONS.test(entry.name)) out.push(full)
-  }
-}
-
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const files = []
-  for (const d of [...SCAN_DIRS, ...NATIVE_DIRS]) {
-    const full = path.join(WEB_ROOT, d)
-    if (fs.existsSync(full)) walk(full, files)
-  }
-  let failures = 0
-  for (const file of files) {
-    for (const hit of scanText(fs.readFileSync(file, 'utf8'))) {
-      failures++
-      console.error(`${path.relative(WEB_ROOT, file)}:${hit.line}  ${hit.color}  hue ${hit.hue}`)
-    }
-  }
-  if (failures) {
-    console.error(`\nverify:hue-palette: ${failures} orange/purple colour(s). Use cyan/teal/ice tokens.`)
+  const tokens = JSON.parse(fs.readFileSync(path.join(WEB_ROOT, '../shared/tokens/tokens.json'), 'utf8'))
+  const chrome = ['blueprintBg', 'blueprintPaper', 'blueprintPaper2', 'blueprintInk', 'blueprintBlue',
+    'cyan', 'cyanBright', 'cyanPress', 'amber', 'amberBright', 'amberPress', 'warn']
+  const failures = chrome.flatMap(key => scanText(tokens.colors[key]).map(hit => `${key}: ${hit.color} hue ${hit.hue}`))
+  if (failures.length) {
+    console.error('verify:hue-palette: blueprint chrome must use blue/teal/ice\n' + failures.join('\n'))
     process.exit(1)
   }
-  console.log(`verify:hue-palette: ${files.length} files clean`)
+  console.log(`verify:hue-palette: ${chrome.length} shared chrome tokens clean; scene palette governed by game-theme-spec.md`)
 }

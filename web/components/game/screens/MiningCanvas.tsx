@@ -432,6 +432,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
 
   return (
     <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" data-palette={palette.id} data-training-mining={trainingMiningTry || undefined}>
+      {trainingMiningTry && <div className="mining-seam-brackets" data-testid="mining-seam-brackets" aria-hidden="true" />}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
         // Keep miss feedback at the firing lane. A full-canvas red wash reads

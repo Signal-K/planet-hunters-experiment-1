@@ -36,7 +36,7 @@
    is still dark mode — just neutral-dark instead of blue-dark. */
 :root, .theme-deep {
   /* BEGIN GENERATED SHARED TOKENS — run npm run sync:shared */
-  /* Accent naming: blueprintBlue is canonical; --ln-cyan remains a legacy web alias. Amber is the warm selection/currency accent. The Sun (--ln-map-sun) is ice-white with a cyan glow. */
+  /* Accent naming: blueprintBlue is canonical; --ln-cyan remains a legacy web alias. Legacy amber aliases use blueprint blue for controls; use payout for rewards. The Sun (--ln-map-sun) is ice-white with a cyan glow. */
   --ln-void: #0a0a0c;
   --ln-bg: #131316;
   --ln-bg-grid: #1a1a1e;
@@ -2931,9 +2931,24 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"]:
     linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom right / 2px 12px no-repeat;
   animation: beacon-lock 240ms ease-out both, beacon-glow 3s ease-in-out 240ms 1 both;
 }
+.help-coach-brackets {
+  z-index: 81;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) top left / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) top left / 2px 12px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) top right / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) top right / 2px 12px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom left / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom left / 2px 12px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom right / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom right / 2px 12px no-repeat;
+  animation: beacon-glow 3s ease-in-out 240ms 1 both;
+}
 @media (prefers-reduced-motion: reduce) {
   html[data-flight-target] [data-beacon]::after,
-  .lock-on::after { animation: none !important; }
+  .lock-on::after,
+  .help-coach-brackets { animation: none !important; }
 }
 /* SSL-449: one primary action per screen. While the Flight Plan beacons another
    control, the Base Build button drops to a quiet secondary so only the
@@ -2992,6 +3007,18 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 .flight-plan-hint-dock { display: flex; align-items: center; gap: 8px; margin: 0; min-height: 44px; }
 .flight-plan-hint-dock button { flex: none; min-width: 44px; min-height: 44px; padding: 0 12px; border: 2px solid var(--ln-bp-blue, #1f78c1); border-radius: 8px; background: var(--ln-bp-paper, #fff); color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
 .flight-plan-hint-dock span { font-size: 14px; line-height: 1.3; color: var(--ln-bp-ink, #0f2436); }
+.help-coach-dock { box-sizing: border-box; width: min(340px, calc(100vw - 32px)); max-height: min(220px, calc(100dvh - 32px)); overflow: auto; }
+.help-coach-dock-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.help-coach-dock-head .ops-badge { width: 44px; height: 44px; }
+.help-coach-dock-kicker { font: 800 14px/1.25 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); }
+
+.base-biome-choice { border: 2px solid var(--ln-bp-ink); border-radius: 12px; margin: 16px 0; padding: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.base-biome-option { min-width: 0; min-height: 72px; padding: 4px; display: grid; grid-template-rows: 44px auto; gap: 4px; justify-items: stretch; align-items: center; border: 2px solid var(--ln-bp-ink); border-radius: 8px; color: var(--ln-bp-ink); background: var(--ln-bp-paper); font: 800 14px/1.15 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.base-biome-option[aria-pressed='true'] { background: var(--ln-bp-paper-2); outline: 2px solid var(--ln-bp-blue); outline-offset: 1px; }
+.base-biome-option img { width: 100%; height: 44px; object-fit: cover; border-radius: 4px; }
+.base-biome-move-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.base-biome-move-grid .base-biome-option { min-height: 68px; font-size: 14px; }
+@media (max-width: 420px) { .base-biome-move-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .flight-plan-skip { align-self: flex-start; margin-top: 4px; }
 .flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-bp-paper, #fff); }
 .game-chrome-bottom__training-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 999px; background: var(--ln-cyan); }
@@ -3776,10 +3803,17 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* SSL-442 Mission patch shelf (Menu > Training log): one patch per try, ring filled when done. */
 .patch-shelf { display: grid; gap: 8px; }
 .patch { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 12px; padding: 8px; border: 1px solid var(--ln-bp-line, rgba(15,36,54,.14)); border-radius: 8px; background: var(--ln-bp-paper, #fff); }
-.patch-ring { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 999px; border: 2px dashed var(--ln-bp-line-strong, rgba(15,36,54,.3)); color: var(--ln-bp-ink-dim, #48596a); font: 800 14px/1 var(--ln-font-display); background: var(--ln-bp-paper, #fff); }
-.patch[data-state='active'] .patch-ring { border-color: transparent; color: var(--ln-bp-ink, #0f2436); }
-.patch[data-state='active'] .patch-ring::before { content: ''; position: absolute; inset: -2px; border-radius: inherit; background: conic-gradient(var(--ln-bp-blue, #1f78c1) calc(var(--patch-turn, 0.2) * 1turn), var(--ln-bp-line, rgba(15,36,54,.14)) 0); -webkit-mask: radial-gradient(circle, transparent 16px, #000 18px); mask: radial-gradient(circle, transparent 16px, #000 18px); }
-.patch[data-state='done'] .patch-ring { border: 3px solid var(--ln-bp-green, #17703f); background: var(--ln-bp-green-soft, rgba(23,112,63,.1)); color: var(--ln-bp-green, #17703f); }
+.patch-ring { display: block; flex: none; width: 44px; height: 44px; overflow: visible; color: var(--ln-bp-ink-dim, #48596a); font: 800 9px/1 var(--ln-font-display); }
+.patch-ring-track,.patch-ring-segment { fill: none; stroke-width: 3; }
+.patch-ring-track { stroke: var(--ln-bp-line-strong, rgba(15,36,54,.3)); stroke-dasharray: 2 3; }
+.patch-ring-segment { stroke: var(--ln-bp-line-strong, rgba(15,36,54,.3)); transition: stroke 400ms ease-out; }
+.patch-ring-segment[data-stitched='true'] { stroke: var(--ln-bp-green, #17703f); animation: patch-stitch 400ms ease-out both; }
+.patch-ring text { fill: currentColor; font: 800 9px var(--ln-font-display); }
+.patch-ring--silhouette { display: inline-flex; align-items: center; justify-content: center; border: 2px dashed var(--ln-bp-line-strong, rgba(15,36,54,.3)); border-radius: 50%; font-size: 22px; }
+@keyframes patch-stitch { from { opacity: .35; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .patch-ring-segment { animation: none !important; transition: none !important; } }
+.patch[data-state='active'] .patch-ring text { fill: var(--ln-bp-ink, #0f2436); }
+.patch[data-state='done'] .patch-ring { color: var(--ln-bp-green, #17703f); }
 .patch-name { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--ln-bp-ink, #0f2436); }
 .patch-status { font: 14px/1.3 var(--ln-font-body); color: var(--ln-bp-ink-dim, #48596a); margin-top: 2px; }
 .patch[data-state='active'] .patch-status { color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font-weight: 700; }
@@ -4235,6 +4269,8 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   z-index: 17;
 }
 .mining-screen .laser-chrome .settings-cog { top: 8px; left: 8px; }
+.mining-screen .laser-chrome__help { position: absolute; z-index: 21; top: 8px; left: 60px; width: 44px; height: 44px; }
+.mining-screen .laser-chrome .laser-chrome__clock { left: 112px; }
 .laser-chrome__clock {
   top: 8px;
   left: 60px;
@@ -4274,6 +4310,21 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   white-space: normal;
 }
 .portrait-canvas--mining .sync-status { display: none; }
+.mining-seam-brackets {
+  position: absolute; z-index: 11; pointer-events: none; left: 60px; top: calc(62% - 14px); width: 40px; height: 28px;
+  background:
+    linear-gradient(var(--ln-bp-paper, #fff), var(--ln-bp-paper, #fff)) left top / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-paper, #fff), var(--ln-bp-paper, #fff)) left top / 2px 10px no-repeat,
+    linear-gradient(var(--ln-bp-paper, #fff), var(--ln-bp-paper, #fff)) right top / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-paper, #fff), var(--ln-bp-paper, #fff)) right top / 2px 10px no-repeat,
+    linear-gradient(var(--ln-bp-paper, #fff), var(--ln-bp-paper, #fff)) left bottom / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-paper, #fff), var(--ln-bp-paper, #fff)) left bottom / 2px 10px no-repeat,
+    linear-gradient(var(--ln-bp-paper, #fff), var(--ln-bp-paper, #fff)) right bottom / 12px 2px no-repeat,
+    linear-gradient(var(--ln-bp-paper, #fff), var(--ln-bp-paper, #fff)) right bottom / 2px 10px no-repeat;
+  filter: drop-shadow(0 0 2px var(--ln-bp-ink, #0f2436));
+  animation: beacon-lock 240ms ease-out both, beacon-glow 3s ease-in-out 240ms 1 both;
+}
+@media (prefers-reduced-motion: reduce) { .mining-seam-brackets { animation: none !important; } }
 html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="mining-fire-laser"]::after {
   content: none;
   animation: none;
@@ -4290,9 +4341,12 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   color: #f4f1ea;
   left: 50%;
   right: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: max-content;
   max-width: calc(100vw - 32px);
-  transform: translateX(-50%);
+  transform: none;
   margin: 0;
   text-align: center;
   font: 700 14px/18px var(--ln-font-body);

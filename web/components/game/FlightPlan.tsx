@@ -5,6 +5,7 @@ import type { TutorialStep, TrainingTryStep } from '@/lib/data'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { useHelpOpen } from '@/lib/help/open-state'
+import { trainingTryPosition } from '@/lib/data/tutorial'
 
 interface FlightPlanProps {
   stepIndex: number
@@ -35,15 +36,18 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
   const stripRef = useRef<HTMLElement>(null)
   // SSL-442: a finished step reads "COPY · STEP n DONE" in the kicker for 1.5s.
   const [doneStep, setDoneStep] = useState<number | null>(null)
-  const prevStep = useRef({ index: stepIndex, id: step.id })
+  const tryPosition = 'try' in step ? trainingTryPosition(step) : null
+  const displayIndex = (tryPosition?.index ?? stepIndex + 1) - 1
+  const displayTotal = tryPosition?.total ?? total
+  const prevStep = useRef({ index: displayIndex, id: step.id })
   useEffect(() => {
     const prev = prevStep.current
-    prevStep.current = { index: stepIndex, id: step.id }
-    if (stepIndex <= prev.index || step.id === prev.id) return
+    prevStep.current = { index: displayIndex, id: step.id }
+    if (displayIndex <= prev.index || step.id === prev.id) return
     setDoneStep(prev.index + 1)
     const timer = window.setTimeout(() => setDoneStep(null), 1500)
     return () => window.clearTimeout(timer)
-  }, [stepIndex, step.id])
+  }, [displayIndex, step.id])
 
   useEffect(() => { if (persistedHidden !== undefined) setHidden(persistedHidden) }, [persistedHidden])
 
@@ -82,7 +86,7 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
         type="button"
         className="flight-plan-chip"
         data-testid="flight-plan-chip"
-        aria-label={`Show Flight Plan, training ${stepIndex + 1} of ${total}`}
+        aria-label={`Show Flight Plan, training ${displayIndex + 1} of ${displayTotal}`}
         onClick={() => { setHidden(false); onHiddenChange?.(false) }}
       >
         Training {stepIndex + 1}/{total}
@@ -102,7 +106,7 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
         >
           <span className="ops-badge" data-testid="ops-badge" aria-hidden="true">OPS<span className="ops-bars"><i /><i /><i /></span></span>
           <span className="flight-plan-text">
-          <span className="flight-plan-kicker" data-state={doneStep ? 'done' : 'live'} data-testid="flight-plan-kicker">{doneStep ? `Copy · Step ${doneStep} done` : `${isTryStep ? step.try : step.title} Ops · Step ${stepIndex + 1}/${total}`}</span>
+          <span className="flight-plan-kicker" data-state={doneStep ? 'done' : 'live'} data-testid="flight-plan-kicker">{doneStep ? `Copy · Step ${doneStep} done` : `${isTryStep ? step.try : step.title} Ops · Step ${displayIndex + 1}/${displayTotal}`}</span>
           <span className="flight-plan-action">{action}</span>
           </span>
         </button>

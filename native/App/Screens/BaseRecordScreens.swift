@@ -4,6 +4,7 @@ import LandnamCore
 /// Opening scene (mirrors web IntroScreen): wordmark, one sentence, one button into the base.
 struct IntroScreen: View {
     @Environment(GameStore.self) private var store
+    @State private var selectedBiome = "mountains"
     var body: some View {
         let p = store.player
         let returning = p.missionsDone > 0
@@ -16,7 +17,30 @@ struct IntroScreen: View {
                  ? "Missions completed: \(p.missionsDone) · Total earned: \(Economy.format(francs: p.francs))"
                  : "Build your base. Mine the asteroids. Fulfill the contract. The belt is waiting.")
                 .font(AppFont.body(16)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center).frame(maxWidth: 420)
-            PrimaryButton(title: returning ? "Resume operations" : "Begin operations") { store.go(returning || !p.placed.isEmpty ? .hub : .build) }.frame(maxWidth: 320)
+            if !returning {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                    ForEach(["mountains", "desert", "tundra", "coast"], id: \.self) { id in
+                        Button { selectedBiome = id } label: {
+                            VStack(spacing: 4) {
+                                GeometryReader { proxy in
+                                    Image("Biome/\(id)-layer-far")
+                                        .resizable().scaledToFill()
+                                        .frame(width: proxy.size.width, height: 48)
+                                        .clipped()
+                                }
+                                .frame(height: 48)
+                                Text(id.capitalized).font(AppFont.display(14)).lineLimit(1).minimumScaleFactor(0.85)
+                            }.frame(maxWidth: .infinity).padding(6)
+                                .background(selectedBiome == id ? Theme.hudPanel : Theme.paper)
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(selectedBiome == id ? Theme.blue : Theme.hudInk, lineWidth: 2))
+                        }.buttonStyle(.plain).frame(minHeight: 88).accessibilityAddTraits(selectedBiome == id ? .isSelected : [])
+                    }
+                }.frame(maxWidth: 620).accessibilityElement(children: .contain).accessibilityLabel("Choose base landscape")
+            }
+            PrimaryButton(title: returning ? "Resume operations" : "Begin operations") {
+                if !returning { store.setEarthBiome(selectedBiome) }
+                store.go(returning || !p.placed.isEmpty ? .hub : .build)
+            }.frame(maxWidth: 320)
             Spacer(minLength: 0)
         }
         .padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)

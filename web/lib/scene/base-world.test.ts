@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { normalizeState } from '@/lib/game-state'
 import {
   biomeLayers,
+  biomeGround,
   exchangeAnchorX,
   exchangeSeat,
   lockBaseWorldPreview,
@@ -20,11 +21,13 @@ import {
 } from './base-world'
 
 describe('base world layers', () => {
-  it('ships two biome layer sets and borrows them for the other two biomes', () => {
+  it('ships distinct skyline and ground layers for all four base biomes', () => {
     expect(biomeLayers('mountains').map(layer => layer.id)).toEqual(['far', 'hills'])
     expect(biomeLayers('desert').map(layer => layer.id)).toEqual(['far'])
-    expect(biomeLayers('tundra').map(layer => layer.src)).toEqual(biomeLayers('mountains').map(layer => layer.src))
-    expect(biomeLayers('coast').map(layer => layer.src)).toEqual(biomeLayers('desert').map(layer => layer.src))
+    expect(biomeLayers('tundra').map(layer => layer.src)).toEqual(['/game/assets/biomes/tundra/layer-far.png'])
+    expect(biomeLayers('coast').map(layer => layer.src)).toEqual(['/game/assets/biomes/coast/layer-far.png'])
+    expect(biomeGround('tundra')).toBe('/game/assets/biomes/tundra/layer-ground.png')
+    expect(biomeGround('coast')).toBe('/game/assets/biomes/coast/layer-ground.png')
     expect(biomeLayers('mountains').map(layer => layer.src)).toEqual([
       '/game/assets/base/layers/mountains-far.png',
       '/game/assets/base/layers/mountains-mid.png',

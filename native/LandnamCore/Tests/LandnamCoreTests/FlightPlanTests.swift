@@ -30,12 +30,13 @@ struct FlightPlanTests {
     @Test func coachNamesLaunchpadPlacementFirst() {
         let p = Player()
         let c = FlightPlan.coach(p, screen: .hub)
-        #expect(c?.kicker == "MINING OPS · STEP 1/3" && c?.objective == "Place the launchpad" && c?.go?.screen == .build)
+        #expect(c?.kicker == "MINING OPS · STEP 1/6" && c?.objective == "Place the launchpad" && c?.go?.screen == .build)
         var placed = p; placed.placed = ["launchpad"]
         #expect(FlightPlan.coach(placed, screen: .launchpad)?.objective == "Open client contracts")
         placed.flightPlan.complete("mining")
         #expect(FlightPlan.coach(placed, screen: .hub)?.kicker == "SCAN OPS · STEP 2/3")
         #expect(FlightPlan.coach(placed, screen: .mining)?.objective == "Fire the laser on a seam")
+        #expect(FlightPlan.coach(p, screen: .mining)?.kicker == "MINING OPS · STEP 5/6")
     }
 
     @Test func transitEntryKind() {

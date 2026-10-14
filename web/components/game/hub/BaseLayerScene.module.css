@@ -210,6 +210,26 @@
   pointer-events: none;
 }
 
+.scene[data-biome='tundra'] .ground,
+.scene[data-biome='coast'] .ground { background: none; }
+.scene[data-biome='tundra'] .props,
+.scene[data-biome='coast'] .props { display: none; }
+
+.biomeGround {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  image-rendering: auto;
+}
+
+.scene[data-biome='tundra'] .verge,
+.scene[data-biome='coast'] .verge,
+.scene[data-biome='tundra'] .road,
+.scene[data-biome='coast'] .road { display: none; }
+
 .verge {
   position: absolute;
   left: 0;

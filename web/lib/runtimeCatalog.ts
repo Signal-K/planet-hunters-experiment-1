@@ -56,7 +56,7 @@ interface RuntimeCatalogOpts {
   missionId?: string | null
   targetId?: string | null
   missionsDone: number
-  player?: Player
+  player?: Partial<Player>
 }
 
 export function buildRuntimeCatalog({
