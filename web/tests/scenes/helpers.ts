@@ -7,13 +7,14 @@ export const VIEWPORTS = {
 } as const
 
 /** Mount one screen from a dev preset. `patch` shallow-merges into the player; `click` clicks data-testids in order. */
-export async function stage(page: Page, preset: string, opts: { patch?: object; click?: string[]; chrome?: boolean } = {}) {
+export async function stage(page: Page, preset: string, opts: { patch?: object; click?: string[]; chrome?: boolean; normalize?: boolean } = {}) {
   const errors: string[] = []
   page.on('pageerror', e => errors.push(e.message))
   const q = new URLSearchParams({ preset })
   if (opts.patch) q.set('patch', JSON.stringify(opts.patch))
   if (opts.click?.length) q.set('click', opts.click.join(','))
   if (opts.chrome) q.set('chrome', '1')
+  if (opts.normalize) q.set('normalize', '1')
   await page.goto(`/game/stage?${q}`)
   await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
   if (opts.click?.length) await page.waitForTimeout(500 + opts.click.length * 700)

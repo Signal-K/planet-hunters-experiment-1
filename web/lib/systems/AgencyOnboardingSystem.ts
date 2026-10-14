@@ -50,20 +50,14 @@ function finiteMissionsDone(player: AgencyTrainingPlayer): number {
   return Number.isFinite(player.missionsDone) ? player.missionsDone : 0
 }
 
-function flightPlanStarted(plan: AgencyTrainingPlayer['flightPlan']): boolean {
-  if (!plan) return false
-  if (plan.activeSince || plan.replayTry) return true
-  const completed = plan.completed
-  return !!(completed?.mining || completed?.scan || completed?.part)
-}
-
-/** Free Ops opens once the three tries are finished. A save that already
- * reached Free Ops under the old three-mission onboarding, and never started
- * this plan, keeps the unlock. Mining three contracts without the scan and
- * part tries does not (SSL-393). */
+/** Free Ops opens once the three tries are finished, or once the player has
+ * flown at least the legacy onboarding's three missions. SSL-569: missions
+ * flown always count, even after the flight plan was opened (a hint, a replay
+ * or a single try started on an old account used to re-lock a veteran save
+ * with ten missions done). Free Ops is never taken away from a player who has
+ * earned it. */
 export function freeOperationsUnlocked(player: AgencyTrainingPlayer): boolean {
   if (isTrainingComplete(player.flightPlan)) return true
-  if (flightPlanStarted(player.flightPlan)) return false
   return finiteMissionsDone(player) >= LEGACY_FREE_OPS_MISSIONS_DONE
 }
 

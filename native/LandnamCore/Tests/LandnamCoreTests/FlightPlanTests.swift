@@ -22,9 +22,12 @@ struct FlightPlanTests {
         #expect(store.player.freeOperations && !store.state.tutorial)
     }
 
-    @Test func threeContractsAloneDoNotOpenFreeOps() {
-        var p = Player(); p.missionsDone = 3
+    /// SSL-569 (supersedes SSL-393 native): flown missions count, matching web, so veteran saves are never locked out.
+    @Test func freeOpsOpensAtLegacyMissionCountButNotBefore() {
+        var p = Player(); p.missionsDone = 2
         #expect(!Transitions.freeOperationsUnlocked(p))
+        p.missionsDone = 3
+        #expect(Transitions.freeOperationsUnlocked(p))
     }
 
     @Test func coachNamesLaunchpadPlacementFirst() {

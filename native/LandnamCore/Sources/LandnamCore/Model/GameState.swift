@@ -174,6 +174,9 @@ public struct Player: Codable, Equatable, Sendable {
         buildingLevels = BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)
         launchpadUpgraded = launchpadUpgraded || (buildingLevels["launchpad"] ?? 1) >= 2
         Self.mergeTelescope(&self)
+        // SSL-569: heal an undercounted counter and a stale Free Ops flag on every load and cloud pull.
+        missionsDone = max(missionsDone, completedMissions.count)
+        freeOperations = Transitions.freeOperationsUnlocked(self)
         for key in c.allKeys where !consumed.contains(key.stringValue) {
             extras[key.stringValue] = try? c.decode(JSONValue.self, forKey: key)
         }
@@ -268,6 +271,7 @@ public struct GameState: Codable, Equatable, Sendable {
         getOpt("deliveryTargetId", &deliveryTargetId); get("rocket", &rocket); getOpt("lastCargo", &lastCargo)
         getOpt("deliveredCargo", &deliveredCargo); get("tutorial", &tutorial); get("doneSteps", &doneSteps)
         getOpt("popup", &popup); get("menuOpen", &menuOpen); getOpt("updatedAt", &updatedAt)
+        if player.freeOperations { tutorial = false } // SSL-569: a healed Free Ops save leaves the tutorial
         for key in c.allKeys where !consumed.contains(key.stringValue) {
             extras[key.stringValue] = try? c.decode(JSONValue.self, forKey: key)
         }

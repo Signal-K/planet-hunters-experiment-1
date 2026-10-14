@@ -13,8 +13,14 @@ public enum Transitions {
 
     // MARK: onboarding
 
-    /// Free Ops opens when all three training tries (mining, scan, part) are done; contract count alone never opens it.
-    public static func freeOperationsUnlocked(_ p: Player) -> Bool { p.flightPlan.isComplete }
+    /// Missions that put a save in Free Ops under the legacy onboarding (web `LEGACY_FREE_OPS_MISSIONS_DONE`).
+    public static let legacyFreeOpsMissionsDone = 3
+
+    /// Free Ops opens when the three training tries are done, or once the player has flown the
+    /// legacy onboarding's three missions (SSL-569: veteran saves are never re-locked). Mirrors web.
+    public static func freeOperationsUnlocked(_ p: Player) -> Bool {
+        p.flightPlan.isComplete || max(p.missionsDone, p.completedMissions.count) >= legacyFreeOpsMissionsDone
+    }
 
     // MARK: return leg
 

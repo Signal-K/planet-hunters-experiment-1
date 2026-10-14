@@ -313,9 +313,12 @@ export function normalizeState(input: PartialSave): GameState {
   // early; derive it (SSL-332: guided missions flown plus a storage silo, or a
   // save that already reached Free Ops under the old onboarding) so the early
   // game can never expose the post-onboarding telescope flow.
-  const missionsDone = Number.isFinite(player.missionsDone)
+  // SSL-569: a missing or undercounted counter heals from the mission log, and
+  // a save already in Free Ops is never re-locked by a stale derivation.
+  const savedMissionsDone = Number.isFinite(player.missionsDone)
     ? Math.max(0, Math.floor(player.missionsDone ?? 0))
     : DEFAULT_STATE.player.missionsDone
+  const missionsDone = Math.max(savedMissionsDone, completedMissions.length)
   const freeOperations = freeOperationsUnlocked({ missionsDone, placed: placedList, flightPlan: player.flightPlan })
   const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
   const pendingTerritoryClaimFor = legacyClaim

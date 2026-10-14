@@ -12,6 +12,7 @@ import { trainingTryStep } from '@/lib/data/tutorial'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import { OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
+import { normalizeState } from '@/lib/game-state'
 
 // Minimal shell: same wrapper classes as the live game so CSS matches, but none
 // of the loop machinery (Flight Plan, auth gate, tickers, sync, analytics).
@@ -22,11 +23,18 @@ function Stage() {
   useEffect(() => {
     if (!game.hydrated || patched.current) return
     patched.current = true
-    const raw = new URLSearchParams(window.location.search).get('patch')
+    const params = new URLSearchParams(window.location.search)
+    const raw = params.get('patch')
     if (!raw) return
     try {
       const patch = JSON.parse(raw)
-      game.setPlayer(p => ({ ...p, ...patch }))
+      // ?normalize=1 runs the patched player through the real save loader, so a
+      // legacy save fixture renders exactly as it would after a load or cloud pull.
+      if (params.get('normalize') === '1') {
+        const next = normalizeState({ player: { ...game.player, ...patch } }).player
+        game.setPlayer(() => next)
+        if (next.freeOperations) game.setTutorial(false)
+      } else game.setPlayer(p => ({ ...p, ...patch }))
     } catch { /* bad patch JSON: render the unpatched fixture */ }
   }, [game, game.hydrated])
 
