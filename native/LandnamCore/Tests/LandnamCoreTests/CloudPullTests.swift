@@ -36,6 +36,17 @@ import Foundation
         #expect(!store.welcomePending)
     }
 
+    @Test func laterWebImportsDoNotReplayTheCompletedWelcome() {
+        let store = GameStore(state: GameState())
+        #expect(store.adoptRemote(webSave(missions: 4)))
+        store.finishWelcome()
+
+        #expect(store.adoptRemote(webSave(missions: 5)))
+        #expect(store.screen == .hub)
+        #expect(!store.welcomePending)
+        #expect(store.state.extras[CloudPull.welcomeSeenKey] == .bool(true))
+    }
+
     @Test func staleOrEmptyRemoteNeverClobbersLocalProgress() {
         var local = GameState(); local.player.missionsDone = 9; local.player.placed = ["launchpad"]
         let store = GameStore(state: local)

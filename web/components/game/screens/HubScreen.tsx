@@ -16,7 +16,6 @@ import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
-import { CrewWalkers } from '@/components/game/hub/CrewWalkers'
 import { EARTH_BASE_WIDE } from '@/lib/scene/compositions'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
@@ -48,39 +47,9 @@ function BuildGlyph() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 21h18M6 21V9l6-5 6 5v12M10 21v-6h4v6" /></svg>
   )
 }
-function PlusGlyph() {
+function HubGlyph() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
-  )
-}
-function HangarGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="7" width="16" height="13" rx="1.5" /><path d="M4 7l2-4h12l2 4" /></svg>
-  )
-}
-function UpgradeGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M13 2L4 14h6l-1 8 9-12h-6z" /></svg>
-  )
-}
-function SurfaceGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
-  )
-}
-function SubsurfaceGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-  )
-}
-function HistoryGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 5h16v14H4z" /><path d="M8 9h8M8 13h6M8 17h4" /></svg>
-  )
-}
-function MarketGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 9h16v11H4z" /><path d="M3 9l2-5h14l2 5M8 13h8M8 17h5" /></svg>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="8" /><path d="M4 12h16M12 4a12 12 0 0 1 0 16M12 4a12 12 0 0 0 0 16" /></svg>
   )
 }
 /**
@@ -208,14 +177,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   // dock is an overlay; the scene keeps its authored `--hub-ground` contact.
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const setSubsurface = (v: boolean) => onSubsurfaceChange?.(v)
-  const activeMissionDisplayLabel = (activeMission: NonNullable<Player['activeMission']>): string => {
-    const mission = MISSIONS.find(item => item.id === activeMission.id)
-    if (!mission) return activeMission.label
-    const target = activeMission.label.split('→').slice(1).join('→').trim()
-    const operation = missionTypePrimer(mission).label
-    return target ? `${operation} → ${target}` : operation
-  }
-  const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
   const [opsOpen, setOpsOpen] = useState(false)
   const help = useHelp('hub')
   const { signals } = useInstrumentSignals(player)
@@ -354,7 +315,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     }
     return null
   })()
-  const showStorageSiloCta = !player.activeMission && awaitingStorageSilo(player) && !subsurface
 
   const structureProps = (kind: string) => {
     if (kind === 'launchpad') {
@@ -445,7 +405,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <HubWorldBackground phase={skyPhase} />
           <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
-          <CrewWalkers road={EARTH_BASE_WIDE.roadPaths?.[0]} />
           <SkyEventChip surface="base" />
           {!subsurface && <OrionidsTeaser />}
 
@@ -584,105 +543,20 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       </div>
       {!subsurface && <SkyBadgeRow badges={player.badges} className={layoutStyles.badges} />}
 
-      {confirmingLaunchpadUpgrade && onUpgradeLaunchpad && (
-        <ActionConfirmBar
-          eyebrow="Upgrade"
-          title="Upgrade Launchpad"
-          description={`Spend ${formatCurrency(LAUNCHPAD_UPGRADE_COST)} to permanently upgrade the launchpad. This can't be undone.`}
-          confirmLabel={`Confirm Upgrade (${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })})`}
-          onConfirm={() => { onUpgradeLaunchpad(); setConfirmingLaunchpadUpgrade(false) }}
-          onDismiss={() => setConfirmingLaunchpadUpgrade(false)}
-        />
-      )}
-      {/* Bottom dock — rebuilt 2026-08-21 (KES-226) as a docked sheet, not a
-          floating pill row (see DockIconBtn/DockPrimaryBtn doc comment for
-          why). It remains available during onboarding so the tutorial can
-          point at Missions without taking away the rest of the base controls. */}
-      {/* Navigation is part of the base, not a tutorial reward. Keeping this
-          dock mounted during M1 means the coach can point at Missions without
-          removing the rest of the player's controls. */}
-      {(
+      {!subsurface && (
         <div className="hub-bottom-dock" style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: subsurface ? 40 : 20,
+          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20,
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
         }}>
           <div className="hub-bottom-dock-inner" style={{
             pointerEvents: 'auto', width: '100%', maxWidth: 480,
-            // A translucent command rail, deliberately without backdrop blur:
-            // blurring the terrain under a fixed dock created the frosted band
-            // reported in visual review and broke the scene's ground plane.
-            background: 'linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 72%, transparent) 0%, color-mix(in srgb, var(--ln-void) 88%, transparent) 100%)',
-            borderTop: '4px solid color-mix(in srgb, var(--hub-outline) 60%, transparent)',
-            borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 24px color-mix(in srgb, var(--ln-void) 28%, transparent)',
-            padding: '12px 16px 16px',
+            display: 'flex', justifyContent: 'center', gap: 8,
+            background: 'var(--ln-panel)', border: '2px solid var(--ln-text)',
+            borderRadius: '16px 16px 0 0', boxShadow: '4px -4px 0 var(--ln-text)', padding: '8px 12px',
           }}>
-            {subsurface ? (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
-                <DockPrimaryBtn testId="subsurface-surface-btn" onClick={() => setSubsurface(false)}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><SurfaceGlyph />Surface</span>
-                </DockPrimaryBtn>
-                {player.placed.includes('launchpad') && (
-                  <DockPrimaryBtn testId="subsurface-launchpad-btn" onClick={() => onOpenScene('launchpad')}>
-                    Launchpad
-                  </DockPrimaryBtn>
-                )}
-              </div>
-            ) : (
-              <>
-                {/* Row 1 — status + primary CTA, the reference's
-                    "Facility Tier · status" + primary-action row. */}
-                <div className="hub-bottom-dock-main" data-testid={player.activeMission ? 'hub-resume-mission-banner' : undefined} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--hub-cyan)' }}>
-                      {player.activeMission ? 'Mission in progress' : 'Launchpad'}
-                    </div>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: player.activeMission ? 11 : 14, fontWeight: 800, color: 'var(--ln-text)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {player.activeMission ? activeMissionDisplayLabel(player.activeMission) : 'Ready'}
-                    </div>
-                  </div>
-                  {showStorageSiloCta ? (
-                    // SSL-332: the last training step. The Build screen is only
-                    // otherwise reachable from Edit, so the dock offers it.
-                    <DockPrimaryBtn testId="hub-build-storage-silo" coachId="hub-build-storage-silo" onClick={() => onOpenScene('build')} pulse>
-                      Build Silo
-                    </DockPrimaryBtn>
-                  ) : player.activeMission ? (
-                    <DockIconBtn testId="hub-resume-mission-btn" icon={<HistoryGlyph />} label="Resume" onClick={() => onOpenScene(missionResumeScreen(player))} accent />
-                  ) : (
-                    <DockPrimaryBtn testId="hub-edit-build-btn" onClick={() => setEditMode(v => !v)}>
-                      {editMode ? 'Done' : 'Build'}
-                    </DockPrimaryBtn>
-                  )}
-                </div>
-
-                {/* Row 2 — icon-tab strip. Non-wrapping by construction
-                    (fixed-width buttons, horizontal scroll as a safety net
-                    rather than flexWrap) so it can never overlap the scene
-                    below it, unlike the pill row it replaces. */}
-                <div className="hub-bottom-dock-actions" style={{ display: 'flex', gap: 4, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
-                  <DockIconBtn testId="hub-ops-btn" icon={<HistoryGlyph />} label="Ops" onClick={() => setOpsOpen(true)} />
-                  {help.button}
-                  <DockIconBtn testId="hub-control-station-btn" icon={<HistoryGlyph />} label="Control" onClick={() => onOpenScene('instrument-hub')} />
-                  {editMode && (
-                    <>
-                      <DockIconBtn testId="hub-new-structure-btn" icon={<PlusGlyph />} label="New" onClick={() => onFocusBuilding('build')} />
-                      {player.placed.includes('launchpad') && (
-                        <DockIconBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onFocusBuilding('hangar')} />
-                      )}
-                      {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                        <DockIconBtn icon={<UpgradeGlyph />} label="UPGRADE" onClick={() => setConfirmingLaunchpadUpgrade(true)} />
-                      )}
-                    </>
-                  )}
-                  <DockIconBtn testId="hub-subsurface-btn" icon={<SubsurfaceGlyph />} label="Subsurface" onClick={() => setSubsurface(true)} />
-                  <DockIconBtn testId="hub-mission-log-btn" icon={<HistoryGlyph />} label="Mission Log" onClick={() => onOpenScene('mission-history')} />
-                  <DockIconBtn testId="hub-market-btn" icon={<MarketGlyph />} label="Market" onClick={() => onOpenMarket?.()} />
-                  {player.freeOperations && (
-                    <DockIconBtn testId="hub-surface-ops" icon={<SurfaceGlyph />} label="Sites" onClick={() => onOpenScene('surface-ops')} />
-                  )}
-                </div>
-              </>
-            )}
+            <DockIconBtn testId="hub-locations-btn" icon={<span aria-hidden="true">« »</span>} label="« »" onClick={() => setOpsOpen(true)} />
+            <DockIconBtn testId="hub-build-btn" icon={<BuildGlyph />} label="Build" onClick={() => setEditMode(v => !v)} active={editMode} />
+            <DockIconBtn testId="hub-control-station-btn" icon={<HubGlyph />} label="Hub" onClick={() => onOpenScene('instrument-hub')} />
           </div>
         </div>
       )}

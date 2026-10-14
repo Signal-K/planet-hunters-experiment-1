@@ -39,6 +39,11 @@ struct HubScreen: View {
             let k = layout.k, groundY = layout.groundY
             ZStack(alignment: .topLeading) {
                 BiomeBackdrop(layout: BiomeLayout(biome: biome, size: size, roadY: layout.roadY, exclusions: layout.exclusions))
+                // Traffic belongs to the service lane behind every building and
+                // HUD control. Keeping it before the structures in this stack
+                // prevents the rover from painting across an Exchange, hatch,
+                // or tappable building label in either orientation.
+                BaseTraffic(width: w, groundY: groundY, k: k).allowsHitTesting(false)
                 ForEach(Array(BaseLayout.slots.enumerated()), id: \.offset) { i, slot in
                     building(slot.name, sprite: slot.sprite, aspect: slot.aspect, width: layout.width(slot),
                              x: layout.centreX(i), groundY: layout.structureY) { store.go(slot.tap) }
@@ -48,7 +53,6 @@ struct HubScreen: View {
                         placedStructure(kind, plot: plot, width: w, groundY: layout.placedGroundY(), k: k, portrait: portrait)
                     }
                 }
-                BaseTraffic(width: w, groundY: groundY, k: k).allowsHitTesting(false)
                 subsurfaceHotspot(x: w * layout.spec.subsurfaceX, groundY: groundY)
                 skyCraft(width: w, height: h)
                 topLeftHud(insets: insets, portrait: portrait)

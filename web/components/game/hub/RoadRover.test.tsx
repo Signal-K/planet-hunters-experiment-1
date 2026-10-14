@@ -19,6 +19,7 @@ describe('RoadRover', () => {
     expect(markup).toContain('/game/assets/actors/road_rover.png')
     expect(markup).toContain('left:12%')
     expect(markup).toContain('calc(var(--hub-ground) - 7%)')
+    expect(markup).toContain('z-index:8')
   })
 
   it('does not render without a road path', () => {

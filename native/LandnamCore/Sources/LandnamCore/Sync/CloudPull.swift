@@ -12,8 +12,11 @@ public enum CloudPull {
         case unavailable   // offline, signed out, or server trouble: try again later
     }
 
-    /// Set on adoption; the app shows the mobile welcome until the player finishes it.
+    /// Set while the first adopted web save is being introduced to the player.
     public static let welcomeKey = "nativeWelcomePending"
+    /// Once a device has completed the import briefing, later remote adoptions
+    /// must return directly to the hub rather than replaying that briefing.
+    public static let welcomeSeenKey = "nativeWelcomeSeen"
 
     public static func fetch(baseURL: URL, token: String, userId: String, session: URLSession = .shared) async -> Result {
         var comps = URLComponents(url: baseURL.appendingPathComponent("api/collections/game_states/records"), resolvingAgainstBaseURL: false)!
