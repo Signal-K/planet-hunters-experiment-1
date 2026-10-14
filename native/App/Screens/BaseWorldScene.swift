@@ -21,6 +21,8 @@ struct BaseWorldScene: View {
     var padLift: CGFloat = 0
     var insets: EdgeInsets = EdgeInsets()
     var camera: BaseCamera
+    /// Off for backdrop use (the mission board): no edge chevrons or depth button over the scene.
+    var showsControls: Bool = true
     var onStructure: (String) -> Void
     var onShaft: () -> Void
     var onBuildSilo: () -> Void
@@ -78,8 +80,10 @@ struct BaseWorldScene: View {
                 .scaleEffect(camera.zoom, anchor: .center)
                 Rectangle().fill(timeWash()).opacity(1 - camera.depth).allowsHitTesting(false)
                 Rectangle().fill(seasonWash()).opacity(1 - camera.depth).allowsHitTesting(false).blendMode(.softLight)
-                edgeHints(world: world, cx: cx)
-                depthButton(world: world)
+                if showsControls {
+                    edgeHints(world: world, cx: cx)
+                    depthButton(world: world)
+                }
             }
             .frame(width: w, height: h, alignment: .topLeading)
             .clipped()
