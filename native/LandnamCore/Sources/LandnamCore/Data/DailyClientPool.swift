@@ -42,6 +42,23 @@ public enum DailyClientPool {
         min(maxAffinityBonusSlots, completedJobs / Clients.affinityMissionThreshold)
     }
 
+    /// A client build job is one run: it must fit the tier-2 Prospector hull.
+    public static let clientBuildCargoCap = 10
+
+    /// The share of a structure's materials one reachable target can supply, scaled to one run.
+    /// Mirrors web `clientBuildMaterials`: the first target (in `Targets.all` order) holding the most materials wins.
+    public static func clientBuildMaterials(_ materials: Cargo, orbitMax: Int) -> Cargo? {
+        var best: [String] = []
+        for target in Targets.all where target.orbit <= orbitMax {
+            let here = materials.keys.filter { target.minerals.contains($0) }
+            if here.count > best.count { best = here }
+        }
+        guard !best.isEmpty else { return nil }
+        let total = best.reduce(0) { $0 + (materials[$1] ?? 0) }
+        let scale = min(1.0, Double(clientBuildCargoCap) / Double(total))
+        return Dictionary(uniqueKeysWithValues: best.map { ($0, max(1, Int((Double(materials[$0] ?? 0) * scale).rounded(.down)))) })
+    }
+
     public static func generate(date: String, missionsDone: Int, clientMissions: [String: Int] = [:]) -> [Mission] {
         let tier = maxClientTier(missionsDone: missionsDone, clientMissions: clientMissions)
         let base = MissionGenerator.templates.filter { !$0.id.hasPrefix("freeops-") && $0.tag != "CONSTRUCT" }
@@ -72,8 +89,11 @@ public enum DailyClientPool {
                                                   drillTier: MissionGenerator.requiredDrillTier([mineral], floor: t.drillTierMin), maxOrbit: t.orbitMax),
                     payout: MissionPayout(francs: MissionGenerator.normalizePayout(raw: raw, sequence: seq), affinity: max(5, Int((8.0 + Double(amount) / 2).rounded())))))
             }
-            if let bt = builds.first(where: { $0.clientRole == client.uiRole }), let plan = bt.construction,
-               djb2("\(date):\(client.id):build") % 2 == 0 {
+            if let bt = builds.first(where: { $0.clientRole == client.uiRole }), let blueprint = bt.construction,
+               djb2("\(date):\(client.id):build") % 2 == 0,
+               let materials = clientBuildMaterials(blueprint.requiredMaterials, orbitMax: bt.orbitMax) {
+                var plan = blueprint
+                plan.requiredMaterials = materials
                 let structure = structureNames[plan.structureKind] ?? plan.structureKind
                 let cargo = plan.requiredMaterials.values.reduce(0, +)
                 let value = plan.requiredMaterials.reduce(0.0) { $0 + Double(Minerals.byId[$1.key]?.price ?? 0) * Double($1.value) }

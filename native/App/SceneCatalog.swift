@@ -271,6 +271,10 @@ enum SceneCatalog {
         scene("mission-board-wsw-phone", 874) {
             MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },
+        // SSL-571: 2026-10-15 noon, Arcturus posts a Fuel Depot build; the player holds the aluminium.
+        scene("mission-board-build-live", 874) {
+            MissionsScreen(startTitle: "Build Fuel Depot").environment(GameStore(state: basePlayer(), clock: { 1_792_054_800_000 }))
+        },
         scene("mission-program-phone", 1400) {
             MissionsScreen(startTab: 1).environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },

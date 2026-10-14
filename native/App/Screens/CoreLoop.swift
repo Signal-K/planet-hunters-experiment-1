@@ -13,7 +13,13 @@ struct MissionsScreen: View {
     @State private var selected = 0
     @State private var tab: Int
 
-    init(startTab: Int = 0) { _tab = State(initialValue: startTab) }
+    /// `startTitle` opens the board on that contract (scene catalog only).
+    private let startTitle: String?
+
+    init(startTab: Int = 0, startTitle: String? = nil) {
+        _tab = State(initialValue: startTab)
+        self.startTitle = startTitle
+    }
 
     var body: some View {
         let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
@@ -53,6 +59,11 @@ struct MissionsScreen: View {
         .background(Theme.bg.ignoresSafeArea())
         .foregroundStyle(Theme.ink)
         .sheet(isPresented: $showArchive) { ArchiveScreen(focus: archiveFocus) }
+        .onAppear {
+            guard let startTitle else { return }
+            let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
+            if let i = entries.firstIndex(where: { $0.mission.title == startTitle }) { selected = i }
+        }
     }
 
     @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {

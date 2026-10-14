@@ -43,4 +43,29 @@ import Testing
         #expect(!ids.contains { MissionBoard.staticFreeOpsIds.contains($0) })
         if let id = ids.first(where: { $0.hasPrefix("dcp-") }) { #expect(Catalog().mission(id)?.id == id) }
     }
+
+    @Test func buildJobsFitOneRunAtOneReachableTarget() {
+        // Same rule as web clientBuildMaterials: 2026-10-15 Arcturus fuel depot asks for aluminium 6 only.
+        let depot = DailyClientPool.generate(date: "2026-10-15", missionsDone: 2).first { $0.title == "Build Fuel Depot" }
+        #expect(depot?.requires.minerals == ["aluminium": 6])
+        for day in 1...30 {
+            let date = String(format: "2026-10-%02d", day)
+            for m in DailyClientPool.generate(date: date, missionsDone: 30) where m.construction != nil {
+                #expect(m.requires.cargoMin <= DailyClientPool.clientBuildCargoCap)
+                #expect(m.construction?.requiredMaterials == m.requires.minerals)
+                #expect(Targets.all.contains { t in t.orbit <= m.requires.maxOrbit && m.requires.minerals.keys.allSatisfy { t.minerals.contains($0) } })
+            }
+        }
+    }
+
+    @Test func clientBuildJobIsCreditedToTheClient() {
+        let depot = DailyClientPool.generate(date: "2026-10-15", missionsDone: 2).first { $0.title == "Build Fuel Depot" }!
+        var s = GameState(); s.player.freeOperations = true; s.player.missionsDone = 3
+        s.player.stash = depot.requires.minerals
+        let done = ConstructionMissions.applyDelivery(s, plan: depot.construction!, targetId: "vesta", clientId: depot.client, now: 1_000)
+        guard case .array(let items)? = done.player.extras["clientStructures"], case .object(let rec)? = items.first else { Issue.record("no structure"); return }
+        #expect(rec["clientId"] == .string("arcturus-battery-systems"))
+        #expect(rec["structureKind"] == .string(depot.construction!.structureKind))
+        #expect(done.player.stash.isEmpty)
+    }
 }

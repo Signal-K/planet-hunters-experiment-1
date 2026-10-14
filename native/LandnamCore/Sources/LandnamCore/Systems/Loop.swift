@@ -182,7 +182,7 @@ public enum Loop {
         let mission = catalog.mission(s.missionId)
         if let plan = mission?.construction {
             // The kit is delivered on arrival: materials leave the stash, the site starts its build clock.
-            n = ConstructionMissions.applyDelivery(n, plan: plan, targetId: s.targetId ?? mission?.targetId ?? "", now: now)
+            n = ConstructionMissions.applyDelivery(n, plan: plan, targetId: s.targetId ?? mission?.targetId ?? "", clientId: mission?.client, now: now)
             n.player.missionPhase = .debrief
             n.player.arrivalAt = nil
             n.player.transitStartedAt = nil

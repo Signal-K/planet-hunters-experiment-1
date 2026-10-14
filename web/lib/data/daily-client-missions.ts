@@ -5,6 +5,30 @@ import { findTargetStructure } from './target-structures'
 import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_MISSION_SEQUENCE, requiredDrillTier, deliveryEligibleMineralKeys } from './mission-generator'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
 import { normalizeMissionPayout } from './payouts'
+import { TARGETS } from './targets'
+
+// A client build job is one run: it must fit the tier-2 Prospector hull.
+export const CLIENT_BUILD_CARGO_CAP = 10
+
+/**
+ * The share of a structure's materials one reachable target can supply, scaled
+ * to a single run. A blueprint can list materials no single body holds (fuel
+ * depot: hydrogen + aluminium), and the board hides any contract no rocket can
+ * complete, so build jobs ask only for what one site has.
+ */
+export function clientBuildMaterials(materials: Record<string, number>, orbitMax: number): Record<string, number> | null {
+  const keys = Object.keys(materials)
+  let best: string[] = []
+  for (const target of TARGETS) {
+    if (target.orbit > orbitMax) continue
+    const here = keys.filter(k => target.minerals.includes(k))
+    if (here.length > best.length) best = here
+  }
+  if (best.length === 0) return null
+  const total = best.reduce((sum, k) => sum + materials[k], 0)
+  const scale = Math.min(1, CLIENT_BUILD_CARGO_CAP / total)
+  return Object.fromEntries(best.map(k => [k, Math.max(1, Math.floor(materials[k] * scale))]))
+}
 
 // Base daily slots per client, before affinity bonus slots.
 export const BASE_DAILY_SLOTS_PER_CLIENT = 3
@@ -65,7 +89,8 @@ function constructMission(date: string, client: ClientSlot, template: MissionTem
   if (!plan) return null
   const blueprint = findTargetStructure(plan.structureKind)
   const name = blueprint?.name ?? plan.structureKind
-  const materials = { ...plan.requiredMaterials }
+  const materials = clientBuildMaterials(plan.requiredMaterials, template.orbitMax)
+  if (!materials) return null
   const cargo = Object.values(materials).reduce((sum, n) => sum + n, 0)
   const value = Object.entries(materials).reduce((sum, [key, n]) => sum + (minerals[key]?.price ?? 0) * n, 0)
   const francs = Math.round(value * 1500 * template.payoutMultiplier * (1 + client.payoutPremium))
@@ -88,7 +113,7 @@ function constructMission(date: string, client: ClientSlot, template: MissionTem
       francs: normalizeMissionPayout(francs, FREE_OPS_MISSION_SEQUENCE),
       affinity: Math.max(8, Math.round(10 + cargo / 2)),
     },
-    construction: plan,
+    construction: { ...plan, requiredMaterials: materials },
   }
 }
 

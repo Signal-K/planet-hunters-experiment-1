@@ -31,7 +31,8 @@ public enum ConstructionMissions {
         }
     }
 
-    public static func applyDelivery(_ s: GameState, plan: MissionConstructionPlan, targetId: String, now: Double) -> GameState {
+    /// `clientId` is the client who ordered the build; own-program builds keep the own-program id.
+    public static func applyDelivery(_ s: GameState, plan: MissionConstructionPlan, targetId: String, clientId: String? = nil, now: Double) -> GameState {
         var n = s
         for (id, amount) in plan.requiredMaterials {
             let left = (n.player.stash[id] ?? 0) - amount
@@ -45,7 +46,7 @@ public enum ConstructionMissions {
         }
         if !alreadyThere {
             items.append(.object(["targetId": .string(targetId), "structureKind": .string(plan.structureKind),
-                                  "clientId": .string(ownProgramClientId), "state": .string("under-construction"),
+                                  "clientId": .string(clientId ?? ownProgramClientId), "state": .string("under-construction"),
                                   "startedAt": .number(now)]))
         }
         n.player.extras["clientStructures"] = .array(items)
