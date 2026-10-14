@@ -48,3 +48,4 @@ tests/.report
 
 # Go Takeon WASM build output (scripts/sync-takeon-go-wasm.sh)
 /public/takeon-go/
+.vercel
