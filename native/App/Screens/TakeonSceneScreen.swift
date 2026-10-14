@@ -136,7 +136,7 @@ struct TakeonSceneScreen: View {
                 model.tick(dt: min(0.25, dt))
             }
         }
-        .statusBarHidden(false)
+        .iOSStatusBarHidden(false)
     }
 
     @ViewBuilder private func overlay(_ geo: GeometryProxy) -> some View {
@@ -272,3 +272,14 @@ enum TakeonSceneFlag {
 }
 
 private extension Int64 { var asDouble: Double { Double(self) } }
+
+private extension View {
+    /// `statusBarHidden` is unavailable on macOS; apply only on iOS.
+    @ViewBuilder func iOSStatusBarHidden(_ hidden: Bool) -> some View {
+        #if os(iOS)
+        self.statusBarHidden(hidden)
+        #else
+        self
+        #endif
+    }
+}
