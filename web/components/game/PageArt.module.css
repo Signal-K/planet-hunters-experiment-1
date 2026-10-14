@@ -1,0 +1,7 @@
+.art { position:absolute; inset:0; overflow:hidden; pointer-events:none; background:linear-gradient(180deg, color-mix(in srgb,var(--ln-bp-blue) 15%,var(--ln-bp-bg)),var(--ln-bp-bg) 76%); }
+.grid { position:absolute; inset:0 0 auto; height:min(42vh,390px); opacity:.58; background:linear-gradient(var(--ln-bp-line) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,var(--ln-bp-line) 1px,transparent 1px) 0 0/32px 32px; }
+.svg { position:absolute; inset:auto 0 0; width:100%; height:min(52vh,460px); }
+.building { fill:var(--ln-bp-paper); stroke:var(--ln-bp-ink); stroke-width:1.6; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.building path:nth-child(even) { fill:color-mix(in srgb,var(--ln-bp-blue) 18%,var(--ln-bp-paper)); }
+.horizon { fill:color-mix(in srgb,var(--ln-bp-blue) 10%,var(--ln-bp-paper-2)); stroke:var(--ln-bp-ink); stroke-width:1.5; vector-effect:non-scaling-stroke; }
+.groundLine { fill:none; stroke:var(--ln-bp-ink); stroke-width:1.5; vector-effect:non-scaling-stroke; }
