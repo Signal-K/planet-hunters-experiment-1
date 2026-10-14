@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { captureGameEvent } from '@/lib/posthog'
-import { useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
+import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { ORIONIDS_VARIANTS, orionidsVariantForSurface } from '@/lib/orionids/theme'
-import { WORLD_SPACE_WEEK_PLAYER_LINKS, type BadgeTier } from '@/lib/data/sky-events'
+import { ORIONIDS_DEBRIS_PRESET, ORIONIDS_PANEL, WORLD_SPACE_WEEK_PLAYER_LINKS, isOrionidsPeakNight, isOrionidsWindow, orionidsShareText, type BadgeTier } from '@/lib/data/sky-events'
 import styles from './SkyEventChip.module.css'
 
 const seenSurfaces = new Set<string>()
@@ -24,10 +24,32 @@ export default function SkyEventChip({
   debrisCount?: number
   badgeTier?: BadgeTier | null
 }) {
-  const preset = useDebrisEvent()
+  const activePreset = useDebrisEvent()
   const [open, setOpen] = useState(false)
+  const [inWindow, setInWindow] = useState(false)
+  const [peak, setPeak] = useState(false)
+  const [shared, setShared] = useState(false)
+  useEffect(() => {
+    const tick = () => { const now = debrisNow(); setInWindow(isOrionidsWindow(now)); setPeak(isOrionidsPeakNight(now)) }
+    tick()
+    const id = window.setInterval(tick, 60_000)
+    return () => window.clearInterval(id)
+  }, [])
+  // SSL-578: Base keeps an Orionids entry all day in the window; debris itself waits for night.
+  const daytimeEntry = !activePreset && inWindow && surface === 'base'
+  const preset = activePreset ?? (daytimeEntry ? ORIONIDS_DEBRIS_PRESET : null)
   const [dotOn, setDotOn] = useState(true)
   const orionids = preset?.eventId === 'orionids-2026'
+  const share = async () => {
+    if (!badgeTier) return
+    const text = orionidsShareText(badgeTier)
+    captureGameEvent('sky_event_badge_shared', { event_id: 'orionids-2026', tier: badgeTier })
+    try {
+      if (typeof navigator.share === 'function') await navigator.share({ text })
+      else await navigator.clipboard.writeText(text)
+      setShared(true)
+    } catch { /* cancelled */ }
+  }
   const variant = ORIONIDS_VARIANTS[orionidsVariantForSurface(surface)]
 
   useEffect(() => {
@@ -48,7 +70,7 @@ export default function SkyEventChip({
   if (!preset) return null
   return (
     <>
-      {orionids && (
+      {orionids && !daytimeEntry && (
         <img
           className={styles.sky}
           data-blend={variant.skyBlend}
@@ -58,7 +80,7 @@ export default function SkyEventChip({
         />
       )}
       <div className={[styles.hud, 'sky-event-wrap', className].filter(Boolean).join(' ')} data-testid={`sky-event-${surface}`}>
-        {orionids ? (
+        {orionids && !daytimeEntry ? (
           <button
             type="button"
             className={styles.chip}
@@ -77,10 +99,27 @@ export default function SkyEventChip({
             aria-expanded={open}
             onClick={() => setOpen(o => !o)}
           >
-            {preset.chipLabel}
+            {daytimeEntry ? 'Orionids tonight' : preset.chipLabel}
           </button>
         )}
-        {open && (
+        {open && orionids && (
+          <section className={styles.panel} data-testid="orionids-panel" aria-label="Orionids event">
+            <h2 className={styles.panelTitle}>{ORIONIDS_PANEL.title}</h2>
+            <p>{ORIONIDS_PANEL.what}</p>
+            <p><strong className={styles.label}>When</strong> {ORIONIDS_PANEL.when}</p>
+            <p data-peak={peak ? 'on' : 'off'}><strong className={styles.label}>{peak ? 'Peak now' : 'Peak'}</strong> {ORIONIDS_PANEL.peak}</p>
+            <ol className={styles.steps}>
+              {ORIONIDS_PANEL.steps.map(step => <li key={step}>{step}</li>)}
+            </ol>
+            <p><strong className={styles.label}>Badge</strong> {badgeTier ? `You hold the ${badgeTier} Orionids badge.` : 'Mine your first debris to earn gold. After the shower it is silver.'}</p>
+            {badgeTier && (
+              <button type="button" className={styles.fallback} data-testid="orionids-share" onClick={() => { void share() }}>
+                {shared ? 'Copied' : 'Share badge'}
+              </button>
+            )}
+          </section>
+        )}
+        {open && !orionids && preset && (
           <div className={styles.note} role="status">
             <p>{preset.label} falls while you mine tonight. Laser it after it lands, then sell it at the Market spot price. It does not count toward the mining order.</p>
             {preset.eventId === 'draconids-2026' && (

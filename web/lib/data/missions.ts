@@ -1,10 +1,11 @@
 // Landnam game data — mission fallback assembled by the deterministic generator
 
-import { missionPayoutFloor } from './payouts'
+import { missionPayoutFloor, normalizeMissionPayout } from './payouts'
 import type { Mission } from './types'
 import { CLIENT_SLOTS } from './clients'
 import { MINERAL_META } from './minerals'
 import { STRUCTURES } from './structures'
+import { isOrionidsWindow } from './sky-events'
 import {
   DEFAULT_MISSION_TEMPLATES,
   FREE_OPS_MISSION_SEQUENCE,
@@ -36,8 +37,29 @@ export function generateFreeOpsMissions(): Mission[] {
 // generateSelfDirectedMiningPoolFromRules), but never assigns a client. This
 // is the pool form of the mechanic; SELF_DIRECTED_MINING_MISSION_ID above
 // remains as the fixed M3-adjacent tutorial intro to it.
-export function generateSelfDirectedMiningPool(): Mission[] {
-  return generateSelfDirectedMiningPoolFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
+export function generateSelfDirectedMiningPool(now: number = Date.now()): Mission[] {
+  const pool = generateSelfDirectedMiningPoolFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
+  return isOrionidsWindow(now) ? [...pool, orionidsNightRun()] : pool
+}
+
+// SSL-578: Orionids Free Ops run, on the board only during the shower window.
+export const ORIONIDS_NIGHT_RUN_ID = 'self-directed-orionids-night-run'
+
+export function orionidsNightRun(): Mission {
+  const amount = 8
+  const iron = MINERAL_META.iron
+  return {
+    id: ORIONIDS_NIGHT_RUN_ID,
+    title: 'Orionids night run',
+    brief: `No client. Mine ${amount} units of iron after 22:00 while the Orionids fall. Laser the debris once it lands and sell it at the Exchange. Peak night is 21-22 Oct.`,
+    tag: 'FREE OPS',
+    difficulty: 'L1',
+    locked: false,
+    sequence: FREE_OPS_MISSION_SEQUENCE,
+    unlockAt: 'Reach Free Operations',
+    requires: { minerals: { iron: amount }, cargo_min: amount, drill_tier: 1, max_orbit: 5 },
+    payout: { francs: normalizeMissionPayout((iron?.price ?? 0) * amount, FREE_OPS_MISSION_SEQUENCE), affinity: 0 },
+  }
 }
 
 // Transport lesson (SSL-332 onboarding mission 2, formerly M3): the player

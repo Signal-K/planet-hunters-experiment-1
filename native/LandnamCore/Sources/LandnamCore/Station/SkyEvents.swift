@@ -104,7 +104,31 @@ public enum SkyEvents {
         guard isActive(p, at: ms, calendar: calendar) else { return 0 }
         let half = max(p.peakMs - p.startMs, p.endMs - p.peakMs, 1)
         let closeness = max(0, 1 - abs(ms - p.peakMs) / half)
-        return p.baseRatePerMinute + (p.peakRatePerMinute - p.baseRatePerMinute) * closeness
+        let rate = p.baseRatePerMinute + (p.peakRatePerMinute - p.baseRatePerMinute) * closeness
+        return p.eventId == orionids.eventId && isOrionidsPeakNight(ms, calendar: calendar) ? rate * orionidsPeakMultiplier : rate
+    }
+
+    /// SSL-578: peak-night debris boost, mirrors web ORIONIDS_PEAK_MULTIPLIER.
+    public static let orionidsPeakMultiplier = 2.0
+
+    /// Local 21 Oct 18:00 until 22 Oct 06:00 in the calendar's zone.
+    public static func isOrionidsPeakNight(_ ms: Double, calendar: Calendar = .current) -> Bool {
+        guard let start = calendar.date(from: DateComponents(year: 2026, month: 10, day: 21, hour: 18)),
+              let end = calendar.date(from: DateComponents(year: 2026, month: 10, day: 22, hour: 6)) else { return false }
+        let t = Date(timeIntervalSince1970: ms / 1000)
+        return t >= start && t < end
+    }
+
+    /// Event panel copy, mirrors web ORIONIDS_PANEL.
+    public static let orionidsPanelSteps = [
+        "Fly any laser mining run at night.",
+        "Wait for debris to land, then laser it.",
+        "Sell Orionid debris at the Exchange.",
+    ]
+    public static let orionidsPanelPeak = "Peak night 21-22 Oct: debris falls twice as fast."
+
+    public static func orionidsShareText(_ tier: BadgeTier) -> String {
+        "I earned the \(tier.rawValue) Orionids 2026 badge in Landnam by mining meteor debris."
     }
 
     // MARK: new moon (Meeus ch. 49, same terms as web)

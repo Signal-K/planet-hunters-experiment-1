@@ -119,3 +119,33 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+.panel {
+  max-width: 320px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--ln-cyan-border);
+  background: var(--ln-panel);
+  color: var(--ln-text);
+  font: 14px/1.45 var(--ln-font-body);
+  display: grid;
+  gap: 8px;
+}
+.panel p { margin: 0; }
+.panelTitle {
+  margin: 0;
+  font: 700 16px var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ln-cyan);
+}
+.label {
+  font: 700 14px var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ln-cyan);
+  margin-right: 4px;
+}
+.steps { margin: 0; padding-left: 20px; list-style: decimal; display: grid; gap: 4px; }

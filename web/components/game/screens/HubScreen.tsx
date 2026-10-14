@@ -446,7 +446,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           <HubWorldBackground phase={skyPhase} />
           <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
           <CrewWalkers road={EARTH_BASE_WIDE.roadPaths?.[0]} />
-          <SkyEventChip surface="base" />
+          <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} />
           {!subsurface && <OrionidsTeaser />}
 
           {/* Drifting ambient motes — replaces the old daylight cloud layer,
