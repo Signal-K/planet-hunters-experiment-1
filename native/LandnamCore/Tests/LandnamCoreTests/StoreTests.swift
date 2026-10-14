@@ -17,4 +17,12 @@ import Foundation
         #expect(reloaded.screen == .transit)
         #expect(reloaded.player.activeMission?.id == m.id)
     }
+
+    @Test func siloRoutePersistsAndReturnsToHub() throws {
+        let store = GameStore()
+        store.go(.hubSubsurface)
+        #expect(store.screen == .hubSubsurface)
+        store.go(.hub)
+        #expect(store.screen == .hub)
+    }
 }

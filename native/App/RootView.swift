@@ -17,7 +17,7 @@ struct RootView: View {
             switch store.welcomePending ? nil : store.screen {
             case nil: WelcomeScreen()
             case .intro: IntroScreen()
-            case .hub, .hubSubsurface: HubScreen()
+            case .hub, .hubSubsurface: HubRoute()
             case .refinery: RefineryScreen()
             case .skills: SkillTreeScreen()
             case .academy: AcademyScreen()
@@ -44,6 +44,27 @@ struct RootView: View {
         .tint(Theme.accent)
         // Someone confirmed a planet: flag a re-point on the exoplanet target flow (web useConfirmedDiscoveryPoll).
         .task { await feed.pollConfirmed(store: store) }
+    }
+}
+
+/// Keeps the Base and its below-grade silo in one local route. The web flow
+/// remains on the Hub route while the camera descends; this gives native the
+/// same direct, reversible transition without adding a dock destination.
+private struct HubRoute: View {
+    @Environment(GameStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ZStack {
+            if store.screen == .hub {
+                HubScreen()
+                    .transition(.opacity)
+            } else {
+                SubsurfaceSiloScreen()
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.52), value: store.screen)
     }
 }
 

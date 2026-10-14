@@ -96,9 +96,8 @@ struct HubScreen: View {
             .frame(width: size, height: size).contentShape(Rectangle())
     }
 
-    /// Small marker standing on the ground that opens the subsurface level (no dock tile for it).
+    /// Small marker standing on the ground that opens the subsurface silo (no dock tile for it).
     /// The visible marker is 28pt; the tap area around it is 44pt.
-    /// TODO: native has no separate subsurface scene yet; `.hubSubsurface` renders this same base screen.
     private func subsurfaceHotspot(x: CGFloat, groundY: CGFloat) -> some View {
         Button { store.go(.hubSubsurface) } label: {
             VStack(spacing: 0) {
@@ -147,7 +146,7 @@ struct HubScreen: View {
         case "astronaut-academy":
             structure("Academy", art: StructureShape(kind: .academy), width: 70 * k, x: x, groundY: y) { store.go(.academy) }
         default:
-            building("Silo", sprite: "base/surface_silo_flat.png", aspect: 192.0 / 205, width: 62 * k * 0.62, x: x, groundY: y) { store.go(.market) }
+            building("Silo", sprite: "base/surface_silo_flat.png", aspect: 192.0 / 205, width: 62 * k * 0.62, x: x, groundY: y) { store.go(.hubSubsurface) }
         }
     }
 

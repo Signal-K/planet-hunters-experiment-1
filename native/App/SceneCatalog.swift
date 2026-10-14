@@ -83,6 +83,15 @@ enum SceneCatalog {
             gs.player.placementPlots = ["surface-silo": 0, "refinery": 1, "astronaut-academy": 3]
             return HubScreen().environment(GameStore(state: gs))
         },
+        scene("hub-silo-phone", 874) {
+            SubsurfaceSiloScreen().environment(GameStore(state: basePlayer()))
+        },
+        scene("hub-silo-landscape", 402, w: 874) {
+            SubsurfaceSiloScreen().environment(GameStore(state: landscapeBase()))
+        },
+        scene("hub-silo-desktop", 680, w: 1000) {
+            SubsurfaceSiloScreen().environment(GameStore(state: basePlayer()))
+        },
         scene("hub-skycraft-phone", 874) {
             var gs = GameState()
             gs.player.activeMission = ActiveMission(id: "m", label: "Ceres run")
