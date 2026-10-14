@@ -39,6 +39,18 @@ struct FlightPlanTests {
         #expect(FlightPlan.coach(p, screen: .mining)?.kicker == "MINING OPS · STEP 5/6")
     }
 
+    @Test func patchShelfTracksPlayableMilestones() {
+        let p = Player()
+        #expect(FlightPlan.patchProgress(p, screen: .mining, tryId: "mining") == .init(stitched: 4, total: 6))
+        #expect(FlightPlan.patchProgress(p, screen: .delivery, tryId: "mining") == .init(stitched: 5, total: 6))
+        #expect(FlightPlan.patchProgress(p, screen: .hub, tryId: "scan") == .init(stitched: 0, total: 2))
+        var scanned = p; scanned.flightPlan.complete("mining")
+        #expect(FlightPlan.patchProgress(scanned, screen: .galaxy, tryId: "scan") == .init(stitched: 1, total: 2))
+        scanned.flightPlan.complete("scan")
+        scanned.flightPlan.complete("part")
+        #expect(FlightPlan.patchProgress(scanned, screen: .hangar, tryId: "part") == .init(stitched: 2, total: 2))
+    }
+
     @Test func transitEntryKind() {
         var p = Player()
         p.tessClassifications["s1"] = TessClassification(subjectId: "s1", verdict: .planet, ranges: [], submittedAt: 5)

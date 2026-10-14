@@ -2972,6 +2972,9 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 
 /* SSL-395 Flight Plan: in-flow strip between the screen and the nav. */
 .flight-plan, .flight-plan-chip { flex: none; position: relative; z-index: 30; font-family: var(--ln-font-body); }
+.flight-plan-slot { flex: none; min-height: 0; position: relative; }
+.flight-plan-slot:has(> .help-coach-dock) { z-index: 81; }
+.flight-plan-slot:has(> .help-coach-dock) > .flight-plan { display: none; }
 .flight-plan {
   display: flex; flex-direction: column; gap: 6px;
   padding: 6px 10px; background: var(--ln-bp-paper, #fff);
@@ -2981,6 +2984,7 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 .flight-plan:has(> .help-coach-dock) .flight-plan-row,
 .flight-plan:has(> .help-coach-dock) > .flight-plan-hint-dock { display: none; }
 .flight-plan:has(> .help-coach-dock) { gap: 0; z-index: 81; }
+.laser-cue:has(> .help-coach-dock) > :not(.help-coach-dock) { display: none; }
 .flight-plan-row { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 .flight-plan-line {
   flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: row; align-items: center; gap: 10px;

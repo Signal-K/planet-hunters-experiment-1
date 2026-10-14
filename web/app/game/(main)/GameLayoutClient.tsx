@@ -245,6 +245,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             )}
           </div>
         <BackendStatus />
+        <div className="flight-plan-slot" data-testid="flight-plan-slot">
         {coach && !game.popup && !game.authGateOpen && (
           <FlightPlan
             key={coach.id}
@@ -269,6 +270,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             }}
           />
         )}
+        </div>
           {children}
 
           <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />

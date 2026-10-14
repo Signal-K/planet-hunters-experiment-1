@@ -10,7 +10,7 @@ import { readStoredOrientation, storeOrientation, type OrientationPreference } f
 import PageSurface from '@/components/ui/PageSurface'
 import { PushOptIn } from '@/components/game/PushOptIn'
 import { TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
-import { TRAINING_TRIES, trainingTryStep } from '@/lib/data/tutorial'
+import { trainingPatchProgress } from '@/lib/data/tutorial'
 import { EARTH_BIOMES, biomeLayers } from '@/lib/scene/base-world'
 
 interface SettingsSheetProps {
@@ -224,20 +224,17 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                   {TRAINING_TRY_IDS.map(tryId => {
                     const active = currentTrainingTry(game.player.flightPlan) === tryId
                     const done = !!game.player.flightPlan?.completed?.[tryId]
-                    const steps = TRAINING_TRIES.filter(step => step.try === tryId)
-                    const currentStep = active ? trainingTryStep(tryId, game.screen)?.id : undefined
-                    const currentIndex = currentStep ? steps.findIndex(step => step.id === currentStep) : -1
-                    const stitched = done ? steps.length : active ? Math.max(0, currentIndex) : 0
+                    const { total, stitched } = trainingPatchProgress(tryId, game.screen, done, active)
                     const status = done ? 'Done' : active ? 'On air' : `Locked · After ${TRAINING_TRY_IDS.indexOf(tryId)}`
                     const label = tryId === 'part' ? 'Part tweak' : tryId === 'scan' ? 'Planet scan' : 'Mining'
                     return (
                       <div key={tryId} role="listitem" className="patch" data-state={done ? 'done' : active ? 'active' : 'standby'}>
-                        <svg className="patch-ring" viewBox="0 0 44 44" role="img" aria-label={`${label}: ${stitched} of ${steps.length} steps stitched`}>
+                        <svg className="patch-ring" viewBox="0 0 44 44" role="img" aria-label={`${label}: ${stitched} of ${total} steps stitched`}>
                           <circle className="patch-ring-track" cx="22" cy="22" r="16" />
-                          {steps.map((step, index) => {
+                          {Array.from({ length: total }, (_, index) => {
                             const circumference = 2 * Math.PI * 16
-                            const length = circumference / steps.length * 0.72
-                            return <circle key={step.id} className="patch-ring-segment" data-stitched={index < stitched} cx="22" cy="22" r="16" strokeDasharray={`${length} ${circumference}`} transform={`rotate(${index * 360 / steps.length} 22 22)`} />
+                            const length = circumference / total * 0.72
+                            return <circle key={index} className="patch-ring-segment" data-stitched={index < stitched} cx="22" cy="22" r="16" strokeDasharray={`${length} ${circumference}`} transform={`rotate(${index * 360 / total} 22 22)`} />
                           })}
                           <text x="22" y="26" textAnchor="middle">{String(stitched).padStart(2, '0')}</text>
                         </svg>

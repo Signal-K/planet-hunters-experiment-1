@@ -38,6 +38,7 @@ interface RocketBuilderSceneProps {
   launchTestId?: string
   launchDisabled?: boolean
   onChooseMission: () => void
+  onBack?: () => void
   onLaunch: () => void
   onInstall?: (next: BuilderLoadout, prev: BuilderLoadout) => boolean
   launching?: boolean
@@ -58,6 +59,7 @@ export default function RocketBuilderScene({
   towerLabel,
   launchTestId = 'launch-btn',
   launchDisabled = false,
+  onBack,
   onChooseMission,
   onLaunch,
   onInstall,
@@ -119,7 +121,7 @@ export default function RocketBuilderScene({
             }}
           />
         ))}
-        <img className={styles.ground} src="/art/scenes/launchpad/launchpad-plate-ground.png" alt="" />
+        <div className={styles.ground} />
         <div className={styles.wash} />
       </div>
 
@@ -155,7 +157,10 @@ export default function RocketBuilderScene({
       {help.layer}
 
       <div className={styles.actions}>
-        <button type="button" className={styles.launch} data-testid={launchTestId} disabled={launchDisabled} onClick={onLaunch}>Launch</button>
+        <div className={styles.leftGroup}>
+          {onBack && <button type="button" className={styles.back} data-testid="top-bar-back" aria-label="back" onClick={onBack}>&lsaquo; Back</button>}
+          <button type="button" className={styles.launch} data-testid={launchTestId} disabled={launchDisabled} onClick={onLaunch}>Launch</button>
+        </div>
         <button type="button" className={styles.target} data-testid="rocket-builder-target" onClick={onChooseMission}>
           <span>Target</span>
           <strong>{targetLabel}</strong>
@@ -165,7 +170,7 @@ export default function RocketBuilderScene({
       <section className={styles.blueprint} aria-label="Rocket blueprint" data-fitted-count={fittedCount}>
         <div className={styles.sheet}>
           <div className={styles.rocketWrap}>
-            <img src="/art/scenes/launchpad/launchpad-rocket-multistage.png" alt="" data-testid="launch-rocket" style={{ opacity: 0.45 + fittedCount * 0.11 }} />
+            <img src="/art/scenes/launchpad/launchpad-rocket-multistage.png" alt="" data-testid="launch-rocket" style={{ opacity: 0.55 + fittedCount * 0.09 }} />
           </div>
           <div className={styles.labels}>
             {BLUEPRINT_MODULES.map(module => (

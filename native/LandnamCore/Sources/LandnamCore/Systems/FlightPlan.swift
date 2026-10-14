@@ -6,6 +6,27 @@ import Foundation
 public enum FlightPlan {
     public static let tryLabels = ["mining": "Mining", "scan": "Scan", "part": "Part"]
 
+    public struct PatchProgress: Equatable, Sendable {
+        public let stitched: Int
+        public let total: Int
+    }
+
+    /// A patch advances with the real screen flow and becomes complete only
+    /// when its corresponding game event records the try.
+    public static func patchProgress(_ player: Player, screen: Screen, tryId: String) -> PatchProgress {
+        let total = tryId == "mining" ? 6 : 2
+        if player.flightPlan.completed[tryId] == true { return PatchProgress(stitched: total, total: total) }
+        guard player.flightPlan.currentTry == tryId else { return PatchProgress(stitched: 0, total: total) }
+        let stitched: Int
+        switch tryId {
+        case "mining": stitched = max(0, miningPosition(screen).0 - 1)
+        case "scan": stitched = screen == .galaxy ? 1 : 0
+        case "part": stitched = screen == .hangar ? 1 : 0
+        default: stitched = 0
+        }
+        return PatchProgress(stitched: min(stitched, total), total: total)
+    }
+
     /// What the coach strip shows: kicker ("MINING OPS · STEP 1/6"), the objective and the radio line, plus an
     /// optional button that takes the player to the screen the step needs.
     public struct Coach: Equatable, Sendable {

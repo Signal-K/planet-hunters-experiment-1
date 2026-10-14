@@ -68,7 +68,11 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
   const [flightPlan, setFlightPlan] = useState<HTMLElement | null>(null)
 
   useLayoutEffect(() => {
-    setFlightPlan(document.querySelector<HTMLElement>('[data-testid="flight-plan"]'))
+    const isVisible = (element: HTMLElement) => element.getClientRects().length > 0
+    const miningCue = document.querySelector<HTMLElement>('[data-testid="mining-training-tip"]')
+    const flightPlan = document.querySelector<HTMLElement>('[data-testid="flight-plan-slot"]')
+    setFlightPlan((miningCue && isVisible(miningCue) ? miningCue : null)
+      ?? flightPlan)
   }, [])
 
   useEffect(() => {
@@ -119,7 +123,7 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
       className="help-coach-dock"
       style={{
         position: flightPlan ? 'relative' : 'absolute', ...(flightPlan ? {} : pos), pointerEvents: 'auto',
-        padding: 'var(--ln-s-3) var(--ln-s-4)', background: 'var(--ln-blueprint-paper, #fff)', color: 'var(--ln-text)',
+        padding: 'var(--ln-s-3) var(--ln-s-4)', background: 'var(--ln-blueprint-paper, #fff)', color: 'var(--ln-bp-ink, #0f2436)',
         border: '2px solid var(--ln-cyan-border)', borderRadius: 'var(--ln-r-md)', boxShadow: '4px 4px 0 var(--ln-blueprint-blue, #1f78c1)',
         ...(flightPlan ? { width: '100%', maxWidth: 'none', maxHeight: 'none' } : {}),
       }}
@@ -132,10 +136,10 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
         {step.hint}
       </div>
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-        <button type="button" data-testid="help-coach-stop" onClick={onStop} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-panel)', color: 'var(--ln-text)' }}>
+        <button type="button" data-testid="help-coach-stop" onClick={onStop} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-panel)', color: 'var(--ln-bp-ink, #0f2436)' }}>
           Skip
         </button>
-        <button type="button" data-testid="help-coach-next" onClick={onNext} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)', color: 'var(--ln-cyan-bright)' }}>
+        <button type="button" data-testid="help-coach-next" onClick={onNext} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)', color: 'var(--ln-bp-ink, #0f2436)' }}>
           {last ? 'Done' : 'Next'}
         </button>
       </div>

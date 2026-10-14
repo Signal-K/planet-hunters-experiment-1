@@ -17,7 +17,7 @@ function structureOptions(player: Player) {
 
 /**
  * Structures the player has genuinely unlocked but has not placed yet.
- * Keeping this beside BuildPlaceScreen's gate prevents the Hub and Launchpad
+ * Keeping this beside the base Build picker's gate prevents the Hub and Launchpad
  * from promising an action that the placement screen would reject.
  */
 export function unplacedUnlockedStructures(player: Player): StructureBlueprint[] {

@@ -397,9 +397,9 @@ enum SceneCatalog {
             let st = GameStore(state: Academy.applyHire(gs, sourceId: "nasa", now: t0), clock: { 1_760_000_000_000 })
             return AcademyScreen(at: t0).environment(st).environment(\.flatLayout, true)
         },
-        scene("build-phone", 900) {
+        scene("build-phone", 874) {
             var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.placementPlots = ["launchpad": 0]
-            return BuildScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
+            return BuildScreen().environment(GameStore(state: gs))
         },
         scene("surface-ops-phone", 1400) {
             var gs = basePlayer(); gs.player.stash = ["aluminium": 4, "silicon": 6]

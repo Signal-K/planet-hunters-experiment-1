@@ -101,6 +101,7 @@ export default function LaunchpadScreen({
         launchTestId={launchTestId}
         launchDisabled={launchDisabled}
         onChooseMission={onViewContracts}
+        onBack={onBack}
         onLaunch={launch}
         onInstall={onInstallLoadout}
         launching={launching}

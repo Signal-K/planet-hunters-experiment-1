@@ -24,6 +24,9 @@ struct BaseWorldScene: View {
     var onStructure: (String) -> Void
     var onShaft: () -> Void
     var onBuildSilo: () -> Void
+    /// Placement mode: free slots that do not overlap a structure are drawn and tappable.
+    var placing: Bool = false
+    var onSlot: (Int) -> Void = { _ in }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pinchStart: CGFloat?
     @State private var dragStartX: CGFloat?
@@ -63,6 +66,7 @@ struct BaseWorldScene: View {
                             structure(kind, sprite: sprite, width: w, height: h, ground: ground, portrait: portrait, level: levels[kind] ?? 1)
                         }
                     }
+                    if placing { slots(width: w, height: h, ground: ground, portrait: portrait) }
                 }
                 .frame(width: world.worldW, height: world.worldH, alignment: .topLeading)
                 .offset(x: -cx, y: -lift)
@@ -311,7 +315,7 @@ struct BaseWorldScene: View {
         let artH = 44 * sx
         return AnyView(Button { onStructure(kind) } label: {
             Art.view(sprite).resizable().interpolation(.none)
-                .frame(width: 72 * sx, height: artH)
+                .frame(width: (kind == "market" ? 110 : 72) * sx, height: kind == "market" ? 44 * sx : artH)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
@@ -320,8 +324,45 @@ struct BaseWorldScene: View {
         .accessibilityLabel(kindLabel(kind)))
     }
 
+    /// Half-width of a structure's drawn footprint, in points.
+    private func halfWidth(_ kind: String, px: CGFloat, portrait: Bool) -> CGFloat {
+        switch kind {
+        case "launchpad": return 60 * px
+        case "market": return 55 * (portrait ? px * 0.75 : px)
+        default: return 36 * (portrait ? px * 0.75 : px)
+        }
+    }
+
+    /// Free plots, drawn only where no structure stands. The pad is wider than its plot, so slots are measured, not assumed.
+    @ViewBuilder private func slots(width: CGFloat, height: CGFloat, ground: CGFloat, portrait: Bool) -> some View {
+        let px = pixelScale(height: height, portrait: portrait)
+        let used = Set(plots.values).union(placed.contains("launchpad") && plots["launchpad"] == nil ? [0] : [])
+        let boxes: [(CGFloat, CGFloat)] = placed.filter { spriteName($0) != nil }.map { kind in
+            (width * anchor(kind, plot: plots[kind] ?? 0, portrait: portrait), halfWidth(kind, px: px, portrait: portrait))
+        }
+        let slotHalf: CGFloat = 39 * (portrait ? px * 0.75 : px)
+        ForEach(0..<Construction.plotCount, id: \.self) { plot in
+            let cxSlot = width * anchor("slot", plot: plot, portrait: portrait)
+            if !used.contains(plot), !boxes.contains(where: { abs($0.0 - cxSlot) < $0.1 + slotHalf + 6 }) {
+                Button { onSlot(plot) } label: {
+                    ZStack {
+                        Ellipse().fill(Theme.hudPanel.opacity(0.7)).overlay(Ellipse().stroke(Theme.hudInk, style: StrokeStyle(lineWidth: 2, dash: [5, 4])))
+                        Image(systemName: "plus").font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.hudInk)
+                    }
+                    .frame(width: slotHalf * 2, height: 30)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .position(x: cxSlot, y: ground - 8)
+                .accessibilityLabel("Build slot \(plot + 1)")
+            }
+        }
+    }
+
     private func spriteName(_ kind: String) -> String? {
         switch kind {
+        case "market": return "base/kit/exchange-flat.png"
         case "launchpad": return "base/kit/pad-rocket.png"
         case "hangar", "garage": return "base/kit/hangar-white.png"
         default: return nil
@@ -345,6 +386,7 @@ struct BaseWorldScene: View {
         case "launchpad": return "Launchpad"
         case "hangar", "garage": return "Hangar"
         case "astronaut-academy": return "Academy"
+        case "market": return "Exchange"
         default: return "Structure"
         }
     }

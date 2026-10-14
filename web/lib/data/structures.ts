@@ -44,6 +44,16 @@ export const STRUCTURES: StructureBlueprint[] = [
     description: 'Small Earth-side mineral storage. Hold ore from your own mining or a contract.',
   },
   {
+    id: 'market',
+    name: 'Exchange',
+    kind: 'market',
+    cost: STRUCTURE_PRICES.exchange,
+    // Optional: players choose to build it once they are trading on their own.
+    unlocksAt: 'Opens once the guided missions are flown',
+    unlockTrigger: 'onboarding-missions',
+    description: 'Cargo dock where you sell ore at the spot price.',
+  },
+  {
     id: 'astronaut-academy',
     name: 'Astronaut Academy',
     kind: 'astronaut-academy',
@@ -65,6 +75,7 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
   // becomes available after Extraction and Transport, and placement opens
   // Free Ops. Existing players retain access through their saved unlock.
   if (structure.id === 'surface-silo') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
+  if (structure.id === 'market') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('market')
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   if (structure.unlockTrigger === 'always') return true
   return false

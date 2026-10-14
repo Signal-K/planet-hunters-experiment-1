@@ -28,6 +28,7 @@ public enum Economy {
     public static let openMarketSellRate = 0.8
     public static let surfaceSiloCapacity = 40
     public static let surfaceSiloPrice = 2_000_000
+    public static let exchangePrice = 4_000_000
     public static let mineralSiloCapacity = 120
     public static let deepMineralSiloCapacity = 300
     public static let remoteMineralSiloCapacity = 180

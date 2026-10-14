@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
+  structureUnlocked,
   REFINING_VALUE_MULTIPLIER,
   sellCargo,
   suggestBuild,
@@ -509,8 +510,8 @@ describe('seed bible v0 catalog', () => {
     }
   })
 
-  it('keeps the base catalog to launchpad, surface silo, and the parked academy', () => {
-    expect(STRUCTURES.map(structure => structure.id)).toEqual(['launchpad', 'surface-silo', 'astronaut-academy'])
+  it('keeps the base catalog to launchpad, surface silo, the optional exchange and the parked academy', () => {
+    expect(STRUCTURES.map(structure => structure.id)).toEqual(['launchpad', 'surface-silo', 'market', 'astronaut-academy'])
     expect(MISSIONS.some(mission => mission.id === 'program-build-refinery')).toBe(false)
     expect(STRUCTURES.some(structure => structure.id === 'refinery' || structure.id === 'garage')).toBe(false)
   })
@@ -876,5 +877,14 @@ describe('spectralClassForTeff', () => {
     expect(spectralClassForTeff(SUN_TEFF_K)).toBe('G') // Sun
     expect(spectralClassForTeff(9500)).toBe('A') // Sirius-class
     expect(spectralClassForTeff(35000)).toBe('O') // blue giant
+  })
+})
+
+describe('Exchange structure (optional, chosen by the player)', () => {
+  const market = STRUCTURES.find(structure => structure.id === 'market')!
+  it('is locked before the guided missions and unlocked after', () => {
+    expect(structureUnlocked(market, { missionsDone: 0 })).toBe(false)
+    expect(structureUnlocked(market, { missionsDone: 2 })).toBe(true)
+    expect(structureUnlocked(market, { freeOperations: true })).toBe(true)
   })
 })

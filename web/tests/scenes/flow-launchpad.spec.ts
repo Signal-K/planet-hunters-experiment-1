@@ -15,7 +15,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(errors).toEqual([])
     })
 
-    test('the scene dock is Previous, Build, Hub, and Next while Exchange stays in the scene', async ({ page }) => {
+    test('the scene dock is Previous, Build, Hub, and Next while the Exchange is a building the player chooses to build', async ({ page }) => {
       const { errors } = await stage(page, 'm1-hub', { chrome: true })
       const dock = page.getByRole('navigation', { name: 'Scene dock' })
       await expect(dock.getByRole('button')).toHaveCount(4)
@@ -25,7 +25,8 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await expect(dock.getByTestId('hub-dock-next')).toBeVisible()
       await expect(page.getByTestId('hub-subsurface-btn')).toHaveCount(0)
       await expect(dock.getByText('Exchange', { exact: true })).toHaveCount(0)
-      await expect(page.getByText('Exchange', { exact: true })).toBeVisible()
+      // The Exchange is a building players choose to build, never a top-bar button.
+      await expect(page.getByTestId('hub-exchange')).toHaveCount(0)
       await page.screenshot({ path: `tests/.out/hub-dock-${vp}.png` })
       expect(errors).toEqual([])
     })

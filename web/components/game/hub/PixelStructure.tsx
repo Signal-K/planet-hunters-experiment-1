@@ -87,5 +87,8 @@ export function PixelStructure({ kind, level = 1, parts, phase = 'idle', rocket 
   if (kind === 'hangar') {
     return <img src={`${KIT}/hangar-white.png`} alt="" draggable={false} className={styles.hangarSprite} data-pixel-structure="hangar" data-tier={tier} />
   }
+  if (kind === 'market') {
+    return <img src="/game/assets/base/exchange_flat.png" alt="" draggable={false} className={styles.hangarSprite} style={{ height: "calc(30 * var(--px, 3px))" }} data-pixel-structure="market" />
+  }
   return null
 }

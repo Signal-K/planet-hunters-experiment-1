@@ -94,6 +94,26 @@ export function trainingTryPosition(step: TrainingTryStep): { index: number; tot
   return { index: step.try === 'scan' ? 2 : 3, total: 3 }
 }
 
+/** Mission patch segments follow the playable milestones, not the number of
+ * screen-specific coaching lines. The current milestone stays open until the
+ * player advances; completed tries stitch the final segment. */
+export function trainingPatchProgress(
+  tryId: TrainingTryStep['try'],
+  screen: string,
+  completed: boolean,
+  active: boolean,
+): { stitched: number; total: number } {
+  const total = tryId === 'mining' ? 6 : 2
+  if (completed) return { stitched: total, total }
+  if (!active) return { stitched: 0, total }
+  if (tryId === 'mining') {
+    const step = trainingTryStep(tryId, screen)
+    return { stitched: Math.max(0, (step ? trainingTryPosition(step).index : 1) - 1), total }
+  }
+  const step = trainingTryStep(tryId, screen)
+  return { stitched: step && step.screen !== '*' ? 1 : 0, total }
+}
+
 export const EXTRACTION_STEPS: TutorialStep[] = [
   { id: 0, screen: 'build',   title: 'Build the tower',
     body: 'Your first structure — all missions launch from here.',

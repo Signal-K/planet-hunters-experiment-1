@@ -9,7 +9,7 @@ import {
   skipFlightPlan,
   startFlightPlan,
 } from './FlightPlanSystem'
-import { trainingTryPosition, trainingTryStep } from '@/lib/data/tutorial'
+import { trainingPatchProgress, trainingTryPosition, trainingTryStep } from '@/lib/data/tutorial'
 
 describe('FlightPlanSystem', () => {
   it('starts mining and reveals only one idle hint after eight seconds', () => {
@@ -79,6 +79,15 @@ describe('FlightPlanSystem', () => {
     expect(position('rover-survey')).toEqual({ index: 4, total: 6 })
     expect(position('mining')).toEqual({ index: 5, total: 6 })
     expect(position('delivery')).toEqual({ index: 6, total: 6 })
+  })
+
+  it('SSL-446: stitches the six real mining milestones and two scan/part steps', () => {
+    expect(trainingPatchProgress('mining', 'mining', false, true)).toEqual({ stitched: 4, total: 6 })
+    expect(trainingPatchProgress('mining', 'delivery', false, true)).toEqual({ stitched: 5, total: 6 })
+    expect(trainingPatchProgress('mining', 'delivery', true, false)).toEqual({ stitched: 6, total: 6 })
+    expect(trainingPatchProgress('scan', 'hub', false, true)).toEqual({ stitched: 0, total: 2 })
+    expect(trainingPatchProgress('scan', 'galaxy', false, true)).toEqual({ stitched: 1, total: 2 })
+    expect(trainingPatchProgress('part', 'hangar', true, false)).toEqual({ stitched: 2, total: 2 })
   })
 
   it('SSL-478: walking the whole plan by real events reaches complete with no stuck step', () => {

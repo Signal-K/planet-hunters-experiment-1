@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
-import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, canAffordStructure, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
@@ -16,13 +16,12 @@ import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 // screens' JS on the very first load.
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import PageSurface from '@/components/ui/PageSurface'
-import HubScreen from '@/components/game/screens/HubScreen'
+import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScreen'
 
 const ScreenLoading = () => <div className="game-screen-loading" aria-hidden="true" />
 
 const MissionSetupRoutes = dynamic(() => import('@/components/game/MissionSetupRoutes'), { loading: ScreenLoading })
 const MissionOperationRoutes = dynamic(() => import('@/components/game/MissionOperationRoutes'), { loading: ScreenLoading })
-const BuildPlaceScreen = dynamic(() => import('@/components/game/screens/BuildPlaceScreen'), { loading: ScreenLoading })
 const RefineryScreen = dynamic(() => import('@/components/game/screens/RefineryScreen'), { loading: ScreenLoading })
 const MarketScreen = dynamic(() => import('@/components/game/screens/MarketScreen'), { loading: ScreenLoading })
 const HangarScreen = dynamic(() => import('@/components/game/screens/HangarScreen'), { loading: ScreenLoading })
@@ -169,49 +168,55 @@ function ScreenBody({
       )
 
     case 'build':
-      return (
-        <BuildPlaceScreen
-          onBack={() => game.goBack()}
-          player={{
-            francs: game.player.francs,
-            stash: game.player.stash,
-            placed: game.player.placed,
-            freeOperations: game.player.freeOperations,
-            refineryUnlocked: !!game.player.refineryUnlocked,
-            academyResearched: !!game.player.academyResearched,
-            missionsDone: game.player.missionsDone,
-            placementPlots: game.player.placementPlots,
-            transitSatelliteLevel: game.player.transitSatelliteLevel,
-            clientMissions: game.player.clientMissions,
-            deepSpaceTelescopeMissionCompletedAt: game.player.deepSpaceTelescopeMissionCompletedAt,
-            hasMiningSettlement: hasEstablishedMiningSettlement(game.player),
-          }}
-          onPlaced={(kind, plot) => {
-            const structure = game.catalog.structures.find(s => s.id === kind)
-            const enteringFreeOps = !game.player.freeOperations
-              && freeOperationsUnlocked({ missionsDone: game.player.missionsDone, placed: [...game.player.placed, kind] })
-            const placed = game.placeStructure(structure, kind, plot)
-            if (!placed) return false
-            game.completeStep(0)
-            captureGameEvent('structure_placed', { structure_kind: kind })
-            if (enteringFreeOps) captureFreeOpsUnlocked(game.player.missionsDone, 'silo')
-            enqueueSurvey('lnm_base_building', 1200)
-            if (kind === 'astronaut-academy') enqueueSurvey('lnm_crew_academy_built', 1200)
-            game.go('hub')
-            return true
-          }}
-        />
-      )
-
     case 'hub':
     case 'hub-subsurface':
     case 'mission-history': {
       // Mission Log is a tray over the still-mounted Base (SSL-347): same
       // HubScreen element position, so opening/closing it never remounts or
       // re-frames the landscape.
+      const unlockOpts = {
+        refineryUnlocked: !!game.player.refineryUnlocked,
+        academyResearched: !!game.player.academyResearched,
+        placed: game.player.placed,
+        freeOperations: game.player.freeOperations,
+        missionsDone: game.player.missionsDone,
+        hasMiningSettlement: hasEstablishedMiningSettlement(game.player),
+      }
+      // Only unlocked structures that are not already on the base are offered.
+      const buildOptions: HubBuildOption[] = game.catalog.structures
+        .filter(structure => structure.id !== 'garage' && structure.id !== 'astronaut-academy'
+          && !game.player.placed.includes(structure.id) && structureUnlocked(structure, unlockOpts))
+        .map(structure => {
+          const gaps = structureAffordabilityGaps(structure, { francs: game.player.francs, stash: game.player.stash })
+          const mineralCost = Object.entries(structure.costMaterials ?? {}).map(([mineral, amount]) => `${amount} ${mineral}`).join(' · ')
+          const francs = structure.cost === 0 ? 'Free' : formatCurrency(structure.cost, { compact: true })
+          return {
+            id: structure.id,
+            name: structure.name,
+            cost: mineralCost ? `${francs} · ${mineralCost}` : francs,
+            affordable: canAffordStructure(structure, { francs: game.player.francs, stash: game.player.stash }),
+            reason: gaps.length ? `Need ${gaps.join(', ')}` : undefined,
+          }
+        })
+      const placeStructureFromBase = (kind: string, plot: number): boolean => {
+        const structure = game.catalog.structures.find(s => s.id === kind)
+        const enteringFreeOps = !game.player.freeOperations
+          && freeOperationsUnlocked({ missionsDone: game.player.missionsDone, placed: [...game.player.placed, kind] })
+        const placed = game.placeStructure(structure, kind, plot)
+        if (!placed) return false
+        game.completeStep(0)
+        captureGameEvent('structure_placed', { structure_kind: kind })
+        if (enteringFreeOps) captureFreeOpsUnlocked(game.player.missionsDone, 'silo')
+        enqueueSurvey('lnm_base_building', 1200)
+        if (screen === 'build') game.go('hub')
+        return true
+      }
       const hub = (
         <HubScreen
           player={game.player}
+          placementMode={screen === 'build'}
+          buildOptions={buildOptions}
+          onPlaceStructure={placeStructureFromBase}
           rocketVariant={rocketModelForConfig(game.rocket).tier >= 2 ? 'prospector' : 'explorer'}
           onboardingActive={onboardingActive}
           onOpenScene={s => {

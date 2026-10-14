@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import { awaitingStorageSilo } from '@/lib/systems/AgencyOnboardingSystem'
@@ -34,7 +34,7 @@ import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SCENE_NAMES } from '@/lib/ui-strings'
 
-const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar'])
+const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market'])
 
 /**
  * How far a building's status pill hangs below the ground line. `Building`
@@ -58,9 +58,24 @@ function dockStops(player: Player): Screen[] {
 // reproduces hub.scene.json exactly.
 const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 
+export interface HubBuildOption {
+  id: string
+  name: string
+  cost: string
+  affordable: boolean
+  /** Why it cannot be placed right now, when it cannot. */
+  reason?: string
+}
+
 interface HubScreenProps {
   player: Player
   onBuild?: () => void
+  /** Open straight into placement (the Build screen is this scene in placement mode). */
+  placementMode?: boolean
+  /** Unlocked, not yet placed structures offered while placing. */
+  buildOptions?: HubBuildOption[]
+  /** Places a structure on a plot. Returns false when it could not be placed. */
+  onPlaceStructure?: (id: string, plot: number) => boolean
   rocketVariant?: HubBuildingDef['rocketVariant']
   onboardingActive?: boolean
   onFocusBuilding: (b: string) => void
@@ -80,11 +95,15 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   const camera = useBaseCamera()
-  const [editMode, setEditMode] = useState(false)
+  const [editMode, setEditMode] = useState(placementMode)
+  const [pickedBuild, setPickedBuild] = useState<string | null>(null)
+  const [placeNote, setPlaceNote] = useState<string | null>(null)
+  const [overlappedPlots, setOverlappedPlots] = useState<number[]>([])
+  const surfaceRef = useRef<HTMLDivElement | null>(null)
   const [dockStop, setDockStop] = useState(0)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
   const [rollingOut, setRollingOut] = useState(() => consumeRocketRolloutPending())
@@ -148,7 +167,7 @@ export default function HubScreen({ player, onBuild, rocketVariant = 'explorer',
     return kind
   }
 
-  const BUILDING_W: Record<string, number> = { launchpad: 105, 'surface-silo': 62, refinery: 84, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
+  const BUILDING_W: Record<string, number> = { launchpad: 105, market: 110, 'surface-silo': 62, refinery: 84, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
   // Invisible click-target height for each building's spacer (Building.tsx),
   // reported unclickable 2026-08-23. EarthBaseModules renders each building's
   // modular art at a per-kind width/footprint with its
@@ -245,6 +264,15 @@ export default function HubScreen({ player, onBuild, rocketVariant = 'explorer',
         onClick: () => onFocusBuilding('launchpad'),
       }
     }
+    if (kind === 'market') {
+      return {
+        kind, label: 'Exchange',
+        sub: 'SELL ORE',
+        status: 'ok' as const,
+        w: 150,
+        onClick: () => onFocusBuilding('market'),
+      }
+    }
     if (kind === 'refinery') {
       return {
         kind, label: 'Refinery',
@@ -294,6 +322,41 @@ export default function HubScreen({ player, onBuild, rocketVariant = 'explorer',
     }
   }
 
+  // A slot is never offered where a structure already stands. Measure the drawn structures and slots, and hide
+  // every slot whose box overlaps a structure sideways (the launchpad art is wider than its plot).
+  useLayoutEffect(() => {
+    if (!editMode) { setOverlappedPlots(prev => (prev.length ? [] : prev)); return }
+    const measure = () => {
+      const root = surfaceRef.current
+      if (!root) return
+      const structures = Array.from(root.querySelectorAll<HTMLElement>('[data-structure]')).map(el => el.getBoundingClientRect())
+      const hidden: number[] = []
+      root.querySelectorAll<HTMLElement>('[data-testid^="build-plot-"]').forEach(el => {
+        const r = el.getBoundingClientRect()
+        const plot = Number(el.dataset.testid?.replace('build-plot-', ''))
+        if (structures.some(b => r.left < b.right + 6 && r.right > b.left - 6)) hidden.push(plot)
+      })
+      setOverlappedPlots(prev => (prev.length === hidden.length && prev.every((v, k) => v === hidden[k]) ? prev : hidden))
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [editMode, placed.join(','), sceneBuildings.length, camera.cam.zoom])
+
+  useEffect(() => {
+    if (!editMode) return
+    if (!pickedBuild || !buildOptions.some(o => o.id === pickedBuild)) setPickedBuild(buildOptions.find(o => o.affordable)?.id ?? buildOptions[0]?.id ?? null)
+  }, [editMode, buildOptions, pickedBuild])
+
+  const firstFreePlot = sortedEntities.map((e, i) => i).find(i => !structureForPlot(i))
+  const underground = pickedBuild === 'surface-silo'
+  const placeOnPlot = (plot: number) => {
+    const option = buildOptions.find(o => o.id === pickedBuild)
+    if (!option || !onPlaceStructure) return
+    if (!option.affordable) { setPlaceNote(`${option.name} · ${option.reason ?? 'Not enough resources'}`); return }
+    if (onPlaceStructure(option.id, plot)) { setPlaceNote(null); setEditMode(placementMode) } else setPlaceNote('That could not be placed. Try another slot.')
+  }
+
   return (
     <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
@@ -310,7 +373,7 @@ export default function HubScreen({ player, onBuild, rocketVariant = 'explorer',
             any lift at all. */}
         <div
           className={layoutStyles.surface}
-          ref={camera.ref}
+          ref={node => { camera.ref.current = node; surfaceRef.current = node }}
           data-testid="base-camera"
           data-zoom={camera.cam.zoom.toFixed(2)}
           {...camera.handlers}
@@ -378,8 +441,8 @@ export default function HubScreen({ player, onBuild, rocketVariant = 'explorer',
                 const kind = structureForPlot(plot)
                 if (kind && !BASE_SCENE_KINDS.has(kind)) return null
                 if (!kind) {
-                  if (!editMode) return null
-                  return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onFocusBuilding('build')} />
+                  if (!editMode || overlappedPlots.includes(plot)) return null
+                  return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => (onPlaceStructure ? placeOnPlot(plot) : onFocusBuilding('build'))} />
                 }
                 const startedAt = player.underConstruction?.[kind]
                 const building = isUnderConstruction(startedAt, kind)
@@ -468,11 +531,6 @@ export default function HubScreen({ player, onBuild, rocketVariant = 'explorer',
           {!subsurface && (
             <div className={layoutStyles.chips}>
               <span className="scene-chip" data-testid="hub-francs-chip">{formatCurrency(player.francs, { compact: true })}</span>
-              {onOpenMarket && (
-                <button type="button" className="scene-chip" data-testid="hub-exchange" onClick={onOpenMarket} style={{ pointerEvents: 'auto' }}>
-                  Exchange
-                </button>
-              )}
               <span className="scene-chip" data-testid="hub-cargo-chip" aria-label="Cargo">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" />
@@ -505,6 +563,43 @@ export default function HubScreen({ player, onBuild, rocketVariant = 'explorer',
         )
       })()}
 
+      {editMode && onPlaceStructure && (
+        <div data-testid="build-picker" style={{ position: 'absolute', left: 0, right: 0, bottom: 72, zIndex: 21, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, pointerEvents: 'none', padding: '0 12px' }}>
+          {placeNote && <span style={{ pointerEvents: 'auto', padding: '6px 12px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>{placeNote}</span>}
+          {underground && firstFreePlot !== undefined && (
+            <button type="button" data-testid="build-place-underground" onClick={() => placeOnPlot(firstFreePlot)}
+              style={{ pointerEvents: 'auto', minHeight: 44, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1 var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Place silo
+            </button>
+          )}
+          {buildOptions.length === 0
+            ? <span style={{ pointerEvents: 'auto', padding: '8px 14px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>Nothing to build yet</span>
+            : (
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', maxWidth: '100%', pointerEvents: 'auto' }}>
+                {buildOptions.map(option => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    data-testid={`build-option-${option.id}`}
+                    aria-pressed={pickedBuild === option.id}
+                    onClick={() => { setPickedBuild(option.id); setPlaceNote(option.affordable ? null : `${option.name} · ${option.reason ?? 'Not enough resources'}`) }}
+                    style={{
+                      minHeight: 44, padding: '0 16px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap',
+                      border: '2px solid var(--ln-world-outline)',
+                      background: pickedBuild === option.id ? 'var(--ln-world-outline)' : 'var(--ln-world-hull-lit)',
+                      color: pickedBuild === option.id ? 'var(--ln-world-hull-lit)' : 'var(--ln-world-outline)',
+                      opacity: option.affordable ? 1 : 0.7,
+                      font: '700 14px/1 var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase',
+                    }}
+                  >
+                    {option.name} · {option.cost}
+                  </button>
+                ))}
+              </div>
+            )}
+        </div>
+      )}
+
       {/* The surface dock is reserved for all-scene navigation only. Base-only
           actions remain on their physical buildings or in their own surfaces. */}
       {(
@@ -526,7 +621,7 @@ export default function HubScreen({ player, onBuild, rocketVariant = 'explorer',
                 setDockStop(next)
                 onOpenScene(stops[next])
               }}
-              onBuild={() => onBuild ? onBuild() : showStorageSiloCta ? onOpenScene('build') : setEditMode(value => !value)}
+              onBuild={() => { setPlaceNote(null); setEditMode(value => !value) }}
               onHub={() => onOpenScene('instrument-hub')}
             />
           </div>

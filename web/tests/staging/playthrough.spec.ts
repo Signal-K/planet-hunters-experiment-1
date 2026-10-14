@@ -73,10 +73,9 @@ test.describe('staging playthrough', () => {
       expect(sharedAuth.record.email).toBe(email)
 
       await page.getByTestId('intro-begin-btn').click()
-      await expect(page.getByTestId('build-place-screen')).toBeVisible()
-      await page.getByTestId('build-structure-card-launchpad').click()
+      await expect(page.getByTestId('build-picker')).toBeVisible()
+      await page.getByTestId('build-option-launchpad').click()
       await page.getByTestId('build-plot-0').click()
-      await page.getByTestId('build-place-confirm').click()
       await expect(page.locator('[data-screen="hub"]')).toBeVisible({ timeout: 30_000 })
 
       // This minimal first slice exercises the shipped M1–M3 completion

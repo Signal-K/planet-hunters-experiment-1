@@ -10,6 +10,10 @@ struct HubScreen: View {
     var safeAreaOverride: EdgeInsets?
     var biome: EarthBiome?
     @State private var showSettings = false
+    /// In-scene placement: pick an unlocked structure, then tap a free slot (the Build screen is this mode).
+    @State private var placing: Bool
+    @State private var picked: String?
+    @State private var placeNote: String?
     /// Homecoming (SSL-553): the core stage lands on the pad behind the delivery sheet.
     var homecoming = false
     var padLift: CGFloat = 0
@@ -17,7 +21,8 @@ struct HubScreen: View {
     private let zones = HUDZones.standard
 
     /// `startX` / `startDepth` set the opening camera (fixtures and screenshots); the game starts at the surface, x 0.
-    init(safeAreaOverride: EdgeInsets? = nil, biome: EarthBiome = .resolve(), startX: CGFloat = 0, startDepth: CGFloat = 0, homecoming: Bool = false, padLift: CGFloat = 0) {
+    init(safeAreaOverride: EdgeInsets? = nil, biome: EarthBiome = .resolve(), startX: CGFloat = 0, startDepth: CGFloat = 0, homecoming: Bool = false, padLift: CGFloat = 0, placing: Bool = false) {
+        _placing = State(initialValue: placing)
         self.safeAreaOverride = safeAreaOverride
         self.homecoming = homecoming
         self.padLift = padLift
@@ -60,14 +65,18 @@ struct HubScreen: View {
                 camera: camera,
                 onStructure: { openStructure($0) },
                 onShaft: { store.go(.hubSubsurface) },
-                onBuildSilo: { buildSilo() }
+                onBuildSilo: { buildSilo() },
+                placing: placing,
+                onSlot: { placeOnSlot($0) }
             )
             skyCraft(width: size.width, height: size.height)
             topLeftHud(insets: insets, portrait: portrait)
             topRightHud(insets: insets)
+            if placing { picker(width: size.width, insets: insets) }
             BaseDock(tile: layout.tile, zones: zones.dock,
                      onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
-                     onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) })
+                     onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
+                     onBuild: { placeNote = nil; placing.toggle() })
                 .padding(.bottom, insets.bottom + zones.dock.bottomInset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
@@ -84,7 +93,59 @@ struct HubScreen: View {
     private func buildSilo() {
         let used = Set(Construction.occupied(store.player).values)
         let plot = (0..<Construction.plotCount).first { !used.contains($0) } ?? 0
-        if !store.place("surface-silo", plot: plot) { store.go(.build) }
+        if !store.place("surface-silo", plot: plot) { placing = true }
+    }
+
+    /// Unlocked structures that are not yet on the base. Locked ones are not offered.
+    private var options: [StructureBlueprint] {
+        Construction.catalog(for: store.player).filter { Construction.unlocked($0, player: store.player) }
+    }
+
+    private func placeOnSlot(_ plot: Int) {
+        guard let id = picked ?? options.first?.id, let b = Construction.byId[id] else { return }
+        if !Construction.canAfford(b, player: store.player) {
+            placeNote = "\(b.name) · Need \(Construction.gaps(b, player: store.player).joined(separator: ", "))"; return
+        }
+        if store.place(id, plot: plot) { placeNote = nil; picked = nil; placing = false } else { placeNote = "That could not be placed. Try another slot." }
+    }
+
+    private func picker(width: CGFloat, insets: EdgeInsets) -> some View {
+        VStack(spacing: 6) {
+            if let placeNote {
+                Text(placeNote).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+            }
+            if options.isEmpty {
+                Text("Nothing to build yet").font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                    .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+            } else {
+                // Stacked rows, not a scroller: there are at most three structures and a scroller hides them from snapshots.
+                do {
+                    VStack(spacing: 6) {
+                        ForEach(options) { b in
+                            let on = (picked ?? options.first?.id) == b.id
+                            Button { picked = b.id; placeNote = Construction.canAfford(b, player: store.player) ? nil : "\(b.name) · Need \(Construction.gaps(b, player: store.player).joined(separator: ", "))" } label: {
+                                Text("\(b.name.uppercased()) · \(b.cost == 0 ? "FREE" : Economy.format(francs: b.cost))")
+                                    .font(AppFont.display(14)).tracking(0.8)
+                                    .foregroundStyle(on ? Theme.hudPanel : Theme.hudInk)
+                                    .padding(.horizontal, 16).frame(minHeight: 44)
+                                    .background(Capsule().fill(on ? Theme.hudInk : Theme.hudPanel))
+                                    .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+                            }.buttonStyle(.plain)
+                        }
+                    }.padding(.horizontal, 12)
+                }
+            }
+            if picked == "surface-silo" || (picked == nil && options.first?.id == "surface-silo") {
+                Button("PLACE SILO") { buildSilo() }
+                    .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.hudInk).frame(minHeight: 44).padding(.horizontal, 18)
+                    .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+            }
+        }
+        .padding(.bottom, insets.bottom + 72)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
     }
 
     private func openStructure(_ kind: String) {
@@ -92,6 +153,7 @@ struct HubScreen: View {
         case "launchpad": store.go(.launchpad)
         case "hangar", "garage": store.go(.hangar)
         case "astronaut-academy": store.go(.academy)
+        case "market": store.go(.market)
         default: break
         }
     }
@@ -340,11 +402,11 @@ struct SettingsSheet: View {
             SettingsHeading(text: "Training")
             VStack(spacing: 12) {
                 ForEach(Array(zip(["mining", "scan", "part"], ["Mining", "Planet scan", "Part tweak"])), id: \.0) { id, title in
+                    let progress = FlightPlan.patchProgress(store.player, screen: store.screen, tryId: id)
                     HStack(spacing: 12) {
-                        TrainingPatchRing(segments: id == "mining" ? 13 : 2,
-                                          stitched: store.player.flightPlan.completed[id] == true ? (id == "mining" ? 13 : 2) : 0)
+                        TrainingPatchRing(segments: progress.total, stitched: progress.stitched)
                             .frame(width: 44, height: 44)
-                            .accessibilityLabel("\(title): \(store.player.flightPlan.completed[id] == true ? (id == "mining" ? 13 : 2) : 0) steps stitched")
+                            .accessibilityLabel("\(title): \(progress.stitched) of \(progress.total) steps stitched")
                         VStack(alignment: .leading, spacing: 2) {
                             Text(title).font(AppFont.display(14, "Bold")).foregroundStyle(SettingsStyle.ink)
                             Text(store.player.flightPlan.completed[id] == true ? "Done" : (store.player.flightPlan.currentTry == id ? "On air" : "Locked · After \(FlightPlanProgress.tryIds.firstIndex(of: id) ?? 0)"))
@@ -486,6 +548,7 @@ private struct PatchRingView: View {
 }
 
 private struct TrainingPatchRing: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let segments: Int
     let stitched: Int
 
@@ -502,6 +565,7 @@ private struct TrainingPatchRing: View {
             Text(String(format: "%02d", stitched)).font(AppFont.display(11, "Bold")).foregroundStyle(SettingsStyle.ink)
         }
         .accessibilityElement(children: .ignore)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: stitched)
     }
 }
 

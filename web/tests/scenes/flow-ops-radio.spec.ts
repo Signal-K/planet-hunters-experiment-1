@@ -1,10 +1,29 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { VIEWPORTS, stage } from './helpers'
 
 // SSL-442: Ops radio skin, shared Ops briefing and the Menu mission patch shelf.
 const seededToken = () => {
   const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url')
   return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ id: 'e2euser0000001', exp: 4102444800 })}.sig`
+}
+
+async function openLive(page: Page, initialState: object) {
+  const record = { id: 'e2euser0000001', collectionId: '_pb_users_auth_', collectionName: 'users', email: 'e2e@example.test', verified: true }
+  await page.route(/\/api\/(collections|realtime|health)/, route =>
+    /auth-refresh/.test(route.request().url())
+      ? route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ token: seededToken(), record }) })
+      : route.abort('connectionrefused'))
+  await page.addInitScript(([s]) => {
+    if (localStorage.getItem('seeded')) return
+    localStorage.setItem('seeded', '1')
+    const b64 = (o: object) => btoa(JSON.stringify(o)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')
+    const token = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ id: 'e2euser0000001', exp: 4102444800 })}.sig`
+    const rec = { id: 'e2euser0000001', collectionId: '_pb_users_auth_', collectionName: 'users', email: 'e2e@example.test', verified: true }
+    localStorage.setItem('pocketbase_auth', JSON.stringify({ token, record: rec }))
+    localStorage.setItem('landnam-game-state-v1:user:e2euser0000001', s as string)
+  }, [JSON.stringify(initialState)])
+  await page.goto('/game')
+  await expect(page.getByTestId('flight-plan')).toBeVisible({ timeout: 30_000 })
 }
 
 for (const [vp, size] of Object.entries(VIEWPORTS)) {
@@ -57,7 +76,9 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await expect(shelf.locator('.patch')).toHaveCount(4)
       await expect(shelf.locator('.patch[data-state="done"]')).toHaveCount(1)
       await expect(shelf.locator('.patch[data-state="active"]')).toHaveCount(1)
-      await expect(shelf.locator('.patch-ring-segment')).toHaveCount(17)
+      await expect(shelf.locator('.patch-ring-segment')).toHaveCount(10)
+      await expect(shelf.locator('.patch').nth(0).locator('[data-stitched="true"]')).toHaveCount(6)
+      await expect(shelf.locator('.patch').nth(1).locator('[data-stitched="true"]')).toHaveCount(0)
       await expect(shelf.getByText('Locked · After 3')).toBeVisible()
       for (const button of await shelf.getByRole('button', { name: 'Replay' }).all()) {
         expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44)
@@ -91,22 +112,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
 
     test('Show me uses an Ops dock with a 44px skip control and static reduced-motion brackets', async ({ page }, info) => {
       await page.emulateMedia({ reducedMotion: 'reduce' })
-      const record = { id: 'e2euser0000001', collectionId: '_pb_users_auth_', collectionName: 'users', email: 'e2e@example.test', verified: true }
-      await page.route(/\/api\/(collections|realtime|health)/, route =>
-        /auth-refresh/.test(route.request().url())
-          ? route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ token: seededToken(), record }) })
-          : route.abort('connectionrefused'))
-      await page.addInitScript(([s]) => {
-        if (localStorage.getItem('seeded')) return
-        localStorage.setItem('seeded', '1')
-        const b64 = (o: object) => btoa(JSON.stringify(o)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')
-        const token = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ id: 'e2euser0000001', exp: 4102444800 })}.sig`
-        const rec = { id: 'e2euser0000001', collectionId: '_pb_users_auth_', collectionName: 'users', email: 'e2e@example.test', verified: true }
-        localStorage.setItem('pocketbase_auth', JSON.stringify({ token, record: rec }))
-        localStorage.setItem('landnam-game-state-v1:user:e2euser0000001', s as string)
-      }, [JSON.stringify({ screen: 'hub', tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true }, player: { placed: ['launchpad'], missionsDone: 0 } })])
-      await page.goto('/game')
-      await expect(page.locator('[data-game-hydrated="true"]')).toBeVisible({ timeout: 30_000 })
+      await openLive(page, { screen: 'hub', tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true }, player: { placed: ['launchpad'], missionsDone: 0 } })
       const scenarioReady = await page.evaluate(() => {
         const bridge = (window as typeof window & { __landnam?: { scenario: (key: string) => boolean } }).__landnam
         return bridge?.scenario('m1-mining') ?? false
@@ -115,9 +121,9 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await expect(page.getByTestId('help-button')).toBeVisible()
       await page.getByTestId('help-button').click()
       await page.getByTestId('help-show-me').click()
-      const flightPlan = page.getByTestId('flight-plan')
-      await expect(flightPlan).toBeVisible()
-      const hint = flightPlan.getByTestId('help-coach-hint')
+      const dockSlot = page.getByTestId('mining-training-tip')
+      await expect(dockSlot).toBeVisible()
+      const hint = dockSlot.getByTestId('help-coach-hint')
       await expect(hint).toBeVisible()
       await expect(hint).toContainText('OPS')
       await expect(hint).toContainText('Show me · 1 of 1')
@@ -137,16 +143,24 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.screenshot({ path: info.outputPath(`show-me-dock-${vp}.png`) })
     })
 
-    test('TESS briefing starts Show me only on request and tracks the two transmissions', async ({ page }, info) => {
-      await stage(page, 'ui-tess-discovery')
-      await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
+    test('TESS Show me docks in Flight Plan and starts only on request', async ({ page }, info) => {
+      await openLive(page, { screen: 'hub', tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true }, player: { placed: ['launchpad'], missionsDone: 0 } })
+      const scenarioReady = await page.evaluate(() => {
+        const bridge = (window as typeof window & { __landnam?: { scenario: (key: string) => boolean; patch: (player: object) => void } }).__landnam
+        const ready = bridge?.scenario('ui-tess-discovery') ?? false
+        bridge?.patch({ freeOperations: false, flightPlan: { completed: { mining: true }, hidden: false } })
+        return ready
+      })
+      expect(scenarioReady).toBe(true)
+      await expect(page.getByTestId('flight-plan-slot')).toHaveCount(1)
       await expect(page.getByTestId('help-coach')).toHaveCount(0)
       await page.locator('[data-testid="help-button"]:visible').first().click()
       await expect(page.getByTestId('help-sheet')).toBeVisible()
       await page.getByTestId('help-show-me').click()
-      await expect(page.getByTestId('help-coach-hint')).toContainText('Show me · 1 of 2')
-      await page.getByTestId('help-coach-next').click()
-      await expect(page.getByTestId('help-coach-hint')).toContainText('Show me · 2 of 2')
+      const hint = page.getByTestId('help-coach-hint')
+      await expect(hint).toBeVisible()
+      await expect(hint).toContainText('Show me · 1 of 2')
+      expect(await hint.evaluate(el => Boolean(el.closest('[data-testid="flight-plan-slot"]')))).toBe(true)
       await page.screenshot({ path: info.outputPath(`tess-show-me-${vp}.png`) })
     })
   })

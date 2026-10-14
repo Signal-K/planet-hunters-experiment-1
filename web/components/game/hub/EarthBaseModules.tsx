@@ -31,7 +31,7 @@ export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height:
   'deep-space-telescope': { width: 74, height: 96 },
   'transit-telescope': { width: 64, height: 88 },
   'astronaut-academy': { width: 178, height: 86 },
-  market: { width: 214, height: 124 },
+  market: { width: 150, height: 60 },
 }
 
 export function LaunchpadModules({ className = '', parts, rocket = false }: { className?: string; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean | 'core' }) {
@@ -142,14 +142,14 @@ export function structureHalfScene(kind: string, level = 1, sceneWidth = 402): n
   return (structureWidthPct(kind, level) / 100) * sceneWidth / 2
 }
 
-const HIDDEN_BASE_KINDS = new Set(['command', 'refinery', 'garage', 'deep-space-telescope', 'transit-telescope', 'astronaut-academy', 'market', 'surface-silo'])
+const HIDDEN_BASE_KINDS = new Set(['command', 'refinery', 'garage', 'deep-space-telescope', 'transit-telescope', 'astronaut-academy', 'surface-silo'])
 
 export function EarthBaseModules({ buildings, parts, padRocket = false }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null; padRocket?: boolean | 'core' }) {
   return (
     <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {
         if (building.kind === 'surface-silo' || HIDDEN_BASE_KINDS.has(building.kind)) return null
-        const kit = building.kind === 'launchpad' || building.kind === 'hangar'
+        const kit = building.kind === 'launchpad' || building.kind === 'hangar' || building.kind === 'market'
         const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.launchpad
         const widthPct = structureWidthPct(building.kind, building.level ?? 1)
         const left = structureCenterPercent(building.kind, building.plotX, widthPct)
