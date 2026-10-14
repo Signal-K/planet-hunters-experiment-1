@@ -25,6 +25,13 @@ enum SceneCatalog {
         CatalogScene(id: id, size: CGSize(width: w, height: h), make: { AnyView(build()) })
     }
 
+    private static func settingsOverlay() -> some View {
+        HubScreen(safeAreaOverride: EdgeInsets())
+            .overlay { SettingsSheet(onClose: {}) }
+            .environment(GameStore(state: starterState()))
+            .environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore()))
+    }
+
     static var offlineFeed: FeedModel { FeedModel(feed: SharedFeed(baseURL: URL(string: "http://127.0.0.1:1")!)) }
 
     static func basePlayer() -> GameState {
@@ -328,8 +335,9 @@ enum SceneCatalog {
         scene("hub-empty-live-landscape", 402, w: 874) { HubScreen().environment(GameStore(state: GameState())) },
         scene("hub-starter-live", 874) { HubScreen().environment(GameStore(state: starterState())) },
         scene("hub-starter-live-landscape", 402, w: 874) { HubScreen().environment(GameStore(state: starterState())) },
-        scene("settings-live", 1500) { SettingsSheet(onClose: {}).environment(GameStore(state: starterState())).environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore())).environment(\.flatLayout, true) },
-        scene("settings-live-landscape", 1500, w: 874) { SettingsSheet(onClose: {}).environment(GameStore(state: starterState())).environment(AuthModel(api: .fromEnvironment(), store: KeychainSessionStore())).environment(\.flatLayout, true) },
+        scene("settings-live", 844, w: 390) { settingsOverlay() },
+        scene("settings-live-landscape", 428, w: 926) { settingsOverlay() },
+        scene("settings-live-desktop", 900, w: 1440) { settingsOverlay() },
         scene("mining-guide-phone", 1250) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
         scene("mining-guide-landscape", 402, w: 874) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
         scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
