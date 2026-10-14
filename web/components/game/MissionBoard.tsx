@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
@@ -16,7 +16,6 @@ import {
   skyEventNow,
 } from '@/lib/data/sky-events'
 import {
-  contractWswMark,
   eventsBoard,
   programChain,
   type ProgramStep,
@@ -26,10 +25,17 @@ import { takeMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-n
 import ClientMark from '@/components/ui/ClientMark'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
+import { EarthBaseModules } from '@/components/game/hub/EarthBaseModules'
+import { buildHubBuildingDefs } from '@/lib/hub-building-defs'
+import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsSheet from '@/components/game/FriendsSheet'
 import styles from './MissionBoard.module.css'
+
+// The board stands on the live base: the same plots and kit the Hub draws.
+const BASE_PLOTS = buildPlotEntities()
+const BOARD_BASE_KINDS = new Set(['launchpad', 'hangar', 'market'])
 
 interface MissionBoardProps {
   catalog: Catalog
@@ -41,7 +47,8 @@ interface MissionBoardProps {
   onClose: () => void
   onOpenLog: () => void
   onOpenBuild: () => void
-  rocketImg: string
+  /** The rocket now stands on the pad in the scene behind the board. */
+  rocketImg?: string
   tutorialBlocked: boolean
   onboardingComplete: boolean
 }
@@ -152,7 +159,7 @@ function boardClock(): { now: number; orionidsNow: number } {
 
 export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onAccept, onClose, onOpenLog, onOpenBuild,
-  rocketImg, tutorialBlocked, onboardingComplete,
+  tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const { grade } = useTimeOfDay()
   const [tab, setTab] = useState<MissionBoardTab>(() => takeMissionBoardTab() ?? 'contracts')
@@ -167,9 +174,6 @@ export default function MissionBoard({
   const card = cards[index]
   const client = card?.client
   const clientLevel = client ? clientAffinityLevel(player.clientMissions[client.id] ?? 0) : 0
-  const wsw = card ? contractWswMark(card.mission, player.badges, now) : null
-  const prevCard = count > 2 ? cards[(index - 1 + count) % count] : null
-  const nextCard = count > 1 ? cards[(index + 1) % count] : null
   const paging = tab === 'contracts' && count > 1
 
   const startStep = (step: ProgramStep) => {
@@ -177,10 +181,26 @@ export default function MissionBoard({
     onAccept(step.id, step.kind === 'focus' ? 'store' : undefined)
   }
 
-  return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'}>
+  const baseBuildings = useMemo(
+    () => buildHubBuildingDefs(player, BASE_PLOTS).filter(building => BOARD_BASE_KINDS.has(building.kind)),
+    [player],
+  )
+  const signalColor = client?.color ?? 'var(--ln-board-amber)'
+  const tabButtons = <>
+    <button type="button" className={styles.tab} data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon />Contracts</button>
+    <button type="button" className={styles.tab} data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => setTab('program')}><ClipboardIcon />Program</button>
+    <button type="button" className={styles.tab} data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => setTab('events')}>
+      <StarIcon />Events
+      {events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
+    </button>
+    <button type="button" className={styles.log} data-testid="mission-board-log" onClick={onOpenLog}>LOG</button>
+  </>
+
+  return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab}>
     <div className={styles.sky} aria-hidden="true">
-      <BaseLayerScene time={grade} />
-      <div className={styles.dim} />
+      <BaseLayerScene time={grade} biome={player.earthBiome ?? 'mountains'} />
+      <EarthBaseModules buildings={baseBuildings} parts={player.shipCustomizerParts} padRocket />
+      {tab !== 'contracts' && <div className={styles.dim} />}
     </div>
     <div className={styles.chrome}>
       <button type="button" className={`${styles.round} ${styles.cog}`} data-testid="settings-button" aria-label="Settings" onClick={() => setSettingsOpen(true)}><CogIcon /></button>
@@ -190,64 +210,59 @@ export default function MissionBoard({
         <span className={`${styles.chip} ${styles.cargoChip}`} data-testid="hub-cargo-chip" aria-label="Cargo"><CubeIcon /></span>
         <button type="button" className={styles.round} data-testid="friends-button" aria-label="Friends" onClick={() => setFriendsOpen(true)}><PeopleIcon /></button>
       </div>
-      {paging && <button type="button" className={`${styles.round} ${styles.arrow} ${styles.prev}`} data-testid="mission-board-prev" aria-label="Previous contract" onClick={() => onSelectRelative(-1)}><ArrowIcon direction="left" /></button>}
-      {paging && <button type="button" className={`${styles.round} ${styles.arrow} ${styles.next}`} data-testid="mission-board-next" aria-label="Next contract" onClick={() => onSelectRelative(1)}><ArrowIcon direction="right" /></button>}
     </div>
-    <section className={styles.panel} data-testid="mission-board" aria-label="Mission board">
+    {tab === 'contracts' ? <section className={styles.dispatch} data-testid="mission-board" aria-label="Mission board">
+      <nav className={styles.rail} aria-label="Mission board">
+        <button type="button" className={`${styles.round} ${styles.railClose}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><ArrowIcon direction="left" /></button>
+        {tabButtons}
+        {help.button && <div className={styles.railHelp}>{help.button}</div>}
+      </nav>
+      {card ? <>
+        <article key={card.mission.id} className={styles.order} style={{ '--signal': signalColor } as CSSProperties} aria-live="polite" data-testid="mission-board-section-client">
+          <div className={styles.signal} aria-hidden="true">
+            <i className={styles.beam} /><i className={styles.pulse} /><i className={styles.ring} /><i className={styles.ring} />
+          </div>
+          <header className={styles.orderHead}>
+            <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-amber)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={44} />
+            <div className={styles.orderWho}>
+              <span>{client?.name ?? 'Your program'}{client ? ` · L${clientLevel}` : ''}</span>
+              <h2 className={styles.orderTitle}>{card.mission.title}</h2>
+            </div>
+          </header>
+          <div className={styles.orderDeal}>
+            <div className={styles.manifest} aria-label="Cargo">
+              {Object.entries(card.mission.requires.minerals).map(([id, amount]) => {
+                const meta = catalog.minerals[id]
+                if (!meta) return null
+                return <span key={id} className={styles.crate} title={meta.name}><MineralRock shape={meta.shape} color={meta.color} /><b>{amount}</b><em>{meta.name}</em></span>
+              })}
+            </div>
+            <strong className={styles.pay}><i className={styles.coin} aria-hidden="true">{FRANC}</i>{formatFrancs(card.displayPayout, { compact: true })}</strong>
+            <button type="button" className={styles.take} data-testid={`mission-accept-${card.mission.id}`} disabled={!card.unlocked || tutorialBlocked} onClick={() => onAccept(card.mission.id)}>ACCEPT</button>
+          </div>
+          {!card.unlocked && card.lockedDetail && <p className={styles.orderLock}>{card.lockedDetail}</p>}
+          {paging && <footer className={styles.orderNav}>
+            <button type="button" className={styles.round} data-testid="mission-board-prev" aria-label="Previous contract" onClick={() => onSelectRelative(-1)}><ArrowIcon direction="left" /></button>
+            {count <= 8 && <div className={styles.orderDots}>
+              {cards.map((item, dot) => <button key={item.mission.id} type="button" className={styles.dotBtn} data-active={dot === index} aria-label={`Contract ${dot + 1}`} onClick={() => onSelectRelative(dot - index)}><i /></button>)}
+            </div>}
+            <span className={styles.orderCount}>{index + 1}/{count}</span>
+            <button type="button" className={styles.round} data-testid="mission-board-next" aria-label="Next contract" onClick={() => onSelectRelative(1)}><ArrowIcon direction="right" /></button>
+          </footer>}
+        </article>
+      </> : <article className={styles.order} data-testid="mission-board-section-client">
+        {onboardingComplete ? <>
+          <h2 className={styles.orderTitle}>No client signals yet</h2>
+          <p className={styles.orderLock}>Free Ops opens once the Earth storage silo is built.</p>
+          <button type="button" className={styles.take} onClick={onOpenBuild}>BUILD STORAGE SILO</button>
+        </> : <h2 className={styles.orderTitle}>No compatible client signals</h2>}
+      </article>}
+    </section> : <section className={styles.panel} data-testid="mission-board" aria-label="Mission board">
       <button type="button" className={`${styles.round} ${styles.close}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
       {help.button && <div className={styles.help}>{help.button}</div>}
-      <nav className={styles.tabs} aria-label="Mission board">
-        <button type="button" className={styles.tab} data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon />Contracts</button>
-        <button type="button" className={styles.tab} data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => setTab('program')}><ClipboardIcon />Program</button>
-        <button type="button" className={styles.tab} data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => setTab('events')}>
-          <StarIcon />Events
-          {events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
-        </button>
-        <button type="button" className={styles.log} data-testid="mission-board-log" onClick={onOpenLog}>LOG</button>
-      </nav>
+      <nav className={styles.tabs} aria-label="Mission board">{tabButtons}</nav>
       <div className={styles.stage}>
         <div className={styles.body}>
-          {tab === 'contracts' && (card ? <div className={styles.carousel}>
-            {prevCard && <button type="button" className={`${styles.peek} ${styles.peekPrev}`} aria-label={`Show ${prevCard.mission.title}`} onClick={() => onSelectRelative(-1)} />}
-            {nextCard && <button type="button" className={`${styles.peek} ${styles.peekNext}`} aria-label={`Show ${nextCard.mission.title}`} onClick={() => onSelectRelative(1)} />}
-            <article className={styles.card} aria-live="polite" data-testid="mission-board-section-client">
-              <div className={styles.cardBody}>
-              <header className={styles.head}>
-                <span className={styles.kicker}>Client contract {index + 1} / {count}</span>
-                <span className={styles.markSlot}><ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-teal)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={48} /></span>
-                {wsw && <span className={styles.wsw} title={wsw.title} data-testid="mission-board-wsw"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" /><rect x="14" y="4" width="6" height="6" /><rect x="4" y="14" width="6" height="6" /><rect x="14" y="14" width="6" height="6" /></svg>{wsw.label}</span>}
-              </header>
-              <h2 className={styles.title}>{card.mission.title}</h2>
-              <div className={styles.facts}>
-                <div className={styles.fact}><span>VALUE</span><strong><i className={styles.coin} aria-hidden="true">{FRANC}</i>{formatFrancs(card.displayPayout, { compact: true })}</strong></div>
-                <div className={styles.fact}><span>CLIENT LEVEL</span><strong>{client ? `L${clientLevel}` : 'PROGRAM'}</strong></div>
-              </div>
-              <div className={styles.cargo}>
-                <span>REQUIRED CARGO</span>
-                <div className={styles.ores}>
-                  {Object.entries(card.mission.requires.minerals).map(([id, amount]) => {
-                    const meta = catalog.minerals[id]
-                    if (!meta) return null
-                    return <span key={id} className={styles.ore}><MineralRock shape={meta.shape} color={meta.color} /><span className={styles.oreName}>{meta.name}</span><span className={styles.oreCount}>{amount}</span></span>
-                  })}
-                </div>
-              </div>
-              <img className={styles.rocket} src={rocketImg} alt="" />
-              {!card.unlocked && card.lockedDetail && <p className={styles.lockline}>{card.lockedDetail}</p>}
-              </div>
-              <button type="button" className={styles.accept} data-testid={`mission-accept-${card.mission.id}`} disabled={!card.unlocked || tutorialBlocked} onClick={() => onAccept(card.mission.id)}>ACCEPT &amp; PREPARE</button>
-            </article>
-            <div className={styles.dots}>
-              {cards.map((item, dot) => <button key={item.mission.id} type="button" className={styles.dotBtn} data-active={dot === index} aria-label={`Contract ${dot + 1}`} onClick={() => onSelectRelative(dot - index)}><i /></button>)}
-            </div>
-          </div> : <div className={styles.empty}>
-            {onboardingComplete ? <>
-              <strong>NO CONTRACTS ARE OFFERED YET</strong>
-              <span>Free Ops opens once the Earth storage silo is built.</span>
-              <button type="button" className={styles.accept} onClick={onOpenBuild}>BUILD STORAGE SILO</button>
-            </> : <strong>NO COMPATIBLE CLIENT SIGNALS</strong>}
-          </div>)}
-
           {tab === 'program' && <div className={styles.chain} data-testid="mission-board-program">
             <header className={styles.chainHead} data-testid="program-summary">
               <div>
@@ -317,7 +332,7 @@ export default function MissionBoard({
           </div>}
         </div>
       </div>
-    </section>
+    </section>}
     {help.layer}
     {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
     {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}

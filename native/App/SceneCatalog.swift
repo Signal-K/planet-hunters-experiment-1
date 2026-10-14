@@ -271,6 +271,10 @@ enum SceneCatalog {
         scene("mission-board-wsw-phone", 874) {
             MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },
+        // The board as a player sees it: full screen over the live base (SSL-423).
+        scene("mission-board-live", 874) {
+            MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon }))
+        },
         scene("mission-program-phone", 1400) {
             MissionsScreen(startTab: 1).environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },

@@ -5,99 +5,279 @@ private func francs(_ n: Int) -> String { Economy.format(francs: n) }
 
 /// Mission board (mirrors web `MissionSetupRoutes` "Choose a contract"): one contract slide at a time with
 /// previous / next arrows, the client mark, facts, required cargo and ACCEPT & PREPARE.
+/// The mission board is a scene, not a page (SSL-423): contracts arrive as client transmissions over the live base.
+/// One compact work order carries the deal (client, job, cargo, pay, accept); Program is one tap away on the rail.
+/// Mirrors web `MissionBoard` dispatch: same base, same order, same rail.
 struct MissionsScreen: View {
     @Environment(GameStore.self) private var store
-    @Environment(\.flatLayout) private var flat
     @State private var archiveFocus: String?
     @State private var showArchive = false
+    @State private var showSettings = false
     @State private var selected = 0
     @State private var tab: Int
+    @State private var camera = BaseCamera(x: 0, depth: 0)
+    /// `startTitle` opens the board on that contract (scene catalog only).
+    private let startTitle: String?
 
-    init(startTab: Int = 0) { _tab = State(initialValue: startTab) }
+    init(startTab: Int = 0, startTitle: String? = nil) {
+        _tab = State(initialValue: startTab)
+        self.startTitle = startTitle
+    }
 
     var body: some View {
-        let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
-        let index = entries.isEmpty ? 0 : min(selected, entries.count - 1)
-        scroller {
-            VStack(alignment: .leading, spacing: 12) {
-                header
-                tabs
-                if tab == 1 {
-                    ProgramRoadmap { archiveFocus = $0; showArchive = true }
-                } else {
-                WorldSpaceWeekBanner(banner: WorldSpaceWeek.banner(badges: store.player.badges, now: store.now))
-                if entries.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("NO CONTRACTS ARE OFFERED YET").font(AppFont.display(16)).foregroundStyle(Theme.ink)
-                        Text("Your own operations are on the Launchpad. The archive shows what unlocks the next contract.")
-                            .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                    }.padding(16).frame(maxWidth: .infinity, alignment: .leading).stage(accent: mixWhite("#17703F", 0.12, fallback: Theme.paper))
-                } else {
-                    let e = entries[index]
-                    HStack(alignment: .center, spacing: 4) {
-                        arrow("chevron.left", label: "Previous contract", disabled: entries.count < 2) { selected = (index - 1 + entries.count) % entries.count }
-                        MissionSlide(entry: e, position: index + 1, count: entries.count, catalog: store.catalog, player: store.player, rocket: store.state.rocket,
-                                     wsw: WorldSpaceWeek.chips(for: e.mission, badges: store.player.badges, now: store.now),
-                                     onTake: { store.pickMission(e.id) }, onPathway: { archiveFocus = "mission:\(e.id)"; showArchive = true })
-                        arrow("chevron.right", label: "Next contract", disabled: entries.count < 2) { selected = (index + 1) % entries.count }
-                    }
-                    .padding(.vertical, 8).padding(.horizontal, 4)
-                    .stage(accent: mixWhite(e.mission.client.flatMap { Clients.byId[$0]?.colorHex } ?? "#17703F", 0.12, fallback: Theme.paper))
-                }
-                PrimaryButton(title: "Archive · pathways and unlocks") { archiveFocus = nil; showArchive = true }
-                }
-            }
-            .padding(.horizontal, 16).padding(.top, 16).padding(.bottom, 32)
-            .frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
+        GeometryReader { outer in
+            let insets = outer.safeAreaInsets
+            let full = CGSize(width: outer.size.width + insets.leading + insets.trailing, height: outer.size.height + insets.top + insets.bottom)
+            scene(size: full, insets: insets)
+                .frame(width: full.width, height: full.height)
+                .position(x: full.width / 2 - insets.leading, y: full.height / 2 - insets.top)
         }
         .background(Theme.bg.ignoresSafeArea())
-        .foregroundStyle(Theme.ink)
+        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
         .sheet(isPresented: $showArchive) { ArchiveScreen(focus: archiveFocus) }
-    }
-
-    @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
-        if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
-    }
-
-    private var tabs: some View {
-        HStack(spacing: 8) {
-            ForEach(Array(["CONTRACTS", "PROGRAM"].enumerated()), id: \.offset) { i, title in
-                Button { tab = i } label: {
-                    Text(title).font(AppFont.display(14, "ExtraBold")).tracking(1.2)
-                        .foregroundStyle(tab == i ? Theme.paper : Theme.ink)
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .background(tab == i ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.ink, lineWidth: 2))
-                }.buttonStyle(.plain).accessibilityAddTraits(tab == i ? .isSelected : [])
-            }
+        .onAppear {
+            guard let startTitle else { return }
+            let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
+            if let i = entries.firstIndex(where: { $0.mission.title == startTitle }) { selected = i }
         }
     }
 
-    private var header: some View {
-        HStack(alignment: .center, spacing: 8) {
+    private func scene(size: CGSize, insets: EdgeInsets) -> some View {
+        let portrait = size.height > size.width
+        let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
+        let index = entries.isEmpty ? 0 : min(selected, entries.count - 1)
+        let side = max(insets.leading, 12)
+        let railTop = insets.top + 60
+        return ZStack(alignment: .topLeading) {
+            BaseWorldScene(
+                biome: EarthBiome(rawValue: store.player.earthBiome) ?? .mountains,
+                placed: store.player.placed,
+                plots: store.player.placementPlots,
+                levels: store.player.buildingLevels,
+                excavated: store.player.subsurfaceExcavated || !store.player.subsurfaceBuilt.isEmpty,
+                secondTank: store.player.subsurfaceBuilt.contains("mineral-vault"),
+                padOccupied: true,
+                insets: insets,
+                camera: camera,
+                onStructure: { _ in }, onShaft: {}, onBuildSilo: {}
+            )
+            .allowsHitTesting(false)
+            if tab == 1 { Theme.ink.opacity(0.18).allowsHitTesting(false) }
+
+            HStack(alignment: .top) {
+                HudGearClock { showSettings = true }
+                Spacer()
+                HudChips(francs: store.player.francs)
+            }
+            .padding(.top, insets.top + 8).padding(.leading, side).padding(.trailing, max(insets.trailing, 12))
+
+            rail(portrait: portrait)
+                .padding(.top, railTop).padding(.leading, side)
+
+            if tab == 1 {
+                ScrollView { ProgramRoadmap { archiveFocus = $0; showArchive = true }.padding(16) }
+                    .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
+                    .padding(.top, portrait ? railTop + 64 : railTop)
+                    .padding(.leading, portrait ? side : side + 144)
+                    .padding(.trailing, max(insets.trailing, 12))
+                    .padding(.bottom, insets.bottom + 12)
+            } else if entries.isEmpty {
+                order(width: orderWidth(size, insets: insets, portrait: portrait), size: size, insets: insets, portrait: portrait) {
+                    Text("No client signals yet").font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                    Text("Your own operations are on the Launchpad. The archive shows what unlocks the next contract.")
+                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+                }
+            } else {
+                let e = entries[index]
+                order(width: orderWidth(size, insets: insets, portrait: portrait), size: size, insets: insets, portrait: portrait, accent: accent(e.mission)) {
+                    WorkOrder(entry: e, position: index + 1, count: entries.count, player: store.player, portrait: portrait,
+                              onTake: { store.pickMission(e.id) },
+                              onPrev: { selected = (index - 1 + entries.count) % entries.count },
+                              onNext: { selected = (index + 1) % entries.count })
+                }
+                .id(e.id)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selected)
+    }
+
+    private func accent(_ m: Mission) -> Color {
+        Color(hex: m.client.flatMap { Clients.byId[$0] }?.colorHex) ?? Theme.blue
+    }
+
+    private func orderWidth(_ size: CGSize, insets: EdgeInsets, portrait: Bool) -> CGFloat {
+        portrait ? size.width - insets.leading - insets.trailing - 24 : min(560, size.width - max(insets.leading, 12) - max(insets.trailing, 12) - 160)
+    }
+
+    /// The work-order slab, anchored to the ground: bottom edge in portrait, bottom right beside the pad otherwise.
+    private func order<C: View>(width: CGFloat, size: CGSize, insets: EdgeInsets, portrait: Bool, accent: Color = Theme.blue, @ViewBuilder _ content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: portrait ? 12 : 8) { content() }
+            .padding(portrait ? 16 : 12)
+            .frame(width: width, alignment: .leading)
+            .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
+            .overlay(alignment: .top) { UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20).fill(accent).frame(height: 8) }
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
+            .background(RoundedRectangle(cornerRadius: 20).fill(Theme.ink.opacity(0.7)).offset(x: 6, y: 6))
+            .overlay(alignment: .topLeading) {
+                SignalBeam(color: accent, length: portrait ? 260 : 110).offset(x: 22, y: -(portrait ? 260 : 110))
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: portrait ? .bottom : .bottomTrailing)
+            .padding(.bottom, insets.bottom + 12)
+            .padding(.leading, portrait ? max(insets.leading, 12) : 0)
+            .padding(.trailing, max(insets.trailing, 12) + (portrait ? 0 : 4))
+    }
+
+    private func rail(portrait: Bool) -> some View {
+        let layout = portrait ? AnyLayout(HStackLayout(spacing: 8)) : AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+        return layout {
             Button { store.go(.hub) } label: {
-                Image(systemName: "chevron.left").font(.system(size: 20, weight: .bold)).foregroundStyle(Theme.ink)
-                    .frame(width: 48, height: 48).background(Theme.paper).overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.ink, lineWidth: 3))
-                    .background(RoundedRectangle(cornerRadius: 4).fill(Theme.ink.opacity(0.42)).offset(y: 4))
+                Image(systemName: "chevron.left").font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.ink)
+                    .frame(width: 44, height: 44).background(Theme.paper, in: Circle()).overlay(Circle().stroke(Theme.ink, lineWidth: 2))
             }.buttonStyle(.plain).accessibilityLabel("Back")
-            VStack(alignment: .leading, spacing: 4) {
-                Text("CONTRACT → LAUNCH").font(AppFont.display(14)).tracking(2.0)
-                Text("Choose a contract").font(AppFont.display(20))
-            }
-            .padding(.vertical, 8).padding(.leading, 12).padding(.trailing, 12).frame(minHeight: 48, alignment: .leading)
-            .background(Theme.paper)
-            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.ink, lineWidth: 3))
-            .overlay(alignment: .leading) { Rectangle().fill(Theme.blue).frame(width: 7).padding(.vertical, 1.5) }
-            .background(RoundedRectangle(cornerRadius: 4).fill(Theme.ink.opacity(0.42)).offset(y: 4))
+            railTab(0, "Contracts", "chart.line.uptrend.xyaxis", portrait: portrait)
+            railTab(1, "Program", "list.clipboard", portrait: portrait)
+            Button { archiveFocus = nil; showArchive = true } label: {
+                Text("LOG").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+                    .frame(minWidth: portrait ? 56 : 132, minHeight: 44)
+                    .background(Theme.paper, in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.ink, lineWidth: 2))
+            }.buttonStyle(.plain).accessibilityLabel("Archive and pathways")
         }
-        .padding(.bottom, 4)
     }
 
-    private func arrow(_ symbol: String, label: String, disabled: Bool, action: @escaping () -> Void) -> some View {
+    private func railTab(_ i: Int, _ title: String, _ symbol: String, portrait: Bool) -> some View {
+        let on = tab == i
+        return Button { tab = i } label: {
+            HStack(spacing: 6) {
+                Image(systemName: symbol).font(.system(size: 18, weight: .bold))
+                if !portrait { Text(title).font(AppFont.display(14)) }
+            }
+            .foregroundStyle(on ? Color.white : Theme.ink)
+            .frame(width: portrait ? 52 : 132, height: portrait ? 52 : 48)
+            .background(on ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.ink, lineWidth: on ? 3 : 2))
+        }
+        .buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(on ? .isSelected : [])
+    }
+}
+
+/// The deal on one contract: who, what, cargo, pay, accept. Everything else lives in the archive.
+private struct WorkOrder: View {
+    let entry: MissionBoard.Entry
+    let position: Int
+    let count: Int
+    let player: Player
+    let portrait: Bool
+    let onTake: () -> Void
+    let onPrev: () -> Void
+    let onNext: () -> Void
+
+    var body: some View {
+        let m = entry.mission
+        let client = m.client.flatMap { Clients.byId[$0] }
+        let level = client.map { 1 + max(0, player.clientMissions[$0.id] ?? 0) / Clients.affinityMissionThreshold }
+        HStack(spacing: 12) {
+            ZStack {
+                Circle().fill(mixWhite(client?.colorHex, 0.35, fallback: Theme.paper2))
+                Circle().stroke(Theme.ink, lineWidth: 2)
+                Text(client?.initial ?? "OP").font(AppFont.display(16)).foregroundStyle(Theme.ink)
+            }.frame(width: 44, height: 44)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\((client?.name ?? "Your program").uppercased())\(level.map { " · L\($0)" } ?? "")")
+                    .font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.textDim).lineLimit(1)
+                Text(m.title).font(AppFont.display(portrait ? 22 : 24)).foregroundStyle(Theme.ink).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        HStack(alignment: .center, spacing: 8) {
+            ForEach(m.requires.minerals.sorted { $0.key < $1.key }, id: \.key) { id, amount in
+                if let meta = Minerals.byId[id] { crate(meta, amount) }
+            }
+            Spacer(minLength: 8)
+            Text(compactFrancs(m.payout.francs)).font(AppFont.display(portrait ? 22 : 26)).foregroundStyle(Theme.ink).lineLimit(1)
+            if !portrait { accept }
+        }
+        if portrait { accept }
+        if !entry.unlocked {
+            Text(entry.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+        }
+        if count > 1 {
+            HStack {
+                round("chevron.left", "Previous contract", onPrev)
+                Spacer()
+                Text("\(position)/\(count)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
+                round("chevron.right", "Next contract", onNext)
+            }
+        }
+    }
+
+    private var accept: some View {
+        Button(action: onTake) {
+            Text("ACCEPT").font(AppFont.display(18)).tracking(1.8)
+                .foregroundStyle(entry.unlocked ? Color.white : Theme.ink)
+                .frame(maxWidth: portrait ? .infinity : nil, minHeight: 52).padding(.horizontal, 22)
+                .background(entry.unlocked ? Theme.blue : Theme.paper2, in: Capsule())
+                .overlay(Capsule().stroke(Theme.ink, lineWidth: 3))
+                .background(Capsule().fill(Theme.ink).offset(x: 3, y: 3))
+        }
+        .buttonStyle(.plain).disabled(!entry.unlocked).accessibilityLabel("Accept \(entry.mission.title)")
+    }
+
+    private func crate(_ meta: MineralMeta, _ amount: Int) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "hexagon.fill").font(.system(size: 26)).foregroundStyle(Color(hex: meta.colorHex) ?? Theme.paper2)
+                .overlay(Image(systemName: "hexagon").font(.system(size: 26)).foregroundStyle(Theme.ink))
+            VStack(alignment: .leading, spacing: 0) {
+                Text("\(amount)").font(AppFont.mono(18)).foregroundStyle(Theme.ink)
+                Text(meta.name).font(AppFont.body(14)).foregroundStyle(Theme.textDim).lineLimit(1)
+            }
+        }
+        .padding(.vertical, 6).padding(.leading, 6).padding(.trailing, 10)
+        .background(mixWhite(meta.colorHex, 0.18, fallback: Theme.paper2), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.ink, lineWidth: 2))
+        .accessibilityElement(children: .combine)
+    }
+
+    private func round(_ symbol: String, _ label: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 20, weight: .bold)).foregroundStyle(Theme.ink)
-                .frame(width: 44, height: 64).background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
-        }.buttonStyle(.plain).disabled(disabled).opacity(disabled ? 0.5 : 1).accessibilityLabel(label)
+            Image(systemName: symbol).font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.ink)
+                .frame(width: 44, height: 44).background(Theme.paper, in: Circle()).overlay(Circle().stroke(Theme.ink, lineWidth: 2))
+        }.buttonStyle(.plain).accessibilityLabel(label)
+    }
+
+    private func compactFrancs(_ n: Int) -> String {
+        if n >= 1_000_000_000 { return String(format: "₣%.1fB", Double(n) / 1e9) }
+        if n >= 1_000_000 { return String(format: "₣%.1fM", Double(n) / 1e6) }
+        return Economy.format(francs: n)
+    }
+}
+
+/// An incoming client transmission: a dashed beam from the sky, a packet riding down it, rings where it lands.
+private struct SignalBeam: View {
+    let color: Color
+    let length: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { ctx in
+            let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
+            let phase = CGFloat(t.truncatingRemainder(dividingBy: 1.8) / 1.8)
+            ZStack(alignment: .top) {
+                Path { p in p.move(to: CGPoint(x: 2, y: 0)); p.addLine(to: CGPoint(x: 2, y: length)) }
+                    .stroke(color, style: StrokeStyle(lineWidth: 4, dash: [10, 8], dashPhase: -CGFloat(t * 20)))
+                    .frame(width: 4, height: length).opacity(0.8)
+                RoundedRectangle(cornerRadius: 3).fill(color).overlay(RoundedRectangle(cornerRadius: 3).stroke(Theme.ink, lineWidth: 2))
+                    .frame(width: 14, height: 14).offset(y: phase * (length - 14)).opacity(phase < 0.9 ? 1 : 0)
+                ForEach(0..<2, id: \.self) { k in
+                    let r = (phase + CGFloat(k) * 0.5).truncatingRemainder(dividingBy: 1)
+                    Circle().stroke(color, lineWidth: 3).frame(width: 36, height: 36)
+                        .scaleEffect(0.4 + r * 2.2).opacity(Double(1 - r) * 0.9).offset(y: length - 18)
+                }
+            }
+            .frame(width: 4, height: length)
+        }
+        .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
@@ -115,130 +295,6 @@ private extension Color {
     }
 }
 
-private extension View {
-    /// The web contract stage: 3pt ink frame, 8pt radius, a tint of the client colour behind the left half.
-    func stage(accent: Color) -> some View {
-        self.background(
-            GeometryReader { g in
-                HStack(spacing: 0) {
-                    Rectangle().fill(accent).frame(width: g.size.width * 0.5)
-                    Rectangle().fill(Theme.paper2)
-                }
-            }
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 3))
-        .background(RoundedRectangle(cornerRadius: 8).fill(Theme.ink.opacity(0.42)).offset(y: 8))
-        .padding(.bottom, 8)
-    }
-}
-
-/// One contract: identity, brief, facts, cargo and the accept button (web `contractSlide`).
-struct MissionSlide: View {
-    let entry: MissionBoard.Entry
-    let position: Int
-    let count: Int
-    let catalog: Catalog
-    let player: Player
-    let rocket: RocketConfig
-    let wsw: [WorldSpaceWeek.Chip]
-    let onTake: () -> Void
-    let onPathway: () -> Void
-
-    private func compactFrancs(_ n: Int) -> String {
-        if n >= 1_000_000_000 { return String(format: "₣%.1fB", Double(n) / 1e9) }
-        if n >= 1_000_000 { return String(format: "₣%.0fM", Double(n) / 1e6) }
-        return Economy.format(francs: n)
-    }
-
-    var body: some View {
-        let m = entry.mission
-        let client = m.client.flatMap { Clients.byId[$0] }
-        let accent = Color(hex: client?.colorHex) ?? Theme.blue
-        let level = client.map { 1 + max(0, player.clientMissions[$0.id] ?? 0) / Clients.affinityMissionThreshold }
-        let route: String = {
-            if let from = m.targetId.flatMap(catalog.target)?.name, let to = m.deliveryTargetId.flatMap(catalog.target)?.name { return "\(from) → \(to)".uppercased() }
-            return "\(entry.feasibleTargets) ELIGIBLE TARGET\(entry.feasibleTargets == 1 ? "" : "S")"
-        }()
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle().fill(Theme.paper)
-                    Circle().stroke(accent, lineWidth: 2)
-                    Text(client?.initial ?? "OP").font(AppFont.display(28)).foregroundStyle(Theme.ink)
-                }.frame(width: 88, height: 88)
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("CLIENT CONTRACT \(position) / \(count)").font(AppFont.display(14)).tracking(2.0)
-                    Text(client?.name ?? "Your program").font(AppFont.display(18)).fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                Text(m.title).font(AppFont.display(26)).fixedSize(horizontal: false, vertical: true)
-                Text(route).font(AppFont.display(14)).tracking(1.7)
-                WorldSpaceWeekChips(chips: wsw).padding(.top, 6)
-                Text(m.brief).font(AppFont.body(14, "SemiBold")).fixedSize(horizontal: false, vertical: true)
-            }
-            HStack(alignment: .top, spacing: 8) {
-                fact("VALUE", compactFrancs(m.payout.francs))
-                fact("CLIENT LEVEL", level.map { "L\($0)" } ?? "PROGRAM")
-                fact("MISSION TIER", m.difficulty)
-            }
-            if !m.requires.minerals.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("REQUIRED CARGO").font(AppFont.display(14)).tracking(2.0)
-                    ChipFlow(spacing: 8) {
-                        ForEach(m.requires.minerals.sorted { $0.key < $1.key }, id: \.key) { id, amount in
-                            if let meta = Minerals.byId[id] { cargoChip(meta, amount) }
-                        }
-                    }
-                }
-            }
-            Art.view(Rockets.model(for: rocket).id == "prospector" ? "ships/ship_sr2.png" : "ships/ship_sr1.png")
-                .resizable().interpolation(.high).aspectRatio(contentMode: .fit).frame(height: 140).frame(maxWidth: .infinity)
-            Button(action: onTake) {
-                HStack(spacing: 8) {
-                    Image(systemName: "location.north.fill").font(.system(size: 16, weight: .bold))
-                    Text("ACCEPT & PREPARE").font(AppFont.display(14)).tracking(1.7)
-                }
-                .foregroundStyle(.white).frame(maxWidth: .infinity, minHeight: 48)
-                .background(Theme.teal, in: RoundedRectangle(cornerRadius: 4))
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.ink, lineWidth: 3))
-                .background(RoundedRectangle(cornerRadius: 4).fill(Theme.ink.opacity(0.72)).offset(y: 4))
-                .padding(.bottom, 4)
-            }.buttonStyle(.plain).disabled(!entry.unlocked).opacity(entry.unlocked ? 1 : 0.5)
-            if !entry.unlocked {
-                HStack(spacing: 8) {
-                    Image(systemName: "lock.fill").foregroundStyle(Theme.textMuted)
-                    Text(entry.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
-                }
-                Button(action: onPathway) {
-                    Text("SEE THE PATHWAY").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress).frame(minHeight: 44, alignment: .leading)
-                }.buttonStyle(.plain)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 4)
-    }
-
-    private func fact(_ k: String, _ v: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(k).font(AppFont.display(14)).tracking(1.7).fixedSize(horizontal: false, vertical: true)
-            Text(v).font(AppFont.display(15))
-        }.frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func cargoChip(_ meta: MineralMeta, _ amount: Int) -> some View {
-        HStack(spacing: 0) {
-            Text(meta.symbol).font(AppFont.display(14)).frame(minWidth: 28).frame(maxHeight: .infinity)
-                .background(mixWhite(meta.colorHex, 0.35, fallback: Theme.paper2))
-                .overlay(alignment: .trailing) { Rectangle().fill(Theme.ink).frame(width: 2) }
-            Text("×\(amount)").font(AppFont.display(14)).padding(.horizontal, 6)
-            Text(meta.name).font(AppFont.display(14)).padding(.trailing, 6)
-        }
-        .frame(minHeight: 32).fixedSize()
-        .background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
-    }
-}
 
 struct LaunchScreen: View {
     @Environment(GameStore.self) private var store
