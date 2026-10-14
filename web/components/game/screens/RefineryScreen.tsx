@@ -11,6 +11,7 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import { formatCurrency } from '@/lib/format'
 import ScenePanel from '@/components/game/ScenePanel'
 import { captureGameEvent } from '@/lib/posthog'
+import { Stat, StatStrip } from '@/components/ui/Omega'
 
 interface RefineryScreenProps {
   player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; staffed?: boolean }
@@ -43,7 +44,13 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
   return (
     <div className="game-screen theme-blueprint">
       <TopBar eyebrow="BASE · INDUSTRY" title="Refinery" onBack={onBack} />
-      <ScenePanel ambient="industrial" className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
+      <ScenePanel ambient="industrial" art="refinery" className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
+        <StatStrip label="Refinery status">
+          <Stat label="Cycle" value={runningRecipe ? (done ? 'READY' : 'RUNNING') : 'IDLE'} detail={runningRecipe ? runningRecipe.name : 'Choose a recipe'} />
+          <Stat label="Output stored" value={Object.values(player.refinedGoods).reduce((total, amount) => total + amount, 0)} detail="Goods ready to trade" />
+          <Stat label="Daily slot" value={startedToday ? 'USED' : 'OPEN'} detail="One shipment per day" />
+          <Stat label="Reward value" value={formatCurrency(Object.entries(player.refinedGoods).reduce((total, [id, amount]) => total + (REFINERY_RECIPES.find(recipe => recipe.id === id)?.output.price ?? 0) * amount, 0), { compact: true })} detail="Processed inventory" />
+        </StatStrip>
         <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)' }}>On-site Ore Processing</div>
           <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', marginTop: 4 }}>

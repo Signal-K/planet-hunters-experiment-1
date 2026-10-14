@@ -6,6 +6,7 @@ import { ControlStationBoard } from '@/components/game/control-station/ControlSt
 import TopBar from '@/components/ui/TopBar'
 import { useHelp } from '@/components/ui/useHelp'
 import { buildControlStation } from '@/lib/control-station'
+import { Stat, StatStrip } from '@/components/ui/Omega'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { UI_ZONES } from '@/lib/ui-zones'
 import type { Player } from '@/lib/game-types'
@@ -47,13 +48,17 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onClaim
     }),
     [player, signals, bodyId, awaitingFeed],
   )
+  const rows = model.groups.flatMap(group => group.rows)
+  const live = rows.filter(row => row.live).length
+  const ready = rows.reduce((total, row) => total + row.readyCount, 0)
+  const projects = new Set(rows.flatMap(row => row.projects.map(project => project.id))).size
 
   return (
     <ScenePanel
       ambient="survey"
+      art="control"
       className={`game-screen theme-blueprint ${styles.screen}`}
       data-testid="instrument-hub-screen"
-      scene={<div className={`ln-con-grid ${styles.grid}`} />}
     >
       <TopBar
         eyebrow="ORBITAL OBSERVATORY / DATA LINK"
@@ -64,6 +69,12 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onClaim
       />
       {help.layer}
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
+        <StatStrip label="Control Station status">
+          <Stat label="Instruments online" value={`${live}/${rows.length}`} detail={live ? 'Feeds live' : 'Awaiting launch'} />
+          <Stat label="Ready to classify" value={ready} detail={ready ? 'Open a signal' : 'No queued frames'} />
+          <Stat label="Projects linked" value={projects} detail="Citizen-science feeds" />
+          <Stat label="Research XP" value={player.researchXP ?? 0} detail="Programme reward" />
+        </StatStrip>
         <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} />
         {onStartScan && onResolveScan && player.freeOperations && (
           <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />

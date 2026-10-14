@@ -16,6 +16,7 @@ struct ControlStationScreen: View {
     var body: some View {
         ScreenFrame(title: "Control Station", back: { store.go(.hub) }) {
             let m = model
+            StationSummary(model: m)
             StationMap(model: m).coachTarget("station-map")
             filters(m).coachTarget("station-filters")
             if let empty = m.emptyLabel { Panel { Text(empty).foregroundStyle(Theme.textDim) } }
@@ -75,6 +76,31 @@ struct ControlStationScreen: View {
         case .deepSpace: store.go(.asteroidDiscovery)
         case .saturn: store.go(.saturnStormSearch)
         }
+    }
+}
+
+/// Live numbers make the station read as an operations room before a row is opened.
+private struct StationSummary: View {
+    let model: ControlStation.Model
+    private var rows: [ControlStation.Row] { model.groups.flatMap(\.rows) }
+    var body: some View {
+        let live = rows.filter(\.live).count
+        let ready = rows.reduce(0) { $0 + $1.readyCount }
+        let projects = Set(rows.flatMap(\.projects)).count
+        HStack(spacing: 8) {
+            tile("INSTRUMENTS", "\(live)/\(rows.count)", live > 0 ? "ONLINE" : "STANDBY")
+            tile("QUEUE", "\(ready)", ready > 0 ? "READY" : "CLEAR")
+            tile("PROJECTS", "\(projects)", "LINKED")
+        }.accessibilityElement(children: .combine).accessibilityLabel("\(live) of \(rows.count) instruments online, \(ready) queued frames, \(projects) projects linked")
+    }
+    private func tile(_ label: String, _ value: String, _ detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(AppFont.display(11, "Bold")).tracking(0.8).foregroundStyle(Theme.textMuted)
+            Text(value).font(AppFont.mono(18)).foregroundStyle(Theme.ink)
+            Text(detail).font(AppFont.display(10, "Bold")).tracking(0.7).foregroundStyle(Theme.teal)
+        }.padding(9).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 1.25))
     }
 }
 

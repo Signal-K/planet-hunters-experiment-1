@@ -11,6 +11,7 @@ struct MissionsScreen: View {
     var body: some View {
         let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
         ScreenFrame(title: "Mission board", back: { store.go(.hub) }) {
+            MissionBoardSummary(entries: entries, francs: store.player.francs)
             Eyebrow(text: store.player.freeOperations ? "Free Operations · client work" : "Guided contracts")
             if entries.isEmpty {
                 Panel {
@@ -27,6 +28,29 @@ struct MissionsScreen: View {
             PrimaryButton(title: "Archive · pathways and unlocks") { archiveFocus = nil; showArchive = true }
         }
         .sheet(isPresented: $showArchive) { ArchiveScreen(focus: archiveFocus) }
+    }
+}
+
+private struct MissionBoardSummary: View {
+    let entries: [MissionBoard.Entry]
+    let francs: Int
+    var body: some View {
+        let open = entries.filter(\.unlocked).count
+        let payout = entries.filter(\.unlocked).reduce(0) { $0 + $1.mission.payout.francs }
+        HStack(spacing: 8) {
+            tile("OPEN", "\(open)/\(entries.count)", "CONTRACTS")
+            tile("REWARDS", Economy.format(francs: payout), "AVAILABLE")
+            tile("CAPITAL", Economy.format(francs: francs), "ON HAND")
+        }.accessibilityElement(children: .combine).accessibilityLabel("\(open) open contracts, \(Economy.format(francs: payout)) available rewards, \(Economy.format(francs: francs)) capital")
+    }
+    private func tile(_ label: String, _ value: String, _ detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(AppFont.display(11, "Bold")).tracking(0.8).foregroundStyle(Theme.textMuted)
+            Text(value).font(AppFont.mono(16)).foregroundStyle(Theme.ink).lineLimit(1).minimumScaleFactor(0.7)
+            Text(detail).font(AppFont.display(10, "Bold")).tracking(0.7).foregroundStyle(Theme.teal)
+        }.padding(9).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 1.25))
     }
 }
 

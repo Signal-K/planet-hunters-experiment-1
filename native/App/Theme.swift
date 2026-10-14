@@ -134,27 +134,111 @@ struct ScreenFrame<Content: View>: View {
     var back: (() -> Void)?
     @ViewBuilder var content: Content
     var body: some View {
-        scroller {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .center, spacing: 12) {
-                    if let back {
-                        Button(action: back) {
-                            Text("‹ BASE").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.bluePress)
-                                .frame(minWidth: 44, minHeight: 44, alignment: .leading).contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityLabel("Back to base")
+        ZStack {
+            InternalPageScene(title: title).ignoresSafeArea()
+            scroller {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(alignment: .center, spacing: 12) {
+                        if let back {
+                            Button(action: back) {
+                                Text("‹ BASE").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.bluePress)
+                                    .frame(minWidth: 44, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                            }.buttonStyle(.plain).accessibilityLabel("Back to base")
+                        }
+                        Text(title).font(AppFont.display(23)).foregroundStyle(Theme.ink)
                     }
-                    Text(title).font(AppFont.display(23)).foregroundStyle(Theme.ink)
+                    PageStatusStrip(title: title)
+                    content
                 }
-                content
+                .padding(16).frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
             }
-            .padding(16).frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
         }
-        .background(Theme.bg.ignoresSafeArea())
         .foregroundStyle(Theme.ink)
     }
 
     @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
         if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
+    }
+}
+
+/// The shared internal-page landscape. It is deliberately an outlined building
+/// or instrument, never a planet or a person, so a data page still feels like
+/// a place in the base.
+private struct InternalPageScene: View {
+    let title: String
+    private var kind: Int {
+        let key = title.lowercased()
+        if key.contains("control") || key.contains("imager") { return 0 }
+        if key.contains("mission") || key.contains("launch") { return 1 }
+        if key.contains("market") { return 2 }
+        if key.contains("refinery") { return 3 }
+        return 4
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .bottom) {
+                LinearGradient(colors: [Theme.skyTop, Theme.bg], startPoint: .top, endPoint: .bottom)
+                Canvas { ctx, size in
+                    let ground = size.height * 0.52
+                    var grid = Path()
+                    stride(from: CGFloat(0), through: size.width, by: 32).forEach { grid.move(to: CGPoint(x: $0, y: 0)); grid.addLine(to: CGPoint(x: $0, y: ground)) }
+                    stride(from: CGFloat(0), through: ground, by: 32).forEach { grid.move(to: CGPoint(x: 0, y: $0)); grid.addLine(to: CGPoint(x: size.width, y: $0)) }
+                    ctx.stroke(grid, with: .color(Theme.ink.opacity(0.12)), lineWidth: 1)
+                    let w = min(size.width * 0.72, 520), x = (size.width - w) / 2
+                    var building = Path()
+                    switch kind {
+                    case 0: // instrument room and signal mast
+                        building.addRect(CGRect(x: x + w * 0.22, y: ground - 118, width: w * 0.56, height: 118))
+                        building.move(to: CGPoint(x: x + w * 0.5, y: ground - 118)); building.addLine(to: CGPoint(x: x + w * 0.5, y: ground - 210))
+                        building.addEllipse(in: CGRect(x: x + w * 0.39, y: ground - 232, width: w * 0.22, height: 48))
+                    case 1: // launch review tower
+                        building.addRect(CGRect(x: x + w * 0.38, y: ground - 185, width: w * 0.24, height: 185))
+                        building.addRect(CGRect(x: x + w * 0.68, y: ground - 145, width: w * 0.1, height: 145))
+                        building.move(to: CGPoint(x: x + w * 0.68, y: ground - 145)); building.addLine(to: CGPoint(x: x + w * 0.78, y: ground - 105))
+                    case 2: // Exchange remains a building
+                        building.addRect(CGRect(x: x + w * 0.12, y: ground - 122, width: w * 0.76, height: 122))
+                        building.move(to: CGPoint(x: x, y: ground - 122)); building.addLine(to: CGPoint(x: x + w * 0.5, y: ground - 192)); building.addLine(to: CGPoint(x: x + w, y: ground - 122)); building.closeSubpath()
+                    case 3: // refinery stacks
+                        for offset in [0.18, 0.42, 0.66] { building.addRect(CGRect(x: x + w * offset, y: ground - 190 + w * offset * 0.12, width: 36, height: 190 - w * offset * 0.12)) }
+                    default: // workshop / academy bay
+                        building.addRect(CGRect(x: x + w * 0.12, y: ground - 140, width: w * 0.76, height: 140))
+                        building.move(to: CGPoint(x: x + w * 0.12, y: ground - 140)); building.addLine(to: CGPoint(x: x + w * 0.22, y: ground - 184)); building.addLine(to: CGPoint(x: x + w * 0.78, y: ground - 184)); building.addLine(to: CGPoint(x: x + w * 0.88, y: ground - 140))
+                    }
+                    ctx.fill(building, with: .color(Theme.paper.opacity(0.92)))
+                    ctx.stroke(building, with: .color(Theme.ink.opacity(0.72)), lineWidth: 1.5)
+                    var horizon = Path(); horizon.move(to: CGPoint(x: 0, y: ground)); horizon.addLine(to: CGPoint(x: size.width, y: ground))
+                    ctx.stroke(horizon, with: .color(Theme.ink.opacity(0.7)), lineWidth: 1.5)
+                }
+            }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+private struct PageStatusStrip: View {
+    let title: String
+    private var labels: (String, String, String, String) {
+        let key = title.lowercased()
+        if key.contains("mission") || key.contains("launch") { return ("CONTRACTS", "REVIEW", "REWARD", "PUBLISHED") }
+        if key.contains("market") { return ("EXCHANGE", "LIVE", "RATES", "PUBLISHED") }
+        if key.contains("control") || key.contains("imager") { return ("FEEDS", "MONITORED", "QUEUE", "READY") }
+        if key.contains("refinery") { return ("PROCESSING", "MONITORED", "OUTPUT", "STORED") }
+        return ("PROGRAMME", "ACTIVE", "PROGRESS", "TRACKED")
+    }
+    var body: some View {
+        let l = labels
+        HStack(spacing: 8) {
+            status(l.0, l.1); status(l.2, l.3)
+        }.accessibilityElement(children: .combine).accessibilityLabel("\(l.0) \(l.1), \(l.2) \(l.3)")
+    }
+    private func status(_ label: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(AppFont.display(11, "Bold")).tracking(1.0).foregroundStyle(Theme.textMuted)
+            Text(value).font(AppFont.mono(14)).foregroundStyle(Theme.ink)
+        }.padding(.vertical, 7).padding(.horizontal, 10).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.paper.opacity(0.94), in: RoundedRectangle(cornerRadius: 7))
+            .overlay(RoundedRectangle(cornerRadius: 7).stroke(Theme.ink, lineWidth: 1.25))
     }
 }
 
