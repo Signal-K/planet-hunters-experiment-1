@@ -26,7 +26,16 @@ public enum Market {
     public static func unitPrice(_ id: String, player: Player, clientId: String?, now: Double) -> Quote {
         guard let meta = Minerals.byId[id] else { return Quote(price: 0, base: 0, premiumApplied: false) }
         let sold = decayedUnitsSold(player.marketSupply[id] ?? 0, lastSoldAt: player.marketSupplyUpdatedAt[id], now: now)
-        let base = openMarketSellPrice(base: meta.price, unitsSold: sold)
+        // Match web `sellUnitPrice`: a published shared daily quote is authoritative;
+        // per-player supply pressure is only the fallback for older saves.
+        let snapshotPrice: Int? = {
+            guard case let .object(snapshot)? = player.extras["dailyEconomySnapshot"],
+                  case let .object(prices)? = snapshot["prices"],
+                  case let .object(quote)? = prices[id],
+                  case let .number(price)? = quote["price"] else { return nil }
+            return Int(price)
+        }()
+        let base = snapshotPrice ?? openMarketSellPrice(base: meta.price, unitsSold: sold)
         let client = clientId.flatMap { Clients.byId[$0] }
         let premium = client.map { $0.mineralPreferences.contains(id) && $0.payoutPremium > 0 } ?? false
         return Quote(price: premium ? Int((Double(base) * (1 + client!.payoutPremium)).rounded()) : base, base: base, premiumApplied: premium)

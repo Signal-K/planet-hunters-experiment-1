@@ -54,6 +54,20 @@ import Foundation
         #expect(healed == fresh)
     }
 
+    @Test func sharedDailyMarketQuotesOverrideCommonFallbackPrices() {
+        var p = Player()
+        p.extras["dailyEconomySnapshot"] = .object([
+            "prices": .object([
+                "carbon": .object(["price": .number(178_000)]),
+                "iron": .object(["price": .number(264_000)]),
+                "silicon": .object(["price": .number(231_000)]),
+            ]),
+        ])
+        #expect(Market.unitPrice("carbon", player: p, clientId: nil, now: 0).price == 178_000)
+        #expect(Market.unitPrice("iron", player: p, clientId: nil, now: 0).price == 264_000)
+        #expect(Market.unitPrice("silicon", player: p, clientId: nil, now: 0).price == 231_000)
+    }
+
     @Test func clientPremiumOnlyOnPreferredMinerals() {
         let p = Player()
         #expect(Market.unitPrice("platinum", player: p, clientId: "helios-propulsion-depot", now: 0).premiumApplied)
