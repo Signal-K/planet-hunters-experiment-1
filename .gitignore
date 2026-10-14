@@ -90,3 +90,4 @@ __pycache__/
 
 # Written by tests/scenes/flow-landscape-height.spec.ts on every run
 /docs/landscape-playfield/
+.vercel
