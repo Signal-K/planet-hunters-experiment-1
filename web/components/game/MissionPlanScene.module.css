@@ -1,0 +1,53 @@
+/* Mission creation scene: one base landscape behind three in-scene steps (target map, rocket and cargo, review).
+   Floating chrome uses the dusk panel tokens; no orange. */
+.plan { position:relative; display:grid; grid-template-rows:auto minmax(0,1fr) auto; gap:16px; height:100%; min-height:0; padding:16px 24px 24px; overflow:hidden; color:var(--dusk-ink); }
+.world { position:absolute; inset:0; z-index:0; }
+
+.top { position:relative; z-index:2; display:flex; align-items:center; justify-content:center; gap:16px; }
+.pips { display:flex; align-items:center; gap:16px; margin:0; padding:8px 16px; list-style:none; border:2px solid var(--dusk-raised); border-radius:999px; background:color-mix(in srgb,var(--dusk-deep) 86%,transparent); }
+.pips li { display:flex; align-items:center; }
+.pips li + li::before { content:''; width:24px; height:2px; margin-right:16px; background:var(--dusk-raised); }
+.pip { display:grid; place-items:center; width:44px; height:44px; padding:0; border:2px solid var(--dusk-raised); border-radius:50%; background:var(--dusk-panel); color:var(--dusk-muted); cursor:pointer; }
+.pip svg, .arrow svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.pip[data-state='now'] { border-color:var(--dusk-cta); color:var(--dusk-deep); background:var(--dusk-cta); }
+.pip[data-state='done'] { border-color:var(--dusk-info); color:var(--dusk-info); }
+.pip:disabled { cursor:default; }
+
+.mapSheet { position:relative; z-index:2; min-height:0; overflow:hidden; border:3px solid var(--dusk-raised); border-radius:12px; background:var(--dusk-deep); box-shadow:0 12px 32px color-mix(in srgb,var(--dusk-deep) 70%,transparent); }
+.mapSheet > * { width:100%; height:100%; }
+
+.bay { position:relative; z-index:2; align-self:end; justify-self:center; display:flex; align-items:center; gap:16px; width:min(640px,100%); }
+.bayCard { display:grid; gap:8px; flex:1 1 auto; min-width:0; padding:16px 24px; border:2px solid var(--dusk-raised); border-radius:12px; background:color-mix(in srgb,var(--dusk-deep) 88%,transparent); text-align:center; justify-items:center; }
+.bayCard span, .railText span { font:800 14px var(--ln-font-display); letter-spacing:.14em; color:var(--dusk-info); }
+.bayCard strong { font:800 clamp(24px,4vw,40px)/1 var(--ln-font-display); letter-spacing:.04em; text-transform:uppercase; }
+
+.arrow { display:grid; place-items:center; flex:none; width:48px; height:48px; padding:0; border:2px solid var(--dusk-raised); border-radius:8px; background:var(--dusk-panel); color:var(--dusk-ink); cursor:pointer; }
+.arrow:disabled { opacity:.4; cursor:default; }
+
+.cargo { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:0; padding:0; list-style:none; }
+.cargo li { display:inline-flex; align-items:center; gap:8px; min-height:32px; padding-right:8px; border:2px solid var(--dusk-raised); border-radius:6px; background:var(--dusk-panel); font:800 14px var(--ln-font-display); }
+.cargo i { display:grid; place-items:center; align-self:stretch; min-width:32px; border-radius:4px 0 0 4px; background:var(--mineral-accent,var(--dusk-info)); color:var(--dusk-deep); font-style:normal; }
+.cargo span { color:var(--dusk-dim); font-weight:600; }
+
+.rail { position:relative; z-index:2; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; padding:16px 24px; border:2px solid var(--dusk-raised); border-radius:12px; background:color-mix(in srgb,var(--dusk-deep) 90%,transparent); box-shadow:0 8px 24px color-mix(in srgb,var(--dusk-deep) 60%,transparent); }
+.railText { display:grid; gap:4px; flex:1 1 200px; min-width:0; }
+.railText strong { overflow:hidden; font:800 clamp(18px,2.4vw,26px)/1.1 var(--ln-font-display); text-overflow:ellipsis; white-space:nowrap; text-transform:uppercase; }
+.railText small { font:800 14px var(--ln-font-display); letter-spacing:.1em; color:var(--dusk-warn); }
+.railText small[data-ready='true'] { color:var(--dusk-cta); }
+.railText span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.railActions { display:flex; gap:8px; margin-left:auto; }
+.go, .ghost { min-height:48px; min-width:96px; padding:8px 24px; border:2px solid var(--dusk-raised); border-radius:8px; font:800 14px var(--ln-font-display); letter-spacing:.14em; text-transform:uppercase; cursor:pointer; }
+.go { border-color:var(--dusk-cta); background:var(--dusk-cta); color:var(--dusk-deep); }
+.ghost { background:var(--dusk-panel); color:var(--dusk-ink); }
+.go:disabled, .ghost:disabled { opacity:.5; cursor:not-allowed; }
+
+@media (max-width:720px),(max-height:520px) {
+  .plan { gap:8px; padding:8px 8px 8px; }
+  .pips { gap:8px; padding:4px 12px; }
+  .pips li + li::before { width:12px; margin-right:8px; }
+  .rail { padding:8px 12px; gap:8px; }
+  .bay { gap:8px; }
+  .bayCard { padding:8px 12px; }
+  .go, .ghost { min-height:44px; padding:8px 16px; }
+}
+@media (max-height:520px) { .railText small { display:block; } .cargo li { min-height:32px; } }
