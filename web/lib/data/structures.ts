@@ -39,7 +39,7 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'surface-silo',
     cost: SURFACE_SILO_PRICE,
     // SSL-332: building it is the last guided step, and it is what opens Free Ops.
-    unlocksAt: 'Complete the guided missions',
+    unlocksAt: 'Fly both guided missions first',
     unlockTrigger: 'onboarding-missions',
     description: 'Small Earth-side mineral storage. Hold ore from your own mining or a contract.',
   },
@@ -49,7 +49,7 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'astronaut-academy',
     cost: STRUCTURE_PRICES.academy,
     costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
-    unlocksAt: 'Research after reaching client level 2 with two clients',
+    unlocksAt: 'Reach client level 2 with two clients, then research it',
     unlockTrigger: 'academy-research',
     description: 'Trains named astronauts, manages the roster, and coordinates Base staffing.',
   },

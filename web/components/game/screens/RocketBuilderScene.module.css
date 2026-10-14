@@ -171,11 +171,12 @@
   padding: 12px;
   border: 3px solid var(--ln-blueprint-ink);
   border-radius: 12px;
-  background-color: var(--ln-blueprint-paper-2);
-  background-image: url('/art/scenes/launchpad/launchpad-blueprint-panel.png');
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
+  /* Plain blueprint grid. The old panel art had a rocket and labels painted in, which doubled the live ones. */
+  background-color: var(--ln-blueprint-blue);
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--ln-blueprint-paper) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--ln-blueprint-paper) 22%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 .sheet {

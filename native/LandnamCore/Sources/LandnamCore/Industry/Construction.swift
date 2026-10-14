@@ -16,10 +16,10 @@ public enum Construction {
 
     public static let all: [StructureBlueprint] = [
         StructureBlueprint(id: "launchpad", name: "Launchpad", cost: 0, materials: [:], unlocksAt: "Always", summary: "Rocket assembly and launch operations."),
-        StructureBlueprint(id: "surface-silo", name: "Surface Silo", cost: Economy.surfaceSiloPrice, materials: [:], unlocksAt: "Complete the guided missions",
+        StructureBlueprint(id: "surface-silo", name: "Surface Silo", cost: Economy.surfaceSiloPrice, materials: [:], unlocksAt: "Fly both guided missions first",
                            summary: "Small Earth-side mineral storage. Hold ore for a better market window."),
         StructureBlueprint(id: "astronaut-academy", name: "Astronaut Academy", cost: Economy.academyPrice, materials: ["aluminium": 24, "silicon": 12, "copper": 8],
-                           unlocksAt: "Research after reaching client level 2 with two clients", summary: "Trains named astronauts, manages the roster, and coordinates Base staffing."),
+                           unlocksAt: "Reach client level 2 with two clients, then research it", summary: "Trains named astronauts, manages the roster, and coordinates Base staffing."),
     ]
     public static let byId: [String: StructureBlueprint] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
 

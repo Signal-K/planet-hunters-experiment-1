@@ -10,7 +10,7 @@ struct BuildScreen: View {
 
     var body: some View {
         let p = store.player
-        let catalog = Construction.catalog(for: p)
+        let catalog = Construction.catalog(for: p).filter { Construction.unlocked($0, player: p) }
         let sel = picked.flatMap { id in catalog.first { $0.id == id } }
         let taken = Construction.occupied(p)
         ScreenFrame(title: "Build", back: { store.go(.hub) }) {
@@ -62,7 +62,12 @@ struct BuildScreen: View {
             ForEach(0..<Construction.plotCount, id: \.self) { i in
                 let kind = taken.first { $0.value == i }?.key
                 let on = plot == i
-                Button { if kind == nil, sel != nil { plot = on ? nil : i } } label: {
+                Button {
+                    guard kind == nil, let sel else { return }
+                    // One step: the picked structure goes straight onto the tapped plot.
+                    if Construction.canAfford(sel, player: store.player), store.place(sel.id, plot: i) { picked = nil; plot = nil; note = nil }
+                    else { plot = on ? nil : i }
+                } label: {
                     VStack(spacing: 4) {
                         Image(systemName: kind != nil ? "building.2.fill" : (on ? "checkmark.circle.fill" : "plus"))
                             .font(.system(size: 20, weight: .bold)).foregroundStyle(kind != nil ? Theme.ink : Theme.blue)
@@ -84,7 +89,7 @@ struct BuildScreen: View {
         let can = unlocked && afford, on = picked == b.id
         return Button {
             if can { picked = b.id; plot = nil; note = nil }
-            else { picked = nil; note = "\(b.name) · " + (!unlocked ? "Unlocks at \(b.unlocksAt)" : "Need \(Construction.gaps(b, player: p).joined(separator: ", "))") }
+            else { picked = nil; note = "\(b.name) · " + (!unlocked ? "Locked. \(b.unlocksAt)." : "Need \(Construction.gaps(b, player: p).joined(separator: ", "))") }
         } label: {
             Panel(accent: on ? Theme.teal : Theme.blueBright) {
                 HStack(alignment: .top, spacing: 12) {

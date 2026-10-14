@@ -92,6 +92,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
     // this unrelated progression branch in the simplified launch loop.
     && s.id !== 'astronaut-academy'
     && !player.placed.includes(s.id)
+    // Locked structures are not offered at all (SSL-566); the lock reason lives in the Base coach.
+    && structureUnlocked(s, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, missionsDone: player.missionsDone, hasMiningSettlement: player.hasMiningSettlement })
   )
   const sel = catalog.find(c => c.id === picked) ?? catalog[0]
   const sortedEntities = plotEntities.slice().sort((a, b) => {
@@ -102,7 +104,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
 
   const placementPlots = player.placementPlots ?? {}
   // Pre-placementPlots saves always put the launchpad in plot 0 (mirrors HubScreen's legacy handling).
-  const legacyLaunchpadPlot0 = player.placed.includes('launchpad') && placementPlots.launchpad == null
+  const legacyLaunchpadPlot0 = placementPlots.launchpad == null
   const effectivePlots: Record<string, number> = {
     ...placementPlots,
     ...(legacyLaunchpadPlot0 ? { launchpad: 0 } : {}),
@@ -200,7 +202,12 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                 key={idx}
                 className="build-plot-button"
                 data-testid={`build-plot-${idx}`}
-                onClick={() => sel && setCell(on ? null : idx)}
+                onClick={() => {
+                  if (!sel) return
+                  // One step: the picked structure goes straight onto the tapped slot.
+                  if (canSelectStructure(sel) && onPlaced(sel.id, idx)) return
+                  setCell(on ? null : idx)
+                }}
                 disabled={!sel}
                 style={{
                   position: 'absolute',
@@ -313,7 +320,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, player }: BuildPlac
                     setBlocked({
                       id: c.id,
                       reason: !unlocked
-                        ? `Unlocks at ${c.unlocksAt}`
+                        ? `Locked. ${c.unlocksAt}.`
                         : `Need ${gaps.join(', ')}${shortIds.length > 0 ? `. ${mineralSourceHints(shortIds)}` : ''}`,
                     })
                     captureGameEvent('structure_placement_blocked', {

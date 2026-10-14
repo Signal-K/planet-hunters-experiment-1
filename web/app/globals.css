@@ -2978,6 +2978,9 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
   border-top: 2px solid var(--ln-bp-blue, #1f78c1);
   color: var(--ln-bp-ink, #0f2436);
 }
+.flight-plan:has(> .help-coach-dock) .flight-plan-row,
+.flight-plan:has(> .help-coach-dock) > .flight-plan-hint-dock { display: none; }
+.flight-plan:has(> .help-coach-dock) { gap: 0; z-index: 81; }
 .flight-plan-row { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 .flight-plan-line {
   flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: row; align-items: center; gap: 10px;

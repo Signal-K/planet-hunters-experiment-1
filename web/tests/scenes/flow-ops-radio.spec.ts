@@ -91,11 +91,33 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
 
     test('Show me uses an Ops dock with a 44px skip control and static reduced-motion brackets', async ({ page }, info) => {
       await page.emulateMedia({ reducedMotion: 'reduce' })
-      await stage(page, 'm1-mining')
+      const record = { id: 'e2euser0000001', collectionId: '_pb_users_auth_', collectionName: 'users', email: 'e2e@example.test', verified: true }
+      await page.route(/\/api\/(collections|realtime|health)/, route =>
+        /auth-refresh/.test(route.request().url())
+          ? route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ token: seededToken(), record }) })
+          : route.abort('connectionrefused'))
+      await page.addInitScript(([s]) => {
+        if (localStorage.getItem('seeded')) return
+        localStorage.setItem('seeded', '1')
+        const b64 = (o: object) => btoa(JSON.stringify(o)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')
+        const token = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ id: 'e2euser0000001', exp: 4102444800 })}.sig`
+        const rec = { id: 'e2euser0000001', collectionId: '_pb_users_auth_', collectionName: 'users', email: 'e2e@example.test', verified: true }
+        localStorage.setItem('pocketbase_auth', JSON.stringify({ token, record: rec }))
+        localStorage.setItem('landnam-game-state-v1:user:e2euser0000001', s as string)
+      }, [JSON.stringify({ screen: 'hub', tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true }, player: { placed: ['launchpad'], missionsDone: 0 } })])
+      await page.goto('/game')
+      await expect(page.locator('[data-game-hydrated="true"]')).toBeVisible({ timeout: 30_000 })
+      const scenarioReady = await page.evaluate(() => {
+        const bridge = (window as typeof window & { __landnam?: { scenario: (key: string) => boolean } }).__landnam
+        return bridge?.scenario('m1-mining') ?? false
+      })
+      expect(scenarioReady).toBe(true)
       await expect(page.getByTestId('help-button')).toBeVisible()
       await page.getByTestId('help-button').click()
       await page.getByTestId('help-show-me').click()
-      const hint = page.getByTestId('help-coach-hint')
+      const flightPlan = page.getByTestId('flight-plan')
+      await expect(flightPlan).toBeVisible()
+      const hint = flightPlan.getByTestId('help-coach-hint')
       await expect(hint).toBeVisible()
       await expect(hint).toContainText('OPS')
       await expect(hint).toContainText('Show me · 1 of 1')
