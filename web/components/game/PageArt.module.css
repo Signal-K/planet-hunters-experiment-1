@@ -1,0 +1,64 @@
+/* Scene art behind an internal page. Light blueprint line art, thin ink outlines (Out There: Omega).
+   The scene is a hero band at the top of the page: its ground line sits just under where the page content starts
+   (`--ln-hero-h` pushes content down in globals.css), and the rest of the page is flat ground. Short landscape
+   screens have no room for a band, so the scene fills the whole page there. */
+.art {
+  --ln-art-h: clamp(220px, 34vh, 380px);
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 31px, var(--ln-bp-line) 31px 32px),
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-bp-blue) 12%, var(--ln-bp-paper-2)), var(--ln-bp-bg));
+}
+
+.sky {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: var(--ln-art-h);
+  background:
+    linear-gradient(var(--ln-bp-line) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, var(--ln-bp-line) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-bp-blue) 16%, var(--ln-bp-bg)) 0%, var(--ln-bp-bg) 100%);
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .art { --ln-art-h: 100%; }
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.line {
+  fill: none;
+  stroke: var(--ln-bp-ink);
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.paper { fill: var(--ln-bp-paper); }
+.ice { fill: var(--ln-bp-paper-2); }
+.tint { fill: color-mix(in srgb, var(--ln-bp-blue) 16%, var(--ln-bp-paper)); }
+.tintHi { fill: color-mix(in srgb, var(--ln-bp-blue) 34%, var(--ln-bp-paper)); }
+.glass { fill: color-mix(in srgb, var(--ln-bp-blue) 10%, var(--ln-bp-paper)); }
+.mint { fill: color-mix(in srgb, var(--ln-bp-green) 30%, var(--ln-bp-paper)); }
+.ground { fill: color-mix(in srgb, var(--ln-bp-blue) 12%, var(--ln-bp-paper-2)); }
+.plot { fill: none; }
+.trace { fill: none; stroke: var(--ln-bp-blue); }
+.dash { fill: none; stroke-dasharray: 6 8; opacity: 0.7; }
+.pipe { fill: none; stroke: var(--ln-bp-ink); stroke-width: 6px; stroke-linecap: butt; vector-effect: non-scaling-stroke; }
+.cloud { opacity: 0.9; }
+.hatch {
+  fill: none;
+  stroke: var(--ln-bp-line-strong);
+  stroke-width: 1px;
+  stroke-dasharray: 2 10;
+  vector-effect: non-scaling-stroke;
+}
