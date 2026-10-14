@@ -198,9 +198,17 @@
   .blueprint { top: 56px; width: min(112px, 16vw); }
   .assembly { inset: 0 0 6% 0; }
   .scene { height: 128%; object-position: center 22%; }
-  .fleet { bottom: 68px; gap: 12px; width: min(920px, calc(100% - 32px)); }
-  .card { min-height: 96px; padding: 8px 12px; }
-  .vehicleIcon { height: 72px; }
+  .fleet { bottom: 58px; gap: 12px; width: min(520px, calc(100% - 32px)); }
+  .card { min-height: 64px; padding: 4px 8px; }
+  .vehicleIcon { height: 48px; }
+  /* The plate art has tiny lettering at this seam; extend the opaque balance
+     chip over the gap so no background glyph reads as part of the HUD. */
+  .hud > .cluster:last-child [data-testid='hangar-francs-chip'] {
+    position: relative;
+    z-index: 1;
+    margin-right: -8px;
+    padding-right: 16px;
+  }
   .dock { bottom: 4px; }
 }
 

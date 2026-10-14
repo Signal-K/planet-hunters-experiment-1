@@ -68,9 +68,9 @@ struct HangarScreen: View {
             }
             .overlay(alignment: .bottom) {
                 cards(short: short, narrow: narrow)
-                    .frame(maxWidth: 1100)
+                    .frame(maxWidth: short ? 520 : 1100)
                     .padding(.horizontal, narrow ? 12 : 24)
-                    .padding(.bottom, short ? 68 : 76)
+                    .padding(.bottom, short ? 58 : 76)
             }
             .overlay(alignment: .center) {
                 if stagedInBay || stagedOnPad {
@@ -156,9 +156,9 @@ struct HangarScreen: View {
                 Button { focused = vehicle.id } label: {
                     HangarRocketThumbnail(cargo: vehicle.id == "prospector")
                         .frame(maxWidth: .infinity)
-                        .frame(height: short ? 72 : (narrow ? 88 : 120))
-                        .padding(short ? 8 : 16)
-                        .frame(maxWidth: .infinity, minHeight: short ? 96 : 120)
+                        .frame(height: short ? 48 : (narrow ? 88 : 120))
+                        .padding(short ? 4 : 16)
+                        .frame(maxWidth: .infinity, minHeight: short ? 64 : 120)
                         .background(Theme.paper2)
                         .overlay(Rectangle().stroke(focused == vehicle.id ? Theme.ink : Theme.blue, lineWidth: 3))
                 }
