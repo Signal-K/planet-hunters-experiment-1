@@ -1,6 +1,7 @@
 // Daily client mission pool — deterministic per calendar day, resets at midnight.
 
-import type { ClientSlot, MineralMeta, Mission } from './types'
+import type { ClientSlot, MineralMeta, Mission, MissionTemplate } from './types'
+import { findTargetStructure } from './target-structures'
 import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_MISSION_SEQUENCE, requiredDrillTier, deliveryEligibleMineralKeys } from './mission-generator'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
 import { normalizeMissionPayout } from './payouts'
@@ -27,8 +28,7 @@ export interface DailyClientPool {
   completedIds: string[]      // ids completed today (reward already received via debrief)
 }
 
-export function todayDateKey(): string {
-  const d = new Date()
+export function todayDateKey(d: Date = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
@@ -47,6 +47,51 @@ function maxTierForProgress(missionsDone: number): number {
   return 1
 }
 
+// SSL-570: client affinity opens new client tiers. Every
+// CLIENT_TIER_AFFINITY_JOBS completed client jobs (across all clients) opens
+// the next unlockTier, so all twelve clients become reachable over time even
+// for a player who mostly runs contracts rather than raising missionsDone.
+export const CLIENT_TIER_AFFINITY_JOBS = 3
+export const MAX_CLIENT_TIER = 5
+
+export function maxClientTier(missionsDone: number, clientMissions: Record<string, number> = {}): number {
+  const jobs = Object.values(clientMissions).reduce((sum, n) => sum + (Number.isFinite(n) ? n : 0), 0)
+  const affinityTier = 1 + Math.floor(jobs / CLIENT_TIER_AFFINITY_JOBS)
+  return Math.min(MAX_CLIENT_TIER, Math.max(maxTierForProgress(missionsDone), affinityTier))
+}
+
+function constructMission(date: string, client: ClientSlot, template: MissionTemplate, minerals: Record<string, MineralMeta>): Mission | null {
+  const plan = template.construction
+  if (!plan) return null
+  const blueprint = findTargetStructure(plan.structureKind)
+  const name = blueprint?.name ?? plan.structureKind
+  const materials = { ...plan.requiredMaterials }
+  const cargo = Object.values(materials).reduce((sum, n) => sum + n, 0)
+  const value = Object.entries(materials).reduce((sum, [key, n]) => sum + (minerals[key]?.price ?? 0) * n, 0)
+  const francs = Math.round(value * 1500 * template.payoutMultiplier * (1 + client.payoutPremium))
+  return {
+    id: `dcp-${date}-${client.id}-build-${plan.structureKind}`,
+    title: `Build ${name}`,
+    brief: `${client.name} wants a ${name.toLowerCase()} raised at a target of your choice. Mine the materials, fly them out and build on site. Optional client job.`,
+    client: client.id,
+    tag: template.tag,
+    difficulty: template.difficulty,
+    locked: false,
+    sequence: FREE_OPS_MISSION_SEQUENCE,
+    requires: {
+      minerals: materials,
+      cargo_min: cargo,
+      drill_tier: requiredDrillTier(Object.keys(materials), template.drillTierMin, minerals),
+      max_orbit: template.orbitMax,
+    },
+    payout: {
+      francs: normalizeMissionPayout(francs, FREE_OPS_MISSION_SEQUENCE),
+      affinity: Math.max(8, Math.round(10 + cargo / 2)),
+    },
+    construction: plan,
+  }
+}
+
 export function generateDailyClientPool(
   date: string,
   missionsDone: number,
@@ -54,7 +99,7 @@ export function generateDailyClientPool(
   minerals: Record<string, MineralMeta>,
   clientMissions: Record<string, number> = {},
 ): Mission[] {
-  const maxTier = maxTierForProgress(missionsDone)
+  const maxTier = maxClientTier(missionsDone, clientMissions)
   const eligible = clients.filter(c => c.unlockTier <= maxTier)
   // CONSTRUCT-tagged templates (fuel-depot/battery-station/fabrication-pad)
   // build structures on-site — cargo never routes back to Earth, so their
@@ -70,6 +115,9 @@ export function generateDailyClientPool(
   // why "always an iron contract" kept showing up for early Free Ops clients
   // (e.g. ferrum-orbital-construction, unlockTier 1, uiRole 'bulk').
   const baseTemplates = DEFAULT_MISSION_TEMPLATES.filter(t => !t.id.startsWith('freeops-') && t.tag !== 'CONSTRUCT')
+  // SSL-571: CONSTRUCT templates are emitted as separate build jobs (above),
+  // never as delivery slots, so the Earth-abundant concern does not apply.
+  const constructTemplates = DEFAULT_MISSION_TEMPLATES.filter(t => t.tag === 'CONSTRUCT' && t.construction)
   const missions: Mission[] = []
 
   for (const client of eligible) {
@@ -125,6 +173,14 @@ export function generateDailyClientPool(
         },
       })
     }
+
+    // SSL-571: about half the days each client whose role matches a
+    // CONSTRUCT template also posts an optional build job.
+    const buildTemplate = constructTemplates.find(t => t.clientRole === client.uiRole)
+    if (buildTemplate && djb2(`${date}:${client.id}:build`) % 2 === 0) {
+      const build = constructMission(date, client, buildTemplate, minerals)
+      if (build) missions.push(build)
+    }
   }
 
   return missions
@@ -136,8 +192,9 @@ export function refreshPoolIfStale(
   clients: ClientSlot[],
   minerals: Record<string, MineralMeta>,
   clientMissions: Record<string, number> = {},
+  now: Date = new Date(),
 ): DailyClientPool {
-  const today = todayDateKey()
+  const today = todayDateKey(now)
   if (existing?.date === today) return existing
   return {
     date: today,
@@ -145,4 +202,10 @@ export function refreshPoolIfStale(
     acceptedId: null,
     completedIds: [],
   }
+}
+
+/** Board offers for today's pool: everything not already completed today. */
+export function openDailyClientOffers(pool: DailyClientPool): Mission[] {
+  const done = new Set(pool.completedIds)
+  return pool.missions.filter(m => !done.has(m.id))
 }

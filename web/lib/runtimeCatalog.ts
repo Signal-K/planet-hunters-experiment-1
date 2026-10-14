@@ -3,6 +3,12 @@ import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } 
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
 import { tagMissionCategories } from './data/mission-generator'
+import { CLIENT_SLOTS, generateFreeOpsMissions } from './data'
+import { openDailyClientOffers, refreshPoolIfStale } from './data/daily-client-missions'
+
+// SSL-570: the static Free Ops client contracts are replaced by the rotating
+// daily client pool once Free Ops is open.
+const STATIC_FREE_OPS_CLIENT_IDS = new Set(generateFreeOpsMissions().map(m => m.id))
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -108,9 +114,18 @@ export function buildRuntimeCatalog({
   const hasSelfDirectedMining = catalog.missions.some(mission =>
     mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction,
   )
-  const relationshipMissions = hasSelfDirectedMining || !fallbackSelfDirectedMining
+  const baseRelationshipMissions = hasSelfDirectedMining || !fallbackSelfDirectedMining
     ? catalog.missions
     : [...catalog.missions, fallbackSelfDirectedMining]
+  const dailyPool = freeOperations && player
+    ? refreshPoolIfStale(player.dailyClientPool, player.missionsDone ?? missionsDone ?? 0, CLIENT_SLOTS, catalog.minerals, player.clientMissions)
+    : undefined
+  const relationshipMissions = dailyPool
+    ? [
+        ...baseRelationshipMissions.filter(m => !STATIC_FREE_OPS_CLIENT_IDS.has(m.id)),
+        ...openDailyClientOffers(dailyPool).filter(m => !baseRelationshipMissions.some(b => b.id === m.id)),
+      ]
+    : baseRelationshipMissions
   const existingMissionIds = new Set(relationshipMissions.map(mission => mission.id))
   const transitTelescopeMission: Mission[] = shouldIncludeTransitTelescopeMission && !existingMissionIds.has(TRANSIT_TELESCOPE_MISSION_ID)
     ? [{

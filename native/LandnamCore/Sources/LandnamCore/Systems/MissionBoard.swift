@@ -85,12 +85,22 @@ public enum MissionBoard {
         return Entry(mission: m, unlocked: reason == nil, lockedReason: reason, feasibleTargets: targets)
     }
 
+    static let staticFreeOpsIds = Set(MissionGenerator.generateFreeOps().map(\.id))
+
     /// Client work on the mission board. During the guided missions only this step's options show.
     public static func clientBoard(catalog: Catalog, player p: Player, now: Double) -> [Entry] {
         let freeOps = p.freeOperations
         let seq = p.missionsDone + 1
         var raw = catalog.missions.filter { m in
             isBoardMission(m, freeOps: freeOps) && (m.client.map { Clients.byId[$0] != nil } ?? false) && (freeOps || m.sequence == seq)
+        }
+        if freeOps {
+            // SSL-570: Free Ops client work is the rotating daily pool, not the static freeops- contracts.
+            let day = DailyClientPool.dateKey(Date(timeIntervalSince1970: now / 1000))
+            let done = Set(p.completedMissions.map(\.id))
+            let daily = DailyClientPool.generate(date: day, missionsDone: p.missionsDone, clientMissions: p.clientMissions)
+                .filter { !done.contains($0.id) }
+            raw = raw.filter { !staticFreeOpsIds.contains($0.id) } + daily
         }
         if !freeOps {
             let feasible = raw.filter { entry($0, catalog: catalog, player: p, now: now).feasibleTargets > 0 }

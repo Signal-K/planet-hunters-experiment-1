@@ -12,7 +12,7 @@ public struct Catalog: Sendable {
         self.missions = missions; self.targets = targets; self.parts = parts
     }
 
-    public func mission(_ id: String?) -> Mission? { id.flatMap { id in missions.first { $0.id == id } } }
+    public func mission(_ id: String?) -> Mission? { id.flatMap { id in missions.first { $0.id == id } ?? DailyClientPool.mission(id: id) } }
     public func target(_ id: String?) -> Target? { id.flatMap { id in targets.first { $0.id == id } } }
 }
 

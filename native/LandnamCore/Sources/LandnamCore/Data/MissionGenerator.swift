@@ -23,6 +23,7 @@ public struct MissionTemplate: Equatable, Sendable {
     public let orbitMax: Int
     public let payoutMultiplier: Double
     public let clientRole: Client.UIRole
+    public var construction: MissionConstructionPlan? = nil
 }
 
 /// Deterministic offline mission board (port of `mission-generator.ts`). The same
@@ -57,6 +58,12 @@ public enum MissionGenerator {
         MissionTemplate(id: "freeops-mining-survey", tag: "SURVEY", difficulty: "L1", mineralKeys: ["cobalt", "copper", "aluminium", "gold"], cargoRange: 3...7, drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.55, clientRole: .prospect),
         MissionTemplate(id: "freeops-bulk-run", tag: "BULK", difficulty: "L1", mineralKeys: ["hydrogen", "aluminium", "copper"], cargoRange: 8...16, drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.15, clientRole: .bulk),
         MissionTemplate(id: "freeops-rover-landing", tag: "ROVER", difficulty: "L1", mineralKeys: ["cobalt", "copper", "aluminium", "hydrogen"], cargoRange: 2...5, drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.7, clientRole: .starter),
+        MissionTemplate(id: "construct-fuel-depot", tag: "CONSTRUCT", difficulty: "L2", mineralKeys: ["hydrogen", "aluminium", "copper"], cargoRange: 8...14, drillTierMin: 1, orbitMax: 5, payoutMultiplier: 2.8, clientRole: .prospect,
+                        construction: MissionConstructionPlan(structureKind: "fuel-depot", requiredMaterials: ["hydrogen": 8, "aluminium": 6], buildTimeMs: 20 * 60 * 1000)),
+        MissionTemplate(id: "construct-battery-station", tag: "CONSTRUCT", difficulty: "L2", mineralKeys: ["cobalt", "nickel", "copper", "gold"], cargoRange: 8...14, drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.2, clientRole: .command,
+                        construction: MissionConstructionPlan(structureKind: "battery-station", requiredMaterials: ["cobalt": 6, "nickel": 4, "copper": 4], buildTimeMs: 25 * 60 * 1000)),
+        MissionTemplate(id: "construct-fabrication-pad", tag: "CONSTRUCT", difficulty: "L3", mineralKeys: ["iron", "silicon", "aluminium", "carbon"], cargoRange: 10...18, drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.6, clientRole: .bulk,
+                        construction: MissionConstructionPlan(structureKind: "fabrication-pad", requiredMaterials: ["iron": 12, "silicon": 6, "aluminium": 4], buildTimeMs: 35 * 60 * 1000)),
     ]
 
     struct Band { let sequence: Int; let templateId: String; let mineralCount: Int; let amountBias: Int; let clientOffset: Int; let mineralOffset: Int? }

@@ -10,6 +10,8 @@ import { MISSIONS, TARGETS, getLaserChargeCap } from '@/lib/data'
 import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair } from '@/lib/game-state'
 import { REMOTE_MERGED_EVENT, sameContent } from '@/lib/sync/casSave'
 import { useRuntimeCatalog } from '@/lib/contexts/useRuntimeCatalog'
+import { CLIENT_SLOTS } from '@/lib/data'
+import { refreshPoolIfStale } from '@/lib/data/daily-client-missions'
 import { resolvePreset, DEV_GROUPS } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { identifyUser } from '@/lib/posthog'
@@ -269,6 +271,15 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
   useDailyEconomySync(setState, hydrated, isPreview.current)
   const runtimeCatalog = useRuntimeCatalog(catalog, state)
+  // SSL-570: persist today's rotating client pool in player state so the
+  // board is stable within the day and syncs through the normal outbox save.
+  useEffect(() => {
+    if (!hydrated || !state.player.freeOperations) return
+    const current = state.player.dailyClientPool
+    const next = refreshPoolIfStale(current, state.player.missionsDone, CLIENT_SLOTS, catalog.minerals, state.player.clientMissions)
+    if (next === current) return
+    setState(s => s.player.dailyClientPool?.date === next.date ? s : { ...s, player: { ...s.player, dailyClientPool: next } })
+  }, [hydrated, state.player.freeOperations, state.player.dailyClientPool, state.player.missionsDone, state.player.clientMissions, catalog.minerals])
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))

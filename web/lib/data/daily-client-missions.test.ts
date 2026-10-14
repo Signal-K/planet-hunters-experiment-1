@@ -30,7 +30,7 @@ describe('generateDailyClientPool', () => {
     const missions = generateDailyClientPool('2026-07-11', 20, CLIENT_SLOTS, MINERAL_META, {})
     const eligible = CLIENT_SLOTS.filter(c => c.unlockTier <= 4)
     for (const client of eligible) {
-      const offers = missions.filter(m => m.client === client.id)
+      const offers = missions.filter(m => m.client === client.id && !m.construction)
       expect(offers.length).toBe(BASE_DAILY_SLOTS_PER_CLIENT)
     }
   })
