@@ -41,3 +41,14 @@ SCENE=hub-phone,debrief-phone xcodebuild test -scheme Landnam -only-testing:Land
 ```
 
 Do not run the Cypress pipeline to look at a screen. Use the stage, then push once when the work is done.
+
+
+## Live storyboard (keep open beside the terminal)
+
+```
+cd web && NEXT_PUBLIC_LANDNAM_ENV=staging npm run dev      # or any dev server on :3001
+open http://localhost:3001/game/storyboard
+scripts/native-shots.sh [scene-id ...]                     # native PNGs -> /tmp/landnam-snap, then "Reload all"
+```
+
+Every scene in `scenes.json`, grouped by flow, as a live iframe of `/game/stage?preset=KEY` at the real viewport (phone, landscape, desktop), with the native snapshot beside it (phone only). Filter by flow, scene, preset or ticket. "Copy ref" copies `scene (web preset, native id) @ viewport` to paste to an agent. Hot reload updates the web side as files change. Native needs a booted iOS Simulator (headless, no window); the macOS test host does not work.
