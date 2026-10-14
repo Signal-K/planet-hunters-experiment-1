@@ -72,4 +72,12 @@ struct BaseLayout {
 
     /// Player-placed structures sit between the road and the dock; never lower than the dock's top.
     func placedGroundY() -> CGFloat { portrait ? dockRect.minY - 48 : min(groundY + 92 * k, dockRect.minY - 44) }
+
+    /// The ambient road rover's frame `phase` (0...1) of the way around its loop. It drives the road's lower half and
+    /// enters and leaves just past the screen edges. The road already clears the dock, so the rover's lane never
+    /// reaches a HUD control; the scene draws it behind every structure, so it never crosses one either.
+    func roverFrame(phase: CGFloat) -> CGRect {
+        let w = 56 * k, h = w / 1.5
+        return CGRect(x: -w + phase * (size.width + w * 2) - w / 2, y: roadY + 5 * k - h, width: w, height: h)
+    }
 }

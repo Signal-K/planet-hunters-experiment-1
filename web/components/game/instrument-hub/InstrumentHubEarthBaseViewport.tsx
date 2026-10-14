@@ -33,7 +33,8 @@ export function InstrumentHubEarthBaseViewport({ player }: InstrumentHubEarthBas
       <div className={styles.frame}>
         <div className={styles.liveScene}>
           <HubWorldBackground phase={skyPhase.phase} composition="earth-base-wide" />
-          <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
+          {/* This viewport keeps its structure layer at z 3 (module css), so the rover goes below it. */}
+          <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} zIndex={2} />
           <EarthBaseModules buildings={buildings} />
         </div>
       </div>

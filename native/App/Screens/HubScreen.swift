@@ -39,6 +39,9 @@ struct HubScreen: View {
             let k = layout.k, groundY = layout.groundY
             ZStack(alignment: .topLeading) {
                 BiomeBackdrop(layout: BiomeLayout(biome: biome, size: size, roadY: layout.roadY, exclusions: layout.exclusions))
+                // Traffic is the backmost actor: it drives the road behind every structure, name pill and HUD
+                // control. Keep it above the backdrop and below everything else in this stack.
+                BaseTraffic(layout: layout).allowsHitTesting(false)
                 ForEach(Array(BaseLayout.slots.enumerated()), id: \.offset) { i, slot in
                     building(slot.name, sprite: slot.sprite, aspect: slot.aspect, width: layout.width(slot),
                              x: layout.centreX(i), groundY: layout.structureY) { store.go(slot.tap) }
@@ -48,7 +51,6 @@ struct HubScreen: View {
                         placedStructure(kind, plot: plot, width: w, groundY: layout.placedGroundY(), k: k, portrait: portrait)
                     }
                 }
-                BaseTraffic(width: w, groundY: groundY, k: k).allowsHitTesting(false)
                 subsurfaceHotspot(x: w * layout.spec.subsurfaceX, groundY: groundY)
                 skyCraft(width: w, height: h)
                 topLeftHud(insets: insets, portrait: portrait)
@@ -394,19 +396,18 @@ private struct FriendsSheet: View {
     }
 }
 
-/// Layer part: ambient base traffic. An outlined road rover loops along the apron (mirrors web RoadRover).
+/// Layer part: ambient base traffic. An outlined road rover loops along the road (mirrors web RoadRover).
 private struct BaseTraffic: View {
-    let width: CGFloat, groundY: CGFloat, k: CGFloat
+    let layout: BaseLayout
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { ctx in
             let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
-            let roverW = 56 * k
-            let drive = CGFloat(t.truncatingRemainder(dividingBy: 18) / 18)
+            let frame = layout.roverFrame(phase: CGFloat(t.truncatingRemainder(dividingBy: 18) / 18))
             ZStack(alignment: .topLeading) {
-                Art.view("actors/road_rover.png").resizable().aspectRatio(1.5, contentMode: .fit).frame(width: roverW)
-                    .position(x: -roverW + drive * (width + roverW * 2), y: groundY + 6 * k - roverW / 3)
+                Art.view("actors/road_rover.png").resizable().aspectRatio(1.5, contentMode: .fit).frame(width: frame.width)
+                    .position(x: frame.midX, y: frame.midY)
             }
         }
     }

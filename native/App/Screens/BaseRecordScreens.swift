@@ -16,7 +16,7 @@ struct IntroScreen: View {
                  ? "Missions completed: \(p.missionsDone) · Total earned: \(Economy.format(francs: p.francs))"
                  : "Build your base. Mine the asteroids. Fulfill the contract. The belt is waiting.")
                 .font(AppFont.body(16)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center).frame(maxWidth: 420)
-            PrimaryButton(title: returning ? "Resume operations" : "Begin operations") { store.go(returning || !p.placed.isEmpty ? .hub : .build) }.frame(maxWidth: 320)
+            PrimaryButton(title: returning ? "Resume operations" : "Begin operations") { store.markIntroSeen(); store.go(returning || !p.placed.isEmpty ? .hub : .build) }.frame(maxWidth: 320)
             Spacer(minLength: 0)
         }
         .padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -9,6 +9,7 @@ import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
 import { formatCurrency } from '@/lib/format'
 import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
+import { afterIntroScreen, introAlreadyDone, markIntroSeen } from '@/lib/intro-seen'
 // IntroScreen and HubScreen are the two most likely first paints (cold start
 // and post-onboarding default), so they stay in the main bundle. Every other
 // screen below is code-split with next/dynamic — the switch below only ever
@@ -135,6 +136,17 @@ function ScreenBody({
   // mining seam tied to the active try rather than the legacy coach state.
   const trainingMiningTry = currentTrainingTry(game.player.flightPlan) === 'mining'
 
+  // The intro is a first-run screen. Once the player has begun (or already has
+  // progress, e.g. a save pulled from another device) it never shows again.
+  // Signed-in only: dev presets and the isolated stage have no account and must
+  // still render the intro on demand.
+  const introDone = screen === 'intro' && game.hydrated && introAlreadyDone(game.player, !!game.authUserId)
+  useEffect(() => {
+    if (!introDone) return
+    markIntroSeen()
+    game.go(afterIntroScreen(game.player))
+  }, [introDone]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // The Exchange is a permanent Earth Base building the player can tap at any
   // stage (SSL-477), so Market is no longer gated on freeOperations.
   useEffect(() => {
@@ -167,9 +179,10 @@ function ScreenBody({
 
   switch (screen) {
     case 'intro':
+      if (introDone) return null
       return (
         <IntroScreen
-          onBegin={() => game.go('build')}
+          onBegin={() => { markIntroSeen(); game.go('build') }}
           returning={game.player.missionsDone > 0 || game.player.placed.length > 0}
           missionsDone={game.player.missionsDone}
           totalEarned={game.player.francs}

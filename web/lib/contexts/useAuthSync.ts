@@ -9,6 +9,7 @@ import { identifyUser, captureGameEvent } from '@/lib/posthog'
 import { DEFAULT_STATE, loadState, mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import { accountGameStateStorageKey, gameStateStorageKey } from '@/lib/game-state-storage'
 import { isResumableMissionScreen } from '@/lib/initial-route'
+import { hasSeenIntro } from '@/lib/intro-seen'
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
 import { MISSIONS, TARGETS, travelDurationMs } from '@/lib/data'
@@ -703,7 +704,7 @@ export function useAuthSync({
     // Base would show the "Tap the Launchpad" coach over an empty scene. Keep
     // them on the intro/build flow instead (SSL-365).
     if (current.player.placed.length === 0 && !current.player.freeOperations) {
-      const firstTimeScreen = current.screen === 'intro' ? 'intro' : 'build'
+      const firstTimeScreen = current.screen === 'intro' && !hasSeenIntro() ? 'intro' : 'build'
       if (current.screen !== firstTimeScreen) setState(s => ({ ...s, screen: firstTimeScreen }))
       router.replace(`/game/${firstTimeScreen}`)
       return

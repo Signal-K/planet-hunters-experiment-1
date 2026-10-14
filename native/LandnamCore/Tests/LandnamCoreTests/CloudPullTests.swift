@@ -27,22 +27,62 @@ import Foundation
     }
 
     @Test func freshNativeAdoptsWebProgressAndQueuesWelcome() {
-        let store = GameStore(state: GameState())
-        #expect(store.adoptRemote(webSave()))
-        #expect(store.player.francs == 12_345_000)
-        #expect(store.screen == .hub)
-        #expect(store.welcomePending)
-        store.finishWelcome()
-        #expect(!store.welcomePending)
+        withScratchDefaults { defaults in
+            let store = GameStore(state: GameState(), defaults: defaults)
+            #expect(store.adoptRemote(webSave()))
+            #expect(store.player.francs == 12_345_000)
+            #expect(store.screen == .hub)
+            #expect(store.welcomePending)
+            store.finishWelcome()
+            #expect(!store.welcomePending)
+        }
+    }
+
+    @Test func laterImportsDoNotReplayTheCompletedWelcome() {
+        withScratchDefaults { defaults in
+            let store = GameStore(state: GameState(), defaults: defaults)
+            #expect(store.adoptRemote(webSave(missions: 4)))
+            store.finishWelcome()
+
+            #expect(store.adoptRemote(webSave(missions: 5)))
+            #expect(store.screen == .hub)
+            #expect(!store.welcomePending)
+        }
+    }
+
+    @Test func theWelcomeStaysDoneAcrossRelaunchesAndAccountSwitches() {
+        withScratchDefaults { defaults in
+            let first = GameStore(state: GameState(), defaults: defaults)
+            #expect(first.adoptRemote(webSave()))
+            first.finishWelcome()
+
+            let relaunch = GameStore(state: GameState(), defaults: defaults)
+            #expect(relaunch.adoptRemote(webSave(missions: 6)))
+            #expect(!relaunch.welcomePending)
+            #expect(relaunch.welcomeSeen)
+        }
+    }
+
+    @Test func aWelcomeLeftPendingByAnotherDeviceIsClearedOnceSeen() {
+        withScratchDefaults { defaults in
+            defaults.set(true, forKey: GameStore.welcomeSeenKey)
+            var remote = webSave()
+            remote.extras[CloudPull.welcomeKey] = .bool(true)
+            let store = GameStore(state: GameState(), defaults: defaults)
+            #expect(store.adoptRemote(remote))
+            #expect(!store.welcomePending)
+        }
     }
 
     @Test func staleOrEmptyRemoteNeverClobbersLocalProgress() {
-        var local = GameState(); local.player.missionsDone = 9; local.player.placed = ["launchpad"]
-        let store = GameStore(state: local)
-        #expect(!store.adoptRemote(webSave(missions: 4)))
-        #expect(!store.adoptRemote(GameState()))
-        #expect(store.player.missionsDone == 9)
-        #expect(!store.welcomePending)
+        withScratchDefaults { defaults in
+            var local = GameState(); local.player.missionsDone = 9; local.player.placed = ["launchpad"]
+            let store = GameStore(state: local, defaults: defaults)
+            #expect(!store.adoptRemote(webSave(missions: 4)))
+            #expect(!store.adoptRemote(GameState()))
+            #expect(store.player.missionsDone == 9)
+            #expect(!store.welcomePending)
+        }
     }
 }
 

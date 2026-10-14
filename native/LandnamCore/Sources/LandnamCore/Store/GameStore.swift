@@ -10,6 +10,7 @@ public final class GameStore {
     /// The live catalog: the authored one plus instrument launches and discovered-planet surveys.
     public var catalog: Catalog { Instruments.runtime(baseCatalog, player: state.player, missionId: state.missionId, targetId: state.targetId) }
     private let saveURL: URL?
+    private let defaults: UserDefaults
     private let clock: @Sendable () -> Double
     /// Called after every persisted change; the app wires cloud sync and Game Center here.
     public var onChange: ((GameState) -> Void)?
@@ -19,13 +20,29 @@ public final class GameStore {
     public var onClassified: ((SharedClassification) -> Void)?
 
     public init(state: GameState = GameState(), catalog: Catalog = Catalog(), saveURL: URL? = nil,
+                defaults: UserDefaults = .standard,
                 clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 * 1000 }) {
-        self.baseCatalog = catalog; self.saveURL = saveURL; self.clock = clock
+        self.baseCatalog = catalog; self.saveURL = saveURL; self.defaults = defaults; self.clock = clock
         if let saveURL, let data = try? Data(contentsOf: saveURL), let loaded = try? JSONDecoder().decode(GameState.self, from: data) {
             self.state = loaded
         } else {
             self.state = state
         }
+        skipIntroIfDone()
+    }
+
+    /// First-run screens persist a per-device flag, so they never come back once the player has been through them.
+    public static let introSeenKey = "landnam.introSeen"
+    public static let welcomeSeenKey = "landnam.welcomeSeen"
+    public var introSeen: Bool { defaults.bool(forKey: Self.introSeenKey) }
+    public var welcomeSeen: Bool { defaults.bool(forKey: Self.welcomeSeenKey) }
+    public func markIntroSeen() { defaults.set(true, forKey: Self.introSeenKey) }
+
+    /// The opening scene shows only to a player who has not begun: once begun (or once there is any progress) a save
+    /// that still points at it lands on the base, or on first-time placement when nothing is built.
+    private func skipIntroIfDone() {
+        guard state.screen == .intro, introSeen || CloudPull.hasProgress(state) else { return }
+        state.screen = state.player.placed.isEmpty ? .build : .hub
     }
 
     public static var defaultSaveURL: URL {
@@ -55,23 +72,26 @@ public final class GameStore {
     }
 
     /// Adopts a cloud save made elsewhere (web) when it is further along than the local one.
-    /// The player lands on the hub with the mobile welcome pending; navigation from the web is dropped.
+    /// The player lands on the hub with the mobile welcome pending the first time only; navigation from the web is dropped.
     @discardableResult public func adoptRemote(_ remote: GameState) -> Bool {
         guard CloudPull.shouldAdopt(local: state, remote: remote) else { return false }
         var n = remote
         n.screen = .hub; n.menuOpen = false; n.popup = nil
         // A web mission in flight keeps its mission and target so the hub can resume it.
         if remote.player.activeMission == nil { n.missionId = nil; n.targetId = nil }
-        n.extras[CloudPull.welcomeKey] = .bool(true)
+        n.extras[CloudPull.welcomeKey] = welcomeSeen ? nil : .bool(true)
         apply(n)
         return true
     }
 
     public var welcomePending: Bool { if case .bool(true)? = state.extras[CloudPull.welcomeKey] { return true } else { return false } }
-    public func finishWelcome() { var n = state; n.extras[CloudPull.welcomeKey] = nil; if n.screen == .intro { n.screen = .hub }; apply(n) }
+    public func finishWelcome() {
+        defaults.set(true, forKey: Self.welcomeSeenKey)
+        var n = state; n.extras[CloudPull.welcomeKey] = nil; if n.screen == .intro { n.screen = .hub }; apply(n)
+    }
 
     public func go(_ screen: Screen) { var n = state; n.screen = screen; apply(n) }
-    public func reset() { state = GameState(); persist() }
+    public func reset() { state = GameState(); skipIntroIfDone(); persist() }
 
     // MARK: intents
     /// Research XP for the first classification of a TESS or NEOCP subject (mirrors web useGameLoop).

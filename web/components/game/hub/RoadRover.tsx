@@ -6,6 +6,14 @@ import { groundOffsetCss, type SceneRoadPath, type SceneRoadPoint } from '@/lib/
 // KES-260: ambient Earth Base traffic stays on the composition's road path.
 const ROVER_SRC = '/game/assets/actors/road_rover.png'
 
+/**
+ * Ambient vehicles ride above the sky and ground but behind everything a player can
+ * tap or read: structures, building labels, scene buttons and HUD all sit at z 6 and up.
+ * A vehicle can pass a structure; it never draws over one. Scenes whose own layers sit
+ * lower (the Control Station viewport keeps its structures at z 3) pass a lower `zIndex`.
+ */
+export const VEHICLE_Z_INDEX = 5
+
 function pathLength(points: SceneRoadPoint[]): number {
   return points.slice(1).reduce((total, point, index) => {
     const previous = points[index]
@@ -35,7 +43,7 @@ function pointAtProgress(points: SceneRoadPoint[], progress: number): SceneRoadP
   return points[points.length - 1]
 }
 
-export function RoadRover({ road, durationMs = 18000 }: { road?: SceneRoadPath; durationMs?: number }) {
+export function RoadRover({ road, durationMs = 18000, zIndex = VEHICLE_Z_INDEX }: { road?: SceneRoadPath; durationMs?: number; zIndex?: number }) {
   const [progress, setProgress] = useState(0)
   const total = useMemo(() => road ? pathLength(road.points) : 0, [road])
   const point = useMemo(
@@ -70,10 +78,10 @@ export function RoadRover({ road, durationMs = 18000 }: { road?: SceneRoadPath; 
         bottom: groundOffsetCss(point.groundOffset),
         width: 'clamp(36px, 5vw, 72px)',
         aspectRatio: '72 / 48',
-        // Below the building status-pill layer (HubScreen.tsx, zIndex 10) —
-        // KES-352 found this rover driving in front of and obscuring the
-        // "LAUNCHPAD · READY" pill text as it crossed behind the structure.
-        zIndex: 9,
+        // Behind the status-pill layer (HubScreen.tsx, zIndex 10) and every
+        // scene button: KES-352 found this rover obscuring the "LAUNCHPAD · READY"
+        // pill, and it also drove over the Launchpad control and Hangar label.
+        zIndex,
         pointerEvents: 'none',
         transform: 'translateX(-50%)',
         filter: 'drop-shadow(0 3px 3px color-mix(in srgb, var(--ln-void) 48%, transparent))',
