@@ -1,4 +1,4 @@
-import { Assets, Container, Sprite, Texture, TilingSprite } from 'pixi.js'
+import { Assets, Container, Graphics, Sprite, Texture, TilingSprite } from 'pixi.js'
 import type { LaserPalette } from './laserPalette'
 
 /** Native laser kit is authored at 1px and drawn at 2. */
@@ -42,6 +42,9 @@ interface Drifter { node: Sprite; x: number; y: number; v: number }
 
 export interface LaserField {
   backdrop: Container
+  /** Tall angular peaks behind the ridges. Shift `x` by -(scroll * 0.07) % mountainW. */
+  mountains: Container
+  mountainW: number
   far: Container
   near: Container
   ground: Container
@@ -55,7 +58,8 @@ export interface LaserField {
   pixelScale: number
   depositFrames: Texture[]
   hover: number
-  step: (time: number, reduced: boolean, firing: boolean) => void
+  /** `beamEndY` is where the held beam stops: a deposit, a boulder or the surface. */
+  step: (time: number, reduced: boolean, firing: boolean, beamEndY?: number) => void
 }
 
 export async function buildLaserField(opts: {
@@ -178,6 +182,34 @@ export async function buildLaserField(opts: {
     dust.push({ node: mote, x, y, v: 10 + (i % 5) * 6 })
   }
 
+  // Mountains: one tileable period of angular peaks (first and last height
+  // match), drawn twice so the parallax shift can wrap. Faceted: shaded
+  // flank, lit flank, snow-free ridge line.
+  const mountainW = Math.max(720, Math.ceil(worldW / 8) * 8)
+  const mountains = new Container()
+  {
+    const peaks = Math.max(4, Math.round(mountainW / 190))
+    const baseY = surfaceY + 8
+    const maxH = Math.min(surfaceY * 0.7, 170)
+    const hs: number[] = []
+    for (let i = 0; i < peaks; i++) hs.push(maxH * (0.45 + 0.55 * (((i * 37 + 11) % 7) / 6)))
+    const g = new Graphics()
+    const lit = lerp(palette.distant, 0xffffff, 0.1)
+    const shade = lerp(palette.distant, 0x000000, 0.32)
+    for (let copy = 0; copy < 2; copy++) {
+      for (let i = 0; i < peaks; i++) {
+        const cx = copy * mountainW + ((i + 0.5) * mountainW) / peaks
+        const halfW = (mountainW / peaks) * 0.78
+        const top = baseY - hs[i]
+        const ridge = cx + halfW * 0.08 * (i % 2 ? 1 : -1)
+        g.poly([cx - halfW, baseY, ridge, top, cx + halfW, baseY]).fill(shade)
+        g.poly([ridge, top, cx + halfW, baseY, ridge - halfW * 0.1, baseY]).fill(lit)
+      }
+    }
+    mountains.addChild(g)
+  }
+  backdrop.addChild(mountains)
+
   const ridgeCopies = Math.ceil(worldW / ridgeW) + 2
   const far = new Container()
   const farStrip = tile(ridgeTex, ridgeCopies, px)
@@ -274,9 +306,9 @@ export async function buildLaserField(opts: {
 
   const flameFrames = [flame0, flame1]
   const field: LaserField = {
-    backdrop, far, near, ground, beam, dig, spark, ship, plume,
+    backdrop, mountains, mountainW, far, near, ground, beam, dig, spark, ship, plume,
     soilW, ridgeW, pixelScale: px, depositFrames: [deposit0, deposit1], hover: 0,
-    step(time, reduced, firing) {
+    step(time, reduced, firing, beamEndY) {
       const tw = reduced ? 0 : 1
       for (const star of stars) {
         const flick = 0.55 + 0.45 * Math.abs(Math.sin(time * 2.4 + star.phase))
@@ -296,17 +328,27 @@ export async function buildLaserField(opts: {
         }
       }
       const pulse = reduced ? 1 : 0.82 + Math.sin(time * 9) * 0.18
-      beam.alpha = firing ? 1 : 0.72 + pulse * 0.28
-      beam.scale.x = firing ? 1.45 : 1
-      dig.alpha = firing ? 1 : 0
+      // The beam exists only while fire is held, and stops at what it touches.
+      const endY = beamEndY ?? surfaceY
+      const live = Math.max(0, endY - beam.y)
+      beam.visible = firing
+      beam.alpha = 0.8 + pulse * 0.2
+      beam.scale.x = 1.2
+      beam.children.forEach((seg, k) => { seg.visible = k * segH < live })
+      const buried = endY >= surfaceY - 1
+      dig.visible = firing && buried
+      dig.alpha = 1
+      dig.y = endY
       if (firing && !reduced) {
         for (const mote of digMotes) {
           mote.node.alpha = 0.45 + 0.55 * Math.abs(Math.sin(time * 6 + mote.base))
           mote.node.y = (mote.base + time * 40) % 48
         }
       }
-      spark.scale.set(px * (firing ? 1.5 : 0.85 + pulse * 0.2))
-      spark.alpha = firing ? 1 : 0.7 + pulse * 0.3
+      spark.visible = firing
+      spark.y = endY
+      spark.scale.set(px * (1.3 + pulse * 0.3))
+      spark.alpha = 1
       plume.alpha = 0.7 + pulse * 0.3
       if (!reduced) plume.texture = flameFrames[Math.floor(time * 10) % 2]
       field.hover = reduced ? 0 : Math.sin(time * 2.2) * 2

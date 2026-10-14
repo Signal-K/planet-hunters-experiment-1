@@ -24,6 +24,9 @@ import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
 // you're actually mining with no client attached (sell the haul yourself,
 // no daily limit) — the two are different moments and were previously
 // conflated, leaving the mining screen with zero "no client" first-entry cue.
+/** One charge drains per this much held beam. Slow on purpose: ~1.5s per charge. */
+const DRAIN_MS_PER_CHARGE = 1500
+const BEAM_TICK_MS = 100
 const FREE_OPS_MINING_ACK_KEY = 'ln_mining_freeops_first_entry_ack'
 const FREE_OPS_FIRST_SUCCESS_ACK_KEY = 'ln_mining_freeops_first_success_ack'
 // SSL-333: first-ever mining run, any mission type, opens the controls guide
@@ -61,8 +64,8 @@ function useFreeOpsFirstSuccessAck() {
 // Thumb snaps back to center on release
 function miningGuide(hasDelivery: boolean) {
   return [
-    { kind: 'fire', label: 'Fire Laser', desc: 'Fires the vertical beam. Scroll ore under the beam, then fire (Space/F).' },
-    { kind: 'charges', label: 'Charges', desc: 'The fire button reads Depleted when the laser is empty. Empty, with the order unfinished, the run stops.' },
+    { kind: 'fire', label: 'Fire Laser', desc: 'Hold fire to run the beam straight down. Scroll ore under it and keep holding until the deposit breaks. Boulders block the beam until it crumbles them (Space/F).' },
+    { kind: 'charges', label: 'Charges', desc: 'The fuel meter drains only while the beam is on. At empty the run stops until you recharge.' },
     { kind: 'order', label: 'Order', desc: 'The order card lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty.' },
     { kind: 'scroll', label: 'Scroll', desc: 'The dock arrows change how fast the ground moves. They settle back to a steady crawl. Drag the field the same way.' },
     { kind: 'inventory', label: 'Inventory', desc: 'The order lines show collected against required. Fill every line to unlock return.' },
@@ -172,7 +175,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // over via initialEarthDisposition so resuming never asks twice.
   const [earthDisposition, setEarthDisposition] = useState<'store' | 'sell' | null>(initialEarthDisposition ?? null)
   const gateOpen = !!isFreeHaulEligible && earthDisposition == null
-  const fireRef = useRef<(() => void) | null>(null)
+  const fireRef = useRef<((on: boolean) => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
   const [laserCharges, setLaserCharges] = useState(() => initialCharges != null ? Math.max(0, Math.min(MAX_CHARGES, initialCharges)) : MAX_CHARGES)
   const laserChargesRef = useRef(laserCharges)
@@ -183,9 +186,15 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   useEffect(() => {
     onPersistRef.current?.(cargo, laserCharges)
   }, [cargo, laserCharges])
+  const drainRef = useRef(0)
+  const [drain, setDrain] = useState(0)
   const [confirmingRecharge, setConfirmingRecharge] = useState(false)
   const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
   const [sceneStatus, setSceneStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
+  const sceneStatusRef = useRef(sceneStatus)
+  sceneStatusRef.current = sceneStatus
+  const gateOpenRef = useRef(gateOpen)
+  gateOpenRef.current = gateOpen
   const firedRef = useRef(false)
   const hintedFirstHitRef = useRef(false)
   const hintedWrongOreRef = useRef(false)
@@ -193,15 +202,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const oreNearRef = useRef<((near: boolean) => void) | null>(null)
   const [oreNear, setOreNear] = useState(false)
   oreNearRef.current = (near: boolean) => setOreNear(near)
-
-  // Fire cooldown state lives in MiningCanvas (it must gate both the button
-  // and a direct canvas tap). chargingRef mirrors it up here the same way
-  // oreNearRef mirrors ore-proximity, purely for the button's own display.
-  const chargingRef = useRef<((charging: boolean) => void) | null>(null)
-  const [isCharging, setIsCharging] = useState(false)
-  chargingRef.current = (charging: boolean) => setIsCharging(charging)
-  const [tapDenied, setTapDenied] = useState(false)
-  const tapDeniedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Kept current every render (cheap Set build) so the "fire now" flash only
   // lights up for ore whose mineral is still short of the order — not any
@@ -224,6 +224,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
   // Charges depleted without filling the order — always show recovery options, not just during coaching
   const runFailed = !isFreeHaulEligible && laserCharges === 0 && !orderFilled
+  const fuelPct = Math.max(0, Math.min(100, Math.round(((laserCharges - drain) / MAX_CHARGES) * 100)))
   const chargesLow = !isFreeHaulEligible && !orderFilled && laserCharges > 0 && laserCharges <= LOW_CHARGE_THRESHOLD
 
   // A recharge is paid for (SSL-512): the cost is on the button, confirmed,
@@ -248,8 +249,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     firedRef.current = false
     setSceneStatus('loading')
     setRunKey(k => k + 1)
-    if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
-    setTapDenied(false)
+    drainRef.current = 0
+    setDrain(0)
   }
 
   const onDebrisMinedRef = useRef(onDebrisMined)
@@ -286,47 +287,53 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     }
   }, [trainingMiningTry, addToast, mission.requires.minerals, minerals])
 
-  function fireLaser(quiet = false) {
-    if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
-    if (isCharging) {
-      if (quiet) return
-      // Tap landed mid-cooldown: acknowledge it instead of silently dropping
-      // it, so a phone tester never wonders whether the tap registered.
-      if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
-      setTapDenied(true)
-      tapDeniedTimerRef.current = setTimeout(() => setTapDenied(false), 160)
-      return
-    }
-    setLaserCharges(c => c - 1)
-    fireRef.current?.()
-    if (!firedRef.current && trainingMiningTry) {
-      firedRef.current = true
-    }
-  }
-
-  // SSL-413: players mashed FIRE LASER every ~0.6s in 15s bursts (rageclicks).
-  // Holding the button now re-fires the moment the laser has recharged.
-  const fireLaserRef = useRef(fireLaser)
-  fireLaserRef.current = fireLaser
-  const fireHoldRef = useRef(0)
-  const endFireHold = useCallback(() => window.clearInterval(fireHoldRef.current), [])
-  const beginFireHold = useCallback(() => {
-    window.clearInterval(fireHoldRef.current)
-    fireLaserRef.current()
-    fireHoldRef.current = window.setInterval(() => fireLaserRef.current(true), 120)
+  // The beam is on only while fire is held (button, Space/F, or a press on
+  // the field). Holding drains one charge every DRAIN_MS_PER_CHARGE, so a
+  // magazine lasts several seconds of beam rather than a few taps.
+  const holdRef = useRef(0)
+  const [beamOn, setBeamOn] = useState(false)
+  const endBeam = useCallback(() => {
+    window.clearInterval(holdRef.current)
+    holdRef.current = 0
+    fireRef.current?.(false)
+    setBeamOn(false)
   }, [])
-  useEffect(() => endFireHold, [endFireHold])
+  const beginBeam = useCallback(() => {
+    if (holdRef.current) return
+    if (gateOpenRef.current || sceneStatusRef.current !== 'ready' || laserChargesRef.current <= 0) return
+    fireRef.current?.(true)
+    setBeamOn(true)
+    firedRef.current = true
+    holdRef.current = window.setInterval(() => {
+      drainRef.current += BEAM_TICK_MS / DRAIN_MS_PER_CHARGE
+      if (drainRef.current >= 1) {
+        drainRef.current -= 1
+        const next = Math.max(0, laserChargesRef.current - 1)
+        laserChargesRef.current = next
+        setLaserCharges(next)
+        if (next <= 0) { drainRef.current = 0; endBeam() }
+      }
+      setDrain(drainRef.current)
+    }, BEAM_TICK_MS)
+  }, [endBeam])
+  useEffect(() => endBeam, [endBeam])
+  useEffect(() => { if (sceneStatus !== 'ready') endBeam() }, [sceneStatus, endBeam])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.code === 'Space' || e.code === 'KeyF') {
-        e.preventDefault()
-        fireLaser()
-      }
+      if (e.code !== 'Space' && e.code !== 'KeyF') return
+      e.preventDefault()
+      if (e.type === 'keydown') { if (!e.repeat) beginBeam() } else endBeam()
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [laserCharges, sceneStatus, isCharging])
+    window.addEventListener('keyup', onKey)
+    window.addEventListener('blur', endBeam)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keyup', onKey)
+      window.removeEventListener('blur', endBeam)
+    }
+  }, [beginBeam, endBeam])
 
   function handleReturn() {
     if (isFreeHaulEligible || orderFilled || laserCharges <= 0) {
@@ -599,6 +606,21 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <HubClockWidget />
         </button>
         <div className="laser-chrome__chips">
+          <span
+            className="scene-chip mining-fuel"
+            data-testid="mining-fuel-chip"
+            data-low={chargesLow || laserCharges <= 0 || undefined}
+            data-firing={beamOn || undefined}
+            role="meter"
+            aria-label="Laser fuel"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={fuelPct}
+          >
+            <span className="mining-fuel__label">{laserCharges <= 0 ? 'EMPTY' : chargesLow ? 'LOW' : 'FUEL'}</span>
+            <span className="mining-fuel__track"><span className="mining-fuel__fill" style={{ width: `${fuelPct}%` }} /></span>
+            <span className="mining-fuel__pct">{fuelPct}%</span>
+          </span>
           <span className="scene-chip" data-testid="mining-francs-chip">{formatCurrency(francs, { compact: true })}</span>
           <span className="scene-chip" aria-label={`Cargo ${freeOpsCargoUnits} units`} data-testid="mining-cargo-chip">
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -642,11 +664,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           onReady={() => setSceneStatus('ready')}
           onFailure={() => setSceneStatus('failed')}
           fireRef={fireRef}
-          onFireRequest={() => fireLaser()}
+          onFireRequest={on => { if (on) beginBeam(); else endBeam() }}
           scrollRef={scrollRef}
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
-          chargingRef={chargingRef}
           trainingMiningTry={trainingMiningTry}
           debrisPreset={debrisPreset}
         />
@@ -705,7 +726,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       </div>
 
       {trainingMiningTry && (
-        <p className="laser-cue" data-testid="mining-training-tip">Fire when ore crosses the beam</p>
+        <p className="laser-cue" data-testid="mining-training-tip">Hold fire while ore is under the beam</p>
       )}
       <div className="laser-hud" data-testid="mining-controls">
         {/* SSL-411: the stat row is gone. Per-mineral progress is kept for
@@ -731,11 +752,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
         <BaseDock
           variant="flight"
-          buildLabel={laserCharges <= 0 ? 'Depleted' : isCharging ? 'Charging' : 'Fire'}
+          buildLabel={laserCharges <= 0 ? 'Depleted' : beamOn ? 'Firing' : 'Hold to fire'}
           buildTestId="fire-laser-btn"
           buildBeacon="mining-fire-laser"
           buildDisabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
-          buildCharging={isCharging}
+          buildCharging={beamOn}
           buildIcon={(
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
               <path d="M13 2 L4 14 h7 l-1 8 10-14 h-7 l0-6 z" />
@@ -743,12 +764,12 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           )}
           onPrev={() => nudge(-1)}
           onNext={() => nudge(1)}
-          onBuild={event => { if (!event || event.detail === 0) fireLaser() }}
-          onBuildPointerDown={event => { if (event.button === 0) beginFireHold() }}
-          onBuildPointerUp={endFireHold}
-          onBuildPointerLeave={endFireHold}
-          onBuildPointerCancel={endFireHold}
-          onHub={() => onBack(cargoRef.current, laserChargesRef.current)}
+          onBuild={event => { if (!event || event.detail === 0) { beginBeam(); window.setTimeout(endBeam, 600) } }}
+          onBuildPointerDown={event => { if (event.button === 0) beginBeam() }}
+          onBuildPointerUp={endBeam}
+          onBuildPointerLeave={endBeam}
+          onBuildPointerCancel={endBeam}
+          onHub={() => { endBeam(); onBack(cargoRef.current, laserChargesRef.current) }}
         />
         {isFreeOps && freeOpsDebrisReadout ? <span className="laser-dock__debris" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span> : null}
       </div>

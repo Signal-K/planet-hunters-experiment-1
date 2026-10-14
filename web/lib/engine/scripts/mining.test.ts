@@ -105,6 +105,12 @@ describe('ShapeRenderer', () => {
   })
 })
 
+/** Hold the beam for `seconds` in 50ms steps. */
+function hold(controller: MiningController, seconds: number) {
+  controller.setBeam(true)
+  for (let t = 0; t < seconds; t += 0.05) controller.update(0.05)
+}
+
 describe('MiningController', () => {
   it('spawns 20 ore entities on start', () => {
     const { controller, host } = makeController()
@@ -122,14 +128,22 @@ describe('MiningController', () => {
     expect(ore.transform.position.x).toBeLessThan(before)
   })
 
-  it('fires a laser projectile that moves down', () => {
-    const { controller, host } = makeController()
+  it('beam is off until fire is held, and a boulder blocks it', () => {
+    const onBeamEnd = vi.fn()
+    const { controller, host } = makeController(vi.fn(), { rockColor: 0x886644, surfaceY: 200, onBeamEnd })
     controller.start()
-    controller.fireLaser()
-    const laser = host.children.find(c => c.id.startsWith('laser-'))!
-    const before = laser.transform.position.y
-    controller.update(1)
-    expect(laser.transform.position.y).toBeGreaterThan(before)
+    const rocks = (controller as unknown as { obstacles: { x: number; hp: number }[] }).obstacles
+    expect(rocks.length).toBeGreaterThan(0)
+    const rock = rocks[0]
+    rock.x = SHIP_X
+    for (const c of host.children) if (c.id.startsWith('ore-')) c.transform.position.x = 5000
+    controller.update(0)
+    expect(rock.hp).toBe(1.4) // not firing: untouched
+    hold(controller, 0.5)
+    expect(rock.hp).toBeLessThan(1.4)
+    expect(onBeamEnd).toHaveBeenLastCalledWith(expect.any(Number))
+    hold(controller, 1.6)
+    expect((controller as unknown as { obstacles: unknown[] }).obstacles).not.toContain(rock)
   })
 
   it('fires onScroll callback with accumulated scroll distance', () => {
@@ -149,20 +163,15 @@ describe('MiningController', () => {
     controller.start()
     const oreChildren = host.children.filter(c => c.id.startsWith('ore-'))
     // All spawned ores are cobalt (tier 2), radius 13
-    const anyOre = oreChildren[0] as unknown as { children: unknown[]; components: unknown[] }
-    // Radius is stored on the ore entity — access via controller internals via collision test:
-    // A laser hit within 13px should register, one outside 13px should not.
     const ore = host.children.find(c => c.id === 'ore-0')!
     ore.transform.position.x = 80
     ore.transform.position.y = 190
-
-    // Fire laser with laser at 12px from ore centre (within radius 13) → should hit
-    controller.fireLaser()
-    const laser = host.children.find(c => c.id.startsWith('laser-') && c.active)!
-    laser.transform.position.x = 80 + 12
-    laser.transform.position.y = 190
-    controller.update(0)
-    expect(laser.active).toBe(false) // hit → laser deactivated
+    expect(oreChildren.length).toBeGreaterThan(0)
+    // Tier-2 ore (hp 2) survives a single hp worth of beam, and breaks after two.
+    hold(controller, 0.6)
+    expect(ore.active).toBe(true)
+    hold(controller, 1.2)
+    expect(ore.active).toBe(false)
   })
 
   it('collects ore and calls onCollect when hp depletes', () => {
@@ -175,14 +184,7 @@ describe('MiningController', () => {
     ore.transform.position.x = 80
     ore.transform.position.y = 190
 
-    // Fire enough lasers to deplete ore hp (maxHp is 2-3)
-    for (let i = 0; i < 4; i++) {
-      controller.fireLaser()
-      const laser = host.children.find(c => c.id.startsWith('laser-') && c.active)!
-      laser.transform.position.x = 80
-      laser.transform.position.y = 190 // laser at ore's y → collision
-      controller.update(0) // zero dt: resolve collision without moving
-    }
+    hold(controller, 3)
 
     expect(onCollect).toHaveBeenCalled()
     expect(onCollect.mock.calls[0][0]).toBe('iron')
@@ -194,14 +196,7 @@ describe('MiningController', () => {
     const ore = host.children.find(c => c.id === 'ore-0')!
     ore.transform.position.x = 80
     ore.transform.position.y = 190
-    for (let i = 0; i < 4; i++) {
-      controller.fireLaser()
-      const laser = host.children.find(c => c.id.startsWith('laser-') && c.active)
-      if (!laser) break
-      laser.transform.position.x = 80
-      laser.transform.position.y = 190
-      controller.update(0)
-    }
+    hold(controller, 3)
     const other = host.children.find(c => c.id === 'ore-1')!
     const x0 = other.transform.position.x
     controller.update(0.03) // inside the freeze: nothing scrolls
@@ -210,7 +205,7 @@ describe('MiningController', () => {
     expect(other.transform.position.x).toBeLessThan(x0)
   })
 
-  it('calls onHit on every collision, including a partial hit that does not destroy the ore', () => {
+  it('calls onHit for each hp chipped, including a partial hit that does not destroy the ore', () => {
     const onHit = vi.fn()
     const { controller, host } = makeController(vi.fn(), { onHit })
     controller.start()
@@ -218,13 +213,8 @@ describe('MiningController', () => {
     ore.transform.position.x = 80
     ore.transform.position.y = 190
 
-    controller.fireLaser()
-    const laser = host.children.find(c => c.id.startsWith('laser-') && c.active)!
-    laser.transform.position.x = 80
-    laser.transform.position.y = 190
-    controller.update(0)
-
-    expect(onHit).toHaveBeenCalledTimes(1)
+    hold(controller, 0.6)
+.toHaveBeenCalledTimes(1)
   })
 })
 
@@ -293,8 +283,7 @@ describe('MiningController ore sym labels', () => {
     }
     const ore = host.children.find(child => child.id === 'ore-0')!
     ore.transform.position.x = SHIP_X
-    controller.fireLaser()
-    controller.update(0.4)
+    hold(controller, 1)
     expect(onCollect).toHaveBeenCalled()
   })
 
@@ -323,13 +312,7 @@ describe('MiningController ore sym labels', () => {
     const ore = host.children.find(c => c.id === 'ore-0')!
     ore.transform.position.x = 80
     ore.transform.position.y = 190
-    for (let i = 0; i < 4; i++) {
-      controller.fireLaser()
-      const laser = host.children.find(c => c.id.startsWith('laser-') && c.active)!
-      laser.transform.position.x = 80
-      laser.transform.position.y = 190
-      controller.update(0)
-    }
+    hold(controller, 3)
     expect(labels()[0].visible).toBe(false)
   })
 
@@ -379,7 +362,7 @@ describe('MiningController ore sym labels', () => {
     expect(host.children.filter(c => c.id.startsWith('ore-'))).toHaveLength(20)
   })
 
-  it('mines a landed chunk in one shot and ignores it while it is still falling', () => {
+  it('mines a landed chunk with the held beam and ignores it while it is still falling', () => {
     const onCollect = vi.fn()
     const { controller, host } = makeController(onCollect, {
       mineralColors: MINERAL_COLORS,
@@ -391,20 +374,14 @@ describe('MiningController ore sym labels', () => {
     expect(debris).toBeTruthy()
     debris!.transform.position.x = 80
     debris!.transform.position.y = 40
-    controller.fireLaser()
-    const fallingLaser = host.children.find(c => c.id.startsWith('laser-') && c.active)!
-    fallingLaser.transform.position.x = 80
-    fallingLaser.transform.position.y = 40
-    controller.update(0)
+    controller.setBeam(true)
+    controller.update(0.2)
     expect(onCollect).not.toHaveBeenCalled()
+    controller.setBeam(false)
 
     debris!.transform.position.y = 316
     controller.update(0)
-    controller.fireLaser()
-    const landedLaser = host.children.find(c => c.id.startsWith('laser-') && c.active)!
-    landedLaser.transform.position.x = 80
-    landedLaser.transform.position.y = 316
-    controller.update(0)
+    hold(controller, 1)
     expect(onCollect).toHaveBeenCalledTimes(1)
     expect(onCollect).toHaveBeenCalledWith('orionid_debris')
   })

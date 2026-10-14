@@ -4254,6 +4254,28 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   min-height: 44px;
   height: 44px;
 }
+.mining-fuel { gap: 8px; min-width: 156px; }
+.mining-fuel__label { letter-spacing: 0.14em; font-size: 14px; }
+.mining-fuel__track {
+  position: relative;
+  flex: 1;
+  min-width: 56px;
+  height: 12px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 2px;
+  background: var(--ln-world-hull-lit);
+  overflow: hidden;
+}
+.mining-fuel__fill {
+  display: block;
+  height: 100%;
+  background: var(--ln-cyan-press);
+  transition: width 120ms linear;
+}
+.mining-fuel[data-low] .mining-fuel__fill { background: var(--ln-warn); }
+.mining-fuel[data-low] .mining-fuel__track { border-style: dashed; }
+.mining-fuel[data-firing] .mining-fuel__fill { background: var(--ln-cyan); }
+.mining-fuel__pct { min-width: 3.2ch; text-align: right; }
 .mining-screen .laser-order.scene-dock-word {
   position: absolute;
   top: 60px;

@@ -14,17 +14,21 @@ import { fallFrameIndex, landFrameIndex } from '@/lib/orionids/theme'
 export const SCROLL_SPEED = 48
 export const SCROLL_SPEED_MIN = 16
 export const SCROLL_SPEED_MAX = 96
-const LASER_SPEED = 480
 export const SHIP_X = 80
 export const SHIP_Y = 112
 export const SURFACE_Y = 320
 // Wider than ship X so ore movement during laser flight doesn't cause misses on tall screens
-const HIT_TOLERANCE = 56
+const HIT_TOLERANCE = 30
 // Share of ore nodes that are the requested mineral(s) once the seeded ones are out.
 const REQUIRED_ORE_SHARE = 0.85
 // First nodes are copies of the requested ore, close and shallow, so a few shots hit it.
 const REQUIRED_ORE_COPIES = 6
-const LASER_SIZE = { width: 4, height: 16 }
+/** Seconds of held beam to chip one hp off a deposit. */
+const MINE_SECONDS_PER_HP = 0.55
+/** Seconds of held beam to crumble a boulder. */
+const BOULDER_SECONDS = 1.4
+/** Gap between the sparks thrown off while the beam is on a target. */
+const BEAM_FX_INTERVAL = 0.07
 const LASER_COLOR = '#9becff'
 const ORE_STROKE = '#0a0a12'
 // Untinted base fill; the mineral colour is applied with setTint.
@@ -181,6 +185,12 @@ export interface MiningControllerOptions {
   pixelBeam?: boolean
   /** Symbol ink. Light ground uses a dark ink. */
   labelInk?: number
+  /** Display name per mineral key, shown under each deposit. */
+  mineralNames?: Record<string, string>
+  /** Boulder body colour (the palette's ground). Omit for no boulders. */
+  rockColor?: number
+  /** Beam contact changed: `endY` is where the beam stops (ore, boulder or surface). */
+  onBeamEnd?: (endY: number) => void
   onCollect: (mineral: string) => void
   /** Called when a laser exits the world without hitting any ore (miss). */
   onMiss?: () => void
@@ -241,6 +251,11 @@ interface OreEntity {
   renderer: ShapeRenderer | null
   sprite: Sprite | null
   label: Text | null
+  nameLabel: Text | null
+  /** Beam progress bar, drawn while the ore is being mined. */
+  bar: Graphics | null
+  /** 0..1 progress toward losing one hp under the beam. */
+  progress: number
   /** Surface rock drawn on the ground line. Collision stays at the buried node. */
   chip: Graphics | null
   mineral: string
@@ -258,9 +273,21 @@ interface OreEntity {
   frames?: Texture[] | null
 }
 
-interface LaserEntity {
-  go: GameObject
-  prevY: number
+/** A boulder on the surface. It blocks the beam until it is cleared. */
+interface Obstacle {
+  g: Graphics
+  bar: Graphics
+  x: number
+  halfW: number
+  height: number
+  /** Seconds of beam left before it crumbles. */
+  hp: number
+  maxHp: number
+}
+
+interface Popup {
+  text: Text
+  life: number
 }
 
 interface Pickup {
@@ -285,7 +312,10 @@ interface Particle {
 export class MiningController extends ScriptBehaviour {
   private opts: MiningControllerOptions
   private ores: OreEntity[] = []
-  private lasers: LaserEntity[] = []
+  private obstacles: Obstacle[] = []
+  private popups: Popup[] = []
+  private beamOn = false
+  private beamFxTimer = 0
   private particles: Particle[] = []
   private pickups: Pickup[] = []
   private streaks: Streak[] = []
@@ -298,7 +328,6 @@ export class MiningController extends ScriptBehaviour {
   private hitStop = 0
   private oreCounter = 0
   private requiredMineralQueue: string[] = []
-  private laserCounter = 0
   private totalScrollX = 0
   private scrollSpeed = SCROLL_SPEED
   private oreNearState = false
@@ -370,6 +399,8 @@ export class MiningController extends ScriptBehaviour {
       if (ore.sprite) ore.sprite.x = ore.go.transform.position.x
       if (ore.chip) ore.chip.x = ore.go.transform.position.x
       if (ore.label) ore.label.x = ore.go.transform.position.x
+      if (ore.nameLabel) ore.nameLabel.x = ore.go.transform.position.x
+      if (ore.bar) ore.bar.x = ore.go.transform.position.x
 
       if (ore.flashTimer > 0) {
         ore.flashTimer = Math.max(0, ore.flashTimer - dt)
@@ -390,13 +421,14 @@ export class MiningController extends ScriptBehaviour {
       this.spawnOre(lastX + this.depositGap())
     }
 
-    for (const laser of this.lasers) {
-      laser.prevY = laser.go.transform.position.y
-      laser.go.transform.position.y += LASER_SPEED * dt
+    for (const rock of this.obstacles) {
+      rock.x -= dx
+      rock.g.x = rock.x
+      rock.bar.x = rock.x
     }
-
-    this.resolveCollisions()
+    this.updateBeam(dt)
     this.removeOffscreen()
+    this.updatePopups(dt)
     this.updateParticles(dt)
     this.updatePickups(dt)
 
@@ -412,19 +444,18 @@ export class MiningController extends ScriptBehaviour {
     }
   }
 
-  fireLaser(): void {
-    const go = new GameObject(`laser-${this.laserCounter++}`, 'Laser', {
-      position: { x: SHIP_X, y: (this.opts.shipY ?? SHIP_Y) + 16 },
-    })
-    const bolt = new ShapeRenderer(
-      { shape: 'rect', width: LASER_SIZE.width, height: LASER_SIZE.height, color: this.opts.beamColor ?? LASER_COLOR },
-      this.opts.container
-    )
-    go.addComponent(bolt)
-    this.gameObject.addChild(go)
-    go.start()
-    if (this.opts.pixelBeam) bolt.setShown(false)
-    this.lasers.push({ go, prevY: go.transform.position.y })
+  /** The beam is on only while the player holds fire. */
+  setBeam(on: boolean): void {
+    if (this.beamOn === on) return
+    this.beamOn = on
+    this.beamFxTimer = 0
+    if (!on) this.clearBars()
+    this.opts.onBeamEnd?.(this.opts.surfaceY ?? SURFACE_Y)
+  }
+
+  private clearBars(): void {
+    for (const ore of this.ores) { ore.progress = 0; ore.bar?.clear() }
+    for (const rock of this.obstacles) rock.bar.clear()
   }
 
   /** Spawns falling debris + decorative streaks while the event rate is above zero. */
@@ -501,6 +532,7 @@ export class MiningController extends ScriptBehaviour {
     ore.go.transform.position.y = y
     if (ore.sprite) ore.sprite.y = y
     if (ore.label) ore.label.y = y
+    if (ore.nameLabel) ore.nameLabel.y = y + 18
   }
 
   private showFallFrame(ore: OreEntity, frame: number): void {
@@ -556,7 +588,7 @@ export class MiningController extends ScriptBehaviour {
     }
     this.gameObject.addChild(go)
     this.ores.push({
-      go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, 11), mineral,
+      go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, 11), nameLabel: null, bar: null, progress: 0, mineral,
       hp: 1, maxHp: 1, radius: art ? DEBRIS_RADIUS : 11, flashTimer: 0, mineralColor,
       fallSpeed: DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor),
       phase: 'fall', animTime: 0, variant,
@@ -790,7 +822,10 @@ export class MiningController extends ScriptBehaviour {
     const label = this.createLabel(mineral, x, chip ? surface + LABEL_DEPTH : y + (frames && this.opts.pixelScale ? 12 : 0), radius)
 
     this.gameObject.addChild(go)
-    this.ores.push({ go, renderer, sprite, label, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: frames ?? null })
+    const labelY = chip ? surface + LABEL_DEPTH : y + (frames && this.opts.pixelScale ? 12 : 0)
+    const nameLabel = this.createNameLabel(mineral, x, labelY + Math.max(26, radius + 14))
+    this.ores.push({ go, renderer, sprite, label, nameLabel, bar: null, progress: 0, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: frames ?? null })
+    if ((this.oreCounter * 5 + mineralSalt(mineral)) % 10 < 6) this.spawnBoulder(x + this.depositGap() / 2)
   }
 
   /** Faceted nodules, seams and crystals inside the soil, with a sym disc on the mass. */
@@ -837,6 +872,51 @@ export class MiningController extends ScriptBehaviour {
     ]).fill(lit)
   }
 
+  /** Mineral name under the deposit, so every node says what it is. */
+  private createNameLabel(mineral: string, x: number, y: number): Text | null {
+    const name = this.opts.mineralNames?.[mineral]
+    if (!name) return null
+    const ink = this.opts.labelInk ?? ORE_LABEL_FILL
+    const label = new Text({
+      text: name.toUpperCase(),
+      style: {
+        fontFamily: 'monospace',
+        fontSize: 14,
+        fontWeight: 'bold',
+        letterSpacing: 1,
+        fill: ink,
+        stroke: { color: ink === ORE_LABEL_FILL ? ORE_LABEL_HALO : 0xffffff, width: 4, join: 'round' },
+      },
+    })
+    label.anchor.set(0.5)
+    label.x = x
+    label.y = y
+    this.opts.container.addChild(label)
+    return label
+  }
+
+  /** A boulder standing on the surface. It blocks the beam until cleared. */
+  private spawnBoulder(x: number): void {
+    const rockColor = this.opts.rockColor
+    if (rockColor == null) return
+    const surface = this.opts.surfaceY ?? SURFACE_Y
+    const salt = this.oreCounter * 7 + 3
+    const halfW = 22 + (salt % 4) * 6
+    const height = 26 + ((salt >> 1) % 4) * 8
+    const lit = mixHex(rockColor, 0xffffff, 0.3)
+    const shade = mixHex(rockColor, 0x000000, 0.45)
+    const body = mixHex(rockColor, 0x000000, 0.15)
+    const g = new Graphics()
+    // Angular, faceted: shade side, body, lit ridge. Base sits a pixel into the crust.
+    g.poly([-halfW, 2, -halfW * 0.7, -height * 0.55, -halfW * 0.15, -height, halfW * 0.35, -height * 0.8, halfW * 0.85, -height * 0.4, halfW, 2]).fill(shade)
+    g.poly([-halfW * 0.7, 2, -halfW * 0.5, -height * 0.5, -halfW * 0.15, -height, halfW * 0.35, -height * 0.8, halfW * 0.5, 2]).fill(body)
+    g.poly([-halfW * 0.5, -height * 0.5, -halfW * 0.15, -height, 0, -height * 0.7, -halfW * 0.3, -height * 0.4]).fill(lit)
+    g.x = x
+    g.y = surface
+    this.opts.container.addChild(g)
+    this.obstacles.push({ g, bar: this.makeBar(), x, halfW, height, hp: BOULDER_SECONDS, maxHp: BOULDER_SECONDS })
+  }
+
   /** Element sym above the outcrop. Longer syms (`H2O`) use a smaller size. */
   private createLabel(mineral: string, x: number, y: number, radius: number): Text | null {
     const sym = this.opts.mineralSyms?.[mineral]
@@ -861,47 +941,139 @@ export class MiningController extends ScriptBehaviour {
     return label
   }
 
-  private resolveCollisions(): void {
-    for (const laser of this.lasers) {
-      const lx = laser.go.transform.position.x
-      const ly = laser.go.transform.position.y
-
+  /**
+   * Held beam: finds what it touches straight below the ship. A boulder on the
+   * surface blocks it; otherwise the nearest deposit inside the laser's reach
+   * takes damage while the beam stays on it.
+   */
+  private updateBeam(dt: number): void {
+    if (!this.beamOn) return
+    const surface = this.opts.surfaceY ?? SURFACE_Y
+    const rock = this.obstacles.find(o => Math.abs(o.x - SHIP_X) < o.halfW + 4)
+    let target: OreEntity | null = null
+    if (!rock) {
+      const tier = this.opts.maxLaserTier ?? 3
+      const reach = surface + (this.opts.pixelScale ? this.pixelLaserReach(tier) : (LASER_DEPTH_BY_TIER[tier] ?? LASER_DEPTH_BY_TIER[3]))
+      let best = HIT_TOLERANCE
       for (const ore of this.ores) {
-        const ox = ore.go.transform.position.x
-        const oy = ore.go.transform.position.y
-
-        // Debris is scenery until it has landed. The shot keeps going.
-        if (ore.phase && ore.phase !== 'intact') continue
-
-        // Swept Y check: did the laser travel THROUGH the ore's Y band this frame?
-        const minTravelY = Math.min(laser.prevY, ly)
-        const maxTravelY = Math.max(laser.prevY, ly)
-        const hitY = ore.phase ? oy - ore.radius * 0.35 : oy
-        if (maxTravelY < hitY - ore.radius || minTravelY > hitY + ore.radius) continue
-        if (Math.abs(lx - ox) >= HIT_TOLERANCE) continue
-
-        ore.hp -= 1
-        laser.go.active = false
-        this.opts.onHit?.()
-        this.freeze(ore.hp <= 0 ? 'collect' : 'hit')
-
-        if (ore.hp <= 0) {
-          ore.go.active = false
-          if (ore.phase) this.playDebrisMine(ore)
-          if (ore.sprite) ore.sprite.visible = false
-          if (ore.chip) ore.chip.visible = false
-          if (ore.label) ore.label.visible = false
-          const popY = ore.chip ? ore.chip.y : ore.go.transform.position.y
-          if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, popY, ore.mineralColor, ore.radius)
-          this.spawnPickup(ore.go.transform.position.x, popY, ore.mineralColor)
-          this.opts.onCollect(ore.mineral)
-        } else {
-          ore.flashTimer = FLASH_DURATION
-          this.applyTint(ore, 0xffffff)
-        }
-        break
+        if (!ore.go.active || (ore.phase && ore.phase !== 'intact')) continue
+        const dxo = Math.abs(ore.go.transform.position.x - SHIP_X)
+        if (dxo >= best) continue
+        const hitY = ore.phase ? ore.go.transform.position.y - ore.radius * 0.35 : ore.go.transform.position.y
+        if (hitY - ore.radius > reach) continue
+        best = dxo
+        target = ore
       }
     }
+    for (const ore of this.ores) if (ore !== target && ore.progress > 0) { ore.progress = 0; ore.bar?.clear() }
+
+    const endY = rock ? surface - rock.height : target ? this.contactY(target) : surface
+    this.opts.onBeamEnd?.(endY)
+
+    this.beamFxTimer -= dt
+    const spark = this.beamFxTimer <= 0
+    if (spark) this.beamFxTimer = BEAM_FX_INTERVAL
+
+    if (rock) {
+      rock.hp -= dt
+      this.drawBar(rock.bar, rock.x, surface - rock.height - 12, 1 - Math.max(0, rock.hp) / rock.maxHp)
+      if (spark) this.spawnParticleBurst(SHIP_X, endY, this.opts.rockColor ?? 0x888888, 14, 3)
+      if (rock.hp <= 0) {
+        this.spawnParticleBurst(rock.x, surface - rock.height / 2, this.opts.rockColor ?? 0x888888, rock.halfW * 1.4, 12)
+        this.freeze('collect')
+        this.opts.container.removeChild(rock.g); rock.g.destroy()
+        this.opts.container.removeChild(rock.bar); rock.bar.destroy()
+        this.obstacles = this.obstacles.filter(o => o !== rock)
+      }
+      return
+    }
+    if (!target) return
+    target.progress += dt / MINE_SECONDS_PER_HP
+    if (spark) this.spawnParticleBurst(SHIP_X, endY, target.mineralColor, 12, 3)
+    this.drawBar(target.bar ??= this.makeBar(), target.go.transform.position.x, this.barY(target), Math.min(1, ((target.maxHp - target.hp) + target.progress) / target.maxHp))
+    if (target.progress < 1) { this.applyTint(target, spark ? 0xffffff : this.damagedTint(target)); return }
+    target.progress = 0
+    target.hp -= 1
+    this.opts.onHit?.()
+    this.freeze(target.hp <= 0 ? 'collect' : 'hit')
+    if (target.hp > 0) {
+      target.flashTimer = FLASH_DURATION
+      this.applyTint(target, 0xffffff)
+      return
+    }
+    const ore = target
+    ore.go.active = false
+    if (ore.phase) this.playDebrisMine(ore)
+    if (ore.sprite) ore.sprite.visible = false
+    if (ore.chip) ore.chip.visible = false
+    if (ore.label) ore.label.visible = false
+    if (ore.nameLabel) ore.nameLabel.visible = false
+    ore.bar?.clear()
+    const popY = ore.chip ? ore.chip.y : ore.go.transform.position.y
+    if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, popY, ore.mineralColor, ore.radius)
+    this.spawnPickup(ore.go.transform.position.x, popY, ore.mineralColor)
+    this.spawnPopup(ore.go.transform.position.x, popY, ore.mineral, ore.mineralColor)
+    this.opts.onCollect(ore.mineral)
+  }
+
+  private contactY(ore: OreEntity): number {
+    return (ore.chip ? ore.chip.y : ore.go.transform.position.y) - ore.radius
+  }
+
+  private barY(ore: OreEntity): number {
+    return (this.opts.surfaceY ?? SURFACE_Y) - 14
+  }
+
+  private makeBar(): Graphics {
+    const g = new Graphics()
+    this.opts.container.addChild(g)
+    return g
+  }
+
+  /** Thin progress bar over whatever the beam is chewing through. */
+  private drawBar(g: Graphics, x: number, y: number, frac: number): void {
+    const w = 44
+    g.clear()
+    g.rect(-w / 2 - 2, -4, w + 4, 8).fill({ color: 0x0a0a12, alpha: 0.8 })
+    g.rect(-w / 2, -2, w * Math.max(0, Math.min(1, frac)), 4).fill({ color: 0x9becff, alpha: 1 })
+    g.x = x
+    g.y = y
+  }
+
+  /** "+1 Iron" rises from a mined deposit and fades. */
+  private spawnPopup(x: number, y: number, mineral: string, color: number): void {
+    const name = this.opts.mineralNames?.[mineral] ?? this.opts.mineralSyms?.[mineral] ?? mineral
+    const text = new Text({
+      text: `+1 ${name.toUpperCase()}`,
+      style: {
+        fontFamily: 'monospace',
+        fontSize: 16,
+        fontWeight: 'bold',
+        fill: mixHex(color, 0xffffff, 0.45),
+        letterSpacing: 1,
+        stroke: { color: 0x0a0a12, width: 4, join: 'round' },
+      },
+    })
+    text.anchor.set(0.5, 1)
+    text.x = x
+    text.y = y - 12
+    this.opts.container.addChild(text)
+    this.popups.push({ text, life: 1.1 })
+  }
+
+  private updatePopups(dt: number): void {
+    this.popups = this.popups.filter(p => {
+      p.life -= dt
+      if (p.life <= 0) {
+        this.opts.container.removeChild(p.text)
+        p.text.destroy()
+        return false
+      }
+      p.text.y -= 42 * dt
+      p.text.x -= this.scrollSpeed * this.devSpeed * dt
+      p.text.alpha = Math.min(1, p.life / 0.4)
+      return true
+    })
   }
 
   private applyTint(ore: OreEntity, tint: number): void {
@@ -926,6 +1098,14 @@ export class MiningController extends ScriptBehaviour {
         this.opts.container.removeChild(ore.label)
         ore.label.destroy()
       }
+      if (ore.nameLabel) {
+        this.opts.container.removeChild(ore.nameLabel)
+        ore.nameLabel.destroy()
+      }
+      if (ore.bar) {
+        this.opts.container.removeChild(ore.bar)
+        ore.bar.destroy()
+      }
       if (ore.chip) {
         this.opts.container.removeChild(ore.chip)
         ore.chip.destroy()
@@ -933,21 +1113,15 @@ export class MiningController extends ScriptBehaviour {
       return false
     })
 
-    const tier = this.opts.maxLaserTier ?? 3
-    const laserDepth = this.opts.pixelScale ? this.pixelLaserReach(tier) : (LASER_DEPTH_BY_TIER[tier] ?? LASER_DEPTH_BY_TIER[3])
-    const laserFloor = (this.opts.surfaceY ?? SURFACE_Y) + laserDepth
-    this.lasers = this.lasers.filter(laser => {
-      if (laser.go.active && laser.go.transform.position.y < laserFloor) return true
-      const wasMiss = laser.go.active
-      laser.go.destroy()
-      this.gameObject.children = this.gameObject.children.filter(c => c !== laser.go)
-      if (wasMiss) this.opts.onMiss?.()
+    this.obstacles = this.obstacles.filter(rock => {
+      if (rock.x > -rock.halfW * 2) return true
+      this.opts.container.removeChild(rock.g); rock.g.destroy()
+      this.opts.container.removeChild(rock.bar); rock.bar.destroy()
       return false
     })
   }
 
-  private spawnParticleBurst(x: number, y: number, color: number, radius: number): void {
-    const count = 8
+  private spawnParticleBurst(x: number, y: number, color: number, radius: number, count = 8): void {
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5
       const speed = 50 + Math.random() * 70
