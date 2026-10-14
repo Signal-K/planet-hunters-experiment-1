@@ -17,6 +17,8 @@ export interface BaseCameraState {
 export interface Viewport {
   w: number
   h: number
+  /** Unzoomed world width in px when the base strip is wider than the view (SSL-423 site map). */
+  worldW?: number
 }
 
 export const BASE_CAMERA_HOME: BaseCameraState = { x: 0, y: 0, zoom: MIN_ZOOM }
@@ -27,7 +29,8 @@ export function clampZoom(zoom: number): number {
 
 /** Hard pan limits for a zoom: the offset range that keeps the world covering the viewport. */
 export function panLimits(zoom: number, view: Viewport): { minX: number; maxX: number; minY: number; maxY: number } {
-  return { minX: view.w * (1 - zoom), maxX: 0, minY: view.h * (1 - zoom), maxY: 0 }
+  const worldW = Math.max(view.worldW ?? view.w, view.w)
+  return { minX: view.w - worldW * zoom, maxX: 0, minY: view.h * (1 - zoom), maxY: 0 }
 }
 
 function clampAxis(v: number, min: number, max: number): number {

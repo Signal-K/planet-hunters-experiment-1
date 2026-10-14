@@ -10,20 +10,32 @@ import XCTest
         let a = XCTAttachment(screenshot: app.screenshot()); a.name = name; a.lifetime = .keepAlways; add(a)
     }
 
-    func testWrongPasswordThenSignIn() {
+    func enterSlowly(_ value: String, into field: XCUIElement) {
+        for character in value {
+            field.typeText(String(character))
+            usleep(30_000)
+        }
+    }
+
+    func testCreateAccountOpensTheGame() {
         app.launch()
-        let email = app.textFields["Email"], pw = app.secureTextFields["Password"]
+        let email = app.textFields["Email"]
         XCTAssertTrue(email.waitForExistence(timeout: 10))
-        email.tap(); email.typeText("tester@example.com")
-        pw.tap(); pw.typeText("wrongwrong")
-        app.buttons["SIGN IN"].firstMatch.tap()
-        XCTAssertTrue(app.staticTexts["Email or password is incorrect."].waitForExistence(timeout: 10))
-        shot("wrong-password")
-        pw.tap(); pw.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "TesterPass123")
-        app.buttons["SIGN IN"].firstMatch.tap()
-        XCTAssertFalse(email.waitForExistence(timeout: 2) && email.isHittable == false)
-        sleep(4)
-        shot("after-sign-in")
-        XCTAssertFalse(app.textFields["Email"].exists, "still on sign-in screen")
+        app.buttons["auth-signup"].tap()
+        let testEmail = "sim-\(UUID().uuidString.lowercased())@landnam.test"
+        let password = "LanternSimulator20261014"
+        email.tap(); email.typeText(testEmail)
+        let pw = app.secureTextFields["Create password"]
+        pw.tap(); enterSlowly(password, into: pw)
+        let confirmation = app.secureTextFields["Confirm password"]
+        confirmation.tap(); enterSlowly(password, into: confirmation)
+        app.buttons["auth-submit"].tap()
+        sleep(3)
+        shot("native-signup-result")
+        let signedOut = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: email)
+        wait(for: [signedOut], timeout: 12)
+        sleep(2)
+        shot("native-account-created-game")
+        XCTAssertFalse(app.textFields["Email"].exists, "still on sign-up screen")
     }
 }

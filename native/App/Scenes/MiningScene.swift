@@ -8,6 +8,8 @@ final class MiningScene: SKScene {
     private(set) var field: MiningField
     var onChange: ((MiningField) -> Void)?
     var onFeedback: ((String) -> Void)?
+    var onTargetCue: ((String?) -> Void)?
+    var onObstacleAhead: ((Bool) -> Void)?
     var reducedMotion = false
 
     private let palette: LaserPalette.Spec
@@ -27,6 +29,9 @@ final class MiningScene: SKScene {
     private var lastTime: TimeInterval?
     private var nodeSprites: [Int: SKNode] = [:]
     private var laneX: [Int: CGFloat] = [:]
+    private var labelBaseY: [Int: CGFloat] = [:]
+    private var lastTargetCue: String?
+    private var lastObstacleAhead: Bool?
     private var track: CGFloat = 800
     private let world = SKNode()
     private var stars: [(node: SKSpriteNode, base: CGFloat, phase: CGFloat)] = []
@@ -76,6 +81,7 @@ final class MiningScene: SKScene {
         world.removeAllChildren()
         nodeSprites = [:]
         laneX = [:]
+        labelBaseY = [:]
         stars = []
         dust = []
         clouds = []
@@ -418,9 +424,6 @@ final class MiningScene: SKScene {
                 let x = CGFloat(c) * midW + CGFloat(d.x) * px
                 node.position = CGPoint(x: x, y: surfaceY - (tex.size().height * 0.35).rounded() * px)
                 surfaceDeposits.addChild(node)
-                let tag = Self.depositTag("\(Landscape.depositNames[d.kind] ?? d.kind.capitalized) · ~\(d.amount)t")
-                tag.position = CGPoint(x: x, y: node.position.y + tex.size().height * px + 14)
-                surfaceDeposits.addChild(tag)
             }
         }
     }
@@ -438,10 +441,14 @@ final class MiningScene: SKScene {
             let chip = SKSpriteNode(texture: a)
             a.filteringMode = .nearest
             chip.size = a.size()
-            chip.setScale(px)   // terrain pixel scale
+            chip.setScale(px * 0.45)   // compact seam markers; labels remain at full size
             let tag = Self.depositTag("\(Minerals.byId[n.mineralId]?.name ?? n.mineralId) · \(Minerals.byId[n.mineralId]?.symbol ?? "") ×1")
             tag.setScale(1 / px)
-            tag.position = CGPoint(x: 0, y: -a.size().height / 2 - 10 / px)
+            tag.name = "ore-label"
+            // Keep names above the ore, away from phone controls below the terrain.
+            let labelRise = CGFloat(96) / px
+            tag.position = CGPoint(x: 0, y: a.size().height * 0.35 + labelRise)
+            labelBaseY[n.id] = tag.position.y
             chip.addChild(tag)
             if art == nil {
                 let b = depositTexture(colorHex: hex, variant: n.id, glint: true)
@@ -615,21 +622,43 @@ final class MiningScene: SKScene {
         #endif
     }
 
-    /// Small, roomy cream-on-navy label pill (mineral name + rough amount). No orange.
+    /// Readable cream-on-navy label pill (mineral name + amount). No orange.
     static func depositTag(_ text: String) -> SKNode {
         let label = SKLabelNode(text: text)
         label.fontName = "Oxanium-SemiBold"
-        label.fontSize = 11
+        label.fontSize = 14
         label.fontColor = LaserPalette.sk(0xF4F1EA)
         label.verticalAlignmentMode = .center
         let w = label.frame.width + 14
-        let pill = SKShapeNode(rectOf: CGSize(width: w, height: 18), cornerRadius: 9)
+        let pill = SKShapeNode(rectOf: CGSize(width: w, height: 24), cornerRadius: 12)
+        pill.userData = NSMutableDictionary()
+        pill.userData?["labelWidth"] = NSNumber(value: Double(w))
         pill.fillColor = LaserPalette.sk(0x1A2A3C, 0.82)
         pill.strokeColor = LaserPalette.sk(0x9FB7D0, 0.5)
         pill.lineWidth = 1
         pill.addChild(label)
         pill.zPosition = 30
         return pill
+    }
+
+    /// Keep the requested mineral's timing legible without requiring the player to infer the beam window.
+    private func updateTargetCue() {
+        let needed = field.nodes.filter { !$0.isDepleted && field.required[$0.mineralId, default: 0] > field.cargo[$0.mineralId, default: 0] }
+        let candidates = needed.isEmpty ? field.nodes.filter { !$0.isDepleted } : needed
+        let nearest = candidates.compactMap { node -> (String, CGFloat)? in
+            guard let sprite = nodeSprites[node.id] else { return nil }
+            return (node.mineralId, abs(sprite.position.x - beamX))
+        }.min { $0.1 < $1.1 }
+        let cue: String?
+        if let (mineralId, distance) = nearest {
+            let name = Minerals.byId[mineralId]?.name ?? mineralId.capitalized
+            cue = distance < 40 ? "\(name.uppercased()) · FIRE NOW" : "\(name.uppercased()) · WAIT"
+        } else {
+            cue = nil
+        }
+        guard cue != lastTargetCue else { return }
+        lastTargetCue = cue
+        onTargetCue?(cue)
     }
 
     private func crack(_ sp: SKNode) {
@@ -639,6 +668,7 @@ final class MiningScene: SKScene {
     private func pop(_ sp: SKNode, id: Int, mineral: String) {
         nodeSprites[id] = nil
         laneX[id] = nil
+        labelBaseY[id] = nil
         SK.burst(at: sp.position, color: LaserPalette.sk(palette.beamCore), count: 10, speed: 80, in: world)
         sp.run(.sequence([.group([.scale(to: 1.4, duration: 0.12), .fadeOut(withDuration: 0.12)]), .removeFromParent()]))
         let tag = SKLabelNode(text: "+1 \(Minerals.byId[mineral]?.symbol ?? "")")
@@ -653,11 +683,32 @@ final class MiningScene: SKScene {
 
     private func placeChips() {
         let span = max(track, 1)
+        var labels: [(id: Int, tag: SKNode, x: CGFloat, center: CGFloat, halfWidth: CGFloat)] = []
         for (id, node) in nodeSprites {
             guard let lane = laneX[id] else { continue }
             var x = (lane - scrollX).truncatingRemainder(dividingBy: span)
             if x < -36 { x += span }
             node.position = CGPoint(x: x, y: surfaceY - 15 * px)
+            if let tag = node.childNode(withName: "ore-label") {
+                let labelWidth = (tag.userData?["labelWidth"] as? NSNumber)?.doubleValue ?? Double(tag.frame.width)
+                let halfWidth = max(32, CGFloat(labelWidth) * 0.58)
+                guard x >= -halfWidth, x <= size.width + halfWidth else { tag.alpha = 0; continue }
+                tag.alpha = 1
+                let center = size.width >= halfWidth * 2 + 40
+                    ? min(max(x, halfWidth + 20), size.width - halfWidth - 20)
+                    : size.width / 2
+                labels.append((id, tag, x, center, halfWidth))
+            }
+        }
+        labels.sort { $0.center < $1.center }
+        var laneEnds: [CGFloat] = []
+        for label in labels {
+            var lane = 0
+            while lane < laneEnds.count && label.center - label.halfWidth < laneEnds[lane] + 8 { lane += 1 }
+            if lane == laneEnds.count { laneEnds.append(-.infinity) }
+            laneEnds[lane] = label.center + label.halfWidth
+            label.tag.position.x = (label.center - label.x) / px
+            label.tag.position.y = (labelBaseY[label.id] ?? label.tag.position.y) + CGFloat(lane * 26) / px
         }
     }
 
@@ -680,6 +731,7 @@ final class MiningScene: SKScene {
         shift(mid, by: dx * 0.3, width: midW)
         shift(surfaceDeposits, by: dx, width: midW)
         placeChips()
+        updateTargetCue()
 
         let pulse = reducedMotion ? 1 : 0.82 + sin(clock * 9) * 0.18
         if clock >= flashUntil {
@@ -706,6 +758,12 @@ final class MiningScene: SKScene {
         let charging = clock < nextShotAt
         if charging != wasCharging { wasCharging = charging; onCharging?(charging) }
         let clear = [beamX - 30, beamX, beamX + 30].map(obstacleHeight).max() ?? 0
+        let obstacleAhead = [beamX + 80, beamX + 120, beamX + 160].map(obstacleHeight).max() ?? 0
+        let shouldClimb = obstacleAhead > 18 && shipY + altitude - 14 < surfaceY + obstacleAhead + 12
+        if shouldClimb != lastObstacleAhead {
+            lastObstacleAhead = shouldClimb
+            onObstacleAhead?(shouldClimb)
+        }
         let belly = shipY + altitude - 14
         if clear > 0, belly < surfaceY + clear {
             altitude = min(ceiling, surfaceY + clear + 14 + 18 - shipY)

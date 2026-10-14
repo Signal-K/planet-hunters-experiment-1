@@ -195,6 +195,8 @@ export interface MiningControllerOptions {
   onScroll?: (scrollX: number) => void
   /** Called when any ore enters or leaves the "fire now" window around SHIP_X. */
   onOreNearby?: (near: boolean) => void
+  /** Live target mineral and alignment state for the mining HUD. */
+  onTargetCue?: (mineral: string | null, inRange: boolean) => void
   /**
    * Live-updating set of mineral keys still needed to fill the order. When
    * set, the "fire now" window only lights up for ore whose mineral is still
@@ -246,6 +248,7 @@ interface OreEntity {
   renderer: ShapeRenderer | null
   sprite: Sprite | null
   label: Text | null
+  labelBaseY: number
   /** Surface rock drawn on the ground line. Collision stays at the buried node. */
   chip: Graphics | null
   mineral: string
@@ -307,6 +310,7 @@ export class MiningController extends ScriptBehaviour {
   private totalScrollX = 0
   private scrollSpeed = SCROLL_SPEED
   private oreNearState = false
+  private targetCueState = ''
   /** Local-dev QA multiplier (1 everywhere else), see lib/devMiningSpeed.ts. */
   private readonly devSpeed = devMiningSpeedMultiplier()
 
@@ -365,6 +369,7 @@ export class MiningController extends ScriptBehaviour {
     const dx = (this.pinScroll ? 0 : this.scrollSpeed) * this.devSpeed * dt
     this.totalScrollX += dx
 
+    const visibleChipLabels: Array<{ ore: OreEntity; center: number; halfWidth: number }> = []
     for (const ore of this.ores) {
       ore.go.transform.position.x -= dx
       if (ore.frames && ore.frames.length > 1 && ore.sprite) {
@@ -374,7 +379,21 @@ export class MiningController extends ScriptBehaviour {
       }
       if (ore.sprite) ore.sprite.x = ore.go.transform.position.x
       if (ore.chip) ore.chip.x = ore.go.transform.position.x
-      if (ore.label) ore.label.x = ore.go.transform.position.x
+      if (ore.label) {
+        const halfLabel = ore.label.width * (ore.chip ? 0.58 : 0.5)
+        const oreX = ore.go.transform.position.x
+        if (ore.chip && (oreX < -halfLabel || oreX > this.opts.worldWidth + halfLabel)) {
+          ore.label.visible = false
+        } else {
+          ore.label.visible = true
+          const minLabelX = halfLabel + 20
+          const maxLabelX = Math.max(minLabelX, this.opts.worldWidth - halfLabel - 20)
+          ore.label.x = Math.min(maxLabelX, Math.max(minLabelX, oreX))
+          if (ore.chip && ore.phase !== 'fall' && ore.phase !== 'land') {
+            visibleChipLabels.push({ ore, center: ore.label.x, halfWidth: halfLabel })
+          }
+        }
+      }
 
       if (ore.flashTimer > 0) {
         ore.flashTimer = Math.max(0, ore.flashTimer - dt)
@@ -382,6 +401,16 @@ export class MiningController extends ScriptBehaviour {
           this.applyTint(ore, this.damagedTint(ore))
         }
       }
+    }
+
+    visibleChipLabels.sort((a, b) => a.center - b.center)
+    const laneEnds: number[] = []
+    for (const label of visibleChipLabels) {
+      let lane = 0
+      while (lane < laneEnds.length && label.center - label.halfWidth < laneEnds[lane] + 8) lane++
+      if (lane === laneEnds.length) laneEnds.push(Number.NEGATIVE_INFINITY)
+      laneEnds[lane] = label.center + label.halfWidth
+      label.ore.label!.y = label.ore.labelBaseY - lane * Math.max(160, label.ore.label!.height + 24)
     }
 
     this.updateDebris(dt)
@@ -408,9 +437,19 @@ export class MiningController extends ScriptBehaviour {
     this.opts.onScroll?.(this.totalScrollX)
 
     const needed = this.opts.neededMineralsRef?.current
-    const anyNear = this.ores.some(o => o.go.active
-      && Math.abs(o.go.transform.position.x - SHIP_X) < HIT_TOLERANCE
-      && (!needed || needed.has(o.mineral)))
+    const targetOres = this.ores.filter(o => o.go.active && o.fallSpeed === undefined && (!needed || needed.size === 0 || needed.has(o.mineral)))
+    const target = targetOres.reduce<OreEntity | null>((best, ore) => {
+      if (!best) return ore
+      return Math.abs(ore.go.transform.position.x - SHIP_X) < Math.abs(best.go.transform.position.x - SHIP_X) ? ore : best
+    }, null)
+    const targetDistance = target ? Math.abs(target.go.transform.position.x - SHIP_X) : Number.POSITIVE_INFINITY
+    const inRange = targetDistance < HIT_TOLERANCE
+    const targetState = target ? `${target.mineral}:${inRange}` : ''
+    if (targetState !== this.targetCueState) {
+      this.targetCueState = targetState
+      this.opts.onTargetCue?.(target?.mineral ?? null, inRange)
+    }
+    const anyNear = inRange
     if (anyNear !== this.oreNearState) {
       this.oreNearState = anyNear
       this.opts.onOreNearby?.(anyNear)
@@ -561,7 +600,7 @@ export class MiningController extends ScriptBehaviour {
     }
     this.gameObject.addChild(go)
     this.ores.push({
-      go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, 11), mineral,
+      go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, 11), labelBaseY: y, mineral,
       hp: 1, maxHp: 1, radius: art ? DEBRIS_RADIUS : 11, flashTimer: 0, mineralColor,
       fallSpeed: DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor),
       phase: 'fall', animTime: 0, variant,
@@ -741,7 +780,8 @@ export class MiningController extends ScriptBehaviour {
     const colorHex = this.opts.mineralColors[mineral] ?? ORE_FILL
     const mineralColor = parseInt(colorHex.replace('#', ''), 16)
 
-    const go = new GameObject(`ore-${this.oreCounter++}`, 'Ore', { position: { x, y } })
+    const oreIndex = this.oreCounter++
+    const go = new GameObject(`ore-${oreIndex}`, 'Ore', { position: { x, y } })
 
     const frames = this.opts.depositFrames
     const art = this.opts.depositArtFor?.(mineral)
@@ -793,12 +833,13 @@ export class MiningController extends ScriptBehaviour {
     }
 
     const surface = this.opts.surfaceY ?? SURFACE_Y
-    const parts = blobParts(mineral, this.oreCounter)
+    const parts = blobParts(mineral, oreIndex)
     const chip = this.opts.chipFill != null ? this.createChip(x, surface, mineral, parts) : null
-    const label = this.createLabel(mineral, x, chip ? surface + LABEL_DEPTH : y + (frames && this.opts.pixelScale ? 12 : 0), radius)
+    const labelY = chip ? surface - 50 : y + (frames && this.opts.pixelScale ? 12 : 0)
+    const label = this.createLabel(mineral, x, labelY, radius)
 
     this.gameObject.addChild(go)
-    this.ores.push({ go, renderer, sprite, label, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: art ? null : frames ?? null })
+    this.ores.push({ go, renderer, sprite, label, labelBaseY: labelY, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: art ? null : frames ?? null })
   }
 
   /** Faceted nodules, seams and crystals inside the soil, with a sym disc on the mass. */
@@ -808,6 +849,7 @@ export class MiningController extends ScriptBehaviour {
     const lit = mixHex(body, 0xffffff, avg < 70 ? 0.62 : 0.34)
     const shade = mixHex(body, 0x000000, avg < 70 ? 0.28 : 0.45)
     const g = new Graphics()
+    g.scale.set(0.42)
     let glowX = 0
     let glowY = 0
     let glowN = 0

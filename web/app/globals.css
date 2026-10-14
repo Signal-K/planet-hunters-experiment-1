@@ -3813,17 +3813,17 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* SSL-442 Mission patch shelf (Menu > Training log): one patch per try, ring filled when done. */
 .patch-shelf { display: grid; gap: 8px; }
 .patch { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 12px; padding: 8px; border: 1px solid var(--ln-bp-line, rgba(15,36,54,.14)); border-radius: 8px; background: var(--ln-bp-paper, #fff); }
-.patch-ring { display: block; flex: none; width: 44px; height: 44px; overflow: visible; color: var(--ln-bp-ink-dim, #48596a); font: 800 9px/1 var(--ln-font-display); }
+.patch-ring { display: block; flex: none; width: 44px; height: 44px; overflow: visible; color: var(--ln-bp-ink-dim, #48596a); font: 800 14px/1 var(--ln-font-display); }
 .patch-ring-track,.patch-ring-segment { fill: none; stroke-width: 3; }
 .patch-ring-track { stroke: var(--ln-bp-line-strong, rgba(15,36,54,.3)); stroke-dasharray: 2 3; }
 .patch-ring-segment { stroke: var(--ln-bp-line-strong, rgba(15,36,54,.3)); transition: stroke 400ms ease-out; }
-.patch-ring-segment[data-stitched='true'] { stroke: var(--ln-bp-green, #17703f); animation: patch-stitch 400ms ease-out both; }
-.patch-ring text { fill: currentColor; font: 800 9px var(--ln-font-display); }
+.patch-ring-segment[data-stitched='true'] { stroke: var(--ln-blueprint-blue, #1f6fbf); animation: patch-stitch 400ms ease-out both; }
+.patch-ring text { fill: currentColor; font: 800 14px var(--ln-font-display); }
 .patch-ring--silhouette { display: inline-flex; align-items: center; justify-content: center; border: 2px dashed var(--ln-bp-line-strong, rgba(15,36,54,.3)); border-radius: 50%; font-size: 22px; }
 @keyframes patch-stitch { from { opacity: .35; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .patch-ring-segment { animation: none !important; transition: none !important; } }
 .patch[data-state='active'] .patch-ring text { fill: var(--ln-bp-ink, #0f2436); }
-.patch[data-state='done'] .patch-ring { color: var(--ln-bp-green, #17703f); }
+.patch[data-state='done'] .patch-ring { color: var(--ln-blueprint-blue, #1f6fbf); }
 .patch-name { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--ln-bp-ink, #0f2436); }
 .patch-status { font: 14px/1.3 var(--ln-font-body); color: var(--ln-bp-ink-dim, #48596a); margin-top: 2px; }
 .patch[data-state='active'] .patch-status { color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font-weight: 700; }

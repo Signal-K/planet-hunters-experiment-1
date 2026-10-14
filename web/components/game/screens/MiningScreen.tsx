@@ -17,6 +17,7 @@ import SkyEventChip from '@/components/game/SkyEventChip'
 import { LaserGauge, MiningDPad } from './MiningControls'
 import { useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
+import styles from './MiningTargetCue.module.css'
 
 // First-time-entering-Free-Ops-mining explainer — dismiss-once, same
 // localStorage-ack pattern as MissionBoardScreen's EXPLAINER_ACK_KEY, but
@@ -191,14 +192,16 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [confirmingRecharge, setConfirmingRecharge] = useState(false)
   const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
   const [sceneStatus, setSceneStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
-  const [laserCopy, setLaserCopy] = useState(false)
   const firedRef = useRef(false)
   const hintedFirstHitRef = useRef(false)
   const hintedWrongOreRef = useRef(false)
   const hintedOrderFilledRef = useRef(false)
-  const oreNearRef = useRef<((near: boolean) => void) | null>(null)
-  const [oreNear, setOreNear] = useState(false)
-  oreNearRef.current = (near: boolean) => setOreNear(near)
+  const targetCueRef = useRef<((mineral: string | null, inRange: boolean) => void) | null>(null)
+  const [targetCue, setTargetCue] = useState<{ mineral: string; inRange: boolean } | null>(null)
+  targetCueRef.current = (mineral, inRange) => setTargetCue(mineral ? { mineral, inRange } : null)
+  const obstacleAheadRef = useRef<((ahead: boolean) => void) | null>(null)
+  const [obstacleAhead, setObstacleAhead] = useState(false)
+  obstacleAheadRef.current = ahead => setObstacleAhead(current => current === ahead ? current : ahead)
 
   // Fire cooldown state lives in MiningCanvas (it must gate both the button
   // and a direct canvas tap). chargingRef mirrors it up here the same way
@@ -252,7 +255,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     setCargo({})
     setLaserCharges(MAX_CHARGES)
     firedRef.current = false
-    setLaserCopy(false)
     setSceneStatus('loading')
     setRunKey(k => k + 1)
     if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
@@ -309,8 +311,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     help.reportAction('fire')
     if (!firedRef.current && trainingMiningTry) {
       firedRef.current = true
-      setLaserCopy(true)
-      window.setTimeout(() => setLaserCopy(false), 1500)
     }
   }
 
@@ -647,6 +647,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                 <span key={id}>{`${minerals[id]?.name ?? id} ${Math.min(cargo[id] ?? 0, amount)}/${amount}`}</span>
               ))
             )}
+            {targetCue ? (
+              <span className={styles.targetCueStatus} data-testid="mining-target-cue">
+                {minerals[targetCue.mineral]?.name ?? targetCue.mineral} · {targetCue.inRange ? 'FIRE NOW' : 'WAIT'}
+              </span>
+            ) : trainingMiningTry ? <span className={styles.targetCueStatus} data-testid="mining-target-cue">Fire on a labelled seam</span> : null}
           </span>
         </DockWordButton>
       </div>
@@ -678,7 +683,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             setBumpNote(true)
             window.setTimeout(() => setBumpNote(false), 1200)
           }}
-          oreNearRef={oreNearRef}
+          onTargetCueRef={targetCueRef}
+          onObstacleAheadRef={obstacleAheadRef}
           neededMineralsRef={neededMineralsRef}
           chargingRef={chargingRef}
           trainingMiningTry={trainingMiningTry}
@@ -688,6 +694,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           disabled={sceneStatus !== 'ready'}
           onAltitude={dir => altitudeRef.current?.(dir)}
           onSpeed={dir => scrollRef.current?.(dir)}
+          obstacleAhead={obstacleAhead}
         />
         <LaserGauge charges={laserCharges} max={MAX_CHARGES} charging={isCharging} firing={firingHeld} />
         {bumpNote ? <div className="mining-bump-note" role="status" data-testid="mining-bump">Hull bumped: −1 charge</div> : null}
@@ -745,15 +752,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       )}
       </div>
 
-      {trainingMiningTry && (
-        <div className="laser-cue" data-testid="mining-training-tip">
-          <span className="ops-badge" data-state={laserCopy ? 'done' : 'live'} data-testid="ops-badge" aria-hidden="true">OPS<span className="ops-bars"><i /><i /><i /></span></span>
-          <span className="flight-plan-text">
-            <span className="flight-plan-kicker" data-state={laserCopy ? 'done' : 'live'} data-testid="flight-plan-kicker">{laserCopy ? 'Copy · Step 5 done' : 'Mining Ops · Step 5/6'}</span>
-            <span className="flight-plan-action">{laserCopy ? '+1 stitch · Fire when ore crosses the beam' : 'Fire when ore crosses the beam'}</span>
-          </span>
-        </div>
-      )}
       <div className="laser-hud" data-testid="mining-controls">
         {/* SSL-411: the stat row is gone. Per-mineral progress is kept for
             assistive tech; charges live inside FIRE LASER and order progress

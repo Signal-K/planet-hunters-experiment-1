@@ -1,0 +1,70 @@
+.marker {
+  position: absolute;
+  z-index: 11;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.marker:disabled { cursor: default; opacity: 0.7; }
+
+/* The footprint lies on the ground's top surface: a flat dashed slab as wide as the structure. */
+.footprint {
+  display: block;
+  width: 100%;
+  height: calc(11 * var(--px, 3px));
+  border: 2px dashed var(--ln-world-hull-lit);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ln-world-glass) 30%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ln-world-outline) 55%, transparent);
+  transform: perspective(240px) rotateX(58deg);
+  transform-origin: center bottom;
+  animation: sitePulse 1.8s ease-in-out infinite;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid var(--ln-bp-ink, #0f2436);
+  border-radius: 999px;
+  background: var(--ln-bp-paper, #fff);
+  box-shadow: 3px 3px 0 var(--ln-bp-line-strong, rgba(15, 36, 54, 0.3));
+  color: var(--ln-bp-ink, #0f2436);
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.plus {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ln-world-trim-blue);
+  color: var(--ln-world-hull-lit);
+  font-size: 16px;
+}
+
+.marker:focus-visible .label { outline: 3px solid var(--ln-world-trim-blue); outline-offset: 2px; }
+
+@keyframes sitePulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footprint { animation: none; opacity: 0.9; }
+}

@@ -97,6 +97,8 @@ struct MiningScreen: View {
     @Environment(GameStore.self) private var store
     @State private var scene: MiningScene?
     @State private var field: MiningField?
+    @State private var targetCue: String?
+    @State private var obstacleAhead = false
     @State private var toast: String?
     @State private var laserCharging = false
     @FocusState private var keysFocused: Bool
@@ -176,7 +178,8 @@ struct MiningScreen: View {
     private func laserChrome(_ field: MiningField, insets: EdgeInsets, narrow: Bool, short: Bool = false) -> some View {
         let compact = narrow || short
         let zones = HUDZones.standard
-        let order = MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false)
+        let trainingCue = store.player.flightPlan.currentTry == "mining" ? "Fire on a labelled seam" : nil
+        let order = MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue)
             .frame(maxWidth: 220)
             .onLongPressGesture { showGuide = true }
         return ZStack {
@@ -196,11 +199,11 @@ struct MiningScreen: View {
             }
 
             HudChips(francs: store.player.francs)
-                .padding(.trailing, insets.trailing + zones.topRight.inset).padding(.top, insets.top + zones.topRight.inset)
+                .padding(.trailing, insets.trailing + zones.topRight.inset + 52).padding(.top, insets.top + zones.topRight.inset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 
             // Phones: compact pad and gauge in the clear strip under the ground deposits.
-            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSpeed: { scene?.setScroll($0) }, tile: short ? 36 : compact ? 40 : 52)
+            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSpeed: { scene?.setScroll($0) }, obstacleAhead: obstacleAhead, tile: short ? 44 : compact ? 52 : 56)
                 .padding(.leading, insets.leading + 16)
                 .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 16))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
@@ -255,6 +258,8 @@ struct MiningScreen: View {
             field = f
             for id in SkyEvents.debrisResourceIds where f.cargo[id, default: 0] > 0 { store.debrisMined(id) }
         }
+        s.onTargetCue = { cue in targetCue = cue }
+        s.onObstacleAhead = { obstacleAhead = $0 }
         s.reducedMotion = reduceMotion
         s.onBump = { say("Hull bumped: −1 charge") }
         s.onCharging = { c in laserCharging = c }
@@ -270,6 +275,7 @@ struct MiningActionRow: View {
     let onScrub: () -> Void
     var onFire: () -> Void = {}
     var showFire = true
+    var targetCue: String? = nil
 
     private var chargePct: Double { field.chargeCap > 0 ? Double(field.charge) / Double(field.chargeCap) : 0 }
 
@@ -282,6 +288,9 @@ struct MiningActionRow: View {
                         let have = min(need, field.cargo[id, default: 0])
                         Text("\(Minerals.byId[id]?.name ?? id) \(have)/\(need)")
                             .font(AppFont.mono(14)).foregroundStyle(Theme.hudInk).lineLimit(1)
+                    }
+                    if let targetCue {
+                        Text(targetCue).font(AppFont.display(14)).foregroundStyle(Theme.hudInk).lineLimit(1)
                     }
                     GeometryReader { g in
                         ZStack(alignment: .leading) {

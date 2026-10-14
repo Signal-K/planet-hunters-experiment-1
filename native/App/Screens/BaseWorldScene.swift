@@ -33,6 +33,11 @@ struct BaseWorldScene: View {
     @State private var dragVertical: Bool?
     @State private var pulse = false
 
+    /// The glazed hangar stands beside the pad as soon as the pad is built, whether or not it was placed on a plot (matches web `scenicHangar`).
+    private var shownKinds: [String] {
+        placed.contains("launchpad") && !placed.contains("hangar") && !placed.contains("garage") ? placed + ["hangar"] : placed
+    }
+
     private var siloPlaced: Bool { placed.contains("surface-silo") }
     private var siloBuilt: Bool { siloPlaced && excavated }
 
@@ -61,7 +66,7 @@ struct BaseWorldScene: View {
                         .offset(y: ground)
                         .allowsHitTesting(camera.underground)
                     shaftHead(world: world)
-                    ForEach(placed, id: \.self) { kind in
+                    ForEach(shownKinds, id: \.self) { kind in
                         if let sprite = spriteName(kind) {
                             structure(kind, sprite: sprite, width: w, height: h, ground: ground, portrait: portrait, level: levels[kind] ?? 1)
                         }
@@ -315,7 +320,7 @@ struct BaseWorldScene: View {
         let artH = 44 * sx
         return AnyView(Button { onStructure(kind) } label: {
             Art.view(sprite).resizable().interpolation(.none)
-                .frame(width: (kind == "market" ? 110 : 72) * sx, height: kind == "market" ? 44 * sx : artH)
+                .frame(width: (kind == "market" ? 115 : 72) * sx, height: kind == "market" ? 46 * sx : artH)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
@@ -328,7 +333,7 @@ struct BaseWorldScene: View {
     private func halfWidth(_ kind: String, px: CGFloat, portrait: Bool) -> CGFloat {
         switch kind {
         case "launchpad": return 60 * px
-        case "market": return 55 * (portrait ? px * 0.75 : px)
+        case "market": return 57 * (portrait ? px * 0.75 : px)
         default: return 36 * (portrait ? px * 0.75 : px)
         }
     }
@@ -337,7 +342,7 @@ struct BaseWorldScene: View {
     @ViewBuilder private func slots(width: CGFloat, height: CGFloat, ground: CGFloat, portrait: Bool) -> some View {
         let px = pixelScale(height: height, portrait: portrait)
         let used = Set(plots.values).union(placed.contains("launchpad") && plots["launchpad"] == nil ? [0] : [])
-        let boxes: [(CGFloat, CGFloat)] = placed.filter { spriteName($0) != nil }.map { kind in
+        let boxes: [(CGFloat, CGFloat)] = shownKinds.filter { spriteName($0) != nil }.map { kind in
             (width * anchor(kind, plot: plots[kind] ?? 0, portrait: portrait), halfWidth(kind, px: px, portrait: portrait))
         }
         let slotHalf: CGFloat = 39 * (portrait ? px * 0.75 : px)
@@ -362,7 +367,7 @@ struct BaseWorldScene: View {
 
     private func spriteName(_ kind: String) -> String? {
         switch kind {
-        case "market": return "base/kit/exchange-flat.png"
+        case "market": return "base/kit/exchange-dock.png"
         case "launchpad": return "base/kit/pad-rocket.png"
         case "hangar", "garage": return "base/kit/hangar-white.png"
         default: return nil
