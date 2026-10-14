@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreText
+import LandnamCore
 
 /// Light "blueprint" direction, mirroring web `--ln-*` tokens in globals.css.
 /// No dark default.
@@ -79,8 +80,8 @@ struct Panel<Content: View>: View {
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.paper, in: RoundedRectangle(cornerRadius: 9))
-            .overlay(RoundedRectangle(cornerRadius: 9).stroke(Theme.border, lineWidth: 1.5))
-            .background(RoundedRectangle(cornerRadius: 9).fill(accent).offset(x: 4, y: 4))
+            .overlay(RoundedRectangle(cornerRadius: 9).stroke(Theme.hudInk, lineWidth: 2))
+            .background(RoundedRectangle(cornerRadius: 9).fill(accent.opacity(0.72)).offset(x: 4, y: 4))
             .padding(.trailing, 4).padding(.bottom, 4)
     }
 }
@@ -130,31 +131,111 @@ extension EnvironmentValues {
 
 struct ScreenFrame<Content: View>: View {
     @Environment(\.flatLayout) private var flat
+    @Environment(GameStore.self) private var store
     let title: String
     var back: (() -> Void)?
     @ViewBuilder var content: Content
     var body: some View {
-        scroller {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .center, spacing: 12) {
-                    if let back {
-                        Button(action: back) {
-                            Text("‹ BASE").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.bluePress)
-                                .frame(minWidth: 44, minHeight: 44, alignment: .leading).contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityLabel("Back to base")
+        ZStack {
+            OperationsPaperScene().ignoresSafeArea()
+            scroller {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(alignment: .center, spacing: 12) {
+                        if let back {
+                            Button(action: back) {
+                                Text("‹ BASE").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.bluePress)
+                                    .frame(minWidth: 44, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                            }.buttonStyle(.plain).accessibilityLabel("Back to base")
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Eyebrow(text: "Program operations")
+                            Text(title).font(AppFont.display(23)).foregroundStyle(Theme.ink)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "dot.radiowaves.left.and.right")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(Theme.blue)
+                            .frame(width: 44, height: 44)
+                            .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.hudInk, lineWidth: 2))
                     }
-                    Text(title).font(AppFont.display(23)).foregroundStyle(Theme.ink)
+                    ProgramReadout(missions: store.player.missionsDone, francs: store.player.francs, research: store.player.researchXP)
+                    content
                 }
-                content
+                .padding(16).frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
             }
-            .padding(16).frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
         }
-        .background(Theme.bg.ignoresSafeArea())
         .foregroundStyle(Theme.ink)
     }
 
     @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
         if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
+    }
+}
+
+/// A small, stable telemetry layer shown on every internal page. It keeps the
+/// player's current programme state visible without turning route content into
+/// another dashboard.
+private struct ProgramReadout: View {
+    let missions: Int
+    let francs: Int
+    let research: Int
+
+    var body: some View {
+        HStack(spacing: 0) {
+            metric("MISSIONS", "\(missions)", "flag.checkered")
+            Divider().overlay(Theme.hairline).padding(.vertical, 6)
+            metric("FUNDS", Economy.format(francs: francs), "banknote")
+            Divider().overlay(Theme.hairline).padding(.vertical, 6)
+            metric("RESEARCH", "\(research) XP", "waveform.path.ecg")
+        }
+        .padding(10)
+        .background(Theme.paper.opacity(0.94), in: RoundedRectangle(cornerRadius: 9))
+        .overlay(RoundedRectangle(cornerRadius: 9).stroke(Theme.hudInk, lineWidth: 2))
+        .background(RoundedRectangle(cornerRadius: 9).fill(Theme.blue.opacity(0.35)).offset(x: 4, y: 4))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Program status: \(missions) missions, \(Economy.format(francs: francs)), \(research) research XP")
+    }
+
+    private func metric(_ label: String, _ value: String, _ symbol: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: symbol).font(.system(size: 13, weight: .bold)).foregroundStyle(Theme.bluePress)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label).font(AppFont.display(11, "Bold")).tracking(1)
+                Text(value).font(AppFont.mono(13)).lineLimit(1).minimumScaleFactor(0.72)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 4)
+    }
+}
+
+/// Technical-station scene art for menu and record pages. It deliberately
+/// depicts an instrument deck and uplink paths, never a planet or a person.
+struct OperationsPaperScene: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [Theme.bg, Theme.paper2.opacity(0.8), Theme.bg], startPoint: .topLeading, endPoint: .bottomTrailing)
+            Canvas { context, size in
+                var grid = Path()
+                let spacing: CGFloat = 32
+                for x in stride(from: 0, through: size.width, by: spacing) { grid.move(to: CGPoint(x: x, y: 0)); grid.addLine(to: CGPoint(x: x, y: size.height)) }
+                for y in stride(from: 0, through: size.height, by: spacing) { grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y)) }
+                context.stroke(grid, with: .color(Theme.blue.opacity(0.10)), lineWidth: 1)
+
+                let panel = CGRect(x: size.width * 0.62, y: size.height * 0.12, width: size.width * 0.30, height: size.height * 0.22)
+                context.fill(Path(roundedRect: panel, cornerRadius: 12), with: .color(Theme.paper.opacity(0.55)))
+                context.stroke(Path(roundedRect: panel, cornerRadius: 12), with: .color(Theme.blue.opacity(0.32)), lineWidth: 2)
+                var signal = Path()
+                signal.move(to: CGPoint(x: size.width * 0.10, y: size.height * 0.78))
+                signal.addCurve(to: CGPoint(x: size.width * 0.82, y: size.height * 0.22), control1: CGPoint(x: size.width * 0.30, y: size.height * 0.42), control2: CGPoint(x: size.width * 0.58, y: size.height * 0.62))
+                context.stroke(signal, with: .color(Theme.teal.opacity(0.28)), style: StrokeStyle(lineWidth: 3, dash: [8, 10]))
+                for point in [CGPoint(x: size.width * 0.10, y: size.height * 0.78), CGPoint(x: size.width * 0.82, y: size.height * 0.22)] {
+                    context.fill(Path(ellipseIn: CGRect(x: point.x - 7, y: point.y - 7, width: 14, height: 14)), with: .color(Theme.blue.opacity(0.38)))
+                }
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 

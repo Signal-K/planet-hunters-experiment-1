@@ -12,6 +12,7 @@ struct MissionsScreen: View {
         let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
         ScreenFrame(title: "Mission board", back: { store.go(.hub) }) {
             Eyebrow(text: store.player.freeOperations ? "Free Operations · client work" : "Guided contracts")
+            missionStatus(entries)
             if entries.isEmpty {
                 Panel {
                     VStack(alignment: .leading, spacing: 8) {
@@ -27,6 +28,27 @@ struct MissionsScreen: View {
             PrimaryButton(title: "Archive · pathways and unlocks") { archiveFocus = nil; showArchive = true }
         }
         .sheet(isPresented: $showArchive) { ArchiveScreen(focus: archiveFocus) }
+    }
+
+    private func missionStatus(_ entries: [MissionBoard.Entry]) -> some View {
+        let ready = entries.filter(\.unlocked)
+        let payout = ready.reduce(0) { $0 + $1.mission.payout.francs }
+        let total = max(1, entries.count)
+        return Panel(accent: ready.isEmpty ? Theme.blueBright : Theme.teal) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Eyebrow(text: "Contract signal board")
+                        Text("\(ready.count) READY · \(entries.count - ready.count) LOCKED").font(AppFont.display(14)).tracking(0.8)
+                    }
+                    Spacer(minLength: 0)
+                    Text(payout > 0 ? Economy.format(francs: payout) : "FREE OPS").font(AppFont.mono(16)).foregroundStyle(Theme.bluePress)
+                }
+                Bar(value: Double(ready.count) / Double(total))
+                Text(ready.isEmpty ? "Review the pathway to unlock the next programme operation." : "Combined posted rewards for available client work.")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+            }
+        }
     }
 }
 

@@ -45,6 +45,12 @@ export default function PageSurface({
       data-testid={testId}
       style={{ zIndex, ...style }}
     >
+      <div className="ln-page-surface__scene" aria-hidden="true">
+        <i className="ln-page-surface__mast" />
+        <i className="ln-page-surface__uplink ln-page-surface__uplink--one" />
+        <i className="ln-page-surface__uplink ln-page-surface__uplink--two" />
+        <i className="ln-page-surface__console" />
+      </div>
       <section
         className={['ln-page-surface__content', contentClassName].filter(Boolean).join(' ')}
         role="region"

@@ -12,22 +12,42 @@ struct ArchiveScreen: View {
 
     var body: some View {
         let entries = Archive.entries(catalog: store.catalog, player: store.player, now: store.now)
-        VStack(spacing: 0) {
-            header(entries)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    if let id = selected, let entry = entries.first(where: { $0.id == id }) {
-                        ArchiveDetail(entry: entry, onGo: go)
-                    } else {
-                        chips
-                        if filter == nil { pathway(entries) } else { list(entries.filter { $0.category == filter }) }
+        ZStack {
+            OperationsPaperScene().ignoresSafeArea()
+            VStack(spacing: 0) {
+                header(entries)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        if let id = selected, let entry = entries.first(where: { $0.id == id }) {
+                            ArchiveDetail(entry: entry, onGo: go)
+                        } else {
+                            archiveStatus(entries)
+                            chips
+                            if filter == nil { pathway(entries) } else { list(entries.filter { $0.category == filter }) }
+                        }
                     }
+                    .padding(16).frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
                 }
-                .padding(16).frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
             }
         }
-        .background(Theme.bg.ignoresSafeArea()).foregroundStyle(Theme.ink)
+        .foregroundStyle(Theme.ink)
         .onAppear { if selected == nil { selected = focus } }
+    }
+
+    private func archiveStatus(_ entries: [ArchiveEntry]) -> some View {
+        let complete = entries.filter { $0.status == .done }.count
+        let live = entries.filter { $0.status == .live || $0.status == .available }.count
+        return Panel(accent: Theme.blueBright) {
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: "point.3.connected.trianglepath.dotted").font(.system(size: 22, weight: .bold)).foregroundStyle(Theme.blue)
+                VStack(alignment: .leading, spacing: 2) {
+                    Eyebrow(text: "Programme pathway")
+                    Text("\(complete) FILED · \(live) READY TO REVIEW").font(AppFont.display(14)).tracking(0.8)
+                }
+                Spacer(minLength: 0)
+                Text("\(entries.count)").font(AppFont.mono(20)).foregroundStyle(Theme.bluePress)
+            }
+        }
     }
 
     private func header(_ entries: [ArchiveEntry]) -> some View {

@@ -1106,8 +1106,26 @@ button { cursor: pointer; }
   position: absolute;
   inset: 0;
   overflow: auto;
-  background: var(--ln-void);
+  isolation: isolate;
+  background:
+    linear-gradient(var(--ln-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px),
+    linear-gradient(135deg, var(--ln-blueprint-bg), var(--ln-blueprint-paper-2));
+  background-size: 32px 32px, 32px 32px, auto;
 }
+
+/* Internal pages are operations rooms, not flat app sheets. The art is an
+   abstract uplink mast and instrument desk, so it gives each surface depth
+   without depicting people, a planet, or another destination. */
+.ln-page-surface__scene { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.ln-page-surface__mast { position: absolute; right: 9%; bottom: 10%; width: 8px; height: 48%; background: var(--ln-blueprint-ink); opacity: .14; transform: skewX(-7deg); }
+.ln-page-surface__mast::before, .ln-page-surface__mast::after { content: ''; position: absolute; left: 50%; border: 2px solid var(--ln-blueprint-blue); border-bottom: 0; border-radius: 50% 50% 0 0; transform: translateX(-50%); }
+.ln-page-surface__mast::before { bottom: 35%; width: 110px; height: 58px; opacity: .6; }
+.ln-page-surface__mast::after { bottom: 52%; width: 184px; height: 100px; opacity: .38; }
+.ln-page-surface__uplink { position: absolute; width: 42%; height: 2px; background: repeating-linear-gradient(90deg, var(--ln-blueprint-blue) 0 8px, transparent 8px 16px); opacity: .28; transform-origin: right center; }
+.ln-page-surface__uplink--one { right: 9%; bottom: 43%; transform: rotate(-28deg); }
+.ln-page-surface__uplink--two { right: 9%; bottom: 33%; transform: rotate(18deg); }
+.ln-page-surface__console { position: absolute; left: -6%; bottom: -7%; width: 46%; height: 31%; border: 2px solid var(--ln-blueprint-ink); border-radius: 14px 14px 0 0; background: linear-gradient(135deg, var(--ln-blueprint-paper), color-mix(in srgb, var(--ln-blueprint-blue) 13%, var(--ln-blueprint-paper))); box-shadow: 8px -8px 0 color-mix(in srgb, var(--ln-blueprint-ink) 14%, transparent); opacity: .7; transform: rotate(-7deg); }
 
 .ln-page-surface__content {
   position: relative;
@@ -1117,6 +1135,7 @@ button { cursor: pointer; }
   max-height: none !important;
   box-shadow: none !important;
   overflow-y: auto;
+  background: transparent;
 }
 
 /* SSL-347: Base trays (Menu, Friends, Community) are centered cards over the
@@ -3563,4 +3582,3 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 .patch-status { font: 14px/1.3 var(--ln-font-body); color: var(--ln-bp-ink-dim, #48596a); margin-top: 2px; }
 .patch[data-state='active'] .patch-status { color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font-weight: 700; }
 .patch[data-state='done'] .patch-status { color: var(--ln-bp-green, #17703f); }
-

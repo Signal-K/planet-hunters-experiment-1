@@ -35,7 +35,7 @@ export default function MissionHistoryScreen({ records, missions = [], player, o
   const logIsPartial = lifetimeCompleted > ordered.length
 
   return (
-    <section className="theme-light" data-testid="mission-history-screen" style={{ position: 'relative', minHeight: '100%', background: 'var(--ln-void)' }}>
+    <section className="theme-light" data-testid="mission-history-screen" style={{ position: 'relative', minHeight: '100%', background: 'transparent' }}>
       <div className={styles.shell}>
         <header className={styles.header}>
           <div><div className={styles.eyebrow}>BASE · MISSION LOG</div><h1>Mission Log</h1><p>A concise record of completed client work and program operations.</p></div>

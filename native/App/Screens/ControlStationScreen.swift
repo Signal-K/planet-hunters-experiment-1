@@ -17,6 +17,7 @@ struct ControlStationScreen: View {
         ScreenFrame(title: "Control Station", back: { store.go(.hub) }) {
             let m = model
             StationMap(model: m).coachTarget("station-map")
+            stationStatus(m)
             filters(m).coachTarget("station-filters")
             if let empty = m.emptyLabel { Panel { Text(empty).foregroundStyle(Theme.textDim) } }
             ForEach(m.groups) { group in
@@ -28,6 +29,22 @@ struct ControlStationScreen: View {
             SkyBadgeRow(badges: store.player.badges)
         }
         .helpable(.instrumentHub)
+    }
+
+    private func stationStatus(_ m: ControlStation.Model) -> some View {
+        let instruments = m.groups.flatMap(\.rows)
+        let live = instruments.filter(\.live).count
+        let ready = m.markers.reduce(0) { $0 + $1.readyCount }
+        return Panel(accent: live > 0 ? Theme.teal : Theme.blueBright) {
+            HStack(spacing: 12) {
+                Image(systemName: "antenna.radiowaves.left.and.right").font(.system(size: 24, weight: .bold)).foregroundStyle(Theme.blue)
+                VStack(alignment: .leading, spacing: 3) {
+                    Eyebrow(text: "Instrument network")
+                    Text("\(live) LIVE · \(ready) SIGNAL\(ready == 1 ? "" : "S") READY").font(AppFont.display(14)).tracking(0.8)
+                    Text("\(instruments.count) deployed instruments across \(m.groups.count) observation groups.").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                }
+            }
+        }
     }
 
     private func filters(_ m: ControlStation.Model) -> some View {
