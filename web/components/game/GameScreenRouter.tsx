@@ -420,6 +420,8 @@ function ScreenBody({
 
     case 'market':
       return (
+        <>
+        <HubScreen player={game.player} onFocusBuilding={() => {}} onOpenScene={game.go} />
         <MarketScreen
           stash={game.player.stash ?? {}}
           marketSupply={game.player.marketSupply ?? {}}
@@ -453,6 +455,7 @@ function ScreenBody({
             return false
           }}
         />
+        </>
       )
 
     case 'hangar':

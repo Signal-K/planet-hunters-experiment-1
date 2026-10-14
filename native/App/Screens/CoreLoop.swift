@@ -398,7 +398,6 @@ struct DebriefLedger: View {
 
 struct MarketScreen: View {
     @Environment(GameStore.self) private var store
-    @Environment(\.flatLayout) private var flat
     @State private var showBuild = false
     @State private var confirmSellAll = false
 
@@ -407,12 +406,21 @@ struct MarketScreen: View {
         let held = p.stash.keys.sorted().filter { (p.stash[$0] ?? 0) > 0 }
         let price = { (id: String) in Market.unitPrice(id, player: p, clientId: p.lastClient, now: store.now).price }
         let total = held.reduce(0) { $0 + price($1) * (p.stash[$1] ?? 0) }
-        VStack(spacing: 0) {
-            SetHeader(back: { store.go(.hub) }, trailing: francs(p.francs))
+        GeometryReader { geometry in
+        ZStack {
+            HubScreen()
+            VStack(spacing: 16) {
+            HStack {
+                SetButton(title: "Close") { store.go(.hub) }
+                Text("EXCHANGE").font(AppFont.display(20, "Bold")).tracking(1.6)
+                Spacer(minLength: 0)
+            }
+            .padding(.bottom, 8)
+            .overlay(alignment: .bottom) { Rectangle().fill(Theme.blue).frame(height: 3) }
             scroller {
                 VStack(spacing: SetStyle.gap) {
                     SetSegment(options: ["Cargo", "Build"], selected: showBuild ? 1 : 0) { showBuild = $0 == 1 }
-                    SetButton(title: confirmSellAll ? "Confirm · \(francs(total))" : "Sell all", solid: true, enabled: !held.isEmpty, fill: true) {
+                    SetButton(title: confirmSellAll ? "Confirm · \(francs(total))" : "Sell all", color: Theme.blue, solid: true, enabled: !held.isEmpty, fill: true) {
                         if confirmSellAll { held.forEach { store.sell($0, amount: p.stash[$0] ?? 0) }; confirmSellAll = false } else { confirmSellAll = true }
                     }
                     if showBuild {
@@ -433,24 +441,33 @@ struct MarketScreen: View {
                         if held.isEmpty { Text("NO CARGO").font(AppFont.display(14, "Bold")).tracking(1.1).foregroundStyle(SetStyle.muted) }
                     }
                 }
-                .padding(.horizontal, 16).padding(.top, 16).padding(.bottom, 32)
+                .padding(.vertical, 8)
                 .setColumn()
             }
         }
-        .background(SetStyle.bg.ignoresSafeArea())
-        .foregroundStyle(SetStyle.ink)
+            .padding(16)
+            .frame(maxWidth: 640)
+            .background(Theme.hex(0xFFFDF8))
+            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+            .shadow(color: Theme.ink, radius: 0, x: 5, y: 5)
+            .padding(.horizontal, geometry.size.width > 700 ? 80 : 16)
+            .padding(.top, geometry.size.height < 500 ? 64 : 80)
+            .padding(.bottom, geometry.size.height < 500 ? 80 : 100)
+        }
+        }
+        .foregroundStyle(Theme.ink)
     }
 
     private func row<A: View>(_ name: String, _ meta: String, @ViewBuilder trailing: () -> A) -> some View {
         HStack(spacing: 16) {
-            SetRowText(title: name, status: meta)
+            SetRowText(title: name.uppercased(), status: meta, titleColor: Theme.ink)
             Spacer(minLength: 8)
             trailing()
-        }.setCard()
+        }.setCard(border: Theme.blue, padding: 16)
     }
 
     @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
-        if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
+        ScrollView { c() }
     }
 }
 

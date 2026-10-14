@@ -177,3 +177,53 @@
   outline: 2px solid var(--set-ink);
   outline-offset: 2px;
 }
+
+/* SSL-557: the Exchange counter floats inside the live base HUD. */
+.screen {
+  inset: 80px 16px 100px;
+  overflow: hidden;
+  background: transparent;
+  pointer-events: none;
+  --set-ink: var(--ln-blueprint-ink);
+  --set-card: var(--ln-board-paper);
+  --set-radius: 2px;
+}
+.column {
+  max-height: 100%;
+  width: min(640px, 100%);
+  overflow-y: auto;
+  pointer-events: auto;
+  gap: 16px;
+  padding: 16px;
+  background: var(--ln-board-paper);
+  border: 3px solid var(--ln-blueprint-ink);
+  box-shadow: inset 0 6px var(--ln-blueprint-blue), 6px 6px 0 var(--ln-blueprint-ink);
+}
+.header {
+  position: static;
+  min-height: 48px;
+  padding: 0 0 16px;
+  background: transparent;
+  border-bottom: 3px solid var(--ln-blueprint-blue);
+}
+.heading {
+  margin: 0;
+  font: 800 22px var(--ln-font-display), monospace;
+  letter-spacing: .08em;
+}
+.balance { font-size: 14px; }
+.list { gap: 16px; }
+.row { border-color: var(--ln-blueprint-blue); padding: 16px; }
+.sellButton { background: var(--ln-blueprint-blue); }
+.name { text-transform: uppercase; }
+@media (max-height: 500px) {
+  .screen { inset: 64px 80px 80px; }
+}
+@media (max-width: 430px) {
+  .heading { font-size: 18px; }
+  .balance { display: none; }
+  .row { gap: 8px; }
+}
+.screen :global(.ln-action-confirm) {
+  pointer-events: auto;
+}
