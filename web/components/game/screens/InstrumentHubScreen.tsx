@@ -6,6 +6,8 @@ import { ControlStationBoard } from '@/components/game/control-station/ControlSt
 import TopBar from '@/components/ui/TopBar'
 import { useHelp } from '@/components/ui/useHelp'
 import { buildControlStation } from '@/lib/control-station'
+import { stationSummary } from '@/lib/page-info'
+import { Stat, StatStrip } from '@/components/ui/Omega'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { UI_ZONES } from '@/lib/ui-zones'
 import type { Player } from '@/lib/game-types'
@@ -48,12 +50,18 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onClaim
     [player, signals, bodyId, awaitingFeed],
   )
 
+  const overview = useMemo(
+    () => stationSummary(buildControlStation({ player, signals, bodyId: 'all', loading: awaitingFeed })),
+    [player, signals, awaitingFeed],
+  )
+  const badgeCount = Object.keys(player.badges ?? {}).length
+
   return (
     <ScenePanel
       ambient="survey"
       className={`game-screen theme-blueprint ${styles.screen}`}
       data-testid="instrument-hub-screen"
-      scene={<div className={`ln-con-grid ${styles.grid}`} />}
+      art="control"
     >
       <TopBar
         eyebrow="ORBITAL OBSERVATORY / DATA LINK"
@@ -64,6 +72,12 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onClaim
       />
       {help.layer}
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
+        <StatStrip label="Station status" testId="control-station-stats">
+          <Stat label="Instruments online" value={`${overview.live} / ${overview.instruments}`} tone={overview.live > 0 ? 'ok' : 'default'} sub={overview.live > 0 ? 'Feeds live' : 'Launch to go live'} />
+          <Stat label="Ready to classify" value={overview.ready} tone={overview.ready > 0 ? 'info' : 'default'} sub={overview.ready > 0 ? 'Open a row to start' : 'Waiting on the next feed'} />
+          <Stat label="Projects" value={overview.projects} sub="Citizen-science feeds" />
+          <Stat label="Research XP" value={player.researchXP ?? 0} sub={badgeCount > 0 ? `${badgeCount} sky badge${badgeCount === 1 ? '' : 's'} earned` : 'No sky badges yet'} />
+        </StatStrip>
         <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} />
         {onStartScan && onResolveScan && player.freeOperations && (
           <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import PageArt, { type PageArtScene } from '@/components/game/PageArt'
 
 export type SceneAmbient = 'industrial' | 'survey' | 'utility' | 'observatory'
 
@@ -18,6 +19,8 @@ interface ScenePanelProps extends React.HTMLAttributes<HTMLDivElement> {
   /** A real rendered background (e.g. `HubWorldBackground`/`TerrainScene`, a
    * future Pixi canvas). Omit to use the ambient gradient alone. */
   scene?: React.ReactNode
+  /** Themed line-art scene for an internal page (see PageArt). Drawn behind the page panels. */
+  art?: PageArtScene
   children: React.ReactNode
 }
 
@@ -26,11 +29,12 @@ interface ScenePanelProps extends React.HTMLAttributes<HTMLDivElement> {
  * sits over a lit backdrop, never a flat `--ln-panel`/`--ln-bg` fill.
  * Replaces hand-rolling a one-off `.ln-scene-<screen>` CSS class per screen.
  */
-export default function ScenePanel({ ambient, scene, children, className, ...rest }: ScenePanelProps) {
+export default function ScenePanel({ ambient, scene, art, children, className, ...rest }: ScenePanelProps) {
   const classes = ['ln-scene-panel', `ln-scene-panel--${ambient}`, className].filter(Boolean).join(' ')
   return (
     <div className={classes} {...rest}>
       {scene && <div className="ln-scene-panel-backdrop" aria-hidden="true">{scene}</div>}
+      {art && <div className="ln-scene-panel-backdrop" aria-hidden="true"><PageArt scene={art} /></div>}
       {children}
     </div>
   )

@@ -299,6 +299,8 @@ body:has([data-screen="hub"]) {
 
   --ln-bp-green:      #17703f;
   --ln-bp-green-soft: rgba(23, 112, 63, 0.10);
+  /* Out There: Omega mint accent for panel title tabs and meters. */
+  --ln-omega-mint:    #5edba8;
 
   --ln-void:      var(--ln-bp-bg);
   --ln-bg:        var(--ln-bp-bg);
@@ -3482,7 +3484,18 @@ button.hub-orbital-network__status:disabled { cursor: default; }
    scroll area starts just below it (it used to sit at a fixed 68-96px and the first card slid under the bar). */
 .game-screen > .screen-scroll,
 .game-screen > .debrief-game__content.screen-scroll {
-  padding-top: calc(var(--ln-topbar-h, 64px) + 12px);
+  padding-top: calc(var(--ln-topbar-h, 64px) + var(--ln-hero-h, 0px) + 12px);
+}
+
+/* Internal pages with scene art (PageArt): page content starts below a hero band so the scene reads above the
+   panels. Short landscape screens skip the band and let the scene sit behind the content. */
+.game-screen:has(.ln-page-art),
+.ln-scene-panel:has(.ln-page-art) {
+  --ln-hero-h: max(0px, calc(clamp(220px, 34vh, 380px) - var(--ln-topbar-h, 64px) - 48px));
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .game-screen:has(.ln-page-art),
+  .ln-scene-panel:has(.ln-page-art) { --ln-hero-h: 0px; }
 }
 
 /* SSL-345: Base header spacing. Desktop HUB sat flush against FRIENDS; the
