@@ -18,7 +18,9 @@ import { RocketRollout } from '@/components/game/hub/RocketRollout'
 import { consumeRocketRolloutPending } from '@/lib/rocket-rollout'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
-import { Building, EmptyPlot } from '@/components/game/hub/Building'
+import { Building } from '@/components/game/hub/Building'
+import { SiteMarker } from '@/components/game/hub/SiteMarker'
+import { STRIP_W, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
@@ -98,11 +100,15 @@ interface HubScreenProps {
 export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
-  const camera = useBaseCamera()
+  // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
+  // and starts centred on the pad site, which is where a fresh base asks for its first structure.
+  const [viewSize, setViewSize] = useState(() => (typeof window === 'undefined' ? { w: 1440, h: 900 } : { w: window.innerWidth, h: window.innerHeight }))
+  const px = kitScale(viewSize)
+  const worldW = STRIP_W * px
+  const camera = useBaseCamera({ worldWidth: worldW, homeX: siteById('pad').x * px })
   const [editMode, setEditMode] = useState(placementMode)
   const [pickedBuild, setPickedBuild] = useState<string | null>(null)
   const [placeNote, setPlaceNote] = useState<string | null>(null)
-  const [overlappedPlots, setOverlappedPlots] = useState<number[]>([])
   const surfaceRef = useRef<HTMLDivElement | null>(null)
   const [dockStop, setDockStop] = useState(0)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -141,20 +147,21 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     return ai - bi
   })
 
+  // Each placed structure stands on its home site; the plot index only records the save slot.
   const plotStyles: React.CSSProperties[] = sortedEntities
-    // SVG grass is at 78% from top = 22% from bottom. calc(22% - 42px) puts the label
-    // bottom 42px underground so the visible building base sits at the grass line.
-    // left uses scene-proportional % so it matches the CSS-stretched PixiJS canvas (HUB_W=402).
-    // `sceneXPercent` returns the structure centre, so the DOM wrapper uses
-    // the same translate as the sprite layer below.
     .map(e => {
       const plot = readComponentNumber(e, 'BuildPlot', 'index', 0)
       const kind = Object.entries(effectivePlots).find(([, index]) => index === plot)?.[0]
-      const widthPct = kind ? structureWidthPct(kind, isUpgradableBuilding(kind) ? buildingLevel(player, kind) : 1) : 0
-      const center = kind ? structureCenterPercent(kind, e.transform.position.x, widthPct) : sceneXPercent(e.transform.position.x, widthPct)
+      const site = kind ? homeSite(kind) : null
+      const sprite = kind ? structureSprite(kind) : null
+      if (!site) {
+        const widthPct = kind ? structureWidthPct(kind, isUpgradableBuilding(kind) ? buildingLevel(player, kind) : 1) : 0
+        const center = kind ? structureCenterPercent(kind, e.transform.position.x, widthPct) : sceneXPercent(e.transform.position.x, widthPct)
+        return { left: `${center}%`, width: `${widthPct}%`, minWidth: 44, bottom: 'var(--hub-ground)', transform: 'translateX(-50%)' } as React.CSSProperties
+      }
       return ({
-        left: `${center}%`,
-        width: kind === 'launchpad' ? 'calc(120 * var(--px, 3px))' : kind === 'hangar' ? 'calc(72 * var(--px, 3px))' : `${widthPct}%`,
+        left: units(site.x),
+        width: units(sprite?.width ?? site.half * 2),
         minWidth: 44,
         maxWidth: 'none',
         bottom: 'var(--hub-ground)',
@@ -324,34 +331,28 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     }
   }
 
-  // A slot is never offered where a structure already stands. Measure the drawn structures and slots, and hide
-  // every slot whose box overlaps a structure sideways (the launchpad art is wider than its plot).
-  useLayoutEffect(() => {
-    if (!editMode) { setOverlappedPlots(prev => (prev.length ? [] : prev)); return }
-    const measure = () => {
-      const root = surfaceRef.current
-      if (!root) return
-      const structures = Array.from(root.querySelectorAll<HTMLElement>('[data-structure]')).map(el => el.getBoundingClientRect())
-      const hidden: number[] = []
-      root.querySelectorAll<HTMLElement>('[data-testid^="build-plot-"]').forEach(el => {
-        const r = el.getBoundingClientRect()
-        const plot = Number(el.dataset.testid?.replace('build-plot-', ''))
-        if (structures.some(b => r.left < b.right + 6 && r.right > b.left - 6)) hidden.push(plot)
-      })
-      setOverlappedPlots(prev => (prev.length === hidden.length && prev.every((v, k) => v === hidden[k]) ? prev : hidden))
-    }
-    measure()
-    window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
-  }, [editMode, placed.join(','), sceneBuildings.length, camera.cam.zoom])
+  // The surface tracks its own size so the kit scale follows the real viewport (rotation, split view).
+  useEffect(() => {
+    const el = surfaceRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      if (width > 0 && height > 0) setViewSize(prev => (prev.w === width && prev.h === height ? prev : { w: width, h: height }))
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   useEffect(() => {
     if (!editMode) return
     if (!pickedBuild || !buildOptions.some(o => o.id === pickedBuild)) setPickedBuild(buildOptions.find(o => o.affordable)?.id ?? buildOptions[0]?.id ?? null)
   }, [editMode, buildOptions, pickedBuild])
 
-  const firstFreePlot = sortedEntities.map((e, i) => i).find(i => !structureForPlot(i))
   const underground = pickedBuild === 'surface-silo'
+  // The one site the picked build may stand on, offered only while it is free.
+  const pickedSite = editMode && pickedBuild ? homeSite(pickedBuild) : null
+  const pickedOption = buildOptions.find(o => o.id === pickedBuild)
+  const pickedSiteFree = !!pickedSite && pickedSite.plot != null && !placed.includes(pickedBuild ?? '') && !Object.values(effectivePlots).includes(pickedSite.plot)
   const placeOnPlot = (plot: number) => {
     const option = buildOptions.find(o => o.id === pickedBuild)
     if (!option || !onPlaceStructure) return
@@ -360,7 +361,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   }
 
   return (
-    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px` } as React.CSSProperties}>
 
       {/* Base stays mounted at its authored camera frame while a tray is open.
           The former 200%-tall slider moved the whole world before revealing
@@ -381,13 +382,16 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           {...camera.handlers}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden', touchAction: 'none' }}
         >
-          <div data-testid="base-camera-world" style={{ position: 'absolute', inset: 0, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
+          <div data-testid="base-camera-world" data-world-width={worldW} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: worldW, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <BaseLayerScene
             phase={skyPhase}
             time={skyGrade}
             season={skySeason}
             biome={player.earthBiome ?? 'mountains'}
+            placed={placed}
+            panX={camera.cam.x}
+            zoom={camera.cam.zoom}
             siloBuilt={!!player.subsurfaceExcavated || (player.subsurfaceBuilt ?? []).length > 0}
             onOpenSilo={() => setSubsurface(true)}
           />
@@ -442,17 +446,14 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
               {plotStyles.map((style, plot) => {
                 const kind = structureForPlot(plot)
                 if (kind && !BASE_SCENE_KINDS.has(kind)) return null
-                if (!kind) {
-                  if (!editMode || overlappedPlots.includes(plot)) return null
-                  return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => (onPlaceStructure ? placeOnPlot(plot) : onFocusBuilding('build'))} />
-                }
+                if (!kind) return null
                 const startedAt = player.underConstruction?.[kind]
                 const building = isUnderConstruction(startedAt, kind)
                   ? { ...structureProps(kind), status: 'building' as const, buildStartedAt: startedAt }
                   : structureProps(kind)
                 // Outer plots open their callout inward so a 208px bubble
                 // can't run off the edge of the scene.
-                const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402
+                const xFrac = (homeSite(kind)?.x ?? STRIP_W / 2) / STRIP_W
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
                 const silo = kind === 'surface-silo'
                 const editable = editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind)
@@ -478,13 +479,16 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
                   active={activeBuilding === 'hangar'}
                   onActiveChange={active => setActiveBuilding(active ? 'hangar' : null)}
                   style={{
-                    left: '12%',
-                    width: 'calc(72 * var(--px, 3px))',
+                    left: units(siteById('hall').x),
+                    width: units(structureSprite('hangar')?.width ?? 78),
                     minWidth: 44,
                     bottom: 'var(--hub-ground)',
                     transform: 'translateX(-50%)',
                   }}
                 />
+              )}
+              {pickedSite && pickedSiteFree && !underground && onPlaceStructure && (
+                <SiteMarker site={pickedSite} label={pickedOption?.name ?? pickedSite.label} onPlace={() => placeOnPlot(pickedSite.plot ?? 0)} />
               )}
             </div>
           </div>
@@ -568,13 +572,15 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       {editMode && onPlaceStructure && (
         <div data-testid="build-picker" style={{ position: 'absolute', left: 0, right: 0, bottom: 72, zIndex: 21, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, pointerEvents: 'none', padding: '0 12px' }}>
           {placeNote && <span style={{ pointerEvents: 'auto', padding: '6px 12px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>{placeNote}</span>}
-          {underground && firstFreePlot !== undefined && (
-            <button type="button" data-testid="build-place-underground" onClick={() => placeOnPlot(firstFreePlot)}
+          {underground && pickedSiteFree && (
+            <button type="button" data-testid="build-place-underground" onClick={() => placeOnPlot(siteById('shaft').plot ?? 2)}
               style={{ pointerEvents: 'auto', minHeight: 44, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1 var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Place silo
             </button>
           )}
-          {buildOptions.length === 0
+          {buildOptions.length === 1 && pickedSiteFree && !underground && !placeNote
+            ? null
+            : buildOptions.length === 0
             ? <span style={{ pointerEvents: 'auto', padding: '8px 14px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>Nothing to build yet</span>
             : (
               <div style={{ display: 'flex', gap: 8, overflowX: 'auto', maxWidth: '100%', pointerEvents: 'auto' }}>

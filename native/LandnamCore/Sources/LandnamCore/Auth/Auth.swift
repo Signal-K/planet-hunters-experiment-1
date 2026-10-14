@@ -22,13 +22,13 @@ public struct AuthSession: Codable, Equatable, Sendable {
 
 public enum AuthError: Error, Equatable, Sendable {
     case rejected          // provider token refused by the server
+    case accountCreationRejected
     case unreachable(String)
     case malformed
 }
 
-/// Talks to the Landnam PocketBase `/api/landnam-auth/*` routes
-/// (pocketbase/landnam_auth_oidc.go). There is no guest route: a verified
-/// Apple identity is required.
+/// Talks to shared PocketBase for email accounts and Landnam PocketBase for
+/// session exchange. There is no guest route: an account is required.
 public struct AuthAPI: Sendable {
     public var baseURL: URL
     /// Shared PocketBase that owns the email/password `users` accounts (same as the web).
@@ -71,6 +71,23 @@ public struct AuthAPI: Sendable {
         var session = try Self.decodeSession(xdata)
         session.sharedToken = shared.token; session.sharedUserId = shared.record?.id
         return session
+    }
+
+    /// Creates the same shared PocketBase account as the web signup, then opens
+    /// its Landnam session through the normal password sign-in path.
+    public func createAccountWithPassword(email: String, password: String) async throws -> AuthSession {
+        var create = URLRequest(url: sharedURL.appendingPathComponent("api/collections/users/records"))
+        create.httpMethod = "POST"
+        create.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        create.httpBody = try JSONEncoder().encode([
+            "email": email,
+            "password": password,
+            "passwordConfirm": password,
+            "name": ""
+        ])
+        do { _ = try await send(create) }
+        catch AuthError.rejected { throw AuthError.accountCreationRejected }
+        return try await signInWithPassword(email: email, password: password)
     }
 
     /// Renews an aging session without asking for a password: refresh the shared login, then re-exchange it.

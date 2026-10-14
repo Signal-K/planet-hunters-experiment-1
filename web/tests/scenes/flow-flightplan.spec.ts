@@ -35,42 +35,25 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       // onReady is raised as the Pixi loop starts; let its first visible frame paint.
       await page.waitForTimeout(800)
       await expect(objective(page)).toContainText('Fire the laser')
-      await expect(page.getByTestId('flight-plan-kicker')).toHaveText(/Mining Ops · Step 5\/6/i)
-      await expect(page.getByTestId('ops-badge')).toBeVisible()
-      await expect(page.getByTestId('mining-training-tip')).toBeVisible()
+      await expect(page.getByTestId('mining-training-tip')).toHaveCount(0)
+      await expect(page.getByTestId('mining-target-cue')).toContainText(/Fire on a labelled seam|· (WAIT|FIRE NOW)/)
       await expect(objective(page)).not.toContainText('Fit a module')
       await expect(page.getByText(/Fit a module/i)).toHaveCount(0)
     })
 
-    test('live mining try shows the Ops laser step and Copy completion', async ({ page }, info) => {
+    test('live mining try keeps the field clear and the order row gives the laser cue', async ({ page }, info) => {
       await page.emulateMedia({ reducedMotion: 'reduce' })
       await stage(page, 'm1-mining', { patch: { flightPlan: { completed: {}, hidden: false } } })
       await page.goto(page.url() + '&plan=1')
       await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
       await expect(page.getByTestId('mining-scene-status')).toHaveCount(0, { timeout: 30_000 })
       await page.waitForTimeout(800)
-      const cue = page.getByTestId('mining-training-tip')
-      await expect(cue).toBeVisible()
-      await expect(cue.getByTestId('ops-badge')).toBeVisible()
-      const badgeBox = (await cue.getByTestId('ops-badge').boundingBox())!
-      expect(badgeBox.width).toBeGreaterThanOrEqual(44)
-      expect(badgeBox.height).toBeGreaterThanOrEqual(44)
-      const cueMetrics = await cue.evaluate(el => {
-        const rect = el.getBoundingClientRect()
-        const color = getComputedStyle(el).backgroundColor.match(/\d+/g)?.slice(0, 3).map(Number) ?? [0, 0, 0]
-        return { left: rect.left, right: rect.right, height: rect.height, paperLuma: color.reduce((sum, channel) => sum + channel, 0) / 3 }
-      })
-      expect(cueMetrics.left).toBeGreaterThanOrEqual(0)
-      expect(cueMetrics.right).toBeLessThanOrEqual(size.width)
-      expect(cueMetrics.height).toBeLessThanOrEqual(64)
-      expect(cueMetrics.paperLuma).toBeGreaterThan(200)
-      await expect(cue.getByTestId('flight-plan-kicker')).toHaveText(/Mining Ops · Step 5\/6/i)
-      expect(await cue.locator('.ops-bars i').first().evaluate(el => getComputedStyle(el).animationName)).toBe('none')
+      await expect(page.getByTestId('mining-training-tip')).toHaveCount(0)
+      const cue = page.getByTestId('mining-target-cue')
+      await expect(cue).toContainText(/Fire on a labelled seam|· (WAIT|FIRE NOW)/)
       await page.screenshot({ path: info.outputPath(`flow-flightplan-laser-${vp}.png`) })
       await page.getByTestId('fire-laser-btn').click()
-      await expect(cue.getByTestId('flight-plan-kicker')).toHaveText('Copy · Step 5 done')
-      await expect(cue.getByTestId('ops-badge')).toHaveAttribute('data-state', 'done')
-      await expect(cue.locator('.flight-plan-action')).toContainText('+1 stitch')
+      await expect(page.getByTestId('mining-training-tip')).toHaveCount(0)
     })
 
     test('part try on the Hangar screen says fit a module, not the Base instruction', async ({ page }) => {

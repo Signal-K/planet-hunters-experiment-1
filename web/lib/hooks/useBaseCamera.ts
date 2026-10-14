@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   BASE_CAMERA_HOME,
+  MIN_ZOOM,
   clampCamera,
   inertiaStep,
   softClampCamera,
@@ -18,7 +19,7 @@ const DRAG_THRESHOLD = 6
  * Pan (drag/swipe with inertia and soft edges) and zoom (pinch, wheel) for the base scene (SSL-503).
  * Attach `ref` to the viewport element and apply `transform` to the world element inside it.
  */
-export function useBaseCamera() {
+export function useBaseCamera({ worldWidth, homeX }: { worldWidth?: number; homeX?: number } = {}) {
   const ref = useRef<HTMLDivElement | null>(null)
   const [cam, setCam] = useState<BaseCameraState>(BASE_CAMERA_HOME)
   const camRef = useRef(cam)
@@ -32,10 +33,19 @@ export function useBaseCamera() {
     setCam(next)
   }, [])
 
+  const worldRef = useRef(worldWidth)
+  worldRef.current = worldWidth
   const view = useCallback((): Viewport => {
     const r = ref.current?.getBoundingClientRect()
-    return { w: r?.width ?? 1, h: r?.height ?? 1 }
+    return { w: r?.width ?? 1, h: r?.height ?? 1, worldW: worldRef.current }
   }, [])
+
+  // Home: centre the strip on `homeX` (unzoomed world px) when the world or the home point changes.
+  useEffect(() => {
+    if (homeX == null || !ref.current) return
+    const v = view()
+    commit(clampCamera({ zoom: MIN_ZOOM, x: v.w / 2 - homeX, y: 0 }, v))
+  }, [commit, homeX, view, worldWidth])
 
   const stop = useCallback(() => { cancelAnimationFrame(raf.current) }, [])
 

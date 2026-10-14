@@ -1,6 +1,6 @@
 import { Assets, Container, Graphics, Sprite, Text, Texture, TilingSprite } from 'pixi.js'
 import type { LaserPalette } from './laserPalette'
-import { DEPOSIT_NAMES, PIECE_SIZE, layoutForPalette, type DepositKind, type TerrainPiece } from './landscape'
+import { PIECE_SIZE, layoutForPalette, type DepositKind, type TerrainPiece } from './landscape'
 
 export interface Obstacle { x: number; halfW: number; height: number; kind: TerrainPiece }
 
@@ -301,7 +301,6 @@ export async function buildLaserField(opts: {
       node.x = c * midW + d.x * px
       node.y = Math.round(tex.height * 0.35) * px
       surface.addChild(node)
-      surface.addChild(depositTag(`${DEPOSIT_NAMES[d.kind]} · ~${d.amount}t`, node.x, node.y - tex.height * px - 12))
     }
   }
   surface.y = surfaceY

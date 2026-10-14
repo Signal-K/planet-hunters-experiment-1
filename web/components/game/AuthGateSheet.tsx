@@ -94,8 +94,8 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
               tabs — a brand-new player on Sign Up has nothing to resume. */}
           <p className="auth-gate__intro" data-testid="auth-gate-intro">
             {mode === 'signin'
-              ? 'Pick up at the next step in your space program.'
-              : 'Create a program, then build toward your first launch.'}
+              ? 'Return to your launchpad and take on your agency’s next mission.'
+              : 'Choose a landing site, build your launchpad, and grow your space program one mission at a time.'}
           </p>
 
           <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
@@ -155,7 +155,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
             data-testid="auth-gate-submit"
             className="auth-gate__primary"
           >
-            {submitting ? (mode === 'signin' ? 'Signing in…' : 'Creating…') : (mode === 'signin' ? 'Sign In' : 'Create Account')}
+            {submitting ? (mode === 'signin' ? 'Opening program…' : 'Starting program…') : (mode === 'signin' ? 'Return to Base' : 'Start Program')}
           </button>
         </form>
 

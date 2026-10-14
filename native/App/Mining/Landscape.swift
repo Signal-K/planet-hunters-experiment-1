@@ -75,7 +75,7 @@ enum Landscape {
     static func layout(_ spec: Spec?, key: String, period: Double = 768) -> Layout {
         let s = spec ?? Spec()
         var rng = RNG(a: s.seed ^ hash32(key))
-        let count = max(2, Int((period / 128 * s.density).rounded(.toNearestOrAwayFromZero)))
+        let count = max(2, Int((period / 128 * s.density * 1.15).rounded(.toNearestOrAwayFromZero)))
         let slot = period / Double(count)
         var out: [Piece] = []
         for i in 0..<count {

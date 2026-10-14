@@ -71,7 +71,7 @@ function pick<K extends string>(weights: Record<K, number>, keys: K[], r: number
 export function landscapeLayout(spec: LandscapeSpec | undefined, targetKey: string, period = 768): LandscapeLayout {
   const s = spec ?? DEFAULT_LANDSCAPE
   const next = rng((s.seed ^ hash32(targetKey)) >>> 0)
-  const count = Math.max(2, Math.round((period / 128) * s.density))
+  const count = Math.max(2, Math.round((period / 128) * s.density * 1.15))
   const slot = period / count
   const pieces: PlacedPiece[] = []
   for (let i = 0; i < count; i++) {

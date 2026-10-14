@@ -112,16 +112,7 @@ button.launchpad-scene-object { cursor: pointer; }
   aspect-ratio: auto !important;
   overflow: visible;
 }
-@media (orientation: portrait) and (max-width: 800px) {
-  /* 402pt phone: pad stays at the 2px kit scale, hangar drops to 1.5px so three clear gaps fit across the strip. */
-  .earth-base-structure--launchpad { left: 68% !important; width: auto !important; height: auto !important; }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--hangar { --px: 1.5px; left: 16% !important; width: auto !important; height: auto !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-launchpad"] { left: 68% !important; width: calc(120 * var(--px, 2px)) !important; min-width: 44px !important; max-width: none !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor[data-testid="building-hangar"] { --px: 1.5px; left: 16% !important; width: calc(72 * var(--px, 2px)) !important; min-width: 44px !important; max-width: none !important; }
-}
-.portrait-canvas:has([data-screen="hub"]) .earth-base-structure img {
-  image-rendering: pixelated;
-}
+/* Structures stand on their home sites from the shared site map (SSL-423); no per-orientation overrides. */
 .earth-base-flat-sprite {
   position: absolute;
   inset: 0;

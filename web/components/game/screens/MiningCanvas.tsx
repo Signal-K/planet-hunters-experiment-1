@@ -48,6 +48,8 @@ interface MiningCanvasProps {
   /** The hull clipped a mountain or ridge: bumped up and damaged, never an instant fail. */
   onBump?: () => void
   oreNearRef?: React.MutableRefObject<((near: boolean) => void) | null>
+  onTargetCueRef?: React.MutableRefObject<((mineral: string | null, inRange: boolean) => void) | null>
+  onObstacleAheadRef?: React.MutableRefObject<((ahead: boolean) => void) | null>
   /** Live-updating set of mineral keys still needed to fill the order — see MiningControllerOptions.neededMineralsRef. */
   neededMineralsRef?: React.MutableRefObject<Set<string> | null>
   /** Pushed true immediately after a shot fires, false once the cooldown clears. Mirrors the oreNearRef push pattern so the screen can show ready/charging state without owning the timer. */
@@ -57,7 +59,7 @@ interface MiningCanvasProps {
   debrisPreset?: DebrisEventPreset | null
 }
 
-export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, altitudeRef, onBump, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
   void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
@@ -241,6 +243,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
             field.surface.x = -(scrollX % field.midW)
           },
           onOreNearby: (near) => { oreNearRef?.current?.(near) },
+          onTargetCue: (mineral, inRange) => { onTargetCueRef?.current?.(mineral, inRange) },
           neededMineralsRef,
           reducedMotion: prefersReducedMotion(),
           debrisArt,
@@ -265,6 +268,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         let altitude = 0
         let climb = 0
         let bumpCooldown = 0
+        let lastObstacleAhead: boolean | null = null
         const minAlt = Math.min(0, 64 - shipY)
         const maxAlt = Math.max(0, surfaceY - 56 - shipY)
         const beamTop = field.beam.y
@@ -285,6 +289,16 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
             obstacleHeightAt(field, SHIP_X),
             obstacleHeightAt(field, SHIP_X + SHIP_HALF_W),
           )
+          const obstacleAhead = Math.max(
+            obstacleHeightAt(field, SHIP_X + 80),
+            obstacleHeightAt(field, SHIP_X + 120),
+            obstacleHeightAt(field, SHIP_X + 160),
+          )
+          const shouldClimb = obstacleAhead > 18 && shipY + altitude + SHIP_BELLY > surfaceY - obstacleAhead - 12
+          if (shouldClimb !== lastObstacleAhead) {
+            lastObstacleAhead = shouldClimb
+            onObstacleAheadRef?.current?.(shouldClimb)
+          }
           if (clear > 0 && shipY + altitude + SHIP_BELLY > surfaceY - clear) {
             altitude = Math.max(minAlt, surfaceY - clear - SHIP_BELLY - shipY - BUMP_KICK)
             if (bumpCooldown <= 0) {

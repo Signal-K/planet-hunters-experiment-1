@@ -43,7 +43,23 @@ public final class AuthModel {
         }
     }
 
+    public func createAccountWithPassword(email: String, password: String) async {
+        isWorking = true; errorMessage = nil
+        defer { isWorking = false }
+        do {
+            let s = try await api.createAccountWithPassword(email: email.trimmingCharacters(in: .whitespaces), password: password)
+            store.save(s); session = s
+        } catch AuthError.accountCreationRejected {
+            errorMessage = "That account could not be created. Check the email and try again."
+        } catch AuthError.rejected {
+            errorMessage = "Your account was created, but could not be opened. Switch to sign in and check your email credentials."
+        } catch {
+            errorMessage = "Could not reach Landnam. Check your connection and try again."
+        }
+    }
+
     public func fail(_ message: String) { errorMessage = message }
+    public func clearError() { errorMessage = nil }
 
     /// Signs out. The local save stays on the device for the same account to resume.
     public func signOut(message: String? = nil) { store.clear(); session = nil; errorMessage = message }

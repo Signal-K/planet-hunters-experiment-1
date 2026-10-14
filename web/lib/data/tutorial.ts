@@ -26,7 +26,7 @@ export interface TrainingTryStep {
 export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-launchpad', try: 'mining', screen: 'launchpad', objective: 'Open client contracts', radio: 'The first try is a complete mine-and-return run.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-intro', try: 'mining', screen: 'intro', objective: 'Begin operations', radio: 'Choose a landscape, then place the launchpad.', beacon: 'intro-begin', doneOn: 'mining-debriefed' },
-  { id: 'mine-build', try: 'mining', screen: 'build', objective: 'Tap a build pad, then confirm', radio: 'The launchpad is the first structure. Missions leave from here.', beacon: 'build-plot-0|build-confirm', doneOn: 'mining-debriefed' },
+  { id: 'mine-build', try: 'mining', screen: 'build', objective: 'Place the launchpad', radio: 'Tap the marked pad site. Every mission leaves from the pad.', beacon: 'build-plot-0|build-confirm', doneOn: 'mining-debriefed' },
   { id: 'mine-hub', try: 'mining', screen: 'hub', objective: 'Tap the tower', radio: 'Client contracts open from the tower.', beacon: 'building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
   { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },
@@ -115,12 +115,12 @@ export function trainingPatchProgress(
 }
 
 export const EXTRACTION_STEPS: TutorialStep[] = [
-  { id: 0, screen: 'build',   title: 'Build the tower',
-    body: 'Your first structure — all missions launch from here.',
-    action: 'Tap a build pad, then confirm',
-    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-0', dir: 'down', cta: 'Build the tower',
-    desktopBody: 'Your first structure — all missions launch from here.',
-    desktopAction: 'Click a build pad, then confirm placement',
+  { id: 0, screen: 'build',   title: 'Place the launchpad',
+    body: 'Your first structure. All missions launch from here.',
+    action: 'Tap the marked pad site',
+    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-0', dir: 'down', cta: 'Place the launchpad',
+    desktopBody: 'Your first structure. All missions launch from here.',
+    desktopAction: 'Click the marked pad site',
     desktopCoachId: 'build-confirm|build-plot-0', desktopDir: 'down' },
   { id: 1, screen: 'hub',     title: 'Extraction',
     body: 'Your agency\'s first job: mine ore for a client and bring it home. Contracts are on the mission board.',

@@ -6,6 +6,7 @@ import LandnamCore
 struct MiningDPad: View {
     var onAltitude: (Double) -> Void
     var onSpeed: (Double) -> Void
+    var obstacleAhead = false
     var tile: CGFloat = 52
     private static let ink = Theme.hex(0x1A2A3C)
     private static let paper = Theme.hex(0xF4F1EA)
@@ -13,11 +14,10 @@ struct MiningDPad: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            pad("chevron.up", "Climb", corners: [.topLeading, .topTrailing]) { onAltitude($0 ? -1 : 0) }
+            pad("chevron.up", obstacleAhead ? "Climb, obstacle ahead" : "Climb", corners: [.topLeading, .topTrailing], emphasized: obstacleAhead) { onAltitude($0 ? -1 : 0) }
             HStack(spacing: 0) {
                 pad("chevron.left", "Slow down", corners: [.topLeading, .bottomLeading]) { onSpeed($0 ? -1 : 0) }
-                Rectangle().fill(Self.paper).frame(width: tile, height: tile)
-                    .overlay(VStack { Rectangle().fill(Self.ink).frame(height: 2); Spacer(); Rectangle().fill(Self.ink).frame(height: 2) })
+                Color.clear.frame(width: tile, height: tile).accessibilityHidden(true)
                 pad("chevron.right", "Speed up", corners: [.topTrailing, .bottomTrailing]) { onSpeed($0 ? 1 : 0) }
             }
             pad("chevron.down", "Descend", corners: [.bottomLeading, .bottomTrailing]) { onAltitude($0 ? 1 : 0) }
@@ -26,8 +26,8 @@ struct MiningDPad: View {
         .accessibilityLabel("Steer")
     }
 
-    private func pad(_ icon: String, _ label: String, corners: Set<Corner>, _ hold: @escaping (Bool) -> Void) -> some View {
-        HoldPad(icon: icon, tile: tile, corners: corners, hold: hold)
+    private func pad(_ icon: String, _ label: String, corners: Set<Corner>, emphasized: Bool = false, _ hold: @escaping (Bool) -> Void) -> some View {
+        HoldPad(icon: icon, tile: tile, corners: corners, emphasized: emphasized, hold: hold)
             .accessibilityLabel(label)
     }
 
@@ -37,6 +37,7 @@ struct MiningDPad: View {
         let icon: String
         let tile: CGFloat
         let corners: Set<Corner>
+        var emphasized = false
         let hold: (Bool) -> Void
         @State private var down = false
 
@@ -50,8 +51,8 @@ struct MiningDPad: View {
                 .font(.system(size: 18, weight: .heavy))
                 .foregroundStyle(down ? Theme.hex(0x2F6FA8) : MiningDPad.ink)
                 .frame(width: tile, height: tile)
-                .background(shape.fill(down ? MiningDPad.pressed : MiningDPad.paper))
-                .overlay(shape.stroke(MiningDPad.ink, lineWidth: 2))
+                .background(shape.fill(down ? MiningDPad.pressed : emphasized ? Theme.blue : MiningDPad.paper))
+                .overlay(shape.stroke(MiningDPad.ink, lineWidth: emphasized ? 3 : 2))
                 .contentShape(shape)
                 .gesture(DragGesture(minimumDistance: 0)
                     .onChanged { _ in if !down { down = true; hold(true) } }

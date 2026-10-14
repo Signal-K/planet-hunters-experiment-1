@@ -23,10 +23,11 @@ function Arrow({ dir }: { dir: Dir }) {
  * Mining steering pad, bottom-left (rover d-pad style). Up/down hold altitude, left/right hold speed.
  * Keyboard W/S/arrows still work; this is the main touch control (SSL-536).
  */
-export function MiningDPad({ disabled, onAltitude, onSpeed }: {
+export function MiningDPad({ disabled, onAltitude, onSpeed, obstacleAhead = false }: {
   disabled?: boolean
   onAltitude: (dir: -1 | 0 | 1) => void
   onSpeed: (dir: -1 | 0 | 1) => void
+  obstacleAhead?: boolean
 }) {
   const hold = (dir: Dir) => {
     const go = () => {
@@ -47,11 +48,11 @@ export function MiningDPad({ disabled, onAltitude, onSpeed }: {
   return (
     <div className={styles.dpad} role="group" aria-label="Steer" data-testid="mining-dpad">
       {(['up', 'left', 'right', 'down'] as Dir[]).map(dir => (
-        <button key={dir} type="button" disabled={disabled} className={`${styles.pad} ${styles[dir]}`} data-testid={`mining-dpad-${dir}`} aria-label={label[dir]} {...hold(dir)}>
+        <button key={dir} type="button" disabled={disabled} className={`${styles.pad} ${styles[dir]} ${dir === 'up' && obstacleAhead ? styles.obstacleAhead : ''}`} data-testid={`mining-dpad-${dir}`} aria-label={dir === 'up' && obstacleAhead ? 'Climb, obstacle ahead' : label[dir]} {...hold(dir)}>
           <Arrow dir={dir} />
         </button>
       ))}
-      <span className={styles.hub} aria-hidden="true" />
+      <span className={styles.center} aria-hidden="true" />
     </div>
   )
 }

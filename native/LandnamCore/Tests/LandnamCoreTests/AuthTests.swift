@@ -67,6 +67,30 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
         #expect(await model.session == AuthSession(token: "L", userId: "u1", email: "a@b.co", displayName: nil, sharedToken: "SHARED", sharedUserId: "s1"))
     }
 
+    @Test func accountCreationRegistersWithSharedAndExchangesTheNewSession() async throws {
+        var requests: [String] = []
+        StubProtocol.handler = { req in
+            let path = req.url?.path ?? ""
+            requests.append(path)
+            if path == "/api/collections/users/records" {
+                let body = try! JSONSerialization.jsonObject(with: req.bodyStreamData()) as! [String: String]
+                #expect(body["email"] == "new@example.test")
+                #expect(body["password"] == "secret")
+                #expect(body["passwordConfirm"] == "secret")
+                return (200, Data(#"{"id":"shared-new","email":"new@example.test"}"#.utf8))
+            }
+            if path == "/api/collections/users/auth-with-password" {
+                return (200, Data(#"{"token":"SHARED","record":{"id":"shared-new"}}"#.utf8))
+            }
+            #expect(path == "/api/landnam-auth/exchange")
+            #expect(req.value(forHTTPHeaderField: "Authorization") == "Bearer SHARED")
+            return (200, Data(#"{"token":"LANDNAM","record":{"id":"new-player","email":"new@example.test"}}"#.utf8))
+        }
+        let result = try await api().createAccountWithPassword(email: "new@example.test", password: "secret")
+        #expect(requests == ["/api/collections/users/records", "/api/collections/users/auth-with-password", "/api/landnam-auth/exchange"])
+        #expect(result == AuthSession(token: "LANDNAM", userId: "new-player", email: "new@example.test", sharedToken: "SHARED", sharedUserId: "shared-new"))
+    }
+
     @Test func wrongPasswordShowsMessageAndStaysSignedOut() async {
         StubProtocol.handler = { _ in (400, Data(#"{"message":"Failed to authenticate."}"#.utf8)) }
         let model = await AuthModel(api: api(), store: InMemorySessionStore())

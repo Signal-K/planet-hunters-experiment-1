@@ -9,6 +9,9 @@ struct SignInScreen: View {
     @State private var nonce = Self.makeNonce()
     @State private var email = ""
     @State private var password = ""
+    @State private var passwordConfirmation = ""
+    @State private var creatingAccount = false
+    @State private var formError: String?
 
     var body: some View {
         GeometryReader { geometry in
@@ -19,7 +22,13 @@ struct SignInScreen: View {
                     if landscape {
                         landscapeCard
                     } else {
-                        portraitCard
+                        ScrollView {
+                            portraitCard
+                                .frame(minHeight: max(0, geometry.size.height - 40))
+                                .frame(maxWidth: .infinity)
+                        }
+                        .scrollDismissesKeyboard(.interactively)
+                        .scrollIndicators(.hidden)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -48,14 +57,17 @@ struct SignInScreen: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 .padding(.horizontal, 28)
             Rectangle().fill(Theme.border).frame(width: 1.5).padding(.vertical, 24)
-            VStack(alignment: .leading, spacing: 14) {
-                Text("SIGN IN")
-                    .font(AppFont.display(22))
-                    .tracking(1.2)
-                    .foregroundStyle(Theme.ink)
-                accessForm(compact: true)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(creatingAccount ? "START YOUR PROGRAM" : "AGENCY LINK")
+                        .font(AppFont.display(22))
+                        .tracking(1.2)
+                        .foregroundStyle(Theme.ink)
+                    accessForm(compact: true)
+                }
             }
             .frame(maxWidth: 390, maxHeight: .infinity, alignment: .center)
+            .scrollIndicators(.hidden)
             .padding(.horizontal, 26)
         }
         .frame(maxWidth: 900, maxHeight: 356)
@@ -77,7 +89,7 @@ struct SignInScreen: View {
                 .foregroundStyle(Theme.blue)
             Rectangle().fill(Theme.blue.opacity(0.4)).frame(width: alignment == .center ? 88 : 72, height: 2)
                 .frame(maxWidth: alignment == .center ? .infinity : nil, alignment: alignment == .center ? .center : .leading)
-            Text("Run a small space agency. Take contracts, mine, return, get paid.")
+            Text("Choose a landing site, build your launchpad, and grow your space program one mission at a time.")
                 .font(AppFont.body(15))
                 .foregroundStyle(Theme.textDim)
                 .multilineTextAlignment(alignment == .center ? .center : .leading)
@@ -102,6 +114,11 @@ struct SignInScreen: View {
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 1.5))
             .disabled(auth.isWorking)
 
+            HStack(spacing: 8) {
+                accountModeButton("SIGN IN", selected: !creatingAccount) { setMode(false) }
+                accountModeButton("SIGN UP", selected: creatingAccount) { setMode(true) }
+            }
+
             HStack(spacing: 10) {
                 Rectangle().fill(Theme.border).frame(height: 1)
                 Text("OR USE EMAIL")
@@ -120,32 +137,72 @@ struct SignInScreen: View {
                 .textFieldStyle(.plain)
                 .signInFieldStyle()
 
-            SecureField("Password", text: $password, prompt: Text("Password").foregroundColor(Theme.textDim))
-                .textContentType(.password)
+            SecureField(creatingAccount ? "Create password" : "Password", text: $password, prompt: Text(creatingAccount ? "Create password" : "Password").foregroundColor(Theme.textDim))
+                .textContentType(creatingAccount ? .newPassword : .password)
                 .textFieldStyle(.plain)
                 .signInFieldStyle()
-                .onSubmit(submitPassword)
+                .submitLabel(.go)
+                .onSubmit(submitForm)
 
-            signInButton
+            if creatingAccount {
+                SecureField("Confirm password", text: $passwordConfirmation, prompt: Text("Confirm password").foregroundColor(Theme.textDim))
+                    .textContentType(.newPassword)
+                    .textFieldStyle(.plain)
+                    .signInFieldStyle()
+                    .submitLabel(.go)
+                    .onSubmit(submitForm)
+            }
 
-            if let message = auth.errorMessage {
+            if let message = formError ?? auth.errorMessage {
                 Text(message).font(AppFont.body(14)).foregroundStyle(Theme.crimson).multilineTextAlignment(.center)
             }
+
+            accessButton
         }
         .frame(maxWidth: .infinity)
-        .accessibilityLabel("\(Strings.Scene.base) sign in")
+        .accessibilityElement(children: .contain)
     }
 
-    private func submitPassword() {
+    private func setMode(_ create: Bool) {
+        creatingAccount = create
+        password = ""
+        passwordConfirmation = ""
+        formError = nil
+        auth.clearError()
+    }
+
+    private func submitForm() {
         guard !email.isEmpty, !password.isEmpty else { return }
+        if creatingAccount && password != passwordConfirmation {
+            formError = "Passwords do not match."
+            return
+        }
+        formError = nil
         let e = email, p = password
-        Task { await auth.signInWithPassword(email: e, password: p) }
+        Task {
+            if creatingAccount { await auth.createAccountWithPassword(email: e, password: p) }
+            else { await auth.signInWithPassword(email: e, password: p) }
+        }
     }
 
-    private var signInButton: some View {
-        let enabled = !auth.isWorking && !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !password.isEmpty
-        return Button(action: submitPassword) {
-            Text("SIGN IN")
+    private func accountModeButton(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title).font(AppFont.display(14, "Bold")).tracking(0.8)
+                .foregroundStyle(Theme.ink)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .background(selected ? Theme.paper2 : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(selected ? Theme.blue : Theme.border, lineWidth: selected ? 2 : 1.5))
+        }
+        .buttonStyle(SignInActionButtonStyle())
+        .accessibilityIdentifier(title == "SIGN UP" ? "auth-signup" : "auth-signin")
+        .disabled(auth.isWorking)
+    }
+
+    private var accessButton: some View {
+        let enabled = !auth.isWorking && !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !password.isEmpty && (!creatingAccount || !passwordConfirmation.isEmpty)
+        return Button(action: submitForm) {
+            Text(creatingAccount ? "START PROGRAM" : "RETURN TO BASE")
                 .font(AppFont.display(14))
                 .tracking(1.4)
                 .foregroundStyle(enabled ? Color.white : Theme.ink)
@@ -154,6 +211,7 @@ struct SignInScreen: View {
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 1.5))
         }
         .buttonStyle(SignInActionButtonStyle())
+        .accessibilityIdentifier("auth-submit")
         .disabled(!enabled)
     }
 

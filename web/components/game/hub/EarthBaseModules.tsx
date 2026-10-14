@@ -1,5 +1,6 @@
 'use client'
 
+import { aboveGround, homeSite, structureSprite, units } from '@/lib/scene/base-site'
 import React, { useEffect, useState } from 'react'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { LAUNCHPAD_SCENE_WIDTH_PCT, structureAnchorPercent, structureTierScale } from '@/lib/scene/base-world'
@@ -31,7 +32,7 @@ export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height:
   'deep-space-telescope': { width: 74, height: 96 },
   'transit-telescope': { width: 64, height: 88 },
   'astronaut-academy': { width: 178, height: 86 },
-  market: { width: 150, height: 60 },
+  market: { width: 160, height: 64 },
 }
 
 export function LaunchpadModules({ className = '', parts, rocket = false }: { className?: string; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean | 'core' }) {
@@ -152,17 +153,18 @@ export function EarthBaseModules({ buildings, parts, padRocket = false }: { buil
         const kit = building.kind === 'launchpad' || building.kind === 'hangar' || building.kind === 'market'
         const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.launchpad
         const widthPct = structureWidthPct(building.kind, building.level ?? 1)
-        const left = structureCenterPercent(building.kind, building.plotX, widthPct)
+        // Kit structures stand on their home site on the strip (shared site map); others keep the plot percentage.
+        const site = kit ? homeSite(building.kind) : null
+        const sprite = kit ? structureSprite(building.kind) : null
+        const left = site ? units(site.x) : `${structureCenterPercent(building.kind, building.plotX, widthPct)}%`
         return (
           <span
             key={`${building.kind}-${building.plotX}`}
             className={`earth-base-structure earth-base-structure--${building.kind}`}
             data-structure={building.kind}
             style={{
-              left: `${left}%`,
-              bottom: building.kind === 'launchpad'
-                ? 'calc(var(--hub-ground) - (4 * var(--px, 3px)))'
-                : 'var(--hub-ground)',
+              left,
+              bottom: sprite?.foot != null ? aboveGround(sprite.foot) : 'var(--hub-ground)',
               width: kit ? 'auto' : `min(${widthPct}%, var(--hub-structure-max, 9999px))`,
               height: kit ? 'auto' : undefined,
               aspectRatio: kit ? 'auto' : `${size.width} / ${size.height}`,
