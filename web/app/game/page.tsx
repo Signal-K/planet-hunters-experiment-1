@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { returningScreen } from '@/lib/initial-route'
+import { hasSeenIntro } from '@/lib/intro-seen'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
 import { canonicalGameRoute } from '@/lib/game-route'
 import type { Screen } from '@/lib/game-types'
@@ -32,7 +33,7 @@ function GameRouteBridge() {
     // about to open, and resuming
     // straight into gameplay would sit the URL behind it. See STS-624.
     const canResume = pbShared.authStore.isValid
-    const screen = preset?.screen ?? (canResume ? savedScreen() : 'intro')
+    const screen = preset?.screen ?? (canResume ? savedScreen() : hasSeenIntro() ? 'hub' : 'intro')
     const route = canonicalGameRoute({
       screen,
       missionId: preset?.missionId ?? null,

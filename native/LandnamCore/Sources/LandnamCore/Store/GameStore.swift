@@ -10,6 +10,7 @@ public final class GameStore {
     /// The live catalog: the authored one plus instrument launches and discovered-planet surveys.
     public var catalog: Catalog { Instruments.runtime(baseCatalog, player: state.player, missionId: state.missionId, targetId: state.targetId) }
     private let saveURL: URL?
+    private let introDefaults: UserDefaults
     private let clock: @Sendable () -> Double
     /// Called after every persisted change; the app wires cloud sync and Game Center here.
     public var onChange: ((GameState) -> Void)?
@@ -19,13 +20,26 @@ public final class GameStore {
     public var onClassified: ((SharedClassification) -> Void)?
 
     public init(state: GameState = GameState(), catalog: Catalog = Catalog(), saveURL: URL? = nil,
+                introDefaults: UserDefaults = .standard,
                 clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 * 1000 }) {
-        self.baseCatalog = catalog; self.saveURL = saveURL; self.clock = clock
+        self.baseCatalog = catalog; self.saveURL = saveURL; self.introDefaults = introDefaults; self.clock = clock
         if let saveURL, let data = try? Data(contentsOf: saveURL), let loaded = try? JSONDecoder().decode(GameState.self, from: data) {
             self.state = loaded
         } else {
             self.state = state
         }
+        skipIntroIfSeen()
+    }
+
+    /// The opening scene is a first-launch screen: once begun (or once there is any progress) it never shows again on this device.
+    public static let introSeenKey = "landnam.introSeen"
+    public var introSeen: Bool { introDefaults.bool(forKey: Self.introSeenKey) }
+    public func markIntroSeen() { introDefaults.set(true, forKey: Self.introSeenKey) }
+    private func skipIntroIfSeen() {
+        guard state.screen == .intro else { return }
+        let progressed = state.player.missionsDone > 0 || !state.player.placed.isEmpty
+        if progressed { markIntroSeen() }
+        if introSeen { state.screen = state.player.placed.isEmpty ? .build : .hub }
     }
 
     public static var defaultSaveURL: URL {
@@ -71,7 +85,7 @@ public final class GameStore {
     public func finishWelcome() { var n = state; n.extras[CloudPull.welcomeKey] = nil; if n.screen == .intro { n.screen = .hub }; apply(n) }
 
     public func go(_ screen: Screen) { var n = state; n.screen = screen; apply(n) }
-    public func reset() { state = GameState(); persist() }
+    public func reset() { state = GameState(); skipIntroIfSeen(); persist() }
 
     // MARK: intents
     /// Research XP for the first classification of a TESS or NEOCP subject (mirrors web useGameLoop).

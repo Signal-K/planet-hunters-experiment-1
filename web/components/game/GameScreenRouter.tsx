@@ -15,6 +15,7 @@ import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 // renders one of them at a time, so there's no reason to ship all ~20
 // screens' JS on the very first load.
 import IntroScreen from '@/components/game/screens/IntroScreen'
+import { hasProgress, hasSeenIntro, markIntroSeen } from '@/lib/intro-seen'
 import PageSurface from '@/components/ui/PageSurface'
 import HubScreen from '@/components/game/screens/HubScreen'
 
@@ -135,6 +136,15 @@ function ScreenBody({
   // mining seam tied to the active try rather than the legacy coach state.
   const trainingMiningTry = currentTrainingTry(game.player.flightPlan) === 'mining'
 
+  // The intro is a first-visit screen. Once the player has begun (or has any
+  // progress, e.g. a save pulled from another device) it never shows again.
+  const introDone = screen === 'intro' && game.hydrated && (hasSeenIntro() || hasProgress(game.player))
+  useEffect(() => {
+    if (!introDone) return
+    markIntroSeen()
+    game.go(game.player.placed.length > 0 ? 'hub' : 'build')
+  }, [introDone]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // The Exchange is a permanent Earth Base building the player can tap at any
   // stage (SSL-477), so Market is no longer gated on freeOperations.
   useEffect(() => {
@@ -167,9 +177,10 @@ function ScreenBody({
 
   switch (screen) {
     case 'intro':
+      if (introDone) return null
       return (
         <IntroScreen
-          onBegin={() => game.go('build')}
+          onBegin={() => { markIntroSeen(); game.go('build') }}
           returning={game.player.missionsDone > 0 || game.player.placed.length > 0}
           missionsDone={game.player.missionsDone}
           totalEarned={game.player.francs}
