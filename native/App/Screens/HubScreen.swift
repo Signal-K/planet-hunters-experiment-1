@@ -241,6 +241,7 @@ struct SettingsSheet: View {
     @State private var moveBiome = "mountains"
     @State private var confirmMoveBase = false
     @State private var showPatchNotes = false
+    @State private var confirmSkipTraining = false
     @State private var width: CGFloat = 390
     #if os(iOS)
     @AppStorage(OrientationPreference.storageKey) private var orientation = OrientationPreference.auto.rawValue
@@ -337,10 +338,43 @@ struct SettingsSheet: View {
     private var trainingSection: some View {
         VStack(spacing: 16) {
             SettingsHeading(text: "Training")
-            row(SettingsRowText(title: "Replay tutorials", status: "Mining, scan, and the part tweak")) {
-                SettingsButton(title: "Replay", fill: width < 560) { onClose(); store.replayTry("mining") }
-                    .accessibilityLabel("Replay tutorials")
-            }
+            VStack(spacing: 12) {
+                ForEach(Array(zip(["mining", "scan", "part"], ["Mining", "Planet scan", "Part tweak"])), id: \.0) { id, title in
+                    HStack(spacing: 12) {
+                        TrainingPatchRing(segments: id == "mining" ? 13 : 2,
+                                          stitched: store.player.flightPlan.completed[id] == true ? (id == "mining" ? 13 : 2) : 0)
+                            .frame(width: 44, height: 44)
+                            .accessibilityLabel("\(title): \(store.player.flightPlan.completed[id] == true ? (id == "mining" ? 13 : 2) : 0) steps stitched")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(title).font(AppFont.display(14, "Bold")).foregroundStyle(SettingsStyle.ink)
+                            Text(store.player.flightPlan.completed[id] == true ? "Done" : (store.player.flightPlan.currentTry == id ? "On air" : "Locked · After \(FlightPlanProgress.tryIds.firstIndex(of: id) ?? 0)"))
+                                .font(AppFont.body(14)).foregroundStyle(SettingsStyle.ink.opacity(0.72))
+                        }
+                        Spacer(minLength: 4)
+                        SettingsButton(title: "Replay", fill: false) { onClose(); store.replayTry(id) }
+                            .accessibilityLabel("Replay \(title)")
+                    }.frame(minHeight: 48)
+                }
+                HStack(spacing: 12) {
+                    Text("◇").font(.system(size: 24, weight: .bold)).frame(width: 44, height: 44)
+                        .accessibilityLabel("Free Ops patch")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Free Ops").font(AppFont.display(14, "Bold"))
+                        Text(store.player.freeOperations ? "Unlocked" : "Locked · After 3").font(AppFont.body(14)).foregroundStyle(SettingsStyle.ink.opacity(0.72))
+                    }
+                    Spacer()
+                }.frame(minHeight: 48)
+                if !store.player.freeOperations {
+                    HStack {
+                        SettingsRowText(title: "Skip", status: confirmSkipTraining ? "Confirm: mark all tries done" : "Marks every try done")
+                        Spacer(minLength: 8)
+                        SettingsButton(title: confirmSkipTraining ? "Confirm" : "Skip", fill: false) {
+                            if confirmSkipTraining { store.skipTraining(); confirmSkipTraining = false; onClose() }
+                            else { confirmSkipTraining = true }
+                        }.accessibilityLabel(confirmSkipTraining ? "Confirm skip training" : "Skip training")
+                    }
+                }
+            }.settingsCard()
         }
     }
 
@@ -448,6 +482,26 @@ private struct PatchRingView: View {
         .frame(width: 44, height: 44)
         .accessibilityElement()
         .accessibilityLabel(silhouette ? "Free Ops patch" : "\(stitched) of \(count) steps stitched")
+    }
+}
+
+private struct TrainingPatchRing: View {
+    let segments: Int
+    let stitched: Int
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(SettingsStyle.ink.opacity(0.18), lineWidth: 3)
+            ForEach(0..<segments, id: \.self) { index in
+                Circle()
+                    .trim(from: CGFloat(index) / CGFloat(segments) + 0.018,
+                          to: CGFloat(index + 1) / CGFloat(segments) - 0.018)
+                    .stroke(index < stitched ? SettingsStyle.blue : SettingsStyle.ink.opacity(0.2), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+            }
+            Text(String(format: "%02d", stitched)).font(AppFont.display(11, "Bold")).foregroundStyle(SettingsStyle.ink)
+        }
+        .accessibilityElement(children: .ignore)
     }
 }
 

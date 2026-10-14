@@ -52,3 +52,9 @@ scripts/native-shots.sh [scene-id ...]                     # native PNGs -> /tmp
 ```
 
 Every scene in `scenes.json`, grouped by flow, as a live iframe of `/game/stage?preset=KEY` at the real viewport (phone, landscape, desktop), with the native snapshot beside it (phone only). Filter by flow, scene, preset or ticket. "Copy ref" copies `scene (web preset, native id) @ viewport` to paste to an agent. Hot reload updates the web side as files change. Native needs a booted iOS Simulator (headless, no window); the macOS test host does not work.
+
+### Focus view and comments
+
+When an agent runs `scripts/storyboard-focus.sh SCENE --ticket SSL-123 --title "..." --desc "..."`, the board shows that one scene with the Linear ticket, the description and a comment box ("All scenes" returns to the grid).
+Comments are appended to `/tmp/landnam-sb/comments.jsonl`; the agent streams them with `scripts/storyboard-watch.sh` (Monitor) and answers with `scripts/storyboard-reply.sh`.
+In Docker, mount `/tmp/landnam-sb` read-write, `qa/` and `/tmp/landnam-snap`, and set `NEXT_PUBLIC_LANDNAM_ENV=staging`.

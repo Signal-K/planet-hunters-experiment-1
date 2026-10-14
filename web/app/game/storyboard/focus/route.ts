@@ -5,7 +5,7 @@ import { promisify } from 'node:util'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 
 const run = promisify(execFile)
-const FOCUS_FILE = process.env.STORYBOARD_FOCUS_FILE ?? '/tmp/landnam-focus.json'
+const FOCUS_FILE = process.env.STORYBOARD_FOCUS_FILE ?? '/tmp/landnam-sb/focus.json'
 const RECENT_MS = 10 * 60_000
 
 // What is being edited right now, for the storyboard highlight:
@@ -14,7 +14,7 @@ const RECENT_MS = 10 * 60_000
 export async function GET() {
   if (!isDevLauncherEnabled()) return new Response('Not found', { status: 404 })
   const root = path.join(process.cwd(), '..')
-  let focus: { scenes?: string[]; note?: string } = {}
+  let focus: { scenes?: string[]; note?: string; ticket?: string; title?: string; description?: string } = {}
   try { focus = JSON.parse(await readFile(FOCUS_FILE, 'utf8')) } catch { /* no focus declared */ }
   const files: string[] = []
   try {
@@ -25,5 +25,5 @@ export async function GET() {
       try { if (now - (await stat(path.join(root, f))).mtimeMs < RECENT_MS) files.push(f) } catch { /* deleted */ }
     }))
   } catch { /* not a git checkout */ }
-  return Response.json({ scenes: focus.scenes ?? [], note: focus.note ?? '', files }, { headers: { 'cache-control': 'no-store' } })
+  return Response.json({ scenes: focus.scenes ?? [], note: focus.note ?? '', ticket: focus.ticket ?? '', title: focus.title ?? '', description: focus.description ?? '', files }, { headers: { 'cache-control': 'no-store' } })
 }

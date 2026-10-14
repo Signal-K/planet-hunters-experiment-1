@@ -5,6 +5,7 @@ import LandnamCore
 /// step lives on another screen, a button that goes there. Sits in layout flow above the dock, never over a control.
 struct CoachStrip: View {
     @Environment(GameStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let coach: FlightPlan.Coach
     @State private var copyStep: String?
 
@@ -13,7 +14,7 @@ struct CoachStrip: View {
             opsBadge(isDone: copyStep != nil)
             VStack(alignment: .leading, spacing: 2) {
                 Text(copyStep ?? coach.kicker).font(AppFont.display(14)).tracking(1.2).foregroundStyle(copyStep == nil ? Theme.teal : Theme.green)
-                Text(coach.objective).font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink)
+                Text(copyStep == nil ? coach.objective : "+1 stitch · \(coach.objective)").font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink)
                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
@@ -32,6 +33,7 @@ struct CoachStrip: View {
         .overlay(alignment: .top) { Rectangle().fill(Theme.hudInk).frame(height: 1) }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(coach.kicker). \(coach.objective). \(coach.radio)")
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: coach.kicker)
         .onChange(of: coach.kicker) { old, _ in
             guard let part = old.components(separatedBy: "STEP ").last,
                   let step = part.split(separator: "/").first else { return }

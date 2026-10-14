@@ -114,5 +114,17 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(metrics.kickerSize).toBeGreaterThanOrEqual(14)
       await page.screenshot({ path: info.outputPath(`show-me-dock-${vp}.png`) })
     })
+
+    test('TESS briefing starts Show me only on request and tracks the two transmissions', async ({ page }, info) => {
+      await stage(page, 'ui-tess-discovery')
+      await expect(page.getByTestId('help-coach')).toHaveCount(0)
+      await page.getByTestId('help-button').click()
+      await expect(page.getByTestId('help-sheet')).toBeVisible()
+      await page.getByTestId('help-show-me').click()
+      await expect(page.getByTestId('help-coach-hint')).toContainText('Show me · 1 of 2')
+      await page.getByTestId('help-coach-next').click()
+      await expect(page.getByTestId('help-coach-hint')).toContainText('Show me · 2 of 2')
+      await page.screenshot({ path: info.outputPath(`tess-show-me-${vp}.png`) })
+    })
   })
 }

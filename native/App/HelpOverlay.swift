@@ -180,12 +180,18 @@ struct CoachMarks: View {
         let y: CGFloat = hole.map { below >= 170 ? $0.maxY + 12 + 75 : max(95, $0.minY - 12 - 75) } ?? size.height - 110
         let x = min(max(16 + w / 2, hole?.midX ?? size.width / 2), size.width - 16 - w / 2)
         return VStack(alignment: .leading, spacing: 8) {
-            Text("STEP \(index + 1) OF \(total)").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress)
+            HStack(spacing: 10) {
+                Text("OPS").font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.blue)
+                    .frame(width: 44, height: 44).background(Theme.mix(0.12))
+                    .overlay(Rectangle().stroke(Theme.blue, lineWidth: 2))
+                Text("SHOW ME · \(index + 1) OF \(total)")
+                    .font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.blue)
+            }
             Text(step.hint).font(AppFont.body(15)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
             HStack {
-                Button("STOP", action: onStop).foregroundStyle(Theme.textDim)
+                Button("SKIP", action: onStop).foregroundStyle(Theme.textDim).frame(minWidth: 44, minHeight: 44)
                 Spacer()
-                Button(index + 1 >= total ? "DONE" : "NEXT", action: onNext).foregroundStyle(Theme.bluePress)
+                Button(index + 1 >= total ? "DONE" : "NEXT", action: onNext).foregroundStyle(Theme.bluePress).frame(minWidth: 44, minHeight: 44)
             }
             .font(AppFont.display(14, "Bold")).tracking(1.4).buttonStyle(.plain)
             .frame(minHeight: 44)

@@ -96,7 +96,9 @@ struct HangarScreen: View {
         }
         .foregroundStyle(Theme.ink)
         .ignoresSafeArea()
+        #if !os(macOS)
         .statusBarHidden()
+        #endif
         .accessibilityElement(children: .contain)
     }
 

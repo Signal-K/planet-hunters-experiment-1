@@ -2988,11 +2988,14 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 .flight-plan-kicker[data-state='done'] { color: var(--ln-bp-green, #17703f); }
 /* SSL-442 Ops call-sign badge: OPS plus three signal bars that tick up in 240ms. */
 .ops-badge { flex: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 44px; height: 44px; border: 2px solid var(--ln-bp-blue, #1f78c1); border-radius: 8px; background: var(--ln-bp-blue-soft, rgba(31,120,193,.08)); color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; }
+.ops-badge[data-state='done'] { border-color: var(--ln-bp-green, #17703f); background: color-mix(in srgb, var(--ln-bp-green, #17703f) 10%, var(--ln-bp-paper, #fff)); color: var(--ln-bp-green, #17703f); }
 .ops-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 8px; margin-top: 3px; }
 .ops-bars i { width: 4px; background: currentColor; border-radius: 1px; animation: ops-bar 240ms ease-out both; }
 .ops-bars i:nth-child(1) { height: 3px; } .ops-bars i:nth-child(2) { height: 5px; animation-delay: 80ms; } .ops-bars i:nth-child(3) { height: 8px; animation-delay: 160ms; }
 @keyframes ops-bar { from { opacity: 0; transform: scaleY(.2); transform-origin: bottom; } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .ops-bars i { animation: none; } }
+@keyframes ops-text-in { from { opacity: .35; } to { opacity: 1; } }
+.flight-plan-kicker, .flight-plan-action { animation: ops-text-in 200ms ease-out both; }
+@media (prefers-reduced-motion: reduce) { .ops-bars i, .flight-plan-kicker, .flight-plan-action { animation: none; } }
 .flight-plan-action { font-size: 14px; line-height: 1.3; }
 .flight-plan-go { min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: 8px; cursor: pointer; background: var(--ln-bp-blue, #1f78c1); color: var(--ln-bp-paper, #fff); border: 1px solid var(--ln-bp-blue, #1f78c1); font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; }
 .flight-plan-btn, .flight-plan-skip, .flight-plan-chip {
@@ -4335,25 +4338,33 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   /* Hint sits up in the sky under the HUD, clear of the d-pad, gauge and deposits (SSL-538). */
   top: calc(124px + env(safe-area-inset-top));
   bottom: auto;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: rgba(26, 42, 60, 0.82);
-  color: #f4f1ea;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid var(--ln-bp-line-strong, #73849a);
+  border-radius: 4px;
+  background: var(--ln-bp-paper, #fff);
+  color: var(--ln-bp-ink, #0f2436);
   left: 50%;
   right: auto;
   display: flex;
   align-items: center;
   gap: 8px;
-  width: max-content;
-  max-width: calc(100vw - 32px);
-  transform: none;
+  width: calc(100vw - 24px);
+  max-width: 540px;
+  transform: translateX(-50%);
   margin: 0;
-  text-align: center;
+  text-align: left;
   font: 700 14px/18px var(--ln-font-body);
-  text-shadow: 0 1px 0 var(--ln-world-outline);
+  text-shadow: none;
   pointer-events: none;
 }
-.mining-screen p.laser-cue { color: #f4f1ea; }
+.mining-screen p.laser-cue { color: var(--ln-bp-ink, #0f2436); }
+.mining-screen .laser-cue .flight-plan-text { min-width: 0; overflow-wrap: anywhere; }
+.mining-screen .laser-cue .flight-plan-kicker { color: var(--ln-bp-ink, #0f2436); }
+.mining-screen .laser-cue .flight-plan-kicker[data-state='done'] { color: var(--ln-bp-green, #17703f); }
+.mining-screen .laser-cue .ops-badge { border-color: var(--ln-bp-ink, #0f2436); background: var(--ln-bp-paper, #fff); color: var(--ln-bp-ink, #0f2436); }
+.mining-screen .laser-cue .ops-badge[data-state='done'] { border-color: var(--ln-bp-green, #17703f); background: color-mix(in srgb, var(--ln-bp-green, #17703f) 10%, var(--ln-bp-paper, #fff)); color: var(--ln-bp-green, #17703f); }
 .laser-hud {
   position: absolute;
   left: 0;
@@ -4555,6 +4566,19 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   .ops-settings__field { gap: 8px; }
   .ops-settings__field--orient .ops-settings__sub { display: none; }
   .ops-settings__copy { gap: 4px; }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .intro-content { justify-content: flex-start; overflow-y: auto; padding: 12px 24px; }
+  .intro-badge { margin-bottom: 6px; }
+  .intro-logo-mark { width: 56px; height: 56px; margin-bottom: 4px; }
+  .intro-title { font-size: 32px; margin-bottom: 4px; }
+  .intro-welcome { margin-bottom: 4px; }
+  .intro-subtitle { max-width: 500px; margin-bottom: 4px; }
+  .base-biome-choice { margin: 6px 0; padding: 8px; gap: 6px; }
+  .base-biome-option { min-height: 56px; grid-template-rows: 28px auto; gap: 2px; }
+  .base-biome-option img { height: 28px; }
+  .intro-begin-btn { min-height: 44px; padding-block: 8px; }
 }
 @media (max-width: 639px) {
   .ops-settings__card .ops-settings__stack { grid-template-columns: minmax(0, 1fr); }

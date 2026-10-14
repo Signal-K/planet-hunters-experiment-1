@@ -206,7 +206,6 @@ function GameCanvas() {
         <BackendStatus />
           {coach && !game.authGateOpen && (
             <FlightPlan
-              key={coach.id}
               stepIndex={coachIndex}
               step={coach}
               total={coachSteps.length}

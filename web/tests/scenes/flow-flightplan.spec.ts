@@ -55,11 +55,22 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       const badgeBox = (await cue.getByTestId('ops-badge').boundingBox())!
       expect(badgeBox.width).toBeGreaterThanOrEqual(44)
       expect(badgeBox.height).toBeGreaterThanOrEqual(44)
+      const cueMetrics = await cue.evaluate(el => {
+        const rect = el.getBoundingClientRect()
+        const color = getComputedStyle(el).backgroundColor.match(/\d+/g)?.slice(0, 3).map(Number) ?? [0, 0, 0]
+        return { left: rect.left, right: rect.right, height: rect.height, paperLuma: color.reduce((sum, channel) => sum + channel, 0) / 3 }
+      })
+      expect(cueMetrics.left).toBeGreaterThanOrEqual(0)
+      expect(cueMetrics.right).toBeLessThanOrEqual(size.width)
+      expect(cueMetrics.height).toBeLessThanOrEqual(64)
+      expect(cueMetrics.paperLuma).toBeGreaterThan(200)
       await expect(cue.getByTestId('flight-plan-kicker')).toHaveText(/Mining Ops · Step 5\/6/i)
       expect(await cue.locator('.ops-bars i').first().evaluate(el => getComputedStyle(el).animationName)).toBe('none')
       await page.screenshot({ path: info.outputPath(`flow-flightplan-laser-${vp}.png`) })
       await page.getByTestId('fire-laser-btn').click()
       await expect(cue.getByTestId('flight-plan-kicker')).toHaveText('Copy · Step 5 done')
+      await expect(cue.getByTestId('ops-badge')).toHaveAttribute('data-state', 'done')
+      await expect(cue.locator('.flight-plan-action')).toContainText('+1 stitch')
     })
 
     test('part try on the Hangar screen says fit a module, not the Base instruction', async ({ page }) => {

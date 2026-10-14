@@ -30,6 +30,11 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       const coast = page.getByTestId('base-biome-coast')
       await coast.click()
       await expect(coast).toHaveAttribute('aria-pressed', 'true')
+      const choiceBox = (await page.getByTestId('base-biome-choice').boundingBox())!
+      const beginBox = (await page.getByTestId('intro-begin-btn').boundingBox())!
+      expect(choiceBox.y).toBeGreaterThanOrEqual(0)
+      expect(choiceBox.y + choiceBox.height).toBeLessThanOrEqual(size.height)
+      expect(beginBox.y + beginBox.height).toBeLessThanOrEqual(size.height)
       await page.screenshot({ path: info.outputPath(`biome-onboarding-${vp}.png`) })
       await page.getByTestId('intro-begin-btn').click()
       await expect(page.locator('[data-stage-ready="true"]')).toHaveAttribute('data-stage-screen', 'build')
