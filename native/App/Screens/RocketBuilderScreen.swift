@@ -11,6 +11,7 @@ struct RocketBuilderScreen: View {
     @State private var showSettings = false
     @State private var selectedSlot: String?
     @State private var notice = ""
+    @State private var planSheet: PlanSheet?
     /// Snapshots render ScrollView content as empty; catalog scenes set this to lay the list out flat.
     @Environment(\.flatLayout) private var flat
 
@@ -34,6 +35,7 @@ struct RocketBuilderScreen: View {
                         HudChips(francs: store.player.francs)
                     }
                     actions
+                    MissionPlanStrip(sheet: $planSheet)
                     if guided {
                         Text(guidedSlot.map { id in "STEP \(fittedCount + 1) OF \(RocketBuilder.slots.count) · FIT YOUR \(RocketBuilder.slots.first { $0.id == id }?.label ?? "")" } ?? "ROCKET READY · PRESS LAUNCH")
                             .font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.paper)
@@ -57,6 +59,9 @@ struct RocketBuilderScreen: View {
                 BaseDock(tile: 44, zones: HUDZones.standard.dock, onPrev: { store.go(.hub) })
                     .padding(.bottom, 8)
                     .frame(maxHeight: .infinity, alignment: .bottom)
+                if let sheet = planSheet {
+                    MissionPlanSheet(sheet: sheet) { planSheet = nil }.frame(maxHeight: .infinity, alignment: .bottom).zIndex(2)
+                }
             }
         }
         .background(Theme.paper)
