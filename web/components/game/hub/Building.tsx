@@ -270,11 +270,11 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
           >
             <span style={{
               width: 22, height: 22, borderRadius: '50%',
-              background: seen ? 'var(--ln-hairline)' : 'var(--hub-mint)',
+              background: seen ? 'var(--ln-hairline)' : 'var(--ln-info)',
               border: '2px solid var(--hub-panel)',
               display: 'grid', placeItems: 'center',
               color: seen ? 'var(--ln-text-dim)' : 'var(--ln-text-inverse)',
-              boxShadow: seen ? 'none' : '0 0 12px var(--ln-ok-soft)',
+              boxShadow: seen ? 'none' : '0 0 12px color-mix(in srgb, var(--ln-info) 40%, transparent)',
               animation: seen ? 'none' : 'hub-notify-pulse 1.8s ease-in-out infinite',
             }}>
               <BellGlyph />

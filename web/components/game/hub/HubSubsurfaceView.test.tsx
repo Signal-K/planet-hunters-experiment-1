@@ -103,8 +103,7 @@ describe('HubSubsurfaceView', () => {
     })
     expect(host.querySelector('[data-testid="subsurface-mineral-vault"]')).not.toBeNull()
     expect(host.textContent).toContain('4 U')
-    expect(host.querySelector('[data-testid="subsurface-silo-sell"]')).toBeNull()
-    expect(host.textContent).toContain('Earth-return cargo sheet')
+    expect(host.querySelector('[data-testid="subsurface-silo-sell"]')).not.toBeNull()
 
     const back = host.querySelector<HTMLButtonElement>('[data-testid="subsurface-room-back"]')
     await act(async () => {

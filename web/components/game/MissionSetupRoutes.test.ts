@@ -48,7 +48,7 @@ describe('R1 mission setup', () => {
     expect(board).toContain('mission-board-tab-contracts')
     expect(board).toContain('mission-board-tab-program')
     expect(board).toContain('mission-board-tab-events')
-    expect(board).toContain('ACCEPT &amp; PREPARE')
+    expect(board).toContain('mission-accept-')
   })
 
   it('keeps the Mission Board back control at the 44px touch-target floor', () => {

@@ -26,14 +26,17 @@ test.describe('hangar contrast', () => {
     const cards = grid.locator('button')
     await expect(cards).toHaveCount(3)
     const paint = await cards.evaluateAll(nodes => nodes.map(el => {
+      // Computed colours can come back as color(), oklab() or rgb(); a 1px canvas resolves any of them to sRGB.
+      const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!
+      const rgbOf = (css: string) => { ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = '#000'; ctx.fillStyle = css; ctx.fillRect(0, 0, 1, 1); return Array.from(ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)) }
       const s = getComputedStyle(el)
       return {
         text: (el.textContent || '').trim(),
         icons: el.querySelectorAll('svg').length,
         images: el.querySelectorAll('img').length,
         opacity: s.opacity,
-        color: s.color,
-        background: s.backgroundColor,
+        color: rgbOf(s.color),
+        background: rgbOf(s.backgroundColor),
       }
     }))
     for (const card of paint) {
@@ -41,7 +44,7 @@ test.describe('hangar contrast', () => {
       expect(card.icons).toBe(1)
       expect(card.images).toBe(0)
       expect(Number(card.opacity)).toBe(1)
-      expect(ratio(channel(card.color), channel(card.background))).toBeGreaterThanOrEqual(4.5)
+      expect(ratio(card.color, card.background)).toBeGreaterThanOrEqual(4.5)
     }
     await expect(cards.nth(0)).toHaveAccessibleName(/Explorer/)
     await expect(cards.nth(1)).toHaveAccessibleName(/Prospector/)

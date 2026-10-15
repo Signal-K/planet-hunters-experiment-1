@@ -24,17 +24,12 @@ describe('canonical mission setup route', () => {
     expect(canonicalGameRoute({ screen: 'mining', missionId: 'mission-1', targetId: 'eros' }))
       .toBe('mining')
   })
-
-  it('routes deferred Exchange state back to the Base', () => {
-    expect(canonicalGameRoute({ screen: 'market', missionId: null, targetId: null }))
-      .toBe('hub')
-  })
 })
 
 describe('trayScreenFromPath', () => {
-  it('keeps Subsurface and Mission Log on a cold load, but defers Market', async () => {
+  it('keeps Market and Subsurface on a cold load, nothing else', async () => {
     const { trayScreenFromPath } = await import('./game-route')
-    expect(trayScreenFromPath('/game/market')).toBeNull()
+    expect(trayScreenFromPath('/game/market')).toBe('market')
     expect(trayScreenFromPath('/game/hub-subsurface/')).toBe('hub-subsurface')
     expect(trayScreenFromPath('/game/mission-history')).toBe('mission-history')
     expect(trayScreenFromPath('/game/missions')).toBeNull()

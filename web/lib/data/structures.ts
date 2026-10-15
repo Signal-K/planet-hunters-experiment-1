@@ -75,9 +75,7 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
   // becomes available after Extraction and Transport, and placement opens
   // Free Ops. Existing players retain access through their saved unlock.
   if (structure.id === 'surface-silo') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
-  // Deferred after the 15 Oct review. Keep the blueprint decodable for old saves,
-  // but do not offer or place the Exchange until its flow is redesigned.
-  if (structure.id === 'market') return false
+  if (structure.id === 'market') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('market')
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   if (structure.unlockTrigger === 'always') return true
   return false

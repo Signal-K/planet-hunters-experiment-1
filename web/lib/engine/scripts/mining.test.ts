@@ -30,6 +30,7 @@ vi.mock('pixi.js', () => ({
     this.destroy = vi.fn()
     this.x = 0
     this.y = 0
+    this.width = 0
     this.visible = true
   }),
   Sprite: vi.fn().mockImplementation(function (this: Record<string, unknown>) {
@@ -46,7 +47,7 @@ vi.mock('pixi.js', () => ({
 
 import { Container, Text } from 'pixi.js'
 import { ShapeRenderer } from '../components/ShapeRenderer'
-import { MiningController, SHIP_X } from './MiningController'
+import { MiningController, SHIP_X, SURFACE_Y } from './MiningController'
 import type { MiningControllerOptions } from './MiningController'
 import { RuntimeContext } from '../RuntimeContext'
 import { GameObject } from '../GameObject'
@@ -267,10 +268,10 @@ describe('MiningController ore sym labels', () => {
     expect(wide).toBeLessThan(labels()[0].style.fontSize)
   })
 
-  it('puts the sym on the buried deposit, under the surface line', () => {
+  it('hangs the sym just above the deposit chip, over the surface line', () => {
     const { controller } = makeController(vi.fn(), { mineralSyms: SYMS, chipFill: 0x334455, chipShade: 0x112233 })
     controller.start()
-    expect(labels()[0].y).toBeGreaterThan(320)
+    expect(labels()[0].y).toBe(SURFACE_Y - 50)
   })
 
   it('buries pixel deposits under the crust at varied depths the tier-1 laser can still reach', () => {

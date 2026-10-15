@@ -98,6 +98,8 @@ describe('production hub, terrain and actor sprites', () => {
       '/game/assets/base/layers/mountains-far.png',
       '/game/assets/base/layers/mountains-mid.png',
       '/game/assets/base/layers/mountains-near.png',
+      // Exchange dock art from SSL-423 that no scene references yet; the base draws base/v7/structures/exchange.png.
+      '/game/assets/base/kit/exchange-dock.png',
     ])
     const registered = new Set(Object.values(manifest))
     const unregistered = RENDERED.flatMap(dir => walk(join(PUBLIC, dir)))

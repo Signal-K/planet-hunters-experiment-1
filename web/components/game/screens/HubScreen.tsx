@@ -38,7 +38,7 @@ import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SCENE_NAMES } from '@/lib/ui-strings'
 
-const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar'])
+const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market'])
 
 /**
  * How far a building's status pill hangs below the ground line. `Building`
@@ -48,6 +48,7 @@ const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar'])
  */
 function dockStops(player: Player): Screen[] {
   const stops: Screen[] = ['missions']
+  if (player.freeOperations) stops.push('market')
   if (player.activeMission) {
     const resume = missionResumeScreen(player)
     if (!stops.includes(resume)) stops.push(resume)
@@ -89,6 +90,7 @@ interface HubScreenProps {
   onExcavateSubsurfaceUnavailable?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
+  onOpenMarket?: () => void
   subsurface?: boolean
   /** SSL-553: the rocket is touching down on the pad after the trip home. */
   padLanding?: boolean
@@ -97,7 +99,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
@@ -126,10 +128,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const [upgradingBuilding, setUpgradingBuilding] = useState<UpgradableBuildingId | null>(null)
   const { signals } = useInstrumentSignals(player)
   const asteroidQueueCount = signals.filter(signal => signal.kind === 'deep-space').length
-  const placed = (player.placed ?? []).filter(kind => kind !== 'market')
-  const placementPlots = Object.fromEntries(
-    Object.entries(player.placementPlots ?? {}).filter(([kind]) => kind !== 'market'),
-  )
+  const placed = player.placed ?? []
+  const placementPlots = player.placementPlots ?? {}
   const legacyPlaced = (kind: string) => placed.includes(kind) && placementPlots[kind] == null
   // Pre-placementPlots saves always went through the guided tutorial, which
   // coaches the player to the first build pad (data-coach-id="build-plot-0"
@@ -381,7 +381,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           className={layoutStyles.surface}
           ref={node => { camera.ref.current = node; surfaceRef.current = node }}
           data-testid="base-camera"
-          inert={subsurface}
           data-zoom={camera.cam.zoom.toFixed(2)}
           {...camera.handlers}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden', touchAction: 'none' }}
@@ -507,6 +506,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
             onExcavateUnavailable={onExcavateSubsurfaceUnavailable}
             onBuildRoom={onBuildSubsurfaceRoom}
             onFocusResources={onFocusResources}
+            onOpenMarket={onOpenMarket}
           />
         </div>
 

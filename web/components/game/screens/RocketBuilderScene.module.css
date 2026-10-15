@@ -297,7 +297,7 @@
 .tab img { width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated; }
 .tab:disabled { opacity: 0.45; cursor: default; }
 .tab[data-selected='true'] { background: var(--ln-blueprint-blue); color: var(--ln-blueprint-paper); }
-.tabLabel { font: 700 14px/1.1 var(--ln-font-display); letter-spacing: 0; text-transform: uppercase; max-width: 100%; text-align: center; overflow-wrap: anywhere; }
+.tabLabel { font: 700 14px/1.1 var(--ln-font-display); letter-spacing: 0; text-transform: uppercase; max-width: 100%; text-align: center; overflow-wrap: normal; word-break: keep-all; }
 .tabPart { font: 600 14px/1.1 var(--ln-font-body, var(--ln-font-display)); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .optionsHead { flex: 0 0 auto; padding: 8px 12px 0; }
@@ -358,9 +358,10 @@
   .body { grid-template-columns: 1fr; grid-template-rows: minmax(120px, 30%) minmax(0, 1fr); }
   .blueprint { flex-direction: row; align-items: stretch; }
   .stats { flex-direction: column; flex: 0 0 38%; justify-content: center; }
-  .tabs { gap: 4px; padding: 6px; }
+  .tabs { gap: 3px; padding: 6px 4px; }
   .tabPart { display: none; }
-  .tab { min-height: 72px; }
+  .tab { min-height: 72px; padding-inline: 1px; }
+  .tabLabel { letter-spacing: -0.04em; }
   .tower { display: none; }
 }
 

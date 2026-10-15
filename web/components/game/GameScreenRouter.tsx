@@ -70,16 +70,12 @@ type ScreenContentProps = {
 
 // SSL-441: every scene change fades through a void veil instead of hard-cutting.
 export function ScreenContent(props: ScreenContentProps) {
-  const visibleScreen: Screen = props.screen === 'market' ? 'hub' : props.screen
-  useEffect(() => {
-    if (props.screen === 'market') props.game.go('hub')
-  }, [props.screen, props.game.go])
   return (
-    <SceneTransition sceneKey={visibleScreen}>
+    <SceneTransition sceneKey={props.screen}>
       {/* SSL-35 / SSL-452: every screen renders inside the shared frame,
           labelled with the layout type its route maps to in GAME_ROUTES. */}
-      <SurfaceLayout surface={surfaceForScreen(visibleScreen)}>
-        <ScreenBody {...props} screen={visibleScreen} />
+      <SurfaceLayout surface={surfaceForScreen(props.screen)}>
+        <ScreenBody {...props} />
       </SurfaceLayout>
     </SceneTransition>
   )
@@ -188,7 +184,7 @@ function ScreenBody({
       }
       // Only unlocked structures that are not already on the base are offered.
       const buildOptions: HubBuildOption[] = game.catalog.structures
-        .filter(structure => structure.id !== 'garage' && structure.id !== 'astronaut-academy' && structure.id !== 'market'
+        .filter(structure => structure.id !== 'garage' && structure.id !== 'astronaut-academy'
           && !game.player.placed.includes(structure.id) && structureUnlocked(structure, unlockOpts))
         .map(structure => {
           const gaps = structureAffordabilityGaps(structure, { francs: game.player.francs, stash: game.player.stash })
@@ -232,7 +228,7 @@ function ScreenBody({
           onFocusBuilding={building => {
             if (building === 'build') return game.go('build')
             if (building === 'refinery') return game.go('refinery')
-            if (building === 'market') return game.go('hub')
+            if (building === 'market') return game.go('market')
             // Mission first: the hangar opens on its rocket choice only once a mission and
             // destination are set up. Otherwise it starts at the contract board.
             if (building === 'hangar') return game.mission && game.target ? game.go('hangar') : game.goToMissions()
@@ -274,6 +270,7 @@ function ScreenBody({
             game.addToast(`Cannot excavate: need ${missing.join(' and ')}`, 'warn')
           }}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
+          onOpenMarket={() => game.go('market')}
           onFocusResources={(label, minerals) => {
             game.setPlayer(player => ({ ...player, resourceFocus: { label, minerals } }))
             game.addToast(`${label} added to focus`, 'info')

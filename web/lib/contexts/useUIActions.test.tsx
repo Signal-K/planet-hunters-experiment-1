@@ -128,7 +128,7 @@ describe('useUIActions URL sync skip', () => {
     expect(handleRef.current?.skipNextUrlSync.current).toBe(false)
 
     await act(async () => { handleRef.current?.setScreenFromUrl('market') })
-    expect(handleRef.current?.skipNextUrlSync.current).toBe(false)
+    expect(handleRef.current?.skipNextUrlSync.current).toBe(true)
     await act(async () => { root.unmount() })
   })
 })

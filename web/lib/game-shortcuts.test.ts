@@ -7,8 +7,8 @@ describe('resolveShortcut', () => {
   it('maps Esc to closing the open tray', () => {
     expect(resolveShortcut(key('Escape'))).toBe('close-tray')
   })
-  it('leaves M unused while Exchange is deferred and maps arrows to the « » switch', () => {
-    expect(resolveShortcut(key('m'))).toBeNull()
+  it('maps M to Market and arrows to the « » switch', () => {
+    expect(resolveShortcut(key('m'))).toBe('open-market')
     expect(resolveShortcut(key('ArrowLeft'))).toBe('switch-operation')
     expect(resolveShortcut(key('ArrowRight'))).toBe('switch-operation')
   })

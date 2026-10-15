@@ -50,16 +50,15 @@ export function useUIActions(
   }, [])
 
   const go = useCallback((screen: Screen) => {
-    const safeScreen: Screen = screen === 'market' ? 'hub' : screen
-    syncSubsurface(safeScreen)
+    syncSubsurface(screen)
     setState(s => {
-      if (safeScreen === 'hangar') {
+      if (screen === 'hangar') {
         hangarReturnView.current = s.screen === 'launchpad' || s.screen === 'academy'
           ? s.screen
           : 'hub'
       }
-      rememberHost(safeScreen)
-      return { ...s, screen: safeScreen }
+      rememberHost(screen)
+      return { ...s, screen }
     })
   }, [rememberHost, setState, syncSubsurface])
 
@@ -138,9 +137,7 @@ export function useUIActions(
       // A bookmarked /game/build must not resurrect the transient plot picker
       // for an operational base after hydration has already repaired it to
       // Hub. Keep the URL-driven route in the same safe landing state.
-      const safeScreen = screen === 'market'
-        ? 'hub'
-        : screen === 'build' && s.player.freeOperations && s.player.placed.length > 0
+      const safeScreen = screen === 'build' && s.player.freeOperations && s.player.placed.length > 0
         ? 'hub'
         : screen
       // Valid URL changes are already represented by the browser history and

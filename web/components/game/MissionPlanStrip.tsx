@@ -49,7 +49,7 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
       {blockedReason && <p className={styles.hold} data-testid="plan-clearance" role="status">Build hold: {blockedReason}</p>}
 
       {sheet && (
-        <div className={styles.sheet} role="dialog" aria-label={sheet === 'destination' ? 'Choose destination' : 'Choose vehicle'} data-testid={`plan-sheet-${sheet}`}>
+        <div className={styles.sheet} role="group" aria-label={sheet === 'destination' ? 'Choose destination' : 'Choose vehicle'} data-testid={`plan-sheet-${sheet}`}>
           <div className={styles.sheetHead}>
             <strong>{sheet === 'destination' ? 'Destination' : 'Vehicle'}</strong>
             <button type="button" onClick={() => setSheet(null)}>Close</button>

@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test'
 import { VIEWPORTS, stage } from './helpers'
 
+// Takeon's Pixi WebGL context kills headless Chrome's GPU process on some dev machines (see screens.spec.ts), so this
+// runs on CI, or locally with SCENES_WEBGL=1.
+test.skip(!process.env.CI && !process.env.SCENES_WEBGL, 'needs a working WebGL context')
+
 // Takeon's own isometric field. A scanner sweep logs a formation, then the ship laser unlocks.
 for (const [vp, size] of Object.entries(VIEWPORTS)) {
   test.describe(vp, () => {
