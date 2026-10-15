@@ -65,7 +65,7 @@ public enum MissionBoard {
             if !c.met { return c.reason }
         default: break
         }
-        if let plan = m.construction {
+        if let plan = m.construction, m.isOwnProgram {
             let short = plan.requiredMaterials.filter { (p.stash[$0.key] ?? 0) < $0.value }
             if !short.isEmpty {
                 return "Needs " + short.sorted { $0.key < $1.key }.map { "\($0.value) \($0.key) (have \(p.stash[$0.key] ?? 0))" }.joined(separator: ", ") + " in storage"
@@ -89,7 +89,12 @@ public enum MissionBoard {
     public static func clientBoard(catalog: Catalog, player p: Player, now: Double) -> [Entry] {
         let freeOps = p.freeOperations
         let seq = p.missionsDone + 1
-        var raw = catalog.missions.filter { m in
+        // Free Ops lists today's daily pool first (new contracts each day, more clients as missions are flown), minus
+        // contracts finished today. The fixed generated Free Ops client runs it replaces stay off the board.
+        let pool = freeOps ? p.dailyClientPool : nil
+        let pooled = pool.map { pool in pool.missions.filter { !pool.completedIds.contains($0.id) } } ?? []
+        let base = pool == nil ? catalog.missions : catalog.missions.filter { !($0.client != nil && $0.id.hasPrefix("freeops-") ) && !DailyClientMissions.isPoolId($0.id) }
+        var raw = (pooled + base).filter { m in
             isBoardMission(m, freeOps: freeOps) && (m.client.map { Clients.byId[$0] != nil } ?? false) && (freeOps || m.sequence == seq)
         }
         if !freeOps {

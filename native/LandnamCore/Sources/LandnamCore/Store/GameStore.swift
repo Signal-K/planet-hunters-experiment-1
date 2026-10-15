@@ -32,10 +32,29 @@ public final class GameStore {
         } else {
             initialState = state
         }
-        let visibleState = Self.withDeferredExchangeHidden(initialState)
+        var visibleState = Self.withDeferredExchangeHidden(initialState)
+        visibleState.player.dailyClientPool = Self.dailyPool(for: visibleState.player, now: clock(), targets: catalog.targets)
         self.state = visibleState
-        self.catalog = Instruments.runtime(catalog, player: visibleState.player, missionId: visibleState.missionId, targetId: visibleState.targetId)
+        self.catalog = Self.runtimeCatalog(catalog, player: visibleState.player, missionId: visibleState.missionId, targetId: visibleState.targetId)
     }
+
+    /// Today's client pool for a Free Ops player (nil before Free Ops). Returns the existing pool object when nothing changed.
+    static func dailyPool(for p: Player, now: Double, targets: [Target]) -> DailyClientPool? {
+        guard p.freeOperations else { return p.dailyClientPool }
+        let today = DailyClientMissions.dateKey(Date(timeIntervalSince1970: now / 1000))
+        return DailyClientMissions.refreshed(p.dailyClientPool, missionsDone: p.missionsDone, clientMissions: p.clientMissions, today: today, targets: targets)
+    }
+
+    /// The authored catalog plus instrument launches, discovered-planet surveys and today's pooled client contracts.
+    static func runtimeCatalog(_ base: Catalog, player: Player, missionId: String?, targetId: String?) -> Catalog {
+        var c = Instruments.runtime(base, player: player, missionId: missionId, targetId: targetId)
+        let known = Set(c.missions.map(\.id))
+        c.missions.append(contentsOf: (player.dailyClientPool?.missions ?? []).filter { !known.contains($0.id) })
+        return c
+    }
+
+    /// Call when the app returns to the foreground so a new calendar day shows new contracts.
+    public func refreshDailyPool() { apply(state) }
 
     public static var defaultSaveURL: URL {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Landnam", isDirectory: true)
@@ -57,7 +76,8 @@ public final class GameStore {
     }
 
     private func apply(_ proposed: GameState) {
-        let next = Self.withDeferredExchangeHidden(proposed)
+        var next = Self.withDeferredExchangeHidden(proposed)
+        next.player.dailyClientPool = Self.dailyPool(for: next.player, now: clock(), targets: baseCatalog.targets)
         guard next != state else { return }
         var n = next
         MissionRuns.stamp(old: state, new: &n)
@@ -82,8 +102,9 @@ public final class GameStore {
             || p.deepSpaceTelescopeBuilt != n.deepSpaceTelescopeBuilt
             || p.placed.contains("deep-space-telescope") != n.placed.contains("deep-space-telescope")
             || p.saturnImagerLaunchedAt != n.saturnImagerLaunchedAt
-            || p.discoveredExoplanetTargets != n.discoveredExoplanetTargets {
-            catalog = Instruments.runtime(baseCatalog, player: n, missionId: next.missionId, targetId: next.targetId)
+            || p.discoveredExoplanetTargets != n.discoveredExoplanetTargets
+            || p.dailyClientPool?.missions != n.dailyClientPool?.missions {
+            catalog = Self.runtimeCatalog(baseCatalog, player: n, missionId: next.missionId, targetId: next.targetId)
         }
     }
 
@@ -213,7 +234,11 @@ public final class GameStore {
         apply(n)
         onClassified?(.asteroid(candidate: candidateId, verdict: verdict))
     }
-    public func pickMission(_ id: String) { apply(Loop.pickMission(state, id: id, catalog: catalog)) }
+    public func pickMission(_ id: String) {
+        var n = Loop.pickMission(state, id: id, catalog: catalog)
+        if DailyClientMissions.isPoolId(id), n.missionId == id { n.player.dailyClientPool?.acceptedId = id }
+        apply(n)
+    }
     public func pickTarget(_ id: String) { apply(Loop.pickTarget(state, id: id, catalog: catalog)) }
     public func finishQuickSetup() { apply(Loop.finishQuickSetup(state, catalog: catalog)) }
     public func purchaseRocket(_ id: String) { apply(Loop.purchaseRocket(state, rocketId: id, catalog: catalog)) }

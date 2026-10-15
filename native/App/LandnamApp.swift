@@ -35,7 +35,7 @@ struct LandnamApp: App {
                     }
                 }
                 .onChange(of: auth.session) { _, s in services.attach(s) }
-                .onChange(of: scenePhase) { _, p in if p == .active { services.flush() } }
+                .onChange(of: scenePhase) { _, p in if p == .active { services.flush(); store.refreshDailyPool() } }
                 #if canImport(UIKit)
                 .onAppear { OrientationPreference(stored: orientation).apply() }
                 .onChange(of: orientation) { _, v in OrientationPreference(stored: v).apply() }

@@ -31,7 +31,7 @@ public enum Loop {
         if s.screen == .missions && s.player.freeOperations && mission.isOwnProgram { return s }
         guard s.player.activeMission == nil else { return s }
         // Off-world builds carry the materials from the stash; no kit, no flight.
-        if let plan = mission.construction, plan.requiredMaterials.contains(where: { (s.player.stash[$0.key] ?? 0) < $0.value }) { return s }
+        if let plan = mission.construction, mission.isOwnProgram, plan.requiredMaterials.contains(where: { (s.player.stash[$0.key] ?? 0) < $0.value }) { return s }
         var base = s
         base.player.freeHaulDisposition = haul ?? s.player.freeHaulDisposition
         base.doneSteps["2"] = true
@@ -180,7 +180,7 @@ public enum Loop {
         if s.player.headingToDelivery { return Transitions.applyDeliveryArrived(s, now: now) }
         var n = s
         let mission = catalog.mission(s.missionId)
-        if let plan = mission?.construction {
+        if let plan = mission?.construction, mission?.isOwnProgram == true {
             // The kit is delivered on arrival: materials leave the stash, the site starts its build clock.
             n = ConstructionMissions.applyDelivery(n, plan: plan, targetId: s.targetId ?? mission?.targetId ?? "", now: now)
             n.player.missionPhase = .debrief
@@ -264,6 +264,15 @@ public enum Loop {
                 let left = (n.player.stash[id] ?? 0) - amount
                 n.player.stash[id] = left > 0 ? left : nil
             }
+        }
+        // A client build job mines its materials on site; handing them over raises the structure for that client.
+        if let plan = mission?.construction, let client = mission?.client, plan.requiredMaterials.allSatisfy({ (cargo[$0.key] ?? 0) >= $0.value }) {
+            n = ConstructionMissions.applyDelivery(n, plan: plan, targetId: s.targetId ?? mission?.targetId ?? "", now: now, clientId: client, takeFromStash: false)
+        }
+        if DailyClientMissions.isPoolId(missionId), var pool = n.player.dailyClientPool {
+            pool.acceptedId = nil
+            if !pool.completedIds.contains(missionId) { pool.completedIds.append(missionId) }
+            n.player.dailyClientPool = pool
         }
         n.player.francs += total
         if let xp = mission?.programReward?.researchXP, xp > 0 { n.player.researchXP += xp }

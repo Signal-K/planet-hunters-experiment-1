@@ -338,6 +338,17 @@ enum SceneCatalog {
         scene("mission-board-live", 874) {
             MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon }))
         },
+        // SSL-570 / SSL-571: daily client contracts, the same board a day later, and a client build job.
+        scene("mission-board-daily-phone", 874) {
+            MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
+        },
+        scene("mission-board-next-day-phone", 874) {
+            MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon + 86_400_000 })).environment(\.flatLayout, true)
+        },
+        scene("mission-board-build-phone", 874) {
+            var gs = basePlayer(); gs.player.missionsDone = 12
+            return MissionsScreen(startTitle: "Build a Fuel Depot").environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true)
+        },
         scene("mission-program-phone", 1400) {
             MissionsScreen(startTab: 1).environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },
