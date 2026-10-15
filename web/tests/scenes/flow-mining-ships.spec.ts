@@ -72,9 +72,8 @@ for (const [ship, rocket] of Object.entries(SHIPS)) {
             const el = page.getByTestId(id)
             if (await el.count() && await el.first().isVisible()) await el.first().dispatchEvent('click')
           }
-          // The first mining run opens the controls guide over the scene (it hides the HUD); a player closes it with the X.
-          const closeGuide = page.getByRole('button', { name: 'Close', exact: true })
-          if (await closeGuide.count() && await closeGuide.first().isVisible()) await closeGuide.first().dispatchEvent('click')
+          // A Free Ops run must not open the full-screen controls guide over the scene: it hides Fire.
+          await expect(page.locator('.mining-guide-dock')).toHaveCount(0)
           await page.waitForTimeout(500)
           const shot = (name: string) => process.env.SHOT_DIR ? page.screenshot({ path: `${process.env.SHOT_DIR}/mine-${ship}-${vp}-${name}.png` }) : Promise.resolve()
           await shot('start')

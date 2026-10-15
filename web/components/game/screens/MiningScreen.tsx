@@ -420,6 +420,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     // Flight Plan already explains the shot; the guide must not create a
     // second guidance layer over the ore and fire controls.
     if (trainingMiningTry) return
+    // A Free Ops run has its own first-run explainer; the full-screen guide would hide Fire behind it.
+    if (isFreeHaulEligible) return
     try {
       if (!localStorage.getItem(HUD_GUIDE_ACK_KEY)) {
         setGuideOpen(true)
@@ -427,7 +429,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       }
     } catch { /* localStorage unavailable */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trainingMiningTry])
+  }, [trainingMiningTry, isFreeHaulEligible])
 
   const isFreeOps = !!isFreeHaulEligible
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
