@@ -1,4 +1,5 @@
 import SwiftUI
+import ImageIO
 
 #if canImport(UIKit)
 import UIKit
@@ -29,10 +30,42 @@ enum Art {
 
     private static func load(_ url: URL) -> PlatformImage? {
         #if canImport(UIKit)
-        UIImage(contentsOfFile: url.path)
+        guard let src = UIImage(contentsOfFile: url.path) else { return nil }
+        return decode(url).map { UIImage(cgImage: $0, scale: src.scale, orientation: .up) } ?? src
         #else
-        NSImage(contentsOf: url)
+        guard let src = NSImage(contentsOf: url) else { return nil }
+        return decode(url).map { NSImage(cgImage: $0, size: src.size) } ?? src
         #endif
+    }
+
+    /// Decodes once into the renderer's native premultiplied BGRA bitmap. A lazily decoded PNG/JPEG is re-decoded
+    /// and channel-swizzled on every draw, which made the 60 fps base Canvas burn CPU on JPEG decode every frame.
+    private static func decode(_ url: URL) -> CGImage? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let raw = CGImageSourceCreateImageAtIndex(source, 0, [kCGImageSourceShouldCacheImmediately: true] as CFDictionary),
+              let ctx = CGContext(data: nil, width: raw.width, height: raw.height, bitsPerComponent: 8, bytesPerRow: 0,
+                                  space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                  bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
+        else { return nil }
+        ctx.interpolationQuality = .none
+        ctx.draw(raw, in: CGRect(x: 0, y: 0, width: raw.width, height: raw.height))
+        return ctx.makeImage()
+    }
+
+    private static var drawCache: [String: Image] = [:]
+
+    /// A decoded sprite as a SwiftUI `Image`, built once, for drawing many times a second in a `Canvas`.
+    static func drawable(_ path: String) -> Image? {
+        if let hit = drawCache[path] { return hit }
+        guard let img = image(path) else { return nil }
+        #if canImport(UIKit)
+        let cg = img.cgImage
+        #else
+        let cg = img.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        #endif
+        let out = cg.map { Image(decorative: $0, scale: 1) } ?? Image(platform: img)
+        drawCache[path] = out
+        return out
     }
 
     private static var tileCache: [String: Image] = [:]

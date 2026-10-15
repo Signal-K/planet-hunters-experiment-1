@@ -60,7 +60,7 @@ struct BaseWorldScene: View {
                     BaseWorldCanvas(px: world.px, camX: -cx, biome: biome.rawValue)
                         .frame(width: w, height: h)
                         .offset(x: cx)
-                    BaseUnderground(world: world, built: siloBuilt, siloPlaced: siloPlaced, secondTank: secondTank, oreFraction: oreFraction, onBuild: onBuildSilo, onOpen: onShaft)
+                    BaseUnderground(world: world, built: siloBuilt, siloPlaced: siloPlaced, secondTank: secondTank, oreFraction: oreFraction, onBuild: onBuildSilo, onOpen: onShaft, active: camera.depth > 0)
                         .offset(y: ground)
                         .allowsHitTesting(camera.underground)
                     shaftHead(world: world)

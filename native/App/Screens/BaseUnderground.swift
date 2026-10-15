@@ -12,7 +12,10 @@ struct BaseUnderground: View {
     let oreFraction: Double
     var onBuild: () -> Void
     var onOpen: () -> Void
+    /// False while the camera is at the surface and the cutaway is off-screen: its animations pause.
+    var active: Bool = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var still: Bool { reduceMotion || !active }
 
     private var u: CGFloat { world.u }
     private var d: CGFloat { world.dirtDepth }
@@ -61,21 +64,21 @@ struct BaseUnderground: View {
     }
 
     private func lamp(_ i: Int) -> some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 10, paused: reduceMotion)) { ctx in
+        TimelineView(.animation(minimumInterval: 1.0 / 10, paused: still)) { ctx in
             let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
             sprite((Int(t * 1.6) + i * 3) % 7 == 0 ? "ug-lamp-0" : "ug-lamp-1", 9, 12)
         }
     }
 
     private var console: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 6, paused: reduceMotion)) { ctx in
+        TimelineView(.animation(minimumInterval: 1.0 / 6, paused: still)) { ctx in
             let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
             sprite(Int(t * 1.1) % 2 == 0 ? "ug-console-0" : "ug-console-1", 36, 28)
         }
     }
 
     private func ore(slot: Int) -> some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 6, paused: reduceMotion)) { ctx in
+        TimelineView(.animation(minimumInterval: 1.0 / 6, paused: still)) { ctx in
             let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
             sprite((Int(t * 1.2) + slot) % 2 == 0 ? "ug-ore-0" : "ug-ore-1", 16, 8)
         }
@@ -83,7 +86,7 @@ struct BaseUnderground: View {
 
     /// The lift cabin rides the shaft from the surface hatch to the chamber floor and back, easing at both ends.
     private func lift(top: CGFloat) -> some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { ctx in
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: still)) { ctx in
             let t = reduceMotion ? 3 : ctx.date.timeIntervalSinceReferenceDate
             let phase = (1 - cos(2 * .pi * t / 11)) / 2
             let lo = 6 * u, hi = top + 76 * u - 18 * u
@@ -109,7 +112,7 @@ struct BaseUnderground: View {
     }
 
     private var drill: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 8, paused: reduceMotion)) { ctx in
+        TimelineView(.animation(minimumInterval: 1.0 / 8, paused: still)) { ctx in
             let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
             sprite(Int(t * 4) % 2 == 0 ? "ug-drill-0" : "ug-drill-1", 26, 26)
         }

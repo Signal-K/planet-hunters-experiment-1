@@ -38,6 +38,8 @@ final class WorldRunner {
     var last: Date?
     var sky: WorldSky?
     var skyAt = Date.distantPast
+    /// Parsed hex colours; the canvas asks for the same few dozen every frame.
+    static var colors: [String: Color] = [:]
 
     init() { if let scene = WorldAssets.scene { world = World(scene: scene) } }
 }
@@ -57,8 +59,10 @@ struct BaseWorldCanvas: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: false)) { timeline in
-            Canvas { g, size in
+        // 30 fps is plenty for drifting clouds and weather and halves the full-screen redraw cost (60 fps on a large
+        // Mac window was the main source of lag). The sky gradient covers every pixel, so the canvas is opaque.
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: false)) { timeline in
+            Canvas(opaque: true) { g, size in
                 step(now: timeline.date, size: size)
                 draw(&g, size: size, t: timeline.date.timeIntervalSinceReferenceDate)
             }
@@ -68,7 +72,7 @@ struct BaseWorldCanvas: View {
     }
 
     private func step(now: Date, size: CGSize) {
-        guard var world = runner.world, let site = WorldAssets.site, let cal = WorldAssets.calendar else { return }
+        guard runner.world != nil, let site = WorldAssets.site, let cal = WorldAssets.calendar else { return }
         let dt = min(0.1, runner.last.map { now.timeIntervalSince($0) } ?? 0)
         runner.last = now
         if runner.sky == nil || now.timeIntervalSince(runner.skyAt) > 1 {
@@ -76,9 +80,9 @@ struct BaseWorldCanvas: View {
             runner.skyAt = now
         }
         let view = WorldView(w: size.width / px, h: size.height * (1 - site.ground.lineFromBottom) / px, camX: camX, px: px)
-        if let sky = runner.sky { world.applySky(sky, view: view, dt: reduceMotion ? 0 : dt) }
-        if !reduceMotion { runner.carry = world.advance(dt, carry: runner.carry) }
-        runner.world = world
+        // Step in place: copying the world out and back each frame duplicated the entity array every frame.
+        if let sky = runner.sky { runner.world!.applySky(sky, view: view, dt: reduceMotion ? 0 : dt) }
+        if !reduceMotion { runner.carry = runner.world!.advance(dt, carry: runner.carry) }
     }
 
     private func draw(_ g: inout GraphicsContext, size: CGSize, t: Double) {
@@ -124,12 +128,12 @@ struct BaseWorldCanvas: View {
     }
 
     private func drawSprite(_ g: inout GraphicsContext, _ s: WorldScene.SpriteDef, _ e: WorldEntity, sx: CGFloat, sy: CGFloat, k: CGFloat) {
-        guard let img = Art.image(s.src) else { return }
+        guard let img = Art.drawable(s.src) else { return }
         let rect = CGRect(x: CGFloat(s.x0) * k, y: -CGFloat(s.v0 + s.h) * k, width: CGFloat(s.w) * k, height: CGFloat(s.h) * k)
         var c = g
         c.translateBy(x: sx, y: sy)
         if e.heading != 0 { c.rotate(by: .radians(e.heading)) }
-        c.draw(Image(platform: img).resizable(), in: rect)
+        c.draw(img.resizable(), in: rect)
     }
 
     private func drawShape(_ g: inout GraphicsContext, _ e: WorldEntity, sx: CGFloat, sy: CGFloat, k: CGFloat, groundY: CGFloat, w: CGFloat, t: Double) {
@@ -221,7 +225,9 @@ struct BaseWorldCanvas: View {
     }
 
     private func color(_ hex: String) -> Color {
-        let v = UInt32(hex.dropFirst(), radix: 16) ?? 0xffffff
-        return Theme.hex(v)
+        if let hit = WorldRunner.colors[hex] { return hit }
+        let c = Theme.hex(UInt32(hex.dropFirst(), radix: 16) ?? 0xffffff)
+        WorldRunner.colors[hex] = c
+        return c
     }
 }
