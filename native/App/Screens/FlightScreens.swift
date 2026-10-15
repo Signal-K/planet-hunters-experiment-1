@@ -261,6 +261,10 @@ struct MiningScreen: View {
         s.onTargetCue = { cue in targetCue = cue }
         s.onObstacleAhead = { obstacleAhead = $0 }
         s.reducedMotion = reduceMotion
+        #if DEBUG
+        // Simulator playtests have no tap driver: `-autofire` holds the real trigger so the laser path is exercised unattended.
+        if ProcessInfo.processInfo.arguments.contains("-autofire") { s.setTrigger(true) }
+        #endif
         s.onBump = { say("Hull bumped: −1 charge") }
         s.onCharging = { c in laserCharging = c }
         s.onFeedback = { msg in toast = msg; Task { try? await Task.sleep(for: .seconds(1.4)); if toast == msg { toast = nil } } }

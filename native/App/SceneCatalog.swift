@@ -205,6 +205,12 @@ enum SceneCatalog {
         return gs
     }
 
+    static func shipMiningState(_ chassis: String, _ propulsion: String, _ drill: String) -> GameState {
+        var gs = miningState(rover: false)
+        gs.rocket = RocketConfig(chassis: chassis, propulsion: propulsion, drill: drill)
+        return gs
+    }
+
     static let tess = TessCandidate(id: "tess-demo", ticId: "TIC 260004324", toi: "TOI 700.01", sector: "Sectors 1-3", periodDays: 3.4, transitEpoch: 1.1, depthPpm: 9000, signalToNoise: 14)
 
     static var all: [CatalogScene] { [
@@ -475,6 +481,9 @@ enum SceneCatalog {
         scene("mining-laser-live-landscape", 402, w: 874) {
             MiningScreen().environment(GameStore(state: miningState(rover: false)))
         },
+        scene("mining-laser-explorer-live", 874) { MiningScreen().environment(GameStore(state: shipMiningState("hull-mk1", "ion-a1", "hand-drill"))) },
+        scene("mining-laser-prospector-live", 874) { MiningScreen().environment(GameStore(state: shipMiningState("hull-mk2", "fusion-b2", "laser-t2"))) },
+        scene("mining-laser-surveyor-live", 874) { MiningScreen().environment(GameStore(state: shipMiningState("hull-mk3", "ion-a3", "plasma-t3"))) },
         scene("mining-laser-bennu-live", 874) { MiningScreen().environment(GameStore(state: miningState(rover: false, target: "bennu"))) },
         scene("mining-laser-mars-live", 874) { MiningScreen().environment(GameStore(state: miningState(rover: false, target: "mars"))) },
         scene("mining-laser-icy-live", 874) { MiningScreen().environment(GameStore(state: miningState(rover: false, target: "jupiter"))) },
