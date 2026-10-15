@@ -56,6 +56,39 @@ import Testing
         #expect(!world.scene.sprites.keys.contains { $0.contains("mountain") || $0.contains("pine") || $0.contains("tower") })
     }
 
+    @Test func everyLandscapeHasItsOwnFlatHorizon() throws {
+        let scene = try Self.scene()
+        func sprites(_ biome: String) -> Set<String> { Set(World(scene: scene, biome: biome).entities.compactMap(\.def.sprite)) }
+        let want: [String: [String]] = [
+            "mountains": ["steppe-plain", "escarpment-a-mid", "tussock-0"],
+            "desert": ["plain-desert", "butte-a-far", "dune-ridge-mid", "saxaul", "sand-drift-0"],
+            "tundra": ["plain-tundra", "snow-ridge-far", "ice", "snow-drift-0"],
+            "coast": ["plain-coast", "headland-far", "coast-dune-ridge-mid", "dune-grass", "sand-drift-1"],
+        ]
+        for (biome, list) in want {
+            let got = sprites(biome)
+            for s in list + ["ground-complex", "cloud-0"] { #expect(got.contains(s), "\(biome) \(s)") }
+        }
+        #expect(!sprites("desert").contains("escarpment-a-mid"))
+    }
+
+    @Test func snowsInTheTundraAndRaisesDustInTheDesert() throws {
+        let scene = try Self.scene(), cal = try Self.calendar()
+        let view = WorldView(w: 463, h: 214)
+        let day = Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 10, hour: 14))!
+        var tundra = World(scene: scene, biome: "tundra")
+        let snow = WorldSkyClock.sky(cal, at: day, grade: "afternoon", biome: "tundra", force: ["rain"])
+        #expect(snow.weather.precip == "snow")
+        for _ in 0..<40 { tundra.applySky(snow, view: view, dt: 1 / 20) }
+        #expect(tundra.entities.contains { $0.def.shape == "dot" && $0.def.colour == "#f6f9fc" })
+        #expect(!tundra.entities.contains { $0.def.shape == "line" })
+        var desert = World(scene: scene, biome: "desert")
+        let wind = WorldSkyClock.sky(cal, at: day, grade: "afternoon", biome: "desert", force: ["windy"])
+        #expect(wind.weather.dust)
+        for _ in 0..<40 { desert.applySky(wind, view: view, dt: 1 / 20) }
+        #expect(desert.entities.contains { $0.def.colour == "#e8d9b8" })
+    }
+
     @Test func skyEventsBecomeObjectsAndRetire() throws {
         var world = World(scene: try Self.scene())
         let cal = try Self.calendar()
@@ -69,6 +102,23 @@ import Testing
         clear.weather.kind = "clear"; clear.weather.rainPerSecond = 0; clear.weather.boltEvery = 0
         world.applySky(clear, view: view, dt: 1 / 20)
         #expect(!world.entities.contains { $0.def.shape == "ribbon" || $0.def.shape == "comet" })
+    }
+
+    @Test func weatherDiffersByLandscape() throws {
+        let data = try Self.calendar()
+        let cal = Calendar.current
+        func tally(_ biome: String) -> [String: Int] {
+            var out: [String: Int] = [:]
+            for day in 0..<400 {
+                let d = cal.date(from: DateComponents(year: 2026, month: 1, day: 1 + day, hour: 14))!
+                out[WorldSkyClock.sky(data, at: d, grade: "afternoon", biome: biome).weather.kind, default: 0] += 1
+            }
+            return out
+        }
+        let mountains = tally("mountains"), desert = tally("desert"), coast = tally("coast"), tundra = tally("tundra")
+        #expect(mountains["windy", default: 0] > tundra["windy", default: 0])
+        #expect(desert["clear", default: 0] > coast["clear", default: 0])
+        #expect(coast["rain", default: 0] + coast["storm", default: 0] > desert["rain", default: 0] + desert["storm", default: 0])
     }
 
     @Test func realCalendarMatchesWeb() throws {

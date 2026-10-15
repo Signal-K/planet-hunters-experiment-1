@@ -127,7 +127,8 @@ function makeEntity(world: World, def: EntityDef, over: Partial<Entity> = {}): E
   }
 }
 
-export function createWorld(seedKey = 'base'): World {
+/** A world for one landscape: the common entities (paving, clouds) plus that landscape's own set. */
+export function createWorld(seedKey = 'base', biome = 'mountains'): World {
   const world: World = {
     entities: [],
     time: 0,
@@ -139,7 +140,8 @@ export function createWorld(seedKey = 'base'): World {
     flash: 0,
     sky: null,
   }
-  for (const def of scene.entities as EntityDef[]) world.entities.push(makeEntity(world, def))
+  const land = (scene.biomes as Record<string, EntityDef[]>)[biome] ?? (scene.biomes as Record<string, EntityDef[]>).mountains
+  for (const def of [...(scene.entities as EntityDef[]), ...land]) world.entities.push(makeEntity(world, def))
   return world
 }
 
@@ -231,8 +233,12 @@ export function applySky(world: World, sky: SkyState, view: WorldView, dt: numbe
   }
   for (const id of [...world.activeEvents]) if (!live.has(id)) world.activeEvents.delete(id)
   const w = sky.weather
-  if (w.rainPerSecond > 0) emitAtRate(world, 'rain', w.rainPerSecond, dt, () => {
-    spawn(world, 'raindrop', { x: stripXAt(view, world.rng.range(-0.05, 1.05), 0.9), y: view.h, vy: -150, floor: world.rng.range(-36, 4) })
+  const snow = w.precip === 'snow'
+  if (w.rainPerSecond > 0) emitAtRate(world, 'rain', w.rainPerSecond * (snow ? 0.6 : 1), dt, () => {
+    spawn(world, snow ? 'snowflake' : 'raindrop', { x: stripXAt(view, world.rng.range(-0.05, 1.05), 0.9), y: view.h, vy: snow ? -14 : -150, floor: world.rng.range(-36, 4) })
+  })
+  if (w.dust) emitAtRate(world, 'dust', 8, dt, () => {
+    spawn(world, 'dust', { x: stripXAt(view, world.rng.range(-0.1, 0.9), 0.7), y: world.rng.range(0, 28), vx: w.wind })
   })
   if (w.boltEvery > 0) emitAtRate(world, 'bolt', 1 / w.boltEvery, dt, () => {
     spawn(world, 'bolt', { x: stripXAt(view, world.rng.range(0.1, 0.9), 0.1), y: view.h * 0.62 })

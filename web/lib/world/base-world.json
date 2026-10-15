@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "Base world scene (SSL-423): every background piece is a game object. Web (lib/world) and native (LandnamCore World) load this file, step the same physics and draw entities in depth order. Units: kit units; x along the strip, y height above the ground line, depth is the parallax factor (1 moves with the strip, 0 stays with the screen). Sprites carry their Blender frame: w, h, x0 (left edge from the entity x), v0 (bottom edge from the entity y). Nothing here is built by the player; structures are drawn on top from base-site.json.",
+  "about": "Base world scene (SSL-423): every background piece is a game object. Web (lib/world) and native (LandnamCore World) load this file, step the same physics and draw entities in depth order. Units: kit units; x along the strip, y height above the ground line, depth is the parallax factor (1 moves with the strip, 0 stays with the screen). Sprites carry their Blender frame: w, h, x0 (left edge from the entity x), v0 (bottom edge from the entity y). `entities` are in every landscape; `biomes` adds each landscape's own horizon, far ground, ground-level plants and drifts (all flat launch-range land). Nothing here is built by the player; structures are drawn on top from base-site.json.",
   "physics": {
     "gravity": -60,
     "fixedStep": 0.0166667,
@@ -133,102 +133,163 @@
       "h": 20.996,
       "x0": -12,
       "v0": -1
+    },
+    "butte-a-far": {
+      "src": "base/v7/world/butte-a-far.png",
+      "w": 236,
+      "h": 26.43,
+      "x0": -8,
+      "v0": -0.5
+    },
+    "butte-butte-far": {
+      "src": "base/v7/world/butte-butte-far.png",
+      "w": 76,
+      "h": 22.385,
+      "x0": -8,
+      "v0": -0.5
+    },
+    "butte-b-mid": {
+      "src": "base/v7/world/butte-b-mid.png",
+      "w": 166,
+      "h": 20.509,
+      "x0": -8,
+      "v0": -0.5
+    },
+    "butte-butte-mid": {
+      "src": "base/v7/world/butte-butte-mid.png",
+      "w": 76,
+      "h": 22.385,
+      "x0": -8,
+      "v0": -0.5
+    },
+    "dune-ridge-far": {
+      "src": "base/v7/world/dune-ridge-far.png",
+      "w": 368,
+      "h": 11.651,
+      "x0": -4,
+      "v0": -0.5
+    },
+    "dune-ridge-mid": {
+      "src": "base/v7/world/dune-ridge-mid.png",
+      "w": 308,
+      "h": 12.561,
+      "x0": -4,
+      "v0": -0.5
+    },
+    "snow-ridge-far": {
+      "src": "base/v7/world/snow-ridge-far.png",
+      "w": 368,
+      "h": 12.815,
+      "x0": -4,
+      "v0": -0.5
+    },
+    "snow-ridge-mid": {
+      "src": "base/v7/world/snow-ridge-mid.png",
+      "w": 308,
+      "h": 14.192,
+      "x0": -4,
+      "v0": -0.5
+    },
+    "coast-dune-ridge-far": {
+      "src": "base/v7/world/coast-dune-ridge-far.png",
+      "w": 368,
+      "h": 11.455,
+      "x0": -4,
+      "v0": -0.5
+    },
+    "coast-dune-ridge-mid": {
+      "src": "base/v7/world/coast-dune-ridge-mid.png",
+      "w": 308,
+      "h": 12.376,
+      "x0": -4,
+      "v0": -0.5
+    },
+    "headland-far": {
+      "src": "base/v7/world/headland-far.png",
+      "w": 256,
+      "h": 24.406,
+      "x0": -8,
+      "v0": -0.5
+    },
+    "headland-mid": {
+      "src": "base/v7/world/headland-mid.png",
+      "w": 256,
+      "h": 24.406,
+      "x0": -8,
+      "v0": -0.5
+    },
+    "sand-drift-0": {
+      "src": "base/v7/world/sand-drift-0.png",
+      "w": 30,
+      "h": 6.833,
+      "x0": -15,
+      "v0": 0.184
+    },
+    "sand-drift-1": {
+      "src": "base/v7/world/sand-drift-1.png",
+      "w": 22,
+      "h": 6.866,
+      "x0": -11,
+      "v0": 0.184
+    },
+    "snow-drift-0": {
+      "src": "base/v7/world/snow-drift-0.png",
+      "w": 30,
+      "h": 7.01,
+      "x0": -15,
+      "v0": 0.184
+    },
+    "snow-drift-1": {
+      "src": "base/v7/world/snow-drift-1.png",
+      "w": 22,
+      "h": 6.557,
+      "x0": -11,
+      "v0": 0.184
+    },
+    "saxaul": {
+      "src": "base/v7/world/saxaul.png",
+      "w": 16,
+      "h": 6.836,
+      "x0": -8,
+      "v0": 1.152
+    },
+    "dune-grass": {
+      "src": "base/v7/world/dune-grass.png",
+      "w": 22,
+      "h": 10.747,
+      "x0": -11,
+      "v0": 1.152
+    },
+    "ice": {
+      "src": "base/v7/world/ice.png",
+      "w": 16,
+      "h": 9.936,
+      "x0": -8,
+      "v0": 1.152
+    },
+    "plain-desert": {
+      "src": "base/v7/ground/plain-desert.jpg",
+      "w": 680,
+      "h": 47.933,
+      "x0": 0,
+      "v0": 10.161
+    },
+    "plain-tundra": {
+      "src": "base/v7/ground/plain-tundra.jpg",
+      "w": 680,
+      "h": 47.933,
+      "x0": 0,
+      "v0": 10.161
+    },
+    "plain-coast": {
+      "src": "base/v7/ground/plain-coast.jpg",
+      "w": 680,
+      "h": 47.933,
+      "x0": 0,
+      "v0": 10.161
     }
   },
   "entities": [
-    {
-      "id": "escarpment-far-1",
-      "sprite": "escarpment-c-far",
-      "x": -60,
-      "y": 56,
-      "depth": 0.12,
-      "layer": 10
-    },
-    {
-      "id": "escarpment-far-2",
-      "sprite": "escarpment-b-far",
-      "x": 300,
-      "y": 56.5,
-      "depth": 0.12,
-      "layer": 10
-    },
-    {
-      "id": "escarpment-far-3",
-      "sprite": "escarpment-butte-far",
-      "x": 520,
-      "y": 56,
-      "depth": 0.12,
-      "layer": 10
-    },
-    {
-      "id": "escarpment-mid-1",
-      "sprite": "escarpment-a-mid",
-      "x": 90,
-      "y": 54,
-      "depth": 0.2,
-      "layer": 11
-    },
-    {
-      "id": "escarpment-mid-2",
-      "sprite": "escarpment-butte-mid",
-      "x": 430,
-      "y": 54.5,
-      "depth": 0.2,
-      "layer": 11
-    },
-    {
-      "id": "steppe",
-      "sprite": "steppe-plain",
-      "x": -80,
-      "y": 0,
-      "depth": 0.6,
-      "layer": 20
-    },
-    {
-      "id": "tussock-1",
-      "sprite": "tussock-0",
-      "x": 40,
-      "y": 30,
-      "depth": 0.7,
-      "scale": 0.6,
-      "layer": 21
-    },
-    {
-      "id": "tussock-2",
-      "sprite": "tussock-2",
-      "x": 150,
-      "y": 38,
-      "depth": 0.66,
-      "scale": 0.5,
-      "layer": 21
-    },
-    {
-      "id": "tussock-3",
-      "sprite": "tussock-1",
-      "x": 268,
-      "y": 26,
-      "depth": 0.74,
-      "scale": 0.7,
-      "layer": 21
-    },
-    {
-      "id": "tussock-4",
-      "sprite": "tussock-0",
-      "x": 392,
-      "y": 34,
-      "depth": 0.68,
-      "scale": 0.55,
-      "layer": 21
-    },
-    {
-      "id": "tussock-5",
-      "sprite": "tussock-2",
-      "x": 470,
-      "y": 22,
-      "depth": 0.78,
-      "scale": 0.75,
-      "layer": 21
-    },
     {
       "id": "ground",
       "sprite": "ground-complex",
@@ -411,6 +472,430 @@
         "wind": 0.3,
         "life": 600
       }
+    },
+    "snowflake": {
+      "shape": "dot",
+      "colour": "#f6f9fc",
+      "radius": 0.6,
+      "alpha": 0.9,
+      "layer": 40,
+      "depth": 0.9,
+      "body": {
+        "gravity": 0.06,
+        "wind": 0.9,
+        "drag": 0.3,
+        "ground": "stop",
+        "life": 9
+      }
+    },
+    "dust": {
+      "shape": "line",
+      "colour": "#e8d9b8",
+      "length": 22,
+      "width": 2,
+      "alpha": 0.32,
+      "layer": 26,
+      "depth": 0.7,
+      "body": {
+        "gravity": 0,
+        "wind": 1,
+        "life": 3
+      }
     }
+  },
+  "biomes": {
+    "mountains": [
+      {
+        "id": "escarpment-far-1",
+        "sprite": "escarpment-c-far",
+        "x": -60,
+        "y": 56,
+        "depth": 0.12,
+        "layer": 10
+      },
+      {
+        "id": "escarpment-far-2",
+        "sprite": "escarpment-b-far",
+        "x": 300,
+        "y": 56.5,
+        "depth": 0.12,
+        "layer": 10
+      },
+      {
+        "id": "escarpment-far-3",
+        "sprite": "escarpment-butte-far",
+        "x": 520,
+        "y": 56,
+        "depth": 0.12,
+        "layer": 10
+      },
+      {
+        "id": "escarpment-mid-1",
+        "sprite": "escarpment-a-mid",
+        "x": 90,
+        "y": 54,
+        "depth": 0.2,
+        "layer": 11
+      },
+      {
+        "id": "escarpment-mid-2",
+        "sprite": "escarpment-butte-mid",
+        "x": 430,
+        "y": 54.5,
+        "depth": 0.2,
+        "layer": 11
+      },
+      {
+        "id": "steppe",
+        "sprite": "steppe-plain",
+        "x": -80,
+        "y": 0,
+        "depth": 0.6,
+        "layer": 20
+      },
+      {
+        "id": "tussock-1",
+        "sprite": "tussock-0",
+        "x": 40,
+        "y": 30,
+        "depth": 0.7,
+        "scale": 0.6,
+        "layer": 22
+      },
+      {
+        "id": "tussock-2",
+        "sprite": "tussock-2",
+        "x": 150,
+        "y": 38,
+        "depth": 0.66,
+        "scale": 0.5,
+        "layer": 22
+      },
+      {
+        "id": "tussock-3",
+        "sprite": "tussock-1",
+        "x": 268,
+        "y": 26,
+        "depth": 0.74,
+        "scale": 0.7,
+        "layer": 22
+      },
+      {
+        "id": "tussock-4",
+        "sprite": "tussock-0",
+        "x": 392,
+        "y": 34,
+        "depth": 0.68,
+        "scale": 0.55,
+        "layer": 22
+      },
+      {
+        "id": "tussock-5",
+        "sprite": "tussock-2",
+        "x": 470,
+        "y": 22,
+        "depth": 0.78,
+        "scale": 0.75,
+        "layer": 22
+      }
+    ],
+    "desert": [
+      {
+        "id": "butte-far-1",
+        "sprite": "butte-a-far",
+        "x": -40,
+        "y": 56,
+        "depth": 0.12,
+        "layer": 10
+      },
+      {
+        "id": "butte-far-2",
+        "sprite": "butte-butte-far",
+        "x": 400,
+        "y": 56.5,
+        "depth": 0.12,
+        "layer": 10
+      },
+      {
+        "id": "dune-far",
+        "sprite": "dune-ridge-far",
+        "x": 150,
+        "y": 55,
+        "depth": 0.16,
+        "layer": 10
+      },
+      {
+        "id": "butte-mid",
+        "sprite": "butte-b-mid",
+        "x": 250,
+        "y": 53.5,
+        "depth": 0.2,
+        "layer": 11
+      },
+      {
+        "id": "dune-mid",
+        "sprite": "dune-ridge-mid",
+        "x": -30,
+        "y": 46,
+        "depth": 0.4,
+        "layer": 21
+      },
+      {
+        "id": "plain",
+        "sprite": "plain-desert",
+        "x": -80,
+        "y": 0,
+        "depth": 0.6,
+        "layer": 20
+      },
+      {
+        "id": "saxaul-1",
+        "sprite": "saxaul",
+        "x": 46,
+        "y": 32,
+        "depth": 0.68,
+        "layer": 22,
+        "scale": 0.6
+      },
+      {
+        "id": "saxaul-2",
+        "sprite": "saxaul",
+        "x": 205,
+        "y": 24,
+        "depth": 0.74,
+        "layer": 22,
+        "scale": 0.75
+      },
+      {
+        "id": "saxaul-3",
+        "sprite": "saxaul",
+        "x": 372,
+        "y": 36,
+        "depth": 0.66,
+        "layer": 22,
+        "scale": 0.5
+      },
+      {
+        "id": "saxaul-4",
+        "sprite": "saxaul",
+        "x": 488,
+        "y": 22,
+        "depth": 0.78,
+        "layer": 22,
+        "scale": 0.8
+      },
+      {
+        "id": "drift-1",
+        "sprite": "sand-drift-0",
+        "x": 108,
+        "y": -5,
+        "depth": 1,
+        "layer": 31
+      },
+      {
+        "id": "drift-2",
+        "sprite": "sand-drift-1",
+        "x": 268,
+        "y": -7,
+        "depth": 1,
+        "layer": 31
+      },
+      {
+        "id": "drift-3",
+        "sprite": "sand-drift-0",
+        "x": 420,
+        "y": -4,
+        "depth": 1,
+        "layer": 31
+      }
+    ],
+    "tundra": [
+      {
+        "id": "ridge-far-1",
+        "sprite": "snow-ridge-far",
+        "x": -40,
+        "y": 56,
+        "depth": 0.12,
+        "layer": 10
+      },
+      {
+        "id": "ridge-far-2",
+        "sprite": "snow-ridge-far",
+        "x": 330,
+        "y": 56.5,
+        "depth": 0.12,
+        "layer": 10
+      },
+      {
+        "id": "ridge-mid",
+        "sprite": "snow-ridge-mid",
+        "x": 120,
+        "y": 46,
+        "depth": 0.4,
+        "layer": 21
+      },
+      {
+        "id": "plain",
+        "sprite": "plain-tundra",
+        "x": -80,
+        "y": 0,
+        "depth": 0.6,
+        "layer": 20
+      },
+      {
+        "id": "ice-1",
+        "sprite": "ice",
+        "x": 60,
+        "y": 30,
+        "depth": 0.7,
+        "layer": 22,
+        "scale": 0.6
+      },
+      {
+        "id": "ice-2",
+        "sprite": "ice",
+        "x": 300,
+        "y": 36,
+        "depth": 0.66,
+        "layer": 22,
+        "scale": 0.5
+      },
+      {
+        "id": "ice-3",
+        "sprite": "ice",
+        "x": 455,
+        "y": 24,
+        "depth": 0.76,
+        "layer": 22,
+        "scale": 0.75
+      },
+      {
+        "id": "drift-1",
+        "sprite": "snow-drift-0",
+        "x": 12,
+        "y": -5,
+        "depth": 1,
+        "layer": 31
+      },
+      {
+        "id": "drift-2",
+        "sprite": "snow-drift-1",
+        "x": 110,
+        "y": -7,
+        "depth": 1,
+        "layer": 31
+      },
+      {
+        "id": "drift-3",
+        "sprite": "snow-drift-0",
+        "x": 268,
+        "y": -4,
+        "depth": 1,
+        "layer": 31
+      },
+      {
+        "id": "drift-4",
+        "sprite": "snow-drift-1",
+        "x": 420,
+        "y": -6,
+        "depth": 1,
+        "layer": 31
+      }
+    ],
+    "coast": [
+      {
+        "id": "headland",
+        "sprite": "headland-far",
+        "x": 330,
+        "y": 56,
+        "depth": 0.12,
+        "layer": 10
+      },
+      {
+        "id": "dune-far",
+        "sprite": "coast-dune-ridge-far",
+        "x": 60,
+        "y": 50,
+        "depth": 0.32,
+        "layer": 21
+      },
+      {
+        "id": "dune-mid",
+        "sprite": "coast-dune-ridge-mid",
+        "x": -40,
+        "y": 42,
+        "depth": 0.45,
+        "layer": 21
+      },
+      {
+        "id": "plain",
+        "sprite": "plain-coast",
+        "x": -80,
+        "y": 0,
+        "depth": 0.6,
+        "layer": 20
+      },
+      {
+        "id": "grass-1",
+        "sprite": "dune-grass",
+        "x": 40,
+        "y": 30,
+        "depth": 0.7,
+        "layer": 22,
+        "scale": 0.6
+      },
+      {
+        "id": "grass-2",
+        "sprite": "dune-grass",
+        "x": 160,
+        "y": 38,
+        "depth": 0.66,
+        "layer": 22,
+        "scale": 0.5
+      },
+      {
+        "id": "grass-3",
+        "sprite": "dune-grass",
+        "x": 280,
+        "y": 24,
+        "depth": 0.76,
+        "layer": 22,
+        "scale": 0.75
+      },
+      {
+        "id": "grass-4",
+        "sprite": "dune-grass",
+        "x": 410,
+        "y": 33,
+        "depth": 0.68,
+        "layer": 22,
+        "scale": 0.55
+      },
+      {
+        "id": "grass-5",
+        "sprite": "dune-grass",
+        "x": 500,
+        "y": 26,
+        "depth": 0.74,
+        "layer": 22,
+        "scale": 0.7
+      },
+      {
+        "id": "drift-1",
+        "sprite": "sand-drift-1",
+        "x": 108,
+        "y": -6,
+        "depth": 1,
+        "layer": 31
+      },
+      {
+        "id": "drift-2",
+        "sprite": "sand-drift-0",
+        "x": 420,
+        "y": -4,
+        "depth": 1,
+        "layer": 31
+      }
+    ]
   }
 }

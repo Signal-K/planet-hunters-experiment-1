@@ -23,6 +23,16 @@ extension SceneCatalog {
                 return HubScreen(safeAreaOverride: EdgeInsets()).environment(GameStore(state: gs))
             })
         }
+        // Each landscape with the pad built, in phone landscape (web `?biome=`).
+        for biome in EarthBiome.allCases {
+            out.append(scene("base-world-\(biome.rawValue)-landscape", 428, w: 926) {
+                var gs = GameState()
+                gs.player.francs = 150_000_000
+                gs.player.placed = ["launchpad"]
+                gs.player.placementPlots = ["launchpad": 0]
+                return HubScreen(safeAreaOverride: EdgeInsets(), biome: biome).environment(GameStore(state: gs))
+            })
+        }
         return out
     }
 }

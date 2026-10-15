@@ -43,6 +43,36 @@ describe('base world', () => {
     }
   })
 
+  it('gives every landscape its own flat horizon, plants and drifts on top of the shared paving and clouds', () => {
+    const sprites = (biome: string) => new Set(createWorld('base', biome).entities.map(e => e.def.sprite))
+    const expectations: Record<string, string[]> = {
+      mountains: ['steppe-plain', 'escarpment-a-mid', 'tussock-0'],
+      desert: ['plain-desert', 'butte-a-far', 'dune-ridge-mid', 'saxaul', 'sand-drift-0'],
+      tundra: ['plain-tundra', 'snow-ridge-far', 'ice', 'snow-drift-0'],
+      coast: ['plain-coast', 'headland-far', 'coast-dune-ridge-mid', 'dune-grass', 'sand-drift-1'],
+    }
+    for (const [biome, want] of Object.entries(expectations)) {
+      const got = sprites(biome)
+      for (const s of [...want, 'ground-complex', 'cloud-0']) expect(got.has(s), `${biome} ${s}`).toBe(true)
+    }
+    expect(sprites('desert').has('escarpment-a-mid')).toBe(false)
+  })
+
+  it('snows in the tundra and raises dust in a windy desert', () => {
+    const view = { w: 463, h: 214 }
+    const tundra = createWorld('base', 'tundra')
+    const snow = skyAt(new Date(2026, 0, 10, 14), 'afternoon', 'tundra', ['rain'])
+    expect(snow.weather.precip).toBe('snow')
+    for (let i = 0; i < 40; i += 1) applySky(tundra, snow, view, 1 / 20)
+    expect(tundra.entities.some(e => e.def.shape === 'dot' && e.def.colour === '#f6f9fc')).toBe(true)
+    expect(tundra.entities.some(e => e.def.shape === 'line')).toBe(false)
+    const desert = createWorld('base', 'desert')
+    const wind = skyAt(new Date(2026, 0, 10, 14), 'afternoon', 'desert', ['windy'])
+    expect(wind.weather.dust).toBe(true)
+    for (let i = 0; i < 40; i += 1) applySky(desert, wind, view, 1 / 20)
+    expect(desert.entities.some(e => e.def.colour === '#e8d9b8')).toBe(true)
+  })
+
   it('has no mountains, forest or buildings in the background', () => {
     const sprites = Object.keys(WORLD_SCENE.sprites)
     expect(sprites.some(s => /mountain|pine|tree|forest|hall|tower|building/.test(s))).toBe(false)
@@ -98,6 +128,21 @@ describe('base world', () => {
     expect(skyAt(new Date(2026, 9, 21, 12), 'midday', 'mountains').events.some(e => e.kind === 'meteors')).toBe(false)
     expect(skyAt(new Date(2026, 7, 12, 12), 'midday', 'mountains').events.some(e => e.kind === 'eclipse-solar')).toBe(true)
     expect(skyAt(new Date(2026, 5, 1, 19), 'dusk', 'mountains').events.some(e => e.id === 'venus-evening')).toBe(true)
+  })
+
+  it('weights weather by landscape', () => {
+    const tally = (biome: string) => {
+      const out: Record<string, number> = {}
+      for (let day = 0; day < 400; day += 1) {
+        const w = skyAt(new Date(2026, 0, 1 + day, 14), 'afternoon', biome).weather.kind
+        out[w] = (out[w] ?? 0) + 1
+      }
+      return out
+    }
+    const t = { mountains: tally('mountains'), desert: tally('desert'), tundra: tally('tundra'), coast: tally('coast') }
+    expect(t.mountains.windy).toBeGreaterThan(t.tundra.windy ?? 0)
+    expect(t.desert.clear).toBeGreaterThan(t.coast.clear)
+    expect((t.coast.rain ?? 0) + (t.coast.storm ?? 0)).toBeGreaterThan((t.desert.rain ?? 0) + (t.desert.storm ?? 0))
   })
 
   it('gives every player the same sky for the same local time', () => {

@@ -46,7 +46,7 @@ export function BaseWorldCanvas({ px, camera, time, biome }: Props) {
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    worldRef.current = worldRef.current ?? createWorld('base')
+    worldRef.current = createWorld('base', biome)
     const world = worldRef.current
     if (process.env.NODE_ENV !== 'production') (window as unknown as { __baseWorld?: World }).__baseWorld = world
     let raf = 0
@@ -81,7 +81,8 @@ export function BaseWorldCanvas({ px, camera, time, biome }: Props) {
     }
     raf = requestAnimationFrame(frame)
     return () => cancelAnimationFrame(raf)
-  }, [])
+    // A new landscape is a new world: its own horizon, plants and drifts.
+  }, [biome])
 
   return <canvas ref={canvasRef} className={styles.canvas} data-testid="base-world-canvas" data-time={time} data-biome={biome} aria-hidden="true" />
 }

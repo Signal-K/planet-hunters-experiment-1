@@ -28,6 +28,10 @@ export interface SkyEvent {
 
 export interface SkyWeather {
   kind: WeatherKind
+  /** What falls when it rains: snow in the tundra. */
+  precip: 'rain' | 'snow'
+  /** Wind lifts dust off the desert. */
+  dust: boolean
   /** Wind in kit units per second, positive blowing right. */
   wind: number
   clouds: number
@@ -63,27 +67,38 @@ function inShowerWindow(d: Date, start: string, end: string): boolean {
   return toStart <= 0 && toEnd >= 0 && (toEnd - toStart) <= 60
 }
 
-function pickWeather(d: Date, grade: WorldTimeGrade): SkyWeather {
+function pickWeather(d: Date, grade: WorldTimeGrade, biome: string): SkyWeather {
   const w = calendar.weather
+  const land = (calendar.biomes as Record<string, { weather: Record<string, number>; precip?: string; dust?: boolean }>)[biome]
+  const odds = land?.weather ?? {}
   const block = Math.floor(d.getHours() / w.blockHours)
   const rng = WorldRandom.from(`${calendar.salt}:weather:${dateKey(d)}:${block}`)
   const allowed = w.kinds.filter(k => !('onlyGrades' in k) || (k.onlyGrades as string[]).includes(grade))
-  const total = allowed.reduce((sum, k) => sum + k.weight, 0)
+  const weight = (k: { id: string; weight: number }) => k.weight * (odds[k.id] ?? 1)
+  const total = allowed.reduce((sum, k) => sum + weight(k), 0)
   let roll = rng.next() * total
   let kind = allowed[0]
   for (const k of allowed) {
-    roll -= k.weight
+    roll -= weight(k)
     if (roll < 0) { kind = k; break }
   }
   const [lo, hi] = kind.wind
   const sign = rng.next() < 0.7 ? 1 : -1
-  return {
+  return landWeather({
     kind: kind.id as WeatherKind,
     wind: sign * rng.range(lo, hi),
     clouds: kind.clouds,
     rainPerSecond: 'rainPerSecond' in kind ? (kind.rainPerSecond as number) : 0,
     boltEvery: 'boltEvery' in kind ? (kind.boltEvery as number) : 0,
-  }
+    precip: 'rain',
+    dust: false,
+  }, land)
+}
+
+/** Apply a landscape to weather: tundra precipitation is snow (no lightning in snow), desert wind over 6 raises dust. */
+function landWeather(w: SkyWeather, land?: { precip?: string; dust?: boolean }): SkyWeather {
+  const snow = land?.precip === 'snow'
+  return { ...w, precip: snow ? 'snow' : 'rain', boltEvery: snow ? 0 : w.boltEvery, dust: !!land?.dust && Math.abs(w.wind) > 6 }
 }
 
 /**
@@ -149,7 +164,7 @@ export function skyAt(now: Date, grade: WorldTimeGrade, biome: string, force: re
     }
   }
 
-  let weather = pickWeather(now, grade)
+  let weather = pickWeather(now, grade, biome)
   for (const f of force) {
     if (f === 'meteors') events.push({ id: 'forced-meteors', kind: 'meteors', name: 'Meteor shower', perMinute: 30 })
     if (f === 'launch') events.push({ id: 'forced-launch', kind: 'launch', name: calendar.launches.name, elapsed: 0 })
@@ -161,13 +176,15 @@ export function skyAt(now: Date, grade: WorldTimeGrade, biome: string, force: re
     if (f === 'venus') events.push({ id: 'forced-venus', kind: 'planet', name: 'Venus', x: 0.78, y: 0.62 })
     const kind = calendar.weather.kinds.find(k => k.id === f)
     if (kind) {
-      weather = {
+      weather = landWeather({
         kind: kind.id as WeatherKind,
         wind: (kind.wind[0] + kind.wind[1]) / 2,
         clouds: kind.clouds,
         rainPerSecond: 'rainPerSecond' in kind ? (kind.rainPerSecond as number) : 0,
         boltEvery: 'boltEvery' in kind ? (kind.boltEvery as number) : 0,
-      }
+        precip: 'rain',
+        dust: false,
+      }, (calendar.biomes as Record<string, { precip?: string; dust?: boolean }>)[biome])
     }
   }
   return { events, weather }

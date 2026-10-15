@@ -1,43 +1,278 @@
 {
   "version": 1,
-  "about": "Sky events over the base (SSL-423, SSL-540). Real calendar entries use real dates; the rest are deterministic per date from `salt`, so every player and both platforms see the same sky at the same local time. Each event spawns world objects from base-world.json prefabs. Visibility by grade: `night` means dusk, night and dawn. Location-dependent visibility (eclipse paths, aurora latitude) waits on SSL-540; until then events show on their dates everywhere.",
+  "about": "Sky events over the base (SSL-423, SSL-540). Real calendar entries use real dates; the rest are deterministic per date from `salt`, so every player and both platforms see the same sky at the same local time. Each event spawns world objects from base-world.json prefabs. Visibility by grade: `night` means dusk, night and dawn. Location-dependent visibility (eclipse paths, aurora latitude) waits on SSL-540; until then events show on their dates everywhere. `biomes` scales each weather kind's weight per landscape; tundra precipitation falls as snow; desert wind raises dust.",
   "salt": "landnam-sky-v1",
   "meteorShowers": [
-    { "id": "quadrantids", "name": "Quadrantids", "start": "12-28", "peak": "01-03", "end": "01-12", "perMinute": 14, "spreadDays": 1.2 },
-    { "id": "lyrids", "name": "Lyrids", "start": "04-16", "peak": "04-22", "end": "04-25", "perMinute": 4, "spreadDays": 1.5 },
-    { "id": "eta-aquariids", "name": "Eta Aquariids", "start": "04-19", "peak": "05-06", "end": "05-28", "perMinute": 6, "spreadDays": 4 },
-    { "id": "perseids", "name": "Perseids", "start": "07-17", "peak": "08-12", "end": "08-24", "perMinute": 14, "spreadDays": 3 },
-    { "id": "orionids", "name": "Orionids", "start": "10-02", "peak": "10-21", "end": "11-07", "perMinute": 5, "spreadDays": 4 },
-    { "id": "leonids", "name": "Leonids", "start": "11-06", "peak": "11-17", "end": "11-30", "perMinute": 4, "spreadDays": 2 },
-    { "id": "geminids", "name": "Geminids", "start": "12-04", "peak": "12-14", "end": "12-17", "perMinute": 16, "spreadDays": 2 }
+    {
+      "id": "quadrantids",
+      "name": "Quadrantids",
+      "start": "12-28",
+      "peak": "01-03",
+      "end": "01-12",
+      "perMinute": 14,
+      "spreadDays": 1.2
+    },
+    {
+      "id": "lyrids",
+      "name": "Lyrids",
+      "start": "04-16",
+      "peak": "04-22",
+      "end": "04-25",
+      "perMinute": 4,
+      "spreadDays": 1.5
+    },
+    {
+      "id": "eta-aquariids",
+      "name": "Eta Aquariids",
+      "start": "04-19",
+      "peak": "05-06",
+      "end": "05-28",
+      "perMinute": 6,
+      "spreadDays": 4
+    },
+    {
+      "id": "perseids",
+      "name": "Perseids",
+      "start": "07-17",
+      "peak": "08-12",
+      "end": "08-24",
+      "perMinute": 14,
+      "spreadDays": 3
+    },
+    {
+      "id": "orionids",
+      "name": "Orionids",
+      "start": "10-02",
+      "peak": "10-21",
+      "end": "11-07",
+      "perMinute": 5,
+      "spreadDays": 4
+    },
+    {
+      "id": "leonids",
+      "name": "Leonids",
+      "start": "11-06",
+      "peak": "11-17",
+      "end": "11-30",
+      "perMinute": 4,
+      "spreadDays": 2
+    },
+    {
+      "id": "geminids",
+      "name": "Geminids",
+      "start": "12-04",
+      "peak": "12-14",
+      "end": "12-17",
+      "perMinute": 16,
+      "spreadDays": 2
+    }
   ],
   "eclipses": [
-    { "id": "solar-2026-02-17", "kind": "solar", "date": "2026-02-17", "name": "Annular solar eclipse" },
-    { "id": "lunar-2026-03-03", "kind": "lunar", "date": "2026-03-03", "name": "Total lunar eclipse" },
-    { "id": "solar-2026-08-12", "kind": "solar", "date": "2026-08-12", "name": "Total solar eclipse" },
-    { "id": "lunar-2026-08-28", "kind": "lunar", "date": "2026-08-28", "name": "Partial lunar eclipse" },
-    { "id": "solar-2027-02-06", "kind": "solar", "date": "2027-02-06", "name": "Annular solar eclipse" },
-    { "id": "lunar-2027-02-20", "kind": "lunar", "date": "2027-02-20", "name": "Penumbral lunar eclipse" },
-    { "id": "solar-2027-08-02", "kind": "solar", "date": "2027-08-02", "name": "Total solar eclipse" }
+    {
+      "id": "solar-2026-02-17",
+      "kind": "solar",
+      "date": "2026-02-17",
+      "name": "Annular solar eclipse"
+    },
+    {
+      "id": "lunar-2026-03-03",
+      "kind": "lunar",
+      "date": "2026-03-03",
+      "name": "Total lunar eclipse"
+    },
+    {
+      "id": "solar-2026-08-12",
+      "kind": "solar",
+      "date": "2026-08-12",
+      "name": "Total solar eclipse"
+    },
+    {
+      "id": "lunar-2026-08-28",
+      "kind": "lunar",
+      "date": "2026-08-28",
+      "name": "Partial lunar eclipse"
+    },
+    {
+      "id": "solar-2027-02-06",
+      "kind": "solar",
+      "date": "2027-02-06",
+      "name": "Annular solar eclipse"
+    },
+    {
+      "id": "lunar-2027-02-20",
+      "kind": "lunar",
+      "date": "2027-02-20",
+      "name": "Penumbral lunar eclipse"
+    },
+    {
+      "id": "solar-2027-08-02",
+      "kind": "solar",
+      "date": "2027-08-02",
+      "name": "Total solar eclipse"
+    }
   ],
   "planets": [
-    { "id": "venus-evening", "name": "Venus", "from": "2026-03-01", "to": "2026-10-10", "grades": ["dusk", "night"], "x": 0.78, "y": 0.62 },
-    { "id": "venus-morning", "name": "Venus", "from": "2026-11-05", "to": "2027-06-30", "grades": ["dawn"], "x": 0.22, "y": 0.6 }
+    {
+      "id": "venus-evening",
+      "name": "Venus",
+      "from": "2026-03-01",
+      "to": "2026-10-10",
+      "grades": [
+        "dusk",
+        "night"
+      ],
+      "x": 0.78,
+      "y": 0.62
+    },
+    {
+      "id": "venus-morning",
+      "name": "Venus",
+      "from": "2026-11-05",
+      "to": "2027-06-30",
+      "grades": [
+        "dawn"
+      ],
+      "x": 0.22,
+      "y": 0.6
+    }
   ],
-  "satellites": { "passesPerNight": 3, "seconds": 70, "grades": ["dusk", "night", "dawn"] },
-  "launches": { "chancePerDay": 0.4, "fromHour": 7, "toHour": 21, "seconds": 75, "name": "Launch on the range" },
-  "balloons": { "hours": [6, 18], "seconds": 240, "name": "Weather balloon" },
+  "satellites": {
+    "passesPerNight": 3,
+    "seconds": 70,
+    "grades": [
+      "dusk",
+      "night",
+      "dawn"
+    ]
+  },
+  "launches": {
+    "chancePerDay": 0.4,
+    "fromHour": 7,
+    "toHour": 21,
+    "seconds": 75,
+    "name": "Launch on the range"
+  },
+  "balloons": {
+    "hours": [
+      6,
+      18
+    ],
+    "seconds": 240,
+    "name": "Weather balloon"
+  },
   "weather": {
     "blockHours": 3,
     "kinds": [
-      { "id": "clear", "weight": 50, "wind": [1, 4], "clouds": 0.6 },
-      { "id": "cloudy", "weight": 20, "wind": [3, 7], "clouds": 1 },
-      { "id": "windy", "weight": 8, "wind": [9, 15], "clouds": 0.8 },
-      { "id": "rain", "weight": 12, "wind": [4, 9], "clouds": 1, "rainPerSecond": 90 },
-      { "id": "storm", "weight": 5, "wind": [8, 14], "clouds": 1, "rainPerSecond": 160, "boltEvery": 6 },
-      { "id": "fog", "weight": 5, "wind": [0, 1.5], "clouds": 0.4, "onlyGrades": ["dawn", "morning"] }
+      {
+        "id": "clear",
+        "weight": 50,
+        "wind": [
+          1,
+          4
+        ],
+        "clouds": 0.6
+      },
+      {
+        "id": "cloudy",
+        "weight": 20,
+        "wind": [
+          3,
+          7
+        ],
+        "clouds": 1
+      },
+      {
+        "id": "windy",
+        "weight": 8,
+        "wind": [
+          9,
+          15
+        ],
+        "clouds": 0.8
+      },
+      {
+        "id": "rain",
+        "weight": 12,
+        "wind": [
+          4,
+          9
+        ],
+        "clouds": 1,
+        "rainPerSecond": 90
+      },
+      {
+        "id": "storm",
+        "weight": 5,
+        "wind": [
+          8,
+          14
+        ],
+        "clouds": 1,
+        "rainPerSecond": 160,
+        "boltEvery": 6
+      },
+      {
+        "id": "fog",
+        "weight": 5,
+        "wind": [
+          0,
+          1.5
+        ],
+        "clouds": 0.4,
+        "onlyGrades": [
+          "dawn",
+          "morning"
+        ]
+      }
     ]
   },
-  "aurora": { "chancePerNight": 0.08, "tundraChancePerNight": 0.3, "grades": ["night"] },
-  "comets": { "bucketDays": 73, "chancePerBucket": 0.5, "days": 6, "grades": ["dusk", "night", "dawn"] }
+  "biomes": {
+    "mountains": {
+      "weather": {
+        "windy": 3
+      }
+    },
+    "desert": {
+      "weather": {
+        "clear": 1.5,
+        "cloudy": 0.6,
+        "rain": 0.3,
+        "storm": 0.2,
+        "windy": 2.2,
+        "fog": 0
+      },
+      "dust": true
+    },
+    "tundra": {
+      "weather": {
+        "cloudy": 1.3,
+        "rain": 1.3
+      },
+      "precip": "snow"
+    },
+    "coast": {
+      "weather": {
+        "rain": 2,
+        "storm": 1.5,
+        "fog": 3
+      }
+    }
+  },
+  "aurora": {
+    "chancePerNight": 0.08,
+    "tundraChancePerNight": 0.3,
+    "grades": [
+      "night"
+    ]
+  },
+  "comets": {
+    "bucketDays": 73,
+    "chancePerBucket": 0.5,
+    "days": 6,
+    "grades": [
+      "dusk",
+      "night",
+      "dawn"
+    ]
+  }
 }

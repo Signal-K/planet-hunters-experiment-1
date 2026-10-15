@@ -25,6 +25,7 @@ ESCARPMENTS = {
     "a": (220, 22, [(0.0, 0.0), (0.06, 0.55), (0.1, 0.95), (0.5, 1.0), (0.78, 0.97), (0.86, 0.6), (0.93, 0.5), (1.0, 0.0)]),
     "b": (150, 16, [(0.0, 0.0), (0.12, 0.7), (0.18, 1.0), (0.62, 1.0), (0.7, 0.72), (0.76, 0.7), (0.84, 0.35), (1.0, 0.0)]),
     "c": (300, 13, [(0.0, 0.0), (0.05, 0.8), (0.09, 1.0), (0.4, 0.98), (0.45, 0.82), (0.55, 0.8), (0.6, 0.95), (0.92, 1.0), (1.0, 0.0)]),
+    "headland": (240, 20, [(0.0, 0.0), (0.1, 0.45), (0.22, 0.85), (0.3, 1.0), (0.78, 0.96), (0.86, 0.92), (0.9, 0.3), (0.96, 0.22), (1.0, 0.0)]),
     "butte": (60, 18, [(0.0, 0.0), (0.18, 0.75), (0.26, 1.0), (0.7, 1.0), (0.78, 0.7), (1.0, 0.0)]),
 }
 
@@ -135,3 +136,174 @@ def build_far_rocket():
     prism("nose", [(-1.2, 14), (1.2, 14), (0, 17)], 2.4, y=3.8, colours=("hull_lit", "hull", "hull_shade"), outline=0.3)
     camera_for(-3, 3, screen_v(5, 0) - 0.5)
     return "far-rocket"
+
+
+# ---------------------------------------------------------------- biome variants (Liam, 14 Oct: "Real variants")
+# Every landscape is flat launch-range land. Only the horizon objects, the ground details and the weather change.
+
+LAND = {
+    # Sandstone buttes and dunes of a Gobi range (Jiuquan): muted rose-tan, never orange.
+    "desert": {"cap": "#c8a892", "cap_lit": "#dcc0ac", "face": "#b08f7c", "face_lit": "#c3a28e", "face_shade": "#94766a",
+               "band": "#9a7b6d", "talus": "#c2ab8e", "talus_shade": "#a69174",
+               "sand": "#dcc8a2", "sand_lit": "#ebdcbc", "sand_shade": "#c1a983"},
+    # Snow ridges of a northern range (Plesetsk, Andoya).
+    "tundra": {"snow": "#eef3f8", "snow_lit": "#fbfdff", "snow_shade": "#c8d6e4", "ice": "#a9c8dd", "rock": "#7f8a96"},
+    # Headland and dunes of a coastal range (Canaveral, Kourou).
+    "coast": {"cliff": "#8e9aa6", "cliff_lit": "#aeb8c2", "cliff_shade": "#6f7b88", "top": "#bfb38f", "sand": "#e2d6b6", "sand_lit": "#efe6cf", "sand_shade": "#c9ba94"},
+}
+
+
+def _haze_tone(hex_value, depth):
+    haze, k = HAZE[depth]
+    return _mix_hex(hex_value, haze, k)
+
+
+def _p(name, hex_value):
+    PALETTE[name] = hex_value
+    return name
+
+
+def build_butte(shape="a", depth="far", seed=4):
+    """Desert buttes: the escarpment build with sandstone tones."""
+    saved = dict(STEPPE)
+    for k, v in LAND["desert"].items():
+        if k in STEPPE:
+            STEPPE[k] = v
+    try:
+        name = build_escarpment(shape, depth, seed)
+    finally:
+        STEPPE.clear(); STEPPE.update(saved)
+    return name.replace("escarpment", "butte")
+
+
+def _dune_height(x, dunes):
+    """Upper envelope of dunes: each a convex windward rise (left) and a steep lee drop (right)."""
+    best = 0.0
+    for cx, h, wl, wr in dunes:
+        if cx - wl <= x <= cx:
+            t = (x - (cx - wl)) / wl
+            best = max(best, h * math.sin(t * math.pi / 2) ** 1.3)
+        elif cx < x <= cx + wr:
+            t = (x - cx) / wr
+            best = max(best, h * (1 - t) ** 2.2)
+    return best
+
+
+def _dune_row(rng, width, height, n):
+    dunes = []
+    for i in range(n):
+        cx = (i + rng.uniform(0.25, 0.85)) * width / n
+        h = height * rng.uniform(0.45, 1.0)
+        dunes.append((cx, h, rng.uniform(0.7, 1.2) * width / n, rng.uniform(0.18, 0.32) * width / n))
+    return dunes
+
+
+def snow_or_sand_soft(kind):
+    return kind == "snow"
+
+
+def build_ridge(kind="dune", depth="mid", seed=9):
+    """Long low ridge (desert dune, coastal dune or snow pressure ridge): lit windward faces, shaded lee faces."""
+    reset_scene()
+    rng = random.Random(seed + len(kind) * 7 + (0 if depth == "mid" else 3))
+    width, height, n = (300.0, 14.0, 4) if depth == "mid" else (360.0, 10.0, 6)
+    if kind == "snow":
+        lit, mid, shade = LAND["tundra"]["snow_lit"], LAND["tundra"]["snow"], LAND["tundra"]["snow_shade"]
+    elif kind == "coast-dune":
+        lit, mid, shade = LAND["coast"]["sand_lit"], LAND["coast"]["sand"], LAND["coast"]["sand_shade"]
+    else:
+        lit, mid, shade = LAND["desert"]["sand_lit"], LAND["desert"]["sand"], LAND["desert"]["sand_shade"]
+    lit_t, mid_t, shade_t = (_p(f"r_lit_{depth}", _haze_tone(lit, depth)), _p(f"r_mid_{depth}", _haze_tone(mid, depth)), _p(f"r_shade_{depth}", _haze_tone(shade, depth)))
+    back_t = _p(f"r_back_{depth}", _haze_tone(_mix_hex(mid, HAZE["far"][0], 0.25), depth))
+    prism("base", [(0, 0), (width, 0), (width, height * 0.25), (0, height * 0.25)], 0.2, y=0.4, colours=(mid_t,) * 3, outline=0)
+    pts = []
+    # Two rows: a taller hazier row behind, a nearer row in front; each sampled every 2 units.
+    for row, (scale, yoff, ndunes) in enumerate(((1.0, 0.3, n), (0.6, -0.1, n + 2))):
+        dunes = _dune_row(rng, width, height * scale, ndunes)
+        samples = [(x, _dune_height(x, dunes) + (height * 0.12 if snow_or_sand_soft(kind) else 0)) for x in [k * 2.0 for k in range(int(width / 2) + 1)]]
+        if row == 1:
+            pts = samples
+        for k, (a, b) in enumerate(zip(samples, samples[1:])):
+            slope = (b[1] - a[1]) / 2.0
+            if row == 0:
+                tone = back_t
+            else:
+                tone = lit_t if slope > 0.05 else (shade_t if slope < -0.35 else mid_t)
+            prism(f"r{row}f{k}", [(a[0], 0), (b[0], 0), b, a], 0.2, y=yoff - 0.001 * k, colours=(tone,) * 3, outline=0)
+    if kind == "snow":
+        # Sastrugi: thin wind-cut lines across the lit faces.
+        for i in range(int(width / 18)):
+            x = rng.uniform(4, width - 4)
+            z = rng.uniform(height * 0.15, height * 0.5)
+            prism(f"sas{i}", [(x, z), (x + rng.uniform(5, 10), z + 0.3), (x + rng.uniform(5, 10), z + 0.7), (x, z + 0.5)], 0.2, y=-0.3, colours=(shade_t,) * 3, outline=0)
+    if kind == "coast-dune":
+        for i in range(int(width / 9)):
+            x = rng.uniform(2, width - 2)
+            crest = next((z for px, z in pts if px >= x), height * 0.4)
+            prism(f"marram{i}", _spikes(x, crest * rng.uniform(0.5, 0.9), 1.6, 2.4), 0.2, y=-0.4, colours=(_p(f"marram_{depth}", _haze_tone("#c4b98a", depth)),) * 3, outline=0)
+    camera_for(-4, width + 4, -0.5)
+    return f"{kind}-ridge-{depth}"
+
+
+def build_headland(depth="far", seed=12):
+    """Coastal headland: the escarpment build in grey cliff rock with a straw-grass top, dropping to the sea on
+    its right. No lighthouse: nothing built stands in the background."""
+    c = LAND["coast"]
+    swap = {"cap": c["top"], "cap_lit": "#d3c9a4", "face": c["cliff"], "face_lit": c["cliff_lit"], "face_shade": c["cliff_shade"],
+            "band": "#7d8995", "talus": "#9aa3ab", "talus_shade": "#7f8891"}
+    saved = dict(STEPPE)
+    STEPPE.update(swap)
+    try:
+        build_escarpment("headland", depth, seed)
+    finally:
+        STEPPE.clear(); STEPPE.update(saved)
+    return f"headland-{depth}"
+
+
+def build_drift(kind="sand", variant=0):
+    """A low drift lying on the paving: sand or snow blown against the apron."""
+    reset_scene()
+    rng = random.Random(30 + variant + (7 if kind == "snow" else 0))
+    w = (26.0, 18.0)[variant]
+    if kind == "snow":
+        lit, mid, shade = LAND["tundra"]["snow_lit"], LAND["tundra"]["snow"], LAND["tundra"]["snow_shade"]
+    else:
+        lit, mid, shade = LAND["desert"]["sand_lit"], LAND["desert"]["sand"], LAND["desert"]["sand_shade"]
+    pts = [(-w / 2, 0)]
+    for k in range(1, 8):
+        x = -w / 2 + w * k / 8
+        pts.append((x, (1 - abs(x) / (w / 2)) ** 0.7 * rng.uniform(1.2, 2.2)))
+    pts.append((w / 2, 0))
+    prism("drift", pts, 10, y=STRUCT_Y - 2, colours=(_p("dr_lit", lit), _p("dr_mid", mid), _p("dr_shade", shade)), outline=0.35)
+    camera_for(-w / 2 - 2, w / 2 + 2, screen_v(STRUCT_Y - 2, 0) - 0.3)
+    return f"{kind}-drift-{variant}"
+
+
+def build_scrub(kind="saxaul"):
+    """Ground-level plant for a landscape: saxaul (desert), dune grass (coast), snow tuft (tundra)."""
+    reset_scene()
+    rng = random.Random(len(kind))
+    if kind == "saxaul":
+        colours = (_p("sx_lit", "#b8ad8c"), _p("sx_mid", "#9b9174"), _p("sx_dark", "#7a725b"))
+        for i in range(5):
+            x = rng.uniform(-4, 4)
+            r = rng.uniform(2.2, 3.4)
+            top = [(x + r * math.cos(a), r * 0.6 + r * 0.5 * math.sin(a)) for a in [t * math.pi / 8 for t in range(9)]]
+            prism(f"clump{i}", [(x + r, 0.4)] + top + [(x - r, 0.4)], r, y=STRUCT_Y + 2 + i * 0.1, colours=colours, outline=0.4)
+        prism("trunk", [(-0.5, 0), (0.5, 0), (0.3, 1.5), (-0.3, 1.5)], 0.6, y=STRUCT_Y + 1.9, colours=("soil_dark",) * 3, outline=0.3)
+        half = 8
+    elif kind == "dune-grass":
+        saved = dict(STEPPE)
+        STEPPE.update({"grass": "#cfc597", "grass_lit": "#e0d8ae", "grass_shade": "#ada476"})
+        try:
+            build_tussock(2)
+        finally:
+            STEPPE.clear(); STEPPE.update(saved)
+        return "dune-grass"
+    else:
+        colours = (_p("ib_lit", LAND["tundra"]["snow_lit"]), _p("ib_mid", LAND["tundra"]["ice"]), _p("ib_dark", "#88aac2"))
+        prism("ice", _chunk(0, 0, 6, 6, 0.6), 6, y=STRUCT_Y + 2, colours=colours, outline=0.4)
+        prism("cap", [(-5.5, 3.5), (-2, 6), (2.5, 5.2), (5.6, 2.4), (4, 3.4), (-3, 4.6)], 0.4, y=STRUCT_Y + 1.6, colours=(_p("ib_snow", LAND["tundra"]["snow_lit"]),) * 3, outline=0)
+        half = 8
+    camera_for(-half, half, screen_v(STRUCT_Y + 2, 0) - 0.3)
+    return kind

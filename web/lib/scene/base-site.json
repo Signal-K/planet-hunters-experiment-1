@@ -239,5 +239,20 @@
         "seconds": 260
       }
     ]
+  },
+  "biomes": {
+    "about": "Landscape picker labels. Ids stay as saved (mountains is shown as Steppe). Every landscape is flat launch-range land; base-world.json holds each one's objects.",
+    "mountains": {
+      "label": "Steppe"
+    },
+    "desert": {
+      "label": "Desert"
+    },
+    "tundra": {
+      "label": "Tundra"
+    },
+    "coast": {
+      "label": "Coast"
+    }
   }
 }

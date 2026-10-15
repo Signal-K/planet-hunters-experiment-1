@@ -50,6 +50,8 @@ public struct WorldScene: Decodable, Sendable {
     public let physics: Physics
     public let sprites: [String: SpriteDef]
     public let entities: [EntityDef]
+    /// Each landscape's own horizon, far ground, plants and drifts, added to `entities`.
+    public let biomes: [String: [EntityDef]]
     public let prefabs: [String: EntityDef]
 
     public static func load(_ data: Data) throws -> WorldScene { try JSONDecoder().decode(WorldScene.self, from: data) }

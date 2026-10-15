@@ -41,7 +41,15 @@ final class WorldRunner {
     /// Parsed hex colours; the canvas asks for the same few dozen every frame.
     static var colors: [String: Color] = [:]
 
-    init() { if let scene = WorldAssets.scene { world = World(scene: scene) } }
+    /// The landscape the world was built for; a different one rebuilds it (its own horizon, plants and drifts).
+    var biome = ""
+
+    func world(for biome: String) {
+        guard biome != self.biome, let scene = WorldAssets.scene else { return }
+        self.biome = biome
+        world = World(scene: scene, biome: biome)
+        sky = nil
+    }
 }
 
 /// The base world (SSL-423): every background piece is an entity from `base-world.json`, stepped by the shared
@@ -72,6 +80,7 @@ struct BaseWorldCanvas: View {
     }
 
     private func step(now: Date, size: CGSize) {
+        runner.world(for: biome)
         guard runner.world != nil, let site = WorldAssets.site, let cal = WorldAssets.calendar else { return }
         let dt = min(0.1, runner.last.map { now.timeIntervalSince($0) } ?? 0)
         runner.last = now

@@ -40,10 +40,12 @@ public struct World: Sendable {
     public var flash: Double = 0
     public var sky: WorldSky?
 
-    public init(scene: WorldScene, seedKey: String = "base") {
+    /// A world for one landscape: the common entities (paving, clouds) plus that landscape's own set.
+    public init(scene: WorldScene, seedKey: String = "base", biome: String = "mountains") {
         self.scene = scene
         rng = WorldRandom(key: seedKey)
-        for def in scene.entities { entities.append(make(def)) }
+        let land = scene.biomes[biome] ?? scene.biomes["mountains"] ?? []
+        for def in scene.entities + land { entities.append(make(def)) }
     }
 
     public struct Over {
@@ -162,11 +164,19 @@ public struct World: Sendable {
         }
         activeEvents = activeEvents.filter { live.contains($0) }
         let weather = sky.weather
+        let snow = weather.precip == "snow"
         if weather.rainPerSecond > 0 {
-            emitAtRate("rain", perSecond: weather.rainPerSecond, dt: dt) { w in
+            emitAtRate("rain", perSecond: weather.rainPerSecond * (snow ? 0.6 : 1), dt: dt) { w in
                 let x = view.stripX(w.rng.range(-0.05, 1.05), depth: 0.9)
                 let floor = w.rng.range(-36, 4)
-                w.spawn("raindrop", Over(x: x, y: view.h, vy: -150, floor: floor))
+                w.spawn(snow ? "snowflake" : "raindrop", Over(x: x, y: view.h, vy: snow ? -14 : -150, floor: floor))
+            }
+        }
+        if weather.dust {
+            emitAtRate("dust", perSecond: 8, dt: dt) { w in
+                let x = view.stripX(w.rng.range(-0.1, 0.9), depth: 0.7)
+                let y = w.rng.range(0, 28)
+                w.spawn("dust", Over(x: x, y: y, vx: weather.wind))
             }
         }
         if weather.boltEvery > 0 {

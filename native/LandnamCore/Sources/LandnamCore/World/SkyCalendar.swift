@@ -15,6 +15,13 @@ public struct WorldSkyCalendar: Decodable, Sendable {
         public let rainPerSecond: Double?; public let boltEvery: Double?; public let onlyGrades: [String]?
     }
     public struct Weather: Decodable, Sendable { public let blockHours: Int; public let kinds: [WeatherKind] }
+    public struct BiomeOdds: Decodable, Sendable {
+        public let weather: [String: Double]
+        /// "snow" in the tundra: precipitation falls as snow.
+        public let precip: String?
+        /// Desert: wind over 6 raises dust.
+        public let dust: Bool?
+    }
     public struct Aurora: Decodable, Sendable { public let chancePerNight, tundraChancePerNight: Double; public let grades: [String] }
     public struct Comets: Decodable, Sendable { public let bucketDays: Int; public let chancePerBucket: Double; public let days: Int; public let grades: [String] }
 
@@ -26,6 +33,7 @@ public struct WorldSkyCalendar: Decodable, Sendable {
     public let launches: Launches
     public let balloons: Balloons
     public let weather: Weather
+    public let biomes: [String: BiomeOdds]
     public let aurora: Aurora
     public let comets: Comets
 
@@ -46,6 +54,10 @@ public struct WorldSkyEvent: Sendable, Equatable {
 
 public struct WorldWeather: Sendable, Equatable {
     public var kind: String
+    /// "rain" or "snow" (tundra).
+    public var precip: String = "rain"
+    /// Wind lifts dust off the desert.
+    public var dust: Bool = false
     public var wind: Double
     public var clouds: Double
     public var rainPerSecond: Double
@@ -82,20 +94,32 @@ public enum WorldSkyClock {
         return best
     }
 
-    static func pickWeather(_ data: WorldSkyCalendar, _ d: Date, grade: String, _ cal: Calendar) -> WorldWeather {
+    /// Apply a landscape (web `landWeather`): tundra precipitation is snow with no lightning; desert wind over 6 raises dust.
+    static func landWeather(_ w: WorldWeather, _ land: WorldSkyCalendar.BiomeOdds?) -> WorldWeather {
+        var out = w
+        let snow = land?.precip == "snow"
+        out.precip = snow ? "snow" : "rain"
+        if snow { out.boltEvery = 0 }
+        out.dust = (land?.dust ?? false) && abs(w.wind) > 6
+        return out
+    }
+
+    static func pickWeather(_ data: WorldSkyCalendar, _ d: Date, grade: String, biome: String, _ cal: Calendar) -> WorldWeather {
         let w = data.weather
         let block = cal.component(.hour, from: d) / w.blockHours
         var rng = WorldRandom(key: "\(data.salt):weather:\(dateKey(d, cal)):\(block)")
         let allowed = w.kinds.filter { $0.onlyGrades == nil || $0.onlyGrades!.contains(grade) }
-        let total = allowed.reduce(0) { $0 + $1.weight }
+        let odds = data.biomes[biome]?.weather ?? [:]
+        func weight(_ k: WorldSkyCalendar.WeatherKind) -> Double { k.weight * (odds[k.id] ?? 1) }
+        let total = allowed.reduce(0) { $0 + weight($1) }
         var roll = rng.next() * total
         var kind = allowed[0]
         for k in allowed {
-            roll -= k.weight
+            roll -= weight(k)
             if roll < 0 { kind = k; break }
         }
         let sign: Double = rng.next() < 0.7 ? 1 : -1
-        return WorldWeather(kind: kind.id, wind: sign * rng.range(kind.wind[0], kind.wind[1]), clouds: kind.clouds, rainPerSecond: kind.rainPerSecond ?? 0, boltEvery: kind.boltEvery ?? 0)
+        return landWeather(WorldWeather(kind: kind.id, wind: sign * rng.range(kind.wind[0], kind.wind[1]), clouds: kind.clouds, rainPerSecond: kind.rainPerSecond ?? 0, boltEvery: kind.boltEvery ?? 0), data.biomes[biome])
     }
 
     /// The sky at a local time. `force` (dev previews) adds events and weather by kind.
@@ -156,7 +180,7 @@ public enum WorldSkyClock {
                 if dayOfEpoch >= first && dayOfEpoch < first + c.days { events.append(WorldSkyEvent(id: "comet-\(bucket)", kind: .comet, name: "Comet")) }
             }
         }
-        var weather = pickWeather(data, now, grade: grade, cal)
+        var weather = pickWeather(data, now, grade: grade, biome: biome, cal)
         for f in force {
             switch f {
             case "meteors": events.append(WorldSkyEvent(id: "forced-meteors", kind: .meteors, name: "Meteor shower", perMinute: 30))
@@ -170,7 +194,7 @@ public enum WorldSkyClock {
             default: break
             }
             if let k = data.weather.kinds.first(where: { $0.id == f }) {
-                weather = WorldWeather(kind: k.id, wind: (k.wind[0] + k.wind[1]) / 2, clouds: k.clouds, rainPerSecond: k.rainPerSecond ?? 0, boltEvery: k.boltEvery ?? 0)
+                weather = landWeather(WorldWeather(kind: k.id, wind: (k.wind[0] + k.wind[1]) / 2, clouds: k.clouds, rainPerSecond: k.rainPerSecond ?? 0, boltEvery: k.boltEvery ?? 0), data.biomes[biome])
             }
         }
         return WorldSky(events: events, weather: weather)
