@@ -3043,6 +3043,14 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
   pointer-events: none;
 }
 .flight-plan-slot > * { pointer-events: auto; }
+/* On wide and landscape screens the launch review keeps its plan strip at the top, so the coach strip moves to the bottom instead of covering it. */
+@media (min-width: 701px), (orientation: landscape) {
+  body:has([data-testid="mission-launch-review"]) .flight-plan-slot { top: auto; bottom: 156px; }
+}
+/* A short landscape screen has no room for the strip over the review; the screen explains itself. */
+@media (orientation: landscape) and (max-height: 520px) {
+  body:has([data-testid="mission-launch-review"]) .flight-plan-slot { display: none; }
+}
 .flight-plan-slot:has(> .help-coach-dock) { z-index: 81; }
 .flight-plan-slot:has(> .help-coach-dock) > .flight-plan { display: none; }
 .flight-plan {

@@ -70,12 +70,16 @@ export const STRUCTURES: StructureBlueprint[] = [
  *  HubScreen's copy, which could drift apart silently. */
 export const LAUNCHPAD_UPGRADE_COST = STRUCTURE_PRICES.launchpadUpgrade
 
+/** Silo and Exchange appear once one run has been flown: before that there is no ore to store or sell, and they cost
+ *  a fifth of the starting francs. (Free Ops itself opens with the launchpad.) */
+export const FIRST_STORAGE_MISSIONS_DONE = 1
+
 export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; missionsDone?: number; hasMiningSettlement?: boolean } = {}): boolean {
   // SSL-332's storage silo is the only pre-Free-Ops construction step: it
   // becomes available after Extraction and Transport, and placement opens
   // Free Ops. Existing players retain access through their saved unlock.
-  if (structure.id === 'surface-silo') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
-  if (structure.id === 'market') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('market')
+  if (structure.id === 'surface-silo') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
+  if (structure.id === 'market') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('market')
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   if (structure.unlockTrigger === 'always') return true
   return false

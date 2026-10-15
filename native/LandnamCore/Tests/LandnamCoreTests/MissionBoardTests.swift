@@ -29,6 +29,21 @@ import Foundation
         }
     }
 
+    /// A new player starts with F9M and the free Explorer: the first contracts must be flyable with it, no parts bought.
+    @Test func firstContractsAreFlyableWithTheFreeExplorerAndNoParts() {
+        let p = Player()
+        let first = MissionBoard.clientBoard(catalog: catalog, player: p, now: now)
+        #expect(!first.isEmpty)
+        let explorer = Rockets.config(for: Rockets.models[0])
+        for entry in first {
+            let targets = Targets.feasible(for: entry.mission, missionsDone: 0)
+            #expect(!targets.isEmpty, "\(entry.mission.title) has no target a new player can reach")
+            if let target = targets.first {
+                #expect(catalog.parts.validate(mission: entry.mission, target: target, rocket: explorer, skills: []).ok, "\(entry.mission.title) is not launchable with the free Explorer")
+            }
+        }
+    }
+
     @Test func guidedPathOffersFirstContractsThenTheTwoTransportClients() {
         var p = Player()
         let first = MissionBoard.clientBoard(catalog: catalog, player: p, now: now)

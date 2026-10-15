@@ -11,6 +11,8 @@ struct RocketBuilderScreen: View {
     @State private var showSettings = false
     @State private var selectedSlot: String?
     @State private var notice = ""
+    /// The free Explorer launches as it is: the parts shop stays closed until the player asks for it (web `builder-customize`).
+    @State private var customizing = false
     @State private var planSheet: PlanSheet?
     /// Snapshots render ScrollView content as empty; catalog scenes set this to lay the list out flat.
     @Environment(\.flatLayout) private var flat
@@ -43,7 +45,10 @@ struct RocketBuilderScreen: View {
                             .background(Theme.blue, in: RoundedRectangle(cornerRadius: 10))
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink, lineWidth: 2))
                     }
-                    if wide {
+                    if !(customizing || guided) {
+                        blueprint(fittedCount: fittedCount, numbers: numbers, row: true).frame(height: max(150, geo.size.height * 0.3))
+                        Spacer(minLength: 0)
+                    } else if wide {
                         HStack(alignment: .top, spacing: 8) {
                             blueprint(fittedCount: fittedCount, numbers: numbers, row: true).frame(width: geo.size.width * 0.3).frame(maxHeight: .infinity)
                             choices(active: active, guidedSlot: guidedSlot, loadout: loadout, compact: geo.size.height < 520)
@@ -69,6 +74,14 @@ struct RocketBuilderScreen: View {
     }
 
     private var actions: some View {
+        // Back, Launch and Customize always fit; the Target card only joins them when there is room (the plan strip also names the destination).
+        ViewThatFits(in: .horizontal) {
+            actionsRow(showTarget: true)
+            actionsRow(showTarget: false)
+        }
+    }
+
+    private func actionsRow(showTarget: Bool) -> some View {
         HStack(alignment: .center, spacing: 8) {
             Button { store.go(.hub) } label: {
                 Text("‹ BACK").font(AppFont.display(14, "Bold")).tracking(1.4).foregroundStyle(Theme.ink).lineLimit(1).fixedSize()
@@ -83,8 +96,15 @@ struct RocketBuilderScreen: View {
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
             }
             .buttonStyle(.plain).disabled(!launchEnabled).accessibilityIdentifier("launch-btn")
+            if !guided {
+                Button { customizing.toggle() } label: {
+                    Text(customizing ? "DONE" : "CUSTOMIZE").font(AppFont.display(14, "Bold")).tracking(1.4).foregroundStyle(Theme.ink).lineLimit(1).fixedSize()
+                        .padding(.horizontal, 16).frame(minHeight: 44)
+                        .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.ink, lineWidth: 2))
+                }.buttonStyle(.plain).accessibilityIdentifier("builder-customize")
+            }
             Spacer(minLength: 4)
-            Button(action: onChooseMission) {
+            if showTarget { Button(action: onChooseMission) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("TARGET").font(AppFont.display(14, "Bold")).tracking(1.4)
                     Text(store.target?.name ?? "Choose a mission").font(AppFont.body(14, "Bold")).lineLimit(1)
@@ -93,7 +113,7 @@ struct RocketBuilderScreen: View {
                 .frame(minWidth: 110, minHeight: 44, alignment: .leading).padding(.horizontal, 12)
                 .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
-            }.buttonStyle(.plain)
+            }.buttonStyle(.plain) }
         }
     }
 

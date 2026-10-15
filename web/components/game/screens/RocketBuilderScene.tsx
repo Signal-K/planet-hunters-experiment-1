@@ -76,6 +76,9 @@ export default function RocketBuilderScene({
   const loadout = asLoadout(installed)
   const [selected, setSelected] = useState<BuilderSlotId | null>(null)
   const [notice, setNotice] = useState('')
+  // The free Explorer launches as it is. The parts shop is optional, so it stays closed until the player asks for it.
+  const [customizing, setCustomizing] = useState(false)
+  const showParts = customizing || guided
   const land = builderLandscape(target)
   const stats = rocketBuilderStats(rocket, loadout, skills)
   const fitted = fittedModules(loadout)
@@ -169,6 +172,7 @@ export default function RocketBuilderScene({
             <span>Target</span>
             <strong>{targetLabel}</strong>
           </button>
+          {!guided && <button type="button" className={styles.back} data-testid="builder-customize" aria-expanded={customizing} onClick={() => setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
         </div>
 
         {guided && (
@@ -179,7 +183,7 @@ export default function RocketBuilderScene({
           </p>
         )}
 
-        <div className={styles.body}>
+        <div className={styles.body} data-parts={showParts ? 'open' : 'closed'}>
           <section className={styles.blueprint} aria-label="Rocket blueprint" data-fitted-count={fittedCount}>
             <div className={styles.rocketWrap}>
               <img src="/art/scenes/launchpad/launchpad-rocket-multistage.png" alt="" data-testid="launch-rocket" style={{ opacity: 0.55 + fittedCount * 0.09 }} />
@@ -191,7 +195,7 @@ export default function RocketBuilderScene({
             </ul>
           </section>
 
-          <section className={styles.choices} aria-label="Part choices">
+          {showParts && <section className={styles.choices} aria-label="Part choices">
             <div className={styles.tabs} role="tablist" data-testid="rocket-builder-tray">
               {BUILDER_SLOTS.map(slot => {
                 const partId = partIdForSlot(loadout, slot)
@@ -252,7 +256,7 @@ export default function RocketBuilderScene({
               })}
             </ul>
             {notice ? <p className={styles.notice} role="status">{notice}</p> : null}
-          </section>
+          </section>}
         </div>
       </div>
 

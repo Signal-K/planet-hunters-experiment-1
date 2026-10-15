@@ -30,10 +30,13 @@ public enum Construction {
         all.filter { $0.id != "astronaut-academy" && !p.placed.contains($0.id) }
     }
 
+    /// Silo and Exchange appear once one run is flown: before that there is nothing to store or sell (web `FIRST_STORAGE_MISSIONS_DONE`).
+    public static let firstStorageMissionsDone = 1
+
     public static func unlocked(_ b: StructureBlueprint, player p: Player) -> Bool {
         switch b.id {
-        case "surface-silo": return p.freeOperations || p.missionsDone >= 2 || p.placed.contains("surface-silo")
-        case "market": return p.freeOperations || p.missionsDone >= 2 || p.placed.contains("market")
+        case "surface-silo": return p.missionsDone >= firstStorageMissionsDone || p.placed.contains("surface-silo")
+        case "market": return p.missionsDone >= firstStorageMissionsDone || p.placed.contains("market")
         case "astronaut-academy": return p.academyResearched || p.placed.contains("astronaut-academy")
         case "launchpad": return true
         default: return false

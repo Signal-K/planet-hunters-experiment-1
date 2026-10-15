@@ -76,7 +76,7 @@ struct MissionPlanStrip: View {
 
     @ViewBuilder private func slot(_ label: String, _ value: String, change: PlanSheet?, id: String) -> some View {
         let content = VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(AppFont.display(14, "Bold")).tracking(1.2).opacity(0.75)
+            Text(label).font(AppFont.display(14, "Bold")).tracking(0.3).lineLimit(1).opacity(0.75)
             Text(value).font(AppFont.body(14, "Bold")).lineLimit(1)
         }
         .foregroundStyle(Theme.ink)

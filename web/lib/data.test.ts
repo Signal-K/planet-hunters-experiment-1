@@ -888,7 +888,8 @@ describe('Exchange structure (optional, chosen by the player)', () => {
   const market = STRUCTURES.find(structure => structure.id === 'market')!
   it('is locked before the guided missions and unlocked after', () => {
     expect(structureUnlocked(market, { missionsDone: 0 })).toBe(false)
-    expect(structureUnlocked(market, { missionsDone: 2 })).toBe(true)
-    expect(structureUnlocked(market, { freeOperations: true })).toBe(true)
+    expect(structureUnlocked(market, { missionsDone: 1 })).toBe(true)
+    // Free Ops opens with the launchpad, but there is nothing to sell until the first run is flown.
+    expect(structureUnlocked(market, { freeOperations: true, missionsDone: 0 })).toBe(false)
   })
 })

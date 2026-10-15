@@ -21,7 +21,7 @@ struct LaunchReviewScreen: View {
         if launching {
             LaunchSequenceScreen(variant: model.id == "prospector" ? "prospector" : "explorer") { store.launch() }
         } else {
-            RocketBuilderScreen(launchEnabled: launchEnabled, onLaunch: launchTapped, onChooseMission: { store.go(.missions) }, guided: store.state.tutorial)
+            RocketBuilderScreen(launchEnabled: launchEnabled, onLaunch: launchTapped, onChooseMission: { store.go(.missions) })
         }
     }
 

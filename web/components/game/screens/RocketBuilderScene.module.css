@@ -129,6 +129,13 @@
 
 .stage > * { pointer-events: auto; }
 
+/* The coach strip sits at the top (68px, 56px tall): start the stage below it so Back, Launch and Customize stay visible. */
+@media (orientation: portrait) and (max-width: 700px) {
+  :global(body:has(.flight-plan)) .stage { top: 132px; }
+  /* The plan strip already names the destination; the Target card gives its room to Customize. */
+  .actions .target { display: none; }
+}
+
 .actions {
   display: flex;
   align-items: stretch;
@@ -201,6 +208,8 @@
   grid-template-columns: minmax(200px, 34%) minmax(0, 1fr);
   gap: 8px;
 }
+
+.body[data-parts='closed'] { grid-template-columns: minmax(0, 1fr); }
 
 .blueprint,
 .choices {

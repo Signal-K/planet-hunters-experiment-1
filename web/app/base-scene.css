@@ -57,8 +57,8 @@
 }
 
 .hub-mission-status__short { display: none; }
-/* Short landscape: tuck the bar to the right of the dock so it never covers the structures. */
-@media (orientation: landscape) and (max-height: 500px) {
+/* Short landscape (up to a 640px window): tuck the bar to the right of the dock so it never covers the structures or their labels. */
+@media (orientation: landscape) and (max-height: 640px) {
   .hub-mission-status { position: absolute; right: 12px; bottom: 4px; }
   .hub-mission-status__long { display: none; }
   .hub-mission-status__short { display: inline; }

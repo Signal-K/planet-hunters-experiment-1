@@ -10,6 +10,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
       await expect(page.getByTestId('rocket-builder')).toBeVisible()
       const before = await page.getByTestId('rocket-builder-stats').getAttribute('data-range')
+      await page.getByTestId('builder-customize').click()
       await page.getByTestId('builder-part-engine').click()
       await page.getByTestId('builder-option-ion-thruster-t1').click()
       await expect(page.getByTestId('rocket-builder-stats')).not.toHaveAttribute('data-range', before ?? '')
@@ -21,6 +22,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test('part cards update the blueprint loadout on the launch review', async ({ page }, info) => {
       await stage(page, 'ui-target-picker', { patch: { francs: 500_000_000, crewModuleResearched: true } })
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
+      await page.getByTestId('builder-customize').click()
       await page.getByTestId('builder-part-cargo-hold').click()
       await page.getByTestId('builder-option-cargo-payload-t1').click()
       await expect(page.getByTestId('builder-part-cargo-hold')).toHaveAttribute('data-part', 'cargo-payload-t1')

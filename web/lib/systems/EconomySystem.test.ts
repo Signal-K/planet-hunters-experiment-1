@@ -363,9 +363,9 @@ describe('Academy and staffing economy', () => {
     expect(built.popup).toBe('tutorial-complete')
   })
 
-  it('keeps the storage silo locked before the guided missions are flown', () => {
+  it('keeps the storage silo locked until the first run is flown, even in Free Ops', () => {
     const silo = STRUCTURES.find(structure => structure.id === 'surface-silo')!
-    const early = { ...makeState({ francs: silo.cost, missionsDone: 1, freeOperations: false, placed: ['launchpad'] }), tutorial: true }
+    const early = { ...makeState({ francs: silo.cost, missionsDone: 0, freeOperations: true, placed: ['launchpad'] }), tutorial: true }
     expect(applyPlaceStructure(early, silo, silo.kind, 1)).toBe(early)
   })
 
