@@ -27,6 +27,13 @@ struct FlightPlanTests {
         #expect(!Transitions.freeOperationsUnlocked(p))
     }
 
+    @Test func guideStaysOfferedInFreeOpsUntilTheTriesAreDone() {
+        var p = Player(); p.placed = ["launchpad"]; p.freeOperations = true
+        #expect(FlightPlan.coach(p, screen: .hub)?.kicker == "MINING OPS · STEP 1/6")
+        for id in FlightPlanProgress.tryIds { p.flightPlan.complete(id) }
+        #expect(FlightPlan.coach(p, screen: .hub, includeHidden: true) == nil)
+    }
+
     @Test func coachNamesLaunchpadPlacementFirst() {
         let p = Player()
         let c = FlightPlan.coach(p, screen: .hub)

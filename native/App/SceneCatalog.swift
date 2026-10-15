@@ -453,9 +453,13 @@ enum SceneCatalog {
         scene("launch-no-silo-phone", 874) {
             var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
             let st = GameStore(state: gs)
-            st.go(.missions)
-            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && !$0.locked && $0.construction == nil && !$0.requires.minerals.isEmpty })?.id { st.pickMission(id) }
-            return LaunchReviewScreen().environment(st).environment(\.flatLayout, true)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: false, onLaunch: {}, onChooseMission: {}).environment(st).environment(\.flatLayout, true)
+        },
+        scene("guide-free-ops-hub", 874) {
+            var gs = GameState(); gs.player.freeOperations = true; gs.player.placed = ["launchpad"]; gs.player.placementPlots = ["launchpad": 0]
+            return coached(HubScreen(), gs, screen: .hub)
         },
         scene("home-live-landscape", 402, w: 874) { HomecomingScreen().environment(GameStore(state: homeState())) },
         scene("transit-live", 874) {
