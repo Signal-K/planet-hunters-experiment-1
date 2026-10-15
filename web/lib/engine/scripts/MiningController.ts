@@ -382,14 +382,14 @@ export class MiningController extends ScriptBehaviour {
       if (ore.label) {
         const halfLabel = ore.label.width * (ore.chip ? 0.58 : 0.5)
         const oreX = ore.go.transform.position.x
-        if (ore.chip && (oreX < -halfLabel || oreX > this.opts.worldWidth + halfLabel)) {
+        if ((ore.chip || !(ore.label instanceof Text)) && (oreX < -halfLabel || oreX > this.opts.worldWidth + halfLabel)) {
           ore.label.visible = false
         } else {
           ore.label.visible = true
           const minLabelX = halfLabel + 20
           const maxLabelX = Math.max(minLabelX, this.opts.worldWidth - halfLabel - 20)
           ore.label.x = Math.min(maxLabelX, Math.max(minLabelX, oreX))
-          if (ore.chip && ore.phase !== 'fall' && ore.phase !== 'land') {
+          if (!ore.chip || (ore.phase !== 'fall' && ore.phase !== 'land')) {
             visibleChipLabels.push({ ore, center: ore.label.x, halfWidth: halfLabel })
           }
         }
@@ -410,7 +410,9 @@ export class MiningController extends ScriptBehaviour {
       while (lane < laneEnds.length && label.center - label.halfWidth < laneEnds[lane] + 8) lane++
       if (lane === laneEnds.length) laneEnds.push(Number.NEGATIVE_INFINITY)
       laneEnds[lane] = label.center + label.halfWidth
-      label.ore.label!.y = label.ore.labelBaseY - lane * Math.max(160, label.ore.label!.height + 24)
+      // Chip labels sit far apart; deposit name pills only need to clear each other.
+      const step = label.ore.chip ? Math.max(160, label.ore.label!.height + 24) : label.ore.label!.height + 4
+      label.ore.label!.y = label.ore.labelBaseY - lane * step
     }
 
     this.updateDebris(dt)
