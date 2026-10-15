@@ -9,6 +9,7 @@ import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import MissionBoard from '@/components/game/MissionBoard'
+import MissionPlanStrip from '@/components/game/MissionPlanStrip'
 import styles from './MissionSetupRoutes.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -74,6 +75,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
 
   return (
     <div data-testid="mission-launch-review" className={styles.builderHost}>
+      <MissionPlanStrip game={game} launched={launchPending} blockedReason={launchReady ? null : (validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [] }).problems[0] ?? crewStatus.reason ?? 'Mission requirements not met')} />
       <LaunchpadScreen
         onBack={() => game.go(ownProgram ? 'launchpad' : 'missions')}
         onPick={game.onPickMission}

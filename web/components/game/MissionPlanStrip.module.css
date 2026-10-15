@@ -1,0 +1,35 @@
+.rail, .slot, .hold, .sheet { color: var(--ln-world-outline); }
+.host, .host * { box-sizing: border-box; }
+.host { position: absolute; z-index: auto; top: 56px; left: 8px; right: 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+.host > * { pointer-events: auto; }
+.rail, .slots, .hold { position: relative; z-index: 30; }
+.rail { display: flex; gap: 16px; margin: 0; padding: 4px 16px; list-style: none; font: 800 14px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; background: var(--ln-world-hull-lit); border: 1px solid var(--ln-world-outline); }
+.rail li { display: flex; align-items: center; gap: 8px; opacity: .55; }
+.rail li[data-state='now'] { opacity: 1; }
+.rail li[data-state='done'] { opacity: .85; }
+.rail i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.rail li[data-state='next'] i { background: none; border: 1px solid currentColor; }
+.slots { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.slot { display: grid; gap: 2px; min-width: 120px; min-height: 44px; padding: 4px 16px; text-align: left; color: var(--ln-world-outline); font: inherit; background: var(--ln-world-hull-lit); border: 1px solid var(--ln-world-outline); }
+.slot span { font-size: 14px; letter-spacing: .12em; text-transform: uppercase; opacity: .75; }
+.slot strong { font-size: 14px; }
+.slot em { font-size: 14px; font-style: normal; letter-spacing: .12em; text-transform: uppercase; }
+.slot:disabled { opacity: .6; }
+.hold { margin: 0; padding: 4px 16px; font-size: 14px; background: var(--ln-world-hull-lit); border: 1px solid var(--ln-world-outline); }
+.sheet { position: fixed; z-index: 60; box-sizing: border-box; left: 0; right: 0; bottom: 0; max-height: 60vh; overflow: auto; padding: 16px; background: var(--ln-world-hull-lit); border-top: 2px solid var(--ln-world-outline); pointer-events: auto; }
+.sheet p { margin: 0 0 8px; font-size: 14px; }
+.sheet ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sheet li button { display: flex; justify-content: space-between; gap: 16px; width: 100%; min-height: 44px; padding: 8px 16px; color: var(--ln-world-outline); font: inherit; font-size: 14px; background: none; border: 1px solid var(--ln-world-outline); }
+.sheet li button[data-current] { border-width: 2px; }
+.sheetHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .12em; }
+.sheetHead button { min-height: 44px; padding: 0 16px; color: var(--ln-world-outline); font: inherit; font-size: 14px; background: none; border: 1px solid var(--ln-world-outline); }
+@media (orientation: landscape) and (max-height: 520px) { .host { top: 4px; left: 64px; right: 64px; } .rail { display: none; } .sheet { left: 25%; right: 25%; max-height: 80vh; } }
+
+/* Phone portrait: the top rows belong to the HUD and builder, so the plan rides just above the dock. */
+@media (orientation: portrait) and (max-width: 600px) { .host { top: auto; bottom: 76px; gap: 4px; } .slots { flex-wrap: nowrap; width: 100%; } .slot { flex: 1 1 0; min-width: 0; padding: 4px 8px; } .slot strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .slot span, .slot em { font-size: 14px; letter-spacing: .04em; } }
+
+/* Desktop: ride the empty band between Launch and Target, above the part tabs. */
+@media (min-width: 900px) and (min-height: 600px) { .host { top: 66px; left: 260px; right: 260px; flex-direction: row; justify-content: center; align-items: center; gap: 16px; } .slots { flex-wrap: nowrap; } .slot { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px; } }
+@media (orientation: portrait) and (max-width: 600px) { .slot em { display: none; } .slot { min-height: 44px; } }
+@media (min-width: 900px) and (min-height: 600px) { .host { left: 290px; right: 270px; gap: 8px; } .slot em { display: none; } button.slot:not(:disabled)::after { content: '\203A'; font-weight: 800; } .slot { padding: 0 12px; } .slot strong { white-space: nowrap; } }
+@media (orientation: portrait) and (max-width: 600px) { button.slot:not(:disabled)::after { content: '\203A'; position: absolute; right: 8px; top: 4px; font-weight: 800; } .slot { position: relative; } }
