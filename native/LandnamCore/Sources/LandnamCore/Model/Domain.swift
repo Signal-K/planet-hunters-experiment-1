@@ -73,7 +73,7 @@ public struct Target: Codable, Equatable, Identifiable, Sendable {
 }
 
 public struct Client: Equatable, Identifiable, Sendable {
-    public enum UIRole: String, Sendable { case starter, prospect, bulk, command }
+    public enum UIRole: String, Sendable { case starter, prospect, bulk, command, science }
     public let id: String
     public let name: String
     public let colorHex: String

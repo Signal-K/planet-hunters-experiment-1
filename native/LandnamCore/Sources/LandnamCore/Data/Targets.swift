@@ -49,6 +49,7 @@ public enum Targets {
         landmark("ceres", "1 Ceres", .asteroid, 5, "L2", "Dwarf planet at the belt's inner edge. Ice-rich mantle beneath a carbon-dark crust.", .C),
         landmark("lutetia", "21 Lutetia", .asteroid, 6, "L2", "A large carbonaceous asteroid in the outer belt. Hydrated minerals under a dark regolith crust.", .C, recommended: false),
         landmark("jupiter", "Jupiter", .planet, 6, "L3", "Gas giant with hydrogen, helium, and a high gravity penalty. Jupiter itself is not a conventional mining site.", .gasGiant),
+        landmark("europa", "Europa", .planet, 6, "L2", "Ice-covered moon of Jupiter. Water ice over a silicate interior, with a banded giant in the sky.", .icy),
     ]
 
     public static let byId: [String: Target] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
