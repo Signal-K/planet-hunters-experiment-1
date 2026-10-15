@@ -146,6 +146,11 @@ struct HubScreen: View {
                     .padding(.horizontal, 12).padding(.vertical, 6)
                     .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
             }
+            if picked == "surface-silo" || (picked == nil && options.first?.id == "surface-silo") {
+                Button("PLACE SILO") { buildSilo() }
+                    .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.hudInk).frame(minHeight: 44).padding(.horizontal, 18)
+                    .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+            }
             if options.count == 1 && placeNote == nil {
                 // One choice: the site marker in the scene already names it (web hides the chip too).
                 EmptyView()
@@ -154,27 +159,24 @@ struct HubScreen: View {
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
             } else {
-                // Stacked rows, not a scroller: there are at most three structures and a scroller hides them from snapshots.
-                do {
-                    VStack(spacing: 6) {
-                        ForEach(options) { b in
-                            let on = (picked ?? options.first?.id) == b.id
-                            Button { picked = b.id; placeNote = Construction.canAfford(b, player: store.player) ? nil : "\(b.name) · Need \(Construction.gaps(b, player: store.player).joined(separator: ", "))" } label: {
-                                Text("\(b.name.uppercased()) · \(b.cost == 0 ? "FREE" : Economy.format(francs: b.cost))")
-                                    .font(AppFont.display(14)).tracking(0.8)
-                                    .foregroundStyle(on ? Theme.hudPanel : Theme.hudInk)
-                                    .padding(.horizontal, 16).frame(minHeight: 44)
-                                    .background(Capsule().fill(on ? Theme.hudInk : Theme.hudPanel))
-                                    .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
-                            }.buttonStyle(.plain)
-                        }
-                    }.padding(.horizontal, 12)
+                // One row above the dock, like web: a plain row when it fits, scrolling sideways when it does not.
+                let chips = HStack(spacing: 8) {
+                    ForEach(options) { b in
+                        let on = (picked ?? options.first?.id) == b.id
+                        Button { picked = b.id; placeNote = Construction.canAfford(b, player: store.player) ? nil : "\(b.name) · Need \(Construction.gaps(b, player: store.player).joined(separator: ", "))" } label: {
+                            Text("\(b.name.uppercased()) · \(b.cost == 0 ? "FREE" : Economy.format(francs: b.cost))")
+                                .font(AppFont.display(14)).tracking(0.8)
+                                .foregroundStyle(on ? Theme.hudPanel : Theme.hudInk)
+                                .padding(.horizontal, 16).frame(minHeight: 44)
+                                .background(Capsule().fill(on ? Theme.hudInk : Theme.hudPanel))
+                                .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+                        }.buttonStyle(.plain)
+                    }
+                }.padding(.horizontal, 12)
+                ViewThatFits(in: .horizontal) {
+                    chips
+                    ScrollView(.horizontal, showsIndicators: false) { chips }
                 }
-            }
-            if picked == "surface-silo" || (picked == nil && options.first?.id == "surface-silo") {
-                Button("PLACE SILO") { buildSilo() }
-                    .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.hudInk).frame(minHeight: 44).padding(.horizontal, 18)
-                    .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
             }
         }
         .padding(.bottom, insets.bottom + 72)
