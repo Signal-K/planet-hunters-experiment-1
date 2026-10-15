@@ -139,11 +139,12 @@ struct HomecomingScreen: View {
                                   y: g.size.height * 0.7 + (c.stored ? 110 * q : -160 * q))
                 }
                 VStack {
-                    Spacer()
+                    // Clear sky under the HUD: at the bottom it sat over the building labels and the mission bar.
                     Text(note.uppercased()).font(AppFont.display(14)).tracking(0.8).multilineTextAlignment(.center).foregroundStyle(Self.navy)
                         .padding(.horizontal, 16).padding(.vertical, 8).background(Self.cream, in: RoundedRectangle(cornerRadius: 12))
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Self.navy, lineWidth: 2))
-                        .padding(.bottom, 96).accessibilityIdentifier("settle-note")
+                        .padding(.top, 150).padding(.horizontal, 16).accessibilityIdentifier("settle-note")
+                    Spacer()
                 }
             }
         }

@@ -19,6 +19,7 @@ import {
   STRUCTURES,
   TARGETS,
   PARTS,
+  ROCKET_MODELS,
   CLIENT_SLOTS,
   BASE_LASER_CHARGES,
   canConfirmCustomizerBuild,
@@ -617,9 +618,12 @@ describe('seed bible v0 catalog', () => {
       expect(mission.programReward?.researchXP).toBe(0)
       expect(mission.construction?.structureKind).toBeTruthy()
       expect(mission.construction?.requiredMaterials).toEqual(mission.requires.minerals)
-      expect(mission.requires.cargo_min).toBe(
-        Object.values(mission.requires.minerals).reduce((sum, amount) => sum + amount, 0),
-      )
+      const kit = Object.values(mission.requires.minerals).reduce((sum, amount) => sum + amount, 0)
+      const biggestHull = Math.max(...ROCKET_MODELS.filter(rocket => !rocket.locked).map(rocket => rocket.stats.cargo))
+      expect(mission.requires.cargo_min).toBe(Math.min(kit, biggestHull))
+      // The step has to be flyable: some launchable vehicle can carry it, and some target is reachable with a buildable rocket.
+      expect(mission.requires.cargo_min).toBeLessThanOrEqual(biggestHull)
+      expect(feasibleTargetsFor(mission, TARGETS, PARTS, 6).length).toBeGreaterThan(0)
       expect(mission.requires.max_orbit).toBe(mission.id === 'program-build-mars-mining-settlement' ? 4 : 5)
       expect(mission.sequence).toBe(FREE_OPS_MISSION_SEQUENCE)
       expect(MISSIONS).toContainEqual(mission)

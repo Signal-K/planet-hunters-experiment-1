@@ -22,7 +22,8 @@ public enum AuthoredMissions {
                    mats: Cargo, maxOrbit: Int, outcome: String) -> Mission {
             Mission(id: id, title: title, brief: brief, client: nil, tag: "PROGRAM", difficulty: diff, locked: false, sequence: seq,
                     unlockAt: unlock, targetId: target, deliveryTargetId: nil,
-                    requires: MissionRequirements(minerals: mats, cargoMin: mats.values.reduce(0, +), drillTier: 1, maxOrbit: maxOrbit),
+                    // The kit must fit the biggest vehicle the player can launch (web `materialRequirement`).
+                    requires: MissionRequirements(minerals: mats, cargoMin: min(mats.values.reduce(0, +), Rockets.models.filter { !$0.locked }.map(\.cargo).max() ?? 0), drillTier: 1, maxOrbit: maxOrbit),
                     payout: MissionPayout(francs: 0, affinity: 0),
                     construction: MissionConstructionPlan(structureKind: kind, requiredMaterials: mats, buildTimeMs: buildTimeMs),
                     payload: nil, programReward: ProgramReward(researchXP: 0, outcome: outcome))

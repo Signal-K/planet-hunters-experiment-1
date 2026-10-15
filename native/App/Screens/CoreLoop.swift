@@ -50,7 +50,7 @@ struct MissionsScreen: View {
         let railTop = insets.top + 60
         return ZStack(alignment: .topLeading) {
             Color.clear
-            if tab == 1 { Theme.ink.opacity(0.18).allowsHitTesting(false) }
+            if tab != 0 { Theme.ink.opacity(0.18).allowsHitTesting(false) }
 
             HStack(alignment: .top) {
                 HudGearClock { showSettings = true }
@@ -62,8 +62,8 @@ struct MissionsScreen: View {
             rail(portrait: portrait)
                 .padding(.top, railTop).padding(.leading, side)
 
-            if tab == 1 {
-                ScrollView { ProgramRoadmap { archiveFocus = $0; showArchive = true }.padding(16) }
+            if tab == 1 || tab == 2 {
+                ScrollView { if tab == 1 { ProgramRoadmap { archiveFocus = $0; showArchive = true }.padding(16) } else { EventsBoard().padding(16) } }
                     .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
                     .padding(.top, portrait ? railTop + 64 : railTop)
@@ -123,6 +123,7 @@ struct MissionsScreen: View {
             }.buttonStyle(.plain).accessibilityLabel("Back")
             railTab(0, "Contracts", "chart.line.uptrend.xyaxis", portrait: portrait)
             railTab(1, "Program", "list.clipboard", portrait: portrait)
+            railTab(2, "Events", "star", portrait: portrait)
             Button { archiveFocus = nil; showArchive = true } label: {
                 Text("LOG").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
                     .frame(minWidth: portrait ? 56 : 132, minHeight: 44)

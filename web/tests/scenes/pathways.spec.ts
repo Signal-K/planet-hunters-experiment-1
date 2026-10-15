@@ -72,6 +72,9 @@ const tapRole = async (page: Page, name: RegExp) => {
   return true
 }
 
+let pickShip: string | null = null
+let picked: string | null = null
+
 /** Drives the flight, mining, delivery and debrief screens the same way for every pathway. `start` handles the base and board. */
 async function drive(page: Page, until: (s: Snap) => boolean, start: (page: Page, s: Snap) => Promise<void>, log: string[], budgetMs = 300_000) {
   const t0 = Date.now()
@@ -86,7 +89,7 @@ async function drive(page: Page, until: (s: Snap) => boolean, start: (page: Page
     if (tag !== last) { log.push(tag); last = tag }
     const now = tag + '|' + (await buttons(page)).join(',')
     if (now !== sig) { sig = now; sigAt = Date.now() }
-    else if (Date.now() - sigAt > 90_000) throw new Error(`stalled on ${tag}. Path: ${log.join(' > ')}. Buttons: ${(await buttons(page)).join(' ; ')}`)
+    else if (Date.now() - sigAt > 90_000) { if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/stall-${tag.replace(/\W/g, '_')}.png` }); throw new Error(`stalled on ${tag}. Path: ${log.join(' > ')}. Buttons: ${(await buttons(page)).join(' ; ')}`) }
 
     if (await tap(page, 'launch-sequence-skip-btn') || await tap(page, 'tutorial-complete-close') || await tap(page, 'delivery-confirm')) { await page.waitForTimeout(500); continue }
     switch (s.screen) {
@@ -101,6 +104,10 @@ async function drive(page: Page, until: (s: Snap) => boolean, start: (page: Page
         if (!(await tap(page, 'dev-skip-mining-btn')) && !page.url().includes('dev=1')) await page.goto('/game/mining?dev=1')
         break
       case 'targets': case 'rocket-buy': case 'fab': case 'launchpad':
+        if (pickShip && s.screen === 'rocket-buy') {
+          await tap(page, 'plan-vehicle')
+          if (await tapRole(page, new RegExp(`^${pickShip}`, 'i'))) { picked = pickShip; pickShip = null; await page.waitForTimeout(800) }
+        }
         await tapRole(page, /^launch$/i); break
       case 'galaxy': case 'instrument-hub': case 'mission-history':
         if (!(await tap(page, 'top-bar-back'))) await tapRole(page, /^back/i); break
@@ -109,6 +116,7 @@ async function drive(page: Page, until: (s: Snap) => boolean, start: (page: Page
     }
     await page.waitForTimeout(700)
   }
+  if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/timeout-${last.replace(/\W/g, '_')}.png` })
   throw new Error(`ran out of time. Path: ${log.join(' > ')}. Buttons: ${(await buttons(page)).join(' ; ')}`)
 }
 
@@ -202,5 +210,35 @@ test.describe('player pathways from a post-onboarding save', () => {
     }, log)
     console.log('EXPLORER', log.join(' > '))
     expect(done.player.transitSatelliteLaunchedAt ?? done.player.deepSpaceTelescopeLaunchedAt).toBeTruthy()
+  }))
+
+  test('hangar: buy and fly the Surveyor, the 40M hull is paid for and the run completes', withPage(async page => {
+    const log: string[] = []
+    pickShip = 'Surveyor'; picked = null
+    await open(page, POST_ONBOARDING)
+    const before = (await snap(page))!.player
+    const done = await drive(page, s => s.player.missionsDone > before.missionsDone, async (p, s) => {
+      if (s.screen === 'hub' || s.screen === 'build') { await tapRole(p, /new mission/i); return }
+      await tap(p, 'mission-board-tab-program')
+      await tap(p, 'program-start-freeops-self-directed-mining')
+    }, log)
+    console.log('SURVEYOR', log.join(' > '), 'picked', picked, 'francs', before.francs, '->', done.player.francs)
+    expect(picked).toBe('Surveyor')
+    expect(done.player.francs).toBeLessThan(before.francs - 30_000_000)
+  }))
+
+  test('crafter: the program BUILD step (remote silo) is accepted, flown with a Surveyor, and the silo is commissioned', withPage(async page => {
+    const log: string[] = []
+    pickShip = 'Surveyor'; picked = null
+    await open(page, { ...POST_ONBOARDING, player: { ...POST_ONBOARDING.player, stash: { iron: 40, aluminium: 40, copper: 20 } } })
+    const before = (await snap(page))!.player
+    const done = await drive(page, s => s.player.missionsDone > before.missionsDone, async (p, s) => {
+      if (s.screen === 'hub' || s.screen === 'build') { await tapRole(p, /new mission/i); return }
+      await tap(p, 'mission-board-tab-program')
+      await tap(p, 'program-start-program-build-remote-silo')
+    }, log)
+    const changed = Object.keys(done.player).filter(k => JSON.stringify(done.player[k]) !== JSON.stringify(before[k]))
+    console.log('CRAFTER', log.join(' > '), 'changed', changed.join(','))
+    expect(done.player.missionsDone).toBeGreaterThan(before.missionsDone)
   }))
 })

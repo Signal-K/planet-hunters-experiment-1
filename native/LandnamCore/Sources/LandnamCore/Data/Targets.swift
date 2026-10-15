@@ -73,7 +73,8 @@ public enum Targets {
     /// Targets a mission can be flown to (port of `compatibleTargetsFor`).
     public static func compatible(with mission: Mission, targets: [Target] = all) -> [Target] {
         if let fixed = mission.targetId { return targets.filter { $0.id == fixed } }
-        let required = Array(mission.requires.minerals.keys)
+        // A construction mission's minerals are materials carried from the stash, not ore the target must hold.
+        let required = mission.construction == nil ? Array(mission.requires.minerals.keys) : []
         let onboarding = mission.sequence <= MissionGenerator.onboardingSequenceCount
         return targets.filter { t in
             t.orbit <= mission.requires.maxOrbit

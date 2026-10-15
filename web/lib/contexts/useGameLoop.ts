@@ -434,7 +434,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
       ?? null
     if (currentMission && !rocketCompatibleWithMission(rocket, currentMission)) {
-      addToast('This rocket cannot carry the selected client contract.', 'warn')
+      addToast('This rocket cannot carry the selected mission.', 'warn')
       return
     }
     setState(s => {

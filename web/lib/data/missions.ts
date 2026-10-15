@@ -4,6 +4,7 @@ import { missionPayoutFloor } from './payouts'
 import type { Mission } from './types'
 import { CLIENT_SLOTS } from './clients'
 import { MINERAL_META } from './minerals'
+import { ROCKET_MODELS } from './rockets'
 import {
   DEFAULT_MISSION_TEMPLATES,
   FREE_OPS_MISSION_SEQUENCE,
@@ -56,7 +57,11 @@ const remoteSiloBlueprint = { requiredMaterials: { aluminium: 18, iron: 12, copp
 function materialRequirement(materials: Record<string, number>): { minerals: Record<string, number>; cargo_min: number } {
   return {
     minerals: { ...materials },
-    cargo_min: Object.values(materials).reduce((total, amount) => total + amount, 0),
+    // The kit must fit the biggest vehicle the player can launch: a 36U kit against an 18U Surveyor made these steps unflyable.
+    cargo_min: Math.min(
+      Object.values(materials).reduce((total, amount) => total + amount, 0),
+      Math.max(...ROCKET_MODELS.filter(rocket => !rocket.locked).map(rocket => rocket.stats.cargo)),
+    ),
   }
 }
 

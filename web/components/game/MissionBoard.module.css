@@ -4,16 +4,16 @@
   --ln-board-ink: #1b2430;
   --ln-board-lavender: #e7def8;
   --ln-board-lavender-deep: color-mix(in srgb, var(--ln-board-lavender) 55%, var(--ln-board-ink));
-  --ln-board-teal: #14a39a;
+  --ln-board-teal: #1b8fb8;
   --ln-board-amber: #175f9b;
-  --ln-board-coral: #ef6f62;
+  --ln-board-coral: #7a5cc7;
   --ln-board-paper: #fffdf8;
   --ln-board-muted: #5e6872;
   --ln-board-live: #e23d3d;
   --ln-board-gold: #8ecae6;
   --ln-board-silver: #c8cdd4;
   --ln-board-on-accent: #ffffff;
-  --ln-board-ok: #1f9d57;
+  --ln-board-ok: #2a6fb0;
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -88,6 +88,8 @@ button.round:disabled { opacity: 0.45; cursor: default; }
 }
 .chip svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .cargoChip svg { stroke: var(--ln-board-teal); }
+/* The board's top row also carries the friends button; on narrow phones the passive cargo chip gives way so the sync chip does not overlap the balance. */
+@media (orientation: portrait) and (max-width: 430px) { .cargoChip { display: none; } }
 
 .arrow { position: absolute; top: 50%; z-index: 5; transform: translateY(-50%); }
 .prev { left: 8px; }
@@ -145,7 +147,7 @@ button.tab {
 .tab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 button.tab[data-tab='contracts'] { background-color: var(--ln-board-teal); color: var(--ln-board-on-accent); }
 button.tab[data-tab='program'] { background-color: var(--ln-board-amber); color: var(--ln-board-ink); }
-button.tab[data-tab='events'] { background-color: var(--ln-board-coral); color: var(--ln-board-ink); }
+button.tab[data-tab='events'] { background-color: var(--ln-board-coral); color: var(--ln-board-on-accent); }
 button.tab[data-active='true'] {
   border-color: var(--ln-board-ink);
   box-shadow: 3px 3px 0 var(--ln-board-ink);

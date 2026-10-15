@@ -368,6 +368,12 @@ enum SceneCatalog {
         scene("mission-program-phone", 1400) {
             MissionsScreen(startTab: 1).environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },
+        scene("mission-events-phone", 874) {
+            MissionsScreen(startTab: 2).environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
+        },
+        scene("mission-events-live", 874) {
+            MissionsScreen(startTab: 2).environment(GameStore(state: basePlayer(), clock: { wswNoon }))
+        },
         scene("sky-badges-phone", 1000) {
             var gs = GameState()
             gs.player.freeOperations = true; gs.player.deepSpaceTelescopeBuilt = true

@@ -158,7 +158,8 @@ export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGE
   // Explicit fixed-target missions: only the designated target is valid.
   if (mission.targetId) return targets.filter(t => t.id === mission.targetId)
 
-  const required = Object.keys(mission.requires.minerals)
+  // A construction mission's minerals are materials carried from the stash, not ore the target must hold.
+  const required = mission.construction ? [] : Object.keys(mission.requires.minerals)
   // Onboarding (M1/M2) stays scoped to asteroids — planets unlock as
   // targets from M3 onward. Unlike the old isOnboarding bypass this never
   // skips the mineral check; it only narrows which *type* of body onboarding

@@ -19,6 +19,16 @@ import Foundation
         }
     }
 
+    /// A kit bigger than the biggest launchable vehicle made both off-world BUILD steps unflyable (blank screen on web).
+    @Test func programBuildStepsAreFlyableWithALaunchableVehicle() {
+        let biggest = Rockets.models.filter { !$0.locked }.map(\.cargo).max() ?? 0
+        for id in [AuthoredMissions.remoteSiloBuildId, AuthoredMissions.marsSettlementBuildId] {
+            let mission = catalog.missions.first { $0.id == id }!
+            #expect(mission.requires.cargoMin <= biggest, "\(id) needs more cargo than any vehicle carries")
+            #expect(!Targets.feasible(for: mission, missionsDone: 6).isEmpty, "\(id) has no flyable target")
+        }
+    }
+
     @Test func guidedPathOffersFirstContractsThenTheTwoTransportClients() {
         var p = Player()
         let first = MissionBoard.clientBoard(catalog: catalog, player: p, now: now)
