@@ -17,15 +17,17 @@ struct HubScreen: View {
     /// Homecoming (SSL-553): the core stage lands on the pad behind the delivery sheet.
     var homecoming = false
     var padLift: CGFloat = 0
+    var padDismantle: CGFloat = 0
     @State private var camera: BaseCamera
     private let zones = HUDZones.standard
 
     /// `startX` / `startDepth` set the opening camera (fixtures and screenshots); the game starts at the surface, x 0.
-    init(safeAreaOverride: EdgeInsets? = nil, biome: EarthBiome = .resolve(), startX: CGFloat = 0, startDepth: CGFloat = 0, homecoming: Bool = false, padLift: CGFloat = 0, placing: Bool = false) {
+    init(safeAreaOverride: EdgeInsets? = nil, biome: EarthBiome = .resolve(), startX: CGFloat = 0, startDepth: CGFloat = 0, homecoming: Bool = false, padLift: CGFloat = 0, padDismantle: CGFloat = 0, placing: Bool = false) {
         _placing = State(initialValue: placing)
         self.safeAreaOverride = safeAreaOverride
         self.homecoming = homecoming
         self.padLift = padLift
+        self.padDismantle = padDismantle
         self.biome = biome
         _camera = State(initialValue: BaseCamera(x: startX, depth: startDepth))
     }
@@ -61,6 +63,7 @@ struct HubScreen: View {
                         padOccupied: store.player.activeMission != nil || store.player.pendingLaunch,
                 padCore: homecoming,
                 padLift: padLift,
+                padDismantle: padDismantle,
                 insets: insets,
                 camera: camera,
                 onStructure: { openStructure($0) },

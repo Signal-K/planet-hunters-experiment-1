@@ -19,12 +19,12 @@ public enum Clients {
         c("atlas-aggregate", "Atlas Aggregate", "#a8d8ea", "AA", 2, "Bulk construction feedstock and orbital ballast", ["iron", "silicon"], 0.18, 0.02, .bulk, crew: false),
         c("ceres-volatiles-collective", "Ceres Volatiles Collective", "#5ee6c0", "CV", 2, "Volatile extraction and carbonaceous feedstock reserves", ["carbon", "ice", "hydrogen"], 0.20, 0.025, .prospect, crew: false),
         c("helioforge-metals", "Helioforge Metals", "#79d1ec", "HF", 2, "Nickel, cobalt, and precious-metal assay", ["nickel", "cobalt", "gold"], 0.24, 0.03, .prospect, crew: false),
-        c("kepler-materials", "Kepler Materials", "#70e070", "KM", 3, "Deep-core sampling and battery material reserves", ["nickel", "cobalt"], 0.22, 0.03, .prospect, crew: false),
+        c("kepler-materials", "Kepler Materials", "#4fb3d9", "KM", 3, "Deep-core sampling and battery material reserves", ["nickel", "cobalt"], 0.22, 0.03, .prospect, crew: false),
         c("nightjar-systems", "Nightjar Systems", "#93cef0", "NS", 3, "Rare gas capture and ion drive reserves", ["rare", "hydrogen"], 0.28, 0.035, .command, crew: true),
         c("vulcan-core-metallurgy", "Vulcan Core Metallurgy", "#3b7fb8", "VC", 4, "Deep metallic-core assay and platinum-group refinement", ["platinum", "rhodium"], 0.26, 0.03, .prospect, crew: false),
         c("solgrid-dynamics", "Solgrid Dynamics", "#5ae7de", "SD", 4, "Solar-grid expansion and high-purity silicon", ["silicon", "ice"], 0.24, 0.025, .command, crew: true),
         c("lumen-research", "Lumen Research", "#36c6e2", "LR", 4, "Strategic sample reserve and sensor research", ["gold", "rare", "cobalt"], 0.30, 0.035, .science, crew: true),
-        c("pioneer-works", "Pioneer Works", "#39d36a", "PW", 5, "Base expansion reserves and general frontier supply", ["iron", "silicon", "nickel"], 0.20, 0.025, .starter, crew: true),
+        c("pioneer-works", "Pioneer Works", "#9b8cf0", "PW", 5, "Base expansion reserves and general frontier supply", ["iron", "silicon", "nickel"], 0.20, 0.025, .starter, crew: true),
     ]
 
     public static let byId: [String: Client] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })

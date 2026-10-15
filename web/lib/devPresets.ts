@@ -156,7 +156,7 @@ export const DEV_GROUPS: DevGroup[] = [
   },
   {
     label: 'Recent UI',
-    color: '#39d36a',
+    color: '#9b8cf0',
     shots: [
       { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
       { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },

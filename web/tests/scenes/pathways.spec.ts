@@ -171,6 +171,15 @@ test.describe('player pathways from a post-onboarding save', () => {
     expect(done.player.missionsDone).toBeGreaterThan(before.missionsDone)
   }))
 
+  test('miner without a silo is told before launch that the haul will be sold', withPage(async page => {
+    const noSilo = { ...POST_ONBOARDING, player: { ...POST_ONBOARDING.player, placed: ['launchpad', 'market'], placementPlots: { launchpad: 0, market: 1 } } }
+    await open(page, noSilo)
+    await tapRole(page, /new mission/i)
+    await expect.poll(async () => tap(page, 'mission-board-tab-program'), { timeout: 20_000 }).toBe(true)
+    await tap(page, 'program-start-freeops-self-directed-mining')
+    await expect(page.getByTestId('plan-no-silo')).toContainText(/sold when you land/i, { timeout: 20_000 })
+  }))
+
   test('trader: the Exchange sells crates from the stash for francs', withPage(async page => {
     await open(page, { ...POST_ONBOARDING, screen: 'market' })
     await page.goto('/game/market')

@@ -25,6 +25,12 @@ struct MissionPlanStrip: View {
         return store.catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: model), skills: store.player.unlockedSkillNodes).problems.first
     }
 
+    /// A run on your own account keeps nothing without a silo: say so before launch, not after landing.
+    private var noSilo: Bool {
+        guard let mission = store.mission, mission.isOwnProgram, mission.construction == nil, store.state.deliveryTargetId == nil else { return false }
+        return !HomeDelivery.silo(store.player, cargo: [:]).built
+    }
+
     var body: some View {
         if let target = store.target, store.mission != nil {
             VStack(spacing: 4) {
@@ -44,6 +50,18 @@ struct MissionPlanStrip: View {
                     slot("DESTINATION", target.name, change: .destination, id: "plan-destination")
                     slot("VEHICLE", rocketName, change: .vehicle, id: "plan-vehicle")
                     slot("CARGO", cargo, change: nil, id: "plan-cargo")
+                }
+                if noSilo && !launching {
+                    HStack(spacing: 4) {
+                        Text("No storage silo: ore you mine is sold when you land.").font(AppFont.body(14, "Bold")).foregroundStyle(Theme.ink)
+                        Button { store.go(.build) } label: {
+                            Text("Build a silo").font(AppFont.body(14, "Bold")).underline().foregroundStyle(Theme.ink).frame(minHeight: 44).padding(.horizontal, 4)
+                        }.buttonStyle(.plain)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 8)
+                    .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 1))
+                    .accessibilityElement(children: .contain).accessibilityIdentifier("plan-no-silo")
                 }
                 if let hold {
                     Text("BUILD HOLD: \(hold)").font(AppFont.body(14, "Bold")).foregroundStyle(Theme.ink)

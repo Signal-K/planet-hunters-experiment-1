@@ -19,6 +19,8 @@ export interface InstrumentAnswer {
   label: string
   testId: string
   disabled?: boolean
+  /** Looks unready but stays tappable, so the tap can explain what is missing. */
+  dim?: boolean
   onClick: () => void
 }
 
@@ -141,6 +143,7 @@ export function InstrumentAnswerRow({ actions, groupTestId, coachTarget }: { act
           className={styles.answer}
           data-testid={action.testId}
           disabled={action.disabled}
+          data-dim={action.dim ? 'true' : undefined}
           onClick={action.onClick}
         >
           {action.label}

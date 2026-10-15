@@ -8,18 +8,35 @@ struct HomecomingScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var landedAt = Date()
     @State private var split: HomeDelivery.Split?
+    /// Set when the player settles: crates leave the hold and the rocket is taken apart, then the delivery is applied.
+    @State private var settling: (at: Date, split: HomeDelivery.Split)?
+    /// Fixtures and screenshots: start settling once the sheet is up, as if the player tapped Settle cargo.
+    var autoSettle = false
     private static let landing = 2.6
+    private static let settle = 2.4
+    private static let maxCrates = 8
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30)) { ctx in
             let t = reduceMotion ? Self.landing : ctx.date.timeIntervalSince(landedAt)
             let f = min(1, t / Self.landing)
             let lift = CGFloat(pow(1 - f, 2)) * 900
+            let st = settling.map { reduceMotion ? Self.settle : ctx.date.timeIntervalSince($0.at) }
+            let dismantle = CGFloat(max(0, min(1, ((st ?? 0) - 0.5) / 1.6)))
             ZStack {
-                HubScreen(homecoming: true, padLift: lift).allowsHitTesting(false)
-                if f >= 1 { sheet.transition(.opacity) }
+                HubScreen(homecoming: true, padLift: lift, padDismantle: dismantle).allowsHitTesting(false)
+                if f >= 1 && settling == nil { sheet.transition(.opacity) }
+                if let st, let s = settling { settleOverlay(split: s.split, t: st) }
             }
+            .task { if autoSettle { try? await Task.sleep(for: .seconds(0.2)); autoSettleIfNeeded() } }
         }
+    }
+
+    private func autoSettleIfNeeded() {
+        guard autoSettle, settling == nil else { return }
+        let c = cargo
+        let demand = HomeDelivery.demand(store.mission, cargo: c)
+        settle(HomeDelivery.defaultSplit(c, demand: demand, siloFree: HomeDelivery.silo(store.player, cargo: c).free))
     }
 
     private var cargo: Cargo { (store.state.lastCargo ?? [:]).filter { $0.value > 0 } }
@@ -60,7 +77,7 @@ struct HomecomingScreen: View {
                         summary("Silo", "\(totals.silo) U", warn: false)
                         summary("Sell", "F\(sellValue.formatted())", warn: false)
                         Spacer()
-                        Button { store.homeDelivery(current) } label: {
+                        Button { settle(current) } label: {
                             Text("Settle cargo").font(AppFont.display(16)).foregroundStyle(Self.cream)
                                 .padding(.horizontal, 18).frame(minHeight: 44).background(Self.navy)
                         }
@@ -74,6 +91,63 @@ struct HomecomingScreen: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+    }
+
+    private func settle(_ current: HomeDelivery.Split) {
+        guard settling == nil else { return }
+        if reduceMotion { store.homeDelivery(current); return }
+        settling = (Date(), current)
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(Self.settle))
+            store.homeDelivery(current)
+        }
+    }
+
+    private static func mineralColor(_ id: String) -> Color {
+        let hex = Minerals.byId[id]?.colorHex ?? "#c8ccd2"
+        return UInt32(hex.dropFirst(), radix: 16).map { Theme.hex($0) } ?? Self.steel
+    }
+
+    private struct Crate: Identifiable { let id: Int; let stored: Bool; let color: Color }
+
+    private func crates(_ split: HomeDelivery.Split) -> [Crate] {
+        var out: [Crate] = []
+        for id in split.keys.sorted() {
+            let row = split[id] ?? .init()
+            let color = Self.mineralColor(id)
+            for _ in 0..<row.silo where out.count < Self.maxCrates { out.append(Crate(id: out.count, stored: true, color: color)) }
+            for _ in 0..<row.sell where out.count < Self.maxCrates { out.append(Crate(id: out.count, stored: false, color: color)) }
+        }
+        return out
+    }
+
+    /// Stored crates sink into the ground, sold crates fly to the francs counter; a note says what happened.
+    private func settleOverlay(split: HomeDelivery.Split, t: TimeInterval) -> some View {
+        let totals = HomeDelivery.totals(split)
+        let sale = HomeDelivery.marketValue(store.player, units: HomeDelivery.pick(split, .sell), now: store.now)
+        let note = [totals.sell > 0 ? "Sold \(totals.sell) for F\(sale.formatted())" : nil, totals.silo > 0 ? "Stored \(totals.silo) in the silo" : nil, "Rocket recycled"].compactMap { $0 }.joined(separator: " · ")
+        return GeometryReader { g in
+            ZStack {
+                ForEach(crates(split)) { c in
+                    let p = CGFloat(max(0, min(1, (t - Double(c.id) * 0.14) / 1.1)))
+                    let q = (p * 10).rounded(.down) / 10
+                    RoundedRectangle(cornerRadius: 2).fill(c.color).frame(width: 14, height: 14)
+                        .overlay(RoundedRectangle(cornerRadius: 2).stroke(Self.navy, lineWidth: 2))
+                        .opacity(p <= 0 || p >= 1 ? 0 : 1)
+                        .scaleEffect(c.stored ? 1 - 0.5 * q : 1 - 0.4 * q)
+                        .position(x: g.size.width * 0.5 + CGFloat(c.id % 4) * 10 - 15 + (c.stored ? 0 : 60 * q),
+                                  y: g.size.height * 0.7 + (c.stored ? 110 * q : -160 * q))
+                }
+                VStack {
+                    Spacer()
+                    Text(note.uppercased()).font(AppFont.display(14)).tracking(0.8).multilineTextAlignment(.center).foregroundStyle(Self.navy)
+                        .padding(.horizontal, 16).padding(.vertical, 8).background(Self.cream, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Self.navy, lineWidth: 2))
+                        .padding(.bottom, 96).accessibilityIdentifier("settle-note")
+                }
+            }
+        }
+        .allowsHitTesting(false)
     }
 
     private func card(_ id: String, row: HomeDelivery.Row, demand: Cargo, silo: HomeDelivery.Silo, current: HomeDelivery.Split) -> some View {

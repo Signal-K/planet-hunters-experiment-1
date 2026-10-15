@@ -285,13 +285,20 @@ describe('game state hydration normalization', () => {
 })
 
 describe('onboarding completion boundary', () => {
-  it('keeps a player in training until all three Flight Plan tries are complete (SSL-405)', () => {
-    const noSilo = normalizeAndRepair({
-      player: { missionsDone: 2, placed: ['launchpad'], freeOperations: true },
+  it('opens Free Ops once the launchpad is placed, without the Flight Plan tries (SSL-611)', () => {
+    const noTries = normalizeAndRepair({
+      player: { missionsDone: 2, placed: ['launchpad'] },
+      tutorial: true,
+    })
+    expect(noTries.player.freeOperations).toBe(true)
+    expect(noTries.tutorial).toBe(false)
+
+    const noLaunchpad = normalizeAndRepair({
+      player: { missionsDone: 0, placed: [], freeOperations: true },
       tutorial: false,
     })
-    expect(noSilo.player.freeOperations).toBe(false)
-    expect(noSilo.tutorial).toBe(true)
+    expect(noLaunchpad.player.freeOperations).toBe(false)
+    expect(noLaunchpad.tutorial).toBe(true)
 
     const withTries = normalizeAndRepair({
       player: { missionsDone: 2, placed: ['launchpad'], flightPlan: { completed: { mining: true, scan: true, part: true }, hidden: false } },
@@ -316,7 +323,7 @@ describe('onboarding completion boundary', () => {
       targetId: 'eros',
       player: {
         missionsDone: 1,
-        placed: ['launchpad'],
+        placed: [],
         activeMission: { id: 'generated-s2-volatile-bulk-4', label: 'Heavy Haul → Eros' },
         missionPhase: 'mining',
       },

@@ -52,6 +52,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const [devDayOffset, setDevDayOffset] = useState(0)
   const [retryToken, setRetryToken] = useState(0)
   const [dragArmed, setDragArmed] = useState(true)
+  const [needsMark, setNeedsMark] = useState(false)
 
   useEffect(() => {
     if (visualCandidate) {
@@ -188,6 +189,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
 
   const castVerdict = (id: TessVerdict) => {
     if (classification) return
+    // A verdict that needs a marked dip explains itself instead of sitting disabled and looking dead.
+    if (VERDICT_ACTIONS.find(action => action.id === id)?.requiresMark && ranges.length === 0) { setNeedsMark(true); return }
     const measuredPeriod = periodFromRanges(ranges)
     onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate, measuredPeriod) : undefined)
   }
@@ -222,8 +225,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       onCommand={onCommand}
       devBar={devBar}
       caption={(
-        <p className={viewportStyles.caption} data-testid="tess-data-provenance">
-          {showMap ? 'TARGET SELECT' : (activeSector?.label ?? 'LIGHT CURVE')}
+        <p className={viewportStyles.caption} data-testid="tess-data-provenance" data-attention={needsMark ? 'true' : undefined}>
+          {showMap ? 'TARGET SELECT' : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
         </p>
       )}
       viewportChrome={(
@@ -269,7 +272,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           <ObservatoryChart
             points={sectorPoints}
             ranges={activeRanges}
-            onRange={(x1, x2) => { setRanges(prev => [...prev, { x1, x2 }]); help.reportAction('mark') }}
+            onRange={(x1, x2) => { setRanges(prev => [...prev, { x1, x2 }]); setNeedsMark(false); help.reportAction('mark') }}
             onRemoveRange={index => setRanges(prev => prev.filter((_, current) => current !== index))}
             locked={!dragArmed}
             yDomain={yDomain}
@@ -285,7 +288,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
             id: action.id,
             label: action.label,
             testId: `tess-verdict-${action.id}`,
-            disabled: action.requiresMark && markCount === 0,
+            dim: action.requiresMark && markCount === 0,
             onClick: () => castVerdict(action.id),
           }))}
         />

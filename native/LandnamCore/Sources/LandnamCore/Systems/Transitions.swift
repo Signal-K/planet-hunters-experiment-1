@@ -13,8 +13,8 @@ public enum Transitions {
 
     // MARK: onboarding
 
-    /// Free Ops opens when all three training tries (mining, scan, part) are done; contract count alone never opens it.
-    public static func freeOperationsUnlocked(_ p: Player) -> Bool { p.flightPlan.isComplete }
+    /// Free Ops opens once the launchpad is placed (no required path); the three training tries (mining, scan, part) stay an optional guide.
+    public static func freeOperationsUnlocked(_ p: Player) -> Bool { p.placed.contains("launchpad") || p.flightPlan.isComplete }
 
     // MARK: return leg
 

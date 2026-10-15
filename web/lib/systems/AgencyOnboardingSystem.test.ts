@@ -18,8 +18,10 @@ describe('agency training constants', () => {
 })
 
 describe('freeOperationsUnlocked', () => {
-  it('needs the mining, scan and part tries', () => {
-    expect(freeOperationsUnlocked({ placed: ['launchpad'], missionsDone: 1, flightPlan: { completed: { mining: true, scan: true }, hidden: false } })).toBe(false)
+  it('opens once the launchpad is placed, with no training tries required', () => {
+    expect(freeOperationsUnlocked({ placed: [], missionsDone: 0 })).toBe(false)
+    expect(freeOperationsUnlocked({ placed: ['launchpad'], missionsDone: 0 })).toBe(true)
+    expect(freeOperationsUnlocked({ placed: ['launchpad'], missionsDone: 1, flightPlan: { completed: { mining: true, scan: true }, hidden: false } })).toBe(true)
     expect(freeOperationsUnlocked({ placed: ['launchpad'], missionsDone: 2, flightPlan: { completed: { mining: true, scan: true, part: true }, hidden: false } })).toBe(true)
   })
 

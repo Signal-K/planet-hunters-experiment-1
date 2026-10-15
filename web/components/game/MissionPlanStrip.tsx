@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import type { useGame } from '@/game-context'
-import { ROCKET_MODELS, rocketConfigForModel, rocketModelForConfig, validateBuild } from '@/lib/data'
+import { ROCKET_MODELS, isOwnProgramMission, rocketConfigForModel, rocketModelForConfig, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
 import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
+import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
 import styles from './MissionPlanStrip.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -23,6 +24,8 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
   const rocket = rocketModelForConfig(game.rocket)
   const minerals = Object.keys(mission.requires.minerals).map(id => game.catalog.minerals[id]?.name ?? id)
   const step = launched ? 2 : 1
+  // A run on your own account keeps nothing without a silo: say so before launch, not after landing.
+  const noSilo = isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
   const targets = sheet === 'destination'
     ? feasibleTargetsFor(mission, game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, player.unlockedSkillNodes ?? [], buildingLevel(player, 'launchpad'))
@@ -46,6 +49,11 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
         </button>
         <div className={styles.slot} data-testid="plan-cargo"><span>Cargo</span><strong>{minerals.join(', ') || 'None'}</strong></div>
       </div>
+      {noSilo && !launched && (
+        <p className={styles.hold} data-testid="plan-no-silo" role="status">
+          No storage silo: ore you mine is sold when you land. <button type="button" className={styles.link} onClick={() => game.go('build')}>Build a silo</button> to keep it.
+        </p>
+      )}
       {blockedReason && <p className={styles.hold} data-testid="plan-clearance" role="status">Build hold: {blockedReason}</p>}
 
       {sheet && (

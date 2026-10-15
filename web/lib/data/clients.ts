@@ -107,7 +107,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
   {
     id: 'kepler-materials',
     name: 'Kepler Materials',
-    color: '#70e070',
+    color: '#4fb3d9',
     initial: 'KM',
     unlockTier: 3,
     projectType: 'Deep-core sampling and battery material reserves',
@@ -188,7 +188,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
   {
     id: 'pioneer-works',
     name: 'Pioneer Works',
-    color: '#39d36a',
+    color: '#9b8cf0',
     initial: 'PW',
     unlockTier: 5,
     projectType: 'Base expansion reserves and general frontier supply',

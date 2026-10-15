@@ -221,10 +221,13 @@ struct InstrumentAnswerButton: View {
     let title: String
     var enabled = true
     var primary = false
+    /// Looks unready but still runs the action, so a tap can explain what is missing.
+    var dim = false
     let action: () -> Void
     var body: some View {
+        let enabled = enabled && !dim
         // Not .disabled: the system dims a disabled plain button's label below 4.5:1. Gate the action instead.
-        Button(action: { if enabled { action() } }) {
+        Button(action: { if enabled || dim { action() } }) {
             Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, minHeight: 44).padding(.horizontal, 6)
                 .foregroundStyle(primary && enabled ? Color.white : Theme.ink)

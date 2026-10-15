@@ -416,7 +416,8 @@
   cursor: pointer;
 }
 
-.answer:disabled {
+.answer:disabled,
+.answer[data-dim="true"] {
   /* SSL-480: disabled stays readable (>=4.5:1) and keeps the 44px target. */
   min-height: 44px;
   opacity: 1;
@@ -425,6 +426,10 @@
   border-color: var(--iv-line);
   border-style: dashed;
   cursor: not-allowed;
+}
+
+.caption[data-attention="true"] {
+  background: var(--ln-info);
 }
 
 .toolButton,

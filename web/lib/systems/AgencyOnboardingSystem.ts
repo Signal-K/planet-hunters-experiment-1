@@ -57,11 +57,15 @@ function flightPlanStarted(plan: AgencyTrainingPlayer['flightPlan']): boolean {
   return !!(completed?.mining || completed?.scan || completed?.part)
 }
 
-/** Free Ops opens once the three tries are finished. A save that already
- * reached Free Ops under the old three-mission onboarding, and never started
- * this plan, keeps the unlock. Mining three contracts without the scan and
- * part tries does not (SSL-393). */
+/** Free Ops opens as soon as the launchpad is placed (SSL-611: no required path), so a player can mine, trade or
+ * build on their own without the three training tries. The tries stay as an optional guide. A save that already
+ * reached Free Ops under the old three-mission onboarding keeps the unlock. */
 export function freeOperationsUnlocked(player: AgencyTrainingPlayer): boolean {
+  return (player.placed ?? []).includes('launchpad') || trainingFinished(player)
+}
+
+/** The optional training track is done (or the save predates it). */
+function trainingFinished(player: AgencyTrainingPlayer): boolean {
   if (isTrainingComplete(player.flightPlan)) return true
   if (flightPlanStarted(player.flightPlan)) return false
   return finiteMissionsDone(player) >= LEGACY_FREE_OPS_MISSIONS_DONE
@@ -77,7 +81,7 @@ export function awaitingStorageSilo(player: AgencyTrainingPlayer): boolean {
 
 /** The training stage the player is currently on (the first incomplete one). */
 export function agencyTrainingStage(player: AgencyTrainingPlayer): AgencyTrainingStage {
-  if (freeOperationsUnlocked(player)) return 'free-ops'
+  if (trainingFinished(player)) return 'free-ops'
   if (!player.flightPlan?.completed?.mining) return 'mining'
   if (!player.flightPlan?.completed?.scan) return 'scan'
   return 'part'

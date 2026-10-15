@@ -16,6 +16,7 @@
 .slot em { font-size: 14px; font-style: normal; letter-spacing: .12em; text-transform: uppercase; }
 .slot:disabled { opacity: .6; }
 .hold { margin: 0; padding: 4px 16px; font-size: 14px; background: var(--ln-world-hull-lit); border: 1px solid var(--ln-world-outline); }
+.link { min-height: 44px; padding: 0 8px; color: inherit; font: inherit; font-weight: 800; text-decoration: underline; background: none; border: 0; cursor: pointer; }
 .sheet { position: fixed; z-index: 60; box-sizing: border-box; left: 0; right: 0; bottom: 0; max-height: 60vh; overflow: auto; padding: 16px; background: var(--ln-world-hull-lit); border-top: 2px solid var(--ln-world-outline); pointer-events: auto; }
 .sheet p { margin: 0 0 8px; font-size: 14px; }
 .sheet ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }

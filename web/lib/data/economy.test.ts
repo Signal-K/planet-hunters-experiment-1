@@ -25,8 +25,9 @@ describe('economy scale', () => {
     const fee = CONTRACT_FEES[2]
     const commonShare = (hold * MINERAL_VALUE.common) / fee
     const exoticShare = (hold * MINERAL_VALUE.exotic) / fee
-    expect(commonShare).toBeGreaterThan(0.1)
-    expect(exoticShare).toBeLessThan(1)
+    expect(commonShare).toBeGreaterThan(0.25) // SSL-611: mining on your own is a real alternative to a client contract
+    expect(commonShare).toBeLessThan(1)
+    expect(exoticShare).toBeGreaterThan(commonShare)
     expect(exoticShare / commonShare).toBeLessThan(5)
   })
 

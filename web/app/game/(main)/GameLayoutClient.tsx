@@ -133,17 +133,20 @@ function GameChrome({ children }: { children: ReactNode }) {
     : undefined
   const coach = useMemo(() => {
     // A Menu Replay re-arms its try even after Free Ops, when the tutorial flag is off.
-    const routeCoach = (!game.player.freeOperations && game.tutorial) || game.player.flightPlan?.replayTry ? flightStep ?? null : null
+    // The training tries stay on offer as an optional guide after Free Ops opens (SSL-611: no required path) until done or skipped.
+    const guideOffered = agencyTrainingStage(game.player) !== 'free-ops'
+    const routeCoach = (!game.player.freeOperations && game.tutorial) || game.player.flightPlan?.replayTry || guideOffered ? flightStep ?? null : null
     if (currentScreen === 'hub' && game.subsurfaceView) return null
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
     if (settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, settingsOpen])
+  }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, settingsOpen])
 
   const coachIndex = flightStep ? ['mining', 'scan', 'part'].indexOf(flightStep.try) : -1
-  const onboardingActive = !!coach
+  // Only the required-looking onboarding (not the optional guide) changes the hub's own copy.
+  const onboardingActive = !!coach && (!game.player.freeOperations || !!game.player.flightPlan?.replayTry)
 
   // SSL-432: the 8s hint waits while a help sheet or "Show me" run is open and
   // restarts its clock when help closes.

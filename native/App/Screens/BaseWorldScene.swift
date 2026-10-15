@@ -22,6 +22,8 @@ struct BaseWorldScene: View {
     /// The returning core stage (no boosters) stands on the pad; `padLift` raises it for the touchdown animation (SSL-553).
     var padCore: Bool = false
     var padLift: CGFloat = 0
+    /// 0...1: the rocket is taken apart from the top down, in pixel steps (settling a haul).
+    var padDismantle: CGFloat = 0
     var insets: EdgeInsets = EdgeInsets()
     var camera: BaseCamera
     /// Off for backdrop use (the mission board): no edge chevrons or depth button over the scene.
@@ -218,6 +220,7 @@ struct BaseWorldScene: View {
                         }
                         Art.view(padCore ? "base/kit/space-rocket.png" : "base/kit/pad-rocket.png").resizable().interpolation(.none)
                             .frame(width: 44 * px, height: 72 * px)
+                            .mask(alignment: .bottom) { Rectangle().frame(height: 72 * px * (1 - (padDismantle * 8).rounded(.down) / 8)) }
                     }
                     .offset(x: CGFloat(mount.x - 22) * px, y: -CGFloat(mount.z + 2) * px - padLift)
                 }

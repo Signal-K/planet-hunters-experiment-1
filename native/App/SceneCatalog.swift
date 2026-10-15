@@ -449,6 +449,14 @@ enum SceneCatalog {
         scene("return-live", 874) { TransitScreen().environment(GameStore(state: returnState())) },
         scene("return-live-landscape", 402, w: 874) { TransitScreen().environment(GameStore(state: returnState())) },
         scene("home-live", 874) { HomecomingScreen().environment(GameStore(state: homeState())) },
+        scene("home-settle-live", 874) { HomecomingScreen(autoSettle: true).environment(GameStore(state: homeState())) },
+        scene("launch-no-silo-phone", 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.missions)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && !$0.locked && $0.construction == nil && !$0.requires.minerals.isEmpty })?.id { st.pickMission(id) }
+            return LaunchReviewScreen().environment(st).environment(\.flatLayout, true)
+        },
         scene("home-live-landscape", 402, w: 874) { HomecomingScreen().environment(GameStore(state: homeState())) },
         scene("transit-live", 874) {
             let st = GameStore(state: transitState(returning: false))

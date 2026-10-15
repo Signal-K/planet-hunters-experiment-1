@@ -6,10 +6,10 @@ public enum Economy {
     public static let contractFees: [Int: Int] = [1: 15_000_000, 2: 18_000_000, 3: 22_000_000, 4: 24_000_000]
     public static let contractFeeStep = 2_500_000
     public static let cargoBonusCap = 0.18
-    public static let cargoBonusRate = 0.4
+    public static let cargoBonusRate = 0.1
 
     public static let mineralValue: [MineralRarity: Int] = [
-        .common: 250_000, .uncommon: 420_000, .rare: 700_000, .exotic: 1_100_000,
+        .common: 1_000_000, .uncommon: 1_680_000, .rare: 2_800_000, .exotic: 4_400_000,
     ]
     public static let refiningValueMultiplier = 1.6
     public static let refiningCostRate = 0.07

@@ -4,7 +4,7 @@
 // delivery sheet over the base settles the haul: per mineral, units go to the
 // client (fulfils the contract), the underground silo, or the open market.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MineralMeta, Mission } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { formatCurrency } from '@/lib/format'
@@ -17,6 +17,11 @@ import { sellUnitPrice } from '@/lib/systems/EconomySystem'
 import styles from './HomecomingScreen.module.css'
 
 export const TOUCHDOWN_MS = 2600
+/** Cargo leaves the hold and the rocket is taken apart before the base returns. */
+export const SETTLE_MS = 2400
+const MAX_CRATES = 8
+
+interface Crate { id: string; kind: 'silo' | 'sell'; color: string; x: number; y: number; delay: number }
 
 interface Props {
   player: Player
@@ -54,12 +59,41 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
   const sale = marketValue(player, pick(split, 'sell'))
   const shortBy = Object.entries(demand).reduce((n, [id, want]) => n + Math.max(0, want - (split[id]?.client ?? 0)), 0)
 
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [crates, setCrates] = useState<Crate[] | null>(null)
+  const settling = crates !== null
+  const settledTimer = useRef<number | null>(null)
+  useEffect(() => () => { if (settledTimer.current) window.clearTimeout(settledTimer.current) }, [])
+
+  // Settle: crates leave the rocket (stored ones sink into the ground, sold ones fly to the francs counter), the rocket is
+  // dismantled from the top, then the settlement is confirmed.
+  const settle = () => {
+    if (settling) return
+    const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const root = rootRef.current
+    const rocket = root?.querySelector('[data-testid="pad-rocket"]')?.getBoundingClientRect()
+    const box = root?.getBoundingClientRect()
+    if (reduced || !rocket || !box) { onConfirm(split); return }
+    const out: Crate[] = []
+    for (const [id, row] of Object.entries(split)) {
+      const color = minerals[id]?.color ?? '#c8ccd2'
+      for (let i = 0; i < row.silo && out.length < MAX_CRATES; i++) out.push({ id: `${id}-s${i}`, kind: 'silo', color, x: 0, y: 0, delay: 0 })
+      for (let i = 0; i < row.sell && out.length < MAX_CRATES; i++) out.push({ id: `${id}-m${i}`, kind: 'sell', color, x: 0, y: 0, delay: 0 })
+    }
+    const startX = rocket.left - box.left + rocket.width / 2
+    const startY = rocket.top - box.top + rocket.height * 0.7
+    setCrates(out.map((c, i) => ({ ...c, x: startX + (i % 4) * 10 - 15, y: startY, delay: i * 140 })))
+    settledTimer.current = window.setTimeout(() => onConfirm(split), SETTLE_MS)
+  }
+  const soldUnits = totals.sell
+  const storedUnits = totals.silo
+
   const available = (key: HomeDestination) => key === 'client' ? hasClient : key === 'silo' ? silo.built : true
 
   return (
-    <div className={styles.root} data-testid="homecoming-screen" data-landed={down ? 'true' : 'false'}>
+    <div ref={rootRef} className={styles.root} data-testid="homecoming-screen" data-landed={down ? 'true' : 'false'} data-settling={settling ? 'true' : undefined}>
       <HubScreen player={player} homecoming padLanding={!down} onFocusBuilding={() => {}} onOpenScene={() => {}} />
-      {down && (
+      {down && !settling && (
         <div className={styles.scrim}>
           <section className={styles.sheet} aria-label="Deliver cargo" data-testid="delivery-sheet">
             <header className={styles.head}>
@@ -123,12 +157,23 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
                 <div><dt>Silo</dt><dd>{totals.silo} units</dd></div>
                 <div><dt>Sell</dt><dd data-testid="summary-sell">{formatCurrency(sale)}</dd></div>
               </dl>
-              <button type="button" className={styles.confirm} data-testid="delivery-confirm" onClick={() => onConfirm(split)}>
+              <button type="button" className={styles.confirm} data-testid="delivery-confirm" onClick={settle}>
                 Settle cargo
               </button>
             </footer>
           </section>
         </div>
+      )}
+      {settling && (
+        <>
+          {crates!.map(c => (
+            <i key={c.id} className={styles.crate} data-kind={c.kind} data-testid={`crate-${c.kind}`}
+              style={{ left: c.x, top: c.y, background: c.color, animationDelay: `${c.delay}ms` }} />
+          ))}
+          <p className={styles.settleNote} role="status" data-testid="settle-note">
+            {[soldUnits > 0 ? `Sold ${soldUnits} for ${formatCurrency(sale)}` : '', storedUnits > 0 ? `Stored ${storedUnits} in the silo` : '', 'Rocket recycled'].filter(Boolean).join(' · ')}
+          </p>
+        </>
       )}
     </div>
   )

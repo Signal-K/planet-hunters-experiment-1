@@ -11,6 +11,7 @@ struct TessDiscoveryScreen: View {
     var candidate: TessCandidate?
     var inspect: String?
     @State private var ranges: [TransitRange] = []
+    @State private var needsMark = false
     @State private var sector = 0
     @State private var dragArmed = true
 
@@ -62,7 +63,8 @@ struct TessDiscoveryScreen: View {
         let window = sectors[min(sector, sectors.count - 1)]
         let marks = saved?.ranges ?? ranges
         let period = Tess.periodFromRanges(marks)
-        let caption = ([window.label, "\(marks.count) MARK\(marks.count == 1 ? "" : "S")"] + (period.map { [String(format: "PERIOD %.2fd", $0)] } ?? [])).joined(separator: " · ")
+        let prompt = saved == nil && marks.isEmpty ? (needsMark ? "DRAG ACROSS THE DIP FIRST" : "DRAG ACROSS THE DIP") : nil
+        let caption = prompt ?? ([window.label, "\(marks.count) MARK\(marks.count == 1 ? "" : "S")"] + (period.map { [String(format: "PERIOD %.2fd", $0)] } ?? [])).joined(separator: " · ")
         return InstrumentViewport(
             eyebrow: "Instrument data feed · Daily downlink", title: c.toi,
             status: saved == nil ? "Review" : "Saved", caption: caption,
@@ -78,7 +80,7 @@ struct TessDiscoveryScreen: View {
             },
             well: {
                 LightCurveChart(points: window.points, domain: Self.domain(points), marks: marks, locked: saved != nil || !dragArmed) { r in
-                    ranges.append(r)
+                    ranges.append(r); needsMark = false
                 }
             },
             overlay: { EmptyView() },
@@ -87,14 +89,20 @@ struct TessDiscoveryScreen: View {
                     Panel(accent: Theme.teal) { Text("Annotation saved").font(AppFont.display(16)) }
                 } else {
                     HStack(spacing: 10) {
-                        InstrumentAnswerButton(title: "Confirm transit", enabled: !ranges.isEmpty, primary: true) { store.classifyTess(c.id, verdict: .planet, ranges: ranges, candidate: c) }
-                        InstrumentAnswerButton(title: "Mark noise", enabled: !ranges.isEmpty) { store.classifyTess(c.id, verdict: .notPlanet, ranges: ranges, candidate: c) }
+                        InstrumentAnswerButton(title: "Confirm transit", primary: true, dim: ranges.isEmpty) { verdict(.planet, c) }
+                        InstrumentAnswerButton(title: "Mark noise", dim: ranges.isEmpty) { verdict(.notPlanet, c) }
                         InstrumentAnswerButton(title: "Skip") { store.classifyTess(c.id, verdict: .unsure, ranges: ranges, candidate: c) }
                     }
                 }
             },
             tool: { tools(sectors: sectors, saved: saved != nil) })
         .id(c.id)
+    }
+
+    /// A verdict that needs a marked dip explains itself instead of sitting dead.
+    private func verdict(_ v: TessVerdict, _ c: TessCandidate) {
+        if v != .unsure && ranges.isEmpty { needsMark = true; return }
+        store.classifyTess(c.id, verdict: v, ranges: ranges, candidate: c)
     }
 
     @ViewBuilder private func tools(sectors: [SectorWindow], saved: Bool) -> some View {
