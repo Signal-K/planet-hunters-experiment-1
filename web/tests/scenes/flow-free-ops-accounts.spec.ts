@@ -35,7 +35,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         await expect(page.getByTestId('launchpad-focus-screen')).toBeVisible({ timeout: 30_000 })
         expect(await page.evaluate(() => innerWidth)).toBe(size.width)
         await expect(page.getByTestId('launchpad-new-mission-menu')).toHaveCount(0)
-        await page.getByTestId('launchpad-new-mission-btn').click()
+        await page.getByTestId('rocket-builder-target').click()
         await expect(page.getByTestId('mission-board')).toBeVisible()
         await expect(page.getByTestId('mission-board-tab-contracts')).toBeVisible()
         await expect(page.getByTestId('mission-board-tab-program')).toBeVisible()
