@@ -162,7 +162,6 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
       { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-target-picker', label: 'Launch Review', hint: 'Launch review (the target picker is folded in) with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
-      { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Space telescope classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-rover-survey', label: 'Rover Survey', hint: 'Starter-rover live TakeOn field — survey before ship-laser extraction', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
@@ -176,6 +175,18 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+    ],
+  },
+  {
+    label: 'Gaps and checkpoints',
+    color: '#91ccef',
+    shots: [
+      { key: 'ui-landing', label: 'Landing', hint: 'Touchdown scene on arrival at Eros, mid-mission', stage: 'tutorial' },
+      { key: 'ui-rocket-buy', label: 'Rocket buy', hint: 'Rocket purchase list, post-onboarding with funds', stage: 'free-ops' },
+      { key: 'ui-subsurface', label: 'Subsurface', hint: 'Base subsurface view with a silo and stash', stage: 'free-ops' },
+      { key: 'cp-early', label: 'Checkpoint: early', hint: 'About 15 min in: 3 missions done, Free Ops unlocked, tier 2 parts', stage: 'free-ops' },
+      { key: 'cp-mid', label: 'Checkpoint: mid', hint: 'About 35 min in: 8 missions done, silo, academy and refinery built, tier 2 rocket', stage: 'free-ops' },
+      { key: 'cp-late', label: 'Checkpoint: late', hint: 'About 55 min in: 20 missions done, tier 3 rocket, all buildings, rich stash', stage: 'free-ops' },
     ],
   },
 ]
@@ -669,6 +680,88 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
+      }
+
+    case 'ui-landing':
+      return {
+        screen: 'landing',
+        player: { ...BASE_PLAYER, missionsDone: 0, activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, missionPhase: 'landing', landingStartedAt: Date.now() },
+        tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true },
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'ui-rocket-buy':
+      return {
+        screen: 'rocket-buy',
+        player: { ...POST_ONBOARDING_PLAYER, francs: 1_000_000_000 },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'ui-subsurface':
+      return {
+        screen: 'hub-subsurface',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          placed: ['launchpad', 'surface-silo'],
+          placementPlots: { launchpad: 0, 'surface-silo': 1 },
+          stash: { iron: 30, nickel: 12, silicates: 8 },
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    // Progress checkpoints: jump to roughly minute 15 / 35 / 55 of the playable hour without playing it.
+    case 'cp-early':
+      return {
+        screen: 'hub',
+        player: { ...POST_ONBOARDING_PLAYER, francs: 40_000_000, stash: { iron: 10 } },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'cp-mid':
+      return {
+        screen: 'hub',
+        player: {
+          ...ACADEMY_PLAYER,
+          missionsDone: 8, francs: 120_000_000,
+          placed: ['launchpad', 'transit-telescope', 'surface-silo', 'astronaut-academy'],
+          placementPlots: { launchpad: 0, 'transit-telescope': 1, 'surface-silo': 2, 'astronaut-academy': 3 },
+          refineryBuilt: true, refineryUnlocked: true,
+          stash: { iron: 40, nickel: 20, silicates: 15, copper: 8 },
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'cp-late':
+      return {
+        screen: 'hub',
+        player: {
+          ...ASTEROID_DISCOVERY_PLAYER,
+          missionsDone: 20, francs: 600_000_000,
+          placed: ['launchpad', 'transit-telescope', 'deep-space-telescope', 'surface-silo', 'astronaut-academy', 'market'],
+          placementPlots: { launchpad: 0, 'transit-telescope': 1, 'deep-space-telescope': 2, 'surface-silo': 3, 'astronaut-academy': 4, market: 5 },
+          academyResearched: true, academyFunded: true,
+          refineryBuilt: true, refineryUnlocked: true, launchpadUpgraded: true,
+          clientMissions: { 'helios-propulsion-depot': 14, 'arcturus-battery-systems': 12 },
+          stash: { iron: 120, nickel: 60, silicates: 40, copper: 30, gold: 6 },
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk3', propulsion: 'ion-a3', drill: 'plasma-t3' },
+        lastCargo: null, popup: null,
       }
 
     default:

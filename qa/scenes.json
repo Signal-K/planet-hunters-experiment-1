@@ -309,6 +309,150 @@
    "web": "ui-launchpad",
    "native": null,
    "tickets": []
+  },
+  {
+   "id": "first-fab",
+   "name": "Fab, first mission",
+   "flow": "core-loop",
+   "web": "m1-fab",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "first-return",
+   "name": "Return flight",
+   "flow": "core-loop",
+   "web": "m1-return",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "first-home",
+   "name": "Home delivery sheet",
+   "flow": "core-loop",
+   "web": "m1-home",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "storage-build",
+   "name": "Build: place silo",
+   "flow": "core-loop",
+   "web": "storage-build",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "transport-hub",
+   "name": "Transport hub",
+   "flow": "core-loop",
+   "web": "transport-hub",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "transport-fab",
+   "name": "Transport fab",
+   "flow": "core-loop",
+   "web": "transport-fab",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "transport-mining",
+   "name": "Transport mining",
+   "flow": "core-loop",
+   "web": "transport-mining",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "transport-delivery",
+   "name": "Transport delivery",
+   "flow": "core-loop",
+   "web": "transport-delivery",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "transport-debrief",
+   "name": "Transport debrief",
+   "flow": "core-loop",
+   "web": "transport-debrief",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "telescope-hub",
+   "name": "Telescope hub",
+   "flow": "instruments",
+   "web": "telescope-hub",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "telescope-fab",
+   "name": "Telescope fab",
+   "flow": "instruments",
+   "web": "telescope-fab",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "telescope-debrief",
+   "name": "Telescope debrief",
+   "flow": "instruments",
+   "web": "telescope-debrief",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "landing",
+   "name": "Landing",
+   "flow": "core-loop",
+   "web": "ui-landing",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "rocket-buy",
+   "name": "Rocket buy",
+   "flow": "ship",
+   "web": "ui-rocket-buy",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "subsurface",
+   "name": "Subsurface",
+   "flow": "core-loop",
+   "web": "ui-subsurface",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "cp-early",
+   "name": "Checkpoint early (~15 min)",
+   "flow": "core-loop",
+   "web": "cp-early",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "cp-mid",
+   "name": "Checkpoint mid (~35 min)",
+   "flow": "core-loop",
+   "web": "cp-mid",
+   "native": null,
+   "tickets": []
+  },
+  {
+   "id": "cp-late",
+   "name": "Checkpoint late (~55 min)",
+   "flow": "core-loop",
+   "web": "cp-late",
+   "native": null,
+   "tickets": []
   }
  ]
 }
