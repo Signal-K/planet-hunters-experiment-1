@@ -48,7 +48,7 @@ describe('economy scale', () => {
 
   it('keeps every franc figure inside one readable band', () => {
     const values = [
-      STARTING_FRANCS, ROCKET_PRICES.prospector, ROCKET_PRICES.unannounced3,
+      STARTING_FRANCS, ROCKET_PRICES.prospector, ROCKET_PRICES.surveyor,
       ...Object.values(STRUCTURE_PRICES), ...Object.values(CONTRACT_FEES),
       ...Object.values(MINERAL_VALUE),
     ]

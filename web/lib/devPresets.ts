@@ -183,6 +183,7 @@ export const DEV_GROUPS: DevGroup[] = [
     shots: [
       { key: 'ui-landing', label: 'Landing', hint: 'Touchdown scene on arrival at Eros, mid-mission', stage: 'tutorial' },
       { key: 'ui-rocket-buy', label: 'Rocket buy', hint: 'Rocket purchase list, post-onboarding with funds', stage: 'free-ops' },
+      { key: 'ui-hangar-surveyor', label: 'Hangar: Surveyor', hint: 'Six missions done and funds in hand, so the tier 3 Surveyor is open in the hangar', stage: 'free-ops' },
       { key: 'ui-subsurface', label: 'Subsurface', hint: 'Base subsurface view with a silo and stash', stage: 'free-ops' },
       { key: 'cp-early', label: 'Checkpoint: early', hint: 'About 15 min in: 3 missions done, Free Ops unlocked, tier 2 parts', stage: 'free-ops' },
       { key: 'cp-mid', label: 'Checkpoint: mid', hint: 'About 35 min in: 8 missions done, silo, academy and refinery built, tier 2 rocket', stage: 'free-ops' },
@@ -689,6 +690,16 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true },
         missionId: FIRST_MISSION.id, targetId: 'eros',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'ui-hangar-surveyor':
+      return {
+        screen: 'hangar',
+        player: { ...POST_ONBOARDING_PLAYER, missionsDone: 6, francs: 1_000_000_000 },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
 

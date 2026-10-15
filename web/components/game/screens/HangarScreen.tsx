@@ -35,9 +35,10 @@ interface HangarScreenProps {
 const VEHICLES = [
   { id: ROCKET_IDS.explorer, rocketId: ROCKET_IDS.explorer, label: 'Explorer' },
   { id: ROCKET_IDS.prospector, rocketId: ROCKET_IDS.prospector, label: 'Prospector' },
+  { id: ROCKET_IDS.surveyor, rocketId: ROCKET_IDS.surveyor, label: 'Surveyor' },
 ] as const
 
-function RocketThumbnail({ cargo }: { cargo: boolean }) {
+function RocketThumbnail({ tier }: { tier: number }) {
   return (
     <svg className={styles.vehicleIcon} viewBox="0 0 210 107" aria-hidden="true" shapeRendering="crispEdges">
       <g stroke="var(--ln-world-outline)" strokeWidth="4" strokeLinejoin="round">
@@ -46,7 +47,8 @@ function RocketThumbnail({ cargo }: { cargo: boolean }) {
         <path d="M18 44h12v19H18z" fill="var(--ln-world-asphalt)" />
         <path d="M110 43h10v21h-10z" fill="var(--ln-world-trim-blue)" stroke="none" />
         <rect x="76" y="48" width="13" height="10" rx="4" fill="var(--ln-world-glass)" strokeWidth="2" />
-        {cargo && <path d="M91 30h38v12H91z" fill="var(--ln-world-trim-blue)" />}
+        {tier >= 2 && <path d="M91 30h38v12H91z" fill="var(--ln-world-trim-blue)" />}
+        {tier >= 3 && <path d="M91 65h38v12H91z" fill="var(--ln-world-trim-blue)" />}
       </g>
     </svg>
   )
@@ -121,7 +123,11 @@ export default function HangarScreen({
               aria-label={sealed ? `${vehicle.label}, sealed` : vehicle.label}
               onClick={() => choose(vehicle.rocketId)}
             >
-              <RocketThumbnail cargo={vehicle.id === ROCKET_IDS.prospector} />
+              <RocketThumbnail tier={rocket?.tier ?? 1} />
+              <span className={styles.label}>
+                {vehicle.label}
+                {sealed && rocket && <span className={styles.sealed}>{`Needs ${rocket.missionsRequired} ${rocket.missionsRequired === 1 ? 'mission' : 'missions'}`}</span>}
+              </span>
             </button>
           )
         })}

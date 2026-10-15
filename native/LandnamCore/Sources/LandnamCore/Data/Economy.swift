@@ -15,7 +15,7 @@ public enum Economy {
     public static let refiningCostRate = 0.07
 
     public static let prospectorPrice = 13_000_000
-    public static let unannounced3Price = 40_000_000
+    public static let surveyorPrice = 40_000_000
     public static let refineryPrice = 8_000_000
     public static let garagePrice = 6_000_000
     public static let academyPrice = 12_000_000

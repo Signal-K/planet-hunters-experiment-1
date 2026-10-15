@@ -14,7 +14,7 @@ import { ROCKET_ASSETS } from '../rocket-assets'
 export const ROCKET_IDS = {
   explorer: 'explorer',
   prospector: 'prospector',
-  unannounced3: 'unannounced-3',
+  surveyor: 'surveyor',
   unannounced4: 'unannounced-4',
   unannounced5: 'unannounced-5',
 } as const
@@ -22,7 +22,8 @@ export const ROCKET_IDS = {
 export const LEGACY_ROCKET_IDS = {
   sr1: ROCKET_IDS.explorer,
   sr2: ROCKET_IDS.prospector,
-  sr3: ROCKET_IDS.unannounced3,
+  sr3: ROCKET_IDS.surveyor,
+  'unannounced-3': ROCKET_IDS.surveyor,
   sr4: ROCKET_IDS.unannounced4,
   sr5: ROCKET_IDS.unannounced5,
 } as const
@@ -51,23 +52,18 @@ export const ROCKET_MODELS: RocketModel[] = [
     unlockHint: 'Unlocks after M1',
   },
   {
-    // Coming-soon tease, not yet purchasable — decided cost/unlock condition
-    // (rocket-and-room-system.md, 2026-06-18) is ROCKET_PRICES.unannounced3 at L3/M3, but stats
-    // aren't finalized so this stays locked like the two below until they are.
-    //
-    // "Unannounced" is a status, not a model name. Explorer and Prospector were
-    // named 2026-07-08; tiers 3-5 never were, and they render in the Hangar, so
-    // a placeholder that reads as a name would leak retired vocabulary to the
-    // player. Replace with real names when they're chosen.
-    id: ROCKET_IDS.unannounced3,
-    name: 'Unannounced',
+    // Tier 3 opens the last stretch of the first hour: the heavy frame, A3 drive
+    // and plasma drill, with the cargo and orbit to reach Jupiter and Europa.
+    // "Surveyor" is a working name until Liam picks the final one.
+    id: ROCKET_IDS.surveyor,
+    name: 'Surveyor',
     tier: 3,
-    costFrancs: ROCKET_PRICES.unannounced3,
-    missionsRequired: 999,
-    locked: true,
-    stats: { cargo: 0, maxOrbit: 0, drillTier: 0 },
-    img: '/parts/basic_hull_t1.png',
-    unlockHint: 'Unlocks at L3/M3',
+    costFrancs: ROCKET_PRICES.surveyor,
+    missionsRequired: 6,
+    locked: false,
+    stats: { cargo: 18, maxOrbit: 9, drillTier: 3 },
+    img: '/parts/hull_mk3_heavy_t3.png',
+    unlockHint: 'Unlocks after 6 missions',
   },
   {
     id: ROCKET_IDS.unannounced4,
@@ -96,7 +92,7 @@ export const ROCKET_MODELS: RocketModel[] = [
 const ROCKET_MODEL_BY_CHASSIS: Record<string, string> = {
   'hull-mk1': ROCKET_IDS.explorer,
   'hull-mk2': ROCKET_IDS.prospector,
-  'hull-mk3': ROCKET_IDS.prospector,
+  'hull-mk3': ROCKET_IDS.surveyor,
 }
 
 export function rocketModelForConfig(rocket: Pick<RocketConfig, 'chassis'> | null | undefined): RocketModel {
@@ -114,6 +110,8 @@ export function rocketConfigForModel(model: Pick<RocketModel, 'id'> | null | und
   switch (model?.id) {
     case ROCKET_IDS.prospector:
       return { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' }
+    case ROCKET_IDS.surveyor:
+      return { chassis: 'hull-mk3', propulsion: 'ion-a3', drill: 'plasma-t3' }
     case ROCKET_IDS.explorer:
     default:
       return { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' }

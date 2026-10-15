@@ -84,6 +84,14 @@ enum SceneCatalog {
         return gs
     }
 
+    /// Six missions done with funds in hand: the tier 3 Surveyor is open in the hangar (web `ui-hangar-surveyor`).
+    static func surveyorState() -> GameState {
+        var gs = partState()
+        gs.player.missionsDone = 6
+        gs.player.francs = 1_000_000_000
+        return gs
+    }
+
     /// The web `baseArt=starter` base: launchpad and hangar (silo is underground only).
     static func starterState() -> GameState {
         var gs = GameState()
@@ -459,6 +467,10 @@ enum SceneCatalog {
         scene("hangar-workshop-phone-live", 844, w: 390) { HangarScreen().environment(GameStore(state: partState())) },
         scene("hangar-workshop-landscape", 428, w: 926) { HangarScreen().environment(GameStore(state: partState())) },
         scene("hangar-workshop-desktop", 900, w: 1440) { HangarScreen().environment(GameStore(state: partState())) },
+        scene("hangar-surveyor-phone", 844, w: 390) { HangarScreen().environment(GameStore(state: surveyorState())) },
+        scene("hangar-surveyor-landscape", 428, w: 926) { HangarScreen().environment(GameStore(state: surveyorState())) },
+        scene("hangar-surveyor-desktop", 900, w: 1440) { HangarScreen().environment(GameStore(state: surveyorState())) },
+        scene("hangar-sealed-phone", 844, w: 390) { HangarScreen().environment(GameStore(state: partState())) },
         scene("hangar-config-phone", 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
         scene("hangar-config-landscape", 402, w: 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
         scene("rover-field-phone", 874) {

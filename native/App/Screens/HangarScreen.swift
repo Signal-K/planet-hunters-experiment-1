@@ -150,20 +150,38 @@ struct HangarScreen: View {
         let vehicles: [(id: String, name: String)] = [
             ("explorer", "Explorer"),
             ("prospector", "Prospector"),
+            ("surveyor", "Surveyor"),
         ]
-        return HStack(spacing: short ? 12 : 20) {
+        return HStack(spacing: short ? 12 : (narrow ? 12 : 20)) {
             ForEach(vehicles, id: \.id) { vehicle in
-                Button { focused = vehicle.id } label: {
-                    HangarRocketThumbnail(cargo: vehicle.id == "prospector")
-                        .frame(maxWidth: .infinity)
-                        .frame(height: short ? 48 : (narrow ? 88 : 120))
-                        .padding(short ? 4 : 16)
-                        .frame(maxWidth: .infinity, minHeight: short ? 64 : 120)
-                        .background(Theme.paper2)
-                        .overlay(Rectangle().stroke(focused == vehicle.id ? Theme.ink : Theme.blue, lineWidth: 3))
+                let model = Rockets.model(id: vehicle.id)
+                let sealed = model.map { $0.locked || store.player.missionsDone < $0.missionsRequired } ?? false
+                Button { if !sealed { focused = vehicle.id } } label: {
+                    VStack(spacing: 2) {
+                        HangarRocketThumbnail(tier: model?.tier ?? 1)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: short ? 40 : (narrow ? 72 : 120))
+                        Text(vehicle.name.uppercased())
+                            .font(.system(size: 14, weight: .bold))
+                            .tracking(narrow ? 0 : 0.56)
+                            .lineLimit(1)
+                            .foregroundStyle(sealed ? Theme.ink.opacity(0.6) : Theme.ink)
+                        if sealed, let model {
+                            Text("NEEDS \(model.missionsRequired) \(model.missionsRequired == 1 ? "MISSION" : "MISSIONS")")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Theme.ink.opacity(0.6))
+                                .multilineTextAlignment(.center)
+                                .minimumScaleFactor(1)
+                        }
+                    }
+                    .padding(.horizontal, short ? 4 : (narrow ? 2 : 16))
+                    .padding(.vertical, short ? 4 : (narrow ? 8 : 16))
+                    .frame(maxWidth: .infinity, minHeight: short ? 84 : (narrow ? 120 : 168))
+                    .background(Theme.paper2)
+                    .overlay(Rectangle().stroke(focused == vehicle.id ? Theme.ink : Theme.blue, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(vehicle.name)
+                .accessibilityLabel(sealed ? "\(vehicle.name), sealed" : vehicle.name)
             }
         }
     }
@@ -179,7 +197,7 @@ struct HangarScreen: View {
 }
 
 private struct HangarRocketThumbnail: View {
-    let cargo: Bool
+    let tier: Int
 
     var body: some View {
         Canvas { context, size in
@@ -207,8 +225,11 @@ private struct HangarRocketThumbnail: View {
             let window = Path(roundedRect: CGRect(x: 76, y: 48, width: 13, height: 10), cornerRadius: 4)
             context.fill(window, with: .color(glass))
             context.stroke(window, with: .color(outline), lineWidth: 2)
-            if cargo {
+            if tier >= 2 {
                 polygon([CGPoint(x: 91, y: 30), CGPoint(x: 129, y: 30), CGPoint(x: 129, y: 42), CGPoint(x: 91, y: 42)], color: blue)
+            }
+            if tier >= 3 {
+                polygon([CGPoint(x: 91, y: 65), CGPoint(x: 129, y: 65), CGPoint(x: 129, y: 77), CGPoint(x: 91, y: 77)], color: blue)
             }
         }
         .accessibilityHidden(true)

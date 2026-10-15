@@ -93,7 +93,7 @@ export const REFINING_COST_RATE = 0.07
 export const ROCKET_PRICES = {
   explorer: 0,
   prospector: 13_000_000,
-  unannounced3: 40_000_000,
+  surveyor: 40_000_000,
 } as const
 
 export const STRUCTURE_PRICES = {

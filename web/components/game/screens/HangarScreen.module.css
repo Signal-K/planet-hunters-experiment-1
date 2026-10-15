@@ -97,7 +97,7 @@
   left: 50%;
   bottom: 68px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
   width: min(680px, calc(100% - 48px));
   transform: translateX(-50%);
@@ -124,6 +124,19 @@
   cursor: default;
   opacity: 1;
 }
+
+.label {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--ln-bp-ink);
+}
+
+.card:disabled .label { opacity: 0.7; }
+
+.sealed { display: block; margin-top: 2px; font-weight: 400; letter-spacing: 0.02em; }
 
 .vehicleIcon {
   display: block;
@@ -187,7 +200,7 @@
 @media (max-width: 720px) {
   .blueprint { top: 68px; left: 12px; width: min(156px, 40vw); }
   .fleet { bottom: 68px; gap: 12px; width: calc(100% - 24px); }
-  .card { min-height: 120px; padding: 12px; }
+  .card { min-height: 120px; padding: 8px; align-content: center; gap: 4px; }
   .vehicleIcon { height: 88px; }
   .assembly { inset: 0 0 16% 0; }
   .scene { object-position: center 12%; }
@@ -199,8 +212,8 @@
   .assembly { inset: 0 0 6% 0; }
   .scene { height: 128%; object-position: center 22%; }
   .fleet { bottom: 58px; gap: 12px; width: min(520px, calc(100% - 32px)); }
-  .card { min-height: 64px; padding: 4px 8px; }
-  .vehicleIcon { height: 48px; }
+  .card { min-height: 84px; padding: 4px 8px; gap: 0; }
+  .vehicleIcon { height: 40px; }
   /* The plate art has tiny lettering at this seam; extend the opaque balance
      chip over the gap so no background glyph reads as part of the HUD. */
   .hud > .cluster:last-child [data-testid='hangar-francs-chip'] {

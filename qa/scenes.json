@@ -423,6 +423,16 @@
    "tickets": []
   },
   {
+   "id": "hangar-surveyor",
+   "name": "Hangar: Surveyor",
+   "flow": "ship",
+   "web": "ui-hangar-surveyor",
+   "native": "hangar-surveyor-phone",
+   "tickets": [
+    "SSL-611"
+   ]
+  },
+  {
    "id": "subsurface",
    "name": "Subsurface",
    "flow": "core-loop",
