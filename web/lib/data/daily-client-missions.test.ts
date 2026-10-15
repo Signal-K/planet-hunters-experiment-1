@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CLIENTS, CLIENT_SLOTS } from './clients'
 import { PARTS } from './parts'
 import { TARGETS, feasibleTargetsFor } from './targets'
+import { applyConstructionCompletion } from '../systems/ConstructionSystem'
 import { MINERAL_META } from './minerals'
 import {
   affinityBonusSlots,
@@ -33,7 +34,7 @@ describe('generateDailyClientPool', () => {
     const missions = generateDailyClientPool('2026-07-11', 20, CLIENT_SLOTS, MINERAL_META, {})
     const eligible = CLIENT_SLOTS.filter(c => c.unlockTier <= 4)
     for (const client of eligible) {
-      const offers = missions.filter(m => m.client === client.id)
+      const offers = missions.filter(m => m.client === client.id && !m.construction)
       expect(offers.length).toBe(BASE_DAILY_SLOTS_PER_CLIENT)
     }
   })
@@ -43,7 +44,7 @@ describe('generateDailyClientPool', () => {
     const missions = generateDailyClientPool('2026-07-11', 20, CLIENT_SLOTS, MINERAL_META, {
       [client.id]: 10,
     })
-    const offers = missions.filter(m => m.client === client.id)
+    const offers = missions.filter(m => m.client === client.id && !m.construction)
     expect(offers.length).toBe(BASE_DAILY_SLOTS_PER_CLIENT + 2)
   })
 
@@ -98,5 +99,33 @@ describe('daily rotation on the board (SSL-570)', () => {
     const next = refreshPoolIfStale(grown, 12, CLIENT_SLOTS, MINERAL_META, {}, '2026-10-17')
     expect(next.acceptedId).toBeNull()
     expect(next.completedIds).toEqual([])
+  })
+})
+
+describe('construct client contracts (SSL-571)', () => {
+  const pool = generateDailyClientPool('2026-10-16', 6, CLIENT_SLOTS, MINERAL_META)
+  const builds = pool.filter(m => m.construction)
+
+  it('offers the fuel depot, battery station and fabrication pad as optional client jobs', () => {
+    expect(builds.map(m => m.construction!.structureKind).sort()).toEqual(['battery-station', 'fabrication-pad', 'fuel-depot'])
+    for (const m of builds) {
+      expect(m.client).toBeDefined()
+      expect(m.id.startsWith('dcp-')).toBe(true)
+      expect(m.locked).toBe(false)
+      expect(m.payout.francs).toBeGreaterThan(0)
+      expect(m.requires.minerals).toEqual(m.construction!.requiredMaterials)
+    }
+  })
+
+  it('only asks for materials a target in range holds together, so each can be mined and flown', () => {
+    const parts = { chassis: PARTS.chassis.filter(p => !p.locked && (p.missionsRequired ?? 0) <= 6), propulsion: PARTS.propulsion.filter(p => !p.locked && (p.missionsRequired ?? 0) <= 6), drill: PARTS.drill.filter(p => !p.locked && (p.missionsRequired ?? 0) <= 6) }
+    for (const m of builds) expect(feasibleTargetsFor(m, TARGETS, parts, 6, true, [], 1).length).toBeGreaterThan(0)
+  })
+
+  it('places the client structure at the target when the job is completed', () => {
+    for (const m of builds) {
+      const player = applyConstructionCompletion({ clientStructures: [] } as never, m, 'bennu', 1000)
+      expect(player.clientStructures).toEqual([{ targetId: 'bennu', structureKind: m.construction!.structureKind, clientId: m.client, state: 'under-construction', startedAt: 1000 }])
+    }
   })
 })

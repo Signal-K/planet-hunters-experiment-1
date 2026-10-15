@@ -125,7 +125,7 @@ function missionById(s: GameState, catalog: Catalog, id: string | null): Mission
 
 /** Shared by the Map step and the one-screen setup: lock a target in and move on to the rocket. */
 function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState {
-  const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
+  const mission = missionById(s, catalog, s.missionId)
   const target = catalog.targets.find(t => t.id === id) ?? null
   if (!mission || !target) return s
   if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, s.player.unlockedSkillNodes ?? [], buildingLevel(s.player, 'launchpad')).some(item => item.id === id)) return s
