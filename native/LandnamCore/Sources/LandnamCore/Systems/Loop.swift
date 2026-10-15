@@ -120,7 +120,7 @@ public enum Loop {
     }
 
     public static func purchaseRocket(_ s: GameState, rocketId: String, catalog: Catalog) -> GameState {
-        guard Self.reviewScreens.contains(s.screen), let rocket = Rockets.model(id: rocketId), !rocket.locked,
+        guard Self.reviewScreens.contains(s.screen) || s.screen == .hangar, let rocket = Rockets.model(id: rocketId), !rocket.locked,
               let mission = catalog.mission(s.missionId), Rockets.compatible(rocket, with: mission),
               Market.purchaseRefusal(s, rocket: rocket) == nil else { return s }
         var n = Market.applyPurchaseRocket(s, rocket: rocket)

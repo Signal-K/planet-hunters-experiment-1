@@ -71,6 +71,14 @@ describe('applyPurchaseRocket', () => {
     expect(rocketPurchaseRefusal(state, rocket)).toBeNull()
   })
 
+  it('accepts a build from the hangar once a mission and destination are set up', () => {
+    const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
+    const state = { ...makeState({ francs: rocket.costFrancs }), screen: 'hangar' as const, missionId: 'm1', targetId: 'mars' }
+    expect(rocketPurchaseRefusal(state, rocket)).toBeNull()
+    expect(applyPurchaseRocket(state, rocket).screen).toBe('fab')
+    expect(rocketPurchaseRefusal({ ...state, missionId: null }, rocket)).not.toBeNull()
+  })
+
   it('explains each authoritative purchase refusal', () => {
     const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
     expect(rocketPurchaseRefusal(makeState({ francs: 0 }), rocket)).toBe('Return to the launch review before building.')

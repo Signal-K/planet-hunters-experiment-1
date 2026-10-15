@@ -24,7 +24,7 @@ test.describe('hangar contrast', () => {
     await expect(grid).toBeVisible()
     await expect(page.locator('[data-testid="hangar-screen"]').getByRole('heading')).toHaveCount(0)
     const cards = grid.locator('button')
-    await expect(cards).toHaveCount(2)
+    await expect(cards).toHaveCount(3)
     const paint = await cards.evaluateAll(nodes => nodes.map(el => {
       const s = getComputedStyle(el)
       return {
@@ -37,14 +37,14 @@ test.describe('hangar contrast', () => {
       }
     }))
     for (const card of paint) {
-      expect(card.text).toBe('')
+      expect(card.text).not.toBe('')
       expect(card.icons).toBe(1)
       expect(card.images).toBe(0)
       expect(Number(card.opacity)).toBe(1)
       expect(ratio(channel(card.color), channel(card.background))).toBeGreaterThanOrEqual(4.5)
     }
-    await expect(cards.nth(0)).toHaveAccessibleName('Explorer')
-    await expect(cards.nth(1)).toHaveAccessibleName('Prospector')
+    await expect(cards.nth(0)).toHaveAccessibleName(/Explorer/)
+    await expect(cards.nth(1)).toHaveAccessibleName(/Prospector/)
     await expect(grid.locator('img[src*="rover"]')).toHaveCount(0)
     const chip = await page.locator('[data-testid="hangar-francs-chip"]').evaluate(el => {
       const s = getComputedStyle(el)

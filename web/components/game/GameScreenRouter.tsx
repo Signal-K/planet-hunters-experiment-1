@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
-import { ACADEMY_INTRO_MISSION_ID, canAffordStructure, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, canAffordStructure, ROCKET_MODELS, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
+import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
@@ -232,7 +233,9 @@ function ScreenBody({
             if (building === 'build') return game.go('build')
             if (building === 'refinery') return game.go('refinery')
             if (building === 'market') return game.go('hub')
-            if (building === 'hangar') return game.go('hangar')
+            // Mission first: the hangar opens on its rocket choice only once a mission and
+            // destination are set up. Otherwise it starts at the contract board.
+            if (building === 'hangar') return game.mission && game.target ? game.go('hangar') : game.goToMissions()
             if (building === 'skills') return game.go('skills')
             if (building === 'deep-space-telescope') return game.go('asteroid-discovery')
             if (building === 'academy' || building === 'astronaut-academy') return game.go('academy')
@@ -458,6 +461,16 @@ function ScreenBody({
           pendingRocketName={rocketDisplay.name}
           trainingPartTry={game.player.flightPlan?.replayTry === 'part' || (!game.player.flightPlan?.completed?.part && !!game.player.flightPlan?.completed?.scan)}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
+          missionTitle={game.mission?.title ?? null}
+          compatibleRocketIds={game.mission && game.target
+            ? ROCKET_MODELS.filter(model => rocketCompatibleWithMission(model, game.mission!)).map(model => model.id)
+            : null}
+          stagedTier={(() => {
+            const vehicle = game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId && candidate.location === 'hangar')
+            return vehicle ? (ROCKET_MODELS.find(model => model.id === vehicle.rocketId)?.tier ?? 1) : null
+          })()}
+          onChooseMission={() => game.goToMissions()}
+          onBuildRocket={game.onPurchaseRocket}
           onBack={onBackFromHangar ?? game.returnFromHangar}
           onBuild={() => game.go('build')}
           onHub={() => game.go('instrument-hub')}

@@ -161,6 +161,19 @@ import Foundation
         #expect(Loop.launch(s, catalog: catalog, now: t0).screen == .fab)
     }
 
+    @Test func hangarBuildsTheChosenRocketForTheSetUpMission() {
+        var s = GameState(); s.screen = .missions
+        s.player.missionsDone = 1
+        s = Loop.pickMission(s, id: catalog.missions.first { $0.sequence == 1 }!.id, catalog: catalog)
+        s.player.stagedRockets = []; s.player.selectedStagedRocketId = nil
+        s.screen = .hangar
+        s.player.francs = 1_000_000_000
+        let built = Loop.purchaseRocket(s, rocketId: "explorer", catalog: catalog)
+        #expect(built.player.stagedRockets.count == 1)
+        #expect(built.screen == .fab)
+        #expect(built.player.francs < s.player.francs || Rockets.model(id: "explorer")?.costFrancs == 0)
+    }
+
     @Test func quickSetupNeverSpendsFrancs() {
         var s = GameState(); s.screen = .missions
         s.player.missionsDone = 1

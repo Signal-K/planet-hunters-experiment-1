@@ -264,7 +264,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const structureProps = (kind: string) => {
     if (kind === 'launchpad') {
       return {
-        kind, label: 'Tower',
+        kind, label: 'Launchpad',
         sub: player.activeMission ? 'IN FLIGHT' : 'READY',
         status: (player.activeMission ? 'warn' : 'ok') as 'ok' | 'warn',
         hot: !!player.pendingLaunch,
@@ -611,8 +611,16 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       {(
         <div className="hub-bottom-dock" style={{
           position: 'absolute', left: 0, right: 0, bottom: 8, zIndex: subsurface ? 40 : 20,
-          display: 'flex', justifyContent: 'center', pointerEvents: 'none',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none',
         }}>
+          {!subsurface && !editMode && !player.activeMission && !player.pendingLaunch && (
+            <div className="hub-mission-status" data-testid="hub-mission-status" role="status" style={{ pointerEvents: 'auto' }}>
+              <span className="hub-mission-status__text"><span className="hub-mission-status__long">No mission in progress</span><span className="hub-mission-status__short">No mission</span></span>
+              <button type="button" className="hub-mission-status__cta" data-testid="hub-new-mission-btn" onClick={() => onOpenScene('missions')}>
+                New mission
+              </button>
+            </div>
+          )}
           <div style={{ pointerEvents: 'auto' }}>
             <BaseDock
               onPrev={() => {

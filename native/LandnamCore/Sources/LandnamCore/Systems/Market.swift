@@ -105,7 +105,7 @@ public enum Market {
     // MARK: rockets
 
     public static func purchaseRefusal(_ s: GameState, rocket: RocketModel) -> String? {
-        if s.screen != .rocketBuy { return "Return to the rocket blueprint before building." }
+        if s.screen != .rocketBuy && s.screen != .hangar { return "Return to the rocket blueprint before building." }
         if s.missionId == nil || s.targetId == nil { return "Choose a contract destination before building a rocket." }
         if s.player.francs < rocket.costFrancs { return "Need \(Economy.format(francs: rocket.costFrancs - s.player.francs)) more to build this rocket." }
         return nil

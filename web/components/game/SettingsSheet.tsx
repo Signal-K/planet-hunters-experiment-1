@@ -280,31 +280,19 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
               </div>
             </section>}
 
-            <section>
+            {game.player.freeOperations && <section>
               <h3 className="ops-settings__label">Game</h3>
               <div className="ops-settings__panel">
-                <div className="ops-settings__field">
+                <Row>
                   <div className="ops-settings__copy">
-                    <div className="ops-settings__name">Free Ops</div>
-                    <div className="ops-settings__sub">{freeOps ? 'On' : 'Off'}</div>
+                    <div className="ops-settings__name">Mission alerts</div>
                   </div>
-                  <div className="ln-set-segment ops-settings__choices ops-settings__choices--two" role="group" aria-label="Free Ops" data-testid="free-ops-toggle">
-                    <button type="button" aria-pressed={!freeOps} onClick={() => game.setFreeOps(false)}>Off</button>
-                    <button type="button" aria-pressed={freeOps} onClick={() => game.setFreeOps(true)}>On</button>
+                  <div className="ops-settings__alerts">
+                    <PushOptIn userId={game.authUserId ?? undefined} />
                   </div>
-                </div>
-                {game.player.freeOperations && (
-                  <Row>
-                    <div className="ops-settings__copy">
-                      <div className="ops-settings__name">Mission alerts</div>
-                    </div>
-                    <div className="ops-settings__alerts">
-                      <PushOptIn userId={game.authUserId ?? undefined} />
-                    </div>
-                  </Row>
-                )}
+                </Row>
               </div>
-            </section>
+            </section>}
 
             <section>
               <h3 className="ops-settings__label">Account</h3>

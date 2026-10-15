@@ -1,5 +1,5 @@
-/* Assembly bay. The plate is the room; the sheet is the painted gantry and
-   rocket; vehicle cards sit on the floor. Light panels, dark ink. */
+/* Assembly bay: a vector room (HangarBay) with a gantry and, only when a vehicle is staged, its rocket.
+   Vehicle cards sit on the floor in the dock's hull-panel style. */
 
 .screen {
   position: absolute;
@@ -9,66 +9,12 @@
   color: var(--ln-bp-ink);
 }
 
-.bay,
-.assembly img,
-.blueprint img {
-  image-rendering: pixelated;
-}
-
-.bay {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 62%;
-  filter: saturate(1.18) hue-rotate(8deg);
-  pointer-events: none;
-}
-
-.screen::after {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  content: '';
-  pointer-events: none;
-  background: linear-gradient(112deg,
-    color-mix(in srgb, var(--ln-world-trim-teal) 24%, transparent),
-    transparent 46%,
-    color-mix(in srgb, var(--ln-world-trim-blue) 25%, transparent));
-  mix-blend-mode: screen;
-}
-
-/* Painted assembly: gantry, multi-stage rocket, and the wall drawing, cropped
-   above the baked card row. The bay plate shows through the lower fade. */
 .assembly {
   position: absolute;
-  z-index: 2;
-  inset: 0 0 12% 0;
-  overflow: hidden;
-  pointer-events: none;
-  mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 100%);
-}
-
-.scene {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 134%;
-  object-fit: cover;
-  object-position: center 18%;
-}
-
-.assembly::after {
-  position: absolute;
   z-index: 1;
   inset: 0;
-  content: '';
+  overflow: hidden;
   pointer-events: none;
-  background: var(--ln-world-trim-blue);
-  opacity: 0.5;
-  mix-blend-mode: color;
 }
 
 .blueprint {
@@ -84,7 +30,7 @@
   cursor: pointer;
 }
 
-.blueprint img {
+.blueprint svg {
   display: block;
   width: 100%;
   height: auto;
@@ -103,40 +49,107 @@
   transform: translateX(-50%);
 }
 
-.card {
-  display: grid;
-  place-items: center;
-  min-height: 148px;
-  margin: 0;
-  padding: 16px 20px;
-  border: 3px solid var(--ln-blueprint-blue);
-  background: var(--ln-bp-paper-2);
-  box-shadow: 4px 4px 0 color-mix(in srgb, var(--ln-bp-ink) 16%, transparent);
+.status {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 68px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+  padding: 4px 4px 4px 16px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 999px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  transform: translateX(-50%);
+}
+
+.statusText {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-right: 12px;
+}
+
+.statusCta {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 999px;
+  background: var(--ln-world-trim-blue);
+  color: var(--ln-world-hull-lit);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 
-.card[data-selected='true'] {
-  border-color: var(--ln-bp-ink);
-  box-shadow: 4px 4px 0 var(--ln-blueprint-blue);
+.card {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 148px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 16px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
 }
+
+.card[data-state='ready']:hover { transform: translateY(-2px); }
+.card[data-state='ready']:active { background: color-mix(in srgb, var(--ln-world-outline) 14%, var(--ln-world-hull-lit)); }
 
 .card:disabled {
   cursor: default;
-  opacity: 1;
+  background: color-mix(in srgb, var(--ln-world-hull-lit) 72%, var(--ln-world-outline));
 }
+
+.card:disabled .vehicleIcon { opacity: 0.55; }
 
 .label {
   font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   text-align: center;
-  color: var(--ln-bp-ink);
 }
 
-.card:disabled .label { opacity: 0.7; }
+.cost { font-size: 14px; font-weight: 600; letter-spacing: 0.04em; }
 
-.sealed { display: block; margin-top: 2px; font-weight: 400; letter-spacing: 0.02em; }
+.note {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.buildPill {
+  display: inline-grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 44px;
+  padding: 2px 16px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 999px;
+  background: var(--ln-world-trim-blue);
+  color: var(--ln-world-hull-lit);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
 
 .vehicleIcon {
   display: block;
@@ -198,36 +211,22 @@
 }
 
 @media (max-width: 720px) {
-  .blueprint { top: 68px; left: 12px; width: min(156px, 40vw); }
+  .blueprint { top: 124px; left: 12px; width: min(120px, 32vw); }
+  .status { top: 64px; }
   .fleet { bottom: 68px; gap: 12px; width: calc(100% - 24px); }
   .card { min-height: 120px; padding: 8px; align-content: center; gap: 4px; }
   .vehicleIcon { height: 88px; }
-  .assembly { inset: 0 0 16% 0; }
-  .scene { object-position: center 12%; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
   .hud { padding-top: 8px; }
   .blueprint { top: 56px; width: min(112px, 16vw); }
-  .assembly { inset: 0 0 6% 0; }
-  .scene { height: 128%; object-position: center 22%; }
   .fleet { bottom: 58px; gap: 12px; width: min(520px, calc(100% - 32px)); }
   .card { min-height: 84px; padding: 4px 8px; gap: 0; }
+  .note, .buildPill { min-height: 44px; }
   .vehicleIcon { height: 40px; }
-  /* The plate art has tiny lettering at this seam; extend the opaque balance
-     chip over the gap so no background glyph reads as part of the HUD. */
-  .hud > .cluster:last-child [data-testid='hangar-francs-chip'] {
-    position: relative;
-    z-index: 1;
-    margin-right: -8px;
-    padding-right: 16px;
-  }
+  .status { top: 56px; }
   .dock { bottom: 4px; }
-}
-
-@media (min-width: 721px) {
-  /* The wide plate already paints the wall drawing. The control stays, the slice does not double it. */
-  .blueprint img { opacity: 0; }
 }
 
 @media (min-width: 1100px) {
@@ -237,6 +236,3 @@
   .fleet { bottom: 76px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .assembly img { image-rendering: auto; }
-}

@@ -1,15 +1,13 @@
 import SwiftUI
 import LandnamCore
 
-/// Assembly bay. The plate is the room, the gantry holds the staged rocket, the
-/// blueprint is the wall drawing, and the floor is a row of vehicle cards.
-/// SwiftUI was written to match the web scene; this environment cannot compile it.
+/// Assembly bay: a vector room (`HangarBayArt`) with a gantry and, only when a vehicle is staged, its rocket.
+/// The floor is a row of rocket cards; tapping an open card builds that rocket for the mission that is set up.
 struct HangarScreen: View {
     @Environment(GameStore.self) private var store
     @State private var showSettings = false
     @State private var configuring = false
     @State private var launching = false
-    @State private var focused = "explorer"
     private let zones = HUDZones.standard
 
     private var customizerUnlocked: Bool {
@@ -20,10 +18,16 @@ struct HangarScreen: View {
 
     private var stagedInBay: Bool { store.player.stagedRockets.contains { $0.location == .hangar } }
     private var stagedOnPad: Bool { store.player.stagedRockets.contains { $0.location == .launchpad } }
+    private var hasMission: Bool { store.mission != nil && store.target != nil }
+    private var stagedTier: Int? {
+        guard let id = store.player.selectedStagedRocketId,
+              let vehicle = store.player.stagedRockets.first(where: { $0.id == id && $0.location == .hangar }) else { return nil }
+        return Rockets.model(id: Rockets.canonicalId(vehicle.rocketId))?.tier ?? 1
+    }
 
     var body: some View {
         if launching {
-            LaunchSequenceScreen(variant: focused == "explorer" ? "explorer" : "prospector") { store.launch() }
+            LaunchSequenceScreen(variant: "explorer") { store.launch() }
         } else if configuring {
             HangarModulesPanel(onClose: { configuring = false })
         } else {
@@ -37,33 +41,17 @@ struct HangarScreen: View {
             let short = geo.size.height < 500
             let narrow = geo.size.width < 720
             ZStack {
-                Image("scene-hangar-plate-bay")
-                    .resizable()
-                    .interpolation(.none)
-                    .scaledToFill()
+                HangarBayArt(stagedTier: stagedTier)
                     .frame(width: geo.size.width, height: geo.size.height)
-                    .clipped()
-                    .saturation(1.18)
-                    .hueRotation(.degrees(8))
-                    .accessibilityHidden(true)
-                    .overlay {
-                        LinearGradient(
-                            stops: [
-                                .init(color: Theme.blueBright.opacity(0.18), location: 0),
-                                .init(color: .clear, location: 0.46),
-                                .init(color: Theme.blue.opacity(0.2), location: 1),
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        .blendMode(.color)
-                        .allowsHitTesting(false)
-                    }
-                assembly(in: geo)
+            }
+            .overlay(alignment: .top) {
+                status
+                    .padding(.top, short ? 56 : 68)
+                    .padding(.horizontal, 12)
             }
             .overlay(alignment: .topLeading) {
-                blueprint(narrow: narrow, width: narrow ? min(156, geo.size.width * 0.4) : min(260, geo.size.width * 0.2))
-                    .padding(.top, narrow ? 68 : 84)
+                blueprint(width: narrow ? min(120, geo.size.width * 0.32) : (short ? 112 : min(260, geo.size.width * 0.18)))
+                    .padding(.top, narrow ? 124 : (short ? 56 : 84))
                     .padding(.leading, narrow ? 12 : 28)
             }
             .overlay(alignment: .bottom) {
@@ -86,9 +74,9 @@ struct HangarScreen: View {
                     .offset(y: short ? -36 : -48)
                 }
             }
-        .frame(width: geo.size.width, height: geo.size.height)
-        .clipped()
-        .overlay(alignment: .top) { hud(short: short) }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .clipped()
+            .overlay(alignment: .top) { hud(short: short) }
             .overlay(alignment: .bottom) {
                 BaseDock(tile: 44, zones: zones.dock, onPrev: { store.go(.hub) }, onNext: { store.go(.launchpad) })
                     .padding(.bottom, short ? 4 : 8)
@@ -102,44 +90,50 @@ struct HangarScreen: View {
         .accessibilityElement(children: .contain)
     }
 
-    private func assembly(in geo: GeometryProxy) -> some View {
-        let height = geo.size.height * (geo.size.height < 500 ? 0.92 : 0.86)
-        return Image("scene-hangar-sheet")
-            .resizable()
-            .interpolation(.none)
-            .scaledToFill()
-        .frame(width: geo.size.width, height: height * 1.34, alignment: .top)
-        .frame(width: geo.size.width, height: height, alignment: .top)
-        .clipped()
-        .overlay {
-            Rectangle()
-                .fill(Theme.blue)
-                .blendMode(.color)
-                .opacity(0.5)
-                .allowsHitTesting(false)
+    /// Which mission the rocket is for, or a way to choose one when none is set up.
+    private var status: some View {
+        HStack(spacing: 8) {
+            Text(hasMission ? "BUILDING FOR \((store.mission?.title ?? "").uppercased())" : "NO MISSION SET UP")
+                .font(AppFont.display(14)).tracking(1.1).lineLimit(2).multilineTextAlignment(.leading)
+                .padding(.leading, 12).padding(.vertical, 6)
+            if !hasMission {
+                Button { store.go(.missions) } label: {
+                    Text("CHOOSE MISSION").font(AppFont.display(14)).tracking(1.1)
+                        .foregroundStyle(Theme.hudPanel)
+                        .padding(.horizontal, 16).frame(minHeight: 44)
+                        .background(Capsule().fill(Theme.blue))
+                        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            } else {
+                Color.clear.frame(width: 4, height: 1)
+            }
         }
-        .mask(
-            LinearGradient(stops: [
-                .init(color: .black, location: 0),
-                .init(color: .black, location: 0.72),
-                .init(color: .clear, location: 1),
-            ], startPoint: .top, endPoint: .bottom)
-        )
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
+        .foregroundStyle(Theme.hudInk)
+        .padding(4)
+        .background(Capsule().fill(Theme.hudPanel))
+        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+        .accessibilityElement(children: .contain)
     }
 
-    private func blueprint(narrow: Bool, width: CGFloat) -> some View {
+    private func blueprint(width: CGFloat) -> some View {
         Button {
             if customizerUnlocked { configuring = true }
         } label: {
-            Image("scene-hangar-blueprint-panel")
-                .resizable()
-                .interpolation(.none)
-                .scaledToFit()
-                .frame(width: width)
-                .opacity(narrow ? 1 : 0.001)
+            Canvas { ctx, size in
+                let k = size.width / 220
+                ctx.scaleBy(x: k, y: k)
+                let frame = Path(roundedRect: CGRect(x: 2, y: 2, width: 216, height: 146), cornerRadius: 6)
+                ctx.fill(frame, with: .color(Theme.ink.opacity(0.7)))
+                ctx.stroke(frame, with: .color(Theme.paper), lineWidth: 3)
+                var d = Path()
+                d.move(to: CGPoint(x: 60, y: 118)); d.addLine(to: CGPoint(x: 60, y: 50)); d.addQuadCurve(to: CGPoint(x: 88, y: 50), control: CGPoint(x: 74, y: 16))
+                d.addLine(to: CGPoint(x: 88, y: 118)); d.closeSubpath()
+                for y in [40.0, 62, 84, 106] { d.move(to: CGPoint(x: 126, y: y)); d.addLine(to: CGPoint(x: 196 - (y == 62 ? 16 : y == 106 ? 30 : 0), y: y)) }
+                ctx.stroke(d, with: .color(Theme.blueBright), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+            }
+            .aspectRatio(220.0 / 150, contentMode: .fit)
+            .frame(width: width)
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("open-ship-customizer")
@@ -156,32 +150,45 @@ struct HangarScreen: View {
             ForEach(vehicles, id: \.id) { vehicle in
                 let model = Rockets.model(id: vehicle.id)
                 let sealed = model.map { $0.locked || store.player.missionsDone < $0.missionsRequired } ?? false
-                Button { if !sealed { focused = vehicle.id } } label: {
-                    VStack(spacing: 2) {
+                let incompatible = hasMission && (model.flatMap { m in store.mission.map { !Rockets.compatible(m, with: $0) } } ?? false)
+                let note: String? = sealed
+                    ? model.map { "Needs \($0.missionsRequired) \($0.missionsRequired == 1 ? "mission" : "missions")" }
+                    : incompatible ? "Cannot carry this mission" : !hasMission ? "Choose a mission first" : nil
+                let cost = model.map { $0.costFrancs == 0 ? "Free" : Economy.format(francs: $0.costFrancs) } ?? ""
+                Button {
+                    if note == nil { store.purchaseRocket(vehicle.id) }
+                } label: {
+                    VStack(spacing: 4) {
                         HangarRocketThumbnail(tier: model?.tier ?? 1)
                             .frame(maxWidth: .infinity)
-                            .frame(height: short ? 40 : (narrow ? 72 : 120))
+                            .frame(height: short ? 36 : (narrow ? 56 : 100))
+                            .opacity(note == nil ? 1 : 0.55)
                         Text(vehicle.name.uppercased())
-                            .font(.system(size: 14, weight: .bold))
-                            .tracking(narrow ? 0 : 0.56)
-                            .lineLimit(1)
-                            .foregroundStyle(sealed ? Theme.ink.opacity(0.6) : Theme.ink)
-                        if sealed, let model {
-                            Text("NEEDS \(model.missionsRequired) \(model.missionsRequired == 1 ? "MISSION" : "MISSIONS")")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Theme.ink.opacity(0.6))
-                                .multilineTextAlignment(.center)
-                                .minimumScaleFactor(1)
+                            .font(AppFont.display(14)).tracking(narrow ? 0.4 : 1.1)
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                        if let note {
+                            Text(note).font(.system(size: 14)).multilineTextAlignment(.center)
+                                .frame(minHeight: 44).opacity(0.8)
+                        } else {
+                            VStack(spacing: 0) {
+                                Text("BUILD").font(AppFont.display(14)).tracking(1.1)
+                                Text(cost).font(.system(size: 14, weight: .semibold))
+                            }
+                            .foregroundStyle(Theme.hudPanel)
+                            .padding(.horizontal, 16).frame(minHeight: 44)
+                            .background(Capsule().fill(Theme.blue))
+                            .overlay(Capsule().stroke(Theme.ink, lineWidth: 1))
                         }
                     }
-                    .padding(.horizontal, short ? 4 : (narrow ? 2 : 16))
-                    .padding(.vertical, short ? 4 : (narrow ? 8 : 16))
-                    .frame(maxWidth: .infinity, minHeight: short ? 84 : (narrow ? 120 : 168))
-                    .background(Theme.paper2)
-                    .overlay(Rectangle().stroke(focused == vehicle.id ? Theme.ink : Theme.blue, lineWidth: 3))
+                    .foregroundStyle(Theme.ink)
+                    .padding(.horizontal, short ? 4 : 12)
+                    .padding(.vertical, short ? 4 : 12)
+                    .frame(maxWidth: .infinity, minHeight: short ? 84 : (narrow ? 120 : 148))
+                    .background(RoundedRectangle(cornerRadius: 16).fill(note == nil ? Theme.paper : Theme.hex(0xaab3c2)))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.ink, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(sealed ? "\(vehicle.name), sealed" : vehicle.name)
+                .accessibilityLabel(note.map { "\(vehicle.name), \($0)" } ?? "Build \(vehicle.name) for \(cost)")
             }
         }
     }

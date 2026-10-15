@@ -35,7 +35,7 @@ struct BaseWorldScene: View {
     @State private var pinchStart: CGFloat?
     @State private var dragStartX: CGFloat?
     @State private var dragVertical: Bool?
-    @State private var pulse = false
+    private let pulse = true
 
     /// The glazed hangar stands beside the pad as soon as the pad is built, whether or not it was placed on a plot (matches web `scenicHangar`).
     private var shownKinds: [String] {
@@ -67,6 +67,9 @@ struct BaseWorldScene: View {
                     shaftHead(world: world)
                     ForEach(shownKinds, id: \.self) { kind in
                         structure(kind, world: world)
+                    }
+                    ForEach(shownKinds, id: \.self) { kind in
+                        nameTag(kind, world: world)
                     }
                     if placing { siteMarker(world: world) }
                 }
@@ -148,7 +151,6 @@ struct BaseWorldScene: View {
             if cx > 2 { hint("chevron.left", x: insets.leading + 22, world: world) }
             if cx < world.maxX - 2 { hint("chevron.right", x: world.w - insets.trailing - 22, world: world) }
         }
-        .onAppear { if !reduceMotion { withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { pulse = true } } }
     }
 
     private func hint(_ symbol: String, x: CGFloat, world: BaseWorld) -> some View {
@@ -228,6 +230,24 @@ struct BaseWorldScene: View {
         .accessibilityLabel(kindLabel(kind)))
     }
 
+    /// Name tag just below a structure's footing, so every building is labelled (web `hub-building-name`).
+    private func nameTag(_ kind: String, world: BaseWorld) -> AnyView {
+        guard let map = WorldAssets.site, let site = map.homeSite(kind), let sprite = map.structure(kind) else { return AnyView(EmptyView()) }
+        let px = world.px
+        let centerX = CGFloat(site.x + sprite.centerOffset) * px
+        let bottom = world.ground - CGFloat(sprite.foot ?? 0) * px
+        return AnyView(Text(kindLabel(kind).uppercased())
+            .font(AppFont.display(14)).tracking(1.1)
+            .foregroundStyle(Theme.hudInk)
+            .padding(.horizontal, 10).padding(.vertical, 2)
+            .background(Capsule().fill(Theme.hudPanel))
+            .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+            .fixedSize()
+            .position(x: centerX, y: bottom + 14)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true))
+    }
+
     /// The picked structure's one site, marked on the ground at its real footprint while it is free (web `SiteMarker`).
     /// A fresh base shows exactly this, on the pad site: the first build has an obvious place.
     @ViewBuilder private func siteMarker(world: BaseWorld) -> some View {
@@ -256,7 +276,6 @@ struct BaseWorldScene: View {
             .buttonStyle(.plain)
             .position(x: CGFloat(site.x) * px, y: world.ground - 22 - 3 * px)
             .accessibilityLabel("Place \(kindLabel(kind)) here")
-            .onAppear { if !reduceMotion { withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { pulse = true } } }
         }
     }
 }

@@ -5,6 +5,7 @@ import { ROCKET_IDS, ROCKET_MODELS, hasShipCustomizer } from '@/lib/data'
 import type { InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
+import HangarBay from './HangarBay'
 import { formatCurrency } from '@/lib/format'
 import { captureGameEvent } from '@/lib/posthog'
 import { kitRocketBuilt, markRocketRolloutPending } from '@/lib/rocket-rollout'
@@ -29,7 +30,15 @@ interface HangarScreenProps {
   onBuild?: () => void
   onHub?: () => void
   onNext?: () => void
-  onSelect?: (rocketId: string) => void
+  /** Title of the mission this vehicle is being built for; null when no mission is set up yet. */
+  missionTitle?: string | null
+  /** Rocket ids that can carry the set-up mission; null when there is no mission context. */
+  compatibleRocketIds?: string[] | null
+  /** Tier of the vehicle standing in the bay, or null when the bay is empty. */
+  stagedTier?: number | null
+  onChooseMission?: () => void
+  /** Starts building the chosen rocket for the set-up mission. */
+  onBuildRocket?: (rocketId: string) => void
 }
 
 const VEHICLES = [
@@ -65,35 +74,26 @@ function GearIcon() {
 
 export default function HangarScreen({
   francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched,
-  trainingPartTry = false, onConfirmShipCustomizerBuild, onBack, onBuild, onHub, onNext, onSelect,
+  trainingPartTry = false, onConfirmShipCustomizerBuild, onBack, onBuild, onHub, onNext,
+  missionTitle = null, compatibleRocketIds = null, stagedTier = null, onChooseMission, onBuildRocket,
 }: HangarScreenProps) {
   const customizerUnlocked = trainingPartTry || hasShipCustomizer(unlockedSkillNodes) || !!crewModuleResearched || !!landingResearched
   const [customizerOpen, setCustomizerOpen] = useState(false)
   const help = useHelp('hangar')
   const installed = shipCustomizerParts ?? {}
-  const staged = [...ROCKET_MODELS].reverse().find(rocket => !rocket.locked && missionsDone >= rocket.missionsRequired) ?? ROCKET_MODELS[0]
-  const [focused, setFocused] = useState(staged.id)
+  const hasMission = compatibleRocketIds !== null
 
-  const choose = (rocketId: string | null) => {
-    if (!rocketId) {
-      setFocused('rover')
-      return
-    }
+  const build = (rocketId: string) => {
     const rocket = ROCKET_MODELS.find(model => model.id === rocketId)
-    const open = !!rocket && !rocket.locked && missionsDone >= rocket.missionsRequired
-    if (!open) return
-    setFocused(rocketId)
-    if (onSelect) {
-      captureGameEvent('hangar_rocket_selected', { rocket_id: rocketId, cost_francs: rocket.costFrancs })
-      onSelect(rocketId)
-    }
+    if (!rocket || !onBuildRocket || !hasMission) return
+    captureGameEvent('hangar_rocket_selected', { rocket_id: rocketId, cost_francs: rocket.costFrancs })
+    onBuildRocket(rocketId)
   }
 
   return (
     <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="hangar-screen">
-      <img className={styles.bay} src="/art/scenes/hangar/hangar-plate-bay.png" alt="" />
       <div className={styles.assembly} data-testid="hangar-assembly" aria-hidden="true">
-        <img className={styles.scene} src="/art/scenes/hangar/hangar-sheet.png" alt="" />
+        <HangarBay stagedTier={stagedTier} />
       </div>
       <button
         type="button"
@@ -106,28 +106,54 @@ export default function HangarScreen({
           setCustomizerOpen(true)
         }}
       >
-        <img src="/art/scenes/hangar/hangar-blueprint-panel.png" alt="" />
+        <svg viewBox="0 0 220 150" aria-hidden="true">
+          <rect x="2" y="2" width="216" height="146" rx="6" fill="color-mix(in srgb, var(--ln-world-outline) 70%, var(--ln-world-trim-blue))" stroke="var(--ln-world-hull-lit)" strokeWidth="3" />
+          <g fill="none" stroke="var(--ln-world-glass)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.9">
+            <path d="M60 118 V50 q14 -34 28 0 V118 z" />
+            <path d="M44 118 V76 q8 -20 16 0 M88 118 V76 q8 -20 16 0" />
+            <path d="M126 40 h70 M126 62 h54 M126 84 h62 M126 106 h40" />
+          </g>
+        </svg>
       </button>
+
+      <div className={styles.status} data-testid="hangar-status" role="status">
+        {hasMission ? (
+          <span className={styles.statusText}>{missionTitle ? `Building for ${missionTitle}` : 'Choose a rocket to build'}</span>
+        ) : (
+          <>
+            <span className={styles.statusText}>No mission set up</span>
+            {onChooseMission && <button type="button" className={styles.statusCta} data-testid="hangar-choose-mission" onClick={onChooseMission}>Choose mission</button>}
+          </>
+        )}
+      </div>
 
       <div className={styles.fleet} data-testid="hangar-fleet-grid" data-ui-zone={UI_ZONES.screenContent}>
         {VEHICLES.map(vehicle => {
-          const rocket = vehicle.rocketId ? ROCKET_MODELS.find(model => model.id === vehicle.rocketId) : null
+          const rocket = ROCKET_MODELS.find(model => model.id === vehicle.rocketId)
           const sealed = !!rocket && (rocket.locked || missionsDone < rocket.missionsRequired)
+          const incompatible = !!rocket && hasMission && !compatibleRocketIds.includes(rocket.id)
+          const waiting = !hasMission
+          const cost = rocket ? (rocket.costFrancs === 0 ? 'Free' : formatCurrency(rocket.costFrancs, { compact: true })) : ''
+          const note = sealed && rocket
+            ? `Needs ${rocket.missionsRequired} ${rocket.missionsRequired === 1 ? 'mission' : 'missions'}`
+            : incompatible ? 'Cannot carry this mission' : waiting ? 'Choose a mission first' : null
+          const disabled = sealed || incompatible || waiting
           return (
             <button
               key={vehicle.id}
               type="button"
               className={styles.card}
-              data-selected={focused === vehicle.id}
-              disabled={sealed}
-              aria-label={sealed ? `${vehicle.label}, sealed` : vehicle.label}
-              onClick={() => choose(vehicle.rocketId)}
+              data-testid={`hangar-rocket-${vehicle.id}`}
+              data-state={sealed ? 'sealed' : incompatible ? 'incompatible' : waiting ? 'waiting' : 'ready'}
+              disabled={disabled}
+              aria-label={note ? `${vehicle.label}, ${note}` : `Build ${vehicle.label} for ${cost}`}
+              onClick={() => build(vehicle.id)}
             >
               <RocketThumbnail tier={rocket?.tier ?? 1} />
-              <span className={styles.label}>
-                {vehicle.label}
-                {sealed && rocket && <span className={styles.sealed}>{`Needs ${rocket.missionsRequired} ${rocket.missionsRequired === 1 ? 'mission' : 'missions'}`}</span>}
-              </span>
+              <span className={styles.label}>{vehicle.label}</span>
+              {note
+                ? <span className={styles.note}>{note}</span>
+                : <span className={styles.buildPill}><span>Build</span><span className={styles.cost}>{cost}</span></span>}
             </button>
           )
         })}

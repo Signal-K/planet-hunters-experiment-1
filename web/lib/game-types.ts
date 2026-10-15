@@ -591,7 +591,6 @@ export interface GameActions {
   replayTrainingTry: (tryId: TrainingTryId) => void
   openTrainingTry: (tryId: TrainingTryId) => void
   skipFlightPlan: () => void
-  setFreeOps: (on: boolean) => void
   completeStep: (id: number) => void
   resetGame: () => void
   signOut: () => void

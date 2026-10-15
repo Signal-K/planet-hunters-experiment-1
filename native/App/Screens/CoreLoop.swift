@@ -49,20 +49,7 @@ struct MissionsScreen: View {
         let side = max(insets.leading, 12)
         let railTop = insets.top + 60
         return ZStack(alignment: .topLeading) {
-            BaseWorldScene(
-                biome: EarthBiome(rawValue: store.player.earthBiome) ?? .mountains,
-                placed: store.player.placed,
-                plots: store.player.placementPlots,
-                levels: store.player.buildingLevels,
-                excavated: store.player.subsurfaceExcavated || !store.player.subsurfaceBuilt.isEmpty,
-                secondTank: store.player.subsurfaceBuilt.contains("mineral-vault"),
-                padOccupied: true,
-                insets: insets,
-                camera: camera,
-                showsControls: false,
-                onStructure: { _ in }, onShaft: {}, onBuildSilo: {}
-            )
-            .allowsHitTesting(false)
+            Color.clear
             if tab == 1 { Theme.ink.opacity(0.18).allowsHitTesting(false) }
 
             HStack(alignment: .top) {
@@ -121,9 +108,6 @@ struct MissionsScreen: View {
             .overlay(alignment: .top) { UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20).fill(accent).frame(height: 8) }
             .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
             .background(RoundedRectangle(cornerRadius: 20).fill(Theme.ink.opacity(0.7)).offset(x: 6, y: 6))
-            .overlay(alignment: .topLeading) {
-                SignalBeam(color: accent, length: portrait ? 260 : 110).offset(x: 22, y: -(portrait ? 260 : 110))
-            }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: portrait ? .bottom : .bottomTrailing)
             .padding(.bottom, insets.bottom + 12)
             .padding(.leading, portrait ? max(insets.leading, 12) : 0)
@@ -261,13 +245,13 @@ private struct SignalBeam: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { ctx in
+        // Only the packet and rings, at 24 fps. A tall line under them (dashed with an animated `dashPhase`, sliding rectangles,
+        // or even a static solid one) pinned WindowServer at 45-100% on macOS next to the live base canvas.
+        ZStack(alignment: .top) {
+        TimelineView(.animation(minimumInterval: 1.0 / 8, paused: reduceMotion)) { ctx in
             let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
             let phase = CGFloat(t.truncatingRemainder(dividingBy: 1.8) / 1.8)
             ZStack(alignment: .top) {
-                Path { p in p.move(to: CGPoint(x: 2, y: 0)); p.addLine(to: CGPoint(x: 2, y: length)) }
-                    .stroke(color, style: StrokeStyle(lineWidth: 4, dash: [10, 8], dashPhase: -CGFloat(t * 20)))
-                    .frame(width: 4, height: length).opacity(0.8)
                 RoundedRectangle(cornerRadius: 3).fill(color).overlay(RoundedRectangle(cornerRadius: 3).stroke(Theme.ink, lineWidth: 2))
                     .frame(width: 14, height: 14).offset(y: phase * (length - 14)).opacity(phase < 0.9 ? 1 : 0)
                 ForEach(0..<2, id: \.self) { k in
@@ -278,6 +262,8 @@ private struct SignalBeam: View {
             }
             .frame(width: 4, height: length)
         }
+        }
+        .frame(width: 4, height: length)
         .allowsHitTesting(false).accessibilityHidden(true)
     }
 }

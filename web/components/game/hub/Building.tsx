@@ -230,6 +230,9 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
           )}
         </div>
 
+        {quiet && (
+          <span className="hub-building-name" data-testid={`building-${kind}-name`}>{label}</span>
+        )}
         {!quiet && (
         <div className="hub-building-status" style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,

@@ -57,9 +57,5 @@ export function useTutorialActions(
     })
   }, [setState])
 
-  const setFreeOps = useCallback((on: boolean) => {
-    setState(s => ({ ...s, tutorial: !on, player: { ...s.player, freeOperations: on } }))
-  }, [setState])
-
-  return { setTutorial, skipTutorial, setDoneSteps, completeStep, startFlightPlan, completeFlightPlan, showFlightPlanHint, replayTrainingTry, openTrainingTry, skipFlightPlan, setFreeOps }
+  return { setTutorial, skipTutorial, setDoneSteps, completeStep, startFlightPlan, completeFlightPlan, showFlightPlanHint, replayTrainingTry, openTrainingTry, skipFlightPlan }
 }

@@ -65,16 +65,18 @@ struct BaseWorldCanvas: View {
     var grade: String = WorldAssets.grade()
     @State private var runner = WorldRunner()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         // 30 fps is plenty for drifting clouds and weather and halves the full-screen redraw cost (60 fps on a large
         // Mac window was the main source of lag). The sky gradient covers every pixel, so the canvas is opaque.
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: false)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 6, paused: reduceMotion || scenePhase != .active)) { timeline in
             Canvas(opaque: true) { g, size in
                 step(now: timeline.date, size: size)
                 draw(&g, size: size, t: timeline.date.timeIntervalSinceReferenceDate)
             }
         }
+        .drawingGroup()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
@@ -116,17 +118,21 @@ struct BaseWorldCanvas: View {
             let cloud = e.def.sprite?.hasPrefix("cloud") == true
             var layer = g
             layer.opacity = e.alpha * (cloud ? grade.clouds * (runner.sky?.weather.clouds ?? 1) : 1)
-            if cloud && overcast { layer.addFilter(.brightness(storm ? -0.45 : -0.22)) }
             if let name = e.def.sprite, let s = world.scene.sprites[name] {
                 drawSprite(&layer, s, e, sx: sx, sy: sy, k: px * z * CGFloat(e.scale))
             } else {
                 drawShape(&layer, e, sx: sx, sy: sy, k: px * z, groundY: groundY, w: w, t: t)
             }
         }
+        if overcast {
+            // One tint for the whole sky: a brightness filter per cloud cost an offscreen pass each.
+            var dim = g
+            dim.opacity = storm ? 0.3 : 0.14
+            dim.fill(Path(CGRect(x: 0, y: 0, width: w, height: groundY)), with: .color(color("#101826")))
+        }
         if grade.shade > 0 {
             var shade = g
-            shade.blendMode = .multiply
-            shade.opacity = grade.shade
+            shade.opacity = grade.shade * 0.6
             shade.fill(Path(CGRect(x: 0, y: 0, width: w, height: h)), with: .color(color(grade.top)))
         }
         if world.flash > 0 {
@@ -175,19 +181,18 @@ struct BaseWorldCanvas: View {
                 y += 10 + CGFloat(s / 233280) * 10
                 p.addLine(to: CGPoint(x: x, y: min(y, bottom)))
             }
-            var glow = g
-            glow.addFilter(.shadow(color: color("#cfe0ff"), radius: 6))
-            glow.stroke(p, with: .color(fill), lineWidth: CGFloat(d.width ?? 2))
+            g.stroke(p, with: .color(fill.opacity(0.35)), lineWidth: CGFloat(d.width ?? 2) + 5)
+            g.stroke(p, with: .color(fill), lineWidth: CGFloat(d.width ?? 2))
         case "bank":
             let bw = 260 * k, bh = CGFloat(d.height ?? 20) * k
             g.fill(Path(CGRect(x: sx - bw / 2, y: sy - bh, width: bw, height: bh)), with: .linearGradient(
                 Gradient(colors: [fill.opacity(0), fill]), startPoint: CGPoint(x: 0, y: sy - bh), endPoint: CGPoint(x: 0, y: sy)))
         case "ribbon":
             let top = sy - CGFloat(d.height ?? 40) * k
-            for i in 0..<46 {
-                let x = CGFloat(i) / 45 * w
+            for i in 0..<24 {
+                let x = CGFloat(i) / 23 * w
                 let wave = CGFloat(sin(Double(i) * 0.35 + t * 0.4 + e.seed * 6)) * 12 * k / 2
-                g.fill(Path(CGRect(x: x, y: top + wave, width: w / 45 + 1, height: sy - top)), with: .linearGradient(
+                g.fill(Path(CGRect(x: x, y: top + wave, width: w / 23 + 1, height: sy - top)), with: .linearGradient(
                     Gradient(stops: [.init(color: color("#a078dc").opacity(0), location: 0), .init(color: color("#7fe0c8").opacity(0.55), location: 0.45), .init(color: color("#7fe0c8").opacity(0), location: 1)]),
                     startPoint: CGPoint(x: 0, y: top + wave), endPoint: CGPoint(x: 0, y: sy + wave)))
             }

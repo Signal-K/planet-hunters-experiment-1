@@ -160,13 +160,6 @@ public final class GameStore {
         apply(n)
     }
 
-    public func setFreeOps(_ on: Bool) {
-        var n = state
-        n.player.freeOperations = on
-        n.tutorial = !on
-        apply(n)
-    }
-
     // MARK: intents
     /// Research XP for the first classification of a TESS or NEOCP subject (mirrors web useGameLoop).
     static let firstClassificationXP = 15

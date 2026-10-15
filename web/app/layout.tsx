@@ -3,6 +3,7 @@ import Script from 'next/script'
 import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
 import './globals.css'
 import './loop-screens.css'
+import './base-scene.css'
 
 const SITE_URL = 'https://playlandnam.space'
 const OG_IMAGE = { url: '/og-image.png', width: 1200, height: 630, alt: PRODUCT_NAME }
