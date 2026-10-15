@@ -118,15 +118,16 @@ import Foundation
         #expect(Construction.applyPlace(s, kind: "surface-silo", plot: 9, now: now) == s)
     }
 
-    @Test func deferredExchangeIsNeitherBuildableNorPlotOccupying() {
+    @Test func exchangeIsABuildingOnceTheGuidedMissionsAreFlown() {
         var player = Player()
-        player.freeOperations = true
+        #expect(!Construction.unlocked(Construction.byId["market"]!, player: player))
+        player.missionsDone = 2
+        #expect(Construction.unlocked(Construction.byId["market"]!, player: player))
+        #expect(Construction.catalog(for: player).contains { $0.id == "market" })
         player.placed = ["launchpad", "market"]
         player.placementPlots = ["launchpad": 0, "market": 2]
-
         #expect(!Construction.catalog(for: player).contains { $0.id == "market" })
-        #expect(!Construction.unlocked(Construction.byId["market"]!, player: player))
-        #expect(Construction.occupied(player) == ["launchpad": 0])
+        #expect(Construction.occupied(player) == ["launchpad": 0, "market": 2])
     }
 
     @Test func buildProgressRunsTenSeconds() {

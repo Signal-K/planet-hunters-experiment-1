@@ -478,11 +478,11 @@ enum SceneCatalog {
         scene("settings-base-move-desktop", 900, w: 1440) { settingsOverlay(focusBaseMove: true) },
         scene("mining-guide-phone", 1250) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
         scene("mining-guide-landscape", 402, w: 874) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
-        scene("exchange-phone", 874) { HubScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
-        scene("exchange-landscape", 402, w: 874) { HubScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("exchange-landscape", 402, w: 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("coach-exchange-landscape", 428, w: 926) {
             var gs = exchangeState(); gs.player.flightPlan.complete("mining")
-            return coached(HubScreen(), gs, screen: .market).environment(\.flatLayout, true)
+            return coached(MarketScreen(), gs, screen: .market).environment(\.flatLayout, true)
         },
         scene("hangar-workshop-phone", 844, w: 390) { HangarScreen().environment(GameStore(state: partState())) },
         scene("hangar-workshop-phone-live", 844, w: 390) { HangarScreen().environment(GameStore(state: partState())) },

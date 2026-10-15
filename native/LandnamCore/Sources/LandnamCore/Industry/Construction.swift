@@ -27,13 +27,13 @@ public enum Construction {
 
     /// What the Build screen offers: web hides the Academy here (it is placed after research) and anything already built.
     public static func catalog(for p: Player) -> [StructureBlueprint] {
-        all.filter { $0.id != "astronaut-academy" && $0.id != "market" && !p.placed.contains($0.id) }
+        all.filter { $0.id != "astronaut-academy" && !p.placed.contains($0.id) }
     }
 
     public static func unlocked(_ b: StructureBlueprint, player p: Player) -> Bool {
         switch b.id {
         case "surface-silo": return p.freeOperations || p.missionsDone >= 2 || p.placed.contains("surface-silo")
-        case "market": return false
+        case "market": return p.freeOperations || p.missionsDone >= 2 || p.placed.contains("market")
         case "astronaut-academy": return p.academyResearched || p.placed.contains("astronaut-academy")
         case "launchpad": return true
         default: return false
@@ -50,7 +50,7 @@ public enum Construction {
 
     /// Plots in use, with the pre-plot launchpad save pinned to plot 0 as on web.
     public static func occupied(_ p: Player) -> [String: Int] {
-        var plots = p.placementPlots.filter { $0.key != "market" }
+        var plots = p.placementPlots
         if p.placed.contains("launchpad") && plots["launchpad"] == nil { plots["launchpad"] = 0 }
         return plots
     }

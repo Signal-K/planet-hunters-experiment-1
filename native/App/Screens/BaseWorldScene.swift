@@ -41,8 +41,7 @@ struct BaseWorldScene: View {
 
     /// The glazed hangar stands beside the pad as soon as the pad is built, whether or not it was placed on a plot (matches web `scenicHangar`).
     private var shownKinds: [String] {
-        let visible = placed.filter { $0 != "market" }
-        return visible.contains("launchpad") && !visible.contains("hangar") && !visible.contains("garage") ? visible + ["hangar"] : visible
+        placed.contains("launchpad") && !placed.contains("hangar") && !placed.contains("garage") ? placed + ["hangar"] : placed
     }
 
     private var siloPlaced: Bool { placed.contains("surface-silo") }

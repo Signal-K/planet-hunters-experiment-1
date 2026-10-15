@@ -3,15 +3,16 @@ import Foundation
 @testable import LandnamCore
 
 @MainActor @Suite struct StoreTests {
-    @Test func deferredExchangeStateReturnsToBase() {
+    @Test func exchangeScreenOpensAndStaysOpen() {
         var state = GameState()
         state.screen = .market
 
         let store = GameStore(state: state)
-        #expect(store.screen == .hub)
+        #expect(store.screen == .market)
 
+        store.go(.hub)
         store.go(.market)
-        #expect(store.screen == .hub)
+        #expect(store.screen == .market)
     }
 
     @Test func loopPersistsAndReloads() throws {

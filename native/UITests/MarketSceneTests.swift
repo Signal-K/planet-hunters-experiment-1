@@ -1,16 +1,15 @@
 import XCTest
 
-/// A stale Exchange scene request must fall back to the Base while the feature is deferred.
+/// The Exchange dock opens as its own scene with crates on the belt and a sell pad.
 @MainActor final class MarketSceneTests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
 
-    func testDeferredExchangeSceneReturnsToBase() {
+    func testExchangeSceneShowsCratesAndSellPad() {
         let app = XCUIApplication()
         app.launchArguments = ["-scene", "coach-exchange-landscape", "-landnam.orientation", "landscape"]
         app.launch()
 
-        XCTAssertTrue(app.buttons["Build"].waitForExistence(timeout: 10))
-        XCTAssertFalse(app.buttons["exchange-crate-iron"].exists)
-        XCTAssertFalse(app.buttons["sell-all-btn"].exists)
+        XCTAssertTrue(app.buttons["exchange-crate-iron"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.otherElements["exchange-francs"].exists || app.staticTexts["exchange-francs"].exists)
     }
 }

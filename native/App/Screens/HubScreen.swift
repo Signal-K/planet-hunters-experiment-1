@@ -187,7 +187,7 @@ struct HubScreen: View {
         // Mission first: the hangar opens on its rocket choice only once a mission and destination are set up.
         case "hangar", "garage": store.go(store.mission != nil && store.target != nil ? .hangar : .missions)
         case "astronaut-academy": store.go(.academy)
-        case "market": store.go(.hub)
+        case "market": store.go(.market)
         default: break
         }
     }

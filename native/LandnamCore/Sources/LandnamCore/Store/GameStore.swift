@@ -32,7 +32,7 @@ public final class GameStore {
         } else {
             initialState = state
         }
-        var visibleState = Self.withDeferredExchangeHidden(initialState)
+        var visibleState = initialState
         visibleState.player.dailyClientPool = Self.dailyPool(for: visibleState.player, now: clock(), targets: catalog.targets)
         self.state = visibleState
         self.catalog = Self.runtimeCatalog(catalog, player: visibleState.player, missionId: visibleState.missionId, targetId: visibleState.targetId)
@@ -68,15 +68,8 @@ public final class GameStore {
     public var target: Target? { catalog.target(state.targetId) }
     public var now: Double { clock() }
 
-    private static func withDeferredExchangeHidden(_ state: GameState) -> GameState {
-        guard state.screen == .market else { return state }
-        var visible = state
-        visible.screen = .hub
-        return visible
-    }
-
     private func apply(_ proposed: GameState) {
-        var next = Self.withDeferredExchangeHidden(proposed)
+        var next = proposed
         next.player.dailyClientPool = Self.dailyPool(for: next.player, now: clock(), targets: baseCatalog.targets)
         guard next != state else { return }
         var n = next

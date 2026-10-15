@@ -35,7 +35,7 @@ struct RootView: View {
             case .mining, .landing: MiningScreen().helpable(.mining)
             case .delivery: DeliveryScreen()
             case .debrief: if store.player.homeDeliveryPending { HomecomingScreen() } else { DebriefScreen() }
-            case .market: HubScreen()
+            case .market: MarketScreen()
             case .instrumentHub: ControlStationScreen()
             case .saturnStormSearch: SaturnStormSearchScreen()
             case .asteroidDiscovery: AsteroidDiscoveryScreen()
