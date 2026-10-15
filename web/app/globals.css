@@ -2297,10 +2297,15 @@ button { cursor: pointer; }
   border-color: var(--ln-bp-line-strong) !important;
   box-shadow: var(--ln-shadow-card);
 }
-.theme-blueprint.mining-screen .mining-success-overlay,
 .theme-blueprint.mining-screen .mining-failure-overlay {
   background: var(--ln-mining-overlay);
 }
+/* The first-haul card sits over the bottom of the scene; the ore field stays visible (no scrim) while it is up. */
+.theme-blueprint.mining-screen .mining-success-overlay {
+  background: transparent;
+  pointer-events: none;
+}
+.theme-blueprint.mining-screen .mining-success-overlay > * { pointer-events: auto; }
 .theme-blueprint.mining-screen .mining-success-secondary,
 .theme-blueprint.mining-screen .mining-success-primary {
   font: 800 14px var(--ln-font-display);
@@ -2349,7 +2354,7 @@ button { cursor: pointer; }
 }
 .theme-blueprint.mining-screen .mining-success-panel {
   background: var(--ln-mining-control-fill-strong) !important;
-  border-color: var(--ln-bp-green) !important;
+  border-color: var(--ln-cyan) !important;
   box-shadow: var(--ln-shadow-modal);
 }
 .theme-blueprint.mining-screen .mining-success-secondary,
@@ -2358,14 +2363,14 @@ button { cursor: pointer; }
   border-radius: var(--ln-r-md);
 }
 .theme-blueprint.mining-screen .mining-success-secondary {
-  border: 1px solid var(--ln-bp-green);
-  background: var(--ln-bp-green-soft);
-  color: var(--ln-bp-green);
+  border: 1px solid var(--ln-cyan);
+  background: var(--ln-cyan-soft);
+  color: var(--ln-text);
 }
 .theme-blueprint.mining-screen .mining-success-primary {
   border: 0;
-  background: var(--ln-bp-green);
-  color: #ffffff;
+  background: var(--ln-cyan);
+  color: var(--ln-text);
 }
 .theme-blueprint.mining-screen .mining-failure-overlay {
   background: rgba(238, 243, 248, 0.94);

@@ -529,7 +529,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             >
               ×
             </button>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 6 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-text)', textTransform: 'uppercase', marginBottom: 6 }}>
               No Client On This Run
             </div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45, paddingRight: 20 }}>
@@ -551,8 +551,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
       {activeOverlay === 'success' && (
         <div className="mining-success-overlay" data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'flex', alignItems: 'flex-end', padding: 16 }}>
-          <Panel className="mining-success-panel" accent="var(--ln-ok)" surface="glass" style={{ padding: 14, width: '100%' }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 6 }}>
+          <Panel className="mining-success-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 14, width: '100%' }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-text)', textTransform: 'uppercase', marginBottom: 6 }}>
               First Free Ops Haul Secured
             </div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
