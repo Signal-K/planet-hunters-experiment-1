@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { CLIENT_SLOTS } from './clients'
+import { CLIENTS, CLIENT_SLOTS } from './clients'
+import { PARTS } from './parts'
+import { TARGETS, feasibleTargetsFor } from './targets'
 import { MINERAL_META } from './minerals'
 import {
   affinityBonusSlots,
   BASE_DAILY_SLOTS_PER_CLIENT,
   generateDailyClientPool,
   MAX_AFFINITY_BONUS_SLOTS,
+  refreshPoolIfStale,
 } from './daily-client-missions'
 
 describe('affinityBonusSlots', () => {
@@ -50,5 +53,50 @@ describe('generateDailyClientPool', () => {
     const after = generateDailyClientPool('2026-07-11', 12, CLIENT_SLOTS, MINERAL_META, {})
     expect(before.some(m => m.client === tier5.id)).toBe(false)
     expect(after.some(m => m.client === tier5.id)).toBe(true)
+  })
+})
+
+describe('daily rotation on the board (SSL-570)', () => {
+  const pool = (date: string, done: number, clientMissions = {}) => generateDailyClientPool(date, done, CLIENT_SLOTS, MINERAL_META, clientMissions)
+  const signature = (missions: { id: string; requires: { minerals: Record<string, number> } }[]) => missions.map(m => `${m.id}:${JSON.stringify(m.requires.minerals)}`).join('|')
+
+  it('shows different contracts on two different days', () => {
+    expect(signature(pool('2026-10-16', 6))).not.toBe(signature(pool('2026-10-17', 6)))
+  })
+
+  it('opens higher tier clients as missions are flown, and every pooled client exists on the board', () => {
+    const early = new Set(pool('2026-10-16', 2).map(m => m.client))
+    const late = new Set(pool('2026-10-16', 12).map(m => m.client))
+    expect(late.size).toBeGreaterThan(early.size)
+    const tierOf = (id: string) => CLIENT_SLOTS.find(c => c.id === id)!.unlockTier
+    expect(Math.max(...[...late].map(id => tierOf(id as string)))).toBeGreaterThan(Math.max(...[...early].map(id => tierOf(id as string))))
+    for (const id of late) expect(CLIENTS[id as string]).toBeDefined()
+  })
+
+  it('every pooled contract can be flown with the parts unlocked at that point', () => {
+    for (const done of [2, 6, 12, 20]) {
+      const parts = {
+        chassis: PARTS.chassis.filter(p => !p.locked && (p.missionsRequired ?? 0) <= done),
+        propulsion: PARTS.propulsion.filter(p => !p.locked && (p.missionsRequired ?? 0) <= done),
+        drill: PARTS.drill.filter(p => !p.locked && (p.missionsRequired ?? 0) <= done),
+      }
+      const missions = pool('2026-10-16', done)
+      const flyable = missions.filter(m => feasibleTargetsFor(m, TARGETS, parts, done, true, [], 1).length > 0)
+      expect(flyable.length).toBeGreaterThanOrEqual(Math.ceil(missions.length / 2))
+    }
+  })
+
+  it('keeps accepted and completed contracts when the pool grows within a day, and resets on a new day', () => {
+    const day = '2026-10-16'
+    const first = refreshPoolIfStale(undefined, 2, CLIENT_SLOTS, MINERAL_META, {}, day)
+    const marked = { ...first, acceptedId: first.missions[0].id, completedIds: [first.missions[1].id] }
+    const grown = refreshPoolIfStale(marked, 12, CLIENT_SLOTS, MINERAL_META, {}, day)
+    expect(grown.missions.length).toBeGreaterThan(first.missions.length)
+    expect(grown.acceptedId).toBe(first.missions[0].id)
+    expect(grown.completedIds).toEqual([first.missions[1].id])
+    expect(refreshPoolIfStale(grown, 12, CLIENT_SLOTS, MINERAL_META, {}, day)).toBe(grown)
+    const next = refreshPoolIfStale(grown, 12, CLIENT_SLOTS, MINERAL_META, {}, '2026-10-17')
+    expect(next.acceptedId).toBeNull()
+    expect(next.completedIds).toEqual([])
   })
 })

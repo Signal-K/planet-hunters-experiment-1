@@ -39,7 +39,7 @@ function djb2(s: string): number {
   return h
 }
 
-function maxTierForProgress(missionsDone: number): number {
+export function maxTierForProgress(missionsDone: number): number {
   if (missionsDone >= 12) return 5
   if (missionsDone >= 9) return 4
   if (missionsDone >= 6) return 3
@@ -130,19 +130,20 @@ export function generateDailyClientPool(
   return missions
 }
 
+/** Today's pool for this player. Same day keeps what was accepted or completed and any payout already adjusted, so
+ * a mid-day tier or affinity unlock only adds contracts. A new day starts clean. */
 export function refreshPoolIfStale(
   existing: DailyClientPool | undefined,
   missionsDone: number,
   clients: ClientSlot[],
   minerals: Record<string, MineralMeta>,
   clientMissions: Record<string, number> = {},
+  today: string = todayDateKey(),
 ): DailyClientPool {
-  const today = todayDateKey()
-  if (existing?.date === today) return existing
-  return {
-    date: today,
-    missions: generateDailyClientPool(today, missionsDone, clients, minerals, clientMissions),
-    acceptedId: null,
-    completedIds: [],
-  }
+  const generated = generateDailyClientPool(today, missionsDone, clients, minerals, clientMissions)
+  if (existing?.date !== today) return { date: today, missions: generated, acceptedId: null, completedIds: [] }
+  const kept = new Map(existing.missions.map(mission => [mission.id, mission]))
+  const missions = generated.map(mission => kept.get(mission.id) ?? mission)
+  const unchanged = missions.length === existing.missions.length && missions.every((mission, i) => mission === existing.missions[i])
+  return unchanged ? existing : { ...existing, missions }
 }

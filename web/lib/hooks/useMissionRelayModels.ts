@@ -57,10 +57,15 @@ export function useMissionRelayModels({
   const tutorialMissionInProgress = isTutorialMissionInProgress(freeOperations, !!player?.activeMission)
   const missionStartBlockedLabel = 'Finish current mission'
 
-  // Free Ops lists the catalog's available client work. The authoritative
-  // client/market day will later supply this catalog; do not generate a
-  // player-local daily board or add per-client cooldown gates here.
-  const rawAvailable = MISSIONS.filter(m => {
+  // Free Ops lists the player's daily client pool (SSL-570): new contracts each day, more clients as missions are
+  // flown. The fixed generated client runs it replaces are left out; own runs, instruments and story steps stay.
+  // Contracts finished today leave the board until tomorrow.
+  const pool = freeOperations ? player?.dailyClientPool : undefined
+  const poolMissions = pool ? pool.missions.filter(m => !pool.completedIds.includes(m.id)) : []
+  const boardMissions = pool
+    ? [...poolMissions, ...MISSIONS.filter(m => !(m.client && m.id.startsWith('freeops-')))]
+    : MISSIONS
+  const rawAvailable = boardMissions.filter(m => {
     if (!isMissionBoardMission(m, freeOperations)) return false
     if (m.client && !CLIENTS[m.client]) return false
     return freeOperations || m.sequence === sequence
