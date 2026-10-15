@@ -345,6 +345,16 @@ enum SceneCatalog {
         scene("mission-board-next-day-phone", 874) {
             MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon + 86_400_000 })).environment(\.flatLayout, true)
         },
+        scene("mission-board-daily-landscape", 402, w: 874) {
+            MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
+        },
+        scene("mission-board-daily-desktop", 900, w: 1440) {
+            MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
+        },
+        scene("mission-board-build-desktop", 900, w: 1440) {
+            var gs = basePlayer(); gs.player.missionsDone = 12
+            return MissionsScreen(startTitle: "Build a Fuel Depot").environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true)
+        },
         scene("mission-board-build-phone", 874) {
             var gs = basePlayer(); gs.player.missionsDone = 12
             return MissionsScreen(startTitle: "Build a Fuel Depot").environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true)
