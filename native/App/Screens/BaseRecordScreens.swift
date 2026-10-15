@@ -43,7 +43,7 @@ struct IntroScreen: View {
     private func backdrop(biome: EarthBiome) -> some View {
         GeometryReader { geo in
             BaseWorldScene(
-                biome: biome, placed: [], plots: [:], levels: [:],
+                biome: biome, grade: "dusk", placed: [], plots: [:], levels: [:],
                 camera: BaseCamera(x: BaseWorld(w: geo.size.width, h: geo.size.height).homeX([]), depth: 0),
                 showsControls: false,
                 onStructure: { _ in }, onShaft: {}, onBuildSilo: {}
@@ -55,19 +55,19 @@ struct IntroScreen: View {
 
     private func head(returning: Bool, pitch: BiomePitch?, p: Player) -> some View {
         VStack(spacing: 4) {
-            Text("LANDNAM").font(AppFont.display(14)).tracking(4.5).foregroundStyle(Theme.textDim)
+            Text("LANDNAM").font(AppFont.display(14)).tracking(4.5).foregroundStyle(IntroInk.dim)
             if returning {
                 Text("Missions completed: \(p.missionsDone) · Total earned: \(Economy.format(francs: p.francs))")
-                    .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    .font(AppFont.body(14)).foregroundStyle(IntroInk.dim)
             } else {
-                Text(pitch?.heading ?? "Choose where to build").font(AppFont.display(24)).foregroundStyle(Theme.ink)
-                Text(pitch?.lede ?? "").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                Text(pitch?.heading ?? "Choose where to build").font(AppFont.display(24)).foregroundStyle(IntroInk.ink)
+                Text(pitch?.lede ?? "").font(AppFont.body(14)).foregroundStyle(IntroInk.dim)
             }
         }
         .multilineTextAlignment(.center)
         .padding(.horizontal, 20).padding(.vertical, 12).frame(maxWidth: 520)
-        .background(Theme.paper.opacity(0.92), in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.hudInk, lineWidth: 2))
+        .background(IntroInk.panel.opacity(0.94), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(IntroInk.outline, lineWidth: 2))
     }
 
     private func panel(returning: Bool, pitch: BiomePitch?, wide: Bool) -> some View {
@@ -77,37 +77,57 @@ struct IntroScreen: View {
                     ForEach(Self.ids, id: \.self) { id in card(id, pitch?.biomes[id]) }
                 }
                 .accessibilityElement(children: .contain).accessibilityLabel("Choose base landscape")
-                Text(pitch?.note ?? "").font(AppFont.body(14)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center)
+                Text(pitch?.note ?? "").font(AppFont.body(14)).foregroundStyle(IntroInk.dim).multilineTextAlignment(.center)
             }
-            PrimaryButton(title: returning ? "Resume operations" : "Establish base") {
+            Button {
                 if !returning { store.setEarthBiome(selectedBiome) }
                 store.go(returning || !store.player.placed.isEmpty ? .hub : .build)
+            } label: {
+                Text((returning ? "Resume operations" : "Establish base").uppercased()).font(AppFont.display(14)).tracking(1.4)
+                    .frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(IntroInk.ink)
+                    .background(IntroInk.cta, in: RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(IntroInk.outline, lineWidth: 2))
             }
+            .buttonStyle(.plain)
         }
         .padding(12).frame(maxWidth: returning ? 360 : 760)
-        .background(Theme.paper.opacity(0.94), in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.hudInk, lineWidth: 2))
+        .background(IntroInk.panel.opacity(0.94), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(IntroInk.outline, lineWidth: 2))
     }
 
     private func card(_ id: String, _ entry: BiomePitch.Entry?) -> some View {
         let selected = selectedBiome == id
         return Button { selectedBiome = id } label: {
             VStack(alignment: .leading, spacing: 4) {
-                Text((entry?.label ?? id.capitalized).uppercased()).font(AppFont.display(14)).tracking(1.4)
-                Text(entry?.tagline ?? "").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+                Text((entry?.label ?? id.capitalized).uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(IntroInk.ink)
+                // Two lines reserved so every card shares one layout.
+                Text(entry?.tagline ?? "").font(AppFont.body(14)).foregroundStyle(IntroInk.dim).lineLimit(2)
+                    .frame(maxWidth: .infinity, minHeight: 36, alignment: .topLeading)
                 Spacer(minLength: 0)
-                Text((entry?.trait ?? "").uppercased()).font(AppFont.display(14)).tracking(0.6).foregroundStyle(Theme.blue)
+                Text((entry?.trait ?? "").uppercased()).font(AppFont.display(14)).tracking(0.8).foregroundStyle(IntroInk.ink).lineLimit(1)
                     .padding(.horizontal, 8).padding(.vertical, 2)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.blue, lineWidth: 2))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(IntroInk.muted, lineWidth: 2))
             }
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading).padding(10)
-            .background(selected ? Theme.hudPanel : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(selected ? Theme.blue : Theme.hudInk, lineWidth: selected ? 3 : 2))
+            .background(selected ? IntroInk.raised : IntroInk.deep, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(selected ? IntroInk.ink : IntroInk.outline, lineWidth: selected ? 3 : 2))
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
+}
+
+/// Dusk chrome for the intro, matching the web `--dusk-*` tokens: dark navy panels, chalk text, no white or blue.
+private enum IntroInk {
+    static let panel = Color(red: 0x15 / 255, green: 0x20 / 255, blue: 0x33 / 255)
+    static let deep = Color(red: 0x0C / 255, green: 0x14 / 255, blue: 0x24 / 255)
+    static let raised = Color(red: 0x1C / 255, green: 0x2C / 255, blue: 0x48 / 255)
+    static let outline = Color(red: 0x16 / 255, green: 0x29 / 255, blue: 0x3B / 255)
+    static let ink = Color(red: 0xF7 / 255, green: 0xF4 / 255, blue: 0xEE / 255)
+    static let dim = Color(red: 0xD7 / 255, green: 0xE0 / 255, blue: 0xD4 / 255)
+    static let muted = Color(red: 0xC5 / 255, green: 0xD4 / 255, blue: 0xC8 / 255)
+    static let cta = Color(red: 0x9F / 255, green: 0x4B / 255, blue: 0x5F / 255)
 }
 
 /// Completed work as illustrated destination cards above the live base. The base keeps the one dock.

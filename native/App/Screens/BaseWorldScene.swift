@@ -7,6 +7,8 @@ import LandnamCore
 /// cutaway. A fresh base has no structures; in placement mode the picked structure's one site is marked.
 struct BaseWorldScene: View {
     var biome: EarthBiome = .mountains
+    /// Fixes the sky grade (the intro stays on deep dusk); nil follows the local clock.
+    var grade: String? = nil
     var placed: [String]
     var plots: [String: Int]
     var levels: [String: Int]
@@ -58,7 +60,7 @@ struct BaseWorldScene: View {
                 ZStack(alignment: .topLeading) {
                     // The world rides inside the camera container (so it dives and zooms with the structures) but
                     // counter-offsets the pan: it draws its own parallax from `camX`.
-                    BaseWorldCanvas(px: world.px, camX: -cx, biome: biome.rawValue)
+                    BaseWorldCanvas(px: world.px, camX: -cx, biome: biome.rawValue, grade: grade ?? WorldAssets.grade())
                         .frame(width: w, height: h)
                         .offset(x: cx)
                     BaseUnderground(world: world, built: siloBuilt, siloPlaced: siloPlaced, secondTank: secondTank, oreFraction: oreFraction, onBuild: onBuildSilo, onOpen: onShaft, active: camera.depth > 0)

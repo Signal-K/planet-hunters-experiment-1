@@ -1,12 +1,12 @@
 {
-  "about": "What the landscape picker says about each base landscape (intro screen, web and native). Ids stay as saved; mountains is shown as Steppe. `trait` is the one real difference today and must match the weights in sky-events.json `biomes`: weather odds and aurora chance only. Landscape never locks any gameplay.",
+  "about": "What the landscape picker says about each base landscape (intro screen, web and native). Ids stay as saved; mountains is shown as Steppe. `trait` is the one real difference today and must match the weights in sky-events.json `biomes`: weather odds and aurora chance, a small change to how you play. Landscape never locks any gameplay. Keep every trait to one short line so all cards share one layout.",
   "heading": "Choose where to build",
   "lede": "Your launch complex and everything you add will stand here.",
-  "note": "A landscape changes the look and the sky only. You can move your base once later.",
+  "note": "Your landscape shifts the weather and sky you play under. You can move your base once later.",
   "biomes": {
-    "mountains": { "label": "Steppe", "tagline": "Wide flat range under a big sky.", "trait": "Strong winds" },
-    "desert": { "label": "Desert", "tagline": "Dry, bright and dusty.", "trait": "Clear, dry skies" },
-    "tundra": { "label": "Tundra", "tagline": "Snow and long cold nights.", "trait": "Frequent aurora" },
-    "coast": { "label": "Coast", "tagline": "Sea air under a low headland.", "trait": "Fog and rain" }
+    "mountains": { "label": "Steppe", "tagline": "Wide flat range, big sky.", "trait": "Windy" },
+    "desert": { "label": "Desert", "tagline": "Dry, bright and dusty.", "trait": "Dry, clear" },
+    "tundra": { "label": "Tundra", "tagline": "Snow, long cold nights.", "trait": "Aurora" },
+    "coast": { "label": "Coast", "tagline": "Sea air, low headland.", "trait": "Fog, rain" }
   }
 }

@@ -4,7 +4,6 @@ import { useState, type CSSProperties } from 'react'
 import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
 import { PRODUCT_WORDMARK } from '@/lib/brand'
 import { formatCurrency } from '@/lib/format'
-import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { useViewSize } from '@/lib/hooks/useViewSize'
 import { homeCenter, kitScale } from '@/lib/scene/base-site'
 import { BIOME_PITCH, INTRO_COPY } from '@/lib/scene/biome-pitch'
@@ -32,7 +31,8 @@ export default function IntroScreen({
   const shown = returning || awaitingRemoteState ? sanitizeEarthBiome(savedBiome) : biome
   // The backdrop is the base world itself, framed on the empty launch pad, and follows the picked landscape.
   const view = useViewSize()
-  const { grade } = useTimeOfDay()
+  // The intro always plays under the deep dusk grade, never the bright daytime sky.
+  const grade = 'dusk' as const
   const px = kitScale(view)
   const camX = view.w / 2 - homeCenter([], view.w / px) * px
   return (

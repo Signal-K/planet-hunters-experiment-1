@@ -348,6 +348,74 @@
         660
       ],
       "sky": true
+    },
+    {
+      "id": "cloud-4",
+      "sprite": "cloud-1",
+      "x": 150,
+      "y": 96,
+      "depth": 0.06,
+      "layer": 5,
+      "body": {
+        "wind": 1,
+        "vx": 2.4
+      },
+      "wrap": [
+        -140,
+        660
+      ],
+      "sky": true
+    },
+    {
+      "id": "cloud-5",
+      "sprite": "cloud-2",
+      "x": 360,
+      "y": 84,
+      "depth": 0.05,
+      "layer": 5,
+      "body": {
+        "wind": 1,
+        "vx": 1.8
+      },
+      "wrap": [
+        -140,
+        660
+      ],
+      "sky": true
+    },
+    {
+      "id": "cloud-6",
+      "sprite": "cloud-0",
+      "x": 560,
+      "y": 132,
+      "depth": 0.07,
+      "layer": 5,
+      "body": {
+        "wind": 1,
+        "vx": 2.8
+      },
+      "wrap": [
+        -140,
+        660
+      ],
+      "sky": true
+    },
+    {
+      "id": "cloud-7",
+      "sprite": "cloud-2",
+      "x": -20,
+      "y": 110,
+      "depth": 0.04,
+      "layer": 5,
+      "body": {
+        "wind": 1,
+        "vx": 1.2
+      },
+      "wrap": [
+        -140,
+        660
+      ],
+      "sky": true
     }
   ],
   "prefabs": {
@@ -597,6 +665,110 @@
         "depth": 0.78,
         "scale": 0.75,
         "layer": 22
+      },
+      {
+        "id": "escarpment-far-4",
+        "sprite": "escarpment-a-far",
+        "x": 180,
+        "y": 56,
+        "depth": 0.12,
+        "layer": 10
+      },
+      {
+        "id": "escarpment-mid-3",
+        "sprite": "escarpment-b-mid",
+        "x": 250,
+        "y": 54,
+        "depth": 0.2,
+        "layer": 11
+      },
+      {
+        "id": "escarpment-mid-4",
+        "sprite": "escarpment-c-mid",
+        "x": -80,
+        "y": 54.2,
+        "depth": 0.2,
+        "layer": 11
+      },
+      {
+        "id": "escarpment-mid-5",
+        "sprite": "escarpment-a-mid",
+        "x": 560,
+        "y": 54,
+        "depth": 0.2,
+        "layer": 11
+      },
+      {
+        "id": "tussock-10",
+        "sprite": "tussock-1",
+        "x": 90,
+        "y": 24,
+        "depth": 0.72,
+        "layer": 22,
+        "scale": 0.55
+      },
+      {
+        "id": "tussock-11",
+        "sprite": "tussock-0",
+        "x": 205,
+        "y": 32,
+        "depth": 0.68,
+        "layer": 22,
+        "scale": 0.5
+      },
+      {
+        "id": "tussock-12",
+        "sprite": "tussock-2",
+        "x": 330,
+        "y": 36,
+        "depth": 0.67,
+        "layer": 22,
+        "scale": 0.5
+      },
+      {
+        "id": "tussock-13",
+        "sprite": "tussock-1",
+        "x": 430,
+        "y": 22,
+        "depth": 0.78,
+        "layer": 22,
+        "scale": 0.7
+      },
+      {
+        "id": "tussock-14",
+        "sprite": "tussock-0",
+        "x": -10,
+        "y": 22,
+        "depth": 0.76,
+        "layer": 22,
+        "scale": 0.65
+      },
+      {
+        "id": "tussock-15",
+        "sprite": "tussock-2",
+        "x": 540,
+        "y": 34,
+        "depth": 0.7,
+        "layer": 22,
+        "scale": 0.6
+      },
+      {
+        "id": "tussock-16",
+        "sprite": "tussock-1",
+        "x": 10,
+        "y": 40,
+        "depth": 0.64,
+        "layer": 22,
+        "scale": 0.4
+      },
+      {
+        "id": "tussock-17",
+        "sprite": "tussock-0",
+        "x": 235,
+        "y": 44,
+        "depth": 0.62,
+        "layer": 22,
+        "scale": 0.4
       }
     ],
     "desert": [
@@ -707,6 +879,100 @@
         "y": -4,
         "depth": 1,
         "layer": 31
+      },
+      {
+        "id": "butte-far-3",
+        "sprite": "butte-a-far",
+        "x": 560,
+        "y": 56,
+        "depth": 0.12,
+        "layer": 10
+      },
+      {
+        "id": "butte-mid-2",
+        "sprite": "butte-butte-mid",
+        "x": 90,
+        "y": 53.5,
+        "depth": 0.2,
+        "layer": 11
+      },
+      {
+        "id": "butte-mid-3",
+        "sprite": "butte-b-mid",
+        "x": 500,
+        "y": 53.5,
+        "depth": 0.2,
+        "layer": 11
+      },
+      {
+        "id": "dune-far-2",
+        "sprite": "dune-ridge-far",
+        "x": -60,
+        "y": 55,
+        "depth": 0.16,
+        "layer": 10
+      },
+      {
+        "id": "dune-mid-2",
+        "sprite": "dune-ridge-mid",
+        "x": 330,
+        "y": 46,
+        "depth": 0.4,
+        "layer": 21
+      },
+      {
+        "id": "saxaul-10",
+        "sprite": "saxaul",
+        "x": 120,
+        "y": 38,
+        "depth": 0.64,
+        "layer": 22,
+        "scale": 0.45
+      },
+      {
+        "id": "saxaul-11",
+        "sprite": "saxaul",
+        "x": 300,
+        "y": 30,
+        "depth": 0.72,
+        "layer": 22,
+        "scale": 0.6
+      },
+      {
+        "id": "saxaul-12",
+        "sprite": "saxaul",
+        "x": -20,
+        "y": 28,
+        "depth": 0.74,
+        "layer": 22,
+        "scale": 0.7
+      },
+      {
+        "id": "saxaul-13",
+        "sprite": "saxaul",
+        "x": 440,
+        "y": 26,
+        "depth": 0.76,
+        "layer": 22,
+        "scale": 0.55
+      },
+      {
+        "id": "saxaul-14",
+        "sprite": "saxaul",
+        "x": 560,
+        "y": 34,
+        "depth": 0.68,
+        "layer": 22,
+        "scale": 0.5
+      },
+      {
+        "id": "saxaul-15",
+        "sprite": "dune-grass",
+        "x": 165,
+        "y": 42,
+        "depth": 0.62,
+        "layer": 22,
+        "scale": 0.4
       }
     ],
     "tundra": [
@@ -800,6 +1066,83 @@
         "y": -6,
         "depth": 1,
         "layer": 31
+      },
+      {
+        "id": "ridge-far-3",
+        "sprite": "snow-ridge-far",
+        "x": -180,
+        "y": 56,
+        "depth": 0.14,
+        "layer": 10
+      },
+      {
+        "id": "ridge-far-4",
+        "sprite": "snow-ridge-far",
+        "x": 560,
+        "y": 56.2,
+        "depth": 0.14,
+        "layer": 10
+      },
+      {
+        "id": "ridge-mid-2",
+        "sprite": "snow-ridge-mid",
+        "x": 420,
+        "y": 46,
+        "depth": 0.4,
+        "layer": 21
+      },
+      {
+        "id": "ridge-mid-3",
+        "sprite": "snow-ridge-mid",
+        "x": -100,
+        "y": 46,
+        "depth": 0.4,
+        "layer": 21
+      },
+      {
+        "id": "ice-10",
+        "sprite": "ice",
+        "x": 150,
+        "y": 40,
+        "depth": 0.64,
+        "layer": 22,
+        "scale": 0.45
+      },
+      {
+        "id": "ice-11",
+        "sprite": "ice",
+        "x": 220,
+        "y": 26,
+        "depth": 0.74,
+        "layer": 22,
+        "scale": 0.65
+      },
+      {
+        "id": "ice-12",
+        "sprite": "ice",
+        "x": 380,
+        "y": 30,
+        "depth": 0.7,
+        "layer": 22,
+        "scale": 0.55
+      },
+      {
+        "id": "ice-13",
+        "sprite": "ice",
+        "x": 10,
+        "y": 22,
+        "depth": 0.78,
+        "layer": 22,
+        "scale": 0.7
+      },
+      {
+        "id": "ice-14",
+        "sprite": "ice",
+        "x": 520,
+        "y": 38,
+        "depth": 0.66,
+        "layer": 22,
+        "scale": 0.5
       }
     ],
     "coast": [
@@ -895,6 +1238,92 @@
         "y": -4,
         "depth": 1,
         "layer": 31
+      },
+      {
+        "id": "headland-2",
+        "sprite": "headland-far",
+        "x": -100,
+        "y": 56,
+        "depth": 0.12,
+        "layer": 10
+      },
+      {
+        "id": "dune-far-2",
+        "sprite": "coast-dune-ridge-far",
+        "x": 380,
+        "y": 50,
+        "depth": 0.32,
+        "layer": 21
+      },
+      {
+        "id": "dune-mid-2",
+        "sprite": "coast-dune-ridge-mid",
+        "x": 330,
+        "y": 42,
+        "depth": 0.45,
+        "layer": 21
+      },
+      {
+        "id": "dune-mid-3",
+        "sprite": "coast-dune-ridge-mid",
+        "x": 560,
+        "y": 42,
+        "depth": 0.45,
+        "layer": 21
+      },
+      {
+        "id": "grass-10",
+        "sprite": "dune-grass",
+        "x": 100,
+        "y": 24,
+        "depth": 0.74,
+        "layer": 22,
+        "scale": 0.65
+      },
+      {
+        "id": "grass-11",
+        "sprite": "dune-grass",
+        "x": 220,
+        "y": 30,
+        "depth": 0.7,
+        "layer": 22,
+        "scale": 0.6
+      },
+      {
+        "id": "grass-12",
+        "sprite": "dune-grass",
+        "x": 350,
+        "y": 38,
+        "depth": 0.66,
+        "layer": 22,
+        "scale": 0.45
+      },
+      {
+        "id": "grass-13",
+        "sprite": "dune-grass",
+        "x": 470,
+        "y": 22,
+        "depth": 0.78,
+        "layer": 22,
+        "scale": 0.75
+      },
+      {
+        "id": "grass-14",
+        "sprite": "dune-grass",
+        "x": -10,
+        "y": 36,
+        "depth": 0.68,
+        "layer": 22,
+        "scale": 0.55
+      },
+      {
+        "id": "grass-15",
+        "sprite": "dune-grass",
+        "x": 560,
+        "y": 32,
+        "depth": 0.7,
+        "layer": 22,
+        "scale": 0.6
       }
     ]
   }
