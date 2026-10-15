@@ -17,7 +17,7 @@ public enum Construction {
     public static let all: [StructureBlueprint] = [
         StructureBlueprint(id: "launchpad", name: "Launchpad", cost: 0, materials: [:], unlocksAt: "Always", summary: "Rocket assembly and launch operations."),
         StructureBlueprint(id: "surface-silo", name: "Surface Silo", cost: Economy.surfaceSiloPrice, materials: [:], unlocksAt: "Fly both guided missions first",
-                           summary: "Small Earth-side mineral storage. Hold ore for a better market window."),
+                           summary: "Small Earth-side mineral storage. Keep ore for construction; overflow sells when a flight returns."),
         StructureBlueprint(id: "market", name: "Exchange", cost: Economy.exchangePrice, materials: [:], unlocksAt: "Opens once the guided missions are flown",
                            summary: "Cargo dock where you sell ore at the spot price."),
         StructureBlueprint(id: "astronaut-academy", name: "Astronaut Academy", cost: Economy.academyPrice, materials: ["aluminium": 24, "silicon": 12, "copper": 8],
@@ -27,13 +27,13 @@ public enum Construction {
 
     /// What the Build screen offers: web hides the Academy here (it is placed after research) and anything already built.
     public static func catalog(for p: Player) -> [StructureBlueprint] {
-        all.filter { $0.id != "astronaut-academy" && !p.placed.contains($0.id) }
+        all.filter { $0.id != "astronaut-academy" && $0.id != "market" && !p.placed.contains($0.id) }
     }
 
     public static func unlocked(_ b: StructureBlueprint, player p: Player) -> Bool {
         switch b.id {
         case "surface-silo": return p.freeOperations || p.missionsDone >= 2 || p.placed.contains("surface-silo")
-        case "market": return p.freeOperations || p.missionsDone >= 2 || p.placed.contains("market")
+        case "market": return false
         case "astronaut-academy": return p.academyResearched || p.placed.contains("astronaut-academy")
         case "launchpad": return true
         default: return false
@@ -50,7 +50,7 @@ public enum Construction {
 
     /// Plots in use, with the pre-plot launchpad save pinned to plot 0 as on web.
     public static func occupied(_ p: Player) -> [String: Int] {
-        var plots = p.placementPlots
+        var plots = p.placementPlots.filter { $0.key != "market" }
         if p.placed.contains("launchpad") && plots["launchpad"] == nil { plots["launchpad"] = 0 }
         return plots
     }

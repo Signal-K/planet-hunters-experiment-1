@@ -1282,9 +1282,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
               ? 'launchpad'
               : flightPlan.completed.mining && !flightPlan.completed.scan
                 ? 'galaxy'
-              : (stillInTutorial || justFinishedOnboardingNow)
-                ? 'hub'
-                : 'market',
+              : 'hub',
       }
       return applyGainResearchXP(next, mission?.programReward?.researchXP ?? 0)
     })

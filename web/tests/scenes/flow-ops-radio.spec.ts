@@ -50,6 +50,19 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(m.kicker).toBeGreaterThanOrEqual(14)
       expect(m.action).toBeGreaterThanOrEqual(14)
       expect(m.anim).toBe('none')
+      const geometry = await page.evaluate(() => {
+        const plan = document.querySelector<HTMLElement>('[data-testid=flight-plan]')!.getBoundingClientRect()
+        const screen = document.querySelector<HTMLElement>('.game-screen-area')!.getBoundingClientRect()
+        return { planWidth: plan.width, planTop: plan.top, screenHeight: screen.height }
+      })
+      expect(geometry.planTop).toBeGreaterThanOrEqual(60)
+      expect(geometry.planWidth).toBeLessThanOrEqual(Math.min(560, size.width - 16) + 1)
+      await page.getByTestId('flight-plan-hide').click()
+      await expect(page.getByTestId('flight-plan')).toHaveCount(0)
+      await expect(page.getByTestId('flight-plan-chip')).toContainText(/OPS · \d+\/\d+/)
+      expect(Math.abs(await page.locator('.game-screen-area').evaluate(el => el.getBoundingClientRect().height) - geometry.screenHeight)).toBeLessThanOrEqual(1)
+      await page.getByTestId('flight-plan-chip').click()
+      await expect(page.getByTestId('flight-plan')).toBeVisible()
       await page.screenshot({ path: info.outputPath(`ops-strip-${vp}.png`) })
     })
 

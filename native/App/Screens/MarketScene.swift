@@ -22,6 +22,8 @@ struct MarketScreen: View {
         GeometryReader { geo in
             let short = geo.size.height < 520
             let wide = geo.size.width >= 900 && geo.size.height >= 640
+            let safe = geo.safeAreaInsets
+            let coachInset: CGFloat = FlightPlan.coach(store.player, screen: .market, includeHidden: true) == nil ? 0 : 68
             ZStack(alignment: .topLeading) {
                 Image("scene-exchange-plate-dock")
                     .resizable()
@@ -38,16 +40,17 @@ struct MarketScreen: View {
                 .blendMode(.multiply)
                 .allowsHitTesting(false)
                 play(size: geo.size, short: short, wide: wide)
-                    .padding(.top, short ? 60 : 76)
-                    .padding(.bottom, short ? 76 : 88)
-                    .padding(.horizontal, wide ? 32 : 16)
+                    .padding(.top, max((short ? 56 : 76) + coachInset, safe.top + 56 + coachInset))
+                    .padding(.bottom, short ? max(68, safe.bottom + 60) : 88)
+                    .padding(.leading, max(wide ? 32 : 12, safe.leading + 8))
+                    .padding(.trailing, max(wide ? 32 : 12, safe.trailing + 8))
                 HudGearClock(onSettings: { showSettings = true })
-                    .padding(.leading, zones.topLeft.inset + (short ? 8 : 12))
-                    .padding(.top, zones.topLeft.inset + (short ? 8 : 12))
+                    .padding(.leading, max(zones.topLeft.inset + (short ? 8 : 12), safe.leading + 8))
+                    .padding(.top, max(zones.topLeft.inset + (short ? 8 : 12), safe.top + 8))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 HudChips(francs: store.player.francs)
-                    .padding(.trailing, zones.topRight.inset + 12)
-                    .padding(.top, zones.topRight.inset + (short ? 8 : 12))
+                    .padding(.trailing, max(zones.topRight.inset + 12, safe.trailing + 8))
+                    .padding(.top, max(zones.topRight.inset + (short ? 8 : 12), safe.top + 8))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                 BaseDock(tile: 44, zones: zones.dock,
                          items: [
@@ -56,11 +59,12 @@ struct MarketScreen: View {
                          ],
                          onPrev: { store.go(.hub) },
                          onNext: { store.go(store.player.activeMission == nil ? .missions : .launchpad) })
-                    .padding(.bottom, zones.dock.bottomInset + 8)
+                    .padding(.bottom, max(zones.dock.bottomInset + 8, safe.bottom + 8))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
             .coordinateSpace(name: "exchange")
         }
+        .ignoresSafeArea(edges: [.top, .horizontal])
         .background(Theme.tokenBlueprintBg.ignoresSafeArea())
         .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
         .task(id: store.player.francs) { await tickFrancs(to: store.player.francs) }
@@ -80,34 +84,35 @@ struct MarketScreen: View {
     private func play(size: CGSize, short: Bool, wide: Bool) -> some View {
         if short {
             HStack(alignment: .top, spacing: 8) {
-                board.frame(width: 200)
+                board(compact: true).frame(width: min(224, max(200, size.width * 0.25)))
                 VStack(spacing: 8) {
                     window
-                    belt
+                    belt(compact: true)
                 }
                 floor(compact: true).frame(width: 200)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         } else if wide {
             VStack(spacing: 16) {
                 HStack(alignment: .top, spacing: 24) {
-                    board.frame(width: 360, alignment: .top)
+                    board(compact: false).frame(width: 360, alignment: .top)
                     window
                 }
                 .frame(height: max(220, size.height * 0.36))
-                belt.frame(height: 188)
+                belt(compact: false).frame(height: 188)
                 floor(compact: false).frame(height: 168)
             }
         } else {
             VStack(spacing: 12) {
                 ZStack(alignment: .bottomLeading) {
                     window
-                    board
+                    board(compact: false)
                         .frame(maxWidth: 340, maxHeight: 196, alignment: .top)
                         .padding(.leading, 8)
                         .padding(.bottom, 12)
                 }
                 .frame(height: min(320, max(180, size.height * 0.36)))
-                belt.frame(minHeight: 132)
+                belt(compact: false).frame(minHeight: 132)
                 floor(compact: false)
             }
         }
@@ -144,8 +149,8 @@ struct MarketScreen: View {
         .accessibilityHidden(true)
     }
 
-    private var board: some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private func board(compact: Bool) -> some View {
+        VStack(alignment: .leading, spacing: compact ? 6 : 8) {
             if lots.isEmpty {
                 Text("NO QUOTES")
                     .font(AppFont.display(14, "ExtraBold"))
@@ -153,7 +158,7 @@ struct MarketScreen: View {
                     .foregroundStyle(Theme.ink)
             }
             ForEach(lots) { lot in
-                HStack(spacing: 8) {
+                HStack(spacing: compact ? 6 : 8) {
                     Image(crateAsset(lot.artId))
                         .resizable()
                         .interpolation(.none)
@@ -165,8 +170,9 @@ struct MarketScreen: View {
                         .lineLimit(1)
                     Spacer(minLength: 8)
                     Text(Economy.format(francs: lot.unit))
-                        .font(AppFont.display(16, "ExtraBold"))
+                        .font(AppFont.display(compact ? 14 : 16, "ExtraBold"))
                         .foregroundStyle(Theme.ink)
+                        .fixedSize(horizontal: true, vertical: false)
                     trendMark(lot.trend)
                 }
                 .frame(minHeight: 36)
@@ -174,7 +180,7 @@ struct MarketScreen: View {
                 .accessibilityLabel("\(lot.name) \(Economy.format(francs: lot.unit)) \(lot.trend.label)")
             }
         }
-        .padding(16)
+        .padding(compact ? 8 : 16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.paper)
         .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
@@ -183,7 +189,7 @@ struct MarketScreen: View {
         .accessibilityLabel("Prices")
     }
 
-    private var belt: some View {
+    private func belt(compact: Bool) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(alignment: .bottom, spacing: 16) {
                 if lots.isEmpty {
@@ -199,9 +205,9 @@ struct MarketScreen: View {
             }
             .padding(.horizontal, 8)
             .padding(.bottom, 8)
-            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 120, alignment: .bottom)
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: compact ? 88 : 120, alignment: .bottom)
         }
-        .frame(maxWidth: .infinity, minHeight: 120, alignment: .bottom)
+        .frame(maxWidth: .infinity, minHeight: compact ? 88 : 120, alignment: .bottom)
         .background(
             Image("scene-exchange-conveyor")
                 .resizable(resizingMode: .stretch)
@@ -215,17 +221,17 @@ struct MarketScreen: View {
 
     private func floor(compact: Bool) -> some View {
         Group {
-                if compact {
+            if compact {
                 VStack(alignment: .trailing, spacing: 8) {
-                    pad
-                    face
+                    pad(compact: true)
+                    face(compact: true)
                     sellAllButton
                 }
             } else {
                 VStack(alignment: .trailing, spacing: 8) {
                     HStack(alignment: .bottom, spacing: 16) {
-                        pad
-                        face
+                        pad(compact: false)
+                        face(compact: false)
                     }
                     sellAllButton
                 }
@@ -233,23 +239,23 @@ struct MarketScreen: View {
         }
     }
 
-    private var pad: some View {
+    private func pad(compact: Bool) -> some View {
         ZStack(alignment: .bottom) {
             Image("scene-exchange-sell-pad")
                 .resizable()
                 .interpolation(.none)
                 .scaledToFit()
-                .frame(maxWidth: .infinity, maxHeight: 120)
+                .frame(maxWidth: .infinity, maxHeight: compact ? 64 : 120)
             if padLot != nil {
                 Image("scene-exchange-crate-on-pad")
                     .resizable()
                     .interpolation(.none)
-                    .frame(width: 72, height: 80)
-                    .padding(.bottom, 16)
+                    .frame(width: compact ? 54 : 72, height: compact ? 60 : 80)
+                    .padding(.bottom, compact ? 8 : 16)
                     .transition(.scale.combined(with: .opacity))
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 88)
+        .frame(maxWidth: .infinity, minHeight: compact ? 56 : 88)
         .background(GeometryReader { proxy in
             Color.clear.preference(key: PadFrameKey.self, value: proxy.frame(in: .named("exchange")))
         })
@@ -258,13 +264,13 @@ struct MarketScreen: View {
         .accessibilityLabel("Sell pad")
     }
 
-    private var face: some View {
+    private func face(compact: Bool) -> some View {
         ZStack(alignment: .bottomTrailing) {
             Image("scene-exchange-counter-machine")
                 .resizable()
                 .interpolation(.none)
                 .scaledToFit()
-                .frame(maxWidth: 320, maxHeight: 160)
+                .frame(maxWidth: 320, maxHeight: compact ? 64 : 160)
             Text(grouped(shownFrancs))
                 .font(AppFont.mono(16))
                 .foregroundStyle(Theme.ink)
@@ -275,8 +281,9 @@ struct MarketScreen: View {
                 .background(Theme.paper)
                 .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
                 .padding(.trailing, 10)
-                .padding(.bottom, 16)
+                .padding(.bottom, compact ? 8 : 16)
                 .accessibilityLabel("Francs \(shownFrancs)")
+                .accessibilityIdentifier("exchange-francs")
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
     }
@@ -295,6 +302,7 @@ struct MarketScreen: View {
         .buttonStyle(.plain)
         .disabled(lots.isEmpty)
         .accessibilityLabel(armed ? "Confirm sell all" : "Sell all")
+        .accessibilityIdentifier("sell-all-btn")
     }
 
     private func crateButton(_ lot: Lot) -> some View {
@@ -321,9 +329,9 @@ struct MarketScreen: View {
         .frame(minWidth: 72, minHeight: 44)
         .contentShape(Rectangle())
         .offset(dragging == lot.id ? dragOffset : .zero)
-        .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel("Sell one \(lot.name). \(lot.qty) held.")
+        .accessibilityIdentifier("exchange-crate-\(lot.id)")
         .accessibilityAction { sellOne(lot) }
         .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .named("exchange"))
             .onChanged { value in
@@ -466,6 +474,14 @@ private enum Trend {
     }
 }
 
+private struct PadFrameKey: PreferenceKey {
+    static let defaultValue: CGRect = .zero
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if next != .zero { value = next }
+    }
+}
+
 private struct Triangle: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
@@ -474,13 +490,5 @@ private struct Triangle: Shape {
         path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
         path.closeSubpath()
         return path
-    }
-}
-
-private struct PadFrameKey: PreferenceKey {
-    static let defaultValue: CGRect = .zero
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
-        let next = nextValue()
-        if next != .zero { value = next }
     }
 }

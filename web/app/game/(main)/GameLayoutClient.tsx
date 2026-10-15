@@ -187,8 +187,6 @@ function GameChrome({ children }: { children: ReactNode }) {
       if (action === 'close-tray') {
         setSettingsOpen(false); setFriendsOpen(false); setCommunityOpen(false)
         if (currentScreen === 'market' || currentScreen === 'hub-subsurface' || currentScreen === 'mission-history') game.goBack('hub')
-      } else if (action === 'open-market') {
-        if (game.player.freeOperations) game.go('market')
       } else if (action === 'switch-operation') {
         resumeOperations()
       }
@@ -246,7 +244,8 @@ function GameChrome({ children }: { children: ReactNode }) {
           </div>
         <BackendStatus />
         <div className="flight-plan-slot" data-testid="flight-plan-slot">
-        {coach && !game.popup && !game.authGateOpen && (
+        {/* The intro's own heading already says what to do; the strip would sit over it. */}
+        {coach && !game.popup && !game.authGateOpen && game.screen !== 'intro' && (
           <FlightPlan
             key={coach.id}
             stepIndex={coachIndex}

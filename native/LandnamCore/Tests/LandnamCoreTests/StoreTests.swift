@@ -3,6 +3,17 @@ import Foundation
 @testable import LandnamCore
 
 @MainActor @Suite struct StoreTests {
+    @Test func deferredExchangeStateReturnsToBase() {
+        var state = GameState()
+        state.screen = .market
+
+        let store = GameStore(state: state)
+        #expect(store.screen == .hub)
+
+        store.go(.market)
+        #expect(store.screen == .hub)
+    }
+
     @Test func loopPersistsAndReloads() throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("landnam-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: url) }

@@ -49,8 +49,8 @@ public enum FlightPlan {
     /// Screens that belong to a live cargo run; the scan and part lines never show here (web LOOP_SCREENS).
     private static let loopScreens: Set<Screen> = [.fab, .roverSurvey, .targets, .mining, .debrief, .transit, .landing, .delivery, .rocketBuy]
 
-    public static func coach(_ p: Player, screen: Screen) -> Coach? {
-        guard !p.freeOperations, !p.flightPlan.hidden, let current = p.flightPlan.currentTry,
+    public static func coach(_ p: Player, screen: Screen, includeHidden: Bool = false) -> Coach? {
+        guard !p.freeOperations, (includeHidden || !p.flightPlan.hidden), let current = p.flightPlan.currentTry,
               let index = FlightPlanProgress.tryIds.firstIndex(of: current) else { return nil }
         let position = current == "mining" ? miningPosition(screen) : (index + 1, FlightPlanProgress.tryIds.count)
         let kicker = "\((tryLabels[current] ?? current).uppercased()) OPS · STEP \(position.0)/\(position.1)"

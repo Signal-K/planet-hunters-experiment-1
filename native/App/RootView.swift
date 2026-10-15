@@ -35,7 +35,7 @@ struct RootView: View {
             case .mining, .landing: MiningScreen().helpable(.mining)
             case .delivery: DeliveryScreen()
             case .debrief: if store.player.homeDeliveryPending { HomecomingScreen() } else { DebriefScreen() }
-            case .market: MarketScreen()
+            case .market: HubScreen()
             case .instrumentHub: ControlStationScreen()
             case .saturnStormSearch: SaturnStormSearchScreen()
             case .asteroidDiscovery: AsteroidDiscoveryScreen()
@@ -43,9 +43,14 @@ struct RootView: View {
             default: StubScreen(screen: store.screen)
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !store.welcomePending, store.screen != .mining, store.screen != .landing,
-               let coach = FlightPlan.coach(store.player, screen: store.screen) { CoachStrip(coach: coach) }
+        .overlay(alignment: .top) {
+            if !store.welcomePending, store.screen != .mining, store.screen != .landing, store.screen != .intro,
+               let coach = FlightPlan.coach(store.player, screen: store.screen, includeHidden: true) {
+                CoachStrip(coach: coach)
+                    .frame(maxWidth: 560)
+                    .padding(.horizontal, 8)
+                    .padding(.top, 68)
+            }
         }
         .tint(Theme.accent)
         // Someone confirmed a planet: flag a re-point on the exoplanet target flow (web useConfirmedDiscoveryPoll).

@@ -18,7 +18,8 @@ describe('DEV_GROUPS', () => {
     // free ops + the space telescope are built.
     expect(labels).toContain('First Satellite Launch')
     expect(labels).toContain('Recent UI')
-    expect(labels).toHaveLength(5)
+    expect(labels).toContain('Gaps and checkpoints')
+    expect(labels).toHaveLength(6)
     expect(labels).not.toContain('Mission 2')
   })
 

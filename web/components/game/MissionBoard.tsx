@@ -194,10 +194,10 @@ export default function MissionBoard({
   const boardCamX = view.w / 2 - homeCenter(baseBuildings.map(b => b.kind), view.w / boardPx) * boardPx
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
   const tabButtons = <>
-    <button type="button" className={styles.tab} data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon />Contracts</button>
-    <button type="button" className={styles.tab} data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => setTab('program')}><ClipboardIcon />Program</button>
+    <button type="button" className={styles.tab} data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
+    <button type="button" className={styles.tab} data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => setTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
     <button type="button" className={styles.tab} data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => setTab('events')}>
-      <StarIcon />Events
+      <StarIcon /><span className={styles.tabLabel}>Events</span>
       {events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
     </button>
     <button type="button" className={styles.log} data-testid="mission-board-log" onClick={onOpenLog}>LOG</button>

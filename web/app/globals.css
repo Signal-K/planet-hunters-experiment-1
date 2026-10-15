@@ -2983,14 +2983,32 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 }
 
 /* SSL-395 Flight Plan: in-flow strip between the screen and the nav. */
-.flight-plan, .flight-plan-chip { flex: none; position: relative; z-index: 30; font-family: var(--ln-font-body); }
-.flight-plan-slot { flex: none; min-height: 0; position: relative; }
+.flight-plan, .flight-plan-chip { position: relative; z-index: 30; font-family: var(--ln-font-body); }
+.flight-plan-slot {
+  position: absolute;
+  z-index: 30;
+  top: calc(env(safe-area-inset-top, 0px) + 68px);
+  right: 8px;
+  left: 8px;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.flight-plan-slot > * { pointer-events: auto; }
 .flight-plan-slot:has(> .help-coach-dock) { z-index: 81; }
 .flight-plan-slot:has(> .help-coach-dock) > .flight-plan { display: none; }
 .flight-plan {
   display: flex; flex-direction: column; gap: 6px;
-  padding: 6px 10px; background: var(--ln-bp-paper, #fff);
-  border-top: 2px solid var(--ln-bp-blue, #1f78c1);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: min(560px, calc(100% - 16px));
+  align-self: center;
+  flex: 0 1 560px;
+  padding: 4px 6px; background: color-mix(in srgb, var(--ln-bp-paper, #fff) 94%, transparent);
+  border: 2px solid var(--ln-bp-blue, #1f78c1);
+  border-radius: 10px;
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--ln-bp-ink, #0f2436) 24%, transparent);
   color: var(--ln-bp-ink, #0f2436);
 }
 .flight-plan:has(> .help-coach-dock) .flight-plan-row,
@@ -3042,7 +3060,7 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 .base-biome-move-grid .base-biome-option { min-height: 68px; font-size: 14px; }
 @media (max-width: 420px) { .base-biome-move-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .flight-plan-skip { align-self: flex-start; margin-top: 4px; }
-.flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-bp-paper, #fff); }
+.flight-plan-chip { background: var(--ln-bp-paper, #fff); }
 .game-chrome-bottom__training-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 999px; background: var(--ln-cyan); }
 .game-chrome-bottom__training-chip { margin-left: 4px; font-size: var(--ln-fs-micro); color: var(--ln-cyan); }
 /* Phone widths: MENU + dot + "0/3" is wider than its slot and spilled past the
@@ -3455,14 +3473,14 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
   display: flex;
   align-items: center;
   gap: 4px;
-  min-height: 16px;
+  min-height: 20px;
   padding: 0 8px;
   color: var(--ln-text-muted);
   background: color-mix(in srgb, var(--hub-panel-deep) 82%, transparent);
   border: 1px solid var(--ln-hairline);
   border-radius: 2px;
   font-family: var(--ln-font-display);
-  font-size: 8px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.1em;
   line-height: 1;
@@ -3797,7 +3815,7 @@ button.hub-orbital-network__status:disabled { cursor: default; }
 /* SSL-429: the hidden Flight Plan chip used to float over the bottom-right of the
    screen (mining overflow, build confirm). It now takes its own row, so no
    guidance element can sit on the control it points at. */
-.flight-plan-chip { position: relative; right: auto; bottom: auto; align-self: flex-end; margin: 4px 8px; }
+.flight-plan-chip { position: relative; right: auto; bottom: auto; align-self: flex-end; margin: 0; }
 
 /* SSL-430: the sync chip (offline outbox state) sat on top of the primary
    button on debrief and over the Flight Plan text. On phones it now lives in

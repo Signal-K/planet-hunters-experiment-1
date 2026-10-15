@@ -89,7 +89,7 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
         aria-label={`Show Flight Plan, training ${displayIndex + 1} of ${displayTotal}`}
         onClick={() => { setHidden(false); onHiddenChange?.(false) }}
       >
-        Training {stepIndex + 1}/{total}
+        OPS · {displayIndex + 1}/{displayTotal}
       </button>
     )
   }
@@ -111,8 +111,8 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
           </span>
         </button>
         {go && <button type="button" className="flight-plan-go" data-testid="flight-plan-go" data-coach-id="flight-plan-go" onClick={go.run}>{go.label}</button>}
-        <button type="button" className="flight-plan-btn" data-testid="flight-plan-hide" aria-label="Hide Flight Plan" onClick={() => { setHidden(true); onHiddenChange?.(true) }}>
-          ▾
+        <button type="button" className="flight-plan-btn" data-testid="flight-plan-hide" aria-label="Hide Ops guidance" onClick={() => { setHidden(true); onHiddenChange?.(true) }}>
+          ×
         </button>
       </div>
       {hint && (

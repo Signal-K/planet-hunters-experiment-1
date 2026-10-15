@@ -157,7 +157,7 @@ struct HubScreen: View {
         case "launchpad": store.go(.launchpad)
         case "hangar", "garage": store.go(.hangar)
         case "astronaut-academy": store.go(.academy)
-        case "market": store.go(.market)
+        case "market": store.go(.hub)
         default: break
         }
     }

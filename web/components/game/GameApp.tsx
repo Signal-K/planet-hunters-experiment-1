@@ -204,25 +204,28 @@ function GameCanvas() {
           )}
         </div>
         <BackendStatus />
-          {coach && !game.authGateOpen && (
-            <FlightPlan
-              stepIndex={coachIndex}
-              step={coach}
-              total={coachSteps.length}
-              onSkip={() => {
-                // Distinct from a step being completed in the normal flow —
-                // this is the player bailing out of onboarding entirely, which
-                // mission_completed/tutorial_step_started alone can't surface.
-                captureGameEvent('tutorial_skipped', {
-                  step_id: coach?.id ?? null,
-                  screen: coach?.screen ?? null,
-                  step_index: coachIndex,
-                  total_steps: coachSteps.length,
-                })
-                game.skipTutorial(coachSteps.map(s => s.id))
-              }}
-            />
-          )}
+        <div className="flight-plan-slot" data-testid="flight-plan-slot">
+          {/* The intro's own heading already says what to do; the strip would sit over it. */}
+          {coach && !game.authGateOpen && game.screen !== 'intro' && (
+              <FlightPlan
+                stepIndex={coachIndex}
+                step={coach}
+                total={coachSteps.length}
+                onSkip={() => {
+                  // Distinct from a step being completed in the normal flow —
+                  // this is the player bailing out of onboarding entirely, which
+                  // mission_completed/tutorial_step_started alone can't surface.
+                  captureGameEvent('tutorial_skipped', {
+                    step_id: coach?.id ?? null,
+                    screen: coach?.screen ?? null,
+                    step_index: coachIndex,
+                    total_steps: coachSteps.length,
+                  })
+                  game.skipTutorial(coachSteps.map(s => s.id))
+                }}
+              />
+            )}
+        </div>
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {!coach && !game.popup && !game.authGateOpen && (

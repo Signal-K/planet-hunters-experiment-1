@@ -880,11 +880,11 @@ describe('spectralClassForTeff', () => {
   })
 })
 
-describe('Exchange structure (optional, chosen by the player)', () => {
+describe('Exchange structure (deferred)', () => {
   const market = STRUCTURES.find(structure => structure.id === 'market')!
-  it('is locked before the guided missions and unlocked after', () => {
+  it('stays hidden even for progressed and legacy saves', () => {
     expect(structureUnlocked(market, { missionsDone: 0 })).toBe(false)
-    expect(structureUnlocked(market, { missionsDone: 2 })).toBe(true)
-    expect(structureUnlocked(market, { freeOperations: true })).toBe(true)
+    expect(structureUnlocked(market, { missionsDone: 2 })).toBe(false)
+    expect(structureUnlocked(market, { freeOperations: true, placed: ['market'] })).toBe(false)
   })
 })

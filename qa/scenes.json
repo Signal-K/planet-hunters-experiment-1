@@ -140,7 +140,7 @@
    "name": "Ship customiser",
    "flow": "ship",
    "web": "ship-customizer",
-   "native": null,
+   "native": "hangar-workshop-phone",
    "tickets": [
     "SSL-427",
     "SSL-472"
@@ -151,7 +151,7 @@
    "name": "Hangar assembly",
    "flow": "ship",
    "web": "ui-hangar-assembly",
-   "native": null,
+   "native": "hangar-workshop-phone",
    "tickets": [
     "SSL-427"
    ]
@@ -307,7 +307,7 @@
    "name": "Launchpad",
    "flow": "core-loop",
    "web": "ui-launchpad",
-   "native": null,
+   "native": "launchpad-ops-phone",
    "tickets": []
   },
   {
@@ -315,7 +315,7 @@
    "name": "Fab, first mission",
    "flow": "core-loop",
    "web": "m1-fab",
-   "native": null,
+   "native": "first-fab-live",
    "tickets": []
   },
   {
@@ -323,7 +323,7 @@
    "name": "Return flight",
    "flow": "core-loop",
    "web": "m1-return",
-   "native": null,
+   "native": "return-live",
    "tickets": []
   },
   {
@@ -331,7 +331,7 @@
    "name": "Home delivery sheet",
    "flow": "core-loop",
    "web": "m1-home",
-   "native": null,
+   "native": "home-live",
    "tickets": []
   },
   {
@@ -339,7 +339,7 @@
    "name": "Build: place silo",
    "flow": "core-loop",
    "web": "storage-build",
-   "native": null,
+   "native": "storage-build-live",
    "tickets": []
   },
   {
@@ -347,7 +347,7 @@
    "name": "Transport hub",
    "flow": "core-loop",
    "web": "transport-hub",
-   "native": null,
+   "native": "transport-hub-live",
    "tickets": []
   },
   {
@@ -355,7 +355,7 @@
    "name": "Transport fab",
    "flow": "core-loop",
    "web": "transport-fab",
-   "native": null,
+   "native": "transport-fab-live",
    "tickets": []
   },
   {
@@ -363,7 +363,7 @@
    "name": "Transport mining",
    "flow": "core-loop",
    "web": "transport-mining",
-   "native": null,
+   "native": "transport-mining-live",
    "tickets": []
   },
   {
@@ -371,7 +371,7 @@
    "name": "Transport delivery",
    "flow": "core-loop",
    "web": "transport-delivery",
-   "native": null,
+   "native": "transport-delivery-live",
    "tickets": []
   },
   {
@@ -379,7 +379,7 @@
    "name": "Transport debrief",
    "flow": "core-loop",
    "web": "transport-debrief",
-   "native": null,
+   "native": "transport-debrief-live",
    "tickets": []
   },
   {
@@ -387,7 +387,7 @@
    "name": "Telescope hub",
    "flow": "instruments",
    "web": "telescope-hub",
-   "native": null,
+   "native": "telescope-hub-live",
    "tickets": []
   },
   {
@@ -395,7 +395,7 @@
    "name": "Telescope fab",
    "flow": "instruments",
    "web": "telescope-fab",
-   "native": null,
+   "native": "telescope-fab-live",
    "tickets": []
   },
   {
@@ -403,7 +403,7 @@
    "name": "Telescope debrief",
    "flow": "instruments",
    "web": "telescope-debrief",
-   "native": null,
+   "native": "telescope-debrief-live",
    "tickets": []
   },
   {
@@ -411,7 +411,7 @@
    "name": "Landing",
    "flow": "core-loop",
    "web": "ui-landing",
-   "native": null,
+   "native": "landing-live",
    "tickets": []
   },
   {
@@ -419,7 +419,7 @@
    "name": "Rocket buy",
    "flow": "ship",
    "web": "ui-rocket-buy",
-   "native": null,
+   "native": "rocket-buy-live",
    "tickets": []
   },
   {
@@ -427,7 +427,7 @@
    "name": "Subsurface",
    "flow": "core-loop",
    "web": "ui-subsurface",
-   "native": null,
+   "native": "hub-ug-built-phone",
    "tickets": []
   },
   {
@@ -435,7 +435,7 @@
    "name": "Checkpoint early (~15 min)",
    "flow": "core-loop",
    "web": "cp-early",
-   "native": null,
+   "native": "cp-early",
    "tickets": []
   },
   {
@@ -443,7 +443,7 @@
    "name": "Checkpoint mid (~35 min)",
    "flow": "core-loop",
    "web": "cp-mid",
-   "native": null,
+   "native": "cp-mid",
    "tickets": []
   },
   {
@@ -451,7 +451,7 @@
    "name": "Checkpoint late (~55 min)",
    "flow": "core-loop",
    "web": "cp-late",
-   "native": null,
+   "native": "cp-late",
    "tickets": []
   }
  ]

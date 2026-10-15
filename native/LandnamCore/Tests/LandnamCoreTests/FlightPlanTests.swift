@@ -37,6 +37,10 @@ struct FlightPlanTests {
         #expect(FlightPlan.coach(placed, screen: .launchpad)?.objective == "Open client contracts")
         placed.flightPlan.complete("mining")
         #expect(FlightPlan.coach(placed, screen: .hub)?.kicker == "SCAN OPS · STEP 2/3")
+        placed.flightPlan.hidden = true
+        #expect(FlightPlan.coach(placed, screen: .hub) == nil)
+        #expect(FlightPlan.coach(placed, screen: .hub, includeHidden: true)?.kicker == "SCAN OPS · STEP 2/3")
+        placed.flightPlan.hidden = false
         #expect(FlightPlan.coach(placed, screen: .mining)?.objective == "Fire the laser on a seam")
         #expect(FlightPlan.coach(p, screen: .mining)?.kicker == "MINING OPS · STEP 5/6")
     }

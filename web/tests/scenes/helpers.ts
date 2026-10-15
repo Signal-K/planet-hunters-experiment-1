@@ -31,7 +31,7 @@ export async function expectSound(page: Page, errors: string[] = []) {
     out.hscroll = document.documentElement.scrollWidth > innerWidth + 1
     const visible = (el: Element) => {
       const r = el.getBoundingClientRect(); const s = getComputedStyle(el)
-      return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && +s.opacity > 0.05 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth
+      return !el.closest('[inert]') && r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && +s.opacity > 0.05 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth
     }
     const label = (el: Element) => `${el.tagName.toLowerCase()}:${((el as HTMLElement).innerText || el.getAttribute('aria-label') || '').trim().slice(0, 24).replace(/\s+/g, ' ')}`
     for (const el of document.querySelectorAll('body *')) {

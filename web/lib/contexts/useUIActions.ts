@@ -50,15 +50,16 @@ export function useUIActions(
   }, [])
 
   const go = useCallback((screen: Screen) => {
-    syncSubsurface(screen)
+    const safeScreen: Screen = screen === 'market' ? 'hub' : screen
+    syncSubsurface(safeScreen)
     setState(s => {
-      if (screen === 'hangar') {
+      if (safeScreen === 'hangar') {
         hangarReturnView.current = s.screen === 'launchpad' || s.screen === 'academy'
           ? s.screen
           : 'hub'
       }
-      rememberHost(screen)
-      return { ...s, screen }
+      rememberHost(safeScreen)
+      return { ...s, screen: safeScreen }
     })
   }, [rememberHost, setState, syncSubsurface])
 
@@ -137,7 +138,9 @@ export function useUIActions(
       // A bookmarked /game/build must not resurrect the transient plot picker
       // for an operational base after hydration has already repaired it to
       // Hub. Keep the URL-driven route in the same safe landing state.
-      const safeScreen = screen === 'build' && s.player.freeOperations && s.player.placed.length > 0
+      const safeScreen = screen === 'market'
+        ? 'hub'
+        : screen === 'build' && s.player.freeOperations && s.player.placed.length > 0
         ? 'hub'
         : screen
       // Valid URL changes are already represented by the browser history and
@@ -183,7 +186,7 @@ export function useUIActions(
   }, [])
 
   const clearTerritoryClaimPopup = useCallback(() => {
-    setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
+    setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: 'hub' }))
   }, [setState])
 
   return { go, goBack, recordScreenTransition, goToMissions, markContractsOpened, setScreenFromUrl, skipNextUrlSync, inflightPath, isStaleRoute, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }

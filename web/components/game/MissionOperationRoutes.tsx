@@ -23,7 +23,6 @@ const reportedDebrisBadges = new Set<string>()
 
 function flightStops(player: Game['player']): Screen[] {
   const stops: Screen[] = ['hub', 'missions']
-  if (player.freeOperations) stops.push('market')
   const resume = missionResumeScreen(player)
   if (!stops.includes(resume)) stops.push(resume)
   return stops

@@ -69,12 +69,16 @@ type ScreenContentProps = {
 
 // SSL-441: every scene change fades through a void veil instead of hard-cutting.
 export function ScreenContent(props: ScreenContentProps) {
+  const visibleScreen: Screen = props.screen === 'market' ? 'hub' : props.screen
+  useEffect(() => {
+    if (props.screen === 'market') props.game.go('hub')
+  }, [props.screen, props.game.go])
   return (
-    <SceneTransition sceneKey={props.screen}>
+    <SceneTransition sceneKey={visibleScreen}>
       {/* SSL-35 / SSL-452: every screen renders inside the shared frame,
           labelled with the layout type its route maps to in GAME_ROUTES. */}
-      <SurfaceLayout surface={surfaceForScreen(props.screen)}>
-        <ScreenBody {...props} />
+      <SurfaceLayout surface={surfaceForScreen(visibleScreen)}>
+        <ScreenBody {...props} screen={visibleScreen} />
       </SurfaceLayout>
     </SceneTransition>
   )
@@ -122,8 +126,6 @@ function ScreenBody({
   // mining seam tied to the active try rather than the legacy coach state.
   const trainingMiningTry = currentTrainingTry(game.player.flightPlan) === 'mining'
 
-  // The Exchange is a permanent Earth Base building the player can tap at any
-  // stage (SSL-477), so Market is no longer gated on freeOperations.
   useEffect(() => {
     // Refining is commissioned at an approved off-world site. An old save
     // that contains a Base refinery remains readable, but no unbuilt player
@@ -185,7 +187,7 @@ function ScreenBody({
       }
       // Only unlocked structures that are not already on the base are offered.
       const buildOptions: HubBuildOption[] = game.catalog.structures
-        .filter(structure => structure.id !== 'garage' && structure.id !== 'astronaut-academy'
+        .filter(structure => structure.id !== 'garage' && structure.id !== 'astronaut-academy' && structure.id !== 'market'
           && !game.player.placed.includes(structure.id) && structureUnlocked(structure, unlockOpts))
         .map(structure => {
           const gaps = structureAffordabilityGaps(structure, { francs: game.player.francs, stash: game.player.stash })
@@ -229,7 +231,7 @@ function ScreenBody({
           onFocusBuilding={building => {
             if (building === 'build') return game.go('build')
             if (building === 'refinery') return game.go('refinery')
-            if (building === 'market') return game.go('market')
+            if (building === 'market') return game.go('hub')
             if (building === 'hangar') return game.go('hangar')
             if (building === 'skills') return game.go('skills')
             if (building === 'deep-space-telescope') return game.go('asteroid-discovery')
@@ -269,7 +271,6 @@ function ScreenBody({
             game.addToast(`Cannot excavate: need ${missing.join(' and ')}`, 'warn')
           }}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
-          onOpenMarket={() => game.go('market')}
           onFocusResources={(label, minerals) => {
             game.setPlayer(player => ({ ...player, resourceFocus: { label, minerals } }))
             game.addToast(`${label} added to focus`, 'info')
@@ -549,7 +550,6 @@ function ScreenBody({
           onViewMissionLog={() => game.go('mission-history')}
           onOpenSiloBuild={() => game.go('build')}
           onOpenControlStation={() => game.go('instrument-hub')}
-          onOpenMarket={() => game.go('market')}
           onAbandonMission={game.player.activeMission && !activeSettled ? () => game.abandonMission({ confirmed: true }) : undefined}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}

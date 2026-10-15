@@ -32,8 +32,9 @@ public final class GameStore {
         } else {
             initialState = state
         }
-        self.state = initialState
-        self.catalog = Instruments.runtime(catalog, player: initialState.player, missionId: initialState.missionId, targetId: initialState.targetId)
+        let visibleState = Self.withDeferredExchangeHidden(initialState)
+        self.state = visibleState
+        self.catalog = Instruments.runtime(catalog, player: visibleState.player, missionId: visibleState.missionId, targetId: visibleState.targetId)
     }
 
     public static var defaultSaveURL: URL {
@@ -48,7 +49,15 @@ public final class GameStore {
     public var target: Target? { catalog.target(state.targetId) }
     public var now: Double { clock() }
 
-    private func apply(_ next: GameState) {
+    private static func withDeferredExchangeHidden(_ state: GameState) -> GameState {
+        guard state.screen == .market else { return state }
+        var visible = state
+        visible.screen = .hub
+        return visible
+    }
+
+    private func apply(_ proposed: GameState) {
+        let next = Self.withDeferredExchangeHidden(proposed)
         guard next != state else { return }
         var n = next
         MissionRuns.stamp(old: state, new: &n)
@@ -130,6 +139,13 @@ public final class GameStore {
         n.player.flightPlan.replayTry = id
         n.player.flightPlan.hidden = false
         n.screen = id == "scan" ? .galaxy : id == "part" ? .hangar : .launchpad
+        apply(n)
+    }
+
+    /// Collapses or restores the training HUD without changing its progress.
+    public func setFlightPlanHidden(_ hidden: Bool) {
+        var n = state
+        n.player.flightPlan.hidden = hidden
         apply(n)
     }
 

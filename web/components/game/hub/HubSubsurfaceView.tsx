@@ -39,7 +39,6 @@ interface HubSubsurfaceViewProps {
   onExcavateUnavailable?: () => void
   onBuildRoom?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
-  onOpenMarket?: () => void
 }
 
 interface StoredMineral {
@@ -250,7 +249,7 @@ function StorageSilo({ minerals, capacity }: { minerals: StoredMineral[]; capaci
   )
 }
 
-function MineralVault({ minerals, capacity, onOpenMarket }: { minerals: StoredMineral[]; capacity: number; onOpenMarket?: () => void }) {
+function MineralVault({ minerals, capacity }: { minerals: StoredMineral[]; capacity: number }) {
   const totalUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
   return (
     <div className={styles.detailPanel} data-testid="subsurface-mineral-vault">
@@ -259,17 +258,14 @@ function MineralVault({ minerals, capacity, onOpenMarket }: { minerals: StoredMi
           <div className={styles.metricValue}>{totalUnits}</div>
           <div className={styles.metricLabel}>Units in secure storage</div>
           <p className={styles.summaryCopy}>
-            Ore you keep sits in the silo until you sell it at the Commodity
-            Exchange or spend it on your own builds. Selling later, when prices
-            are up, beats the fixed payout for auto-selling on return.
+            Ore you keep sits in the silo for your own builds. Choose Sell on
+            the Earth-return cargo sheet when you want the current open-market
+            price instead; overflow is sold there automatically.
           </p>
         </div>
         <span className={styles.status}>{minerals.length} species catalogued</span>
       </div>
       <StorageSilo minerals={minerals} capacity={capacity} />
-      <PrimaryBtn testId="subsurface-silo-sell" full={false} onClick={onOpenMarket}>
-        Sell cargo at market
-      </PrimaryBtn>
       <div className={styles.inventoryList}>
         {minerals.length > 0 ? minerals.map(mineral => (
           <div className={styles.inventoryRow} key={mineral.id}>
@@ -477,7 +473,6 @@ export function HubSubsurfaceView({
   onExcavateUnavailable,
   onBuildRoom,
   onFocusResources,
-  onOpenMarket,
 }: HubSubsurfaceViewProps) {
   const [activeRoom, setActiveRoom] = useState<SubsurfaceRoomId | null>(null)
   const minerals = storedMinerals(stash)
@@ -544,7 +539,7 @@ export function HubSubsurfaceView({
             ) : !builtSet.has(activeRoom) ? (
               <RoomBuildPrompt room={activeDefinition} francs={francs} stash={stash} onBuild={onBuildRoom} onFocusResources={onFocusResources} />
             ) : activeRoom === 'mineral-vault' || activeRoom === 'deep-mineral-vault' ? (
-              <MineralVault minerals={minerals} capacity={activeRoom === 'deep-mineral-vault' ? DEEP_MINERAL_SILO_CAPACITY : MINERAL_SILO_CAPACITY} onOpenMarket={onOpenMarket} />
+              <MineralVault minerals={minerals} capacity={activeRoom === 'deep-mineral-vault' ? DEEP_MINERAL_SILO_CAPACITY : MINERAL_SILO_CAPACITY} />
             ) : (
               <PartsLocker parts={parts} />
             )}

@@ -62,7 +62,6 @@ struct BaseDock: View {
 
     private var stops: [Screen] {
         var out: [Screen] = [.missions]
-        if store.player.freeOperations { out.append(.market) }
         if store.player.activeMission != nil { out.append(.launchpad) }
         return out
     }

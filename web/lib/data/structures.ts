@@ -41,7 +41,7 @@ export const STRUCTURES: StructureBlueprint[] = [
     // SSL-332: building it is the last guided step, and it is what opens Free Ops.
     unlocksAt: 'Fly both guided missions first',
     unlockTrigger: 'onboarding-missions',
-    description: 'Small Earth-side mineral storage. Hold ore from your own mining or a contract.',
+    description: 'Small Earth-side mineral storage. Keep ore for construction; overflow is sold when a flight returns.',
   },
   {
     id: 'market',
@@ -75,7 +75,9 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
   // becomes available after Extraction and Transport, and placement opens
   // Free Ops. Existing players retain access through their saved unlock.
   if (structure.id === 'surface-silo') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
-  if (structure.id === 'market') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('market')
+  // Deferred after the 15 Oct review. Keep the blueprint decodable for old saves,
+  // but do not offer or place the Exchange until its flow is redesigned.
+  if (structure.id === 'market') return false
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   if (structure.unlockTrigger === 'always') return true
   return false

@@ -9,38 +9,70 @@ struct CoachStrip: View {
     let coach: FlightPlan.Coach
     @State private var copyStep: String?
 
+    private var hidden: Bool { store.player.flightPlan.hidden }
+    private var compactStep: String {
+        coach.kicker.components(separatedBy: "·").last?.trimmingCharacters(in: .whitespaces) ?? "TRAINING"
+    }
+
+    @ViewBuilder
     var body: some View {
-        HStack(spacing: 12) {
-            opsBadge(isDone: copyStep != nil)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(copyStep ?? coach.kicker).font(AppFont.display(14)).tracking(1.2).foregroundStyle(copyStep == nil ? Theme.teal : Theme.teal)
-                Text(copyStep == nil ? coach.objective : "+1 stitch · \(coach.objective)").font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink)
-                    .lineLimit(2).fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 0)
-            if let go = coach.go {
-                Button { store.go(go.screen) } label: {
-                    Text(go.label).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+        if hidden {
+            HStack {
+                Spacer(minLength: 0)
+                Button { store.setFlightPlanHidden(false) } label: {
+                    Text("OPS · \(compactStep)")
+                        .font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.ink)
                         .padding(.horizontal, 12).frame(minHeight: 44)
-                        .background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+                        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Show Ops guidance, \(compactStep)")
             }
-        }
-        .padding(.horizontal, 16).padding(.vertical, 8)
-        .frame(maxWidth: .infinity, minHeight: 56)
-        .background(Theme.hudPanel)
-        .overlay(alignment: .top) { Rectangle().fill(Theme.hudInk).frame(height: 1) }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(coach.kicker). \(coach.objective). \(coach.radio)")
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: coach.kicker)
-        .onChange(of: coach.kicker) { old, _ in
-            guard let part = old.components(separatedBy: "STEP ").last,
-                  let step = part.split(separator: "/").first else { return }
-            let next = "Copy · Step \(step) done"
-            copyStep = next
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                if copyStep == next { copyStep = nil }
+        } else {
+            HStack(spacing: 8) {
+                opsBadge(isDone: copyStep != nil)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(copyStep ?? coach.kicker).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.teal)
+                    Text(copyStep == nil ? coach.objective : "+1 stitch · \(coach.objective)").font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink)
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                if let go = coach.go {
+                    Button { store.go(go.screen) } label: {
+                        Text(go.label).font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.ink)
+                            .padding(.horizontal, 10).frame(minHeight: 44)
+                            .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+                }
+                Button { store.setFlightPlanHidden(true) } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(Theme.ink)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Hide Ops guidance")
+            }
+            .padding(6)
+            .frame(maxWidth: .infinity, minHeight: 56)
+            .background(Theme.hudPanel.opacity(0.96), in: RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.hudInk, lineWidth: 2))
+            .shadow(color: Theme.hudInk.opacity(0.24), radius: 0, x: 0, y: 4)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("\(coach.kicker). \(coach.objective). \(coach.radio)")
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: coach.kicker)
+            .onChange(of: coach.kicker) { old, _ in
+                guard let part = old.components(separatedBy: "STEP ").last,
+                      let step = part.split(separator: "/").first else { return }
+                let next = "Copy · Step \(step) done"
+                copyStep = next
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    if copyStep == next { copyStep = nil }
+                }
             }
         }
     }

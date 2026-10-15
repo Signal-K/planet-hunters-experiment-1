@@ -911,7 +911,8 @@ button.take:disabled { background-color: var(--ln-board-silver); color: var(--ln
 /* Phone portrait: rail across the top, order across the bottom. */
 @media (orientation: portrait) and (max-width: 700px) {
   .rail { flex-direction: row; width: auto; flex-wrap: nowrap; align-items: center; }
-  .rail button.tab { flex: 0 0 52px; width: 52px; min-height: 52px; padding: 0; font-size: 0; gap: 0; }
+  .rail button.tab { flex: 0 0 52px; width: 52px; min-height: 52px; padding: 0; gap: 0; }
+  .rail .tabLabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .rail button.tab svg { width: 24px; height: 24px; }
   .rail button.log { position: static; flex: 0 0 auto; min-height: 44px; padding: 0 12px; }
   .order { left: 12px; right: 12px; bottom: 12px; width: auto; }

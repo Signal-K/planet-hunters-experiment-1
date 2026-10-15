@@ -36,7 +36,6 @@ interface LaunchpadScreenProps {
   onOpenSiloBuild?: () => void
   /** Own-program work opens from the Mission Board. Callers may still pass this. */
   onOpenControlStation?: () => void
-  onOpenMarket?: () => void
   /** Scrub the active run after the launchpad confirm rail (SSL-512). */
   onAbandonMission?: () => void
   mission?: { title: string } | null

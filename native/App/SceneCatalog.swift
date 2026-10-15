@@ -54,12 +54,17 @@ enum SceneCatalog {
         return gs
     }
 
-    /// Training fixtures: a screen with the coach strip below it, the way RootView lays it out.
+    /// Training fixtures: the compact floating coach HUD, matching RootView without reserving playfield height.
     static func coached<V: View>(_ view: V, _ gs: GameState, screen: Screen) -> some View { coached(view, GameStore(state: gs), screen: screen) }
     static func coached<V: View>(_ view: V, _ store: GameStore, screen: Screen) -> some View {
         view.environment(store).environment(offlineFeed)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if let c = FlightPlan.coach(store.player, screen: screen) { CoachStrip(coach: c).environment(store) }
+            .overlay(alignment: .top) {
+                if let c = FlightPlan.coach(store.player, screen: screen, includeHidden: true) {
+                    CoachStrip(coach: c).environment(store)
+                        .frame(maxWidth: 560)
+                        .padding(.horizontal, 8)
+                        .padding(.top, 68)
+                }
             }
     }
 
@@ -122,6 +127,47 @@ enum SceneCatalog {
         var gs = transitState(returning: false)
         let nowMs = Date().timeIntervalSince1970 * 1000
         gs.player.transitStartedAt = nowMs - 450_000; gs.player.arrivalAt = nowMs + 550_000
+        return gs
+    }
+
+    /// Web `cp-early` / `cp-mid` / `cp-late`: roughly minute 15, 35 and 55 of the hour.
+    static func checkpointState(_ stage: Int) -> GameState {
+        var gs = GameState()
+        gs.player.freeOperations = true
+        switch stage {
+        case 0:
+            gs.player.missionsDone = 4; gs.player.francs = 40_000_000
+            gs.player.placed = ["launchpad", "hangar", "surface-silo"]
+            gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1]
+            gs.rocket = RocketConfig(chassis: "hull-mk2", propulsion: "fusion-b2", drill: "laser-t2")
+        case 1:
+            gs = basePlayer(); gs.player.missionsDone = 8; gs.player.francs = 150_000_000
+            gs.player.refineryBuilt = true; gs.player.refineryUnlocked = true
+            gs.rocket = RocketConfig(chassis: "hull-cargo", propulsion: "fusion-b2", drill: "laser-t2")
+        default:
+            gs = basePlayer(); gs.player.missionsDone = 20; gs.player.francs = 600_000_000
+            gs.player.placed = ["launchpad", "deep-space-telescope", "surface-silo", "astronaut-academy", "market"]
+            gs.player.placementPlots = ["launchpad": 0, "deep-space-telescope": 2, "surface-silo": 3, "astronaut-academy": 4, "market": 5]
+            gs.player.deepSpaceTelescopeBuilt = true
+            gs.player.refineryBuilt = true; gs.player.refineryUnlocked = true; gs.player.launchpadUpgraded = true
+            gs.player.stash = ["iron": 120, "nickel": 60, "silicon": 40, "copper": 30, "gold": 6]
+            gs.rocket = RocketConfig(chassis: "hull-mk3", propulsion: "ion-a3", drill: "plasma-t3")
+        }
+        gs.screen = .hub
+        return gs
+    }
+
+    /// A mission and target picked, parked on `screen` (web `m1-fab`, `ui-rocket-buy`, `ui-landing`, `transport-*`).
+    static func pickedState(_ screen: Screen, mission: String? = nil, missionsDone: Int = 0, phase: MissionPhase? = nil) -> GameState {
+        var gs = transitState(returning: false)
+        let cat = Catalog()
+        if let id = mission, let m = cat.mission(id) {
+            gs.missionId = m.id; gs.targetId = m.targetId
+            gs.player.activeMission = ActiveMission(id: m.id, label: m.title)
+        }
+        gs.player.missionsDone = missionsDone
+        if let phase { gs.player.missionPhase = phase }
+        gs.screen = screen
         return gs
     }
 
@@ -322,6 +368,7 @@ enum SceneCatalog {
         },
         scene("coach-launchpad-phone", 874) { coached(BuildScreen(), GameState(), screen: .build) },
         scene("coach-launchpad-landscape", 402, w: 874) { coached(BuildScreen(), GameState(), screen: .build) },
+        scene("coach-launchpad-desktop", 900, w: 1440) { coached(BuildScreen(), GameState(), screen: .build) },
         scene("coach-mining-phone", 874) {
             var gs = GameState(); gs.player.placed = ["launchpad", "hangar"]; gs.player.placementPlots = ["launchpad": 0, "hangar": 1]
             return coached(HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 0, trailing: 0)), gs, screen: .hub)
@@ -353,6 +400,21 @@ enum SceneCatalog {
             store.fitHangarModules(["engine": "ion-thruster-t1", "booster": "strap-booster-t1", "cockpit": "cockpit-command-t1", "payload": "cargo-payload-t1"])
             return coached(LaunchScreen(), store, screen: .hangar)
         },
+        scene("cp-early", 874) { HubScreen().environment(GameStore(state: checkpointState(0))) },
+        scene("cp-mid", 874) { HubScreen().environment(GameStore(state: checkpointState(1))) },
+        scene("cp-late", 874) { HubScreen().environment(GameStore(state: checkpointState(2))) },
+        scene("landing-live", 874) { MiningScreen().environment(GameStore(state: pickedState(.landing, phase: .landing))) },
+        scene("rocket-buy-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.rocketBuy))).environment(\.flatLayout, true) },
+        scene("first-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab))).environment(\.flatLayout, true) },
+        scene("storage-build-live", 874) { var gs = basePlayer(); gs.player.missionsDone = 2; gs.screen = .build; return BuildScreen().environment(GameStore(state: gs)) },
+        scene("transport-hub-live", 874) { var gs = basePlayer(); gs.player.missionsDone = 1; return HubScreen().environment(GameStore(state: gs)) },
+        scene("transport-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))).environment(\.flatLayout, true) },
+        scene("transport-mining-live", 874) { MiningScreen().environment(GameStore(state: pickedState(.mining, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1, phase: .mining))) },
+        scene("transport-delivery-live", 874) { DeliveryScreen().environment(GameStore(state: pickedState(.delivery, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))) },
+        scene("transport-debrief-live", 874) { DebriefScreen().environment(GameStore(state: pickedState(.debrief, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))) },
+        scene("telescope-hub-live", 874) { var gs = basePlayer(); gs.player.deepSpaceTelescopeBuilt = true; return HubScreen().environment(GameStore(state: gs)) },
+        scene("telescope-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab, mission: Instruments.transitMissionId, missionsDone: 5))).environment(\.flatLayout, true) },
+        scene("telescope-debrief-live", 874) { DebriefScreen().environment(GameStore(state: pickedState(.debrief, mission: Instruments.transitMissionId, missionsDone: 5))) },
         scene("flight-live", 874) { TransitScreen().environment(GameStore(state: flightState())) },
         scene("flight-live-landscape", 402, w: 874) { TransitScreen().environment(GameStore(state: flightState())) },
         scene("return-live", 874) { TransitScreen().environment(GameStore(state: returnState())) },
@@ -387,8 +449,12 @@ enum SceneCatalog {
         scene("settings-base-move-desktop", 900, w: 1440) { settingsOverlay(focusBaseMove: true) },
         scene("mining-guide-phone", 1250) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
         scene("mining-guide-landscape", 402, w: 874) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
-        scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
-        scene("exchange-landscape", 402, w: 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("exchange-phone", 874) { HubScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("exchange-landscape", 402, w: 874) { HubScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("coach-exchange-landscape", 428, w: 926) {
+            var gs = exchangeState(); gs.player.flightPlan.complete("mining")
+            return coached(HubScreen(), gs, screen: .market).environment(\.flatLayout, true)
+        },
         scene("hangar-workshop-phone", 844, w: 390) { HangarScreen().environment(GameStore(state: partState())) },
         scene("hangar-workshop-phone-live", 844, w: 390) { HangarScreen().environment(GameStore(state: partState())) },
         scene("hangar-workshop-landscape", 428, w: 926) { HangarScreen().environment(GameStore(state: partState())) },
