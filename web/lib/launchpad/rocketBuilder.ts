@@ -190,10 +190,10 @@ export function builderLandscape(target: Pick<Target, 'id' | 'type' | 'archetype
   const layout = layoutForPalette(palette, target?.id ?? 'earth-base')
   return {
     paletteId: palette.id,
-    skyTop: liftColor(palette.skyTop, 0.84),
-    skyHorizon: liftColor(palette.skyHorizon, 0.72),
-    ground: liftColor(palette.ground, 0.35),
-    ridge: liftColor(palette.nearRidge, 0.22),
+    skyTop: liftColor(palette.skyTop, 0.08),
+    skyHorizon: liftColor(palette.skyHorizon, 0.16),
+    ground: liftColor(palette.ground, 0.08),
+    ridge: liftColor(palette.nearRidge, 0.06),
     tint: liftColor(layout.tint, 0.2),
     period: layout.period,
     pieces: layout.pieces,

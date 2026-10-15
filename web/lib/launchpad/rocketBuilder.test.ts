@@ -56,7 +56,7 @@ describe('rocket builder loadout', () => {
     expect(result.state.player.francs).toBe(80_000_000 - 7_500_000)
   })
 
-  it('lifts destination landscapes into a light, non-orange wash', () => {
+  it('paints destination landscapes as a dusk sky, never a flat grey wash or orange', () => {
     for (const target of [
       { id: 'eros', type: 'asteroid' as const },
       { id: 'mars', type: 'planet' as const },
@@ -65,7 +65,8 @@ describe('rocket builder loadout', () => {
       const scene = builderLandscape(target)
       for (const color of [scene.skyTop, scene.skyHorizon]) {
         const [r, g, b] = color.match(/\d+/g)!.map(Number)
-        expect((r + g + b) / 3).toBeGreaterThan(180)
+        // Dusk, not a near-white wash: the old 84% paper lift read as grey bars around the panels.
+        expect((r + g + b) / 3).toBeLessThan(150)
         expect(r > b + 28 && r >= g).toBe(false)
       }
     }

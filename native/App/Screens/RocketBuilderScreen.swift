@@ -97,9 +97,9 @@ struct RocketBuilderScreen: View {
         let palette = target.map { LaserPalette.resolve(id: $0.id, type: $0.type, archetype: $0.archetype) } ?? LaserPalette.named("mars")
         let layout = Landscape.layout(palette.landscape, key: target?.id ?? "earth-base")
         return (
-            lifted(palette.skyTop, 0.84),
-            lifted(palette.skyHorizon, 0.72),
-            lifted(palette.ground, 0.35),
+            lifted(palette.skyTop, 0.08),
+            lifted(palette.skyHorizon, 0.16),
+            lifted(palette.ground, 0.08),
             lifted(layout.tint, 0.2),
             layout.pieces,
             layout.period
@@ -115,16 +115,17 @@ struct RocketBuilderScreen: View {
                 Image("scene-launchpad-plate-landscape-right").resizable().interpolation(.none).scaledToFit().frame(width: 140)
             }
             .padding(.bottom, 48)
-            ForEach(Array(land.pieces.enumerated()), id: \.offset) { _, piece in
-                Art.view("mining/terrain_\(piece.kind).png")
-                    .resizable()
-                    .interpolation(.none)
-                    .scaledToFit()
-                    .frame(width: 72)
-                    .scaleEffect(x: (piece.flip ? -1 : 1) * piece.scale, y: piece.scale, anchor: .bottom)
-                    .position(x: CGFloat(piece.x / land.period) * 800, y: 0)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                    .padding(.bottom, 36)
+            // Pieces stand on the horizon (web `.piece`: bottom 16%, left = x / period of the width).
+            GeometryReader { g in
+                ForEach(Array(land.pieces.enumerated()), id: \.offset) { _, piece in
+                    Art.view("mining/terrain_\(piece.kind).png")
+                        .resizable()
+                        .interpolation(.none)
+                        .scaledToFit()
+                        .frame(width: 72, height: 72, alignment: .bottom)
+                        .scaleEffect(x: (piece.flip ? -1 : 1) * piece.scale, y: piece.scale, anchor: .bottom)
+                        .position(x: CGFloat(piece.x / land.period) * g.size.width, y: g.size.height * 0.84 - 36)
+                }
             }
             // Drawn ground: the old plate had the part cards painted into it, which doubled the live list.
             land.ground.frame(height: 72)
@@ -256,7 +257,7 @@ struct RocketBuilderScreen: View {
         Image(name).resizable().interpolation(.none).scaledToFit().frame(height: 40)
     }
 
-    /// Pull a palette colour toward blueprint paper. Orange leans cool toward blue.
+    /// Pull a palette colour slightly toward paper (dusk, never a grey wash). Orange leans cool toward blue.
     private func lifted(_ hex: UInt32, _ mix: Double) -> Color {
         func channel(_ shift: UInt32) -> Double { Double((hex >> shift) & 255) }
         var r = channel(16) + (238 - channel(16)) * mix
