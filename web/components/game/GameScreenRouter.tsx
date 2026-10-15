@@ -164,6 +164,7 @@ function ScreenBody({
           missionsDone={game.player.missionsDone}
           totalEarned={game.player.francs}
           awaitingRemoteState={!game.hydrated}
+          savedBiome={game.player.earthBiome}
         />
       )
 

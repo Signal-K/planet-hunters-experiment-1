@@ -57,6 +57,9 @@ public enum FlightPlan {
         func c(_ objective: String, _ radio: String, go: Coach.Go? = nil) -> Coach { Coach(kicker: kicker, objective: objective, radio: radio, go: go) }
         switch current {
         case "mining":
+            if screen == .intro && !p.placed.contains("launchpad") {
+                return c("Choose where to build", "Pick a landscape for your base, then establish it. The launchpad comes next.")
+            }
             if !p.placed.contains("launchpad") {
                 return c("Place the launchpad", "Your first structure. All missions launch from here.",
                          go: screen == .build ? nil : .init(label: "OPEN BUILD", screen: .build))

@@ -11,6 +11,7 @@ const pairs = [
   ["shared/layout/base-site.json", "web/lib/scene/base-site.json"],
   ["shared/scenes/base-world.json", "web/lib/world/base-world.json"],
   ["shared/scenes/sky-events.json", "web/lib/world/sky-events.json"],
+  ["shared/scenes/biome-pitch.json", "web/lib/scene/biome-pitch.json"],
 ];
 let drift = false;
 for (const [from, to] of pairs) {

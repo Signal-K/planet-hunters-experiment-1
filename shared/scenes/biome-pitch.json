@@ -1,0 +1,12 @@
+{
+  "about": "What the landscape picker says about each base landscape (intro screen, web and native). Ids stay as saved; mountains is shown as Steppe. `trait` is the one real difference today and must match the weights in sky-events.json `biomes`: weather odds and aurora chance only. Landscape never locks any gameplay.",
+  "heading": "Choose where to build",
+  "lede": "Your launch complex and everything you add will stand here.",
+  "note": "A landscape changes the look and the sky only. You can move your base once later.",
+  "biomes": {
+    "mountains": { "label": "Steppe", "tagline": "Wide flat range under a big sky.", "trait": "Strong winds" },
+    "desert": { "label": "Desert", "tagline": "Dry, bright and dusty.", "trait": "Clear, dry skies" },
+    "tundra": { "label": "Tundra", "tagline": "Snow and long cold nights.", "trait": "Frequent aurora" },
+    "coast": { "label": "Coast", "tagline": "Sea air under a low headland.", "trait": "Fog and rain" }
+  }
+}

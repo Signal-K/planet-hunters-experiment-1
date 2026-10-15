@@ -1,10 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { PRODUCT_OPERATIONS_LABEL, PRODUCT_WORDMARK } from '@/lib/brand'
+import { useState, type CSSProperties } from 'react'
+import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
+import { PRODUCT_WORDMARK } from '@/lib/brand'
 import { formatCurrency } from '@/lib/format'
-import type { EarthBiomeId } from '@/lib/scene/base-world'
-import { biomeLayers } from '@/lib/scene/base-world'
+import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
+import { useViewSize } from '@/lib/hooks/useViewSize'
+import { homeCenter, kitScale } from '@/lib/scene/base-site'
+import { BIOME_PITCH, INTRO_COPY } from '@/lib/scene/biome-pitch'
+import { EARTH_BIOMES, sanitizeEarthBiome, type EarthBiomeId } from '@/lib/scene/base-world'
 
 interface IntroScreenProps {
   onBegin: (biome?: EarthBiomeId) => void
@@ -12,14 +16,9 @@ interface IntroScreenProps {
   missionsDone?: number
   totalEarned?: number
   awaitingRemoteState?: boolean
+  /** The saved landscape, shown behind a returning player's resume screen. */
+  savedBiome?: string
 }
-
-const BIOME_CHOICES: { id: EarthBiomeId; label: string }[] = [
-  { id: 'mountains', label: 'Mountains' },
-  { id: 'desert', label: 'Desert' },
-  { id: 'tundra', label: 'Tundra' },
-  { id: 'coast', label: 'Coast' },
-]
 
 export default function IntroScreen({
   onBegin,
@@ -27,56 +26,71 @@ export default function IntroScreen({
   missionsDone = 0,
   totalEarned = 0,
   awaitingRemoteState = false,
+  savedBiome,
 }: IntroScreenProps) {
   const [biome, setBiome] = useState<EarthBiomeId>('mountains')
+  const shown = returning || awaitingRemoteState ? sanitizeEarthBiome(savedBiome) : biome
+  // The backdrop is the base world itself, framed on the empty launch pad, and follows the picked landscape.
+  const view = useViewSize()
+  const { grade } = useTimeOfDay()
+  const px = kitScale(view)
+  const camX = view.w / 2 - homeCenter([], view.w / px) * px
   return (
-    <div className="game-screen intro-screen theme-blueprint">
-
-      {awaitingRemoteState ? (
-        <div className="intro-content">
-          <div className="intro-badge">{PRODUCT_OPERATIONS_LABEL}</div>
-          <img className="intro-logo-mark" src="/icons/landnam-logo-mark.png" alt="" aria-hidden="true" />
+    <div className="game-screen intro-screen theme-blueprint" data-biome={shown}>
+      <div className="intro-world" aria-hidden="true" style={{ '--px': `${px}px`, '--hub-ground': '20%' } as CSSProperties}>
+        <BaseWorldCanvas px={px} camera={{ x: camX, y: 0, zoom: 1 }} time={grade} biome={shown} />
+      </div>
+      <div className="intro-content" data-mode={awaitingRemoteState ? 'restoring' : returning ? 'returning' : 'new'}>
+        <div className="intro-head">
           <h1 className="intro-title" data-testid="intro-title">{PRODUCT_WORDMARK}</h1>
-          <p className="intro-welcome">Welcome back, Commander.</p>
-          <p className="intro-subtitle">Restoring your mission data&hellip;</p>
-          <div className="intro-reconnecting-indicator" aria-label="Connecting to backend">
-            <span /><span /><span />
-          </div>
-        </div>
-      ) : (
-        <div className="intro-content">
-          <div className="intro-badge">{PRODUCT_OPERATIONS_LABEL}</div>
-          <img className="intro-logo-mark" src="/icons/landnam-logo-mark.png" alt="" aria-hidden="true" />
-          <h1 className="intro-title" data-testid="intro-title">{PRODUCT_WORDMARK}</h1>
-          <p className="intro-welcome">{returning ? 'Welcome back, Commander.' : 'Welcome, Commander.'}</p>
-          <p className="intro-subtitle">
-            {returning
-              ? `Missions completed: ${missionsDone} · Total earned: ${formatCurrency(totalEarned, { compact: true })}`
-              : 'Build your base. Mine the asteroids. Fulfill the contract. The belt is waiting.'}
-          </p>
-          {!returning && (
-            <fieldset className="base-biome-choice" data-testid="base-biome-choice">
-              <legend style={{ padding: '0 8px', font: '800 14px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ln-bp-ink, #0f2436)' }}>Landscape</legend>
-              {BIOME_CHOICES.map(choice => (
-                <button
-                  key={choice.id}
-                  type="button"
-                  className="base-biome-option"
-                  aria-pressed={biome === choice.id}
-                  data-testid={`base-biome-${choice.id}`}
-                  onClick={() => setBiome(choice.id)}
-                >
-                  <img src={biomeLayers(choice.id)[0].src} alt="" draggable={false} />
-                  {choice.label}
-                </button>
-              ))}
-            </fieldset>
+          {awaitingRemoteState ? (
+            <>
+              <p className="intro-subtitle">Restoring your mission data&hellip;</p>
+              <div className="intro-reconnecting-indicator" aria-label="Connecting to backend">
+                <span /><span /><span />
+              </div>
+            </>
+          ) : returning ? (
+            <p className="intro-subtitle">{`Missions completed: ${missionsDone} · Total earned: ${formatCurrency(totalEarned, { compact: true })}`}</p>
+          ) : (
+            <>
+              <h2 className="intro-heading">{INTRO_COPY.heading}</h2>
+              <p className="intro-subtitle">{INTRO_COPY.lede}</p>
+            </>
           )}
-          <button className="intro-begin-btn" onClick={() => onBegin(returning ? undefined : biome)} data-testid="intro-begin-btn" data-beacon="intro-begin">
-            {returning ? 'RESUME OPERATIONS' : 'BEGIN OPERATIONS'}
-          </button>
         </div>
-      )}
+        {!awaitingRemoteState && (
+          <div className="intro-panel">
+            {!returning && (
+              <fieldset className="base-biome-choice" data-testid="base-biome-choice">
+                <legend className="intro-legend">Landscape</legend>
+                {EARTH_BIOMES.map(id => {
+                  const pitch = BIOME_PITCH[id]
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      className="base-biome-option"
+                      aria-pressed={biome === id}
+                      data-testid={`base-biome-${id}`}
+                      data-biome={id}
+                      onClick={() => setBiome(id)}
+                    >
+                      <span className="base-biome-name">{pitch.label}</span>
+                      <span className="base-biome-tagline">{pitch.tagline}</span>
+                      <span className="base-biome-trait">{pitch.trait}</span>
+                    </button>
+                  )
+                })}
+              </fieldset>
+            )}
+            {!returning && <p className="intro-note">{INTRO_COPY.note}</p>}
+            <button className="intro-begin-btn" onClick={() => onBegin(returning ? undefined : biome)} data-testid="intro-begin-btn" data-beacon="intro-begin">
+              {returning ? 'RESUME OPERATIONS' : 'ESTABLISH BASE'}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

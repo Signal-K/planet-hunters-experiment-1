@@ -31,6 +31,8 @@ struct FlightPlanTests {
         let p = Player()
         let c = FlightPlan.coach(p, screen: .hub)
         #expect(c?.kicker == "MINING OPS · STEP 1/6" && c?.objective == "Place the launchpad" && c?.go?.screen == .build)
+        let intro = FlightPlan.coach(p, screen: .intro)
+        #expect(intro?.objective == "Choose where to build" && intro?.go == nil)
         var placed = p; placed.placed = ["launchpad"]
         #expect(FlightPlan.coach(placed, screen: .launchpad)?.objective == "Open client contracts")
         placed.flightPlan.complete("mining")

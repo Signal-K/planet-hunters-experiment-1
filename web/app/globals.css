@@ -2555,13 +2555,25 @@ button { cursor: pointer; }
 .debrief-arrival-board p { margin: 0; color: var(--ln-text-muted); font: var(--ln-fs-micro) var(--ln-font-mono); letter-spacing: .1em; text-transform: uppercase; }
 
 .intro-screen { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--ln-bp-bg); }
-.intro-content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px; text-align: center; z-index: 1; }
-.intro-badge { color: var(--ln-bp-ink-dim); font: 700 14px var(--ln-font-mono); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 12px; }
-.intro-logo-mark { width: 104px; height: 104px; margin: 0 0 8px; }
-.intro-title { color: var(--ln-bp-ink); font: 800 52px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 10px; }
-.intro-welcome { color: var(--ln-bp-ink); font: 700 16px var(--ln-font-display); letter-spacing: 0.08em; margin: 0 0 8px; }
-.intro-subtitle { color: var(--ln-bp-ink-dim); font: 400 14px/1.5 var(--ln-font-body); max-width: 280px; margin: 0 0 36px; }
+.intro-world { position: absolute; inset: 0; z-index: 0; }
+.intro-content { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: center; gap: 12px; padding: max(24px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); text-align: center; overflow-y: auto; }
+.intro-content[data-mode='restoring'], .intro-content[data-mode='returning'] { justify-content: center; }
+.intro-head { display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 520px; padding: 12px 20px; background: color-mix(in srgb, var(--ln-bp-paper) 92%, transparent); border: 2px solid var(--ln-bp-ink); border-radius: 12px; }
+.intro-title { color: var(--ln-bp-ink-dim); font: 800 14px var(--ln-font-display); letter-spacing: 0.32em; text-transform: uppercase; margin: 0; }
+.intro-heading { color: var(--ln-bp-ink); font: 800 24px/1.15 var(--ln-font-display); letter-spacing: 0.04em; margin: 0; }
+.intro-subtitle { color: var(--ln-bp-ink-dim); font: 400 14px/1.4 var(--ln-font-body); margin: 0; }
+.intro-panel { display: grid; gap: 8px; width: 100%; max-width: 760px; padding: 12px; background: color-mix(in srgb, var(--ln-bp-paper) 94%, transparent); border: 2px solid var(--ln-bp-ink); border-radius: 16px; }
+.intro-content[data-mode='returning'] .intro-panel { max-width: 360px; }
+.intro-legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.intro-screen .base-biome-choice { position: relative; min-width: 0; margin: 0; padding: 0; border: 0; border-radius: 0; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.intro-screen .base-biome-option { min-height: 44px; padding: 10px; display: grid; grid-template-rows: none; grid-auto-rows: min-content; gap: 4px; justify-items: start; align-content: start; align-items: start; text-align: left; text-transform: none; letter-spacing: normal; font: 400 14px/1.3 var(--ln-font-body); }
+.intro-screen .base-biome-option[aria-pressed='true'] { outline-width: 3px; }
+.base-biome-name { font: 800 14px var(--ln-font-display); letter-spacing: 0.1em; text-transform: uppercase; }
+.base-biome-tagline { color: var(--ln-bp-ink-dim); }
+.base-biome-trait { margin-top: auto; padding: 2px 8px; border: 2px solid var(--ln-bp-blue); border-radius: 8px; color: var(--ln-bp-blue); font: 700 14px/1.2 var(--ln-font-display); letter-spacing: 0.04em; text-transform: uppercase; }
+.intro-note { margin: 0; color: var(--ln-bp-ink-dim); font: 400 14px/1.35 var(--ln-font-body); }
 .intro-begin-btn { min-height: 48px; min-width: 44px; padding: 10px 24px; background: var(--ln-bp-blue); color: var(--ln-bp-paper); font-family: var(--ln-font-display); font-weight: 800; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--ln-bp-blue); border-radius: 8px; cursor: pointer; transition: background 120ms ease-out, transform 100ms; }
+@media (min-width: 640px) { .intro-screen .base-biome-choice { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .intro-begin-btn:hover { background: var(--ln-bp-ink); border-color: var(--ln-bp-ink); }
 .intro-begin-btn:focus-visible { outline: 3px solid var(--ln-bp-ink); outline-offset: 2px; }
 .intro-begin-btn:active { transform: translateY(2px); }
@@ -4577,15 +4589,11 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
-  .intro-content { justify-content: flex-start; overflow-y: auto; padding: 12px 24px; }
-  .intro-badge { margin-bottom: 6px; }
-  .intro-logo-mark { width: 56px; height: 56px; margin-bottom: 4px; }
-  .intro-title { font-size: 32px; margin-bottom: 4px; }
-  .intro-welcome { margin-bottom: 4px; }
-  .intro-subtitle { max-width: 500px; margin-bottom: 4px; }
-  .base-biome-choice { margin: 6px 0; padding: 8px; gap: 6px; }
-  .base-biome-option { min-height: 56px; grid-template-rows: 28px auto; gap: 2px; }
-  .base-biome-option img { height: 28px; }
+  .intro-content { padding: 10px 16px; gap: 8px; }
+  .intro-head { padding: 8px 16px; gap: 2px; }
+  .intro-heading { font-size: 20px; }
+  .intro-panel { padding: 8px; gap: 6px; }
+  .intro-screen .base-biome-option { padding: 8px; gap: 2px; }
   .intro-begin-btn { min-height: 44px; padding-block: 8px; }
 }
 @media (max-width: 639px) {

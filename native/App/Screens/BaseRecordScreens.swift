@@ -1,50 +1,112 @@
 import SwiftUI
 import LandnamCore
 
-/// Opening scene (mirrors web IntroScreen): wordmark, one sentence, one button into the base.
+/// What the landscape picker says about each landscape: `shared/scenes/biome-pitch.json`, the file web reads too.
+struct BiomePitch: Decodable {
+    struct Entry: Decodable { let label, tagline, trait: String }
+    let heading, lede, note: String
+    let biomes: [String: Entry]
+
+    static let shared: BiomePitch? = Bundle.main.url(forResource: "biome-pitch", withExtension: "json")
+        .flatMap { try? Data(contentsOf: $0) }.flatMap { try? JSONDecoder().decode(BiomePitch.self, from: $0) }
+}
+
+/// Opening scene (mirrors web IntroScreen): the base world as a live backdrop that follows the picked landscape,
+/// a plain heading, one card per landscape with its one real difference, and one button into the base.
 struct IntroScreen: View {
     @Environment(GameStore.self) private var store
     @State private var selectedBiome = "mountains"
+
+    private static let ids = ["mountains", "desert", "tundra", "coast"]
+
     var body: some View {
         let p = store.player
         let returning = p.missionsDone > 0
-        VStack(spacing: 18) {
-            Spacer(minLength: 0)
-            Eyebrow(text: "Mission operations")
-            Text("LANDNAM").font(AppFont.display(44)).tracking(4).foregroundStyle(Theme.ink)
-            Text(returning ? "Welcome back, Commander." : "Welcome, Commander.").font(AppFont.display(20))
-            Text(returning
-                 ? "Missions completed: \(p.missionsDone) · Total earned: \(Economy.format(francs: p.francs))"
-                 : "Build your base. Mine the asteroids. Fulfill the contract. The belt is waiting.")
-                .font(AppFont.body(16)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center).frame(maxWidth: 420)
-            if !returning {
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
-                    ForEach(["mountains", "desert", "tundra", "coast"], id: \.self) { id in
-                        Button { selectedBiome = id } label: {
-                            VStack(spacing: 4) {
-                                GeometryReader { proxy in
-                                    Image("Biome/\(id)-layer-far")
-                                        .resizable().scaledToFill()
-                                        .frame(width: proxy.size.width, height: 48)
-                                        .clipped()
-                                }
-                                .frame(height: 48)
-                                Text(id.capitalized).font(AppFont.display(14)).lineLimit(1).minimumScaleFactor(0.85)
-                            }.frame(maxWidth: .infinity).padding(6)
-                                .background(selectedBiome == id ? Theme.hudPanel : Theme.paper)
-                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(selectedBiome == id ? Theme.blue : Theme.hudInk, lineWidth: 2))
-                        }.buttonStyle(.plain).frame(minHeight: 88).accessibilityAddTraits(selectedBiome == id ? .isSelected : [])
-                    }
-                }.frame(maxWidth: 620).accessibilityElement(children: .contain).accessibilityLabel("Choose base landscape")
+        let shown = EarthBiome(rawValue: returning ? p.earthBiome : selectedBiome) ?? .mountains
+        let pitch = BiomePitch.shared
+        GeometryReader { geo in
+            let wide = geo.size.width >= 640
+            ZStack {
+                backdrop(biome: shown)
+                VStack(spacing: 12) {
+                    head(returning: returning, pitch: pitch, p: p)
+                    Spacer(minLength: 0)
+                    panel(returning: returning, pitch: pitch, wide: wide)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 12)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            PrimaryButton(title: returning ? "Resume operations" : "Begin operations") {
-                if !returning { store.setEarthBiome(selectedBiome) }
-                store.go(returning || !p.placed.isEmpty ? .hub : .build)
-            }.frame(maxWidth: 320)
-            Spacer(minLength: 0)
         }
-        .padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.bg.ignoresSafeArea()).foregroundStyle(Theme.ink)
+    }
+
+    private func backdrop(biome: EarthBiome) -> some View {
+        GeometryReader { geo in
+            BaseWorldScene(
+                biome: biome, placed: [], plots: [:], levels: [:],
+                camera: BaseCamera(x: BaseWorld(w: geo.size.width, h: geo.size.height).homeX([]), depth: 0),
+                showsControls: false,
+                onStructure: { _ in }, onShaft: {}, onBuildSilo: {}
+            )
+            .allowsHitTesting(false)
+        }
+        .ignoresSafeArea()
+    }
+
+    private func head(returning: Bool, pitch: BiomePitch?, p: Player) -> some View {
+        VStack(spacing: 4) {
+            Text("LANDNAM").font(AppFont.display(14)).tracking(4.5).foregroundStyle(Theme.textDim)
+            if returning {
+                Text("Missions completed: \(p.missionsDone) · Total earned: \(Economy.format(francs: p.francs))")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+            } else {
+                Text(pitch?.heading ?? "Choose where to build").font(AppFont.display(24)).foregroundStyle(Theme.ink)
+                Text(pitch?.lede ?? "").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+            }
+        }
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 20).padding(.vertical, 12).frame(maxWidth: 520)
+        .background(Theme.paper.opacity(0.92), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.hudInk, lineWidth: 2))
+    }
+
+    private func panel(returning: Bool, pitch: BiomePitch?, wide: Bool) -> some View {
+        VStack(spacing: 8) {
+            if !returning {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8, alignment: .top), count: wide ? 4 : 2), spacing: 8) {
+                    ForEach(Self.ids, id: \.self) { id in card(id, pitch?.biomes[id]) }
+                }
+                .accessibilityElement(children: .contain).accessibilityLabel("Choose base landscape")
+                Text(pitch?.note ?? "").font(AppFont.body(14)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center)
+            }
+            PrimaryButton(title: returning ? "Resume operations" : "Establish base") {
+                if !returning { store.setEarthBiome(selectedBiome) }
+                store.go(returning || !store.player.placed.isEmpty ? .hub : .build)
+            }
+        }
+        .padding(12).frame(maxWidth: returning ? 360 : 760)
+        .background(Theme.paper.opacity(0.94), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.hudInk, lineWidth: 2))
+    }
+
+    private func card(_ id: String, _ entry: BiomePitch.Entry?) -> some View {
+        let selected = selectedBiome == id
+        return Button { selectedBiome = id } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text((entry?.label ?? id.capitalized).uppercased()).font(AppFont.display(14)).tracking(1.4)
+                Text(entry?.tagline ?? "").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Text((entry?.trait ?? "").uppercased()).font(AppFont.display(14)).tracking(0.6).foregroundStyle(Theme.blue)
+                    .padding(.horizontal, 8).padding(.vertical, 2)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.blue, lineWidth: 2))
+            }
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading).padding(10)
+            .background(selected ? Theme.hudPanel : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(selected ? Theme.blue : Theme.hudInk, lineWidth: selected ? 3 : 2))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
