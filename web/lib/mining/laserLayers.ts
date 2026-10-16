@@ -322,6 +322,7 @@ export async function buildLaserField(opts: {
       const tex = depositTex[d.kind]
       tex.source.scaleMode = 'nearest'
       const node = new Sprite(tex)
+      node.alpha = 0.3   // scenery: dimmed so only the labelled seams read as targets
       node.anchor.set(0.5, 1)
       node.scale.set(px)
       node.x = c * midW + d.x * px

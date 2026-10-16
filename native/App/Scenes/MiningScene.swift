@@ -175,7 +175,8 @@ final class MiningScene: SKScene {
         let tone = tops.indices.map { hash($0, 4, seed) - 0.5 }
         let topP = max(2, w / 18)
         return pixelTexture(width: w, height: h) { x, y in
-            let rim = 1 + wrapNoise(CGFloat(x), cell: CGFloat(w) / CGFloat(topP), period: topP, seed: seed + 91) * 3
+            // Uneven crust: slow swells plus a ragged 3-column jitter, so the surface is never a ruler edge.
+            let rim = 1 + wrapNoise(CGFloat(x), cell: CGFloat(w) / CGFloat(topP), period: topP, seed: seed + 91) * 8 + hash(x / 3, 5, seed) * 3
             let fy = CGFloat(y)
             if fy < rim { return nil }
             var layer = 0
@@ -378,6 +379,7 @@ final class MiningScene: SKScene {
         world.addChild(far)
         world.addChild(mid)
         surfaceDeposits.zPosition = 2
+        surfaceDeposits.alpha = 0.3   // scenery: dimmed so only the labelled seams read as targets
         world.addChild(surfaceDeposits)
         world.addChild(near)
         world.addChild(ground)
@@ -427,7 +429,7 @@ final class MiningScene: SKScene {
                 node.yScale = px * CGFloat(p.scale) * ts
                 node.position = CGPoint(x: CGFloat(c) * midW + CGFloat(p.x) * px, y: surfaceY - 4 - (Landscape.pieceHeight[p.kind] ?? 48) * 0.04 * px)
                 node.color = LaserPalette.sk(Self.legible(layout.tint))
-                node.colorBlendFactor = CGFloat(layout.shade)
+                node.colorBlendFactor = max(CGFloat(layout.shade), 0.55)
                 mid.addChild(node)
             }
             for d in layout.deposits {

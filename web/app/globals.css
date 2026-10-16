@@ -3047,6 +3047,10 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
   pointer-events: none;
 }
 .flight-plan-slot > * { pointer-events: auto; }
+/* Wide enough to share the top row: sit between the gear/clock/help cluster and the francs chips, so the strip never covers Back, target or stat cards below. */
+@media (min-width: 600px) {
+  .flight-plan-slot { top: calc(env(safe-area-inset-top, 0px) + 6px); left: 200px; right: 170px; }
+}
 /* On wide and landscape screens the launch review keeps its plan strip at the top, so the coach strip moves to the bottom instead of covering it. */
 @media (min-width: 701px), (orientation: landscape) {
   body:has([data-testid="mission-launch-review"]) .flight-plan-slot { top: auto; bottom: 156px; }
