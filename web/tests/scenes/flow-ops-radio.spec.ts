@@ -87,16 +87,18 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       const shelf = page.getByTestId('training-patch-shelf')
       await shelf.scrollIntoViewIfNeeded()
       await expect(shelf.locator('.patch')).toHaveCount(4)
-      await expect(shelf.locator('.patch[data-state="done"]')).toHaveCount(1)
+      // Mining is done, and Free Ops opens with the launchpad, so its patch reads done too.
+      await expect(shelf.locator('.patch[data-state="done"]')).toHaveCount(2)
       await expect(shelf.locator('.patch[data-state="active"]')).toHaveCount(1)
       await expect(shelf.locator('.patch-ring-segment')).toHaveCount(10)
       await expect(shelf.locator('.patch').nth(0).locator('[data-stitched="true"]')).toHaveCount(6)
       await expect(shelf.locator('.patch').nth(1).locator('[data-stitched="true"]')).toHaveCount(0)
-      await expect(shelf.getByText('Locked · After 3')).toBeVisible()
+      await expect(shelf.getByText('Unlocked')).toBeVisible()
       for (const button of await shelf.getByRole('button', { name: 'Replay' }).all()) {
         expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44)
       }
-      expect((await page.getByTestId('skip-training').boundingBox())!.height).toBeGreaterThanOrEqual(44)
+      // Free Ops is already unlocked here (it opens with the launchpad), so there is nothing left to skip.
+      await expect(page.getByTestId('skip-training')).toHaveCount(0)
       await page.screenshot({ path: info.outputPath(`patch-shelf-${vp}.png`) })
     })
 

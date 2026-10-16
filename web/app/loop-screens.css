@@ -364,3 +364,28 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
     min-height: 100%;
   }
 }
+
+/* Mining: minimal chrome. Money and clock stay out of the way, the arrows are gone, and every control is dark glass over the world instead of white cards. */
+.mining-screen .laser-chrome__chips .scene-chip[data-testid="mining-francs-chip"] { display: none; }
+.mining-screen .laser-chrome__clock { color: #eef2f6; display: grid; place-items: center; }
+.mining-screen .laser-hud .scene-dock-arrow,
+.mining-screen .laser-hud .scene-dock-rule { display: none !important; }
+.mining-screen .laser-chrome .settings-cog,
+.mining-screen .laser-chrome__clock,
+.mining-screen .laser-chrome__chips .scene-chip,
+.mining-screen .laser-hud .scene-dock,
+.mining-screen .laser-order.scene-dock-word,
+.mining-screen .laser-hud .scene-dock-primary,
+.mining-screen .laser-hud .scene-dock-word {
+  background: rgba(14, 22, 34, 0.66) !important;
+  color: #eef2f6 !important;
+  border: 1px solid rgba(159, 183, 208, 0.45) !important;
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35) !important;
+}
+.mining-screen .laser-hud .scene-dock { padding: 4px; gap: 6px; }
+.mining-screen .laser-hud .scene-dock-primary { background: rgba(47, 111, 168, 0.85) !important; }
+.mining-screen .laser-hud .scene-dock-primary * , .mining-screen .laser-hud .scene-dock-word * { color: inherit !important; }
+.mining-screen .laser-order *, .mining-screen .laser-dock__lines, .mining-screen .laser-dock__lines > span { color: #eef2f6; }
+.mining-screen .laser-order [data-testid="mining-target-cue"] { color: #9fd6e4 !important; }

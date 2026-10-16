@@ -2,10 +2,10 @@ import SwiftUI
 import LandnamCore
 
 /// Mining steering pad, bottom-left, in the rover d-pad style (SSL-536).
-/// Up/down hold altitude, left/right hold speed. Mirrors web `MiningDPad`.
+/// Up/down hold altitude, left/right slide the ship along the sky.
 struct MiningDPad: View {
     var onAltitude: (Double) -> Void
-    var onSpeed: (Double) -> Void
+    var onSteer: (Double) -> Void
     var obstacleAhead = false
     var tile: CGFloat = 52
     private static let ink = Theme.hex(0x1A2A3C)
@@ -16,9 +16,9 @@ struct MiningDPad: View {
         VStack(spacing: 0) {
             pad("chevron.up", obstacleAhead ? "Climb, obstacle ahead" : "Climb", corners: [.topLeading, .topTrailing], emphasized: obstacleAhead) { onAltitude($0 ? -1 : 0) }
             HStack(spacing: 0) {
-                pad("chevron.left", "Slow down", corners: [.topLeading, .bottomLeading]) { onSpeed($0 ? -1 : 0) }
+                pad("chevron.left", "Move left", corners: [.topLeading, .bottomLeading]) { onSteer($0 ? -1 : 0) }
                 Color.clear.frame(width: tile, height: tile).accessibilityHidden(true)
-                pad("chevron.right", "Speed up", corners: [.topTrailing, .bottomTrailing]) { onSpeed($0 ? 1 : 0) }
+                pad("chevron.right", "Move right", corners: [.topTrailing, .bottomTrailing]) { onSteer($0 ? 1 : 0) }
             }
             pad("chevron.down", "Descend", corners: [.bottomLeading, .bottomTrailing]) { onAltitude($0 ? 1 : 0) }
         }
@@ -111,5 +111,39 @@ struct LaserGauge: View {
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(low ? Self.brick : Self.ink, lineWidth: 2))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Laser capacity \(charge) of \(cap)")
+    }
+}
+
+
+/// Cargo hold chip: tap to jettison anything you picked up by mistake (one unit, or the lot of a mineral).
+struct CargoMenu: View {
+    let field: MiningField
+    let onJettison: (String, Bool) -> Void
+    private static let ink = Theme.hex(0x1A2A3C)
+
+    var body: some View {
+        Menu {
+            if field.cargo.isEmpty {
+                Text("Hold empty")
+            }
+            ForEach(field.cargo.keys.sorted(), id: \.self) { id in
+                let n = field.cargo[id, default: 0]
+                let name = Minerals.byId[id]?.name ?? id
+                Button("Jettison 1 \(name)") { onJettison(id, false) }
+                if n > 1 { Button("Jettison all \(name) (\(n))", role: .destructive) { onJettison(id, true) } }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "shippingbox.fill")
+                Text("HOLD \(field.cargoUnits)/\(field.cargoCapacity)").tracking(1.1)
+                Image(systemName: "arrow.down.to.line")
+            }
+            .font(AppFont.display(14))
+            .foregroundStyle(field.isFull ? Theme.hex(0x9B3B32) : Self.ink)
+            .padding(.horizontal, 12).frame(minHeight: 44)
+            .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hex(0xF4F1EA, 0.94)))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(field.isFull ? Theme.hex(0x9B3B32) : Self.ink, lineWidth: 2))
+        }
+        .accessibilityLabel("Cargo hold \(field.cargoUnits) of \(field.cargoCapacity). Jettison cargo.")
     }
 }

@@ -67,7 +67,16 @@ final class MiningScene: SKScene {
     }
     required init?(coder: NSCoder) { fatalError() }
 
-    private var beamX: CGFloat { min(96, max(72, size.width * 0.18)) }
+    private var baseBeamX: CGFloat { min(96, max(72, size.width * 0.18)) }
+    /// d-pad left/right slides the ship (and its beam) along the sky; the ground keeps scrolling at its own pace.
+    private var shipShift: CGFloat = 0
+    private var steerInput = 0.0
+    private var maxShift: CGFloat { max(0, min(260, size.width * 0.34)) }
+    private var beamX: CGFloat { baseBeamX + shipShift }
+    /// Ship centre limits: under the top HUD row, and a belly's clearance above the ground, so up and down always have room (phones included).
+    private var ceilingCenterY: CGFloat { size.height - 64 }
+    private var floorCenterY: CGFloat { surfaceY + 34 }
+    private var didSeedAltitude = false
     /// Ground is the bottom third (min 150pt) so there is sky to fly in (SSL-536).
     /// Ground line. Phones keep a clear control strip under the deposits so the d-pad and gauge never cover them (SSL-538).
     private var surfaceY: CGFloat {
@@ -86,6 +95,10 @@ final class MiningScene: SKScene {
         dust = []
         clouds = []
         addChild(world)
+        if !didSeedAltitude {
+            didSeedAltitude = true
+            altitude = (floorCenterY + ceilingCenterY) / 2 - shipY
+        }
         buildSky()
         buildGround()
         buildChips()
@@ -393,7 +406,11 @@ final class MiningScene: SKScene {
         let layout = Landscape.layout(palette.landscape, key: landscapeKey)
         midW = CGFloat(layout.period) * px
         // Short (phone landscape) skies get lower terrain so the ship can clear it under the HUD.
-        let ts: CGFloat = size.height < 520 ? 0.6 : 1
+        var ts: CGFloat = size.height < 520 ? 0.6 : 1
+        // Every obstacle must be climbable: its top stays a ship-length under the ceiling.
+        let rawMax = layout.pieces.map { p in (Landscape.pieceHeight[p.kind] ?? 48) * px * CGFloat(p.scale) * 0.92 }.max() ?? 1
+        let climbable = max(24, ceilingCenterY - 14 - surfaceY - 14 - 18)
+        ts = min(ts, climbable / max(1, rawMax))
         obstacles = layout.pieces.map { p in
             let h = Landscape.pieceHeight[p.kind] ?? 48
             return (CGFloat(p.x) * px, 64 * px * CGFloat(p.scale) * ts * 0.9, (h * px * CGFloat(p.scale) * 0.92 - h * 0.04 * px - 4) * ts, p.kind)
@@ -409,7 +426,7 @@ final class MiningScene: SKScene {
                 node.xScale = px * CGFloat(p.scale) * ts * (p.flip ? -1 : 1)
                 node.yScale = px * CGFloat(p.scale) * ts
                 node.position = CGPoint(x: CGFloat(c) * midW + CGFloat(p.x) * px, y: surfaceY - 4 - (Landscape.pieceHeight[p.kind] ?? 48) * 0.04 * px)
-                node.color = LaserPalette.sk(layout.tint)
+                node.color = LaserPalette.sk(Self.legible(layout.tint))
                 node.colorBlendFactor = CGFloat(layout.shade)
                 mid.addChild(node)
             }
@@ -428,6 +445,16 @@ final class MiningScene: SKScene {
         }
     }
 
+    /// Obstacles must read against a dark sky: lift near-black tints toward a pale stone so the silhouette shows.
+    private static func legible(_ hex: UInt32) -> UInt32 {
+        let r = Double((hex >> 16) & 255), g = Double((hex >> 8) & 255), b = Double(hex & 255)
+        let lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+        guard lum < 0.5 else { return hex }
+        let k = 0.55 * (0.5 - lum) / 0.5 + 0.2
+        func mix(_ c: Double, _ t: Double) -> UInt32 { UInt32(max(0, min(255, c + (t - c) * k))) }
+        return (mix(r, 150) << 16) | (mix(g, 160) << 8) | mix(b, 175)
+    }
+
     /// Deposits sit buried in the soil under the beam line, far apart so one pass shows one or two.
     private func buildChips() {
         let live = field.nodes.filter { !$0.isDepleted }.sorted { ($0.x + $0.y) < ($1.x + $1.y) }
@@ -441,7 +468,7 @@ final class MiningScene: SKScene {
             let chip = SKSpriteNode(texture: a)
             a.filteringMode = .nearest
             chip.size = a.size()
-            chip.setScale(px * 0.45)   // compact seam markers; labels remain at full size
+            chip.setScale(px * 0.7)   // compact seam markers; labels remain at full size
             let tag = Self.depositTag("\(Minerals.byId[n.mineralId]?.name ?? n.mineralId) · \(Minerals.byId[n.mineralId]?.symbol ?? "") ×1")
             tag.setScale(1 / px)
             tag.name = "ore-label"
@@ -558,6 +585,8 @@ final class MiningScene: SKScene {
     // MARK: play
 
     func setScroll(_ input: Double) { scrollInput = max(-1, min(1, input)) }
+    /// d-pad / keys: -1 left, 0 hold, 1 right. Moves the ship; it never changes ground speed.
+    func setSteer(_ input: Double) { steerInput = max(-1, min(1, input)) }
     /// d-pad / keys: -1 climb, 0 hold, 1 descend. The ship stays level.
     func setClimb(_ input: Double) { climbInput = max(-1, min(1, input)) }
     var isFiring: Bool { clock < flashUntil }
@@ -570,6 +599,13 @@ final class MiningScene: SKScene {
         run(.sequence([.wait(forDuration: 0.5), .run { [weak self] in self?.setScroll(0) }]), withKey: "nudge")
     }
 
+    /// Drop cargo overboard so a wrong pick-up never leaves the hold stuck full. `all` empties that mineral.
+    func jettison(_ mineralId: String, all: Bool = false) {
+        guard field.jettison(mineralId, all: all) > 0 else { return }
+        onFeedback?("Jettisoned \(Minerals.byId[mineralId]?.name ?? mineralId)")
+        onChange?(field)
+    }
+
     func refill() {
         field.recharge(field.chargeCap)
         onChange?(field)
@@ -578,7 +614,7 @@ final class MiningScene: SKScene {
     func fireLaser() { fire(at: CGPoint(x: beamX, y: surfaceY)) }
 
     func fire(at _: CGPoint) {
-        let hit = nodeSprites.first { abs($0.value.position.x - beamX) < 40 }
+        let hit = nodeSprites.min { abs($0.value.position.x - beamX) < abs($1.value.position.x - beamX) }.flatMap { abs($0.value.position.x - beamX) < 56 ? $0 : nil }
         let outcome = field.strike(nodeId: hit?.key)
         flashBeam(hit: {
             switch outcome {
@@ -652,7 +688,7 @@ final class MiningScene: SKScene {
         let cue: String?
         if let (mineralId, distance) = nearest {
             let name = Minerals.byId[mineralId]?.name ?? mineralId.capitalized
-            cue = distance < 40 ? "\(name.uppercased()) · FIRE NOW" : "\(name.uppercased()) · WAIT"
+            cue = distance < 56 ? "\(name.uppercased()) · FIRE NOW" : "\(name.uppercased()) · WAIT"
         } else {
             cue = nil
         }
@@ -747,9 +783,14 @@ final class MiningScene: SKScene {
             if let sprite = plume as? SKSpriteNode, !reducedMotion { sprite.texture = flameFrames[Int(clock * 10) % 2] }
         }
         // Altitude (SpriteKit is y-up: positive climbs). Clamp between sky ceiling and just above ground.
-        altitude += CGFloat(-climbInput) * 180 * CGFloat(dt)
-        let ceiling = size.height - (size.height < 520 ? 100 : 64) - shipY   // stay under the HUD
-        altitude = max(surfaceY + 56 - shipY, min(ceiling, altitude))
+        altitude += CGFloat(-climbInput) * 150 * CGFloat(dt)
+        let ceiling = ceilingCenterY - shipY   // stay under the HUD
+        altitude = max(floorCenterY - shipY, min(ceiling, altitude))
+        shipShift = max(0, min(maxShift, shipShift + CGFloat(steerInput) * 130 * CGFloat(dt)))
+        ship.position.x = beamX
+        beam.position.x = beamX
+        spark.position.x = beamX
+        opsBrackets.position.x = shipShift
         if bumpCooldown > 0 { bumpCooldown -= dt }
         if triggerHeld, clock >= nextShotAt {
             nextShotAt = clock + Self.fireCooldown
@@ -805,9 +846,9 @@ final class MiningScene: SKScene {
     override func mouseUp(with event: NSEvent) { fireLaser() }
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 49 || event.keyCode == 3 { fireLaser() } // space, F
-        if event.keyCode == 123 || event.keyCode == 0 { setScroll(-1) }
-        if event.keyCode == 124 || event.keyCode == 2 { setScroll(1) }
+        if event.keyCode == 123 || event.keyCode == 0 { setSteer(-1) }
+        if event.keyCode == 124 || event.keyCode == 2 { setSteer(1) }
     }
-    override func keyUp(with event: NSEvent) { setScroll(0) }
+    override func keyUp(with event: NSEvent) { setSteer(0) }
     #endif
 }

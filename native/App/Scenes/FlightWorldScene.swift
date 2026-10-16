@@ -54,7 +54,7 @@ struct FlightWorldScene: View {
 
     private func asteroid(w: CGFloat, h: CGFloat, t: Double) -> some View {
         let p = CGFloat(min(1, max(0, progress)))
-        let k = pixelScale(min(w * 0.30, h * 0.46) * (0.55 + 0.45 * p), native: 48)
+        let k = pixelScale(min(w * 0.20, h * 0.34) * (0.55 + 0.45 * p), native: 48)
         let side = 48 * k
         let x = w * (1.15 - 0.33 * p)
         return Art.view("base/kit/asteroid-pixel.png")
@@ -65,7 +65,7 @@ struct FlightWorldScene: View {
 
     private func rocket(w: CGFloat, h: CGFloat, t: Double) -> some View {
         // space-rocket.png is 44x72, nose up, the core stage without side boosters (they stay on Earth). Rotated 90 degrees clockwise it points right; the flame trails behind.
-        let k = pixelScale(min(w * 0.30, 260), native: 72)
+        let k = pixelScale(min(w * 0.22, h * 0.38), native: 72)
         let len = 72 * k, thick = 44 * k
         let frame = reduceMotion ? 0 : Int(t * 12) % 3
         return ZStack {

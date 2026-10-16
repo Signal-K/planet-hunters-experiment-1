@@ -624,7 +624,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           aria-expanded={guideOpen}
           onClick={() => setGuideOpen(o => !o)}
         >
-          <HubClockWidget />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
         </button>
         <div className="laser-chrome__chips">
           <span className="scene-chip" data-testid="mining-francs-chip">{formatCurrency(francs, { compact: true })}</span>

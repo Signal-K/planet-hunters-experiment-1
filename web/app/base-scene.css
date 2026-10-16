@@ -68,3 +68,9 @@
   .hub-mission-status { padding: 0; border: 0; background: none; }
   .hub-mission-status__text { display: none; }
 }
+
+/* Narrow windows: the "No mission in progress" text only crowds the structure labels above it, so keep the button alone and lift it clear of them. */
+@media (max-width: 699px) {
+  .hub-mission-status { padding: 0; border: 0; background: none; margin-bottom: 10px; }
+  .hub-mission-status__text { display: none; }
+}

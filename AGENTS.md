@@ -59,6 +59,15 @@ Base scene
 Platforms
 14. Native must match web behavior and appearance. For EACH acceptance slice, implement web, then native iOS/iPadOS and macOS before starting another feature. Compare the same state side by side. Shared SwiftUI code does not prove every destination works; explicitly record each destination checked or blocked.
 
+## Live preview in the editor (Simple Browser)
+
+Liam watches agent work in the Cursor/VS Code Simple Browser on `http://localhost:3001` (`make up`). Next dev HMR reloads it on every save. To make it also show the page you are editing:
+- Claude Code: automatic, a PostToolUse hook in `.claude/settings.json` runs `scripts/preview-target.mjs` on every edit.
+- Codex, Cursor and others (no hook): after editing a screen or component, run `node scripts/preview-target.mjs <edited file or /game/route>`. Do this when you start on a screen and whenever you switch to another one.
+- Liam opens `http://localhost:3001/game/hub?follow=1` once (`?follow=0` stops it). `web/components/dev/DevFollow.tsx` (dev only) then navigates that tab to the last previewed route via `/api/dev/follow`.
+- Every screen and every Hub-only state must be reachable by URL: a gameplay screen is a `/game/<screen>` route (`web/lib/game-screens.ts`), and Hub overlays take query params (`/game/hub?menu=1`, `?building=<kind>`, read in `HubScreen.tsx`). A new scene or overlay must be deep-linkable and added to the map in `scripts/preview-target.mjs`; never make it reachable only by clicking through ephemeral state.
+- Use the same dev server for your own checks when you can; do not start a second one on another port for the same checkout.
+
 ## Priority order (highest wins)
 
 1. The user's latest instruction and latest approved specs.

@@ -39,6 +39,10 @@ import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SCENE_NAMES } from '@/lib/ui-strings'
 
+function hubQuery(): URLSearchParams {
+  return new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search)
+}
+
 const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market', 'control-station'])
 
 /**
@@ -115,8 +119,10 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const [placeNote, setPlaceNote] = useState<string | null>(null)
   const surfaceRef = useRef<HTMLDivElement | null>(null)
   const [dockStop, setDockStop] = useState(0)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
+  // Hub-only UI state is addressable by URL (`/game/hub?menu=1`, `?building=hangar`) so tooling can
+  // deep-link to it. Client-only screen, so reading location during init is safe.
+  const [menuOpen, setMenuOpen] = useState(() => hubQuery().has('menu'))
+  const [activeBuilding, setActiveBuilding] = useState<string | null>(() => hubQuery().get('building'))
   const [rollingOut, setRollingOut] = useState(() => consumeRocketRolloutPending())
   const finishRollout = useCallback(() => setRollingOut(false), [])
   // The pad stays empty unless a mission or launch is in progress (docs/STYLE.md rule 6). Rollout draws its own rocket.

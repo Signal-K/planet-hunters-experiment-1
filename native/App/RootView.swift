@@ -46,10 +46,7 @@ struct RootView: View {
         .overlay(alignment: .top) {
             if !store.welcomePending, store.screen != .mining, store.screen != .landing, store.screen != .intro,
                let coach = FlightPlan.coach(store.player, screen: store.screen, includeHidden: true) {
-                CoachStrip(coach: coach)
-                    .frame(maxWidth: 560)
-                    .padding(.horizontal, 8)
-                    .padding(.top, 68)
+                CoachPlacement(coach: coach)
             }
         }
         .tint(Theme.accent)

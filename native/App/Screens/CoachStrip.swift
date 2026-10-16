@@ -190,3 +190,21 @@ struct HangarModulesPanel: View {
         .padding(16)
     }
 }
+
+
+/// Where the coach floats. Landscape phones have a free band between the gear/clock and the francs chips, so it sits there
+/// instead of covering Back, target and stat cards below the chips; portrait keeps the strip under the chip row.
+struct CoachPlacement: View {
+    let coach: FlightPlan.Coach
+    var body: some View {
+        GeometryReader { geo in
+            let landscapePhone = geo.size.height < 500 && geo.size.width > 640
+            CoachStrip(coach: coach)
+                .frame(maxWidth: landscapePhone ? min(430, geo.size.width - 520) : 560)
+                .padding(.horizontal, 8)
+                .padding(.top, landscapePhone ? 8 : 68)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        }
+        .allowsHitTesting(true)
+    }
+}

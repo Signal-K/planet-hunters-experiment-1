@@ -98,9 +98,11 @@ struct HubScreen: View {
     /// Idle base: says nothing is in progress and starts a new mission (web `hub-mission-status`).
     private func missionStatus(compact: Bool) -> some View {
         HStack(spacing: 8) {
-            Text(compact ? "NO MISSION" : "NO MISSION IN PROGRESS")
-                .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.hudInk)
-                .padding(.leading, 14)
+            if !compact {
+                Text("NO MISSION IN PROGRESS")
+                    .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.hudInk)
+                    .padding(.leading, 14)
+            }
             Button { store.go(.missions) } label: {
                 Text("NEW MISSION").font(AppFont.display(14)).tracking(1.1)
                     .foregroundStyle(Theme.hudPanel)

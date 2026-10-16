@@ -607,7 +607,9 @@
     flex-direction: column;
     overflow-y: auto;
   }
-  .wellSlot { flex: none; height: 200px; min-height: 200px; }
+  /* A wide window onto the instrument image, not a postage stamp: the well fills the width. */
+  .wellSlot { flex: none; display: block; height: clamp(240px, 40vh, 400px); min-height: 240px; }
+  .well { width: 100%; height: 100%; aspect-ratio: auto; max-width: none; max-height: none; }
   .command { order: 1; }
   .controls { order: 2; }
   .controls,
@@ -658,9 +660,15 @@
 
 @media (orientation: landscape) and (max-height: 520px) {
   .body { top: 52px; padding-bottom: var(--ln-s-1); }
+  /* Wide enough that no label is cut: EXPOSURE wraps under ZOOM and FOCUS, and the verdicts stack. */
   .stage {
-    grid-template-columns: 156px minmax(0, 1fr) 176px;
+    grid-template-columns: 200px minmax(0, 1fr) 232px;
   }
+  .knobRow { flex-wrap: wrap; justify-content: center; gap: var(--ln-s-1) 16px; }
+  .knob { width: auto; min-width: 56px; }
+  .knobLabel, .switchLabel { letter-spacing: 0; white-space: nowrap; }
+  .answers { grid-template-columns: minmax(0, 1fr); gap: var(--ln-s-1); }
+  .commandInput { min-width: 0; text-overflow: ellipsis; }
   .controlGrid { gap: var(--ln-s-1); }
   .controls, .command { padding: var(--ln-s-1); }
   .knob { width: 44px; }
@@ -732,4 +740,8 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--iv-ink);
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .knob { width: auto; min-width: 56px; }
 }

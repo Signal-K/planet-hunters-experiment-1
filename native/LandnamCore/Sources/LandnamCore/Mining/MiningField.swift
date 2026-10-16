@@ -99,6 +99,16 @@ public struct MiningField: Equatable, Sendable {
         return .hit(nodeId: id, remaining: nodes[i].hp)
     }
 
+    /// Throw cargo overboard (SSL-611 playtest: a wrong pick-up must never strand the hold). Returns units dropped; costs nothing.
+    @discardableResult
+    public mutating func jettison(_ mineralId: String, all: Bool = false) -> Int {
+        let have = cargo[mineralId, default: 0]
+        guard have > 0 else { return 0 }
+        let drop = all ? have : 1
+        if have - drop <= 0 { cargo[mineralId] = nil } else { cargo[mineralId] = have - drop }
+        return drop
+    }
+
     public mutating func recharge(_ amount: Int = 1) { charge = min(chargeCap, charge + amount) }
     /// Hull clipped terrain (SSL-536): costs charge, never ends the run.
     public mutating func bump(_ cost: Int = 1) { charge = max(0, charge - cost) }

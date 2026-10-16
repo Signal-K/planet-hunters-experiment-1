@@ -32,5 +32,38 @@
       "Read(./.env)",
       "Read(./web/.env*)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/preview-target.mjs\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && (make up >/tmp/landnam-make-up.log 2>&1 &) ; echo 'Landnam stack starting (make up). Live preview: open http://localhost:3001/game/hub?follow=1 in the Simple Browser (Cmd+Shift+P, Simple Browser: Show); it follows every edit.'"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && make down >/tmp/landnam-make-down.log 2>&1 || true"
+          }
+        ]
+      }
+    ]
   }
 }

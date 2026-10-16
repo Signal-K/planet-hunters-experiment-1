@@ -149,15 +149,15 @@ struct MiningScreen: View {
                 switch press.key {
                 case .upArrow: scene?.setClimb(down ? -1 : 0)
                 case .downArrow: scene?.setClimb(down ? 1 : 0)
-                case .leftArrow: scene?.setScroll(down ? -1 : 0)
-                case .rightArrow: scene?.setScroll(down ? 1 : 0)
+                case .leftArrow: scene?.setSteer(down ? -1 : 0)
+                case .rightArrow: scene?.setSteer(down ? 1 : 0)
                 case .space: scene?.setTrigger(down)
                 default:
                     switch press.characters.lowercased() {
                     case "w": scene?.setClimb(down ? -1 : 0)
                     case "s": scene?.setClimb(down ? 1 : 0)
-                    case "a": scene?.setScroll(down ? -1 : 0)
-                    case "d": scene?.setScroll(down ? 1 : 0)
+                    case "a": scene?.setSteer(down ? -1 : 0)
+                    case "d": scene?.setSteer(down ? 1 : 0)
                     case "f": scene?.setTrigger(down)
                     default: return .ignored
                     }
@@ -179,9 +179,12 @@ struct MiningScreen: View {
         let compact = narrow || short
         let zones = HUDZones.standard
         let trainingCue = store.player.flightPlan.currentTry == "mining" ? "Fire on a labelled seam" : nil
-        let order = MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue)
-            .frame(maxWidth: 220)
-            .onLongPressGesture { showGuide = true }
+        let order = VStack(alignment: .leading, spacing: 6) {
+            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue)
+                .onLongPressGesture { showGuide = true }
+            CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
+        }
+        .frame(maxWidth: 220)
         return ZStack {
             VStack(alignment: .leading, spacing: 8) {
                 HudGearClock(onSettings: { showSettings = true })
@@ -199,11 +202,11 @@ struct MiningScreen: View {
             }
 
             HudChips(francs: store.player.francs)
-                .padding(.trailing, insets.trailing + zones.topRight.inset + 52).padding(.top, insets.top + zones.topRight.inset)
+                .padding(.trailing, insets.trailing + zones.topRight.inset + 64).padding(.top, insets.top + zones.topRight.inset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 
             // Phones: compact pad and gauge in the clear strip under the ground deposits.
-            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSpeed: { scene?.setScroll($0) }, obstacleAhead: obstacleAhead, tile: short ? 44 : compact ? 52 : 56)
+            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSteer: { scene?.setSteer($0) }, obstacleAhead: obstacleAhead, tile: short ? 44 : compact ? 52 : 56)
                 .padding(.leading, insets.leading + 16)
                 .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 16))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)

@@ -18,41 +18,43 @@
   min-width: 56px;
   min-height: 56px;
   padding: 0;
-  border: 2px solid #1a2a3c;
-  background: #f4f1ea;
-  color: #1a2a3c;
+  border: 1px solid rgba(159, 183, 208, 0.45);
+  background: rgba(14, 22, 34, 0.62);
+  color: #eef2f6;
   display: grid;
   place-items: center;
   cursor: pointer;
-  box-shadow: 0 2px 0 #1a2a3c;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
 }
-.pad:active { background: #d7e6f7; color: #2f6fa8; transform: translateY(1px); box-shadow: none; }
+.pad:active { background: rgba(47, 111, 168, 0.75); color: #fff; transform: translateY(1px); box-shadow: none; }
 .pad:disabled { opacity: 0.45; cursor: default; }
 .pad:focus-visible { outline: 2px solid #2f6fa8; outline-offset: 2px; }
-.obstacleAhead { background: var(--ln-bp-blue-soft); border-color: var(--ln-bp-blue); box-shadow: 0 0 0 3px var(--ln-bp-blue-soft), 0 2px 0 #1a2a3c; }
+.obstacleAhead { background: rgba(47, 111, 168, 0.8); border-color: #9fd6e4; box-shadow: 0 0 0 3px rgba(159, 214, 228, 0.35); }
 .up { grid-area: up; border-radius: 14px 14px 0 0; }
 .left { grid-area: left; border-radius: 14px 0 0 14px; }
 .right { grid-area: right; border-radius: 0 14px 14px 0; }
 .down { grid-area: down; border-radius: 0 0 14px 14px; }
-.center { grid-area: hub; width: 100%; height: 100%; background: #f4f1ea; }
+.center { grid-area: hub; width: 100%; height: 100%; background: rgba(14, 22, 34, 0.62); }
 
 .gauge {
   position: absolute;
-  left: 50%;
-  bottom: calc(92px + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
+  right: 12px;
+  top: calc(64px + env(safe-area-inset-top));
   z-index: 6;
-  width: min(280px, 60vw);
+  width: min(190px, 46vw);
   padding: 8px 12px 10px;
-  border: 2px solid #1a2a3c;
+  border: 1px solid rgba(159, 183, 208, 0.45);
   border-radius: 14px;
-  background: rgba(244, 241, 234, 0.94);
-  color: #1a2a3c;
+  background: rgba(14, 22, 34, 0.7);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  color: #eef2f6;
 }
 .gaugeHead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
 .gaugeLabel { font: 800 14px/1 var(--ln-font-display, system-ui); letter-spacing: 0.08em; text-transform: uppercase; }
 .gaugeValue { font: 700 14px/1 var(--ln-font-display, system-ui); font-variant-numeric: tabular-nums; }
-.track { position: relative; height: 12px; border-radius: 6px; background: #c9d3de; overflow: hidden; }
+.track { position: relative; height: 12px; border-radius: 6px; background: rgba(255, 255, 255, 0.16); overflow: hidden; }
 .fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #2f6fa8, #3fb6c4); transition: width 160ms linear; }
 .recharge { position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent); animation: sweep 420ms linear infinite; }
 .gauge[data-firing] .fill { filter: brightness(1.2); }
@@ -66,12 +68,11 @@
 
 /* Phones: compact pad and gauge tucked into the corners beside/above the dock, clear of deposits (SSL-538). */
 @media (max-width: 600px) {
+  .gauge { top: calc(132px + env(safe-area-inset-top)); width: 150px; padding: 6px 10px 8px; }
   .dpad { grid-template-columns: 52px 52px 52px; grid-template-rows: 52px 52px 52px; bottom: calc(68px + env(safe-area-inset-bottom)); left: 12px; }
   .pad { min-width: 52px; min-height: 52px; }
-  .gauge { left: auto; right: 12px; transform: none; width: 150px; bottom: calc(68px + env(safe-area-inset-bottom)); padding: 6px 10px 8px; }
 }
 @media (max-height: 520px) {
-  .dpad { grid-template-columns: 44px 44px 44px; grid-template-rows: 44px 44px 44px; bottom: calc(60px + env(safe-area-inset-bottom)); left: 12px; }
+  .dpad { grid-template-columns: 44px 44px 44px; grid-template-rows: 44px 44px 44px; bottom: calc(8px + env(safe-area-inset-bottom)); left: 12px; }
   .pad { min-width: 44px; min-height: 44px; }
-  .gauge { left: auto; right: 12px; transform: none; width: 170px; bottom: calc(60px + env(safe-area-inset-bottom)); padding: 6px 10px 8px; }
 }
