@@ -39,7 +39,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.addInitScript(([u]) => {
         if (localStorage.getItem('seeded-offline')) return
         localStorage.setItem('seeded-offline', '1')
-        localStorage.setItem(`landnam-game-state-v1:user:${u}`, JSON.stringify({ screen: 'hub', player: { placed: ['launchpad'], missionsDone: 1, francs: 50_000 } }))
+        localStorage.setItem(`landnam-game-state-v1:user:${u}`, JSON.stringify({ screen: 'hub', player: { placed: ['launchpad'], missionsDone: 1, francs: 20_000_000 } }))
       }, [uid])
       page.setDefaultTimeout(20_000)
       await page.goto('/game/hub')
@@ -47,10 +47,12 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.getByPlaceholder('Email').fill(EMAIL)
       await page.getByPlaceholder('Password').fill(PASSWORD)
       await page.getByRole('button', { name: /return to base/i }).click()
-      await page.waitForTimeout(10000)
       await page.screenshot({ path: info.outputPath(`offline-0-loaded-${vp}.png`) })
       await expect(page.getByTestId('building-launchpad')).toBeVisible({ timeout: 40_000 })
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
+      // The shell is cached by the production service worker on the first online visit; wait for it before going offline.
+      await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined))
+      await page.waitForTimeout(3000)
       await page.screenshot({ path: info.outputPath(`offline-1-online-${vp}.png`) })
 
       await context.setOffline(true)
@@ -59,11 +61,11 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       const countBefore = (await placed(page, uid))?.length ?? 0
 
       // Build one more structure the way a player does, with the network off.
-      const plot = page.locator('[data-testid^="build-plot-"]').first()
-      await plot.dispatchEvent('click')
-      const option = page.locator('[data-testid^="build-option-"]').first()
-      await option.dispatchEvent('click')
-      await page.getByTestId('build-confirm').dispatchEvent('click').catch(() => {})
+      await page.getByTestId('hub-build-btn').dispatchEvent('click')
+      await page.waitForTimeout(1500)
+      await page.locator('[data-testid^="build-option-"]').first().dispatchEvent('click')
+      await page.waitForTimeout(800)
+      await page.locator('[data-testid^="build-plot-"], [data-testid^="build-site-"], [data-testid="build-place-underground"]').first().dispatchEvent('click')
       await expect.poll(async () => (await placed(page, uid))?.length ?? 0, { timeout: 20_000 }).toBeGreaterThan(countBefore)
       await page.screenshot({ path: info.outputPath(`offline-2-built-offline-${vp}.png`) })
 

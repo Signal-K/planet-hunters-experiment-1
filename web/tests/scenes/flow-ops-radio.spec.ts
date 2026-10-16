@@ -53,13 +53,20 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       const geometry = await page.evaluate(() => {
         const plan = document.querySelector<HTMLElement>('[data-testid=flight-plan]')!.getBoundingClientRect()
         const screen = document.querySelector<HTMLElement>('.game-screen-area')!.getBoundingClientRect()
-        return { planWidth: plan.width, planTop: plan.top, screenHeight: screen.height }
+        return { planWidth: plan.width, planTop: plan.top, planLeft: plan.left, screenHeight: screen.height }
       })
-      expect(geometry.planTop).toBeGreaterThanOrEqual(60)
+      // Narrow screens put the strip under the HUD row; wide ones share the row, between the gear/clock and the francs chips.
+      if (size.width < 600) expect(geometry.planTop).toBeGreaterThanOrEqual(60)
+      else expect(geometry.planLeft).toBeGreaterThanOrEqual(190)
       expect(geometry.planWidth).toBeLessThanOrEqual(Math.min(560, size.width - 16) + 1)
       await page.getByTestId('flight-plan-hide').click()
       await expect(page.getByTestId('flight-plan')).toHaveCount(0)
       await expect(page.getByTestId('flight-plan-chip')).toHaveText('?')
+      const chip = (await page.getByTestId('flight-plan-chip').boundingBox())!
+      expect(chip.width).toBeGreaterThanOrEqual(44)
+      expect(chip.height).toBeGreaterThanOrEqual(44)
+      await page.screenshot({ path: info.outputPath(`ops-chip-${vp}.png`) })
+      expect(chip.x).toBeLessThan(size.width / 3)
       expect(Math.abs(await page.locator('.game-screen-area').evaluate(el => el.getBoundingClientRect().height) - geometry.screenHeight)).toBeLessThanOrEqual(1)
       await page.getByTestId('flight-plan-chip').click()
       await expect(page.getByTestId('flight-plan')).toBeVisible()

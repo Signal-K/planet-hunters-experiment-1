@@ -99,20 +99,18 @@ struct HangarScreen: View {
             if !hasMission {
                 Button { store.go(.missions) } label: {
                     Text("CHOOSE MISSION").font(AppFont.display(14)).tracking(1.1)
-                        .foregroundStyle(Theme.hudPanel)
+                        .foregroundStyle(Glass.cyan)
                         .padding(.horizontal, 16).frame(minHeight: 44)
-                        .background(Capsule().fill(Theme.blue))
-                        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+                        .overlay(Capsule().stroke(Glass.cyan, lineWidth: 1.5))
                 }
                 .buttonStyle(.plain)
             } else {
                 Color.clear.frame(width: 4, height: 1)
             }
         }
-        .foregroundStyle(Theme.hudInk)
+        .foregroundStyle(Color.white)
         .padding(4)
-        .background(Capsule().fill(Theme.hudPanel))
-        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+        .glowPanel(Capsule())
         .accessibilityElement(children: .contain)
     }
 
@@ -174,18 +172,17 @@ struct HangarScreen: View {
                                 Text("BUILD").font(AppFont.display(14)).tracking(1.1)
                                 Text(cost).font(.system(size: 14, weight: .semibold))
                             }
-                            .foregroundStyle(Theme.hudPanel)
+                            .foregroundStyle(Glass.cyan)
                             .padding(.horizontal, 16).frame(minHeight: 44)
-                            .background(Capsule().fill(Theme.blue))
-                            .overlay(Capsule().stroke(Theme.ink, lineWidth: 1))
+                            .overlay(Capsule().stroke(Glass.cyan, lineWidth: 1.5))
                         }
                     }
-                    .foregroundStyle(Theme.ink)
+                    .foregroundStyle(Color.white)
                     .padding(.horizontal, short ? 4 : 12)
                     .padding(.vertical, short ? 4 : 12)
                     .frame(maxWidth: .infinity, minHeight: short ? 84 : (narrow ? 120 : 148))
-                    .background(RoundedRectangle(cornerRadius: 16).fill(note == nil ? Theme.paper : Theme.hex(0xaab3c2)))
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.ink, lineWidth: 1))
+                    .glowPanel(RoundedRectangle(cornerRadius: 16), active: note == nil)
+                    .opacity(note == nil ? 1 : 0.8)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(note.map { "\(vehicle.name), \($0)" } ?? "Build \(vehicle.name) for \(cost)")

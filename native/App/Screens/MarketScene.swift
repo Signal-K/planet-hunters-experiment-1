@@ -37,7 +37,7 @@ struct MarketScreen: View {
                 .blendMode(.multiply)
                 .allowsHitTesting(false)
                 panel(compact: short || geo.size.width < 500)
-                    .frame(maxWidth: wide ? 720 : .infinity, maxHeight: .infinity)
+                    .frame(maxWidth: wide ? 720 : .infinity, maxHeight: .infinity, alignment: .top)
                     .padding(.top, max((short ? 56 : 76) + coachInset, safe.top + 56 + coachInset))
                     .padding(.bottom, short ? max(68, safe.bottom + 60) : 88)
                     .padding(.leading, max(12, safe.leading + 8))
