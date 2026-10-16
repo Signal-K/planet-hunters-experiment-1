@@ -57,11 +57,13 @@ export default function MarketScreen({
   const [tab, setTab] = useState<Tab>('sell')
   const [armed, setArmed] = useState(false)
   const [targets, setTargets] = useState<Record<string, number>>({})
-  const board: SpotQuote[] = spotBoard({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot }, clientId)
+  const prices: SpotQuote[] = spotBoard({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot }, clientId)
+  // Selling leads with what you hold; the other tabs list the whole board by price.
+  const board = tab === 'sell' ? [...prices].sort((a, b) => Number(b.held > 0) - Number(a.held > 0)) : prices
   const refined = REFINERY_RECIPES.map(r => ({ recipe: r, qty: refinedGoods[r.id] ?? 0 })).filter(r => r.qty > 0)
   const alertFor = (id: string) => priceAlerts.find(a => a.mineralId === id)
-  const sellAllValue = board.reduce((sum, q) => sum + q.spot * q.held, 0) + refined.reduce((sum, r) => sum + r.recipe.output.price * r.qty, 0)
-  const hasCargo = board.some(q => q.held > 0) || refined.length > 0
+  const sellAllValue = prices.reduce((sum, q) => sum + q.spot * q.held, 0) + refined.reduce((sum, r) => sum + r.recipe.output.price * r.qty, 0)
+  const hasCargo = prices.some(q => q.held > 0) || refined.length > 0
 
   useEffect(() => {
     if (!armed) return
@@ -72,8 +74,8 @@ export default function MarketScreen({
   function sellAll() {
     if (!hasCargo) return
     if (!armed) { setArmed(true); return }
-    captureGameEvent('market_sell_all', { mineral_count: board.filter(q => q.held > 0).length + refined.length, total_value: sellAllValue })
-    for (const q of board) if (q.held > 0) onSell(q.id, q.held)
+    captureGameEvent('market_sell_all', { mineral_count: prices.filter(q => q.held > 0).length + refined.length, total_value: sellAllValue })
+    for (const q of prices) if (q.held > 0) onSell(q.id, q.held)
     for (const r of refined) onSellRefined(r.recipe.id, r.qty)
     setArmed(false)
   }
