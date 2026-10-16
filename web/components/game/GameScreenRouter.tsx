@@ -148,10 +148,9 @@ function ScreenBody({
   // `initialSubsurface` prop used to.
   useEffect(() => {
     if (screen === 'hub-subsurface') game.setSubsurfaceView(true)
-    // Any other screen except the Mission Log tray (which sits over whichever
-    // half of the Base is showing) clears it, so a stale flag from a visit to
+    // Any other screen clears it, so a stale flag from a visit to
     // Subsurface can't leak into /game/launchpad (SSL-476).
-    else if (screen !== 'mission-history') game.setSubsurfaceView(false)
+    else game.setSubsurfaceView(false)
   }, [screen, game.setSubsurfaceView])
 
   switch (screen) {
@@ -172,11 +171,7 @@ function ScreenBody({
 
     case 'build':
     case 'hub':
-    case 'hub-subsurface':
-    case 'mission-history': {
-      // Mission Log is a tray over the still-mounted Base (SSL-347): same
-      // HubScreen element position, so opening/closing it never remounts or
-      // re-frames the landscape.
+    case 'hub-subsurface': {
       const unlockOpts = {
         refineryUnlocked: !!game.player.refineryUnlocked,
         academyResearched: !!game.player.academyResearched,
@@ -285,24 +280,23 @@ function ScreenBody({
           onSubsurfaceChange={open => game.go(open ? 'hub-subsurface' : 'hub')}
         />
       )
-      return (
-        <>
-          {hub}
-          {screen === 'mission-history' && (
-            <PageSurface tray testId="mission-history-tray" ariaLabel="Mission Log">
-              <MissionHistoryScreen
-                records={game.player.completedMissions ?? []}
-                clients={game.catalog.clients}
-                targets={game.catalog.targets}
-                missions={game.catalog.missions}
-                player={game.player}
-                onBack={() => game.goBack('hub')}
-              />
-            </PageSurface>
-          )}
-        </>
-      )
+      return hub
     }
+
+    case 'mission-history':
+      // Mission Log is its own page with its own panel, not a tray over the Base.
+      return (
+        <PageSurface testId="mission-history-page" ariaLabel="Mission Log">
+          <MissionHistoryScreen
+            records={game.player.completedMissions ?? []}
+            clients={game.catalog.clients}
+            targets={game.catalog.targets}
+            missions={game.catalog.missions}
+            player={game.player}
+            onBack={() => game.goBack('hub')}
+          />
+        </PageSurface>
+      )
 
     case 'instrument-hub':
       return (

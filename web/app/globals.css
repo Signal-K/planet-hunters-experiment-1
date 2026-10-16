@@ -3049,7 +3049,7 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 .flight-plan-slot > * { pointer-events: auto; }
 /* Wide enough to share the top row: sit between the gear/clock/help cluster and the francs chips, so the strip never covers Back, target or stat cards below. */
 @media (min-width: 600px) {
-  .flight-plan-slot { top: calc(env(safe-area-inset-top, 0px) + 6px); left: 200px; right: 170px; }
+  .flight-plan-slot { top: calc(env(safe-area-inset-top, 0px) + 6px); left: 200px; right: 240px; }
 }
 /* On wide and landscape screens the launch review keeps its plan strip at the top, so the coach strip moves to the bottom instead of covering it. */
 @media (min-width: 701px), (orientation: landscape) {
@@ -3879,6 +3879,8 @@ button.hub-orbital-network__status:disabled { cursor: default; }
    screen (mining overflow, build confirm). It now takes its own row, so no
    guidance element can sit on the control it points at. */
 .flight-plan-chip { position: relative; right: auto; bottom: auto; align-self: flex-end; margin: 0; }
+/* The "?" chip sits in the top-left corner under the gear/clock cluster: empty sky, clear of buildings, labels and the dock. */
+.flight-plan-slot > .flight-plan-chip { position: fixed; left: 8px; right: auto; top: calc(env(safe-area-inset-top, 0px) + 68px); bottom: auto; width: 44px; padding: 0; border-radius: 999px; font-size: 18px; z-index: 40; }
 
 /* SSL-430: the sync chip (offline outbox state) sat on top of the primary
    button on debrief and over the Flight Plan text. On phones it now lives in

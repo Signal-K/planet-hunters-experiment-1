@@ -290,7 +290,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         // taller hit area below covers the gantry without creating an
         // oversized box that shifts the building label away from the structure.
         w: BUILDING_W.launchpad,
-        callout: launchpadCallout,
+        callout: menuOpen ? undefined : launchpadCallout,
         onClick: () => onFocusBuilding('launchpad'),
       }
     }
@@ -396,10 +396,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     { id: 'build', icon: 'build', primary: true, label: 'Build', detail: 'New structures, a control station, satellites', onSelect: () => { setPlaceNote(null); setEditMode(true) } },
     { id: 'contracts', icon: 'mission', primary: true, label: 'New mission', detail: 'Client contracts and free runs', onSelect: () => onOpenScene('missions') },
     { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: player.placed.includes('market') ? 'Sell what you have mined' : 'Build the Exchange to sell ore', onSelect: () => { if (player.placed.includes('market') && onOpenMarket) onOpenMarket(); else { setPlaceNote(null); setEditMode(true) } } },
-    ...(player.placed.includes('launchpad') ? [{ id: 'hangar', icon: 'hangar' as const, label: 'Hangar', detail: 'Ships and their parts', onSelect: () => onOpenScene('hangar') }] : []),
     ...(player.placed.includes('control-station') ? [{ id: 'control-station', icon: 'station' as const, label: 'Control station', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }] : []),
     { id: 'mission-log', icon: 'log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
-    { id: 'subsurface', icon: 'subsurface', label: 'Subsurface', detail: 'Silo and underground rooms', onSelect: () => setSubsurface(true) },
     ...(player.freeOperations ? [{ id: 'sites', icon: 'sites' as const, label: 'Sites', detail: 'Places to survey and settle', onSelect: () => onOpenScene('surface-ops') }] : []),
   ]
 

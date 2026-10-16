@@ -344,11 +344,11 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
 }
 
 @media (max-width: 767px) {
-  [data-testid="mission-history-tray"] {
+  [data-testid="mission-history-page"] {
     display: flex;
     flex-direction: column;
   }
-  [data-testid="mission-history-tray"] .ln-page-surface__content {
+  [data-testid="mission-history-page"] .ln-page-surface__content {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;

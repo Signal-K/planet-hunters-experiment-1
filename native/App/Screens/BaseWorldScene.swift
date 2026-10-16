@@ -179,6 +179,13 @@ struct BaseWorldScene: View {
                         .frame(width: 26 * u, height: 16 * u)
                         .frame(minWidth: 44, minHeight: 44)
                         .contentShape(Rectangle())
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(Theme.blue, style: StrokeStyle(lineWidth: 2, dash: [5, 3]))
+                                .background(Theme.blue.opacity(0.14), in: RoundedRectangle(cornerRadius: 6))
+                                .shadow(color: Theme.blue.opacity(0.55), radius: 7)
+                                .modifier(ShaftPulse())
+                        )
                 }
                 .buttonStyle(.plain)
                 .position(x: world.shaftX, y: world.ground + 5 * u - 8 * u)
@@ -282,5 +289,15 @@ struct BaseWorldScene: View {
             .position(x: CGFloat(site.x) * px, y: world.ground - 22 - 3 * px)
             .accessibilityLabel("Place \(kindLabel(kind)) here")
         }
+    }
+}
+
+
+/// Slow opacity pulse on the lift-head highlight, matching the web shaft button.
+private struct ShaftPulse: ViewModifier {
+    @State private var on = false
+    func body(content: Content) -> some View {
+        content.opacity(on ? 1 : 0.55)
+            .onAppear { withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) { on = true } }
     }
 }

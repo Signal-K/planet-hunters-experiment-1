@@ -26,10 +26,8 @@ struct BaseMenu: View {
 
     private var rest: [Item] {
         var rows: [Item] = []
-        if store.player.placed.contains("launchpad") { rows.append(Item(id: "hangar", label: "Hangar", detail: "Ships and their parts", symbol: "house.lodge", run: { store.go(.hangar) })) }
         if store.player.placed.contains("control-station") { rows.append(Item(id: "control-station", label: "Control station", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
         rows.append(Item(id: "mission-log", label: "Mission log", detail: "Past runs and what they paid", symbol: "list.bullet.rectangle", run: { store.go(.missionHistory) }))
-        rows.append(Item(id: "subsurface", label: "Subsurface", detail: "Silo and underground rooms", symbol: "arrow.down.to.line", run: { store.go(.hubSubsurface) }))
         if store.player.freeOperations { rows.append(Item(id: "sites", label: "Sites", detail: "Places to survey and settle", symbol: "globe", run: { store.go(.surfaceOps) })) }
         return rows
     }
@@ -48,7 +46,7 @@ struct BaseMenu: View {
                                 .overlay(Capsule().stroke(Theme.ink, lineWidth: 1))
                         }.buttonStyle(.plain)
                     }
-                    grid(primary)
+                    grid(primary, single: true)
                     grid(rest)
                 }
                 .padding(16)
@@ -61,8 +59,8 @@ struct BaseMenu: View {
         .accessibilityIdentifier("base-menu")
     }
 
-    private func grid(_ items: [Item]) -> some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 8)], spacing: 8) {
+    private func grid(_ items: [Item], single: Bool = false) -> some View {
+        LazyVGrid(columns: single ? [GridItem(.flexible())] : [GridItem(.adaptive(minimum: 260), spacing: 8)], spacing: 8) {
             ForEach(items) { item in
                 Button { onClose(); item.run() } label: {
                     HStack(spacing: 12) {

@@ -55,6 +55,6 @@ describe('MissionHistoryScreen', () => {
         } as never}
       />,
     )
-    expect(markup).toMatch(/>0<\/span><span><strong>MISSIONS COMPLETED/)
+    expect(markup).toMatch(/>0<\/span><strong>MISSIONS COMPLETED/)
   })
 })

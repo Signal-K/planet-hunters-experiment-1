@@ -58,6 +58,7 @@
 .detail { font: 500 14px var(--ln-font-body, inherit); opacity: 0.8; }
 @media (min-width: 560px) {
   .list { grid-template-columns: 1fr 1fr; }
+  .mainList { grid-template-columns: 1fr; }
 }
 @media (orientation: landscape) and (max-height: 640px) {
   .scrim { align-items: center; }

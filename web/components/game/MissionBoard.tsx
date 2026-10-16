@@ -160,6 +160,10 @@ function boardClock(): { now: number; orionidsNow: number } {
   return { now, orionidsNow: now }
 }
 
+function PickIcon() {
+  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 4 20 10M4 20l9-9M9 5c3-2 7-1 10 2M5 9c-2 3-1 7 2 10" /></svg>
+}
+
 export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onAccept, onClose, onOpenLog, onOpenBuild,
   tutorialBlocked, onboardingComplete,
@@ -172,6 +176,7 @@ export default function MissionBoard({
   const { now, orionidsNow } = boardClock()
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
   const events = useMemo(() => eventsBoard(now, player.badges, orionidsNow), [now, orionidsNow, player.badges])
+  const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
   const count = cards.length
   const index = count === 0 ? 0 : Math.min(selectedIndex, count - 1)
   const card = cards[index]
@@ -195,6 +200,7 @@ export default function MissionBoard({
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
   const tabButtons = <>
     <button type="button" className={styles.tab} data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
+    {player.freeOperations && <button type="button" className={styles.tab} data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => setTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
     <button type="button" className={styles.tab} data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => setTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
     <button type="button" className={styles.tab} data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => setTab('events')}>
       <StarIcon /><span className={styles.tabLabel}>Events</span>
@@ -272,6 +278,22 @@ export default function MissionBoard({
       <nav className={styles.tabs} aria-label="Mission board">{tabButtons}</nav>
       <div className={styles.stage}>
         <div className={styles.body}>
+          {tab === 'free' && <div className={styles.chain} data-testid="mission-board-free">
+            <header className={styles.chainHead}>
+              <div>
+                <h2>Your own mining run</h2>
+                <p>No client, no daily limit. Pick what to mine, keep it or sell it at market price.</p>
+              </div>
+            </header>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 8, marginTop: 8 }}>
+              {freeRuns.map(run => <article key={run.id} data-testid={`free-run-${run.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 12, background: '#faf7f0', color: '#1a2a3c', border: '2px solid #1a2a3c', borderRadius: 6 }}>
+                <h3 style={{ margin: 0, font: '800 14px var(--ln-font-display)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{run.title}</h3>
+                <p style={{ margin: 0, font: '14px var(--ln-font-body)' }}>{Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}</p>
+                <button type="button" className={styles.take} onClick={() => onAccept(run.id)}>START RUN</button>
+              </article>)}
+              {freeRuns.length === 0 && <p className={styles.orderLock}>No free runs are available yet.</p>}
+            </div>
+          </div>}
           {tab === 'program' && <div className={styles.chain} data-testid="mission-board-program">
             <header className={styles.chainHead} data-testid="program-summary">
               <div>

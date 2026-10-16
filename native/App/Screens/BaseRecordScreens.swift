@@ -130,7 +130,7 @@ private enum IntroInk {
     static let cta = Color(red: 0x9F / 255, green: 0x4B / 255, blue: 0x5F / 255)
 }
 
-/// Completed work as illustrated destination cards above the live base. The base keeps the one dock.
+/// Completed work as illustrated destination cards on a page of their own.
 struct MissionHistoryScreen: View {
     @Environment(GameStore.self) private var store
     @State private var openKey: Int?
@@ -144,26 +144,22 @@ struct MissionHistoryScreen: View {
         let ordered = MissionLog.entries(store.player)
         let missionEntries = ordered.filter { !$0.isTransit }.count
         let lifetime = max(store.player.missionsDone, missionEntries)
-        MissionRecordOverlay(bare: true) {
+        MissionRecordPage(title: "Mission log") {
             VStack(alignment: .leading, spacing: 24) {
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text("\(lifetime)").font(AppFont.display(32)).foregroundStyle(Theme.blue)
-                    Text("MISSIONS COMPLETED").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.ink)
-                    Spacer(minLength: 8)
+                HStack(alignment: .top, spacing: 8) {
+                    stat(lifetime, "MISSIONS COMPLETED")
+                    stat(ordered.filter { !$0.isTransit && !$0.isProgram }.count, "CLIENT RUNS")
+                    stat(ordered.filter { $0.isProgram }.count, "OWN RUNS")
+                    stat(ordered.filter { $0.isTransit }.count, "TRANSITS")
                     Button { store.go(.hub) } label: {
                         Text("BACK").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.ink)
-                            .padding(.horizontal, 16).frame(minHeight: 44)
+                            .padding(.horizontal, 14).frame(minWidth: 44, minHeight: 44)
                             .background(RecordCream.paper)
-                            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+                            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Back")
                 }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(RecordCream.paper)
-                .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
-                .overlay(alignment: .top) { Rectangle().fill(Theme.blue).frame(height: 6) }
 
                 if ordered.isEmpty {
                     Text("No completed missions yet. Choose a contract from the Mission Board to start your log.")
@@ -180,6 +176,16 @@ struct MissionHistoryScreen: View {
             .frame(maxWidth: 720, alignment: .leading)
             .frame(maxWidth: .infinity)
         }
+    }
+
+    private func stat(_ n: Int, _ label: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("\(n)").font(AppFont.display(28)).foregroundStyle(Theme.blue)
+            Text(label).font(AppFont.display(14, "Bold")).tracking(1.0).foregroundStyle(Theme.ink).lineLimit(2).minimumScaleFactor(0.7)
+        }
+        .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+        .background(RecordCream.paper)
+        .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
     }
 
     private func place(_ r: MissionLogEntry) -> (id: String, type: TargetType, archetype: TargetArchetype?) {
@@ -305,33 +311,42 @@ struct NarrativeLedgerScreen: View {
     private func color(_ s: LedgerState) -> Color { s == .live ? Theme.teal : s == .adapt ? Theme.blueBright : Theme.textMuted }
 }
 
-/// These record screens keep the same live scene, clock, resource chips and dock as the base.
-struct MissionRecordOverlay<Content: View>: View {
-    var bare = false
+/// A record screen is its own page with its own panel: the base world as a dimmed backdrop, a chunky framed panel
+/// with a title plaque hanging over its top edge.
+struct MissionRecordPage<Content: View>: View {
+    @Environment(GameStore.self) private var store
+    var title: String
     @ViewBuilder var content: Content
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                HubScreen()
-                ScrollView {
-                    if bare {
-                        content
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 24)
-                    } else {
-                        VStack(alignment: .leading, spacing: 16) { content }
-                            .padding(20)
-                            .frame(maxWidth: 680, alignment: .leading)
-                            .background(RecordCream.paper)
-                            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
-                            .overlay(alignment: .top) { Rectangle().fill(Theme.blue).frame(height: 6) }
-                            .padding(4)
-                            .frame(maxWidth: .infinity, alignment: geo.size.width > 700 ? .trailing : .center)
+        ZStack {
+            GeometryReader { geo in
+                BaseWorldScene(
+                    biome: EarthBiome(rawValue: store.player.earthBiome) ?? .mountains,
+                    placed: [], plots: [:], levels: [:],
+                    camera: BaseCamera(x: BaseWorld(w: geo.size.width, h: geo.size.height).homeX([]), depth: 0),
+                    showsControls: false,
+                    onStructure: { _ in }, onShaft: {}, onBuildSilo: {}
+                )
+                .allowsHitTesting(false)
+            }
+            .ignoresSafeArea()
+            LinearGradient(colors: [Theme.ink.opacity(0.35), Theme.ink.opacity(0.65)], startPoint: .top, endPoint: .bottom).ignoresSafeArea().allowsHitTesting(false)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) { content }
+                    .padding(.horizontal, 16).padding(.top, 36).padding(.bottom, 16)
+                    .frame(maxWidth: 780, alignment: .leading)
+                    .background(RecordCream.paper)
+                    .overlay(Rectangle().stroke(Theme.ink, lineWidth: 4))
+                    .overlay(alignment: .top) {
+                        Text(title.uppercased()).font(AppFont.display(16, "Bold")).tracking(2.4).foregroundStyle(RecordCream.paper)
+                            .padding(.horizontal, 28).padding(.vertical, 10)
+                            .background(Theme.blue)
+                            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 4))
+                            .offset(y: -22)
                     }
-                }
-                .padding(.horizontal, bare ? 0 : 16)
-                .padding(.top, geo.size.height < 500 ? 64 : 88)
-                .padding(.bottom, 88)
+                    .shadow(color: Theme.ink, radius: 0, x: 0, y: 6)
+                    .padding(.horizontal, 16).padding(.top, 88).padding(.bottom, 112)
+                    .frame(maxWidth: .infinity)
             }
         }
     }

@@ -1,11 +1,16 @@
 'use client'
 
 import type { CompletedMissionRecord, Player } from '@/lib/game-types'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Client, Mission, Target } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
 import { transitLogRecords } from '@/lib/mission-log'
+import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
+import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
+import { BASE_CAMERA_HOME } from '@/lib/scene/base-camera'
+import { kitScale } from '@/lib/scene/base-site'
+import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 import DestinationLandscape, { type VistaTarget } from '@/components/game/screens/DestinationLandscape'
 import styles from './MissionHistoryScreen.module.css'
 
@@ -40,15 +45,43 @@ export default function MissionHistoryScreen({ records, targets = [], missions =
   const missionEntries = ordered.filter(record => record.kind !== 'transit').length
   const lifetimeCompleted = Math.max(player?.missionsDone ?? 0, missionEntries)
 
+  const { grade } = useTimeOfDay()
+  const [view, setView] = useState({ w: 1440, h: 900 })
+  // The panel paints first; the world behind it starts after, so opening the log never waits on the scene.
+  const [backdropReady, setBackdropReady] = useState(false)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setBackdropReady(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
+  useEffect(() => {
+    const measure = () => setView({ w: window.innerWidth, h: window.innerHeight })
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
+  const clientRuns = ordered.filter(record => record.kind !== 'transit' && record.kind !== 'program').length
+  const ownRuns = ordered.filter(record => record.kind === 'program').length
+  const transits = ordered.filter(record => record.kind === 'transit').length
+
   return (
     <section className={styles.screen} data-testid="mission-history-screen">
+      <div className={styles.backdrop} aria-hidden="true">
+        {backdropReady && <BaseWorldCanvas px={kitScale(view)} camera={BASE_CAMERA_HOME} time={grade} biome={sanitizeEarthBiome(player?.earthBiome)} />}
+      </div>
       <div className={styles.shell}>
-        <div className={styles.toolbar}>
-          <p className={styles.summary}><span className={styles.count}>{lifetimeCompleted}</span><span><strong>MISSIONS COMPLETED</strong></span></p>
-          <button type="button" className={styles.backButton} onClick={onBack}>Back</button>
+        <div className={styles.plaque}>Mission log</div>
+        <button type="button" className={styles.backButton} onClick={onBack} aria-label="Back to base">Back</button>
+        <div className={styles.stats}>
+          <p className={styles.stat}><span className={styles.count}>{lifetimeCompleted}</span><strong>MISSIONS COMPLETED</strong></p>
+          <p className={styles.stat}><span className={styles.count}>{clientRuns}</span><strong>CLIENT RUNS</strong></p>
+          <p className={styles.stat}><span className={styles.count}>{ownRuns}</span><strong>OWN RUNS</strong></p>
+          <p className={styles.stat}><span className={styles.count}>{transits}</span><strong>TRANSITS</strong></p>
         </div>
         {ordered.length === 0 ? (
-          <div className={styles.empty}>No completed missions yet. Choose a contract from the Mission Board to start your log.</div>
+          <div className={styles.empty}>
+            <div className={styles.emptySlots} aria-hidden="true"><span /><span /><span /></div>
+            No completed missions yet. Choose a contract from the Mission Board to start your log.
+          </div>
         ) : (
           <div className={styles.list}>
             {ordered.map((record, index) => {
