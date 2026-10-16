@@ -19,6 +19,14 @@ async function signIn() {
   return { shared, landnam }
 }
 
+/** Local only: clears the account's saved game so every viewport starts from the same server state. */
+async function resetRemoteSave(userId: string) {
+  for (const url of [SHARED, LANDNAM]) if (!['localhost', '127.0.0.1'].includes(new URL(url).hostname)) throw new Error(`refusing to run against ${url}`)
+  const su = await json(await fetch(`${LANDNAM}/api/collections/_superusers/auth-with-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identity: 'liam@skinetics.tech', password: 'ThisIsATestPassword' }) }))
+  const list = await json(await fetch(`${LANDNAM}/api/collections/game_states/records?filter=${encodeURIComponent(`user = "${userId}"`)}`, { headers: { Authorization: su.token } }))
+  for (const item of list.items) await fetch(`${LANDNAM}/api/collections/game_states/records/${item.id}`, { method: 'DELETE', headers: { Authorization: su.token } })
+}
+
 const remoteState = async (token: string, userId: string) => {
   const res = await json(await fetch(`${LANDNAM}/api/collections/game_states/records?filter=${encodeURIComponent(`user = "${userId}"`)}`, { headers: { Authorization: token } }))
   return res.items as Array<{ id: string; state: { player?: { placed?: string[] } } }>
@@ -31,6 +39,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test.setTimeout(120_000)
     const { landnam } = await signIn()
     const uid = landnam.record.id as string
+    await resetRemoteSave(uid)
     const before = await remoteState(landnam.token, uid)
     const browser = await chromium.launch({ args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
     try {
@@ -47,7 +56,6 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.getByPlaceholder('Email').fill(EMAIL)
       await page.getByPlaceholder('Password').fill(PASSWORD)
       await page.getByRole('button', { name: /return to base/i }).click()
-      await page.screenshot({ path: info.outputPath(`offline-0-loaded-${vp}.png`) })
       await expect(page.getByTestId('building-launchpad')).toBeVisible({ timeout: 40_000 })
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
       // The shell is cached by the production service worker on the first online visit; wait for it before going offline.
