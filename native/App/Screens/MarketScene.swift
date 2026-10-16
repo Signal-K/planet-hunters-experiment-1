@@ -5,6 +5,7 @@ import LandnamCore
 /// The built Exchange adds Buy (at a dealer markup) and per-mineral sell alerts.
 struct MarketScreen: View {
     @Environment(GameStore.self) private var store
+    @Environment(\.flatLayout) private var flat
     @State private var showSettings = false
     @State private var armed = false
     @State private var tab: Tab = .sell
@@ -114,11 +115,9 @@ struct MarketScreen: View {
             if tab != .sell && !exchangeBuilt {
                 locked
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(rows) { q in row(q, compact: compact) }
-                        if tab == .sell { ForEach(refinedLots) { refinedRow($0) } }
-                    }
+                Group {
+                    if flat { list.frame(maxHeight: .infinity, alignment: .top) }   // ImageRenderer draws nothing inside a ScrollView
+                    else { ScrollView { list } }
                 }
                 .overlay(alignment: .top) { Rectangle().fill(Theme.ink).frame(height: 1) }
             }
@@ -129,6 +128,13 @@ struct MarketScreen: View {
         .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Marketplace")
+    }
+
+    private var list: some View {
+        VStack(spacing: 0) {
+            ForEach(rows) { q in row(q, compact: false) }
+            if tab == .sell { ForEach(refinedLots) { refinedRow($0) } }
+        }
     }
 
     /// Selling leads with what you hold; the other tabs list the whole board by price.

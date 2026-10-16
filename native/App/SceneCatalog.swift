@@ -595,6 +595,28 @@ enum SceneCatalog {
             gs.player.tessClassifications = ["toi-4": TessClassification(subjectId: "toi-4", verdict: .planet, ranges: [], submittedAt: t0 - 3_600_000)]
             return MissionHistoryScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
         },
+        scene("mission-log-landscape", 402, w: 874) {
+            var gs = basePlayer()
+            gs.player.completedMissions = [CompletedMissionRecord(id: "m1", title: "Iron for the pad", targetId: "ceres", clientName: "Vulcan", targetName: "Ceres", completedAt: t0, runId: "r1", kind: .client),
+                                           CompletedMissionRecord(id: "m2", title: "Own survey run", targetId: "eros", clientName: nil, targetName: "Eros", completedAt: t0 - 86_400_000, runId: "r2", kind: .program)]
+            gs.player.transitSatelliteLaunchedAt = t0 - 200_000_000
+            gs.player.tessClassifications = ["toi-4": TessClassification(subjectId: "toi-4", verdict: .planet, ranges: [], submittedAt: t0 - 3_600_000)]
+            return MissionHistoryScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
+        },
+        scene("mission-log-desktop", 900, w: 1440) {
+            var gs = basePlayer()
+            gs.player.completedMissions = [CompletedMissionRecord(id: "m1", title: "Iron for the pad", targetId: "ceres", clientName: "Vulcan", targetName: "Ceres", completedAt: t0, runId: "r1", kind: .client),
+                                           CompletedMissionRecord(id: "m2", title: "Own survey run", targetId: "eros", clientName: nil, targetName: "Eros", completedAt: t0 - 86_400_000, runId: "r2", kind: .program)]
+            gs.player.transitSatelliteLaunchedAt = t0 - 200_000_000
+            gs.player.tessClassifications = ["toi-4": TessClassification(subjectId: "toi-4", verdict: .planet, ranges: [], submittedAt: t0 - 3_600_000)]
+            return MissionHistoryScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
+        },
+        scene("base-menu-phone", 874) { BaseMenu(onClose: {}, onBuild: {}).environment(GameStore(state: siloState(ore: 24))) },
+        scene("base-menu-desktop", 900, w: 1440) { BaseMenu(onClose: {}, onBuild: {}).environment(GameStore(state: siloState(ore: 24))) },
+        scene("hub-silo-surface-phone", 874) {
+            let world = BaseWorld(w: phone, h: 874)
+            return HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), startX: world.shaftFocusX, startDepth: 0).environment(GameStore(state: siloState(ore: 24)))
+        },
         scene("ledger-phone", 1900) { NarrativeLedgerScreen().environment(GameStore(state: GameState())).environment(\.flatLayout, true) },
     ] + baseWorldScenes }
 
