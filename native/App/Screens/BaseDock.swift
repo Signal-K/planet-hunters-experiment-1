@@ -14,11 +14,13 @@ struct BaseDock: View {
     var onNext: (() -> Void)?
     /// When set, Build runs this (in-scene placement) instead of opening the Build screen.
     var onBuild: (() -> Void)?
+    /// When set, the second base button is Menu (opens the base menu) instead of Hub.
+    var onMenu: (() -> Void)?
     /// When set, the first middle button is press-and-hold (true on press, false on release) instead of a tap. Mining Fire uses this.
     var holdFirst: ((Bool) -> Void)?
 
     private var middle: [(title: String, symbol: String, action: () -> Void)] {
-        items ?? [("Build", "hammer.fill", { if let onBuild { onBuild() } else { store.go(.build) } }), ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) })]
+        items ?? [("Build", "hammer.fill", { if let onBuild { onBuild() } else { store.go(.build) } }), onMenu.map { menu in ("Menu", "list.bullet", { menu() }) } ?? ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) })]
     }
 
     var body: some View {

@@ -52,6 +52,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       // The coach says "Tap the tower": that opens the contracts.
       await page.getByTestId('building-launchpad-hit').dispatchEvent('click')
       await page.getByTestId('builder-choose-contract').dispatchEvent('click')
+      await page.waitForTimeout(1500)
       if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/fresh-contracts-${vp}.png` })
       await page.locator('[data-testid^="mission-accept-"]').first().dispatchEvent('click')
       const launch = page.locator('[data-testid="launch-btn"], [data-testid="prepare-launch-btn"]').first()
@@ -60,7 +61,8 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/fresh-review-${vp}.png` })
       // The Launch button must be the thing under its own centre point: nothing (the coach strip) may cover it.
       const covered = await launch.evaluate(el => { const r = el.getBoundingClientRect(); const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !(top && (el === top || el.contains(top))) })
-      expect(covered, 'the Launch button is covered by another element').toBe(false)
+      const what = covered ? await launch.evaluate(el => { const r = el.getBoundingClientRect(); const t = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return t ? `${t.tagName}.${t.className} ${t.getAttribute('data-testid') ?? ''}` : 'none' }) : ''
+      expect(covered, `the Launch button is covered by ${what}`).toBe(false)
       await expect(launch).toBeEnabled()
       // The parts shop is closed until asked for.
       await expect(page.getByTestId('rocket-builder-options')).toHaveCount(0)

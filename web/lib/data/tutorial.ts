@@ -25,6 +25,7 @@ export interface TrainingTryStep {
  * named real game event completes a try. */
 export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-launchpad', try: 'mining', screen: 'launchpad', objective: 'Open client contracts', radio: 'The first try is a complete mine-and-return run.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
+  { id: 'mine-elsewhere', try: 'mining', screen: '*', objective: 'Go back to the base and tap the tower', radio: 'Client contracts open from the tower.', beacon: 'building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-intro', try: 'mining', screen: 'intro', objective: 'Choose where to build', radio: 'Pick a landscape for your base, then establish it. The launchpad comes next.', beacon: 'intro-begin', doneOn: 'mining-debriefed' },
   { id: 'mine-build', try: 'mining', screen: 'build', objective: 'Place the launchpad', radio: 'Tap the marked pad site. Every mission leaves from the pad.', beacon: 'build-plot-0|build-confirm', doneOn: 'mining-debriefed' },
   { id: 'mine-hub', try: 'mining', screen: 'hub', objective: 'Tap the tower', radio: 'Client contracts open from the tower.', beacon: 'building-launchpad', doneOn: 'mining-debriefed' },

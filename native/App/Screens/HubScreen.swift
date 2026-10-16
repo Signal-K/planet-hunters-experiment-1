@@ -10,6 +10,7 @@ struct HubScreen: View {
     var safeAreaOverride: EdgeInsets?
     var biome: EarthBiome?
     @State private var showSettings = false
+    @State private var menuOpen = false
     /// In-scene placement: pick an unlocked structure, then tap a free slot (the Build screen is this mode).
     @State private var placing: Bool
     @State private var picked: String?
@@ -86,9 +87,11 @@ struct HubScreen: View {
             BaseDock(tile: layout.tile, zones: zones.dock,
                      onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
-                     onBuild: { placeNote = nil; placing.toggle() })
+                     onBuild: { placeNote = nil; placing.toggle() },
+                     onMenu: { menuOpen = true })
                 .padding(.bottom, insets.bottom + zones.dock.bottomInset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            if menuOpen { BaseMenu(onClose: { menuOpen = false }) }
         }
     }
 

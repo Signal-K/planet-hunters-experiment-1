@@ -4953,7 +4953,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 .scene-chip.sync-chip:not(.sync-chip--floating) .sync-chip__label { display: inline; }
 .scene-chip.sync-chip:not(.sync-chip--floating) { min-width: max-content; }
 /* A phone's top row has no room for the words beside the balance: keep the dot (the label stays in aria-label and the tooltip). */
-@media (max-width: 430px) {
+@media (max-width: 430px), (orientation: landscape) and (max-height: 640px) {
   .scene-chip.sync-chip:not(.sync-chip--floating) { min-width: 44px; justify-content: center; padding-left: 0; padding-right: 0; }
   .scene-chip.sync-chip:not(.sync-chip--floating) .sync-chip__label { display: none !important; }
   .scene-chip.sync-chip:not(.sync-chip--floating) .sync-chip__dot { width: 12px; height: 12px; }

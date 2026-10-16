@@ -64,6 +64,8 @@ describe('FlightPlanSystem', () => {
     expect(trainingTryStep('part', 'hub')?.objective).toBe('Open the Hangar from Base')
     expect(trainingTryStep('scan', 'hub')?.objective).toBe('Open the Galaxy map')
     expect(trainingTryStep('mining', 'intro')?.objective).toBe('Choose where to build')
+    // A screen with no step of its own (Control Station, Market) points back at the tower, not at a contracts button that is not there.
+    expect(trainingTryStep('mining', 'instrument-hub')?.objective).toBe('Go back to the base and tap the tower')
     expect(trainingTryStep('mining', 'build')?.objective).toBe('Place the launchpad')
     expect(trainingTryStep('mining', 'hub')?.objective).toBe('Tap the tower')
     expect(trainingTryStep('mining', 'transit')?.objective).toBe('Fly the cargo home')

@@ -12,6 +12,7 @@ import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
 import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
 import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 import { BaseDock } from '@/components/game/hub/BaseDock'
+import { BaseMenuSheet, type BaseMenuItem } from '@/components/game/hub/BaseMenuSheet'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { useBaseCamera } from '@/lib/hooks/useBaseCamera'
 import { useBaseSeason, useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
@@ -114,6 +115,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const [placeNote, setPlaceNote] = useState<string | null>(null)
   const surfaceRef = useRef<HTMLDivElement | null>(null)
   const [dockStop, setDockStop] = useState(0)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
   const [rollingOut, setRollingOut] = useState(() => consumeRocketRolloutPending())
   const finishRollout = useCallback(() => setRollingOut(false), [])
@@ -362,6 +364,17 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     if (!option.affordable) { setPlaceNote(`${option.name} · ${option.reason ?? 'Not enough resources'}`); return }
     if (onPlaceStructure(option.id, plot)) { setPlaceNote(null); setEditMode(placementMode) } else setPlaceNote('That could not be placed. Try another slot.')
   }
+
+
+  const menuItems: BaseMenuItem[] = [
+    { id: 'contracts', label: 'Contracts', detail: 'Client orders that pay for a run', onSelect: () => onOpenScene('missions') },
+    ...(player.placed.includes('launchpad') ? [{ id: 'hangar', label: 'Hangar', detail: 'Ships and their parts', onSelect: () => onOpenScene('hangar') }] : []),
+    ...(player.placed.includes('market') && onOpenMarket ? [{ id: 'market', label: 'Exchange', detail: 'Sell what you have mined', onSelect: () => onOpenMarket() }] : []),
+    { id: 'mission-log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
+    { id: 'subsurface', label: 'Subsurface', detail: 'Silo and underground rooms', onSelect: () => setSubsurface(true) },
+    ...(player.freeOperations ? [{ id: 'sites', label: 'Sites', detail: 'Places to survey and settle', onSelect: () => onOpenScene('surface-ops') }] : []),
+    { id: 'control-station', label: 'Control station', detail: 'Telescope feeds and sky events', onSelect: () => onOpenScene('instrument-hub') },
+  ]
 
   return (
     <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px` } as React.CSSProperties}>
@@ -636,10 +649,15 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
                 onOpenScene(stops[next])
               }}
               onBuild={() => { setPlaceNote(null); setEditMode(value => !value) }}
-              onHub={() => onOpenScene('instrument-hub')}
+              hubLabel="Menu"
+              hubTestId="hub-menu-btn"
+              onHub={() => setMenuOpen(true)}
             />
           </div>
         </div>
+      )}
+      {menuOpen && (
+        <BaseMenuSheet onClose={() => setMenuOpen(false)} items={menuItems} />
       )}
     </div>
   )

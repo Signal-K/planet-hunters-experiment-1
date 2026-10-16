@@ -74,7 +74,7 @@ public enum FlightPlan {
             case .transit, .landing: return c("Fly the cargo home", "The order is only paid once the cargo reaches the debrief.")
             case .delivery: return c("Deliver the cargo", "The order is only paid once the cargo reaches the debrief.")
             case .launchpad: return c("Open client contracts", "The first try is a complete mine-and-return run.", go: .init(label: "CONTRACTS", screen: .missions))
-            default: return c("Open client contracts", "The first try is a complete mine-and-return run.", go: .init(label: "LAUNCHPAD", screen: .launchpad))
+            default: return c("Go back to the base and tap the tower", "Client contracts open from the tower.", go: .init(label: "BASE", screen: .hub))
             }
         case "scan":
             if loopScreens.contains(screen) { return coachForLoop(p, screen, kicker) }
