@@ -60,7 +60,7 @@ enum SceneCatalog {
         view.environment(store).environment(offlineFeed)
             .overlay(alignment: .top) {
                 if let c = FlightPlan.coach(store.player, screen: screen, includeHidden: true) {
-                    CoachStrip(coach: c).environment(store)
+                    CoachStrip(coach: c, screen: screen, summoned: .constant(false)).environment(store)
                         .frame(maxWidth: 560)
                         .padding(.horizontal, 8)
                         .padding(.top, 68)
@@ -76,6 +76,20 @@ enum SceneCatalog {
     static func exchangeState() -> GameState {
         var gs = starterState(); gs.player.francs = 12500
         gs.player.stash = ["iron": 14, "silicon": 6, "carbon": 3]; gs.screen = .market
+        gs.player.placed = ["launchpad", "market", "surface-silo"]
+        return gs
+    }
+
+    static func exchangeAlertState() -> GameState {
+        var gs = exchangeState()
+        let spot = Marketplace.spot("iron", player: gs.player, now: Date().timeIntervalSince1970 * 1000)
+        gs.player.priceAlerts = [PriceAlert(id: "alert-iron", mineralId: "iron", target: spot + 40),
+                                 PriceAlert(id: "alert-silicon", mineralId: "silicon", target: 1, firedAt: 1)]
+        return gs
+    }
+
+    static func exchangeLockedState() -> GameState {
+        var gs = exchangeState(); gs.player.placed = ["launchpad"]
         return gs
     }
 
@@ -371,6 +385,10 @@ enum SceneCatalog {
         scene("mission-events-phone", 874) {
             MissionsScreen(startTab: 2).environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },
+        scene("mission-free-run-phone", 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true
+            return MissionsScreen(startTab: 3).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true)
+        },
         scene("mission-events-live", 874) {
             MissionsScreen(startTab: 2).environment(GameStore(state: basePlayer(), clock: { wswNoon }))
         },
@@ -507,6 +525,14 @@ enum SceneCatalog {
         scene("mining-guide-landscape", 402, w: 874) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
         scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-landscape", 402, w: 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("exchange-desktop", 900, w: 1440) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("exchange-buy-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("exchange-alerts-phone", 844, w: 390) { MarketScreen(tab: .alerts).environment(GameStore(state: exchangeAlertState())).environment(\.flatLayout, true) },
+        scene("exchange-locked-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeLockedState())).environment(\.flatLayout, true) },
+        scene("coach-chip-phone", 844, w: 390) {
+            var gs = exchangeState(); gs.player.flightPlan.complete("mining")
+            return coached(MarketScreen(), gs, screen: .market).environment(\.flatLayout, true)
+        },
         scene("coach-exchange-landscape", 428, w: 926) {
             var gs = exchangeState(); gs.player.flightPlan.complete("mining")
             return coached(MarketScreen(), gs, screen: .market).environment(\.flatLayout, true)
@@ -561,7 +587,7 @@ enum SceneCatalog {
             gs = SurfaceOps.applyMined(gs, "moon-south-pole", mineral: "iron", amount: 12)
             return SurfaceOpsScreen(at: t0).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true)
         },
-        scene("mission-log-phone", 640) {
+        scene("mission-log-phone", 1400) {
             var gs = basePlayer()
             gs.player.completedMissions = [CompletedMissionRecord(id: "m1", title: "Iron for the pad", targetId: "ceres", clientName: "Vulcan", targetName: "Ceres", completedAt: t0, runId: "r1", kind: .client),
                                            CompletedMissionRecord(id: "m2", title: "Own survey run", targetId: "eros", clientName: nil, targetName: "Eros", completedAt: t0 - 86_400_000, runId: "r2", kind: .program)]

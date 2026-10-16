@@ -59,10 +59,11 @@
   gap: 8px;
   max-width: calc(100% - 24px);
   padding: 4px 4px 4px 16px;
-  border: 1px solid var(--ln-world-outline);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
   border-radius: 999px;
-  background: var(--ln-world-hull-lit);
-  color: var(--ln-world-outline);
+  background: linear-gradient(180deg, rgba(10, 18, 30, 0.85), rgba(3, 6, 12, 0.92));
+  box-shadow: 0 0 12px rgba(159, 214, 228, 0.35);
+  color: #9fd6e4;
   transform: translateX(-50%);
 }
 
@@ -97,20 +98,22 @@
   min-height: 148px;
   margin: 0;
   padding: 12px 16px;
-  border: 1px solid var(--ln-world-outline);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
   border-radius: 16px;
-  background: var(--ln-world-hull-lit);
-  color: var(--ln-world-outline);
+  background: linear-gradient(180deg, rgba(10, 18, 30, 0.82), rgba(3, 6, 12, 0.92));
+  box-shadow: 0 0 14px rgba(159, 214, 228, 0.35), inset 0 0 18px rgba(159, 214, 228, 0.08);
+  color: #9fd6e4;
   cursor: pointer;
   transition: transform 120ms ease, background 120ms ease;
 }
 
 .card[data-state='ready']:hover { transform: translateY(-2px); }
-.card[data-state='ready']:active { background: color-mix(in srgb, var(--ln-world-outline) 14%, var(--ln-world-hull-lit)); }
+.card[data-state='ready']:active { box-shadow: 0 0 22px rgba(159, 214, 228, 0.7); }
 
 .card:disabled {
   cursor: default;
-  background: color-mix(in srgb, var(--ln-world-hull-lit) 72%, var(--ln-world-outline));
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: none;
 }
 
 .card:disabled .vehicleIcon { opacity: 0.55; }
@@ -140,10 +143,11 @@
   min-width: 0;
   min-height: 44px;
   padding: 2px 16px;
-  border: 1px solid var(--ln-world-outline);
+  border: 1.5px solid #9fd6e4;
   border-radius: 999px;
-  background: var(--ln-world-trim-blue);
-  color: var(--ln-world-hull-lit);
+  background: rgba(159, 214, 228, 0.12);
+  box-shadow: 0 0 10px rgba(159, 214, 228, 0.4);
+  color: #fff;
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.08em;

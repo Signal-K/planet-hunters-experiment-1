@@ -316,6 +316,15 @@ public final class GameStore {
     public func collectRefined(_ recipeId: String) { apply(Refinery.applyCollect(state, recipeId: recipeId, now: now)) }
     public func sellRefined(_ recipeId: String, amount: Int) { apply(Refinery.applySell(state, recipeId: recipeId, amount: amount)) }
     public func sell(_ mineralId: String, amount: Int) { apply(Market.applySell(state, mineralId: mineralId, amount: amount, now: now)) }
+    public func buy(_ mineralId: String, amount: Int) { apply(Marketplace.applyBuy(state, mineralId: mineralId, amount: amount, now: now)) }
+    public func setPriceAlert(_ mineralId: String, target: Int) { apply(Marketplace.applySetAlert(state, mineralId: mineralId, target: target)) }
+    public func removePriceAlert(_ id: String) { apply(Marketplace.applyRemoveAlert(state, alertId: id)) }
+    /// Returns the alerts that fired this call so the caller can notify the player.
+    @discardableResult public func checkPriceAlerts() -> [PriceAlert] {
+        let due = Marketplace.dueAlerts(state.player, now: now)
+        if !due.isEmpty { apply(Marketplace.applyFireDue(state, now: now)) }
+        return due
+    }
     /// Fits a chosen part in a rocket-builder slot.
     @discardableResult public func installBuilderPart(_ slot: String, partId: String) -> Bool {
         let next = RocketBuilder.install(state, slot: slot, partId: partId)

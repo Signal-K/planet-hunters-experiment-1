@@ -236,6 +236,13 @@ enum LocalNotifications {
     static func requestProvisional() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .provisional]) { _, _ in }
     }
+    /// Delivers now (SSL-617 sell alerts). iOS shows it even when the app has moved to the background.
+    static func notifyNow(title: String, body: String, id: String) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .provisional]) { _, _ in }
+        let c = UNMutableNotificationContent(); c.title = title; c.body = body
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: c,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)))
+    }
     static func schedule(title: String, body: String, at ms: Double) {
         let c = UNMutableNotificationContent(); c.title = title; c.body = body
         let wait = max(1, ms / 1000 - Date().timeIntervalSince1970)

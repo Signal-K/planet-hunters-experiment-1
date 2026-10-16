@@ -13,6 +13,7 @@ import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
+import { notifyFiredAlert } from '@/lib/priceAlertNotify'
 import { captureGameEvent, captureScreenView, initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
@@ -193,6 +194,16 @@ function GameChrome({ children }: { children: ReactNode }) {
     const timer = window.setInterval(checkPriceAlerts, 30_000)
     return () => window.clearInterval(timer)
   }, [hasPriceAlerts, checkPriceAlerts, game.player.dailyEconomySnapshot])
+  const notifiedAlerts = useRef<Set<string>>(new Set((game.player.priceAlerts ?? []).filter(a => a.firedAt != null).map(a => `${a.id}:${a.firedAt}`)))
+  useEffect(() => {
+    for (const alert of game.player.priceAlerts ?? []) {
+      if (alert.firedAt == null) continue
+      const key = `${alert.id}:${alert.firedAt}`
+      if (notifiedAlerts.current.has(key)) continue
+      notifiedAlerts.current.add(key)
+      notifyFiredAlert(alert)
+    }
+  }, [game.player.priceAlerts])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {

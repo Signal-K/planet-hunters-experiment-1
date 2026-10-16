@@ -62,7 +62,15 @@ struct MissionsScreen: View {
             rail(portrait: portrait)
                 .padding(.top, railTop).padding(.leading, side)
 
-            if tab == 1 || tab == 2 {
+            if tab == 3 {
+                FreeRunBoard(runs: store.catalog.missions.filter { $0.id.hasPrefix("self-directed-") && !$0.locked }) { store.pickMission($0) }
+                    .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
+                    .padding(.top, portrait ? railTop + 64 : railTop)
+                    .padding(.leading, portrait ? side : side + 144)
+                    .padding(.trailing, max(insets.trailing, 12))
+                    .padding(.bottom, insets.bottom + 12)
+            } else if tab == 1 || tab == 2 {
                 ScrollView { if tab == 1 { ProgramRoadmap { archiveFocus = $0; showArchive = true }.padding(16) } else { EventsBoard().padding(16) } }
                     .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
@@ -124,6 +132,7 @@ struct MissionsScreen: View {
             railTab(0, "Contracts", "chart.line.uptrend.xyaxis", portrait: portrait)
             railTab(1, "Program", "list.clipboard", portrait: portrait)
             railTab(2, "Events", "star", portrait: portrait)
+            if store.player.freeOperations { railTab(3, "Free run", "scope", portrait: portrait) }
             Button { archiveFocus = nil; showArchive = true } label: {
                 Text("LOG").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
                     .frame(minWidth: portrait ? 56 : 132, minHeight: 44)
@@ -146,6 +155,43 @@ struct MissionsScreen: View {
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.ink, lineWidth: on ? 3 : 2))
         }
         .buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(on ? .isSelected : [])
+    }
+}
+
+/// Free Ops: start your own mining run with no client or daily limit (mirrors web `MissionBoard` Free run tab).
+private struct FreeRunBoard: View {
+    let runs: [Mission]
+    let onStart: (String) -> Void
+    @Environment(\.flatLayout) private var flat
+
+    var body: some View {
+        if flat { content } else { ScrollView { content } }
+    }
+
+    private var content: some View {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Your own mining run").font(AppFont.display(20)).foregroundStyle(Theme.ink)
+                Text("No client, no daily limit. Pick what to mine, keep it or sell it at market price.")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+                VStack(spacing: 8) {
+                    ForEach(runs, id: \.id) { run in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(run.title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+                            Text(run.requires.minerals.sorted { $0.key < $1.key }.map { "\($0.value) \(Minerals.byId[$0.key]?.name ?? $0.key)" }.joined(separator: ", "))
+                                .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                            Button { onStart(run.id) } label: {
+                                Text("START RUN").font(AppFont.display(14)).tracking(1.2).foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity, minHeight: 44)
+                                    .background(Theme.blue, in: RoundedRectangle(cornerRadius: 12))
+                            }.buttonStyle(.plain).accessibilityLabel("Start \(run.title)")
+                        }
+                        .padding(12)
+                        .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.ink, lineWidth: 2))
+                    }
+                    if runs.isEmpty { Text("No free runs are available yet.").font(AppFont.body(14)).foregroundStyle(Theme.textDim) }
+                }
+            }.padding(16)
     }
 }
 

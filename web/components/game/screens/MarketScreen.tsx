@@ -1,5 +1,6 @@
 'use client'
 
+import { requestAlertPermission } from '@/lib/priceAlertNotify'
 import { useEffect, useState } from 'react'
 import { BaseDock } from '@/components/game/hub/BaseDock'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
@@ -160,7 +161,7 @@ export default function MarketScreen({
                           <span className={styles.price} data-testid={`market-alert-target-${q.id}`}>{formatCurrency(targetFor(q), { compact: true })}</span>
                           <button type="button" className={styles.btn} aria-label={`Raise ${q.name} alert`} onClick={() => setTargets(t => ({ ...t, [q.id]: targetFor(q) + stepFor(q) }))}>+</button>
                         </div>
-                        <button type="button" className={styles.btn} data-testid={`market-alert-set-${q.id}`} onClick={() => { captureGameEvent('market_alert_set', { mineral_id: q.id, target: targetFor(q) }); onSetAlert(q.id, targetFor(q)) }}>Set</button>
+                        <button type="button" className={styles.btn} data-testid={`market-alert-set-${q.id}`} onClick={() => { captureGameEvent('market_alert_set', { mineral_id: q.id, target: targetFor(q) }); requestAlertPermission(); onSetAlert(q.id, targetFor(q)) }}>Set</button>
                         {alert && <button type="button" className={styles.btn} data-testid={`market-alert-clear-${q.id}`} aria-label={`Remove ${q.name} alert`} onClick={() => onRemoveAlert(alert.id)}>Clear</button>}
                       </>
                     )}

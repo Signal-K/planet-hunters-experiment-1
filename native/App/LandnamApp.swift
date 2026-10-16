@@ -17,6 +17,15 @@ struct LandnamApp: App {
 
     init() { AppFont.register() }
 
+    private func announcePriceAlerts() {
+        for alert in store.checkPriceAlerts() {
+            let name = Minerals.byId[alert.mineralId]?.name ?? alert.mineralId
+            LocalNotifications.notifyNow(title: "\(name) hit your price",
+                                         body: "Spot is at or above \(Economy.format(francs: alert.target)). Time to sell.",
+                                         id: "landnam-alert-\(alert.id)-\(Int(store.now))")
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             Group {
@@ -35,7 +44,14 @@ struct LandnamApp: App {
                     }
                 }
                 .onChange(of: auth.session) { _, s in services.attach(s) }
-                .onChange(of: scenePhase) { _, p in if p == .active { services.flush(); store.refreshDailyPool() } }
+                .onChange(of: scenePhase) { _, p in if p == .active { services.flush(); store.refreshDailyPool(); announcePriceAlerts() } }
+                .task {
+                    // Sell alerts are checked every 30s while the app runs (web `GameLayoutClient`).
+                    while !Task.isCancelled {
+                        announcePriceAlerts()
+                        try? await Task.sleep(nanoseconds: 30_000_000_000)
+                    }
+                }
                 #if canImport(UIKit)
                 .onAppear { OrientationPreference(stored: orientation).apply() }
                 .onChange(of: orientation) { _, v in OrientationPreference(stored: v).apply() }

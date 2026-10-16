@@ -1,21 +1,17 @@
 import SwiftUI
 import LandnamCore
 
-/// Cargo dock. Crates for held minerals sit on the conveyor; a tap or a drag onto the
-/// sell pad sells one unit through the same market rules as the web Exchange.
-/// The francs counter ticks. Sell All is the secondary action.
-/// Swift was not compiled in the environment that wrote this file.
+/// Marketplace panel (web `MarketScreen.tsx`): spot prices and the balance, with Sell for everyone.
+/// The built Exchange adds Buy (at a dealer markup) and per-mineral sell alerts.
 struct MarketScreen: View {
     @Environment(GameStore.self) private var store
-    private let biome = EarthBiome.resolve()
     @State private var showSettings = false
     @State private var armed = false
-    @State private var shownFrancs = 0
-    @State private var padLot: String?
-    @State private var dragging: String?
-    @State private var dragOffset: CGSize = .zero
-    @State private var padFrame: CGRect = .zero
-    @State private var francsReady = false
+    @State private var tab: Tab = .sell
+    @State private var targets: [String: Int] = [:]
+    enum Tab: String, CaseIterable { case sell, buy, alerts }
+
+    init(tab: Tab = .sell) { _tab = State(initialValue: tab) }
     private let zones = HUDZones.standard
 
     var body: some View {
@@ -39,11 +35,13 @@ struct MarketScreen: View {
                 ], startPoint: .top, endPoint: .bottom)
                 .blendMode(.multiply)
                 .allowsHitTesting(false)
-                play(size: geo.size, short: short, wide: wide)
+                panel(compact: short || geo.size.width < 500)
+                    .frame(maxWidth: wide ? 720 : .infinity, maxHeight: .infinity)
                     .padding(.top, max((short ? 56 : 76) + coachInset, safe.top + 56 + coachInset))
                     .padding(.bottom, short ? max(68, safe.bottom + 60) : 88)
-                    .padding(.leading, max(wide ? 32 : 12, safe.leading + 8))
-                    .padding(.trailing, max(wide ? 32 : 12, safe.trailing + 8))
+                    .padding(.leading, max(12, safe.leading + 8))
+                    .padding(.trailing, max(12, safe.trailing + 8))
+                    .frame(maxWidth: .infinity, alignment: .center)
                 HudGearClock(onSettings: { showSettings = true })
                     .padding(.leading, max(zones.topLeft.inset + (short ? 8 : 12), safe.leading + 8))
                     .padding(.top, max(zones.topLeft.inset + (short ? 8 : 12), safe.top + 8))
@@ -62,17 +60,10 @@ struct MarketScreen: View {
                     .padding(.bottom, max(zones.dock.bottomInset + 8, safe.bottom + 8))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
-            .coordinateSpace(name: "exchange")
         }
         .ignoresSafeArea(edges: [.top, .horizontal])
         .background(Theme.tokenBlueprintBg.ignoresSafeArea())
         .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
-        .task(id: store.player.francs) { await tickFrancs(to: store.player.francs) }
-        .task(id: padLot) {
-            guard padLot != nil else { return }
-            try? await Task.sleep(nanoseconds: 700_000_000)
-            if !Task.isCancelled { padLot = nil }
-        }
         .task(id: armed) {
             guard armed else { return }
             try? await Task.sleep(nanoseconds: 4_000_000_000)
@@ -80,376 +71,213 @@ struct MarketScreen: View {
         }
     }
 
-    @ViewBuilder
-    private func play(size: CGSize, short: Bool, wide: Bool) -> some View {
-        if short {
-            HStack(alignment: .top, spacing: 8) {
-                board(compact: true).frame(width: min(224, max(200, size.width * 0.25)))
-                VStack(spacing: 8) {
-                    window
-                    belt(compact: true)
-                }
-                floor(compact: true).frame(width: 200)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        } else if wide {
-            VStack(spacing: 16) {
-                HStack(alignment: .top, spacing: 24) {
-                    board(compact: false).frame(width: 360, alignment: .top)
-                    window
-                }
-                .frame(height: max(220, size.height * 0.36))
-                belt(compact: false).frame(height: 188)
-                floor(compact: false).frame(height: 168)
-            }
-        } else {
-            VStack(spacing: 12) {
-                ZStack(alignment: .bottomLeading) {
-                    window
-                    board(compact: false)
-                        .frame(maxWidth: 340, maxHeight: 196, alignment: .top)
-                        .padding(.leading, 8)
-                        .padding(.bottom, 12)
-                }
-                .frame(height: min(320, max(180, size.height * 0.36)))
-                belt(compact: false).frame(minHeight: 132)
-                floor(compact: false)
-            }
+    // MARK: panel
+
+    private var exchangeBuilt: Bool { Marketplace.exchangeBuilt(store.player) }
+    private var board: [SpotQuote] { Marketplace.board(store.player, now: store.now) }
+    private var refinedLots: [Lot] {
+        store.player.refinedGoods.keys.sorted().compactMap { id in
+            let qty = store.player.refinedGoods[id] ?? 0
+            guard qty > 0, let recipe = Refinery.byId[id] else { return nil }
+            return Lot(id: id, name: recipe.name, qty: qty, unit: recipe.price)
         }
     }
-
-    private var window: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .bottom) {
-                LinearGradient(colors: biome == .desert || biome == .coast
-                               ? [Theme.bluePress, Theme.skyMid, Theme.horizon]
-                               : [Theme.skyTop, Theme.skyMid, Theme.horizon], startPoint: .top, endPoint: .bottom)
-                ForEach(Array(biome.backBands.enumerated()), id: \.offset) { index, band in
-                    Image(band.asset)
-                        .resizable()
-                        .interpolation(.none)
-                        .scaledToFill()
-                        .frame(width: proxy.size.width, height: proxy.size.height * (index == 0 ? 0.54 : 0.43), alignment: .bottom)
-                        .saturation(band.saturation)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                        .padding(.bottom, proxy.size.height * 0.18)
-                }
-                Image(biome.ground.asset)
-                    .resizable()
-                    .interpolation(.none)
-                    .scaledToFill()
-                    .frame(width: proxy.size.width, height: proxy.size.height * 0.22, alignment: .top)
-                    .clipped()
-                    .overlay(alignment: .top) { Rectangle().fill(Theme.blue.opacity(0.8)).frame(height: 3) }
-            }
-            .clipped()
-            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
-            .overlay(Rectangle().stroke(Theme.blue, lineWidth: 3).padding(3))
-        }
-        .accessibilityHidden(true)
+    private var heldValue: Int {
+        board.reduce(0) { $0 + $1.spot * $1.held } + refinedLots.reduce(0) { $0 + $1.unit * $1.qty }
     }
+    private var hasCargo: Bool { board.contains { $0.held > 0 } || !refinedLots.isEmpty }
 
-    private func board(compact: Bool) -> some View {
-        VStack(alignment: .leading, spacing: compact ? 6 : 8) {
-            if lots.isEmpty {
-                Text("NO QUOTES")
-                    .font(AppFont.display(14, "ExtraBold"))
-                    .tracking(1.2)
-                    .foregroundStyle(Theme.ink)
+    private func panel(compact: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("SPOT PRICES").font(AppFont.display(14, "ExtraBold")).tracking(1.1).foregroundStyle(Theme.ink)
+                Spacer()
+                Text(Economy.format(francs: store.player.francs))
+                    .font(AppFont.display(16, "ExtraBold")).foregroundStyle(Theme.ink)
+                    .accessibilityLabel("Balance \(Economy.format(francs: store.player.francs))")
+                    .accessibilityIdentifier("market-balance")
             }
-            ForEach(lots) { lot in
-                HStack(spacing: compact ? 6 : 8) {
-                    Image(crateAsset(lot.artId))
-                        .resizable()
-                        .interpolation(.none)
-                        .frame(width: 28, height: 24)
-                    Text(lot.name.uppercased())
-                        .font(AppFont.display(14, "ExtraBold"))
-                        .tracking(1.1)
-                        .foregroundStyle(Theme.ink)
-                        .lineLimit(1)
-                    Spacer(minLength: 8)
-                    Text(Economy.format(francs: lot.unit))
-                        .font(AppFont.display(compact ? 14 : 16, "ExtraBold"))
-                        .foregroundStyle(Theme.ink)
-                        .fixedSize(horizontal: true, vertical: false)
-                    trendMark(lot.trend)
-                }
-                .frame(minHeight: 36)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(lot.name) \(Economy.format(francs: lot.unit)) \(lot.trend.label)")
-            }
-        }
-        .padding(compact ? 8 : 16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.paper)
-        .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
-        .overlay(Rectangle().stroke(Theme.blue, lineWidth: 2).padding(3))
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Prices")
-    }
-
-    private func belt(compact: Bool) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(alignment: .bottom, spacing: 16) {
-                if lots.isEmpty {
-                    Text("HOLD IS EMPTY")
-                        .font(AppFont.display(14, "ExtraBold"))
-                        .tracking(1.2)
-                        .foregroundStyle(Theme.ink)
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                }
-                ForEach(lots) { lot in
-                    crateButton(lot)
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
-            .frame(minWidth: 0, maxWidth: .infinity, minHeight: compact ? 88 : 120, alignment: .bottom)
-        }
-        .frame(maxWidth: .infinity, minHeight: compact ? 88 : 120, alignment: .bottom)
-        .background(
-            Image("scene-exchange-conveyor")
-                .resizable(resizingMode: .stretch)
-                .interpolation(.none)
-                .frame(height: 56)
-                .frame(maxHeight: .infinity, alignment: .bottom),
-            alignment: .bottom
-        )
-        .accessibilityLabel("Cargo on the conveyor")
-    }
-
-    private func floor(compact: Bool) -> some View {
-        Group {
-            if compact {
-                VStack(alignment: .trailing, spacing: 8) {
-                    pad(compact: true)
-                    face(compact: true)
-                    sellAllButton
-                }
-            } else {
-                VStack(alignment: .trailing, spacing: 8) {
-                    HStack(alignment: .bottom, spacing: 16) {
-                        pad(compact: false)
-                        face(compact: false)
+            HStack(spacing: 6) {
+                ForEach(Tab.allCases, id: \.self) { t in
+                    Button { tab = t } label: {
+                        Text(t.rawValue.uppercased()).font(AppFont.display(14, "ExtraBold")).tracking(1.1)
+                            .foregroundStyle(tab == t ? Theme.paper : Theme.ink)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .background(tab == t ? Theme.ink : Theme.paper)
+                            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
                     }
-                    sellAllButton
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(tab == t ? .isSelected : [])
+                    .accessibilityIdentifier("market-tab-\(t.rawValue)")
                 }
             }
-        }
-    }
-
-    private func pad(compact: Bool) -> some View {
-        ZStack(alignment: .bottom) {
-            Image("scene-exchange-sell-pad")
-                .resizable()
-                .interpolation(.none)
-                .scaledToFit()
-                .frame(maxWidth: .infinity, maxHeight: compact ? 64 : 120)
-            if padLot != nil {
-                Image("scene-exchange-crate-on-pad")
-                    .resizable()
-                    .interpolation(.none)
-                    .frame(width: compact ? 54 : 72, height: compact ? 60 : 80)
-                    .padding(.bottom, compact ? 8 : 16)
-                    .transition(.scale.combined(with: .opacity))
+            if tab != .sell && !exchangeBuilt {
+                locked
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(rows) { q in row(q, compact: compact) }
+                        if tab == .sell { ForEach(refinedLots) { refinedRow($0) } }
+                    }
+                }
+                .overlay(alignment: .top) { Rectangle().fill(Theme.ink).frame(height: 1) }
             }
+            if tab == .sell { sellAllButton }
         }
-        .frame(maxWidth: .infinity, minHeight: compact ? 56 : 88)
-        .background(GeometryReader { proxy in
-            Color.clear.preference(key: PadFrameKey.self, value: proxy.frame(in: .named("exchange")))
-        })
-        .onPreferenceChange(PadFrameKey.self) { padFrame = $0 }
-        .accessibilityElement()
-        .accessibilityLabel("Sell pad")
+        .padding(12)
+        .background(Theme.paper.opacity(0.94))
+        .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Marketplace")
     }
 
-    private func face(compact: Bool) -> some View {
-        ZStack(alignment: .bottomTrailing) {
-            Image("scene-exchange-counter-machine")
-                .resizable()
-                .interpolation(.none)
-                .scaledToFit()
-                .frame(maxWidth: 320, maxHeight: compact ? 64 : 160)
-            Text(grouped(shownFrancs))
-                .font(AppFont.mono(16))
-                .foregroundStyle(Theme.ink)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Theme.paper)
-                .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
-                .padding(.trailing, 10)
-                .padding(.bottom, compact ? 8 : 16)
-                .accessibilityLabel("Francs \(shownFrancs)")
-                .accessibilityIdentifier("exchange-francs")
-        }
-        .frame(maxWidth: .infinity, alignment: .trailing)
+    /// Selling leads with what you hold; the other tabs list the whole board by price.
+    private var rows: [SpotQuote] {
+        tab == .sell ? board.sorted { ($0.held > 0 ? 0 : 1) < ($1.held > 0 ? 0 : 1) } : board
     }
 
-    private var sellAllButton: some View {
-        Button(action: sellAll) {
-            Text((armed ? "CONFIRM \(Economy.format(francs: total))" : "SELL ALL").uppercased())
-                .font(AppFont.display(14, "ExtraBold"))
-                .tracking(1.1)
-                .foregroundStyle(lots.isEmpty ? Theme.ink.opacity(0.45) : Theme.ink)
-                .padding(.horizontal, 16)
-                .frame(minWidth: 88, minHeight: 44)
+    private var locked: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(tab == .buy ? "Build the Exchange to buy ore." : "Build the Exchange to set sell alerts.")
+                .font(AppFont.display(14, "ExtraBold")).foregroundStyle(Theme.ink)
+            Button { store.go(.build) } label: {
+                Text("BUILD THE EXCHANGE").font(AppFont.display(14, "ExtraBold")).tracking(1.1).foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 16).frame(minHeight: 44)
+                    .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("market-build-exchange")
+        }
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func row(_ q: SpotQuote, compact: Bool) -> some View {
+        let alert = store.player.priceAlerts.first { $0.mineralId == q.id }
+        let blocker = tab == .buy ? Marketplace.buyBlocker(store.player, q.id, now: store.now) : nil
+        let fresh = Market.openMarketSellPrice(base: Minerals.byId[q.id]?.price ?? 0, unitsSold: 0)
+        let trend: Trend = q.spot > fresh + 1 ? .up : q.spot < fresh - 1 ? .down : .flat
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(q.name.uppercased()).font(AppFont.display(14, "ExtraBold")).tracking(1.1).foregroundStyle(Theme.ink)
+                    Text(detail(q, alert: alert)).font(AppFont.display(14, "Medium")).foregroundStyle(Theme.ink.opacity(0.75))
+                }
+                Spacer(minLength: 8)
+                Text(Economy.format(francs: tab == .buy ? q.ask : q.spot))
+                    .font(AppFont.display(16, "ExtraBold")).foregroundStyle(Theme.ink).fixedSize()
+                    .accessibilityIdentifier("market-price-\(q.id)")
+                trendMark(trend)
+            }
+            if tab == .sell && q.held > 0 { sellActions(q) }
+            if tab == .buy { buyActions(q, blocker: blocker) }
+            if tab == .alerts { alertActions(q, alert: alert) }
+        }
+        .padding(.vertical, 6)
+        .padding(.leading, tab == .alerts && alert?.firedAt != nil ? 8 : 0)
+        .overlay(alignment: .leading) { if tab == .alerts && alert?.firedAt != nil { Rectangle().fill(Theme.blue).frame(width: 4) } }
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.ink.opacity(0.3)).frame(height: 1) }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("exchange-price-\(q.id)")
+    }
+
+    private func detail(_ q: SpotQuote, alert: PriceAlert?) -> String {
+        switch tab {
+        case .sell: return "\(q.held) held"
+        case .buy: return "Spot \(Economy.format(francs: q.spot))"
+        case .alerts:
+            guard let alert else { return "Spot \(Economy.format(francs: q.spot))" }
+            return alert.firedAt != nil ? "Hit \(Economy.format(francs: alert.target))" : "Alert at \(Economy.format(francs: alert.target))"
+        }
+    }
+
+    private func sellActions(_ q: SpotQuote) -> some View {
+        HStack(spacing: 6) {
+            panelButton("Sell 1", id: "exchange-crate-\(q.id)") { store.sell(q.id, amount: 1) }
+            if q.held > 1 { panelButton("Sell \(q.held)", id: "market-sell-all-\(q.id)") { store.sell(q.id, amount: q.held) } }
+        }
+    }
+
+    private func buyActions(_ q: SpotQuote, blocker: String?) -> some View {
+        HStack(spacing: 6) {
+            panelButton("Buy 1", id: "market-buy-\(q.id)", disabled: blocker != nil) { store.buy(q.id, amount: 1) }
+            panelButton("x10", id: "market-buy-10-\(q.id)", disabled: Marketplace.buyBlocker(store.player, q.id, amount: 10, now: store.now) != nil) { store.buy(q.id, amount: 10) }
+            if let blocker { Text(blocker).font(AppFont.display(14, "Medium")).foregroundStyle(Theme.ink.opacity(0.75)).lineLimit(1) }
+        }
+    }
+
+    private func alertActions(_ q: SpotQuote, alert: PriceAlert?) -> some View {
+        let step = max(1, Int((Double(q.spot) * 0.05).rounded()))
+        let target = targets[q.id] ?? alert?.target ?? Int((Double(q.spot) * 1.1).rounded())
+        return HStack(spacing: 6) {
+            panelButton("-", id: "market-alert-down-\(q.id)", minWidth: 44) { targets[q.id] = max(1, target - step) }
+            Text(Economy.format(francs: target)).font(AppFont.display(14, "ExtraBold")).foregroundStyle(Theme.ink)
+                .frame(minWidth: 72).accessibilityIdentifier("market-alert-target-\(q.id)")
+            panelButton("+", id: "market-alert-up-\(q.id)", minWidth: 44) { targets[q.id] = target + step }
+            panelButton(alert == nil ? "Set" : "Move", id: "market-alert-set-\(q.id)") { store.setPriceAlert(q.id, target: target); targets[q.id] = nil }
+            if let alert { panelButton("Clear", id: "market-alert-clear-\(q.id)") { store.removePriceAlert(alert.id) } }
+        }
+    }
+
+    private func refinedRow(_ lot: Lot) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(lot.name.uppercased()).font(AppFont.display(14, "ExtraBold")).tracking(1.1).foregroundStyle(Theme.ink)
+                    Text("\(lot.qty) held").font(AppFont.display(14, "Medium")).foregroundStyle(Theme.ink.opacity(0.75))
+                }
+                Spacer()
+                Text(Economy.format(francs: lot.unit)).font(AppFont.display(16, "ExtraBold")).foregroundStyle(Theme.ink)
+            }
+            panelButton("Sell 1", id: "exchange-crate-\(lot.id)") { store.sellRefined(lot.id, amount: 1) }
+        }
+        .padding(.vertical, 6)
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.ink.opacity(0.3)).frame(height: 1) }
+    }
+
+    private func panelButton(_ title: String, id: String, disabled: Bool = false, minWidth: CGFloat = 64, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title.uppercased()).font(AppFont.display(14, "ExtraBold")).tracking(1.1)
+                .foregroundStyle(disabled ? Theme.ink.opacity(0.45) : Theme.ink)
+                .padding(.horizontal, 12).frame(minWidth: minWidth, minHeight: 44)
                 .background(Theme.paper)
                 .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
         }
         .buttonStyle(.plain)
-        .disabled(lots.isEmpty)
+        .disabled(disabled)
+        .accessibilityIdentifier(id)
+    }
+
+    private var sellAllButton: some View {
+        Button(action: sellAll) {
+            Text((armed ? "CONFIRM \(Economy.format(francs: heldValue))" : "SELL ALL").uppercased())
+                .font(AppFont.display(14, "ExtraBold")).tracking(1.1)
+                .foregroundStyle(hasCargo ? Theme.paper : Theme.ink.opacity(0.45))
+                .padding(.horizontal, 16).frame(maxWidth: .infinity, minHeight: 44)
+                .background(hasCargo ? (armed ? Theme.blue : Theme.ink) : Theme.paper)
+                .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+        }
+        .buttonStyle(.plain)
+        .disabled(!hasCargo)
         .accessibilityLabel(armed ? "Confirm sell all" : "Sell all")
         .accessibilityIdentifier("sell-all-btn")
     }
 
-    private func crateButton(_ lot: Lot) -> some View {
-        let layers = pile(lot.qty)
-        return ZStack(alignment: .top) {
-            ZStack(alignment: .bottom) {
-                ForEach(0..<layers, id: \.self) { index in
-                    Image(crateAsset(lot.artId))
-                        .resizable()
-                        .interpolation(.none)
-                        .frame(width: 76, height: 68)
-                        .offset(y: CGFloat(-12 * index))
-                }
-            }
-            .frame(width: 76, height: 104, alignment: .bottom)
-            Text("\(lot.qty)")
-                .font(AppFont.display(14, "ExtraBold"))
-                .foregroundStyle(Theme.ink)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Theme.paper)
-                .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
-        }
-        .frame(minWidth: 72, minHeight: 44)
-        .contentShape(Rectangle())
-        .offset(dragging == lot.id ? dragOffset : .zero)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel("Sell one \(lot.name). \(lot.qty) held.")
-        .accessibilityIdentifier("exchange-crate-\(lot.id)")
-        .accessibilityAction { sellOne(lot) }
-        .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .named("exchange"))
-            .onChanged { value in
-                let moved = hypot(value.translation.width, value.translation.height) > 8
-                if moved {
-                    dragging = lot.id
-                    dragOffset = value.translation
-                }
-            }
-            .onEnded { value in
-                let moved = hypot(value.translation.width, value.translation.height) > 8
-                let end = CGPoint(x: value.startLocation.x + value.translation.width,
-                                  y: value.startLocation.y + value.translation.height)
-                dragging = nil
-                dragOffset = .zero
-                if moved {
-                    if padFrame.contains(end) { sellOne(lot) }
-                } else {
-                    sellOne(lot)
-                }
-            })
+    private func sellAll() {
+        guard hasCargo else { return }
+        if !armed { armed = true; return }
+        for q in board where q.held > 0 { store.sell(q.id, amount: q.held) }
+        for lot in refinedLots { store.sellRefined(lot.id, amount: lot.qty) }
+        armed = false
     }
 
     private func trendMark(_ trend: Trend) -> some View {
         Group {
-            if trend == .up {
-                Triangle().fill(Theme.blue).frame(width: 14, height: 10)
-            } else if trend == .down {
-                Triangle().fill(Theme.ink).rotationEffect(.degrees(180)).frame(width: 14, height: 10)
-            } else {
-                Rectangle().fill(Theme.ink).frame(width: 14, height: 3)
-            }
+            if trend == .up { Triangle().fill(Theme.blue).frame(width: 14, height: 10) }
+            else if trend == .down { Triangle().fill(Theme.ink).rotationEffect(.degrees(180)).frame(width: 14, height: 10) }
+            else { Rectangle().fill(Theme.ink).frame(width: 14, height: 3) }
         }
         .accessibilityHidden(true)
-    }
-
-    private var lots: [Lot] {
-        var out: [Lot] = []
-        let player = store.player
-        for id in player.stash.keys.sorted() {
-            let qty = player.stash[id] ?? 0
-            guard qty > 0, let meta = Minerals.byId[id] else { continue }
-            let quote = Market.unitPrice(id, player: player, clientId: player.lastClient, now: store.now)
-            let fresh = Market.openMarketSellPrice(base: meta.price, unitsSold: 0)
-            out.append(Lot(id: id, name: meta.name, qty: qty, unit: quote.price, refined: false,
-                           trend: quote.price > fresh + 1 ? .up : quote.price < fresh - 1 ? .down : .flat))
-        }
-        for id in player.refinedGoods.keys.sorted() {
-            let qty = player.refinedGoods[id] ?? 0
-            guard qty > 0, let recipe = Refinery.byId[id] else { continue }
-            out.append(Lot(id: id, name: recipe.name, qty: qty, unit: recipe.price, refined: true, trend: .flat))
-        }
-        return out.sorted { $0.name < $1.name }
-    }
-
-    private var total: Int {
-        lots.reduce(0) { $0 + $1.unit * $1.qty }
-    }
-
-    private func sellOne(_ lot: Lot) {
-        withAnimation(.easeOut(duration: 0.28)) { padLot = lot.id }
-        if lot.refined { store.sellRefined(lot.id, amount: 1) }
-        else { store.sell(lot.id, amount: 1) }
-    }
-
-    private func sellAll() {
-        guard !lots.isEmpty else { return }
-        if !armed {
-            armed = true
-            return
-        }
-        let snapshot = lots
-        for lot in snapshot {
-            if lot.refined { store.sellRefined(lot.id, amount: lot.qty) }
-            else { store.sell(lot.id, amount: lot.qty) }
-        }
-        armed = false
-        padLot = "all"
-    }
-
-    private func tickFrancs(to target: Int) async {
-        if !francsReady {
-            shownFrancs = target
-            francsReady = true
-            return
-        }
-        let start = shownFrancs
-        guard start != target else { return }
-        let steps = 16
-        for step in 1...steps {
-            try? await Task.sleep(nanoseconds: 40_000_000)
-            if Task.isCancelled { return }
-            shownFrancs = start + (target - start) * step / steps
-        }
-    }
-
-    private func pile(_ qty: Int) -> Int {
-        if qty >= 24 { return 4 }
-        if qty >= 8 { return 3 }
-        if qty >= 2 { return 2 }
-        return 1
-    }
-
-    private func crateAsset(_ id: String) -> String {
-        switch id {
-        case "iron": return "scene-exchange-crate-1-iron"
-        case "nickel": return "scene-exchange-crate-2-nickel"
-        case "silicon", "aluminium", "carbon": return "scene-exchange-crate-5-silver"
-        case "platinum", "palladium", "gold", "iridium", "rhodium", "rare": return "scene-exchange-crate-4-platinum"
-        case "ice", "hydrogen", "orionid_debris": return "scene-exchange-crate-6-ice"
-        default: return "scene-exchange-crate-3-steel-blue"
-        }
-    }
-
-    private func grouped(_ value: Int) -> String {
-        let mark = "₣"
-        let number = NumberFormatter.localizedString(from: NSNumber(value: value), number: .decimal)
-        return mark + number
     }
 }
 
@@ -458,29 +286,9 @@ private struct Lot: Identifiable {
     let name: String
     let qty: Int
     let unit: Int
-    let refined: Bool
-    let trend: Trend
-    var artId: String { refined ? "silicon" : id }
 }
 
-private enum Trend {
-    case up, down, flat
-    var label: String {
-        switch self {
-        case .up: return "price up"
-        case .down: return "price down"
-        case .flat: return "price steady"
-        }
-    }
-}
-
-private struct PadFrameKey: PreferenceKey {
-    static let defaultValue: CGRect = .zero
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
-        let next = nextValue()
-        if next != .zero { value = next }
-    }
-}
+private enum Trend { case up, down, flat }
 
 private struct Triangle: Shape {
     func path(in rect: CGRect) -> Path {

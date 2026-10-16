@@ -14,13 +14,19 @@ struct BaseMenu: View {
         let run: () -> Void
     }
 
+    private func marketDetail(_ hasMarket: Bool) -> String {
+        let fired = Marketplace.firedCount(store.player)
+        if fired > 0 { return fired == 1 ? "1 price alert hit" : "\(fired) price alerts hit" }
+        return hasMarket ? "Spot prices, sell, buy and alerts" : "Spot prices and selling"
+    }
+
     private var primary: [Item] {
         let hasMarket = store.player.placed.contains("market")
         return [
             Item(id: "build", label: "Build", detail: "New structures, a control station, satellites", symbol: "building.2", primary: true, run: onBuild),
             Item(id: "contracts", label: "New mission", detail: "Client contracts and free runs", symbol: "paperplane", primary: true, run: { store.go(.missions) }),
-            Item(id: "market", label: "Marketplace", detail: hasMarket ? "Sell what you have mined" : "Build the Exchange to sell ore", symbol: "cart", primary: true,
-                 run: { if hasMarket { store.go(.market) } else { onBuild() } }),
+            Item(id: "market", label: "Marketplace", detail: marketDetail(hasMarket), symbol: "cart", primary: true,
+                 run: { store.go(.market) }),
         ]
     }
 

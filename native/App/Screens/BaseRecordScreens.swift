@@ -146,11 +146,13 @@ struct MissionHistoryScreen: View {
         let lifetime = max(store.player.missionsDone, missionEntries)
         MissionRecordPage(title: "Mission log") {
             VStack(alignment: .leading, spacing: 24) {
-                HStack(alignment: .top, spacing: 8) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), spacing: 8)], spacing: 8) {
                     stat(lifetime, "MISSIONS COMPLETED")
                     stat(ordered.filter { !$0.isTransit && !$0.isProgram }.count, "CLIENT RUNS")
                     stat(ordered.filter { $0.isProgram }.count, "OWN RUNS")
                     stat(ordered.filter { $0.isTransit }.count, "TRANSITS")
+                }
+                .overlay(alignment: .topTrailing) {
                     Button { store.go(.hub) } label: {
                         Text("BACK").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.ink)
                             .padding(.horizontal, 14).frame(minWidth: 44, minHeight: 44)
@@ -159,7 +161,9 @@ struct MissionHistoryScreen: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Back")
+                    .offset(y: -78)
                 }
+                .padding(.top, 8)
 
                 if ordered.isEmpty {
                     Text("No completed missions yet. Choose a contract from the Mission Board to start your log.")
@@ -183,7 +187,7 @@ struct MissionHistoryScreen: View {
             Text("\(n)").font(AppFont.display(28)).foregroundStyle(Theme.blue)
             Text(label).font(AppFont.display(14, "Bold")).tracking(1.0).foregroundStyle(Theme.ink).lineLimit(2).minimumScaleFactor(0.7)
         }
-        .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10).frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
         .background(RecordCream.paper)
         .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
     }
@@ -209,20 +213,25 @@ struct MissionHistoryScreen: View {
         let spot = place(r)
         return VStack(alignment: .leading, spacing: 0) {
             Button { openKey = open ? nil : i } label: {
-                VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .center, spacing: 0) {
                     DestinationVista(targetId: spot.id, type: spot.type, archetype: spot.archetype, card: true)
-                        .frame(height: 148)
-                        .frame(maxWidth: .infinity)
+                        .frame(width: 92, height: 104)
                         .clipped()
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(String(format: "%02d", total - i)).font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.blue)
-                        Text(r.title).font(AppFont.display(18)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                        Text(meta(r)).font(AppFont.display(14, "Bold")).tracking(1.1).foregroundStyle(Theme.ink)
-                        Text(Self.date(r.completedAt)).font(AppFont.mono(14)).foregroundStyle(Theme.blue)
+                        .overlay(alignment: .trailing) { Rectangle().fill(Theme.ink).frame(width: 3) }
+                    HStack(alignment: .center, spacing: 12) {
+                        Text(String(format: "%02d", total - i)).font(AppFont.display(14, "Bold")).tracking(1.0).foregroundStyle(RecordCream.paper)
+                            .frame(minWidth: 40).padding(.vertical, 8)
+                            .background(Theme.blue)
+                            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(r.title).font(AppFont.display(18)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                            Text(meta(r)).font(AppFont.display(14, "Bold")).tracking(1.1).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                            Text(Self.date(r.completedAt)).font(AppFont.mono(14)).foregroundStyle(Theme.blue)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(12)
                 }
-                .padding(16)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
             }
@@ -233,8 +242,7 @@ struct MissionHistoryScreen: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RecordCream.paper)
         .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
-        .overlay(alignment: .top) { Rectangle().fill(Theme.blue).frame(height: 6) }
-    }
+            }
 
     private func debrief(_ r: MissionLogEntry, mission: Mission?) -> some View {
         let day = Self.date(r.completedAt)
@@ -315,6 +323,7 @@ struct NarrativeLedgerScreen: View {
 /// with a title plaque hanging over its top edge.
 struct MissionRecordPage<Content: View>: View {
     @Environment(GameStore.self) private var store
+    @Environment(\.flatLayout) private var flat
     var title: String
     @ViewBuilder var content: Content
     var body: some View {
@@ -331,12 +340,13 @@ struct MissionRecordPage<Content: View>: View {
             }
             .ignoresSafeArea()
             LinearGradient(colors: [Theme.ink.opacity(0.35), Theme.ink.opacity(0.65)], startPoint: .top, endPoint: .bottom).ignoresSafeArea().allowsHitTesting(false)
-            ScrollView {
+            scroller {
                 VStack(alignment: .leading, spacing: 16) { content }
                     .padding(.horizontal, 16).padding(.top, 36).padding(.bottom, 16)
                     .frame(maxWidth: 780, alignment: .leading)
                     .background(RecordCream.paper)
                     .overlay(Rectangle().stroke(Theme.ink, lineWidth: 4))
+                    .background(alignment: .top) { Rectangle().fill(Theme.ink).offset(y: 6) }
                     .overlay(alignment: .top) {
                         Text(title.uppercased()).font(AppFont.display(16, "Bold")).tracking(2.4).foregroundStyle(RecordCream.paper)
                             .padding(.horizontal, 28).padding(.vertical, 10)
@@ -344,11 +354,14 @@ struct MissionRecordPage<Content: View>: View {
                             .overlay(Rectangle().stroke(Theme.ink, lineWidth: 4))
                             .offset(y: -22)
                     }
-                    .shadow(color: Theme.ink, radius: 0, x: 0, y: 6)
                     .padding(.horizontal, 16).padding(.top, 88).padding(.bottom, 112)
                     .frame(maxWidth: .infinity)
             }
         }
+    }
+
+    @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
+        if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
     }
 }
 
