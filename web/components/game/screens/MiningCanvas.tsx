@@ -2,96 +2,34 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
-import { Application, Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js'
+import { Application, Container } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
 import type { MineralMeta } from '@/lib/data'
-import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 import { prefersReducedMotion } from '@/lib/pixi/launchSpriteAnim'
 import { recoilOffset } from '@/lib/engine/miningJuice'
 import { activeDebrisPreset, debrisRatePerMinute, type DebrisEventPreset } from '@/lib/data/sky-events'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { loadOrionidsArt } from '@/lib/orionids/loadArt'
-import { MINING_CANVAS_SKY, miningCanvasIsDark } from '@/lib/orionids/theme'
-
-// Keep every mineral visibly grounded in the mining scene. The authored set
-// covers the most common late-game ores; the neutral iron crystal is a
-// deliberate generic fallback for early/free-ops minerals until bespoke art
-// exists. Tint + the in-node chemistry symbol preserve identification without
-// returning to the old invisible/shape-only deposits (KES-175).
-const TEXTURED_ORE_IDS = new Set([
-  'carbon', 'cobalt', 'gold', 'ice', 'iron', 'nickel', 'rare', 'silicon',
-])
-const GENERIC_ORE_TEXTURE_ID = 'iron'
-
-// Tile width must be a multiple of 16 (ridgeH period) for seamless wrapping
-const SURFACE_TILE_W = 320
-
-const SKY_COLOR = MINING_CANVAS_SKY
+import { miningCanvasIsDark } from '@/lib/orionids/theme'
+import { buildLaserField, depositKindFor, obstacleHeightAt } from '@/lib/mining/laserLayers'
+import type { LaserPalette } from '@/lib/mining/laserPalette'
 
 // Minimum gap between shots: long enough that a mashed tap reads as
 // deliberately ignored (not dropped input), short enough not to feel laggy.
 const FIRE_COOLDOWN_MS = 420
 
-function buildStars(worldW: number, surfaceY: number): Graphics {
-  const g = new Graphics()
-  const stars: [number, number, number, number][] = [
-    [0.08, 0.13, 1.2, 0.30], [0.20, 0.42, 0.8, 0.18], [0.35, 0.08, 1.5, 0.28],
-    [0.44, 0.55, 1.0, 0.15], [0.55, 0.22, 0.9, 0.22], [0.63, 0.48, 1.2, 0.12],
-    [0.72, 0.10, 1.0, 0.25], [0.80, 0.35, 0.8, 0.18], [0.88, 0.58, 1.3, 0.20],
-    [0.15, 0.60, 1.0, 0.14], [0.50, 0.38, 1.5, 0.10], [0.92, 0.25, 1.0, 0.22],
-    [0.28, 0.30, 0.8, 0.16], [0.68, 0.62, 1.2, 0.18], [0.04, 0.75, 1.0, 0.12],
-  ]
-  for (const [fx, fy, r, alpha] of stars) {
-    g.circle(fx * worldW, fy * (surfaceY - 8), r).fill({ color: 0x0f2436, alpha })
-  }
-  return g
-}
-
-function buildSurfaceTile(tileH: number): Graphics {
-  const g = new Graphics()
-  g.rect(0, 6, SURFACE_TILE_W, tileH - 6).fill(0x9fc8e2)
-  const ridgeH = [0, -10, -14, -7, -18, -11, -5, -16, -12, -8, -15, -9, -19, -6, -13, -10, -17, -4, -11, -8]
-  const edge: number[] = [0, tileH]
-  for (let i = 0; i <= SURFACE_TILE_W; i += 16) {
-    edge.push(i, 6 + ridgeH[Math.floor(i / 16) % ridgeH.length])
-  }
-  edge.push(SURFACE_TILE_W, tileH)
-  g.poly(edge).fill(0x7aabc9)
-  const patches: [number, number][] = [
-    [32, 14], [85, 22], [140, 10], [195, 18], [248, 12], [295, 20],
-    [60, 8],  [125, 26], [175, 9],  [230, 16], [275, 24], [310, 11],
-  ]
-  for (const [px, pr] of patches) {
-    g.circle(px, 22, pr).fill({ color: 0x5d8fac, alpha: 0.32 })
-  }
-  return g
-}
-
-function buildAimGuide(shipY: number, surfaceY: number): Graphics {
-  const g = new Graphics()
-  for (let y = shipY + 22; y < surfaceY - 10; y += 11) {
-    g.circle(SHIP_X, y, 1.2).fill({ color: 0x1f78c1, alpha: 0.22 })
-  }
-  return g
-}
-
-function buildEnginePlume(): Graphics {
-  const g = new Graphics()
-
-  // Engine exhaust layers: teal -> cyan -> white, same palette as the v2 launch flame (SSL-458)
-  g.ellipse(-30, 0, 18, 10).fill({ color: 0x3fb8cc, alpha: 0.18 })
-  g.ellipse(-27, 0, 12, 7).fill({ color: 0x70d9ea, alpha: 0.45 })
-  g.ellipse(-24, 0, 7, 4).fill({ color: 0xa3ecf5, alpha: 0.82 })
-  g.circle(-22, 0, 3).fill({ color: 0xe0f8ff, alpha: 1 })
-
-  return g
-}
-
 interface MiningCanvasProps {
+  palette: LaserPalette
+  /** Target id; varies the landscape arrangement (SSL-536). */
+  landscapeKey?: string
   rocketImageSrc?: string
   minerals: string[]
+  leadMinerals?: string[]
+  scrollScreens?: number
+  /** Hold the field still when `?scroll=` is set, so the offset can be checked. */
+  pinScroll?: boolean
   requiredMinerals?: string[]
   mineralMeta: Record<string, MineralMeta>
   /** Equipped drill/laser part tier (1-3). Gates how deep the laser can reach. */
@@ -105,7 +43,13 @@ interface MiningCanvasProps {
   /** Direct canvas tap/click must route back through the screen's fireLaser() so the charge-budget and gate checks it owns aren't bypassed — see the pointerdown handler below. */
   onFireRequest?: () => void
   scrollRef: React.MutableRefObject<((dx: number) => void) | null>
+  /** Climb (-1), hold (0) or descend (1). Set by the d-pad, keys and vertical drags (SSL-536). */
+  altitudeRef?: React.MutableRefObject<((dir: number) => void) | null>
+  /** The hull clipped a mountain or ridge: bumped up and damaged, never an instant fail. */
+  onBump?: () => void
   oreNearRef?: React.MutableRefObject<((near: boolean) => void) | null>
+  onTargetCueRef?: React.MutableRefObject<((mineral: string | null, inRange: boolean) => void) | null>
+  onObstacleAheadRef?: React.MutableRefObject<((ahead: boolean) => void) | null>
   /** Live-updating set of mineral keys still needed to fill the order — see MiningControllerOptions.neededMineralsRef. */
   neededMineralsRef?: React.MutableRefObject<Set<string> | null>
   /** Pushed true immediately after a shot fires, false once the cooldown clears. Mirrors the oreNearRef push pattern so the screen can show ready/charging state without owning the timer. */
@@ -115,7 +59,8 @@ interface MiningCanvasProps {
   debrisPreset?: DebrisEventPreset | null
 }
 
-export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
+  void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
   debrisPresetRef.current = debrisPreset
@@ -124,6 +69,8 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
   const onFireRequestRef = useRef(onFireRequest)
   onFireRequestRef.current = onFireRequest
   const onReadyRef = useRef(onReady)
+  const onBumpRef = useRef(onBump)
+  onBumpRef.current = onBump
   onReadyRef.current = onReady
   const onFailureRef = useRef(onFailure)
   onFailureRef.current = onFailure
@@ -208,29 +155,14 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         // SURFACE_Y=320 → 208px gap) and let any extra height become ground
         // (tileH below), which already reads as filled/intentional via the
         // dirt texture rather than empty.
-        const shipY = Math.round(Math.min(worldH * 0.22, 140))
-        const surfaceY = Math.round(Math.min(worldH * 0.62, shipY + 220))
-        const tileH = worldH - surfaceY
-
-        // Preload ore sprites — one PNG per mineral key. Missing authored
-        // variants reuse the neutral crystal art rather than rendering an
-        // untextured placeholder.
-        const oreTextures: Record<string, Texture> = {}
-        await Promise.allSettled(
-          minerals.map(id => {
-            const textureId = TEXTURED_ORE_IDS.has(id) ? id : GENERIC_ORE_TEXTURE_ID
-            return Assets.load(`/game/assets/ores/ore_${textureId}.png`)
-              .then((t: Texture) => { oreTextures[id] = t })
-              .catch(() => {})
-          })
-        )
-
-        let rocketTexture: Texture | null = null
-        try {
-          rocketTexture = await Assets.load<Texture>(rocketImageSrc ?? ROCKET_ASSETS.explorer.exterior)
-        } catch {
-          try { rocketTexture = await Assets.load<Texture>(ROCKET_ASSETS.explorer.exterior) } catch { rocketTexture = null }
-        }
+        // Same proportions as the native laser scene: surface halfway down
+        // (never less than 200px of ground), ship hovering above it.
+        // Ground is the bottom third (min 150px) so there is sky to fly in (SSL-536).
+        // Phones keep a clear control strip under the deposits (SSL-538).
+        const surfaceFromBottom = worldH > worldW ? Math.max(330, worldH * 0.33) : Math.max(worldH < 520 ? 240 : 150, worldH * 0.33)
+        const surfaceY = Math.round(worldH - surfaceFromBottom)
+        const shipFromBottom = Math.min(worldH * 0.72, surfaceFromBottom + Math.min(210, worldH * 0.28))
+        const shipY = Math.round(worldH - shipFromBottom)
 
         const [sceneData] = await Promise.all([
           Scene.load('/game/scenes/mining.scene.json'),
@@ -238,7 +170,7 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
             canvas,
             width: worldW,
             height: worldH,
-            background: SKY_COLOR,
+            background: palette.skyTop,
             antialias: false,
             autoDensity: true,
             resolution: dpr,
@@ -246,17 +178,18 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         ])
         if (destroyed) return
 
-        app.stage.addChild(buildStars(worldW, surfaceY))
-
-        const surfaceContainer = new Container()
-        surfaceContainer.y = surfaceY
-        const numTiles = Math.ceil(worldW / SURFACE_TILE_W) + 2
-        for (let i = 0; i < numTiles; i++) {
-          const t = buildSurfaceTile(tileH)
-          t.x = i * SURFACE_TILE_W
-          surfaceContainer.addChild(t)
+        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: SHIP_X, shipY, palette, landscapeKey })
+        if (destroyed) {
+          field.backdrop.destroy({ children: true })
+          field.beam.destroy({ children: true })
+          field.dig.destroy({ children: true })
+          field.spark.destroy()
+          field.ship.destroy({ children: true })
+          return
         }
-        app.stage.addChild(surfaceContainer)
+        const oreLayer = new Container()
+        app.stage.addChild(field.backdrop)
+        app.stage.addChild(oreLayer)
 
         const { scene, entityData } = Scene.fromData(sceneData)
         wireShapeRenderers(app.stage, entityData, scene)
@@ -266,38 +199,51 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         )
 
         const shakeState = { timer: 0 }
+        const pulse = { timer: 0 }
         const shower = debrisPresetRef.current ?? activeDebrisPreset(debrisNow())
         const debrisArt = shower?.eventId === 'orionids-2026'
-          ? await loadOrionidsArt(miningCanvasIsDark(SKY_COLOR) ? 'dark' : 'blueprint')
+          ? await loadOrionidsArt(miningCanvasIsDark(palette.skyTop) ? 'dark' : 'blueprint')
           : null
         if (destroyed) return
         const controllerObj = scene.find('mining-controller')
         const controller = new MiningController(new RuntimeContext(), {
-          container: app.stage,
+          container: oreLayer,
           worldWidth: worldW,
           worldHeight: worldH,
           surfaceY,
           shipY,
           minerals,
+          leadMinerals,
+          scrollScreens,
+          pinScroll,
           requiredMinerals,
           mineralColors: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.color])),
           mineralLaserAccess,
           maxLaserTier: laserTier,
           mineralShapes: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.shape ?? 'circle'])),
-          mineralTextures: oreTextures,
-          // Sym label rides on top of every ore node — the PNG-textured minerals
-          // never get a distinguishing shape, so this is what tells them apart.
           mineralSyms: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.sym])),
+          mineralNames: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.name])),
+          beamColor: palette.beamCss,
+          depositFrames: field.depositFrames,
+          depositArtFor: mineral => field.depositArt[depositKindFor(mineral)],
+          pixelScale: field.pixelScale,
+          pixelBeam: true,
+          labelInk: palette.labelInk,
           onCollect: mineral => onCollectRef.current(mineral),
           onMiss: () => {
             shakeState.timer = 0.28
             onMissRef.current?.()
           },
-          onHit: () => onHitRef.current?.(),
+          onHit: () => { pulse.timer = 0.16; onHitRef.current?.() },
           onScroll: scrollX => {
-            surfaceContainer.x = -(scrollX % SURFACE_TILE_W)
+            field.ground.x = -(scrollX % field.soilW)
+            field.near.x = -((scrollX * 0.45) % field.ridgeW)
+            field.far.x = -((scrollX * 0.16) % field.ridgeW)
+            field.mid.x = -((scrollX * 0.3) % field.midW)
+            field.surface.x = -(scrollX % field.midW)
           },
           onOreNearby: (near) => { oreNearRef?.current?.(near) },
+          onTargetCue: (mineral, inRange) => { onTargetCueRef?.current?.(mineral, inRange) },
           neededMineralsRef,
           reducedMotion: prefersReducedMotion(),
           debrisArt,
@@ -314,7 +260,65 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
           },
         })
 
+        let sceneTime = 0
+        const CLIMB_SPEED = 180
+        const SHIP_BELLY = 14
+        const SHIP_HALF_W = 30
+        const BUMP_KICK = 18
+        let altitude = 0
+        let climb = 0
+        let bumpCooldown = 0
+        let lastObstacleAhead: boolean | null = null
+        const minAlt = Math.min(0, 64 - shipY)
+        const maxAlt = Math.max(0, surfaceY - 56 - shipY)
+        const beamTop = field.beam.y
+        const beamSpan = Math.max(24, surfaceY - beamTop)
+        if (altitudeRef) altitudeRef.current = (dir: number) => { climb = Math.max(-1, Math.min(1, dir)) }
+        let lastFireAt = -1
         app.ticker.add(ticker => {
+          sceneTime += ticker.deltaMS / 1000
+          const firing = lastFireAt > 0 && performance.now() - lastFireAt < 180
+          field.step(sceneTime, prefersReducedMotion(), firing)
+          const kick = prefersReducedMotion() || lastFireAt < 0 ? 0 : recoilOffset((performance.now() - lastFireAt) / 1000)
+          // The ship stays level; altitude moves it between the sky ceiling and just above the ground.
+          const dt = ticker.deltaMS / 1000
+          altitude = Math.max(minAlt, Math.min(maxAlt, altitude + climb * CLIMB_SPEED * dt))
+          if (bumpCooldown > 0) bumpCooldown -= dt
+          const clear = Math.max(
+            obstacleHeightAt(field, SHIP_X - SHIP_HALF_W),
+            obstacleHeightAt(field, SHIP_X),
+            obstacleHeightAt(field, SHIP_X + SHIP_HALF_W),
+          )
+          const obstacleAhead = Math.max(
+            obstacleHeightAt(field, SHIP_X + 80),
+            obstacleHeightAt(field, SHIP_X + 120),
+            obstacleHeightAt(field, SHIP_X + 160),
+          )
+          const shouldClimb = obstacleAhead > 18 && shipY + altitude + SHIP_BELLY > surfaceY - obstacleAhead - 12
+          if (shouldClimb !== lastObstacleAhead) {
+            lastObstacleAhead = shouldClimb
+            onObstacleAheadRef?.current?.(shouldClimb)
+          }
+          if (clear > 0 && shipY + altitude + SHIP_BELLY > surfaceY - clear) {
+            altitude = Math.max(minAlt, surfaceY - clear - SHIP_BELLY - shipY - BUMP_KICK)
+            if (bumpCooldown <= 0) {
+              bumpCooldown = 1.6
+              shakeState.timer = 0.32
+              onBumpRef.current?.()
+            }
+          }
+          field.ship.y = shipY + altitude + kick + field.hover
+          field.beam.y = beamTop + altitude
+          field.beam.scale.y = Math.max(0.05, (beamSpan - altitude) / beamSpan)
+          // Beam shows only while the trigger is held (fire pulse), never as an idle stream.
+          field.beam.visible = firing
+          field.spark.visible = firing
+          // Subtle hit pulse: a 1% zoom that eases back (SSL-538).
+          if (pulse.timer > 0 && !prefersReducedMotion()) {
+            pulse.timer -= ticker.deltaMS / 1000
+            const k = 1 + 0.01 * Math.max(0, pulse.timer / 0.16)
+            app.stage.scale.set(k)
+          } else if (app.stage.scale.x !== 1) app.stage.scale.set(1)
           if (shakeState.timer > 0) {
             shakeState.timer -= ticker.deltaMS / 1000
             const t = Math.max(0, shakeState.timer / 0.28)
@@ -335,7 +339,6 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         // oreNearRef pushes ore-proximity — the screen just mirrors it, it
         // never owns the timer.
         let isCharging = false
-        let lastFireAt = -1
         const attemptFire = () => {
           if (isCharging) {
             onTapAckRef.current?.()
@@ -359,24 +362,33 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         // field returns to normal speed on release.
         canvas.style.touchAction = 'none'
         let dragStartX: number | null = null
+        let dragStartY = 0
         let dragging = false
+        let steering = false
         const DRAG_THRESHOLD_PX = 10
         const DRAG_FULL_SPEED_PX = 120
         const endDrag = () => {
           if (dragging) scrollRef.current?.(0)
+          if (steering) altitudeRef?.current?.(0)
           dragStartX = null
           dragging = false
+          steering = false
         }
         input.onAny(event => {
           if (event.type === 'pointerdown') {
             dragStartX = event.screen.x
+            dragStartY = event.screen.y
             dragging = false
+            steering = false
           } else if (event.type === 'pointermove' && dragStartX !== null) {
             const delta = event.screen.x - dragStartX
+            const dy = event.screen.y - dragStartY
+            if (!dragging && !steering && Math.abs(dy) >= DRAG_THRESHOLD_PX && Math.abs(dy) > Math.abs(delta)) steering = true
+            if (steering) { altitudeRef?.current?.(Math.max(-1, Math.min(1, dy / 60))); return }
             if (!dragging && Math.abs(delta) >= DRAG_THRESHOLD_PX) dragging = true
             if (dragging) scrollRef.current?.(Math.max(-1, Math.min(1, -delta / DRAG_FULL_SPEED_PX)))
           } else if (event.type === 'pointerup') {
-            const wasDrag = dragging
+            const wasDrag = dragging || steering
             endDrag()
             // A direct canvas tap must go through the screen's fireLaser(), not
             // straight to attemptFire(), so the charge-budget and gate checks
@@ -391,33 +403,10 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
           controller.setScrollSpeed(speed)
         }
 
-        app.stage.addChild(buildAimGuide(shipY, surfaceY))
-        const plume = buildEnginePlume()
-        plume.x = SHIP_X - 48
-        plume.y = shipY
-        app.stage.addChild(plume)
-
-        if (rocketTexture) {
-          const ship = new Sprite(rocketTexture)
-          const shipWidth = Math.min(112, worldW * 0.26)
-          const shipScale = shipWidth / rocketTexture.width
-          ship.anchor.set(0.5)
-          ship.scale.set(-shipScale, shipScale)
-          ship.x = SHIP_X
-          ship.y = shipY
-          app.stage.addChild(ship)
-          let plumePhase = 0
-          app.ticker.add(ticker => {
-            plumePhase += ticker.deltaMS / 1000
-            const pulse = 0.92 + Math.sin(plumePhase * 18) * 0.08
-            plume.scale.set(pulse, 0.94 + Math.sin(plumePhase * 13) * 0.06)
-            plume.alpha = 0.84 + Math.sin(plumePhase * 11) * 0.10
-            // Recoil kick on each shot; the plume rides with the hull.
-            const kick = prefersReducedMotion() || lastFireAt < 0 ? 0 : recoilOffset((performance.now() - lastFireAt) / 1000)
-            ship.y = shipY + kick
-            plume.y = shipY + kick
-          })
-        }
+        app.stage.addChild(field.dig)
+        app.stage.addChild(field.beam)
+        app.stage.addChild(field.spark)
+        app.stage.addChild(field.ship)
 
         loop = new GameLoop(scene, app)
         loop.start()
@@ -441,6 +430,7 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
       chargingRef?.current?.(false)
       fireRef.current = null
       scrollRef.current = null
+      if (altitudeRef) altitudeRef.current = null
       if (oreNearRef) oreNearRef.current = null
       controllerRef.current = null
       loop?.stop()
@@ -452,16 +442,16 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
       // else: async init returns early (destroyed=true), canvas stays briefly then is GC'd with parent
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rocketImageSrc, fitKey])
+  }, [palette.id, landscapeKey, rocketImageSrc, fitKey, leadMinerals?.join(','), scrollScreens, pinScroll])
 
   return (
-    <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" data-training-mining={trainingMiningTry || undefined}>
-      {trainingMiningTry && <div className="mining-training-seam" aria-hidden="true" />}
+    <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" data-palette={palette.id} data-training-mining={trainingMiningTry || undefined}>
+      {trainingMiningTry && <div className="mining-seam-brackets" data-testid="mining-seam-brackets" aria-hidden="true" />}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
         // Keep miss feedback at the firing lane. A full-canvas red wash reads
         // as a damaged scene rather than a localized impact response.
-        background: 'radial-gradient(circle at 50% 52%, rgba(255,90,106,0.48) 0%, rgba(255,90,106,0.18) 18%, transparent 42%)',
+        background: 'radial-gradient(circle at 80px 62%, rgba(255,90,106,0.48) 0%, rgba(255,90,106,0.18) 18%, transparent 42%)',
         opacity: missFlash ? 1 : 0,
         transition: missFlash ? 'none' : 'opacity 280ms ease-out',
       }} />
@@ -469,7 +459,7 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
         // Same localized-lane treatment as the miss flash, cyan instead of red
         // so hit vs miss reads instantly without needing to watch the ore itself.
-        background: 'radial-gradient(circle at 50% 52%, rgba(156,236,255,0.42) 0%, rgba(156,236,255,0.14) 18%, transparent 42%)',
+        background: 'radial-gradient(circle at 80px 62%, rgba(156,236,255,0.42) 0%, rgba(156,236,255,0.14) 18%, transparent 42%)',
         opacity: hitFlash ? 1 : 0,
         transition: hitFlash ? 'none' : 'opacity 220ms ease-out',
       }} />
@@ -477,7 +467,7 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
         // Neutral, low-opacity: a tap during the fire cooldown, distinct from
         // both the cyan hit flash and red miss flash so it never reads as a shot result.
-        background: 'radial-gradient(circle at 50% 52%, rgba(255,255,255,0.22) 0%, transparent 32%)',
+        background: 'radial-gradient(circle at 80px 62%, rgba(255,255,255,0.22) 0%, transparent 32%)',
         opacity: tapAck ? 1 : 0,
         transition: tapAck ? 'none' : 'opacity 160ms ease-out',
       }} />

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { HelpCoachStep } from '@/lib/help/topics'
 
 interface Rect { top: number; left: number; width: number; height: number }
@@ -64,6 +65,15 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
 }) {
   const [hole, setHole] = useState<Rect | null>(null)
   const [view, setView] = useState({ w: 0, h: 0 })
+  const [flightPlan, setFlightPlan] = useState<HTMLElement | null>(null)
+
+  useLayoutEffect(() => {
+    const isVisible = (element: HTMLElement) => element.getClientRects().length > 0
+    const miningCue = document.querySelector<HTMLElement>('[data-testid="mining-training-tip"]')
+    const flightPlan = document.querySelector<HTMLElement>('[data-testid="flight-plan-slot"]')
+    setFlightPlan((miningCue && isVisible(miningCue) ? miningCue : null)
+      ?? flightPlan)
+  }, [])
 
   useEffect(() => {
     for (const id of step.targets) findTarget(id)?.scrollIntoView({ block: 'nearest' })
@@ -105,38 +115,45 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
     fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
   }
 
+  const dock = (
+    <div
+      role="status"
+      aria-label={`Show me, ${index + 1} of ${total}`}
+      data-testid="help-coach-hint"
+      className="help-coach-dock"
+      style={{
+        position: flightPlan ? 'relative' : 'absolute', ...(flightPlan ? {} : pos), pointerEvents: 'auto',
+        padding: 'var(--ln-s-3) var(--ln-s-4)', background: 'var(--ln-blueprint-paper, #fff)', color: 'var(--ln-bp-ink, #0f2436)',
+        border: '2px solid var(--ln-cyan-border)', borderRadius: 'var(--ln-r-md)', boxShadow: '4px 4px 0 var(--ln-blueprint-blue, #1f78c1)',
+        ...(flightPlan ? { width: '100%', maxWidth: 'none', maxHeight: 'none' } : {}),
+      }}
+    >
+      <div className="help-coach-dock-head">
+        <span className="ops-badge" aria-hidden="true">OPS</span>
+        <span className="help-coach-dock-kicker">Show me · {index + 1} of {total}</span>
+      </div>
+      <div data-testid="help-coach-hint-text" style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.35, margin: '4px 0 var(--ln-s-3)' }}>
+        {step.hint}
+      </div>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+        <button type="button" data-testid="help-coach-stop" onClick={onStop} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-panel)', color: 'var(--ln-bp-ink, #0f2436)' }}>
+          Skip
+        </button>
+        <button type="button" data-testid="help-coach-next" onClick={onNext} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)', color: 'var(--ln-bp-ink, #0f2436)' }}>
+          {last ? 'Done' : 'Next'}
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <div data-testid="help-coach" data-coach-step={step.id} style={{ position: 'fixed', inset: 0, zIndex: 80, pointerEvents: 'none' }}>
       <div style={{ ...shade, top: 0, left: 0, right: 0, height: Math.max(0, hole.top) }} />
       <div style={{ ...shade, top: holeBottom, left: 0, right: 0, bottom: 0 }} />
       <div style={{ ...shade, top: Math.max(0, hole.top), left: 0, width: Math.max(0, hole.left), height: hole.height }} />
       <div style={{ ...shade, top: Math.max(0, hole.top), left: holeRight, right: 0, height: hole.height }} />
-      <div aria-hidden style={{ position: 'absolute', top: hole.top, left: hole.left, width: hole.width, height: hole.height, borderRadius: 'var(--ln-r-md)', border: '3px solid var(--ln-blueprint-blue, #1f78c1)', pointerEvents: 'none' }} />
-      <div
-        role="status"
-        aria-label={`Hint ${index + 1} of ${total}`}
-        data-testid="help-coach-hint"
-        style={{
-          position: 'absolute', ...pos, pointerEvents: 'auto',
-          padding: 'var(--ln-s-3) var(--ln-s-4)', background: 'var(--ln-blueprint-paper, #fff)', color: 'var(--ln-text)',
-          border: '2px solid var(--ln-cyan-border)', borderRadius: 'var(--ln-r-md)', boxShadow: '4px 4px 0 var(--ln-blueprint-blue, #1f78c1)',
-        }}
-      >
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, color: 'var(--ln-cyan-bright)' }}>
-          Step {index + 1} of {total}
-        </div>
-        <div data-testid="help-coach-hint-text" style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.35, margin: '4px 0 var(--ln-s-3)' }}>
-          {step.hint}
-        </div>
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-          <button type="button" data-testid="help-coach-stop" onClick={onStop} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-panel)', color: 'var(--ln-text)' }}>
-            Stop
-          </button>
-          <button type="button" data-testid="help-coach-next" onClick={onNext} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)', color: 'var(--ln-cyan-bright)' }}>
-            {last ? 'Done' : 'Next'}
-          </button>
-        </div>
-      </div>
+      <div aria-hidden className="help-coach-brackets" style={{ position: 'absolute', top: hole.top - 7, left: hole.left - 7, width: hole.width + 14, height: hole.height + 14 }} />
+      {flightPlan ? createPortal(dock, flightPlan) : dock}
     </div>
   )
 }

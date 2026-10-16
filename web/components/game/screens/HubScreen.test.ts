@@ -15,26 +15,27 @@ describe('Earth Base module composition', () => {
     // These are the authored CSS footprints for the current flat sprite
     // renders. Keep the test tied to the rendered assets rather than the
     // retired modular-kit dimensions.
-    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad.width).toBe(84)
-    expect(EARTH_BASE_STRUCTURE_SIZES.hangar.width).toBe(176)
-    expect(EARTH_BASE_STRUCTURE_SIZES['surface-silo']).toEqual({ width: 124, height: 132 })
+    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad).toEqual({ width: 120, height: 108 })
+    expect(EARTH_BASE_STRUCTURE_SIZES.hangar).toEqual({ width: 72, height: 44 })
+    expect(EARTH_BASE_STRUCTURE_SIZES['surface-silo']).toEqual({ width: 48, height: 96 })
   })
 
-  it('uses the rust/steel silo render instead of the cyan SVG placeholder', () => {
+  it('draws tiered pixel modules and keeps the silo off the surface', () => {
     const source = readFileSync(join(process.cwd(), 'components/game/hub/EarthBaseModules.tsx'), 'utf8')
-    expect(source).toContain("src: '/game/assets/base/surface_silo_flat.png'")
+    expect(source).toContain('PixelStructure')
+    expect(source).not.toContain('surface_silo_flat.png')
     expect(source).not.toContain('earth-base-silo-sprite')
     expect(source).toContain('hub-construct-reveal')
+    expect(source).toContain("building.kind === 'surface-silo'")
   })
 
-  /** Support facilities stay smaller than the two primary Earth Base sprites. */
-  it('keeps structure sizes in the same ratio as the Blender models', () => {
-    const { launchpad, hangar, refinery } = EARTH_BASE_STRUCTURE_SIZES
-    // v5 art (SSL-489): the launchpad is a tall, narrow tower, so compare height for it and area for the hangar.
+  /** The launch complex stays the largest surface module. The silo footprint is the shaft, not a hall. */
+  it('keeps structure sizes in a clear hierarchy', () => {
+    const { launchpad, hangar } = EARTH_BASE_STRUCTURE_SIZES
     const area = (s: { width: number; height: number }) => s.width * s.height
-    expect(launchpad.height).toBeGreaterThan(refinery.height)
-    expect(area(hangar)).toBeGreaterThan(area(refinery))
-    expect(area(EARTH_BASE_STRUCTURE_SIZES['surface-silo'])).toBeLessThan(area(hangar))
+    expect(area(launchpad)).toBeGreaterThan(area(hangar))
+    expect(EARTH_BASE_STRUCTURE_SIZES.refinery).toBeUndefined()
+    expect(EARTH_BASE_STRUCTURE_SIZES.command).toBeUndefined()
   })
 
   it('carries an explicit height so nothing depends on intrinsic image size', () => {

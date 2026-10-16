@@ -1,0 +1,24 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Scenes: start dev server",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/web" },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": { "regexp": "^$" },
+        "background": { "activeOnStart": true, "beginsPattern": "Starting", "endsPattern": "Ready" }
+      },
+      "presentation": { "reveal": "silent" }
+    },
+    {
+      "label": "Scenes: shoot one (prompts for preset)",
+      "type": "shell",
+      "command": "scripts/scene.sh ${input:preset}",
+      "options": { "cwd": "${workspaceFolder}" }
+    }
+  ],
+  "inputs": [{ "id": "preset", "type": "promptString", "description": "Preset key, e.g. cp-mid (scripts/scene.sh list)" }]
+}

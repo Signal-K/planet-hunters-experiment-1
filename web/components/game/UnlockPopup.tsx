@@ -52,7 +52,7 @@ const UNLOCKS: Record<string, {
     cta: 'Accept Loan',
   },
   'ship-customizer': {
-    accent: '#39d36a',
+    accent: '#9b8cf0',
     eyebrow: 'Facility Unlocked',
     title: 'SHIP ROOMS',
     body: 'The hangar now shows a full interior view of your ship — slot rooms to customise layout, capacity, and crew stations. Open Hangar from the base menu to explore it.',

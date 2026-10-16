@@ -71,6 +71,14 @@ describe('applyPurchaseRocket', () => {
     expect(rocketPurchaseRefusal(state, rocket)).toBeNull()
   })
 
+  it('accepts a build from the hangar once a mission and destination are set up', () => {
+    const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
+    const state = { ...makeState({ francs: rocket.costFrancs }), screen: 'hangar' as const, missionId: 'm1', targetId: 'mars' }
+    expect(rocketPurchaseRefusal(state, rocket)).toBeNull()
+    expect(applyPurchaseRocket(state, rocket).screen).toBe('fab')
+    expect(rocketPurchaseRefusal({ ...state, missionId: null }, rocket)).not.toBeNull()
+  })
+
   it('explains each authoritative purchase refusal', () => {
     const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
     expect(rocketPurchaseRefusal(makeState({ francs: 0 }), rocket)).toBe('Return to the launch review before building.')
@@ -311,16 +319,16 @@ describe('applyConfirmShipCustomizerBuild', () => {
 })
 
 describe('Academy and staffing economy', () => {
-  it('leaves an unaffordable refinery placement unchanged', () => {
-    const refinery = STRUCTURES.find(structure => structure.id === 'refinery')!
+  it('leaves an unaffordable academy placement unchanged', () => {
+    const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
     const before = makeState({
-      francs: refinery.cost,
-      stash: { aluminium: 0, copper: 0 },
-      freeOperations: true,
+      francs: academy.cost,
+      stash: {},
+      academyResearched: true,
       placed: ['surface-silo'],
     })
 
-    expect(applyPlaceStructure(before, refinery, refinery.kind, 2)).toBe(before)
+    expect(applyPlaceStructure(before, academy, academy.kind, 2)).toBe(before)
   })
 
   it('charges the Academy build cost and materials only after research', () => {
@@ -343,29 +351,30 @@ describe('Academy and staffing economy', () => {
     expect(built.player.underConstruction?.['astronaut-academy']).toBeGreaterThan(0)
   })
 
-  it('keeps the storage silo as a build option without using it as the Free Ops gate (SSL-409)', () => {
+  it('places the storage silo as a build option; Free Ops is already open from the launchpad (SSL-409, SSL-611)', () => {
     const silo = STRUCTURES.find(structure => structure.id === 'surface-silo')!
     const training = makeState({ francs: silo.cost, missionsDone: 2, freeOperations: false, placed: ['launchpad'] })
     const trainingState = { ...training, tutorial: true, popup: null }
 
     const built = applyPlaceStructure(trainingState, silo, silo.kind, 1)
     expect(built.player.placed).toContain('surface-silo')
-    expect(built.player.freeOperations).toBe(false)
+    expect(built.player.freeOperations).toBe(true)
+    // The optional training is still running, so Free Ops opens quietly: no "training complete" sheet and the coach stays on.
     expect(built.tutorial).toBe(true)
     expect(built.popup).toBeNull()
   })
 
-  it('keeps the storage silo locked before the guided missions are flown', () => {
+  it('keeps the storage silo locked until the first run is flown, even in Free Ops', () => {
     const silo = STRUCTURES.find(structure => structure.id === 'surface-silo')!
-    const early = { ...makeState({ francs: silo.cost, missionsDone: 1, freeOperations: false, placed: ['launchpad'] }), tutorial: true }
+    const early = { ...makeState({ francs: silo.cost, missionsDone: 0, freeOperations: true, placed: ['launchpad'] }), tutorial: true }
     expect(applyPlaceStructure(early, silo, silo.kind, 1)).toBe(early)
   })
 
   it('does not re-raise the Free Ops handoff when a Free Ops player builds another structure', () => {
-    const refinery = STRUCTURES.find(structure => structure.id === 'refinery')!
-    const state = { ...makeState({ francs: refinery.cost, stash: { ...refinery.costMaterials }, placed: ['surface-silo'] }), popup: null }
-    const built = applyPlaceStructure(state, refinery, refinery.kind, 2)
-    expect(built.player.placed).toContain('refinery')
+    const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
+    const state = { ...makeState({ francs: academy.cost, stash: { ...academy.costMaterials }, academyResearched: true, placed: ['surface-silo'] }), popup: null }
+    const built = applyPlaceStructure(state, academy, academy.kind, 2)
+    expect(built.player.placed).toContain('astronaut-academy')
     expect(built.popup).toBeNull()
   })
 

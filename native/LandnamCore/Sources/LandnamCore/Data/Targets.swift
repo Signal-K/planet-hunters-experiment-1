@@ -49,6 +49,7 @@ public enum Targets {
         landmark("ceres", "1 Ceres", .asteroid, 5, "L2", "Dwarf planet at the belt's inner edge. Ice-rich mantle beneath a carbon-dark crust.", .C),
         landmark("lutetia", "21 Lutetia", .asteroid, 6, "L2", "A large carbonaceous asteroid in the outer belt. Hydrated minerals under a dark regolith crust.", .C, recommended: false),
         landmark("jupiter", "Jupiter", .planet, 6, "L3", "Gas giant with hydrogen, helium, and a high gravity penalty. Jupiter itself is not a conventional mining site.", .gasGiant),
+        landmark("europa", "Europa", .planet, 6, "L2", "Ice-covered moon of Jupiter. Water ice over a silicate interior, with a banded giant in the sky.", .icy),
     ]
 
     public static let byId: [String: Target] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
@@ -72,7 +73,8 @@ public enum Targets {
     /// Targets a mission can be flown to (port of `compatibleTargetsFor`).
     public static func compatible(with mission: Mission, targets: [Target] = all) -> [Target] {
         if let fixed = mission.targetId { return targets.filter { $0.id == fixed } }
-        let required = Array(mission.requires.minerals.keys)
+        // A construction mission's minerals are materials carried from the stash, not ore the target must hold.
+        let required = mission.construction == nil ? Array(mission.requires.minerals.keys) : []
         let onboarding = mission.sequence <= MissionGenerator.onboardingSequenceCount
         return targets.filter { t in
             t.orbit <= mission.requires.maxOrbit
@@ -82,10 +84,10 @@ public enum Targets {
     }
 
     /// Compatible targets the player's unlocked parts can actually reach, carry and mine.
-    public static func feasible(for mission: Mission, parts: PartCatalog = .standard, missionsDone: Int,
+    public static func feasible(for mission: Mission, targets: [Target] = all, parts: PartCatalog = .standard, missionsDone: Int,
                                 launchpadUpgraded: Bool = false, launchpadLevel: Int = 1, skills: [String] = []) -> [Target] {
         let delivery = mission.deliveryTargetId.flatMap { byId[$0] }
-        return compatible(with: mission).filter { target in
+        return compatible(with: mission, targets: targets).filter { target in
             let rocket = parts.suggestBuild(mission: mission, target: target, deliveryTarget: delivery,
                                             missionsDone: missionsDone, launchpadUpgraded: launchpadUpgraded, launchpadLevel: launchpadLevel, skills: skills)
             return parts.validate(mission: mission, target: target, rocket: rocket, skills: skills).ok

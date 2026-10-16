@@ -1,0 +1,542 @@
+/* Base world layers (SSL-423 site map). Lengths are kit units times --px; the ground line is --hub-ground. */
+.scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--sky-top);
+}
+
+.sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 52%, var(--sky-horizon) calc(100% - var(--hub-ground) - 4%), var(--sky-horizon) 100%);
+  transition: background 1.2s ease;
+}
+
+.skyFixed {
+  position: absolute;
+  inset: 0 0 var(--hub-ground) 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* The wrapper carries the grade's star opacity; the inner layer only twinkles. */
+.starsWrap {
+  position: absolute;
+  inset: 0 0 35% 0;
+  pointer-events: none;
+  transition: opacity 1.2s ease;
+}
+
+.stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1.5px 1.5px at 8% 22%, var(--ln-world-hull-lit), transparent),
+    radial-gradient(1.5px 1.5px at 22% 10%, var(--ln-world-hull-lit), transparent),
+    radial-gradient(1px 1px at 41% 28%, var(--ln-world-hull-lit), transparent),
+    radial-gradient(1.5px 1.5px at 63% 14%, var(--ln-world-hull-lit), transparent),
+    radial-gradient(1px 1px at 78% 32%, var(--ln-world-hull-lit), transparent),
+    radial-gradient(1.5px 1.5px at 91% 18%, var(--ln-world-hull-lit), transparent);
+  background-size: 280px 160px;
+  animation: twinkle 3.2s ease-in-out infinite;
+}
+
+.luminary {
+  position: absolute;
+  width: calc(14 * var(--px, 3px));
+  height: calc(14 * var(--px, 3px));
+  margin-left: calc(-7 * var(--px, 3px));
+  border-radius: 50%;
+  background: var(--ln-world-hull-lit);
+  box-shadow: 0 0 0 calc(4 * var(--px, 3px)) color-mix(in srgb, var(--ln-world-hull-lit) 22%, transparent), 0 0 calc(18 * var(--px, 3px)) color-mix(in srgb, var(--ln-world-hull-lit) 40%, transparent);
+  pointer-events: none;
+}
+
+/* The moon: a lit disc with a sky-coloured bite, so it reads as a crescent. */
+.luminary[data-luminary='moon'] {
+  width: calc(10 * var(--px, 3px));
+  height: calc(10 * var(--px, 3px));
+  background: radial-gradient(circle at 70% 35%, var(--sky-top) 0 46%, var(--ln-world-hull-lit) 47%);
+  box-shadow: 0 0 calc(12 * var(--px, 3px)) color-mix(in srgb, var(--ln-world-hull-lit) 30%, transparent);
+}
+
+.clouds {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 1.2s ease;
+}
+
+.cloud {
+  position: absolute;
+  height: auto;
+  pointer-events: none;
+  animation: cloudDrift linear infinite;
+}
+
+.horizon {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Far ground: one wide image, wider than the strip so the parallax shift never shows an edge. */
+.band {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+}
+
+.timeShade {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  transition: opacity 1.2s ease, background 1.2s ease;
+}
+
+.ground {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.groundArt {
+  position: absolute;
+  max-width: none;
+}
+
+.groundDeep {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.lane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+  background: repeating-linear-gradient(90deg, var(--ln-world-hull-lit) 0 18px, transparent 18px 36px);
+  animation: lane 18s linear infinite;
+}
+
+.path {
+  position: absolute;
+  top: 8px;
+  width: 14px;
+  height: 18px;
+  margin-left: -7px;
+  background: var(--ln-world-concrete);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ln-world-outline) 35%, transparent);
+}
+
+.shaftWrap {
+  position: absolute;
+  left: 68%;
+  bottom: 8px;
+  width: calc(44 * var(--px, 3px));
+  height: calc(36 * var(--px, 3px));
+  transform: translateX(-50%);
+  z-index: 9;
+}
+
+.shaftArt {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  image-rendering: pixelated;
+}
+
+.shaft {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  transform: translateX(-50%);
+  background: var(--ln-world-hull-shade);
+  border-left: 3px solid var(--ln-world-outline);
+  border-right: 3px solid var(--ln-world-outline);
+}
+
+.lift {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  height: 22px;
+  bottom: 28%;
+  background: var(--ln-world-trim-blue);
+  border: 2px solid var(--ln-world-outline);
+  animation: liftBob 3.4s ease-in-out infinite;
+}
+
+.bay {
+  position: absolute;
+  top: 18px;
+  bottom: 10px;
+  width: 28%;
+  background: color-mix(in srgb, var(--ln-world-hull) 16%, var(--ln-world-underground));
+  border: 2px solid var(--ln-world-outline);
+}
+
+.bayLeft { left: 8px; }
+.bayRight { right: 8px; }
+
+.tank {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 16%;
+  bottom: 18%;
+  background: var(--ln-world-hull);
+  border: 2px solid var(--ln-world-outline);
+  border-radius: 8px;
+}
+
+.lamp {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: var(--ln-world-trim-teal);
+  animation: beacon 2.4s steps(2, end) infinite;
+}
+
+.shaftButton {
+  position: absolute;
+  left: 68%;
+  bottom: 8px;
+  width: max(44px, calc(44 * var(--px, 3px)));
+  height: max(44px, calc(36 * var(--px, 3px)));
+  min-width: 44px;
+  min-height: 44px;
+  transform: translateX(-50%);
+  z-index: 12;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.spriteWrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  image-rendering: pixelated;
+}
+
+.padStack {
+  position: relative;
+  display: block;
+  overflow: visible;
+}
+
+.padArt,
+.structureArt {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.structureArt { position: relative; display: block; }
+
+/* Teal beacon on the gantry mast: a blinking light, the pad's idle animation. */
+.padBeacon {
+  position: absolute;
+  z-index: 6;
+  width: calc(2.4 * var(--px, 3px));
+  height: calc(2.4 * var(--px, 3px));
+  margin-left: calc(-1.2 * var(--px, 3px));
+  border-radius: 50%;
+  background: var(--ln-world-glass);
+  box-shadow: 0 0 calc(3 * var(--px, 3px)) var(--ln-world-trim-teal);
+  pointer-events: none;
+  animation: beaconBlink 1.4s steps(1, end) infinite;
+}
+
+/* The rocket stands on the launch mount; left and bottom come from the site map's mount point. */
+.padFlight {
+  position: absolute;
+  width: calc(44 * var(--px, 3px));
+  height: calc(72 * var(--px, 3px));
+  z-index: 4;
+  pointer-events: none;
+}
+
+.padFlight .padRocket {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.padExhaust {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  height: calc(20 * var(--px, 3px));
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.padSmoke {
+  position: absolute;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 6;
+}
+
+
+.padSmoke {
+  left: calc(50% - 21 * var(--px, 3px));
+  bottom: calc(2 * var(--px, 3px));
+  width: calc(80 * var(--px, 3px));
+  height: calc(28 * var(--px, 3px));
+}
+
+.padStack[data-pad-phase='launch'] .padFlight {
+  z-index: 7;
+  animation: padLiftoff 3.2s linear forwards;
+}
+
+.padLaunch {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  --px: 3px;
+  --hub-ground: 20%;
+}
+
+.padLaunchStack {
+  position: absolute;
+  left: 50%;
+  bottom: var(--hub-ground);
+  z-index: 2;
+  transform: translateX(-50%);
+}
+
+.padCloudDrift {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  animation: padCloudDrift 18s ease-in-out infinite alternate;
+}
+
+
+/* Hangar door to pad. Wheels sit on --hub-ground until --lift raises the nozzles onto the slab. */
+.rollout {
+  --hangar-x: 12%;
+  --pad-x: 52%;
+  --pad-scale: 1;
+  --hangar-scale: 1;
+  --scale: calc(var(--hangar-scale) + (var(--pad-scale) - var(--hangar-scale)) * var(--grow, 0));
+  position: absolute;
+  z-index: 15;
+  left: calc((var(--hangar-x) + 30 * var(--px, 3px) * var(--hangar-scale)) * (1 - var(--t, 0)) + (var(--pad-x) + 19 * var(--px, 3px) * var(--pad-scale)) * var(--t, 0));
+  bottom: calc(var(--hub-ground) + (18 * var(--pad-scale) - 4) * var(--px, 3px) * var(--lift, 0));
+  width: calc(var(--fw, 72) * var(--px, 3px) * var(--scale));
+  transform: translateX(-50%);
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.rollout img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+@media (orientation: portrait) and (max-width: 800px) {
+  .rollout {
+    --hangar-x: 16%;
+    --pad-x: 68%;
+    --hangar-scale: 0.75;
+  }
+}
+.beaconDot {
+  position: absolute;
+  left: 31%;
+  top: 3%;
+  width: 8px;
+  height: 8px;
+  background: var(--ln-world-trim-teal);
+  animation: beacon 2.4s steps(2, end) infinite;
+  pointer-events: none;
+}
+
+.pixel {
+  display: block;
+  width: 100%;
+  height: 100%;
+  shape-rendering: crispEdges;
+}
+
+.beacon { animation: beacon 2.4s steps(2, end) infinite; }
+.steam {
+  transform-origin: center bottom;
+  animation: steam 4.5s ease-out infinite;
+}
+.windowGlow {
+  fill: var(--base-window, var(--ln-world-glass));
+  opacity: var(--base-window-on, 0.35);
+}
+:global([data-screen='hub'][data-time='dusk']) .windowGlow,
+:global([data-screen='hub'][data-time='night']) .windowGlow {
+  animation: windowGlow 7s ease-in-out infinite;
+}
+.dish { transform-box: fill-box; transform-origin: center; animation: dish 14s linear infinite; }
+
+@keyframes parallax {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Clouds cross the whole strip and wrap. */
+@keyframes cloudDrift {
+  from { transform: translateX(calc(-140 * var(--px, 3px))); }
+  to { transform: translateX(calc(560 * var(--px, 3px))); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.95; }
+}
+
+@keyframes lane {
+  from { background-position: 0 0; }
+  to { background-position: -72px 0; }
+}
+
+@keyframes liftBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes beacon {
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0.25; }
+}
+
+@keyframes beaconBlink {
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes padLiftoff {
+  0% { transform: translate3d(0, 0, 0); }
+  8% { transform: translate3d(calc(-1 * var(--px, 3px)), 0, 0); }
+  12% { transform: translate3d(var(--px, 3px), 0, 0); }
+  16% { transform: translate3d(calc(-1 * var(--px, 3px)), 0, 0); }
+  20% { transform: translate3d(var(--px, 3px), 0, 0); }
+  28% { transform: translate3d(0, 0, 0); }
+  42% { transform: translate3d(0, calc(-8 * var(--px, 3px)), 0); }
+  100% { transform: translate3d(0, -62vh, 0); }
+}
+
+@keyframes padCloudDrift {
+  from { transform: translateX(0); }
+  to { transform: translateX(18px); }
+}
+
+@keyframes steam {
+  0% { opacity: 0; transform: translateY(6px) scale(0.7); }
+  30% { opacity: 0.7; }
+  100% { opacity: 0; transform: translateY(-18px) scale(1.2); }
+}
+
+@keyframes windowGlow {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+@keyframes dish {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .band,
+  .cloud,
+  .stars,
+  .lane,
+  .lift,
+  .beacon,
+  .padBeacon,
+  .padFlight,
+  .padCloudDrift,
+  .steam,
+  .windowGlow,
+  .dish,
+  .lamp,
+  .beaconDot {
+    animation: none;
+  }
+}
+
+/* SSL-553: touchdown on the Earth pad after the trip home. The rocket drops in on its exhaust and settles. */
+:global([data-pad-landing='true']) .padFlight {
+  animation: padTouchdown 2.6s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+:global([data-pad-landing='true']) .padFlight::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  height: calc(20 * var(--px, 3px));
+  background: url('/game/assets/base/kit/pad-exhaust-1.png') center / 100% 100% no-repeat;
+  image-rendering: pixelated;
+  animation: padTouchdownFlame 2.6s steps(6) both;
+}
+@keyframes padTouchdown {
+  0% { transform: translateY(-120vh); }
+  70% { transform: translateY(calc(-4 * var(--px, 3px))); }
+  100% { transform: translateY(0); }
+}
+@keyframes padTouchdownFlame {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :global([data-pad-landing='true']) .padFlight, :global([data-pad-landing='true']) .padFlight::after { animation: none; }
+  :global([data-pad-landing='true']) .padFlight::after { opacity: 0; }
+}

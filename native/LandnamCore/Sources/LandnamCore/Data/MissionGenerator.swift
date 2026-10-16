@@ -1,5 +1,18 @@
 import Foundation
 
+public enum MissionCategory: String, Codable, CaseIterable, Sendable {
+    case freeMining = "free-mining"
+    case construction
+    case contracts
+    case explore
+    case citizenScienceHubs = "citizen-science-hubs"
+    case missions
+}
+
+public extension Mission {
+    var category: MissionCategory { MissionGenerator.category(for: self) }
+}
+
 public struct MissionTemplate: Equatable, Sendable {
     public let id: String
     public let tag: String
@@ -15,11 +28,25 @@ public struct MissionTemplate: Equatable, Sendable {
 /// Deterministic offline mission board (port of `mission-generator.ts`). The same
 /// bands produce the same ids on every device, so saves stay compatible with web.
 public enum MissionGenerator {
+    public static func category(for mission: Mission) -> MissionCategory {
+        if mission.client != nil { return .contracts }
+        if mission.construction != nil { return .construction }
+        switch mission.tag.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() {
+        case "FREE OPS": return .freeMining
+        case "EXPLORE", "SCIENCE": return .explore
+        case "CITIZEN SCIENCE HUB": return .citizenScienceHubs
+        default: return .missions
+        }
+    }
+
     public static let freeOpsStartMissionsDone = 2
     public static let onboardingSequenceCount = 2
     public static let freeOpsMissionSequence = 4
     public static let offlineMissionCount = 12
     public static let transportSequence = 2
+    public static let starterRoverTemplateId = "freeops-rover-landing"
+    public static let starterRoverVehicle = "starter-rover"
+    static func onWorldVehicle(for t: MissionTemplate) -> String? { t.id == starterRoverTemplateId ? starterRoverVehicle : nil }
 
     public static let templates: [MissionTemplate] = [
         MissionTemplate(id: "starter-bulk", tag: "STARTER", difficulty: "L1", mineralKeys: ["platinum", "palladium"], cargoRange: 4...8, drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, clientRole: .starter),
@@ -140,7 +167,8 @@ public enum MissionGenerator {
                     unlockAt: "Reach Free Operations",
                     requires: MissionRequirements(minerals: [mineral: amount], cargoMin: amount,
                                                   drillTier: requiredDrillTier([mineral], floor: t.drillTierMin), maxOrbit: t.orbitMax),
-                    payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: max(5, Int((8.0 + Double(amount) / 2).rounded()))))
+                    payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: max(5, Int((8.0 + Double(amount) / 2).rounded()))),
+                    onWorldVehicle: onWorldVehicle(for: t))
             }
         }
     }
@@ -161,7 +189,8 @@ public enum MissionGenerator {
                     unlockAt: "Reach Free Operations",
                     requires: MissionRequirements(minerals: [mineral: amount], cargoMin: amount,
                                                   drillTier: requiredDrillTier([mineral], floor: t.drillTierMin), maxOrbit: t.orbitMax),
-                    payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: 0))
+                    payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: 0),
+                    onWorldVehicle: onWorldVehicle(for: t))
             }
     }
 

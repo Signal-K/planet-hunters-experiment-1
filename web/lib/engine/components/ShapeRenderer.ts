@@ -100,6 +100,11 @@ export class ShapeRenderer implements Component {
     if (this.graphics) this.graphics.tint = tint
   }
 
+  /** Surface chips replace the buried marker. The marker stays for hit tests. */
+  setShown(shown: boolean): void {
+    if (this.graphics) this.graphics.alpha = shown ? 1 : 0
+  }
+
   destroy(): void {
     if (this.graphics) {
       this.graphics.parent?.removeChild(this.graphics)

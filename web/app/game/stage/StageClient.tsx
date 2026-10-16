@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from 'react'
 import { GameProvider, useGame } from '@/game-context'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
-import FriendsButton from '@/components/game/FriendsButton'
-import CommunityButton from '@/components/game/CommunityButton'
 import SuiteHopRail from '@/components/game/SuiteHopRail'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import FlightPlan from '@/components/game/FlightPlan'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { trainingTryStep } from '@/lib/data/tutorial'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import SettingsSheet from '@/components/game/SettingsSheet'
+import { OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 
 // Minimal shell: same wrapper classes as the live game so CSS matches, but none
 // of the loop machinery (Flight Plan, auth gate, tickers, sync, analytics).
@@ -53,12 +53,25 @@ function Stage() {
 
   // ?chrome=1 mounts the Base overlays (DEV badge, Friends, Hub, suite rail) so their overlaps can be checked.
   const [chrome, setChrome] = useState(false)
-  useEffect(() => { setChrome(new URLSearchParams(window.location.search).get('chrome') === '1') }, [])
+  const [signed, setSigned] = useState(false)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setChrome(params.get('chrome') === '1')
+    setSigned(params.get('signed') === '1')
+  }, [])
   // ?plan=1 mounts the live Flight Plan strip (same step lookup as the live shell) so an objective can be asserted.
   const [plan, setPlan] = useState(false)
   useEffect(() => { setPlan(new URLSearchParams(window.location.search).get('plan') === '1') }, [])
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  useEffect(() => {
+    const open = () => setSettingsOpen(true)
+    window.addEventListener(OPEN_SETTINGS_EVENT, open)
+    return () => window.removeEventListener(OPEN_SETTINGS_EVENT, open)
+  }, [])
   const activeTry = currentTrainingTry(game.player.flightPlan)
-  const planStep = plan && activeTry ? trainingTryStep(activeTry, game.screen) : undefined
+  const planStep = plan && activeTry
+    ? trainingTryStep(activeTry, game.screen, { returning: !!game.player.returningToEarth })
+    : undefined
   const immersive = LOCATION_SCREENS.has(game.screen as Screen)
 
   return (
@@ -70,19 +83,21 @@ function Stage() {
       )}
       <div className={`portrait-canvas ${immersive ? 'portrait-canvas--full-page' : ''} ${game.screen === 'mining' ? 'portrait-canvas--mining' : ''}`}>
         <div className="game-stage-main">
-          {chrome && (
+              {chrome && (
             <>
               <DevShortcuts />
-              {game.screen === 'hub' && <><FriendsButton onClick={() => {}} /><CommunityButton onClick={() => {}} /></>}
-              {(game.screen === 'hub' || game.screen === 'launchpad') && <SuiteHopRail signedIn={false} />}
+              {game.screen === 'launchpad' && <SuiteHopRail signedIn={signed} />}
             </>
           )}
           <div className="game-screen-area">
             {game.hydrated && <ScreenContent screen={game.screen} game={game} onboardingActive={false} />}
           </div>
-          {planStep && <FlightPlan key={planStep.id} stepIndex={['mining', 'scan', 'part'].indexOf(planStep.try)} step={planStep} total={3} onSkip={() => {}} />}
+          <div className="flight-plan-slot" data-testid="flight-plan-slot">
+            {planStep && <FlightPlan key={planStep.id} stepIndex={['mining', 'scan', 'part'].indexOf(planStep.try)} step={planStep} total={3} onSkip={() => {}} />}
+          </div>
         </div>
       </div>
+      {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
     </main>
   )
 }

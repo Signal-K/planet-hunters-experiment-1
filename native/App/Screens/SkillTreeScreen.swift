@@ -89,7 +89,7 @@ struct SkillTreeScreen: View {
             VStack(alignment: .leading, spacing: 8) {
                 Eyebrow(text: "Program milestones · Firsts")
                 ForEach([("First mission complete", f.mission), ("First satellite launch", f.satellite), ("First TESS classification", f.tess),
-                         ("First blueprint unlocked", f.blueprint), ("Refinery built", f.refinery), ("Launchpad upgraded", f.launchpad)], id: \.0) { label, done in
+                         ("First blueprint unlocked", f.blueprint), ("Launchpad upgraded", f.launchpad)], id: \.0) { label, done in
                     HStack {
                         Image(systemName: done ? "checkmark.circle.fill" : "circle").foregroundStyle(done ? Theme.teal : Theme.textMuted)
                         Text(label).font(AppFont.body(14))

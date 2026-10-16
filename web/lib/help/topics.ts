@@ -39,17 +39,19 @@ export const MAX_HELP_CARDS = 4
  */
 const LAUNCH_HELP: HelpTopic = {
   id: 'launch',
-  title: 'Launch',
+  title: 'Launch review',
   cards: [
-    { title: 'Workshop, then the pad', body: 'The rocket stands by the Workshop on the Earth base. Confirm and the same rocket rolls to the pad.' },
-    { title: 'Then it flies', body: 'LAUNCH starts the flight. A Free Ops haul and a client contract both leave from this review. The contract was a choice, not a gate.' },
+    { title: 'Map and destination', body: 'The map shows where each body sits. Lit bodies are in reach of this rocket. Tap one to pick it, or use the arrows. Check the minerals and the distance before you commit.' },
+    { title: 'Rocket and cargo', body: 'Each rocket class has its own cargo space and range. Pick one that carries the cargo this run needs and reaches the body. A contract shows its payout, so compare it with what the rocket costs.' },
+    { title: 'Fit checks', body: 'Clearance reads ALL PARAMETERS PASS when the rocket, fuel and cargo fit the trip. If it says BUILD HOLD, the line under it names what is missing. Change the rocket or the target to clear it.' },
+    { title: 'What Launch commits', body: 'Prepare rolls the rocket from the Workshop to the pad and spends its build cost. LAUNCH then starts the flight. A Free Ops haul and a client contract both leave from here.' },
   ],
 }
 
 export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
   'instrument-hub': {
     id: 'control-station',
-    title: 'Control Station',
+    title: 'Where things are',
     cards: [
       {
         title: 'Where things are',
@@ -97,18 +99,18 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
   },
   hub: {
     id: 'base',
-    title: 'Base',
+    title: 'Between flights',
     cards: [
-      { title: 'Home of the program', body: 'The Base is where you stand between flights. Buildings, the launch tower, and the Menu are on this ground. After training, you do not need a client contract to keep playing.' },
-      { title: 'Free Ops or a contract', body: 'Open the Launchpad. Launch your own instrument, scan a body, or mine for yourself. Available Contracts is the other branch from the same pad.' },
-      { title: 'Ops list', body: 'OPS in the Menu lists every building and every running process, including other worlds. Tap a row to jump there.' },
+      { title: 'Home of the program', body: 'You stand here between flights. Buildings and the launch tower are on this ground. After training, you do not need a client contract to keep playing.' },
+      { title: 'Free Ops or a contract', body: 'Open the launch tower. Launch your own instrument, scan a body, or mine for yourself. Available Contracts is the other branch from the same pad.' },
+      { title: 'Ops list', body: 'Buildings on the ground open their own work. The dock switches operation, opens Build, or opens Hub.' },
     ],
   },
   launchpad: {
     id: 'launchpad',
-    title: 'Launchpad',
+    title: 'Start a run',
     cards: [
-      { title: 'Start a run', body: 'NEW MISSION opens Free Ops: your own satellite, a mining haul, or a build. No client is required.' },
+      { title: 'Start a run', body: 'The launch tower opens Free Ops: your own satellite, a mining haul, or a build. No client is required.' },
       { title: 'Contracts stay optional', body: 'AVAILABLE CONTRACTS lists client work. Taking one is a choice. The pad still flies your own missions if you skip it.' },
       { title: 'A run already out', body: 'RESUME jumps back in. SCRUB abandons that run after you confirm. Cargo and laser charges from it are cleared.' },
     ],
@@ -120,38 +122,50 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     id: 'contracts',
     title: 'Contracts',
     cards: [
-      { title: 'One branch', body: 'This board is client work. Accept a contract when you want that payout. Leave it and use the Launchpad for your own flight.' },
+      { title: 'Client or your own work', body: 'This board is client work. A contract pays a set amount and may be locked until you meet its requirement. Skip it and fly your own mission from the pad.' },
+      { title: 'Payout and bonus', body: 'The payout is paid on delivery. A client bonus is extra, and only if the card lists one and you meet its terms. Misses cost the bonus, not the base payout.' },
       { title: 'Prepare, then launch', body: 'Accept and prepare opens the launch review. The rocket stands in the Workshop, then rolls to the pad when you confirm.' },
     ],
   },
   mining: {
     id: 'mining',
-    title: 'Mining',
+    title: 'Mining operations',
     cards: [
       { title: 'Hit the requested ore', body: 'The first rocks in the seam are the mineral this run asked for. Fire when one sits under the ship.' },
       { title: 'Charges and cargo stay', body: 'Shots spend laser charges. Leaving or reloading keeps the cargo and the charges you have left. Recharge spends francs.' },
       { title: 'Bring it home', body: 'Return when you are ready on a Free Ops haul. A client order waits until the requested ore is in the hold.' },
     ],
+    coach: [
+      { id: 'laser', targets: ['mining-fire-laser'], anchor: 'mining-fire-laser', hint: 'Wait for a coloured seam to pass the fixed laser line, then fire.', completeOn: 'fire' },
+    ],
   },
   debrief: {
     id: 'debrief',
-    title: 'Debrief',
+    title: 'After the haul',
     cards: [
       { title: 'The haul is home', body: 'Debrief pays the run and puts ore in your stash, or sells it if that was the plan.' },
-      { title: 'Next is the Base', body: 'Collect, then you are back at the Base. Spend the francs and ore on a build, or launch again. A new contract is optional.' },
+      { title: 'Next is the ground', body: 'Collect, then you are back on the ground. Spend the francs and ore on a build, or launch again. A new contract is optional.' },
     ],
   },
   build: {
     id: 'build',
-    title: 'Build',
+    title: 'Place a structure',
     cards: [
       { title: 'Spend what you hauled', body: 'Pick a structure and a plot. The card shows the francs and minerals it needs.' },
       { title: 'Where a mineral comes from', body: 'If you are short, the card names the Free Ops bodies that carry that mineral. Mine it, return, then build.' },
     ],
   },
+  hangar: {
+    id: 'hangar',
+    title: 'Hangar',
+    cards: [
+      { title: 'Parts and builds', body: 'Pick a part to see what it changes. Stat changes show next to the part. Build cost is the francs it takes to fit it.' },
+      { title: 'Staged vehicles', body: 'Assemble a staged vehicle here, then transfer it to the pad. Parts you have not unlocked stay greyed.' },
+    ],
+  },
   market: {
     id: 'market',
-    title: 'Market',
+    title: 'Sell the haul',
     cards: [
       { title: 'Sell the haul', body: 'Ore you brought home sells here for francs. The price on the card is the price you are paid.' },
       { title: 'Build from a recipe', body: 'Road Segment and Surface Silo show BUILD when you can afford them. Short cards name where to mine the missing material in Free Ops.' },

@@ -11,6 +11,14 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
       await page.waitForTimeout(1500)
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
+      // A beaconed building is marked by a ring on its name tag, not by brackets round its whole sprite frame (they read as a second coach).
+      const flightTarget = await page.evaluate(() => document.documentElement.getAttribute('data-flight-target') ?? '')
+      if (flightTarget.split(' ').every(id => id.startsWith('building-'))) {
+        const ring = await page.evaluate(id => getComputedStyle(document.querySelector(`[data-beacon="${id}"] .hub-building-name`)!).boxShadow, flightTarget.split(' ')[0])
+        expect(ring).not.toBe('none')
+        await page.screenshot({ path: info.outputPath(`beacon-ring-${vp}.png`) })
+        return
+      }
       const report = await page.evaluate(() => {
         const flight = document.documentElement.getAttribute('data-flight-target') ?? ''
         const ids = flight.split(' ').filter(Boolean)

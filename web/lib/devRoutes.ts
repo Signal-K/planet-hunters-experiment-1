@@ -48,7 +48,7 @@ export const UI_ROUTE_PRESETS: Record<string, string> = {
   'instrument-hub': 'ui-instrument-hub',
   'saturn-storm-search': 'ui-saturn-storm-search',
   galaxy: 'ui-tess-discovery',
-  'rover-mining': 'ui-rover-mining',
+  'rover-survey': 'ui-rover-survey',
   'ship-customizer': 'ship-customizer',
   hangar: 'ui-hangar-assembly',
   'hangar-assembly': 'ui-hangar-assembly',

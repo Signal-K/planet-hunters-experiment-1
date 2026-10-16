@@ -1,7 +1,7 @@
 import SwiftUI
 import LandnamCore
 
-/// Deep Space Telescope classify screen (mirrors web AsteroidDiscoveryScreen, STS-622 / SSL-497):
+/// Space Telescope classify screen (mirrors web AsteroidDiscoveryScreen, STS-622 / SSL-497):
 /// one NEOCP candidate a day plotted by RA/Dec; flag it likely real, an artifact, or skip.
 struct AsteroidDiscoveryScreen: View {
     @Environment(GameStore.self) private var store
@@ -19,7 +19,7 @@ struct AsteroidDiscoveryScreen: View {
             if candidate == nil && !store.player.freeOperations {
                 gate("Free Operations Required", "NEOCP candidate downlinks unlock after the starter contract arc.")
             } else if candidate == nil && !store.player.deepSpaceTelescopeBuilt {
-                gate("Launch Deep Space Telescope", "Deploy the Deep Space Telescope from the Launchpad to start receiving NEOCP asteroid candidates.",
+                gate("Launch Space Telescope", "Deploy the Space Telescope from the Launchpad to start receiving NEOCP asteroid candidates.",
                      action: ("OPEN LAUNCHPAD", { store.go(.launchpad) }))
             } else if let c = today {
                 classify(c)
@@ -35,7 +35,7 @@ struct AsteroidDiscoveryScreen: View {
     }
 
     private func gate(_ title: String, _ message: String, action: (String, () -> Void)? = nil) -> some View {
-        InstrumentGate(screenTitle: "Deep Space Telescope", title: title, message: message, action: action.map { (title: $0.0, run: $0.1) })
+        InstrumentGate(screenTitle: "Space Telescope", title: title, message: message, action: action.map { (title: $0.0, run: $0.1) })
     }
 
     private func classify(_ c: AsteroidCandidate) -> some View {

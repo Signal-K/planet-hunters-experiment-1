@@ -1,6 +1,6 @@
 import Foundation
 
-/// Transit Telescope feed (mirrors web lib/data/tess-candidates.ts): a light curve the player
+/// Space Telescope feed (mirrors web lib/data/tess-candidates.ts): a light curve the player
 /// marks dips on, then calls Confirm Transit / Mark Noise / Skip.
 public enum TessVerdict: String, Codable, CaseIterable, Sendable { case planet, notPlanet = "not_planet", unsure }
 
@@ -162,6 +162,10 @@ public enum Tess {
         }
         return depths.isEmpty ? nil : depths.reduce(0, +) / Double(depths.count)
     }
+
+    /// Scan training try subject (web visual fixture, `training-` prefix): stays local, never shared or logged.
+    public static let trainingCandidate = TessCandidate(id: "training-tess-1", ticId: "TIC 260004324", toi: "TRAINING CANDIDATE", sector: "Sectors 1-3",
+                                                        periodDays: 3.4, transitEpoch: 1.1, depthPpm: 9000, signalToNoise: 14)
 
     public static func today(candidates: [TessCandidate], player: Player, dateKey: String, inspect: String? = nil) -> TessCandidate? {
         let open = candidates.filter { player.tessClassifications[$0.id] == nil }

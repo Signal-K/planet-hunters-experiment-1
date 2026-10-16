@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import { awaitingStorageSilo } from '@/lib/systems/AgencyOnboardingSystem'
@@ -8,164 +8,38 @@ import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
-import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
-import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
+import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
+import { sanitizeEarthBiome } from '@/lib/scene/base-world'
+import { BaseDock } from '@/components/game/hub/BaseDock'
+import { BaseMenuSheet, type BaseMenuItem } from '@/components/game/hub/BaseMenuSheet'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
-import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
-import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
+import { useBaseCamera } from '@/lib/hooks/useBaseCamera'
+import { useBaseSeason, useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
+import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES, structureCenterPercent, structureWidthPct } from '@/components/game/hub/EarthBaseModules'
+import { RocketRollout } from '@/components/game/hub/RocketRollout'
+import { consumeRocketRolloutPending } from '@/lib/rocket-rollout'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
-import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
-import { RoadRover } from '@/components/game/hub/RoadRover'
-import { CrewWalkers } from '@/components/game/hub/CrewWalkers'
-import { EARTH_BASE_WIDE } from '@/lib/scene/compositions'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
-import { Building, EmptyPlot } from '@/components/game/hub/Building'
+import { Building } from '@/components/game/hub/Building'
+import { SiteMarker } from '@/components/game/hub/SiteMarker'
+import { STRIP_W, homeCenter, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
-import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, MISSIONS, missionTypePrimer, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
+import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
-import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
-import HUDStrip from '@/components/ui/HUDStrip'
-import SkyEventChip from '@/components/game/SkyEventChip'
-import OrionidsTeaser from '@/components/game/OrionidsTeaser'
+import { openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
-import { SkyBadgeRow } from './SkyBadgeRow'
-import OpsHubSheet from '@/components/game/hub/OpsHubSheet'
-import { useHelp } from '@/components/ui/useHelp'
+import { SCENE_NAMES } from '@/lib/ui-strings'
 
-// ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
-// Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
-// (Francs/jobs/mineral-stash glyphs live in HUDStrip, which owns that readout.)
-function BuildGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 21h18M6 21V9l6-5 6 5v12M10 21v-6h4v6" /></svg>
-  )
-}
-function PlusGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
-  )
-}
-function HangarGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="7" width="16" height="13" rx="1.5" /><path d="M4 7l2-4h12l2 4" /></svg>
-  )
-}
-function UpgradeGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M13 2L4 14h6l-1 8 9-12h-6z" /></svg>
-  )
-}
-function SurfaceGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
-  )
-}
-function SubsurfaceGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-  )
-}
-function HistoryGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 5h16v14H4z" /><path d="M8 9h8M8 13h6M8 17h4" /></svg>
-  )
-}
-function MarketGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 9h16v11H4z" /><path d="M3 9l2-5h14l2 5M8 13h8M8 17h5" /></svg>
-  )
-}
-/**
- * Docked bottom sheet, rebuilt 2026-08-21 (KES-226) — replaces the
- * floating `flexWrap` pill row (`.hub-action-rail`), which wrapped onto
- * the ground-level building labels/Subsurface pill once Edit Mode expanded
- * past ~3 buttons (KES-222, confirmed pre-existing, present on unmodified
- * code, and the likely cause of live taps mis-firing into Subsurface). A
- * fixed-height docked card with a defined row structure — title/CTA row,
- * then a non-wrapping icon-tab strip — cannot overlap anything below it,
- * by construction, at any button count or viewport width.
- *
- * Framed after tapnine.com's "Black Hole" (com.tapnine.blackhole)
- * reference: a title+status+primary-CTA row, then a row of small square
- * icon buttons — not tapnine's literal upgrade list, adapted to Landnam's
- * actual Hub actions (Build, Hangar, Upgrade, Subsurface, and the desktop-
- * only Market/Atlas/Skills destinations).
- */
-// Restyled 2026-08-23 from a vertical icon-over-label tile to a horizontal
-// icon-plate + label pill, taking layout cues from Out There: Ω Edition's
-// in-scene action buttons (a small dark icon plate beside an uppercase
-// label, inside a thin-outlined rounded rect) rather than a bare square tile.
-function DockIconBtn({ icon, label, onClick, active, accent, pulse, testId }: {
-  icon: React.ReactNode
-  label: string
-  onClick: () => void
-  active?: boolean
-  accent?: boolean
-  pulse?: boolean
-  testId?: string
-}) {
-  const on = active || accent
-  return (
-    <button
-      onClick={onClick}
-      data-testid={testId}
-      title={label}
-      aria-label={label}
-      style={{
-        flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 6,
-        background: on ? 'var(--hub-chalk-soft)' : 'color-mix(in srgb, var(--ln-text) 10%, transparent)',
-        border: `4px solid ${on ? 'var(--hub-chalk)' : 'color-mix(in srgb, var(--ln-text) 32%, transparent)'}`,
-        borderRadius: 14, padding: '4px 8px 4px 4px', cursor: 'pointer',
-      }}
-    >
-      <span style={{
-        width: 28, height: 28, borderRadius: 8, display: 'grid', placeItems: 'center', flexShrink: 0,
-        background: 'color-mix(in srgb, var(--ln-void) 55%, transparent)',
-        border: `4px solid ${on ? 'var(--hub-chalk)' : 'color-mix(in srgb, var(--ln-text) 28%, transparent)'}`,
-        color: on ? 'var(--hub-chalk)' : 'var(--hub-cyan)',
-        animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
-      }}>
-        {icon}
-      </span>
-      <span style={{
-        fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
-        letterSpacing: '0.06em', textTransform: 'uppercase', lineHeight: 1.1,
-        color: on ? 'var(--hub-chalk)' : 'color-mix(in srgb, var(--ln-text) 92%, transparent)',
-        whiteSpace: 'nowrap',
-      }}>
-        {label}
-      </span>
-    </button>
-  )
-}
-
-function DockPrimaryBtn({ children, onClick, testId, coachId, pulse }: { children: React.ReactNode; onClick: () => void; testId?: string; coachId?: string; pulse?: boolean }) {
-  return (
-    <button
-      onClick={onClick}
-      data-testid={testId}
-      data-beacon={coachId}
-      style={{
-        flexShrink: 0, background: 'var(--hub-chalk-soft)',
-        border: '4px solid var(--hub-chalk)', borderRadius: 14, padding: '8px 16px',
-        fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14,
-        letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--hub-chalk)',
-        cursor: 'pointer', boxShadow: '0 4px 16px color-mix(in srgb, var(--hub-chalk) 25%, transparent)',
-        animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
-      }}
-    >
-      {children}
-    </button>
-  )
-}
+const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market', 'control-station'])
 
 /**
  * How far a building's status pill hangs below the ground line. `Building`
@@ -173,7 +47,15 @@ function DockPrimaryBtn({ children, onClick, testId, coachId, pulse }: { childre
  * the pill's own height plus its gap — set so the visible building base lands
  * on the ground line. The dock-clearance measurement above depends on it.
  */
-const PLOT_LABEL_DROP = 42
+function dockStops(player: Player): Screen[] {
+  const stops: Screen[] = ['missions']
+  if (player.freeOperations) stops.push('market')
+  if (player.activeMission) {
+    const resume = missionResumeScreen(player)
+    if (!stops.includes(resume)) stops.push(resume)
+  }
+  return stops
+}
 
 // Instantiated from the build-plot prefab rather than written out by hand.
 // This same list previously existed in four places (both hub scene files and
@@ -181,8 +63,24 @@ const PLOT_LABEL_DROP = 42
 // reproduces hub.scene.json exactly.
 const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 
+export interface HubBuildOption {
+  id: string
+  name: string
+  cost: string
+  affordable: boolean
+  /** Why it cannot be placed right now, when it cannot. */
+  reason?: string
+}
+
 interface HubScreenProps {
   player: Player
+  onBuild?: () => void
+  /** Open straight into placement (the Build screen is this scene in placement mode). */
+  placementMode?: boolean
+  /** Unlocked, not yet placed structures offered while placing. */
+  buildOptions?: HubBuildOption[]
+  /** Places a structure on a plot. Returns false when it could not be placed. */
+  onPlaceStructure?: (id: string, plot: number) => boolean
   rocketVariant?: HubBuildingDef['rocketVariant']
   onboardingActive?: boolean
   onFocusBuilding: (b: string) => void
@@ -195,29 +93,41 @@ interface HubScreenProps {
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
   onOpenMarket?: () => void
   subsurface?: boolean
+  /** SSL-553: the rocket is touching down on the pad after the trip home. */
+  padLanding?: boolean
+  /** SSL-553: back from a run: core stage on the pad, no craft chip. */
+  homecoming?: boolean
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
-  const { phase: skyPhase } = useTimeOfDay()
-  const [editMode, setEditMode] = useState(false)
+export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+  const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
+  const skySeason = useBaseSeason()
+  // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
+  // and starts centred on the pad site, which is where a fresh base asks for its first structure.
+  const [viewSize, setViewSize] = useState(() => (typeof window === 'undefined' ? { w: 1440, h: 900 } : { w: window.innerWidth, h: window.innerHeight }))
+  const px = kitScale(viewSize)
+  const worldW = STRIP_W * px
+  const builtKinds = [...(player.placed ?? []), ...((player.placed ?? []).includes('launchpad') ? ['hangar'] : [])]
+  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(builtKinds, viewSize.w / px) * px })
+  const [editMode, setEditMode] = useState(placementMode)
+  const [pickedBuild, setPickedBuild] = useState<string | null>(null)
+  const [placeNote, setPlaceNote] = useState<string | null>(null)
+  const surfaceRef = useRef<HTMLDivElement | null>(null)
+  const [dockStop, setDockStop] = useState(0)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
+  const [rollingOut, setRollingOut] = useState(() => consumeRocketRolloutPending())
+  const finishRollout = useCallback(() => setRollingOut(false), [])
+  // The pad stays empty unless a mission or launch is in progress (docs/STYLE.md rule 6). Rollout draws its own rocket.
+  const rocketOnPad = padLanding || ((!!player.activeMission || !!player.pendingLaunch) && !rollingOut)
   // The terrain baseline is part of the world composition. It must not move
   // when the dock grows or the mobile browser chrome changes height: doing so
   // pulled the launchpad up into the mountain range to make room for UI. The
   // dock is an overlay; the scene keeps its authored `--hub-ground` contact.
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const setSubsurface = (v: boolean) => onSubsurfaceChange?.(v)
-  const activeMissionDisplayLabel = (activeMission: NonNullable<Player['activeMission']>): string => {
-    const mission = MISSIONS.find(item => item.id === activeMission.id)
-    if (!mission) return activeMission.label
-    const target = activeMission.label.split('→').slice(1).join('→').trim()
-    const operation = missionTypePrimer(mission).label
-    return target ? `${operation} → ${target}` : operation
-  }
   const [upgradingBuilding, setUpgradingBuilding] = useState<UpgradableBuildingId | null>(null)
-  const [opsOpen, setOpsOpen] = useState(false)
-  const help = useHelp('hub')
   const { signals } = useInstrumentSignals(player)
   const asteroidQueueCount = signals.filter(signal => signal.kind === 'deep-space').length
   const placed = player.placed ?? []
@@ -242,22 +152,24 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     return ai - bi
   })
 
+  // Each placed structure stands on its home site; the plot index only records the save slot.
   const plotStyles: React.CSSProperties[] = sortedEntities
-    // SVG grass is at 78% from top = 22% from bottom. calc(22% - 42px) puts the label
-    // bottom 42px underground so the visible building base sits at the grass line.
-    // left uses scene-proportional % so it matches the CSS-stretched PixiJS canvas (HUB_W=402).
-    // `sceneXPercent` returns the structure centre, so the DOM wrapper uses
-    // the same translate as the sprite layer below.
     .map(e => {
       const plot = readComponentNumber(e, 'BuildPlot', 'index', 0)
       const kind = Object.entries(effectivePlots).find(([, index]) => index === plot)?.[0]
-      const widthPct = kind ? (EARTH_BASE_STRUCTURE_SIZES[kind]?.width ?? 0) / 6.4 : 0
+      const site = kind ? homeSite(kind) : null
+      const sprite = kind ? structureSprite(kind) : null
+      if (!site) {
+        const widthPct = kind ? structureWidthPct(kind, isUpgradableBuilding(kind) ? buildingLevel(player, kind) : 1) : 0
+        const center = kind ? structureCenterPercent(kind, e.transform.position.x, widthPct) : sceneXPercent(e.transform.position.x, widthPct)
+        return { left: `${center}%`, width: `${widthPct}%`, minWidth: 44, bottom: 'var(--hub-ground)', transform: 'translateX(-50%)' } as React.CSSProperties
+      }
       return ({
-        // The authored outer plots sit close to the scene edge. Clamp the DOM
-        // hit target (which is wider than the sprite) so its entire button and
-        // status remain reachable even on a 320px viewport.
-        left: `clamp(62px, ${sceneXPercent(e.transform.position.x, widthPct)}%, calc(100% - 62px))`,
-        bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`,
+        left: units(site.x),
+        width: units(sprite?.body ?? site.half * 2),
+        minWidth: 44,
+        maxWidth: 'none',
+        bottom: 'var(--hub-ground)',
         transform: 'translateX(-50%)',
       } as React.CSSProperties)
     })
@@ -267,7 +179,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     return kind
   }
 
-  const BUILDING_W: Record<string, number> = { launchpad: 105, 'surface-silo': 62, refinery: 84, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
+  const BUILDING_W: Record<string, number> = { launchpad: 105, market: 110, 'control-station': 60, 'surface-silo': 62, refinery: 84, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
   // Invisible click-target height for each building's spacer (Building.tsx),
   // reported unclickable 2026-08-23. EarthBaseModules renders each building's
   // modular art at a per-kind width/footprint with its
@@ -279,11 +191,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
   // entirely. Values below are sized to each building's actual rendered
   // silhouette (width x pixelHeight/pixelWidth of its PNG) plus headroom;
   // buildings whose art is short/squat keep the old w*0.6-ish default.
-  const HIT_H: Record<string, number> = { launchpad: 140, 'surface-silo': 70, refinery: 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
+  const HIT_H: Record<string, number> = { launchpad: 260, 'control-station': 100, 'surface-silo': 70, refinery: 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
   // Post-tutorial Hub prominence pass (STS-631): telescope/satellite
   // buildings recede visually while they're unlocked but still in their
-  // early, not-yet-actively-producing state — Transit Telescope
-  // before the transit satellite launches, Deep Space Telescope before it's
+  // early, not-yet-actively-producing state — Space Telescope
+  // before the transit satellite launches, Space Telescope before it's
   // built — so the Launchpad keeps reading as the base's primary structure.
   const isDimmedBuildingKind = (kind: string): boolean => {
     if (kind === 'deep-space-telescope') return !player.deepSpaceTelescopeBuilt
@@ -297,6 +209,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       kind,
       plotX: e.transform.position.x,
       w: BUILDING_W[kind] ?? 78,
+      level: isUpgradableBuilding(kind) ? buildingLevel(player, kind) : 1,
       hot: kind === 'launchpad' ? !!player.pendingLaunch : false,
       status: isUnderConstruction(startedAt, kind) ? ('building' as const) : ('ok' as const),
       dimmed: isDimmedBuildingKind(kind),
@@ -304,44 +217,49 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       buildStartedAt: startedAt,
     }]
   })
-  // The exchange is a permanent Earth Base facility, not a menu destination.
-  // It deliberately has its own scene object even before the player has ore.
-  hubBuildings.push({ kind: 'market', plotX: 338, w: 84, status: 'ok' })
-  const launchpadPlot = hubBuildings.find(building => building.kind === 'launchpad')
+  const scenicHangar = placed.includes('launchpad') && !placed.includes('hangar') && !placed.includes('garage')
+  const sceneBuildings: HubBuildingDef[] = [
+    ...(scenicHangar ? [{ kind: 'hangar', plotX: 48, w: 52, level: 3, status: 'ok' as const }] : []),
+    ...hubBuildings.filter(building => BASE_SCENE_KINDS.has(building.kind)),
+  ]
   // The launchpad speaks only while the Base has no live run. Progression is
   // now exposed through contextual buildings and the persistent chrome rather
   // than a generic card laid over the landscape.
-  const hasProgressionCards = !!player.activeMission || !!player.pendingLaunch || player.missionsDone > 0
-  // After the first run the launchpad offers the transit telescope, the one
+  // After the first run the launchpad offers the space telescope, the one
   // prompt that used to live on a Home card. It is dismissible and goes away
   // once the satellite has launched.
+  const hasControlStation = placed.includes('control-station')
   const offersTransitTelescope = !onboardingActive && !player.activeMission && player.missionsDone > 0
     && !!player.freeOperations && !player.transitSatelliteLaunchedAt
     && !isHubPromptDismissed(player, HUB_PROMPT_TRANSIT_TELESCOPE)
-  const launchpadCallout: BuildingCallout | undefined =
-    offersTransitTelescope
-      ? {
-        title: 'Launch a transit telescope',
-        body: 'Your program can put a telescope in orbit. It sends back planet candidates to review.',
-        cta: 'Open Launchpad',
-        onCta: () => onOpenScene('launchpad'),
-        onDismiss: onDismissHubPrompt ? () => onDismissHubPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined,
-      }
-      : onboardingActive || hasProgressionCards
-        ? undefined
-        : {
-          title: 'Choose your first contract',
-          body: 'A client job is open at the Mission Board. Your launchpad is ready to fly it.',
-          cta: 'View Missions',
-          onCta: () => onOpenScene('missions'),
-        }
+  const launchpadCallout: BuildingCallout | undefined = offersTransitTelescope && !hasControlStation
+    ? {
+      title: 'Build a control station',
+      body: 'Satellites and telescopes are run from a control station. Build one before you launch.',
+      cta: 'Build',
+      placement: 'viewport-clear',
+      onCta: () => onBuild?.(),
+      onDismiss: onDismissHubPrompt ? () => onDismissHubPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined,
+    }
+    : offersTransitTelescope
+    ? {
+      title: 'Launch a space telescope',
+      body: 'Your program can put a telescope in orbit. It sends back planet candidates to review.',
+      cta: 'Open the tower',
+      // The pad is tall: a bubble anchored to it ran off the top of the screen. Sit it in open sky instead.
+      placement: 'viewport-clear',
+      onCta: () => onOpenScene('launchpad'),
+      onDismiss: onDismissHubPrompt ? () => onDismissHubPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined,
+    }
+    : undefined
 
   // One sky control for the craft: flying, arrived and waiting on the pad.
   const skyCraft: { state: 'mining' | 'arrived' | 'transit' | 'waiting'; label: string; ariaLabel: string; onOpen: () => void } | null = (() => {
+    if (padLanding || homecoming) return null
     if (player.activeMission) {
       const resume = missionResumeScreen(player)
       const arrived = (player.missionPhase ?? 'transit') === 'transit' && resume !== 'transit'
-      const state = player.missionPhase === 'mining' ? 'mining' : arrived ? 'arrived' : 'transit'
+      const state = player.missionPhase === 'mining' ? 'mining' : (arrived || player.missionPhase === 'survey') ? 'arrived' : 'transit'
       return {
         state,
         label: state === 'mining' ? 'MINING CRAFT' : state === 'arrived' ? 'CRAFT ARRIVED' : 'CRAFT IN TRANSIT',
@@ -350,12 +268,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       }
     }
     if (player.pendingLaunch) {
-      return { state: 'waiting', label: 'CRAFT ON PAD', ariaLabel: 'Open Launchpad: craft waiting on the pad', onOpen: () => onOpenScene('launchpad') }
+      return { state: 'waiting', label: 'CRAFT ON PAD', ariaLabel: 'Open the tower: craft waiting on the pad', onOpen: () => onOpenScene('launchpad') }
     }
     return null
   })()
   const showStorageSiloCta = !player.activeMission && awaitingStorageSilo(player) && !subsurface
-
   const structureProps = (kind: string) => {
     if (kind === 'launchpad') {
       return {
@@ -369,6 +286,24 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
         w: BUILDING_W.launchpad,
         callout: launchpadCallout,
         onClick: () => onFocusBuilding('launchpad'),
+      }
+    }
+    if (kind === 'control-station') {
+      return {
+        kind, label: 'Control station',
+        sub: 'TELESCOPES',
+        status: 'ok' as const,
+        w: 60,
+        onClick: () => onFocusBuilding('control-station'),
+      }
+    }
+    if (kind === 'market') {
+      return {
+        kind, label: 'Exchange',
+        sub: 'SELL ORE',
+        status: 'ok' as const,
+        w: 150,
+        onClick: () => onFocusBuilding('market'),
       }
     }
     if (kind === 'refinery') {
@@ -420,12 +355,50 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
     }
   }
 
-  // The phone dock lays its actions out two per row, so a fifth action adds a row. The scene lifts by the same
-  // amount (HubLayout.module.css) so the dock never sits on the buildings' hit boxes.
-  const dockRows = Math.ceil(((player.freeOperations ? 5 : 4)) / 2)
+  // The surface tracks its own size so the kit scale follows the real viewport (rotation, split view).
+  useEffect(() => {
+    const el = surfaceRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      if (width > 0 && height > 0) setViewSize(prev => (prev.w === width && prev.h === height ? prev : { w: width, h: height }))
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!editMode) return
+    if (!pickedBuild || !buildOptions.some(o => o.id === pickedBuild)) setPickedBuild(buildOptions.find(o => o.affordable)?.id ?? buildOptions[0]?.id ?? null)
+  }, [editMode, buildOptions, pickedBuild])
+
+  const underground = pickedBuild === 'surface-silo'
+  // The one site the picked build may stand on, offered only while it is free.
+  const pickedSite = editMode && pickedBuild ? homeSite(pickedBuild) : null
+  const pickedOption = buildOptions.find(o => o.id === pickedBuild)
+  const pickedSiteFree = !!pickedSite && pickedSite.plot != null && !placed.includes(pickedBuild ?? '') && !Object.values(effectivePlots).includes(pickedSite.plot)
+  const placeOnPlot = (plot: number) => {
+    const option = buildOptions.find(o => o.id === pickedBuild)
+    if (!option || !onPlaceStructure) return
+    if (!option.affordable) { setPlaceNote(`${option.name} · ${option.reason ?? 'Not enough resources'}`); return }
+    if (onPlaceStructure(option.id, plot)) { setPlaceNote(null); setEditMode(placementMode) } else setPlaceNote('That could not be placed. Try another slot.')
+  }
+
+
+  // The three things a player does from the base come first (build, fly, sell), then the places to look things up.
+  const menuItems: BaseMenuItem[] = [
+    { id: 'build', icon: 'build', primary: true, label: 'Build', detail: 'New structures, a control station, satellites', onSelect: () => { setPlaceNote(null); setEditMode(true) } },
+    { id: 'contracts', icon: 'mission', primary: true, label: 'New mission', detail: 'Client contracts and free runs', onSelect: () => onOpenScene('missions') },
+    { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: player.placed.includes('market') ? 'Sell what you have mined' : 'Build the Exchange to sell ore', onSelect: () => { if (player.placed.includes('market') && onOpenMarket) onOpenMarket(); else { setPlaceNote(null); setEditMode(true) } } },
+    ...(player.placed.includes('launchpad') ? [{ id: 'hangar', icon: 'hangar' as const, label: 'Hangar', detail: 'Ships and their parts', onSelect: () => onOpenScene('hangar') }] : []),
+    ...(player.placed.includes('control-station') ? [{ id: 'control-station', icon: 'station' as const, label: 'Control station', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }] : []),
+    { id: 'mission-log', icon: 'log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
+    { id: 'subsurface', icon: 'subsurface', label: 'Subsurface', detail: 'Silo and underground rooms', onSelect: () => setSubsurface(true) },
+    ...(player.freeOperations ? [{ id: 'sites', icon: 'sites' as const, label: 'Sites', detail: 'Places to survey and settle', onSelect: () => onOpenScene('surface-ops') }] : []),
+  ]
 
   return (
-    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-dock-rows={dockRows} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px` } as React.CSSProperties}>
 
       {/* Base stays mounted at its authored camera frame while a tray is open.
           The former 200%-tall slider moved the whole world before revealing
@@ -440,18 +413,20 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             any lift at all. */}
         <div
           className={layoutStyles.surface}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden' }}
+          ref={node => { camera.ref.current = node; surfaceRef.current = node }}
+          data-testid="base-camera"
+          data-zoom={camera.cam.zoom.toFixed(2)}
+          {...camera.handlers}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden', touchAction: 'none' }}
         >
-          {/* World background: sky, starfield, ridge parallax, ground, plateau */}
-          <HubWorldBackground phase={skyPhase} />
-          <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
-          <CrewWalkers road={EARTH_BASE_WIDE.roadPaths?.[0]} />
-          <SkyEventChip surface="base" />
-          {!subsurface && <OrionidsTeaser />}
-
-          {/* Drifting ambient motes — replaces the old daylight cloud layer,
-              which read as overcast weather against the new deep-blue sky. */}
-          <AmbientMotes />
+          {/* The world itself: sky, steppe, paved ground, weather and sky events as game objects, behind the camera's DOM layer. */}
+          <BaseWorldCanvas px={px} camera={camera.cam} time={skyGrade} biome={sanitizeEarthBiome(player.earthBiome)} />
+          <div data-testid="base-camera-world" data-world-width={worldW} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: worldW, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
+          {/* Silo surface pieces on the strip. */}
+          <BaseLayerScene
+            siloBuilt={!!player.subsurfaceExcavated || (player.subsurfaceBuilt ?? []).length > 0}
+            onOpenSilo={() => setSubsurface(true)}
+          />
 
           {skyCraft && (
             <button
@@ -481,7 +456,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
 
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
-          <EarthBaseModules buildings={hubBuildings} />
+          <EarthBaseModules buildings={sceneBuildings} parts={player.shipCustomizerParts} padRocket={padLanding || homecoming ? 'core' : rocketOnPad} />
+          {rollingOut && <RocketRollout onDone={finishRollout} />}
 
           {/* Surface buildings — hit areas + labels.
               zIndex 10 is load-bearing: every scene layer below is an
@@ -501,42 +477,54 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
               {plotStyles.map((style, plot) => {
                 const kind = structureForPlot(plot)
-                if (!kind) {
-                  if (!editMode) return null
-                  return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onFocusBuilding('build')} />
-                }
+                if (kind && !BASE_SCENE_KINDS.has(kind)) return null
+                if (!kind) return null
                 const startedAt = player.underConstruction?.[kind]
                 const building = isUnderConstruction(startedAt, kind)
                   ? { ...structureProps(kind), status: 'building' as const, buildStartedAt: startedAt }
                   : structureProps(kind)
                 // Outer plots open their callout inward so a 208px bubble
                 // can't run off the edge of the scene.
-                const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402
+                const xFrac = (homeSite(kind)?.x ?? STRIP_W / 2) / STRIP_W
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
-                // In Edit mode a tap on an upgradable building opens its upgrade rail
-                // instead of navigating into the building.
+                const silo = kind === 'surface-silo'
                 const editable = editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind)
                   ? { ...building, onClick: () => setUpgradingBuilding(kind) }
-                  : building
-                return <Building key={kind} {...editable} hitH={HIT_H[kind] ?? 60} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
+                  : silo
+                    ? { ...building, onClick: () => setSubsurface(true) }
+                    : building
+                const siloStyle = silo ? { ...style, left: '50%' } : style
+                const aspect = EARTH_BASE_STRUCTURE_SIZES[kind]
+                const pad = kind === 'launchpad'
+                return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={siloStyle} calloutAlign={calloutAlign} />
               })}
-              <Building
-                kind="market"
-                label="Exchange"
-                sub="SELL CARGO"
-                status="ok"
-                w={84}
-                hitH={72}
-                active={activeBuilding === 'market'}
-                onActiveChange={active => setActiveBuilding(active ? 'market' : null)}
-                onClick={() => onFocusBuilding('market')}
-                style={{ left: `clamp(62px, ${sceneXPercent(338, EARTH_BASE_STRUCTURE_SIZES.market.width / 6.4)}%, calc(100% - 62px))`, bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`, transform: 'translateX(-50%)' }}
-              />
+              {scenicHangar && (
+                <Building
+                  kind="hangar"
+                  label="Hangar"
+                  sub="READY"
+                  status="ok"
+                  quiet
+                  w={72}
+                  hitH={88}
+                  onClick={() => onFocusBuilding('hangar')}
+                  active={activeBuilding === 'hangar'}
+                  onActiveChange={active => setActiveBuilding(active ? 'hangar' : null)}
+                  style={{
+                    left: units(siteById('hall').x),
+                    width: units(structureSprite('hangar')?.width ?? 78),
+                    minWidth: 44,
+                    bottom: 'var(--hub-ground)',
+                    transform: 'translateX(-50%)',
+                  }}
+                />
+              )}
+              {pickedSite && pickedSiteFree && !underground && onPlaceStructure && (
+                <SiteMarker site={pickedSite} label={pickedOption?.name ?? pickedSite.label} onPlace={() => placeOnPlot(pickedSite.plot ?? 0)} />
+              )}
             </div>
           </div>
-
-          {/* Soil cross-section with subsurface button */}
-          <SoilCrossSection />
+          </div>
         </div>
 
         {/* Subsurface is a tray over the still-mounted Base, never a camera slide. */}
@@ -562,32 +550,35 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
       {/* Top HUD — always fixed above the slide. Rebuilt 2026-08-21 (KES-226)
           back to a dark scrim (the KES-220 light version was scrapped same
           day) — the persistent stacked HUD rail sits directly beneath the
-          title, top-left, matching the reference's fixed left-edge rail
+        title, top-left, matching the reference's fixed left-edge rail
           rather than corner-scattered readouts. Surface and subsurface now
           share the same dark treatment; no more light/dark split. */}
       <div className={layoutStyles.topHud}>
         <div className={layoutStyles.topRow}>
-          <div className={layoutStyles.titleBlock}>
-            {/* KES-173: DevShortcuts' fixed DEV toggle (top:8 left:8, dev-only,
-                roughly 120 pixels wide) sits directly over this eyebrow, clipping the
-                opening characters ("EARTH BASE" -> "H BASE"). Only reserve
-                the clearance when that badge can actually render. */}
-            <div className={layoutStyles.eyebrow} data-dev-launcher={isDevLauncherEnabled()}>
-              {subsurface ? 'BASE · SUBSURFACE' : `BASE · OPS ${player.missionsDone}`}
+          {!subsurface && (
+            <div className={layoutStyles.leftCluster}>
+              <button type="button" className={layoutStyles.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                </svg>
+              </button>
+              <HubClockWidget />
             </div>
-            <h1 className={layoutStyles.titleText}>
-              {subsurface ? 'Subsurface' : 'Base'}
-            </h1>
-          </div>
-          {!subsurface && <HubClockWidget />}
+          )}
+          {!subsurface && (
+            <div className={layoutStyles.chips}>
+              <span className="scene-chip" data-testid="hub-francs-chip">{formatCurrency(player.francs, { compact: true })}</span>
+              <span className="scene-chip" data-testid="hub-cargo-chip" aria-label="Cargo">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" />
+                  <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />
+                </svg>
+              </span>
+            </div>
+          )}
         </div>
-        {!subsurface && (
-          <div className={layoutStyles.balance}>
-            <HUDStrip player={player} />
-          </div>
-        )}
       </div>
-      {!subsurface && <SkyBadgeRow badges={player.badges} className={layoutStyles.badges} />}
 
       {upgradingBuilding && onUpgradeBuilding && (() => {
         const level = buildingLevel(player, upgradingBuilding)
@@ -609,107 +600,85 @@ export default function HubScreen({ player, rocketVariant = 'explorer', onboardi
           />
         )
       })()}
-      {/* Bottom dock — rebuilt 2026-08-21 (KES-226) as a docked sheet, not a
-          floating pill row (see DockIconBtn/DockPrimaryBtn doc comment for
-          why). It remains available during onboarding so the tutorial can
-          point at Missions without taking away the rest of the base controls. */}
-      {/* Navigation is part of the base, not a tutorial reward. Keeping this
-          dock mounted during M1 means the coach can point at Missions without
-          removing the rest of the player's controls. */}
+
+      {editMode && onPlaceStructure && (
+        <div data-testid="build-picker" style={{ position: 'absolute', left: 0, right: 0, bottom: 72, zIndex: 21, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, pointerEvents: 'none', padding: '0 12px' }}>
+          {placeNote && <span style={{ pointerEvents: 'auto', padding: '6px 12px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>{placeNote}</span>}
+          {underground && pickedSiteFree && (
+            <button type="button" data-testid="build-place-underground" onClick={() => placeOnPlot(siteById('shaft').plot ?? 2)}
+              style={{ pointerEvents: 'auto', minHeight: 44, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1 var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Place silo
+            </button>
+          )}
+          {buildOptions.length === 1 && pickedSiteFree && !underground && !placeNote
+            ? null
+            : buildOptions.length === 0
+            ? <span style={{ pointerEvents: 'auto', padding: '8px 14px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>Nothing to build yet</span>
+            : (
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', maxWidth: '100%', pointerEvents: 'auto' }}>
+                {buildOptions.map(option => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    data-testid={`build-option-${option.id}`}
+                    aria-pressed={pickedBuild === option.id}
+                    onClick={() => { setPickedBuild(option.id); setPlaceNote(option.affordable ? null : `${option.name} · ${option.reason ?? 'Not enough resources'}`) }}
+                    style={{
+                      minHeight: 44, padding: '0 16px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap',
+                      border: '2px solid var(--ln-world-outline)',
+                      background: pickedBuild === option.id ? 'var(--ln-world-outline)' : 'var(--ln-world-hull-lit)',
+                      color: pickedBuild === option.id ? 'var(--ln-world-hull-lit)' : 'var(--ln-world-outline)',
+                      opacity: option.affordable ? 1 : 0.7,
+                      font: '700 14px/1 var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase',
+                    }}
+                  >
+                    {option.name} · {option.cost}
+                  </button>
+                ))}
+              </div>
+            )}
+        </div>
+      )}
+
+      {/* The surface dock is reserved for all-scene navigation only. Base-only
+          actions remain on their physical buildings or in their own surfaces. */}
       {(
         <div className="hub-bottom-dock" style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: subsurface ? 40 : 20,
-          display: 'flex', justifyContent: 'center', pointerEvents: 'none',
+          position: 'absolute', left: 0, right: 0, bottom: 8, zIndex: subsurface ? 40 : 20,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none',
         }}>
-          <div className="hub-bottom-dock-inner" style={{
-            pointerEvents: 'auto', width: '100%', maxWidth: 480,
-            // A translucent command rail, deliberately without backdrop blur:
-            // blurring the terrain under a fixed dock created the frosted band
-            // reported in visual review and broke the scene's ground plane.
-            background: 'linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 72%, transparent) 0%, color-mix(in srgb, var(--ln-void) 88%, transparent) 100%)',
-            borderTop: '4px solid color-mix(in srgb, var(--hub-outline) 60%, transparent)',
-            borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 24px color-mix(in srgb, var(--ln-void) 28%, transparent)',
-            padding: '12px 16px 16px',
-          }}>
-            {subsurface ? (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
-                <DockPrimaryBtn testId="subsurface-surface-btn" onClick={() => setSubsurface(false)}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><SurfaceGlyph />Surface</span>
-                </DockPrimaryBtn>
-                {player.placed.includes('launchpad') && (
-                  <DockPrimaryBtn testId="subsurface-launchpad-btn" onClick={() => onOpenScene('launchpad')}>
-                    Launchpad
-                  </DockPrimaryBtn>
-                )}
-              </div>
-            ) : (
-              <>
-                {/* Row 1 — status + primary CTA, the reference's
-                    "Facility Tier · status" + primary-action row. */}
-                <div className="hub-bottom-dock-main" data-testid={player.activeMission ? 'hub-resume-mission-banner' : undefined} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--hub-cyan)' }}>
-                      {player.activeMission ? 'Mission in progress' : 'Launchpad'}
-                    </div>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: player.activeMission ? 11 : 14, fontWeight: 800, color: 'var(--ln-text)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {player.activeMission ? activeMissionDisplayLabel(player.activeMission) : 'Ready'}
-                    </div>
-                  </div>
-                  {showStorageSiloCta ? (
-                    // SSL-332: the last training step. The Build screen is only
-                    // otherwise reachable from Edit, so the dock offers it.
-                    <DockPrimaryBtn testId="hub-build-storage-silo" coachId="hub-build-storage-silo" onClick={() => onOpenScene('build')} pulse>
-                      Build Silo
-                    </DockPrimaryBtn>
-                  ) : player.activeMission ? (
-                    <DockIconBtn testId="hub-resume-mission-btn" icon={<HistoryGlyph />} label="Resume" onClick={() => onOpenScene(missionResumeScreen(player))} accent />
-                  ) : (
-                    <DockPrimaryBtn testId="hub-edit-build-btn" onClick={() => setEditMode(v => !v)}>
-                      {editMode ? 'Done' : 'Build'}
-                    </DockPrimaryBtn>
-                  )}
-                </div>
-
-                {/* Row 2 — icon-tab strip. Non-wrapping by construction
-                    (fixed-width buttons, horizontal scroll as a safety net
-                    rather than flexWrap) so it can never overlap the scene
-                    below it, unlike the pill row it replaces. */}
-                <div className="hub-bottom-dock-actions" style={{ display: 'flex', gap: 4, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
-                  <DockIconBtn testId="hub-ops-btn" icon={<HistoryGlyph />} label="Ops" onClick={() => setOpsOpen(true)} />
-                  {help.button}
-                  <DockIconBtn testId="hub-control-station-btn" icon={<HistoryGlyph />} label="Control" onClick={() => onOpenScene('instrument-hub')} />
-                  {editMode && (
-                    <>
-                      <DockIconBtn testId="hub-new-structure-btn" icon={<PlusGlyph />} label="New" onClick={() => onFocusBuilding('build')} />
-                      {player.placed.includes('launchpad') && (
-                        <DockIconBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onFocusBuilding('hangar')} />
-                      )}
-                      {player.placed.includes('launchpad') && buildingLevel(player, 'launchpad') < MAX_BUILDING_LEVEL && onUpgradeBuilding && (
-                        <DockIconBtn icon={<UpgradeGlyph />} label="UPGRADE" onClick={() => setUpgradingBuilding('launchpad')} />
-                      )}
-                    </>
-                  )}
-                  <DockIconBtn testId="hub-subsurface-btn" icon={<SubsurfaceGlyph />} label="Subsurface" onClick={() => setSubsurface(true)} />
-                  <DockIconBtn testId="hub-mission-log-btn" icon={<HistoryGlyph />} label="Mission Log" onClick={() => onOpenScene('mission-history')} />
-                  <DockIconBtn testId="hub-market-btn" icon={<MarketGlyph />} label="Market" onClick={() => onOpenMarket?.()} />
-                  {player.freeOperations && (
-                    <DockIconBtn testId="hub-surface-ops" icon={<SurfaceGlyph />} label="Sites" onClick={() => onOpenScene('surface-ops')} />
-                  )}
-                </div>
-              </>
-            )}
+          {!subsurface && !editMode && !player.activeMission && !player.pendingLaunch && (
+            <div className="hub-mission-status" data-testid="hub-mission-status" role="status" style={{ pointerEvents: 'auto' }}>
+              <span className="hub-mission-status__text"><span className="hub-mission-status__long">No mission in progress</span><span className="hub-mission-status__short">No mission</span></span>
+              <button type="button" className="hub-mission-status__cta" data-testid="hub-new-mission-btn" onClick={() => onOpenScene('missions')}>
+                New mission
+              </button>
+            </div>
+          )}
+          <div style={{ pointerEvents: 'auto' }}>
+            <BaseDock
+              onPrev={() => {
+                const stops = dockStops(player)
+                const next = (dockStop - 1 + stops.length) % stops.length
+                setDockStop(next)
+                onOpenScene(stops[next])
+              }}
+              onNext={() => {
+                const stops = dockStops(player)
+                const next = (dockStop + 1) % stops.length
+                setDockStop(next)
+                onOpenScene(stops[next])
+              }}
+              onBuild={() => { setPlaceNote(null); setEditMode(value => !value) }}
+              hubLabel="Menu"
+              hubTestId="hub-menu-btn"
+              onHub={() => setMenuOpen(true)}
+            />
           </div>
         </div>
       )}
-      {help.layer}
-      {opsOpen && (
-        <OpsHubSheet
-          player={player}
-          downlinkCount={signals.length}
-          onClose={() => setOpsOpen(false)}
-          onOpenScene={screen => { setOpsOpen(false); onOpenScene(screen) }}
-          onFocusBuilding={kind => { setOpsOpen(false); onFocusBuilding(kind) }}
-        />
+      {menuOpen && (
+        <BaseMenuSheet onClose={() => setMenuOpen(false)} items={menuItems} />
       )}
     </div>
   )

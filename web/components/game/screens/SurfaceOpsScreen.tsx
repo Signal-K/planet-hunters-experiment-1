@@ -407,7 +407,7 @@ export default function SurfaceOpsScreen({
               <section className={styles.controlPanel} data-testid="settlement-launchpad-panel">
                 <div className={styles.panelTitle}>
                   <Rocket size={18} />
-                  <span>SETTLEMENT LAUNCHPAD</span>
+                  <span>SETTLEMENT PAD</span>
                   <span className={styles.panelState}>{launchpadStatus.toUpperCase()}</span>
                 </div>
                 {!accessPurchased ? (

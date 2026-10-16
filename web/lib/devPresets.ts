@@ -38,7 +38,7 @@ const TRANSPORT_DONE: Record<number, boolean> = { ...EXTRACTION_DONE, 30: true, 
 const TRAINING_DONE: Record<number, boolean> = { ...TRANSPORT_DONE, 40: true, 41: true }
 
 // Story mission synthesized at runtime in game-context.tsx once free ops +
-// the transit telescope are unlocked — not in MISSIONS, so these
+// the space telescope are unlocked — not in MISSIONS, so these
 // presets set the ids directly rather than looking a mission up by sequence.
 const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -53,7 +53,7 @@ const POST_ONBOARDING_PLAYER: Player = {
   transitSatelliteLaunchedAt: null,
 }
 
-// Deep Space Telescope built alongside the transit satellite (STS-622) —
+// Space Telescope built alongside the transit satellite (STS-622) —
 // asteroid-discovery presets need both instruments' unlock gates cleared,
 // since deepSpaceTelescopeUnlocked() also checks transitSatelliteLevel.
 const ASTEROID_DISCOVERY_PLAYER: Player = {
@@ -111,6 +111,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'm1-fab',    label: 'Fab',     hint: 'First generated mission + Eros picked, at fab', stage: 'tutorial' },
       { key: 'm1-mining', label: 'Mining',  hint: 'In mining with iron target', stage: 'tutorial' },
       { key: 'm1-debrief',label: 'Debrief', hint: 'Post-mine debrief, 6 iron', stage: 'tutorial' },
+      { key: 'm1-return', label: 'Return',  hint: 'Flying home with the haul', stage: 'tutorial' },
+      { key: 'm1-home',   label: 'Home',    hint: 'Touchdown on the pad, delivery sheet', stage: 'tutorial' },
     ],
   },
   {
@@ -146,7 +148,7 @@ export const DEV_GROUPS: DevGroup[] = [
     // decision doc for why these are two unrelated screens sharing a word.
     shots: [
       { key: 'telescope-hub',      label: 'Hub',      hint: 'Post-onboarding, Free Ops unlocked, telescope built, story mission on the board', stage: 'free-ops' },
-      { key: 'telescope-fab',      label: 'Fab',      hint: 'Transit telescope mission accepted, at fab — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'telescope-fab',      label: 'Fab',      hint: 'Space telescope mission accepted, at fab — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-transit',  label: 'Transit',  hint: 'Rocket physically en route to Earth orbit to deploy the telescope — dev "Skip ▸" button fast-forwards this. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-debrief',  label: 'Debrief',  hint: 'Telescope deployed, satellite launched — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-tess-discovery',  label: 'Console',  hint: 'Satellite already in orbit — point it (star map) and review the daily transit-photometry candidate. Stationary, no travel. Use the on-screen dev "+1 DAY" control to preview future days without waiting. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -154,19 +156,18 @@ export const DEV_GROUPS: DevGroup[] = [
   },
   {
     label: 'Recent UI',
-    color: '#39d36a',
+    color: '#9b8cf0',
     shots: [
       { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
       { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
       { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-target-picker', label: 'Launch Review', hint: 'Launch review (the target picker is folded in) with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
-      { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Transit telescope classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover live TakeOn field — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
+      { key: 'ui-rover-survey', label: 'Rover Survey', hint: 'Starter-rover live TakeOn field — survey before ship-laser extraction', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
       { key: 'ui-instrument-hub', label: 'Control Station', hint: 'One hub for telescopes and satellites. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Deep Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Market with a stocked stash to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -174,6 +175,19 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+    ],
+  },
+  {
+    label: 'Gaps and checkpoints',
+    color: '#91ccef',
+    shots: [
+      { key: 'ui-landing', label: 'Landing', hint: 'Touchdown scene on arrival at Eros, mid-mission', stage: 'tutorial' },
+      { key: 'ui-rocket-buy', label: 'Rocket buy', hint: 'Rocket purchase list, post-onboarding with funds', stage: 'free-ops' },
+      { key: 'ui-hangar-surveyor', label: 'Hangar: Surveyor', hint: 'Six missions done and funds in hand, so the tier 3 Surveyor is open in the hangar', stage: 'free-ops' },
+      { key: 'ui-subsurface', label: 'Subsurface', hint: 'Base subsurface view with a silo and stash', stage: 'free-ops' },
+      { key: 'cp-early', label: 'Checkpoint: early', hint: 'About 15 min in: 3 missions done, Free Ops unlocked, tier 2 parts', stage: 'free-ops' },
+      { key: 'cp-mid', label: 'Checkpoint: mid', hint: 'About 35 min in: 8 missions done, silo, academy and refinery built, tier 2 rocket', stage: 'free-ops' },
+      { key: 'cp-late', label: 'Checkpoint: late', hint: 'About 55 min in: 20 missions done, tier 3 rocket, all buildings, rich stash', stage: 'free-ops' },
     ],
   },
 ]
@@ -220,6 +234,32 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }
+
+    case 'm1-return':
+      return {
+        screen: 'transit',
+        player: { ...BASE_PLAYER, missionsDone: 0, activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, returningToEarth: true, debriefPending: true, missionPhase: 'transit', transitStartedAt: Date.now(), arrivalAt: null },
+        tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true },
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: { ...FIRST_MISSION.requires.minerals, [FIRST_MINERAL]: (FIRST_MISSION.requires.minerals[FIRST_MINERAL] ?? 1) + 3, nickel: 2 }, popup: null,
+      }
+
+    case 'm1-home': {
+      const haul = { ...FIRST_MISSION.requires.minerals, [FIRST_MINERAL]: (FIRST_MISSION.requires.minerals[FIRST_MINERAL] ?? 1) + 3, nickel: 2 }
+      return {
+        screen: 'debrief',
+        player: {
+          ...BASE_PLAYER, missionsDone: 0, stash: { ...haul, cobalt: 3 },
+          placed: [...(BASE_PLAYER.placed ?? []), 'surface-silo'],
+          activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, missionPhase: 'debrief', homeDeliveryPending: true,
+        },
+        tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true },
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: haul, popup: null,
+      }
+    }
 
     case 'm1-debrief':
       return {
@@ -329,7 +369,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         const transitStartedAt = Date.now() - 30_000
       return {
         screen: 'transit',
-        player: { ...POST_ONBOARDING_PLAYER, activeMission: { id: TRANSIT_TELESCOPE_MISSION_ID, label: 'Launch Transit Telescope → Earth Orbit' }, transitStartedAt, arrivalAt: transitStartedAt + 90_000 },
+        player: { ...POST_ONBOARDING_PLAYER, activeMission: { id: TRANSIT_TELESCOPE_MISSION_ID, label: 'Launch Space Telescope → Earth Orbit' }, transitStartedAt, arrivalAt: transitStartedAt + 90_000 },
         tutorial: false, doneSteps: TRAINING_DONE,
         missionId: TRANSIT_TELESCOPE_MISSION_ID, targetId: TRANSIT_TELESCOPE_TARGET_ID,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -482,9 +522,9 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         popup: null,
       }
 
-    case 'ui-rover-mining':
+    case 'ui-rover-survey':
       return {
-        screen: 'rover-mining',
+        screen: 'rover-survey',
         player: {
           ...BASE_PLAYER,
           missionsDone: 1,
@@ -641,6 +681,98 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
+      }
+
+    case 'ui-landing':
+      return {
+        screen: 'landing',
+        player: { ...BASE_PLAYER, missionsDone: 0, activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, missionPhase: 'landing', landingStartedAt: Date.now() },
+        tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true },
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'ui-hangar-surveyor':
+      return {
+        screen: 'hangar',
+        player: { ...POST_ONBOARDING_PLAYER, missionsDone: 6, francs: 1_000_000_000 },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'ui-rocket-buy':
+      return {
+        screen: 'rocket-buy',
+        player: { ...POST_ONBOARDING_PLAYER, francs: 1_000_000_000 },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'ui-subsurface':
+      return {
+        screen: 'hub-subsurface',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          placed: ['launchpad', 'surface-silo'],
+          placementPlots: { launchpad: 0, 'surface-silo': 1 },
+          stash: { iron: 30, nickel: 12, silicates: 8 },
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    // Progress checkpoints: jump to roughly minute 15 / 35 / 55 of the playable hour without playing it.
+    case 'cp-early':
+      return {
+        screen: 'hub',
+        player: { ...POST_ONBOARDING_PLAYER, francs: 40_000_000, stash: { iron: 10 } },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'cp-mid':
+      return {
+        screen: 'hub',
+        player: {
+          ...ACADEMY_PLAYER,
+          missionsDone: 8, francs: 120_000_000,
+          placed: ['launchpad', 'transit-telescope', 'surface-silo', 'astronaut-academy'],
+          placementPlots: { launchpad: 0, 'transit-telescope': 1, 'surface-silo': 2, 'astronaut-academy': 3 },
+          refineryBuilt: true, refineryUnlocked: true,
+          stash: { iron: 40, nickel: 20, silicates: 15, copper: 8 },
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'cp-late':
+      return {
+        screen: 'hub',
+        player: {
+          ...ASTEROID_DISCOVERY_PLAYER,
+          missionsDone: 20, francs: 600_000_000,
+          placed: ['launchpad', 'transit-telescope', 'deep-space-telescope', 'surface-silo', 'astronaut-academy', 'market'],
+          placementPlots: { launchpad: 0, 'transit-telescope': 1, 'deep-space-telescope': 2, 'surface-silo': 3, 'astronaut-academy': 4, market: 5 },
+          academyResearched: true, academyFunded: true,
+          refineryBuilt: true, refineryUnlocked: true, launchpadUpgraded: true,
+          clientMissions: { 'helios-propulsion-depot': 14, 'arcturus-battery-systems': 12 },
+          stash: { iron: 120, nickel: 60, silicates: 40, copper: 30, gold: 6 },
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk3', propulsion: 'ion-a3', drill: 'plasma-t3' },
+        lastCargo: null, popup: null,
       }
 
     default:

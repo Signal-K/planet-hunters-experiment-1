@@ -16,12 +16,14 @@ public enum Construction {
 
     public static let all: [StructureBlueprint] = [
         StructureBlueprint(id: "launchpad", name: "Launchpad", cost: 0, materials: [:], unlocksAt: "Always", summary: "Rocket assembly and launch operations."),
-        StructureBlueprint(id: "surface-silo", name: "Surface Silo", cost: Economy.surfaceSiloPrice, materials: [:], unlocksAt: "Complete the guided missions",
-                           summary: "Small Earth-side mineral storage. Hold ore for a better market window or for refinery input."),
-        StructureBlueprint(id: "refinery", name: "Refinery", cost: Economy.refineryPrice, materials: ["aluminium": 20, "copper": 10],
-                           unlocksAt: "Surface Silo + Free Operations", summary: "Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day."),
+        StructureBlueprint(id: "surface-silo", name: "Surface Silo", cost: Economy.surfaceSiloPrice, materials: [:], unlocksAt: "Fly both guided missions first",
+                           summary: "Small Earth-side mineral storage. Keep ore for construction; overflow sells when a flight returns."),
+        StructureBlueprint(id: "market", name: "Exchange", cost: Economy.exchangePrice, materials: [:], unlocksAt: "Opens once the guided missions are flown",
+                           summary: "Cargo dock where you sell ore at the spot price."),
+        StructureBlueprint(id: "control-station", name: "Control Station", cost: Economy.controlStationPrice, materials: [:], unlocksAt: "Opens once the guided missions are flown",
+                           summary: "Runs your satellites and telescopes. Build it before you launch one."),
         StructureBlueprint(id: "astronaut-academy", name: "Astronaut Academy", cost: Economy.academyPrice, materials: ["aluminium": 24, "silicon": 12, "copper": 8],
-                           unlocksAt: "Research after reaching client level 2 with two clients", summary: "Trains named astronauts, manages the roster, and coordinates Base staffing."),
+                           unlocksAt: "Reach client level 2 with two clients, then research it", summary: "Trains named astronauts, manages the roster, and coordinates Base staffing."),
     ]
     public static let byId: [String: StructureBlueprint] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
 
@@ -30,12 +32,16 @@ public enum Construction {
         all.filter { $0.id != "astronaut-academy" && !p.placed.contains($0.id) }
     }
 
+    /// Silo and Exchange appear once one run is flown: before that there is nothing to store or sell (web `FIRST_STORAGE_MISSIONS_DONE`).
+    public static let firstStorageMissionsDone = 1
+
     public static func unlocked(_ b: StructureBlueprint, player p: Player) -> Bool {
         switch b.id {
-        case "surface-silo": return p.freeOperations || p.missionsDone >= 2 || p.placed.contains("surface-silo")
+        case "surface-silo": return p.missionsDone >= firstStorageMissionsDone || p.placed.contains("surface-silo")
+        case "market": return p.missionsDone >= firstStorageMissionsDone || p.placed.contains("market")
+        case "control-station": return p.missionsDone >= firstStorageMissionsDone || p.placed.contains("control-station")
         case "astronaut-academy": return p.academyResearched || p.placed.contains("astronaut-academy")
         case "launchpad": return true
-        case "refinery": return p.placed.contains("refinery") || (p.freeOperations && p.placed.contains("surface-silo"))
         default: return false
         }
     }
@@ -66,10 +72,12 @@ public enum Construction {
         n.player.placed.append(kind)
         n.player.placementPlots[kind] = plot
         n.player.underConstruction[kind] = now
-        if kind == "refinery" { n.player.refineryBuilt = true }
         if kind == "astronaut-academy" { n.player.academyFunded = true; n.player.crewUpkeepSettledDate = Academy.dateKey(now) }
         if !s.player.freeOperations && Transitions.freeOperationsUnlocked(n.player) {
-            n.player.freeOperations = true; n.tutorial = false; n.popup = "tutorial-complete"
+            // Free Ops opens with the launchpad, but the three training tries are an optional guide that is still running:
+            // only a finished training ends the coach and raises the "agency is operating" sheet (web `applyPlaceStructure`).
+            n.player.freeOperations = true
+            if n.player.flightPlan.isComplete { n.tutorial = false; n.popup = "tutorial-complete" }
         }
         return n
     }

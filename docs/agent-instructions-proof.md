@@ -1,3 +1,13 @@
+# Agent entry-point verification
+
+Current checks: `node scripts/agent-check.mjs` validates root instruction equality, platform/tool pointers, Node, branch, local tool availability and palette drift without starting services. `AGENTS.md` is canonical; `CLAUDE.md` mirrors it. Web, native, shared and backend entry points point back to it. Copilot and Gemini have explicit pointers. Other agents must be given `AGENTS.md` if their host does not load it automatically.
+
+Instruction-file checks are not proof that every vendor's agent loaded them. The historical Claude-only run below predates the current scene palette and consecutive parity contract; do not use its answers as current rules.
+
+Codex discovery reference: https://learn.chatgpt.com/docs/agent-configuration/agents-md
+
+---
+
 
 # Agent instruction loading proof (SSL-504, 2026-10-08)
 

@@ -6,6 +6,7 @@ export function missionResumeScreen(
   now = Date.now(),
 ): Screen {
   const phase = player.missionPhase ?? 'transit'
+  if (phase === 'survey') return 'rover-survey'
   if (phase !== 'transit' || player.arrivalAt == null || player.arrivalAt > now) return phase
   if (player.returningToEarth) return 'debrief'
   if (player.headingToDelivery) return 'delivery'

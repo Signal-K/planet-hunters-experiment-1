@@ -1,0 +1,2365 @@
+[
+ {
+  "date": "2026-10-16",
+  "done": 2,
+  "affinity": {},
+  "maxTier": 1,
+  "missions": [
+   {
+    "id": "dcp-2026-10-16-helios-propulsion-depot-0",
+    "title": "Palladium starter contract",
+    "brief": "Helios Propulsion Depot needs 5 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 25680000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-helios-propulsion-depot-1",
+    "title": "Platinum starter contract",
+    "brief": "Helios Propulsion Depot needs 5 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 25680000,
+    "affinity": 11,
+    "minerals": {
+     "platinum": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-helios-propulsion-depot-2",
+    "title": "Palladium starter contract",
+    "brief": "Helios Propulsion Depot needs 6 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26016000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-arcturus-battery-systems-0",
+    "title": "Iridium prospect contract",
+    "brief": "Arcturus Battery Systems needs 3 units of iridium for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 26305800,
+    "affinity": 10,
+    "minerals": {
+     "iridium": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-arcturus-battery-systems-1",
+    "title": "Gold prospect contract",
+    "brief": "Arcturus Battery Systems needs 4 units of gold for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27074400,
+    "affinity": 10,
+    "minerals": {
+     "gold": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-arcturus-battery-systems-2",
+    "title": "Iridium prospect contract",
+    "brief": "Arcturus Battery Systems needs 5 units of iridium for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27843000,
+    "affinity": 11,
+    "minerals": {
+     "iridium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-ferrum-orbital-construction-0",
+    "title": "Platinum bulk contract",
+    "brief": "Ferrum Orbital Construction needs 8 units of platinum for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27568320,
+    "affinity": 12,
+    "minerals": {
+     "platinum": 8
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-ferrum-orbital-construction-1",
+    "title": "Iridium bulk contract",
+    "brief": "Ferrum Orbital Construction needs 8 units of iridium for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27568320,
+    "affinity": 12,
+    "minerals": {
+     "iridium": 8
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-ferrum-orbital-construction-2",
+    "title": "Platinum bulk contract",
+    "brief": "Ferrum Orbital Construction needs 4 units of platinum for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 25784160,
+    "affinity": 10,
+    "minerals": {
+     "platinum": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-arcturus-battery-systems-construct-fuel-depot",
+    "title": "Build a Fuel Depot",
+    "brief": "Arcturus Battery Systems wants a fuel depot raised on site. Haul the materials out and it is built before you head home.",
+    "client": "arcturus-battery-systems",
+    "tag": "CONSTRUCT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 14,
+    "minerals": {
+     "hydrogen": 8
+    },
+    "construction": {
+     "kind": "fuel-depot",
+     "materials": {
+      "hydrogen": 8
+     },
+     "buildTimeMs": 1200000
+    }
+   },
+   {
+    "id": "dcp-2026-10-16-ferrum-orbital-construction-construct-fabrication-pad",
+    "title": "Build a Fabrication Pad",
+    "brief": "Ferrum Orbital Construction wants a fabrication pad raised on site. Haul the materials out and it is built before you head home.",
+    "client": "ferrum-orbital-construction",
+    "tag": "CONSTRUCT",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 22,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 21,
+    "minerals": {
+     "iron": 12,
+     "silicon": 6,
+     "aluminium": 4
+    },
+    "construction": {
+     "kind": "fabrication-pad",
+     "materials": {
+      "iron": 12,
+      "silicon": 6,
+      "aluminium": 4
+     },
+     "buildTimeMs": 2100000
+    }
+   }
+  ]
+ },
+ {
+  "date": "2026-10-17",
+  "done": 6,
+  "affinity": {},
+  "maxTier": 3,
+  "missions": [
+   {
+    "id": "dcp-2026-10-17-helios-propulsion-depot-0",
+    "title": "Platinum starter contract",
+    "brief": "Helios Propulsion Depot needs 6 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26016000,
+    "affinity": 11,
+    "minerals": {
+     "platinum": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-helios-propulsion-depot-1",
+    "title": "Palladium starter contract",
+    "brief": "Helios Propulsion Depot needs 6 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26016000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-helios-propulsion-depot-2",
+    "title": "Platinum starter contract",
+    "brief": "Helios Propulsion Depot needs 7 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 7,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26352000,
+    "affinity": 12,
+    "minerals": {
+     "platinum": 7
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-arcturus-battery-systems-0",
+    "title": "Rhodium prospect contract",
+    "brief": "Arcturus Battery Systems needs 4 units of rhodium for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rhodium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-arcturus-battery-systems-1",
+    "title": "Gold prospect contract",
+    "brief": "Arcturus Battery Systems needs 3 units of gold for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 26305800,
+    "affinity": 10,
+    "minerals": {
+     "gold": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-arcturus-battery-systems-2",
+    "title": "Rhodium prospect contract",
+    "brief": "Arcturus Battery Systems needs 6 units of rhodium for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "rhodium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-ferrum-orbital-construction-0",
+    "title": "Iridium bulk contract",
+    "brief": "Ferrum Orbital Construction needs 8 units of iridium for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27568320,
+    "affinity": 12,
+    "minerals": {
+     "iridium": 8
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-ferrum-orbital-construction-1",
+    "title": "Platinum bulk contract",
+    "brief": "Ferrum Orbital Construction needs 8 units of platinum for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27568320,
+    "affinity": 12,
+    "minerals": {
+     "platinum": 8
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-ferrum-orbital-construction-2",
+    "title": "Iridium bulk contract",
+    "brief": "Ferrum Orbital Construction needs 4 units of iridium for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 25784160,
+    "affinity": 10,
+    "minerals": {
+     "iridium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-atlas-aggregate-0",
+    "title": "Platinum bulk contract",
+    "brief": "Atlas Aggregate needs 7 units of platinum for bulk construction feedstock and orbital ballast. Preferred cargo earns a client premium.",
+    "client": "atlas-aggregate",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 7,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27122280,
+    "affinity": 12,
+    "minerals": {
+     "platinum": 7
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-atlas-aggregate-1",
+    "title": "Palladium bulk contract",
+    "brief": "Atlas Aggregate needs 7 units of palladium for bulk construction feedstock and orbital ballast. Preferred cargo earns a client premium.",
+    "client": "atlas-aggregate",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 7,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27122280,
+    "affinity": 12,
+    "minerals": {
+     "palladium": 7
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-atlas-aggregate-2",
+    "title": "Platinum bulk contract",
+    "brief": "Atlas Aggregate needs 6 units of platinum for bulk construction feedstock and orbital ballast. Preferred cargo earns a client premium.",
+    "client": "atlas-aggregate",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 26676240,
+    "affinity": 11,
+    "minerals": {
+     "platinum": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-ceres-volatiles-collective-0",
+    "title": "Iridium prospect contract",
+    "brief": "Ceres Volatiles Collective needs 5 units of iridium for volatile extraction and carbonaceous feedstock reserves. Preferred cargo earns a client premium.",
+    "client": "ceres-volatiles-collective",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27780000,
+    "affinity": 11,
+    "minerals": {
+     "iridium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-ceres-volatiles-collective-1",
+    "title": "Gold prospect contract",
+    "brief": "Ceres Volatiles Collective needs 6 units of gold for volatile extraction and carbonaceous feedstock reserves. Preferred cargo earns a client premium.",
+    "client": "ceres-volatiles-collective",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "gold": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-ceres-volatiles-collective-2",
+    "title": "Iridium prospect contract",
+    "brief": "Ceres Volatiles Collective needs 3 units of iridium for volatile extraction and carbonaceous feedstock reserves. Preferred cargo earns a client premium.",
+    "client": "ceres-volatiles-collective",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 26268000,
+    "affinity": 10,
+    "minerals": {
+     "iridium": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-helioforge-metals-0",
+    "title": "Iridium prospect contract",
+    "brief": "Helioforge Metals needs 5 units of iridium for nickel, cobalt, and precious-metal assay. Preferred cargo earns a client premium.",
+    "client": "helioforge-metals",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27906000,
+    "affinity": 11,
+    "minerals": {
+     "iridium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-helioforge-metals-1",
+    "title": "Gold prospect contract",
+    "brief": "Helioforge Metals needs 6 units of gold for nickel, cobalt, and precious-metal assay. Preferred cargo earns a client premium.",
+    "client": "helioforge-metals",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "gold": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-helioforge-metals-2",
+    "title": "Iridium prospect contract",
+    "brief": "Helioforge Metals needs 3 units of iridium for nickel, cobalt, and precious-metal assay. Preferred cargo earns a client premium.",
+    "client": "helioforge-metals",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 26343600,
+    "affinity": 10,
+    "minerals": {
+     "iridium": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-kepler-materials-0",
+    "title": "Gold prospect contract",
+    "brief": "Kepler Materials needs 6 units of gold for deep-core sampling and battery material reserves. Preferred cargo earns a client premium.",
+    "client": "kepler-materials",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "gold": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-kepler-materials-1",
+    "title": "Iridium prospect contract",
+    "brief": "Kepler Materials needs 5 units of iridium for deep-core sampling and battery material reserves. Preferred cargo earns a client premium.",
+    "client": "kepler-materials",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27843000,
+    "affinity": 11,
+    "minerals": {
+     "iridium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-kepler-materials-2",
+    "title": "Gold prospect contract",
+    "brief": "Kepler Materials needs 4 units of gold for deep-core sampling and battery material reserves. Preferred cargo earns a client premium.",
+    "client": "kepler-materials",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27074400,
+    "affinity": 10,
+    "minerals": {
+     "gold": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-nightjar-systems-0",
+    "title": "Rhodium command contract",
+    "brief": "Nightjar Systems needs 3 units of rhodium for rare gas capture and ion drive reserves. Preferred cargo earns a client premium.",
+    "client": "nightjar-systems",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rhodium": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-nightjar-systems-1",
+    "title": "Iridium command contract",
+    "brief": "Nightjar Systems needs 4 units of iridium for rare gas capture and ion drive reserves. Preferred cargo earns a client premium.",
+    "client": "nightjar-systems",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "iridium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-nightjar-systems-2",
+    "title": "Rhodium command contract",
+    "brief": "Nightjar Systems needs 3 units of rhodium for rare gas capture and ion drive reserves. Preferred cargo earns a client premium.",
+    "client": "nightjar-systems",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rhodium": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-17-helioforge-metals-construct-fuel-depot",
+    "title": "Build a Fuel Depot",
+    "brief": "Helioforge Metals wants a fuel depot raised on site. Haul the materials out and it is built before you head home.",
+    "client": "helioforge-metals",
+    "tag": "CONSTRUCT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 14,
+    "minerals": {
+     "hydrogen": 8
+    },
+    "construction": {
+     "kind": "fuel-depot",
+     "materials": {
+      "hydrogen": 8
+     },
+     "buildTimeMs": 1200000
+    }
+   },
+   {
+    "id": "dcp-2026-10-17-nightjar-systems-construct-battery-station",
+    "title": "Build a Battery Station",
+    "brief": "Nightjar Systems wants a battery station raised on site. Haul the materials out and it is built before you head home.",
+    "client": "nightjar-systems",
+    "tag": "CONSTRUCT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 14,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 17,
+    "minerals": {
+     "cobalt": 6,
+     "nickel": 4,
+     "copper": 4
+    },
+    "construction": {
+     "kind": "battery-station",
+     "materials": {
+      "cobalt": 6,
+      "nickel": 4,
+      "copper": 4
+     },
+     "buildTimeMs": 1500000
+    }
+   },
+   {
+    "id": "dcp-2026-10-17-atlas-aggregate-construct-fabrication-pad",
+    "title": "Build a Fabrication Pad",
+    "brief": "Atlas Aggregate wants a fabrication pad raised on site. Haul the materials out and it is built before you head home.",
+    "client": "atlas-aggregate",
+    "tag": "CONSTRUCT",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 22,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 21,
+    "minerals": {
+     "iron": 12,
+     "silicon": 6,
+     "aluminium": 4
+    },
+    "construction": {
+     "kind": "fabrication-pad",
+     "materials": {
+      "iron": 12,
+      "silicon": 6,
+      "aluminium": 4
+     },
+     "buildTimeMs": 2100000
+    }
+   }
+  ]
+ },
+ {
+  "date": "2026-10-16",
+  "done": 12,
+  "affinity": {
+   "helios-propulsion-depot": 10,
+   "atlas-aggregate": 5
+  },
+  "maxTier": 5,
+  "missions": [
+   {
+    "id": "dcp-2026-10-16-helios-propulsion-depot-0",
+    "title": "Palladium starter contract",
+    "brief": "Helios Propulsion Depot needs 5 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 25680000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-helios-propulsion-depot-1",
+    "title": "Platinum starter contract",
+    "brief": "Helios Propulsion Depot needs 5 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 25680000,
+    "affinity": 11,
+    "minerals": {
+     "platinum": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-helios-propulsion-depot-2",
+    "title": "Palladium starter contract",
+    "brief": "Helios Propulsion Depot needs 6 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26016000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-helios-propulsion-depot-3",
+    "title": "Platinum starter contract",
+    "brief": "Helios Propulsion Depot needs 6 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26016000,
+    "affinity": 11,
+    "minerals": {
+     "platinum": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-helios-propulsion-depot-4",
+    "title": "Palladium starter contract",
+    "brief": "Helios Propulsion Depot needs 4 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 25344000,
+    "affinity": 10,
+    "minerals": {
+     "palladium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-arcturus-battery-systems-0",
+    "title": "Iridium prospect contract",
+    "brief": "Arcturus Battery Systems needs 3 units of iridium for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 26305800,
+    "affinity": 10,
+    "minerals": {
+     "iridium": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-arcturus-battery-systems-1",
+    "title": "Gold prospect contract",
+    "brief": "Arcturus Battery Systems needs 4 units of gold for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27074400,
+    "affinity": 10,
+    "minerals": {
+     "gold": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-arcturus-battery-systems-2",
+    "title": "Iridium prospect contract",
+    "brief": "Arcturus Battery Systems needs 5 units of iridium for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27843000,
+    "affinity": 11,
+    "minerals": {
+     "iridium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-ferrum-orbital-construction-0",
+    "title": "Platinum bulk contract",
+    "brief": "Ferrum Orbital Construction needs 8 units of platinum for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27568320,
+    "affinity": 12,
+    "minerals": {
+     "platinum": 8
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-ferrum-orbital-construction-1",
+    "title": "Iridium bulk contract",
+    "brief": "Ferrum Orbital Construction needs 8 units of iridium for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27568320,
+    "affinity": 12,
+    "minerals": {
+     "iridium": 8
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-ferrum-orbital-construction-2",
+    "title": "Platinum bulk contract",
+    "brief": "Ferrum Orbital Construction needs 4 units of platinum for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 25784160,
+    "affinity": 10,
+    "minerals": {
+     "platinum": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-atlas-aggregate-0",
+    "title": "Palladium bulk contract",
+    "brief": "Atlas Aggregate needs 7 units of palladium for bulk construction feedstock and orbital ballast. Preferred cargo earns a client premium.",
+    "client": "atlas-aggregate",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 7,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27122280,
+    "affinity": 12,
+    "minerals": {
+     "palladium": 7
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-atlas-aggregate-1",
+    "title": "Platinum bulk contract",
+    "brief": "Atlas Aggregate needs 7 units of platinum for bulk construction feedstock and orbital ballast. Preferred cargo earns a client premium.",
+    "client": "atlas-aggregate",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 7,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27122280,
+    "affinity": 12,
+    "minerals": {
+     "platinum": 7
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-atlas-aggregate-2",
+    "title": "Palladium bulk contract",
+    "brief": "Atlas Aggregate needs 6 units of palladium for bulk construction feedstock and orbital ballast. Preferred cargo earns a client premium.",
+    "client": "atlas-aggregate",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 26676240,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-atlas-aggregate-3",
+    "title": "Platinum bulk contract",
+    "brief": "Atlas Aggregate needs 6 units of platinum for bulk construction feedstock and orbital ballast. Preferred cargo earns a client premium.",
+    "client": "atlas-aggregate",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 26676240,
+    "affinity": 11,
+    "minerals": {
+     "platinum": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-ceres-volatiles-collective-0",
+    "title": "Rhodium prospect contract",
+    "brief": "Ceres Volatiles Collective needs 6 units of rhodium for volatile extraction and carbonaceous feedstock reserves. Preferred cargo earns a client premium.",
+    "client": "ceres-volatiles-collective",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "rhodium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-ceres-volatiles-collective-1",
+    "title": "Gold prospect contract",
+    "brief": "Ceres Volatiles Collective needs 5 units of gold for volatile extraction and carbonaceous feedstock reserves. Preferred cargo earns a client premium.",
+    "client": "ceres-volatiles-collective",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27780000,
+    "affinity": 11,
+    "minerals": {
+     "gold": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-ceres-volatiles-collective-2",
+    "title": "Rhodium prospect contract",
+    "brief": "Ceres Volatiles Collective needs 4 units of rhodium for volatile extraction and carbonaceous feedstock reserves. Preferred cargo earns a client premium.",
+    "client": "ceres-volatiles-collective",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rhodium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-helioforge-metals-0",
+    "title": "Rhodium prospect contract",
+    "brief": "Helioforge Metals needs 6 units of rhodium for nickel, cobalt, and precious-metal assay. Preferred cargo earns a client premium.",
+    "client": "helioforge-metals",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "rhodium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-helioforge-metals-1",
+    "title": "Gold prospect contract",
+    "brief": "Helioforge Metals needs 5 units of gold for nickel, cobalt, and precious-metal assay. Preferred cargo earns a client premium.",
+    "client": "helioforge-metals",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27906000,
+    "affinity": 11,
+    "minerals": {
+     "gold": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-helioforge-metals-2",
+    "title": "Rhodium prospect contract",
+    "brief": "Helioforge Metals needs 4 units of rhodium for nickel, cobalt, and precious-metal assay. Preferred cargo earns a client premium.",
+    "client": "helioforge-metals",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rhodium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-kepler-materials-0",
+    "title": "Gold prospect contract",
+    "brief": "Kepler Materials needs 5 units of gold for deep-core sampling and battery material reserves. Preferred cargo earns a client premium.",
+    "client": "kepler-materials",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27843000,
+    "affinity": 11,
+    "minerals": {
+     "gold": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-kepler-materials-1",
+    "title": "Rhodium prospect contract",
+    "brief": "Kepler Materials needs 6 units of rhodium for deep-core sampling and battery material reserves. Preferred cargo earns a client premium.",
+    "client": "kepler-materials",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "rhodium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-kepler-materials-2",
+    "title": "Gold prospect contract",
+    "brief": "Kepler Materials needs 3 units of gold for deep-core sampling and battery material reserves. Preferred cargo earns a client premium.",
+    "client": "kepler-materials",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 26305800,
+    "affinity": 10,
+    "minerals": {
+     "gold": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-nightjar-systems-0",
+    "title": "Xenon command contract",
+    "brief": "Nightjar Systems needs 2 units of xenon for rare gas capture and ion drive reserves. Preferred cargo earns a client premium.",
+    "client": "nightjar-systems",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 2,
+    "drill": 3,
+    "orbit": 6,
+    "francs": 27942400,
+    "affinity": 9,
+    "minerals": {
+     "rare": 2
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-nightjar-systems-1",
+    "title": "Iridium command contract",
+    "brief": "Nightjar Systems needs 4 units of iridium for rare gas capture and ion drive reserves. Preferred cargo earns a client premium.",
+    "client": "nightjar-systems",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "iridium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-nightjar-systems-2",
+    "title": "Xenon command contract",
+    "brief": "Nightjar Systems needs 2 units of xenon for rare gas capture and ion drive reserves. Preferred cargo earns a client premium.",
+    "client": "nightjar-systems",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 2,
+    "drill": 3,
+    "orbit": 6,
+    "francs": 27942400,
+    "affinity": 9,
+    "minerals": {
+     "rare": 2
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-vulcan-core-metallurgy-0",
+    "title": "Rhodium prospect contract",
+    "brief": "Vulcan Core Metallurgy needs 5 units of rhodium for deep metallic-core assay and platinum-group refinement. Preferred cargo earns a client premium.",
+    "client": "vulcan-core-metallurgy",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "rhodium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-vulcan-core-metallurgy-1",
+    "title": "Gold prospect contract",
+    "brief": "Vulcan Core Metallurgy needs 6 units of gold for deep metallic-core assay and platinum-group refinement. Preferred cargo earns a client premium.",
+    "client": "vulcan-core-metallurgy",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "gold": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-vulcan-core-metallurgy-2",
+    "title": "Rhodium prospect contract",
+    "brief": "Vulcan Core Metallurgy needs 3 units of rhodium for deep metallic-core assay and platinum-group refinement. Preferred cargo earns a client premium.",
+    "client": "vulcan-core-metallurgy",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27742200,
+    "affinity": 10,
+    "minerals": {
+     "rhodium": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-solgrid-dynamics-0",
+    "title": "Rhodium command contract",
+    "brief": "Solgrid Dynamics needs 2 units of rhodium for solar-grid expansion and high-purity silicon. Preferred cargo earns a client premium.",
+    "client": "solgrid-dynamics",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 2,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 27819200,
+    "affinity": 9,
+    "minerals": {
+     "rhodium": 2
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-solgrid-dynamics-1",
+    "title": "Xenon command contract",
+    "brief": "Solgrid Dynamics needs 3 units of xenon for solar-grid expansion and high-purity silicon. Preferred cargo earns a client premium.",
+    "client": "solgrid-dynamics",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 3,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rare": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-solgrid-dynamics-2",
+    "title": "Rhodium command contract",
+    "brief": "Solgrid Dynamics needs 2 units of rhodium for solar-grid expansion and high-purity silicon. Preferred cargo earns a client premium.",
+    "client": "solgrid-dynamics",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 2,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 27819200,
+    "affinity": 9,
+    "minerals": {
+     "rhodium": 2
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-lumen-research-0",
+    "title": "Palladium starter contract",
+    "brief": "Lumen Research needs 5 units of palladium for strategic sample reserve and sensor research. Preferred cargo earns a client premium.",
+    "client": "lumen-research",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 25820000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-lumen-research-1",
+    "title": "Platinum bulk contract",
+    "brief": "Lumen Research needs 5 units of platinum for strategic sample reserve and sensor research. Preferred cargo earns a client premium.",
+    "client": "lumen-research",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 26457000,
+    "affinity": 11,
+    "minerals": {
+     "platinum": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-lumen-research-2",
+    "title": "Gold prospect contract",
+    "brief": "Lumen Research needs 6 units of gold for strategic sample reserve and sensor research. Preferred cargo earns a client premium.",
+    "client": "lumen-research",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "gold": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-pioneer-works-0",
+    "title": "Palladium starter contract",
+    "brief": "Pioneer Works needs 5 units of palladium for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
+    "client": "pioneer-works",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 25680000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-pioneer-works-1",
+    "title": "Platinum starter contract",
+    "brief": "Pioneer Works needs 4 units of platinum for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
+    "client": "pioneer-works",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 25344000,
+    "affinity": 10,
+    "minerals": {
+     "platinum": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-pioneer-works-2",
+    "title": "Palladium starter contract",
+    "brief": "Pioneer Works needs 6 units of palladium for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
+    "client": "pioneer-works",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26016000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-helioforge-metals-construct-fuel-depot",
+    "title": "Build a Fuel Depot",
+    "brief": "Helioforge Metals wants a fuel depot raised on site. Haul the materials out and it is built before you head home.",
+    "client": "helioforge-metals",
+    "tag": "CONSTRUCT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 14,
+    "minerals": {
+     "hydrogen": 8
+    },
+    "construction": {
+     "kind": "fuel-depot",
+     "materials": {
+      "hydrogen": 8
+     },
+     "buildTimeMs": 1200000
+    }
+   },
+   {
+    "id": "dcp-2026-10-16-nightjar-systems-construct-battery-station",
+    "title": "Build a Battery Station",
+    "brief": "Nightjar Systems wants a battery station raised on site. Haul the materials out and it is built before you head home.",
+    "client": "nightjar-systems",
+    "tag": "CONSTRUCT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 14,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 17,
+    "minerals": {
+     "cobalt": 6,
+     "nickel": 4,
+     "copper": 4
+    },
+    "construction": {
+     "kind": "battery-station",
+     "materials": {
+      "cobalt": 6,
+      "nickel": 4,
+      "copper": 4
+     },
+     "buildTimeMs": 1500000
+    }
+   },
+   {
+    "id": "dcp-2026-10-16-ferrum-orbital-construction-construct-fabrication-pad",
+    "title": "Build a Fabrication Pad",
+    "brief": "Ferrum Orbital Construction wants a fabrication pad raised on site. Haul the materials out and it is built before you head home.",
+    "client": "ferrum-orbital-construction",
+    "tag": "CONSTRUCT",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 22,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 21,
+    "minerals": {
+     "iron": 12,
+     "silicon": 6,
+     "aluminium": 4
+    },
+    "construction": {
+     "kind": "fabrication-pad",
+     "materials": {
+      "iron": 12,
+      "silicon": 6,
+      "aluminium": 4
+     },
+     "buildTimeMs": 2100000
+    }
+   }
+  ]
+ },
+ {
+  "date": "2026-11-03",
+  "done": 20,
+  "affinity": {
+   "ferrum-orbital-construction": 40
+  },
+  "maxTier": 5,
+  "missions": [
+   {
+    "id": "dcp-2026-11-03-helios-propulsion-depot-0",
+    "title": "Platinum starter contract",
+    "brief": "Helios Propulsion Depot needs 6 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26016000,
+    "affinity": 11,
+    "minerals": {
+     "platinum": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-helios-propulsion-depot-1",
+    "title": "Palladium starter contract",
+    "brief": "Helios Propulsion Depot needs 6 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26016000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-helios-propulsion-depot-2",
+    "title": "Platinum starter contract",
+    "brief": "Helios Propulsion Depot needs 7 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 7,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26352000,
+    "affinity": 12,
+    "minerals": {
+     "platinum": 7
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-arcturus-battery-systems-0",
+    "title": "Rhodium prospect contract",
+    "brief": "Arcturus Battery Systems needs 4 units of rhodium for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rhodium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-arcturus-battery-systems-1",
+    "title": "Gold prospect contract",
+    "brief": "Arcturus Battery Systems needs 3 units of gold for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 26305800,
+    "affinity": 10,
+    "minerals": {
+     "gold": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-arcturus-battery-systems-2",
+    "title": "Rhodium prospect contract",
+    "brief": "Arcturus Battery Systems needs 6 units of rhodium for hydrogen fuel-cell manufacturing and catalyst supply. Preferred cargo earns a client premium.",
+    "client": "arcturus-battery-systems",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "rhodium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-ferrum-orbital-construction-0",
+    "title": "Palladium bulk contract",
+    "brief": "Ferrum Orbital Construction needs 6 units of palladium for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 26676240,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-ferrum-orbital-construction-1",
+    "title": "Iridium bulk contract",
+    "brief": "Ferrum Orbital Construction needs 6 units of iridium for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 26676240,
+    "affinity": 11,
+    "minerals": {
+     "iridium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-ferrum-orbital-construction-2",
+    "title": "Palladium bulk contract",
+    "brief": "Ferrum Orbital Construction needs 7 units of palladium for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 7,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27122280,
+    "affinity": 12,
+    "minerals": {
+     "palladium": 7
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-ferrum-orbital-construction-3",
+    "title": "Iridium bulk contract",
+    "brief": "Ferrum Orbital Construction needs 7 units of iridium for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 7,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27122280,
+    "affinity": 12,
+    "minerals": {
+     "iridium": 7
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-ferrum-orbital-construction-4",
+    "title": "Platinum bulk contract",
+    "brief": "Ferrum Orbital Construction needs 7 units of platinum for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 7,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27122280,
+    "affinity": 12,
+    "minerals": {
+     "platinum": 7
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-ferrum-orbital-construction-5",
+    "title": "Palladium bulk contract",
+    "brief": "Ferrum Orbital Construction needs 7 units of palladium for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 7,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27122280,
+    "affinity": 12,
+    "minerals": {
+     "palladium": 7
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-ferrum-orbital-construction-6",
+    "title": "Platinum bulk contract",
+    "brief": "Ferrum Orbital Construction needs 8 units of platinum for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27568320,
+    "affinity": 12,
+    "minerals": {
+     "platinum": 8
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-ferrum-orbital-construction-7",
+    "title": "Palladium bulk contract",
+    "brief": "Ferrum Orbital Construction needs 8 units of palladium for high-temperature alloy supply for orbital structure assemblies. Preferred cargo earns a client premium.",
+    "client": "ferrum-orbital-construction",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27568320,
+    "affinity": 12,
+    "minerals": {
+     "palladium": 8
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-atlas-aggregate-0",
+    "title": "Platinum bulk contract",
+    "brief": "Atlas Aggregate needs 4 units of platinum for bulk construction feedstock and orbital ballast. Preferred cargo earns a client premium.",
+    "client": "atlas-aggregate",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 25784160,
+    "affinity": 10,
+    "minerals": {
+     "platinum": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-atlas-aggregate-1",
+    "title": "Palladium bulk contract",
+    "brief": "Atlas Aggregate needs 4 units of palladium for bulk construction feedstock and orbital ballast. Preferred cargo earns a client premium.",
+    "client": "atlas-aggregate",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 25784160,
+    "affinity": 10,
+    "minerals": {
+     "palladium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-atlas-aggregate-2",
+    "title": "Platinum bulk contract",
+    "brief": "Atlas Aggregate needs 8 units of platinum for bulk construction feedstock and orbital ballast. Preferred cargo earns a client premium.",
+    "client": "atlas-aggregate",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 27568320,
+    "affinity": 12,
+    "minerals": {
+     "platinum": 8
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-ceres-volatiles-collective-0",
+    "title": "Gold prospect contract",
+    "brief": "Ceres Volatiles Collective needs 5 units of gold for volatile extraction and carbonaceous feedstock reserves. Preferred cargo earns a client premium.",
+    "client": "ceres-volatiles-collective",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27780000,
+    "affinity": 11,
+    "minerals": {
+     "gold": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-ceres-volatiles-collective-1",
+    "title": "Rhodium prospect contract",
+    "brief": "Ceres Volatiles Collective needs 6 units of rhodium for volatile extraction and carbonaceous feedstock reserves. Preferred cargo earns a client premium.",
+    "client": "ceres-volatiles-collective",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "rhodium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-ceres-volatiles-collective-2",
+    "title": "Gold prospect contract",
+    "brief": "Ceres Volatiles Collective needs 3 units of gold for volatile extraction and carbonaceous feedstock reserves. Preferred cargo earns a client premium.",
+    "client": "ceres-volatiles-collective",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 26268000,
+    "affinity": 10,
+    "minerals": {
+     "gold": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-helioforge-metals-0",
+    "title": "Gold prospect contract",
+    "brief": "Helioforge Metals needs 5 units of gold for nickel, cobalt, and precious-metal assay. Preferred cargo earns a client premium.",
+    "client": "helioforge-metals",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27906000,
+    "affinity": 11,
+    "minerals": {
+     "gold": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-helioforge-metals-1",
+    "title": "Rhodium prospect contract",
+    "brief": "Helioforge Metals needs 6 units of rhodium for nickel, cobalt, and precious-metal assay. Preferred cargo earns a client premium.",
+    "client": "helioforge-metals",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "rhodium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-helioforge-metals-2",
+    "title": "Gold prospect contract",
+    "brief": "Helioforge Metals needs 3 units of gold for nickel, cobalt, and precious-metal assay. Preferred cargo earns a client premium.",
+    "client": "helioforge-metals",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 26343600,
+    "affinity": 10,
+    "minerals": {
+     "gold": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-kepler-materials-0",
+    "title": "Rhodium prospect contract",
+    "brief": "Kepler Materials needs 6 units of rhodium for deep-core sampling and battery material reserves. Preferred cargo earns a client premium.",
+    "client": "kepler-materials",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "rhodium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-kepler-materials-1",
+    "title": "Gold prospect contract",
+    "brief": "Kepler Materials needs 5 units of gold for deep-core sampling and battery material reserves. Preferred cargo earns a client premium.",
+    "client": "kepler-materials",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27843000,
+    "affinity": 11,
+    "minerals": {
+     "gold": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-kepler-materials-2",
+    "title": "Rhodium prospect contract",
+    "brief": "Kepler Materials needs 4 units of rhodium for deep-core sampling and battery material reserves. Preferred cargo earns a client premium.",
+    "client": "kepler-materials",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rhodium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-nightjar-systems-0",
+    "title": "Iridium command contract",
+    "brief": "Nightjar Systems needs 3 units of iridium for rare gas capture and ion drive reserves. Preferred cargo earns a client premium.",
+    "client": "nightjar-systems",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 27763200,
+    "affinity": 10,
+    "minerals": {
+     "iridium": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-nightjar-systems-1",
+    "title": "Xenon command contract",
+    "brief": "Nightjar Systems needs 4 units of xenon for rare gas capture and ion drive reserves. Preferred cargo earns a client premium.",
+    "client": "nightjar-systems",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 3,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rare": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-nightjar-systems-2",
+    "title": "Iridium command contract",
+    "brief": "Nightjar Systems needs 3 units of iridium for rare gas capture and ion drive reserves. Preferred cargo earns a client premium.",
+    "client": "nightjar-systems",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 27763200,
+    "affinity": 10,
+    "minerals": {
+     "iridium": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-vulcan-core-metallurgy-0",
+    "title": "Rhodium prospect contract",
+    "brief": "Vulcan Core Metallurgy needs 6 units of rhodium for deep metallic-core assay and platinum-group refinement. Preferred cargo earns a client premium.",
+    "client": "vulcan-core-metallurgy",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 11,
+    "minerals": {
+     "rhodium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-vulcan-core-metallurgy-1",
+    "title": "Iridium prospect contract",
+    "brief": "Vulcan Core Metallurgy needs 5 units of iridium for deep metallic-core assay and platinum-group refinement. Preferred cargo earns a client premium.",
+    "client": "vulcan-core-metallurgy",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 27969000,
+    "affinity": 11,
+    "minerals": {
+     "iridium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-vulcan-core-metallurgy-2",
+    "title": "Rhodium prospect contract",
+    "brief": "Vulcan Core Metallurgy needs 4 units of rhodium for deep metallic-core assay and platinum-group refinement. Preferred cargo earns a client premium.",
+    "client": "vulcan-core-metallurgy",
+    "tag": "PROSPECT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 2,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rhodium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-solgrid-dynamics-0",
+    "title": "Xenon command contract",
+    "brief": "Solgrid Dynamics needs 4 units of xenon for solar-grid expansion and high-purity silicon. Preferred cargo earns a client premium.",
+    "client": "solgrid-dynamics",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 3,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rare": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-solgrid-dynamics-1",
+    "title": "Rhodium command contract",
+    "brief": "Solgrid Dynamics needs 3 units of rhodium for solar-grid expansion and high-purity silicon. Preferred cargo earns a client premium.",
+    "client": "solgrid-dynamics",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 3,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rhodium": 3
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-solgrid-dynamics-2",
+    "title": "Xenon command contract",
+    "brief": "Solgrid Dynamics needs 4 units of xenon for solar-grid expansion and high-purity silicon. Preferred cargo earns a client premium.",
+    "client": "solgrid-dynamics",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 3,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 10,
+    "minerals": {
+     "rare": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-lumen-research-0",
+    "title": "Palladium bulk contract",
+    "brief": "Lumen Research needs 4 units of palladium for strategic sample reserve and sensor research. Preferred cargo earns a client premium.",
+    "client": "lumen-research",
+    "tag": "BULK",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 4,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 25965600,
+    "affinity": 10,
+    "minerals": {
+     "palladium": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-lumen-research-1",
+    "title": "Palladium starter contract",
+    "brief": "Lumen Research needs 5 units of palladium for strategic sample reserve and sensor research. Preferred cargo earns a client premium.",
+    "client": "lumen-research",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 25820000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-lumen-research-2",
+    "title": "Xenon command contract",
+    "brief": "Lumen Research needs 2 units of xenon for strategic sample reserve and sensor research. Preferred cargo earns a client premium.",
+    "client": "lumen-research",
+    "tag": "COMMAND",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 2,
+    "drill": 3,
+    "orbit": 6,
+    "francs": 28004000,
+    "affinity": 9,
+    "minerals": {
+     "rare": 2
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-pioneer-works-0",
+    "title": "Platinum starter contract",
+    "brief": "Pioneer Works needs 5 units of platinum for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
+    "client": "pioneer-works",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 5,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 25680000,
+    "affinity": 11,
+    "minerals": {
+     "platinum": 5
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-pioneer-works-1",
+    "title": "Palladium starter contract",
+    "brief": "Pioneer Works needs 6 units of palladium for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
+    "client": "pioneer-works",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26016000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-pioneer-works-2",
+    "title": "Platinum starter contract",
+    "brief": "Pioneer Works needs 6 units of platinum for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
+    "client": "pioneer-works",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26016000,
+    "affinity": 11,
+    "minerals": {
+     "platinum": 6
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-11-03-vulcan-core-metallurgy-construct-fuel-depot",
+    "title": "Build a Fuel Depot",
+    "brief": "Vulcan Core Metallurgy wants a fuel depot raised on site. Haul the materials out and it is built before you head home.",
+    "client": "vulcan-core-metallurgy",
+    "tag": "CONSTRUCT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 8,
+    "drill": 1,
+    "orbit": 5,
+    "francs": 28320000,
+    "affinity": 14,
+    "minerals": {
+     "hydrogen": 8
+    },
+    "construction": {
+     "kind": "fuel-depot",
+     "materials": {
+      "hydrogen": 8
+     },
+     "buildTimeMs": 1200000
+    }
+   },
+   {
+    "id": "dcp-2026-11-03-solgrid-dynamics-construct-battery-station",
+    "title": "Build a Battery Station",
+    "brief": "Solgrid Dynamics wants a battery station raised on site. Haul the materials out and it is built before you head home.",
+    "client": "solgrid-dynamics",
+    "tag": "CONSTRUCT",
+    "difficulty": "L2",
+    "seq": 4,
+    "cargo": 14,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 17,
+    "minerals": {
+     "cobalt": 6,
+     "nickel": 4,
+     "copper": 4
+    },
+    "construction": {
+     "kind": "battery-station",
+     "materials": {
+      "cobalt": 6,
+      "nickel": 4,
+      "copper": 4
+     },
+     "buildTimeMs": 1500000
+    }
+   },
+   {
+    "id": "dcp-2026-11-03-atlas-aggregate-construct-fabrication-pad",
+    "title": "Build a Fabrication Pad",
+    "brief": "Atlas Aggregate wants a fabrication pad raised on site. Haul the materials out and it is built before you head home.",
+    "client": "atlas-aggregate",
+    "tag": "CONSTRUCT",
+    "difficulty": "L3",
+    "seq": 4,
+    "cargo": 22,
+    "drill": 2,
+    "orbit": 6,
+    "francs": 28320000,
+    "affinity": 21,
+    "minerals": {
+     "iron": 12,
+     "silicon": 6,
+     "aluminium": 4
+    },
+    "construction": {
+     "kind": "fabrication-pad",
+     "materials": {
+      "iron": 12,
+      "silicon": 6,
+      "aluminium": 4
+     },
+     "buildTimeMs": 2100000
+    }
+   }
+  ]
+ }
+]

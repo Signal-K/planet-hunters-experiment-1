@@ -3,6 +3,7 @@
 
 import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict, SaturnClassification, SaturnVerdict, MoonSurveyChart } from '@/lib/data'
 import type { BuildingLevels } from '@/lib/data/building-levels'
+import type { EarthBiomeId } from '@/lib/scene/base-world'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import type { RoverSpec } from '@takeon/engine'
 import type { SceneScope } from './scene-scope'
@@ -46,7 +47,7 @@ export interface MissionRunSnapshot {
   lastCargo: Record<string, number> | null
   deliveredCargo?: Record<string, number> | null
   missionRunId?: string
-  missionPhase?: 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
+  missionPhase?: MissionPhase
   miningCargoInProgress?: Record<string, number>
   miningLaserCharges?: number
   deliveryUnloadStartedAt?: number
@@ -84,7 +85,7 @@ export type Screen =
   | 'hangar'
   | 'rocket-buy'
   | 'skills'
-  | 'rover-mining'
+  | 'rover-survey'
   | 'launchpad'
   | 'surface-ops'
   | 'academy'
@@ -99,8 +100,9 @@ export type Screen =
 // they are locations, not menus, and boxing them in the device-card chrome
 // reads as a modal sitting over the game rather than the game itself.
 // Screens NOT in this set ('intro', 'build', 'missions', 'targets', 'fab',
-// 'market', 'skills', 'rocket-buy', 'debrief') are menus/UI concepts and keep
-// the boxed card treatment. Debrief in particular is a mission-results
+// 'skills', 'rocket-buy', 'debrief') are menus/UI concepts and keep
+// the boxed card treatment. The Exchange is a cargo dock, so it is a place.
+// Debrief in particular is a mission-results
 // summary/paperwork screen, not a place — it was wrongly added here in
 // KES-261 and got full-screen treatment it never should have (KES-265).
 // See `.portrait-canvas--full-page` in globals.css.
@@ -111,7 +113,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'transit',
   'landing',
   'mining',
-  'rover-mining',
+  'rover-survey',
   'delivery',
   'refinery',
   'academy',
@@ -121,6 +123,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'asteroid-discovery',
   'saturn-storm-search',
   'instrument-hub',
+  'market',
   // Mission Log is a tray over the still-mounted Base (SSL-347), so the Base
   // must keep its full-viewport frame while the tray is open.
   'mission-history',
@@ -209,6 +212,9 @@ export interface FieldStructureRecord {
 }
 
 
+/** Operational step of a live run. `survey` is the starter-rover surface pass; extraction is always `mining` on the ship laser. */
+export type MissionPhase = 'transit' | 'landing' | 'survey' | 'mining' | 'delivery' | 'debrief'
+
 export interface ResourceFocus {
   label: string
   minerals: Record<string, number>
@@ -222,7 +228,7 @@ export interface Player {
   // PocketBase mission_runs record for the current run. Kept in the save so a
   // refresh/resume continues updating the same server-side lifecycle record.
   missionRunId?: string
-  missionPhase?: 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
+  missionPhase?: MissionPhase
   // Ore collected so far during an in-progress mining run, preserved across a
   // "Back to hub" pause so resuming the mission doesn't silently discard
   // already-collected cargo (that cargo only lived in MiningScreen's local
@@ -232,9 +238,6 @@ export interface Player {
   // Laser charges left in the paused mining run (SSL-512). Without it, leaving
   // and resuming refilled the magazine, a free recharge.
   miningLaserCharges?: number
-  // Legacy timer field retained for save migration. Live rover missions now
-  // persist their field state through TakeOnMount/LandnamSync.
-  roverMiningStartedAt?: number
   // Legacy KES-110 observation field retained for save migration. The live
   // rover field now exposes deposits through the TakeOn scene itself.
   roverTerrainClassifications?: Record<string, RoverTerrainClass>
@@ -244,7 +247,7 @@ export interface Player {
   deliveryUnloadStartedAt?: number
   // Wall-clock start of the lander detach/descend sequence on arrival, and of
   // the ascend/redock sequence after mining completes. Same "derive progress
-  // from a persisted epoch" pattern as roverMiningStartedAt/deliveryUnloadStartedAt.
+  // from a persisted epoch" pattern as deliveryUnloadStartedAt.
   landingStartedAt?: number
   landingReturnStartedAt?: number
   // True once the player has completed at least one lander redock. Gates
@@ -283,6 +286,8 @@ export interface Player {
   /** Materials currently being gathered for a player-selected construction. */
   resourceFocus?: ResourceFocus
   debriefPending?: boolean
+  /** Back on the Earth pad with cargo still to settle on the delivery sheet (SSL-553). */
+  homeDeliveryPending?: boolean
   /** The haul was settled into an off-world silo or sold before Earth return. */
   cargoSettledOffworld?: boolean
   pendingRemoteDisposition?: 'store' | 'sell'
@@ -328,6 +333,10 @@ export interface Player {
   launchpadUpgraded: boolean
   /** Levels 2-3 of upgradable buildings; absent means level 1. Same JSON key as native. */
   buildingLevels?: BuildingLevels
+  /** Earth Base landscape. Missing saves read as mountains. */
+  earthBiome?: EarthBiomeId
+  /** Set after an existing player uses their one-time base relocation. */
+  earthBiomeMoveUsed?: boolean
   lastClient?: string
   /** Mirrors treasury.loans[...].outstandingFrancs for this player; treasury is authoritative. */
   loanDebt: number
@@ -361,7 +370,7 @@ export interface Player {
   // an assumed migration.
   transitSatelliteLevel?: number
   transitSatelliteLaunchedAt?: number | null
-  // Deep Space Telescope: a separately launched orbital instrument which
+  // Space Telescope: a separately launched orbital instrument which
   // gates the asteroid-discovery (NEOCP) instrument feed.
   deepSpaceTelescopeBuilt?: boolean
   deepSpaceTelescopeLevel?: number
@@ -372,7 +381,7 @@ export interface Player {
   tessClassifications?: Record<string, TessClassification>
   // One-shot late-game narrative beat after a high-level TESS confirmation.
   artifactNarrativeSeenAt?: number | null
-  // Deep Space Telescope's asteroid-discovery (NEOCP) classifications
+  // Space Telescope's asteroid-discovery (NEOCP) classifications
   // (STS-622) — same shape/role as tessClassifications above, keyed by
   // asteroid_candidates record id, but a separate map since it's a
   // genuinely second instrument, not a variant of the transit feed.
@@ -516,6 +525,8 @@ export interface GameState {
   // reads the record's system timestamp directly). missionsDone remains the
   // primary onboarding-stage signal; this only disambiguates true ties.
   updatedAt?: number
+  /** SSL-559 conflict-free progress ledger (see lib/sync/ledger.ts). */
+  syncLedger?: import('./sync/ledger').SyncLedger | null
   /** Dev-preset-only data switch. Never set by normal gameplay or persistence. */
   visualFixture?: 'tess' | 'asteroid'
 }
@@ -572,6 +583,8 @@ export interface GameActions {
   /** Spend hauled ore on the next Laser Capacitor level; no-ops unless the player is still at `expectedLevel` and has the ore spare beyond `reservedUnits`. */
   onBuyLaserCapacitor: (expectedLevel: number, reservedUnits: number) => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell') => void
+  /** SSL-553: settle the return delivery sheet (client / silo / sell per mineral). */
+  onHomeDelivery: (split: Record<string, Record<'client' | 'silo' | 'sell', number>>) => void
   startFlightPlan: () => void
   completeFlightPlan: (event: FlightPlanEvent) => void
   showFlightPlanHint: () => void
@@ -599,7 +612,7 @@ export interface GameActions {
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   submitSaturnClassification: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
   claimSaturnSurveyTerritory: () => void
-  onRoverMiningDone: (cargo: Record<string, number>) => void
+  onRoverSurveyComplete: () => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean

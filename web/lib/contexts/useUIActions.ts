@@ -183,7 +183,7 @@ export function useUIActions(
   }, [])
 
   const clearTerritoryClaimPopup = useCallback(() => {
-    setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
+    setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: 'hub' }))
   }, [setState])
 
   return { go, goBack, recordScreenTransition, goToMissions, markContractsOpened, setScreenFromUrl, skipNextUrlSync, inflightPath, isStaleRoute, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }

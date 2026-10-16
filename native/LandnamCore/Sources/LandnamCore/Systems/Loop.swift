@@ -31,7 +31,7 @@ public enum Loop {
         if s.screen == .missions && s.player.freeOperations && mission.isOwnProgram { return s }
         guard s.player.activeMission == nil else { return s }
         // Off-world builds carry the materials from the stash; no kit, no flight.
-        if let plan = mission.construction, plan.requiredMaterials.contains(where: { (s.player.stash[$0.key] ?? 0) < $0.value }) { return s }
+        if let plan = mission.construction, mission.isOwnProgram, plan.requiredMaterials.contains(where: { (s.player.stash[$0.key] ?? 0) < $0.value }) { return s }
         var base = s
         base.player.freeHaulDisposition = haul ?? s.player.freeHaulDisposition
         base.doneSteps["2"] = true
@@ -70,7 +70,7 @@ public enum Loop {
 
     static func pickTargetState(_ s: GameState, id: String, catalog: Catalog) -> GameState {
         guard let mission = catalog.mission(s.missionId), let target = catalog.target(id) else { return s }
-        let feasible = Targets.feasible(for: mission, parts: catalog.parts, missionsDone: s.player.missionsDone,
+        let feasible = Targets.feasible(for: mission, targets: catalog.targets, parts: catalog.parts, missionsDone: s.player.missionsDone,
                                         launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"), skills: s.player.unlockedSkillNodes)
         guard feasible.contains(where: { $0.id == id }) else { return s }
         let suggested = catalog.parts.suggestBuild(mission: mission, target: target, missionsDone: s.player.missionsDone,
@@ -95,7 +95,7 @@ public enum Loop {
     public static func finishQuickSetup(_ s: GameState, catalog: Catalog) -> GameState {
         var n = s
         if n.screen == .targets, let mission = catalog.mission(n.missionId) {
-            let feasible = Targets.feasible(for: mission, parts: catalog.parts, missionsDone: n.player.missionsDone,
+            let feasible = Targets.feasible(for: mission, targets: catalog.targets, parts: catalog.parts, missionsDone: n.player.missionsDone,
                                             launchpadUpgraded: n.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(n.player, "launchpad"), skills: n.player.unlockedSkillNodes)
             guard let pick = feasible.first(where: { $0.recommended == true }) ?? feasible.first else { return n }
             n = pickTargetState(n, id: pick.id, catalog: catalog)
@@ -120,7 +120,7 @@ public enum Loop {
     }
 
     public static func purchaseRocket(_ s: GameState, rocketId: String, catalog: Catalog) -> GameState {
-        guard Self.reviewScreens.contains(s.screen), let rocket = Rockets.model(id: rocketId), !rocket.locked,
+        guard Self.reviewScreens.contains(s.screen) || s.screen == .hangar, let rocket = Rockets.model(id: rocketId), !rocket.locked,
               let mission = catalog.mission(s.missionId), Rockets.compatible(rocket, with: mission),
               Market.purchaseRefusal(s, rocket: rocket) == nil else { return s }
         var n = Market.applyPurchaseRocket(s, rocket: rocket)
@@ -142,7 +142,7 @@ public enum Loop {
     }
 
     public static func launch(_ s: GameState, catalog: Catalog, now: Double) -> GameState {
-        guard s.screen == .fab, s.player.activeMission == nil,
+        guard s.screen == .fab || s.screen == .launchpad, s.player.activeMission == nil,
               let missionId = s.missionId, let targetId = s.targetId,
               let selectedId = s.player.selectedStagedRocketId,
               let vehicle = s.player.stagedRockets.first(where: { $0.id == selectedId }), vehicle.location == .launchpad,
@@ -168,13 +168,19 @@ public enum Loop {
 
     // MARK: transit arrival
 
+    /// Mirrors web `MissionOperationRoutes`: the rover scene is only for the starter-rover survey
+    /// mission or the tutorial transport lesson; every other mission mines with the ship laser.
+    public static func usesRoverScene(_ mission: Mission?, player: Player) -> Bool {
+        Transitions.isStarterRoverMission(mission) || Transitions.isTutorialTransportLesson(mission, player: player)
+    }
+
     public static func transitArrived(_ s: GameState, catalog: Catalog, now: Double) -> GameState {
         guard s.screen == .transit else { return s }
         if s.player.returningToEarth { return Transitions.applyReturnArrived(s) }
         if s.player.headingToDelivery { return Transitions.applyDeliveryArrived(s, now: now) }
         var n = s
         let mission = catalog.mission(s.missionId)
-        if let plan = mission?.construction {
+        if let plan = mission?.construction, mission?.isOwnProgram == true {
             // The kit is delivered on arrival: materials leave the stash, the site starts its build clock.
             n = ConstructionMissions.applyDelivery(n, plan: plan, targetId: s.targetId ?? mission?.targetId ?? "", now: now)
             n.player.missionPhase = .debrief
@@ -191,9 +197,9 @@ public enum Loop {
             case "transit-telescope":
                 n.player.transitSatelliteLaunchedAt = s.player.transitSatelliteLaunchedAt ?? now
                 n.player.transitSatelliteLevel = max(1, s.player.transitSatelliteLevel ?? 1)
-            case "deep-space-telescope":
+                // One telescope: the asteroid feed comes online with the transit feed.
                 n.player.deepSpaceTelescopeBuilt = true
-                n.player.deepSpaceTelescopeLaunchedAt = s.player.deepSpaceTelescopeLaunchedAt ?? now
+                n.player.deepSpaceTelescopeLaunchedAt = s.player.deepSpaceTelescopeLaunchedAt ?? n.player.transitSatelliteLaunchedAt
             case "saturn-imager":
                 n.player.saturnImagerLaunchedAt = s.player.saturnImagerLaunchedAt ?? now
             default: break
@@ -206,22 +212,24 @@ public enum Loop {
             n.doneSteps["6"] = true
             return n
         }
-        n.player.missionPhase = .mining
-        n.screen = catalog.mission(s.missionId)?.requires.drillTier == 0 ? .roverMining : .mining
+        let rover = usesRoverScene(mission, player: s.player)
+        n.player.missionPhase = rover ? .survey : .mining
+        n.screen = rover ? .roverSurvey : .mining
         return n
     }
 
     public static func miningDone(_ s: GameState, cargo: Cargo, catalog: Catalog, now: Double) -> GameState {
-        let nextLeg = s.deliveryTargetId != nil ? catalog.target(s.deliveryTargetId) : catalog.target(s.targetId)
-        let arrival = travelArrival(target: nextLeg, player: s.player, now: now)
+        // SSL-553: the trip home is a short playable flight (boost to arrive); only a delivery leg runs on the clock.
+        guard s.deliveryTargetId != nil else {
+            return Transitions.applyMiningDone(s, cargo: cargo, arrivalAt: nil, transitStartedAt: now, now: now)
+        }
+        let arrival = travelArrival(target: catalog.target(s.deliveryTargetId), player: s.player, now: now)
         return Transitions.applyMiningDone(s, cargo: cargo, arrivalAt: arrival, transitStartedAt: s.player.freeOperations ? now : nil, now: now)
     }
 
-    /// Surface-ops contracts (drill tier 0) finish from the rover field, not the laser field.
-    public static func roverMiningDone(_ s: GameState, cargo: Cargo, catalog: Catalog, now: Double) -> GameState {
-        let nextLeg = s.deliveryTargetId != nil ? catalog.target(s.deliveryTargetId) : catalog.target(s.targetId)
-        let arrival = travelArrival(target: nextLeg, player: s.player, now: now)
-        return Transitions.applyRoverMiningDone(s, cargo: cargo, arrivalAt: arrival, transitStartedAt: s.player.freeOperations ? now : nil, now: now)
+    /// The rover survey logs the surface, then the ship laser is the only extraction.
+    public static func roverSurveyComplete(_ s: GameState) -> GameState {
+        return Transitions.applyRoverSurveyComplete(s)
     }
 
     public static func deliveryUnloadComplete(_ s: GameState, catalog: Catalog, now: Double) -> GameState {
@@ -257,6 +265,15 @@ public enum Loop {
                 n.player.stash[id] = left > 0 ? left : nil
             }
         }
+        // A client build job mines its materials on site; handing them over raises the structure for that client.
+        if let plan = mission?.construction, let client = mission?.client, plan.requiredMaterials.allSatisfy({ (cargo[$0.key] ?? 0) >= $0.value }) {
+            n = ConstructionMissions.applyDelivery(n, plan: plan, targetId: s.targetId ?? mission?.targetId ?? "", now: now, clientId: client, takeFromStash: false)
+        }
+        if DailyClientMissions.isPoolId(missionId), var pool = n.player.dailyClientPool {
+            pool.acceptedId = nil
+            if !pool.completedIds.contains(missionId) { pool.completedIds.append(missionId) }
+            n.player.dailyClientPool = pool
+        }
         n.player.francs += total
         if let xp = mission?.programReward?.researchXP, xp > 0 { n.player.researchXP += xp }
         if let target = n.targetId, !n.player.seenPlanets.contains(target) { n.player.seenPlanets.append(target) }
@@ -284,6 +301,7 @@ public enum Loop {
         n.player.missionRunId = nil
         n.player.missionPhase = nil
         n.player.debriefPending = false
+        n.player.homeDeliveryPending = false
         n.player.cargoSettledOffworld = false
         n.player.returningToEarth = false
         n.player.deliveryUnloadStartedAt = nil
@@ -296,7 +314,7 @@ public enum Loop {
         n.deliveryTargetId = nil
         n.tutorial = !n.player.freeOperations
         n.doneSteps["9"] = true
-        n.screen = mission?.payload?.type == .satellite ? .instrumentHub : program ? .launchpad : ((n.tutorial || justFinishedOnboarding) ? .hub : .market)
+        n.screen = mission?.payload?.type == .satellite ? .instrumentHub : program ? .launchpad : .hub
         return n
     }
 

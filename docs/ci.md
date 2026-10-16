@@ -1,8 +1,19 @@
-# CI / deploys
+# CI
 
-All CI, test, lint and check workflows were removed. Only deploy workflows remain:
+`ci.yml` is the cycle/4 gate. It runs two independent jobs on every push and pull request to `cycle/4`:
 
-- `.github/workflows/deploy.yml`: push to `main` deploys the production Worker; push to `cycle/**` deploys the staging Worker. Each job builds as part of deploying.
-- `.github/workflows/pb-deploy.yml`: PocketBase deploy to Fly.
+| Job | Command | Evidence |
+| --- | --- | --- |
+| Typecheck, unit tests, build | `tsc --noEmit`, `npm run test:unit`, `npm run build` | job log |
+| Playwright scenes | `npm run test:scenes` on Linux Chromium | HTML report, JSON result and scene screenshots |
 
-There is no `CI required` status check anymore. If it is configured as a required check in repo settings, remove it.
+`CI required` is the aggregate status check. It succeeds only when both jobs succeed; configure branch protection to require that one check.
+
+The scene job installs the Playwright Chromium revision and always uploads `web/tests/.report` and `web/tests/.out`. This is intentionally not a staging or backend acceptance test: staged sign-up, persistence, reconnect and sync remain SSL-508 coverage.
+
+For local macOS runs, use the installed Chrome channel:
+
+```bash
+cd web
+SCENES_CHANNEL=chrome npm run test:scenes
+```

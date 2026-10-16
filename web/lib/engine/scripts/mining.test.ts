@@ -5,6 +5,7 @@ vi.mock('pixi.js', () => ({
   Graphics: vi.fn().mockImplementation(function (this: Record<string, unknown>) {
     this.poly = vi.fn().mockReturnThis()
     this.circle = vi.fn().mockReturnThis()
+    this.ellipse = vi.fn().mockReturnThis()
     this.rect = vi.fn().mockReturnThis()
     this.fill = vi.fn().mockReturnThis()
     this.stroke = vi.fn().mockReturnThis()
@@ -29,13 +30,24 @@ vi.mock('pixi.js', () => ({
     this.destroy = vi.fn()
     this.x = 0
     this.y = 0
+    this.width = 0
     this.visible = true
+  }),
+  Sprite: vi.fn().mockImplementation(function (this: Record<string, unknown>) {
+    this.anchor = { set: vi.fn() }
+    this.scale = { set: vi.fn() }
+    this.destroy = vi.fn()
+    this.x = 0
+    this.y = 0
+    this.tint = 0xffffff
+    this.visible = true
+    this.texture = null
   }),
 }))
 
 import { Container, Text } from 'pixi.js'
 import { ShapeRenderer } from '../components/ShapeRenderer'
-import { MiningController } from './MiningController'
+import { MiningController, SHIP_X, SURFACE_Y } from './MiningController'
 import type { MiningControllerOptions } from './MiningController'
 import { RuntimeContext } from '../RuntimeContext'
 import { GameObject } from '../GameObject'
@@ -217,7 +229,7 @@ describe('MiningController', () => {
   })
 })
 
-interface MockLabel { text: string; x: number; visible: boolean; destroy: () => void; style: { fontSize: number } }
+interface MockLabel { text: string; x: number; y: number; visible: boolean; destroy: () => void; style: { fontSize: number } }
 
 function labels(): MockLabel[] {
   return vi.mocked(Text).mock.instances as unknown as MockLabel[]
@@ -256,6 +268,48 @@ describe('MiningController ore sym labels', () => {
     expect(wide).toBeLessThan(labels()[0].style.fontSize)
   })
 
+  it('hangs the sym just above the deposit chip, over the surface line', () => {
+    const { controller } = makeController(vi.fn(), { mineralSyms: SYMS, chipFill: 0x334455, chipShade: 0x112233 })
+    controller.start()
+    expect(labels()[0].y).toBe(SURFACE_Y - 50)
+  })
+
+  it('buries pixel deposits under the crust at varied depths the tier-1 laser can still reach', () => {
+    const onCollect = vi.fn()
+    const { controller, host } = makeController(onCollect, {
+      pixelScale: 2,
+      depositFrames: [{}, {}] as MiningControllerOptions['depositFrames'],
+      surfaceY: 200,
+      worldHeight: 640,
+      pinScroll: true,
+    })
+    controller.start()
+    const ores = (controller as unknown as { ores: { go: { transform: { position: { y: number } } } }[] }).ores
+    const depths = ores.map(ore => ore.go.transform.position.y - 200)
+    expect(new Set(depths).size).toBeGreaterThan(1)
+    for (const depth of depths) {
+      expect(depth - 14).toBeGreaterThan(16)
+      expect(depth).toBeGreaterThanOrEqual(52)
+      expect(depth).toBeLessThanOrEqual(84)
+    }
+    const ore = host.children.find(child => child.id === 'ore-0')!
+    ore.transform.position.x = SHIP_X
+    controller.fireLaser()
+    controller.update(0.4)
+    expect(onCollect).toHaveBeenCalled()
+  })
+
+  it('keeps deposits a native stride apart', () => {
+    const { controller } = makeController(vi.fn(), { worldWidth: 600, mineralSyms: SYMS, chipFill: 0x334455 })
+    controller.start()
+    const ores = (controller as unknown as { ores: { go: { transform: { position: { x: number } } } }[] }).ores
+    for (let i = 1; i < ores.length; i++) {
+      const gap = ores[i].go.transform.position.x - ores[i - 1].go.transform.position.x
+      expect(gap).toBe(280)
+    }
+    expect(ores[0].go.transform.position.x).toBe(SHIP_X + 160)
+  })
+
   it('keeps the label on the ore as the terrain scrolls', () => {
     const { controller, host } = makeController(vi.fn(), { mineralSyms: SYMS })
     controller.start()
@@ -278,6 +332,44 @@ describe('MiningController ore sym labels', () => {
       controller.update(0)
     }
     expect(labels()[0].visible).toBe(false)
+  })
+
+  it('treats ?scroll= as screen-widths and keeps the native stride', () => {
+    const width = 400
+    const placed = (screens: number) => {
+      const { controller } = makeController(vi.fn(), {
+        worldWidth: width,
+        scrollScreens: screens,
+        pinScroll: true,
+        leadMinerals: ['iron', 'carbon', 'ice'],
+        minerals: ['gold'],
+        mineralColors: { iron: '#e06a22', carbon: '#161616', ice: '#2ec8e8', gold: '#ffd166' },
+      })
+      controller.start()
+      return (controller as unknown as { ores: { mineral: string; go: { transform: { position: { x: number } } } }[] }).ores
+    }
+    const anchor = SHIP_X + 160
+    const first = placed(0)
+    expect(first[0].mineral).toBe('iron')
+    expect(first[0].go.transform.position.x).toBe(anchor)
+    expect(first[1].go.transform.position.x - first[0].go.transform.position.x).toBe(280)
+    expect(placed(1)[0].go.transform.position.x).toBe(anchor - width)
+  })
+
+  it('places lead minerals first, each a stride apart', () => {
+    const { controller } = makeController(vi.fn(), {
+      worldWidth: 390,
+      leadMinerals: ['iron', 'carbon', 'ice'],
+      minerals: ['gold'],
+      mineralColors: { iron: '#e06a22', carbon: '#161616', ice: '#2ec8e8', gold: '#ffd166' },
+    })
+    controller.start()
+    const ores = (controller as unknown as { ores: { mineral: string; go: { transform: { position: { x: number } } } }[] }).ores
+    expect(ores.slice(0, 3).map(ore => ore.mineral)).toEqual(['iron', 'carbon', 'ice'])
+    const xs = ores.slice(0, 3).map(ore => ore.go.transform.position.x)
+    expect(xs[0]).toBe(SHIP_X + 160)
+    expect(xs[1] - xs[0]).toBe(280)
+    expect(xs[2] - xs[1]).toBe(280)
   })
 
   it('does not spawn shower debris when the event is off', () => {

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Deep Space Telescope NEOCP feed (mirrors web lib/data/asteroid-candidates.ts, STS-622).
+/// Space Telescope NEOCP feed (mirrors web lib/data/asteroid-candidates.ts, STS-622).
 /// Classification only: no target payoff yet.
 public enum AsteroidVerdict: String, Codable, CaseIterable, Sendable {
     case likelyReal = "likely_real", likelyArtifact = "likely_artifact", unsure

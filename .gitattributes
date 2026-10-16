@@ -1,0 +1,12 @@
+# Mark generated / vendored files so GitHub diffs and code-review agents collapse them.
+web/package-lock.json linguist-generated=true -diff
+pocketbase/go.sum linguist-generated=true
+native/App/Theme.generated.swift linguist-generated=true
+**/*-sheet.json linguist-generated=true -diff
+web/public/game/assets/** linguist-generated=true
+native/App/Resources/Art/** linguist-generated=true
+native/App/Assets.xcassets/** linguist-generated=true
+web/vendor/** linguist-vendored=true
+tools/sprites/output/** linguist-generated=true
+.agents/skills/landnam-design/_ds_bundle.js linguist-generated=true -diff
+archive/** linguist-documentation=true -diff

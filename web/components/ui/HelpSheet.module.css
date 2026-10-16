@@ -123,7 +123,7 @@
 }
 
 @media (min-width: 1024px) {
-  .scrim { align-items: stretch; justify-content: flex-end; }
+  .scrim.scrim { align-items: stretch; justify-content: flex-end; background: transparent; }
   .sheet {
     width: 420px;
     max-height: none;

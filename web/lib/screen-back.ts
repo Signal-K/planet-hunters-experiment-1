@@ -38,7 +38,7 @@ export const LOGICAL_BACK: Record<Screen, Screen> = {
   transit: 'hub',
   landing: 'hub',
   mining: 'hub',
-  'rover-mining': 'hub',
+  'rover-survey': 'hub',
   delivery: 'hub',
   debrief: 'hub',
 }

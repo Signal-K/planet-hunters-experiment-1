@@ -192,7 +192,7 @@ struct AcademyScreen: View {
     private func staffing(_ p: Player) -> some View {
         let fit = p.crew.filter { $0.crewClass == .astronaut && $0.condition == .fit }
         return VStack(alignment: .leading, spacing: 10) {
-            ForEach([("refinery", "Refinery", "25% faster processing"), ("diplomacy", "Diplomacy Desk", "More valuable trusted-client contracts")], id: \.0) { id, name, effect in
+            ForEach([("diplomacy", "Diplomacy Desk", "More valuable trusted-client contracts")], id: \.0) { id, name, effect in
                 Panel { VStack(alignment: .leading, spacing: 6) {
                     Text(name).font(AppFont.display(16))
                     Text(effect).font(AppFont.body(14)).foregroundStyle(Theme.textDim)

@@ -77,7 +77,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       <InstrumentStandbyViewport
         testId="saturn-storm-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / LOCKED"
+        eyebrow="LOCKED"
         title="Saturn satellite"
         onBack={onBack}
         status="LOCKED"
@@ -92,13 +92,13 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       <InstrumentStandbyViewport
         testId="saturn-storm-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / IMAGER REQUIRED"
+        eyebrow="IMAGER REQUIRED"
         title="Saturn satellite"
         onBack={onBack}
         status="NO IMAGER"
         messageTitle="Launch Saturn satellite"
         messageBody="Deploy the Saturn satellite from the Launchpad to start receiving Cassini frames."
-        answers={<PrimaryBtn testId="launch-saturn-imager-btn" onClick={onLaunchImager}>OPEN LAUNCHPAD</PrimaryBtn>}
+        answers={<PrimaryBtn testId="launch-saturn-imager-btn" onClick={onLaunchImager}>PREPARE LAUNCH</PrimaryBtn>}
       />
     )
   }
@@ -108,7 +108,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       <InstrumentStandbyViewport
         testId="saturn-storm-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / DAILY DOWNLINK"
+        eyebrow="DAILY DOWNLINK"
         title="Saturn satellite"
         onBack={onBack}
         status="ACQUIRING"
@@ -123,7 +123,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       <InstrumentStandbyViewport
         testId="saturn-storm-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / DAILY DOWNLINK"
+        eyebrow="DAILY DOWNLINK"
         title="Saturn satellite"
         onBack={onBack}
         status="EMPTY FEED"

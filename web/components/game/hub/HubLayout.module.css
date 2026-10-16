@@ -4,7 +4,8 @@
      positions (which read this same token) scale together. Re-applied
      2026-09-04 after f3a6a291 (KES-260) silently reverted these values as a
      side effect of an unrelated rail/seam fix. */
-  --hub-ground: 28%;
+  --hub-ground: 20%;
+  --px: 3px;
   --hub-structure-max: 9999px;
 }
 
@@ -22,7 +23,7 @@
   gap: 10px;
   padding: 16px 16px 24px;
   pointer-events: none;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 68%, transparent) 0%, color-mix(in srgb, var(--ln-void) 22%, transparent) 48%, transparent 100%);
+  background: transparent;
 }
 
 .topRow {
@@ -42,67 +43,65 @@
   text-transform: uppercase;
 }
 .eyebrow[data-dev-launcher='true'] { margin-left: 64px; }
-.titleText {
-  margin: 4px 0 0;
-  color: var(--ln-text);
-  font: 800 23px/1 var(--ln-font-display);
-  letter-spacing: -.01em;
-  text-shadow: 0 4px 8px color-mix(in srgb, var(--ln-void) 60%, transparent);
+.leftCluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.cog {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 4px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  cursor: pointer;
+}
+.root :global(.scene-chip) {
+  height: 44px;
+  min-height: 44px;
+}
+.chips {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
 }
 .balance { pointer-events: auto; }
 /* Two classes: SkyBadgeRow's own `bottom: 16px` ties a single class and can win on stylesheet order. */
 .root .badges { top: 144px; bottom: auto; z-index: 19; }
 
-.surface::before {
-  position: absolute;
-  right: 0;
-  bottom: var(--hub-ground);
-  left: 0;
-  height: 18%;
-  content: '';
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    color-mix(in srgb, var(--hub-hill-near) 32%, transparent)
-  );
-  z-index: 3;
-}
-
+.surface::before,
 .surface::after {
-  position: absolute;
-  right: 4%;
-  bottom: calc(var(--hub-ground) - 1px);
-  left: 4%;
-  /* Thickened from 1px and brightened from .42 opacity (KES-263) so the
-     ground/sky boundary reads as a deliberate horizon line rather than a
-     hairline that only shows up on close inspection. */
-  height: 2px;
-  content: '';
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, var(--hub-cyan), transparent);
-  opacity: 0.6;
-  z-index: 5;
+  content: none;
 }
 
 /* Phone portrait stacks the dock actions two per row (launchpad-screen.css). Each row beyond the second is 48px of
    dock the scene has to clear, or the dock covers the buildings' hit boxes. */
 @media (orientation: portrait) and (max-width: 1023px), (max-width: 600px) {
-  .root[data-dock-rows='3'] { --hub-ground: calc(28% + 48px); }
+  .root[data-dock-rows='3'],
+  .root[data-dock-rows='4'] { --hub-ground: 20%; --px: 2px; }
 }
 
 @media (min-width: 1024px) {
   .root {
-    --hub-ground: 40%;
+    --hub-ground: 20%;
+    --px: 3px;
     --hub-structure-max: min(460px, 42vh);
   }
-
 }
 
 /* Phone dock is two rows. Lift the ground so building pills and the
    launchpad beacon brackets clear Build and the rest of the dock. */
 @media (max-width: 520px) and (orientation: portrait) {
-  .root { --hub-ground: 42%; }
+  .root { --hub-ground: 20%; --px: 2px; }
 }
 
 @media (max-width: 720px) {
@@ -110,13 +109,29 @@
   .topRow { min-height: 42px; align-items: center; }
   .eyebrow { font-size: 14px; }
   .eyebrow[data-dev-launcher='true'] { margin-left: 52px; }
-  .titleText { font-size: 20px; }
   .balance { margin-top: 4px; }
+}
+
+/* Phone portrait: one header row. A second title line plus stacked
+   utility rows crowded the sky and pushed the first-contract card onto
+   the launch tower. */
+@media (max-width: 520px) and (orientation: portrait) {
+  .topHud {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px 8px 8px;
+  }
+  .eyebrow { display: none; }
+  .topRow { width: 100%; flex: 1 1 auto; min-width: 0; }
+  .balance { margin-top: 0; }
+  .root { --hub-ground: 20%; --px: 2px; }
 }
 
 @media (min-width: 721px) and (max-width: 1023px) and (max-height: 700px) {
   .root {
-    --hub-ground: 34%;
+    --hub-ground: 20%;
+    --px: 2px;
   }
 
   /* The launchpad hit target is intentionally wider than its art. Nudge its
@@ -128,10 +143,10 @@
    the matching right-hand buttons). */
 @media (orientation: landscape) and (max-height: 500px) {
   .topHud { flex-direction: row; align-items: center; gap: 12px; padding: 8px 12px 16px; }
-  .topRow { width: auto; }
+  .topRow { width: 100%; }
+  .root { --hub-ground: 20%; --px: 2px; }
   .eyebrow { display: none; }
   /* The eyebrow is hidden here, so the DEV badge would sit on the title instead. */
   .titleBlock:has(.eyebrow[data-dev-launcher='true']) { margin-left: 64px; }
-  .titleText { margin: 0; font-size: 18px; }
   .root .badges { top: 56px; }
 }

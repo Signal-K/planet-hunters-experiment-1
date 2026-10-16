@@ -12,6 +12,7 @@
 // `mining-test.scene.json` ended up orphaned — no loader references either.
 
 import type { Screen } from '@/lib/game-types'
+import { SCENE_NAMES } from '@/lib/ui-strings'
 
 export type SceneSurface = 'canvas' | 'dom'
 
@@ -35,13 +36,13 @@ export interface SceneDefinition {
 export const SCENES: readonly SceneDefinition[] = [
   {
     id: 'hub',
-    name: 'Earth Base',
+    name: SCENE_NAMES.base,
     surface: 'canvas',
     location: 'earth-base',
     screen: 'hub',
     sceneFile: '/game/scenes/hub.scene.json',
     entityTypes: ['BuildPlot'],
-    description: 'The player\'s home surface. Build plots hold the Launchpad, Refinery, and — once built — the Astronaut Academy.',
+    description: `The player's home surface. Build plots hold the Launchpad, Refinery, and — once built — the Astronaut Academy.`,
   },
   {
     id: 'build-place',
@@ -51,15 +52,15 @@ export const SCENES: readonly SceneDefinition[] = [
     screen: 'build',
     sceneFile: '/game/scenes/hub.scene.json',
     entityTypes: ['BuildPlot'],
-    description: 'Structure placement over the same Earth Base plots. Note it loads the hub scene — `build-place.scene.json` is orphaned.',
+    description: `Structure placement over the same ${SCENE_NAMES.base} plots. Note it loads the hub scene — \`build-place.scene.json\` is orphaned.`,
   },
   {
     id: 'subsurface',
-    name: 'Earth Base Subsurface',
+    name: `${SCENE_NAMES.base} Subsurface`,
     surface: 'dom',
     location: 'earth-base-subsurface',
     entityTypes: [],
-    description: 'Embedded below-soil logistics deck reached from the Earth Base scene.',
+    description: `Embedded below-soil logistics deck reached from the ${SCENE_NAMES.base} scene.`,
   },
   {
     id: 'subsurface-mineral-vault',
@@ -103,7 +104,7 @@ export const SCENES: readonly SceneDefinition[] = [
     screen: 'surface-ops',
     sceneFile: '/game/scenes/construction-target.scene.json',
     entityTypes: ['ConstructionController'],
-    description: 'Building a structure on a target body rather than at Earth Base.',
+    description: `Building a structure on a target body rather than at ${SCENE_NAMES.base}.`,
   },
   {
     id: 'delivery',
@@ -140,7 +141,7 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'rocket-buy', name: 'Rocket Purchase', surface: 'dom', location: 'earth-base', screen: 'rocket-buy', entityTypes: [], description: 'Buy the rocket model for this run.' },
   { id: 'fab', name: 'Assembly', surface: 'dom', location: 'earth-base', screen: 'fab', entityTypes: [], description: 'Relay/launch checklist before a mission flies.' },
   { id: 'transit', name: 'Transit', surface: 'dom', location: 'transit', screen: 'transit', entityTypes: [], description: 'Physical rocket flight. Not TESS transit photometry — see the glossary rule in CLAUDE.md.' },
-  { id: 'rover-mining', name: 'Rover Mining', surface: 'dom', location: 'target-surface', screen: 'rover-mining', entityTypes: [], description: 'Live TakeOn rover extraction mounted inside the routed screen. Landnam supplies the mission order and records the required cargo.' },
+  { id: 'rover-survey', name: 'Rover Survey', surface: 'dom', location: 'target-surface', screen: 'rover-survey', entityTypes: [], description: 'Starter-rover scouting surface for survey/tutorial observation before the ship laser handles extraction.' },
   { id: 'debrief', name: 'Debrief', surface: 'dom', location: 'earth-base', screen: 'debrief', entityTypes: [], description: 'Payout and cargo settlement after a run.' },
   { id: 'refinery', name: 'Refinery', surface: 'dom', location: 'earth-base', screen: 'refinery', entityTypes: [], description: 'Refine raw minerals into higher-value goods.' },
   { id: 'market', name: 'Market', surface: 'dom', location: 'earth-base', screen: 'market', entityTypes: [], description: 'Open-market sales with supply-driven price decay.' },
@@ -166,7 +167,6 @@ export const KNOWN_SCENE_FILES: readonly string[] = [
   '/game/scenes/hub.scene.json',
   '/game/scenes/build-place.scene.json',
   '/game/scenes/mining.scene.json',
-  '/game/scenes/mining-test.scene.json',
   '/game/scenes/construction-target.scene.json',
   '/game/scenes/delivery.scene.json',
   '/game/scenes/academy.scene.json',

@@ -12,10 +12,35 @@ import Foundation
 
     @Test func catalogCarriesEveryAuthoredWebMission() {
         let ids = Set(catalog.missions.map(\.id))
-        for id in ["program-build-mars-mining-settlement", "program-build-remote-silo", "program-build-refinery", "story-astronaut-academy",
+        for id in ["program-build-mars-mining-settlement", "program-build-remote-silo", "story-astronaut-academy",
                    "lnm_m3_relay_bennu_vesta", "lnm_m3_relay_itokawa_eros", "lnm_relay_psyche_ceres",
                    "freeops-self-directed-mining", "freeops-crewed-prospecting"] {
             #expect(ids.contains(id), "missing \(id)")
+        }
+    }
+
+    /// A kit bigger than the biggest launchable vehicle made both off-world BUILD steps unflyable (blank screen on web).
+    @Test func programBuildStepsAreFlyableWithALaunchableVehicle() {
+        let biggest = Rockets.models.filter { !$0.locked }.map(\.cargo).max() ?? 0
+        for id in [AuthoredMissions.remoteSiloBuildId, AuthoredMissions.marsSettlementBuildId] {
+            let mission = catalog.missions.first { $0.id == id }!
+            #expect(mission.requires.cargoMin <= biggest, "\(id) needs more cargo than any vehicle carries")
+            #expect(!Targets.feasible(for: mission, missionsDone: 6).isEmpty, "\(id) has no flyable target")
+        }
+    }
+
+    /// A new player starts with F9M and the free Explorer: the first contracts must be flyable with it, no parts bought.
+    @Test func firstContractsAreFlyableWithTheFreeExplorerAndNoParts() {
+        let p = Player()
+        let first = MissionBoard.clientBoard(catalog: catalog, player: p, now: now)
+        #expect(!first.isEmpty)
+        let explorer = Rockets.config(for: Rockets.models[0])
+        for entry in first {
+            let targets = Targets.feasible(for: entry.mission, missionsDone: 0)
+            #expect(!targets.isEmpty, "\(entry.mission.title) has no target a new player can reach")
+            if let target = targets.first {
+                #expect(catalog.parts.validate(mission: entry.mission, target: target, rocket: explorer, skills: []).ok, "\(entry.mission.title) is not launchable with the free Explorer")
+            }
         }
     }
 
@@ -53,16 +78,8 @@ import Foundation
         #expect(MissionBoard.gate(m, player: p, now: now) == nil)
     }
 
-    @Test func refineryBuildWaitsForSettlementAndSilo() {
-        var p = freeOpsPlayer()
-        let refinery = catalog.mission("program-build-refinery")!
-        p.stash = ["aluminium": 50, "copper": 50]
-        #expect(MissionBoard.gate(refinery, player: p, now: now)?.contains("settlement") == true)
-        for kind in ["mining-settlement", "mineral-silo"] {
-            p.extras["clientStructures"] = .array(((p.extras["clientStructures"].flatMap { v -> [JSONValue]? in if case .array(let a) = v { return a } else { return nil } }) ?? []) + [
-                .object(["targetId": .string("mars"), "structureKind": .string(kind), "clientId": .string("mission-control"), "state": .string("operational")])])
-        }
-        #expect(MissionBoard.gate(refinery, player: p, now: now) == nil)
+    @Test func refineryProgramBuildIsRemoved() {
+        #expect(catalog.mission("program-build-refinery") == nil)
     }
 
     @Test func buildMissionRefusedWithoutKitThenDeliversAndConsumesIt() {

@@ -1,21 +1,27 @@
 # Landnam native (macOS 14 / iOS 17)
 
 - `LandnamCore/`: pure Swift domain, catalog data, economy, mission systems, `GameStore`. `swift test` runs 17 tests, including parity against the TS mission generator (`Fixtures/web-board.json`).
-- `TakeonKit/`: `TakeonEngine` protocol and a null engine. The sim port and SpriteKit rendering are next.
+- `TakeonKit/`: `TakeonEngine` protocol and native engine adapters. The surface simulation bridge and rendering integration.
 - `App/` + `project.yml`: multiplatform SwiftUI app. `xcodegen generate`, then build the `Landnam` scheme.
 
 Saves are web-compatible JSON; unported fields round-trip untouched via `extras`.
 
-## Status
+## Build and parity
 
-| Area | State |
-|---|---|
-| Domain model, catalog, economy, mission generator | Ported, parity-tested |
-| Core loop (missions, targets, rocket yard, launch, transit, mining, delivery, debrief, market) | Playable, placeholder UI (mining is tap-based) |
-| Local persistence | Done |
-| Other screens (refinery, skills, academy, surface ops, instrument hub, discovery, ledger, history, galaxy...) | Routed, staged stubs |
-| Auth (Apple + email/password), outbox sync, web save import with mobile welcome | Done; offline play queues saves and syncs on reconnect |
-| Takeon sim + SpriteKit scenes | Protocol only |
+The app supports iOS, iPadOS and macOS through `project.yml`. `App/RootView.swift` routes the real screens; `App/SceneCatalog.swift` mounts fixtures for screenshots. `LandnamCore` owns the domain model and save compatibility; `TakeonKit` integrates the surface engine. Inspect these sources rather than treating old stub lists as current status.
+
+Implement each gameplay slice on web and then native before moving on. Run focused domain tests first:
+
+```sh
+swift test --package-path native/LandnamCore --filter LoopTests
+xcodebuild -list -project native/Landnam.xcodeproj
+xcodebuild -project native/Landnam.xcodeproj -scheme Landnam -destination 'platform=macOS' -derivedDataPath /tmp/landnam-derived build CODE_SIGNING_ALLOWED=NO
+xcodebuild -project native/Landnam.xcodeproj -scheme Landnam -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/landnam-derived-ios build CODE_SIGNING_ALLOWED=NO
+```
+
+These commands run from the repository root. Use an installed simulator destination for tests (`xcrun simctl list devices available`); never launch the user's desktop app for verification. Regenerate the Xcode project with `cd native && xcodegen generate` only when `project.yml` or project membership changes.
+
+Palette and layout sources live in `shared/`; generated theme files are not hand-edited. See [the canonical instructions](../AGENTS.md) for the current world and UI styles and verification requirements.
 
 ## Auth
 
@@ -41,3 +47,5 @@ against local PocketBase (shared :8090, Landnam :8091) with a user `tester@examp
 
 `Tests/SnapshotTests.swift` renders real screens to PNG with `ImageRenderer` on an iOS Simulator
 (no window opens): `xcodebuild test -scheme Landnam -destination 'platform=iOS Simulator,name=iPhone 17 Pro'`.
+
+Filter snapshots with `SCENE` (comma-separated SceneCatalog ids) and set `SNAPSHOT_DIR` to an existing writable directory. For simulator test processes pass these through as `SIMCTL_CHILD_SCENE` and `SIMCTL_CHILD_SNAPSHOT_DIR` when required by the runner. Always verify the output files were freshly written; a successful build alone is not snapshot proof. Compare the same state at matching web/native sizes, then run the affected real flow. Headless ImageRenderer output is layout evidence; SpriteKit animation requires scene snapshots or simulator frame captures.

@@ -1,6 +1,7 @@
 // Landnam game data — barrel file
 export type * from './data/types'
 export * from './data/types'
+export { missionCategory, tagMissionCategories } from './data/mission-generator'
 export * from './data/minerals'
 export * from './data/economy'
 export * from './data/payouts'

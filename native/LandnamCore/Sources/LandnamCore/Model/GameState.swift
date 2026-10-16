@@ -44,10 +44,17 @@ public struct Player: Codable, Equatable, Sendable {
     public var skillPoints: Int = 0
     public var unlockedSkillNodes: [String] = []
     public var freeOperations: Bool = false
+    /// Earth base landscape chosen in onboarding or by the one-time move action.
+    public var earthBiome: String = "mountains"
+    public var earthBiomeMoveUsed: Bool = false
     public var transitSatelliteLaunchedAt: Double?
     public var deepSpaceTelescopeBuilt: Bool = false
     public var saturnImagerLaunchedAt: Double?
+    /// Today's client contracts (web `dailyClientPool`), refreshed each calendar day.
+    public var dailyClientPool: DailyClientPool?
     public var debriefPending: Bool = false
+    /// Back on the Earth pad with cargo to settle on the delivery sheet (SSL-553).
+    public var homeDeliveryPending: Bool = false
     public var cargoSettledOffworld: Bool = false
     public var freeHaulDisposition: HaulDisposition?
     public var returningToEarth: Bool = false
@@ -111,6 +118,8 @@ public struct Player: Codable, Equatable, Sendable {
     /// Installed Laser Capacitor level (SSL-462), bought with hauled ore at Debrief.
     public var laserCapacitorLevel: Int = 0
     public var flightPlan: FlightPlanProgress = FlightPlanProgress()
+    /// Hangar ship-customizer fit, room kind to part id (web `shipCustomizerParts`).
+    public var shipCustomizerParts: [String: String] = [:]
     /// Unported save fields, preserved verbatim.
     public var extras: [String: JSONValue] = [:]
 
@@ -140,9 +149,10 @@ public struct Player: Codable, Equatable, Sendable {
         get("rocketPurchaseCounts", &rocketPurchaseCounts); getOpt("missionRocketSource", &missionRocketSource)
         get("placed", &placed); get("placementPlots", &placementPlots); get("controlBuilt", &controlBuilt)
         get("missionsDone", &missionsDone); get("skillPoints", &skillPoints); get("unlockedSkillNodes", &unlockedSkillNodes)
-        get("freeOperations", &freeOperations); get("debriefPending", &debriefPending)
+        get("freeOperations", &freeOperations); get("earthBiome", &earthBiome); get("earthBiomeMoveUsed", &earthBiomeMoveUsed); get("debriefPending", &debriefPending); get("homeDeliveryPending", &homeDeliveryPending)
         getOpt("transitSatelliteLaunchedAt", &transitSatelliteLaunchedAt); get("deepSpaceTelescopeBuilt", &deepSpaceTelescopeBuilt)
         getOpt("saturnImagerLaunchedAt", &saturnImagerLaunchedAt)
+        getOpt("dailyClientPool", &dailyClientPool)
         get("cargoSettledOffworld", &cargoSettledOffworld); getOpt("freeHaulDisposition", &freeHaulDisposition)
         get("returningToEarth", &returningToEarth); get("shipDestroyed", &shipDestroyed)
         get("headingToDelivery", &headingToDelivery); get("stash", &stash); get("marketSupply", &marketSupply)
@@ -163,12 +173,27 @@ public struct Player: Codable, Equatable, Sendable {
         get("loanOffered", &loanOffered); getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
         get("seenPlanets", &seenPlanets); get("researchXP", &researchXP); get("subsurfaceExcavated", &subsurfaceExcavated)
         get("subsurfaceBuilt", &subsurfaceBuilt); get("landingResearched", &landingResearched)
-        get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("laserCapacitorLevel", &laserCapacitorLevel)
+        get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("shipCustomizerParts", &shipCustomizerParts); get("laserCapacitorLevel", &laserCapacitorLevel)
         buildingLevels = BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)
         launchpadUpgraded = launchpadUpgraded || (buildingLevels["launchpad"] ?? 1) >= 2
+        Self.mergeTelescope(&self)
         for key in c.allKeys where !consumed.contains(key.stringValue) {
             extras[key.stringValue] = try? c.decode(JSONValue.self, forKey: key)
         }
+    }
+
+    /// Whether the single space telescope (the former transit and deep space telescopes) is launched.
+    public var telescopeLaunched: Bool {
+        (transitSatelliteLaunchedAt ?? 0) > 0 || (deepSpaceTelescopeLaunchedAt ?? 0) > 0 || deepSpaceTelescopeBuilt
+    }
+
+    /// Old saves tracked two telescopes; either marks the one telescope launched, with both feeds unlocked.
+    static func mergeTelescope(_ p: inout Player) {
+        guard p.telescopeLaunched else { return }
+        let at = [p.transitSatelliteLaunchedAt, p.deepSpaceTelescopeLaunchedAt].compactMap { $0 }.filter { $0 > 0 }.min() ?? Date().timeIntervalSince1970 * 1000
+        p.transitSatelliteLaunchedAt = p.transitSatelliteLaunchedAt ?? at
+        p.deepSpaceTelescopeLaunchedAt = p.deepSpaceTelescopeLaunchedAt ?? at
+        p.deepSpaceTelescopeBuilt = true
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -186,9 +211,10 @@ public struct Player: Codable, Equatable, Sendable {
         try put("rocketPurchaseCounts", rocketPurchaseCounts); try putOpt("missionRocketSource", missionRocketSource)
         try put("placed", placed); try put("placementPlots", placementPlots); try put("controlBuilt", controlBuilt)
         try put("missionsDone", missionsDone); try put("skillPoints", skillPoints); try put("unlockedSkillNodes", unlockedSkillNodes)
-        try put("freeOperations", freeOperations); try put("debriefPending", debriefPending)
+        try put("freeOperations", freeOperations); try put("earthBiome", earthBiome); try put("earthBiomeMoveUsed", earthBiomeMoveUsed); try put("debriefPending", debriefPending); try put("homeDeliveryPending", homeDeliveryPending)
         try putOpt("transitSatelliteLaunchedAt", transitSatelliteLaunchedAt); try put("deepSpaceTelescopeBuilt", deepSpaceTelescopeBuilt)
         try putOpt("saturnImagerLaunchedAt", saturnImagerLaunchedAt)
+        try putOpt("dailyClientPool", dailyClientPool)
         try put("cargoSettledOffworld", cargoSettledOffworld); try putOpt("freeHaulDisposition", freeHaulDisposition)
         try put("returningToEarth", returningToEarth); try put("shipDestroyed", shipDestroyed)
         try put("headingToDelivery", headingToDelivery); try put("stash", stash); try put("marketSupply", marketSupply)
@@ -209,7 +235,7 @@ public struct Player: Codable, Equatable, Sendable {
         try put("loanOffered", loanOffered); try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
         try put("seenPlanets", seenPlanets); try put("researchXP", researchXP); try put("subsurfaceExcavated", subsurfaceExcavated)
         try put("subsurfaceBuilt", subsurfaceBuilt); try put("landingResearched", landingResearched)
-        try put("licenseGrade", licenseGrade); try put("flightPlan", flightPlan); try put("laserCapacitorLevel", laserCapacitorLevel)
+        try put("licenseGrade", licenseGrade); try put("flightPlan", flightPlan); try put("shipCustomizerParts", shipCustomizerParts); try put("laserCapacitorLevel", laserCapacitorLevel)
     }
 }
 

@@ -1,32 +1,139 @@
 import SwiftUI
 import LandnamCore
 
-/// Opening scene (mirrors web IntroScreen): wordmark, one sentence, one button into the base.
+/// What the landscape picker says about each landscape: `shared/scenes/biome-pitch.json`, the file web reads too.
+struct BiomePitch: Decodable {
+    struct Entry: Decodable { let label, tagline, trait: String }
+    let heading, lede, note: String
+    let biomes: [String: Entry]
+
+    static let shared: BiomePitch? = Bundle.main.url(forResource: "biome-pitch", withExtension: "json")
+        .flatMap { try? Data(contentsOf: $0) }.flatMap { try? JSONDecoder().decode(BiomePitch.self, from: $0) }
+}
+
+/// Opening scene (mirrors web IntroScreen): the base world as a live backdrop that follows the picked landscape,
+/// a plain heading, one card per landscape with its one real difference, and one button into the base.
 struct IntroScreen: View {
     @Environment(GameStore.self) private var store
+    @State private var selectedBiome = "mountains"
+
+    private static let ids = ["mountains", "desert", "tundra", "coast"]
+
     var body: some View {
         let p = store.player
         let returning = p.missionsDone > 0
-        VStack(spacing: 18) {
-            Spacer(minLength: 0)
-            Eyebrow(text: "Mission operations")
-            Text("LANDNAM").font(AppFont.display(44)).tracking(4).foregroundStyle(Theme.ink)
-            Text(returning ? "Welcome back, Commander." : "Welcome, Commander.").font(AppFont.display(20))
-            Text(returning
-                 ? "Missions completed: \(p.missionsDone) · Total earned: \(Economy.format(francs: p.francs))"
-                 : "Build your base. Mine the asteroids. Fulfill the contract. The belt is waiting.")
-                .font(AppFont.body(16)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center).frame(maxWidth: 420)
-            PrimaryButton(title: returning ? "Resume operations" : "Begin operations") { store.go(returning || !p.placed.isEmpty ? .hub : .build) }.frame(maxWidth: 320)
-            Spacer(minLength: 0)
+        let shown = EarthBiome(rawValue: returning ? p.earthBiome : selectedBiome) ?? .mountains
+        let pitch = BiomePitch.shared
+        GeometryReader { geo in
+            let wide = geo.size.width >= 640
+            ZStack {
+                backdrop(biome: shown)
+                VStack(spacing: 12) {
+                    head(returning: returning, pitch: pitch, p: p)
+                    Spacer(minLength: 0)
+                    panel(returning: returning, pitch: pitch, wide: wide)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 12)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
-        .padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.bg.ignoresSafeArea()).foregroundStyle(Theme.ink)
+    }
+
+    private func backdrop(biome: EarthBiome) -> some View {
+        GeometryReader { geo in
+            BaseWorldScene(
+                biome: biome, grade: "dusk", placed: [], plots: [:], levels: [:],
+                camera: BaseCamera(x: BaseWorld(w: geo.size.width, h: geo.size.height).homeX([]), depth: 0),
+                showsControls: false,
+                onStructure: { _ in }, onShaft: {}, onBuildSilo: {}
+            )
+            .allowsHitTesting(false)
+        }
+        .ignoresSafeArea()
+    }
+
+    private func head(returning: Bool, pitch: BiomePitch?, p: Player) -> some View {
+        VStack(spacing: 4) {
+            Text("LANDNAM").font(AppFont.display(14)).tracking(4.5).foregroundStyle(IntroInk.dim)
+            if returning {
+                Text("Missions completed: \(p.missionsDone) · Total earned: \(Economy.format(francs: p.francs))")
+                    .font(AppFont.body(14)).foregroundStyle(IntroInk.dim)
+            } else {
+                Text(pitch?.heading ?? "Choose where to build").font(AppFont.display(24)).foregroundStyle(IntroInk.ink)
+                Text(pitch?.lede ?? "").font(AppFont.body(14)).foregroundStyle(IntroInk.dim)
+            }
+        }
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 20).padding(.vertical, 12).frame(maxWidth: 520)
+        .background(IntroInk.panel.opacity(0.94), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(IntroInk.outline, lineWidth: 2))
+    }
+
+    private func panel(returning: Bool, pitch: BiomePitch?, wide: Bool) -> some View {
+        VStack(spacing: 8) {
+            if !returning {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8, alignment: .top), count: wide ? 4 : 2), spacing: 8) {
+                    ForEach(Self.ids, id: \.self) { id in card(id, pitch?.biomes[id]) }
+                }
+                .accessibilityElement(children: .contain).accessibilityLabel("Choose base landscape")
+                Text(pitch?.note ?? "").font(AppFont.body(14)).foregroundStyle(IntroInk.dim).multilineTextAlignment(.center)
+            }
+            Button {
+                if !returning { store.setEarthBiome(selectedBiome) }
+                store.go(returning || !store.player.placed.isEmpty ? .hub : .build)
+            } label: {
+                Text((returning ? "Resume operations" : "Establish base").uppercased()).font(AppFont.display(14)).tracking(1.4)
+                    .frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(IntroInk.ink)
+                    .background(IntroInk.cta, in: RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(IntroInk.outline, lineWidth: 2))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12).frame(maxWidth: returning ? 360 : 760)
+        .background(IntroInk.panel.opacity(0.94), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(IntroInk.outline, lineWidth: 2))
+    }
+
+    private func card(_ id: String, _ entry: BiomePitch.Entry?) -> some View {
+        let selected = selectedBiome == id
+        return Button { selectedBiome = id } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text((entry?.label ?? id.capitalized).uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(IntroInk.ink)
+                // Two lines reserved so every card shares one layout.
+                Text(entry?.tagline ?? "").font(AppFont.body(14)).foregroundStyle(IntroInk.dim).lineLimit(2)
+                    .frame(maxWidth: .infinity, minHeight: 36, alignment: .topLeading)
+                Spacer(minLength: 0)
+                Text((entry?.trait ?? "").uppercased()).font(AppFont.display(14)).tracking(0.8).foregroundStyle(IntroInk.ink).lineLimit(1)
+                    .padding(.horizontal, 8).padding(.vertical, 2)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(IntroInk.muted, lineWidth: 2))
+            }
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading).padding(10)
+            .background(selected ? IntroInk.raised : IntroInk.deep, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(selected ? IntroInk.ink : IntroInk.outline, lineWidth: selected ? 3 : 2))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
-/// Completed client work and own-programme runs (mirrors web MissionHistoryScreen).
+/// Dusk chrome for the intro, matching the web `--dusk-*` tokens: dark navy panels, chalk text, no white or blue.
+private enum IntroInk {
+    static let panel = Color(red: 0x15 / 255, green: 0x20 / 255, blue: 0x33 / 255)
+    static let deep = Color(red: 0x0C / 255, green: 0x14 / 255, blue: 0x24 / 255)
+    static let raised = Color(red: 0x1C / 255, green: 0x2C / 255, blue: 0x48 / 255)
+    static let outline = Color(red: 0x16 / 255, green: 0x29 / 255, blue: 0x3B / 255)
+    static let ink = Color(red: 0xF7 / 255, green: 0xF4 / 255, blue: 0xEE / 255)
+    static let dim = Color(red: 0xD7 / 255, green: 0xE0 / 255, blue: 0xD4 / 255)
+    static let muted = Color(red: 0xC5 / 255, green: 0xD4 / 255, blue: 0xC8 / 255)
+    static let cta = Color(red: 0x9F / 255, green: 0x4B / 255, blue: 0x5F / 255)
+}
+
+/// Completed work as illustrated destination cards above the live base. The base keeps the one dock.
 struct MissionHistoryScreen: View {
     @Environment(GameStore.self) private var store
+    @State private var openKey: Int?
 
     private static func date(_ ms: Double) -> String {
         let f = ISO8601DateFormatter(); f.formatOptions = [.withFullDate]
@@ -37,35 +144,111 @@ struct MissionHistoryScreen: View {
         let ordered = MissionLog.entries(store.player)
         let missionEntries = ordered.filter { !$0.isTransit }.count
         let lifetime = max(store.player.missionsDone, missionEntries)
-        ScreenFrame(title: "Mission Log", back: { store.go(.hub) }) {
-            Eyebrow(text: "Base · Mission log")
-            Panel(accent: Theme.teal) {
-                HStack(spacing: 14) {
-                    Text("\(lifetime)").font(AppFont.display(36))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("MISSIONS COMPLETED").font(AppFont.display(14)).tracking(1.2)
-                        Text(lifetime > missionEntries ? "Detailed entries below cover your most recent operations." : "Your record stays available after the daily contract board refreshes.")
-                            .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+        MissionRecordOverlay(bare: true) {
+            VStack(alignment: .leading, spacing: 24) {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text("\(lifetime)").font(AppFont.display(32)).foregroundStyle(Theme.blue)
+                    Text("MISSIONS COMPLETED").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.ink)
+                    Spacer(minLength: 8)
+                    Button { store.go(.hub) } label: {
+                        Text("BACK").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.ink)
+                            .padding(.horizontal, 16).frame(minHeight: 44)
+                            .background(RecordCream.paper)
+                            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Back")
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RecordCream.paper)
+                .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+                .overlay(alignment: .top) { Rectangle().fill(Theme.blue).frame(height: 6) }
+
+                if ordered.isEmpty {
+                    Text("No completed missions yet. Choose a contract from the Mission Board to start your log.")
+                        .font(AppFont.body(14)).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
+                        .padding(.vertical, 32).padding(.horizontal, 20).frame(maxWidth: .infinity)
+                        .background(RecordCream.paper)
+                        .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+                } else {
+                    VStack(spacing: 24) {
+                        ForEach(Array(ordered.enumerated()), id: \.offset) { i, r in record(r, index: i, total: ordered.count) }
                     }
                 }
             }
-            if ordered.isEmpty {
-                Panel { Text("No completed missions yet. Choose a contract from the Mission Board to start your log.").foregroundStyle(Theme.textDim) }
-            }
-            ForEach(Array(ordered.enumerated()), id: \.offset) { i, r in
-                Panel(accent: Theme.blueBright) {
-                    HStack(alignment: .top, spacing: 12) {
-                        Text(String(format: "%02d", ordered.count - i)).font(AppFont.mono(14)).foregroundStyle(Theme.textMuted)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(r.title).font(AppFont.display(16))
-                            Text(r.meta).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                        }
-                        Spacer(minLength: 0)
-                        Text(Self.date(r.completedAt)).font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
+            .frame(maxWidth: 720, alignment: .leading)
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private func place(_ r: MissionLogEntry) -> (id: String, type: TargetType, archetype: TargetArchetype?) {
+        let mission = r.missionId.flatMap { id in store.catalog.missions.first { $0.id == id } }
+        let id = r.targetId ?? mission?.targetId
+        if let named = store.catalog.targets.first(where: { $0.id == id || (r.targetName != nil && $0.name == r.targetName) }) {
+            return (named.id, named.type, named.archetype)
+        }
+        if r.isTransit { return ("transit-telescope", .planet, nil) }
+        return (id ?? r.title, .asteroid, nil)
+    }
+
+    private func meta(_ r: MissionLogEntry) -> String {
+        let kind = r.isTransit ? "TRANSIT TELESCOPE" : r.isProgram ? "OWN PROGRAM" : (r.clientName ?? "CLIENT OPERATION")
+        return r.targetName.map { "\(kind) · \($0)" } ?? kind
+    }
+
+    private func record(_ r: MissionLogEntry, index i: Int, total: Int) -> some View {
+        let open = openKey == i
+        let mission = r.missionId.flatMap { id in store.catalog.missions.first { $0.id == id } }
+        let spot = place(r)
+        return VStack(alignment: .leading, spacing: 0) {
+            Button { openKey = open ? nil : i } label: {
+                VStack(alignment: .leading, spacing: 12) {
+                    DestinationVista(targetId: spot.id, type: spot.type, archetype: spot.archetype, card: true)
+                        .frame(height: 148)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(String(format: "%02d", total - i)).font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.blue)
+                        Text(r.title).font(AppFont.display(18)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                        Text(meta(r)).font(AppFont.display(14, "Bold")).tracking(1.1).foregroundStyle(Theme.ink)
+                        Text(Self.date(r.completedAt)).font(AppFont.mono(14)).foregroundStyle(Theme.blue)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .padding(16)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(open ? .isSelected : [])
+            if open { debrief(r, mission: mission) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RecordCream.paper)
+        .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+        .overlay(alignment: .top) { Rectangle().fill(Theme.blue).frame(height: 6) }
+    }
+
+    private func debrief(_ r: MissionLogEntry, mission: Mission?) -> some View {
+        let day = Self.date(r.completedAt)
+        func row(_ k: String, _ v: String) -> some View {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(k.uppercased()).font(AppFont.display(14, "Bold")).tracking(1.1).foregroundStyle(Theme.blue)
+                Spacer(minLength: 0)
+                Text(v).font(AppFont.body(14)).foregroundStyle(Theme.ink).multilineTextAlignment(.trailing)
             }
         }
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("DEBRIEF").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.blue)
+            Text(r.isTransit ? "You classified a light curve from your Space Telescope." : mission?.brief ?? "Filed to your record.")
+                .font(AppFont.body(14)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            row("Result", "Completed \(day)")
+            if r.isTransit, let v = r.verdict { row("Verdict", v) } else if let t = r.targetName { row("Target", t) }
+            if let mission, !r.isProgram, mission.payout.francs > 0 { row("Payout", Economy.format(francs: mission.payout.francs)) }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -120,4 +303,47 @@ struct NarrativeLedgerScreen: View {
     }
 
     private func color(_ s: LedgerState) -> Color { s == .live ? Theme.teal : s == .adapt ? Theme.blueBright : Theme.textMuted }
+}
+
+/// These record screens keep the same live scene, clock, resource chips and dock as the base.
+struct MissionRecordOverlay<Content: View>: View {
+    var bare = false
+    @ViewBuilder var content: Content
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                HubScreen()
+                ScrollView {
+                    if bare {
+                        content
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 24)
+                    } else {
+                        VStack(alignment: .leading, spacing: 16) { content }
+                            .padding(20)
+                            .frame(maxWidth: 680, alignment: .leading)
+                            .background(RecordCream.paper)
+                            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+                            .overlay(alignment: .top) { Rectangle().fill(Theme.blue).frame(height: 6) }
+                            .padding(4)
+                            .frame(maxWidth: .infinity, alignment: geo.size.width > 700 ? .trailing : .center)
+                    }
+                }
+                .padding(.horizontal, bare ? 0 : 16)
+                .padding(.top, geo.size.height < 500 ? 64 : 88)
+                .padding(.bottom, 88)
+            }
+        }
+    }
+}
+
+struct DebriefRecordPanel<Content: View>: View {
+    var accent: Color = Theme.blue
+    @ViewBuilder var content: Content
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) { content }
+            .font(AppFont.body(14)).padding(20).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.paper)
+            .overlay(Rectangle().stroke(Theme.blue, lineWidth: 2))
+    }
 }

@@ -3,11 +3,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background:
-    linear-gradient(var(--ln-hairline), transparent 1px),
-    linear-gradient(90deg, var(--ln-hairline), transparent 1px),
-    var(--ln-shell);
-  background-size: 48px 48px;
+  background: var(--ln-shell);
 }
 
 .content {

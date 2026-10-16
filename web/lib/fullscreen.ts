@@ -1,3 +1,5 @@
+import { orientationLockTarget, readStoredOrientation } from './orientation'
+
 // SSL-66: Android Chrome / mobile browsers lose height to tab and menu bars in
 // landscape. The Fullscreen API hides them; iPhone Safari has none, so the
 // control is feature-detected and never offered there.
@@ -24,9 +26,11 @@ export function readFullscreenEnv(): FullscreenEnv {
 
 export async function enterFullscreen(): Promise<void> {
   await document.documentElement.requestFullscreen({ navigationUI: 'hide' })
-  // Best effort: lock() rejects or is missing on many browsers.
+  // Auto keeps the Android landscape lock that hides the browser chrome.
+  // A portrait or landscape choice wins over that default.
+  const target = orientationLockTarget(readStoredOrientation()) ?? 'landscape'
   try {
-    await (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.('landscape')
+    await (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.(target)
   } catch {
     // ignored
   }

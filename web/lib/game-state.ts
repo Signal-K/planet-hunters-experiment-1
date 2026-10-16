@@ -1,3 +1,4 @@
+import { applyMergedLedger } from './sync/ledger'
 import { STARTING_FRANCS } from '@/lib/data/economy'
 import { mergeBuildingLevels, sanitizeBuildingLevels } from '@/lib/data/building-levels'
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
@@ -19,14 +20,15 @@ import { CLIENT_TERRITORIES } from '@/lib/data/site-rights'
 import { createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
 import { dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
+import { GAME_SCREENS } from '@/lib/game-screens'
+import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'saturn-storm-search', 'instrument-hub', 'mission-history', 'narrative-ledger']
-const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
-const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
+const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-survey', 'delivery', 'debrief'])
+const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-survey', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
 const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch'])
 const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager'])
@@ -64,6 +66,8 @@ export const DEFAULT_STATE: GameState = {
     remoteStorage: {},
     launchpadUpgraded: false,
     buildingLevels: {},
+    earthBiome: 'mountains',
+    earthBiomeMoveUsed: false,
     loanDebt: 0,
     loanOffered: false,
     seen_planets: [],
@@ -170,7 +174,7 @@ function normalizeCompletedMissions(value: unknown): CompletedMissionRecord[] {
 }
 
 export function normalizeState(input: PartialSave): GameState {
-  const screen = input.screen && VALID_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
+  const screen = input.screen && GAME_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
   const missionId = typeof input.missionId === 'string' ? input.missionId : null
   const targetId = missionId && typeof input.targetId === 'string' ? input.targetId : null
   const savedScope = input.missionBoardScope
@@ -278,7 +282,7 @@ export function normalizeState(input: PartialSave): GameState {
   // booleans are conveniences derived from it. They can disagree: a save made
   // before `applyPlaceStructure` started setting a flag has the structure in
   // `placed` and the flag false, which is why the hub kept telling players to
-  // "Build a Transit Telescope" they had already built. Derive the
+  // "Build a Space Telescope" they had already built. Derive the
   // flags from `placed` so the two can never drift again — and OR rather than
   // overwrite, so a flag set by any other route still counts.
   const savedPlaced = Array.isArray(player.placed) ? player.placed : DEFAULT_STATE.player.placed
@@ -300,7 +304,9 @@ export function normalizeState(input: PartialSave): GameState {
   const buildingLevels = sanitizeBuildingLevels(player.buildingLevels, !!player.launchpadUpgraded)
   const launchpadUpgraded = !!player.launchpadUpgraded || (buildingLevels.launchpad ?? 1) >= 2
   const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
-  const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt)
+  // The transit and deep space telescopes are one instrument: either flag marks it launched.
+  const telescopeLaunchedAt = player.transitSatelliteLaunchedAt ?? player.deepSpaceTelescopeLaunchedAt ?? null
+  const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt) || !!telescopeLaunchedAt
   const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
   // KES-177: Free Operations is a progression boundary, not a freely
   // persisted toggle. Older/incorrect remote saves can have the flag set
@@ -352,7 +358,12 @@ export function normalizeState(input: PartialSave): GameState {
       selectedStagedRocketId: player.activeMission ? undefined : (player.selectedStagedRocketId ?? (player.pendingLaunch && player.pendingRocketId && missionId && targetId
         ? `legacy-${player.pendingRocketId}-${missionId}-${targetId}`
         : undefined)),
-      deepSpaceTelescopeBuilt, refineryBuilt },
+      deepSpaceTelescopeBuilt, refineryBuilt,
+      transitSatelliteLaunchedAt: telescopeLaunchedAt ?? (player.deepSpaceTelescopeBuilt ? Date.now() : null),
+      deepSpaceTelescopeLaunchedAt: telescopeLaunchedAt ?? (player.deepSpaceTelescopeBuilt ? Date.now() : null),
+      earthBiome: sanitizeEarthBiome(player.earthBiome),
+      earthBiomeMoveUsed: player.earthBiomeMoveUsed === true,
+    },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     // The retired private emergency-loan popup must not survive an old save.
     popup: input.popup === 'loan' || input.popup === undefined ? null : input.popup,
@@ -368,7 +379,7 @@ export function normalizeState(input: PartialSave): GameState {
 // PocketBase's m2-silicon). A save caught mid-run on one has no mission to
 // resume, so drop that run and hand the player back to the Hub, where the
 // Transport lesson picks up as guided mission 2.
-function isRetiredOnboardingMission(id: string | null | undefined): boolean {
+export function isRetiredOnboardingMission(id: string | null | undefined): boolean {
   return !!id && (id.startsWith('generated-s2-') || id === 'm2-silicon')
 }
 
@@ -556,8 +567,11 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   }
 
   const remoteMissionsDone = remoteState.player?.missionsDone ?? -1
-  const isTie = current.player.missionsDone === remoteMissionsDone
-  if (current.player.missionsDone > remoteMissionsDone) {
+  // SSL-559: once both sides carry the progress ledger, no side "wins" wholesale. Every
+  // field goes through the per-field merge below and additive progress comes from the ledger.
+  const bothLedgered = !!current.syncLedger && !!(remoteState as Partial<GameState>).syncLedger
+  const isTie = bothLedgered || current.player.missionsDone === remoteMissionsDone
+  if (!bothLedgered && current.player.missionsDone > remoteMissionsDone) {
     // Local strictly ahead — unchanged from prior behavior: local player
     // wholesale, only placed/placementPlots unioned (construction is
     // monotonic within an onboarding stage; see the comment below).
@@ -570,7 +584,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     }
     merged.tutorial = current.tutorial
     merged.doneSteps = current.doneSteps
-  } else if (isTie) {
+  } else if (isTie && !(remoteMissionsDone > current.player.missionsDone && !bothLedgered)) {
     // A genuine tie (same missionsDone on both sides, e.g. an offline session
     // on one device while another device also played at the same mission
     // count) previously discarded every remote field but placed/placementPlots
@@ -699,7 +713,6 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
       debriefPending: current.player.debriefPending,
       miningCargoInProgress: current.player.miningCargoInProgress,
       miningLaserCharges: current.player.miningLaserCharges,
-      roverMiningStartedAt: current.player.roverMiningStartedAt,
       landingStartedAt: current.player.landingStartedAt,
       landingReturnStartedAt: current.player.landingReturnStartedAt,
       pendingLaunch: false,
@@ -719,7 +732,10 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     )
   }
 
-  return normalizeAndRepair(merged)
+  // SSL-559: additive progress (francs, XP, missions done, stash, refined goods) from the CRDT ledger,
+  // so two devices that played offline at the same time both count and nothing is double counted.
+  const withLedger = applyMergedLedger(merged, current, { player: (remoteState.player ?? {}) as Record<string, unknown>, syncLedger: (remoteState as Partial<GameState>).syncLedger })
+  return normalizeAndRepair(withLedger)
 }
 
 /** Completions are append-only. A stale remote save must not forget a collected run. */

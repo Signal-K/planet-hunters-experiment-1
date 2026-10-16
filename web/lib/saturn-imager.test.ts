@@ -47,7 +47,7 @@ describe('saturn imager launch offer', () => {
   const opts = { catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 4 }
 
   it('offers a no-payout satellite mission once and stops after launch', () => {
-    const offered = buildRuntimeCatalog({ ...opts, player: { ...DEFAULT_STATE.player, freeOperations: true } })
+    const offered = buildRuntimeCatalog({ ...opts, player: { ...DEFAULT_STATE.player, freeOperations: true, placed: ['control-station'] } })
     expect(offered.targets.some(t => t.id === SATURN_IMAGER_TARGET_ID)).toBe(true)
     expect(offered.missions.find(m => m.id === SATURN_IMAGER_MISSION_ID)).toMatchObject({
       payload: { type: 'satellite', instrumentId: 'saturn-imager' },

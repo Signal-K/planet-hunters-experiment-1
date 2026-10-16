@@ -6,7 +6,7 @@ struct WelcomeScreen: View {
     @Environment(GameStore.self) private var store
     @State private var page = 0
 
-    private static let structureNames = ["launchpad": "Launchpad", "surface-silo": "Surface Silo", "refinery": "Refinery"]
+    private static let structureNames = ["launchpad": "Launchpad", "surface-silo": "Surface Silo"]
 
     var body: some View {
         let p = store.player

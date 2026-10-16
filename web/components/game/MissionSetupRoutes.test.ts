@@ -7,33 +7,54 @@ describe('R1 mission setup', () => {
   it('keeps contract selection and launch review on one surface', () => {
     const routes = read('./MissionSetupRoutes.tsx')
 
-    expect(routes).toContain('CONTRACT → LAUNCH')
+    expect(routes).not.toContain('CONTRACT → LAUNCH')
     expect(routes).toContain('data-testid="mission-launch-review"')
-    expect(routes).toContain('aria-label="Change mission setup"')
-    expect(routes).toContain('DESTINATION')
-    expect(routes).toContain('VEHICLE')
+    expect(routes).toContain('LaunchpadScreen')
+    expect(routes).toContain('confirmShipCustomizerBuild')
     expect(routes).toContain("'launch-btn'")
-    // A single compact route map is part of the review (SSL-426); the full picker screen is not.
-    expect(routes).toContain('data-testid="launch-review-map"')
+    // The rocket builder is the launch review. The full target-picker screen is not.
     expect(routes).not.toContain('TargetPickerScreen')
     expect(routes).not.toContain('HangarAssembly')
     expect(routes).not.toContain('MOVE TO LAUNCHPAD')
     expect(routes).not.toContain('MISSION SETUP ·')
   })
 
-  it('uses the Earth Base scene without restoring separate setup compositions', () => {
+  it('uses the rocket builder scene without restoring separate setup compositions', () => {
     const routes = read('./MissionSetupRoutes.tsx')
+    const builder = read('./screens/RocketBuilderScene.tsx')
     const styles = read('./MissionSetupRoutes.module.css')
 
-    expect(routes).toContain('HubWorldBackground')
-    expect(routes).toContain('LaunchpadModules')
-    expect(routes).toContain('HangarModules')
+    expect(routes).toContain('LaunchpadScreen')
+    expect(builder).toContain('launchpad-rocket-multistage.png')
+    expect(builder).toContain('builderLandscape')
     expect(styles).toContain('.review')
     expect(styles).toContain('.inlineChoices')
     expect(styles).toContain('@media (orientation:portrait)')
     expect(styles).not.toContain('@keyframes assemble-')
     expect(styles).not.toContain('.targetMap')
     expect(styles).not.toContain('.rocketBlueprint')
+  })
+
+  it('renders the mission board instead of the contract carousel', () => {
+    const routes = read('./MissionSetupRoutes.tsx')
+    const styles = read('./MissionSetupRoutes.module.css')
+    const board = read('./MissionBoard.tsx')
+
+    expect(routes).toContain('<MissionBoard')
+    expect(routes).toContain("id === ACADEMY_INTRO_MISSION_ID ? game.go('academy')")
+    expect(routes).not.toContain('Choose a contract')
+    expect(routes).not.toContain('contractGallery')
+    expect(styles).not.toContain('.contractGallery')
+    expect(board).toContain('mission-board-tab-contracts')
+    expect(board).toContain('mission-board-tab-program')
+    expect(board).toContain('mission-board-tab-events')
+    expect(board).toContain('mission-accept-')
+  })
+
+  it('keeps the Mission Board back control at the 44px touch-target floor', () => {
+    const styles = read('./MissionSetupRoutes.module.css')
+
+    expect(styles).toMatch(/\.back\s*\{[^}]*min-width:44px;[^}]*min-height:44px;/)
   })
 
   it('keeps the internal setup states on the one canonical missions URL', () => {

@@ -1,29 +1,21 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Target, MineralMeta, Mission, Client } from '@/lib/data'
-import { isOwnProgramMission, missionTypePrimer } from '@/lib/data'
-import { resolveBodyOwnership, type OwnershipPlayer } from '@/lib/systems/OwnershipSystem'
-import TargetSphere from '@/components/game/TargetSphere'
-import TopBar from '@/components/ui/TopBar'
-import ActionConfirmBar from '@/components/game/ActionConfirmBar'
-import TransitCanvas from '@/components/game/screens/TransitCanvas'
-import { UI_ZONES } from '@/lib/ui-zones'
-import { formatCountdown } from '@/lib/format'
-
-const DISTANCE_PER_ORBIT_UNIT_MM = 420
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { Target } from '@/lib/data'
+import { BaseDock } from '@/components/game/hub/BaseDock'
+import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
+import { formatCurrency } from '@/lib/format'
+import { openSettings } from '@/lib/mining/openChrome'
+import { transitBodyShiftPercent } from '@/lib/pixi/transitFlight'
+import { FlightBody } from '@/components/game/screens/FlightBody'
+import { FlightFlame } from '@/components/game/screens/FlightFlame'
+import { FlightSky } from '@/components/game/screens/FlightSky'
+import { KitRocket } from '@/components/game/hub/KitRocket'
+import type { InstalledCustomizerPartsByKind } from '@/lib/data'
+import styles from './FlightScene.module.css'
 const FAKE_PROGRESS_START = 12
 const FAKE_PROGRESS_DURATION_MS = 4400
 const DELIVERY_FAKE_PROGRESS_DURATION_MS = 7000
-
-// Deterministic "passing waypoint" markers along the flight progress track —
-// gives Transit an active-navigation feel instead of a passive percentage
-// wait. Each flips to a "passed" state once progress crosses its threshold.
-const TRANSIT_WAYPOINTS = [
-  { atPercent: 25, label: 'MIDCOURSE' },
-  { atPercent: 50, label: 'HALFWAY' },
-  { atPercent: 75, label: 'APPROACH' },
-] as const
 
 interface Props {
   target: Target
@@ -33,40 +25,72 @@ interface Props {
   returning?: boolean
   onArrive: () => void
   onBack: () => void
+  onPrev?: () => void
+  onNext?: () => void
+  onHub?: () => void
   onAbandon?: () => void
   isDelivery?: boolean
-  cargo?: Record<string, number> | null
-  minerals?: Record<string, MineralMeta>
-  mission?: Mission | null
-  client?: Client | null
-  /**
-   * Player identity + claims for the approach sphere (SSL-317). When omitted
-   * the sphere is not shown (e.g. preview routes without a player).
-   */
-  ownership?: OwnershipPlayer
+  francs?: number
+  parts?: InstalledCustomizerPartsByKind | null
 }
 
-export default function TransitScreen({ target, rocketImageSrc, arrivalAt, transitStartedAt, returning = false, onArrive, onBack, onAbandon, isDelivery = false, cargo, minerals, mission, client, ownership }: Props) {
-  // Ownership/divisions are resolved once per flight; claims cannot change mid-transit.
-  const bodyOwnership = useMemo(
-    () => resolveBodyOwnership(target, ownership ?? { id: 'local-player', name: 'You' }),
-    [ownership, target],
+function CogIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06-.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+    </svg>
   )
+}
+
+function CubeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" />
+      <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />
+    </svg>
+  )
+}
+
+function BoostIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M13 2 4 14h7l-1 8 10-14h-7l0-6z" />
+    </svg>
+  )
+}
+
+export default function TransitScreen({
+  target,
+  arrivalAt,
+  transitStartedAt,
+  returning = false,
+  onArrive,
+  onBack,
+  onPrev,
+  onNext,
+  onHub,
+  isDelivery = false,
+  francs = 0,
+  parts,
+}: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
   const [now, setNow] = useState(() => Date.now())
   const [fakeStartedAt, setFakeStartedAt] = useState(0)
   const [fakeProgress, setFakeProgress] = useState(FAKE_PROGRESS_START)
+  const [boostMs, setBoostMs] = useState(0)
+  const [boostExtra, setBoostExtra] = useState(0)
+  const [boosting, setBoosting] = useState(false)
   const onArriveRef = useRef(onArrive)
   onArriveRef.current = onArrive
 
-  // Tutorial legs are fast, but they are still real mission state. Use the
-  // persisted launch timestamp when one exists so a remount does not rewind
-  // the flight to its first frame.
   useEffect(() => {
     const currentTime = Date.now()
     setNow(currentTime)
     setFakeStartedAt(transitStartedAt ?? currentTime)
+    setBoostMs(0)
+    setBoostExtra(0)
   }, [transitStartedAt])
 
   const arrivalHandledRef = useRef(false)
@@ -78,7 +102,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
 
   useEffect(() => {
     if (!isTimed) return
-    const id = window.setInterval(() => setNow(Date.now()), 500)
+    const id = window.setInterval(() => setNow(Date.now()), 200)
     const onVisible = () => { if (!document.hidden) setNow(Date.now()) }
     document.addEventListener('visibilitychange', onVisible)
     return () => {
@@ -103,156 +127,94 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
     }
   }, [isTimed, fakeStartedAt, fakeDurationMs])
 
-  useEffect(() => {
-    const arrived = isTimed ? now >= (arrivalAt ?? Number.POSITIVE_INFINITY) : fakeProgress >= 100
-    if (!arrived) return
-    const timer = window.setTimeout(arriveOnce, 350)
-    return () => window.clearTimeout(timer)
-  }, [isTimed, now, arrivalAt, fakeProgress, arriveOnce])
-
-  const [confirmingAbandon, setConfirmingAbandon] = useState(false)
-  const liveNow = now > 0 ? now : Date.now()
+  const liveNow = (now > 0 ? now : Date.now()) + boostMs
   const stableTransitStartedAt = isTimed
     ? (transitStartedAt ?? (arrivalAt ? arrivalAt - 1 : liveNow))
     : fakeStartedAt
   const totalMs = isTimed && arrivalAt ? Math.max(1, arrivalAt - stableTransitStartedAt) : 1
-  const arrived = isTimed ? liveNow >= arrivalAt! : fakeProgress >= 100
+  const arrived = isTimed ? liveNow >= arrivalAt! : fakeProgress + boostExtra >= 100
   const progress = isTimed
     ? (arrived ? 100 : Math.min(100, Math.max(0, Math.round(((liveNow - stableTransitStartedAt) / totalMs) * 100))))
-    : Math.round(fakeProgress)
-  const etaMs = isTimed ? Math.max(0, arrivalAt! - liveNow) : 0
-  const destinationName = returning ? 'Earth' : target.name
-  const legLabel = returning ? 'Inbound' : isDelivery ? 'Delivery' : 'Outbound'
-  const cargoEntries = cargo && (isDelivery || returning)
-    ? Object.entries(cargo).filter(([, amount]) => amount > 0)
-    : []
-  const ownProgram = mission ? isOwnProgramMission(mission) : false
-  const issuedBy = ownProgram ? 'Your program' : client?.name ?? null
-  const legPurpose = mission
-    ? returning
-      ? 'Returning to Earth for debrief and payout'
-      : isDelivery
-        ? `Dropping cargo at ${target.name}`
-        : missionTypePrimer(mission).summary
-    : null
+    : Math.min(100, Math.round(fakeProgress + boostExtra))
 
-  const totalDistanceMm = target.orbit * DISTANCE_PER_ORBIT_UNIT_MM
-  const remainingDistanceMm = Math.round(totalDistanceMm * (1 - progress / 100))
-  const speedMmPerHour = isTimed && totalMs > 0 ? Math.round(totalDistanceMm / (totalMs / 3_600_000)) : null
-  const targetKind = target.type === 'asteroid' ? 'asteroid' : 'planet'
+  useEffect(() => {
+    if (!arrived) return
+    const timer = window.setTimeout(arriveOnce, 350)
+    return () => window.clearTimeout(timer)
+  }, [arrived, arriveOnce])
+
+  const boost = () => {
+    if (arrived) return
+    setBoosting(true)
+    window.setTimeout(() => setBoosting(false), 720)
+    if (isTimed && arrivalAt) {
+      setBoostMs(spent => {
+        const remain = Math.max(0, arrivalAt - (Date.now() + spent))
+        return spent + Math.max(2500, remain * 0.22)
+      })
+      return
+    }
+    setBoostExtra(extra => extra + 14)
+  }
+
+  const shift = `${transitBodyShiftPercent(progress)}%`
 
   return (
-    <div className="game-screen theme-blueprint transit-screen">
-      <TopBar eyebrow={`${legLabel} LEG · MISSION TRANSIT`} title={destinationName} onBack={onBack} glass />
-
-      <main className="transit-flight-scene" aria-label={`Flight to ${destinationName}`}>
-        <TransitCanvas
-          targetName={destinationName}
-          targetKind={returning ? 'earth' : targetKind}
-          rocketImageSrc={rocketImageSrc}
-          progress={progress}
-        />
-
-        <div className="transit-flight-vignette" aria-hidden="true" />
-
-        <div className="transit-brief">
-          <div className="transit-brief__text">
-            <div className="transit-destination-chip">
-              <span className="transit-destination-chip__status">COURSE LOCKED</span>
-              <strong>{destinationName}</strong>
-              <span>{returning ? 'EARTH RECOVERY VECTOR' : `${target.type.toUpperCase()} · ORBIT ${target.orbit}`}</span>
-            </div>
-
-            {mission && (
-              <section className="transit-mission-card" data-testid="transit-mission-context" aria-label="Mission context">
-                <div className="transit-mission-card__eyebrow">{legLabel} mission</div>
-                <strong>{mission.title}</strong>
-                {issuedBy && <span className={ownProgram ? 'transit-mission-card__own' : ''}>{ownProgram ? issuedBy : `Issued by ${issuedBy}`}</span>}
-                {legPurpose && <p>{legPurpose}</p>}
-              </section>
-            )}
+    <div className={styles.screen} data-screen="transit" data-testid="transit-screen" aria-label="Flight">
+      <FlightSky />
+      <div className={styles.stage}>
+        <div className={styles.ship} data-boosting={boosting ? 'true' : 'false'}>
+          <FlightFlame boosting={boosting} />
+          <div className={styles.rocketWrap}>
+            <KitRocket parts={parts} space className={styles.rocket} testId="transit-rocket" />
           </div>
-          {!returning && ownership && (
-            <div className={`transit-approach${progress >= 70 ? ' transit-approach--close' : ''}`} data-testid="transit-approach" data-progress={progress}>
-              <TargetSphere
-                target={target}
-                lifeStage={bodyOwnership.lifeStage}
-                ownership={bodyOwnership}
-                size={112}
-                compact
-                eyebrow="TARGET BODY"
-              />
-            </div>
-          )}
         </div>
-
-        <section className="transit-flight-hud transit-readout" data-transit-progress={progress} aria-label="Flight telemetry">
-          <div className="transit-flight-hud__heading">
-            <span>{legPurpose ?? (returning ? 'EARTH RETURN' : 'DEEP-SPACE FLIGHT')}</span>
-            <strong>{progress}%</strong>
-          </div>
-          <div className="transit-progress-wrap">
-            <div className="transit-progress-track" aria-hidden="true">
-              <span style={{ width: `${progress}%` }} />
-            </div>
-            {TRANSIT_WAYPOINTS.map(wp => {
-              const passed = progress >= wp.atPercent
-              return (
-                <div
-                  key={wp.label}
-                  className={`transit-waypoint${passed ? ' transit-waypoint--passed' : ''}`}
-                  style={{ left: `${wp.atPercent}%` }}
-                  data-testid={`transit-waypoint-${wp.label.toLowerCase()}`}
-                  data-passed={passed}
-                >
-                  <span className={`transit-waypoint-label${passed ? ' transit-waypoint-label--passed' : ''}`}>
-                    {wp.label}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-          <div className="transit-telemetry">
-            <div><span>ETA</span><strong>{isTimed ? (arrived ? 'ARRIVED' : formatCountdown(etaMs)) : arrived ? 'ARRIVED' : 'IN FLIGHT'}</strong></div>
-            <div><span>RANGE</span><strong>{arrived ? '0 Mm' : `${remainingDistanceMm.toLocaleString()} Mm`}</strong></div>
-            {speedMmPerHour !== null && <div><span>SPEED</span><strong>{arrived ? '0 Mm/h' : `${speedMmPerHour.toLocaleString()} Mm/h`}</strong></div>}
-            <div><span>{returning ? 'DESTINATION' : 'ORBIT'}</span><strong>{returning ? 'EARTH' : target.orbit}</strong></div>
-          </div>
-          {cargoEntries.length > 0 && (
-            <div className="transit-cargo-strip">
-              <span>{isDelivery ? `CARGO FOR ${target.name.toUpperCase()}` : 'RETURN CARGO'}</span>
-              <strong>{cargoEntries.map(([id, amount]) => `${amount} ${minerals?.[id]?.name ?? id}`).join(' · ')}</strong>
-            </div>
-          )}
-        </section>
-      </main>
-
-      <div className="transit-command-dock" data-ui-zone={UI_ZONES.bottomActions}>
-        <div className="transit-command-dock__status">
-          <span>{arrived ? 'FLIGHT COMPLETE' : 'AUTOPILOT ENGAGED'}</span>
-          <strong>{arrived ? `Ready for ${returning ? 'recovery' : 'surface operations'}` : `En route to ${destinationName}`}</strong>
-        </div>
-        <div className="transit-command-actions">
-          <button type="button" className="transit-command-btn transit-command-btn--arrive" data-testid="transit-arrive-btn" onClick={arriveOnce} disabled={!arrived}>
-            {arrived ? (returning ? 'RECOVER SHIP' : 'BEGIN SURFACE OPS') : isTimed ? `ARRIVE · ${formatCountdown(etaMs)}` : `ARRIVE · ${progress}%`}
-          </button>
-          {process.env.NODE_ENV === 'development' && !arrived && (
-            <button type="button" className="transit-command-btn" data-testid="transit-skip-btn" onClick={arriveOnce}>SKIP FLIGHT</button>
-          )}
-          {onAbandon && <button type="button" className="transit-command-btn transit-command-btn--danger" onClick={() => setConfirmingAbandon(true)}>ABORT MISSION</button>}
+        <div className={styles.body} style={{ ['--shift' as string]: shift }}>
+          <FlightBody target={target} returning={returning} />
         </div>
       </div>
 
-      {confirmingAbandon && onAbandon && (
-        <ActionConfirmBar
-          eyebrow="Mission Transit"
-          title="Abort Mission"
-          description="Abort this mission in transit? Cargo and mission progress will be lost."
-          confirmLabel="Confirm Abort"
-          onConfirm={() => { setConfirmingAbandon(false); onAbandon() }}
-          onDismiss={() => setConfirmingAbandon(false)}
+      <div
+        className={styles.progress}
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progress}
+        aria-label="Flight progress"
+        data-testid="transit-progress"
+      >
+        <span style={{ width: `${progress}%` }} />
+      </div>
+
+      <div className={styles.chrome}>
+        <div className={styles.top}>
+          <div className={styles.cluster}>
+            <button type="button" className={styles.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
+              <CogIcon />
+            </button>
+            <div className={styles.clock}><HubClockWidget /></div>
+          </div>
+          <div className={styles.cluster}>
+            <span className="scene-chip" data-testid="flight-francs-chip">{formatCurrency(francs, { compact: true })}</span>
+            <span className="scene-chip" data-testid="flight-cargo-chip" aria-label="Cargo">
+              <CubeIcon />
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.dock}>
+        <BaseDock
+          variant="flight"
+          buildLabel="Boost"
+          buildTestId="transit-boost-btn"
+          buildIcon={<BoostIcon />}
+          onPrev={onPrev ?? onBack}
+          onNext={onNext ?? onBack}
+          onBuild={boost}
+          onHub={onHub ?? onBack}
         />
-      )}
+      </div>
     </div>
   )
 }

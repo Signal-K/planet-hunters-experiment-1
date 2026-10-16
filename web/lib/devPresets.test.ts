@@ -15,10 +15,11 @@ describe('DEV_GROUPS', () => {
     expect(labels).toContain('Transport')
     expect(labels).toContain('Storage Silo')
     // Post-onboarding story mission (telescope launch) — replayable once
-    // free ops + the transit telescope are built.
+    // free ops + the space telescope are built.
     expect(labels).toContain('First Satellite Launch')
     expect(labels).toContain('Recent UI')
-    expect(labels).toHaveLength(5)
+    expect(labels).toContain('Gaps and checkpoints')
+    expect(labels).toHaveLength(6)
     expect(labels).not.toContain('Mission 2')
   })
 
@@ -202,9 +203,9 @@ describe('resolvePreset — recent UI surfaces', () => {
     expect(p.player!.transitSatelliteLaunchedAt).not.toBeNull()
   })
 
-  it('opens rover mining with an active mission and live TakeOn state', () => {
-    const p = resolvePreset('ui-rover-mining')!
-    expect(p.screen).toBe('rover-mining')
+  it('opens rover survey with an active mission and live TakeOn state', () => {
+    const p = resolvePreset('ui-rover-survey')!
+    expect(p.screen).toBe('rover-survey')
     expect(p.player!.activeMission).not.toBeNull()
   })
 })

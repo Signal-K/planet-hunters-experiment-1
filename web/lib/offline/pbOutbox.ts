@@ -5,6 +5,8 @@
 import { ClientResponseError } from 'pocketbase'
 import { landnamPbUrl } from '@/lib/pb-config'
 import { pbLandnam, refreshLandnamAuthOnce } from '@/lib/pb-landnam'
+import { casUpdateGameState } from '@/lib/sync/casSave'
+import type { GameState } from '@/lib/game-types'
 import { createOutbox, browserStore, memoryStore, newRecordId, type Outbox, type OutboxFailure, type OutboxOp } from './outbox'
 
 interface PbErrorBody {
@@ -67,7 +69,10 @@ async function executePocketBaseOp(op: OutboxOp): Promise<OutboxFailure | null> 
       if (error instanceof ClientResponseError && error.status === 404) return null
       throw error
     })
-    if (existing) await collection.update(existing.id, op.data)
+    if (existing && op.collection === 'game_states' && op.data.state && typeof op.data.user === 'string') {
+      // SSL-559: merge with the server copy instead of overwriting it.
+      await casUpdateGameState(collection, existing.id, op.data.user, op.data.state as GameState)
+    } else if (existing) await collection.update(existing.id, op.data)
     else await collection.create({ id: op.id, ...op.data })
     return null
   }
@@ -76,7 +81,7 @@ async function executePocketBaseOp(op: OutboxOp): Promise<OutboxFailure | null> 
   return null
 }
 
-async function executeOnPocketBase(op: OutboxOp): Promise<OutboxFailure | null> {
+export async function executeOnPocketBase(op: OutboxOp): Promise<OutboxFailure | null> {
   // No Landnam session yet (shared-to-Landnam exchange pending). PocketBase
   // answers an unauthenticated create with 400 "create rule failure", which
   // would be classed as invalid and dropped, losing the write. Wait instead.

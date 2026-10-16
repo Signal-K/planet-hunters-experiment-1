@@ -21,7 +21,7 @@ import { candidateSkyPosition, type TessCandidate } from '@/lib/data'
 const SKY_BG     = 0x03060a
 const GRID_COLOR = 0x87cffa
 const STAR_OPEN  = 0x3fa9ff
-const STAR_VISITED = 0x39d36a
+const STAR_VISITED = 0x9b8cf0
 const STAR_SELECTED = 0x36c6e2
 const TICK_COLOR = 0x6b7fa3
 const SOL_ID = '__sol__'

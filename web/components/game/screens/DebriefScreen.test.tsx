@@ -18,7 +18,7 @@ const target: Target = {
 
 const programMission: Mission = {
   id: 'story-transit-telescope-launch',
-  title: 'Launch Transit Telescope',
+  title: 'Launch Space Telescope',
   brief: '',
   tag: 'STORY',
   difficulty: 'L1',
@@ -27,10 +27,10 @@ const programMission: Mission = {
   targetId: target.id,
   requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 1 },
   payout: { francs: 0, affinity: 0 },
-  payload: { type: 'satellite', name: 'Transit Telescope', cargoCost: 0 },
+  payload: { type: 'satellite', name: 'Space Telescope', cargoCost: 0 },
   programReward: {
     researchXP: 0,
-    outcome: 'Transit telescope online · daily instrument feed unlocked',
+    outcome: 'Space telescope online · daily instrument feed unlocked',
   },
 }
 
@@ -101,10 +101,13 @@ describe('DebriefScreen own-program outcomes', () => {
 
     expect(host.textContent).not.toContain('Client')
     expect(host.textContent).not.toContain('Collect ₣')
-    // SSL-345: Debrief uses the shared top meta bar, not a one-off header.
-    expect(host.querySelectorAll('.top-bar')).toHaveLength(1)
+    // Shared HUD: cog and clock, no scene title and no one-off header.
+    expect(host.querySelector('[aria-label="Settings"]')).not.toBeNull()
+    expect(host.querySelector('.top-bar')).toBeNull()
     expect(host.querySelector('.debrief-hud-header')).toBeNull()
-    expect(host.querySelector('.top-bar__title')?.textContent).toBe('DEPLOYMENT')
+    expect(host.querySelector('.top-bar__title')).toBeNull()
+    expect(host.querySelectorAll('.debrief-result-panel')).toHaveLength(1)
+    expect(host.textContent).not.toContain('DEPLOYMENT')
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
@@ -248,7 +251,7 @@ describe('DebriefScreen own-program outcomes', () => {
     expect(host.querySelector('[data-testid="debrief-teardown-btn"]')).not.toBeNull()
     // SSL-479: the payout Ledger and Collect are on screen before teardown.
     expect(host.textContent).toContain('Ledger')
-    expect(host.textContent).toContain('You brought')
+    expect(host.querySelectorAll('[data-surface="cream"]').length).toBeGreaterThan(0)
     const collectBtn = host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
     expect(collectBtn).not.toBeNull()
     expect(host.textContent).not.toContain('Affinity')
@@ -290,6 +293,33 @@ describe('DebriefScreen own-program outcomes', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
     expect(onDone).toHaveBeenCalledWith(1000, 0, { iron: 1 })
+    root.unmount()
+  })
+
+  it('paints the next-build card cream, with the ore cost and no essay', async () => {
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    await act(async () => {
+      root.render(
+        <DebriefScreen
+          mission={clientMission}
+          target={target}
+          cargo={{ iron: 5 }}
+          onDone={() => {}}
+          minerals={{}}
+          clients={{ 'test-client': testClient }}
+          onBuyLaserCapacitor={() => {}}
+          laserCapacitorLevel={0}
+          stashUnits={1}
+        />,
+      )
+    })
+    const panel = host.querySelector('[data-testid="laser-capacitor-panel"]')
+    expect(panel?.getAttribute('data-surface')).toBe('cream')
+    expect(panel?.textContent).toContain('Laser Capacitor I')
+    expect(panel?.textContent).toContain('6 ore')
+    expect(panel?.textContent).not.toContain('Keep firing')
+    expect(panel?.textContent).not.toContain('You brought')
     root.unmount()
   })
 })

@@ -7,6 +7,6 @@ let package = Package(
     products: [.library(name: "LandnamCore", targets: ["LandnamCore"])],
     targets: [
         .target(name: "LandnamCore"),
-        .testTarget(name: "LandnamCoreTests", dependencies: ["LandnamCore"]),
+        .testTarget(name: "LandnamCoreTests", dependencies: ["LandnamCore"], exclude: ["Fixtures"]),
     ]
 )

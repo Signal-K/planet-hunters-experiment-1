@@ -31,11 +31,16 @@ public enum ConstructionMissions {
         }
     }
 
-    public static func applyDelivery(_ s: GameState, plan: MissionConstructionPlan, targetId: String, now: Double) -> GameState {
+    /// `clientId` is the client who ordered the build (own programme by default). A client job mines its
+    /// materials on site, so it passes `takeFromStash: false`; the player's own kit comes out of storage.
+    public static func applyDelivery(_ s: GameState, plan: MissionConstructionPlan, targetId: String, now: Double,
+                                     clientId: String? = nil, takeFromStash: Bool = true) -> GameState {
         var n = s
-        for (id, amount) in plan.requiredMaterials {
-            let left = (n.player.stash[id] ?? 0) - amount
-            n.player.stash[id] = left > 0 ? left : nil
+        if takeFromStash {
+            for (id, amount) in plan.requiredMaterials {
+                let left = (n.player.stash[id] ?? 0) - amount
+                n.player.stash[id] = left > 0 ? left : nil
+            }
         }
         var items: [JSONValue] = []
         if case .array(let existing)? = n.player.extras["clientStructures"] { items = existing }
@@ -45,7 +50,7 @@ public enum ConstructionMissions {
         }
         if !alreadyThere {
             items.append(.object(["targetId": .string(targetId), "structureKind": .string(plan.structureKind),
-                                  "clientId": .string(ownProgramClientId), "state": .string("under-construction"),
+                                  "clientId": .string(clientId ?? ownProgramClientId), "state": .string("under-construction"),
                                   "startedAt": .number(now)]))
         }
         n.player.extras["clientStructures"] = .array(items)

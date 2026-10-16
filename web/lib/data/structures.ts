@@ -39,29 +39,29 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'surface-silo',
     cost: SURFACE_SILO_PRICE,
     // SSL-332: building it is the last guided step, and it is what opens Free Ops.
-    unlocksAt: 'Complete the guided missions',
+    unlocksAt: 'Fly both guided missions first',
     unlockTrigger: 'onboarding-missions',
-    description: 'Small Earth-side mineral storage. Hold ore for a better market window or for refinery input.',
+    description: 'Small Earth-side mineral storage. Keep ore for construction; overflow is sold when a flight returns.',
   },
   {
-    id: 'refinery',
-    name: 'Refinery',
-    kind: 'refinery',
-    cost: STRUCTURE_PRICES.refinery,
-    costMaterials: { aluminium: 20, copper: 10 },
-    unlocksAt: 'Surface Silo + an established mining settlement',
-    unlockTrigger: 'free-operations',
-    // KES-283: Level 1 only — processes one shipment of raw ore into refined
-    // goods per day (a queue, not instant conversion; see RefineryScreen /
-    // REFINERY_RECIPES). No multi-level tree or advanced recipes yet.
-    //
-    // SSL-74: gated on the Surface Silo (refining needs somewhere to hold
-    // input ore) plus an established off-world mining settlement (purchased
-    // site access — see SurfaceOpsSystem/applyPurchaseSiteAccess). A
-    // settlement lets a ferry bring home a full hold in one trip instead of
-    // repeated one-off mining runs; refining is the payoff for having made
-    // that investment, not a plain Free-Ops purchase.
-    description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day. Requires a Surface Silo for input storage and an established mining settlement — settlements ferry ore home in bulk, giving the Refinery a steady supply instead of one-off mining runs.',
+    id: 'market',
+    name: 'Exchange',
+    kind: 'market',
+    cost: STRUCTURE_PRICES.exchange,
+    // Optional: players choose to build it once they are trading on their own.
+    unlocksAt: 'Opens once the guided missions are flown',
+    unlockTrigger: 'onboarding-missions',
+    description: 'Cargo dock where you sell ore at the spot price.',
+  },
+  {
+    id: 'control-station',
+    name: 'Control Station',
+    kind: 'control-station',
+    cost: STRUCTURE_PRICES.controlStation,
+    // Satellites and telescopes are run from here, so it comes before the first launch of either.
+    unlocksAt: 'Opens once the guided missions are flown',
+    unlockTrigger: 'onboarding-missions',
+    description: 'Runs your satellites and telescopes. Build it before you launch one.',
   },
   {
     id: 'astronaut-academy',
@@ -69,11 +69,10 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'astronaut-academy',
     cost: STRUCTURE_PRICES.academy,
     costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
-    unlocksAt: 'Research after reaching client level 2 with two clients',
+    unlocksAt: 'Reach client level 2 with two clients, then research it',
     unlockTrigger: 'academy-research',
     description: 'Trains named astronauts, manages the roster, and coordinates Base staffing.',
   },
-  { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: STRUCTURE_PRICES.garage, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
 ]
 
 /** One-off cost to permanently upgrade the launchpad. Previously duplicated as
@@ -81,25 +80,19 @@ export const STRUCTURES: StructureBlueprint[] = [
  *  HubScreen's copy, which could drift apart silently. */
 export const LAUNCHPAD_UPGRADE_COST = STRUCTURE_PRICES.launchpadUpgrade
 
+/** Silo and Exchange appear once one run has been flown: before that there is no ore to store or sell, and they cost
+ *  a fifth of the starting francs. (Free Ops itself opens with the launchpad.) */
+export const FIRST_STORAGE_MISSIONS_DONE = 1
+
 export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; missionsDone?: number; hasMiningSettlement?: boolean } = {}): boolean {
   // SSL-332's storage silo is the only pre-Free-Ops construction step: it
   // becomes available after Extraction and Transport, and placement opens
   // Free Ops. Existing players retain access through their saved unlock.
-  if (structure.id === 'surface-silo') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
+  if (structure.id === 'surface-silo') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
+  if (structure.id === 'market') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('market')
+  if (structure.id === 'control-station') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('control-station')
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   if (structure.unlockTrigger === 'always') return true
-  // KES-283: the Refinery is a normal Earth Base plot purchase (same unlock
-  // shape as the Surface Silo) rather than the KES-286 off-world
-  // site-commissioned structure whose unlock condition no mission ever
-  // satisfied — that broken trigger is retired for good.
-  //
-  // SSL-332 makes this an immediate Free Ops activity. The storage silo is
-  // the prerequisite because it provides the refinery's input buffer; an
-  // off-world settlement remains useful later, but is not a dead-end gate.
-  if (structure.id === 'refinery') {
-    return !!opts.placed?.includes('refinery')
-      || (!!opts.freeOperations && !!opts.placed?.includes('surface-silo'))
-  }
   return false
 }
 

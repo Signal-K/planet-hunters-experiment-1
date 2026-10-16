@@ -26,3 +26,22 @@
 @media (orientation: landscape) and (max-height: 520px) {
   .screen .frame.frame { padding: 48px 12px 8px; }
 }
+
+/* Desktop: the survey console and badges sit beside the board instead of below it, so the whole screen fits the
+   viewport and no text is cut at the fold. */
+@media (min-width: 1280px) and (min-height: 700px) {
+  .screen .frame.frame {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-auto-rows: min-content;
+    align-content: start;
+    align-items: start;
+  }
+
+  .screen .frame.frame > :first-child {
+    grid-column: 1;
+    grid-row: 1 / span 6;
+  }
+
+  .screen .frame.frame > :not(:first-child) { grid-column: 2; }
+}

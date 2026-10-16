@@ -1,5 +1,6 @@
 import SwiftUI
 import LandnamCore
+import TakeonKit
 
 /// Routes every one of the 26 screens. Core-loop screens are playable; the rest
 /// show a staged placeholder until their systems are ported (see README).
@@ -19,27 +20,36 @@ struct RootView: View {
             case nil: WelcomeScreen()
             case .intro: IntroScreen()
             case .hub, .hubSubsurface: HubScreen()
-            case .refinery: RefineryScreen()
             case .skills: SkillTreeScreen()
             case .academy: AcademyScreen()
             case .missionHistory: MissionHistoryScreen()
             case .narrativeLedger: NarrativeLedgerScreen()
-            case .missions: MissionsScreen()
-            case .targets, .rocketBuy, .fab, .launchpad: LaunchReviewScreen()
-            case .hangar: LaunchScreen()
+            case .missions: MissionsScreen().helpable(.missions)
+            case .targets, .rocketBuy, .fab: LaunchReviewScreen().helpable(.targets)
+            case .launchpad: LaunchReviewScreen()
+            case .hangar: HangarScreen().helpable(.hangar)
             case .build: BuildScreen()
             case .surfaceOps: SurfaceOpsScreen()
             case .transit: TransitScreen()
-            case .roverMining: RoverFieldScreen()
-            case .mining, .landing: MiningScreen()
+            case .roverSurvey: if TakeonSceneFlag.enabled && takeonGoRuntimeAvailable { TakeonSceneScreen(onExit: { store.go(.hub) }) } else { RoverFieldScreen() }
+            case .mining, .landing: MiningScreen().helpable(.mining)
             case .delivery: DeliveryScreen()
-            case .debrief: DebriefScreen()
+            case .debrief: if store.player.homeDeliveryPending { HomecomingScreen() } else { DebriefScreen() }
             case .market: MarketScreen()
             case .instrumentHub: ControlStationScreen()
             case .saturnStormSearch: SaturnStormSearchScreen()
             case .asteroidDiscovery: AsteroidDiscoveryScreen()
             case .galaxy: TessDiscoveryScreen()
             default: StubScreen(screen: store.screen)
+            }
+        }
+        .overlay(alignment: .top) {
+            if !store.welcomePending, store.screen != .mining, store.screen != .landing, store.screen != .intro,
+               let coach = FlightPlan.coach(store.player, screen: store.screen, includeHidden: true) {
+                CoachStrip(coach: coach)
+                    .frame(maxWidth: 560)
+                    .padding(.horizontal, 8)
+                    .padding(.top, 68)
             }
         }
         .tint(Theme.accent)

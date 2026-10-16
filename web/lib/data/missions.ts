@@ -4,7 +4,7 @@ import { missionPayoutFloor } from './payouts'
 import type { Mission } from './types'
 import { CLIENT_SLOTS } from './clients'
 import { MINERAL_META } from './minerals'
-import { STRUCTURES } from './structures'
+import { ROCKET_MODELS } from './rockets'
 import {
   DEFAULT_MISSION_TEMPLATES,
   FREE_OPS_MISSION_SEQUENCE,
@@ -51,15 +51,17 @@ export const TRANSPORT_SEQUENCE = 2
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
 export const RESOURCE_FOCUS_MISSION_ID = 'focus-resource-mining'
 export const ACADEMY_INTRO_MISSION_ID = 'story-astronaut-academy'
-export const REFINERY_BUILD_MISSION_ID = 'program-build-refinery'
 
-const refineryBlueprint = STRUCTURES.find(structure => structure.id === 'refinery')!
 const remoteSiloBlueprint = { requiredMaterials: { aluminium: 18, iron: 12, copper: 6 } }
 
 function materialRequirement(materials: Record<string, number>): { minerals: Record<string, number>; cargo_min: number } {
   return {
     minerals: { ...materials },
-    cargo_min: Object.values(materials).reduce((total, amount) => total + amount, 0),
+    // The kit must fit the biggest vehicle the player can launch: a 36U kit against an 18U Surveyor made these steps unflyable.
+    cargo_min: Math.min(
+      Object.values(materials).reduce((total, amount) => total + amount, 0),
+      Math.max(...ROCKET_MODELS.filter(rocket => !rocket.locked).map(rocket => rocket.stats.cargo)),
+    ),
   }
 }
 
@@ -85,32 +87,6 @@ export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
     construction: { structureKind: 'mineral-silo', requiredMaterials: { ...remoteSiloBlueprint.requiredMaterials }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
     programReward: { researchXP: 0, outcome: 'Remote Mineral Silo commissioned · ore can be held at the selected target' },
     requires: { ...materialRequirement(remoteSiloBlueprint.requiredMaterials), drill_tier: 1, max_orbit: 5 },
-    payout: { francs: 0, affinity: 0 },
-  },
-  {
-    id: REFINERY_BUILD_MISSION_ID,
-    title: 'Commission an Off-world Refinery',
-    brief: 'Deliver aluminium and copper to a site you own or lease. Your refinery processes ore close to the source for your own construction and client deliveries.',
-    tag: 'PROGRAM',
-    difficulty: 'L1',
-    locked: false,
-    sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Reach Free Operations and choose a site you own or lease',
-    construction: {
-      structureKind: refineryBlueprint.kind,
-      requiredMaterials: { ...(refineryBlueprint.costMaterials ?? {}) },
-      placementMode: 'confirm',
-      buildTimeMs: 45 * 60 * 1000,
-    },
-    programReward: {
-      researchXP: 0,
-      outcome: 'Off-world refinery commissioned · process ore at the selected site',
-    },
-    requires: {
-      ...materialRequirement(refineryBlueprint.costMaterials ?? {}),
-      drill_tier: 1,
-      max_orbit: 5,
-    },
     payout: { francs: 0, affinity: 0 },
   },
 ]

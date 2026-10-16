@@ -14,6 +14,15 @@ import Foundation
         #expect((first?.payout.francs ?? .max) <= Int(15_000_000 * 1.18) + 1)
     }
 
+    @Test func everyMissionHasAStableBoardCategory() {
+        let missions = MissionGenerator.everything()
+        #expect(!missions.isEmpty)
+        #expect(missions.allSatisfy { MissionCategory.allCases.contains($0.category) })
+        #expect(missions.contains { $0.category == .contracts })
+        #expect(missions.contains { $0.category == .freeMining })
+        #expect(MissionGenerator.category(for: missions.first { $0.tag == "STORY" }!) == .missions)
+    }
+
     @Test func onboardingIsAsteroidOnlyAndMineralMatched() {
         let m = MissionGenerator.generate().first { $0.sequence == 1 }!
         let targets = Targets.compatible(with: m)
@@ -43,6 +52,20 @@ import Foundation
         #expect(Market.unitPrice("platinum", player: sold.player, clientId: nil, now: 0).price < fresh)
         let healed = Market.unitPrice("platinum", player: sold.player, clientId: nil, now: 3 * 60 * 60 * 1000).price
         #expect(healed == fresh)
+    }
+
+    @Test func sharedDailyMarketQuotesOverrideCommonFallbackPrices() {
+        var p = Player()
+        p.extras["dailyEconomySnapshot"] = .object([
+            "prices": .object([
+                "carbon": .object(["price": .number(178_000)]),
+                "iron": .object(["price": .number(264_000)]),
+                "silicon": .object(["price": .number(231_000)]),
+            ]),
+        ])
+        #expect(Market.unitPrice("carbon", player: p, clientId: nil, now: 0).price == 178_000)
+        #expect(Market.unitPrice("iron", player: p, clientId: nil, now: 0).price == 264_000)
+        #expect(Market.unitPrice("silicon", player: p, clientId: nil, now: 0).price == 231_000)
     }
 
     @Test func clientPremiumOnlyOnPreferredMinerals() {
@@ -138,6 +161,19 @@ import Foundation
         #expect(Loop.launch(s, catalog: catalog, now: t0).screen == .fab)
     }
 
+    @Test func hangarBuildsTheChosenRocketForTheSetUpMission() {
+        var s = GameState(); s.screen = .missions
+        s.player.missionsDone = 1
+        s = Loop.pickMission(s, id: catalog.missions.first { $0.sequence == 1 }!.id, catalog: catalog)
+        s.player.stagedRockets = []; s.player.selectedStagedRocketId = nil
+        s.screen = .hangar
+        s.player.francs = 1_000_000_000
+        let built = Loop.purchaseRocket(s, rocketId: "explorer", catalog: catalog)
+        #expect(built.player.stagedRockets.count == 1)
+        #expect(built.screen == .fab)
+        #expect(built.player.francs < s.player.francs || Rockets.model(id: "explorer")?.costFrancs == 0)
+    }
+
     @Test func quickSetupNeverSpendsFrancs() {
         var s = GameState(); s.screen = .missions
         s.player.missionsDone = 1
@@ -154,33 +190,32 @@ import Foundation
         #expect(Market.applyPurchaseRocket(s, rocket: prospector) == s)
     }
 
-    @Test func roverFieldFinishesTheSurfaceContract() {
+    @Test func roverSurveyHandsOffToTheLaser() {
         var s = GameState()
-        s.screen = .roverMining; s.missionId = "m"; s.targetId = "eros"
-        let done = Loop.roverMiningDone(s, cargo: ["iron": 2], catalog: catalog, now: t0)
-        #expect(done.screen == .transit && done.player.returningToEarth && done.lastCargo == ["iron": 2])
-        // The laser field entry point must still refuse a rover run.
+        s.screen = .roverSurvey; s.missionId = "m"; s.targetId = "eros"
+        let surveyed = Loop.roverSurveyComplete(s)
+        #expect(surveyed.screen == .mining && surveyed.player.missionPhase == .mining)
+        #expect(surveyed.lastCargo == nil)
+        // The laser refuses a run that is still on the survey surface.
         #expect(Loop.miningDone(s, cargo: ["iron": 2], catalog: catalog, now: t0) == s)
+        let done = Loop.miningDone(surveyed, cargo: ["iron": 2], catalog: catalog, now: t0)
+        #expect(done.screen == .transit && done.player.returningToEarth && done.lastCargo == ["iron": 2])
     }
 
-    @Test func roverCargoMeetingTheOrderReachesDebrief() {
-        let order: Cargo = ["iron": 2]
-        var p = Prospecting(requirements: order)
-        _ = p.tapOutcrop("ore-a"); _ = p.tapOutcrop("ore-a")
-        #expect(p.canReturn && p.cargo == order)
+    @Test func roverSurveyDoesNotDeliverContractCargo() {
+        var p = Prospecting()
+        p.observe("ore-a")
+        #expect(p.canContinue)
         var s = GameState()
-        s.screen = .roverMining; s.missionId = "m"; s.targetId = "eros"
-        let transit = Loop.roverMiningDone(s, cargo: p.cargo, catalog: catalog, now: t0)
-        let debrief = Transitions.applyReturnArrived(transit)
-        #expect(debrief.screen == .debrief)
-        #expect(order.allSatisfy { (debrief.lastCargo?[$0.key] ?? 0) >= $0.value })
-        #expect(debrief.player.stash["iron"] == 2)
+        s.screen = .roverSurvey; s.missionId = "m"; s.targetId = "eros"
+        let surveyed = Loop.roverSurveyComplete(s)
+        #expect(surveyed.lastCargo == nil && surveyed.screen == .mining)
     }
 
-    @Test func shortRoverCargoIsKeptNotDropped() {
+    @Test func shortLaserCargoIsKeptNotDropped() {
         var s = GameState()
-        s.screen = .roverMining; s.missionId = "m"; s.targetId = "eros"
-        let debrief = Transitions.applyReturnArrived(Loop.roverMiningDone(s, cargo: ["iron": 1], catalog: catalog, now: t0))
+        s.screen = .mining; s.missionId = "m"; s.targetId = "eros"
+        let debrief = Transitions.applyReturnArrived(Loop.miningDone(s, cargo: ["iron": 1], catalog: catalog, now: t0))
         #expect(debrief.screen == .debrief && debrief.lastCargo == ["iron": 1])
     }
 
@@ -383,5 +418,58 @@ import Foundation
         remote.player.tessClassifications = ["toi-7": TessClassification(subjectId: "toi-7", verdict: .unsure, ranges: [], submittedAt: 600)]
         let n = CloudPull.reconcile(remote: remote, keeping: local)
         #expect(n.player.saturnImagerLaunchedAt == 700 && n.player.tessClassifications.keys.sorted() == ["toi-7"])
+    }
+}
+
+@Suite struct MiningRouteTests {
+    let catalog = Catalog()
+    let t0 = 1_700_000_000_000.0
+
+    private func arrival(_ mission: Mission, missionsDone: Int = 4) -> GameState {
+        var s = GameState()
+        s.screen = .transit; s.missionId = mission.id; s.targetId = "eros"
+        s.player.missionsDone = missionsDone
+        s.player.missionPhase = .transit
+        return s
+    }
+
+    @Test func laserMissionsNeverResolveToTheRoverScene() {
+        let board = catalog.missions.filter { $0.onWorldVehicle == nil && $0.construction == nil && $0.payload == nil }
+        #expect(!board.isEmpty)
+        for m in board {
+            let out = Loop.transitArrived(arrival(m), catalog: catalog, now: t0)
+            #expect(out.screen != .roverSurvey, "\(m.id) routed to the rover scene")
+            // Includes drill tier 0 contracts: tier alone no longer picks the rover.
+            #expect(out.screen == .mining || out.screen == .debrief)
+        }
+    }
+
+    @Test func starterRoverLandingMissionResolvesToTheRoverScene() {
+        let rover = catalog.missions.filter { $0.id.contains("freeops-rover-landing") }
+        #expect(!rover.isEmpty)
+        for m in rover {
+            #expect(m.onWorldVehicle == "starter-rover")
+            let out = Loop.transitArrived(arrival(m), catalog: catalog, now: t0)
+            #expect(out.screen == .roverSurvey && out.player.missionPhase == .survey)
+        }
+        #expect(catalog.missions.filter { $0.onWorldVehicle != nil }.allSatisfy { $0.id.contains("freeops-rover-landing") })
+    }
+
+    @Test func tutorialTransportLessonAndLandingTouchdownUseTheRover() {
+        var lesson = catalog.missions.first { $0.onWorldVehicle == nil && $0.construction == nil && $0.payload == nil }!
+        lesson.deliveryTargetId = "mars"
+        #expect(Loop.usesRoverScene(lesson, player: { var p = Player(); p.missionsDone = 1; return p }()))
+        #expect(!Loop.usesRoverScene(lesson, player: { var p = Player(); p.missionsDone = 2; return p }()))
+        lesson.deliveryTargetId = nil
+        #expect(!Loop.usesRoverScene(lesson, player: { var p = Player(); p.missionsDone = 1; return p }()))
+
+        var s = GameState()
+        s.screen = .landing; s.player.landingStartedAt = t0; s.player.missionsDone = 1
+        lesson.deliveryTargetId = "mars"
+        let touchdown = Transitions.applyLandingTouchdown(s, mission: lesson)
+        #expect(touchdown.screen == .roverSurvey && touchdown.player.missionPhase == .survey)
+        #expect(Transitions.applyLandingTouchdown(s, mission: nil).screen == .mining)
+        s.player.missionsDone = 4
+        #expect(Transitions.applyLandingTouchdown(s, mission: lesson).screen == .mining)
     }
 }

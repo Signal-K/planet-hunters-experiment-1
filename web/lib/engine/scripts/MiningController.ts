@@ -1,3 +1,4 @@
+import { depositTag } from '@/lib/mining/laserLayers'
 import { Container, Graphics, Sprite, Text, type Texture } from 'pixi.js'
 import { ScriptBehaviour } from '../components/ScriptBehaviour'
 import { ShapeRenderer } from '../components/ShapeRenderer'
@@ -6,6 +7,7 @@ import { GameObject } from '../GameObject'
 import type { RuntimeContext } from '../RuntimeContext'
 import type { EntityBounds } from '../InputManager'
 import { devMiningSpeedMultiplier } from '@/lib/devMiningSpeed'
+import { oreFleck, oreFleckStyle } from '@/lib/mining/oreFlecks'
 import { hitStopSeconds, pickupPosition, stepHitStop, type HitKind } from '../miningJuice'
 import type { DebrisArtSet } from '../debrisArt'
 import { fallFrameIndex, landFrameIndex } from '@/lib/orionids/theme'
@@ -46,20 +48,97 @@ const LASER_DEPTH_BY_TIER: Record<number, number> = {
   3: LASER_MAX_DEPTH,
 }
 
-/** Organic ore gap distribution: 20% tight cluster, 50% normal, 30% wide open space */
-function oreGap(): number {
-  const r = Math.random()
-  if (r < 0.20) return 55  + Math.random() * 40   // close follow-on
-  if (r < 0.70) return 100 + Math.random() * 100  // normal spacing
-  return 220 + Math.random() * 160                 // barren stretch
+/** Buried cutaway shapes. y grows downward into the soil. Every part starts below the surface line. */
+type OreBlob = { x: number; y: number; w: number; h: number }
+const NODULE_BLOBS: OreBlob[][] = [
+  [
+    { x: -28, y: 14, w: 22, h: 18 },
+    { x: -4, y: 18, w: 26, h: 22 },
+    { x: 18, y: 26, w: 16, h: 16 },
+    { x: -14, y: 40, w: 40, h: 14 },
+  ],
+  [
+    { x: -22, y: 16, w: 20, h: 16 },
+    { x: 0, y: 22, w: 22, h: 20 },
+    { x: -12, y: 42, w: 34, h: 12 },
+  ],
+  [
+    { x: -24, y: 12, w: 18, h: 16 },
+    { x: -6, y: 20, w: 16, h: 26 },
+    { x: 12, y: 28, w: 18, h: 18 },
+  ],
+]
+const SEAM_BLOBS: OreBlob[][] = [
+  [
+    { x: -46, y: 16, w: 92, h: 14 },
+    { x: -30, y: 32, w: 68, h: 12 },
+    { x: -16, y: 46, w: 38, h: 8 },
+  ],
+  [
+    { x: -40, y: 20, w: 80, h: 12 },
+    { x: -22, y: 34, w: 50, h: 10 },
+  ],
+  [
+    { x: -34, y: 14, w: 28, h: 10 },
+    { x: -4, y: 18, w: 54, h: 14 },
+    { x: 8, y: 34, w: 34, h: 10 },
+  ],
+]
+const CRYSTAL_BLOBS: OreBlob[][] = [
+  [
+    { x: -14, y: 12, w: 12, h: 28 },
+    { x: 2, y: 16, w: 12, h: 26 },
+    { x: -8, y: 36, w: 20, h: 16 },
+  ],
+  [
+    { x: -18, y: 14, w: 12, h: 26 },
+    { x: -4, y: 18, w: 14, h: 32 },
+    { x: 12, y: 22, w: 10, h: 22 },
+  ],
+  [
+    { x: -10, y: 14, w: 18, h: 16 },
+    { x: -6, y: 28, w: 12, h: 24 },
+    { x: 8, y: 22, w: 12, h: 20 },
+  ],
+]
+/** Symbol disc sits on the buried mass, fully under the crust. */
+const LABEL_DEPTH = 36
+
+function mixHex(a: number, b: number, t: number): number {
+  const ch = (shift: number) => {
+    const av = (a >> shift) & 255
+    const bv = (b >> shift) & 255
+    return Math.round(av + (bv - av) * t)
+  }
+  return (ch(16) << 16) | (ch(8) << 8) | ch(0)
+}
+
+function blobFamily(mineral: string): OreBlob[][] {
+  const style = oreFleckStyle(mineral)
+  if (style === 'seam') return SEAM_BLOBS
+  if (style === 'crystal') return CRYSTAL_BLOBS
+  return NODULE_BLOBS
+}
+
+function mineralSalt(mineral: string): number {
+  let hash = 0
+  for (let i = 0; i < mineral.length; i++) hash = (hash * 33 + mineral.charCodeAt(i)) >>> 0
+  return hash
+}
+
+function blobParts(mineral: string, salt: number): OreBlob[] {
+  const family = blobFamily(mineral)
+  return family[(mineralSalt(mineral) + salt) % family.length]
 }
 
 /** Per-laser-tier ore properties: radius, hp, depth range within rock surface */
 const ORE_TIER: Record<number, { radius: number; maxHp: number; depthMin: number; depthMax: number }> = {
   1: { radius: 10, maxHp: 1, depthMin: 8,  depthMax: 30 },
-  2: { radius: 13, maxHp: 2, depthMin: 32, depthMax: 60 },
-  3: { radius: 17, maxHp: 3, depthMin: 62, depthMax: 96 },
+  2: { radius: 13, maxHp: 1, depthMin: 32, depthMax: 60 },
+  3: { radius: 17, maxHp: 1, depthMin: 62, depthMax: 96 },
 }
+/** Native placeChips offset in source pixels: crust 8 + gap 4 + deposit 14. */
+const PIXEL_BURIAL_SRC = 26
 
 export interface MiningControllerOptions {
   container: Container
@@ -70,6 +149,13 @@ export interface MiningControllerOptions {
   /** Overrides SHIP_Y when the world is sized dynamically from the viewport. */
   shipY?: number
   minerals: string[]
+  /** Drawn first, in order, each one deposit-gap apart. `?ores=mixed` uses
+   * this so iron, carbon and ice each get their own stretch of soil. */
+  leadMinerals?: string[]
+  /** Preview offset in screen-widths. Shifts the field by that many viewports. */
+  scrollScreens?: number
+  /** When set (the `?scroll=` preview), the field stays put until the player scrolls. */
+  pinScroll?: boolean
   /** Required order minerals are seeded at the front of the run so the
    * objective is always discoverable before the normal deposit rotation. */
   requiredMinerals?: string[]
@@ -84,6 +170,22 @@ export interface MiningControllerOptions {
   /** Element-symbol per mineral key (e.g. `Pt`, `H2O`). Rendered as a label on
    * every ore node — omit to leave ore unlabelled. */
   mineralSyms?: Record<string, string>
+  /** Display names, for the deposit labels (`Platinum · 1u`). */
+  mineralNames?: Record<string, string>
+  /** Beam tint for the projectile. Defaults to the original cyan. */
+  beamColor?: string
+  /** Surface rock-chip colours. Omit to keep the buried marker as the only ore graphic. */
+  chipFill?: number
+  chipShade?: number
+  /** Shared pixel deposit frames. Drawn at pixelScale, unstretched and untinted. */
+  depositFrames?: Texture[]
+  /** Deposits v2 art per mineral; wins over `depositFrames` when present (SSL-536). */
+  depositArtFor?: (mineral: string) => Texture | undefined
+  pixelScale?: number
+  /** The scene beam sprite is the shot. Hide the collision bolt graphic. */
+  pixelBeam?: boolean
+  /** Symbol ink. Light ground uses a dark ink. */
+  labelInk?: number
   onCollect: (mineral: string) => void
   /** Called when a laser exits the world without hitting any ore (miss). */
   onMiss?: () => void
@@ -93,6 +195,8 @@ export interface MiningControllerOptions {
   onScroll?: (scrollX: number) => void
   /** Called when any ore enters or leaves the "fire now" window around SHIP_X. */
   onOreNearby?: (near: boolean) => void
+  /** Live target mineral and alignment state for the mining HUD. */
+  onTargetCue?: (mineral: string | null, inRange: boolean) => void
   /**
    * Live-updating set of mineral keys still needed to fill the order. When
    * set, the "fire now" window only lights up for ore whose mineral is still
@@ -144,6 +248,9 @@ interface OreEntity {
   renderer: ShapeRenderer | null
   sprite: Sprite | null
   label: Text | null
+  labelBaseY: number
+  /** Surface rock drawn on the ground line. Collision stays at the buried node. */
+  chip: Graphics | null
   mineral: string
   hp: number
   maxHp: number
@@ -156,6 +263,7 @@ interface OreEntity {
   phase?: 'fall' | 'land' | 'intact'
   animTime: number
   variant: number
+  frames?: Texture[] | null
 }
 
 interface LaserEntity {
@@ -202,6 +310,7 @@ export class MiningController extends ScriptBehaviour {
   private totalScrollX = 0
   private scrollSpeed = SCROLL_SPEED
   private oreNearState = false
+  private targetCueState = ''
   /** Local-dev QA multiplier (1 everywhere else), see lib/devMiningSpeed.ts. */
   private readonly devSpeed = devMiningSpeedMultiplier()
 
@@ -210,33 +319,46 @@ export class MiningController extends ScriptBehaviour {
     this.opts = opts
   }
 
-  /** Override the terrain scroll speed (px/s). Clamped to SCROLL_SPEED_MIN..SCROLL_SPEED_MAX. */
+  /** True while `?scroll=` is holding the field still for a spacing check. */
+  private pinScroll = false
+
+  /** Override the terrain scroll speed (px/s). Clamped to SCROLL_SPEED_MIN..SCROLL_SPEED_MAX.
+   * A player scroll releases the preview pin. */
   setScrollSpeed(speed: number): void {
+    this.pinScroll = false
     this.scrollSpeed = Math.max(SCROLL_SPEED_MIN, Math.min(SCROLL_SPEED_MAX, speed))
   }
 
   start(): void {
     const required = this.opts.requiredMinerals ?? []
-    this.requiredMineralQueue = required.flatMap(mineral => Array.from({ length: REQUIRED_ORE_COPIES }, () => mineral))
-    let x = SHIP_X + 40
+    const lead = (this.opts.leadMinerals ?? []).filter(mineral => mineral.length > 0)
+    this.requiredMineralQueue = [
+      ...lead,
+      ...required.flatMap(mineral => Array.from({ length: REQUIRED_ORE_COPIES }, () => mineral)),
+    ]
+    const gap = this.depositGap()
+    const screens = Math.max(0, this.opts.scrollScreens ?? 0)
+    const skip = Math.round(screens * this.opts.worldWidth)
+    this.pinScroll = this.opts.pinScroll === true
+    this.totalScrollX = skip
+    this.opts.onScroll?.(skip)
+    let x = this.depositAnchor() - skip
     let count = 0
     while (count < 20) {
       this.spawnOre(x)
       count++
-      // Occasionally spawn a close companion (cluster of 2-3)
-      const clusterRoll = Math.random()
-      if (clusterRoll < 0.18 && count < 20) {
-        x += 45 + Math.random() * 35
-        this.spawnOre(x)
-        count++
-        if (Math.random() < 0.35 && count < 20) {
-          x += 40 + Math.random() * 30
-          this.spawnOre(x)
-          count++
-        }
-      }
-      x += oreGap()
+      x += gap
     }
+  }
+
+  /** Where the first deposit sits when `?scroll=0`, clear of the beam. */
+  private depositAnchor(): number {
+    return SHIP_X + 160
+  }
+
+  /** Native stride. A phone-width pass shows one or two deposits. */
+  private depositGap(): number {
+    return 280
   }
 
   update(realDt: number): void {
@@ -244,13 +366,34 @@ export class MiningController extends ScriptBehaviour {
     this.hitStop = stepped.remaining
     const dt = stepped.simDt
     if (this.hitStop > 0) return // frozen: the whole scene holds for the impact
-    const dx = this.scrollSpeed * this.devSpeed * dt
+    const dx = (this.pinScroll ? 0 : this.scrollSpeed) * this.devSpeed * dt
     this.totalScrollX += dx
 
+    const visibleChipLabels: Array<{ ore: OreEntity; center: number; halfWidth: number }> = []
     for (const ore of this.ores) {
       ore.go.transform.position.x -= dx
+      if (ore.frames && ore.frames.length > 1 && ore.sprite) {
+        ore.animTime += dt
+        const frame = ore.frames[Math.floor(ore.animTime / 0.6) % ore.frames.length]
+        if (ore.sprite.texture !== frame) ore.sprite.texture = frame
+      }
       if (ore.sprite) ore.sprite.x = ore.go.transform.position.x
-      if (ore.label) ore.label.x = ore.go.transform.position.x
+      if (ore.chip) ore.chip.x = ore.go.transform.position.x
+      if (ore.label) {
+        const halfLabel = ore.label.width * (ore.chip ? 0.58 : 0.5)
+        const oreX = ore.go.transform.position.x
+        if ((ore.chip || !(ore.label instanceof Text)) && (oreX < -halfLabel || oreX > this.opts.worldWidth + halfLabel)) {
+          ore.label.visible = false
+        } else {
+          ore.label.visible = true
+          const minLabelX = halfLabel + 20
+          const maxLabelX = Math.max(minLabelX, this.opts.worldWidth - halfLabel - 20)
+          ore.label.x = Math.min(maxLabelX, Math.max(minLabelX, oreX))
+          if (!ore.chip || (ore.phase !== 'fall' && ore.phase !== 'land')) {
+            visibleChipLabels.push({ ore, center: ore.label.x, halfWidth: halfLabel })
+          }
+        }
+      }
 
       if (ore.flashTimer > 0) {
         ore.flashTimer = Math.max(0, ore.flashTimer - dt)
@@ -258,6 +401,18 @@ export class MiningController extends ScriptBehaviour {
           this.applyTint(ore, this.damagedTint(ore))
         }
       }
+    }
+
+    visibleChipLabels.sort((a, b) => a.center - b.center)
+    const laneEnds: number[] = []
+    for (const label of visibleChipLabels) {
+      let lane = 0
+      while (lane < laneEnds.length && label.center - label.halfWidth < laneEnds[lane] + 8) lane++
+      if (lane === laneEnds.length) laneEnds.push(Number.NEGATIVE_INFINITY)
+      laneEnds[lane] = label.center + label.halfWidth
+      // Chip labels sit far apart; deposit name pills only need to clear each other.
+      const step = label.ore.chip ? Math.max(160, label.ore.label!.height + 24) : label.ore.label!.height + 4
+      label.ore.label!.y = label.ore.labelBaseY - lane * step
     }
 
     this.updateDebris(dt)
@@ -268,7 +423,7 @@ export class MiningController extends ScriptBehaviour {
     const needsSpawn = !last || last.go.transform.position.x < this.opts.worldWidth + 120
     if (needsSpawn && this.ores.length < MAX_ORES + 8) {
       const lastX = last ? last.go.transform.position.x : 0
-      this.spawnOre(lastX + oreGap())
+      this.spawnOre(lastX + this.depositGap())
     }
 
     for (const laser of this.lasers) {
@@ -284,9 +439,19 @@ export class MiningController extends ScriptBehaviour {
     this.opts.onScroll?.(this.totalScrollX)
 
     const needed = this.opts.neededMineralsRef?.current
-    const anyNear = this.ores.some(o => o.go.active
-      && Math.abs(o.go.transform.position.x - SHIP_X) < HIT_TOLERANCE
-      && (!needed || needed.has(o.mineral)))
+    const targetOres = this.ores.filter(o => o.go.active && o.fallSpeed === undefined && (!needed || needed.size === 0 || needed.has(o.mineral)))
+    const target = targetOres.reduce<OreEntity | null>((best, ore) => {
+      if (!best) return ore
+      return Math.abs(ore.go.transform.position.x - SHIP_X) < Math.abs(best.go.transform.position.x - SHIP_X) ? ore : best
+    }, null)
+    const targetDistance = target ? Math.abs(target.go.transform.position.x - SHIP_X) : Number.POSITIVE_INFINITY
+    const inRange = targetDistance < HIT_TOLERANCE
+    const targetState = target ? `${target.mineral}:${inRange}` : ''
+    if (targetState !== this.targetCueState) {
+      this.targetCueState = targetState
+      this.opts.onTargetCue?.(target?.mineral ?? null, inRange)
+    }
+    const anyNear = inRange
     if (anyNear !== this.oreNearState) {
       this.oreNearState = anyNear
       this.opts.onOreNearby?.(anyNear)
@@ -297,14 +462,14 @@ export class MiningController extends ScriptBehaviour {
     const go = new GameObject(`laser-${this.laserCounter++}`, 'Laser', {
       position: { x: SHIP_X, y: (this.opts.shipY ?? SHIP_Y) + 16 },
     })
-    go.addComponent(
-      new ShapeRenderer(
-        { shape: 'rect', width: LASER_SIZE.width, height: LASER_SIZE.height, color: LASER_COLOR },
-        this.opts.container
-      )
+    const bolt = new ShapeRenderer(
+      { shape: 'rect', width: LASER_SIZE.width, height: LASER_SIZE.height, color: this.opts.beamColor ?? LASER_COLOR },
+      this.opts.container
     )
+    go.addComponent(bolt)
     this.gameObject.addChild(go)
     go.start()
+    if (this.opts.pixelBeam) bolt.setShown(false)
     this.lasers.push({ go, prevY: go.transform.position.y })
   }
 
@@ -437,7 +602,7 @@ export class MiningController extends ScriptBehaviour {
     }
     this.gameObject.addChild(go)
     this.ores.push({
-      go, renderer, sprite, label: art ? null : this.createLabel(mineral, x, y, 11), mineral,
+      go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, 11), labelBaseY: y, mineral,
       hp: 1, maxHp: 1, radius: art ? DEBRIS_RADIUS : 11, flashTimer: 0, mineralColor,
       fallSpeed: DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor),
       phase: 'fall', animTime: 0, variant,
@@ -566,6 +731,41 @@ export class MiningController extends ScriptBehaviour {
     return { mineral: this.opts.minerals[this.oreCounter % this.opts.minerals.length], seeded: false }
   }
 
+  /**
+   * Pixel deposits follow the native burial (26 source px under the surface)
+   * and step up and down so they are not one line under the crust.
+   * Higher tiers sit below the previous laser so a stock beam cannot mine them.
+   */
+  private pixelDepositDepth(tier: number, salt: number): number {
+    const px = this.opts.pixelScale ?? 1
+    const wobble = (salt % (tier <= 1 ? 5 : 4)) * 4 * px
+    // Native center, then deeper. The shallowest sprite top stays a full crust under the lip.
+    const tier1 = PIXEL_BURIAL_SRC * px + wobble
+    if (tier <= 1) return this.clampPixelDepth(tier1, 0, px)
+    const laser1 = this.pixelLaserReach(1)
+    if (tier === 2) return this.clampPixelDepth(laser1 + 14 + wobble, laser1 + 14, px)
+    const laser2 = this.pixelLaserReach(2)
+    return this.clampPixelDepth(laser2 + 19 + wobble, laser2 + 19, px)
+  }
+
+  /** How far a pixel beam travels: just past that tier's deepest varied deposit. */
+  private pixelLaserReach(tier: number): number {
+    const px = this.opts.pixelScale ?? 1
+    const laser1 = PIXEL_BURIAL_SRC * px + 16 * px + 14
+    if (tier <= 1) return laser1
+    const laser2 = laser1 + 14 + 12 * px + 17
+    if (tier === 2) return laser2
+    return laser2 + 19 + 12 * px + 21
+  }
+
+  /** Keep the sprite inside the soil without pulling a locked tier up into the beam above it. */
+  private clampPixelDepth(depth: number, floor: number, px: number): number {
+    const surface = this.opts.surfaceY ?? SURFACE_Y
+    const room = this.opts.worldHeight - surface - 7 * px
+    if (room <= floor) return Math.max(depth, floor)
+    return Math.min(Math.max(depth, floor), room)
+  }
+
   private spawnOre(x: number): void {
     const picked = this.pickMineral()
     const mineral = picked.mineral
@@ -573,21 +773,35 @@ export class MiningController extends ScriptBehaviour {
     const cfg = ORE_TIER[tier] ?? ORE_TIER[1]
     const radius = cfg.radius
     const maxHp = cfg.maxHp
-    const depth = picked.seeded
+    let depth = picked.seeded
       ? 8 + Math.random() * 14
       : cfg.depthMin + Math.random() * (cfg.depthMax - cfg.depthMin)
+    if (this.opts.pixelScale) depth = this.pixelDepositDepth(tier, this.oreCounter + mineralSalt(mineral))
     const y = (this.opts.surfaceY ?? SURFACE_Y) + depth
 
     const colorHex = this.opts.mineralColors[mineral] ?? ORE_FILL
     const mineralColor = parseInt(colorHex.replace('#', ''), 16)
 
-    const go = new GameObject(`ore-${this.oreCounter++}`, 'Ore', { position: { x, y } })
+    const oreIndex = this.oreCounter++
+    const go = new GameObject(`ore-${oreIndex}`, 'Ore', { position: { x, y } })
 
-    const texture = this.opts.mineralTextures?.[mineral]
+    const frames = this.opts.depositFrames
+    const art = this.opts.depositArtFor?.(mineral)
+    const texture = art ?? frames?.[0] ?? this.opts.mineralTextures?.[mineral]
     let renderer: ShapeRenderer | null = null
     let sprite: Sprite | null = null
 
-    if (texture) {
+    if (texture && frames && this.opts.pixelScale) {
+      sprite = new Sprite(texture)
+      sprite.anchor.set(0.5)
+      // Deposits v2 art is authored at 64px; draw it near the old 22px chip footprint.
+      if (art) art.source.scaleMode = 'nearest'
+      sprite.scale.set(this.opts.pixelScale)
+      sprite.tint = 0xffffff
+      sprite.x = x
+      sprite.y = y
+      this.opts.container.addChild(sprite)
+    } else if (texture) {
       sprite = new Sprite(texture)
       const size = radius * 2
       sprite.width = size
@@ -599,6 +813,7 @@ export class MiningController extends ScriptBehaviour {
       sprite.tint = mineralColor
       sprite.x = x
       sprite.y = y
+      if (this.opts.chipFill != null) sprite.visible = false
       this.opts.container.addChild(sprite)
     } else {
       const shape: ShapeKind = this.opts.mineralShapes?.[mineral] ?? 'circle'
@@ -616,28 +831,86 @@ export class MiningController extends ScriptBehaviour {
       go.addComponent(renderer)
       go.start()
       renderer.setTint(mineralColor)
+      if (this.opts.chipFill != null) renderer.setShown(false)
     }
 
-    const label = this.createLabel(mineral, x, y, radius)
+    const surface = this.opts.surfaceY ?? SURFACE_Y
+    const parts = blobParts(mineral, oreIndex)
+    const chip = this.opts.chipFill != null ? this.createChip(x, surface, mineral, parts) : null
+    const labelY = chip ? surface - 50 : y + (frames && this.opts.pixelScale ? 12 : 0)
+    const label = this.createLabel(mineral, x, labelY, radius)
 
     this.gameObject.addChild(go)
-    this.ores.push({ go, renderer, sprite, label, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0 })
+    this.ores.push({ go, renderer, sprite, label, labelBaseY: labelY, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: art ? null : frames ?? null })
   }
 
-  /** Ore sym label, sized to fit inside the node — longer syms (`H2O`) shrink. */
+  /** Faceted nodules, seams and crystals inside the soil, with a sym disc on the mass. */
+  private createChip(x: number, y: number, mineral: string, parts: OreBlob[]): Graphics {
+    const body = oreFleck(mineral)
+    const avg = (((body >> 16) & 255) + ((body >> 8) & 255) + (body & 255)) / 3
+    const lit = mixHex(body, 0xffffff, avg < 70 ? 0.62 : 0.34)
+    const shade = mixHex(body, 0x000000, avg < 70 ? 0.28 : 0.45)
+    const g = new Graphics()
+    g.scale.set(0.42)
+    let glowX = 0
+    let glowY = 0
+    let glowN = 0
+    for (const part of parts) {
+      glowX += part.x + part.w / 2
+      glowY += part.y + part.h / 2
+      glowN += 1
+    }
+    if (glowN > 0) {
+      g.ellipse(glowX / glowN, glowY / glowN, 36, 18).fill({ color: lit, alpha: 0.28 })
+    }
+    for (const part of parts) this.paintFacet(g, part, body, lit, shade)
+    const ink = this.opts.labelInk ?? ORE_LABEL_FILL
+    const disc = ink === ORE_LABEL_FILL ? 0x10141c : 0xf6f3ea
+    const ring = ink === ORE_LABEL_FILL ? 0xf6f3ea : 0x10141c
+    g.circle(0, LABEL_DEPTH, 16).fill(ring)
+    g.circle(0, LABEL_DEPTH, 13).fill(disc)
+    g.x = x
+    g.y = y
+    this.opts.container.addChild(g)
+    return g
+  }
+
+  /** One buried crystal: shade, body, and a highlight. The box is already under the surface. */
+  private paintFacet(g: Graphics, part: OreBlob, body: number, lit: number, shade: number): void {
+    const { x, y, w, h } = part
+    const cx = x + w / 2
+    g.poly([x, y + 2, cx, y, x + w, y + 2, x + w, y + h, x, y + h]).fill(shade)
+    g.poly([cx, y, x + w, y + 2, x + w, y + h * 0.72, cx, y + h * 0.55]).fill(body)
+    g.poly([
+      x + w * 0.22, y + Math.max(4, h * 0.22),
+      cx, y + 1,
+      x + w * 0.7, y + Math.max(4, h * 0.2),
+      cx, y + h * 0.42,
+    ]).fill(lit)
+  }
+
+  /** Element sym above the outcrop. Longer syms (`H2O`) use a smaller size. */
   private createLabel(mineral: string, x: number, y: number, radius: number): Text | null {
     const sym = this.opts.mineralSyms?.[mineral]
     if (!sym) return null
+    const name = this.opts.mineralNames?.[mineral]
+    if (name && this.opts.depositArtFor) {
+      // Clean pill: mineral name + rough amount (one hit-set yields one unit) (SSL-536).
+      const tag = depositTag(`${name} · ${sym} ×1`, x, y)
+      this.opts.container.addChild(tag)
+      return tag as unknown as Text
+    }
 
-    const fontSize = Math.max(7, Math.round(radius * (sym.length >= 3 ? 0.66 : 0.95)))
+    const fontSize = Math.max(14, Math.round(radius * (sym.length >= 3 ? 1.15 : 1.7)))
+    const ink = this.opts.labelInk ?? ORE_LABEL_FILL
     const label = new Text({
       text: sym,
       style: {
         fontFamily: 'monospace',
         fontSize,
         fontWeight: 'bold',
-        fill: ORE_LABEL_FILL,
-        stroke: { color: ORE_LABEL_HALO, width: 2, join: 'round' },
+        fill: ink,
+        stroke: { color: ink === ORE_LABEL_FILL ? ORE_LABEL_HALO : 0xffffff, width: 4, join: 'round' },
       },
     })
     label.anchor.set(0.5)
@@ -669,15 +942,20 @@ export class MiningController extends ScriptBehaviour {
         ore.hp -= 1
         laser.go.active = false
         this.opts.onHit?.()
+        // Impact: small spark burst on every hit (SSL-538).
+        this.spawnParticleBurst(ox, ore.chip ? ore.chip.y : oy, 0xd8f2ff, ore.radius * 0.6)
         this.freeze(ore.hp <= 0 ? 'collect' : 'hit')
 
         if (ore.hp <= 0) {
           ore.go.active = false
           if (ore.phase) this.playDebrisMine(ore)
           if (ore.sprite) ore.sprite.visible = false
+          if (ore.chip) ore.chip.visible = false
           if (ore.label) ore.label.visible = false
-          if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor, ore.radius)
-          this.spawnPickup(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor)
+          const popY = ore.chip ? ore.chip.y : ore.go.transform.position.y
+          if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, popY, ore.mineralColor, ore.radius)
+          this.spawnPickup(ore.go.transform.position.x, popY, ore.mineralColor)
+          this.spawnPopup(ore.go.transform.position.x, popY - 18, `+1 ${this.opts.mineralSyms?.[ore.mineral] ?? ore.mineral}`)
           this.opts.onCollect(ore.mineral)
         } else {
           ore.flashTimer = FLASH_DURATION
@@ -689,8 +967,11 @@ export class MiningController extends ScriptBehaviour {
   }
 
   private applyTint(ore: OreEntity, tint: number): void {
+    if (ore.chip) ore.chip.tint = tint
     if (ore.sprite) {
-      ore.sprite.tint = tint
+      if (!this.opts.pixelScale) ore.sprite.tint = tint
+      // Untinted pixel art flashes by brightening its alpha pulse instead of a tint.
+      else ore.sprite.alpha = tint === 0xffffff ? 0.6 : 1
     } else {
       ore.renderer?.setTint(tint)
     }
@@ -709,11 +990,15 @@ export class MiningController extends ScriptBehaviour {
         this.opts.container.removeChild(ore.label)
         ore.label.destroy()
       }
+      if (ore.chip) {
+        this.opts.container.removeChild(ore.chip)
+        ore.chip.destroy()
+      }
       return false
     })
 
     const tier = this.opts.maxLaserTier ?? 3
-    const laserDepth = LASER_DEPTH_BY_TIER[tier] ?? LASER_DEPTH_BY_TIER[3]
+    const laserDepth = this.opts.pixelScale ? this.pixelLaserReach(tier) : (LASER_DEPTH_BY_TIER[tier] ?? LASER_DEPTH_BY_TIER[3])
     const laserFloor = (this.opts.surfaceY ?? SURFACE_Y) + laserDepth
     this.lasers = this.lasers.filter(laser => {
       if (laser.go.active && laser.go.transform.position.y < laserFloor) return true
@@ -739,6 +1024,24 @@ export class MiningController extends ScriptBehaviour {
       const life = 0.3 + Math.random() * 0.15
       this.particles.push({ g, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life, maxLife: life })
     }
+  }
+
+  /** Floating `+1 Pt` that drifts up and fades. */
+  private spawnPopup(x: number, y: number, text: string): void {
+    const t = new Text({ text, style: { fontFamily: 'Oxanium, system-ui, sans-serif', fontSize: 16, fontWeight: '800', fill: 0xf4f1ea, stroke: { color: 0x1a2a3c, width: 4, join: 'round' } } })
+    t.anchor.set(0.5)
+    t.x = x
+    t.y = y
+    this.opts.container.addChild(t)
+    let life = 0.8
+    const tick = () => {
+      life -= 1 / 60
+      t.y -= 0.6
+      t.alpha = Math.max(0, life / 0.8)
+      if (life <= 0) { this.opts.container.removeChild(t); t.destroy(); return }
+      requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
   }
 
   private freeze(kind: HitKind): void {

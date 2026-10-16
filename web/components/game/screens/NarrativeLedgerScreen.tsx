@@ -20,11 +20,9 @@ export default function NarrativeLedgerScreen({ onBack }: NarrativeLedgerScreenP
       <div className={styles.shell}>
         <header className={styles.header}>
           <div>
-            <div className={styles.eyebrow}>KES-285 · INTERNAL PRODUCT MAP</div>
-            <h1>Narrative Ledger</h1>
             <p>One source of truth for the player promise, the systems behind it, and what is actually built.</p>
           </div>
-          <button className={styles.backButton} onClick={onBack}>Back to base</button>
+          <button className={styles.backButton} onClick={onBack}>Back</button>
         </header>
 
         <section className={styles.command} aria-labelledby="launch-day-title">

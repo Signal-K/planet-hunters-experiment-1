@@ -1,12 +1,13 @@
 'use client'
 
 import type { Player, Screen } from '@/lib/game-types'
+import { missionResumeScreen } from '@/lib/mission-resume'
 
 // Screens that are themselves part of the active-mission flow — the ticker
 // would be redundant (or would float over live mining/transit UI) if shown
 // on any of these, so it only surfaces once the player has actually
 // navigated away to Base/Missions/Atlas/Build/Market.
-const MISSION_FLOW_SCREENS: Screen[] = ['transit', 'mining', 'rover-mining', 'delivery', 'debrief']
+const MISSION_FLOW_SCREENS: Screen[] = ['transit', 'mining', 'rover-survey', 'delivery', 'debrief']
 
 interface MissionTickerProps {
   player: Player
@@ -29,7 +30,7 @@ export default function MissionTicker({ player, screen, onResume }: MissionTicke
   return (
     <button
       data-testid="mission-ticker"
-      onClick={() => onResume(player.missionPhase ?? 'transit')}
+      onClick={() => onResume(missionResumeScreen(player))}
       style={{
         position: 'absolute',
         left: 14,

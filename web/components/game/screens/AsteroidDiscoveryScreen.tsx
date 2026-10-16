@@ -84,8 +84,8 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       <InstrumentStandbyViewport
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / LOCKED"
-        title="Deep Space Telescope"
+        eyebrow="LOCKED"
+        title="Space Telescope"
         onBack={onBack}
         status="LOCKED"
         messageTitle="Free Operations Required"
@@ -99,13 +99,13 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       <InstrumentStandbyViewport
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / TELESCOPE REQUIRED"
-        title="Deep Space Telescope"
+        eyebrow="TELESCOPE REQUIRED"
+        title="Space Telescope"
         onBack={onBack}
         status="NO TELESCOPE"
-        messageTitle="Launch Deep Space Telescope"
-        messageBody="Deploy the Deep Space Telescope from the Launchpad to start receiving NEOCP asteroid candidates."
-        answers={<PrimaryBtn testId="launch-deep-space-telescope-btn" onClick={onLaunchTelescope}>OPEN LAUNCHPAD</PrimaryBtn>}
+        messageTitle="Launch Space Telescope"
+        messageBody="Deploy the Space Telescope from the Launchpad to start receiving NEOCP asteroid candidates."
+        answers={<PrimaryBtn testId="launch-deep-space-telescope-btn" onClick={onLaunchTelescope}>PREPARE LAUNCH</PrimaryBtn>}
       />
     )
   }
@@ -115,8 +115,8 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       <InstrumentStandbyViewport
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / DAILY DOWNLINK"
-        title="Deep Space Telescope"
+        eyebrow="DAILY DOWNLINK"
+        title="Space Telescope"
         onBack={onBack}
         status="ACQUIRING"
         messageTitle="Acquiring Signal"
@@ -131,8 +131,8 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       <InstrumentStandbyViewport
         testId="asteroid-discovery-standby"
         sceneClassName="ln-scene-asteroid-discovery"
-        eyebrow="BASE / DAILY DOWNLINK"
-        title="Deep Space Telescope"
+        eyebrow="DAILY DOWNLINK"
+        title="Space Telescope"
         onBack={onBack}
         status={loadFailed ? 'FEED OFFLINE' : 'EMPTY FEED'}
         messageTitle={misconfigured ? 'Feed Not Configured' : loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Candidate'}

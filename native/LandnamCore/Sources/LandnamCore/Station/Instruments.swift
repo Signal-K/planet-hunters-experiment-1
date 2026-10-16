@@ -10,7 +10,7 @@ public enum Instruments {
     private static func orbitTarget(_ id: String, _ brief: String) -> Target {
         Target(id: id, name: "Earth Orbit", type: .planet, orbit: 1, difficulty: "L1", brief: brief, minerals: [])
     }
-    public static let transitTarget = orbitTarget(transitTargetId, "Low Earth orbit deployment lane for a transit telescope monitored from Base operations.")
+    public static let transitTarget = orbitTarget(transitTargetId, "Low Earth orbit deployment lane for a space telescope monitored from Base operations.")
     public static let deepSpaceTarget = orbitTarget(deepSpaceTargetId, "High-orbit survey lane for calibrating a long-baseline instrument against the Minor Planet Center feed.")
     public static let saturnTarget = orbitTarget(saturnTargetId, "Orbital lane for a Saturn imager that downlinks archived Cassini frames for storm-cloud review.")
 
@@ -30,18 +30,14 @@ public enum Instruments {
         func add(_ t: Target) { if !ids.contains(t.id) && !c.targets.contains(where: { $0.id == t.id }) { c.targets.append(t) } }
         func add(_ m: Mission) { if !missionIds.contains(m.id) { c.missions.append(m) } }
 
-        if p.freeOperations && p.transitSatelliteLaunchedAt == nil || missionId == transitMissionId || targetId == transitTargetId {
+        // A satellite or telescope is run from the control station, so none is offered until one is built.
+        let hasStation = p.placed.contains("control-station")
+        if p.freeOperations && hasStation && !p.telescopeLaunched || missionId == transitMissionId || targetId == transitTargetId {
             add(transitTarget)
-            add(launch(transitMissionId, "Launch Transit Telescope", "Deploy your own TESS-class telescope into Earth orbit. Its daily instrument feed becomes available for classification.",
-                       target: transitTargetId, name: "Transit Telescope", instrument: "transit-telescope", outcome: "Transit telescope online · daily instrument feed unlocked", sequence: seq))
+            add(launch(transitMissionId, "Launch Space Telescope", "Deploy your own TESS-class telescope into Earth orbit. Its daily instrument feed becomes available for classification.",
+                       target: transitTargetId, name: "Space Telescope", instrument: "transit-telescope", outcome: "Space telescope online · daily instrument feed unlocked", sequence: seq))
         }
-        if p.freeOperations && p.deepSpaceTelescopeLaunchedAt == nil && !p.deepSpaceTelescopeBuilt && !p.placed.contains("deep-space-telescope")
-            || missionId == deepSpaceMissionId || targetId == deepSpaceTargetId {
-            add(deepSpaceTarget)
-            add(launch(deepSpaceMissionId, "Launch Deep Space Telescope", "Deploy the Deep Space Telescope into Earth orbit. Its independent instrument feed opens asteroid-discovery classification.",
-                       target: deepSpaceTargetId, name: "Deep Space Telescope", instrument: "deep-space-telescope", outcome: "Deep Space Telescope online · asteroid discovery unlocked", sequence: seq))
-        }
-        if p.freeOperations && p.saturnImagerLaunchedAt == nil || missionId == saturnMissionId || targetId == saturnTargetId {
+        if p.freeOperations && hasStation && p.saturnImagerLaunchedAt == nil || missionId == saturnMissionId || targetId == saturnTargetId {
             add(saturnTarget)
             add(launch(saturnMissionId, "Launch Saturn Imager", "Deploy a Saturn imager into Earth orbit. Its daily feed delivers real Cassini frames to check for storm clouds.",
                        target: saturnTargetId, name: "Saturn Imager", instrument: "saturn-imager", outcome: "Saturn imager online · Cassini storm-cloud feed unlocked", sequence: seq))

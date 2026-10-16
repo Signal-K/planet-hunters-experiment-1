@@ -34,7 +34,7 @@ export const OWN_PROGRAM_CLIENT_ID = 'mission-control'
 /**
  * True when the mission is the player's own operation rather than work for a
  * client: self-directed Free Ops runs, and anything the player launches for
- * their own program (the transit telescope and any future satellite launch).
+ * their own program (the space telescope and any future satellite launch).
  * Those deploy *the player's* entities — they must never be presented as a
  * client request, carry a client premium, or earn client affinity.
  */
@@ -75,8 +75,8 @@ export function isFreeHaulEligibleMission(mission: Mission): boolean {
 
 /**
  * During guided onboarding, the board remains the sequence entry point. Once
- * Free Ops begins, the Mission Board is strictly client work; owned flights
- * live under Launchpad → Your Program.
+ * Free Ops begins, the Contracts tab is strictly client work; owned flights
+ * live on the Mission Board Program tab.
  */
 export function isMissionBoardMission(mission: Mission, freeOperations: boolean): boolean {
   return !freeOperations || !isOwnProgramMission(mission)

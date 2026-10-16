@@ -1,7 +1,7 @@
 import SwiftUI
 import LandnamCore
 
-/// Transit Telescope classify screen (mirrors web TessDiscoveryScreen, SSL-497): drag across each
+/// Space Telescope classify screen (mirrors web TessDiscoveryScreen, SSL-497): drag across each
 /// dip on the light curve, then Confirm Transit, Mark Noise or Skip. Sector chips and the SECTOR
 /// command window the curve the same way the web does.
 struct TessDiscoveryScreen: View {
@@ -11,6 +11,7 @@ struct TessDiscoveryScreen: View {
     var candidate: TessCandidate?
     var inspect: String?
     @State private var ranges: [TransitRange] = []
+    @State private var needsMark = false
     @State private var sector = 0
     @State private var dragArmed = true
 
@@ -18,19 +19,28 @@ struct TessDiscoveryScreen: View {
         self.candidate = candidate; self.inspect = inspect; _ranges = State(initialValue: marks)
     }
 
+    /// Scan training try: the first classification is a local training subject, no telescope or Free Ops needed.
+    private var training: Bool {
+        candidate == nil && !store.player.freeOperations
+            && (store.player.flightPlan.currentTry == "scan" || store.player.tessClassifications[Tess.trainingCandidate.id] != nil)
+    }
+
     private var today: TessCandidate? {
-        candidate ?? Tess.today(candidates: feed.tess, player: store.player, dateKey: Saturn.dateKey(store.now), inspect: inspect)
+        if training { return store.player.tessClassifications[Tess.trainingCandidate.id] == nil ? Tess.trainingCandidate : nil }
+        return candidate ?? Tess.today(candidates: feed.tess, player: store.player, dateKey: Saturn.dateKey(store.now), inspect: inspect)
     }
 
     var body: some View {
         Group {
-            if candidate == nil && !store.player.freeOperations {
+            if candidate == nil && !training && !store.player.freeOperations {
                 gate("Free Operations Required", "TESS candidate downlinks unlock after the starter contract arc.")
-            } else if candidate == nil && store.player.transitSatelliteLaunchedAt == nil {
-                gate("Launch Transit Telescope", "Deploy your own telescope from the Launchpad. Its daily data will downlink here after the flight.",
+            } else if candidate == nil && !training && store.player.transitSatelliteLaunchedAt == nil {
+                gate("Launch Space Telescope", "Deploy your own telescope from the Launchpad. Its daily data will downlink here after the flight.",
                      action: ("OPEN LAUNCHPAD", { store.go(.launchpad) }))
             } else if let c = today {
                 classify(c)
+            } else if training {
+                gate("Transit Logged", "Your classification is recorded. The scan try is complete.", action: ("BACK TO BASE", { store.go(.hub) }))
             } else if feed.tessPhase == .failed {
                 gate("Live Feed Unavailable", "The shared TESS subject feed could not be reached.", action: ("RETRY DOWNLINK", { Task { await feed.loadTess(force: true) } }))
             } else if feed.tessPhase == .ready {
@@ -39,11 +49,11 @@ struct TessDiscoveryScreen: View {
                 gate("Acquiring Signal", "Pulling the day's unresolved TESS transit anomaly from the shared feed.")
             }
         }
-        .task { if candidate == nil { await feed.loadTess() } }
+        .task { if candidate == nil && !training { await feed.loadTess() } }
     }
 
     private func gate(_ title: String, _ message: String, action: (String, () -> Void)? = nil) -> some View {
-        InstrumentGate(screenTitle: "Transit Telescope", title: title, message: message, action: action.map { (title: $0.0, run: $0.1) })
+        InstrumentGate(screenTitle: "Space Telescope", title: title, message: message, action: action.map { (title: $0.0, run: $0.1) })
     }
 
     private func classify(_ c: TessCandidate) -> some View {
@@ -53,7 +63,8 @@ struct TessDiscoveryScreen: View {
         let window = sectors[min(sector, sectors.count - 1)]
         let marks = saved?.ranges ?? ranges
         let period = Tess.periodFromRanges(marks)
-        let caption = ([window.label, "\(marks.count) MARK\(marks.count == 1 ? "" : "S")"] + (period.map { [String(format: "PERIOD %.2fd", $0)] } ?? [])).joined(separator: " · ")
+        let prompt = saved == nil && marks.isEmpty ? (needsMark ? "DRAG ACROSS THE DIP FIRST" : "DRAG ACROSS THE DIP") : nil
+        let caption = prompt ?? ([window.label, "\(marks.count) MARK\(marks.count == 1 ? "" : "S")"] + (period.map { [String(format: "PERIOD %.2fd", $0)] } ?? [])).joined(separator: " · ")
         return InstrumentViewport(
             eyebrow: "Instrument data feed · Daily downlink", title: c.toi,
             status: saved == nil ? "Review" : "Saved", caption: caption,
@@ -69,7 +80,7 @@ struct TessDiscoveryScreen: View {
             },
             well: {
                 LightCurveChart(points: window.points, domain: Self.domain(points), marks: marks, locked: saved != nil || !dragArmed) { r in
-                    ranges.append(r)
+                    ranges.append(r); needsMark = false
                 }
             },
             overlay: { EmptyView() },
@@ -78,14 +89,20 @@ struct TessDiscoveryScreen: View {
                     Panel(accent: Theme.teal) { Text("Annotation saved").font(AppFont.display(16)) }
                 } else {
                     HStack(spacing: 10) {
-                        InstrumentAnswerButton(title: "Confirm transit", enabled: !ranges.isEmpty, primary: true) { store.classifyTess(c.id, verdict: .planet, ranges: ranges, candidate: c) }
-                        InstrumentAnswerButton(title: "Mark noise", enabled: !ranges.isEmpty) { store.classifyTess(c.id, verdict: .notPlanet, ranges: ranges, candidate: c) }
+                        InstrumentAnswerButton(title: "Confirm transit", primary: true, dim: ranges.isEmpty) { verdict(.planet, c) }
+                        InstrumentAnswerButton(title: "Mark noise", dim: ranges.isEmpty) { verdict(.notPlanet, c) }
                         InstrumentAnswerButton(title: "Skip") { store.classifyTess(c.id, verdict: .unsure, ranges: ranges, candidate: c) }
                     }
                 }
             },
             tool: { tools(sectors: sectors, saved: saved != nil) })
         .id(c.id)
+    }
+
+    /// A verdict that needs a marked dip explains itself instead of sitting dead.
+    private func verdict(_ v: TessVerdict, _ c: TessCandidate) {
+        if v != .unsure && ranges.isEmpty { needsMark = true; return }
+        store.classifyTess(c.id, verdict: v, ranges: ranges, candidate: c)
     }
 
     @ViewBuilder private func tools(sectors: [SectorWindow], saved: Bool) -> some View {

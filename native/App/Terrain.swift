@@ -114,9 +114,6 @@ struct TerrainScene: View {
     var ground: Double = 0.28
     /// Footprints (scene coordinates) that outcrops and foreground rocks must stay out of.
     var exclusions: [CGRect] = []
-    /// The web shows the outlined planet only on the wide establishing shot.
-    var showsPlanet = true
-
     /// How strongly a band is washed toward the haze colour (web `hazeFor`): most of aerial perspective
     /// happens in the first stretch of distance.
     static func haze(depth: Double) -> Double {
@@ -136,10 +133,6 @@ struct TerrainScene: View {
                 }
                 groundPlane(w: w, height: groundH).position(x: w / 2, y: groundY + groundH / 2).zIndex(9)
                 road(w: w, h: h).zIndex(9)
-                if showsPlanet {
-                    let side = min(w * 0.5, 300)
-                    Planet().frame(width: side, height: side).position(x: w * 1.12 - side / 2, y: h * 0.16 + side / 2).zIndex(20)
-                }
             }
             .frame(width: w, height: h)
         }
@@ -222,28 +215,5 @@ private extension Color {
         a.usingColorSpace(.sRGB)?.getRed(&r1, green: &g1, blue: &b1, alpha: &a1); b.usingColorSpace(.sRGB)?.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
         #endif
         return Color(.sRGB, red: Double(r1 + (r2 - r1) * t), green: Double(g1 + (g2 - g1) * t), blue: Double(b1 + (b2 - b1) * t))
-    }
-}
-
-/// Web `PlanetBackdrop`: a large outlined planet with three bands (viewBox 100). Built from shapes, not Canvas,
-/// so `ImageRenderer` snapshots show it.
-private struct Planet: View {
-    var body: some View {
-        GeometryReader { geo in
-            let s = geo.size.width / 100
-            ZStack(alignment: .topLeading) {
-                Circle().fill(Theme.blue.opacity(0.35)).frame(width: 96 * s, height: 96 * s).offset(x: 5 * s, y: 5 * s)
-                Circle().fill(Theme.hex(0xDFE9F3)).frame(width: 96 * s, height: 96 * s).offset(x: 2 * s, y: 2 * s)
-                ZStack(alignment: .topLeading) {
-                    ForEach([(26.0, 0x42A6DF), (43, 0x168A80), (60, 0x42A6DF)], id: \.0) { y, c in
-                        Rectangle().fill(Theme.hex(UInt32(c), 0.45)).frame(width: 100 * s, height: 9 * s).offset(y: y * s)
-                    }
-                }
-                .frame(width: 100 * s, height: 100 * s, alignment: .topLeading)
-                .mask { Circle().frame(width: 96 * s, height: 96 * s).offset(x: 2 * s, y: 2 * s).frame(width: 100 * s, height: 100 * s, alignment: .topLeading) }
-                Circle().stroke(Theme.hex(0x0F2436), lineWidth: 1.2 * s).frame(width: 96 * s, height: 96 * s).offset(x: 2 * s, y: 2 * s)
-            }
-        }
-        .allowsHitTesting(false)
     }
 }

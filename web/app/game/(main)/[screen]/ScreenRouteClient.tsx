@@ -1,0 +1,47 @@
+'use client'
+
+import { use, useEffect } from 'react'
+import { notFound } from 'next/navigation'
+import { useGame } from '@/game-context'
+import type { Screen } from '@/lib/game-types'
+import { VALID_SCREENS } from '@/lib/game-screens'
+import { isMissionSetupInternalScreen } from '@/lib/game-route'
+
+export default function ScreenRouteClient({ params }: { params: Promise<{ screen: string }> }) {
+  const { screen } = use(params)
+  const game = useGame()
+
+  // When the URL changes (browser back/forward), sync it into game state
+  // without pushing another history entry. Gated on `hydrated` so this
+  // can't race the initial hydration effect in GameProvider (which does a
+  // plain-value setState and would otherwise silently clobber this sync —
+  // e.g. a fresh player redirected from /game to /game/hub would get stuck
+  // with game.screen desynced at 'intro', permanently hiding the tutorial
+  // coach since it keys off game.screen, not the URL).
+  useEffect(() => {
+    if (!game.hydrated) return
+    // A push the game issued is still in flight. Params from earlier, slower
+    // navigations are stale; only the awaited path may land.
+    if (game.isStaleRoute(screen)) return
+    // Until authentication is resolved, a deep URL is only the route that
+    // opened underneath the entry gate. Letting it write into GameState here
+    // races sign-in's canonical Earth Base redirect and can reopen Contracts.
+    if (game.authGateOpen || !game.authUserId) return
+    // /game/missions owns the whole creation flow. Do not let the stable URL
+    // reset an in-progress internal step during hydration or a rerender.
+    if (screen === 'missions' && isMissionSetupInternalScreen(game.screen)) return
+    if (VALID_SCREENS.has(screen as Screen) && game.screen !== screen) {
+      game.setScreenFromUrl(screen as Screen)
+    }
+  }, [screen, game.hydrated, game.authGateOpen, game.authUserId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!VALID_SCREENS.has(screen as Screen)) return notFound()
+
+  // Auth gate (sign in / sign up / continue with email) must be resolved
+  // before any gameplay screen mounts — otherwise it's a purely cosmetic
+  // overlay and the screen underneath (e.g. a saved 'missions' route) is
+  // already live and interactive. See STS-624.
+  if (game.authGateOpen) return null
+
+  return null
+}

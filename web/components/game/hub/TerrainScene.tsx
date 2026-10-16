@@ -3,6 +3,7 @@
 import React from 'react'
 import type { TimeOfDayPhase } from '@/lib/hooks/useTimeOfDay'
 import { groundOffsetCss, TERRAIN_KIT, brickSrc, type BrickPlacement, type SceneBand, type SceneComposition, type SceneRoadPath } from '@/lib/scene/terrain-kit'
+import sceneStyles from './BaseLayerScene.module.css'
 
 /**
  * Renders a `SceneComposition` from the modular Blender terrain kit (KES-260).
@@ -143,7 +144,19 @@ function Band({ band, palette }: { band: SceneBand; palette: Palette }) {
         zIndex: 1 + Math.round(band.depth * 10),
       }}
     >
-      {band.bricks.map((placement, i) => (
+      {band.id === 'clouds' ? (
+        <div className={sceneStyles.padCloudDrift}>
+          {band.bricks.map((placement, i) => (
+            <Brick
+              key={`${band.id}-${i}`}
+              placement={placement}
+              band={band}
+              haze={palette.haze}
+              hazeAmount={hazeAmount}
+            />
+          ))}
+        </div>
+      ) : band.bricks.map((placement, i) => (
         <Brick
           key={`${band.id}-${i}`}
           placement={placement}
@@ -239,10 +252,9 @@ export function TerrainScene({
           zenith colour. */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0,
-        background: `linear-gradient(180deg, ${palette.skyTop} 0%, ${palette.skyMid} 52%, ${palette.skyHorizon} 100%)`,
+        background: `radial-gradient(ellipse 42% 26% at 76% 18%, color-mix(in srgb, ${palette.skyHorizon} 48%, transparent), transparent 72%), linear-gradient(180deg, ${palette.skyTop} 0%, ${palette.skyMid} 52%, ${palette.skyHorizon} 100%)`,
         transition: 'background 1.2s ease',
       }} />
-
       {/* The sky/ground shell used to be the only thing visible while the
           terrain PNGs were cold or unavailable, which read as an empty broken
           screen. Keep a restrained illustrated horizon underneath the authored
@@ -288,7 +300,7 @@ export function TerrainScene({
           lying on it. The road remains a single connected lane at zIndex 9. */}
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0, height: 'var(--hub-ground)',
-        zIndex: 9, background: palette.ground, transition: 'background 1.2s ease',
+        zIndex: 9, background: `repeating-linear-gradient(0deg, color-mix(in srgb, ${palette.ground} 94%, var(--hub-ground-lip)) 0 2px, ${palette.ground} 2px 18px), ${palette.ground}`, transition: 'background 1.2s ease',
       }}>
         {/* Enlarged from the earlier thin seam and opacity (KES-263) so the
             ground/sky contact point reads as a clear, deliberate line —
@@ -303,7 +315,7 @@ export function TerrainScene({
             near and a far half without adding a texture. */}
         <div style={{
           position: 'absolute', left: 0, right: 0, top: '46%', bottom: 0,
-          background: palette.groundNear, transition: 'background 1.2s ease',
+          background: `repeating-linear-gradient(90deg, color-mix(in srgb, ${palette.groundNear} 92%, var(--hub-ground-lip)) 0 1px, transparent 1px 44px), ${palette.groundNear}`, transition: 'background 1.2s ease',
         }} />
       </div>
 

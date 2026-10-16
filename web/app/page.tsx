@@ -1,46 +1,41 @@
 import Link from 'next/link'
-import { PRODUCT_WORDMARK } from '@/lib/brand'
+import { WorldBackdrop } from '@/components/game/hub/WorldBackdrop'
+import { PRODUCT_DESCRIPTOR, PRODUCT_WORDMARK } from '@/lib/brand'
+import { SCENE_NAMES } from '@/lib/ui-strings'
 import styles from './landing.module.css'
+
+const PILLARS = [
+  { tag: '01', name: 'Build', line: 'Grow one launchpad into a hangar, an exchange and a fleet.' },
+  { tag: '02', name: 'Fly', line: 'Choose a rocket, fly the transit and land on real worlds.' },
+  { tag: '03', name: 'Discover', line: 'Your instruments feed real science back to your agency.' },
+]
 
 export default function Home() {
   return (
     <main className={`theme-blueprint ${styles.page}`} data-testid="landnam-landing">
-      <section className={styles.intro} aria-labelledby="landing-title">
-        <div className={styles.copyPanel}>
-          <div className={styles.eyebrow}>{PRODUCT_WORDMARK} · BASE ONLINE</div>
-          <h1 className={styles.title} id="landing-title">Run your space agency.</h1>
-          <p className={styles.copy}>Build new rockets and settle the galaxy using real science.</p>
-          <div className={styles.actions}>
-            <Link className={styles.primary} href="/game" data-testid="landing-enter-operations">
-              Continue
-            </Link>
-            <Link className={styles.secondary} href="/game?gate=signup" data-testid="landing-create-account">
-              Start new game
-            </Link>
-          </div>
-          <p className={styles.note}>Sign in when you enter operations. The briefing stays open to everyone.</p>
-        </div>
+      <WorldBackdrop />
+      <div className={styles.shade} aria-hidden="true" />
 
-        <div className={styles.yard} aria-label="Earth Base growing from one launchpad into an operating space programme">
-          <div className={styles.sky} aria-hidden="true">
+      <header className={styles.top}>
+        <span className={styles.brand}>{PRODUCT_WORDMARK}<i>{PRODUCT_DESCRIPTOR}</i></span>
+        <Link className={styles.signin} href="/game" data-testid="landing-sign-in">Sign in</Link>
+      </header>
 
-
-            <span className={styles.rocket} />
-          </div>
-          <div className={styles.ground} aria-hidden="true">
-            <span className={`${styles.structure} ${styles.launchpad}`}><i /><b /></span>
-            <span className={`${styles.structure} ${styles.silo}`}><i /><b /></span>
-            <span className={`${styles.structure} ${styles.hangar}`}><i /><b /></span>
-            <span className={`${styles.structure} ${styles.telescope}`}><i /><b /></span>
-            <span className={styles.crane}><i /><b /></span>
-          </div>
-          <ol className={styles.progress}>
-            <li><span>01</span> LAUNCHPAD</li>
-            <li><span>02</span> STORAGE</li>
-            <li><span>03</span> INSTRUMENTS</li>
-          </ol>
+      <section className={styles.hero} aria-labelledby="landing-title">
+        <p className={styles.eyebrow} aria-label={`${SCENE_NAMES.base} growing from one launchpad into an operating space programme`}>Base growing from one launchpad</p>
+        <h1 className={styles.title} id="landing-title">Run your space agency.</h1>
+        <p className={styles.copy}>Build new rockets and settle the galaxy using real science.</p>
+        <div className={styles.actions}>
+          <Link className={styles.primary} href="/game" data-testid="landing-enter-operations">Continue</Link>
+          <Link className={styles.secondary} href="/game?gate=signup" data-testid="landing-create-account">Start new game</Link>
         </div>
       </section>
+
+      <ol className={styles.pillars}>
+        {PILLARS.map(p => (
+          <li key={p.tag}><span>{p.tag}</span><b>{p.name}</b><em>{p.line}</em></li>
+        ))}
+      </ol>
     </main>
   )
 }

@@ -1,0 +1,206 @@
+{
+  "palettes": {
+    "bennu": {
+      "skyTop": "#05060a",
+      "skyHorizon": "#14181f",
+      "starAlpha": 1,
+      "distant": "#2a2826",
+      "nearRidge": "#3a3530",
+      "ground": "#3c342c",
+      "groundDeep": "#1c1814",
+      "groundSpeck": "#e4d5c0",
+      "beam": "#5ce8ff",
+      "beamCore": "#f4fdff",
+      "light": "#9ad4ff",
+      "lightAlpha": 0,
+      "dust": "#6a5e52",
+      "clouds": false,
+      "terrain": "rubble",
+      "landscape": {
+        "tint": "#9a9088",
+        "shade": 1,
+        "seed": 11,
+        "density": 0.9,
+        "pieces": {
+          "mountain": 1,
+          "ridge": 3,
+          "strata": 2
+        },
+        "deposits": {
+          "iron": 2,
+          "nickel": 3,
+          "ice": 0,
+          "cobalt": 1
+        }
+      }
+    },
+    "metal": {
+      "skyTop": "#05060a",
+      "skyHorizon": "#14181f",
+      "starAlpha": 1,
+      "distant": "#5e6772",
+      "nearRidge": "#8b95a3",
+      "ground": "#c5ccd4",
+      "groundDeep": "#3e4650",
+      "groundSpeck": "#f3f6f8",
+      "beam": "#5ce8ff",
+      "beamCore": "#f4fdff",
+      "light": "#9ad4ff",
+      "lightAlpha": 0,
+      "dust": "#8b95a3",
+      "clouds": false,
+      "terrain": "rubble",
+      "landscape": {
+        "tint": "#d4dae2",
+        "shade": 1,
+        "seed": 23,
+        "density": 0.8,
+        "pieces": {
+          "mountain": 1,
+          "ridge": 2,
+          "strata": 3
+        },
+        "deposits": {
+          "iron": 3,
+          "nickel": 4,
+          "ice": 0,
+          "cobalt": 2
+        }
+      }
+    },
+    "stony": {
+      "skyTop": "#05060a",
+      "skyHorizon": "#14181f",
+      "starAlpha": 1,
+      "distant": "#5a514a",
+      "nearRidge": "#7d7268",
+      "ground": "#b1a294",
+      "groundDeep": "#3c342e",
+      "groundSpeck": "#f0e6d8",
+      "beam": "#5ce8ff",
+      "beamCore": "#f4fdff",
+      "light": "#9ad4ff",
+      "lightAlpha": 0,
+      "dust": "#7d7268",
+      "clouds": false,
+      "terrain": "rubble",
+      "landscape": {
+        "tint": "#d0c2b2",
+        "shade": 1,
+        "seed": 37,
+        "density": 1.0,
+        "pieces": {
+          "mountain": 2,
+          "ridge": 3,
+          "strata": 2
+        },
+        "deposits": {
+          "iron": 3,
+          "nickel": 2,
+          "ice": 1,
+          "cobalt": 1
+        }
+      }
+    },
+    "mars": {
+      "skyTop": "#14123a",
+      "skyHorizon": "#4b3b8a",
+      "starAlpha": 0.8,
+      "distant": "#3a3472",
+      "nearRidge": "#4d4488",
+      "ground": "#6a68a0",
+      "groundDeep": "#2a2852",
+      "groundSpeck": "#d4d8f2",
+      "beam": "#5ce8ff",
+      "beamCore": "#f4fdff",
+      "light": "#9ad4ff",
+      "lightAlpha": 0,
+      "dust": "#8f8cc8",
+      "clouds": false,
+      "terrain": "dunes",
+      "landscape": {
+        "tint": "#d2aaa2",
+        "shade": 1,
+        "seed": 53,
+        "density": 1.1,
+        "pieces": {
+          "mountain": 3,
+          "ridge": 2,
+          "strata": 2
+        },
+        "deposits": {
+          "iron": 5,
+          "nickel": 1,
+          "ice": 1,
+          "cobalt": 1
+        }
+      }
+    },
+    "icy-moon": {
+      "skyTop": "#03050c",
+      "skyHorizon": "#0c1424",
+      "starAlpha": 1,
+      "distant": "#7ea4c4",
+      "nearRidge": "#d5e9f6",
+      "ground": "#c5dff2",
+      "groundDeep": "#6a90b4",
+      "groundSpeck": "#1a3d5c",
+      "beam": "#ff5aa8",
+      "beamCore": "#ffe4f2",
+      "light": "#d5e8ff",
+      "lightAlpha": 0,
+      "dust": "#e7f3ff",
+      "clouds": false,
+      "terrain": "ice",
+      "planet": {
+        "cx": 0.76,
+        "cy": 0.38,
+        "radius": 0.2,
+        "bands": [
+          "#4a5cb0",
+          "#a9b8f0",
+          "#3a3f8c",
+          "#c8d2f6",
+          "#2e2a72",
+          "#8a90d8",
+          "#4a5cb0"
+        ]
+      },
+      "landscape": {
+        "tint": "#f2faff",
+        "shade": 1,
+        "seed": 71,
+        "density": 0.85,
+        "pieces": {
+          "mountain": 2,
+          "ridge": 3,
+          "strata": 1
+        },
+        "deposits": {
+          "iron": 0,
+          "nickel": 1,
+          "ice": 5,
+          "cobalt": 2
+        }
+      }
+    }
+  },
+  "worlds": {
+    "bennu": "bennu",
+    "ryugu": "bennu",
+    "lutetia": "bennu",
+    "ceres": "bennu",
+    "eros": "bennu",
+    "itokawa": "bennu",
+    "vesta": "bennu",
+    "psyche": "bennu",
+    "mars": "mars",
+    "mercury": "mars",
+    "venus": "mars",
+    "europa": "icy-moon",
+    "enceladus": "icy-moon",
+    "ganymede": "icy-moon",
+    "callisto": "icy-moon",
+    "titan": "icy-moon"
+  }
+}

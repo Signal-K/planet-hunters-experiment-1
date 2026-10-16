@@ -22,7 +22,7 @@ const COURTYARD_PLATES: Record<TimeOfDayPhase, string> = {
  */
 export function ControlRoomBackdrop({
   phase = 'day',
-  windowLabel = 'COURTYARD / EARTH BASE',
+  windowLabel = 'COURTYARD',
 }: ControlRoomBackdropProps) {
   return (
     <div className={styles.room} data-testid="control-room-backdrop" aria-hidden="true">

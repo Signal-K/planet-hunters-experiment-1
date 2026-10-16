@@ -240,9 +240,12 @@ export default function ClientMark({
       </svg>
       <div style={{
         position: 'absolute', inset: 0,
-        borderRadius: 999, border: `2px solid ${color}`,
+        borderRadius: 999,
+        background: color,
+        border: '2px solid var(--ln-board-ink, var(--ln-text-inverse))',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        font: `800 ${Math.max(14, Math.round(size * 0.36))}px var(--ln-font-display)`, color: 'var(--ln-text)',
+        font: `800 ${Math.max(14, Math.round(size * 0.36))}px var(--ln-font-display)`,
+        color: 'var(--ln-board-ink, var(--ln-text-inverse))',
       }}>
         {initial}
       </div>

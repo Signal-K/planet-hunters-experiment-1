@@ -11,8 +11,9 @@ describe('formatFrancs', () => {
   })
 
   it.each([
-    [1_000_000, '1M'],
-    [12_600_000, '13M'],
+    [1_000_000, '1.0M'],
+    [12_600_000, '12.6M'],
+    [26_352_000, '26.4M'],
     [1_250_000_000, '1.3B'],
   ])('formats %i compactly as %s', (value, expected) => {
     expect(formatFrancs(value, { compact: true })).toBe(expected)
@@ -42,8 +43,9 @@ describe('formatCurrency', () => {
   it('shows direction with a sign rather than an arrow', () => {
     // ▲/▼ previously meant both "gain/loss" and "francs" depending on the
     // screen, so a cost and a payout could render identically.
-    expect(formatCurrency(250_000_000, { compact: true, signed: true })).toBe(`+${FRANC}250M`)
-    expect(formatCurrency(-250_000_000, { compact: true, signed: true })).toBe(`−${FRANC}250M`)
+    expect(formatCurrency(26_352_000, { compact: true })).toBe(`${FRANC}26.4M`)
+    expect(formatCurrency(250_000_000, { compact: true, signed: true })).toBe(`+${FRANC}250.0M`)
+    expect(formatCurrency(-250_000_000, { compact: true, signed: true })).toBe(`−${FRANC}250.0M`)
   })
 
   it('keeps a negative balance unambiguous even when unsigned', () => {

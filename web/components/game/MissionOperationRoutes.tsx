@@ -7,22 +7,37 @@ import { isFreeHaulMission, isOwnProgramMission, laserCapacitorBonus, rocketDisp
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
-import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
+import RoverSurveyScreen from '@/components/game/screens/RoverSurveyScreen'
+import HomecomingScreen from '@/components/game/screens/HomecomingScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
 import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
 import { TRANSPORT_LESSON_MISSIONS_DONE } from '@/lib/systems/AgencyOnboardingSystem'
-import { ownershipIdentity } from '@/lib/systems/SandboxSystem'
 import { isFreeHaulEligibleMission } from '@/lib/data'
 import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-events'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { captureGameEvent } from '@/lib/posthog'
+import { missionResumeScreen } from '@/lib/mission-resume'
 
 const reportedDebrisBadges = new Set<string>()
 
+function flightStops(player: Game['player']): Screen[] {
+  const stops: Screen[] = ['hub', 'missions']
+  if (player.freeOperations) stops.push('market')
+  const resume = missionResumeScreen(player)
+  if (!stops.includes(resume)) stops.push(resume)
+  return stops
+}
+
+function stepFlightDock(game: Game, dir: -1 | 1) {
+  const stops = flightStops(game.player)
+  const at = Math.max(0, stops.indexOf(game.screen))
+  game.go(stops[(at + dir + stops.length) % stops.length])
+}
+
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
-export type MissionOperationRoute = Extract<Screen, 'transit' | 'landing' | 'mining' | 'rover-mining' | 'delivery' | 'debrief'>
+export type MissionOperationRoute = Extract<Screen, 'transit' | 'landing' | 'mining' | 'rover-survey' | 'delivery' | 'debrief'>
 
 interface MissionOperationRoutesProps {
   screen: MissionOperationRoute
@@ -53,17 +68,16 @@ export default function MissionOperationRoutes({
       return (
         <TransitScreen
           target={transitTarget}
-          rocketImageSrc={rocketDisplay.img}
           arrivalAt={game.player.arrivalAt}
           transitStartedAt={game.player.transitStartedAt}
           returning={!!game.player.returningToEarth}
           isDelivery={!!game.player.headingToDelivery}
-          cargo={game.lastCargo}
-          minerals={game.catalog.minerals}
-          mission={game.mission}
-          client={game.mission?.client ? game.catalog.clients[game.mission.client] ?? null : null}
-          ownership={ownershipIdentity(game.player, game.authUserId)}
+          francs={game.player.francs}
+          parts={game.player.shipCustomizerParts}
           onBack={() => game.go('hub')}
+          onPrev={() => stepFlightDock(game, -1)}
+          onNext={() => stepFlightDock(game, 1)}
+          onHub={() => game.go('hub')}
           onArrive={() => {
             if (game.player.returningToEarth) {
               game.onReturnArrived()
@@ -73,9 +87,8 @@ export default function MissionOperationRoutes({
               game.onDeliveryArrived()
               return
             }
-            const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
-            const hasLander = !isRoverMission && !!game.player.shipCustomizerParts?.lander
-            const isTutorialDelivery = game.player.missionsDone === TRANSPORT_LESSON_MISSIONS_DONE && !!game.mission?.deliveryTargetId
+            const isRoverSurvey = game.mission?.survey?.onWorldVehicle === 'starter-rover'
+            const hasLander = !isRoverSurvey && !!game.player.shipCustomizerParts?.lander
             if (game.mission?.payload?.type === 'satellite' || game.mission?.payload?.type === 'deep-space-survey' || game.target?.type === 'exoplanet') {
               game.setPlayer(player => ({
                 ...player,
@@ -86,8 +99,9 @@ export default function MissionOperationRoutes({
                 transitSatelliteLevel: game.mission?.payload?.instrumentId === 'transit-telescope'
                   ? Math.max(1, player.transitSatelliteLevel ?? 1)
                   : player.transitSatelliteLevel,
-                deepSpaceTelescopeBuilt: game.mission?.payload?.instrumentId === 'deep-space-telescope' || player.deepSpaceTelescopeBuilt,
-                deepSpaceTelescopeLaunchedAt: game.mission?.payload?.instrumentId === 'deep-space-telescope'
+                // One telescope: launching it brings the transit and asteroid feeds online together.
+                deepSpaceTelescopeBuilt: game.mission?.payload?.instrumentId === 'transit-telescope' || player.deepSpaceTelescopeBuilt,
+                deepSpaceTelescopeLaunchedAt: game.mission?.payload?.instrumentId === 'transit-telescope'
                   ? (player.deepSpaceTelescopeLaunchedAt ?? Date.now())
                   : player.deepSpaceTelescopeLaunchedAt,
                 saturnImagerLaunchedAt: game.mission?.payload?.instrumentId === 'saturn-imager'
@@ -107,27 +121,12 @@ export default function MissionOperationRoutes({
               game.go('landing')
               return
             }
-            if (isTutorialDelivery) {
-              game.setPlayer(player => ({
-                ...player,
-                missionPhase: 'mining',
-                landingStartedAt: undefined,
-                hasLanded: true,
-              }))
-              game.go('rover-mining')
-              return
-            }
             game.setPlayer(player => ({
               ...player,
-              missionPhase: 'mining',
-              // A rover mission starts with a scouting observation. Its clock
-              // begins only after the player turns that observation into a
-              // deposit lead, so the result is gameplay rather than flavour.
-              roverMiningStartedAt: isRoverMission ? undefined : player.roverMiningStartedAt,
+              missionPhase: isRoverSurvey ? 'survey' : 'mining',
             }))
-            game.go(isRoverMission ? 'rover-mining' : 'mining')
+            game.go(isRoverSurvey ? 'rover-survey' : 'mining')
           }}
-          onAbandon={game.abandonMission}
         />
       )
 
@@ -142,17 +141,7 @@ export default function MissionOperationRoutes({
           onBack={() => game.go('hub')}
           onContinue={() => {
             if (mode === 'descend') {
-              if (game.player.missionsDone === TRANSPORT_LESSON_MISSIONS_DONE && !!game.mission?.deliveryTargetId) {
-                game.setPlayer(player => ({
-                  ...player,
-                  missionPhase: 'mining',
-                  landingStartedAt: undefined,
-                  hasLanded: true,
-                }))
-                game.go('rover-mining')
-              } else {
-                game.onLandingTouchdown()
-              }
+              game.onLandingTouchdown()
               return
             }
             game.onRedockComplete(game.player.miningCargoInProgress ?? {}, game.player.pendingRemoteDisposition)
@@ -245,25 +234,22 @@ export default function MissionOperationRoutes({
         />
       )
 
-    case 'rover-mining': {
+    case 'rover-survey': {
       if (!game.mission || !game.target) return null
       const roverTarget = game.target
       return (
-        <RoverMiningScreen
+        <RoverSurveyScreen
           mission={game.mission}
           target={roverTarget}
           rocketImageSrc={rocketDisplay.img}
-          clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
           player={game.player}
           onFieldBuild={game.recordFieldBuild}
           onFieldDemolish={game.recordFieldDemolish}
           onFabricate={game.fabricateAtField}
           onSeedBiosphere={game.seedBiosphere}
-          onComplete={(cargo) => {
-            game.onRoverMiningDone(cargo)
-          }}
+          onComplete={game.onRoverSurveyComplete}
           onBack={() => {
-            game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
+            game.setPlayer(player => ({ ...player, missionPhase: 'survey' }))
             game.go('hub')
           }}
         />
@@ -289,6 +275,18 @@ export default function MissionOperationRoutes({
 
     case 'debrief':
       if (!game.mission || !game.target) return null
+      if (game.player.homeDeliveryPending && game.lastCargo) {
+        return (
+          <HomecomingScreen
+            player={game.player}
+            mission={game.mission}
+            cargo={game.lastCargo}
+            minerals={game.catalog.minerals}
+            clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
+            onConfirm={game.onHomeDelivery}
+          />
+        )
+      }
       return (
         <DebriefScreen
           mission={game.mission}

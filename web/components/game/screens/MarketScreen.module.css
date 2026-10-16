@@ -1,471 +1,608 @@
-.screen {
-  /* Was `min-height: 100dvh`, built assuming normal page-level scroll — but
-     this screen actually mounts inside .game-screen-area, which is
-     `overflow: hidden` (KES-268). Content taller than the boxed card's
-     available height had nowhere to go and just got clipped. This screen
-     owns its own scroll now, same as every other screen's .screen-scroll
-     convention, so the sticky .header still sticks correctly within it. */
+.scene {
   position: absolute;
   inset: 0;
-  overflow-y: auto;
-  color: var(--ln-text);
-  background:
-    linear-gradient(var(--ln-hairline) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px),
-    var(--ln-void);
-  background-size: 32px 32px;
+  overflow: hidden;
+  color: var(--ln-blueprint-ink);
+  background: var(--ln-blueprint-bg);
 }
 
-.header {
-  position: sticky;
+.scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-world-trim-blue) 54%, transparent) 0 53%, transparent 65%),
+    linear-gradient(180deg, transparent 48%, color-mix(in srgb, var(--ln-world-asphalt) 44%, var(--ln-world-trim-teal)) 100%);
+  mix-blend-mode: multiply;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 62%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hud {
+  position: absolute;
   top: 0;
-  z-index: 10;
+  left: 0;
+  right: 0;
+  z-index: 6;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 12px 0;
+  pointer-events: none;
+}
+
+.hud[data-dev-launcher='true'] {
+  padding-left: 72px;
+}
+
+.cluster {
   display: flex;
   align-items: center;
-  gap: var(--ln-s-3);
-  min-height: 72px;
-  padding: var(--ln-s-3) max(var(--ln-s-4), 4vw);
-  background: color-mix(in srgb, var(--ln-bg) 94%, transparent);
-  border-bottom: 1px solid var(--ln-hairline-strong);
+  gap: 8px;
+  min-width: 0;
+  pointer-events: auto;
 }
 
-/* The development launcher is a fixed 40px badge at the top-left. Market
-   owns its header instead of TopBar, so reserve the badge's full footprint
-   here rather than letting its back control become an overlapping target. */
-.header[data-dev-launcher='true'] {
-  padding-left: max(64px, 4vw);
-}
-
-.backButton,
-.sellButton,
-.primaryButton {
-  font-family: var(--ln-font-display);
-  font-weight: 800;
-  letter-spacing: var(--ln-tr-label);
-  text-transform: uppercase;
+.cog {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 4px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
   cursor: pointer;
 }
 
-.backButton {
-  display: inline-grid;
-  flex: 0 0 auto;
-  width: 44px;
+.cluster :global(.scene-chip) {
+  min-height: 44px;
   height: 44px;
-  place-items: center;
-  color: var(--ln-cyan);
-  background: var(--ln-cyan-soft);
-  border: 1px solid var(--ln-cyan-border);
-  border-radius: var(--ln-r-md);
-}
-
-.backButton:focus-visible,
-.sellButton:focus-visible,
-.primaryButton:focus-visible {
-  outline: 2px solid var(--ln-cyan);
-  outline-offset: 2px;
-}
-
-.headerCopy {
-  min-width: 0;
-  flex: 1;
-}
-
-.eyebrow,
-.sectionLabel,
-.metricLabel,
-.commodityMeta,
-.rateLabel {
-  font-family: var(--ln-font-display);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: var(--ln-tr-label);
-  text-transform: uppercase;
-}
-
-.eyebrow,
-.sectionLabel,
-.metricLabel,
-.rateLabel {
-  color: var(--ln-text-muted);
-}
-
-.title {
-  margin: 2px 0 0;
-  color: var(--ln-text);
-  font-family: var(--ln-font-display);
-  font-size: clamp(20px, 3vw, 32px);
-  font-weight: 800;
-  line-height: 1.05;
-}
-
-.balance {
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  padding-left: var(--ln-s-3);
-  border-left: 1px solid var(--ln-hairline);
-}
-
-.balanceValue,
-.quoteValue,
-.commodityValue {
-  color: var(--ln-payout);
-  font-family: var(--ln-font-mono);
-  font-weight: 800;
-}
-
-.balanceValue {
+  border-radius: 4px;
+  padding: 0 12px;
   font-size: 16px;
 }
 
-.content {
-  width: min(100%, 1280px);
-  margin: 0 auto;
-  padding: clamp(var(--ln-s-4), 4vw, var(--ln-s-7));
-}
-
-.intro {
+.play {
+  position: absolute;
+  z-index: 2;
+  inset: 68px 16px 80px;
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.6fr);
-  gap: var(--ln-s-5);
-  align-items: stretch;
-  margin-bottom: var(--ln-s-5);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(220px, 1.15fr) auto auto;
+  gap: 12px;
+  min-height: 0;
 }
 
-.paperCard,
-.clientCard,
-.commodityCard,
-.emptyCard {
-  background: var(--ln-surface);
-  border: 1px solid var(--ln-hairline-strong);
-  border-radius: var(--ln-r-lg);
-  box-shadow: var(--ln-shadow-card);
+.window {
+  grid-column: 1;
+  grid-row: 1;
+  min-height: 0;
+  overflow: hidden;
+  border: 3px solid var(--ln-blueprint-ink);
+  box-shadow: inset 0 0 0 3px var(--ln-blueprint-blue);
+  isolation: isolate;
+  background: var(--ln-world-glass);
+  pointer-events: none;
 }
 
-.paperCard {
-  padding: clamp(var(--ln-s-4), 3vw, var(--ln-s-6));
+.windowSky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(180deg, var(--ln-world-day-top), var(--ln-world-day-mid) 58%, var(--ln-world-day-horizon));
 }
 
-.paperCard h2,
-.clientCard h2,
-.emptyCard h2 {
-  margin: var(--ln-s-2) 0 0;
-  color: var(--ln-text);
-  font-family: var(--ln-font-display);
-  font-size: clamp(20px, 2.6vw, 28px);
-  line-height: 1.1;
+.windowBand {
+  position: absolute;
+  left: 0;
+  bottom: 16%;
+  display: block;
+  width: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 
-.paperCard p,
-.clientCard p,
-.emptyCard p {
-  margin: var(--ln-s-3) 0 0;
-  color: var(--ln-text-dim);
-  font-family: var(--ln-font-body);
-  font-size: 14px;
-  line-height: 1.5;
+.windowGround {
+  position: absolute;
+  inset: auto 0 0;
+  height: 20%;
+  border-top: 3px solid var(--ln-world-trim-teal);
+  background: repeating-linear-gradient(90deg, var(--ln-world-concrete) 0 28px, var(--ln-world-asphalt) 28px 32px);
+}
+
+.window[data-biome='desert'] .windowSky,
+.window[data-biome='coast'] .windowSky {
+  background: linear-gradient(180deg, var(--ln-world-afternoon-top), var(--ln-world-afternoon-mid) 58%, var(--ln-world-afternoon-horizon));
+}
+
+.window[data-biome='tundra'] .windowSky {
+  background: linear-gradient(180deg, var(--ln-world-dawn-top), var(--ln-world-dawn-mid) 58%, var(--ln-world-dawn-horizon));
+}
+
+.window[data-biome='tundra'] .windowGround {
+  background: repeating-linear-gradient(90deg, var(--ln-blueprint-paper-2) 0 28px, var(--ln-world-glass) 28px 32px);
+}
+
+.window[data-biome='coast'] .windowBand {
+  filter: saturate(.78) hue-rotate(12deg);
+}
+
+.window[data-biome='desert'] .windowGround,
+.window[data-biome='coast'] .windowGround {
+  background: repeating-linear-gradient(90deg, var(--ln-world-soil) 0 28px, var(--ln-world-concrete) 28px 32px);
+}
+
+.window img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 60%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.board {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: end;
+  justify-self: start;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(100% - 16px, 340px);
+  max-height: min(196px, 46%);
+  margin: 0 0 12px 8px;
+  overflow: auto;
+  padding: 16px;
+  background: var(--ln-blueprint-paper);
+  border: 3px solid var(--ln-blueprint-ink);
+  box-shadow: inset 0 0 0 2px var(--ln-blueprint-blue);
 }
 
 .quote {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: var(--ln-s-4);
-  padding: clamp(var(--ln-s-4), 3vw, var(--ln-s-6));
-  background: var(--ln-surface-2);
-  border: 1px solid var(--ln-amber-border);
-  border-radius: var(--ln-r-lg);
-}
-
-.quoteValue {
-  display: block;
-  margin-top: var(--ln-s-2);
-  font-size: clamp(24px, 4vw, 40px);
-  line-height: 1;
-}
-
-.quoteNote {
-  color: var(--ln-text-dim);
-  font-family: var(--ln-font-body);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.clientCard {
-  display: flex;
   align-items: center;
-  gap: var(--ln-s-4);
-  margin-bottom: var(--ln-s-5);
-  padding: var(--ln-s-4) var(--ln-s-5);
-  border-left: 5px solid var(--client-accent, var(--ln-cyan));
+  gap: 8px;
+  min-height: 36px;
+  font-size: 14px;
 }
 
-.clientMark {
-  display: grid;
+.quote img {
+  width: 28px;
+  height: 24px;
+  object-fit: contain;
+  image-rendering: pixelated;
   flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  color: var(--client-accent, var(--ln-cyan));
-  font-family: var(--ln-font-mono);
-  font-size: 15px;
+}
+
+.mineral,
+.quiet,
+.empty,
+.count,
+.sellAll,
+.unit {
+  font-family: var(--ln-font-display), system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mineral {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
   font-weight: 800;
-  border: 1px solid currentColor;
-  border-radius: var(--ln-r-md);
-  background: color-mix(in srgb, currentColor 10%, transparent);
+  line-height: 1.2;
 }
 
-.clientCard h2 {
+.unit {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.trend {
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  margin-left: 4px;
+}
+
+.trend[data-trend='up'] {
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 10px solid var(--ln-blueprint-blue);
+}
+
+.trend[data-trend='down'] {
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid var(--ln-blueprint-ink);
+}
+
+.trend[data-trend='flat'] {
+  width: 14px;
+  height: 3px;
+  background: var(--ln-blueprint-ink);
+}
+
+.quiet,
+.empty {
   margin: 0;
-  font-size: 18px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ln-blueprint-ink);
 }
 
-.clientCard p {
-  margin-top: 4px;
-  font-size: 13px;
-}
-
-.sectionHeader {
+.belt {
+  grid-column: 1;
+  grid-row: 2;
   display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  min-height: 132px;
+  padding: 8px 8px 10px;
+  overflow-x: auto;
+  background:
+    url('/art/scenes/exchange/exchange-conveyor.png') center bottom / 100% 64px no-repeat;
+  image-rendering: pixelated;
+}
+
+.stack {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--ln-s-4);
-  margin-bottom: var(--ln-s-3);
-}
-
-.sectionHeader h2 {
-  margin: 0;
-  color: var(--ln-text);
-  font-family: var(--ln-font-display);
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.sellButton,
-.primaryButton {
+  justify-content: flex-end;
+  width: 88px;
+  min-width: 72px;
   min-height: 44px;
-  padding: 10px 16px;
-  color: var(--ln-text-on-cyan);
-  background: var(--ln-cyan);
+  padding: 0;
   border: 0;
-  border-radius: var(--ln-r-md);
-  box-shadow: 0 3px 0 color-mix(in srgb, var(--ln-cyan-press) 65%, transparent);
+  background: transparent;
+  color: var(--ln-blueprint-ink);
+  cursor: grab;
+  touch-action: none;
 }
 
-.sellButton {
-  flex: 0 0 auto;
-  font-size: 11px;
+.stack:active {
+  cursor: grabbing;
 }
 
-.primaryButton {
-  width: 100%;
-  margin-top: var(--ln-s-4);
-  font-size: 12px;
+.pile {
+  position: relative;
+  width: 76px;
+  height: 108px;
 }
 
-.sellButton:active,
-.primaryButton:active {
-  background: var(--ln-cyan-press);
-  transform: translateY(1px);
+.pile img {
+  position: absolute;
+  left: 0;
+  width: 76px;
+  height: 68px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 
-.commodityGrid {
+.count {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  transform: translateX(-50%);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 4px 8px;
+  background: var(--ln-blueprint-paper);
+  border: 2px solid var(--ln-blueprint-ink);
+}
+
+.floor {
+  grid-column: 1;
+  grid-row: 3;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-  gap: var(--ln-s-4);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 16px;
+  row-gap: 8px;
+  align-items: end;
+  min-height: 0;
 }
 
-.commodityCard {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ln-s-4);
-  padding: var(--ln-s-4);
-}
-
-.commodityTop,
-.commodityFooter,
-.rate {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ln-s-3);
-}
-
-.commodityIdentity {
-  display: flex;
-  align-items: center;
-  gap: var(--ln-s-3);
+.pad {
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  width: min(100%, 420px);
+  justify-self: start;
+  align-self: end;
   min-width: 0;
 }
 
-.commodityName {
-  overflow: hidden;
-  color: var(--ln-text);
-  font-family: var(--ln-font-display);
-  font-size: 18px;
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.machine {
+  display: contents;
 }
 
-.commodityMeta {
-  margin-top: 4px;
-  color: var(--ln-text-muted);
-  font-family: var(--ln-font-mono);
-  font-size: 11px;
-  letter-spacing: 0.03em;
-  text-transform: none;
+.face {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  width: min(100%, 320px);
+  justify-self: end;
+  align-self: end;
 }
 
-.rate {
-  padding-top: var(--ln-s-3);
-  border-top: 1px solid var(--ln-divider);
+.pad > img:first-child,
+.face > img {
+  display: block;
+  width: 100%;
+  height: 112px;
+  object-fit: cover;
+  object-position: center 70%;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 
-.rateValue {
-  color: var(--ln-text);
-  font-family: var(--ln-font-mono);
+.onPad {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  width: 72px;
+  height: 80px;
+  transform: translateX(-50%);
+  object-fit: contain;
+  image-rendering: pixelated;
+  animation: land 280ms ease-out;
+}
+
+.digits {
+  position: absolute;
+  right: 6%;
+  bottom: 18%;
+  max-width: 88%;
+  padding: 4px 8px;
+  background: var(--ln-blueprint-paper);
+  border: 2px solid var(--ln-blueprint-ink);
+  color: var(--ln-blueprint-ink);
+  font-family: var(--ln-font-mono), ui-monospace, monospace;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sellAll {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  min-width: 88px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid var(--ln-blueprint-ink);
+  border-radius: 2px;
+  background: var(--ln-blueprint-paper);
+  color: var(--ln-blueprint-ink);
   font-size: 14px;
   font-weight: 800;
+  cursor: pointer;
 }
 
-.commodityValue {
-  font-size: 20px;
-  white-space: nowrap;
+.sellAll:disabled {
+  color: color-mix(in srgb, var(--ln-blueprint-ink) 45%, var(--ln-blueprint-paper));
+  cursor: not-allowed;
 }
 
-.emptyCard {
-  max-width: 760px;
-  margin: var(--ln-s-4) auto 0;
-  padding: clamp(var(--ln-s-5), 5vw, var(--ln-s-7));
-  text-align: center;
+.sellAll:focus-visible,
+.stack:focus-visible,
+.cog:focus-visible {
+  outline: 2px solid var(--ln-blueprint-blue);
+  outline-offset: 2px;
 }
 
-@media (max-width: 640px) {
-  .header {
-    min-height: 64px;
-    padding-inline: var(--ln-s-3);
+.dock {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.dock :global(.scene-dock) {
+  max-width: 100%;
+  pointer-events: auto;
+}
+
+.ghost,
+.flight {
+  position: fixed;
+  z-index: 8;
+  width: 72px;
+  height: 64px;
+  margin-left: -36px;
+  margin-top: -48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.flight {
+  animation: fly 320ms ease-in forwards;
+}
+
+@keyframes fly {
+  from { transform: translate(var(--dx), var(--dy)); }
+  to { transform: translate(0, 0); }
+}
+
+@keyframes land {
+  from { transform: translateX(-50%) translateY(-16px) scale(0.86); }
+  to { transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+@media (min-width: 900px) and (min-height: 640px) {
+  .play {
+    grid-template-columns: 360px minmax(0, 1fr);
+    grid-template-rows: minmax(200px, 1fr) 168px auto;
+    gap: 16px 24px;
+    inset: 76px 32px 88px;
   }
 
-  .balanceValue {
-    font-size: 13px;
+  .board {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    justify-self: stretch;
+    width: auto;
+    max-height: none;
+    margin: 0;
   }
 
-  .intro {
-    grid-template-columns: 1fr;
+  .window {
+    grid-column: 2;
+    grid-row: 1;
   }
 
-  .sectionHeader {
-    align-items: flex-start;
-    flex-direction: column;
+  .belt {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    min-height: 148px;
   }
 
-  .sectionHeader .sellButton {
+  .floor {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    column-gap: 24px;
+  }
+
+  .pad > img:first-child,
+  .face > img {
+    height: auto;
+    object-fit: contain;
+    object-position: center bottom;
+  }
+
+  .digits {
+    font-size: 22px;
+    right: 8%;
+    bottom: 22%;
+  }
+}
+
+@media (max-height: 520px) {
+  .hud {
+    padding-top: 8px;
+  }
+
+  .play {
+    grid-template-columns: minmax(168px, 220px) minmax(0, 1fr) minmax(168px, 220px);
+    grid-template-rows: minmax(0, 1fr) 116px;
+    gap: 8px;
+    /* The Flight Plan shortens .game-screen-area, but the Exchange dock still
+       floats inside this scene. Reserve its 52px capsule plus breathing room. */
+    inset: 56px 12px 68px;
+  }
+
+  .board {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: stretch;
+    justify-self: stretch;
+    width: auto;
+    max-height: none;
+    margin: 0;
+    padding: 8px;
+  }
+
+  .window {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .floor {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    align-items: end;
+    row-gap: 4px;
+  }
+
+  .pad {
+    grid-column: 1;
+    grid-row: 1;
     width: 100%;
   }
 
-  .commodityTop {
-    align-items: flex-start;
-  }
-}
-
-@media (min-width: 1024px) and (orientation: landscape) {
-  .content {
-    padding-block: var(--ln-s-7);
+  .face {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
   }
 
-  .commodityGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .sellAll {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .pad > img:first-child,
+  .face > img {
+    height: auto;
+    max-height: 64px;
+    object-fit: contain;
+    object-position: center bottom;
+  }
+
+  .belt {
+    grid-column: 1 / 3;
+    grid-row: 2;
+    justify-content: flex-start;
+    min-height: 0;
+    background-size: 100% 44px;
+  }
+
+  .pile {
+    height: 80px;
+  }
+
+  .digits {
+    bottom: 14%;
+    font-size: 14px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sellButton,
-  .primaryButton {
-    transition: none;
+  .flight,
+  .onPad {
+    animation: none;
   }
 }
-
-/* SSL-316: fabrication & build recipe catalogue. */
-.recipes {
-  display: grid;
-  gap: var(--ln-s-4);
-}
-
-.recipeTabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ln-s-2);
-}
-
-.recipeTab {
-  min-height: 36px;
-  padding: 0 var(--ln-s-3);
-  border: 1px solid var(--ln-divider);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ln-text-muted);
-  font-family: var(--ln-font-display);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: var(--ln-tr-label);
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.recipeTab[aria-selected='true'] {
-  border-color: var(--ln-cyan);
-  background: var(--ln-cyan-soft);
-  color: var(--ln-cyan-press);
-}
-
-.recipeCard[data-affordable='false'] { opacity: 0.82; }
-
-.recipeState {
-  flex: none;
-  padding: 4px 8px;
-  border: 1px solid var(--ln-divider);
-  border-radius: 999px;
-  color: var(--ln-text-muted);
-  font-family: var(--ln-font-display);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: var(--ln-tr-label);
-  text-transform: uppercase;
-}
-
-.recipeState[data-ok='true'] { border-color: var(--ln-ok); color: var(--ln-ok); }
-
-.recipeDescription {
-  margin: 0;
-  color: var(--ln-text-dim);
-  font-family: var(--ln-font-body);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.recipeCosts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ln-s-2);
-  padding-top: var(--ln-s-3);
-  border-top: 1px solid var(--ln-divider);
-}
-
-.recipeChip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ln-s-1);
-  min-height: 28px;
-  padding: 0 var(--ln-s-2);
-  border: 1px solid var(--ln-divider);
-  border-radius: 999px;
-  color: var(--ln-text);
-  font-family: var(--ln-font-mono);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.recipeChip[data-short='true'] { border-color: var(--ln-warn); color: var(--ln-warn); }

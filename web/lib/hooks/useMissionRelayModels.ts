@@ -8,6 +8,7 @@ import type { CrewMember } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { filterMissionsForSceneScope } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
+import { SCENE_NAMES } from '@/lib/ui-strings'
 import { isTutorialMissionInProgress } from '@/lib/mission-flow'
 
 export interface MissionRelayCardModel {
@@ -45,7 +46,7 @@ export function useMissionRelayModels({
   francs,
   crew = [],
   player,
-  sceneScope = { kind: 'earth-base', id: 'earth-base', label: 'Base' },
+  sceneScope = { kind: 'earth-base', id: 'earth-base', label: SCENE_NAMES.base },
 }: UseMissionRelayModelsArgs) {
   const { missions: MISSIONS, clients: CLIENTS, targets, parts } = catalog
   const [previewId, setPreviewId] = useState<string | null>(null)
@@ -56,10 +57,15 @@ export function useMissionRelayModels({
   const tutorialMissionInProgress = isTutorialMissionInProgress(freeOperations, !!player?.activeMission)
   const missionStartBlockedLabel = 'Finish current mission'
 
-  // Free Ops lists the catalog's available client work. The authoritative
-  // client/market day will later supply this catalog; do not generate a
-  // player-local daily board or add per-client cooldown gates here.
-  const rawAvailable = MISSIONS.filter(m => {
+  // Free Ops lists the player's daily client pool (SSL-570): new contracts each day, more clients as missions are
+  // flown. The fixed generated client runs it replaces are left out; own runs, instruments and story steps stay.
+  // Contracts finished today leave the board until tomorrow.
+  const pool = freeOperations ? player?.dailyClientPool : undefined
+  const poolMissions = pool ? pool.missions.filter(m => !pool.completedIds.includes(m.id)) : []
+  const boardMissions = pool
+    ? [...poolMissions, ...MISSIONS.filter(m => !(m.client && m.id.startsWith('freeops-')))]
+    : MISSIONS
+  const rawAvailable = boardMissions.filter(m => {
     if (!isMissionBoardMission(m, freeOperations)) return false
     if (m.client && !CLIENTS[m.client]) return false
     return freeOperations || m.sequence === sequence
@@ -133,7 +139,7 @@ export function useMissionRelayModels({
     .filter((c): c is NonNullable<typeof c> => c !== null)
 
   // STS-582 makes this a client-only surface in Free Ops. Owned flights are
-  // filtered above and live under Launchpad → Your Program instead.
+  // filtered above and live on the Mission Board Program tab instead.
   // A newly unlocked Academy is the player's next concrete Base action, so
   // foreground it instead of burying it after the recurring client jobs.
   const academyIntro = cardModels.find(card => card.mission.id === ACADEMY_INTRO_MISSION_ID && card.unlocked)

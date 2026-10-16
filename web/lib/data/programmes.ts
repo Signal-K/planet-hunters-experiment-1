@@ -218,7 +218,7 @@ const SURFACE_BUILDS: ProgrammeDefinition = {
   reward: { francs: false, progression: 'territory' },
   framing: 'none',
   events: { contribute: 'sandbox_structure_built', shared: 'creation_shared' },
-  surfaces: ['SandboxBuildPalette', 'SurfaceOpsScreen', 'RoverMiningScreen'],
+  surfaces: ['SandboxBuildPalette', 'SurfaceOpsScreen', 'RoverSurveyScreen'],
   live: true,
 }
 
@@ -227,8 +227,8 @@ const BASE_SHOWCASE: ProgrammeDefinition = {
   kind: 'creative',
   verb: 'share',
   title: 'Base showcase',
-  question: 'How has your Earth base grown?',
-  dataset: 'Earth base layout and unlocked blueprints',
+  question: 'How has the ground around your launchpad grown?',
+  dataset: 'Home layout and unlocked blueprints',
   provenance: 'Player creation',
   source: { kind: 'player', surface: 'base' },
   cadence: 'on-demand',

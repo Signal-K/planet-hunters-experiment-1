@@ -19,49 +19,63 @@ private struct OrderChip: View {
 
 struct TransitScreen: View {
     @Environment(GameStore.self) private var store
-    @State private var scene: FlightScene?
+    @State private var showSettings = false
+    /// Untimed legs (the trip home, SSL-553) fly a short local course: ~4.4 s, and each Boost skips ahead.
+    @State private var flightStart = Date()
+    @State private var boost: Double = 0
+    private let zones = HUDZones.standard
+    private static let untimedSeconds = 4.4
 
-    private var shipArt: String { "ships/ship_sr1.png" }
-
-    var body: some View {
-        GeometryReader { geo in
-            TimelineView(.animation(minimumInterval: 0.25)) { ctx in
-                let start = store.player.transitStartedAt ?? store.now
-                let end = store.player.arrivalAt ?? start
-                let p = end > start ? min(1, max(0, (ctx.date.timeIntervalSince1970 * 1000 - start) / (end - start))) : 1
-                let s = scene ?? makeScene(geo.size)
-                ZStack(alignment: .top) {
-                    SpriteView(scene: s).ignoresSafeArea()
-                    VStack(spacing: 10) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Eyebrow(text: store.player.returningToEarth ? "Returning" : "En route")
-                                Text(store.player.returningToEarth ? "Earth" : (store.target?.name ?? "Target")).font(AppFont.display(24)).foregroundStyle(Theme.ink)
-                            }
-                            Spacer()
-                        }
-                        Spacer()
-                        Panel {
-                            HStack {
-                                Eyebrow(text: p >= 1 ? "Arrived" : "Transit")
-                                Spacer()
-                                Text("\(Int(p * 100))%").font(AppFont.mono(14)).foregroundStyle(Theme.ink)
-                            }
-                            ProgressTrack(value: p)
-                            PrimaryButton(title: p >= 1 ? "Arrive" : "In flight", enabled: p >= 1) { store.transitArrived() }
-                        }
-                    }
-                    .padding(16)
-                }
-                .onChange(of: p) { _, new in s.progress = new }
-                .onAppear { scene = s; s.progress = p }
-            }
+    private func progress(_ date: Date) -> Double {
+        if let end = store.player.arrivalAt {
+            let start = store.player.transitStartedAt ?? store.now
+            return end > start ? min(1, max(0, (date.timeIntervalSince1970 * 1000 - start) / (end - start))) : 1
         }
-        .background(Theme.bg)
+        return min(1, max(0, date.timeIntervalSince(flightStart) / Self.untimedSeconds + boost))
     }
 
-    private func makeScene(_ size: CGSize) -> FlightScene {
-        FlightScene(size: size, returning: store.player.returningToEarth ?? false, targetName: store.target?.name ?? "Target", shipArt: shipArt)
+    var body: some View {
+        GeometryReader { outer in
+            let insets = outer.safeAreaInsets
+            TimelineView(.animation(minimumInterval: 0.25)) { ctx in
+                let p = progress(ctx.date)
+                ZStack(alignment: .topLeading) {
+                    FlightWorldScene(progress: p, returning: store.player.returningToEarth ?? false)
+                    HudGearClock(onSettings: { showSettings = true })
+                        .padding(.leading, insets.leading + zones.topLeft.inset).padding(.top, insets.top + zones.topLeft.inset)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    HudChips(francs: store.player.francs)
+                        .padding(.trailing, insets.trailing + zones.topRight.inset).padding(.top, insets.top + zones.topRight.inset)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                    VStack(spacing: 24) {
+                        FlightProgressBar(value: p)
+                        BaseDock(tile: 44, zones: zones.dock, items: [
+                            (p >= 1 ? "Arrive" : "Boost", p >= 1 ? "flag.fill" : "bolt.fill", { if p >= 1 { store.transitArrived() } else if store.player.arrivalAt == nil { boost += 0.14 } }),
+                            ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
+                        ])
+                    }
+                    .padding(.bottom, insets.bottom + zones.dock.bottomInset)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                }
+            }
+        }
+        .background(Color(red: 0.05, green: 0.04, blue: 0.16).ignoresSafeArea())
+        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
+    }
+}
+
+/// Slim transit progress bar that sits above the dock.
+struct FlightProgressBar: View {
+    let value: Double
+    var body: some View {
+        GeometryReader { g in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color(red: 0.12, green: 0.14, blue: 0.4))
+                Capsule().fill(Color(red: 0.25, green: 0.5, blue: 0.95)).frame(width: max(8, g.size.width * value))
+            }
+        }
+        .frame(width: 300, height: 8)
+        .accessibilityElement().accessibilityLabel("Flight progress").accessibilityValue("\(Int(value * 100)) percent")
     }
 }
 
@@ -83,9 +97,14 @@ struct MiningScreen: View {
     @Environment(GameStore.self) private var store
     @State private var scene: MiningScene?
     @State private var field: MiningField?
+    @State private var targetCue: String?
+    @State private var obstacleAhead = false
     @State private var toast: String?
-    @State private var dashCharge = 1.0
+    @State private var laserCharging = false
+    @FocusState private var keysFocused: Bool
     @State private var confirmingScrub = false
+    @State private var showSettings = false
+    @State private var showGuide = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// SSL-411: Return stays tappable (a dead button reads as a bug) and says what is still missing.
@@ -109,50 +128,111 @@ struct MiningScreen: View {
 
     var body: some View {
         GeometryReader { geo in
-            ZStack(alignment: .top) {
+            ZStack {
                 if let scene { SpriteView(scene: scene).ignoresSafeArea() }
-                if let field {
-                    VStack(spacing: 10) {
-                        HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Eyebrow(text: "Mining")
-                                Text(store.target?.name ?? "Target").font(AppFont.display(24)).foregroundStyle(Theme.ink)
-                            }
-                            Spacer()
-                            RailCard(symbol: "shippingbox") {
-                                Text("\(field.cargoUnits)/\(field.cargoCapacity)").font(AppFont.mono(14)).foregroundStyle(Theme.ink)
-                            }
-                        }
-                        SkyEventChip().frame(maxWidth: .infinity, alignment: .leading)
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(field.required.keys.sorted(), id: \.self) { id in
-                                    OrderChip(symbol: Minerals.byId[id]?.symbol ?? id, have: field.cargo[id, default: 0], need: field.required[id] ?? 0,
-                                              color: Theme.hex(UInt32(Minerals.byId[id]?.colorHex.dropFirst() ?? "ffffff", radix: 16) ?? 0xFFFFFF))
-                                }
-                            }.padding(.trailing, 4).padding(.bottom, 4)
-                        }
-                        Spacer()
-                        if let toast { Text(toast.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.crimson)
-                            .padding(.horizontal, 10).padding(.vertical, 6).background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.crimson, lineWidth: 1.5)) }
-                        HStack(alignment: .bottom) {
-                            Text("DRAG BELOW TO MOVE THE DRONE · TAP ORE TO FIRE").font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.textDim)
-                                .padding(.horizontal, 8).padding(.vertical, 5).background(Theme.paper.opacity(0.85), in: Capsule())
-                            Spacer()
-                            DashButton(charge: dashCharge) { scene?.dash() }
-                        }
-                        MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true })
-                    }.padding(16)
+                if let field, !showGuide {
+                    laserChrome(field, insets: geo.safeAreaInsets, narrow: geo.size.width < 600, short: geo.size.height < 520).ignoresSafeArea()
+                }
+                if showGuide {
+                    MiningGuide(onRecharge: { showGuide = false; scene?.refill(); say("Laser refilled. Cargo kept.") },
+                                onScrub: { showGuide = false; confirmingScrub = true },
+                                onClose: { showGuide = false })
                 }
             }
-            .onAppear { if scene == nil { setup(geo.size) } }
+            .onAppear { if scene == nil { setup(geo.size) }; keysFocused = true }
+            // Hardware keyboard (iOS keyboard / macOS): W/S or arrows steer altitude, A/D or arrows speed, Space/F fire while held.
+            .focusable()
+            .focused($keysFocused)
+            .focusEffectDisabled()
+            .onKeyPress(phases: [.down, .up]) { press in
+                let down = press.phase == .down
+                switch press.key {
+                case .upArrow: scene?.setClimb(down ? -1 : 0)
+                case .downArrow: scene?.setClimb(down ? 1 : 0)
+                case .leftArrow: scene?.setScroll(down ? -1 : 0)
+                case .rightArrow: scene?.setScroll(down ? 1 : 0)
+                case .space: scene?.setTrigger(down)
+                default:
+                    switch press.characters.lowercased() {
+                    case "w": scene?.setClimb(down ? -1 : 0)
+                    case "s": scene?.setClimb(down ? 1 : 0)
+                    case "a": scene?.setScroll(down ? -1 : 0)
+                    case "d": scene?.setScroll(down ? 1 : 0)
+                    case "f": scene?.setTrigger(down)
+                    default: return .ignored
+                    }
+                }
+                return .handled
+            }
         }
         .background(Theme.bg)
+        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
         .confirmationDialog("Scrub mission?", isPresented: $confirmingScrub, titleVisibility: .visible) {
             Button("Scrub mission", role: .destructive) { store.abandonMission() }
             Button("Keep mining", role: .cancel) {}
         } message: {
             Text("\(field?.cargoUnits ?? 0) units collected will be lost.")
+        }
+    }
+
+    private func laserChrome(_ field: MiningField, insets: EdgeInsets, narrow: Bool, short: Bool = false) -> some View {
+        let compact = narrow || short
+        let zones = HUDZones.standard
+        let trainingCue = store.player.flightPlan.currentTry == "mining" ? "Fire on a labelled seam" : nil
+        let order = MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue)
+            .frame(maxWidth: 220)
+            .onLongPressGesture { showGuide = true }
+        return ZStack {
+            VStack(alignment: .leading, spacing: 8) {
+                HudGearClock(onSettings: { showSettings = true })
+                if narrow { order }
+                SkyEventChip().frame(maxWidth: .infinity, alignment: .leading)
+                Spacer()
+            }
+            .padding(.leading, insets.leading + zones.topLeft.inset).padding(.top, insets.top + zones.topLeft.inset)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+            if !narrow {
+                order
+                    .padding(.top, insets.top + zones.topLeft.inset)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
+
+            HudChips(francs: store.player.francs)
+                .padding(.trailing, insets.trailing + zones.topRight.inset + 52).padding(.top, insets.top + zones.topRight.inset)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+
+            // Phones: compact pad and gauge in the clear strip under the ground deposits.
+            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSpeed: { scene?.setScroll($0) }, obstacleAhead: obstacleAhead, tile: short ? 44 : compact ? 52 : 56)
+                .padding(.leading, insets.leading + 16)
+                .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 16))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+
+            // Hint sits up top, clear of the d-pad, gauge and deposits (SSL-538 phone layout).
+            if let toast {
+                Text(toast).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .background(Capsule().fill(Theme.hudPanel))
+                    .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+                    .padding(.top, insets.top + zones.topLeft.inset + (narrow ? 112 : 64))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
+
+            // Gauge: centred on wide screens; on phones it moves right, level with the d-pad, well above the ground.
+            LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging, width: compact ? 160 : 260)
+                .padding(.trailing, compact ? insets.trailing + 16 : 0)
+                .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 84))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: compact ? .bottomTrailing : .bottom)
+
+            VStack(spacing: 8) {
+                Spacer()
+                BaseDock(tile: 44, zones: zones.dock, items: [
+                    ("Fire", "bolt.fill", {}),
+                    ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
+                ], onPrev: { scene?.nudge(-1) }, onNext: { scene?.nudge(1) }, holdFirst: { scene?.setTrigger($0) })
+            }
+            .padding(.bottom, insets.bottom + zones.dock.bottomInset)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
     }
 
@@ -164,89 +244,89 @@ struct MiningScreen: View {
         let tier = parts.drill.first { $0.id == rocket.drill }?.tier ?? 1
         // Same charge budget as web MiningScreen: onboarding runs are generous, later runs add the Laser Capacitor bonus (SSL-462).
         let ore = mission.requires.minerals.values.reduce(0, +)
-        let charges = mission.sequence <= 2
+        // SSL-538: a full charge lasts about twice as long (matches web MAX_CHARGES * 2).
+        let charges = 2 * (mission.sequence <= 2
             ? max(80, ore * 16)
-            : max(Skills.laserChargeCap(store.player.unlockedSkillNodes), ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel)
+            : max(Skills.laserChargeCap(store.player.unlockedSkillNodes), ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel))
         // Meteor-shower debris joins the field only inside its window and the player's local night (SSL-475).
         let shower = SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now) / 2).rounded(.up)))) }
         let f = MiningField(target: target, required: mission.requires.minerals, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower)
-        let s = MiningScene(field: f, size: size)
+        let palette = LaserPalette.resolve(id: target.id, type: target.type, archetype: target.archetype)
+        let s = MiningScene(field: f, size: size, palette: palette, landscapeKey: target.id)
+        s.showsOpsBrackets = !store.player.freeOperations && store.player.flightPlan.currentTry == "mining"
         s.onChange = { f in
             field = f
             for id in SkyEvents.debrisResourceIds where f.cargo[id, default: 0] > 0 { store.debrisMined(id) }
         }
+        s.onTargetCue = { cue in targetCue = cue }
+        s.onObstacleAhead = { obstacleAhead = $0 }
         s.reducedMotion = reduceMotion
-        s.onDash = { dashCharge = $0 }
+        #if DEBUG
+        // Simulator playtests have no tap driver: `-autofire` holds the real trigger so the laser path is exercised unattended.
+        if ProcessInfo.processInfo.arguments.contains("-autofire") { s.setTrigger(true) }
+        #endif
+        s.onBump = { say("Hull bumped: −1 charge") }
+        s.onCharging = { c in laserCharging = c }
         s.onFeedback = { msg in toast = msg; Task { try? await Task.sleep(for: .seconds(1.4)); if toast == msg { toast = nil } } }
         field = f; scene = s
     }
 }
 
-/// SSL-411 action row: one Return button that carries order progress and laser charge, plus a ... menu for rare actions.
+/// Order lines and the fire control. Scrub stays an accessibility action so the panel matches the approved dock.
 struct MiningActionRow: View {
     let field: MiningField
     let onReturn: () -> Void
     let onScrub: () -> Void
+    var onFire: () -> Void = {}
+    var showFire = true
+    var targetCue: String? = nil
 
-    private var ready: Bool { field.isComplete || field.charge <= 0 }
-    private var need: Int { field.required.values.reduce(0, +) }
-    private var have: Int { field.required.reduce(0) { $0 + min($1.value, field.cargo[$1.key, default: 0]) } }
+    private var chargePct: Double { field.chargeCap > 0 ? Double(field.charge) / Double(field.chargeCap) : 0 }
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Button(action: onReturn) {
-                VStack(spacing: 4) {
-                    Text(ready ? (field.isComplete ? "CONTRACT FILLED · RETURN" : "OUT OF CHARGE · RETURN") : "FILL ORDER TO RETURN")
-                        .font(AppFont.display(14, "Bold")).tracking(1.0).lineLimit(1).minimumScaleFactor(0.9)
-                    HStack(spacing: 6) {
-                        Image(systemName: "bolt.fill").font(.system(size: 14))
-                        Text("\(field.charge)/\(field.chargeCap)").font(AppFont.mono(14))
-                        Text("· ORDER \(have)/\(need)").font(AppFont.mono(14))
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(field.required.keys.sorted(), id: \.self) { id in
+                        let need = field.required[id] ?? 0
+                        let have = min(need, field.cargo[id, default: 0])
+                        Text("\(Minerals.byId[id]?.name ?? id) \(have)/\(need)")
+                            .font(AppFont.mono(14)).foregroundStyle(Theme.hudInk).lineLimit(1)
                     }
-                    ProgressTrack(value: need > 0 ? Double(have) / Double(need) : 0)
+                    if let targetCue {
+                        Text(targetCue).font(AppFont.display(14)).foregroundStyle(Theme.hudInk).lineLimit(1)
+                    }
+                    GeometryReader { g in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Theme.hudInk.opacity(0.15))
+                            Capsule().fill(Theme.hudInk).frame(width: max(4, g.size.width * chargePct))
+                        }
+                    }.frame(height: 8)
                 }
-                .foregroundStyle(ready ? Color.white : Theme.ink)
                 .padding(.horizontal, 12).padding(.vertical, 8)
-                .frame(maxWidth: .infinity, minHeight: 56)
-                .background(ready ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 2))
-                .background(RoundedRectangle(cornerRadius: 8).fill(Theme.blue).offset(x: 3, y: 3))
+                .frame(maxWidth: .infinity, minHeight: showFire ? 64 : 44, alignment: .leading)
+                .background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: 4))
+                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Return to Earth. Order \(have) of \(need). Laser charge \(field.charge) of \(field.chargeCap).")
-            Menu {
-                Button("Scrub mission", role: .destructive, action: onScrub)
-            } label: {
-                Image(systemName: "ellipsis").font(.system(size: 20, weight: .bold)).foregroundStyle(Theme.ink)
-                    .frame(width: 48, height: 56)
-                    .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 2))
+            .accessibilityLabel("Order. Laser charge \(field.charge) of \(field.chargeCap).")
+            .accessibilityAction(named: "Scrub mission", onScrub)
+            if showFire {
+            Button(action: onFire) {
+                Text(field.charge <= 0 ? "Depleted" : "Fire laser")
+                    .font(AppFont.display(20)).foregroundStyle(Theme.ink)
+                    .frame(maxWidth: .infinity, minHeight: 64)
+                    .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 16))
             }
-            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-            .accessibilityLabel("More controls")
-        }
-    }
-}
-
-/// Round dash button with a recharge ring, bottom-right of the mining HUD.
-struct DashButton: View {
-    let charge: Double
-    let action: () -> Void
-    var body: some View {
-        Button(action: action) {
-            ZStack {
-                Circle().fill(Theme.paper)
-                Circle().trim(from: 0, to: charge).stroke(charge >= 1 ? Theme.teal : Theme.blue, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                    .rotationEffect(.degrees(-90)).padding(3)
-                Image(systemName: "bolt.fill").font(.system(size: 20, weight: .bold)).foregroundStyle(charge >= 1 ? Theme.teal : Theme.textMuted)
+            .buttonStyle(.plain)
+            .disabled(field.charge <= 0)
+            .accessibilityLabel("Fire laser")
             }
-            .frame(width: 58, height: 58)
-            .overlay(Circle().stroke(Theme.border, lineWidth: 1.5))
-            .background(Circle().fill(Theme.blue).offset(x: 3, y: 3))
         }
-        .buttonStyle(.plain).disabled(charge < 1)
-        .keyboardShortcut(.space, modifiers: [])
-        .accessibilityLabel("Dash")
+        .padding(showFire ? 10 : 4)
+        .frame(maxWidth: 720)
+        .background(showFire ? Theme.paper : .clear, in: RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(showFire ? Theme.border : .clear, lineWidth: 1))
     }
 }
 
@@ -296,5 +376,74 @@ struct LaunchSequenceScreen: View {
             }
         }
         .background(Theme.bg)
+    }
+}
+
+/// Mining controls guide (mirrors web `mining-guide-dock`): full screen while open, one card per control with 24pt
+/// gaps, Recharge and Scrub as separate full-width buttons. The HUD and dock are removed while it shows.
+struct MiningGuide: View {
+    @Environment(\.flatLayout) private var flat
+    let onRecharge: () -> Void
+    let onScrub: () -> Void
+    let onClose: () -> Void
+
+    private static let items: [(String, String)] = [
+        ("Fire Laser", "Fires the vertical beam. Scroll ore under the beam, then fire."),
+        ("Charges", "The fire button reads Depleted when the laser is empty. Empty, with the order unfinished, the run stops."),
+        ("Order", "The order card lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty."),
+        ("Scroll", "The dock arrows change how fast the ground moves. They settle back to a steady crawl."),
+        ("Inventory", "The order lines show collected against required. Fill every line to unlock return."),
+        ("Return home", "Return for recovery. Payout unlocks after landing."),
+    ]
+
+    private var cards: some View {
+        VStack(spacing: SetStyle.gap) {
+            ForEach(Self.items, id: \.0) { item in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(item.0).font(AppFont.display(16, "Bold")).foregroundStyle(SetStyle.ink)
+                    Text(item.1).font(AppFont.body(16)).foregroundStyle(SetStyle.muted).fixedSize(horizontal: false, vertical: true)
+                }.setCard()
+            }
+        }.padding(.horizontal, 16).padding(.vertical, 8).setColumn()
+    }
+
+    private var buttons: some View {
+        VStack(spacing: SetStyle.gap) {
+            SetButton(title: "Recharge laser", solid: true, fill: true, action: onRecharge)
+            SetButton(title: "Scrub mission", color: SetStyle.danger, fill: true, action: onScrub)
+        }.padding(16)
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            let wide = geo.size.width > geo.size.height
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Controls".uppercased()).font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SetStyle.ink)
+                    Spacer()
+                    Button(action: onClose) {
+                        Image(systemName: "xmark").font(.system(size: 18, weight: .heavy)).foregroundStyle(SetStyle.ink)
+                            .frame(width: 44, height: 44)
+                            .background(SetStyle.card, in: RoundedRectangle(cornerRadius: SetStyle.radius))
+                            .overlay(RoundedRectangle(cornerRadius: SetStyle.radius).stroke(SetStyle.ink, lineWidth: SetStyle.border))
+                    }.buttonStyle(.plain).accessibilityLabel("Close")
+                }.padding(.horizontal, 16).padding(.vertical, 8).frame(minHeight: 60).setColumn(wide: wide)
+                if wide {
+                    HStack(alignment: .top, spacing: 0) {
+                        scroller { cards }
+                        buttons.frame(width: 300)
+                    }
+                } else {
+                    scroller { cards }
+                    buttons.setColumn()
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(SetStyle.bg.ignoresSafeArea())
+    }
+
+    @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
+        if flat { c().frame(maxHeight: .infinity, alignment: .top) } else { ScrollView { c() } }
     }
 }

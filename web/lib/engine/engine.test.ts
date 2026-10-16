@@ -297,6 +297,31 @@ describe('GameLoop', () => {
     expect(scene.update).not.toHaveBeenCalled()
     expect(app.renderer.render).not.toHaveBeenCalled()
   })
+
+  it('does not schedule a frame while the document is hidden, and resumes when shown', () => {
+    const listeners = new Map<string, () => void>()
+    const doc = {
+      hidden: true,
+      addEventListener: (type: string, cb: () => void) => { listeners.set(type, cb) },
+      removeEventListener: (type: string) => { listeners.delete(type) },
+    }
+    vi.stubGlobal('document', doc)
+    const scene = makeMockScene()
+    const loop = new GameLoop(scene, makeMockApp())
+    loop.start()
+    expect(requestAnimationFrame).not.toHaveBeenCalled()
+
+    doc.hidden = false
+    listeners.get('visibilitychange')?.()
+    expect(requestAnimationFrame).toHaveBeenCalledOnce()
+
+    doc.hidden = true
+    listeners.get('visibilitychange')?.()
+    expect(cancelAnimationFrame).toHaveBeenCalled()
+    rafCb!(1000 / 60)
+    expect(scene.update).not.toHaveBeenCalled()
+    loop.stop()
+  })
 })
 
 // ─── AssetManager ────────────────────────────────────────────────────────────

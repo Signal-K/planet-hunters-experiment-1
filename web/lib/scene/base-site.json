@@ -1,0 +1,274 @@
+{
+  "version": 1,
+  "about": "Base site map shared by web (web/lib/scene/base-site.json, copied by scripts/sync-base-site.mjs) and native (bundled). Kit units: the base strip is 520 units wide; one unit is `kitScale` pt on screen. Art comes from tools/blender/models/base_v7.py and terrain_v7.py; sprite metrics are the Blender camera frames. The base is a paved launch complex on flat land: no mountains, no forest, no buildings until the player builds them. A fresh base asks for the launchpad first, on the pad site.",
+  "strip": {
+    "width": 520
+  },
+  "kitScale": {
+    "phone": 2,
+    "large": 3,
+    "largeMinHeight": 600,
+    "portraitFit": 250,
+    "portraitMin": 1.5,
+    "rule": "Portrait: view width / portraitFit, kept between portraitMin and phone, so the hangar and pad both fit. Landscape: phone (2) under 600 pt tall, else large (3)."
+  },
+  "ground": {
+    "lineFromBottom": 0.2,
+    "about": "One paved ground image under the whole strip (concrete apron, service road, drains). `above` and `below` are kit units above and below the ground line (the strip's front edge); `left` is where the image starts on the strip. Below the image the ground continues in `deep`.",
+    "src": "base/v7/ground/ground-complex.jpg",
+    "left": -80,
+    "width": 680,
+    "above": 11.128,
+    "below": 53.223,
+    "deep": "#a39d92"
+  },
+  "structures": {
+    "hangar": {
+      "site": "hall",
+      "src": "base/v7/structures/hangar.png",
+      "body": 52,
+      "left": -3,
+      "width": 68,
+      "height": 56.845,
+      "foot": -0.484
+    },
+    "launchpad": {
+      "site": "pad",
+      "src": "base/v7/structures/launchpad.png",
+      "body": 92,
+      "left": -6,
+      "width": 112,
+      "height": 136.48,
+      "foot": -0.484,
+      "mount": {
+        "x": 60,
+        "z": 15
+      }
+    },
+    "control-station": {
+      "site": "ops",
+      "src": "base/v7/structures/control-station.png",
+      "body": 60,
+      "left": -3,
+      "width": 74,
+      "height": 63.176,
+      "foot": -0.484
+    },
+    "market": {
+      "site": "exchange",
+      "src": "base/v7/structures/exchange.png",
+      "body": 110,
+      "left": -3,
+      "width": 124,
+      "height": 48.954,
+      "foot": -0.484
+    },
+    "surface-silo": {
+      "site": "shaft"
+    }
+  },
+  "sites": [
+    {
+      "id": "hall",
+      "x": 45,
+      "half": 29,
+      "plot": null,
+      "label": "Hangar"
+    },
+    {
+      "id": "pad",
+      "x": 146,
+      "half": 52,
+      "plot": 0,
+      "label": "Launchpad"
+    },
+    {
+      "id": "ops",
+      "x": 252,
+      "half": 33,
+      "plot": 3,
+      "label": "Control station"
+    },
+    {
+      "id": "exchange",
+      "x": 366,
+      "half": 58,
+      "plot": 1,
+      "label": "Exchange"
+    },
+    {
+      "id": "shaft",
+      "x": 470,
+      "half": 26,
+      "plot": 2,
+      "label": "Silo"
+    }
+  ],
+  "backdrop": {
+    "about": "Far ground from the strip's back edge to a low horizon, one image per biome, drawn behind the paved ground with a slower parallax. `bottom` is its lowest row in kit units above the ground line. Every biome is flat.",
+    "left": -80,
+    "width": 680,
+    "biomes": {
+      "mountains": [
+        {
+          "id": "plain",
+          "src": "base/v7/ground/plain-mountains.jpg",
+          "bottom": 10.161,
+          "height": 47.933,
+          "parallax": 0.6
+        }
+      ],
+      "tundra": [
+        {
+          "id": "plain",
+          "src": "base/v7/ground/plain-tundra.jpg",
+          "bottom": 10.161,
+          "height": 47.933,
+          "parallax": 0.6
+        }
+      ],
+      "desert": [
+        {
+          "id": "plain",
+          "src": "base/v7/ground/plain-desert.jpg",
+          "bottom": 10.161,
+          "height": 47.933,
+          "parallax": 0.6
+        }
+      ],
+      "coast": [
+        {
+          "id": "plain",
+          "src": "base/v7/ground/plain-coast.jpg",
+          "bottom": 10.161,
+          "height": 47.933,
+          "parallax": 0.6
+        }
+      ]
+    }
+  },
+  "sky": {
+    "about": "Six local-time grades. Gradient top, mid, horizon; the luminary is the sun by day and the moon at night, at x, y as fractions of the sky. Clouds drift; stars show from dusk to dawn. Clouds drift right across the strip and wrap; `y` is from the top of the sky, `seconds` one full crossing.",
+    "grades": {
+      "dawn": {
+        "top": "#3d6290",
+        "mid": "#8eb4d4",
+        "horizon": "#d7a8b0",
+        "luminary": {
+          "kind": "sun",
+          "x": 0.18,
+          "y": 0.62
+        },
+        "stars": 0.3,
+        "clouds": 0.7,
+        "shade": 0.12
+      },
+      "morning": {
+        "top": "#5b93c4",
+        "mid": "#b7d4ea",
+        "horizon": "#e7f0ea",
+        "luminary": {
+          "kind": "sun",
+          "x": 0.32,
+          "y": 0.26
+        },
+        "stars": 0,
+        "clouds": 1,
+        "shade": 0
+      },
+      "midday": {
+        "top": "#6ea4d4",
+        "mid": "#b9d3e8",
+        "horizon": "#e4eee6",
+        "luminary": {
+          "kind": "sun",
+          "x": 0.52,
+          "y": 0.1
+        },
+        "stars": 0,
+        "clouds": 1,
+        "shade": 0
+      },
+      "afternoon": {
+        "top": "#4e7eae",
+        "mid": "#8fafc6",
+        "horizon": "#c9d5d2",
+        "luminary": {
+          "kind": "sun",
+          "x": 0.7,
+          "y": 0.28
+        },
+        "stars": 0,
+        "clouds": 0.9,
+        "shade": 0.06
+      },
+      "dusk": {
+        "top": "#10182c",
+        "mid": "#1a3d62",
+        "horizon": "#c45b6a",
+        "luminary": {
+          "kind": "sun",
+          "x": 0.84,
+          "y": 0.66
+        },
+        "stars": 0.5,
+        "clouds": 0.55,
+        "shade": 0.22
+      },
+      "night": {
+        "top": "#0e1528",
+        "mid": "#1a2744",
+        "horizon": "#2a3d55",
+        "luminary": {
+          "kind": "moon",
+          "x": 0.24,
+          "y": 0.16
+        },
+        "stars": 1,
+        "clouds": 0.25,
+        "shade": 0.42
+      }
+    },
+    "clouds": [
+      {
+        "src": "base/v7/sky/cloud-0.png",
+        "width": 84,
+        "height": 20.89,
+        "y": 0.16,
+        "x": 40,
+        "seconds": 210
+      },
+      {
+        "src": "base/v7/sky/cloud-1.png",
+        "width": 68,
+        "height": 22.95,
+        "y": 0.3,
+        "x": 230,
+        "seconds": 160
+      },
+      {
+        "src": "base/v7/sky/cloud-2.png",
+        "width": 104,
+        "height": 21,
+        "y": 0.08,
+        "x": 390,
+        "seconds": 260
+      }
+    ]
+  },
+  "biomes": {
+    "about": "Landscape picker labels. Ids stay as saved (mountains is shown as Steppe). Every landscape is flat launch-range land; base-world.json holds each one's objects.",
+    "mountains": {
+      "label": "Steppe"
+    },
+    "desert": {
+      "label": "Desert"
+    },
+    "tundra": {
+      "label": "Tundra"
+    },
+    "coast": {
+      "label": "Coast"
+    }
+  }
+}

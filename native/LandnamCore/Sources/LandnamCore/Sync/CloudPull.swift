@@ -16,6 +16,7 @@ public enum CloudPull {
     public static let welcomeKey = "nativeWelcomePending"
 
     public static func fetch(baseURL: URL, token: String, userId: String, session: URLSession = .shared) async -> Result {
+        if PocketBaseExecutor.forceOffline { return .unavailable }
         var comps = URLComponents(url: baseURL.appendingPathComponent("api/collections/game_states/records"), resolvingAgainstBaseURL: false)!
         comps.queryItems = [.init(name: "filter", value: "user = \"\(userId)\""), .init(name: "perPage", value: "1")]
         var req = URLRequest(url: comps.url!)
@@ -73,6 +74,7 @@ public enum CloudPull {
         n.player.deepSpaceTelescopeLaunchedAt = earliest(n.player.deepSpaceTelescopeLaunchedAt, local.player.deepSpaceTelescopeLaunchedAt)
         n.player.saturnImagerLaunchedAt = earliest(n.player.saturnImagerLaunchedAt, local.player.saturnImagerLaunchedAt)
         n.player.deepSpaceTelescopeBuilt = n.player.deepSpaceTelescopeBuilt || local.player.deepSpaceTelescopeBuilt
+        Player.mergeTelescope(&n.player)
         return n
     }
 }

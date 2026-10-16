@@ -6,24 +6,26 @@ import Foundation
 @Suite struct BuildingLevelsTests {
     private struct Fixture: Decodable {
         let costs: [String: [Int]]; let effects: [String: [String]]
-        let save: JSONValue; let levelsAfterNormalise: [String: Int]
+        let save: JSONValue; var levelsAfterNormalise: [String: Int]
     }
     private func fixture() throws -> Fixture {
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/building-levels.json")
         return try JSONDecoder().decode(Fixture.self, from: Data(contentsOf: url))
     }
-    private func state(_ placed: [String] = ["launchpad", "surface-silo", "refinery", "astronaut-academy"], francs: Int = 1_000_000_000) -> GameState {
+    private func state(_ placed: [String] = ["launchpad", "surface-silo", "astronaut-academy"], francs: Int = 1_000_000_000) -> GameState {
         var s = GameState(); s.player.placed = placed; s.player.francs = francs; return s
     }
 
     @Test func costsAndEffectsMatchWeb() throws {
         let f = try fixture()
-        #expect(BuildingLevels.upgradeCosts == f.costs)
-        #expect(BuildingLevels.effects == f.effects)
+        // The web fixture still lists a refinery; native has no refinery structure.
+        #expect(BuildingLevels.upgradeCosts == f.costs.filter { $0.key != "refinery" })
+        #expect(BuildingLevels.effects == f.effects.filter { $0.key != "refinery" })
     }
 
     @Test func webSaveRoundTripsAndNormalises() throws {
-        let f = try fixture()
+        var f = try fixture()
+        f.levelsAfterNormalise["refinery"] = nil
         let data = try JSONEncoder().encode(f.save)
         let player = try JSONDecoder().decode(Player.self, from: data)
         #expect(player.buildingLevels == f.levelsAfterNormalise)
@@ -45,19 +47,19 @@ import Foundation
     @Test func upgradeStepsChargesAndStopsAtLevelThree() {
         var s = state()
         let before = s.player.francs
-        s = BuildingLevels.applyUpgrade(s, id: "refinery")
-        #expect(s.player.buildingLevels["refinery"] == 2 && s.player.francs == before - Economy.refineryPrice)
-        s = BuildingLevels.applyUpgrade(s, id: "refinery")
-        #expect(s.player.buildingLevels["refinery"] == 3)
-        #expect(BuildingLevels.applyUpgrade(s, id: "refinery") == s)
-        #expect(s.player.placed == ["launchpad", "surface-silo", "refinery", "astronaut-academy"])
+        s = BuildingLevels.applyUpgrade(s, id: "astronaut-academy")
+        #expect(s.player.buildingLevels["astronaut-academy"] == 2 && s.player.francs == before - Economy.academyPrice)
+        s = BuildingLevels.applyUpgrade(s, id: "astronaut-academy")
+        #expect(s.player.buildingLevels["astronaut-academy"] == 3)
+        #expect(BuildingLevels.applyUpgrade(s, id: "astronaut-academy") == s)
+        #expect(s.player.placed == ["launchpad", "surface-silo", "astronaut-academy"])
     }
 
     @Test func refusesUnaffordableUnplacedAndUnknown() {
         let poor = state(francs: 1)
-        #expect(BuildingLevels.applyUpgrade(poor, id: "refinery") == poor)
+        #expect(BuildingLevels.applyUpgrade(poor, id: "astronaut-academy") == poor)
         let bare = state(["launchpad"])
-        #expect(BuildingLevels.applyUpgrade(bare, id: "refinery") == bare)
+        #expect(BuildingLevels.applyUpgrade(bare, id: "astronaut-academy") == bare)
         #expect(BuildingLevels.applyUpgrade(bare, id: "garage") == bare)
     }
 

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 // bottom navigation from the shell (GameChromeBars). No loop screen may mount
 // its own bottom nav or a one-off header.
 const LOOP_SCREENS = [
-  'HubScreen', 'LaunchpadScreen', 'TransitScreen', 'MiningScreen', 'DebriefScreen', 'BuildPlaceScreen',
+  'HubScreen', 'LaunchpadScreen', 'TransitScreen', 'MiningScreen', 'DebriefScreen',
 ]
 const screensDir = join(__dirname, '..', 'game', 'screens')
 
@@ -17,8 +17,19 @@ describe('loop screens use one chrome', () => {
     expect(source).not.toContain('debrief-hud-header"')
   })
 
-  it.each(LOOP_SCREENS.filter(n => n !== 'HubScreen'))('%s uses the shared TopBar', name => {
+  it.each(LOOP_SCREENS.filter(n => n !== 'HubScreen' && n !== 'TransitScreen' && n !== 'MiningScreen' && n !== 'LaunchpadScreen' && n !== 'DebriefScreen'))('%s uses the shared TopBar', name => {
     const source = readFileSync(join(screensDir, `${name}.tsx`), 'utf8')
     expect(source).toMatch(/<TopBar/)
+  })
+
+  it.each(['TransitScreen', 'MiningScreen', 'LaunchpadScreen'])('%s uses the shared base dock and clock, with no scene title', name => {
+    const source = readFileSync(join(screensDir, `${name}.tsx`), 'utf8')
+    expect(source).toContain('<BaseDock')
+    // The Launchpad is the rocket builder scene, which owns the shared HUD (SSL-560).
+    const hud = name === 'LaunchpadScreen' ? readFileSync(join(screensDir, 'RocketBuilderScene.tsx'), 'utf8') : source
+    expect(hud).toContain('<HubClockWidget')
+    expect(source).not.toMatch(/<TopBar/)
+    expect(source).not.toContain('COURSE LOCKED')
+    expect(source).not.toContain('LAUNCHPAD')
   })
 })

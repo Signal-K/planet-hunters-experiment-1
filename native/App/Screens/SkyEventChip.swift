@@ -70,14 +70,16 @@ struct WorldSpaceWeekBanner: View {
     let banner: WorldSpaceWeek.Banner
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(banner.title.uppercased()).font(AppFont.display(14)).tracking(1.4)
-            Text(banner.detail).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-            Text("\(banner.earned) / \(banner.total) BADGES").font(AppFont.display(14)).tracking(1.0)
+        let title = Text(banner.title.uppercased()).font(AppFont.display(14)).tracking(1.7)
+        let detail = Text(banner.detail).font(AppFont.body(14, "Bold"))
+        let count = Text("\(banner.earned) / \(banner.total) BADGES").font(AppFont.display(14)).tracking(1.1)
+        // Web `.banner` is a wrapping flex row: one line when it fits, else title / detail / count stacked.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) { title.lineLimit(1); detail.lineLimit(1); count.lineLimit(1) }
+            VStack(alignment: .leading, spacing: 4) { title; detail; count }
         }
         .foregroundStyle(Theme.ink)
-        .fixedSize(horizontal: false, vertical: true)
-        .padding(.horizontal, 12).padding(.vertical, 8).frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+        .padding(.horizontal, 12).padding(.vertical, 10).frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
         .background(banner.live ? Theme.paper : Theme.paper2, in: RoundedRectangle(cornerRadius: 4))
         .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.ink, lineWidth: 1.5))
         .accessibilityElement(children: .combine)
@@ -113,8 +115,9 @@ struct WorldSpaceWeekChips: View {
 }
 
 /// Wraps its children onto new lines at their natural width.
-private struct ChipFlow: Layout {
+struct ChipFlow: Layout {
     var spacing: CGFloat
+    var rowSpacing: CGFloat? = nil
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let rows = place(subviews, width: proposal.width ?? .infinity)
@@ -135,7 +138,7 @@ private struct ChipFlow: Layout {
             let size = sub.sizeThatFits(.unspecified)
             if x > 0, x + size.width > width {
                 let prev = rows[rows.count - 1]
-                rows.append(Row(y: prev.y + prev.height + spacing)); x = 0
+                rows.append(Row(y: prev.y + prev.height + (rowSpacing ?? spacing))); x = 0
             }
             rows[rows.count - 1].items.append((i, x))
             rows[rows.count - 1].height = max(rows[rows.count - 1].height, size.height)

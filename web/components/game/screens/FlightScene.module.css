@@ -1,0 +1,322 @@
+.screen {
+  --k: 3px;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--ln-world-night-top);
+  color: var(--ln-world-outline);
+}
+
+.sky {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bands {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.starTile {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  image-rendering: pixelated;
+  pointer-events: none;
+  animation: pan 140s linear infinite;
+}
+
+.starTile[data-speed='far'] {
+  background-image: url('/game/assets/base/kit/stars-far.png');
+  background-size: 256px 256px;
+  animation-duration: 140s;
+}
+
+.starTile[data-speed='mid'] {
+  background-image: url('/game/assets/base/kit/stars-mid.png');
+  background-size: 256px 256px;
+  animation-duration: 90s;
+}
+
+.starTile[data-speed='near'] {
+  background-image: url('/game/assets/base/kit/stars-near.png');
+  background-size: 384px 384px;
+  animation-duration: 50s;
+}
+
+.wash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(90% 70% at 72% 18%, color-mix(in srgb, var(--ln-board-lavender) 22%, transparent), transparent 58%),
+    radial-gradient(70% 55% at 8% 78%, color-mix(in srgb, var(--ln-purple-depth) 28%, transparent), transparent 64%),
+    radial-gradient(46% 40% at 38% 46%, color-mix(in srgb, var(--ln-world-night-mid) 80%, var(--ln-board-lavender)), transparent 70%),
+    linear-gradient(180deg, var(--ln-world-night-top) 0%, var(--ln-world-night-mid) 46%, var(--ln-world-dusk-top) 100%);
+}
+
+.dust {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(16px);
+  background: radial-gradient(circle, color-mix(in srgb, var(--ln-board-lavender) 46%, var(--ln-world-night-mid)) 0%, transparent 68%);
+  opacity: 0.72;
+  animation: dust 96s linear infinite;
+}
+
+.dust[data-tone='soft'] {
+  background: radial-gradient(circle, color-mix(in srgb, var(--ln-purple-depth) 64%, var(--ln-world-dusk-mid)) 0%, transparent 70%);
+  opacity: 0.5;
+}
+
+.starTrack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  display: flex;
+  animation: pan 120s linear infinite;
+}
+
+.starTrack[data-speed='mid'] { animation-duration: 68s; }
+.starTrack[data-speed='near'] { animation-duration: 36s; }
+
+.starField {
+  position: relative;
+  width: 50%;
+  height: 100%;
+  flex: 0 0 50%;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--ln-map-sun);
+  opacity: 0.7;
+}
+
+.star[data-size='2'] { opacity: 0.9; }
+.star[data-size='3'] {
+  width: 3px;
+  height: 3px;
+  opacity: 1;
+  background: var(--ln-world-hull-lit);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--ln-world-hull-lit) 70%, transparent);
+}
+
+.stage {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 64px;
+  bottom: 88px;
+}
+
+.ship {
+  position: absolute;
+  left: 36%;
+  top: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  transform: translate(-50%, -50%);
+  animation: bob 3.2s ease-in-out infinite;
+}
+
+.rocketWrap {
+  position: relative;
+  width: calc(72 * var(--k));
+  height: calc(44 * var(--k));
+  flex: 0 0 auto;
+}
+
+.rocket {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(44 * var(--k));
+  height: calc(72 * var(--k));
+  transform: translate(-50%, -50%) rotate(90deg);
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.flame {
+  width: calc(36 * var(--k));
+  height: calc(16 * var(--k));
+  image-rendering: pixelated;
+  flex: 0 0 auto;
+}
+
+.body {
+  position: absolute;
+  top: 50%;
+  right: 10%;
+  z-index: 2;
+  width: calc(48 * var(--k));
+  height: calc(40 * var(--k));
+  transform: translate(var(--shift), -50%);
+  animation: drift 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.bodySprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.bodyCanvas {
+  --flight-sea: var(--ln-blueprint-blue);
+  --flight-land: var(--ln-world-grass);
+  --flight-cloud: var(--ln-world-hull-lit);
+  --flight-ice: var(--ln-mineral-ice);
+  --flight-shade: var(--ln-world-night-mid);
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.progress {
+  position: absolute;
+  left: 50%;
+  bottom: 96px;
+  z-index: 4;
+  width: min(520px, calc(100% - 48px));
+  height: 8px;
+  transform: translateX(-50%);
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ln-world-night-top) 72%, var(--ln-world-outline));
+  pointer-events: none;
+}
+
+.progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ln-blueprint-blue) 0%, var(--ln-world-trim-blue) 72%, transparent 100%);
+}
+
+.chrome {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 12px 0;
+}
+
+.cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  pointer-events: auto;
+}
+
+.cog {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 4px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  cursor: pointer;
+}
+
+.clock {
+  pointer-events: none;
+}
+
+.cluster :global(.scene-chip) {
+  min-height: 44px;
+  height: 44px;
+  border-radius: 4px;
+  padding: 0 12px;
+  font-size: 16px;
+}
+
+.dock {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  z-index: 5;
+  width: max-content;
+  max-width: calc(100% - 16px);
+  transform: translateX(-50%);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: auto;
+}
+
+@keyframes pan {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes dust {
+  from { transform: translateX(8%); }
+  to { transform: translateX(-36%); }
+}
+
+@keyframes bob {
+  0%, 100% { transform: translate(-50%, -50%); }
+  50% { transform: translate(-50%, calc(-50% - 6px)); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(var(--shift), -50%); }
+  50% { transform: translate(calc(var(--shift) - 8px), calc(-50% - 8px)); }
+}
+
+@media (orientation: portrait) and (max-width: 800px) {
+  .screen { --k: 2px; }
+  .stage { top: 72px; bottom: 112px; }
+  .ship { left: 40%; top: 38%; }
+  .body { right: 4%; top: 38%; }
+  .progress { bottom: 96px; width: min(320px, calc(100% - 32px)); }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .screen { --k: 2px; }
+  .top { padding-top: 8px; }
+  .stage { top: 56px; bottom: 96px; }
+  .ship { left: 36%; top: 46%; }
+  .body { right: 8%; top: 46%; }
+  .progress { bottom: 80px; }
+  .dock { bottom: 4px; }
+}
+
+@media (min-width: 1024px) {
+  .screen { --k: 3px; }
+  .ship { left: 36%; }
+  .body { right: 12%; }
+  .progress { width: min(560px, 42vw); bottom: 104px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starTrack, .starTile, .dust, .ship, .body { animation: none; }
+}

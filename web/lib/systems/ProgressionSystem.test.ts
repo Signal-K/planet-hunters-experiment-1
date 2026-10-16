@@ -141,7 +141,6 @@ describe('research progression', () => {
       player: {
         activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order -> Eros' },
         miningCargoInProgress: { iron: 2 },
-        roverMiningStartedAt: 123456,
         deliveryUnloadStartedAt: 234567,
         arrivalAt: Date.now() + 60_000,
         headingToDelivery: true,
@@ -156,7 +155,6 @@ describe('research progression', () => {
     expect(next.screen).toBe('hub')
     expect(next.player.activeMission).toBeNull()
     expect(next.player.miningCargoInProgress).toBeUndefined()
-    expect(next.player.roverMiningStartedAt).toBeUndefined()
     expect(next.player.deliveryUnloadStartedAt).toBeUndefined()
     expect(next.player.arrivalAt).toBeNull()
     expect(next.player.headingToDelivery).toBe(false)

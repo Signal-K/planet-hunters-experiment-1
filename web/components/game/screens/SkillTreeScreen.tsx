@@ -71,9 +71,8 @@ export default function SkillTreeScreen({
     <div className={`theme-blueprint ${styles.screen}`} data-testid="skill-tree-screen">
       <HubWorldBackground phase="night" composition="earth-base-wide" />
       <div className={styles.sceneWash} aria-hidden="true" />
-      <div className={styles.blueprintGrid} aria-hidden="true" />
 
-      <TopBar eyebrow="BASE · ACADEMY" title="Skill Tree" onBack={onBack} glass />
+      <TopBar eyebrow="ACADEMY" title="Skill Tree" onBack={onBack} glass />
 
       <div data-ui-zone={UI_ZONES.screenContent} data-testid="skill-tree-content" className={styles.content}>
         <header className={styles.hero}>
@@ -261,7 +260,7 @@ export default function SkillTreeScreen({
 
       <div className={styles.bottomRail}>
         <span><i className={styles.railDot} /> ACADEMY LINK ONLINE</span>
-        <span>BASE // RESEARCH CONSOLE</span>
+        <span>RESEARCH CONSOLE</span>
       </div>
     </div>
   )

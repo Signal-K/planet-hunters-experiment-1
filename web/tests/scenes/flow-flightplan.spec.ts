@@ -8,11 +8,11 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
   test.describe(`flight plan ${vp}`, () => {
     test.use({ viewport: size })
 
-    test('mining try: Base shows the first step, then the launchpad step after tapping the Launchpad', async ({ page }, info) => {
+    test('mining try: Base directs the player to the launchpad tower', async ({ page }, info) => {
       const { errors } = await stage(page, 'm1-hub', { chrome: true, patch: { flightPlan: { completed: {}, hidden: false } } })
       await page.goto(page.url() + '&plan=1')
       await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
-      await expect(objective(page)).toContainText('Open client contracts')
+      await expect(objective(page)).toContainText('Tap the tower')
       await page.screenshot({ path: `tests/.out/flow-flightplan-mining-${vp}.png` })
       expect(errors).toEqual([])
     })
@@ -31,9 +31,29 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await stage(page, 'm1-mining', { patch: { flightPlan: { completed: { mining: true, scan: true }, hidden: false } } })
       await page.goto(page.url() + '&plan=1')
       await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
+      await expect(page.getByTestId('mining-scene-status')).toHaveCount(0, { timeout: 30_000 })
+      // onReady is raised as the Pixi loop starts; let its first visible frame paint.
+      await page.waitForTimeout(800)
       await expect(objective(page)).toContainText('Fire the laser')
+      await expect(page.getByTestId('mining-training-tip')).toHaveCount(0)
+      await expect(page.getByTestId('mining-target-cue')).toContainText(/Fire on a labelled seam|· (WAIT|FIRE NOW)/)
       await expect(objective(page)).not.toContainText('Fit a module')
       await expect(page.getByText(/Fit a module/i)).toHaveCount(0)
+    })
+
+    test('live mining try keeps the field clear and the order row gives the laser cue', async ({ page }, info) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      await stage(page, 'm1-mining', { patch: { flightPlan: { completed: {}, hidden: false } } })
+      await page.goto(page.url() + '&plan=1')
+      await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })
+      await expect(page.getByTestId('mining-scene-status')).toHaveCount(0, { timeout: 30_000 })
+      await page.waitForTimeout(800)
+      await expect(page.getByTestId('mining-training-tip')).toHaveCount(0)
+      const cue = page.getByTestId('mining-target-cue')
+      await expect(cue).toContainText(/Fire on a labelled seam|· (WAIT|FIRE NOW)/)
+      await page.screenshot({ path: info.outputPath(`flow-flightplan-laser-${vp}.png`) })
+      await page.getByTestId('fire-laser-btn').click()
+      await expect(page.getByTestId('mining-training-tip')).toHaveCount(0)
     })
 
     test('part try on the Hangar screen says fit a module, not the Base instruction', async ({ page }) => {

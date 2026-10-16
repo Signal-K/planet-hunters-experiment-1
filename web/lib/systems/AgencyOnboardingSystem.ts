@@ -5,13 +5,14 @@
 //
 //   Place Launchpad → Extraction → Transport → Build Storage Silo → Free Ops
 //
-// and Free Ops opens on three agency activities: client work, the space
-// telescope, and building a refinery.
+// and Free Ops opens on client work, the space telescope, transport, and
+// storage. The refinery is not a base structure and is not an activity.
 //
 // Free Ops starts once both guided missions are flown AND a storage silo is
 // placed (freeOperationsUnlocked). Players who reached Free Ops under the old
 // three-mission onboarding keep it without a silo, so nobody loses an unlock.
 
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { isTrainingComplete, type FlightPlanProgress, type TrainingTryId } from './FlightPlanSystem'
 
 /** The structure whose placement completes the Storage stage. Kept here (not
@@ -56,25 +57,31 @@ function flightPlanStarted(plan: AgencyTrainingPlayer['flightPlan']): boolean {
   return !!(completed?.mining || completed?.scan || completed?.part)
 }
 
-/** Free Ops opens once the three tries are finished. A save that already
- * reached Free Ops under the old three-mission onboarding, and never started
- * this plan, keeps the unlock. Mining three contracts without the scan and
- * part tries does not (SSL-393). */
+/** Free Ops opens as soon as the launchpad is placed (SSL-611: no required path), so a player can mine, trade or
+ * build on their own without the three training tries. The tries stay as an optional guide. A save that already
+ * reached Free Ops under the old three-mission onboarding keeps the unlock. */
 export function freeOperationsUnlocked(player: AgencyTrainingPlayer): boolean {
+  return (player.placed ?? []).includes('launchpad') || trainingFinished(player)
+}
+
+/** The optional training track is done (or the save predates it). */
+export function trainingFinished(player: AgencyTrainingPlayer): boolean {
   if (isTrainingComplete(player.flightPlan)) return true
   if (flightPlanStarted(player.flightPlan)) return false
   return finiteMissionsDone(player) >= LEGACY_FREE_OPS_MISSIONS_DONE
 }
 
-/** True while the player has flown both guided missions but has not yet
- *  placed the storage silo that opens Free Ops. */
+/** True after both guided missions, until the Surface Silo is placed.
+ *  The hub Build button opens the build screen. Placing the silo does not
+ *  unlock Free Ops. */
 export function awaitingStorageSilo(player: AgencyTrainingPlayer): boolean {
-  return false
+  if ((player.placed ?? []).includes('surface-silo')) return false
+  return finiteMissionsDone(player) >= FREE_OPS_START_MISSIONS_DONE
 }
 
 /** The training stage the player is currently on (the first incomplete one). */
 export function agencyTrainingStage(player: AgencyTrainingPlayer): AgencyTrainingStage {
-  if (freeOperationsUnlocked(player)) return 'free-ops'
+  if (trainingFinished(player)) return 'free-ops'
   if (!player.flightPlan?.completed?.mining) return 'mining'
   if (!player.flightPlan?.completed?.scan) return 'scan'
   return 'part'
@@ -100,7 +107,7 @@ export function agencyTrainingTrack(player: AgencyTrainingPlayer): AgencyTrainin
  *  from the menu (the replayable review of training). */
 export const AGENCY_TRAINING_POPUP = 'agency-training'
 
-export type FreeOpsActivityId = 'client-work' | 'space-telescope' | 'build-refinery' | 'transport' | 'storage-silo'
+export type FreeOpsActivityId = 'client-work' | 'space-telescope' | 'transport' | 'storage-silo'
 
 export interface FreeOpsActivity {
   id: FreeOpsActivityId
@@ -108,9 +115,8 @@ export interface FreeOpsActivity {
   body: string
   cta: string
   /** Where the activity opens. The telescope starts at the Launchpad (where
-   *  its launch lives) until one is in orbit; the refinery starts at
-   *  placement until one is built. */
-  screen: 'missions' | 'launchpad' | 'instrument-hub' | 'build' | 'refinery'
+   *  its launch lives) until one is in orbit. */
+  screen: 'missions' | 'launchpad' | 'instrument-hub' | 'build'
 }
 
 export interface FreeOpsActivityPlayer {
@@ -134,18 +140,9 @@ export function freeOpsActivities(player: FreeOpsActivityPlayer): FreeOpsActivit
       label: 'Space telescope',
       body: telescopeUp
         ? 'Review new observations from your telescope in orbit.'
-        : 'Launch a transit telescope and classify real observation data.',
+        : 'Launch a space telescope and classify real observation data.',
       cta: telescopeUp ? 'Open control station' : 'Open launchpad',
       screen: telescopeUp ? 'instrument-hub' : 'launchpad',
-    },
-    {
-      id: 'build-refinery',
-      label: player.refineryBuilt ? 'Refinery' : 'Build refinery',
-      body: player.refineryBuilt
-        ? 'Turn ore from your silo into higher-value goods.'
-        : 'Construct a refinery at your base to turn stored ore into higher-value goods.',
-      cta: player.refineryBuilt ? 'Open refinery' : 'Open build',
-      screen: player.refineryBuilt ? 'refinery' : 'build',
     },
     {
       id: 'transport',

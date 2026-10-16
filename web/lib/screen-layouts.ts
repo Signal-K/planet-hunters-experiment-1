@@ -40,7 +40,7 @@ export const SCREEN_SURFACES: Record<Exclude<ScreenSurface, 'dev'>, ScreenSurfac
   launch: { label: 'Launch', chrome: 'floating', summary: 'The launch sequence. Every launch renders here; it has no URL of its own.' },
   orbit: { label: 'Orbit', chrome: 'floating', summary: 'Rocket in flight, with « » to switch between missions in progress.' },
   mining: { label: 'Mining / hovering', chrome: 'floating', summary: 'Descent and mining at a target.' },
-  home: { label: 'Home (Earth Base)', chrome: 'floating', summary: 'Tap rockets in the sky and buildings on the landscape. Bottom bar: « » Market Menu.' },
+  home: { label: 'Home', chrome: 'floating', summary: 'Tap rockets in the sky and buildings on the landscape. Dock: « », Build, Hub.' },
   instrument: { label: 'Instrument', chrome: 'docked', summary: 'Inside a building or instrument: consoles, hangar, academy, refinery, skills, community.' },
   map: { label: 'Map / navigation', chrome: 'docked', summary: 'Choosing a target on the map.' },
   takeon: { label: 'Takeon', chrome: 'floating', summary: 'Shell around a vendored TakeOn module.' },
@@ -93,7 +93,7 @@ export const GAME_ROUTES = [
   { path: '/game/mining', screen: 'mining', surface: 'mining' },
 
   // Takeon
-  { path: '/game/rover-mining', screen: 'rover-mining', surface: 'takeon' },
+  { path: '/game/rover-survey', screen: 'rover-survey', surface: 'takeon' },
   { path: '/game/delivery', screen: 'delivery', surface: 'takeon' },
   { path: '/game/surface-ops', screen: 'surface-ops', surface: 'takeon' },
 
@@ -116,6 +116,7 @@ export const GAME_ROUTES = [
   // Dev-only
   { path: '/game/launcher', surface: 'dev', dev: true },
   { path: '/game/stage', surface: 'dev', dev: true },
+  { path: '/game/storyboard', surface: 'dev', dev: true },
   { path: '/game/demo', surface: 'dev', dev: true },
   { path: '/game/demo/[preset]', surface: 'dev', dev: true, redirectTo: '/game/<preset screen>' },
   { path: '/game/mission/[[...slug]]', surface: 'dev', dev: true, redirectTo: '/game/<preset screen>' },
@@ -126,8 +127,6 @@ export const GAME_ROUTES = [
   { path: '/game/control-room-preview', surface: 'instrument', dev: true },
   { path: '/game/ship-customizer', surface: 'instrument', dev: true },
   { path: '/game/mission-flow-preview', surface: 'mission-setup', dev: true },
-  { path: '/game/takeon-preview', surface: 'takeon', dev: true },
-  { path: '/game/transit-demo', surface: 'orbit', dev: true },
 ] as const satisfies readonly GameRoute[]
 
 type ScreenRoute = Extract<typeof GAME_ROUTES[number], { screen: Screen }>

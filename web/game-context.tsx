@@ -1,11 +1,15 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { stampLedger } from '@/lib/sync/ledger'
+import { deviceId } from '@/lib/sync/deviceId'
+import { cacheSave, dropCachedSave, readCachedSave } from '@/lib/offline/stateCache'
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Screen, GameState, GameActions } from '@/lib/game-types'
 import { MISSIONS, TARGETS, getLaserChargeCap } from '@/lib/data'
-import { DEFAULT_STATE, loadState, normalizeAndRepair } from '@/lib/game-state'
-import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
+import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair } from '@/lib/game-state'
+import { REMOTE_MERGED_EVENT, sameContent } from '@/lib/sync/casSave'
+import { useRuntimeCatalog } from '@/lib/contexts/useRuntimeCatalog'
 import { resolvePreset, DEV_GROUPS } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { identifyUser } from '@/lib/posthog'
@@ -15,6 +19,7 @@ import { useAuthSync } from '@/lib/contexts/useAuthSync'
 import { useConfirmedDiscoveryPoll } from '@/lib/contexts/useConfirmedDiscoveryPoll'
 import { useCatalogSync } from '@/lib/contexts/useCatalogSync'
 import { useDailyEconomySync } from '@/lib/contexts/useDailyEconomySync'
+import { useDailyClientPoolSync } from '@/lib/contexts/useDailyClientPoolSync'
 import { useTreasurySync } from '@/lib/contexts/useTreasurySync'
 import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
@@ -29,6 +34,7 @@ import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-st
 import { canonicalGamePath, entryScreenForPath } from '@/lib/game-route'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { captureOrionidsQueryFlag } from '@/lib/data/sky-events'
+import { lockBaseWorldPreview, sanitizeEarthBiome } from '@/lib/scene/base-world'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -40,7 +46,14 @@ const STORAGE_KEY = GAME_STATE_STORAGE_KEY
 const GameContext = createContext<(GameState & GameActions) | null>(null)
 
 export function GameProvider({ children, urlSync = true }: { children: React.ReactNode; /** false = never push the router (isolated dev stage keeps its own URL). */ urlSync?: boolean }) {
-  const [state, setState] = useState<GameState>(DEFAULT_STATE)
+  const [state, setStateRaw] = useState<GameState>(DEFAULT_STATE)
+  // SSL-559: every local change is stamped onto this device's ledger entry (idempotent; merges record nothing).
+  const setState = useCallback<React.Dispatch<React.SetStateAction<GameState>>>(update => {
+    setStateRaw(s => {
+      const next = typeof update === 'function' ? (update as (prev: GameState) => GameState)(s) : update
+      return next === s ? s : stampLedger(next, deviceId())
+    })
+  }, [])
   const stateRef = useRef(state)
   stateRef.current = state
 
@@ -71,18 +84,36 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     if (hydrationRanOnce.current) return
     hydrationRanOnce.current = true
     const params = new URLSearchParams(window.location.search)
+    lockBaseWorldPreview(params)
     const previewScreen = params.get('preview')
     const routePreset = window.location.pathname.endsWith('/game/ship-customizer') ? 'ship-customizer' : null
     const presetName = routePreset ?? params.get('preset')
     if (previewScreen) {
       isPreview.current = true
+      const art = params.get('baseArt')
+      const biomeParam = params.get('biome')
+      const player = {
+        ...DEFAULT_STATE.player,
+        missionsDone: 1,
+        refineryBuilt: true,
+        placed: ['launchpad', 'refinery'] as string[],
+        placementPlots: { launchpad: 0, refinery: 1 } as Record<string, number>,
+        ...(art === 'empty' ? { placed: [] as string[], placementPlots: {}, buildingLevels: {} } : {}),
+        ...(art === 'starter' ? {
+          placed: ['hangar', 'launchpad', 'command', 'refinery'],
+          placementPlots: { hangar: 0, launchpad: 1, command: 2, refinery: 3 },
+          buildingLevels: { hangar: 1, launchpad: 1, command: 1, refinery: 1 },
+          launchpadUpgraded: false,
+        } : {}),
+        ...(biomeParam ? { earthBiome: sanitizeEarthBiome(biomeParam) } : {}),
+      }
       setState({
         ...DEFAULT_STATE,
         screen: previewScreen as Screen,
         tutorial: false,
         missionId: MISSIONS[0]?.id ?? null,
         targetId: TARGETS[0]?.id ?? null,
-        player: { ...DEFAULT_STATE.player, missionsDone: 1, refineryBuilt: true, placed: ['launchpad', 'refinery'] },
+        player,
       })
       setHydrated(true)
       return
@@ -91,7 +122,34 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       const preset = resolvePreset(presetName)
       if (preset) {
         isPreview.current = true
-        setState({ ...DEFAULT_STATE, ...preset })
+        const art = params.get('baseArt')
+        const biomeParam = params.get('biome')
+        const presetPlayer = preset.player
+        const playerPatch = presetPlayer && (art || biomeParam) ? {
+          player: {
+            ...presetPlayer,
+            ...(biomeParam ? { earthBiome: sanitizeEarthBiome(biomeParam) } : {}),
+            ...(art === 'empty' ? { placed: [], placementPlots: {}, buildingLevels: {} } : {}),
+            ...(art === 'starter' ? {
+              placed: ['hangar', 'launchpad', 'command', 'refinery'],
+              placementPlots: { hangar: 0, launchpad: 1, command: 2, refinery: 3 },
+              buildingLevels: { hangar: 1, launchpad: 1, command: 1, refinery: 1 },
+              launchpadUpgraded: false,
+            } : {}),
+            ...(art === 'built' ? {
+              placed: ['command', 'refinery', 'astronaut-academy', 'launchpad', 'surface-silo'],
+              placementPlots: { command: 0, refinery: 1, 'astronaut-academy': 2, launchpad: 3 },
+              buildingLevels: { launchpad: 3, refinery: 3, 'astronaut-academy': 3, 'surface-silo': 3 },
+              launchpadUpgraded: true,
+            } : {}),
+          },
+        } : {}
+        setState({
+          ...DEFAULT_STATE,
+          ...preset,
+          ...playerPatch,
+          ...(art ? { tutorial: false, popup: null } : {}),
+        })
         if (!routePreset && urlSync) window.history.replaceState({}, '', window.location.pathname)
         setHydrated(true)
         return
@@ -101,20 +159,33 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     // localStorage. Hydrate only that account's private slot; the unscoped
     // key is the guest/legacy slot and must not bleed into a new account
     // while remote sync is warming up (KES-324).
-    const loadedState = loadState(gameStateStorageKey(STORAGE_KEY, pbShared.authStore.record?.id))
-    // `/game` resolves returning players to Earth Base before this provider
-    // hydrates. Keep that entry decision authoritative; otherwise hydration
-    // restores the previous Contracts screen and the URL-sync effect pushes
-    // the player straight back to `/game/missions` (KES-226).
-    // SSL-476: /game/launchpad is a stable destination too. Without this a cold
-    // load restored the saved screen (e.g. hub-subsurface) and the URL sync
-    // rewrote the path to it, so the Launchpad opened the underground.
-    const entryScreen = entryScreenForPath(window.location.pathname, loadedState.player.placed)
-    const entryState = entryScreen ? { ...loadedState, screen: entryScreen } : loadedState
-    setState(entryState)
-    setHydrated(true)
-    const record = pbShared.authStore.record
-    if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
+    // SSL-559: IndexedDB is the primary offline cache, localStorage the fallback (and the
+    // fresher copy wins if a tab died between the two writes). PocketBase reconciles afterwards.
+    const slotKey = gameStateStorageKey(STORAGE_KEY, pbShared.authStore.record?.id)
+    void (async () => {
+      const fallback = loadState(slotKey)
+      const cachedRaw = await readCachedSave(slotKey)
+      let loadedState = fallback
+      if (cachedRaw) {
+        try {
+          const cached = normalizeAndRepair(JSON.parse(cachedRaw))
+          if (!localStorage.getItem(slotKey) || (cached.updatedAt ?? 0) >= (fallback.updatedAt ?? 0)) loadedState = cached
+        } catch { /* corrupt cache: localStorage copy */ }
+      }
+      // `/game` resolves returning players to Earth Base before this provider
+      // hydrates. Keep that entry decision authoritative; otherwise hydration
+      // restores the previous Contracts screen and the URL-sync effect pushes
+      // the player straight back to `/game/missions` (KES-226).
+      // SSL-476: /game/launchpad is a stable destination too. Without this a cold
+      // load restored the saved screen (e.g. hub-subsurface) and the URL sync
+      // rewrote the path to it, so the Launchpad opened the underground.
+      const entryScreen = entryScreenForPath(window.location.pathname, loadedState.player.placed)
+      const entryState = entryScreen ? { ...loadedState, screen: entryScreen } : loadedState
+      setState(entryState)
+      setHydrated(true)
+      const record = pbShared.authStore.record
+      if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
+    })()
   }, [])
 
   // Survey on return visit
@@ -163,6 +234,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     if (skipNextLocalPersist.current) {
       skipNextLocalPersist.current = false
       localStorage.removeItem(STORAGE_KEY)
+      void dropCachedSave(gameStateStorageKey(STORAGE_KEY, auth.authUserId))
       return
     }
     // updatedAt (STS-635) is stamped only in the serialized write, not fed back
@@ -170,9 +242,24 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     // on next load via loadState()/normalizeState() and used as a tie-breaker
     // in mergeRemoteState when local and remote missionsDone are equal.
     const key = gameStateStorageKey(STORAGE_KEY, auth.authUserId)
-    localStorage.setItem(key, JSON.stringify({ ...state, updatedAt: Date.now() }))
+    const json = JSON.stringify({ ...state, updatedAt: Date.now() })
+    try { localStorage.setItem(key, json) } catch { /* quota: the IndexedDB copy below still lands */ }
+    void cacheSave(key, json)
     if (key !== STORAGE_KEY) localStorage.removeItem(STORAGE_KEY)
   }, [state, hydrated, auth.authUserId])
+  // SSL-559: a save write merged in another device's progress; fold it into the live state.
+  useEffect(() => {
+    const onMerged = (event: Event) => {
+      const merged = (event as CustomEvent<GameState>).detail
+      if (!merged?.player) return
+      setState(current => {
+        const next = mergeRemoteState(current, merged)
+        return sameContent(next, current) ? current : next
+      })
+    }
+    window.addEventListener(REMOTE_MERGED_EVENT, onMerged)
+    return () => window.removeEventListener(REMOTE_MERGED_EVENT, onMerged)
+  }, [setState])
   useConfirmedDiscoveryPoll({
     stateRef,
     setState,
@@ -182,16 +269,8 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
   useDailyEconomySync(setState, hydrated, isPreview.current)
-  const runtimeCatalog = useMemo(() => buildRuntimeCatalog({
-    catalog,
-    discoveredTargets: state.player.discoveredExoplanetTargets,
-    freeOperations: state.player.freeOperations,
-    transitSatelliteLaunchedAt: state.player.transitSatelliteLaunchedAt,
-    missionId: state.missionId,
-    targetId: state.targetId,
-    missionsDone: state.player.missionsDone,
-    player: state.player,
-  }), [catalog, state.missionId, state.player, state.targetId])
+  useDailyClientPoolSync(setState, hydrated, isPreview.current, !!state.player.freeOperations, state.player.missionsDone, state.player.clientMissions)
+  const runtimeCatalog = useRuntimeCatalog(catalog, state)
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
@@ -251,7 +330,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   //   __landnam.patch({ francs: 5e6 })     merge into player
   //   __landnam.goto('hangar', {missionId, targetId})
   //   __landnam.skipTutorial()
-  //   __landnam.scenario('ui-rover-mining')  load a DEV preset into this session
+  //   __landnam.scenario('ui-rover-survey')  load a DEV preset into this session
   //   __landnam.scenarios()                  list preset keys
   useEffect(() => {
     if (!isDevLauncherEnabled()) return
@@ -262,7 +341,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       goto: (screen: GameState['screen'], ids?: { missionId?: string | null; targetId?: string | null }) =>
         setState(s => ({ ...s, screen, missionId: ids?.missionId ?? s.missionId, targetId: ids?.targetId ?? s.targetId })),
       skipTutorial: () => tutorial.skipTutorial([0, 1, 2, 3, 4, 5, 6, 8, 9, 30, 31, 32, 33, 40, 41]),
-      // Load any DEV preset (m1-mining, ui-rover-mining, ship-customizer, ...)
+      // Load any DEV preset (m1-mining, ui-rover-survey, ship-customizer, ...)
       // into the live signed-in session. Returns false for an unknown key.
       scenario: (name: string) => {
         const p = resolvePreset(name)
@@ -348,10 +427,11 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       onDeliveryArrived: loop.onDeliveryArrived,
       onDeliveryUnloadComplete: loop.onDeliveryUnloadComplete,
       onReturnArrived: loop.onReturnArrived,
-      onRoverMiningDone: loop.onRoverMiningDone,
+      onRoverSurveyComplete: loop.onRoverSurveyComplete,
       onLandingTouchdown: loop.onLandingTouchdown,
       onRedockComplete: loop.onRedockComplete,
       onDebriefDone: loop.onDebriefDone,
+      onHomeDelivery: loop.onHomeDelivery,
       onBuyLaserCapacitor: loop.onBuyLaserCapacitor,
       gainResearchXP: loop.gainResearchXP,
       startSurveyScan: loop.startSurveyScan,

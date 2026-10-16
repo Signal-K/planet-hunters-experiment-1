@@ -10,7 +10,7 @@ import {
   missionTypePrimer,
   BANKRUPTCY_THRESHOLD,
 } from '@/lib/data'
-import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
+import { applyMiningDone, applyReturnArrived } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
@@ -34,6 +34,7 @@ import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
+import { applyHomeSplit, clientDemand, clientPayout, type HomeSplit } from '@/lib/systems/HomeDeliverySystem'
 import { completeFlightPlanEvent, currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
@@ -124,7 +125,7 @@ function missionById(s: GameState, catalog: Catalog, id: string | null): Mission
 
 /** Shared by the Map step and the one-screen setup: lock a target in and move on to the rocket. */
 function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState {
-  const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
+  const mission = missionById(s, catalog, s.missionId)
   const target = catalog.targets.find(t => t.id === id) ?? null
   if (!mission || !target) return s
   if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, s.player.unlockedSkillNodes ?? [], buildingLevel(s.player, 'launchpad')).some(item => item.id === id)) return s
@@ -219,7 +220,7 @@ function parkOrDropActiveRun(state: GameState): GameState {
 function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot): GameState {
   return {
     ...state,
-    screen: snapshot.missionPhase ?? 'transit',
+    screen: snapshot.missionPhase === 'survey' ? 'rover-survey' : (snapshot.missionPhase ?? 'transit'),
     missionId: snapshot.missionId,
     targetId: snapshot.targetId,
     deliveryTargetId: snapshot.deliveryTargetId,
@@ -364,7 +365,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (mission.jointProject && s.player.francs < mission.jointProject.playerCost) return s
       const ownOperation = isOwnProgramMission(mission)
       if (s.screen === 'launchpad' && !ownOperation) return s
-      if (s.screen === 'missions' && s.player.freeOperations && ownOperation) return s
       // Park only once the new mission is actually accepted. A rejected pick
       // must leave the live run where it is.
       const prepared = s.player.activeMission ? parkOrDropActiveRun(s) : s
@@ -434,7 +434,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
       ?? null
     if (currentMission && !rocketCompatibleWithMission(rocket, currentMission)) {
-      addToast('This rocket cannot carry the selected client contract.', 'warn')
+      addToast('This rocket cannot carry the selected mission.', 'warn')
       return
     }
     setState(s => {
@@ -510,7 +510,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const onLaunch = useCallback(() => {
     const current = stateRef.current
     const selectedVehicle = current.player.stagedRockets?.find(vehicle => vehicle.id === current.player.selectedStagedRocketId)
-    if (current.screen !== 'fab' || !current.missionId || !current.targetId || current.player.activeMission || !selectedVehicle || selectedVehicle.location === 'hangar') return
+    if ((current.screen !== 'fab' && current.screen !== 'launchpad') || !current.missionId || !current.targetId || current.player.activeMission || !selectedVehicle || selectedVehicle.location === 'hangar') return
     const currentMission = catalog.missions.find(m => m.id === current.missionId)
       ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
       ?? null
@@ -523,7 +523,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     let earnedLaunchBadge: 'gold' | 'silver' | null = null
     setState(s => {
       const vehicle = s.player.stagedRockets?.find(candidate => candidate.id === s.player.selectedStagedRocketId)
-      if (s.screen !== 'fab' || !s.missionId || !s.targetId || s.player.activeMission || !vehicle || vehicle.location !== 'launchpad') return s
+      if ((s.screen !== 'fab' && s.screen !== 'launchpad') || !s.missionId || !s.targetId || s.player.activeMission || !vehicle || vehicle.location !== 'launchpad') return s
       const mission = s.missionId
         ? (catalog.missions.find(m => m.id === s.missionId)
            ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
@@ -609,7 +609,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const nextLegTarget = hasDelivery
         ? catalog.targets.find(t => t.id === s.deliveryTargetId)
         : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
-      const timedTransit = s.player.freeOperations
+      // SSL-553: the trip home is a short playable flight (boost to arrive); only a delivery leg runs on the clock.
+      const timedTransit = s.player.freeOperations && hasDelivery
       const arrivalAt = (timedTransit && nextLegTarget)
         ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
@@ -673,22 +674,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // notification would cover the next task if the player advances quickly.
   }, [setState])
 
-  const onRoverMiningDone = useCallback((cargo: Record<string, number>) => {
-    let hasDelivery = false
-    const transitStartedAt = Date.now()
-    setState(s => {
-      hasDelivery = !!s.deliveryTargetId
-      const nextLegTarget = hasDelivery
-        ? catalog.targets.find(t => t.id === s.deliveryTargetId)
-        : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
-      const timedTransit = s.player.freeOperations
-      const arrivalAt = (timedTransit && nextLegTarget)
-        ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
-        : null
-      return applyRoverMiningDone(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
-    })
-    addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Rover cargo secured — return to Earth for recovery', 'ok')
-  }, [addToast, catalog.targets, setState])
+  const onRoverSurveyComplete = useCallback(() => {
+    setState(s => s.screen === 'rover-survey'
+      ? { ...s, screen: 'mining', player: { ...s.player, missionPhase: 'mining' } }
+      : s)
+  }, [setState])
 
   const onLandingTouchdown = useCallback(() => {
     setState(s => {
@@ -871,7 +861,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     captureGameEvent('tess_classification_submitted', { subject_id: subjectId, verdict })
   }, [addToast, setState, stateRef])
 
-  // Deep Space Telescope's asteroid-discovery classification (STS-622) — a
+  // Space Telescope's asteroid-discovery classification (STS-622) — a
   // passive digest, so unlike submitTessClassification there's no
   // ranges/discoveredTarget/satelliteTargetId to thread through, just the
   // verdict record itself.
@@ -1269,8 +1259,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           transitSatelliteLevel: mission?.payload?.instrumentId === 'transit-telescope'
             ? Math.max(1, s.player.transitSatelliteLevel ?? 1) + 1
             : s.player.transitSatelliteLevel,
-          deepSpaceTelescopeBuilt: mission?.payload?.instrumentId === 'deep-space-telescope' || s.player.deepSpaceTelescopeBuilt,
-          deepSpaceTelescopeLaunchedAt: mission?.payload?.instrumentId === 'deep-space-telescope'
+          // One telescope: launching it brings the transit and asteroid feeds online together.
+          deepSpaceTelescopeBuilt: mission?.payload?.instrumentId === 'transit-telescope' || s.player.deepSpaceTelescopeBuilt,
+          deepSpaceTelescopeLaunchedAt: mission?.payload?.instrumentId === 'transit-telescope'
             ? (s.player.deepSpaceTelescopeLaunchedAt ?? Date.now())
             : s.player.deepSpaceTelescopeLaunchedAt,
           saturnImagerLaunchedAt: mission?.payload?.instrumentId === 'saturn-imager'
@@ -1291,9 +1282,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
               ? 'launchpad'
               : flightPlan.completed.mining && !flightPlan.completed.scan
                 ? 'galaxy'
-              : (stillInTutorial || justFinishedOnboardingNow)
-                ? 'hub'
-                : 'market',
+              : 'hub',
       }
       return applyGainResearchXP(next, mission?.programReward?.researchXP ?? 0)
     })
@@ -1326,11 +1315,19 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       })
     }
     const runId = current.player.missionRunId ?? missionRunIdRef.current
+    const completedRun = {
+      status: 'completed', phase: 'debrief', cargo: current.deliveredCargo ?? current.lastCargo,
+      payout_francs: total, completed_at: new Date().toISOString(),
+    }
     if (runId) {
-      queueUpdate('mission_runs', runId, {
-        status: 'completed', phase: 'debrief', cargo: current.deliveredCargo ?? current.lastCargo,
-        payout_francs: total, completed_at: new Date().toISOString(),
-      })
+      queueUpdate('mission_runs', runId, completedRun)
+    } else if (userId) {
+      // SSL-553: a run whose id was lost (reload, merge) used to stay in_progress
+      // forever while the save said activeMission = null. Close it by contract.
+      void pbLandnam.collection('mission_runs')
+        .getFullList({ filter: pbLandnam.filter('user = {:user} && status = "in_progress" && mission_id = {:mission}', { user: userId, mission: current.missionId }) })
+        .then(runs => runs.forEach(run => queueUpdate('mission_runs', run.id, completedRun)))
+        .catch(() => {})
     }
     missionRunIdRef.current = null
     // Unconditional analytics event — separate from the (now sampled)
@@ -1404,10 +1401,32 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (newMissionsDone >= FREE_OPS_MISSION_SEQUENCE && !catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
   }, [addToast, catalog.missions, setState, stateRef])
 
+  const onDebriefDoneRef = useRef(onDebriefDone)
+  onDebriefDoneRef.current = onDebriefDone
+
+  /** SSL-553: settle the delivery sheet. Market and silo shares settle here; the client share runs through the debrief ledger. */
+  const onHomeDelivery = useCallback((split: HomeSplit) => {
+    const current = stateRef.current
+    if (current.screen !== 'debrief' || !current.player.homeDeliveryPending || !current.lastCargo) return
+    const mission = current.missionId
+      ? catalog.missions.find(m => m.id === current.missionId) ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
+      : undefined
+    const demand = clientDemand(mission, current.lastCargo)
+    const payout = clientPayout(mission, split, demand, current.player.missionsDone)
+    const affinity = payout > 0 && mission?.client ? Math.max(0, mission.payout.affinity) : 0
+    let consumed: Record<string, number> = {}
+    setState(s => {
+      const settled = applyHomeSplit(s, split, Date.now())
+      consumed = settled.consumed
+      return settled.state
+    })
+    onDebriefDoneRef.current(payout, affinity, consumed)
+  }, [catalog.missions, setState, stateRef])
+
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onLaunch, resumeMissionRun,
-    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone, onBuyLaserCapacitor,
+    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverSurveyComplete, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
     submitAsteroidClassification, submitSaturnClassification, claimSaturnSurveyTerritory,

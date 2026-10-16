@@ -21,6 +21,21 @@ struct SnapshotTests {
         try #require(data).write(to: URL(fileURLWithPath: dir).appendingPathComponent("\(name).png"))
     }
 
+    /// Shared acceptance sizes; keep these aligned with web/tests/scenes/helpers.ts.
+    @Test func parityViewports() throws {
+        let sizes: [(String, CGSize)] = [
+            ("phone", CGSize(width: 390, height: 844)),
+            ("landscape", CGSize(width: 926, height: 428)),
+            ("desktop", CGSize(width: 1440, height: 900)),
+        ]
+        for id in ["hub-starter-live", "transit-live", "exchange-phone"] {
+            let scene = try #require(SceneCatalog.all.first { $0.id == id })
+            for (viewport, size) in sizes {
+                try render(scene.make(), size: size, name: "parity-\(id)-\(viewport)")
+            }
+        }
+    }
+
     /// Renders every scene in SceneCatalog, or only the comma-separated ids in $SCENE.
     /// Scenes are fixtures, so this needs no loop, save file or network.
     @Test func catalog() throws {
@@ -50,21 +65,22 @@ struct SceneSnapshotTests {
     @Test func miningScene() throws {
         AppFont.register()
         let t = Targets.all.first { $0.type == .asteroid }!
-        let f = MiningField(target: t, required: ["iron": 2, "silicon": 1], cargoCapacity: 6, laserTier: 1, seed: 3)
-        let scene = MiningScene(field: f, size: CGSize(width: 402, height: 780))
-        let view = SKView(frame: CGRect(origin: .zero, size: scene.size))
-        view.presentScene(scene)
-        scene.fire(at: CGPoint(x: 5, y: 5))
-        try write(scene, name: "mining-phone")
-    }
-
-    @Test func flightScene() throws {
-        AppFont.register()
-        let scene = FlightScene(size: CGSize(width: 402, height: 780), returning: false, targetName: "Ceres")
-        let view = SKView(frame: CGRect(origin: .zero, size: scene.size))
-        view.presentScene(scene)
-        scene.progress = 0.45
-        try write(scene, name: "flight-phone")
+        let sizes = [
+            ("phone", CGSize(width: 390, height: 844)),
+            ("landscape", CGSize(width: 926, height: 428)),
+            ("desktop", CGSize(width: 1440, height: 900)),
+        ]
+        for (label, size) in sizes {
+            for world in ["bennu", "mars", "icy-moon"] {
+                let f = MiningField(target: t, required: ["iron": 2, "silicon": 1], cargoCapacity: 6, laserTier: 1, seed: 3)
+                let scene = MiningScene(field: f, size: size, palette: LaserPalette.named(world), landscapeKey: world)
+                scene.showsOpsBrackets = true
+                let view = SKView(frame: CGRect(origin: .zero, size: scene.size))
+                view.presentScene(scene)
+                scene.fire(at: CGPoint(x: 5, y: 5))
+                try write(scene, name: world == "bennu" ? "mining-\(label)" : "mining-\(world)-\(label)")
+            }
+        }
     }
 }
 

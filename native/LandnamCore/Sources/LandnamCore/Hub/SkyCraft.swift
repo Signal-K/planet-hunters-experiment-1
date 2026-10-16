@@ -15,6 +15,7 @@ public struct SkyCraft: Equatable, Sendable {
         switch player.missionPhase ?? .transit {
         case .transit: return .transit
         case .landing: return .landing
+        case .survey: return .roverSurvey
         case .mining: return .mining
         case .delivery: return .delivery
         case .debrief: return .debrief

@@ -40,6 +40,12 @@ function GameRouteBridge() {
     })
     const params = new URLSearchParams()
     if (presetName) params.set('preset', presetName)
+    // Preview art switches are read once during hydration. Keep them on the
+    // canonical route; dropping them here leaves the base on the default grade.
+    for (const key of ['baseArt', 'biome', 'time', 'season', 'sky'] as const) {
+      const value = searchParams.get(key)
+      if (value) params.set(key, value)
+    }
     // The landing page's "Create account" link opens the gate on Sign Up.
     if (searchParams.get('gate') === 'signup') params.set('gate', 'signup')
     const qs = params.toString()

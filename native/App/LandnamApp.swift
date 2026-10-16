@@ -22,10 +22,20 @@ struct LandnamApp: App {
             Group {
                 if let scene = SceneHost.requested { SceneHost(id: scene).environment(store) } else { RootView() }
             }
-                .environment(store).environment(auth).environment(services.feed).environment(surveys)
-                .task { if SceneHost.requested == nil { services.start(store: store, auth: auth) } }
+                .environment(store).environment(auth).environment(services.feed).environment(surveys).environment(services)
+                .task {
+                    if SceneHost.requested == nil {
+                        #if DEBUG
+                        DebugSession.prepare()
+                        #endif
+                        services.start(store: store, auth: auth)
+                        #if DEBUG
+                        await DebugSession.run(store: store, auth: auth)
+                        #endif
+                    }
+                }
                 .onChange(of: auth.session) { _, s in services.attach(s) }
-                .onChange(of: scenePhase) { _, p in if p == .active { services.flush() } }
+                .onChange(of: scenePhase) { _, p in if p == .active { services.flush(); store.refreshDailyPool() } }
                 #if canImport(UIKit)
                 .onAppear { OrientationPreference(stored: orientation).apply() }
                 .onChange(of: orientation) { _, v in OrientationPreference(stored: v).apply() }

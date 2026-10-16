@@ -6,6 +6,8 @@
    specificity, so applying it unscoped blacked out that screen instead of
    only resetting the real Launchpad hub screen (LaunchpadScreen.tsx). */
 .ln-scene-launchpad:not(.mission-setup-screen--launchpad) { background: var(--hub-void, var(--ln-void)); }
+.ln-scene-launchpad .launchpad-shared-hud,
+.ln-scene-launchpad .launchpad-shared-dock { z-index: 40; }
 /* The launchpad is a destination, not a phone mockup floating on the desktop
    backdrop. The route adds this class in GameChrome so only this operations
    page escapes the generic 1320px rounded canvas. */
@@ -33,6 +35,8 @@
      authored against (2026-09-08 design feedback, KES-343). */
   --hub-ground: 20%;
 }
+.launchpad-rocket .launchpad-object-label,
+.launchpad-tower .launchpad-primary-pad-control { display: none; }
 /* Shares the Hub's own backdrop instead of a separately hand-rolled one
    (KES-233) — scaled up from the bottom-center so the ground line stays
    anchored where this screen's foreground objects expect it (see
@@ -82,7 +86,7 @@ button.launchpad-scene-object { cursor: pointer; }
   border: 2px dashed rgba(112,217,234,.62); border-radius: 50% 50% 12px 12px; background: rgba(112,217,234,.06);
   box-shadow: inset 0 0 28px rgba(112,217,234,.08), 0 0 24px rgba(112,217,234,.08);
 }
-.launchpad-station.is-blueprint .launchpad-object-art img { opacity: .22; filter: grayscale(1) sepia(.2) hue-rotate(135deg) saturate(5) drop-shadow(0 0 8px rgba(112,217,234,.8)); }
+.launchpad-station.is-blueprint .launchpad-object-art img { opacity: .22; filter: grayscale(1) brightness(1.2) contrast(0.92) drop-shadow(0 0 8px rgba(112,217,234,.8)); }
 .launchpad-station.is-blueprint .launchpad-object-label { border-color: rgba(112,217,234,.8); }
 .launchpad-station.is-blueprint .launchpad-object-label strong { color: #86e7f4; }
 .launchpad-build-plus {
@@ -101,6 +105,14 @@ button.launchpad-scene-object { cursor: pointer; }
   display: block;
   transform: translateX(-50%);
 }
+.earth-base-structure--launchpad,
+.earth-base-structure--hangar {
+  width: auto;
+  height: auto !important;
+  aspect-ratio: auto !important;
+  overflow: visible;
+}
+/* Structures stand on their home sites from the shared site map (SSL-423); no per-orientation overrides. */
 .earth-base-flat-sprite {
   position: absolute;
   inset: 0;
@@ -254,7 +266,8 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-mission-menu-close {
   flex: 0 0 auto;
-  min-height: 32px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0 10px;
   border: 1px solid var(--ln-hairline);
   border-radius: 6px;
@@ -294,9 +307,13 @@ button.launchpad-scene-object { cursor: pointer; }
   background: var(--ln-cyan-soft);
 }
 .launchpad-mission-choice:disabled {
-  opacity: .48;
+  opacity: 1;
   cursor: not-allowed;
+  background: var(--dusk-deep);
+  color: var(--dusk-dim);
 }
+.launchpad-mission-choice:disabled strong,
+.launchpad-mission-choice:disabled span { color: var(--dusk-dim); }
 .launchpad-mission-choice svg {
   width: 24px;
   height: 24px;
@@ -433,7 +450,7 @@ button.launchpad-scene-object { cursor: pointer; }
 /* The prior nav-height offset lifted the Hub dock
    into the middle of the screen on desktop and portrait; anchor it to the
    actual canvas edge. */
-.hub-bottom-dock { bottom: 0 !important; }
+.hub-bottom-dock { bottom: max(14px, env(safe-area-inset-bottom)) !important; gap: 12px !important; padding-inline: 8px; box-sizing: border-box; }
 .hub-bottom-dock-inner {
   max-width: none !important;
   width: 100% !important;
@@ -469,7 +486,7 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-rail-actions button.is-primary { min-width: 142px; }
 }
 @media (orientation: landscape) and (max-height: 600px) {
-  .launchpad-visual-scene { inset: 64px 0 62px; }
+  .launchpad-visual-scene { inset: 0; }
   .launchpad-scene-rail { height: 62px; padding: 7px 10px; }
   .launchpad-satellite { top: 2%; }
 }
@@ -515,12 +532,21 @@ button.launchpad-scene-object { cursor: pointer; }
    grow to two deliberate rows instead: each command stays visible and the
    scene remains the route's primary control above it. */
 @media (orientation: portrait) and (max-width: 600px) {
-  .launchpad-scene-rail { height: auto; min-height: 62px; padding: 6px 8px; align-items: flex-start; }
+  .launchpad-scene-rail { z-index: 30; height: auto; min-height: 62px; padding: 6px 8px; align-items: flex-start; }
+  .launchpad-mission-menu {
+    top: 56px;
+    right: 8px;
+    bottom: 112px;
+    left: 8px;
+    width: auto;
+    max-height: none;
+    transform: none;
+  }
   .launchpad-rail-status { padding-top: 14px; flex: 0 0 auto; }
   .launchpad-rail-status span { font-size: var(--ln-fs-micro); }
   .launchpad-rail-status span:not(:first-child) { display: none; }
   .launchpad-rail-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); flex: 1 1 auto; gap: 4px; }
-  .launchpad-rail-actions button { width: 100%; min-width: 0; height: 40px; padding: 0 6px; justify-content: center; font-size: var(--ln-fs-micro); }
+  .launchpad-rail-actions button { width: 100%; min-width: 0; height: 44px; min-height: 44px; padding: 0 6px; justify-content: center; font-size: var(--ln-fs-micro); }
   .launchpad-rail-actions button.is-primary { min-width: 0; }
   .launchpad-rail-actions button svg { display: none; }
   .launchpad-rail-actions [data-testid="launchpad-guide-open"] { display: none; }
@@ -572,11 +598,19 @@ button.launchpad-scene-object { cursor: pointer; }
    most of the height, and New Mission uses the whole game area so every
    option is on screen instead of in a clipped strip. */
 @media (orientation: landscape) and (max-height: 500px) {
-  .launchpad-visual-scene { inset: 48px 0 48px; }
-  .launchpad-scene-rail { height: 48px; padding: 4px 8px; }
-  .launchpad-rail-actions button { height: 40px; }
-  .launchpad-mission-menu { top: 8px; bottom: 8px; max-height: none; }
-  .launchpad-mission-menu-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .launchpad-visual-scene { inset: 0; }
+  .launchpad-scene-rail { height: 52px; padding: 4px 8px; z-index: 30; }
+  .launchpad-rail-actions button { height: 44px; min-height: 44px; }
+  .launchpad-mission-menu {
+    top: auto;
+    right: 8px;
+    bottom: 60px;
+    left: auto;
+    width: min(440px, 52vw);
+    max-height: calc(100% - 120px);
+    transform: none;
+  }
+  .launchpad-mission-menu-options { grid-template-columns: 1fr 1fr; }
   .portrait-canvas:has(.launchpad-scene-rail) .suite-hop-rail { top: 56px; flex-direction: row; align-items: center; }
   .portrait-canvas:has(.launchpad-scene-rail) .suite-identity-chip { display: none; }
   .portrait-canvas:has(.launchpad-mission-menu) .suite-hop-rail { display: none; }

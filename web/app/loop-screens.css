@@ -147,6 +147,20 @@ body:has([data-screen="hub"]) {
 /* Top bar back control and any loop button: 44px floor. */
 .theme-blueprint button { min-height: 44px; }
 .theme-blueprint .top-bar button { min-width: 44px; }
+.theme-blueprint.mining-screen .laser-hud .scene-dock-arrow,
+.theme-blueprint.mining-screen .laser-hud .scene-dock-word {
+  min-height: 44px;
+  height: 44px;
+}
+.theme-blueprint.mining-screen .laser-hud .scene-dock-arrow {
+  min-width: 44px;
+  width: 44px;
+}
+.theme-blueprint.mining-screen .laser-chrome .settings-cog {
+  min-height: 44px;
+  height: 44px;
+  width: 44px;
+}
 
 /* Shared Panel: the light blueprint card is a 2px ink outline with an offset
    shadow on every screen. Panel sets its border inline, so this must win. */
@@ -154,4 +168,199 @@ body:has([data-screen="hub"]) {
   border: 2px solid var(--ln-blueprint-ink) !important;
   border-radius: 4px !important;
   box-shadow: 4px 4px 0 rgba(31, 120, 193, 0.28) !important;
+}
+
+/* Dusk panels, chrome row, launchpad ground, and the desktop frame.
+   Loaded after globals so these beat the paper token reset. */
+
+/* Approved base chrome is the cog, clock, chips, and dock. Suite hops, the
+   feedback launcher, and the data-link row sit on other screens. */
+body:has([data-screen="hub"]) .suite-hop-rail,
+body:has([data-screen="hub"]) .suite-identity-chip,
+body:has([data-testid="rocket-builder"]) .suite-hop-rail,
+body:has([data-testid="rocket-builder"]) .suite-identity-chip,
+body:has([data-screen="hub"]) .feedback-launcher,
+body:has([data-screen="hub"]) .backend-status,
+body:has([data-screen="missions"]) .backend-status,
+body:has([data-screen="missions"]) .game-stage-backdrop {
+  display: none !important;
+}
+
+body:has([data-screen="hub"]) .hub-friends-button,
+body:has([data-screen="hub"]) .hub-community-button,
+body:has([data-screen="hub"]) .suite-hop-rail a,
+body:has([data-screen="hub"]) .suite-identity-chip,
+body:has([data-screen="launchpad"]) .suite-hop-rail a,
+body:has([data-screen="launchpad"]) .suite-identity-chip {
+  background: var(--dusk-panel) !important;
+  color: var(--dusk-ink) !important;
+  border-color: color-mix(in srgb, var(--dusk-ink) 42%, transparent) !important;
+}
+.hub-callout--clear {
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+}
+/* The callout text colours are inline dusk tokens (light). On the cream card they need the world ink. */
+.hub-callout--clear, .hub-callout--clear * { color: var(--ln-world-outline) !important; }
+.hub-callout--clear [aria-label="Dismiss"] > span { background: color-mix(in srgb, var(--ln-world-outline) 14%, transparent) !important; }
+.scene-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 4px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  cursor: pointer;
+}
+.scene-icon-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.settings-cog {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 24;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 4px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  cursor: pointer;
+}
+.portrait-canvas:has([data-testid="dev-shortcuts-toggle"]) .settings-cog { top: 60px; left: 12px; }
+.portrait-canvas:has(.settings-cog) [data-testid="hub-clock-widget"] { margin-left: 56px; }
+.suite-identity-chip { min-height: 44px; display: inline-flex; align-items: center; box-sizing: border-box; }
+
+@media (min-width: 1024px) {
+  .game-stage { padding: 0; }
+  .portrait-canvas {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail {
+    top: 12px !important;
+    right: 16px !important;
+    flex-direction: row !important;
+    align-items: center;
+  }
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { top: 12px !important; right: 280px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 12px !important; right: 400px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: inline-flex !important; }
+  [data-testid="orionids-teaser"] { top: 52px !important; bottom: auto !important; left: 8px !important; right: auto !important; }
+  .hub-callout--clear { top: 72px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--market { transform: translateX(-50%); }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%); transform-origin: center bottom; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor { bottom: var(--hub-ground) !important; }
+}
+
+@media (max-width: 520px) and (orientation: portrait) {
+  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 20%; }
+  .hub-plot-anchor { bottom: var(--hub-ground) !important; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--market { transform: translateX(-50%); }
+  .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 8px; right: 8px; flex-direction: row; }
+  .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none !important; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 20%; }
+
+  .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 8px !important; flex-direction: row !important; }
+  .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none !important; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%); transform-origin: center bottom; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor { bottom: var(--hub-ground) !important; }
+  [data-testid="orionids-teaser"] {
+    top: 52px !important;
+    bottom: auto !important;
+    left: 8px !important;
+    right: auto !important;
+    width: min(260px, 36vw) !important;
+    transform: none !important;
+  }
+  .hub-callout--clear { top: 60px !important; left: 28% !important; }
+}
+
+.portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad::after {
+  content: none;
+}
+
+.theme-blueprint.build-place-screen,
+.launchpad-visual-scene,
+.launchpad-scene-zoom {
+  --hub-void: var(--dusk-deep);
+  --hub-sky-top: var(--ln-world-dusk-top);
+  --hub-sky-mid: var(--ln-world-dusk-mid);
+  --hub-horizon: var(--ln-world-dusk-horizon);
+  --hub-ground-far: var(--dusk-ground-far);
+  --hub-ground-near: var(--dusk-ground-near);
+  --hub-ground-lip: var(--dusk-ground-lip);
+  --hub-hill-far: var(--dusk-hill);
+  --hub-hill-mid: var(--dusk-hill);
+  --hub-hill-near: var(--dusk-deep);
+  --ln-void: var(--dusk-deep);
+  --ln-bg: var(--dusk-deep);
+  --ln-panel: var(--dusk-panel);
+  --ln-panel-2: var(--dusk-raised);
+  --ln-surface: var(--dusk-raised);
+  --ln-surface-2: var(--dusk-panel);
+  --ln-text: var(--dusk-ink);
+  --ln-text-dim: var(--dusk-dim);
+  --ln-text-muted: var(--dusk-muted);
+  --ln-shell: var(--dusk-panel);
+  --ln-cyan: var(--dusk-info);
+  --ln-cyan-bright: var(--dusk-ink);
+  --ln-cyan-soft: color-mix(in srgb, var(--dusk-info) 22%, var(--dusk-panel));
+}
+.build-place-screen .build-structure-strip > div {
+  background: linear-gradient(180deg, transparent, var(--dusk-deep) 30%, var(--dusk-panel) 100%);
+}
+.build-place-screen .build-structure-strip button,
+.build-place-screen .sticky-actions {
+  background: var(--dusk-raised);
+  color: var(--dusk-ink);
+  border-color: color-mix(in srgb, var(--dusk-ink) 35%, transparent);
+}
+.build-place-screen .build-structure-strip button:disabled {
+  opacity: 1;
+  background: var(--dusk-deep);
+  color: var(--dusk-dim);
+}
+.launchpad-mission-menu {
+  background: var(--dusk-panel);
+  color: var(--dusk-ink);
+}
+.launchpad-mission-choice {
+  background: var(--dusk-raised);
+  color: var(--dusk-ink);
+}
+
+@media (max-width: 767px) {
+  [data-testid="mission-history-tray"] {
+    display: flex;
+    flex-direction: column;
+  }
+  [data-testid="mission-history-tray"] .ln-page-surface__content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+  }
+  [data-testid="mission-history-screen"] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100%;
+  }
 }

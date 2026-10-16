@@ -1,7 +1,9 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { structureBuildMs, hubConstructionProgress } from '@/lib/systems/HubConstructionSystem'
+import { useSharedSecond } from '@/lib/hooks/useSharedSecond'
 
 /**
  * DOM half of a hub structure — hit area, status pill, and the notification
@@ -17,6 +19,8 @@ export interface BuildingCallout {
   title: string
   body: string
   cta: string
+  /** A scene prompt can reserve a viewport-safe area instead of covering art. */
+  placement?: 'anchored' | 'viewport-clear'
   onCta: () => void
   /** Optional "not now" for prompts the player can wave off. */
   onDismiss?: () => void
@@ -70,6 +74,10 @@ export interface BuildingProps {
   active?: boolean
   /** Disable hover/press lift for scene objects whose art should stay still. */
   disableHover?: boolean
+  /** Hide the name pill. The structure stays tappable and keeps its accessible name. */
+  quiet?: boolean
+  /** Width/height of the hit spacer, matching the sprite. */
+  hitAspect?: string
 }
 
 const CALLOUT_W = 208
@@ -78,10 +86,10 @@ const CALLOUT_W = 208
 const CALLOUT_TAIL_INSET = 26
 
 const STATUS_COLOR: Record<BuildingProps['status'], string> = {
-  ok:   'var(--ln-ok)',
-  warn: 'var(--ln-warn)',
-  info: 'var(--ln-cyan)',
-  building: 'var(--ln-cyan)',
+  ok:   'var(--dusk-cta)',
+  warn: 'var(--dusk-warn)',
+  info: 'var(--dusk-info)',
+  building: 'var(--dusk-info)',
 }
 
 function BellGlyph() {
@@ -101,23 +109,13 @@ function ArrowGlyph() {
   )
 }
 
-export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false }: BuildingProps) {
+export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false, quiet = false, hitAspect }: BuildingProps) {
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
-  // Nothing else in the codebase ticks in the background — everything else
-  // resolves (now - startedAt) lazily on renders that happen for other
-  // reasons. A player just watching a structure build won't reliably trigger
-  // those, so this is the one place a local interval is worth it: just to
-  // force a re-render every second so the countdown visibly moves.
-  const [, forceTick] = useState(0)
-  useEffect(() => {
-    if (status !== 'building') return
-    const id = setInterval(() => forceTick(t => t + 1), 1000)
-    return () => clearInterval(id)
-  }, [status])
+  const now = useSharedSecond()
   const buildRemainingS = status === 'building'
-    ? Math.max(0, Math.ceil(structureBuildMs(kind) * (1 - hubConstructionProgress(buildStartedAt, kind)) / 1000))
+    ? Math.max(0, Math.ceil(structureBuildMs(kind) * (1 - hubConstructionProgress(buildStartedAt, kind, now || undefined)) / 1000))
     : 0
   const displaySub = status === 'building' ? `BUILDING · ${buildRemainingS}S` : sub
   // Hover (desktop) and press (mobile — there's no real :hover on touch) both
@@ -138,7 +136,31 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
     calloutAlign === 'start' ? -CALLOUT_TAIL_INSET
       : calloutAlign === 'end' ? -(CALLOUT_W - CALLOUT_TAIL_INSET)
         : -CALLOUT_W / 2
-  const tailLeft = -bubbleLeft
+  // Keep an anchored bubble inside the viewport (a tower near the screen edge
+  // on a 390px phone otherwise pushes it off-screen). The tail moves the
+  // opposite way so it still points at the building.
+  const bubbleRef = useRef<HTMLDivElement | null>(null)
+  const [nudge, setNudge] = useState(0)
+  useLayoutEffect(() => {
+    if (!calloutOpen || callout?.placement === 'viewport-clear') { setNudge(0); return }
+    const measure = () => {
+      const el = bubbleRef.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      const margin = 8
+      const vw = document.documentElement.clientWidth || window.innerWidth
+      const left = r.left - nudge, right = r.right - nudge
+      let next = 0
+      if (right > vw - margin) next = vw - margin - right
+      if (left + next < margin) next = margin - left
+      next = Math.max(-CALLOUT_W, Math.min(CALLOUT_W, next))
+      if (Math.abs(next - nudge) > 0.5) setNudge(next)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [calloutOpen, callout?.placement, nudge])
+  const tailLeft = Math.max(CALLOUT_TAIL_INSET, Math.min(CALLOUT_W - CALLOUT_TAIL_INSET, -bubbleLeft - nudge))
 
   // Small delay so it reads as the base speaking up, rather than slamming
   // into view on load. Matches the mockup's 900ms auto-open.
@@ -154,6 +176,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
     // launchpad's `left: calc(...%)` off this element. Clicking it still
     // reaches the button underneath, which occupies the wrapper's center.
     <div
+      className="hub-plot-anchor"
       data-testid={`building-${kind}`}
       // Desktop tutorial spotlight target. With the sidebar gone, "open a
       // mission" is coached on the launchpad itself rather than a nav rail.
@@ -165,8 +188,10 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
       <button
         data-testid={`building-${kind}-hit`}
         onClick={onClick}
+        aria-label={label}
         style={{
           background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
+          minWidth: 44, minHeight: 44,
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
           transform: isActive ? 'translateY(-4px)' : 'translateY(0)',
           transition: 'transform 180ms',
@@ -179,7 +204,11 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
       >
         {/* Spacer reserving the building art's clickable footprint */}
         <div style={{
-          width: w, height: hitH ?? w * 0.6, position: 'relative',
+          width: hitAspect ? '100%' : w,
+          height: hitAspect ? undefined : (hitH ?? w * 0.6),
+          aspectRatio: hitAspect,
+          minHeight: 44,
+          position: 'relative',
           borderRadius: 12,
           // The sprite layer owns the silhouette highlight. Keep this spacer
           // visually empty so a tall hit target cannot read as a rectangle.
@@ -201,14 +230,17 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
           )}
         </div>
 
-        {/* Status pill — black tile, white outline */}
+        {quiet && (
+          <span className="hub-building-name" data-testid={`building-${kind}-name`}>{label}</span>
+        )}
+        {!quiet && (
         <div className="hub-building-status" style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-          background: 'var(--hub-panel-deep)',
+          background: 'var(--dusk-deep)',
           border: '1.5px solid var(--hub-outline)',
           borderRadius: 999, padding: 'var(--ln-s-1) var(--ln-s-3)', whiteSpace: 'nowrap',
         }}>
-          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>
+          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--dusk-ink)' }}>
             {label}
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -218,6 +250,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             </span>
           </span>
         </div>
+        )}
       </button>
 
       {callout && (
@@ -237,41 +270,52 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
           >
             <span style={{
               width: 22, height: 22, borderRadius: '50%',
-              background: seen ? 'var(--ln-hairline)' : 'var(--hub-mint)',
+              background: seen ? 'var(--ln-hairline)' : 'var(--ln-info)',
               border: '2px solid var(--hub-panel)',
               display: 'grid', placeItems: 'center',
               color: seen ? 'var(--ln-text-dim)' : 'var(--ln-text-inverse)',
-              boxShadow: seen ? 'none' : '0 0 12px var(--ln-ok-soft)',
+              boxShadow: seen ? 'none' : '0 0 12px color-mix(in srgb, var(--ln-info) 40%, transparent)',
               animation: seen ? 'none' : 'hub-notify-pulse 1.8s ease-in-out infinite',
             }}>
               <BellGlyph />
             </span>
           </button>
 
+          {(() => {
+            const clear = callout.placement === 'viewport-clear'
+            // A transformed ancestor makes `position: fixed` stick to the
+            // tower. Viewport-clear prompts portal to the document so the
+            // card can sit in open sky, fully opaque, with the link intact.
+            const bubble = (
           <div
+            className={clear ? 'hub-callout hub-callout--clear' : undefined}
+            ref={clear ? undefined : bubbleRef}
             data-testid={`building-${kind}-callout`}
             onClick={e => e.stopPropagation()}
-            style={{
-              // 50% is the building center (the wrapper is translateX(-50%)
-              // onto its plot); bubbleLeft then offsets the box from there.
-              position: 'absolute', left: `calc(50% + ${bubbleLeft}px)`, bottom: 'calc(100% + 16px)',
+            style={clear ? {
+              opacity: calloutOpen ? 1 : 0,
+              pointerEvents: calloutOpen ? 'auto' : 'none',
+              visibility: calloutOpen ? 'visible' : 'hidden',
+            } : {
+              position: 'absolute',
+              left: `calc(50% + ${bubbleLeft + nudge}px)`,
+              bottom: 'calc(100% + 16px)',
               transform: calloutOpen ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.96)',
               transformOrigin: `bottom ${tailLeft}px`,
               width: CALLOUT_W, zIndex: 22,
               background: 'var(--hub-panel)',
               border: '1.5px solid var(--hub-outline)',
               borderRadius: 12, padding: 'var(--ln-s-3)',
-              boxShadow: '0 24px 48px var(--ln-overlay)',
+              boxShadow: '0 2px 0 var(--hub-outline) inset, 0 24px 48px var(--ln-overlay)',
               opacity: calloutOpen ? 1 : 0,
               pointerEvents: calloutOpen ? 'auto' : 'none',
-              // A closed callout is hidden, not just transparent: its buttons must leave the tab order and hit-testing.
               visibility: calloutOpen ? 'visible' : 'hidden',
               transition: calloutOpen ? 'opacity 160ms ease, transform 160ms ease' : 'opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms',
               textAlign: 'left',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.06em', color: 'var(--ln-text)' }}>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.06em', color: 'var(--dusk-ink)' }}>
                 {callout.title}
               </span>
               <button
@@ -281,14 +325,14 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 style={{
                   // 46px stays at least 44px while the bubble scales to 0.96 before it opens.
                   flex: '0 0 auto', width: 46, height: 46, margin: '-8px -8px 0 0', border: 'none', cursor: 'pointer',
-                  background: 'transparent', color: 'var(--ln-text-dim)',
+                  background: 'transparent', color: 'var(--dusk-dim)',
                   display: 'grid', placeItems: 'center', padding: 0,
                 }}
               >
                 <span aria-hidden style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--ln-hairline)', fontSize: 16, lineHeight: 1, display: 'grid', placeItems: 'center' }}>×</span>
               </button>
             </div>
-            <div style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--ln-text-dim)', marginTop: 4 }}>
+            <div style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--dusk-dim)', marginTop: 4 }}>
               {callout.body}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 4 }}>
@@ -299,7 +343,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                 display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 46, minWidth: 46,
                 background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
                 fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
-                letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--hub-mint)',
+                letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--dusk-cta)',
               }}
             >
               {callout.cta} <ArrowGlyph />
@@ -313,7 +357,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
                   display: 'inline-flex', alignItems: 'center', minHeight: 46, minWidth: 46, padding: 0, cursor: 'pointer',
                   background: 'transparent', border: 'none',
                   fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14,
-                  letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)',
+                  letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--dusk-dim)',
                 }}
               >
                 Dismiss
@@ -321,19 +365,23 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             )}
             </div>
             {/* Bubble tail — outline triangle with a fill triangle stacked over it */}
-            <span style={{
+            {callout.placement !== 'viewport-clear' && <span style={{
               position: 'absolute', left: tailLeft, top: '100%', transform: 'translateX(-50%)',
               width: 0, height: 0,
               borderLeft: '8px solid transparent', borderRight: '8px solid transparent',
               borderTop: '9px solid var(--hub-outline)',
-            }} />
-            <span style={{
+            }} />}
+            {callout.placement !== 'viewport-clear' && <span style={{
               position: 'absolute', left: tailLeft, top: 'calc(100% - 1.5px)', transform: 'translateX(-50%)',
               width: 0, height: 0,
               borderLeft: '8px solid transparent', borderRight: '8px solid transparent',
               borderTop: '7.5px solid var(--hub-panel)',
-            }} />
+            }} />}
           </div>
+            )
+            if (clear && typeof document !== 'undefined') return createPortal(bubble, document.body)
+            return bubble
+          })()}
         </>
       )}
     </div>

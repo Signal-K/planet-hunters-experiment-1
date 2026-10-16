@@ -8,7 +8,6 @@ public enum AuthoredMissions {
     public static let selfDirectedMiningId = "freeops-self-directed-mining"
     public static let crewedProspectingId = "freeops-crewed-prospecting"
     public static let academyStoryId = "story-astronaut-academy"
-    public static let refineryBuildId = "program-build-refinery"
     public static let remoteSiloBuildId = "program-build-remote-silo"
     public static let marsSettlementBuildId = "program-build-mars-mining-settlement"
     public static let buildTimeMs = 45 * 60 * 1000
@@ -23,7 +22,8 @@ public enum AuthoredMissions {
                    mats: Cargo, maxOrbit: Int, outcome: String) -> Mission {
             Mission(id: id, title: title, brief: brief, client: nil, tag: "PROGRAM", difficulty: diff, locked: false, sequence: seq,
                     unlockAt: unlock, targetId: target, deliveryTargetId: nil,
-                    requires: MissionRequirements(minerals: mats, cargoMin: mats.values.reduce(0, +), drillTier: 1, maxOrbit: maxOrbit),
+                    // The kit must fit the biggest vehicle the player can launch (web `materialRequirement`).
+                    requires: MissionRequirements(minerals: mats, cargoMin: min(mats.values.reduce(0, +), Rockets.models.filter { !$0.locked }.map(\.cargo).max() ?? 0), drillTier: 1, maxOrbit: maxOrbit),
                     payout: MissionPayout(francs: 0, affinity: 0),
                     construction: MissionConstructionPlan(structureKind: kind, requiredMaterials: mats, buildTimeMs: buildTimeMs),
                     payload: nil, programReward: ProgramReward(researchXP: 0, outcome: outcome))
@@ -39,11 +39,6 @@ public enum AuthoredMissions {
                   "L2", "Reach Free Operations", target: nil, kind: "mineral-silo",
                   mats: ["aluminium": 18, "iron": 12, "copper": 6], maxOrbit: 5,
                   outcome: "Remote Mineral Silo commissioned · ore can be held at the selected target"),
-            build(refineryBuildId, "Commission an Off-world Refinery",
-                  "Deliver aluminium and copper to a site you own or lease. Your refinery processes ore close to the source for your own construction and client deliveries.",
-                  "L1", "Reach Free Operations and choose a site you own or lease", target: nil, kind: "refinery",
-                  mats: Construction.byId["refinery"]?.materials ?? ["aluminium": 20, "copper": 10], maxOrbit: 5,
-                  outcome: "Off-world refinery commissioned · process ore at the selected site"),
         ]
     }()
 

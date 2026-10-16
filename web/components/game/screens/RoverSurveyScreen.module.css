@@ -1,0 +1,96 @@
+.screen {
+  background: var(--ln-bp-bg);
+}
+
+.world {
+  position: absolute;
+  inset: 0;
+}
+
+.world .takeon {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.chrome {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.cog,
+.clock,
+.chips,
+.hud,
+.readout {
+  pointer-events: auto;
+}
+
+.cog {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 4px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  cursor: pointer;
+}
+
+.clock {
+  position: absolute;
+  top: 8px;
+  left: 60px;
+}
+
+.clock :global(.scene-chip),
+.chips :global(.scene-chip) {
+  height: 44px;
+  min-height: 44px;
+}
+
+.chips {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.hud {
+  position: absolute;
+  right: 0;
+  bottom: 8px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+}
+
+.readout {
+  max-width: min(360px, calc(100% - 16px));
+  padding: 8px 12px;
+  border: 1px solid var(--ln-world-outline);
+  border-radius: 4px;
+  background: var(--ln-world-hull-lit);
+  color: var(--ln-world-outline);
+  font: 700 14px/1.3 var(--ln-font-body);
+  text-align: center;
+}
+
+.dock {
+  pointer-events: auto;
+}

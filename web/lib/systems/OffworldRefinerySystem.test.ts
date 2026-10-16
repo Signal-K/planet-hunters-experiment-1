@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { Mission } from '@/lib/data/types'
 import { OWN_PROGRAM_BUILD_MISSIONS } from '@/lib/data/missions'
 import {
   hasActiveSiteRight,
@@ -6,9 +7,18 @@ import {
   resolveOffworldRefinery,
 } from './OffworldRefinerySystem'
 
-const refineryMission = OWN_PROGRAM_BUILD_MISSIONS.find(
-  mission => mission.id === 'program-build-refinery',
-)
+const refineryMission: Mission = {
+  id: 'program-build-refinery',
+  title: 'Commission an Off-world Refinery',
+  brief: '',
+  tag: 'PROGRAM',
+  difficulty: 'L1',
+  locked: false,
+  sequence: 4,
+  construction: { structureKind: 'refinery', requiredMaterials: { aluminium: 20, copper: 10 }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
+  requires: { minerals: { aluminium: 20, copper: 10 }, cargo_min: 30, drill_tier: 1, max_orbit: 5 },
+  payout: { francs: 0, affinity: 0 },
+}
 
 describe('OffworldRefinerySystem', () => {
   it('plans a player-owned refinery at an owned site without client or XP gates', () => {

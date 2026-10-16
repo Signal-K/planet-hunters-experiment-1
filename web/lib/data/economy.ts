@@ -63,8 +63,9 @@ export const CONTRACT_FEE_STEP = 2_500_000
  */
 export const CARGO_BONUS_CAP = 0.18
 
-/** Ore value is worth this much as a fee bonus before the cap applies. */
-export const CARGO_BONUS_RATE = 0.4
+/** Ore value is worth this much as a fee bonus before the cap applies. Ore prices are 4x since SSL-611 (see
+ *  MINERAL_VALUE), so the rate is 4x lower and contract fees do not move. */
+export const CARGO_BONUS_RATE = 0.1
 
 // ── Mineral values ─────────────────────────────────────────────────────────
 // Priced by rarity band. The old prices spread 70× from carbon (60) to rhodium
@@ -75,11 +76,14 @@ export const CARGO_BONUS_RATE = 0.4
 
 export type MineralRarity = 'common' | 'uncommon' | 'rare' | 'exotic'
 
+// SSL-611: raised 4x so a self-directed haul (mine it, sell it yourself) earns a real share of a client contract
+// (a full common hold ~8M against a 15-25M fee, an exotic hold more than a fee) instead of ~10%. Contract fees stay
+// put because CARGO_BONUS_RATE drops by the same factor.
 export const MINERAL_VALUE: Record<MineralRarity, number> = {
-  common: 250_000,
-  uncommon: 420_000,
-  rare: 700_000,
-  exotic: 1_100_000,
+  common: 1_000_000,
+  uncommon: 1_680_000,
+  rare: 2_800_000,
+  exotic: 4_400_000,
 }
 
 /** Refining multiplies the input ore's value by this much. */
@@ -93,13 +97,15 @@ export const REFINING_COST_RATE = 0.07
 export const ROCKET_PRICES = {
   explorer: 0,
   prospector: 13_000_000,
-  unannounced3: 40_000_000,
+  surveyor: 40_000_000,
 } as const
 
 export const STRUCTURE_PRICES = {
   refinery: 8_000_000,
   garage: 6_000_000,
   academy: 12_000_000,
+  exchange: 4_000_000,
+  controlStation: 3_000_000,
   launchpadUpgrade: 10_000_000,
   deepSpaceTelescope: 15_000_000,
 } as const

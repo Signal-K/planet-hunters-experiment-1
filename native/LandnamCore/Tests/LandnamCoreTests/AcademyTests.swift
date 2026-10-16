@@ -65,10 +65,8 @@ import Foundation
     @Test func staffingNeedsFitCrewAndMovesTheSeat() {
         var s = built()
         let a = "crew-starting-astronaut"
-        s = Academy.applyAssign(s, structureId: "refinery", crewId: a)
-        #expect(Refinery.isStaffed(s.player))
         s = Academy.applyAssign(s, structureId: "diplomacy", crewId: a)
-        #expect(!Refinery.isStaffed(s.player) && Academy.diplomacyActive(s.player))
+        #expect(Academy.diplomacyActive(s.player))
         s = Academy.applyAssign(s, structureId: "diplomacy", crewId: nil)
         #expect(!Academy.diplomacyActive(s.player))
     }
@@ -120,13 +118,16 @@ import Foundation
         #expect(Construction.applyPlace(s, kind: "surface-silo", plot: 9, now: now) == s)
     }
 
-    @Test func refineryNeedsSiloFreeOpsAndMaterials() {
-        var s = GameState(); s.player.freeOperations = true; s.player.placed = ["launchpad", "surface-silo"]; s.player.francs = 20_000_000
-        let r = Construction.byId["refinery"]!
-        #expect(Construction.gaps(r, player: s.player) == ["20 more aluminium", "10 more copper"])
-        s.player.stash = ["aluminium": 20, "copper": 10]
-        let n = Construction.applyPlace(s, kind: "refinery", plot: 2, now: now)
-        #expect(n.player.refineryBuilt && n.player.stash["aluminium"] == 0 && n.player.francs == 12_000_000)
+    @Test func exchangeIsABuildingOnceTheGuidedMissionsAreFlown() {
+        var player = Player()
+        #expect(!Construction.unlocked(Construction.byId["market"]!, player: player))
+        player.missionsDone = 2
+        #expect(Construction.unlocked(Construction.byId["market"]!, player: player))
+        #expect(Construction.catalog(for: player).contains { $0.id == "market" })
+        player.placed = ["launchpad", "market"]
+        player.placementPlots = ["launchpad": 0, "market": 2]
+        #expect(!Construction.catalog(for: player).contains { $0.id == "market" })
+        #expect(Construction.occupied(player) == ["launchpad": 0, "market": 2])
     }
 
     @Test func buildProgressRunsTenSeconds() {
@@ -195,14 +196,40 @@ import Foundation
 @MainActor @Suite struct InstrumentFlightTests {
     let now: Double = 1_760_000_000_000
     func freeOps() -> GameStore {
-        var gs = GameState(); gs.player.freeOperations = true; gs.player.missionsDone = 3; gs.screen = .launchpad
+        var gs = GameState(); gs.player.freeOperations = true; gs.player.missionsDone = 3; gs.player.placed = ["control-station"]; gs.screen = .launchpad
         return GameStore(state: gs, clock: { 1_760_000_000_000 })
+    }
+
+    @Test func telescopeLaunchIsNotLockedForMissingTargets() {
+        let st = freeOps()
+        let board = MissionBoard.programBoard(catalog: st.catalog, player: st.player, now: 0)
+        let t = board.first { $0.mission.id == Instruments.transitMissionId }
+        #expect(t?.unlocked == true)
+        #expect((t?.feasibleTargets ?? 0) > 0)
+        #expect(st.catalog.mission(Instruments.deepSpaceMissionId) == nil)
+    }
+
+    @Test func oldSaveWithEitherTelescopeFlagShowsOneTelescopeOnline() throws {
+        var p = Player(); p.freeOperations = true; p.transitSatelliteLaunchedAt = 1_758_000_000_000
+        let q = try JSONDecoder().decode(Player.self, from: JSONEncoder().encode(p))
+        #expect(q.deepSpaceTelescopeBuilt && q.deepSpaceTelescopeLaunchedAt != nil)
+        var d = Player(); d.deepSpaceTelescopeBuilt = true
+        let r = try JSONDecoder().decode(Player.self, from: JSONEncoder().encode(d))
+        #expect(r.transitSatelliteLaunchedAt != nil)
+        let board = MissionBoard.programBoard(catalog: Instruments.runtime(Catalog(), player: q, missionId: nil, targetId: nil), player: q, now: 0)
+        #expect(board.first { $0.mission.id == Instruments.transitMissionId } == nil)
     }
 
     @Test func offersTheThreeInstrumentLaunchesOnlyInFreeOps() {
         let on = freeOps().catalog
-        for id in [Instruments.transitMissionId, Instruments.deepSpaceMissionId, Instruments.saturnMissionId] { #expect(on.mission(id) != nil) }
+        for id in [Instruments.transitMissionId, Instruments.saturnMissionId] { #expect(on.mission(id) != nil) }
         #expect(GameStore().catalog.mission(Instruments.transitMissionId) == nil)
+    }
+
+    @Test func offersNoInstrumentLaunchUntilAControlStationIsBuilt() {
+        var gs = GameState(); gs.player.freeOperations = true; gs.player.missionsDone = 3
+        let bare = GameStore(state: gs, clock: { 1_760_000_000_000 }).catalog
+        for id in [Instruments.transitMissionId, Instruments.saturnMissionId] { #expect(bare.mission(id) == nil) }
     }
 
     @Test func launchingTheTransitTelescopeBringsItOnlineAtDebrief() {

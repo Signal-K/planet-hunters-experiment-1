@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
+  structureUnlocked,
   REFINING_VALUE_MULTIPLIER,
-  STRUCTURE_PRICES,
   sellCargo,
   suggestBuild,
   validateBuild,
@@ -19,9 +19,9 @@ import {
   STRUCTURES,
   TARGETS,
   PARTS,
+  ROCKET_MODELS,
   CLIENT_SLOTS,
   BASE_LASER_CHARGES,
-  canAffordStructure,
   canConfirmCustomizerBuild,
   canUnlockSkillNode,
   calculateShipSuccessChance,
@@ -46,7 +46,6 @@ import {
   REFINERY_RECIPES,
   refundCustomizerPart,
   selectedCustomizerPartIds,
-  structureUnlocked,
   travelDurationMs,
   DAILY_QUEST_TEMPLATES,
   getDailyQuestTemplate,
@@ -512,29 +511,10 @@ describe('seed bible v0 catalog', () => {
     }
   })
 
-  it('defines the Refinery structure seed data with Francs and material costs (KES-283)', () => {
-    const refinery = STRUCTURES.find(structure => structure.id === 'refinery')
-    expect(refinery).toMatchObject({
-      kind: 'refinery',
-      cost: STRUCTURE_PRICES.refinery,
-      costMaterials: { aluminium: 20, copper: 10 },
-      unlockTrigger: 'free-operations',
-    })
-    // KES-283: a normal Earth Base plot purchase (same unlock shape as the
-    // Surface Silo), not the KES-286 off-world site-commissioned structure
-    // whose unlock condition no mission ever satisfied — that dead trigger
-    // stays retired for good.
-    //
-    // SSL-332 makes this an immediate Free Ops activity. Its only live
-    // prerequisite is the Storage Silo that holds the refinery input.
-    expect(refinery && structureUnlocked(refinery, { placed: [] })).toBe(false)
-    expect(refinery && structureUnlocked(refinery, { freeOperations: true })).toBe(false)
-    expect(refinery && structureUnlocked(refinery, { freeOperations: true, placed: ['surface-silo'] })).toBe(true)
-    expect(refinery && structureUnlocked(refinery, { placed: ['refinery'] })).toBe(true)
-    expect(refinery && canAffordStructure(refinery, {
-      francs: STRUCTURE_PRICES.refinery,
-      stash: { aluminium: 20, copper: 10 },
-    })).toBe(true)
+  it('keeps the base catalog to launchpad, surface silo, the optional exchange, the control station and the parked academy', () => {
+    expect(STRUCTURES.map(structure => structure.id)).toEqual(['launchpad', 'surface-silo', 'market', 'control-station', 'astronaut-academy'])
+    expect(MISSIONS.some(mission => mission.id === 'program-build-refinery')).toBe(false)
+    expect(STRUCTURES.some(structure => structure.id === 'refinery' || structure.id === 'garage')).toBe(false)
   })
 
   it('keeps Landnam targets to real solar-system bodies for the seed catalog', () => {
@@ -626,11 +606,10 @@ describe('seed bible v0 catalog', () => {
     expect(CLIENT_SLOTS.some(c => c.id === relay?.client)).toBe(true)
   })
 
-  it('defines settlement, remote-silo, and refinery builds as own-program missions', () => {
+  it('defines settlement and remote-silo builds as own-program missions', () => {
     expect(OWN_PROGRAM_BUILD_MISSIONS.map(mission => mission.id)).toEqual([
       'program-build-mars-mining-settlement',
       'program-build-remote-silo',
-      'program-build-refinery',
     ])
 
     for (const mission of OWN_PROGRAM_BUILD_MISSIONS) {
@@ -639,9 +618,12 @@ describe('seed bible v0 catalog', () => {
       expect(mission.programReward?.researchXP).toBe(0)
       expect(mission.construction?.structureKind).toBeTruthy()
       expect(mission.construction?.requiredMaterials).toEqual(mission.requires.minerals)
-      expect(mission.requires.cargo_min).toBe(
-        Object.values(mission.requires.minerals).reduce((sum, amount) => sum + amount, 0),
-      )
+      const kit = Object.values(mission.requires.minerals).reduce((sum, amount) => sum + amount, 0)
+      const biggestHull = Math.max(...ROCKET_MODELS.filter(rocket => !rocket.locked).map(rocket => rocket.stats.cargo))
+      expect(mission.requires.cargo_min).toBe(Math.min(kit, biggestHull))
+      // The step has to be flyable: some launchable vehicle can carry it, and some target is reachable with a buildable rocket.
+      expect(mission.requires.cargo_min).toBeLessThanOrEqual(biggestHull)
+      expect(feasibleTargetsFor(mission, TARGETS, PARTS, 6).length).toBeGreaterThan(0)
       expect(mission.requires.max_orbit).toBe(mission.id === 'program-build-mars-mining-settlement' ? 4 : 5)
       expect(mission.sequence).toBe(FREE_OPS_MISSION_SEQUENCE)
       expect(MISSIONS).toContainEqual(mission)
@@ -650,9 +632,6 @@ describe('seed bible v0 catalog', () => {
     expect(OWN_PROGRAM_BUILD_MISSIONS[0]).toMatchObject({ targetId: 'mars', construction: { structureKind: 'mining-settlement' } })
     expect(OWN_PROGRAM_BUILD_MISSIONS[1]).toMatchObject({
       construction: { structureKind: 'mineral-silo' },
-    })
-    expect(OWN_PROGRAM_BUILD_MISSIONS[2]).toMatchObject({
-      construction: { structureKind: 'refinery', requiredMaterials: { aluminium: 20, copper: 10 } },
     })
   })
 })
@@ -902,5 +881,15 @@ describe('spectralClassForTeff', () => {
     expect(spectralClassForTeff(SUN_TEFF_K)).toBe('G') // Sun
     expect(spectralClassForTeff(9500)).toBe('A') // Sirius-class
     expect(spectralClassForTeff(35000)).toBe('O') // blue giant
+  })
+})
+
+describe('Exchange structure (optional, chosen by the player)', () => {
+  const market = STRUCTURES.find(structure => structure.id === 'market')!
+  it('is locked before the guided missions and unlocked after', () => {
+    expect(structureUnlocked(market, { missionsDone: 0 })).toBe(false)
+    expect(structureUnlocked(market, { missionsDone: 1 })).toBe(true)
+    // Free Ops opens with the launchpad, but there is nothing to sell until the first run is flown.
+    expect(structureUnlocked(market, { freeOperations: true, missionsDone: 0 })).toBe(false)
   })
 })

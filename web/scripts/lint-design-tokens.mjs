@@ -188,13 +188,13 @@ function lintFile(filePath) {
 
     if (allIssues.length > 0) {
       const relative = path.relative(WEB_ROOT, filePath);
-      console.log(`\n📄 ${relative}`);
+      if (process.argv.includes("--verbose")) console.log(`\n📄 ${relative}`);
 
       allIssues.forEach(issue => {
         const icon = issue.type === 'hardcoded-color' ? '🎨' :
                      issue.type === 'invalid-spacing' ? '📏' :
                      '💛';
-        console.log(`  ${icon} Line ${issue.line}: ${issue.message}`);
+        if (process.argv.includes("--verbose")) console.log(`  ${icon} Line ${issue.line}: ${issue.message}`);
         issueCount++;
       });
     }
@@ -220,7 +220,7 @@ function walkDir(dir) {
   });
 }
 
-console.log('🔍 Checking design tokens...\n');
+console.log('Checking design tokens (use --verbose for per-line findings)...');
 walkDir(path.join(WEB_ROOT, 'components'));
 walkDir(path.join(WEB_ROOT, 'lib'));
 walkDir(path.join(WEB_ROOT, 'app'));

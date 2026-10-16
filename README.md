@@ -1,69 +1,41 @@
 # Landnám
 
-A resource management game where players build a launchpad, select single-use Explorer and Prospector vessels, accept client jobs, fly to nearby targets, mine minerals, sell cargo, and reinvest.
+A space-program game with independent Free Ops (mine, survey, build and trade) and optional client contracts. Ships as a Next.js web/PWA app and a SwiftUI app for iOS, iPadOS and macOS.
 
-> **Migration complete:** Landnam is now 100% Next.js/React — no Godot dependencies. The legacy Godot project (`scene/`) is excluded from the repository and is not used in any build or development workflow.
+Read [AGENTS.md](AGENTS.md) before changing the game. Linear is the tracker; ZenNotes in the parent Navigation workspace holds durable decisions. Every gameplay change proceeds through web and native consecutively.
 
-## 🎮 Game Overview
+## Start
 
-Landnám’s current release path is focused on the onboarding mining loop. M1 teaches launchpad, mission, target, preflight, mining, and debrief. M2 teaches the Prospector purchase flow with a larger single-use vessel. M3 is not yet fully described and should not be implemented or documented from older plans.
+Node.js 24+ for web; Xcode and Swift for native. Install dependencies explicitly, then start locally:
 
-## 📋 Project workflow
-
-Landnam uses **Linear** (Kestloome project) for issue state. Durable product and technical decisions live in the parent Navigation workspace’s ZenNotes; Craft is planning context only. This repository intentionally has no local `.knowns` store or snapshot.
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 24+
-
-### Setup
-
-```bash
+```sh
+node scripts/agent-check.mjs
 cd web
 npm ci
 npm run dev
 ```
 
-## 📚 Documentation
+`make up` starts the Docker frontend and parent-owned local backends. It performs no dependency download at startup. Inspect existing services before starting another server. See [native/README.md](native/README.md) for native builds.
 
-- `AGENTS.md` — repository workflow and technical conventions
-- Parent Navigation workspace ZenNotes — canonical decisions and specifications
-- Craft — planning, research, and feedback context linked from Linear issues
+## Verify
 
-## 🧪 Testing
+From `web/`:
 
-```bash
-cd web
-npm run test:unit
-npm run test:e2e
+```sh
+npm run typecheck
+npm run test:unit -- lib/path/to/changed.test.ts
+npm run test:scenes -- screens.spec.ts --grep 'transport-delivery'
+npm run sync:shared -- --check
 ```
 
-### Staging / test deployment
+Use actual affected test paths. Omit filters for a full batch after implementation; do not run the entire suite after every edit. Playwright covers scenes and real flows. Cypress is retired. Native domain tests run with `swift test --package-path native/LandnamCore` from the root. Rendered evidence and platform coverage requirements live in AGENTS.md.
 
-Every push to any branch deploys to the staging Worker via CI. To deploy a test build manually:
+## Sources and deployment
 
-```bash
-cd web
-npm run deploy:cf
-```
+- `web/`: game routes, React UI, PixiJS scenes and tests.
+- `native/`: SwiftUI/SpriteKit app, LandnamCore model and TakeonKit.
+- `shared/`: generated palette inputs and shared layout data; see [shared/README.md](shared/README.md).
+- `pocketbase/`: game backend; ecosystem identity is owned by the parent workspace backend.
+- [Game theme](docs/design/game-theme-spec.md): deep dusk worlds with blueprint UI chrome.
 
-Test URL: https://landnam-web-staging.liam-55d.workers.dev
-
-## 🤝 Contributing
-
-1. Resolve or create the relevant Linear issue.
-2. Read the applicable ZenNotes decision or specification in the parent Navigation workspace.
-3. Implement and validate the scoped change.
-4. Attach implementation evidence to the Linear issue.
-
-## 📊 Project Status
-
-- **Mission System**: active onboarding data is M1-M2
-- **M3**: pending new product direction
-- **Platforms**: Web/PWA
-
-## 📄 License
-
-[Add license information]
+Work directly on `cycle/4`. Pushing `cycle/**` triggers staging deployment; `main` deploys production. Do not push to main. CI and deployment run separately; local tests do not prove deployment. Do not use `deploy:cf` as a staging shortcut: it targets production by default.

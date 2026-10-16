@@ -2,6 +2,7 @@ import type { Catalog } from './catalog'
 import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from './data'
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
+import { tagMissionCategories } from './data/mission-generator'
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -12,11 +13,11 @@ export const TRANSIT_TELESCOPE_TARGET: Target = {
   type: 'planet',
   orbit: 1,
   difficulty: 'L1',
-  brief: 'Low Earth orbit deployment lane for a transit telescope monitored from Base operations.',
+  brief: 'Low Earth orbit deployment lane for a space telescope monitored from Base operations.',
   minerals: [],
 }
 
-// KES-128: the Deep Space Telescope's on-ramp, matching the Transit
+// KES-128: the Space Telescope's on-ramp, matching the Transit
 // Telescope's story-mission pattern above rather than the bare numeric
 // deepSpaceTelescopeUnlocked() threshold (STS-622) silently opening a build
 // slot with no narrative reason it happened.
@@ -56,7 +57,7 @@ interface RuntimeCatalogOpts {
   missionId?: string | null
   targetId?: string | null
   missionsDone: number
-  player?: Player
+  player?: Partial<Player>
 }
 
 export function buildRuntimeCatalog({
@@ -70,23 +71,18 @@ export function buildRuntimeCatalog({
   player,
 }: RuntimeCatalogOpts): Catalog {
   const discoveredTargetList = Object.values(discoveredTargets)
-  const shouldOfferTransitTelescopeMission = freeOperations && !transitSatelliteLaunchedAt
+  // A satellite or telescope is run from the control station, so none is offered until one is built.
+  const hasControlStation = !!player?.placed?.includes('control-station')
+  const shouldOfferTransitTelescopeMission = freeOperations && hasControlStation && !transitSatelliteLaunchedAt
   const hasActiveTransitTelescopeMission = missionId === TRANSIT_TELESCOPE_MISSION_ID || targetId === TRANSIT_TELESCOPE_TARGET_ID
   const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
-  const shouldOfferDeepSpaceTelescopeMission = freeOperations
-    && !player?.deepSpaceTelescopeLaunchedAt
-    && !player?.deepSpaceTelescopeBuilt
-    && !player?.placed?.includes('deep-space-telescope')
-  const hasActiveDeepSpaceTelescopeMission = missionId === DEEP_SPACE_TELESCOPE_MISSION_ID || targetId === DEEP_SPACE_TELESCOPE_TARGET_ID
-  const shouldIncludeDeepSpaceTelescopeMission = shouldOfferDeepSpaceTelescopeMission || hasActiveDeepSpaceTelescopeMission
-  const shouldOfferSaturnImagerMission = freeOperations && !player?.saturnImagerLaunchedAt
+  const shouldOfferSaturnImagerMission = freeOperations && hasControlStation && !player?.saturnImagerLaunchedAt
   const hasActiveSaturnImagerMission = missionId === SATURN_IMAGER_MISSION_ID || targetId === SATURN_IMAGER_TARGET_ID
   const shouldIncludeSaturnImagerMission = shouldOfferSaturnImagerMission || hasActiveSaturnImagerMission
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
   const mergedTargets = [
     ...catalog.targets,
     ...(shouldIncludeTransitTelescopeMission && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
-    ...(shouldIncludeDeepSpaceTelescopeMission && !existingTargetIds.has(DEEP_SPACE_TELESCOPE_TARGET.id) ? [DEEP_SPACE_TELESCOPE_TARGET] : []),
     ...(shouldIncludeSaturnImagerMission && !existingTargetIds.has(SATURN_IMAGER_TARGET.id) ? [SATURN_IMAGER_TARGET] : []),
     ...discoveredTargetList.filter(target => !existingTargetIds.has(target.id)),
   ]
@@ -96,7 +92,7 @@ export function buildRuntimeCatalog({
   // The self-directed launchpad route must remain available even while a
   // remote catalog is warming or returns only its client rows. PocketBase
   // catalog responses are allowed to lag the authored frontend catalog; do
-  // not let that transient gap render GO MINING disabled in Your Program.
+  // not let that transient gap render GO MINING disabled on the Program tab.
   const fallbackSelfDirectedMining: Mission = MISSIONS.find(mission => mission.id === SELF_DIRECTED_MINING_MISSION_ID)
     ?? MISSIONS.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
     ?? {
@@ -121,7 +117,7 @@ export function buildRuntimeCatalog({
   const transitTelescopeMission: Mission[] = shouldIncludeTransitTelescopeMission && !existingMissionIds.has(TRANSIT_TELESCOPE_MISSION_ID)
     ? [{
         id: TRANSIT_TELESCOPE_MISSION_ID,
-        title: 'Launch Transit Telescope',
+        title: 'Launch Space Telescope',
         brief: 'Deploy your own TESS-class telescope into Earth orbit. Its daily instrument feed becomes available for classification.',
         tag: 'STORY',
         difficulty: 'L1',
@@ -131,7 +127,7 @@ export function buildRuntimeCatalog({
         targetId: TRANSIT_TELESCOPE_TARGET_ID,
         payload: {
           type: 'satellite',
-          name: 'Transit Telescope',
+          name: 'Space Telescope',
           cargoCost: 0,
           instrumentId: 'transit-telescope',
         },
@@ -143,37 +139,7 @@ export function buildRuntimeCatalog({
         },
         programReward: {
           researchXP: 0,
-          outcome: 'Transit telescope online · daily instrument feed unlocked',
-        },
-        payout: { francs: 0, affinity: 0 },
-      }]
-    : []
-  const deepSpaceTelescopeMission: Mission[] = shouldIncludeDeepSpaceTelescopeMission && !existingMissionIds.has(DEEP_SPACE_TELESCOPE_MISSION_ID)
-    ? [{
-        id: DEEP_SPACE_TELESCOPE_MISSION_ID,
-        title: 'Launch Deep Space Telescope',
-        brief: 'Deploy the Deep Space Telescope into Earth orbit. Its independent instrument feed opens asteroid-discovery classification.',
-        tag: 'STORY',
-        difficulty: 'L1',
-        locked: false,
-        sequence: missionsDone + 1,
-        unlockAt: 'Reach Free Operations',
-        targetId: DEEP_SPACE_TELESCOPE_TARGET_ID,
-        payload: {
-          type: 'satellite',
-          name: 'Deep Space Telescope',
-          cargoCost: 0,
-          instrumentId: 'deep-space-telescope',
-        },
-        requires: {
-          minerals: {},
-          cargo_min: 0,
-          drill_tier: 1,
-          max_orbit: 1,
-        },
-        programReward: {
-          researchXP: 0,
-          outcome: 'Deep Space Telescope online · asteroid discovery unlocked',
+          outcome: 'Space telescope online · daily instrument feed unlocked',
         },
         payout: { francs: 0, affinity: 0 },
       }]
@@ -265,6 +231,6 @@ export function buildRuntimeCatalog({
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: [...relationshipMissions, ...transitTelescopeMission, ...deepSpaceTelescopeMission, ...saturnImagerMission, ...surveyMissions, ...jointMissions, ...resourceFocusMissions],
+    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...surveyMissions, ...jointMissions, ...resourceFocusMissions]),
   }
 }

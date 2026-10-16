@@ -73,7 +73,7 @@ public struct Target: Codable, Equatable, Identifiable, Sendable {
 }
 
 public struct Client: Equatable, Identifiable, Sendable {
-    public enum UIRole: String, Sendable { case starter, prospect, bulk, command }
+    public enum UIRole: String, Sendable { case starter, prospect, bulk, command, science }
     public let id: String
     public let name: String
     public let colorHex: String
@@ -153,6 +153,8 @@ public struct Mission: Codable, Equatable, Identifiable, Sendable {
     public var construction: MissionConstructionPlan?
     public var payload: MissionPayload?
     public var programReward: ProgramReward?
+    /// Web `survey.onWorldVehicle`: `"starter-rover"` only on the `freeops-rover-landing` template.
+    public var onWorldVehicle: String? = nil
     /// Player-owned operations pay no francs or affinity (no client).
     public var isOwnProgram: Bool { client == nil }
 }
@@ -197,4 +199,4 @@ public struct ActiveMission: Codable, Equatable, Sendable {
     public init(id: String, label: String) { self.id = id; self.label = label }
 }
 
-public enum MissionPhase: String, Codable, Sendable { case transit, landing, mining, delivery, debrief }
+public enum MissionPhase: String, Codable, Sendable { case transit, landing, survey, mining, delivery, debrief }

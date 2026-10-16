@@ -1,12 +1,18 @@
 'use client'
 
+import { aboveGround, homeSite, spriteCenterOffset, structureSprite, units } from '@/lib/scene/base-site'
 import React, { useEffect, useState } from 'react'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
+import { LAUNCHPAD_SCENE_WIDTH_PCT, structureAnchorPercent, structureTierScale } from '@/lib/scene/base-world'
 import { structureBuildMs } from '@/lib/systems/HubConstructionSystem'
+import { PixelStructure } from '@/components/game/hub/PixelStructure'
+import type { InstalledCustomizerPartsByKind } from '@/lib/data'
 export interface HubBuildingDef {
   kind: string
   plotX: number
   w: number
+  /** 1 is the small first build. 2 and 3 grow into the full module. Absent means level 1. */
+  level?: number
   hot?: boolean
   status?: 'ok' | 'info' | 'warn' | 'locked' | 'building'
   dimmed?: boolean
@@ -16,40 +22,25 @@ export interface HubBuildingDef {
   buildStartedAt?: number
 }
 
-/** Earth Base hero structures, rendered as single-mass Blender sprites (see
- * `tools/blender/models/structures.py` and the ZenNotes decision "Landnam
- * Earth Base structure art — single-mass render standard"). Each is one
- * cohesive scene/one render, not a composited multi-piece kit. */
-const SPRITES = {
-  launchpad: { src: '/game/assets/base/launchpad_flat.png', width: 84, height: 139 },
-  'surface-silo': { src: '/game/assets/base/surface_silo_flat.png', width: 124, height: 132 },
-  hangar: { src: '/game/assets/base/hangar_flat.png', width: 176, height: 150 },
-} as const
-
+/** Level-3 footprints. Level 1 and 2 render the same silhouette smaller via `structureTierScale`.
+ *  The surface silo has no above-ground body; the lift shaft is the silo door. */
 export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height: number }> = {
-  launchpad: { width: 84, height: 139 },
-  'surface-silo': { width: 124, height: 132 },
-  hangar: { width: 176, height: 150 },
-  refinery: { width: 150, height: 97 },
-  command: { width: 150, height: 97 },
-  'deep-space-telescope': { width: 150, height: 97 },
-  'astronaut-academy': { width: 150, height: 97 },
-  market: { width: 132, height: 88 },
+  // Launchpad width is the low platform only. The rocket is a separate sprite on top of it.
+  launchpad: { width: 120, height: 108 },
+  'surface-silo': { width: 48, height: 96 },
+  hangar: { width: 72, height: 44 },
+  'deep-space-telescope': { width: 74, height: 96 },
+  'transit-telescope': { width: 64, height: 88 },
+  'astronaut-academy': { width: 178, height: 86 },
+  market: { width: 160, height: 64 },
 }
 
-type SpriteName = keyof typeof SPRITES
-
-function FlatSprite({ name, className = '' }: { name: SpriteName; className?: string }) {
-  const sprite = SPRITES[name]
-  return <img className={`earth-base-flat-sprite ${className}`} src={sprite.src} alt="" draggable={false} aria-hidden="true" />
-}
-
-export function LaunchpadModules({ className = '' }: { className?: string }) {
-  return <FlatSprite name="launchpad" className={className} />
+export function LaunchpadModules({ className = '', parts, rocket = false }: { className?: string; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean | 'core' }) {
+  return <span className={className} style={{ display: 'block', width: '100%', height: '100%' }}><PixelStructure kind="launchpad" level={3} parts={parts} rocket={rocket} /></span>
 }
 
 export function HangarModules({ className = '' }: { className?: string }) {
-  return <FlatSprite name="hangar" className={className} />
+  return <span className={className} style={{ display: 'block', width: '100%', height: '100%' }}><PixelStructure kind="hangar" level={3} /></span>
 }
 
 /**
@@ -88,7 +79,7 @@ function ConstructionRig({ animDuration, animDelay }: { animDuration: string; an
   )
 }
 
-function StructureSprite({ kind, active, buildStartedAt }: { kind: string; active?: boolean; buildStartedAt?: number }) {
+function StructureSprite({ kind, level = 1, active, buildStartedAt, parts, rocket }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean | 'core' }) {
   const buildMs = structureBuildMs(kind)
   // `buildStartedAt` does not change when the build finishes, so a value
   // captured once at mount left `isBuilding` true forever and the cyan
@@ -112,36 +103,15 @@ function StructureSprite({ kind, active, buildStartedAt }: { kind: string; activ
     ? <ConstructionRig animDuration={animDuration} animDelay={animDelay} />
     : null
 
-  const name: SpriteName | null = kind === 'launchpad' || kind === 'surface-silo' || kind === 'hangar' ? kind : null
-  if (!name) {
-    if (kind === 'market') {
-      return <span aria-hidden="true" style={{ display: 'grid', gridTemplateRows: '18% 1fr', width: '100%', height: '100%', border: '3px solid var(--ln-cyan)', background: 'var(--ln-panel)', boxShadow: active ? '8px 8px 0 var(--ln-cyan)' : '6px 6px 0 var(--ln-hairline)' }}>
-        <span style={{ display: 'block', background: 'var(--ln-cyan)', borderBottom: '3px solid var(--ln-text)' }} />
-        <svg viewBox="0 0 100 64" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: '100%' }}>
-          {/* Exchange hall: crates on the left, loading-dock shutter in the middle, price board on the right. */}
-          <rect x="0" y="0" width="100" height="64" fill="#eaf2f9" />
-          <rect x="6" y="36" width="22" height="24" fill="#cfe3f2" stroke="#0f2436" strokeWidth="2" />
-          <rect x="10" y="22" width="16" height="14" fill="#e3f0f9" stroke="#0f2436" strokeWidth="2" />
-          <line x1="6" y1="48" x2="28" y2="48" stroke="#0f2436" strokeWidth="1.5" />
-          <rect x="36" y="14" width="30" height="46" fill="#9cc2df" stroke="#0f2436" strokeWidth="2.5" />
-          {[22, 30, 38, 46, 54].map(y => <line key={y} x1="36" y1={y} x2="66" y2={y} stroke="#0f2436" strokeOpacity=".55" strokeWidth="1.5" />)}
-          <rect x="74" y="12" width="22" height="26" fill="#0f2436" stroke="#0f2436" strokeWidth="2" />
-          <polyline points="77,32 82,26 87,29 93,18" fill="none" stroke="#7fe0d0" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-          <line x1="85" y1="38" x2="85" y2="60" stroke="#0f2436" strokeWidth="2" />
-        </svg>
-      </span>
-    }
-    // No base art exists yet for this kind (command/refinery/deep-space-telescope/
-    // astronaut-academy) — only ever show the construction rig while it's
-    // actively building; once done, render nothing, same as before this
-    // feature existed.
-    return rig
-  }
+  if (kind === 'surface-silo') return rig
   return (
     <>
-      <span className={isBuilding ? 'hub-construct-reveal' : ''} style={isBuilding ? { display: 'block', animationDuration: animDuration, animationDelay: animDelay } : undefined}>
-        <FlatSprite name={name} />
-        {active && <FlatSprite name={name} className="earth-base-flat-sprite--highlight" />}
+      <span
+        className={isBuilding ? 'hub-construct-reveal' : ''}
+        data-active={active ? 'true' : undefined}
+        style={isBuilding ? { display: 'block', animationDuration: animDuration, animationDelay: animDelay } : { display: 'block', height: '100%' }}
+      >
+        <PixelStructure kind={kind} level={level} parts={parts} rocket={kind === 'launchpad' ? rocket : true} />
       </span>
       {rig}
     </>
@@ -150,31 +120,58 @@ function StructureSprite({ kind, active, buildStartedAt }: { kind: string; activ
 
 const SCENE_WIDTH_DIVISOR = 6.4
 
-export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] }) {
+export function structureWidthPct(kind: string, level = 1): number {
+  if (kind === 'launchpad') return LAUNCHPAD_SCENE_WIDTH_PCT
+  // Starter footprints stay modest. Level 1 is not shrunk again, or the hut and tank fall under a 44px hit.
+  const starter: Record<string, number> = { hangar: 14, garage: 14, command: 8, refinery: 6 }
+  if (kind in starter) {
+    const grow = level >= 3 ? 1.12 : level >= 2 ? 1.06 : 1
+    return (starter[kind] ?? 8) * grow
+  }
+  const size = EARTH_BASE_STRUCTURE_SIZES[kind] ?? EARTH_BASE_STRUCTURE_SIZES.launchpad
+  const tier = kind === 'market' ? Math.max(level, 2) : level
+  return (size.width / SCENE_WIDTH_DIVISOR) * structureTierScale(tier)
+}
+
+/** Sprite centre. Starter kinds use the approved anchors; everything else stays on its plot. */
+export function structureCenterPercent(kind: string, plotX: number, widthPct: number): number {
+  return structureAnchorPercent(kind) ?? sceneXPercent(plotX, widthPct)
+}
+
+/** Half-width in hub scene units (the 402-wide plot space). */
+export function structureHalfScene(kind: string, level = 1, sceneWidth = 402): number {
+  return (structureWidthPct(kind, level) / 100) * sceneWidth / 2
+}
+
+const HIDDEN_BASE_KINDS = new Set(['command', 'refinery', 'garage', 'deep-space-telescope', 'transit-telescope', 'astronaut-academy', 'surface-silo'])
+
+export function EarthBaseModules({ buildings, parts, padRocket = false }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null; padRocket?: boolean | 'core' }) {
   return (
-    <div aria-hidden="true" className="earth-base-modules-layer">
+    <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {
-        const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.command
-        const widthPct = size.width / SCENE_WIDTH_DIVISOR
-        const left = sceneXPercent(building.plotX, widthPct)
+        if (building.kind === 'surface-silo' || HIDDEN_BASE_KINDS.has(building.kind)) return null
+        const kit = building.kind === 'launchpad' || building.kind === 'hangar' || building.kind === 'market' || building.kind === 'control-station'
+        const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.launchpad
+        const widthPct = structureWidthPct(building.kind, building.level ?? 1)
+        // Kit structures stand on their home site on the strip (shared site map); others keep the plot percentage.
+        const site = kit ? homeSite(building.kind) : null
+        const sprite = kit ? structureSprite(building.kind) : null
+        const left = site && sprite ? units(site.x + spriteCenterOffset(sprite)) : `${structureCenterPercent(building.kind, building.plotX, widthPct)}%`
         return (
           <span
             key={`${building.kind}-${building.plotX}`}
             className={`earth-base-structure earth-base-structure--${building.kind}`}
             data-structure={building.kind}
             style={{
-              left: `${left}%`,
-              bottom: 'var(--hub-ground)',
-              // Mobile keeps the authored scene-proportional scale. Desktop
-              // receives a viewport-aware cap so structures retain the same
-              // relationship to the terrain instead of ballooning with a 2K
-              // canvas (the background bricks are authored in CSS pixels).
-              width: `min(${widthPct}%, var(--hub-structure-max, 9999px))`,
-              aspectRatio: `${size.width} / ${size.height}`,
+              left,
+              bottom: sprite?.foot != null ? aboveGround(sprite.foot) : 'var(--hub-ground)',
+              width: kit ? 'auto' : `min(${widthPct}%, var(--hub-structure-max, 9999px))`,
+              height: kit ? 'auto' : undefined,
+              aspectRatio: kit ? 'auto' : `${size.width} / ${size.height}`,
               opacity: building.dimmed ? 0.6 : 1,
             }}
           >
-            <StructureSprite kind={building.kind} active={building.active} buildStartedAt={building.buildStartedAt} />
+            <StructureSprite kind={building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} parts={parts} rocket={building.kind === 'launchpad' ? padRocket : true} />
           </span>
         )
       })}

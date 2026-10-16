@@ -10,7 +10,7 @@ import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import DeliveryCanvas from './DeliveryCanvas'
 import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
-import { takeonBodyForTarget } from './RoverMiningScreen'
+import { takeonBodyForTarget } from './RoverSurveyScreen'
 import { captureGameEvent } from '@/lib/posthog'
 import styles from './DeliveryScreen.module.css'
 

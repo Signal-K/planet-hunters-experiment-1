@@ -10,18 +10,18 @@ public struct PartCatalog: Sendable {
             Part(id: "hull-mk1", name: "Hull MK1", tier: 1, locked: false, mass: 2, cargo: 6),
             Part(id: "hull-mk2", name: "Prospector Unibody Frame", tier: 2, locked: false, mass: 3, cargo: 10, missionsRequired: 1),
             Part(id: "hull-cargo", name: "Cargo Bay T1", tier: 1, locked: false, mass: 2, cargo: 14, missionsRequired: 1),
-            Part(id: "hull-mk3", name: "Hull MK3 Heavy Frame", tier: 3, locked: true, mass: 4, cargo: 18, missionsRequired: 2),
-            Part(id: "hull-hauler", name: "Bulk Hauler Chassis", tier: 3, locked: true, mass: 3, cargo: 24, missionsRequired: 2),
+            Part(id: "hull-mk3", name: "Hull MK3 Heavy Frame", tier: 3, locked: false, mass: 4, cargo: 18, missionsRequired: 6),
+            Part(id: "hull-hauler", name: "Bulk Hauler Chassis", tier: 3, locked: false, mass: 3, cargo: 24, missionsRequired: 6),
         ],
         propulsion: [
             Part(id: "ion-a1", name: "Ion Drive A1", tier: 1, locked: false, maxOrbit: 5),
             Part(id: "fusion-b2", name: "Fusion Drive B2", tier: 2, locked: false, maxOrbit: 7, missionsRequired: 1),
-            Part(id: "ion-a3", name: "Ion Drive A3", tier: 3, locked: true, maxOrbit: 9, missionsRequired: 2),
+            Part(id: "ion-a3", name: "Ion Drive A3", tier: 3, locked: false, maxOrbit: 9, missionsRequired: 6),
         ],
         drill: [
             Part(id: "hand-drill", name: "Hand Drill", tier: 1, locked: false, rate: 1),
             Part(id: "laser-t2", name: "Laser T2", tier: 2, locked: false, rate: 2, missionsRequired: 1),
-            Part(id: "plasma-t3", name: "Plasma T3", tier: 3, locked: true, rate: 4, missionsRequired: 2),
+            Part(id: "plasma-t3", name: "Plasma T3", tier: 3, locked: false, rate: 4, missionsRequired: 6),
             Part(id: "cargo-module-t1", name: "Cargo Module T1", tier: 1, locked: false, rate: 0, missionsRequired: 2),
         ]
     )

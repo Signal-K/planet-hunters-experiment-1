@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { WorldBackdrop } from '@/components/game/hub/WorldBackdrop'
 import { PRODUCT_DESCRIPTOR, PRODUCT_WORDMARK } from '@/lib/brand'
-import { ROCKET_ASSETS } from '@/lib/rocket-assets'
+import { STAGING_PLAYTEST_EMAIL_SUFFIX } from '@/lib/staging-account'
 
 interface AuthGateSheetProps {
   error: string | null
@@ -30,6 +31,11 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
   // iOS leaves the layout viewport at full height when the keyboard opens, so
   // the bounded panel runs under it. Mirror the keyboard's height into a CSS
   // var so the sheet lifts above it and the panel scrolls internally.
+  // Local only: decided at runtime from the hostname so a deployed build never shows the shortcut.
+  const [isLocal, setIsLocal] = useState(false)
+  useEffect(() => {
+    setIsLocal(/^(localhost|127\.0\.0\.1)$/.test(window.location.hostname))
+  }, [])
   const [keyboardInset, setKeyboardInset] = useState<number | null>(null)
   useEffect(() => {
     const vv = window.visualViewport
@@ -66,31 +72,35 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
     }
   }
 
+  async function handleQuickAccount() {
+    const id = Math.random().toString(36).slice(2, 10)
+    const quickPassword = `Local-${Math.random().toString(36).slice(2, 12)}`
+    setValidationError(null)
+    setSubmitting(true)
+    try {
+      await onCreateAccount(`dev-${id}${STAGING_PLAYTEST_EMAIL_SUFFIX}`, quickPassword)
+    } catch {
+      // error shown via props
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div
       className="ln-sheet ln-sheet--bottom auth-gate theme-blueprint"
       style={keyboardInset ? ({ '--gate-kb': `${keyboardInset}px` } as React.CSSProperties) : undefined}
     >
+      <WorldBackdrop />
       <div className="auth-gate__scrim" aria-hidden="true" />
+      <div className="auth-gate__brand" aria-hidden="true">
+        <span className="auth-gate__brand-eyebrow">{PRODUCT_DESCRIPTOR}</span>
+        <span className="auth-gate__brand-title">{PRODUCT_WORDMARK}</span>
+        <span className="auth-gate__brand-line">Build rockets. Settle the galaxy. Use real science.</span>
+      </div>
       <section className="ln-sheet__panel auth-gate__panel">
         <div className="ln-sheet__handle-wrap auth-gate__handle" aria-hidden="true">
           <div className="ln-sheet__handle" />
-        </div>
-
-        <div className="auth-gate__scene" aria-hidden="true">
-          <div className="auth-gate__scene-copy">
-            <span className="auth-gate__eyebrow">LANDNAM // BASE</span>
-            <span className="auth-gate__scene-title">PROGRAM MAP</span>
-            <span className="auth-gate__scene-status"><i /> SYSTEM LINK READY</span>
-          </div>
-          <div className="auth-gate__orbit auth-gate__orbit--outer" />
-          <div className="auth-gate__orbit auth-gate__orbit--inner" />
-          <div className="auth-gate__planet" />
-          <img className="auth-gate__ship" src={ROCKET_ASSETS.explorer.exterior} alt="" />
-          <div className="auth-gate__telemetry">
-            <span>PROGRAM LINK</span><strong>READY</strong>
-            <span>ACCESS ROUTE</span><strong>EARTH BASE</strong>
-          </div>
         </div>
 
         <div className="auth-gate__content">
@@ -100,8 +110,8 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
               tabs — a brand-new player on Sign Up has nothing to resume. */}
           <p className="auth-gate__intro" data-testid="auth-gate-intro">
             {mode === 'signin'
-              ? 'Pick up at the next step in your space program.'
-              : 'Create a program, then build toward your first launch.'}
+              ? 'Return to your launchpad and take on your agency’s next mission.'
+              : 'Choose a landing site, build your launchpad, and grow your space program one mission at a time.'}
           </p>
 
           <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
@@ -157,13 +167,21 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !email.trim() || !password}
             data-testid="auth-gate-submit"
             className="auth-gate__primary"
           >
-            {submitting ? (mode === 'signin' ? 'Signing in…' : 'Creating…') : (mode === 'signin' ? 'Sign In' : 'Create Account')}
+            {submitting ? (mode === 'signin' ? 'Opening program…' : 'Starting program…') : (mode === 'signin' ? 'Return to Base' : 'Start Program')}
           </button>
         </form>
+
+        {isLocal && (
+          <div className="auth-gate__quick">
+            <button type="button" className="auth-gate__quick-btn" data-testid="auth-gate-quick-account" disabled={submitting} onClick={handleQuickAccount}>
+              Local: create test account
+            </button>
+          </div>
+        )}
 
         </div>
       </section>

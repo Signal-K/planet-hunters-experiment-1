@@ -13,14 +13,12 @@ public enum Transitions {
 
     // MARK: onboarding
 
-    public static let legacyFreeOpsMissionsDone = 3
-    public static func freeOperationsUnlocked(_ p: Player) -> Bool {
-        p.missionsDone >= legacyFreeOpsMissionsDone || p.flightPlan.isComplete
-    }
+    /// Free Ops opens once the launchpad is placed (no required path); the three training tries (mining, scan, part) stay an optional guide.
+    public static func freeOperationsUnlocked(_ p: Player) -> Bool { p.placed.contains("launchpad") || p.flightPlan.isComplete }
 
     // MARK: return leg
 
-    /// Shared by laser mining, rover mining and lander redock completion.
+    /// Shared by laser mining and lander redock completion. The rover survey does not extract cargo.
     public static func startReturnLeg(_ s: GameState, cargo: Cargo, arrivalAt: Double?, transitStartedAt: Double?, now: Double) -> GameState {
         var n = s
         let hasDelivery = s.deliveryTargetId != nil
@@ -44,9 +42,13 @@ public enum Transitions {
         return startReturnLeg(s, cargo: cargo, arrivalAt: arrivalAt, transitStartedAt: transitStartedAt, now: now)
     }
 
-    public static func applyRoverMiningDone(_ s: GameState, cargo: Cargo, arrivalAt: Double?, transitStartedAt: Double?, now: Double) -> GameState {
-        guard s.screen == .roverMining, s.missionId != nil, s.targetId != nil else { return s }
-        return startReturnLeg(s, cargo: cargo, arrivalAt: arrivalAt, transitStartedAt: transitStartedAt, now: now)
+    /// Survey complete: the starter rover (or tutorial transport lesson) hands off to the ship laser.
+    public static func applyRoverSurveyComplete(_ s: GameState) -> GameState {
+        guard s.screen == .roverSurvey, s.missionId != nil, s.targetId != nil else { return s }
+        var n = s
+        n.screen = .mining
+        n.player.missionPhase = .mining
+        return n
     }
 
     /// Cargo lands in Earth storage and the run moves to Debrief.
@@ -61,6 +63,8 @@ public enum Transitions {
         n.player.transitStartedAt = nil
         n.player.missionPhase = .debrief
         n.player.debriefPending = false
+        // SSL-553: a mined haul lands on the Earth pad and is settled on the delivery sheet.
+        n.player.homeDeliveryPending = !s.player.cargoSettledOffworld && cargo.values.contains { $0 > 0 }
         n.player.returningToEarth = false
         n.player.shipDestroyed = false
         n.screen = .debrief
@@ -113,11 +117,24 @@ public enum Transitions {
         return n
     }
 
-    public static func applyLandingTouchdown(_ s: GameState) -> GameState {
+    /// Web `TRANSPORT_LESSON_MISSIONS_DONE`.
+    public static let transportLessonMissionsDone = 1
+
+    public static func isStarterRoverMission(_ mission: Mission?) -> Bool {
+        mission?.onWorldVehicle == MissionGenerator.starterRoverVehicle
+    }
+
+    public static func isTutorialTransportLesson(_ mission: Mission?, player: Player) -> Bool {
+        player.missionsDone == transportLessonMissionsDone && mission?.deliveryTargetId != nil
+    }
+
+    /// Touchdown lands on the rover survey only for the tutorial transport lesson. Every other descent continues on the ship laser.
+    public static func applyLandingTouchdown(_ s: GameState, mission: Mission? = nil) -> GameState {
         guard s.screen == .landing, s.player.landingStartedAt != nil else { return s }
         var n = s
-        n.screen = .mining
-        n.player.missionPhase = .mining
+        let rover = isTutorialTransportLesson(mission, player: s.player)
+        n.screen = rover ? .roverSurvey : .mining
+        n.player.missionPhase = rover ? .survey : .mining
         n.player.landingStartedAt = nil
         n.player.hasLanded = true
         return n

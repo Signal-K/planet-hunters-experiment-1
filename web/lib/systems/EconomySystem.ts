@@ -11,7 +11,7 @@ import { nextLaserCapacitorTier, spendOreUnits } from '@/lib/data/mining-upgrade
 import { structureIsStaffed } from './AcademySystem'
 import { buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
-import { freeOperationsUnlocked } from './AgencyOnboardingSystem'
+import { freeOperationsUnlocked, trainingFinished } from './AgencyOnboardingSystem'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
 export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
@@ -358,7 +358,7 @@ export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameStat
  */
 export function rocketPurchaseRefusal(s: GameState, rocket: RocketModel): string | null {
   // SSL-450: the launch review (screen 'fab') is where a vehicle is prepared.
-  if (s.screen !== 'rocket-buy' && s.screen !== 'fab' && s.screen !== 'targets') return 'Return to the launch review before building.'
+  if (s.screen !== 'rocket-buy' && s.screen !== 'fab' && s.screen !== 'targets' && s.screen !== 'hangar') return 'Return to the launch review before building.'
   if (!s.missionId || !s.targetId) return 'Choose a contract destination before building a rocket.'
   if (s.player.francs < rocket.costFrancs) {
     return `Need ${rocket.costFrancs - s.player.francs} more francs to build this rocket.`
@@ -473,7 +473,9 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
     && freeOperationsUnlocked({ missionsDone: s.player.missionsDone, placed })
   return {
     ...s,
-    ...(enteredFreeOperations ? { tutorial: false, popup: 'tutorial-complete' } : {}),
+    // Free Ops opens with the launchpad, but the three training tries are an optional guide that is still running: only a finished
+    // training ends the coach and raises the "agency is operating" sheet.
+    ...(enteredFreeOperations && trainingFinished({ missionsDone: s.player.missionsDone, placed, flightPlan: s.player.flightPlan }) ? { tutorial: false, popup: 'tutorial-complete' } : {}),
     player: {
       ...s.player,
       ...(enteredFreeOperations ? { freeOperations: true } : {}),

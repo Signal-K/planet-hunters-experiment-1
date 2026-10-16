@@ -1,27 +1,69 @@
 'use client'
 
-import { useState, type CSSProperties } from 'react'
-import ActionConfirmBar from '@/components/game/ActionConfirmBar'
-import MineralChip from '@/components/game/MineralChip'
-import {
-  MINERAL_META,
-  CLIENT_SLOTS,
-  REFINERY_RECIPES,
-  CRAFTING_RECIPES,
-  CRAFTING_CATEGORY_LABELS,
-  CRAFTING_CATEGORY_ORDER,
-  craftingAffordability,
-  type CraftingCategory,
-  type CraftingRecipe,
-} from '@/lib/data'
-import { mineralSourceHints } from '@/lib/data/mineral-sources'
-import { sellUnitPrice, sellQuote } from '@/lib/systems/EconomySystem'
-import { formatCurrency } from '@/lib/format'
+import { useEffect, useRef, useState } from 'react'
+import { BaseDock } from '@/components/game/hub/BaseDock'
+import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
+import { MINERAL_META, REFINERY_RECIPES } from '@/lib/data'
+import { openMarketSellPrice, sellQuote, sellUnitPrice } from '@/lib/systems/EconomySystem'
 import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
-import { captureGameEvent } from '@/lib/posthog'
+import { formatCurrency, formatFrancs, FRANC } from '@/lib/format'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { openSettings } from '@/lib/mining/openChrome'
+import { captureGameEvent } from '@/lib/posthog'
+import { biomeLayers, sanitizeEarthBiome, type EarthBiomeId } from '@/lib/scene/base-world'
 import styles from './MarketScreen.module.css'
-import { useHelp } from '@/components/ui/useHelp'
+
+const ART = '/art/scenes/exchange'
+
+/** Steel-blue, silver, and lilac crates. No green or warm ore. */
+const CRATE_FOR: Record<string, string> = {
+  iron: 'exchange-crate-1-iron.png',
+  nickel: 'exchange-crate-2-nickel.png',
+  cobalt: 'exchange-crate-3-steel-blue.png',
+  copper: 'exchange-crate-3-steel-blue.png',
+  silicon: 'exchange-crate-5-silver.png',
+  aluminium: 'exchange-crate-5-silver.png',
+  carbon: 'exchange-crate-5-silver.png',
+  platinum: 'exchange-crate-4-platinum.png',
+  palladium: 'exchange-crate-4-platinum.png',
+  gold: 'exchange-crate-4-platinum.png',
+  iridium: 'exchange-crate-4-platinum.png',
+  rhodium: 'exchange-crate-4-platinum.png',
+  rare: 'exchange-crate-4-platinum.png',
+  ice: 'exchange-crate-6-ice.png',
+  hydrogen: 'exchange-crate-6-ice.png',
+  uranium: 'exchange-crate-3-steel-blue.png',
+  orionid_debris: 'exchange-crate-6-ice.png',
+  draconid_debris: 'exchange-crate-3-steel-blue.png',
+}
+
+function crateFile(id: string): string {
+  return CRATE_FOR[id] ?? 'exchange-crate-3-steel-blue.png'
+}
+
+function pileHeight(qty: number): number {
+  if (qty >= 24) return 4
+  if (qty >= 8) return 3
+  if (qty >= 2) return 2
+  return 1
+}
+
+type Trend = 'up' | 'down' | 'flat'
+
+function priceTrend(price: number, book: number): Trend {
+  if (price > book + 1) return 'up'
+  if (price < book - 1) return 'down'
+  return 'flat'
+}
+
+interface CargoLot {
+  id: string
+  name: string
+  qty: number
+  unit: number
+  trend: Trend
+  refined: boolean
+}
 
 interface MarketScreenProps {
   stash: Record<string, number>
@@ -33,315 +75,266 @@ interface MarketScreenProps {
   refinedGoods: Record<string, number>
   onSellRefined: (recipeId: string, amount: number) => void
   onBack: () => void
-  onOpenMissions: () => void
+  onBuild: () => void
+  onHub: () => void
+  onNext: () => void
   clientId?: string
-  /** Base structure kinds already placed, so a built recipe reads BUILT. */
-  placedStructures?: string[]
-  /** Field kits held, by recipe id. */
-  fieldKits?: Record<string, number>
-  /** Run a recipe's build action (SSL-512). True when something was built. */
-  onBuildRecipe?: (recipe: CraftingRecipe) => boolean
+  biome?: EarthBiomeId
 }
 
-/** The build button a recipe card offers, or null when it is made elsewhere. */
-function recipeAction(recipe: CraftingRecipe, affordable: boolean, placed: string[], kits: Record<string, number>): { label: string; disabled: boolean; reason?: string } | null {
-  switch (recipe.producedAt) {
-    case 'field': {
-      const held = kits[recipe.id] ?? 0
-      return { label: held > 0 ? `BUILD · ${held} HELD` : 'BUILD', disabled: !affordable }
-    }
-    case 'earth-base': {
-      const kind = recipe.id.replace(/^earth-/, '')
-      if (!placed.includes(kind)) return { label: 'BUILD', disabled: !affordable }
-      if (recipe.id === 'earth-surface-silo') {
-        return {
-          label: 'ONE PER BASE',
-          disabled: true,
-          reason: 'One Surface Silo stands at the Base. It cannot be built again. More ore storage is the Mineral Vault under the Base.',
-        }
-      }
-      return { label: 'BUILT', disabled: true, reason: `${recipe.name} is already at the Base.` }
-    }
-    case 'subsurface': return { label: 'Open Base deck', disabled: false }
-    case 'refinery': return { label: 'Open Refinery', disabled: false }
-    case 'hangar': return { label: 'Open Hangar', disabled: false }
-    default: return null
-  }
-}
-
-export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell, refinedGoods, onSellRefined, onBack, onOpenMissions, clientId, placedStructures = [], fieldKits = {}, onBuildRecipe }: MarketScreenProps) {
-  const help = useHelp('market')
-  const [confirming, setConfirming] = useState<string | null>(null)
-  const [sellAllConfirm, setSellAllConfirm] = useState(false)
-  // SSL-316: every recipe in the game is published here so the player can
-  // plan purchases against their stash before they are standing on a field.
-  const recipeCategories = CRAFTING_CATEGORY_ORDER.filter(c => CRAFTING_RECIPES.some(r => r.category === c))
-  const [recipeCategory, setRecipeCategory] = useState<CraftingCategory>(recipeCategories[0])
-  const visibleRecipes = CRAFTING_RECIPES.filter(r => r.category === recipeCategory)
-
-  const entries = Object.entries(stash).filter(([, v]) => v > 0)
-
-  const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) ?? null : null
-
-  // Prices come from the same function the sale itself uses, so a quote can
-  // never promise more (or less) than the player is actually paid.
+export default function MarketScreen({
+  stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell,
+  refinedGoods, onSellRefined, onBack, onBuild, onHub, onNext, clientId, biome = 'mountains',
+}: MarketScreenProps) {
+  const landscape = sanitizeEarthBiome(biome)
+  const landscapeLayers = biomeLayers(landscape)
   const priceContext = { marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot }
-  const unitPrice = (mineralId: string) => sellUnitPrice(mineralId, priceContext, clientId)
-  const totalValue = () => sellQuote(stash, priceContext, clientId)
+  const lots: CargoLot[] = []
+  for (const [id, qty] of Object.entries(stash)) {
+    if (qty <= 0) continue
+    const meta = MINERAL_META[id]
+    if (!meta) continue
+    const { price } = sellUnitPrice(id, priceContext, clientId)
+    lots.push({
+      id, name: meta.name, qty, unit: price, refined: false,
+      trend: priceTrend(price, openMarketSellPrice(meta.price, 0)),
+    })
+  }
+  for (const recipe of REFINERY_RECIPES) {
+    const qty = refinedGoods[recipe.id] ?? 0
+    if (qty <= 0) continue
+    lots.push({
+      id: recipe.id, name: recipe.output.name, qty, unit: recipe.output.price,
+      trend: 'flat', refined: true,
+    })
+  }
+  lots.sort((a, b) => a.name.localeCompare(b.name))
 
-  function handleSell(mineralId: string) {
-    const qty = stash[mineralId] ?? 0
-    if (qty > 0) {
-      captureGameEvent('market_mineral_sold', { mineral_id: mineralId, quantity: qty })
-      onSell(mineralId, qty)
+  const cargoValue = sellQuote(stash, priceContext, clientId)
+  const refinedValue = lots.filter(lot => lot.refined).reduce((sum, lot) => sum + lot.unit * lot.qty, 0)
+  const hasCargo = lots.length > 0
+
+  const [armed, setArmed] = useState(false)
+  const [shownFrancs, setShownFrancs] = useState(francs)
+  const [padLot, setPadLot] = useState<string | null>(null)
+  const [ghost, setGhost] = useState<{ src: string; x: number; y: number } | null>(null)
+  const [flight, setFlight] = useState<{ src: string; x: number; y: number; dx: number; dy: number } | null>(null)
+  const shownRef = useRef(francs)
+  const dragRef = useRef<{ id: string; x: number; y: number; moved: boolean } | null>(null)
+  const draggedRef = useRef(false)
+  const padRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const from = shownRef.current
+    const to = francs
+    if (from === to) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduce) {
+      shownRef.current = to
+      setShownFrancs(to)
+      return
     }
-    setConfirming(null)
+    const start = performance.now()
+    let frame = 0
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / 680)
+      const eased = 1 - (1 - t) * (1 - t)
+      const value = Math.round(from + (to - from) * eased)
+      shownRef.current = value
+      setShownFrancs(value)
+      if (t < 1) frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [francs])
+
+  useEffect(() => {
+    if (!armed) return
+    const timer = window.setTimeout(() => setArmed(false), 4000)
+    return () => window.clearTimeout(timer)
+  }, [armed])
+
+  function sellLot(lot: CargoLot, origin: DOMRect | null) {
+    const pad = padRef.current?.getBoundingClientRect()
+    if (origin && pad) {
+      const x = pad.left + pad.width / 2
+      const y = pad.top + pad.height / 2
+      setFlight({
+        src: `${ART}/${crateFile(lot.refined ? 'silicon' : lot.id)}`,
+        x, y,
+        dx: origin.left + origin.width / 2 - x,
+        dy: origin.top + origin.height / 2 - y,
+      })
+      window.setTimeout(() => setFlight(null), 340)
+    }
+    setPadLot(lot.id)
+    window.setTimeout(() => setPadLot(current => current === lot.id ? null : current), 700)
+    captureGameEvent('market_sell_one', { mineral_id: lot.id, unit_price: lot.unit, refined: lot.refined })
+    if (lot.refined) onSellRefined(lot.id, 1)
+    else onSell(lot.id, 1)
   }
 
-  const totalUnits = entries.reduce((sum, [, qty]) => sum + qty, 0)
-  const refinedEntries = REFINERY_RECIPES.filter(recipe => (refinedGoods[recipe.id] ?? 0) > 0)
+  function sellAll() {
+    if (!hasCargo) return
+    if (!armed) {
+      setArmed(true)
+      return
+    }
+    captureGameEvent('market_sell_all', { mineral_count: lots.length, total_value: cargoValue + refinedValue })
+    for (const lot of lots) {
+      if (lot.refined) onSellRefined(lot.id, lot.qty)
+      else onSell(lot.id, lot.qty)
+    }
+    setArmed(false)
+    setPadLot('all')
+    window.setTimeout(() => setPadLot(null), 700)
+  }
 
   return (
-    <div className={`theme-light market-screen ${styles.screen}`}>
-      <header className={styles.header} data-dev-launcher={isDevLauncherEnabled() || undefined}>
-        <button className={styles.backButton} onClick={onBack} aria-label="Back to previous screen" type="button" data-testid="market-back-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-        <div className={styles.headerCopy}>
-          <div className={styles.eyebrow}>Base · Resource Desk</div>
-          <h1 className={styles.title}>Commodity Exchange</h1>
-        </div>
-        {help.button}
-        {help.layer}
-        <div className={styles.balance} aria-label={`Current balance ${formatCurrency(francs)}`}>
-          <span className={styles.metricLabel}>Available francs</span>
-          <span className={styles.balanceValue}>{formatCurrency(francs, { compact: true })}</span>
-        </div>
-      </header>
+    <div className={`market-screen ${styles.scene}`} data-testid="exchange-scene">
+      <img className={styles.backdrop} src={`${ART}/exchange-plate-dock.png`} alt="" draggable={false} />
 
-      <main className={styles.content}>
-        <section className={styles.intro} aria-labelledby="market-intro-title">
-          <div className={styles.paperCard}>
-            <div className={styles.sectionLabel}>Open market · live rates</div>
-            <h2 id="market-intro-title">Move recovered material into working capital.</h2>
-            <p>Sell mined cargo at the published exchange rate. Daily client construction demand sets the next price board.</p>
-          </div>
-          <div className={styles.quote} aria-label={`Estimated inventory value ${formatCurrency(totalValue())}`}>
-            <div>
-              <div className={styles.sectionLabel}>Estimated inventory value</div>
-              <span className={styles.quoteValue}>{formatCurrency(totalValue())}</span>
+      <div className={styles.hud} data-dev-launcher={isDevLauncherEnabled() ? 'true' : 'false'}>
+        <div className={styles.cluster}>
+          <button type="button" className={styles.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+            </svg>
+          </button>
+          <HubClockWidget />
+        </div>
+        <div className={styles.cluster}>
+          <span className="scene-chip" data-testid="market-balance">{formatCurrency(francs, { compact: true })}</span>
+          <span className="scene-chip" data-testid="exchange-cargo-chip" aria-label="Cargo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" />
+              <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.play}>
+        <section className={styles.board} aria-label="Prices" data-testid="exchange-prices">
+          {lots.length === 0 && <p className={styles.quiet}>No quotes</p>}
+          {lots.map(lot => (
+            <div className={styles.quote} key={lot.id} data-testid={`exchange-price-${lot.id}`}>
+              <img src={`${ART}/${crateFile(lot.refined ? 'silicon' : lot.id)}`} alt="" draggable={false} />
+              <span className={styles.mineral}>{lot.name}</span>
+              <span className={styles.unit}>{formatCurrency(lot.unit, { compact: true })}</span>
+              <span className={styles.trend} data-trend={lot.trend} aria-label={lot.trend === 'up' ? 'Price up' : lot.trend === 'down' ? 'Price down' : 'Price steady'} />
             </div>
-            <div className={styles.quoteNote}>{totalUnits > 0 ? `${totalUnits} units across ${entries.length} mineral${entries.length === 1 ? '' : 's'}.` : 'No cargo currently buffered.'}</div>
-          </div>
+          ))}
         </section>
 
-        {client && !dailyEconomySnapshot && (
-          <section className={styles.clientCard} style={{ '--client-accent': client.color } as CSSProperties} aria-label={`${client.name} premium`}>
-            <div className={styles.clientMark} aria-hidden="true">+</div>
-            <div>
-              <div className={styles.sectionLabel}>Active client preference</div>
-              <h2>{client.name} Premium</h2>
-              <p>Preferred minerals sell at {Math.round((1 + client.payoutPremium) * 100)}% market rate.</p>
-            </div>
-          </section>
-        )}
+        <div className={styles.window} data-biome={landscape} aria-hidden="true">
+          <div className={styles.windowSky} />
+          {landscapeLayers.map((layer, index) => (
+            <img
+              key={layer.id}
+              className={styles.windowBand}
+              data-layer={layer.id}
+              src={layer.src}
+              alt=""
+              draggable={false}
+              style={{ height: layer.height, zIndex: index + 1 }}
+            />
+          ))}
+          <div className={styles.windowGround} />
+        </div>
 
-        {entries.length === 0 && (
-          <section className={styles.emptyCard} aria-labelledby="empty-market-title">
-            <div className={styles.sectionLabel}>Inventory status · empty</div>
-            <h2 id="empty-market-title">No cargo to sell yet</h2>
-            <p>The exchange becomes useful after a mining run. Choose a client job or launch a self-directed run, then bring the ore home.</p>
-            <button className={styles.primaryButton} onClick={onOpenMissions} type="button">Find a Mining Run</button>
-          </section>
-        )}
-
-        {entries.length > 0 && (
-          <div className={styles.sectionHeader}>
-            <div>
-              <div className={styles.sectionLabel}>Cargo manifest</div>
-              <h2>Mineral Inventory</h2>
-            </div>
-            <button className={styles.sellButton} onClick={() => setSellAllConfirm(true)} type="button" data-testid="sell-all-btn">Sell All Minerals</button>
-          </div>
-        )}
-
-        {refinedEntries.length > 0 && (
-          <>
-            <div className={styles.sectionHeader}>
-              <div>
-                <div className={styles.sectionLabel}>Processed inventory</div>
-                <h2>Refined Goods</h2>
-              </div>
-              <div className={styles.commodityMeta}>Output value · recipe rate</div>
-            </div>
-            <div className={styles.commodityGrid} data-testid="market-refined-grid">
-              {refinedEntries.map(recipe => {
-                const qty = refinedGoods[recipe.id] ?? 0
-                return (
-                  <article className={styles.commodityCard} key={recipe.id}>
-                    <div className={styles.commodityTop}>
-                      <div>
-                        <div className={styles.commodityName}>{recipe.output.name}</div>
-                        <div className={styles.commodityMeta}>{qty} units ready</div>
-                      </div>
-                      <div className={styles.commodityValue}>{formatCurrency(recipe.output.price * qty)}</div>
-                    </div>
-                    <div className={styles.rate}>
-                      <div>
-                        <div className={styles.rateLabel}>Settlement rate</div>
-                        <div className={styles.rateValue}>{formatCurrency(recipe.output.price)}/u</div>
-                      </div>
-                    </div>
-                    <button className={styles.sellButton} onClick={() => { captureGameEvent('market_refined_sold', { recipe_id: recipe.id, quantity: qty }); onSellRefined(recipe.id, qty) }} type="button">Sell All {recipe.output.name}</button>
-                  </article>
-                )
-              })}
-            </div>
-          </>
-        )}
-        <section className={styles.recipes} aria-labelledby="market-recipes-title" data-testid="market-recipes">
-          <div className={styles.sectionHeader}>
-            <div>
-              <div className={styles.sectionLabel}>Fabrication &amp; build recipes</div>
-              <h2 id="market-recipes-title">What your cargo can become</h2>
-            </div>
-            <div className={styles.commodityMeta}>Field recipes become kits you place with the rover. Base recipes are placed on a free plot.</div>
-          </div>
-          <div className={styles.recipeTabs} role="tablist" aria-label="Recipe categories">
-            {recipeCategories.map(category => (
+        <div className={styles.belt} data-testid="exchange-belt" aria-label="Cargo on the conveyor">
+          {lots.length === 0 && <p className={styles.empty}>Hold is empty</p>}
+          {lots.map(lot => {
+            const layers = pileHeight(lot.qty)
+            const src = `${ART}/${crateFile(lot.refined ? 'silicon' : lot.id)}`
+            return (
               <button
-                key={category}
+                key={lot.id}
                 type="button"
-                role="tab"
-                aria-selected={recipeCategory === category}
-                className={styles.recipeTab}
-                onClick={() => setRecipeCategory(category)}
-                data-testid={`market-recipe-tab-${category}`}
+                className={styles.stack}
+                data-testid={`exchange-crate-${lot.id}`}
+                aria-label={`Sell one ${lot.name}. ${lot.qty} held.`}
+                onPointerDown={event => {
+                  event.currentTarget.setPointerCapture(event.pointerId)
+                  dragRef.current = { id: lot.id, x: event.clientX, y: event.clientY, moved: false }
+                  setGhost({ src, x: event.clientX, y: event.clientY })
+                }}
+                onPointerMove={event => {
+                  const drag = dragRef.current
+                  if (!drag || drag.id !== lot.id) return
+                  if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) > 8) drag.moved = true
+                  setGhost({ src, x: event.clientX, y: event.clientY })
+                }}
+                onPointerUp={event => {
+                  const drag = dragRef.current
+                  dragRef.current = null
+                  setGhost(null)
+                  if (!drag || drag.id !== lot.id || !drag.moved) return
+                  draggedRef.current = true
+                  const pad = padRef.current?.getBoundingClientRect()
+                  const over = !!pad && event.clientX >= pad.left && event.clientX <= pad.right && event.clientY >= pad.top && event.clientY <= pad.bottom
+                  if (over) sellLot(lot, event.currentTarget.getBoundingClientRect())
+                }}
+                onClick={event => {
+                  if (draggedRef.current) {
+                    draggedRef.current = false
+                    return
+                  }
+                  sellLot(lot, (event.currentTarget as HTMLButtonElement).getBoundingClientRect())
+                }}
               >
-                {CRAFTING_CATEGORY_LABELS[category]}
+                <span className={styles.pile} aria-hidden="true">
+                  {Array.from({ length: layers }, (_, index) => (
+                    <img key={index} src={src} alt="" draggable={false} style={{ bottom: index * 12 }} />
+                  ))}
+                </span>
+                <span className={styles.count}>{lot.qty}</span>
               </button>
-            ))}
-          </div>
-          <div className={styles.commodityGrid} data-testid="market-recipe-grid">
-            {visibleRecipes.map(recipe => {
-              const can = craftingAffordability(recipe, francs, stash, refinedGoods)
-              return (
-                <article className={`${styles.commodityCard} ${styles.recipeCard}`} key={recipe.id} data-affordable={can.ok} data-testid={`market-recipe-${recipe.id}`}>
-                  <div className={styles.commodityTop}>
-                    <div>
-                      <div className={styles.commodityName}>{recipe.name}</div>
-                      <div className={styles.commodityMeta}>Made at {recipe.producedAt.replace(/-/g, ' ')}{recipe.placeable ? ' · placeable on the field' : ''}</div>
-                    </div>
-                    <span className={styles.recipeState} data-ok={can.ok}>{can.ok ? 'Ready' : 'Short'}</span>
-                  </div>
-                  <p className={styles.recipeDescription}>{recipe.description}</p>
-                  <div className={styles.recipeCosts}>
-                    {recipe.costFrancs > 0 && <span className={styles.recipeChip}>{formatCurrency(recipe.costFrancs, { compact: true })}</span>}
-                    {Object.entries(recipe.costMinerals).map(([id, amount]) => (
-                      <span className={styles.recipeChip} key={id} data-short={(can.mineralsShort[id] ?? 0) > 0}>
-                        <MineralChip mineral={id} variant="avatar" size={16} />
-                        {amount} {MINERAL_META[id]?.name ?? id}
-                      </span>
-                    ))}
-                    {Object.entries(recipe.costRefined ?? {}).map(([id, amount]) => (
-                      <span className={styles.recipeChip} key={id} data-short={(can.refinedShort[id] ?? 0) > 0}>
-                        {amount} {REFINERY_RECIPES.find(r => r.id === id)?.name ?? id}
-                      </span>
-                    ))}
-                  </div>
-                  {!can.ok && Object.keys(can.mineralsShort).length > 0 && (
-                    <p className={styles.recipeDescription} data-testid={`market-recipe-source-${recipe.id}`}>
-                      Short {Object.entries(can.mineralsShort).map(([id, n]) => `${n} ${MINERAL_META[id]?.name ?? id}`).join(', ')}. {mineralSourceHints(Object.keys(can.mineralsShort))}
-                    </p>
-                  )}
-                  {(() => {
-                    const action = recipeAction(recipe, can.ok, placedStructures, fieldKits)
-                    if (!action || !onBuildRecipe) return null
-                    return (
-                      <>
-                        {action.reason && (
-                          <p className={styles.recipeDescription} data-testid={`market-recipe-reason-${recipe.id}`}>{action.reason}</p>
-                        )}
-                        <button
-                          className={styles.primaryButton}
-                          type="button"
-                          disabled={action.disabled}
-                          data-testid={`market-recipe-build-${recipe.id}`}
-                          onClick={() => { captureGameEvent('market_recipe_build', { recipe_id: recipe.id }); onBuildRecipe(recipe) }}
-                        >
-                          {action.label}
-                        </button>
-                      </>
-                    )
-                  })()}
-                </article>
-              )
-            })}
-          </div>
-        </section>
+            )
+          })}
+        </div>
 
-        {sellAllConfirm && (
-          <ActionConfirmBar
-            eyebrow="Commodity Exchange"
-            title="Sell Entire Inventory"
-            description={`Sell all cargo for ${formatCurrency(totalValue())}? This can't be undone.`}
-            confirmLabel={`Confirm Sell (${formatCurrency(totalValue())})`}
-            onConfirm={() => {
-              captureGameEvent('market_sell_all', { mineral_count: entries.length, total_value: totalValue() })
-              entries.forEach(([id]) => onSell(id, stash[id]))
-              setSellAllConfirm(false)
-            }}
-            onDismiss={() => setSellAllConfirm(false)}
-          />
-        )}
-
-        {entries.length > 0 && (
-          <div className={styles.commodityGrid} data-testid="market-commodity-grid">
-            {entries.map(([id, qty]) => {
-              const meta = MINERAL_META[id]
-              if (!meta) return null
-              const { price, base, premiumApplied } = unitPrice(id)
-              const demandExplanation = dailyEconomySnapshot?.prices[id]?.explanation
-              return (
-                <article className={styles.commodityCard} key={id} data-testid={`commodity-${id}`}>
-              <div className={styles.commodityTop}>
-                <div className={styles.commodityIdentity}>
-                  <MineralChip mineral={id} variant="avatar" size={36} />
-                  <div>
-                    <div className={styles.commodityName}>{meta.name}</div>
-                    <div className={styles.commodityMeta}>{qty} units held</div>
-                  </div>
-                </div>
-                <div className={styles.commodityValue}>{formatCurrency(price * qty)}</div>
-              </div>
-              <div className={styles.rate}>
-                <div>
-                  <div className={styles.rateLabel}>Current rate</div>
-                  <div className={styles.rateValue}>{formatCurrency(price)}/u <span className={styles.commodityMeta}>base {formatCurrency(base)}/u</span></div>
-                  {demandExplanation && <div className={styles.commodityMeta} data-testid={`market-demand-explanation-${id}`}>{demandExplanation}</div>}
-                </div>
-                {premiumApplied && client && <div className={styles.commodityMeta} style={{ color: client.color }}>Client premium</div>}
-              </div>
-              <button className={styles.sellButton} onClick={() => setConfirming(id)} type="button">Sell All {meta.name}</button>
-                </article>
-              )
-            })}
+        <div className={styles.floor}>
+          <div className={styles.pad} ref={padRef} data-testid="exchange-sell-pad" aria-label="Sell pad">
+            <img src={`${ART}/exchange-sell-pad.png`} alt="" draggable={false} />
+            {padLot && <img className={styles.onPad} src={`${ART}/exchange-crate-on-pad.png`} alt="" draggable={false} />}
           </div>
-        )}
-      </main>
+          <div className={styles.machine}>
+            <div className={styles.face}>
+              <img src={`${ART}/exchange-counter-machine.png`} alt="" draggable={false} />
+              <span className={styles.digits} data-testid="exchange-francs" aria-label={`Francs ${formatFrancs(shownFrancs)}`}>
+                {FRANC}{formatFrancs(shownFrancs)}
+              </span>
+            </div>
+            <button
+              type="button"
+              className={styles.sellAll}
+              data-testid="sell-all-btn"
+              disabled={!hasCargo}
+              onClick={sellAll}
+            >
+              {armed ? `Confirm ${formatCurrency(cargoValue + refinedValue, { compact: true })}` : 'Sell all'}
+            </button>
+          </div>
+        </div>
+      </div>
 
-      {confirming && MINERAL_META[confirming] && (
-        <ActionConfirmBar
-          eyebrow="Commodity Exchange"
-          title={`Sell All ${MINERAL_META[confirming].name}`}
-          description={`Sell ${stash[confirming] ?? 0} units for ${formatCurrency(unitPrice(confirming).price * (stash[confirming] ?? 0))}? This can't be undone.`}
-          confirmLabel="Confirm Sell"
-          onConfirm={() => handleSell(confirming)}
-          onDismiss={() => setConfirming(null)}
+      {ghost && <img className={styles.ghost} src={ghost.src} alt="" style={{ left: ghost.x, top: ghost.y }} draggable={false} />}
+      {flight && (
+        <img
+          className={styles.flight}
+          src={flight.src}
+          alt=""
+          style={{ left: flight.x, top: flight.y, ['--dx' as string]: `${flight.dx}px`, ['--dy' as string]: `${flight.dy}px` }}
+          draggable={false}
         />
       )}
+
+      <div className={styles.dock}>
+        <BaseDock onPrev={onBack} onNext={onNext} onBuild={onBuild} onHub={onHub} />
+      </div>
     </div>
   )
 }

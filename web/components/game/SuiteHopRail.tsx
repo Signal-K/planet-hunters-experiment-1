@@ -23,9 +23,10 @@ export default function SuiteHopRail({ signedIn }: SuiteHopRailProps) {
           data-testid="suite-identity-chip"
           className="suite-identity-chip"
           style={{
-            padding: '4px 8px', borderRadius: 999,
-            background: 'var(--ln-panel)', border: '1px solid var(--ln-hairline)',
-            color: 'var(--ln-cyan)', fontFamily: 'var(--ln-font-mono)',
+            minHeight: 44, alignItems: 'center', boxSizing: 'border-box',
+            padding: '0 12px', borderRadius: 999,
+            background: 'var(--dusk-panel)', border: '1px solid color-mix(in srgb, var(--dusk-ink) 42%, transparent)',
+            color: 'var(--dusk-ink)', fontFamily: 'var(--ln-font-mono)',
             fontSize: 14, letterSpacing: '0.12em',
           }}
         >

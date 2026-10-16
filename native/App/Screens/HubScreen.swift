@@ -8,12 +8,30 @@ struct HubScreen: View {
     @Environment(GameStore.self) private var store
     /// Snapshots have no real safe area; fixtures pass the device insets they want to show.
     var safeAreaOverride: EdgeInsets?
-    /// The default mountains biome is the web terrain kit. Other biomes are future kit variants; their layered assets stay unused for now.
-    var biome: EarthBiome = .resolve()
+    var biome: EarthBiome?
     @State private var showSettings = false
-    @State private var showFriends = false
-    @State private var showLocations = false
+    @State private var menuOpen = false
+    /// In-scene placement: pick an unlocked structure, then tap a free slot (the Build screen is this mode).
+    @State private var placing: Bool
+    @State private var picked: String?
+    @State private var placeNote: String?
+    /// Homecoming (SSL-553): the core stage lands on the pad behind the delivery sheet.
+    var homecoming = false
+    var padLift: CGFloat = 0
+    var padDismantle: CGFloat = 0
+    @State private var camera: BaseCamera
     private let zones = HUDZones.standard
+
+    /// `startX` / `startDepth` set the opening camera (fixtures and screenshots); the game starts at the surface, x 0.
+    init(safeAreaOverride: EdgeInsets? = nil, biome: EarthBiome = .resolve(), startX: CGFloat = 0, startDepth: CGFloat = 0, homecoming: Bool = false, padLift: CGFloat = 0, padDismantle: CGFloat = 0, placing: Bool = false) {
+        _placing = State(initialValue: placing)
+        self.safeAreaOverride = safeAreaOverride
+        self.homecoming = homecoming
+        self.padLift = padLift
+        self.padDismantle = padDismantle
+        self.biome = biome
+        _camera = State(initialValue: BaseCamera(x: startX, depth: startDepth))
+    }
 
     var body: some View {
         // Read the real safe area from the outer proxy, then draw edge to edge at the full size.
@@ -28,48 +46,165 @@ struct HubScreen: View {
                 .position(x: full.width / 2 - origin.width, y: full.height / 2 - origin.height)
         }
         .background(Theme.bg.ignoresSafeArea())
-        .sheet(isPresented: $showSettings) { SettingsSheet(onClose: { showSettings = false }) }
-        .sheet(isPresented: $showFriends) { FriendsSheet(onClose: { showFriends = false }) }
+        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
     }
 
     private func scene(size: CGSize, insets: EdgeInsets) -> some View {
-        Group {
-            let w = size.width, h = size.height
-            let layout = BaseLayout(size: size, insets: insets, zones: zones, hasPlaced: store.player.placed.contains { $0 != "launchpad" && store.player.placementPlots[$0] != nil })
-            let portrait = layout.portrait
-            let k = layout.k, groundY = layout.groundY
-            ZStack(alignment: .topLeading) {
-                TerrainScene(composition: .earthBaseWide, ground: layout.ground, exclusions: layout.exclusions)
-                ForEach(Array(BaseLayout.slots.enumerated()), id: \.offset) { i, slot in
-                    building(slot.name, sprite: slot.sprite, aspect: slot.aspect, width: layout.width(slot),
-                             x: layout.centreX(i), groundY: layout.structureY) { store.go(slot.tap) }
-                }
-                ForEach(["surface-silo", "refinery", "astronaut-academy"], id: \.self) { kind in
-                    if let plot = store.player.placementPlots[kind], store.player.placed.contains(kind) {
-                        placedStructure(kind, plot: plot, width: w, groundY: layout.placedGroundY(), k: k, portrait: portrait)
-                    }
-                }
-                BaseTraffic(width: w, groundY: groundY, k: k).allowsHitTesting(false)
-                subsurfaceHotspot(x: w * layout.spec.subsurfaceX, groundY: groundY)
-                skyCraft(width: w, height: h)
-                topLeftHud(insets: insets, portrait: portrait)
-                topRightHud(insets: insets)
-                dock(tile: layout.tile).padding(.bottom, insets.bottom + zones.dock.bottomInset)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        let layout = BaseLayout(size: size, insets: insets, zones: zones, hasPlaced: !store.player.placed.isEmpty)
+        let portrait = layout.portrait
+        return ZStack(alignment: .topLeading) {
+            BaseWorldScene(
+                biome: biome ?? EarthBiome(rawValue: store.player.earthBiome) ?? .mountains,
+                placed: store.player.placed,
+                plots: store.player.placementPlots,
+                levels: store.player.buildingLevels,
+                oreFraction: oreFraction,
+                excavated: store.player.subsurfaceExcavated || !store.player.subsurfaceBuilt.isEmpty,
+                secondTank: store.player.subsurfaceBuilt.contains("mineral-vault"),
+                        padOccupied: store.player.activeMission != nil || store.player.pendingLaunch,
+                padCore: homecoming,
+                padLift: padLift,
+                padDismantle: padDismantle,
+                insets: insets,
+                camera: camera,
+                onStructure: { openStructure($0) },
+                onShaft: { store.go(.hubSubsurface) },
+                onBuildSilo: { buildSilo() },
+                placing: placing,
+                pickedKind: picked ?? options.first?.id,
+                onSlot: { placeOnSlot($0) }
+            )
+            skyCraft(width: size.width, height: size.height)
+            topLeftHud(insets: insets, portrait: portrait)
+            topRightHud(insets: insets)
+            if placing { picker(width: size.width, insets: insets) }
+            if !placing && store.player.activeMission == nil && !store.player.pendingLaunch {
+                missionStatus(compact: size.height < 500)
+                    .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14) + (size.height < 500 ? 0 : 66))
+                    .padding(.trailing, size.height < 500 ? insets.trailing + 12 : 0)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: size.height < 500 ? .bottomTrailing : .bottom)
             }
+            BaseDock(tile: layout.tile, zones: zones.dock,
+                     onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
+                     onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
+                     onBuild: { placeNote = nil; placing.toggle() },
+                     onMenu: { menuOpen = true })
+                .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            if menuOpen { BaseMenu(onClose: { menuOpen = false }, onBuild: { placeNote = nil; placing = true }) }
+        }
+    }
+
+    /// Idle base: says nothing is in progress and starts a new mission (web `hub-mission-status`).
+    private func missionStatus(compact: Bool) -> some View {
+        HStack(spacing: 8) {
+            Text(compact ? "NO MISSION" : "NO MISSION IN PROGRESS")
+                .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.hudInk)
+                .padding(.leading, 14)
+            Button { store.go(.missions) } label: {
+                Text("NEW MISSION").font(AppFont.display(14)).tracking(1.1)
+                    .foregroundStyle(Theme.hudPanel)
+                    .padding(.horizontal, 16).frame(minHeight: 44)
+                    .background(Capsule().fill(Theme.blue))
+                    .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("New mission")
+        }
+        .padding(4)
+        .background(Capsule().fill(Theme.hudPanel))
+        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("No mission in progress")
+    }
+
+    /// Share of the silo's capacity holding ore, for the stored-ore crates in the cutaway.
+    private var oreFraction: Double {
+        let capacity = 40 * BuildingLevels.siloCapacityMultiplier(store.player.buildingLevels["surface-silo"] ?? 1)
+        let held = store.player.stash.values.reduce(0, +)
+        return min(1, Double(held) / Double(max(capacity, 1)))
+    }
+
+    /// Builds the silo on the first free plot; when it is locked or unaffordable the Build screen explains why.
+    private func buildSilo() {
+        let used = Set(Construction.occupied(store.player).values)
+        let plot = (0..<Construction.plotCount).first { !used.contains($0) } ?? 0
+        if !store.place("surface-silo", plot: plot) { placing = true }
+    }
+
+    /// Unlocked structures that are not yet on the base. Locked ones are not offered.
+    private var options: [StructureBlueprint] {
+        Construction.catalog(for: store.player).filter { Construction.unlocked($0, player: store.player) }
+    }
+
+    private func placeOnSlot(_ plot: Int) {
+        guard let id = picked ?? options.first?.id, let b = Construction.byId[id] else { return }
+        if !Construction.canAfford(b, player: store.player) {
+            placeNote = "\(b.name) · Need \(Construction.gaps(b, player: store.player).joined(separator: ", "))"; return
+        }
+        if store.place(id, plot: plot) { placeNote = nil; picked = nil; placing = false } else { placeNote = "That could not be placed. Try another slot." }
+    }
+
+    private func picker(width: CGFloat, insets: EdgeInsets) -> some View {
+        VStack(spacing: 6) {
+            if let placeNote {
+                Text(placeNote).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+            }
+            if picked == "surface-silo" || (picked == nil && options.first?.id == "surface-silo") {
+                Button("PLACE SILO") { buildSilo() }
+                    .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.hudInk).frame(minHeight: 44).padding(.horizontal, 18)
+                    .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+            }
+            if options.count == 1 && placeNote == nil {
+                // One choice: the site marker in the scene already names it (web hides the chip too).
+                EmptyView()
+            } else if options.isEmpty {
+                Text("Nothing to build yet").font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                    .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+            } else {
+                // One row above the dock, like web: a plain row when it fits, scrolling sideways when it does not.
+                let chips = HStack(spacing: 8) {
+                    ForEach(options) { b in
+                        let on = (picked ?? options.first?.id) == b.id
+                        Button { picked = b.id; placeNote = Construction.canAfford(b, player: store.player) ? nil : "\(b.name) · Need \(Construction.gaps(b, player: store.player).joined(separator: ", "))" } label: {
+                            Text("\(b.name.uppercased()) · \(b.cost == 0 ? "FREE" : Economy.format(francs: b.cost))")
+                                .font(AppFont.display(14)).tracking(0.8)
+                                .foregroundStyle(on ? Theme.hudPanel : Theme.hudInk)
+                                .padding(.horizontal, 16).frame(minHeight: 44)
+                                .background(Capsule().fill(on ? Theme.hudInk : Theme.hudPanel))
+                                .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+                        }.buttonStyle(.plain)
+                    }
+                }.padding(.horizontal, 12)
+                ViewThatFits(in: .horizontal) {
+                    chips
+                    ScrollView(.horizontal, showsIndicators: false) { chips }
+                }
+            }
+        }
+        .padding(.bottom, insets.bottom + 72)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+    }
+
+    private func openStructure(_ kind: String) {
+        switch kind {
+        case "launchpad": store.go(.launchpad)
+        // Mission first: the hangar opens on its rocket choice only once a mission and destination are set up.
+        case "hangar", "garage": store.go(store.mission != nil && store.target != nil ? .hangar : .missions)
+        case "astronaut-academy": store.go(.academy)
+        case "market": store.go(.market)
+        case "control-station": store.go(.instrumentHub)
+        default: break
         }
     }
 
     private func topLeftHud(insets: EdgeInsets, portrait: Bool) -> some View {
         let z = zones.topLeft
         return VStack(alignment: .leading, spacing: z.gap) {
-            HStack(spacing: 6) {
-                Image(systemName: "f.circle.fill").font(.system(size: z.francsChip.glyph, weight: .bold)).foregroundStyle(Theme.hudInk)
-                Text(Economy.format(francs: store.player.francs)).font(AppFont.mono(14)).foregroundStyle(Theme.hudInk)
-            }
-            .padding(.horizontal, z.francsChip.padding).frame(minHeight: z.francsChip.height)
-            .hudPanel()
-            .accessibilityElement(children: .combine)
+            HudGearClock(onSettings: { showSettings = true })
             if store.player.activeMission != nil {
                 ContractCard(width: z.contractCard.width, collapsible: portrait && z.contractCard.collapseInPortrait)
             }
@@ -81,43 +216,15 @@ struct HubScreen: View {
 
     private func topRightHud(insets: EdgeInsets) -> some View {
         let z = zones.topRight
-        return HStack(spacing: 0) {
-            Button { showFriends = true } label: { hudGlyph("person.2.fill", z.pill.buttonSize) }
-                .buttonStyle(.plain).accessibilityLabel("Friends")
-            Button { showSettings = true } label: { hudGlyph("gearshape.fill", z.pill.buttonSize) }
-                .buttonStyle(.plain).accessibilityLabel("Settings")
-        }
-        .hudPanel()
+        return HudChips(francs: store.player.francs)
         .padding(.trailing, insets.trailing + z.inset).padding(.top, insets.top + z.inset)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-    }
-
-    private func hudGlyph(_ symbol: String, _ size: CGFloat) -> some View {
-        Image(systemName: symbol).font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
-            .frame(width: size, height: size).contentShape(Rectangle())
-    }
-
-    /// Small marker standing on the ground that opens the subsurface level (no dock tile for it).
-    /// The visible marker is 28pt; the tap area around it is 44pt.
-    /// TODO: native has no separate subsurface scene yet; `.hubSubsurface` renders this same base screen.
-    private func subsurfaceHotspot(x: CGFloat, groundY: CGFloat) -> some View {
-        Button { store.go(.hubSubsurface) } label: {
-            VStack(spacing: 0) {
-                Image(systemName: "arrow.down.to.line").font(.system(size: 14, weight: .black)).foregroundStyle(Theme.hudInk)
-                    .frame(width: 28, height: 28).hudPanel(radius: 8)
-                Ellipse().fill(Theme.hudInk.opacity(0.35)).frame(width: 34, height: 6)
-            }
-            .frame(width: 44, height: 44).contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .position(x: x, y: groundY - 12)
-        .accessibilityLabel("Open the subsurface")
     }
 
     /// Storyboard 2026-09-24: a craft that needs a tap hangs in the sky and opens its mission step.
     private func skyCraft(width: CGFloat, height: CGFloat) -> some View {
         TimelineView(.periodic(from: .now, by: 1)) { _ in
-            if let craft = SkyCraft.current(for: store.player, now: store.now) {
+            if !homecoming, let craft = SkyCraft.current(for: store.player, now: store.now) {
                 ZStack {
                     Capsule().fill(Theme.blue.opacity(0.6)).offset(x: 3, y: 3)
                     Button { store.go(craft.opens) } label: {
@@ -139,90 +246,6 @@ struct HubScreen: View {
         }
     }
 
-    /// Player-placed structures stand on the four apron plots, nearer the camera than the main buildings.
-    @ViewBuilder private func placedStructure(_ kind: String, plot: Int, width w: CGFloat, groundY: CGFloat, k: CGFloat, portrait: Bool) -> some View {
-        let x = w * (portrait ? [0.15, 0.38, 0.62, 0.85] : [0.08, 0.30, 0.70, 0.92] as [CGFloat])[min(max(plot, 0), 3)], y = groundY
-        switch kind {
-        case "refinery":
-            structure("Refinery", art: StructureShape(kind: .refinery), width: 70 * k, x: x, groundY: y) { store.go(.refinery) }
-        case "astronaut-academy":
-            structure("Academy", art: StructureShape(kind: .academy), width: 70 * k, x: x, groundY: y) { store.go(.academy) }
-        default:
-            building("Silo", sprite: "base/surface_silo_flat.png", aspect: 192.0 / 205, width: 62 * k * 0.62, x: x, groundY: y) { store.go(.market) }
-        }
-    }
-
-    private func structure(_ name: String, art: StructureShape, width: CGFloat, x: CGFloat, groundY: CGFloat, tap: @escaping () -> Void) -> some View {
-        Button(action: tap) {
-            VStack(spacing: 4) {
-                art.frame(width: width, height: width * 0.8)
-                Text(name.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.ink)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 1))
-            }
-        }
-        .buttonStyle(.plain)
-        .position(x: x, y: groundY - width * 0.4 + 18)
-    }
-
-    private func building(_ name: String, sprite: String, aspect: CGFloat, width: CGFloat, x: CGFloat, groundY: CGFloat, tap: @escaping () -> Void) -> some View {
-        Button(action: tap) {
-            VStack(spacing: 4) {
-                Art.view(sprite).resizable().interpolation(.high).aspectRatio(aspect, contentMode: .fit).frame(width: width)
-                Text(name.uppercased()).font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.ink)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 1))
-            }
-        }
-        .buttonStyle(.plain)
-        .position(x: x, y: groundY - width / aspect / 2 + 18)
-    }
-
-    /// Locations the player can jump to: a craft that needs a tap, plus every settlement they own.
-    /// TODO: no combined settlement + mission location list exists in core yet; this reads the same
-    /// sources the old « » and the Surface Ops screen use. Replace with the real list when it lands.
-    private var quickLocations: [(title: String, screen: Screen)] {
-        var out: [(String, Screen)] = []
-        if let craft = SkyCraft.current(for: store.player, now: store.now) { out.append((craft.accessibilityLabel, craft.opens)) }
-        for site in SurfaceOps.sites where SurfaceOps.progress(store.player, site.id).siteAccessPurchasedAt != nil {
-            out.append((site.name, .surfaceOps))
-        }
-        return out
-    }
-
-    /// One floating dock, bottom-centre: « » quick access, Build, Hub.
-    private func dock(tile: CGFloat) -> some View {
-        let locations = quickLocations
-        return HStack(alignment: .top, spacing: zones.dock.gap) {
-            Button {
-                if locations.count == 1, let only = locations.first { store.go(only.screen) } else { showLocations = true }
-            } label: {
-                dockTile(tile, label: nil) { Text("«»").font(AppFont.display(tile * 0.5)).foregroundStyle(Theme.hudInk) }
-            }
-            .buttonStyle(.plain)
-            .disabled(locations.isEmpty).opacity(locations.isEmpty ? 0.4 : 1)
-            .accessibilityLabel("Go to a settlement or mission location")
-            .confirmationDialog("Go to", isPresented: $showLocations, titleVisibility: .visible) {
-                ForEach(Array(locations.enumerated()), id: \.offset) { _, loc in
-                    Button(loc.title) { store.go(loc.screen) }
-                }
-            }
-            Button { store.go(.build) } label: {
-                dockTile(tile, label: "Build") { Image(systemName: "hammer.fill").font(.system(size: tile * 0.5, weight: .black)).foregroundStyle(Theme.hudInk) }
-            }.buttonStyle(.plain).accessibilityLabel("Build")
-            Button { store.go(.instrumentHub) } label: {
-                dockTile(tile, label: "Hub") { Image(systemName: "globe").font(.system(size: tile * 0.5, weight: .bold)).foregroundStyle(Theme.hudInk) }
-            }.buttonStyle(.plain).accessibilityLabel("Open the instrument hub")
-        }
-        .padding(zones.dock.padding).hudPanel(radius: 14)
-    }
-
-    private func dockTile<Glyph: View>(_ size: CGFloat, label: String?, @ViewBuilder glyph: () -> Glyph) -> some View {
-        VStack(spacing: 2) {
-            glyph().frame(width: size, height: size).hudPanel(radius: 12)
-            Text((label ?? " ").uppercased()).font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.hudInk).lineLimit(1)
-        }
-    }
 }
 
 /// Contract card: active mission title plus progress. In portrait it collapses to a chip that expands on tap.
@@ -238,6 +261,7 @@ private struct ContractCard: View {
         switch store.player.missionPhase ?? .transit {
         case .transit: return 0.2
         case .landing: return 0.4
+        case .survey: return 0.5
         case .mining: return 0.6
         case .delivery: return 0.8
         case .debrief: return 0.9
@@ -313,169 +337,301 @@ extension View {
     }
 }
 
-/// Settings gear destination: the screens the old MENU dock button listed.
-private struct SettingsSheet: View {
+/// Settings gear destination, matching the web Settings sheet: account, one replay row, reset, Free Ops, a patch-notes link.
+struct SettingsSheet: View {
     @Environment(GameStore.self) private var store
     @Environment(AuthModel.self) private var auth
-    @State private var showArchive = false
     @State private var confirmSignOut = false
+    @State private var confirmReset = false
+    @State private var moveBiome = "mountains"
+    @State private var confirmMoveBase = false
+    @State private var showPatchNotes = false
+    @State private var confirmSkipTraining = false
+    @State private var width: CGFloat = 390
     #if os(iOS)
     @AppStorage(OrientationPreference.storageKey) private var orientation = OrientationPreference.auto.rawValue
     #endif
+    /// Optional focus used by the native scene catalog to render the relocation acceptance surface directly.
+    let initialScrollTarget: String?
     let onClose: () -> Void
 
-    private var destinations: [Screen] {
-        Screen.allCases.filter { !$0.needsMissionContext && $0 != .hub && $0 != .hubSubsurface && $0 != .missions && $0 != .market }
+    init(onClose: @escaping () -> Void, initialScrollTarget: String? = nil) {
+        self.onClose = onClose
+        self.initialScrollTarget = initialScrollTarget
     }
 
     var body: some View {
+        GeometryReader { geo in
+            let pageWidth = geo.size.width
+            settingsBody(short: geo.size.height < 500)
+                .frame(width: pageWidth, height: geo.size.height)
+                .background(SettingsStyle.bg)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onAppear { width = pageWidth }
+                .onChange(of: geo.size) { _, size in width = size.width }
+        }
+        .ignoresSafeArea()
+            .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+                Button("Sign out", role: .destructive) { auth.signOut() }
+                Button("Stay signed in", role: .cancel) {}
+            } message: {
+                Text("Your progress stays saved on this device and in the cloud. Sign back in to continue.")
+            }
+
+    }
+
+    private func settingsBody(short: Bool) -> some View {
         VStack(spacing: 0) {
+            SettingsSkyHeader().frame(height: short ? 20 : 44).clipped()
+                .overlay(alignment: .bottom) { Rectangle().fill(SettingsStyle.ink).frame(height: 3) }
             HStack {
-                Text("SETTINGS").font(AppFont.display(18)).tracking(1.4).foregroundStyle(Theme.hudInk)
+                Text(showPatchNotes ? "PATCH NOTES" : "SETTINGS").font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SettingsStyle.ink)
                 Spacer()
-                Button(action: onClose) {
-                    Image(systemName: "xmark").font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
-                        .frame(width: 44, height: 44).contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityLabel("Close")
-            }.padding(.horizontal, 16).padding(.top, 8)
-            ScrollView {
-                VStack(spacing: 8) {
-                    #if os(iOS)
-                    orientationPicker
-                    #endif
-                    row("Missions", .missions)
-                    ForEach(destinations, id: \.self) { row($0.rawValue.replacingOccurrences(of: "-", with: " ").capitalized, $0) }
-                    action("Archive: pathways and unlocks") { showArchive = true }
-                    if let email = auth.session?.email {
-                        Text("Signed in as \(email)").font(AppFont.display(14)).foregroundStyle(Theme.textDim)
+                Button { if showPatchNotes { showPatchNotes = false } else { onClose() } } label: {
+                    Image(systemName: showPatchNotes ? "chevron.left" : "xmark").font(.system(size: 16, weight: .heavy)).foregroundStyle(SettingsStyle.ink)
+                        .frame(width: 48, height: 48)
+                        .background(SettingsStyle.card, in: RoundedRectangle(cornerRadius: 2))
+                        .overlay(RoundedRectangle(cornerRadius: 2).stroke(SettingsStyle.ink, lineWidth: 2))
+                        .contentShape(Rectangle())
+                }.buttonStyle(.plain).accessibilityLabel(showPatchNotes ? "Back" : "Close")
+            }.padding(.horizontal, 20).padding(.vertical, 12)
+                .background(SettingsStyle.card)
+                .overlay(alignment: .top) { Rectangle().fill(SettingsStyle.blue).frame(height: 4) }
+                .overlay(alignment: .bottom) { Rectangle().fill(SettingsStyle.ink).frame(height: 3) }
+            ScrollViewReader { proxy in
+                ScrollView { if showPatchNotes { SettingsPatchNotes() } else { content } }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .task {
+                        guard let initialScrollTarget else { return }
+                        await Task<Never, Never>.yield()
+                        proxy.scrollTo(initialScrollTarget, anchor: .top)
                     }
-                    action("Sign out") { confirmSignOut = true }
-                }.padding(16)
             }
         }
-        .sheet(isPresented: $showArchive) { ArchiveScreen() }
-        .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
-            Button("Sign out", role: .destructive) { auth.signOut() }
-            Button("Stay signed in", role: .cancel) {}
-        } message: {
-            Text("Your progress stays saved on this device and in the cloud. Sign back in to continue.")
+    }
+
+    private var content: some View {
+        let wideChoices = width >= 560
+        let columns = Array(repeating: GridItem(.flexible(minimum: 0), spacing: 24, alignment: .topLeading), count: width >= 720 ? 2 : 1)
+        return LazyVGrid(columns: columns, alignment: .center, spacing: SettingsStyle.gap) {
+            #if os(iOS)
+            displaySection(wide: wideChoices)
+            #endif
+            trainingSection
+            if !store.player.placed.isEmpty && !store.player.earthBiomeMoveUsed { baseLandscapeSection.id("base-landscape-move") }
+            VStack(spacing: 16) {
+                SettingsHeading(text: "Account")
+                row(SettingsRowText(title: auth.session?.email ?? "Email account", status: "Signed in")) {
+                    SettingsButton(title: "Sign out", fill: !wideChoices) { confirmSignOut = true }
+                }
+            }
+            row(SettingsRowText(title: "Reset progress", status: confirmReset ? "Tap again to erase all progress" : "Erases the saved game", titleColor: SettingsStyle.danger),
+                border: SettingsStyle.danger) {
+                SettingsButton(title: confirmReset ? "Confirm reset" : "Reset progress", color: SettingsStyle.danger, fill: !wideChoices) {
+                    if confirmReset { confirmReset = false; onClose(); store.reset() } else { confirmReset = true }
+                }
+            }
+            Button { showPatchNotes = true } label: {
+                Text("Patch notes")
+                    .font(AppFont.display(16, "Bold"))
+                    .underline()
+                    .foregroundStyle(SettingsStyle.blue)
+                    .frame(minWidth: 48, minHeight: 48)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+            .accessibilityLabel("Patch notes")
         }
-        .background(Theme.bg)
-        .presentationDetents([.medium, .large])
+        .frame(maxWidth: 1280)
+        .padding(.horizontal, width >= 720 ? 40 : 16)
+        .padding(.top, shortPageInset).padding(.bottom, 32)
+        .frame(maxWidth: .infinity)
+    }
+
+    private var shortPageInset: CGFloat { width > 700 ? 24 : 16 }
+
+    private var trainingSection: some View {
+        VStack(spacing: 16) {
+            SettingsHeading(text: "Training")
+            VStack(spacing: 12) {
+                ForEach(Array(zip(["mining", "scan", "part"], ["Mining", "Planet scan", "Part tweak"])), id: \.0) { id, title in
+                    let progress = FlightPlan.patchProgress(store.player, screen: store.screen, tryId: id)
+                    HStack(spacing: 12) {
+                        TrainingPatchRing(segments: progress.total, stitched: progress.stitched)
+                            .frame(width: 44, height: 44)
+                            .accessibilityLabel("\(title): \(progress.stitched) of \(progress.total) steps stitched")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(title).font(AppFont.display(14, "Bold")).foregroundStyle(SettingsStyle.ink)
+                            Text(store.player.flightPlan.completed[id] == true ? "Done" : (store.player.flightPlan.currentTry == id ? "On air" : "Locked · After \(FlightPlanProgress.tryIds.firstIndex(of: id) ?? 0)"))
+                                .font(AppFont.body(14)).foregroundStyle(SettingsStyle.ink.opacity(0.72))
+                        }
+                        Spacer(minLength: 4)
+                        SettingsButton(title: "Replay", fill: false) { onClose(); store.replayTry(id) }
+                            .accessibilityLabel("Replay \(title)")
+                    }.frame(minHeight: 48)
+                }
+                HStack(spacing: 12) {
+                    Text("◇").font(.system(size: 24, weight: .bold)).frame(width: 44, height: 44)
+                        .accessibilityLabel("Free Ops patch")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Free Ops").font(AppFont.display(14, "Bold"))
+                        Text(store.player.freeOperations ? "Unlocked" : "Locked · After 3").font(AppFont.body(14)).foregroundStyle(SettingsStyle.ink.opacity(0.72))
+                    }
+                    Spacer()
+                }.frame(minHeight: 48)
+                if !store.player.freeOperations {
+                    HStack {
+                        SettingsRowText(title: "Skip", status: confirmSkipTraining ? "Confirm: mark all tries done" : "Marks every try done")
+                        Spacer(minLength: 8)
+                        SettingsButton(title: confirmSkipTraining ? "Confirm" : "Skip", fill: false) {
+                            if confirmSkipTraining { store.skipTraining(); confirmSkipTraining = false; onClose() }
+                            else { confirmSkipTraining = true }
+                        }.accessibilityLabel(confirmSkipTraining ? "Confirm skip training" : "Skip training")
+                    }
+                }
+            }.settingsCard(padding: width < 560 ? 12 : 18)
+        }
+    }
+
+    private var baseLandscapeSection: some View {
+        VStack(spacing: 16) {
+            SettingsHeading(text: "Base landscape")
+            VStack(spacing: 16) {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                    ForEach(["mountains", "desert", "tundra", "coast"], id: \.self) { id in
+                        Button { moveBiome = id; confirmMoveBase = false } label: {
+                            VStack(spacing: 4) {
+                                GeometryReader { geometry in
+                                    Image("Biome/\(id)-layer-far").resizable().scaledToFill()
+                                        .saturation(0)
+                                        .frame(width: geometry.size.width, height: 48).clipped()
+                                }.frame(height: 48).clipped()
+                                Text(id.capitalized).font(AppFont.display(14)).lineLimit(1)
+                            }.frame(maxWidth: .infinity).padding(6)
+                                .background(moveBiome == id ? Theme.hudPanel : Theme.paper)
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(moveBiome == id ? Theme.blue : SettingsStyle.ink, lineWidth: 2))
+                        }.buttonStyle(.plain).frame(minHeight: 68)
+                    }
+                }
+                HStack(spacing: 16) {
+                    SettingsRowText(title: "Move base", status: confirmMoveBase ? "Confirm relocation" : "Available once")
+                    Spacer(minLength: 8)
+                    SettingsButton(title: confirmMoveBase ? "Confirm move" : "Move", fill: false) {
+                        if confirmMoveBase {
+                            store.setEarthBiome(moveBiome, asMove: true)
+                            confirmMoveBase = false
+                        } else { confirmMoveBase = true }
+                    }
+                }
+            }.settingsCard()
+        }
+        .onAppear { moveBiome = store.player.earthBiome }
     }
 
     #if os(iOS)
-    private var orientationPicker: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("SCREEN ORIENTATION").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-            HStack(spacing: 8) {
-                ForEach(OrientationPreference.allCases) { option in
-                    let on = OrientationPreference(stored: orientation) == option
-                    Button { orientation = option.rawValue } label: {
-                        Text(option.title.uppercased()).font(AppFont.display(14)).tracking(1.0)
-                            .foregroundStyle(on ? Theme.hudPanel : Theme.hudInk)
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                            .background(on ? Theme.hudInk : Color.clear, in: RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.hudInk, lineWidth: 1.5))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Orientation \(option.title)")
-                    .accessibilityAddTraits(on ? .isSelected : [])
+    private func displaySection(wide: Bool) -> some View {
+        VStack(spacing: 16) {
+            SettingsHeading(text: "Display")
+            VStack(alignment: .leading, spacing: 16) {
+                SettingsRowText(title: "Screen orientation", status: "Lock to portrait or landscape")
+                orientationChoices(wide: wide)
+            }.settingsCard()
+        }
+    }
+
+    private func orientationChoices(wide: Bool) -> some View {
+        let options = OrientationPreference.allCases
+        let selected = options.firstIndex(of: OrientationPreference(stored: orientation)) ?? 0
+        let layout = wide ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 12))
+        return layout {
+            ForEach(Array(options.enumerated()), id: \.offset) { i, pref in
+                let on = i == selected
+                Button { orientation = pref.rawValue } label: {
+                    Text(pref.title.uppercased()).font(AppFont.display(14)).tracking(14 * 0.06)
+                        .foregroundStyle(on ? SettingsStyle.card : SettingsStyle.ink)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, minHeight: 52)
+                        .background(on ? SettingsStyle.blue : SettingsStyle.card, in: RoundedRectangle(cornerRadius: 2))
+                        .overlay(RoundedRectangle(cornerRadius: 2).stroke(SettingsStyle.ink, lineWidth: 2))
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel(pref.title)
+                .accessibilityAddTraits(on ? .isSelected : [])
             }
         }
-        .padding(14).frame(maxWidth: .infinity, alignment: .leading).hudPanel(radius: 10)
     }
     #endif
 
-    private func row(_ title: String, _ screen: Screen) -> some View {
-        action(title) { onClose(); store.go(screen) }
-    }
-
-    private func action(_ title: String, _ run: @escaping () -> Void) -> some View {
-        Button(action: run) {
-            HStack {
-                Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudInk)
-                Spacer()
-                Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.hudInk)
-            }
-            .padding(.horizontal, 14).frame(maxWidth: .infinity, minHeight: 48).hudPanel(radius: 10)
-        }.buttonStyle(.plain)
+    private func row<A: View>(_ text: SettingsRowText, border: Color = SettingsStyle.ink, @ViewBuilder action: () -> A) -> some View {
+        let narrow = width < 560
+        let layout = narrow ? AnyLayout(VStackLayout(alignment: .leading, spacing: 16)) : AnyLayout(HStackLayout(spacing: 16))
+        return layout {
+            text
+            if !narrow { Spacer(minLength: 8) }
+            action()
+        }.settingsCard(border: border)
     }
 }
 
-/// TODO: friends are not ported to native yet (web: FriendsSheet / lib/friends/client.ts).
-private struct FriendsSheet: View {
-    let onClose: () -> Void
+private struct PatchRingView: View {
+    let count: Int
+    let stitched: Int
+    var silhouette = false
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("FRIENDS").font(AppFont.display(18)).tracking(1.4).foregroundStyle(Theme.hudInk)
-                Spacer()
-                Button(action: onClose) {
-                    Image(systemName: "xmark").font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
-                        .frame(width: 44, height: 44).contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityLabel("Close")
+        ZStack {
+            ForEach(0..<max(1, count), id: \.self) { index in
+                Circle().trim(from: CGFloat(index) / CGFloat(max(1, count)), to: (CGFloat(index) + 0.72) / CGFloat(max(1, count)))
+                    .stroke(index < stitched ? Theme.teal : Theme.border, style: StrokeStyle(lineWidth: 3, lineCap: .butt))
+                    .rotationEffect(.degrees(-90))
             }
-            Text("Friends are not available in the native app yet.").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-            Spacer()
+            if silhouette { Text("◇").font(AppFont.display(22)).foregroundStyle(Theme.textDim) }
+            else { Text(String(format: "%02d", stitched)).font(AppFont.display(9, "Bold")).foregroundStyle(Theme.ink) }
         }
-        .padding(16).background(Theme.bg)
-        .presentationDetents([.medium])
+        .frame(width: 44, height: 44)
+        .accessibilityElement()
+        .accessibilityLabel(silhouette ? "Free Ops patch" : "\(stitched) of \(count) steps stitched")
     }
 }
 
-/// Layer part: ambient base traffic. An outlined road rover loops along the apron (mirrors web RoadRover).
-private struct BaseTraffic: View {
-    let width: CGFloat, groundY: CGFloat, k: CGFloat
+private struct TrainingPatchRing: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let segments: Int
+    let stitched: Int
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { ctx in
-            let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
-            let roverW = 56 * k
-            let drive = CGFloat(t.truncatingRemainder(dividingBy: 18) / 18)
-            ZStack(alignment: .topLeading) {
-                Art.view("actors/road_rover.png").resizable().aspectRatio(1.5, contentMode: .fit).frame(width: roverW)
-                    .position(x: -roverW + drive * (width + roverW * 2), y: groundY + 6 * k - roverW / 3)
+        ZStack {
+            Circle().stroke(SettingsStyle.ink.opacity(0.18), lineWidth: 3)
+            ForEach(0..<segments, id: \.self) { index in
+                Circle()
+                    .trim(from: CGFloat(index) / CGFloat(segments) + 0.018,
+                          to: CGFloat(index + 1) / CGFloat(segments) - 0.018)
+                    .stroke(index < stitched ? SettingsStyle.blue : SettingsStyle.ink.opacity(0.2), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
             }
+            Text(String(format: "%02d", stitched)).font(AppFont.display(14, "Bold")).foregroundStyle(SettingsStyle.ink)
         }
+        .accessibilityElement(children: .ignore)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: stitched)
     }
 }
 
-/// Blueprint-outlined stand-ins for structures with no sprite (the web Hub draws none either):
-/// paper body, offset ice shade, 2.5pt ink outline.
-private struct StructureShape: View {
-    enum Kind { case refinery, academy }
-    let kind: Kind
-
+/// Native patch notes: newest first.
+struct SettingsPatchNotes: View {
+    private static let notes: [(String, [String])] = [
+        ("Base and flight scenes", ["Pixel-art launchpad, hangar and underground silo", "Swipe down from the base to dig", "Shared dock and HUD on every scene"]),
+        ("Laser mining", ["Ship laser mining is the default", "Buried deposits spaced across the dig", "Layered strata ground"]),
+        ("Training", ["Replay the three tries from Settings", "Free Ops opens when training is done"]),
+    ]
     var body: some View {
-        Canvas { ctx, size in
-            let w = size.width, h = size.height
-            func outlined(_ path: Path, fill: Color) {
-                ctx.fill(path.offsetBy(dx: 3, dy: 3), with: .color(Theme.blue.opacity(0.35)))
-                ctx.fill(path, with: .color(fill))
-                ctx.stroke(path, with: .color(Theme.ink), lineWidth: 2.5)
+        VStack(spacing: 24) {
+            ForEach(Self.notes, id: \.0) { note in
+                VStack(alignment: .leading, spacing: 8) {
+                    SettingsHeading(text: note.0)
+                    ForEach(note.1, id: \.self) { Text("• \($0)").font(AppFont.body(14)).foregroundStyle(SettingsStyle.ink) }
+                }.settingsCard(padding: 24)
             }
-            switch kind {
-            case .refinery:
-                outlined(Path(CGRect(x: 0, y: h * 0.45, width: w * 0.62, height: h * 0.55)), fill: Theme.paper)
-                outlined(Path(CGRect(x: w * 0.12, y: h * 0.08, width: w * 0.12, height: h * 0.4)), fill: Theme.paper2)
-                outlined(Path(CGRect(x: w * 0.36, y: h * 0.22, width: w * 0.1, height: h * 0.26)), fill: Theme.paper2)
-                outlined(Path(roundedRect: CGRect(x: w * 0.68, y: h * 0.4, width: w * 0.32, height: h * 0.6), cornerRadius: 8), fill: Theme.paper2)
-                ctx.fill(Path(CGRect(x: w * 0.06, y: h * 0.62, width: w * 0.5, height: h * 0.1)), with: .color(Theme.teal))
-            case .academy:
-                outlined(Path(CGRect(x: 0, y: h * 0.5, width: w, height: h * 0.5)), fill: Theme.paper)
-                var dome = Path()
-                dome.addArc(center: CGPoint(x: w * 0.5, y: h * 0.5), radius: w * 0.3, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
-                dome.closeSubpath()
-                outlined(dome, fill: Theme.paper2)
-                var mast = Path(); mast.move(to: CGPoint(x: w * 0.5, y: h * 0.2)); mast.addLine(to: CGPoint(x: w * 0.5, y: h * 0.02))
-                ctx.stroke(mast, with: .color(Theme.ink), lineWidth: 2.5)
-                ctx.fill(Path(CGRect(x: w * 0.5, y: h * 0.02, width: w * 0.16, height: h * 0.1)), with: .color(Theme.teal))
-                for i in 0..<3 { ctx.fill(Path(CGRect(x: w * (0.14 + 0.28 * Double(i)), y: h * 0.68, width: w * 0.16, height: h * 0.18)), with: .color(Theme.blueBright.opacity(0.7))) }
-            }
-        }
-        .accessibilityHidden(true)
+        }.padding(24)
     }
 }

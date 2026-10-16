@@ -382,7 +382,7 @@ export default function CommunityHubSheet({ onClose }: CommunityHubSheetProps) {
           <div className={styles.deck}>
             <div className={styles.header}>
               <div>
-                <div className={styles.eyebrow}>Earth Base · Community Hub</div>
+                <div className={styles.eyebrow}>Community Hub</div>
                 <div className={styles.title}>Shared Log</div>
                 <p className={styles.lede}>
                   Discoveries, field builds and claimed worlds other crews chose to show. Every entry is a snapshot: you can look, react and discuss, never change. Public posts are open to everyone; report a reply that does not belong.

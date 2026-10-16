@@ -1,10 +1,10 @@
 // Landnam game data — tutorial steps
 //
 // SSL-332 agency training: EXTRACTION_STEPS (place the launchpad, then the
-// first mine-and-return contract), TRANSPORT_STEPS (the two-stop mine-and-haul
-// contract) and STORAGE_STEPS (build the Earth silo that opens Free Ops). The
-// old M2 Prospector steps are retired. Stage selection lives in
-// trainingCoachSteps below.
+// first mine-and-return contract) and TRANSPORT_STEPS (the two-stop
+// mine-and-haul contract). The Surface Silo is a Build action on the hub
+// after both guided missions, not a coach script. The old M2 Prospector
+// steps are retired. Stage selection lives in trainingCoachSteps below.
 
 import type { TutorialStep } from './types'
 import type { AgencyTrainingStage } from '@/lib/systems/AgencyOnboardingSystem'
@@ -25,10 +25,14 @@ export interface TrainingTryStep {
  * named real game event completes a try. */
 export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-launchpad', try: 'mining', screen: 'launchpad', objective: 'Open client contracts', radio: 'The first try is a complete mine-and-return run.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
+  { id: 'mine-elsewhere', try: 'mining', screen: '*', objective: 'Go back to the base and tap the tower', radio: 'Client contracts open from the tower.', beacon: 'building-launchpad', doneOn: 'mining-debriefed' },
+  { id: 'mine-intro', try: 'mining', screen: 'intro', objective: 'Choose where to build', radio: 'Pick a landscape for your base, then establish it. The launchpad comes next.', beacon: 'intro-begin', doneOn: 'mining-debriefed' },
+  { id: 'mine-build', try: 'mining', screen: 'build', objective: 'Place the launchpad', radio: 'Tap the marked pad site. Every mission leaves from the pad.', beacon: 'build-plot-0|build-confirm', doneOn: 'mining-debriefed' },
+  { id: 'mine-hub', try: 'mining', screen: 'hub', objective: 'Tap the tower', radio: 'Client contracts open from the tower.', beacon: 'building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
   { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },
-  { id: 'mine-surface', try: 'mining', screen: 'rover-mining', objective: 'Deploy the rover and drill the ore', radio: 'Drive to an exposed outcrop and drill. Drill three opens a mine site.', doneOn: 'mining-debriefed' },
   { id: 'mine-target', try: 'mining', screen: 'targets', objective: 'Choose the highlighted target', radio: 'The target carries the mineral named by the order.', doneOn: 'mining-debriefed' },
+  { id: 'mine-survey', try: 'mining', screen: 'rover-survey', objective: 'Scout one outcrop, then continue to the ship laser', radio: 'The rover logs the surface. The ship laser extracts the order.', doneOn: 'mining-debriefed' },
   { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
   { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
   { id: 'mine-return', try: 'mining', screen: 'transit', objective: 'Fly the cargo home', radio: 'The order is only paid once the cargo reaches the debrief.', doneOn: 'mining-debriefed' },
@@ -44,35 +48,87 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
  * its "open the Hangar / fit a module" line onto these; the player is flying
  * the mining loop, so the objective is that screen's mining step (SSL-478). */
 const LOOP_SCREENS = new Set([
-  'fab', 'rover-mining', 'targets', 'mining', 'debrief', 'transit', 'landing', 'delivery',
+  'fab', 'rover-survey', 'targets', 'mining', 'debrief', 'transit', 'landing', 'delivery',
 ])
 
-export function trainingTryStep(tryId: TrainingTryId, screen: string): TrainingTryStep | undefined {
+export function trainingTryStep(
+  tryId: TrainingTryId,
+  screen: string,
+  options?: { returning?: boolean },
+): TrainingTryStep | undefined {
   const exact = TRAINING_TRIES.find(step => step.try === tryId && step.screen === screen)
-  if (exact) return exact
-  if (LOOP_SCREENS.has(screen)) {
-    return TRAINING_TRIES.find(step => step.try === 'mining' && step.screen === screen)
+  const step = exact
+    ?? (LOOP_SCREENS.has(screen)
+      ? TRAINING_TRIES.find(item => item.try === 'mining' && item.screen === screen)
+      : undefined)
+    // Hub, Launchpad, Hangar and Galaxy keep the try's own "open it" line.
+    // The mining try has no wildcard, so an unlisted screen falls back to its first step.
+    ?? TRAINING_TRIES.find(item => item.try === tryId && item.screen === '*')
+    ?? TRAINING_TRIES.find(item => item.try === tryId)
+  // Outbound and return share the transit screen. "Fly the cargo home" on the
+  // way out tells a new player the run is already finished.
+  if (step?.screen === 'transit' && options?.returning === false) {
+    return {
+      ...step,
+      objective: 'Boost toward the target',
+      radio: 'The ship is outbound. The laser run starts after arrival.',
+    }
   }
-  // Hub, Launchpad, Hangar and Galaxy keep the try's own "open it" line.
-  // The mining try has no wildcard, so Base falls back to its first step.
-  return TRAINING_TRIES.find(step => step.try === tryId && step.screen === '*')
-    ?? TRAINING_TRIES.find(step => step.try === tryId)
+  return step
+}
+
+/** Six real milestones within the mining try. The first milestone covers
+ * establishing the pad and taking a client order; the last covers bringing
+ * the recovered cargo home and settling the order. This puts the laser at
+ * 5/6, matching the playable sequence rather than the stale 2/6 concept. */
+const MINING_OPS_STEP_BY_SCREEN: Readonly<Record<string, number>> = {
+  intro: 1, build: 1, hub: 1, launchpad: 1, missions: 1,
+  'rocket-buy': 2, fab: 2,
+  targets: 3,
+  'rover-survey': 4,
+  mining: 5,
+  debrief: 6, transit: 6, landing: 6, delivery: 6,
+}
+
+export function trainingTryPosition(step: TrainingTryStep): { index: number; total: number } {
+  if (step.try === 'mining') return { index: MINING_OPS_STEP_BY_SCREEN[step.screen] ?? 1, total: 6 }
+  return { index: step.try === 'scan' ? 2 : 3, total: 3 }
+}
+
+/** Mission patch segments follow the playable milestones, not the number of
+ * screen-specific coaching lines. The current milestone stays open until the
+ * player advances; completed tries stitch the final segment. */
+export function trainingPatchProgress(
+  tryId: TrainingTryStep['try'],
+  screen: string,
+  completed: boolean,
+  active: boolean,
+): { stitched: number; total: number } {
+  const total = tryId === 'mining' ? 6 : 2
+  if (completed) return { stitched: total, total }
+  if (!active) return { stitched: 0, total }
+  if (tryId === 'mining') {
+    const step = trainingTryStep(tryId, screen)
+    return { stitched: Math.max(0, (step ? trainingTryPosition(step).index : 1) - 1), total }
+  }
+  const step = trainingTryStep(tryId, screen)
+  return { stitched: step && step.screen !== '*' ? 1 : 0, total }
 }
 
 export const EXTRACTION_STEPS: TutorialStep[] = [
-  { id: 0, screen: 'build',   title: 'Build a Launchpad',
-    body: 'Your first structure — all missions launch from here.',
-    action: 'Tap a build pad, then confirm',
-    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-0', dir: 'down', cta: 'Build Launchpad',
-    desktopBody: 'Your first structure — all missions launch from here.',
-    desktopAction: 'Click a build pad, then confirm placement',
+  { id: 0, screen: 'build',   title: 'Place the launchpad',
+    body: 'Your first structure. All missions launch from here.',
+    action: 'Tap the marked pad site',
+    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-0', dir: 'down', cta: 'Place the launchpad',
+    desktopBody: 'Your first structure. All missions launch from here.',
+    desktopAction: 'Click the marked pad site',
     desktopCoachId: 'build-confirm|build-plot-0', desktopDir: 'down' },
   { id: 1, screen: 'hub',     title: 'Extraction',
     body: 'Your agency\'s first job: mine ore for a client and bring it home. Contracts are on the mission board.',
-    action: 'Tap the Launchpad',
-    anchor: 'bottom', spot: null, coachId: 'building-launchpad', dir: 'up', cta: 'Launchpad',
+    action: 'Tap the tower',
+    anchor: 'bottom', spot: null, coachId: 'building-launchpad', dir: 'up', cta: 'Tower',
     desktopBody: 'Your agency\'s first job: mine ore for a client and bring it home. Contracts are on the mission board.',
-    desktopAction: 'Click the Launchpad',
+    desktopAction: 'Click the tower',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
   // Sibling of step 1, same id — tapping the launchpad now opens its own
   // program screen first (STS-625) instead of going straight to Missions, so
@@ -123,10 +179,10 @@ export const EXTRACTION_STEPS: TutorialStep[] = [
 export const TRANSPORT_STEPS: TutorialStep[] = [
   { id: 30, screen: 'hub', title: 'Transport',
     body: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. The contract pays for both jobs.',
-    action: 'Tap the Launchpad',
-    anchor: 'bottom', spot: null, cta: 'Launchpad', coachId: 'building-launchpad', dir: 'up',
-    desktopBody: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. Click the Launchpad to begin.',
-    desktopAction: 'Click the Launchpad',
+    action: 'Tap the tower',
+    anchor: 'bottom', spot: null, cta: 'Tower', coachId: 'building-launchpad', dir: 'up',
+    desktopBody: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. Click the tower to begin.',
+    desktopAction: 'Click the tower',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
   // Sibling of step 30 — see the id:1 launchpad sibling above for why this exists.
   { id: 30, screen: 'launchpad', title: 'Transport',
@@ -149,33 +205,16 @@ export const TRANSPORT_STEPS: TutorialStep[] = [
     anchor: 'top', spot: null, cta: 'Got it' },
 ]
 
-export const STORAGE_STEPS: TutorialStep[] = [
-  { id: 40, screen: 'hub', title: 'Build a Storage Silo',
-    body: 'Your agency can mine and haul. Now give it somewhere to keep ore on Earth. Building the silo opens Free Ops.',
-    action: 'Tap Build Silo',
-    anchor: 'bottom', spot: null, cta: 'Build Silo', coachId: 'hub-build-storage-silo', dir: 'up',
-    desktopAction: 'Click Build Silo',
-    desktopCoachId: 'hub-build-storage-silo', desktopDir: 'up' },
-  { id: 41, screen: 'build', title: 'Place the Silo',
-    body: 'Pick an open plot for the Surface Silo, then confirm.',
-    action: 'Tap an open plot, then confirm',
-    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-open', dir: 'down', cta: 'Build Surface Silo',
-    desktopAction: 'Click an open plot, then confirm placement',
-    desktopCoachId: 'build-confirm|build-plot-open', desktopDir: 'down' },
-]
-
 export const PROGRESSION_STEPS: TutorialStep[] = [
   ...EXTRACTION_STEPS,
   ...TRANSPORT_STEPS,
-  ...STORAGE_STEPS,
 ]
 
 /** Coach steps for an agency training stage. Launchpad placement is the
- *  first beat of the Extraction step list; Free Ops has no coach. */
+ *  first beat of the Extraction step list. Storage and Free Ops have no coach. */
 export function trainingCoachSteps(stage: AgencyTrainingStage): TutorialStep[] {
   if (stage === 'launchpad' || stage === 'extraction') return EXTRACTION_STEPS
   if (stage === 'transport') return TRANSPORT_STEPS
-  if (stage === 'storage') return STORAGE_STEPS
   return []
 }
 
@@ -183,4 +222,4 @@ export function trainingCoachSteps(stage: AgencyTrainingStage): TutorialStep[] {
 // selects the same agency stages through trainingCoachSteps.
 export const M1_STEPS = EXTRACTION_STEPS
 export const M2_STEPS = TRANSPORT_STEPS
-export const M3_STEPS = STORAGE_STEPS
+export const M3_STEPS: TutorialStep[] = []

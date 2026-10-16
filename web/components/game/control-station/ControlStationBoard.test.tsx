@@ -45,8 +45,8 @@ describe('ControlStationBoard', () => {
 
     expect(markup).toContain('data-testid="control-station-map"')
     expect(markup).toContain('Ground telescopes')
-    expect(markup).toContain('Transit Telescope')
-    expect(markup).toContain('Deep Space Telescope')
+    expect(markup).toContain('Space Telescope')
+    expect(markup).toContain('Space Telescope')
     expect(markup).toContain('Asteroid discovery')
     expect(markup).toContain('Exoplanet Hunters')
     expect(markup).toContain('>Open<')

@@ -1,15 +1,16 @@
 import type { Screen } from './game-types'
 import type { Mission, Target } from './data/types'
 import { compatibleTargetsFor } from './data/targets'
+import { SCENE_NAMES } from './ui-strings'
 
 export type SceneScope =
-  | { kind: 'earth-base'; id: 'earth-base'; label: 'Base' }
+  | { kind: 'earth-base'; id: 'earth-base'; label: typeof SCENE_NAMES.base }
   | { kind: 'body'; id: string; label: string }
 
 export const EARTH_BASE_SCOPE: SceneScope = {
   kind: 'earth-base',
   id: 'earth-base',
-  label: 'Base',
+  label: SCENE_NAMES.base,
 }
 
 interface SceneScopeInput {
@@ -22,7 +23,7 @@ const TARGET_SURFACE_SCREENS = new Set<Screen>([
   'transit',
   'landing',
   'mining',
-  'rover-mining',
+  'rover-survey',
   'delivery',
 ])
 

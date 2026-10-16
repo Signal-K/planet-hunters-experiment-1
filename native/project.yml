@@ -4,6 +4,7 @@ options:
   deploymentTarget: { macOS: "14.0", iOS: "17.0" }
 packages:
   LandnamCore: { path: LandnamCore }
+  TakeonKit: { path: TakeonKit }
 targets:
   Landnam:
     type: application
@@ -16,7 +17,14 @@ targets:
         buildPhase: resources
       - path: ../shared/layout
         buildPhase: resources
-    dependencies: [{ package: LandnamCore }]
+      - path: ../shared/scenes
+        buildPhase: resources
+        excludes: ["world-fixture.json"]
+      - path: ../web/lib/scene-names.json
+        buildPhase: resources
+      - path: ../web/lib/mining/laser-palettes.json
+        buildPhase: resources
+    dependencies: [{ package: LandnamCore }, { package: TakeonKit }]
     settings:
       base:
         SWIFT_VERSION: 6.0

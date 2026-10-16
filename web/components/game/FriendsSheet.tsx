@@ -317,7 +317,7 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
       <div className={styles.shell}>
       <div className={styles.deck}>
         <aside className={styles.visual} aria-hidden="true">
-          <div className={styles.visualLabel}>Earth Base Comms</div>
+          <div className={styles.visualLabel}>Field Comms</div>
           <div className={styles.network}>
             <span className={styles.orbitOne} />
             <span className={styles.orbitTwo} />
@@ -335,7 +335,7 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
             fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
             letterSpacing: '0.24em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 8,
           }}>
-            Earth Base · Comms Network
+            Comms Network
           </div>
           <div style={{
             fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800,

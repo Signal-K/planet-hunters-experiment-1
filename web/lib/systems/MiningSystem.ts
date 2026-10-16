@@ -1,4 +1,4 @@
-// Pure state-transition functions for mining (laser) and rover mining systems.
+// Pure state transitions for ship-laser mining. The rover survey surface does not extract cargo.
 
 import type { GameState } from '@/lib/game-types'
 
@@ -7,12 +7,7 @@ export function applyMiningDone(s: GameState, cargo: Record<string, number>, arr
   return startReturnLeg(s, cargo, arrivalAt, transitStartedAt)
 }
 
-export function applyRoverMiningDone(s: GameState, cargo: Record<string, number>, arrivalAt: number | null, transitStartedAt?: number | null): GameState {
-  if (s.screen !== 'rover-mining' || !s.missionId || !s.targetId) return s
-  return startReturnLeg(s, cargo, arrivalAt, transitStartedAt)
-}
-
-// Shared by laser and rover mining completion (and lander redock completion,
+// Shared by laser mining completion (and lander redock completion,
 // see LandingSystem.ts): heads for the mission's deliveryTargetId (two-leg
 // "mine then deliver" jobs) if one is set, otherwise starts the Earth-return
 // leg directly.
@@ -30,7 +25,6 @@ export function startReturnLeg(s: GameState, cargo: Record<string, number>, arri
       miningCargoInProgress: undefined,
       miningLaserCharges: undefined,
       pendingRemoteDisposition: undefined,
-      roverMiningStartedAt: undefined,
       landingReturnStartedAt: undefined,
       headingToDelivery: hasDelivery,
       debriefPending: !hasDelivery,
@@ -59,6 +53,8 @@ export function applyReturnArrived(s: GameState): GameState {
       transitStartedAt: null,
       missionPhase: 'debrief',
       debriefPending: false,
+      // SSL-553: a mined haul lands on the Earth pad and is settled on the delivery sheet.
+      homeDeliveryPending: !s.player.cargoSettledOffworld && Object.values(s.lastCargo).some(units => units > 0),
       returningToEarth: false,
       // KES-321: this was unconditionally `true`, so DebriefScreen's
       // "HULL LOST · CARGO RECOVERED" branch fired on every single

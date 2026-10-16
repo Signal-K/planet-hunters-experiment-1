@@ -1,0 +1,58 @@
+.root {
+  position: relative;
+  display: block;
+}
+
+.sprite,
+.pieceImg {
+  display: block;
+  width: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.sprite {
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.blueprint {
+  background: color-mix(in srgb, var(--ln-bp-blue) 14%, var(--set-card));
+}
+
+.blueprint .sprite {
+  filter: grayscale(1) brightness(1.2) contrast(0.92);
+  opacity: 0.72;
+}
+
+.piece {
+  position: absolute;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pieceImg {
+  position: absolute;
+  left: 0;
+  max-width: none;
+}
+
+.hit {
+  position: absolute;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 2px solid transparent;
+  background: transparent;
+  cursor: pointer;
+}
+
+.hit[aria-pressed='true'] {
+  border-color: var(--set-ink);
+  background: color-mix(in srgb, var(--set-ink) 8%, transparent);
+}

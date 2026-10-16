@@ -92,7 +92,7 @@ export const COMPONENT_REGISTRY: readonly ComponentDescriptor[] = [
   {
     type: 'BuildPlot',
     category: 'marker',
-    description: 'A placement slot at Earth Base. The host screen reads the index to map a plot to a placed structure.',
+    description: 'A placement slot on the home ground. The host screen reads the index to map a plot to a placed structure.',
     fields: ['index'],
   },
   {

@@ -103,12 +103,12 @@ export const BIOME_META: Record<BiomeId, BiomeMeta> = {
   'ash-plains': { id: 'ash-plains', label: 'Ash plains', color: '#6f6b70', shade: '#454247', help: 'Metres of fine grey ashfall, soft underfoot.', lifeCapacity: 0 },
   'sulfur-flats': { id: 'sulfur-flats', label: 'Sulfur flats', color: '#e8d24a', shade: '#a99424', help: 'Vivid yellow sulfur crust around dead fumaroles.', lifeCapacity: 0 },
   'basalt-columns': { id: 'basalt-columns', label: 'Basalt columns', color: '#3f4a5c', shade: '#26303f', help: 'Hexagonal columnar basalt stepping down into the dark.', lifeCapacity: 0 },
-  'mesa-badlands': { id: 'mesa-badlands', label: 'Mesa badlands', color: '#4ad9d8', shade: '#4b5a8f', help: 'Banded orange and purple clay, cut into flat-topped mesas.', lifeCapacity: 0 },
+  'mesa-badlands': { id: 'mesa-badlands', label: 'Mesa badlands', color: '#4ad9d8', shade: '#4b5a8f', help: 'Banded clay, cut into flat-topped mesas.', lifeCapacity: 0 },
   'iron-dunes': { id: 'iron-dunes', label: 'Iron dunes', color: '#b8442e', shade: '#7a2b1c', help: 'Rust-red hematite sand heaped into long dunes.', lifeCapacity: 0 },
   'glacier-shelf': { id: 'glacier-shelf', label: 'Glacier shelf', color: '#7fc3e6', shade: '#3f7ea3', help: 'Deep blue glacial ice, calving into crevasse fields.', lifeCapacity: 0 },
   'geyser-basin': { id: 'geyser-basin', label: 'Geyser basin', color: '#5fd3c8', shade: '#2d8a86', help: 'Turquoise mineral pools and steaming vent cones.', lifeCapacity: 1, bloomsInto: 'lumen-marsh' },
   'crystal-caverns': { id: 'crystal-caverns', label: 'Crystal caverns', color: '#78c2e8', shade: '#3f779c', help: 'Violet quartz spires growing out of collapsed cave roofs.', lifeCapacity: 0 },
-  'methane-lakes': { id: 'methane-lakes', label: 'Methane lakes', color: '#3ab5c9', shade: '#20707a', help: 'Amber hydrocarbon lakes under an orange haze.', lifeCapacity: 0 },
+  'methane-lakes': { id: 'methane-lakes', label: 'Methane lakes', color: '#3ab5c9', shade: '#20707a', help: 'Hydrocarbon lakes under a thick haze.', lifeCapacity: 0 },
   'storm-bands': { id: 'storm-bands', label: 'Storm bands', color: '#69ced9', shade: '#3a8a86', help: 'Cream and ochre cloud bands whipped into vortices.', lifeCapacity: 0 },
 
   // ── latent (life could take hold) ──

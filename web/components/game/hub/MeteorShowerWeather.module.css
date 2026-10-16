@@ -1,0 +1,44 @@
+.layer {
+  position: absolute;
+  inset: 0 0 45% 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+/* Thin 2px pixel meteor: bright head, tail stepping up-right and fading out. Moves down-left. */
+.streak {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #f2f8ff;
+  box-shadow:
+    2px -2px 0 0 #f2f8ff,
+    4px -4px 0 0 #cfe6ff,
+    6px -6px 0 0 #cfe6ff,
+    8px -8px 0 0 #9cc8f2,
+    10px -10px 0 0 #9cc8f2,
+    12px -12px 0 0 #6fa4d8,
+    14px -14px 0 0 #6fa4d8,
+    16px -16px 0 0 #4a7fb8,
+    18px -18px 0 0 #4a7fb8,
+    20px -20px 0 0 rgba(74, 127, 184, 0.5),
+    22px -22px 0 0 rgba(74, 127, 184, 0.5),
+    24px -24px 0 0 rgba(74, 127, 184, 0.25);
+  opacity: 0;
+  animation: meteor-fall linear infinite;
+}
+
+/* Visible for the first ~22% of each cycle, then idle: occasional, never static. */
+@keyframes meteor-fall {
+  0% { transform: translate(0, 0); opacity: 0; animation-timing-function: steps(28, end); }
+  2% { opacity: 1; }
+  18% { opacity: 1; }
+  22% { transform: translate(-280px, 280px); opacity: 0; }
+  100% { transform: translate(-280px, 280px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .streak { animation-duration: 18s !important; }
+}

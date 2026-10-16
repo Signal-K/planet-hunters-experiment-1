@@ -3,93 +3,308 @@ import LandnamCore
 
 private func francs(_ n: Int) -> String { Economy.format(francs: n) }
 
+/// Mission board (mirrors web `MissionSetupRoutes` "Choose a contract"): one contract slide at a time with
+/// previous / next arrows, the client mark, facts, required cargo and ACCEPT & PREPARE.
+/// The mission board is a scene, not a page (SSL-423): contracts arrive as client transmissions over the live base.
+/// One compact work order carries the deal (client, job, cargo, pay, accept); Program is one tap away on the rail.
+/// Mirrors web `MissionBoard` dispatch: same base, same order, same rail.
 struct MissionsScreen: View {
     @Environment(GameStore.self) private var store
     @State private var archiveFocus: String?
     @State private var showArchive = false
+    @State private var showSettings = false
+    @State private var selected = 0
+    @State private var tab: Int
+    @State private var camera = BaseCamera(x: 0, depth: 0)
+    /// `startTitle` opens the board on that contract (scene catalog only).
+    private let startTitle: String?
+
+    init(startTab: Int = 0, startTitle: String? = nil) {
+        _tab = State(initialValue: startTab)
+        self.startTitle = startTitle
+    }
 
     var body: some View {
-        let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
-        ScreenFrame(title: "Mission board", back: { store.go(.hub) }) {
-            Eyebrow(text: store.player.freeOperations ? "Free Operations · client work" : "Guided contracts")
-            WorldSpaceWeekBanner(banner: WorldSpaceWeek.banner(badges: store.player.badges, now: store.now))
-            if entries.isEmpty {
-                Panel {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("No contracts open right now").font(AppFont.display(16))
-                        Text("Your own operations are on the Launchpad. The archive shows what unlocks the next contract.")
-                            .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                    }
-                }
-            }
-            ForEach(entries) { e in MissionCard(entry: e, catalog: store.catalog, wsw: WorldSpaceWeek.chips(for: e.mission, badges: store.player.badges, now: store.now)) {
-                store.pickMission(e.id)
-            } onPathway: { archiveFocus = "mission:\(e.id)"; showArchive = true } }
-            PrimaryButton(title: "Archive · pathways and unlocks") { archiveFocus = nil; showArchive = true }
+        GeometryReader { outer in
+            let insets = outer.safeAreaInsets
+            let full = CGSize(width: outer.size.width + insets.leading + insets.trailing, height: outer.size.height + insets.top + insets.bottom)
+            scene(size: full, insets: insets)
+                .frame(width: full.width, height: full.height)
+                .position(x: full.width / 2 - insets.leading, y: full.height / 2 - insets.top)
         }
+        .background(Theme.bg.ignoresSafeArea())
+        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
         .sheet(isPresented: $showArchive) { ArchiveScreen(focus: archiveFocus) }
+        .onAppear {
+            guard let startTitle else { return }
+            let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
+            if let i = entries.firstIndex(where: { $0.mission.title == startTitle }) { selected = i }
+        }
+    }
+
+    private func scene(size: CGSize, insets: EdgeInsets) -> some View {
+        let portrait = size.height > size.width
+        let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
+        let index = entries.isEmpty ? 0 : min(selected, entries.count - 1)
+        let side = max(insets.leading, 12)
+        let railTop = insets.top + 60
+        return ZStack(alignment: .topLeading) {
+            Color.clear
+            if tab != 0 { Theme.ink.opacity(0.18).allowsHitTesting(false) }
+
+            HStack(alignment: .top) {
+                HudGearClock { showSettings = true }
+                Spacer()
+                HudChips(francs: store.player.francs)
+            }
+            .padding(.top, insets.top + 8).padding(.leading, side).padding(.trailing, max(insets.trailing, 12))
+
+            rail(portrait: portrait)
+                .padding(.top, railTop).padding(.leading, side)
+
+            if tab == 1 || tab == 2 {
+                ScrollView { if tab == 1 { ProgramRoadmap { archiveFocus = $0; showArchive = true }.padding(16) } else { EventsBoard().padding(16) } }
+                    .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
+                    .padding(.top, portrait ? railTop + 64 : railTop)
+                    .padding(.leading, portrait ? side : side + 144)
+                    .padding(.trailing, max(insets.trailing, 12))
+                    .padding(.bottom, insets.bottom + 12)
+            } else if entries.isEmpty {
+                order(width: orderWidth(size, insets: insets, portrait: portrait), size: size, insets: insets, portrait: portrait) {
+                    Text("No client signals yet").font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                    Text("Your own operations are on the Launchpad. The archive shows what unlocks the next contract.")
+                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+                }
+            } else {
+                let e = entries[index]
+                order(width: orderWidth(size, insets: insets, portrait: portrait), size: size, insets: insets, portrait: portrait, accent: accent(e.mission)) {
+                    WorkOrder(entry: e, position: index + 1, count: entries.count, player: store.player, portrait: portrait,
+                              onTake: { store.pickMission(e.id) },
+                              onPrev: { selected = (index - 1 + entries.count) % entries.count },
+                              onNext: { selected = (index + 1) % entries.count })
+                }
+                .id(e.id)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selected)
+    }
+
+    private func accent(_ m: Mission) -> Color {
+        Color(hex: m.client.flatMap { Clients.byId[$0] }?.colorHex) ?? Theme.blue
+    }
+
+    private func orderWidth(_ size: CGSize, insets: EdgeInsets, portrait: Bool) -> CGFloat {
+        portrait ? size.width - insets.leading - insets.trailing - 24 : min(560, size.width - max(insets.leading, 12) - max(insets.trailing, 12) - 160)
+    }
+
+    /// The work-order slab, anchored to the ground: bottom edge in portrait, bottom right beside the pad otherwise.
+    private func order<C: View>(width: CGFloat, size: CGSize, insets: EdgeInsets, portrait: Bool, accent: Color = Theme.blue, @ViewBuilder _ content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: portrait ? 12 : 8) { content() }
+            .padding(portrait ? 16 : 12)
+            .frame(width: width, alignment: .leading)
+            .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
+            .overlay(alignment: .top) { UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20).fill(accent).frame(height: 8) }
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
+            .background(RoundedRectangle(cornerRadius: 20).fill(Theme.ink.opacity(0.7)).offset(x: 6, y: 6))
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: portrait ? .bottom : .bottomTrailing)
+            .padding(.bottom, insets.bottom + 12)
+            .padding(.leading, portrait ? max(insets.leading, 12) : 0)
+            .padding(.trailing, max(insets.trailing, 12) + (portrait ? 0 : 4))
+    }
+
+    private func rail(portrait: Bool) -> some View {
+        let layout = portrait ? AnyLayout(HStackLayout(spacing: 8)) : AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+        return layout {
+            Button { store.go(.hub) } label: {
+                Image(systemName: "chevron.left").font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.ink)
+                    .frame(width: 44, height: 44).background(Theme.paper, in: Circle()).overlay(Circle().stroke(Theme.ink, lineWidth: 2))
+            }.buttonStyle(.plain).accessibilityLabel("Back")
+            railTab(0, "Contracts", "chart.line.uptrend.xyaxis", portrait: portrait)
+            railTab(1, "Program", "list.clipboard", portrait: portrait)
+            railTab(2, "Events", "star", portrait: portrait)
+            Button { archiveFocus = nil; showArchive = true } label: {
+                Text("LOG").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+                    .frame(minWidth: portrait ? 56 : 132, minHeight: 44)
+                    .background(Theme.paper, in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.ink, lineWidth: 2))
+            }.buttonStyle(.plain).accessibilityLabel("Archive and pathways")
+        }
+    }
+
+    private func railTab(_ i: Int, _ title: String, _ symbol: String, portrait: Bool) -> some View {
+        let on = tab == i
+        return Button { tab = i } label: {
+            HStack(spacing: 6) {
+                Image(systemName: symbol).font(.system(size: 18, weight: .bold))
+                if !portrait { Text(title).font(AppFont.display(14)) }
+            }
+            .foregroundStyle(on ? Color.white : Theme.ink)
+            .frame(width: portrait ? 52 : 132, height: portrait ? 52 : 48)
+            .background(on ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.ink, lineWidth: on ? 3 : 2))
+        }
+        .buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(on ? .isSelected : [])
     }
 }
 
-/// One contract: who, where, what it pays, and either a Take button or the plain reason it is locked.
-struct MissionCard: View {
+/// The deal on one contract: who, what, cargo, pay, accept. Everything else lives in the archive.
+private struct WorkOrder: View {
     let entry: MissionBoard.Entry
-    let catalog: Catalog
-    let wsw: [WorldSpaceWeek.Chip]
+    let position: Int
+    let count: Int
+    let player: Player
+    let portrait: Bool
     let onTake: () -> Void
-    let onPathway: () -> Void
+    let onPrev: () -> Void
+    let onNext: () -> Void
 
     var body: some View {
         let m = entry.mission
-        let client = m.client.flatMap { Clients.byId[$0]?.name } ?? "Your programme"
-        let from = m.targetId.flatMap(catalog.target)?.name
-        let to = m.deliveryTargetId.flatMap(catalog.target)?.name
-        Panel(accent: entry.unlocked ? Theme.blue : Theme.textMuted) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(m.title).font(AppFont.display(18)).fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 8)
-                    Text(m.tag.uppercased()).font(AppFont.display(14, "Bold")).tracking(1.0).foregroundStyle(Theme.textDim)
-                }
-                Text("\(client) · \(m.difficulty)").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                if let from { Text(to.map { "\(from) → \($0)" } ?? "Target: \(from)").font(AppFont.body(14)) }
-                if !m.requires.minerals.isEmpty {
-                    Text(m.requires.minerals.sorted { $0.key < $1.key }.map { "\($0.value) \(Minerals.byId[$0.key]?.name ?? $0.key)" }.joined(separator: ", ")).font(AppFont.body(14))
-                }
-                if m.payout.francs > 0 { Text(Economy.format(francs: m.payout.francs)).font(AppFont.display(16)).foregroundStyle(Theme.teal) }
-                WorldSpaceWeekChips(chips: wsw)
-                if entry.unlocked {
-                    PrimaryButton(title: "Take contract", action: onTake)
-                } else {
-                    HStack(spacing: 8) {
-                        Image(systemName: "lock.fill").foregroundStyle(Theme.textMuted)
-                        Text(entry.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
-                    }
-                    Button(action: onPathway) {
-                        Text("SEE THE PATHWAY").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.bluePress).frame(minHeight: 44, alignment: .leading)
-                    }.buttonStyle(.plain)
-                }
+        let client = m.client.flatMap { Clients.byId[$0] }
+        let level = client.map { 1 + max(0, player.clientMissions[$0.id] ?? 0) / Clients.affinityMissionThreshold }
+        HStack(spacing: 12) {
+            ZStack {
+                Circle().fill(mixWhite(client?.colorHex, 0.35, fallback: Theme.paper2))
+                Circle().stroke(Theme.ink, lineWidth: 2)
+                Text(client?.initial ?? "OP").font(AppFont.display(16)).foregroundStyle(Theme.ink)
+            }.frame(width: 44, height: 44)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\((client?.name ?? "Your program").uppercased())\(level.map { " · L\($0)" } ?? "")")
+                    .font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.textDim).lineLimit(1)
+                Text(m.title).font(AppFont.display(portrait ? 22 : 24)).foregroundStyle(Theme.ink).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        HStack(alignment: .center, spacing: 8) {
+            ForEach(m.requires.minerals.sorted { $0.key < $1.key }, id: \.key) { id, amount in
+                if let meta = Minerals.byId[id] { crate(meta, amount) }
+            }
+            Spacer(minLength: 8)
+            Text(compactFrancs(m.payout.francs)).font(AppFont.display(portrait ? 22 : 26)).foregroundStyle(Theme.ink).lineLimit(1)
+            if !portrait { accept }
+        }
+        if portrait { accept }
+        if !entry.unlocked {
+            Text(entry.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+        }
+        if count > 1 {
+            HStack {
+                round("chevron.left", "Previous contract", onPrev)
+                Spacer()
+                Text("\(position)/\(count)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
+                round("chevron.right", "Next contract", onNext)
             }
         }
     }
+
+    private var accept: some View {
+        Button(action: onTake) {
+            Text("ACCEPT").font(AppFont.display(18)).tracking(1.8)
+                .foregroundStyle(entry.unlocked ? Color.white : Theme.ink)
+                .frame(maxWidth: portrait ? .infinity : nil, minHeight: 52).padding(.horizontal, 22)
+                .background(entry.unlocked ? Theme.blue : Theme.paper2, in: Capsule())
+                .overlay(Capsule().stroke(Theme.ink, lineWidth: 3))
+                .background(Capsule().fill(Theme.ink).offset(x: 3, y: 3))
+        }
+        .buttonStyle(.plain).disabled(!entry.unlocked).accessibilityLabel("Accept \(entry.mission.title)")
+    }
+
+    private func crate(_ meta: MineralMeta, _ amount: Int) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "hexagon.fill").font(.system(size: 26)).foregroundStyle(Color(hex: meta.colorHex) ?? Theme.paper2)
+                .overlay(Image(systemName: "hexagon").font(.system(size: 26)).foregroundStyle(Theme.ink))
+            VStack(alignment: .leading, spacing: 0) {
+                Text("\(amount)").font(AppFont.mono(18)).foregroundStyle(Theme.ink)
+                Text(meta.name).font(AppFont.body(14)).foregroundStyle(Theme.textDim).lineLimit(1)
+            }
+        }
+        .padding(.vertical, 6).padding(.leading, 6).padding(.trailing, 10)
+        .background(mixWhite(meta.colorHex, 0.18, fallback: Theme.paper2), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.ink, lineWidth: 2))
+        .accessibilityElement(children: .combine)
+    }
+
+    private func round(_ symbol: String, _ label: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.ink)
+                .frame(width: 44, height: 44).background(Theme.paper, in: Circle()).overlay(Circle().stroke(Theme.ink, lineWidth: 2))
+        }.buttonStyle(.plain).accessibilityLabel(label)
+    }
+
+    private func compactFrancs(_ n: Int) -> String {
+        if n >= 1_000_000_000 { return String(format: "₣%.1fB", Double(n) / 1e9) }
+        if n >= 1_000_000 { return String(format: "₣%.1fM", Double(n) / 1e6) }
+        return Economy.format(francs: n)
+    }
 }
+
+/// An incoming client transmission: a dashed beam from the sky, a packet riding down it, rings where it lands.
+private struct SignalBeam: View {
+    let color: Color
+    let length: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        // Only the packet and rings, at 24 fps. A tall line under them (dashed with an animated `dashPhase`, sliding rectangles,
+        // or even a static solid one) pinned WindowServer at 45-100% on macOS next to the live base canvas.
+        ZStack(alignment: .top) {
+        TimelineView(.animation(minimumInterval: 1.0 / 8, paused: reduceMotion)) { ctx in
+            let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
+            let phase = CGFloat(t.truncatingRemainder(dividingBy: 1.8) / 1.8)
+            ZStack(alignment: .top) {
+                RoundedRectangle(cornerRadius: 3).fill(color).overlay(RoundedRectangle(cornerRadius: 3).stroke(Theme.ink, lineWidth: 2))
+                    .frame(width: 14, height: 14).offset(y: phase * (length - 14)).opacity(phase < 0.9 ? 1 : 0)
+                ForEach(0..<2, id: \.self) { k in
+                    let r = (phase + CGFloat(k) * 0.5).truncatingRemainder(dividingBy: 1)
+                    Circle().stroke(color, lineWidth: 3).frame(width: 36, height: 36)
+                        .scaleEffect(0.4 + r * 2.2).opacity(Double(1 - r) * 0.9).offset(y: length - 18)
+                }
+            }
+            .frame(width: 4, height: length)
+        }
+        }
+        .frame(width: 4, height: length)
+        .allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+/// `hex` at `pct` strength over white (CSS `color-mix(in srgb, hex pct, #fff)`).
+private func mixWhite(_ hex: String?, _ pct: Double, fallback: Color) -> Color {
+    guard let hex, hex.hasPrefix("#"), let v = UInt32(hex.dropFirst(), radix: 16) else { return fallback }
+    let c = (r: Double((v >> 16) & 0xFF) / 255, g: Double((v >> 8) & 0xFF) / 255, b: Double(v & 0xFF) / 255)
+    return Color(.sRGB, red: c.r * pct + (1 - pct), green: c.g * pct + (1 - pct), blue: c.b * pct + (1 - pct))
+}
+
+private extension Color {
+    init?(hex: String?) {
+        guard let hex, hex.hasPrefix("#"), let v = UInt32(hex.dropFirst(), radix: 16) else { return nil }
+        self = Theme.hex(v)
+    }
+}
+
 
 struct LaunchScreen: View {
     @Environment(GameStore.self) private var store
     @State private var launching = false
+    @State private var configuring: Bool?
+    private var needsConfig: Bool { !FlightPlan.moduleKinds.allSatisfy { store.player.shipCustomizerParts[$0] != nil } }
     private var variant: String {
         store.player.stagedRockets.first { $0.location == .launchpad }?.rocketId.contains("explorer") == true ? "explorer" : "prospector"
     }
     var body: some View {
         if launching {
             LaunchSequenceScreen(variant: variant) { store.launch() }
+        } else if configuring ?? needsConfig {
+            HangarModulesPanel(onClose: { configuring = false })
         } else {
             pad
         }
     }
 
     private var pad: some View {
-        ScreenFrame(title: "Launchpad", back: { store.go(.hub) }) {
+        ScreenFrame(title: "Hangar", back: { store.go(.hub) }) {
+            SetButton(title: "Build config", fill: true) { configuring = true }
             if let m = store.mission {
                 Panel { Text(m.title).font(.headline); Text("Target: \(store.target?.name ?? "none")") }
             } else if store.player.stagedRockets.isEmpty {
@@ -127,149 +342,224 @@ struct DeliveryScreen: View {
 
 struct DebriefScreen: View {
     @Environment(GameStore.self) private var store
+    @State private var showSettings = false
+    @State private var collecting = false
+    @State private var scrapped = false
+
     var body: some View {
         let m = store.mission
-        let payout = m.map { MissionGenerator.calibrateOnboardingPayout(raw: $0.payout.francs, missionsDone: store.player.missionsDone) } ?? 0
-        let client = m?.client.flatMap { id in Clients.all.first { $0.id == id } }
         let cargo = store.state.lastCargo ?? [:]
-        ScreenFrame(title: "Debrief") {
-            DebriefStrip(title: m?.title ?? "Contract", from: store.target?.name)
-            if let client { DebriefClientPanel(client: client, xp: m?.payout.affinity ?? 0) }
-            if let m, !m.requires.minerals.isEmpty { DebriefManifest(title: m.title, required: m.requires.minerals, delivered: cargo) }
-            DebriefLedger(payout: m?.payload == nil ? payout : nil, reward: m?.programReward)
-            if let m, !m.isOwnProgram, store.player.missionsDone >= 2, LaserCapacitor.units(store.player.stash) > 0 || !cargo.isEmpty {
-                LaserCapacitorPanel(level: store.player.laserCapacitorLevel,
-                                    haulUnits: LaserCapacitor.units(cargo),
-                                    stashUnits: LaserCapacitor.units(store.player.stash),
-                                    reservedUnits: m.requires.minerals.values.reduce(0, +)) {
-                    store.buyLaserCapacitor(expectedLevel: store.player.laserCapacitorLevel, reservedUnits: m.requires.minerals.values.reduce(0, +))
+        let haulUnits = cargo.values.reduce(0) { $0 + max(0, $1) }
+        let payout = m.map { MissionGenerator.calibrateOnboardingPayout(raw: $0.payout.francs, missionsDone: store.player.missionsDone) } ?? 0
+        let isFreeHaul = (m?.isOwnProgram == true && m?.deliveryTargetId == nil && m?.construction == nil) && cargo.values.contains { $0 > 0 }
+        let orbital = m?.payload?.type == .satellite
+        let program = m?.isOwnProgram == true && !isFreeHaul
+        let stored = Market.earthStorageBuilt(store.player)
+        let disposition = store.player.freeHaulDisposition ?? (stored ? HaulDisposition.store : .sell)
+        let willStore = isFreeHaul && disposition == .store && stored
+        let sale = HomeDelivery.marketValue(store.player, units: cargo, now: store.now)
+        let overflow = max(0, Market.storedUnits(store.player.stash) - Market.storageCapacity(store.player))
+        let target = store.target
+        let status = store.player.shipDestroyed ? "Hull lost · cargo recovered" : program ? "Commissioned · instrument online" : "Docked · mission complete"
+        let reserved = m?.requires.minerals.values.reduce(0, +) ?? 0
+        let showLaser = m?.isOwnProgram == false && store.player.missionsDone >= 2 && (LaserCapacitor.units(store.player.stash) > 0 || !cargo.isEmpty)
+
+        GeometryReader { geo in
+            let portrait = geo.size.height > geo.size.width
+            let short = geo.size.height < 520
+            ZStack(alignment: .topLeading) {
+                if let target {
+                    DestinationVista(
+                        targetId: target.id,
+                        type: target.type,
+                        archetype: target.archetype,
+                        crates: cargo.filter { $0.value > 0 }.prefix(4).map { (file: CrateArt.file(for: $0.key), count: min(5, max(1, $0.value))) }
+                    )
+                    .ignoresSafeArea()
+                } else {
+                    RecordCream.paper.ignoresSafeArea()
                 }
-            }
-            PrimaryButton(title: m?.payload?.type == .satellite ? "Open control station" : (m?.isOwnProgram == true && m?.client == nil && m?.programReward != nil ? "File report" : "Collect payout")) {
-                store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: cargo)
+
+                ScrollView {
+                VStack(alignment: .leading, spacing: short ? 16 : 24) {
+                    if orbital {
+                        CreamCard {
+                            statusLine("Commissioned · instrument online", crit: false)
+                            Text(m?.title ?? "Instrument").font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                            Text("PROGRAM OUTCOME").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                            if let outcome = m?.programReward?.outcome {
+                                Text(outcome).font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                            }
+                            Text("\((m?.payload?.name ?? "Instrument")) remains in Earth orbit. The sky-side status indicator marks the downlink. Stationed at \(target?.name ?? "Earth").")
+                                .font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                        }
+                    } else {
+                        CreamCard {
+                            statusLine(status, crit: store.player.shipDestroyed)
+                            HStack(alignment: .top, spacing: 28) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("MISSION").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                                    Text(m?.title ?? "Contract").font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                                }
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(program ? "STATIONED AT" : "RETURNED FROM").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                                    Text(target?.name ?? "—").font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                                }
+                            }
+                        }
+                    }
+
+                    if !orbital && isFreeHaul {
+                        CreamCard {
+                            Text("FREE OPS HAUL").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                            if sale > 0 {
+                                ledgerRow("Mining fee · your program", Economy.format(francs: sale / 2))
+                                ledgerRow("Transport fee · return", Economy.format(francs: sale - sale / 2))
+                            }
+                            Text(willStore ? "Earth storage" : "sell on Earth return").font(AppFont.display(18)).foregroundStyle(Theme.ink).padding(.top, 8)
+                            if willStore {
+                                ledgerRow("Silo", "\(min(Market.storedUnits(store.player.stash), Market.storageCapacity(store.player))) / \(Market.storageCapacity(store.player)) U")
+                                if overflow > 0 {
+                                    Text("\(overflow) units over capacity are sold.").font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                                }
+                            } else {
+                                HStack(alignment: .firstTextBaseline) {
+                                    Text("SALE VALUE").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                                    Spacer(minLength: 12)
+                                    AnimatedFrancs(value: sale)
+                                }.padding(.top, 8)
+                            }
+                            if !stored {
+                                Text("Build a Mineral Vault to keep ore on Earth.").font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                            }
+                        }
+                    } else if !orbital, let reward = m?.programReward, program {
+                        CreamCard {
+                            Text("PROGRAM OUTCOME").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                            Text(reward.outcome).font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                            Text("+\(reward.researchXP) XP").font(AppFont.display(18)).foregroundStyle(Theme.ink)
+                        }
+                    } else if !orbital && m?.payload == nil {
+                        CreamCard {
+                            Text("LEDGER").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                            ledgerRow("Contract value", Economy.format(francs: m?.payout.francs ?? payout))
+                            HStack(alignment: .firstTextBaseline) {
+                                Text("NET").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                                Spacer(minLength: 12)
+                                AnimatedFrancs(value: payout)
+                            }.padding(.top, 8)
+                        }
+                    }
+
+                    if showLaser, let m {
+                        LaserCapacitorPanel(
+                            level: store.player.laserCapacitorLevel,
+                            stashUnits: LaserCapacitor.units(store.player.stash),
+                            reservedUnits: reserved
+                        ) {
+                            store.buyLaserCapacitor(expectedLevel: store.player.laserCapacitorLevel, reservedUnits: reserved)
+                        }
+                    }
+                }
+                .padding(.horizontal, portrait ? 16 : 24)
+                .padding(.bottom, 8)
+                }
+                .padding(.top, portrait ? 0 : (short ? 64 : 88))
+                .padding(.bottom, short ? 84 : 96)
+                .padding(.trailing, portrait ? 0 : 24)
+                .frame(maxWidth: portrait ? .infinity : min(440, short ? geo.size.width * 0.48 : 440))
+                .frame(maxHeight: portrait ? geo.size.height * 0.58 : .infinity, alignment: .top)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: portrait ? .bottom : .topTrailing)
+
             }
         }
+        .overlay(alignment: .top) {
+            HStack(alignment: .top) {
+                HudGearClock { showSettings = true }
+                Spacer(minLength: 8)
+                Text("\(haulUnits) U")
+                    .font(AppFont.mono(14)).foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 10)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .background(RecordCream.paper)
+                    .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+                    .padding(.trailing, 56)
+                    .accessibilityLabel("Cargo units")
+            }
+            .padding(16)
+        }
+        .overlay(alignment: .bottom) {
+            HStack(spacing: 8) {
+                if !orbital {
+                    RecordDockButton(title: scrapped ? "Dismantled" : "Teardown", filled: false, enabled: !scrapped) { scrapped = true }
+                }
+                RecordDockButton(title: collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
+                    guard !collecting else { return }
+                    collecting = true
+                    store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: cargo, disposition: isFreeHaul ? disposition : nil)
+                }
+            }
+            .padding(8)
+            .background(RecordCream.paper)
+            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+            .padding(.bottom, 16)
+        }
+        .helpable(.debrief)
+        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
+    }
+
+    private func collectTitle(free: Bool, store: Bool, overflow: Int, sale: Int, program: Bool, payout: Int) -> String {
+        if free {
+            if store { return overflow > 0 ? "Store haul · sell \(overflow) over cap" : "Keep haul on Earth" }
+            return "Collect \(Economy.format(francs: sale))"
+        }
+        if program { return "Log Program Outcome" }
+        return "Collect \(Economy.format(francs: payout))"
+    }
+
+    private func statusLine(_ text: String, crit: Bool) -> some View {
+        HStack(spacing: 10) {
+            Rectangle().fill(crit ? Theme.crimson : Theme.blue).frame(width: 8, height: 8)
+            Text(text.uppercased()).font(AppFont.mono(14)).tracking(1.4).foregroundStyle(crit ? Theme.crimson : Theme.blue)
+        }
+    }
+
+    private func ledgerRow(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(label.uppercased()).font(AppFont.display(14)).foregroundStyle(Theme.ink)
+            Spacer(minLength: 12)
+            Text(value).font(AppFont.mono(14)).foregroundStyle(Theme.ink)
+        }
+        .padding(.top, 12)
     }
 }
 
-/// Status strip: docked, which mission, where it returned from (mirrors web debrief-mission-strip).
-struct DebriefStrip: View {
+private struct RecordDockButton: View {
     let title: String
-    let from: String?
+    var filled: Bool
+    var wide = false
+    var enabled = true
+    let action: () -> Void
     var body: some View {
-        Panel(accent: Theme.teal) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Circle().fill(Theme.teal).frame(width: 10, height: 10)
-                    Text("DOCKED · MISSION COMPLETE").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.teal)
-                }
-                Eyebrow(text: "Mission")
-                Text(title).font(AppFont.display(18)).foregroundStyle(Theme.ink)
-                if let from { Eyebrow(text: "Returned from"); Text(from).font(AppFont.display(16)).foregroundStyle(Theme.ink) }
-            }
+        Button(action: action) {
+            Text(title.uppercased())
+                .font(AppFont.display(14)).tracking(1.2)
+                .foregroundStyle(filled ? RecordCream.paper : Theme.ink)
+                .frame(maxWidth: wide ? .infinity : nil)
+                .frame(minWidth: 148, minHeight: 48)
+                .padding(.horizontal, 12)
+                .background(filled ? Theme.blue : RecordCream.paper)
+                .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
         }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.55)
     }
 }
 
-struct DebriefClientPanel: View {
-    let client: Client
-    let xp: Int
-    var body: some View {
-        Panel {
-            VStack(alignment: .leading, spacing: 10) {
-                Eyebrow(text: "Client")
-                HStack(spacing: 12) {
-                    Text(client.initial).font(AppFont.display(16)).foregroundStyle(Theme.ink)
-                        .frame(width: 44, height: 44)
-                        .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(client.name).font(AppFont.display(16)).foregroundStyle(Theme.ink)
-                        Text("CLIENT WORK COMPLETE").font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.textMuted)
-                    }
-                    Spacer(minLength: 0)
-                    if xp > 0 { Text("+\(xp) XP").font(AppFont.mono(14)).foregroundStyle(Theme.bluePress) }
-                }
-            }
-        }
-    }
-}
-
-/// Cargo manifest: each ordered mineral with delivered / required and a DONE or SHORT chip.
-struct DebriefManifest: View {
-    let title: String
-    let required: Cargo
-    let delivered: Cargo
-    var body: some View {
-        let delivered = delivered
-        Panel(accent: Theme.blue) {
-            VStack(alignment: .leading, spacing: 10) {
-                Eyebrow(text: "Manifest · \(title)")
-                ForEach(required.keys.sorted(), id: \.self) { id in
-                    let need = required[id] ?? 0, have = delivered[id] ?? 0
-                    let meta = Minerals.all.first { $0.id == id }
-                    HStack(spacing: 10) {
-                        Text(meta?.symbol ?? id.prefix(2).capitalized).font(AppFont.mono(14)).foregroundStyle(Theme.ink)
-                            .frame(width: 44, height: 36).background(Theme.paper2, in: RoundedRectangle(cornerRadius: 6))
-                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.ink, lineWidth: 1.5))
-                        Text(meta?.name ?? id).font(AppFont.display(16)).foregroundStyle(Theme.ink)
-                        Text("\(min(have, need)) / \(need)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
-                        Spacer(minLength: 0)
-                        Text(have >= need ? "DONE" : "SHORT").font(AppFont.display(14)).tracking(1.2)
-                            .foregroundStyle(have >= need ? Theme.teal : Theme.crimson)
-                            .padding(.horizontal, 10).padding(.vertical, 4)
-                            .background((have >= need ? Theme.teal : Theme.crimson).opacity(0.12), in: Capsule())
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct DebriefLedger: View {
-    let payout: Int?
-    let reward: ProgramReward?
-    var body: some View {
-        if payout != nil || reward != nil {
-            Panel(accent: Theme.teal) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Eyebrow(text: "Ledger")
-                    if let payout {
-                        HStack { Text("Contract value").foregroundStyle(Theme.textDim); Spacer(); Text(Economy.format(francs: payout)).font(AppFont.mono(16)).foregroundStyle(Theme.ink) }
-                    }
-                    if let reward {
-                        Text(reward.outcome).foregroundStyle(Theme.textDim)
-                        HStack { Text("Research").foregroundStyle(Theme.textDim); Spacer(); Text("+\(reward.researchXP) XP").font(AppFont.mono(16)).foregroundStyle(Theme.bluePress) }
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct MarketScreen: View {
-    @Environment(GameStore.self) private var store
-    var body: some View {
-        ScreenFrame(title: "Market", back: { store.go(.hub) }) {
-            Panel { Text("Funds: \(francs(store.player.francs))") }
-            ForEach(store.player.stash.keys.sorted(), id: \.self) { id in
-                let n = store.player.stash[id] ?? 0
-                Panel {
-                    Text("\(id) ×\(n)")
-                    PrimaryButton(title: "Sell all", enabled: n > 0) { store.sell(id, amount: n) }
-                }
-            }
-            if store.player.stash.isEmpty { Panel { Text("Nothing in storage.") } }
-        }
-    }
-}
-
-
-/// SSL-462: names the link between the haul and the next build and spends it on the Laser Capacitor
-/// (mirrors web LaserCapacitorPanel).
+/// SSL-462: spend hauled ore on the next Laser Capacitor. Cream card, dark ink, one line of copy.
 struct LaserCapacitorPanel: View {
     let level: Int
-    let haulUnits: Int
     let stashUnits: Int
     let reservedUnits: Int
     let install: () -> Void
@@ -278,23 +568,17 @@ struct LaserCapacitorPanel: View {
         let spare = max(0, stashUnits - reservedUnits)
         if let next = LaserCapacitor.next(level) {
             let canAfford = spare >= next.costUnits
-            Panel(accent: canAfford ? Theme.teal : Theme.blue) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Eyebrow(text: "Next build · \(next.name)")
-                    Text(canAfford
-                         ? "You brought \(haulUnits) ore, enough for \(next.name) (\(next.costUnits) ore). It adds \(next.bonusCharges - LaserCapacitor.bonus(level)) laser charges, so your next run lasts longer and brings home more."
-                         : "You brought \(haulUnits) ore. \(next.name) needs \(next.costUnits) spare ore and you hold \(spare). Keep firing after the order is filled to bring home the rest.")
-                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                    PrimaryButton(title: canAfford ? "Install \(next.name) · \(next.costUnits) ore" : "Need \(next.costUnits - spare) more ore", enabled: canAfford, action: install)
-                }
+            CreamCard {
+                Text("NEXT BUILD").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                Text(next.name).font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                Text("\(next.costUnits) ore").font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                RecordDockButton(title: canAfford ? "Install · \(next.costUnits) ore" : "Need \(next.costUnits - spare) more ore", filled: true, wide: true, enabled: canAfford, action: install)
             }
         } else {
-            Panel(accent: Theme.teal) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Eyebrow(text: "Next build · Laser Capacitor")
-                    Text("\(LaserCapacitor.tiers.last { $0.level == level }?.name ?? "Laser Capacitor") is installed: +\(LaserCapacitor.bonus(level)) laser charges on every run. Fully upgraded.")
-                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                }
+            CreamCard {
+                Text("NEXT BUILD").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                Text(LaserCapacitor.tiers.last { $0.level == level }?.name ?? "Laser Capacitor").font(AppFont.display(22)).foregroundStyle(Theme.ink)
+                Text("\(LaserCapacitor.bonus(level)) charges on every run.").font(AppFont.body(14)).foregroundStyle(Theme.ink)
             }
         }
     }

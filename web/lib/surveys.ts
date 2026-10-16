@@ -1,4 +1,4 @@
-import { initPostHog, posthog } from '@/lib/posthog'
+import { captureGameEvent, initPostHog, posthog } from '@/lib/posthog'
 import { pbShared } from '@/lib/pb'
 import { queueCreate } from '@/lib/offline/pbOutbox'
 import { SURVEY_DEFS, type Survey, type SurveyQuestion } from '@/lib/survey-defs'
@@ -137,7 +137,7 @@ export function submitSurveyResponse(surveyKey: string, responses: SurveyRespons
   if (!def) return
   initPostHog()
   const payload = buildPostHogSurveyPayload(def, responses)
-  const fallbackCapture = () => posthog.capture('survey sent', payload)
+  const fallbackCapture = () => captureGameEvent('survey sent', payload)
 
   fetch('/api/surveys', {
     method: 'POST',
@@ -177,7 +177,7 @@ export function trackSurveyShown(surveyKey: string) {
   const def = SURVEY_DEFS[surveyKey]
   if (!def) return
   initPostHog()
-  posthog.capture('survey shown', { $survey_id: def.id, $survey_name: def.name })
+  captureGameEvent('survey shown', { $survey_id: def.id, $survey_name: def.name })
 }
 
 const REPEAT_SURVEY_FLAG = 'landnam-repeat-mission-surveys'
