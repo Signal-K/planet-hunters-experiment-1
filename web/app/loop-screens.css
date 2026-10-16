@@ -389,3 +389,36 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
 .mining-screen .laser-hud .scene-dock-primary * , .mining-screen .laser-hud .scene-dock-word * { color: inherit !important; }
 .mining-screen .laser-order *, .mining-screen .laser-dock__lines, .mining-screen .laser-dock__lines > span { color: #eef2f6; }
 .mining-screen .laser-order [data-testid="mining-target-cue"] { color: #9fd6e4 !important; }
+
+/* Mining HUD, Out There style: near-black frosted panels with a glowing white outline, black icon tiles, italic cyan tab labels, segmented bars. No green or orange. */
+.mining-screen .laser-chrome .settings-cog,
+.mining-screen .laser-chrome__clock,
+.mining-screen .laser-chrome__chips .scene-chip,
+.mining-screen .laser-hud .scene-dock,
+.mining-screen .laser-order.scene-dock-word,
+.mining-screen .laser-hud .scene-dock-primary,
+.mining-screen .laser-hud .scene-dock-word {
+  background: linear-gradient(160deg, rgba(10, 16, 28, 0.78), rgba(4, 8, 16, 0.86)) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.92) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 12px rgba(255, 255, 255, 0.32), inset 0 0 10px rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(8px) saturate(1.2);
+}
+.mining-screen .laser-hud .scene-dock-primary { background: linear-gradient(160deg, rgba(159, 214, 228, 0.28), rgba(10, 16, 28, 0.86)) !important; }
+.mining-screen .laser-hud .scene-dock-primary:not(:disabled):active { box-shadow: 0 0 18px rgba(159, 214, 228, 0.8) !important; }
+.mining-screen .laser-hud .scene-dock { padding: 4px; border-radius: 8px !important; }
+.mining-screen .laser-order.scene-dock-word { font-style: italic; }
+.mining-screen .laser-chrome__chips .scene-chip { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0 12px; }
+.mining-hold {
+  position: absolute; z-index: 22; top: 128px; right: 8px; min-width: 220px; padding: 10px;
+  background: linear-gradient(160deg, rgba(10, 16, 28, 0.9), rgba(4, 8, 16, 0.94));
+  border: 1.5px solid rgba(255, 255, 255, 0.92); border-radius: 6px; color: #eef2f6; pointer-events: auto;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 12px rgba(255, 255, 255, 0.32);
+  font: 700 14px/1.2 var(--ln-font-display);
+}
+.mining-hold__title { color: #9fd6e4; font-style: italic; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+.mining-hold__row { display: flex; align-items: center; gap: 6px; min-height: 44px; }
+.mining-hold__row span { flex: 1; }
+.mining-hold__row button { min-height: 44px; padding: 0 10px; background: #05080f; color: #fff; border: 1.5px solid rgba(255, 255, 255, 0.8); border-radius: 4px; font: inherit; cursor: pointer; }
+.mining-hold__empty { min-height: 32px; opacity: 0.7; }
+@media (max-width: 600px) { .mining-hold { top: 190px; } }

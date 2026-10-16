@@ -18,23 +18,22 @@
   min-width: 56px;
   min-height: 56px;
   padding: 0;
-  border: 1px solid rgba(159, 183, 208, 0.45);
-  background: rgba(14, 22, 34, 0.62);
-  color: #eef2f6;
+  border: 1.5px solid rgba(255, 255, 255, 0.92);
+  background: #05080f;
+  color: #ffffff;
   display: grid;
   place-items: center;
   cursor: pointer;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 10px rgba(255, 255, 255, 0.3);
 }
-.pad:active { background: rgba(47, 111, 168, 0.75); color: #fff; transform: translateY(1px); box-shadow: none; }
+.pad:active { background: #12324a; color: #fff; box-shadow: 0 0 16px rgba(159, 214, 228, 0.85); transform: translateY(1px); box-shadow: none; }
 .pad:disabled { opacity: 0.45; cursor: default; }
 .pad:focus-visible { outline: 2px solid #2f6fa8; outline-offset: 2px; }
 .obstacleAhead { background: rgba(47, 111, 168, 0.8); border-color: #9fd6e4; box-shadow: 0 0 0 3px rgba(159, 214, 228, 0.35); }
-.up { grid-area: up; border-radius: 14px 14px 0 0; }
-.left { grid-area: left; border-radius: 14px 0 0 14px; }
-.right { grid-area: right; border-radius: 0 14px 14px 0; }
-.down { grid-area: down; border-radius: 0 0 14px 14px; }
+.up { grid-area: up; border-radius: 6px 6px 0 0; }
+.left { grid-area: left; border-radius: 6px 0 0 6px; }
+.right { grid-area: right; border-radius: 0 6px 6px 0; }
+.down { grid-area: down; border-radius: 0 0 6px 6px; }
 .center { grid-area: hub; width: 100%; height: 100%; background: rgba(14, 22, 34, 0.62); }
 
 .gauge {
@@ -44,18 +43,18 @@
   z-index: 6;
   width: min(190px, 46vw);
   padding: 8px 12px 10px;
-  border: 1px solid rgba(159, 183, 208, 0.45);
-  border-radius: 14px;
-  background: rgba(14, 22, 34, 0.7);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  border: 1.5px solid rgba(255, 255, 255, 0.92);
+  border-radius: 6px;
+  background: linear-gradient(160deg, rgba(10, 16, 28, 0.78), rgba(4, 8, 16, 0.86));
+  backdrop-filter: blur(8px) saturate(1.2);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 12px rgba(255, 255, 255, 0.32), inset 0 0 10px rgba(255, 255, 255, 0.06);
   color: #eef2f6;
 }
 .gaugeHead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-.gaugeLabel { font: 800 14px/1 var(--ln-font-display, system-ui); letter-spacing: 0.08em; text-transform: uppercase; }
+.gaugeLabel { color: #9fd6e4; font-style: italic; font: italic 800 14px/1 var(--ln-font-display, system-ui); letter-spacing: 0.08em; text-transform: uppercase; }
 .gaugeValue { font: 700 14px/1 var(--ln-font-display, system-ui); font-variant-numeric: tabular-nums; }
-.track { position: relative; height: 12px; border-radius: 6px; background: rgba(255, 255, 255, 0.16); overflow: hidden; }
-.fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #2f6fa8, #3fb6c4); transition: width 160ms linear; }
+.track { position: relative; height: 12px; border-radius: 2px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.35); overflow: hidden; }
+.fill { position: absolute; inset: 0 auto 0 0; background: repeating-linear-gradient(90deg, #9fd6e4 0 8px, transparent 8px 10px); transition: width 160ms linear; }
 .recharge { position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent); animation: sweep 420ms linear infinite; }
 .gauge[data-firing] .fill { filter: brightness(1.2); }
 .gauge[data-state='low'] { border-color: #9b3b32; }

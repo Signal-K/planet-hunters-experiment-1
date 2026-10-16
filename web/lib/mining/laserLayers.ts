@@ -464,7 +464,7 @@ export function depositTag(text: string, x: number, y: number): Container {
   label.anchor.set(0.5)
   const w = label.width + 14
   const h = label.height + 6
-  const pill = new Graphics().roundRect(-w / 2, -h / 2, w, h, h / 2).fill({ color: 0x0e1622, alpha: 0.78 }).stroke({ color: 0x9fb7d0, width: 1, alpha: 0.55 })
+  const pill = new Graphics().roundRect(-w / 2, -h / 2, w, h, h / 2).fill({ color: 0x05080f, alpha: 0.82 }).stroke({ color: 0xffffff, width: 1.5, alpha: 0.9 })
   tag.addChild(pill, label)
   tag.x = Math.round(x)
   tag.y = Math.round(y)

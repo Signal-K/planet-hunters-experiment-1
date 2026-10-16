@@ -169,6 +169,16 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>(initialCargo ?? {})
   const [cargo, setCargo] = useState<Record<string, number>>(initialCargo ?? {})
+  const [cargoOpen, setCargoOpen] = useState(false)
+  /** Drop cargo overboard so a wrong pick-up never leaves the hold stuck. */
+  const jettison = useCallback((mineral: string, all: boolean) => {
+    const have = cargoRef.current[mineral] ?? 0
+    if (have <= 0) return
+    const next = { ...cargoRef.current }
+    if (all || have <= 1) delete next[mineral]; else next[mineral] = have - 1
+    cargoRef.current = next
+    setCargo(next)
+  }, [])
   const [remoteDisposition, setRemoteDisposition] = useState<'store' | 'sell'>('store')
   // KES-283: a self-directed run requires a storage destination before mining
   // starts. A destination chosen before a prior back-to-hub pause carries
@@ -628,13 +638,27 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         </button>
         <div className="laser-chrome__chips">
           <span className="scene-chip" data-testid="mining-francs-chip">{formatCurrency(francs, { compact: true })}</span>
-          <span className="scene-chip" aria-label={`Cargo ${freeOpsCargoUnits} units`} data-testid="mining-cargo-chip">
+          <button type="button" className="scene-chip" aria-label={`Cargo ${freeOpsCargoUnits} units. Open hold`} aria-expanded={cargoOpen} data-testid="mining-cargo-chip" onClick={() => setCargoOpen(o => !o)}>
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
               <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" strokeWidth="2" />
             </svg>
-          </span>
+            {freeOpsCargoUnits > 0 ? <b style={{ marginLeft: 6 }}>{freeOpsCargoUnits}</b> : null}
+          </button>
         </div>
+        {cargoOpen && (
+          <div className="mining-hold" role="dialog" aria-label="Cargo hold" data-testid="mining-hold">
+            <div className="mining-hold__title">Hold · {freeOpsCargoUnits}</div>
+            {Object.entries(cargo).filter(([, n]) => n > 0).length === 0 ? <div className="mining-hold__empty">Empty</div> : null}
+            {Object.entries(cargo).filter(([, n]) => n > 0).map(([id, n]) => (
+              <div className="mining-hold__row" key={id}>
+                <span>{minerals[id]?.name ?? id} ×{n}</span>
+                <button type="button" onClick={() => jettison(id, false)} aria-label={`Jettison 1 ${minerals[id]?.name ?? id}`}>Drop 1</button>
+                {n > 1 ? <button type="button" onClick={() => jettison(id, true)} aria-label={`Jettison all ${minerals[id]?.name ?? id}`}>Drop all</button> : null}
+              </div>
+            ))}
+          </div>
+        )}
         <DockWordButton
           className="laser-order"
           data-testid="return-home-btn"
