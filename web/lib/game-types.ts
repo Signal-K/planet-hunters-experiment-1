@@ -311,6 +311,8 @@ export interface Player {
   // capping out permanently once enough of a mineral has ever been sold.
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
+  /** Sell alerts set at a built Exchange; see MarketplaceSystem. */
+  priceAlerts?: import('@/lib/systems/MarketplaceSystem').PriceAlert[]
   /** Last published shared AEST price and client-demand snapshot. */
   dailyEconomySnapshot?: DailyEconomySnapshot
   /** Immutable evidence that a player-built client structure completed. */
@@ -600,6 +602,10 @@ export interface GameActions {
   excavateSubsurface: () => void
   buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void
+  buyMinerals: (mineralId: string, amount: number) => void
+  setPriceAlert: (mineralId: string, target: number) => void
+  removePriceAlert: (alertId: string) => void
+  checkPriceAlerts: () => void
   sellRefinedGoods: (recipeId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void

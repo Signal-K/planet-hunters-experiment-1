@@ -469,6 +469,10 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       skipFlightPlan: tutorial.skipFlightPlan,
       // Economy
       sellMinerals: economy.sellMinerals,
+      buyMinerals: economy.buyMinerals,
+      setPriceAlert: economy.setPriceAlert,
+      removePriceAlert: economy.removePriceAlert,
+      checkPriceAlerts: economy.checkPriceAlerts,
       sellRefinedGoods: economy.sellRefinedGoods,
       onStartRefine: economy.onStartRefine,
       onCollectRefined: economy.onCollectRefined,

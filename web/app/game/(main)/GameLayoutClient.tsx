@@ -2,7 +2,7 @@
 
 import { type ReactNode, useMemo, useEffect, useRef, useState } from 'react'
 import { GameProvider, useGame } from '@/game-context'
-import { trainingTryStep } from '@/lib/data'
+import { trainingStepOnPath, trainingTryStep } from '@/lib/data'
 import FlightPlan from '@/components/game/FlightPlan'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
@@ -184,6 +184,16 @@ function GameChrome({ children }: { children: ReactNode }) {
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
     : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'galaxy' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
+  // Price alerts fire when a spot price reaches the target, including as supply pressure recovers over time.
+  const hasPriceAlerts = (game.player.priceAlerts ?? []).some(a => a.firedAt == null)
+  const checkPriceAlerts = game.checkPriceAlerts
+  useEffect(() => {
+    if (!hasPriceAlerts) return
+    checkPriceAlerts()
+    const timer = window.setInterval(checkPriceAlerts, 30_000)
+    return () => window.clearInterval(timer)
+  }, [hasPriceAlerts, checkPriceAlerts, game.player.dailyEconomySnapshot])
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       const action = resolveShortcut(event)
@@ -258,6 +268,8 @@ function GameChrome({ children }: { children: ReactNode }) {
             total={3}
             hidden={game.player.flightPlan?.hidden}
             onHiddenChange={hidden => game.setPlayer(player => ({ ...player, flightPlan: { ...(player.flightPlan ?? { completed: {} }), hidden } }))}
+            screen={currentScreen}
+            offPath={'try' in coach && !trainingStepOnPath(coach, currentScreen)}
             hint={activeTry && game.player.flightPlan?.hintShownFor === activeTry ? coach.hint : undefined}
             go={'try' in coach && coach.screen === '*' && game.screen === 'hub'
               ? (coach.try === 'part' ? { label: 'Open Hangar', run: () => game.go('hangar') }

@@ -17,6 +17,7 @@ import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 // screens' JS on the very first load.
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import PageSurface from '@/components/ui/PageSurface'
+import { buyBlocker, exchangeBuilt } from '@/lib/systems/MarketplaceSystem'
 import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScreen'
 
 const ScreenLoading = () => <div className="game-screen-loading" aria-hidden="true" />
@@ -431,7 +432,13 @@ function ScreenBody({
           marketSupplyUpdatedAt={game.player.marketSupplyUpdatedAt ?? {}}
           dailyEconomySnapshot={game.player.dailyEconomySnapshot}
           francs={game.player.francs}
+          exchangeBuilt={exchangeBuilt(game.player)}
+          priceAlerts={game.player.priceAlerts}
+          buyBlocker={(id, amount) => buyBlocker(game.player, id, amount)}
           onSell={game.sellMinerals}
+          onBuy={game.buyMinerals}
+          onSetAlert={game.setPriceAlert}
+          onRemoveAlert={game.removePriceAlert}
           refinedGoods={game.player.refinedGoods}
           onSellRefined={game.sellRefinedGoods}
           onBack={() => game.goBack()}
@@ -439,7 +446,6 @@ function ScreenBody({
           onHub={() => game.go('instrument-hub')}
           onNext={() => game.go(game.player.activeMission ? 'launchpad' : 'missions')}
           clientId={game.player.lastClient}
-          biome={game.player.earthBiome}
         />
       )
 

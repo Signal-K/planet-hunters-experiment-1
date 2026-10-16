@@ -1,5 +1,6 @@
 'use client'
 
+import { firedAlertCount } from '@/lib/systems/MarketplaceSystem'
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
@@ -395,7 +396,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const menuItems: BaseMenuItem[] = [
     { id: 'build', icon: 'build', primary: true, label: 'Build', detail: 'New structures, a control station, satellites', onSelect: () => { setPlaceNote(null); setEditMode(true) } },
     { id: 'contracts', icon: 'mission', primary: true, label: 'New mission', detail: 'Client contracts and free runs', onSelect: () => onOpenScene('missions') },
-    { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: player.placed.includes('market') ? 'Sell what you have mined' : 'Build the Exchange to sell ore', onSelect: () => { if (player.placed.includes('market') && onOpenMarket) onOpenMarket(); else { setPlaceNote(null); setEditMode(true) } } },
+    { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: firedAlertCount(player) > 0 ? `${firedAlertCount(player)} price alert${firedAlertCount(player) === 1 ? '' : 's'} hit` : player.placed.includes('market') ? 'Spot prices, sell, buy and alerts' : 'Spot prices and selling', onSelect: () => { if (onOpenMarket) onOpenMarket() } },
     ...(player.placed.includes('control-station') ? [{ id: 'control-station', icon: 'station' as const, label: 'Control station', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }] : []),
     { id: 'mission-log', icon: 'log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
     ...(player.freeOperations ? [{ id: 'sites', icon: 'sites' as const, label: 'Sites', detail: 'Places to survey and settle', onSelect: () => onOpenScene('surface-ops') }] : []),

@@ -59,7 +59,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(geometry.planWidth).toBeLessThanOrEqual(Math.min(560, size.width - 16) + 1)
       await page.getByTestId('flight-plan-hide').click()
       await expect(page.getByTestId('flight-plan')).toHaveCount(0)
-      await expect(page.getByTestId('flight-plan-chip')).toContainText(/OPS · \d+\/\d+/)
+      await expect(page.getByTestId('flight-plan-chip')).toHaveText('?')
       expect(Math.abs(await page.locator('.game-screen-area').evaluate(el => el.getBoundingClientRect().height) - geometry.screenHeight)).toBeLessThanOrEqual(1)
       await page.getByTestId('flight-plan-chip').click()
       await expect(page.getByTestId('flight-plan')).toBeVisible()

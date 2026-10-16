@@ -9,7 +9,7 @@ import {
   skipFlightPlan,
   startFlightPlan,
 } from './FlightPlanSystem'
-import { trainingPatchProgress, trainingTryPosition, trainingTryStep } from '@/lib/data/tutorial'
+import { trainingStepOnPath, trainingPatchProgress, trainingTryPosition, trainingTryStep } from '@/lib/data/tutorial'
 
 describe('FlightPlanSystem', () => {
   it('starts mining and reveals only one idle hint after eight seconds', () => {
@@ -35,6 +35,15 @@ describe('FlightPlanSystem', () => {
     expect(replay.completed.mining).toBe(true)
     expect(currentTrainingTry(replay)).toBe('mining')
     expect(isTrainingComplete(skipFlightPlan(replay))).toBe(true)
+  })
+
+  it('the coach steps aside on screens unrelated to the try', () => {
+    const wild = trainingTryStep('mining', 'mission-history')!
+    expect(trainingStepOnPath(wild, 'mission-history')).toBe(false)
+    expect(trainingStepOnPath(wild, 'skills')).toBe(false)
+    expect(trainingStepOnPath(wild, 'hub')).toBe(true)
+    expect(trainingStepOnPath(trainingTryStep('mining', 'mining')!, 'mining')).toBe(true)
+    expect(trainingStepOnPath(trainingTryStep('scan', 'hub')!, 'hub')).toBe(true)
   })
 
   it('SSL-478: a replay of an unfinished try does not swallow the live try event', () => {

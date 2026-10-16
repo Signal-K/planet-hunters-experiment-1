@@ -77,6 +77,17 @@ export function trainingTryStep(
   return step
 }
 
+/**
+ * Whether the coach line is about what the player is doing right now. A
+ * wildcard step ("go back to the base") only applies on the hub, where the
+ * tower/hangar/galaxy entry is; on any other unlisted screen (Mission Log,
+ * Skills, ...) the player is doing something else and the strip steps aside.
+ */
+export function trainingStepOnPath(step: TrainingTryStep, screen: string): boolean {
+  if (step.screen === screen) return true
+  return step.screen === '*' && screen === 'hub'
+}
+
 /** Six real milestones within the mining try. The first milestone covers
  * establishing the pad and taking a client order; the last covers bringing
  * the recovered cargo home and settling the order. This puts the laser at

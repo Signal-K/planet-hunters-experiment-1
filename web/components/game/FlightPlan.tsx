@@ -17,6 +17,10 @@ interface FlightPlanProps {
   hint?: string
   /** SSL-448: a labelled button that takes the player to the step's screen. */
   go?: { label: string; run: () => void }
+  /** The player is on a screen unrelated to this step: show only the "?" chip until they ask for it. */
+  offPath?: boolean
+  /** Current screen, so a summoned strip folds away again when the player moves on. */
+  screen?: string
 }
 
 /**
@@ -27,12 +31,16 @@ interface FlightPlanProps {
  * Action gating is unchanged: steps still complete from real game actions;
  * `manual` steps get a Continue button here.
  */
-export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: persistedHidden, onHiddenChange, hint, go }: FlightPlanProps) {
+export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: persistedHidden, onHiddenChange, hint, go, offPath = false, screen }: FlightPlanProps) {
   const isDesktop = useIsDesktop()
   // SSL-432: the beacon outline pauses while help is on screen.
   const helpOpen = useHelpOpen()
   const [expanded, setExpanded] = useState(false)
   const [hidden, setHidden] = useState(false)
+  // Off-path, the strip is folded away; "?" summons it for this screen only.
+  const [summoned, setSummoned] = useState(false)
+  useEffect(() => { setSummoned(false) }, [screen, offPath, step.id])
+  const folded = offPath && !summoned
   const stripRef = useRef<HTMLElement>(null)
   // SSL-442: a finished step reads "COPY · STEP n DONE" in the kicker for 1.5s.
   const [doneStep, setDoneStep] = useState<number | null>(null)
@@ -61,35 +69,36 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
   useEffect(() => { setExpanded(false) }, [step.id, step.screen])
 
   useEffect(() => {
-    if (hidden || !targetId || helpOpen) return
+    if (hidden || folded || !targetId || helpOpen) return
     const html = document.documentElement
     html.setAttribute('data-flight-target', targetId.split('|').join(' '))
     return () => { html.removeAttribute('data-flight-target') }
-  }, [hidden, targetId, helpOpen])
+  }, [hidden, folded, targetId, helpOpen])
 
   // Publish the strip's height so bottom-anchored status pills (the sync note)
   // sit above it instead of on top of its text.
   useEffect(() => {
     const el = stripRef.current
-    if (hidden || !el) return
+    if (hidden || folded || !el) return
     const root = document.documentElement
     const publish = () => root.style.setProperty('--flight-plan-h', `${el.offsetHeight}px`)
     publish()
     const observer = new ResizeObserver(publish)
     observer.observe(el)
     return () => { observer.disconnect(); root.style.removeProperty('--flight-plan-h') }
-  }, [hidden])
+  }, [hidden, folded])
 
-  if (hidden) {
+  if (hidden || folded) {
     return (
       <button
         type="button"
         className="flight-plan-chip"
         data-testid="flight-plan-chip"
-        aria-label={`Show Flight Plan, training ${displayIndex + 1} of ${displayTotal}`}
-        onClick={() => { setHidden(false); onHiddenChange?.(false) }}
+        aria-label={`Show Ops guidance, training ${displayIndex + 1} of ${displayTotal}`}
+        title="Show Ops guidance"
+        onClick={() => { if (folded) setSummoned(true); else { setHidden(false); onHiddenChange?.(false) } }}
       >
-        OPS · {displayIndex + 1}/{displayTotal}
+        ?
       </button>
     )
   }
@@ -111,7 +120,7 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
           </span>
         </button>
         {go && <button type="button" className="flight-plan-go" data-testid="flight-plan-go" data-coach-id="flight-plan-go" onClick={go.run}>{go.label}</button>}
-        <button type="button" className="flight-plan-btn" data-testid="flight-plan-hide" aria-label="Hide Ops guidance" onClick={() => { setHidden(true); onHiddenChange?.(true) }}>
+        <button type="button" className="flight-plan-btn" data-testid="flight-plan-hide" aria-label="Hide Ops guidance" onClick={() => { if (offPath) setSummoned(false); else { setHidden(true); onHiddenChange?.(true) } }}>
           ×
         </button>
       </div>
