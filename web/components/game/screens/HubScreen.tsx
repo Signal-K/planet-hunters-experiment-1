@@ -373,7 +373,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     { id: 'mission-log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
     { id: 'subsurface', label: 'Subsurface', detail: 'Silo and underground rooms', onSelect: () => setSubsurface(true) },
     ...(player.freeOperations ? [{ id: 'sites', label: 'Sites', detail: 'Places to survey and settle', onSelect: () => onOpenScene('surface-ops') }] : []),
-    { id: 'control-station', label: 'Control station', detail: 'Telescope feeds and sky events', onSelect: () => onOpenScene('instrument-hub') },
+    // No control station building exists: the screen is the feed from telescopes you own, so it is only offered once one is up.
+    ...(player.transitSatelliteLaunchedAt || player.placed.includes('ground-telescope') ? [{ id: 'control-station', label: 'Telescope feeds', detail: 'Observations from your telescopes', onSelect: () => onOpenScene('instrument-hub') }] : []),
   ]
 
   return (

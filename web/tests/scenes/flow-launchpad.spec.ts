@@ -34,7 +34,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test('the Menu lists where to go from the base, and Contracts opens the contracts', async ({ page }) => {
       const { errors } = await stage(page, 'm1-hub', { chrome: true })
       await page.getByTestId('hub-menu-btn').dispatchEvent('click')
-      for (const id of ['contracts', 'hangar', 'mission-log', 'subsurface', 'control-station']) await expect(page.getByTestId(`base-menu-${id}`)).toBeVisible()
+      for (const id of ['contracts', 'hangar', 'mission-log', 'subsurface']) await expect(page.getByTestId(`base-menu-${id}`)).toBeVisible()
       await page.screenshot({ path: `tests/.out/base-menu-${vp}.png` })
       await page.getByTestId('base-menu-contracts').dispatchEvent('click')
       await expect(page.locator('[data-stage-screen]')).toHaveAttribute('data-stage-screen', 'missions')

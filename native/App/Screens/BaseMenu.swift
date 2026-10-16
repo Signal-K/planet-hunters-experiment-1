@@ -17,7 +17,10 @@ struct BaseMenu: View {
         rows.append(Item(id: "mission-log", label: "Mission log", detail: "Past runs and what they paid", screen: .missionHistory))
         rows.append(Item(id: "subsurface", label: "Subsurface", detail: "Silo and underground rooms", screen: .hubSubsurface))
         if store.player.freeOperations { rows.append(Item(id: "sites", label: "Sites", detail: "Places to survey and settle", screen: .surfaceOps)) }
-        rows.append(Item(id: "control-station", label: "Control station", detail: "Telescope feeds and sky events", screen: .instrumentHub))
+        // No control station building exists: the screen is the feed from telescopes you own.
+        if store.player.transitSatelliteLaunchedAt != nil || store.player.placed.contains("ground-telescope") {
+            rows.append(Item(id: "control-station", label: "Telescope feeds", detail: "Observations from your telescopes", screen: .instrumentHub))
+        }
         return rows
     }
 
