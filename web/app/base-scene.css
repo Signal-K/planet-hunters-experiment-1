@@ -65,5 +65,5 @@
 }
 /* Too narrow to sit beside the dock (the dock is about 300px and centred): move the bar up under the top row instead. */
 @media (orientation: landscape) and (max-height: 640px) and (max-width: 799px) {
-  .hub-mission-status { position: fixed; bottom: auto; top: 64px; right: 12px; z-index: 5; }
+  .hub-mission-status { position: fixed; bottom: auto; top: 64px; right: 12px; z-index: 60; }
 }

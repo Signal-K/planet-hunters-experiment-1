@@ -71,7 +71,10 @@ public enum Construction {
         n.player.underConstruction[kind] = now
         if kind == "astronaut-academy" { n.player.academyFunded = true; n.player.crewUpkeepSettledDate = Academy.dateKey(now) }
         if !s.player.freeOperations && Transitions.freeOperationsUnlocked(n.player) {
-            n.player.freeOperations = true; n.tutorial = false; n.popup = "tutorial-complete"
+            // Free Ops opens with the launchpad, but the three training tries are an optional guide that is still running:
+            // only a finished training ends the coach and raises the "agency is operating" sheet (web `applyPlaceStructure`).
+            n.player.freeOperations = true
+            if n.player.flightPlan.isComplete { n.tutorial = false; n.popup = "tutorial-complete" }
         }
         return n
     }

@@ -12,7 +12,13 @@ struct RocketBuilderScreen: View {
     @State private var selectedSlot: String?
     @State private var notice = ""
     /// The free Explorer launches as it is: the parts shop stays closed until the player asks for it (web `builder-customize`).
-    @State private var customizing = false
+    @State private var customizing: Bool = {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("-customize")
+        #else
+        return false
+        #endif
+    }()
     @State private var planSheet: PlanSheet?
     /// Snapshots render ScrollView content as empty; catalog scenes set this to lay the list out flat.
     @Environment(\.flatLayout) private var flat
@@ -25,7 +31,7 @@ struct RocketBuilderScreen: View {
         let loadout = store.player.shipCustomizerParts
         let fittedCount = RocketBuilder.slots.filter { RocketBuilder.partId(loadout, slot: $0.id) != nil }.count
         let guidedSlot = guided ? RocketBuilder.slots.first { RocketBuilder.partId(loadout, slot: $0.id) == nil }?.id : nil
-        let active = selectedSlot ?? guidedSlot ?? RocketBuilder.slots[0].id
+        let active = selectedSlot.flatMap { id in shownSlots.contains { $0.id == id } ? id : nil } ?? guidedSlot ?? (shownSlots.first ?? RocketBuilder.slots[0]).id
         GeometryReader { geo in
             let wide = geo.size.width > geo.size.height
             ZStack(alignment: .top) {
@@ -89,14 +95,14 @@ struct RocketBuilderScreen: View {
                     .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.ink, lineWidth: 2))
             }.buttonStyle(.plain).accessibilityLabel("Back")
             Button(action: onLaunch) {
-                Text("LAUNCH").font(AppFont.display(14, "Bold")).tracking(1.4)
+                Text(store.mission != nil && store.target != nil ? "LAUNCH" : "CONTRACTS").font(AppFont.display(14, "Bold")).tracking(1.4)
                     .frame(minWidth: 110, minHeight: 44).padding(.horizontal, 12)
                     .foregroundStyle(launchEnabled ? Theme.paper : Theme.ink)
                     .background(launchEnabled ? Theme.blue : Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
             }
             .buttonStyle(.plain).disabled(!launchEnabled).accessibilityIdentifier("launch-btn")
-            if !guided {
+            if !guided && store.mission != nil && store.target != nil {
                 Button { customizing.toggle() } label: {
                     Text(customizing ? "DONE" : "CUSTOMIZE").font(AppFont.display(14, "Bold")).tracking(1.4).foregroundStyle(Theme.ink).lineLimit(1).fixedSize()
                         .padding(.horizontal, 16).frame(minHeight: 44)
@@ -200,13 +206,27 @@ struct RocketBuilderScreen: View {
         .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
     }
 
+    /// Only slots with something fittable today: locked parts and empty tabs stay out of sight instead of reading as dead ends.
+    private var shownSlots: [(id: String, label: String, module: String)] {
+        let loadout = store.player.shipCustomizerParts
+        return RocketBuilder.slots.filter { slot in
+            !RocketBuilder.options(slot.id, missionsDone: store.player.missionsDone).isEmpty || RocketBuilder.partId(loadout, slot: slot.id) != nil
+        }
+    }
+
+    private func availableParts(_ slot: String, loadout: [String: String]) -> [RocketBuilder.Part] {
+        let fitted = RocketBuilder.partId(loadout, slot: slot)
+        return RocketBuilder.allOptions(slot).filter { $0.unlockedAt <= store.player.missionsDone || $0.id == fitted }
+    }
+
     private func choices(active: String, guidedSlot: String?, loadout: [String: String], compact: Bool) -> some View {
         // Flat (snapshot) layout has no scroller, so show only what fits: two rows on a short landscape screen.
-        let options = flat && compact ? Array(RocketBuilder.allOptions(active).prefix(2)) : RocketBuilder.allOptions(active)
+        let all = availableParts(active, loadout: loadout)
+        let options = flat && compact ? Array(all.prefix(2)) : all
         let fittedId = RocketBuilder.partId(loadout, slot: active)
         return VStack(spacing: 0) {
             HStack(spacing: 6) {
-                ForEach(RocketBuilder.slots, id: \.id) { slot in
+                ForEach(shownSlots, id: \.id) { slot in
                     let part = RocketBuilder.partId(loadout, slot: slot.id)
                     let blocked = guidedSlot != nil && slot.id != guidedSlot && part == nil
                     Button { selectedSlot = slot.id; notice = "" } label: {

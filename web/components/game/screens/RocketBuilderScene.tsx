@@ -85,10 +85,14 @@ export default function RocketBuilderScene({
   const fittedCount = BUILDER_SLOTS.filter(slot => partIdForSlot(loadout, slot)).length
   const targetLabel = target ? target.name : 'Choose a mission'
 
-  const guidedSlot = guided ? BUILDER_SLOTS.find(slot => !partIdForSlot(loadout, slot)) ?? null : null
-  const activeSlotId: BuilderSlotId = selected ?? guidedSlot?.id ?? BUILDER_SLOTS[0].id
-  const activeSlot = BUILDER_SLOTS.find(slot => slot.id === activeSlotId) ?? BUILDER_SLOTS[0]
-  const options = allPartsForSlot(activeSlot)
+  // Only what can be fitted today: locked parts and slots with nothing available yet stay out of sight instead of reading as dead ends.
+  const available = (slot: (typeof BUILDER_SLOTS)[number]) => allPartsForSlot(slot).filter(part => (part.unlockedAtMissions ?? 0) <= missionsDone || part.id === partIdForSlot(loadout, slot))
+  const shownSlots = BUILDER_SLOTS.filter(slot => available(slot).length > 0)
+  const guidedSlot = guided ? shownSlots.find(slot => !partIdForSlot(loadout, slot)) ?? null : null
+  const firstSlot = shownSlots[0] ?? BUILDER_SLOTS[0]
+  const activeSlotId: BuilderSlotId = selected && shownSlots.some(slot => slot.id === selected) ? selected : guidedSlot?.id ?? firstSlot.id
+  const activeSlot = BUILDER_SLOTS.find(slot => slot.id === activeSlotId) ?? firstSlot
+  const options = available(activeSlot)
   const fittedId = partIdForSlot(loadout, activeSlot)
   const fittedPart = options.find(part => part.id === fittedId)
 
@@ -167,12 +171,15 @@ export default function RocketBuilderScene({
       <div className={styles.stage}>
         <div className={styles.actions}>
           {onBack && <button type="button" className={styles.back} data-testid="top-bar-back" aria-label="back" onClick={onBack}>&lsaquo; Back</button>}
-          <button type="button" className={styles.launch} data-testid={launchTestId} disabled={launchDisabled} onClick={onLaunch}>Launch</button>
+          {/* With no mission picked there is nothing to launch: the primary button opens the contracts instead. */}
+          {target
+            ? <button type="button" className={styles.launch} data-testid={launchTestId} disabled={launchDisabled} onClick={onLaunch}>Launch</button>
+            : <button type="button" className={styles.launch} data-testid="builder-choose-contract" data-beacon="launchpad-view-contracts" onClick={onChooseMission}>Contracts</button>}
           <button type="button" className={styles.target} data-testid="rocket-builder-target" onClick={onChooseMission}>
             <span>Target</span>
             <strong>{targetLabel}</strong>
           </button>
-          {!guided && <button type="button" className={styles.back} data-testid="builder-customize" aria-expanded={customizing} onClick={() => setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
+          {!guided && target && <button type="button" className={styles.back} data-testid="builder-customize" aria-expanded={customizing} onClick={() => setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
         </div>
 
         {guided && (
@@ -197,7 +204,7 @@ export default function RocketBuilderScene({
 
           {showParts && <section className={styles.choices} aria-label="Part choices">
             <div className={styles.tabs} role="tablist" data-testid="rocket-builder-tray">
-              {BUILDER_SLOTS.map(slot => {
+              {shownSlots.map(slot => {
                 const partId = partIdForSlot(loadout, slot)
                 const partName = allPartsForSlot(slot).find(part => part.id === partId)?.name
                 const lockedByGuide = guided && guidedSlot != null && slot.id !== guidedSlot.id && !partId

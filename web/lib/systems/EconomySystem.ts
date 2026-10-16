@@ -11,7 +11,7 @@ import { nextLaserCapacitorTier, spendOreUnits } from '@/lib/data/mining-upgrade
 import { structureIsStaffed } from './AcademySystem'
 import { buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
-import { freeOperationsUnlocked } from './AgencyOnboardingSystem'
+import { freeOperationsUnlocked, trainingFinished } from './AgencyOnboardingSystem'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
 export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
@@ -473,7 +473,9 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
     && freeOperationsUnlocked({ missionsDone: s.player.missionsDone, placed })
   return {
     ...s,
-    ...(enteredFreeOperations ? { tutorial: false, popup: 'tutorial-complete' } : {}),
+    // Free Ops opens with the launchpad, but the three training tries are an optional guide that is still running: only a finished
+    // training ends the coach and raises the "agency is operating" sheet.
+    ...(enteredFreeOperations && trainingFinished({ missionsDone: s.player.missionsDone, placed, flightPlan: s.player.flightPlan }) ? { tutorial: false, popup: 'tutorial-complete' } : {}),
     player: {
       ...s.player,
       ...(enteredFreeOperations ? { freeOperations: true } : {}),

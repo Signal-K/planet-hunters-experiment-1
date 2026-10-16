@@ -14,6 +14,19 @@ const state = (page: Page) => page.evaluate(u => {
   return s ? { screen: s.screen as string, francs: s.player?.francs as number, placed: s.player?.placed as string[], done: s.player?.missionsDone as number } : null
 }, USER)
 
+/** Walks a brand-new account through the intro and places the launchpad, the way a player does. */
+async function placeLaunchpad(page: Page) {
+  for (let i = 0; i < 14 && !(await state(page))?.placed?.includes('launchpad'); i++) {
+    for (const id of ['intro-begin-btn', 'build-plot-0', 'build-confirm']) {
+      const el = page.getByTestId(id).first()
+      if (await el.count() && await el.isVisible()) await el.dispatchEvent('click').catch(() => {})
+    }
+    await page.waitForTimeout(1200)
+  }
+  expect((await state(page))?.placed, 'the launchpad was not placed').toContain('launchpad')
+  await expect.poll(async () => (await state(page))?.screen, { timeout: 20_000 }).toBe('hub')
+}
+
 for (const [vp, size] of Object.entries(VIEWPORTS)) {
   test(`a brand-new account can accept a contract and launch the free Explorer without buying parts (${vp})`, async () => {
     test.setTimeout(120_000)
@@ -24,12 +37,22 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.addInitScript(() => { const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, k: string, ...r: unknown[]) { return /webgl/.test(k) ? null : (g as (...a: unknown[]) => unknown).call(this, k, ...r) } as typeof g })
       await page.route(/\/api\/(collections|realtime|health)/, r => /auth-refresh/.test(r.request().url()) ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ token: token(), record }) }) : r.abort('connectionrefused'))
       await page.addInitScript(([t, r]) => { if (localStorage.getItem('seeded')) return; localStorage.setItem('seeded', '1'); localStorage.setItem('pocketbase_auth', JSON.stringify({ token: t, record: JSON.parse(r as string) })) }, [token(), JSON.stringify(record)])
+      page.setDefaultTimeout(20_000)
       await page.goto('/game')
       await expect.poll(async () => (await state(page))?.screen, { timeout: 30_000 }).toBeTruthy()
       const start = (await state(page))!
       expect(start.francs).toBe(9_000_000)
-
-      await page.getByTestId('hub-new-mission-btn').dispatchEvent('click')
+      await placeLaunchpad(page)
+      await page.waitForTimeout(1500)
+      // No Silo or Exchange is offered before the first run.
+      // Build mode stays open after placing the pad; if it was closed, open it.
+      if (!(await page.getByText('Nothing to build yet').isVisible())) await page.getByTestId('hub-build-btn').dispatchEvent('click')
+      await expect(page.getByText('Nothing to build yet')).toBeVisible()
+      if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/fresh-after-pad-${vp}.png` })
+      // The coach says "Tap the tower": that opens the contracts.
+      await page.getByTestId('building-launchpad-hit').dispatchEvent('click')
+      await page.getByTestId('builder-choose-contract').dispatchEvent('click')
+      if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/fresh-contracts-${vp}.png` })
       await page.locator('[data-testid^="mission-accept-"]').first().dispatchEvent('click')
       const launch = page.locator('[data-testid="launch-btn"], [data-testid="prepare-launch-btn"]').first()
       await expect(launch).toBeVisible({ timeout: 30_000 })
@@ -42,6 +65,15 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       // The parts shop is closed until asked for.
       await expect(page.getByTestId('rocket-builder-options')).toHaveCount(0)
 
+      // Customize opens a short list of parts the player can afford today: no locked rows, no empty tabs.
+      await page.getByTestId('builder-customize').dispatchEvent('click')
+      await expect(page.getByTestId('rocket-builder-options')).toBeVisible()
+      await expect(page.getByTestId('rocket-builder-options')).not.toContainText(/after \d+ missions/i)
+      await expect(page.getByTestId('builder-part-fuel-tank')).toHaveCount(0)
+      await expect(page.getByTestId('builder-part-mining-laser')).toHaveCount(0)
+      await page.waitForTimeout(500)
+      if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/fresh-customize-${vp}.png` })
+      await page.getByTestId('builder-customize').dispatchEvent('click')
       await launch.dispatchEvent('click')
       await expect.poll(async () => (await state(page))?.screen, { timeout: 60_000 }).toMatch(/fab|transit|rocket-buy/)
       const after = await state(page)
@@ -53,3 +85,22 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     } finally { await browser.close().catch(() => {}) }
   })
 }
+
+test('a brand-new account starts at the intro, places the launchpad, and reaches a base with a tower to tap', async () => {
+  test.setTimeout(120_000)
+  const browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
+  try {
+    const page = await (await browser.newContext({ viewport: VIEWPORTS.phone, baseURL: 'http://localhost:3001', hasTouch: true })).newPage()
+    const record = { id: USER, collectionId: '_pb_users_auth_', collectionName: 'users', email: 'fresh@example.test', verified: true }
+    await page.addInitScript(() => { const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, k: string, ...r: unknown[]) { return /webgl/.test(k) ? null : (g as (...a: unknown[]) => unknown).call(this, k, ...r) } as typeof g })
+    await page.route(/\/api\/(collections|realtime|health)/, r => /auth-refresh/.test(r.request().url()) ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ token: token(), record }) }) : r.abort('connectionrefused'))
+    await page.addInitScript(([t, r]) => { if (localStorage.getItem('seeded')) return; localStorage.setItem('seeded', '1'); localStorage.setItem('pocketbase_auth', JSON.stringify({ token: t, record: JSON.parse(r as string) })) }, [token(), JSON.stringify(record)])
+    await page.goto('/game')
+    await expect.poll(async () => (await state(page))?.screen, { timeout: 30_000 }).toMatch(/intro|build/)
+    if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/fresh-intro.png` })
+    await placeLaunchpad(page)
+    await expect(page.getByTestId('building-launchpad')).toBeVisible({ timeout: 20_000 })
+    if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/fresh-base.png` })
+  } finally { await browser.close().catch(() => {}) }
+})
+

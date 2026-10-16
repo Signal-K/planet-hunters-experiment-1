@@ -65,7 +65,7 @@ export function freeOperationsUnlocked(player: AgencyTrainingPlayer): boolean {
 }
 
 /** The optional training track is done (or the save predates it). */
-function trainingFinished(player: AgencyTrainingPlayer): boolean {
+export function trainingFinished(player: AgencyTrainingPlayer): boolean {
   if (isTrainingComplete(player.flightPlan)) return true
   if (flightPlanStarted(player.flightPlan)) return false
   return finiteMissionsDone(player) >= LEGACY_FREE_OPS_MISSIONS_DONE

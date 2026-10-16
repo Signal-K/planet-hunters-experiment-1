@@ -132,11 +132,14 @@ function ScreenBody({
     // flow reachable only when it has a real mission context; a bare/deep
     // linked fab route must never show a prefilled rocket.
     if (screen === 'fab' && !game.player.freeOperations && (!game.mission || !game.target)) game.go('hub')
+    // A brand-new account has no base yet: send it to the intro (choose a site, then place the launchpad) instead of an empty field
+    // whose coach says "Tap the tower". Wait for the remote save first so a returning player on a new device is not sent back.
+    if (screen === 'hub' && game.hydrated && game.player.placed.length === 0 && game.player.missionsDone === 0 && !game.player.freeOperations) game.go('intro')
     // Build placement is a valid destination from Hub, Academy, instrument
     // screens, and the Launchpad availability panel. It has its own back
     // action, so a returning player must be allowed to open it and place a
     // newly unlocked structure.
-  }, [screen, game.player.freeOperations, game.player.hasLanded, game.mission, game.target, game.go])
+  }, [screen, game.hydrated, game.player.placed.length, game.player.missionsDone, game.player.freeOperations, game.player.hasLanded, game.mission, game.target, game.go])
 
   // HubScreen's surface/subsurface slide is driven by ephemeral UI state
   // (game.subsurfaceView), not the route, so a real navigation into

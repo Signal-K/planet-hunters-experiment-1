@@ -280,7 +280,7 @@
 .tabs {
   flex: 0 0 auto;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
   gap: 6px;
   padding: 8px;
   border-bottom: 2px solid var(--ln-blueprint-ink);

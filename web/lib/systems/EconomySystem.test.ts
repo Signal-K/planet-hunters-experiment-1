@@ -359,8 +359,9 @@ describe('Academy and staffing economy', () => {
     const built = applyPlaceStructure(trainingState, silo, silo.kind, 1)
     expect(built.player.placed).toContain('surface-silo')
     expect(built.player.freeOperations).toBe(true)
-    expect(built.tutorial).toBe(false)
-    expect(built.popup).toBe('tutorial-complete')
+    // The optional training is still running, so Free Ops opens quietly: no "training complete" sheet and the coach stays on.
+    expect(built.tutorial).toBe(true)
+    expect(built.popup).toBeNull()
   })
 
   it('keeps the storage silo locked until the first run is flown, even in Free Ops', () => {

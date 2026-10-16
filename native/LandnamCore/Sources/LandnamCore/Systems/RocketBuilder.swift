@@ -47,16 +47,16 @@ public enum RocketBuilder {
 
     /// Prices and bonuses match `CUSTOMIZER_PARTS` for the five tray slots.
     public static let parts: [Part] = [
-        Part(id: "ion-thruster-t1", slot: "engine", price: 6_400_000, power: 5, successBonus: 10, unlockedAt: 0),
-        Part(id: "pulse-thruster-t1", slot: "engine", price: 7_200_000, power: 6, successBonus: 14, unlockedAt: 0),
+        Part(id: "ion-thruster-t1", slot: "engine", price: 2_200_000, power: 5, successBonus: 10, unlockedAt: 0),
+        Part(id: "pulse-thruster-t1", slot: "engine", price: 2_600_000, power: 6, successBonus: 14, unlockedAt: 0),
         Part(id: "fusion-thruster-t2", slot: "engine", price: 9_800_000, power: 8, successBonus: 22, unlockedAt: 2),
         Part(id: "plasma-thruster-t3", slot: "engine", price: 12_400_000, power: 10, successBonus: 30, unlockedAt: 4),
         Part(id: "thruster-array-t4", slot: "engine", price: 15_200_000, power: 13, successBonus: 38, unlockedAt: 6),
         Part(id: "antimatter-thruster-t5", slot: "engine", price: 19_000_000, power: 17, successBonus: 48, unlockedAt: 8),
         Part(id: "kerosene-stage-t1", slot: "fuel-tank", price: 5_800_000, power: 4, successBonus: 8, unlockedAt: 2),
         Part(id: "lox-lh2-stage-t1", slot: "fuel-tank", price: 8_600_000, power: 6, successBonus: 14, unlockedAt: 2),
-        Part(id: "cargo-payload-t1", slot: "cargo-hold", price: 2_200_000, power: 0, successBonus: 10, unlockedAt: 0),
-        Part(id: "mining-payload-t1", slot: "cargo-hold", price: 2_800_000, power: 0, successBonus: 12, unlockedAt: 0),
+        Part(id: "cargo-payload-t1", slot: "cargo-hold", price: 1_500_000, power: 0, successBonus: 10, unlockedAt: 0),
+        Part(id: "mining-payload-t1", slot: "cargo-hold", price: 2_000_000, power: 0, successBonus: 12, unlockedAt: 0),
         Part(id: "storage-silo-t2", slot: "cargo-hold", price: 4_600_000, power: 0, successBonus: 18, unlockedAt: 2),
         Part(id: "storage-silo-t3", slot: "cargo-hold", price: 7_400_000, power: 0, successBonus: 26, unlockedAt: 4),
         Part(id: "storage-silo-t4", slot: "cargo-hold", price: 10_800_000, power: 0, successBonus: 34, unlockedAt: 6),
@@ -65,8 +65,8 @@ public enum RocketBuilder {
         Part(id: "ringed-laser-t3", slot: "mining-laser", price: 11_000_000, power: 9, successBonus: 24, unlockedAt: 4),
         Part(id: "twin-laser-t4", slot: "mining-laser", price: 15_500_000, power: 12, successBonus: 32, unlockedAt: 6),
         Part(id: "resonant-laser-t5", slot: "mining-laser", price: 21_000_000, power: 16, successBonus: 42, unlockedAt: 8),
-        Part(id: "strap-booster-t1", slot: "booster", price: 3_400_000, power: 3, successBonus: 8, unlockedAt: 0),
-        Part(id: "vulcan-booster-t1", slot: "booster", price: 4_100_000, power: 4, successBonus: 12, unlockedAt: 0),
+        Part(id: "strap-booster-t1", slot: "booster", price: 1_300_000, power: 3, successBonus: 8, unlockedAt: 0),
+        Part(id: "vulcan-booster-t1", slot: "booster", price: 1_800_000, power: 4, successBonus: 12, unlockedAt: 0),
     ]
 
     public static func options(_ slot: String, missionsDone: Int) -> [Part] {
