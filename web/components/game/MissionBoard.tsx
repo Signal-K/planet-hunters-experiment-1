@@ -207,7 +207,7 @@ export default function MissionBoard({
     <div className={styles.sky} aria-hidden="true" style={{ '--px': `${boardPx}px`, '--hub-ground': '20%' } as CSSProperties}>
       <BaseWorldCanvas px={boardPx} camera={{ x: boardCamX, y: 0, zoom: 1 }} time={grade} biome={sanitizeEarthBiome(player.earthBiome)} />
       <div style={{ position: 'absolute', inset: 0, transform: `translateX(${boardCamX}px)` }}>
-        <EarthBaseModules buildings={baseBuildings} parts={player.shipCustomizerParts} padRocket />
+        <EarthBaseModules buildings={baseBuildings} parts={player.shipCustomizerParts} padRocket={Object.values(player.shipCustomizerParts ?? {}).some(Boolean)} />
       </div>
       {tab !== 'contracts' && <div className={styles.dim} />}
     </div>

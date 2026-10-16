@@ -33,11 +33,9 @@ target always generates the same appearance across sessions.
 | `surfaceNoise` | 0–1 float controlling surface texture roughness |
 | `highlightColor` | accent color from mineral composition |
 
-Visual generation was originally scoped to `SpriteGenerator` in
-`tools/ruby-asset-pipeline/lib/sprite_generator.rb` for offline PNG output;
-that module was retired 2026-07-16 in favor of `tools/sprites/generate_sprite.py`
-(Replicate/Flux-based external generation) — any future work on this signature
-should target that pipeline instead. The PixiJS canvas renderer
+Visual generation was originally scoped to a Ruby `SpriteGenerator`, since removed;
+the Ruby and Replicate/Flux sprite tools are both gone, so any future work on this
+signature should target the Blender kit (`tools/blender`). The PixiJS canvas renderer
 (`web/components/game/`) applies the same parameters at runtime for animated views.
 
 ## Mineral composition
@@ -55,7 +53,7 @@ Mineral yields are sampled from a weighted distribution keyed by `biome`:
 
 ## Implementation tasks identified
 
-1. **Extend `tools/sprites/generate_sprite.py`** — accept `TargetSignature` as input and vary
+1. **Extend the Blender kit (`tools/blender`)** — accept `TargetSignature` as input and vary
    crater count, surface noise, and highlight color deterministically (superseded from the
    retired `SpriteGenerator` Ruby module, see note above).
 2. **Add `generateTargetSignature(targetId: string): TargetSignature`** in
@@ -65,6 +63,5 @@ Mineral yields are sampled from a weighted distribution keyed by `biome`:
 
 ## References
 
-- `tools/ruby-asset-pipeline/lib/sprite_generator.rb` — sprite generation
 - `web/lib/data.ts` — MINERAL_META and static target data
 - `web/game-context.tsx` — mineral drop logic

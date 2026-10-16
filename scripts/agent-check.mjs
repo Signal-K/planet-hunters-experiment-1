@@ -9,7 +9,7 @@ const check = (ok, message) => { console.log(`${ok ? 'OK' : 'FAIL'} ${message}`)
 const read = file => readFileSync(resolve(root, file), 'utf8');
 const canonical = read('AGENTS.md');
 check(read('CLAUDE.md') === canonical, 'CLAUDE.md matches canonical AGENTS.md');
-for (const file of ['web/AGENTS.md', 'web/CLAUDE.md', 'native/AGENTS.md', 'native/CLAUDE.md', 'shared/AGENTS.md', 'shared/CLAUDE.md', 'pocketbase/AGENTS.md', 'pocketbase/CLAUDE.md', '.github/copilot-instructions.md', 'GEMINI.md']) {
+for (const file of ['web/AGENTS.md', 'web/CLAUDE.md', 'native/AGENTS.md', 'native/CLAUDE.md', 'shared/AGENTS.md', 'shared/CLAUDE.md', 'pocketbase/AGENTS.md', 'pocketbase/CLAUDE.md', '.github/copilot-instructions.md']) {
   check(existsSync(resolve(root, file)) && read(file).includes('AGENTS.md'), `${file} points to canonical instructions`);
 }
 check(Number(process.versions.node.split('.')[0]) >= 24, 'Node.js 24+');

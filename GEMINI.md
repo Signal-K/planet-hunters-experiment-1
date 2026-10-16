@@ -1,1 +1,0 @@
-Read and follow AGENTS.md in this repository root before making changes. It is the canonical source for workflow, consecutive web/native parity, style and verification. This entry point adds no rules.

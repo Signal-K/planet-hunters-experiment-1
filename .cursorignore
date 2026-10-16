@@ -43,7 +43,6 @@ native/App/Resources/Art/
 native/App/Assets.xcassets/
 native/**/Fixtures/
 web/vendor/
-tools/sprites/output/
 docs/landscape-playfield/
 
 # Design-kit bundles (huge, generated; the skill README/SKILL.md stay visible)
@@ -55,7 +54,6 @@ docs/landscape-playfield/
 .agents/skills/landnam-design/assets/
 
 # Archived / legacy
-archive/
 
 # Binary art and media
 *.png

@@ -22,12 +22,10 @@
       "Read(./native/App/Resources/Art/**)",
       "Read(./native/App/Assets.xcassets/**)",
       "Read(./web/vendor/**)",
-      "Read(./tools/sprites/output/**)",
       "Read(./docs/landscape-playfield/**)",
       "Read(./.agents/skills/landnam-design/_ds_bundle.js)",
       "Read(./.agents/skills/landnam-design/_ds_manifest.json)",
       "Read(./.agents/skills/landnam-design/ui_kits/landnam-portrait/screens-pre.tsx)",
-      "Read(./archive/**)",
       "Read(./**/*.log)",
       "Read(./.env)",
       "Read(./web/.env*)"
