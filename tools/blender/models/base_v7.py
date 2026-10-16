@@ -138,7 +138,7 @@ def flat_patch(name, points_xy, z, colour):
 
 # ---------------------------------------------------------------- launch complex
 
-PAD_W = 120.0  # kit units, matches the 120-unit pad slab of the shipped kit so layout code keeps its footprint
+PAD_W = 92.0  # kit units; narrowed from 120 so three or four structures fit in view (the gantry keeps its height)
 # Every structure's front face stands this far behind the ground front edge; its sprite starts at that foot.
 STRUCT_Y = 4.0
 # Structure sprites start a little below their foot so the baked shadow in front of them is not cut off.
@@ -152,16 +152,16 @@ def build_launchpad(with_gantry=True, fresh=True, frame=True):
         reset_scene()
     # Slab: two steps, the upper one carrying the launch mount over a trench.
     box("slab", 0, 0, PAD_W, 7, d=34, y=STRUCT_Y, colours=("concrete_lit", "concrete", "concrete_dark"))
-    box("slab_top", 30, 7, 70, 4, d=26, y=9, colours=("hull_lit", "hull", "hull_shade"))
+    box("slab_top", 30, 7, 54, 4, d=26, y=9, colours=("hull_lit", "hull", "hull_shade"))
     # Flame trench: dark cut in the slab face under the mount.
-    box("trench", 50, 0.5, 30, 6, d=2, y=STRUCT_Y - 0.5, colours=("steel_dark", "steel_dark", "steel_dark"), outline=0.6)
+    box("trench", 40, 0.5, 26, 6, d=2, y=STRUCT_Y - 0.5, colours=("steel_dark", "steel_dark", "steel_dark"), outline=0.6)
     # Blue trim band and service hatches along the slab face.
     box("trim", 0, 4.2, PAD_W, 1.4, d=0.6, y=STRUCT_Y - 0.4, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
-    for i, x in enumerate((8, 22, 92, 106)):
+    for i, x in enumerate((8, 22, 68, 80)):
         box(f"hatch{i}", x, 1.2, 8, 2.4, d=0.6, y=STRUCT_Y - 0.5, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
     # Launch mount ring: the rocket stands here (drawn by the game only while a mission is in progress).
-    cylinder("mount", 65, 11, 9, 2.5, y=22, colours=("steel_lit", "steel", "steel_dark"), verts=20)
-    for x in (55, 75):
+    cylinder("mount", 54, 11, 9, 2.5, y=22, colours=("steel_lit", "steel", "steel_dark"), verts=20)
+    for x in (44, 64):
         box(f"clamp{x}", x - 1.5, 11, 3, 5, d=3, y=12, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.6)
     if with_gantry:
         _gantry(x=20, base_z=7, height=104, width=17.0)
@@ -171,11 +171,11 @@ def build_launchpad(with_gantry=True, fresh=True, frame=True):
     box("hut_strip", 2, 17, 17, 1.2, d=0.6, y=STRUCT_Y + 2.6, colours=("trim_teal", "trim_teal", "trim_teal"), outline=0)
     box("hut_vent", 13, 20, 4, 3, d=4, y=STRUCT_Y + 8, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
     # Hazard chevrons along the mount deck edge, blue on white (no orange).
-    for i in range(9):
+    for i in range(7):
         if i % 2 == 0:
             box(f"chev{i}", 31 + i * 7.6, 7.4, 7.6, 2.0, d=0.5, y=STRUCT_Y + 4.6, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
     # Fuel line from the gantry foot to the mount.
-    box("fuel", 37, 8.5, 18, 1.6, d=1.6, y=14, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.5)
+    box("fuel", 37, 8.5, 12, 1.6, d=1.6, y=14, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.5)
     cast_shadow("pad_shadow", 0, PAD_W, STRUCT_Y, STRUCT_Y + 34, 10)
     if frame:
         camera_for(-6, PAD_W + 14, SHADOW_V0)
@@ -216,7 +216,7 @@ def _gantry(x, base_z, height, width=14.0):
     # Service arms reaching toward the mount, at three heights.
     for i, frac in enumerate((0.42, 0.62, 0.82)):
         z = base_z + height * frac
-        reach = 26 - i * 4
+        reach = 17 - i * 3
         box(f"arm{i}", x + width, z, reach, 2.4, d=4, y=y0 + 4, colours=("hull_lit", "hull", "hull_shade"), outline=0.7)
         box(f"armtip{i}", x + width + reach - 3, z - 2.2, 3, 2.2, d=4, y=y0 + 4, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.6)
 
@@ -245,7 +245,7 @@ def build_preview(style="mountains", pad_x=150.0, width=402.0):
 
 # ---------------------------------------------------------------- hangar
 
-HANGAR_W = 72.0
+HANGAR_W = 52.0
 
 
 def build_hangar(fresh=True, frame=True):
@@ -260,27 +260,69 @@ def build_hangar(fresh=True, frame=True):
     prism("roof", roof, d, y=y, colours=("hull_lit", "hull_shade", "hull_shade"))
     box("roof_band", 0, 29, HANGAR_W, 2, d=0.6, y=y - 0.4, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
     # Panel seams: thin vertical recesses on the front wall.
-    for i in range(1, 6):
-        x = i * HANGAR_W / 6
+    for i in range(1, 5):
+        x = i * HANGAR_W / 5
         box(f"seam{i}", x - 0.3, 1, 0.6, 27, d=0.3, y=y - 0.2, colours=("seam", "seam", "seam"), outline=0)
     # Big door: blue frame, segmented shutter.
-    box("door_frame", 14, 0, 30, 22, d=0.8, y=y - 0.6, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.7)
+    box("door_frame", 5, 0, 24, 22, d=0.8, y=y - 0.6, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.7)
     for i in range(6):
-        box(f"shutter{i}", 16, 0.4 + i * 3.4, 26, 2.8, d=0.5, y=y - 0.9, colours=("steel_lit", "steel_lit", "steel"), outline=0)
+        box(f"shutter{i}", 7, 0.4 + i * 3.4, 20, 2.8, d=0.5, y=y - 0.9, colours=("steel_lit", "steel_lit", "steel"), outline=0)
     # Clerestory glazing and a side window block.
-    box("glass", 48, 14, 20, 8, d=0.6, y=y - 0.6, colours=("glass", "glass", "glass_dark"), outline=0.6)
-    for i in range(1, 4):
-        box(f"mullion{i}", 48 + i * 5 - 0.4, 14, 0.8, 8, d=0.4, y=y - 0.9, colours=("hull_lit", "hull_lit", "hull_lit"), outline=0)
-    box("side_door", 52, 0, 7, 10, d=0.6, y=y - 0.6, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.5)
+    box("glass", 33, 14, 14, 8, d=0.6, y=y - 0.6, colours=("glass", "glass", "glass_dark"), outline=0.6)
+    for i in range(1, 3):
+        box(f"mullion{i}", 33 + i * 4.7 - 0.4, 14, 0.8, 8, d=0.4, y=y - 0.9, colours=("hull_lit", "hull_lit", "hull_lit"), outline=0)
+    box("side_door", 38, 0, 6, 9, d=0.6, y=y - 0.6, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.5)
     # Roof kit: two vents and an antenna mast with a teal beacon.
-    for x in (10, 20):
+    for x in (8, 16):
         box(f"vent{x}", x, 37, 5, 3.5, d=5, y=y + 14, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
-    box("antenna", 60, 37, 1.2, 12, d=1.2, y=y + 14, colours=("steel_lit", "steel", "steel_dark"), outline=0.4)
-    box("antenna_tip", 59.4, 49, 2.4, 1.8, d=2.4, y=y + 13.4, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.4)
+    box("antenna", 44, 37, 1.2, 12, d=1.2, y=y + 14, colours=("steel_lit", "steel", "steel_dark"), outline=0.4)
+    box("antenna_tip", 43.4, 49, 2.4, 1.8, d=2.4, y=y + 13.4, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.4)
     cast_shadow("hangar_shadow", 0, HANGAR_W, STRUCT_Y, STRUCT_Y + 30, 10)
     if frame:
         camera_for(-3, HANGAR_W + 13, SHADOW_V0)
     return "hangar"
+
+
+# ---------------------------------------------------------------- control station (SSL-611)
+
+STATION_W = 60.0
+
+
+def build_control_station(fresh=True, frame=True):
+    """Control station: a white operations block under a glazed control room, a dish on the roof and a lattice
+    mast with a teal beacon. The hub for satellites and telescopes."""
+    if fresh:
+        reset_scene()
+    y = STRUCT_Y
+    # Ground block: white panels, blue base band, a teal side door.
+    box("block", 0, 0, STATION_W, 18, d=26, y=y, colours=("hull_lit", "hull", "hull_shade"))
+    box("block_band", 0, 1.2, STATION_W, 1.6, d=0.6, y=y - 0.4, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
+    for i in range(1, 5):
+        x = i * STATION_W / 5
+        box(f"seam{i}", x - 0.3, 4, 0.6, 12, d=0.3, y=y - 0.2, colours=("seam", "seam", "seam"), outline=0.0)
+    box("door", 6, 0, 8, 11, d=0.6, y=y - 0.6, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.6)
+    box("block_glass", 20, 6, 24, 6, d=0.6, y=y - 0.6, colours=("glass", "glass", "glass_dark"), outline=0.6)
+    # Control room: a narrower upper floor with a long glazed band and a blue roof edge.
+    box("room", 4, 18, 36, 12, d=20, y=y + 3, colours=("hull_lit", "hull", "hull_shade"))
+    box("room_glass", 7, 21, 30, 6, d=0.6, y=y + 2.4, colours=("glass", "glass", "glass_dark"), outline=0.6)
+    for i in range(1, 6):
+        box(f"room_mullion{i}", 7 + i * 5 - 0.4, 21, 0.8, 6, d=0.4, y=y + 2.1, colours=("hull_lit", "hull_lit", "hull_lit"), outline=0)
+    box("room_cap", 3, 29.4, 38, 2, d=22, y=y + 2.5, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.7)
+    # Roof dish: a shallow bowl on a short stem, tilted toward the sky.
+    box("dish_stem", 19.2, 31.4, 1.6, 5, d=1.6, y=y + 11, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
+    prism("dish", [(8, 40), (31, 40), (26, 36.4), (13, 36.4)], 3, y=y + 10, colours=("steel_lit", "steel", "steel_dark"), outline=0.7)
+    box("dish_feed", 19.4, 40, 1.2, 4, d=1.2, y=y + 10.9, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.4)
+    # Lattice mast on the right, with cross rungs and a teal beacon.
+    for lx in (46, 51.6):
+        box(f"mast_leg{lx}", lx, 18, 1.4, 38, d=1.4, y=y + 8, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
+    for i in range(7):
+        box(f"mast_rung{i}", 46, 20 + i * 5, 7, 1.0, d=1.2, y=y + 8, colours=("steel_lit", "steel", "steel_dark"), outline=0.3)
+    box("mast_beacon", 47.2, 56, 3.6, 2.4, d=3.6, y=y + 7.6, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.5)
+    box("mast_mount", 44, 16, 11, 3, d=12, y=y + 4, colours=("hull_lit", "hull", "hull_shade"), outline=0.6)
+    cast_shadow("station_shadow", 0, STATION_W, STRUCT_Y, STRUCT_Y + 26, 8)
+    if frame:
+        camera_for(-3, STATION_W + 11, SHADOW_V0)
+    return "control-station"
 
 
 # ---------------------------------------------------------------- backdrop bands

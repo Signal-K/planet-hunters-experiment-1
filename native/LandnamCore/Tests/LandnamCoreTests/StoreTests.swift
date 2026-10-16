@@ -35,6 +35,7 @@ import Foundation
         remote.player.missionsDone = 8
         remote.player.freeOperations = true
         remote.player.saturnImagerLaunchedAt = 1
+        remote.player.placed = ["control-station"]
         #expect(store.adoptRemote(remote))
         #expect(store.catalog.mission(Instruments.transitMissionId) != nil)
         #expect(store.catalog.mission(Instruments.saturnMissionId) == nil)

@@ -71,10 +71,12 @@ export function buildRuntimeCatalog({
   player,
 }: RuntimeCatalogOpts): Catalog {
   const discoveredTargetList = Object.values(discoveredTargets)
-  const shouldOfferTransitTelescopeMission = freeOperations && !transitSatelliteLaunchedAt
+  // A satellite or telescope is run from the control station, so none is offered until one is built.
+  const hasControlStation = !!player?.placed?.includes('control-station')
+  const shouldOfferTransitTelescopeMission = freeOperations && hasControlStation && !transitSatelliteLaunchedAt
   const hasActiveTransitTelescopeMission = missionId === TRANSIT_TELESCOPE_MISSION_ID || targetId === TRANSIT_TELESCOPE_TARGET_ID
   const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
-  const shouldOfferSaturnImagerMission = freeOperations && !player?.saturnImagerLaunchedAt
+  const shouldOfferSaturnImagerMission = freeOperations && hasControlStation && !player?.saturnImagerLaunchedAt
   const hasActiveSaturnImagerMission = missionId === SATURN_IMAGER_MISSION_ID || targetId === SATURN_IMAGER_TARGET_ID
   const shouldIncludeSaturnImagerMission = shouldOfferSaturnImagerMission || hasActiveSaturnImagerMission
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))

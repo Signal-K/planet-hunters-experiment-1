@@ -2965,7 +2965,6 @@ button { cursor: pointer; }
 :where(html[data-flight-target] [data-beacon]) { position: relative; }
 html[data-flight-target~="bottom-tab-missions"] [data-beacon="bottom-tab-missions"]::after,
 html[data-flight-target~="build-structure-strip"] [data-beacon="build-structure-strip"]::after,
-html[data-flight-target~="building-launchpad"] [data-beacon="building-launchpad"]::after,
 html[data-flight-target~="launchpad-view-contracts"] [data-beacon="launchpad-view-contracts"]::after,
 html[data-flight-target~="hub-build-btn"] [data-beacon="hub-build-btn"]::after,
 html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"]::after,
@@ -3002,6 +3001,11 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"]:
     linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom left / 2px 12px no-repeat,
     linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom right / 12px 2px no-repeat,
     linear-gradient(var(--ln-bp-blue), var(--ln-bp-blue)) bottom right / 2px 12px no-repeat;
+  animation: beacon-glow 3s ease-in-out 240ms 1 both;
+}
+/* A building is beaconed by ringing its name tag, not by brackets round its whole sprite frame: those read as a second coach floating in the sky. */
+html[data-flight-target~="building-launchpad"] [data-beacon="building-launchpad"] .hub-building-name {
+  box-shadow: 0 0 0 3px var(--ln-bp-blue);
   animation: beacon-glow 3s ease-in-out 240ms 1 both;
 }
 @media (prefers-reduced-motion: reduce) {

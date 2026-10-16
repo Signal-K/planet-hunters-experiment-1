@@ -67,12 +67,12 @@ function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: nu
   )
 }
 
-/** Side-on base structure (kit v7). The base shows the launchpad, the hangar and the optional Exchange. */
+/** Side-on base structure (kit v7). The base shows the launchpad, the hangar, the Control Station and the optional Exchange. */
 export function PixelStructure({ kind, level = 1, parts, phase = 'idle', rocket = true }: { kind: string; level?: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch'; rocket?: boolean | 'core' }) {
   const tier = structureTier(level)
   if (kind === 'launchpad') return <LaunchpadKit tier={tier} parts={parts} phase={phase} rocket={rocket} />
   const sprite = structureSprite(kind)
-  if (!sprite?.src || (kind !== 'hangar' && kind !== 'garage' && kind !== 'market')) return null
+  if (!sprite?.src || (kind !== 'hangar' && kind !== 'garage' && kind !== 'market' && kind !== 'control-station')) return null
   return (
     <img
       src={`${ASSET_ROOT}${sprite.src}`}

@@ -166,6 +166,7 @@
   "base_v7_ground_plain_coast": "/game/assets/base/v7/ground/plain-coast.jpg",
   "base_v7_structures_launchpad": "/game/assets/base/v7/structures/launchpad.png",
   "base_v7_structures_hangar": "/game/assets/base/v7/structures/hangar.png",
+  "base_v7_structures_control_station": "/game/assets/base/v7/structures/control-station.png",
   "base_v7_structures_exchange": "/game/assets/base/v7/structures/exchange.png",
   "base_v7_sky_cloud_0": "/game/assets/base/v7/sky/cloud-0.png",
   "base_v7_sky_cloud_1": "/game/assets/base/v7/sky/cloud-1.png",

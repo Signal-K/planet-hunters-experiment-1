@@ -511,8 +511,8 @@ describe('seed bible v0 catalog', () => {
     }
   })
 
-  it('keeps the base catalog to launchpad, surface silo, the optional exchange and the parked academy', () => {
-    expect(STRUCTURES.map(structure => structure.id)).toEqual(['launchpad', 'surface-silo', 'market', 'astronaut-academy'])
+  it('keeps the base catalog to launchpad, surface silo, the optional exchange, the control station and the parked academy', () => {
+    expect(STRUCTURES.map(structure => structure.id)).toEqual(['launchpad', 'surface-silo', 'market', 'control-station', 'astronaut-academy'])
     expect(MISSIONS.some(mission => mission.id === 'program-build-refinery')).toBe(false)
     expect(STRUCTURES.some(structure => structure.id === 'refinery' || structure.id === 'garage')).toBe(false)
   })

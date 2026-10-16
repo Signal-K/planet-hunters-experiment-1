@@ -54,6 +54,16 @@ export const STRUCTURES: StructureBlueprint[] = [
     description: 'Cargo dock where you sell ore at the spot price.',
   },
   {
+    id: 'control-station',
+    name: 'Control Station',
+    kind: 'control-station',
+    cost: STRUCTURE_PRICES.controlStation,
+    // Satellites and telescopes are run from here, so it comes before the first launch of either.
+    unlocksAt: 'Opens once the guided missions are flown',
+    unlockTrigger: 'onboarding-missions',
+    description: 'Runs your satellites and telescopes. Build it before you launch one.',
+  },
+  {
     id: 'astronaut-academy',
     name: 'Astronaut Academy',
     kind: 'astronaut-academy',
@@ -80,6 +90,7 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
   // Free Ops. Existing players retain access through their saved unlock.
   if (structure.id === 'surface-silo') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
   if (structure.id === 'market') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('market')
+  if (structure.id === 'control-station') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('control-station')
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   if (structure.unlockTrigger === 'always') return true
   return false

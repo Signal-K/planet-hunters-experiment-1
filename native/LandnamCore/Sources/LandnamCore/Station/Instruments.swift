@@ -30,12 +30,14 @@ public enum Instruments {
         func add(_ t: Target) { if !ids.contains(t.id) && !c.targets.contains(where: { $0.id == t.id }) { c.targets.append(t) } }
         func add(_ m: Mission) { if !missionIds.contains(m.id) { c.missions.append(m) } }
 
-        if p.freeOperations && !p.telescopeLaunched || missionId == transitMissionId || targetId == transitTargetId {
+        // A satellite or telescope is run from the control station, so none is offered until one is built.
+        let hasStation = p.placed.contains("control-station")
+        if p.freeOperations && hasStation && !p.telescopeLaunched || missionId == transitMissionId || targetId == transitTargetId {
             add(transitTarget)
             add(launch(transitMissionId, "Launch Space Telescope", "Deploy your own TESS-class telescope into Earth orbit. Its daily instrument feed becomes available for classification.",
                        target: transitTargetId, name: "Space Telescope", instrument: "transit-telescope", outcome: "Space telescope online · daily instrument feed unlocked", sequence: seq))
         }
-        if p.freeOperations && p.saturnImagerLaunchedAt == nil || missionId == saturnMissionId || targetId == saturnTargetId {
+        if p.freeOperations && hasStation && p.saturnImagerLaunchedAt == nil || missionId == saturnMissionId || targetId == saturnTargetId {
             add(saturnTarget)
             add(launch(saturnMissionId, "Launch Saturn Imager", "Deploy a Saturn imager into Earth orbit. Its daily feed delivers real Cassini frames to check for storm clouds.",
                        target: saturnTargetId, name: "Saturn Imager", instrument: "saturn-imager", outcome: "Saturn imager online · Cassini storm-cloud feed unlocked", sequence: seq))

@@ -20,6 +20,8 @@ public enum Construction {
                            summary: "Small Earth-side mineral storage. Keep ore for construction; overflow sells when a flight returns."),
         StructureBlueprint(id: "market", name: "Exchange", cost: Economy.exchangePrice, materials: [:], unlocksAt: "Opens once the guided missions are flown",
                            summary: "Cargo dock where you sell ore at the spot price."),
+        StructureBlueprint(id: "control-station", name: "Control Station", cost: Economy.controlStationPrice, materials: [:], unlocksAt: "Opens once the guided missions are flown",
+                           summary: "Runs your satellites and telescopes. Build it before you launch one."),
         StructureBlueprint(id: "astronaut-academy", name: "Astronaut Academy", cost: Economy.academyPrice, materials: ["aluminium": 24, "silicon": 12, "copper": 8],
                            unlocksAt: "Reach client level 2 with two clients, then research it", summary: "Trains named astronauts, manages the roster, and coordinates Base staffing."),
     ]
@@ -37,6 +39,7 @@ public enum Construction {
         switch b.id {
         case "surface-silo": return p.missionsDone >= firstStorageMissionsDone || p.placed.contains("surface-silo")
         case "market": return p.missionsDone >= firstStorageMissionsDone || p.placed.contains("market")
+        case "control-station": return p.missionsDone >= firstStorageMissionsDone || p.placed.contains("control-station")
         case "astronaut-academy": return p.academyResearched || p.placed.contains("astronaut-academy")
         case "launchpad": return true
         default: return false

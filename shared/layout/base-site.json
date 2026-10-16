@@ -23,26 +23,35 @@
     "deep": "#a39d92"
   },
   "structures": {
-    "launchpad": {
-      "site": "pad",
-      "src": "base/v7/structures/launchpad.png",
-      "body": 120,
-      "left": -6,
-      "width": 140,
-      "height": 136.48,
-      "foot": -0.484,
-      "mount": {
-        "x": 71,
-        "z": 15
-      }
-    },
     "hangar": {
       "site": "hall",
       "src": "base/v7/structures/hangar.png",
-      "body": 72,
+      "body": 52,
       "left": -3,
-      "width": 88,
+      "width": 68,
       "height": 56.845,
+      "foot": -0.484
+    },
+    "launchpad": {
+      "site": "pad",
+      "src": "base/v7/structures/launchpad.png",
+      "body": 92,
+      "left": -6,
+      "width": 112,
+      "height": 136.48,
+      "foot": -0.484,
+      "mount": {
+        "x": 60,
+        "z": 15
+      }
+    },
+    "control-station": {
+      "site": "ops",
+      "src": "base/v7/structures/control-station.png",
+      "body": 60,
+      "left": -3,
+      "width": 74,
+      "height": 63.176,
       "foot": -0.484
     },
     "market": {
@@ -61,28 +70,35 @@
   "sites": [
     {
       "id": "hall",
-      "x": 60,
-      "half": 39,
+      "x": 45,
+      "half": 29,
       "plot": null,
       "label": "Hangar"
     },
     {
       "id": "pad",
-      "x": 190,
-      "half": 66,
+      "x": 146,
+      "half": 52,
       "plot": 0,
       "label": "Launchpad"
     },
     {
+      "id": "ops",
+      "x": 252,
+      "half": 33,
+      "plot": 3,
+      "label": "Control station"
+    },
+    {
       "id": "exchange",
-      "x": 340,
+      "x": 366,
       "half": 58,
       "plot": 1,
       "label": "Exchange"
     },
     {
       "id": "shaft",
-      "x": 466,
+      "x": 470,
       "half": 26,
       "plot": 2,
       "label": "Silo"

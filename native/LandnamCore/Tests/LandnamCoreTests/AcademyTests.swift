@@ -196,7 +196,7 @@ import Foundation
 @MainActor @Suite struct InstrumentFlightTests {
     let now: Double = 1_760_000_000_000
     func freeOps() -> GameStore {
-        var gs = GameState(); gs.player.freeOperations = true; gs.player.missionsDone = 3; gs.screen = .launchpad
+        var gs = GameState(); gs.player.freeOperations = true; gs.player.missionsDone = 3; gs.player.placed = ["control-station"]; gs.screen = .launchpad
         return GameStore(state: gs, clock: { 1_760_000_000_000 })
     }
 
@@ -224,6 +224,12 @@ import Foundation
         let on = freeOps().catalog
         for id in [Instruments.transitMissionId, Instruments.saturnMissionId] { #expect(on.mission(id) != nil) }
         #expect(GameStore().catalog.mission(Instruments.transitMissionId) == nil)
+    }
+
+    @Test func offersNoInstrumentLaunchUntilAControlStationIsBuilt() {
+        var gs = GameState(); gs.player.freeOperations = true; gs.player.missionsDone = 3
+        let bare = GameStore(state: gs, clock: { 1_760_000_000_000 }).catalog
+        for id in [Instruments.transitMissionId, Instruments.saturnMissionId] { #expect(bare.mission(id) == nil) }
     }
 
     @Test func launchingTheTransitTelescopeBringsItOnlineAtDebrief() {

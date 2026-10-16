@@ -28,12 +28,23 @@ describe('buildRuntimeCatalog', () => {
     expect(mission?.requires.minerals).toEqual({ aluminium: 11, copper: 8 })
     expect(mission?.requires.cargo_min).toBe(19)
   })
+  it('offers no satellite or telescope launch until a control station is built', () => {
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      transitSatelliteLaunchedAt: null,
+      missionsDone: 3,
+      player: { ...DEFAULT_STATE.player, freeOperations: true },
+    })
+    expect(catalog.missions.some(mission => mission.id === TRANSIT_TELESCOPE_MISSION_ID)).toBe(false)
+  })
   it('adds the space telescope launch mission before the satellite is launched', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
       freeOperations: true,
       transitSatelliteLaunchedAt: null,
       missionsDone: 3,
+      player: { ...DEFAULT_STATE.player, freeOperations: true, placed: ['control-station'] },
     })
 
     expect(catalog.targets.some(target => target.id === TRANSIT_TELESCOPE_TARGET_ID)).toBe(true)
@@ -63,7 +74,7 @@ describe('buildRuntimeCatalog', () => {
   })
 
   it('has no separate deep space telescope launch: one telescope covers transits and asteroids', () => {
-    const player = { ...DEFAULT_STATE.player, freeOperations: true }
+    const player = { ...DEFAULT_STATE.player, freeOperations: true, placed: ['control-station'] }
     const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 4, player })
 
     expect(catalog.targets.some(target => target.id === DEEP_SPACE_TELESCOPE_TARGET_ID)).toBe(false)

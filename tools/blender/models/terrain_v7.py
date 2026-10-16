@@ -289,11 +289,11 @@ def build_scene_preview(biome="grassland", view=(463, 214), built=("launchpad", 
     _perimeter(p, rng, spec)
     _apron_edge(p)
     p.finish()
-    sites = {"hangar": 60, "launchpad": 190, "market": 340}
+    sites = {"hangar": 45, "launchpad": 146, "market": 366, "control-station": 252}
     for kind in built:
         before = {o.name for o in bpy.context.scene.objects}
-        {"launchpad": build_launchpad, "hangar": build_hangar, "market": build_exchange}[kind](fresh=False, frame=False)
-        width = {"launchpad": 120, "hangar": 72, "market": 110}[kind]
+        {"launchpad": build_launchpad, "hangar": build_hangar, "market": build_exchange, "control-station": build_control_station}[kind](fresh=False, frame=False)
+        width = {"launchpad": 92, "hangar": 52, "market": 110, "control-station": 60}[kind]
         for o in bpy.context.scene.objects:
             if o.name not in before:
                 o.location.x += sites[kind] - width / 2

@@ -232,6 +232,7 @@ function ScreenBody({
             if (building === 'build') return game.go('build')
             if (building === 'refinery') return game.go('refinery')
             if (building === 'market') return game.go('market')
+            if (building === 'control-station') return game.go('instrument-hub')
             // Mission first: the hangar opens on its rocket choice only once a mission and
             // destination are set up. Otherwise it starts at the contract board.
             if (building === 'hangar') return game.mission && game.target ? game.go('hangar') : game.goToMissions()

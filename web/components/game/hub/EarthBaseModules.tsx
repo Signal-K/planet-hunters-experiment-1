@@ -150,7 +150,7 @@ export function EarthBaseModules({ buildings, parts, padRocket = false }: { buil
     <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {
         if (building.kind === 'surface-silo' || HIDDEN_BASE_KINDS.has(building.kind)) return null
-        const kit = building.kind === 'launchpad' || building.kind === 'hangar' || building.kind === 'market'
+        const kit = building.kind === 'launchpad' || building.kind === 'hangar' || building.kind === 'market' || building.kind === 'control-station'
         const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.launchpad
         const widthPct = structureWidthPct(building.kind, building.level ?? 1)
         // Kit structures stand on their home site on the strip (shared site map); others keep the plot percentage.

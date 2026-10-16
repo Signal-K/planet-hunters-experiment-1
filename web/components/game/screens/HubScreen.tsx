@@ -39,7 +39,7 @@ import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SCENE_NAMES } from '@/lib/ui-strings'
 
-const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market'])
+const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market', 'control-station'])
 
 /**
  * How far a building's status pill hangs below the ground line. `Building`
@@ -179,7 +179,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     return kind
   }
 
-  const BUILDING_W: Record<string, number> = { launchpad: 105, market: 110, 'surface-silo': 62, refinery: 84, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
+  const BUILDING_W: Record<string, number> = { launchpad: 105, market: 110, 'control-station': 60, 'surface-silo': 62, refinery: 84, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
   // Invisible click-target height for each building's spacer (Building.tsx),
   // reported unclickable 2026-08-23. EarthBaseModules renders each building's
   // modular art at a per-kind width/footprint with its
@@ -191,7 +191,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // entirely. Values below are sized to each building's actual rendered
   // silhouette (width x pixelHeight/pixelWidth of its PNG) plus headroom;
   // buildings whose art is short/squat keep the old w*0.6-ish default.
-  const HIT_H: Record<string, number> = { launchpad: 260, 'surface-silo': 70, refinery: 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
+  const HIT_H: Record<string, number> = { launchpad: 260, 'control-station': 100, 'surface-silo': 70, refinery: 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
   // Post-tutorial Hub prominence pass (STS-631): telescope/satellite
   // buildings recede visually while they're unlocked but still in their
   // early, not-yet-actively-producing state — Space Telescope
@@ -219,7 +219,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   })
   const scenicHangar = placed.includes('launchpad') && !placed.includes('hangar') && !placed.includes('garage')
   const sceneBuildings: HubBuildingDef[] = [
-    ...(scenicHangar ? [{ kind: 'hangar', plotX: 48, w: 72, level: 3, status: 'ok' as const }] : []),
+    ...(scenicHangar ? [{ kind: 'hangar', plotX: 48, w: 52, level: 3, status: 'ok' as const }] : []),
     ...hubBuildings.filter(building => BASE_SCENE_KINDS.has(building.kind)),
   ]
   // The launchpad speaks only while the Base has no live run. Progression is
@@ -228,10 +228,20 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // After the first run the launchpad offers the space telescope, the one
   // prompt that used to live on a Home card. It is dismissible and goes away
   // once the satellite has launched.
+  const hasControlStation = placed.includes('control-station')
   const offersTransitTelescope = !onboardingActive && !player.activeMission && player.missionsDone > 0
     && !!player.freeOperations && !player.transitSatelliteLaunchedAt
     && !isHubPromptDismissed(player, HUB_PROMPT_TRANSIT_TELESCOPE)
-  const launchpadCallout: BuildingCallout | undefined = offersTransitTelescope
+  const launchpadCallout: BuildingCallout | undefined = offersTransitTelescope && !hasControlStation
+    ? {
+      title: 'Build a control station',
+      body: 'Satellites and telescopes are run from a control station. Build one before you launch.',
+      cta: 'Build',
+      placement: 'viewport-clear',
+      onCta: () => onBuild?.(),
+      onDismiss: onDismissHubPrompt ? () => onDismissHubPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined,
+    }
+    : offersTransitTelescope
     ? {
       title: 'Launch a space telescope',
       body: 'Your program can put a telescope in orbit. It sends back planet candidates to review.',
@@ -276,6 +286,15 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         w: BUILDING_W.launchpad,
         callout: launchpadCallout,
         onClick: () => onFocusBuilding('launchpad'),
+      }
+    }
+    if (kind === 'control-station') {
+      return {
+        kind, label: 'Control station',
+        sub: 'TELESCOPES',
+        status: 'ok' as const,
+        w: 60,
+        onClick: () => onFocusBuilding('control-station'),
       }
     }
     if (kind === 'market') {
@@ -366,15 +385,16 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   }
 
 
+  // The three things a player does from the base come first (build, fly, sell), then the places to look things up.
   const menuItems: BaseMenuItem[] = [
-    { id: 'contracts', label: 'Contracts', detail: 'Client orders that pay for a run', onSelect: () => onOpenScene('missions') },
-    ...(player.placed.includes('launchpad') ? [{ id: 'hangar', label: 'Hangar', detail: 'Ships and their parts', onSelect: () => onOpenScene('hangar') }] : []),
-    ...(player.placed.includes('market') && onOpenMarket ? [{ id: 'market', label: 'Exchange', detail: 'Sell what you have mined', onSelect: () => onOpenMarket() }] : []),
-    { id: 'mission-log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
-    { id: 'subsurface', label: 'Subsurface', detail: 'Silo and underground rooms', onSelect: () => setSubsurface(true) },
-    ...(player.freeOperations ? [{ id: 'sites', label: 'Sites', detail: 'Places to survey and settle', onSelect: () => onOpenScene('surface-ops') }] : []),
-    // No control station building exists: the screen is the feed from telescopes you own, so it is only offered once one is up.
-    ...(player.transitSatelliteLaunchedAt || player.placed.includes('ground-telescope') ? [{ id: 'control-station', label: 'Telescope feeds', detail: 'Observations from your telescopes', onSelect: () => onOpenScene('instrument-hub') }] : []),
+    { id: 'build', icon: 'build', primary: true, label: 'Build', detail: 'New structures, a control station, satellites', onSelect: () => { setPlaceNote(null); setEditMode(true) } },
+    { id: 'contracts', icon: 'mission', primary: true, label: 'New mission', detail: 'Client contracts and free runs', onSelect: () => onOpenScene('missions') },
+    { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: player.placed.includes('market') ? 'Sell what you have mined' : 'Build the Exchange to sell ore', onSelect: () => { if (player.placed.includes('market') && onOpenMarket) onOpenMarket(); else { setPlaceNote(null); setEditMode(true) } } },
+    ...(player.placed.includes('launchpad') ? [{ id: 'hangar', icon: 'hangar' as const, label: 'Hangar', detail: 'Ships and their parts', onSelect: () => onOpenScene('hangar') }] : []),
+    ...(player.placed.includes('control-station') ? [{ id: 'control-station', icon: 'station' as const, label: 'Control station', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }] : []),
+    { id: 'mission-log', icon: 'log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
+    { id: 'subsurface', icon: 'subsurface', label: 'Subsurface', detail: 'Silo and underground rooms', onSelect: () => setSubsurface(true) },
+    ...(player.freeOperations ? [{ id: 'sites', icon: 'sites' as const, label: 'Sites', detail: 'Places to survey and settle', onSelect: () => onOpenScene('surface-ops') }] : []),
   ]
 
   return (

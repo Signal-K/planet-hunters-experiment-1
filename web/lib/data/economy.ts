@@ -105,6 +105,7 @@ export const STRUCTURE_PRICES = {
   garage: 6_000_000,
   academy: 12_000_000,
   exchange: 4_000_000,
+  controlStation: 3_000_000,
   launchpadUpgrade: 10_000_000,
   deepSpaceTelescope: 15_000_000,
 } as const

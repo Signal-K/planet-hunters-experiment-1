@@ -34,9 +34,11 @@
   cursor: pointer;
 }
 .list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.mainList { margin-bottom: 8px; }
 .row {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
   min-height: 56px;
   padding: 8px 14px;
@@ -47,6 +49,11 @@
   text-align: left;
   cursor: pointer;
 }
+.icon { flex: 0 0 auto; color: var(--ln-world-trim-blue); }
+.text { display: grid; gap: 2px; min-width: 0; }
+.primary { min-height: 68px; background: var(--ln-world-trim-blue); color: var(--ln-world-hull-lit); }
+.primary .icon { color: var(--ln-world-hull-lit); width: 32px; height: 32px; }
+.primary .detail { opacity: 0.92; }
 .label { font: 800 16px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; }
 .detail { font: 500 14px var(--ln-font-body, inherit); opacity: 0.8; }
 @media (min-width: 560px) {

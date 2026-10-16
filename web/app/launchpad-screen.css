@@ -450,7 +450,7 @@ button.launchpad-scene-object { cursor: pointer; }
 /* The prior nav-height offset lifted the Hub dock
    into the middle of the screen on desktop and portrait; anchor it to the
    actual canvas edge. */
-.hub-bottom-dock { bottom: 0 !important; }
+.hub-bottom-dock { bottom: max(14px, env(safe-area-inset-bottom)) !important; gap: 12px !important; padding-inline: 8px; box-sizing: border-box; }
 .hub-bottom-dock-inner {
   max-width: none !important;
   width: 100% !important;

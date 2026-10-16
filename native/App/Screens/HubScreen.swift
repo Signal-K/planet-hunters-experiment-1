@@ -80,7 +80,7 @@ struct HubScreen: View {
             if placing { picker(width: size.width, insets: insets) }
             if !placing && store.player.activeMission == nil && !store.player.pendingLaunch {
                 missionStatus(compact: size.height < 500)
-                    .padding(.bottom, insets.bottom + zones.dock.bottomInset + (size.height < 500 ? 0 : 58))
+                    .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14) + (size.height < 500 ? 0 : 66))
                     .padding(.trailing, size.height < 500 ? insets.trailing + 12 : 0)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: size.height < 500 ? .bottomTrailing : .bottom)
             }
@@ -89,9 +89,9 @@ struct HubScreen: View {
                      onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onBuild: { placeNote = nil; placing.toggle() },
                      onMenu: { menuOpen = true })
-                .padding(.bottom, insets.bottom + zones.dock.bottomInset)
+                .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-            if menuOpen { BaseMenu(onClose: { menuOpen = false }) }
+            if menuOpen { BaseMenu(onClose: { menuOpen = false }, onBuild: { placeNote = nil; placing = true }) }
         }
     }
 
@@ -196,6 +196,7 @@ struct HubScreen: View {
         case "hangar", "garage": store.go(store.mission != nil && store.target != nil ? .hangar : .missions)
         case "astronaut-academy": store.go(.academy)
         case "market": store.go(.market)
+        case "control-station": store.go(.instrumentHub)
         default: break
         }
     }

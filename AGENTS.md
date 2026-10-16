@@ -47,7 +47,7 @@ Process
 Names and surfaces
 6. Never show scene titles ("Base", "Earth HQ", "Earth Base") anywhere, web or native. They are internal names only.
 7. Mining default is ship mining with the laser, exactly as in the webapp. Laser mining is canonical. Rover/Takeon is a separate surface mode and never hijacks laser mining.
-8. The dock is exactly three controls: `« »`, Build, Hub. Base-only features (for example Subsurface) are opened from the base scene, not the dock.
+8. The dock is `‹ ›`, Build and Menu (Liam, 16 Oct: the Hub screen is not a main menu). The Menu lists Build, New mission and Marketplace first, then the other places. Base-only features (for example Subsurface) are opened from the base scene, not the dock.
 9. Exchange (Market) stays a real building on the base, not a menu item.
 
 Base scene

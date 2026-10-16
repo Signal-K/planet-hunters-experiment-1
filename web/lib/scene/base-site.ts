@@ -15,7 +15,7 @@ export const units = (n: number) => `calc(${n} * var(--px, 3px))`
 /** CSS `calc()` for a height above the ground line (`--hub-ground`), in kit units. */
 export const aboveGround = (n: number) => `calc(var(--hub-ground) + ${n} * var(--px, 3px))`
 
-export type SiteId = 'hall' | 'pad' | 'exchange' | 'shaft'
+export type SiteId = 'hall' | 'pad' | 'ops' | 'exchange' | 'shaft'
 export interface BaseSite { id: SiteId; x: number; half: number; plot: number | null; label: string }
 /** `body` is the structure's own width; the sprite (`left`, `width`) is wider by the shadow it casts to the right. */
 export interface StructureSprite { site: SiteId; src?: string; body?: number; left?: number; width?: number; height?: number; foot?: number; mount?: { x: number; z: number } }
