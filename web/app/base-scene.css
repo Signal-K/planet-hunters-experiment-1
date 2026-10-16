@@ -74,3 +74,8 @@
   .hub-mission-status { padding: 0; border: 0; background: none; margin-bottom: 10px; }
   .hub-mission-status__text { display: none; }
 }
+
+/* New mission lives in the dock (Build, Mission, Menu). Three words need more room, and phones drop the arrows to fit. */
+.scene-dock--mission { max-width: min(460px, calc(100vw - 16px)); }
+.scene-dock-word--mission { background: var(--ln-world-trim-blue) !important; color: var(--ln-world-hull-lit) !important; }
+@media (max-width: 479px) { .scene-dock--mission .scene-dock-arrow { display: none; } }

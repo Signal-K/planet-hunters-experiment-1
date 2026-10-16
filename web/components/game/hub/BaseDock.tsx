@@ -4,6 +4,9 @@ import type { ButtonHTMLAttributes, MouseEvent, PointerEvent, ReactNode } from '
 import { UI_ZONES } from '@/lib/ui-zones'
 
 type BaseDockProps = {
+  /** When set, a New mission button sits between Build and the Hub/Menu button. */
+  onMission?: () => void
+
   onPrev: () => void
   onNext: () => void
   onBuild: (event?: MouseEvent<HTMLButtonElement>) => void
@@ -115,6 +118,14 @@ export function DockPrimaryButton({
   )
 }
 
+function MissionIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 3 3 10l7 3 3 7z" />
+    </svg>
+  )
+}
+
 /** Floating dock: previous at the far left, Build and Hub in the middle, next at the far right. */
 export function BaseDock({
   onPrev,
@@ -135,13 +146,14 @@ export function BaseDock({
   hubLabel = 'Hub',
   hubTestId = 'hub-btn',
   variant = 'base',
+  onMission,
 }: BaseDockProps) {
   const flight = variant === 'flight'
   const label = flight ? buildLabel : 'Build'
   return (
     <nav
       aria-label="Scene dock"
-      className="scene-dock"
+      className={onMission ? 'scene-dock scene-dock--mission' : 'scene-dock'}
       data-ui-zone={UI_ZONES.bottomNav}
       data-testid="base-dock"
       data-dock-variant={variant}
@@ -164,6 +176,15 @@ export function BaseDock({
           {buildIcon ?? <HammerIcon />}
           <span>{label}</span>
         </DockWordButton>
+        {onMission ? (
+          <>
+            <span className="scene-dock-rule" aria-hidden="true" />
+            <DockWordButton className="scene-dock-word--mission" data-testid="hub-new-mission-btn" onClick={onMission}>
+              <MissionIcon />
+              <span>Mission</span>
+            </DockWordButton>
+          </>
+        ) : null}
         <span className="scene-dock-rule" aria-hidden="true" />
         <DockWordButton data-testid={hubTestId} onClick={onHub}>
           {hubIcon ?? <RadioIcon />}

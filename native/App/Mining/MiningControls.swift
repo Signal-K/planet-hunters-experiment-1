@@ -43,16 +43,15 @@ struct MiningDPad: View {
 
         var body: some View {
             let shape = UnevenRoundedRectangle(
-                topLeadingRadius: corners.contains(.topLeading) ? 14 : 0,
-                bottomLeadingRadius: corners.contains(.bottomLeading) ? 14 : 0,
-                bottomTrailingRadius: corners.contains(.bottomTrailing) ? 14 : 0,
-                topTrailingRadius: corners.contains(.topTrailing) ? 14 : 0)
+                topLeadingRadius: corners.contains(.topLeading) ? 6 : 0,
+                bottomLeadingRadius: corners.contains(.bottomLeading) ? 6 : 0,
+                bottomTrailingRadius: corners.contains(.bottomTrailing) ? 6 : 0,
+                topTrailingRadius: corners.contains(.topTrailing) ? 6 : 0)
             Image(systemName: icon)
                 .font(.system(size: 18, weight: .heavy))
-                .foregroundStyle(down ? Theme.hex(0x2F6FA8) : MiningDPad.ink)
+                .foregroundStyle(down || emphasized ? Glass.cyan : .white)
                 .frame(width: tile, height: tile)
-                .background(shape.fill(down ? MiningDPad.pressed : emphasized ? Theme.blue : MiningDPad.paper))
-                .overlay(shape.stroke(MiningDPad.ink, lineWidth: emphasized ? 3 : 2))
+                .glowPanel(shape, active: down || emphasized)
                 .contentShape(shape)
                 .gesture(DragGesture(minimumDistance: 0)
                     .onChanged { _ in if !down { down = true; hold(true) } }
@@ -80,12 +79,12 @@ struct LaserGauge: View {
                 Spacer()
                 Text("\(charge)/\(cap)").font(AppFont.display(14)).monospacedDigit()
             }
-            .foregroundStyle(Self.ink)
+            .foregroundStyle(Glass.ink)
             GeometryReader { g in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Theme.hex(0xC9D3DE))
+                    Capsule().fill(.white.opacity(0.14))
                     Capsule()
-                        .fill(low ? AnyShapeStyle(Self.brick) : AnyShapeStyle(LinearGradient(colors: [Theme.hex(0x2F6FA8), Theme.hex(0x3FB6C4)], startPoint: .leading, endPoint: .trailing)))
+                        .fill(low ? AnyShapeStyle(Self.brick) : AnyShapeStyle(Glass.cyan))
                         .frame(width: g.size.width * pct)
                         .animation(.linear(duration: 0.16), value: pct)
                     if charging {
@@ -107,8 +106,7 @@ struct LaserGauge: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 8)
         .frame(width: width)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hex(0xF4F1EA, 0.94)))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(low ? Self.brick : Self.ink, lineWidth: 2))
+        .glowPanel(RoundedRectangle(cornerRadius: 6), active: low)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Laser capacity \(charge) of \(cap)")
     }
@@ -139,11 +137,47 @@ struct CargoMenu: View {
                 Image(systemName: "arrow.down.to.line")
             }
             .font(AppFont.display(14))
-            .foregroundStyle(field.isFull ? Theme.hex(0x9B3B32) : Self.ink)
+            .foregroundStyle(field.isFull ? Glass.cyan : Glass.ink)
             .padding(.horizontal, 12).frame(minHeight: 44)
-            .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hex(0xF4F1EA, 0.94)))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(field.isFull ? Theme.hex(0x9B3B32) : Self.ink, lineWidth: 2))
+            .glowPanel(RoundedRectangle(cornerRadius: 6), active: field.isFull)
         }
         .accessibilityLabel("Cargo hold \(field.cargoUnits) of \(field.cargoCapacity). Jettison cargo.")
+    }
+}
+
+
+/// Out There style panels for the mining HUD: near-black frosted fill, glowing white outline, no solid colour blocks.
+private struct GlassHudKey: EnvironmentKey { static let defaultValue = false }
+extension EnvironmentValues {
+    var glassHud: Bool {
+        get { self[GlassHudKey.self] }
+        set { self[GlassHudKey.self] = newValue }
+    }
+}
+
+enum Glass {
+    static let ink = Theme.hex(0xEEF2F6)
+    static let cyan = Theme.hex(0x9FD6E4)
+}
+
+extension View {
+    func glowPanel<S: InsettableShape>(_ shape: S, active: Bool = false) -> some View {
+        self
+            .background(shape.fill(LinearGradient(colors: [Theme.hex(0x0A101C, active ? 0.6 : 0.78), Theme.hex(0x04080F, 0.88)], startPoint: .topLeading, endPoint: .bottomTrailing)))
+            .overlay(shape.stroke(.white.opacity(0.92), lineWidth: 1.5))
+            .shadow(color: .white.opacity(active ? 0.7 : 0.3), radius: active ? 12 : 7)
+    }
+}
+
+/// Top-left settings gear in the glass style (the mining screen has no clock or currency).
+struct GlassGear: View {
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "gearshape.fill").font(.system(size: 18, weight: .bold)).foregroundStyle(Glass.ink)
+                .frame(width: 44, height: 44).contentShape(Rectangle())
+                .glowPanel(RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain).accessibilityLabel("Settings")
     }
 }

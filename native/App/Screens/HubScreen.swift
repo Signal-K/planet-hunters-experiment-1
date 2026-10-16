@@ -78,46 +78,16 @@ struct HubScreen: View {
             topLeftHud(insets: insets, portrait: portrait)
             topRightHud(insets: insets)
             if placing { picker(width: size.width, insets: insets) }
-            if !placing && store.player.activeMission == nil && !store.player.pendingLaunch {
-                missionStatus(compact: size.height < 500)
-                    .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14) + (size.height < 500 ? 0 : 66))
-                    .padding(.trailing, size.height < 500 ? insets.trailing + 12 : 0)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: size.height < 500 ? .bottomTrailing : .bottom)
-            }
             BaseDock(tile: layout.tile, zones: zones.dock,
                      onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onBuild: { placeNote = nil; placing.toggle() },
-                     onMenu: { menuOpen = true })
+                     onMenu: { menuOpen = true },
+                     onMission: (!placing && store.player.activeMission == nil && !store.player.pendingLaunch) ? { store.go(.missions) } : nil)
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             if menuOpen { BaseMenu(onClose: { menuOpen = false }, onBuild: { placeNote = nil; placing = true }) }
         }
-    }
-
-    /// Idle base: says nothing is in progress and starts a new mission (web `hub-mission-status`).
-    private func missionStatus(compact: Bool) -> some View {
-        HStack(spacing: 8) {
-            if !compact {
-                Text("NO MISSION IN PROGRESS")
-                    .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.hudInk)
-                    .padding(.leading, 14)
-            }
-            Button { store.go(.missions) } label: {
-                Text("NEW MISSION").font(AppFont.display(14)).tracking(1.1)
-                    .foregroundStyle(Theme.hudPanel)
-                    .padding(.horizontal, 16).frame(minHeight: 44)
-                    .background(Capsule().fill(Theme.blue))
-                    .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("New mission")
-        }
-        .padding(4)
-        .background(Capsule().fill(Theme.hudPanel))
-        .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("No mission in progress")
     }
 
     /// Share of the silo's capacity holding ore, for the stored-ore crates in the cutaway.

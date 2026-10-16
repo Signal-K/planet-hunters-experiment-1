@@ -653,14 +653,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           position: 'absolute', left: 0, right: 0, bottom: 8, zIndex: subsurface ? 40 : 20,
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none',
         }}>
-          {!subsurface && !editMode && !player.activeMission && !player.pendingLaunch && (
-            <div className="hub-mission-status" data-testid="hub-mission-status" role="status" style={{ pointerEvents: 'auto' }}>
-              <span className="hub-mission-status__text"><span className="hub-mission-status__long">No mission in progress</span><span className="hub-mission-status__short">No mission</span></span>
-              <button type="button" className="hub-mission-status__cta" data-testid="hub-new-mission-btn" onClick={() => onOpenScene('missions')}>
-                New mission
-              </button>
-            </div>
-          )}
           <div style={{ pointerEvents: 'auto' }}>
             <BaseDock
               onPrev={() => {
@@ -676,6 +668,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
                 onOpenScene(stops[next])
               }}
               onBuild={() => { setPlaceNote(null); setEditMode(value => !value) }}
+              onMission={!subsurface && !editMode && !player.activeMission && !player.pendingLaunch ? () => onOpenScene('missions') : undefined}
               hubLabel="Menu"
               hubTestId="hub-menu-btn"
               onHub={() => setMenuOpen(true)}
