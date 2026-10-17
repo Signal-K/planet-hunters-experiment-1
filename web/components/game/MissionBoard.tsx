@@ -84,7 +84,7 @@ function StepGlyph({ kind }: { kind: ProgramStep['kind'] }) {
 }
 
 function MineralRock({ shape, color }: { shape?: string; color: string }) {
-  const ink = 'var(--ln-board-ink)'
+  const ink = '#0f1012'
   return <span className={styles.rock} aria-hidden="true">
     <svg viewBox="0 0 24 24">
       {shape === 'diamond' && <path d="M12 2.5 20 9.5 12 21.5 4 9.5Z" fill={color} stroke={ink} strokeWidth="1.6" strokeLinejoin="round" />}
@@ -93,6 +93,37 @@ function MineralRock({ shape, color }: { shape?: string; color: string }) {
       {(!shape || shape === 'circle') && <path d="M8 7.5c2.2-3 7.2-2.4 8.4.4 2.6.4 3.4 4.2 1.2 6.2-.6 2.8-4.2 4.6-7.6 3.2C6.2 16.2 4.6 12.2 6.2 9.4 6.4 8.6 7 7.8 8 7.5Z" fill={color} stroke={ink} strokeWidth="1.6" strokeLinejoin="round" />}
     </svg>
   </span>
+}
+
+const MAP_W = 400
+const MAP_H = 160
+const ORBIT_STEP = 54
+const SUN_X = 18
+
+function spread(id: string): number {
+  let h = 0
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return ((h % 1000) / 1000) * 2 - 1
+}
+
+/** Minimal orbit map: rings around the sun, Earth, and the mission's route stops. */
+function RouteMap({ stops }: { stops: Array<{ id: string; name: string; orbit: number }> }) {
+  const nodes = [{ id: 'earth', name: 'Earth', orbit: 0.8, home: true }, ...stops.map(stop => ({ ...stop, home: false }))].map(node => {
+    const r = node.orbit * ORBIT_STEP
+    const y = MAP_H / 2 + (node.home ? 28 : spread(node.id) * 52)
+    const dy = y - MAP_H / 2
+    return { ...node, x: SUN_X + Math.sqrt(Math.max(r * r - dy * dy, 0)), y }
+  })
+  const path = nodes.map((n, i) => `${i ? 'L' : 'M'}${n.x.toFixed(1)} ${n.y.toFixed(1)}`).join(' ')
+  return <div className={styles.map} role="img" aria-label={`Route: ${nodes.map(n => n.name).join(' to ')}`}>
+    <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} preserveAspectRatio="none" aria-hidden="true">
+      {[1, 2, 3, 4, 5, 6].map(o => <circle key={o} cx={SUN_X} cy={MAP_H / 2} r={o * ORBIT_STEP} className={styles.mapRing} />)}
+      {nodes.length > 1 && <path d={path} className={styles.mapRoute} />}
+    </svg>
+    <i className={styles.mapSun} style={{ left: `${(SUN_X / MAP_W) * 100}%`, top: '50%' }} />
+    {nodes.map(n => <i key={n.id} className={n.home ? styles.mapHome : styles.mapStop} style={{ left: `${(n.x / MAP_W) * 100}%`, top: `${(n.y / MAP_H) * 100}%` }} />)}
+    {nodes.map(n => <span key={n.id} className={styles.mapLabel} data-home={n.home || undefined} style={{ left: `${(n.x / MAP_W) * 100}%`, top: `${(n.y / MAP_H) * 100}%` }}>{n.name}</span>)}
+  </div>
 }
 
 const EVENT_BANNERS = {
@@ -195,14 +226,17 @@ export default function MissionBoard({
             </div>}
           </header>
           <div className={styles.hero} aria-label="Cargo">
+            <RouteMap stops={[card.mission.targetId, card.mission.deliveryTargetId].flatMap(id => {
+              const t = id ? catalog.targets.find(x => x.id === id) : undefined
+              return t ? [{ id: t.id, name: t.name, orbit: t.orbit }] : []
+            })} />
             <div className={styles.heroCrates}>
               {Object.entries(card.mission.requires.minerals).map(([id, amount]) => {
                 const meta = catalog.minerals[id]
                 if (!meta) return null
-                return <span key={id} className={styles.crate} title={meta.name}><MineralRock shape={meta.shape} color={meta.color} /><b>{amount}</b><em>{meta.name}</em></span>
+                return <span key={id} className={styles.crate}><MineralRock shape={meta.shape} color={meta.color} /><b>{amount}</b><em>{meta.name}</em></span>
               })}
             </div>
-            <i className={styles.heroFloor} aria-hidden="true" />
           </div>
           {card.mission.brief && <p className={styles.orderBrief} data-testid="mission-brief">{card.mission.brief}</p>}
           {!card.unlocked && card.lockedDetail && <p className={styles.orderLock}>{card.lockedDetail}</p>}
