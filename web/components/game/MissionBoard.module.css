@@ -986,7 +986,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .mapStop { width: 16px; height: 16px; background: var(--signal); border: 2px solid #ecebe8; box-sizing: border-box; }
 .mapLabel { position: absolute; transform: translate(16px, -50%); font: 700 14px/1 var(--ln-font-body); letter-spacing: 0.08em; text-transform: uppercase; color: #ecebe8; white-space: nowrap; }
 .mapLabel[data-home] { color: #a3a29d; }
-.cargoHeroCrates { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 20px; padding: 16px 24px; border-left: 2px solid #34363c; }
+.heroCrates { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 20px; padding: 16px 24px; border-left: 2px solid #34363c; }
 .cargoHero .crate { display: flex; flex-direction: row; align-items: center; gap: 14px; padding: 0; background: none; border: 0; }
 .cargoHero .crate > :first-child { display: block; width: clamp(56px, 8vw, 88px); height: clamp(56px, 8vw, 88px); background: none; border: 0; }
 .cargoHero .crate > :first-child svg { width: 100%; height: 100%; }
@@ -999,7 +999,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   .order { padding: 12px; gap: 8px; }
   .orderBrief { font-size: 14px; line-height: 1.3; -webkit-line-clamp: 2; }
   .cargoHero { min-height: 90px; }
-  .cargoHeroCrates { gap: 8px; padding: 8px 16px; }
+  .heroCrates { gap: 8px; padding: 8px 16px; }
   .cargoHero .crate > :first-child { width: 40px; height: 40px; }
   .cargoHero .crate b { font-size: 24px; }
 }
@@ -1010,7 +1010,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   .orderDeal { flex-wrap: wrap; }
   button.take { flex: 1 1 100%; }
   .cargoHero { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
-  .cargoHeroCrates { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 12px 24px; border-left: 0; border-top: 2px solid #34363c; padding: 12px; }
+  .heroCrates { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 12px 24px; border-left: 0; border-top: 2px solid #34363c; padding: 12px; }
   .cargoHero .crate > :first-child { width: 44px; height: 44px; }
 }
 
@@ -1031,3 +1031,13 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .freeRun { display: flex; flex-direction: column; gap: 6px; padding: 12px; background: #16171a; color: #ecebe8; border: 2px solid #34363c; border-radius: 14px; }
 .freeRun h3 { margin: 0; font: 800 14px var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; }
 .freeRun p { margin: 0; font: 14px var(--ln-font-body); color: #a3a29d; }
+
+/* One surface language for every tab: same card fill, border and radius; two equal columns where there are two. */
+.sheet .events { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sheet .eventHero, .sheet .eventCard { border: 2px solid #34363c; border-radius: 14px; background: #16171a; }
+.sheet .chainHead, .sheet .step { border-radius: 14px; }
+.cargoHero { background: #16171a; border: 2px solid #34363c; }
+.mapRing { stroke: #34363c; }
+@media (orientation: portrait) and (max-width: 700px) {
+  .sheet .events { grid-template-columns: minmax(0, 1fr); }
+}
