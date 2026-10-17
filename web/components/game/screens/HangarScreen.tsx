@@ -1,4 +1,5 @@
 'use client'
+import { StashChip } from '@/components/game/hub/StashChip'
 
 import { useState } from 'react'
 import { ROCKET_IDS, ROCKET_MODELS, hasShipCustomizer } from '@/lib/data'
@@ -169,12 +170,7 @@ export default function HangarScreen({
         </div>
         <div className={styles.cluster}>
           <span className="scene-chip" data-testid="hangar-francs-chip">{formatCurrency(francs, { compact: true })}</span>
-          <span className="scene-chip" data-testid="hangar-cargo-chip" aria-label="Cargo">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" />
-              <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />
-            </svg>
-          </span>
+          <StashChip testId="hangar-cargo-chip" />
         </div>
       </header>
 

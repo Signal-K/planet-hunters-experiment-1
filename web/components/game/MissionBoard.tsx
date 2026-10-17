@@ -1,5 +1,6 @@
 'use client'
 
+import { StashChip } from '@/components/game/hub/StashChip'
 import { useMemo, useState, type CSSProperties } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import type { Catalog } from '@/lib/catalog'
@@ -222,7 +223,7 @@ export default function MissionBoard({
       <div className={styles.clock}><HubClockWidget /></div>
       <div className={styles.chips}>
         <span className={styles.chip} data-testid="hub-francs-chip">{formatFrancs(player.francs, { compact: true })}</span>
-        <span className={`${styles.chip} ${styles.cargoChip}`} data-testid="hub-cargo-chip" aria-label="Cargo"><CubeIcon /></span>
+        <StashChip testId="hub-cargo-chip" className={`${styles.chip} ${styles.cargoChip}`}><CubeIcon /></StashChip>
         <button type="button" className={styles.round} data-testid="friends-button" aria-label="Friends" onClick={() => setFriendsOpen(true)}><PeopleIcon /></button>
       </div>
     </div>
