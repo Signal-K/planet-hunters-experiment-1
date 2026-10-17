@@ -8,7 +8,7 @@ import type { Player } from '@/lib/game-types'
 import type { RocketConfig, Target } from '@/lib/data'
 import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
-import RocketBuilderScene from '@/components/game/screens/RocketBuilderScene'
+import RocketBuilderScene, { type AssemblyPhase } from '@/components/game/screens/RocketBuilderScene'
 import type { BuilderLoadout } from '@/lib/launchpad/rocketBuilder'
 
 interface LaunchpadScreenProps {
@@ -48,6 +48,8 @@ interface LaunchpadScreenProps {
   helpScreen?: 'launchpad' | 'fab' | 'targets' | 'rocket-buy'
   launchTestId?: string
   launchDisabled?: boolean
+  /** Design, being built on the pad, or ready to launch. Defaults to ready. */
+  assembly?: AssemblyPhase
 }
 
 function HangarGlyph() {
@@ -63,7 +65,7 @@ const STARTER_ROCKET: RocketConfig = { chassis: 'hull-mk1', propulsion: 'ion-a1'
 export default function LaunchpadScreen({
   onBack, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, player, rocketImageSrc = '', selectedRocketName = 'Explorer', francs = 0, hydrated = false, onAbandonMission,
   mission = null, target = null, rocket = STARTER_ROCKET, onInstallLoadout, onRequestLaunch, launching = false, onLaunchComplete, helpScreen = 'launchpad', launchTestId = 'launch-btn', launchDisabled = false,
-  missionsDone, guided = false,
+  missionsDone, guided = false, assembly,
 }: LaunchpadScreenProps) {
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
@@ -110,6 +112,7 @@ export default function LaunchpadScreen({
         launchRocketSrc={rocketImageSrc}
         onLaunchComplete={onLaunchComplete}
         guided={guided}
+        assembly={assembly}
       />
 
       {player.activeMission && onResumeMission && !activeMissionCalloutDismissed && !missionRunsOpen && (

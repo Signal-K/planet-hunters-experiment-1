@@ -49,7 +49,16 @@ interface RocketBuilderSceneProps {
   onLaunchComplete?: () => void
   /** Tutorial player: walk the slots one at a time instead of offering the whole builder. */
   guided?: boolean
+  /** Where the rocket is: still a design (blueprint), being built on the pad, or standing ready. With no target the pad is idle. */
+  assembly?: AssemblyPhase
 }
+
+export type AssemblyPhase = 'design' | 'building' | 'ready'
+
+/** How long the rocket takes to rise on the pad; the route waits this long before the vehicle is bought. */
+export const ROLLOUT_MS = 1600
+
+const COMPLEX_ART = '/game/assets/base/v7/launchpad'
 
 export default function RocketBuilderScene({
   missionTitle,
@@ -72,6 +81,7 @@ export default function RocketBuilderScene({
   launchRocketSrc = '',
   onLaunchComplete,
   guided = false,
+  assembly = 'ready',
 }: RocketBuilderSceneProps) {
   const help = useHelp(helpScreen)
   const loadout = asLoadout(installed)
@@ -85,6 +95,8 @@ export default function RocketBuilderScene({
   const fitted = fittedModules(loadout)
   const fittedCount = BUILDER_SLOTS.filter(slot => partIdForSlot(loadout, slot)).length
   const targetLabel = target ? target.name : 'Choose a mission'
+  const phase: 'idle' | AssemblyPhase = target ? assembly : 'idle'
+  const launchLabel = phase === 'design' ? 'Build rocket' : phase === 'building' ? 'Building' : 'Launch'
 
   // Only what can be fitted today: locked parts and slots with nothing available yet stay out of sight instead of reading as dead ends.
   const available = (slot: (typeof BUILDER_SLOTS)[number]) => allPartsForSlot(slot).filter(part => (part.unlockedAtMissions ?? 0) <= missionsDone || part.id === partIdForSlot(loadout, slot))
@@ -111,38 +123,19 @@ export default function RocketBuilderScene({
       data-palette={land.paletteId}
       data-mission={missionTitle ?? ''}
       data-guided={guided ? 'true' : 'false'}
+      data-assembly={phase}
       style={{
         '--lb-sky-top': land.skyTop,
         '--lb-sky-horizon': land.skyHorizon,
         '--lb-ground': land.ground,
         '--lb-ridge': land.ridge,
         '--lb-tint': land.tint,
+        '--lb-build-ms': `${ROLLOUT_MS}ms`,
       } as CSSProperties}
     >
       <div className={styles.land} data-testid="rocket-builder-landscape" aria-hidden="true">
-        <img className={`${styles.plate} ${styles.plateLeft}`} src="/art/scenes/launchpad/launchpad-plate-landscape-left.png" alt="" />
-        <img className={`${styles.plate} ${styles.plateRight}`} src="/art/scenes/launchpad/launchpad-plate-landscape-right.png" alt="" />
-        {land.pieces.map((piece, index) => (
-          <img
-            key={`${piece.kind}-${piece.x}-${index}`}
-            className={styles.piece}
-            src={`/game/assets/mining/terrain_${piece.kind}.png`}
-            alt=""
-            style={{
-              left: `${(piece.x / land.period) * 100}%`,
-              transform: `translateX(-50%) scale(${piece.scale})${piece.flip ? ' scaleX(-1)' : ''}`,
-            }}
-          />
-        ))}
-        <div className={styles.ground} />
         <div className={styles.wash} />
       </div>
-
-      <button type="button" className={styles.tower} data-testid="launchpad-status-card" data-beacon="launchpad-view-contracts" data-action="primary-mission" aria-label={towerLabel} onClick={onChooseMission}>
-        <span data-testid="launchpad-new-mission-btn">
-          <img src="/art/scenes/launchpad/launchpad-tower.png" alt="" />
-        </span>
-      </button>
 
       <div className={`${flight.chrome} launchpad-shared-hud`}>
         <div className={flight.top}>
@@ -167,10 +160,8 @@ export default function RocketBuilderScene({
       <div className={styles.stage}>
         <div className={styles.actions}>
           {onBack && <button type="button" className={styles.back} data-testid="top-bar-back" aria-label="back" onClick={onBack}>&lsaquo; Back</button>}
-          {/* With no mission picked there is nothing to launch: the primary button opens the contracts instead. */}
-          {target
-            ? <button type="button" className={styles.launch} data-testid={launchTestId} disabled={launchDisabled} onClick={onLaunch}>Launch</button>
-            : <button type="button" className={styles.launch} data-testid="builder-choose-contract" data-beacon="launchpad-view-contracts" onClick={onChooseMission}>Contracts</button>}
+          {/* With no mission picked there is nothing to build: the big call to action on the pad opens the contracts. */}
+          {target && <button type="button" className={styles.launch} data-testid={launchTestId} data-assembly={phase} disabled={launchDisabled || phase === 'building'} onClick={onLaunch}>{launchLabel}</button>}
           <button type="button" className={styles.target} data-testid="rocket-builder-target" onClick={onChooseMission}>
             <span>Target</span>
             <strong>{targetLabel}</strong>
@@ -187,15 +178,32 @@ export default function RocketBuilderScene({
         )}
 
         <div className={styles.body} data-parts={showParts ? 'open' : 'closed'}>
-          <section className={styles.blueprint} aria-label="Rocket blueprint" data-fitted-count={fittedCount}>
-            <div className={styles.rocketWrap}>
-              <img src="/art/scenes/launchpad/launchpad-rocket-multistage.png" alt="" data-testid="launch-rocket" style={{ opacity: 0.55 + fittedCount * 0.09 }} />
+          <section className={styles.pad} aria-label="Launchpad" data-phase={phase} data-fitted-count={fittedCount}>
+            <div className={styles.complex} data-testid="launchpad-complex">
+              <img className={styles.complexArt} src={`${COMPLEX_ART}/pad-complex.png`} alt="" />
+              <span className={styles.hangarTag} aria-hidden="true">Hangar</span>
+              <div className={styles.rocketSlot}>
+                <img className={styles.rocket} src="/art/scenes/launchpad/launchpad-rocket-multistage.png" alt="" data-testid="launch-rocket" />
+              </div>
+              <img className={styles.scaffold} src={`${COMPLEX_ART}/pad-scaffold.png`} alt="" data-testid="pad-scaffold" />
+              <span className={styles.weld} aria-hidden="true" />
+              <button type="button" className={styles.gantryHit} data-testid="launchpad-status-card" data-action="primary-mission" aria-label={towerLabel} onClick={onChooseMission}>
+                <span data-testid="launchpad-new-mission-btn" />
+              </button>
             </div>
-            <ul className={styles.stats} data-testid="rocket-builder-stats" data-capacity={stats.capacity} data-range={stats.range} data-laser={stats.laser}>
-              <li><span>Capacity</span><strong>{stats.capacity}</strong></li>
-              <li><span>Range</span><strong>{stats.range}</strong></li>
-              <li><span>Laser</span><strong>{stats.laser}</strong></li>
-            </ul>
+            {phase === 'idle' && (
+              <button type="button" className={styles.choose} data-testid="builder-choose-contract" data-beacon="launchpad-view-contracts" onClick={onChooseMission}>
+                <span>Nothing on the pad</span>
+                <strong>Choose a mission</strong>
+              </button>
+            )}
+            {phase !== 'idle' && (
+              <ul className={styles.stats} data-testid="rocket-builder-stats" data-capacity={stats.capacity} data-range={stats.range} data-laser={stats.laser}>
+                <li><span>Capacity</span><strong>{stats.capacity}</strong></li>
+                <li><span>Range</span><strong>{stats.range}</strong></li>
+                <li><span>Laser</span><strong>{stats.laser}</strong></li>
+              </ul>
+            )}
           </section>
 
           {showParts && <section className={styles.choices} aria-label="Part choices">
