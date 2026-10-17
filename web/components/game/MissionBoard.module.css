@@ -976,15 +976,26 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   border-radius: 14px; overflow: hidden;
   background: color-mix(in srgb, var(--signal) 14%, #101114);
 }
-.map { position: relative; min-height: 0; margin: 12px; }
+.map {
+  position: relative; min-height: 0; margin: 12px; overflow: hidden; border-radius: 10px;
+  background:
+    radial-gradient(ellipse 45% 60% at 72% 30%, color-mix(in srgb, var(--signal) 22%, transparent), transparent 70%),
+    radial-gradient(ellipse 40% 50% at 30% 80%, rgba(110, 90, 190, 0.2), transparent 70%),
+    #07080d;
+}
 .map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.mapRing { fill: none; stroke: color-mix(in srgb, var(--signal) 40%, #101114); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.mapStar { position: absolute; border-radius: 50%; background: #ecebe8; box-shadow: 0 0 4px rgba(236, 235, 232, 0.7); }
+.mapRing { fill: none; stroke: rgba(190, 205, 235, 0.22); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .mapSun, .mapHome, .mapStop { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); }
-.mapSun { width: 22px; height: 22px; background: #ecebe8; }
-.mapRoute { fill: none; stroke: #ecebe8; stroke-width: 2; stroke-dasharray: 5 6; vector-effect: non-scaling-stroke; }
-.mapHome { width: 12px; height: 12px; background: #ecebe8; }
-.mapStop { width: 16px; height: 16px; background: var(--signal); border: 2px solid #ecebe8; box-sizing: border-box; }
-.mapLabel { position: absolute; transform: translate(16px, -50%); font: 700 14px/1 var(--ln-font-body); letter-spacing: 0.08em; text-transform: uppercase; color: #ecebe8; white-space: nowrap; }
+.mapSun { width: 20px; height: 20px; background: #f4f1e6; box-shadow: 0 0 10px 3px rgba(244, 241, 230, 0.7), 0 0 36px 12px rgba(200, 210, 255, 0.28); }
+.mapRoute { fill: none; stroke: rgba(236, 235, 232, 0.85); stroke-width: 1.5; stroke-dasharray: 4 6; vector-effect: non-scaling-stroke; animation: mapFlow 1.4s linear infinite; }
+@keyframes mapFlow { to { stroke-dashoffset: -10; } }
+@media (prefers-reduced-motion: reduce) { .mapRoute { animation: none; } }
+.mapHome { width: 10px; height: 10px; background: #cfd8ee; box-shadow: 0 0 8px 2px rgba(180, 200, 255, 0.6); }
+.mapStop { width: 12px; height: 12px; background: #f4f1e6; box-shadow: 0 0 10px 3px color-mix(in srgb, var(--signal) 70%, transparent); }
+.mapHome b, .mapStop b { position: absolute; inset: -9px; border-radius: 50%; border: 1px solid rgba(236, 235, 232, 0.55); }
+.mapStop b { border-color: var(--signal); }
+.mapLabel { position: absolute; transform: translate(20px, -50%); padding: 3px 7px; border-radius: 4px; background: rgba(7, 8, 13, 0.7); border: 1px solid rgba(190, 205, 235, 0.3); font: 700 14px/1 var(--ln-font-body); letter-spacing: 0.08em; text-transform: uppercase; color: #ecebe8; white-space: nowrap; }
 .mapLabel[data-home] { color: #a3a29d; }
 .heroCrates { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 20px; padding: 16px 24px; border-left: 2px solid #34363c; }
 .cargoHero .crate { display: flex; flex-direction: row; align-items: center; gap: 14px; padding: 0; background: none; border: 0; }
@@ -1037,7 +1048,6 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .sheet .eventHero, .sheet .eventCard { border: 2px solid #34363c; border-radius: 14px; background: #16171a; }
 .sheet .chainHead, .sheet .step { border-radius: 14px; }
 .cargoHero { background: #16171a; border: 2px solid #34363c; }
-.mapRing { stroke: #34363c; }
 @media (orientation: portrait) and (max-width: 700px) {
   .sheet .events { grid-template-columns: minmax(0, 1fr); }
 }

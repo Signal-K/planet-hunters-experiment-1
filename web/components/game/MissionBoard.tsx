@@ -106,6 +106,12 @@ function spread(id: string): number {
   return ((h % 1000) / 1000) * 2 - 1
 }
 
+const STARS = (() => {
+  let seed = 7
+  const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296 }
+  return Array.from({ length: 60 }, () => ({ x: rand() * 100, y: rand() * 100, size: 1.5 + rand() * 2, glow: 0.35 + rand() * 0.6 }))
+})()
+
 /** Minimal orbit map: rings around the sun, Earth, and the mission's route stops. */
 function RouteMap({ stops }: { stops: Array<{ id: string; name: string; orbit: number }> }) {
   const nodes = [{ id: 'earth', name: 'Earth', orbit: 0.8, home: true }, ...stops.map(stop => ({ ...stop, home: false }))].map(node => {
@@ -116,12 +122,13 @@ function RouteMap({ stops }: { stops: Array<{ id: string; name: string; orbit: n
   })
   const path = nodes.map((n, i) => `${i ? 'L' : 'M'}${n.x.toFixed(1)} ${n.y.toFixed(1)}`).join(' ')
   return <div className={styles.map} role="img" aria-label={`Route: ${nodes.map(n => n.name).join(' to ')}`}>
+    {STARS.map((star, i) => <i key={i} className={styles.mapStar} style={{ left: `${star.x}%`, top: `${star.y}%`, width: star.size, height: star.size, opacity: star.glow }} />)}
     <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} preserveAspectRatio="none" aria-hidden="true">
       {[1, 2, 3, 4, 5, 6].map(o => <circle key={o} cx={SUN_X} cy={MAP_H / 2} r={o * ORBIT_STEP} className={styles.mapRing} />)}
       {nodes.length > 1 && <path d={path} className={styles.mapRoute} />}
     </svg>
     <i className={styles.mapSun} style={{ left: `${(SUN_X / MAP_W) * 100}%`, top: '50%' }} />
-    {nodes.map(n => <i key={n.id} className={n.home ? styles.mapHome : styles.mapStop} style={{ left: `${(n.x / MAP_W) * 100}%`, top: `${(n.y / MAP_H) * 100}%` }} />)}
+    {nodes.map(n => <i key={n.id} className={n.home ? styles.mapHome : styles.mapStop} style={{ left: `${(n.x / MAP_W) * 100}%`, top: `${(n.y / MAP_H) * 100}%` }}><b /></i>)}
     {nodes.map(n => <span key={n.id} className={styles.mapLabel} data-home={n.home || undefined} style={{ left: `${(n.x / MAP_W) * 100}%`, top: `${(n.y / MAP_H) * 100}%` }}>{n.name}</span>)}
   </div>
 }
