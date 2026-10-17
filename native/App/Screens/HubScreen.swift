@@ -188,7 +188,7 @@ struct HubScreen: View {
 
     private func topRightHud(insets: EdgeInsets) -> some View {
         let z = zones.topRight
-        return HudChips(francs: store.player.francs)
+        return HudChips(francs: store.player.francs, stash: store.player.stash, onSell: { store.go(.market) })
         .padding(.trailing, insets.trailing + z.inset).padding(.top, insets.top + z.inset)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
     }

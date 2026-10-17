@@ -194,7 +194,7 @@ struct HangarScreen: View {
         HStack(alignment: .top, spacing: 8) {
             HudGearClock(onSettings: { showSettings = true })
             Spacer(minLength: 8)
-            HudChips(francs: store.player.francs)
+            HudChips(francs: store.player.francs, stash: store.player.stash, onSell: { store.go(.market) })
         }
         .padding(short ? 8 : 12)
     }

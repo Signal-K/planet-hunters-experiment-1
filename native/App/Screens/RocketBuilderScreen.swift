@@ -40,7 +40,7 @@ struct RocketBuilderScreen: View {
                     HStack(alignment: .top) {
                         HudGearClock { showSettings = true }
                         Spacer(minLength: 8)
-                        HudChips(francs: store.player.francs)
+                        HudChips(francs: store.player.francs, stash: store.player.stash, onSell: { store.go(.market) })
                     }
                     actions
                     MissionPlanStrip(sheet: $planSheet)

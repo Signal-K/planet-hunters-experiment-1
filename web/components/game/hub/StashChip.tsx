@@ -1,15 +1,16 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
-import { useGame } from '@/game-context'
+import { useOptionalGame } from '@/game-context'
 import { MINERAL_META } from '@/lib/data'
 
 /** The cube chip in the shared HUD: opens the base stash, with a shortcut to sell it. */
 export function StashChip({ testId, className = 'scene-chip', children }: { testId: string; className?: string; children?: ReactNode }) {
-  const game = useGame()
+  const game = useOptionalGame()
   const [open, setOpen] = useState(false)
-  const entries = Object.entries(game.player.stash ?? {}).filter(([, n]) => n > 0)
+  const entries = Object.entries(game?.player.stash ?? {}).filter(([, n]) => n > 0)
   const units = entries.reduce((sum, [, n]) => sum + n, 0)
+  if (!game) return <span className={className} data-testid={testId} aria-label="Stash">{children}</span>
   return (
     <>
       <button type="button" className={className} data-testid={testId} aria-label={`Stash ${units} units. Open stash`} aria-expanded={open} style={{ cursor: 'pointer', pointerEvents: 'auto' }} onClick={() => setOpen(o => !o)}>

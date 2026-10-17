@@ -505,6 +505,11 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   )
 }
 
+/** Like useGame, but null outside a GameProvider (screens rendered alone in tests or stories). */
+export function useOptionalGame() {
+  return useContext(GameContext)
+}
+
 export function useGame() {
   const ctx = useContext(GameContext)
   if (!ctx) throw new Error('useGame must be used within GameProvider')

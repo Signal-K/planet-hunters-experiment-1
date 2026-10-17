@@ -32,6 +32,10 @@ struct HudGearClock: View {
 /// Francs and cargo chips shared by the base and flight scenes (top-right).
 struct HudChips: View {
     let francs: Int
+    /// Base stock behind the cube chip. Nil keeps the chip inert (flight shows the run's cargo instead).
+    var stash: Cargo? = nil
+    var onSell: (() -> Void)? = nil
+    @State private var stashOpen = false
     @Environment(Services.self) private var services: Services?
     var body: some View {
         HStack(spacing: 8) {
@@ -43,8 +47,44 @@ struct HudChips: View {
                 .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
                 .accessibilityLabel("Francs")
-            Image(systemName: "cube.fill").font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
-                .frame(width: 36, height: 36)
+            stashChip
+        }
+    }
+}
+
+extension HudChips {
+    @ViewBuilder fileprivate var stashChip: some View {
+        let icon = Image(systemName: "cube.fill").font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
+        if let stash {
+            let entries = stash.filter { $0.value > 0 }.sorted { $0.key < $1.key }
+            let units = entries.reduce(0) { $0 + $1.value }
+            Button { stashOpen.toggle() } label: {
+                HStack(spacing: 6) {
+                    icon
+                    if units > 0 { Text("\(units)").font(AppFont.mono(14)).foregroundStyle(Theme.hudInk) }
+                }
+                .padding(.horizontal, 8).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
+                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Stash \(units) units. Open stash")
+            .popover(isPresented: $stashOpen) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("STASH · \(units)").font(AppFont.mono(14))
+                    if entries.isEmpty { Text("Empty. Mine something first.").font(AppFont.mono(14)) }
+                    ForEach(entries, id: \.key) { entry in
+                        Text("\(Minerals.byId[entry.key]?.name ?? entry.key) ×\(entry.value)").font(AppFont.mono(14))
+                    }
+                    if !entries.isEmpty, let onSell {
+                        Button("Sell at Marketplace") { stashOpen = false; onSell() }
+                            .frame(minHeight: 44)
+                    }
+                }
+                .padding(16).presentationCompactAdaptation(.popover)
+            }
+        } else {
+            icon.frame(width: 36, height: 36)
                 .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
                 .accessibilityLabel("Cargo")

@@ -317,6 +317,14 @@ export function normalizeState(input: PartialSave): GameState {
     ? Math.max(0, Math.floor(player.missionsDone ?? 0))
     : DEFAULT_STATE.player.missionsDone
   const freeOperations = freeOperationsUnlocked({ missionsDone, placed: placedList, flightPlan: player.flightPlan })
+  // A save that has flown a mission but never recorded the mining try (a legacy or
+  // reconciled save) must not be told to "Tap the tower" for a first run again. Only
+  // repair a plan that was started: a never-started legacy save keeps its own finished rule.
+  const savedPlan = player.flightPlan
+  const planStarted = !!savedPlan && !!(savedPlan.activeSince || savedPlan.replayTry || savedPlan.completed?.mining || savedPlan.completed?.scan || savedPlan.completed?.part)
+  const flightPlan = savedPlan && planStarted && missionsDone > 0 && !savedPlan.completed?.mining && !savedPlan.replayTry
+    ? { ...savedPlan, completed: { ...savedPlan.completed, mining: true as const } }
+    : savedPlan
   const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
   const pendingTerritoryClaimFor = legacyClaim
     ? { targetId: legacyClaim.targetId, clientId: legacyClaim.clientId ?? legacyClaim.contractorId ?? '' }
@@ -329,7 +337,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
@@ -645,6 +653,16 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.asteroidClassifications = mergeKeyed(current.player.asteroidClassifications, remoteState.player?.asteroidClassifications)
   merged.player.saturnClassifications = mergeKeyed(current.player.saturnClassifications, remoteState.player?.saturnClassifications)
   merged.player.badges = mergeBadges(current.player.badges, remoteState.player?.badges)
+  // A finished training try never un-finishes: the flight plan comes from whichever
+  // side won above, so union the completed flags or a stale save re-offers "Tap the tower".
+  const localPlan = current.player.flightPlan
+  const remotePlan = remoteState.player?.flightPlan
+  if (localPlan || remotePlan) {
+    merged.player.flightPlan = {
+      ...(merged.player.flightPlan ?? EMPTY_FLIGHT_PLAN),
+      completed: { ...(remotePlan?.completed ?? {}), ...(localPlan?.completed ?? {}), ...(merged.player.flightPlan?.completed ?? {}) },
+    }
+  }
   for (const field of INSTRUMENT_LAUNCH_FIELDS) {
     merged.player[field] = earliestStamp(current.player[field], remoteState.player?.[field])
   }
