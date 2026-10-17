@@ -205,13 +205,13 @@ export default function MissionBoard({
   </>
 
   return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab}>
-    {tab === 'contracts' ? <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
+    <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
       <nav className={styles.rail} aria-label="Mission board">
         <button type="button" className={`${styles.round} ${styles.railClose}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><ArrowIcon direction="left" /></button>
         {tabButtons}
         {help.button && <div className={styles.railHelp}>{help.button}</div>}
       </nav>
-      {card ? <>
+      {tab === 'contracts' ? (card ? <>
         <article key={card.mission.id} className={styles.order} style={{ '--signal': signalColor } as CSSProperties} aria-live="polite" data-testid="mission-board-section-client">
           <header className={styles.orderHead}>
             <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-amber)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={44} />
@@ -225,7 +225,7 @@ export default function MissionBoard({
               <button type="button" className={styles.round} data-testid="mission-board-next" aria-label="Next contract" onClick={() => onSelectRelative(1)}><ArrowIcon direction="right" /></button>
             </div>}
           </header>
-          <div className={styles.hero} aria-label="Cargo">
+          <div className={styles.cargoHero} aria-label="Cargo">
             <RouteMap stops={[card.mission.targetId, card.mission.deliveryTargetId].flatMap(id => {
               const t = id ? catalog.targets.find(x => x.id === id) : undefined
               return t ? [{ id: t.id, name: t.name, orbit: t.orbit }] : []
@@ -251,13 +251,7 @@ export default function MissionBoard({
           <p className={styles.orderLock}>Free Ops opens once the Earth storage silo is built.</p>
           <button type="button" className={styles.take} onClick={onOpenBuild}>BUILD STORAGE SILO</button>
         </> : <h2 className={styles.orderTitle}>No compatible client signals</h2>}
-      </article>}
-    </section> : <section className={styles.panel} data-testid="mission-board" aria-label="Mission board">
-      <button type="button" className={`${styles.round} ${styles.close}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
-      {help.button && <div className={styles.help}>{help.button}</div>}
-      <nav className={styles.tabs} aria-label="Mission board">{tabButtons}</nav>
-      <div className={styles.stage}>
-        <div className={styles.body}>
+      </article>) : <div className={styles.sheet}>
           {tab === 'free' && <div className={styles.chain} data-testid="mission-board-free">
             <header className={styles.chainHead}>
               <div>
@@ -316,7 +310,7 @@ export default function MissionBoard({
           </div>}
 
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">
-            <article className={styles.hero} data-testid="events-orionids">
+            <article className={styles.eventHero} data-testid="events-orionids">
               <div className={styles.heroArt} aria-hidden="true"><SkyBanner kind="orionids" /></div>
               <div className={styles.heroBody}>
                 <h2>{events.orionids.name}</h2>
@@ -341,9 +335,8 @@ export default function MissionBoard({
               </article>)}
             </div>
           </div>}
-        </div>
-      </div>
-    </section>}
+      </div>}
+    </section>
     {help.layer}
   </div>
 }
