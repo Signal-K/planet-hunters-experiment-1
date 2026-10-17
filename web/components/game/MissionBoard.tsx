@@ -96,9 +96,12 @@ function MineralRock({ shape, color }: { shape?: string; color: string }) {
 }
 
 const MAP_W = 400
-const MAP_H = 160
-const ORBIT_STEP = 54
-const SUN_X = 18
+const MAP_H = 300
+const MAP_CY = 140
+const MAP_TILT = 0.3
+const ORBIT_STEP = 56
+const SUN_X = 24
+const STAR_TINTS = ['#ecebe8', '#ecebe8', '#bcd2ff', '#ffd9e6', '#d9c8ff', '#b9eaf5']
 
 function spread(id: string): number {
   let h = 0
@@ -109,27 +112,38 @@ function spread(id: string): number {
 const STARS = (() => {
   let seed = 7
   const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296 }
-  return Array.from({ length: 60 }, () => ({ x: rand() * 100, y: rand() * 100, size: 1.5 + rand() * 2, glow: 0.35 + rand() * 0.6 }))
+  return Array.from({ length: 90 }, () => ({
+    x: rand() * 100, y: rand() * 100, size: 1.5 + rand() * 2.5, glow: 0.35 + rand() * 0.6,
+    tint: STAR_TINTS[Math.floor(rand() * STAR_TINTS.length)],
+  }))
 })()
 
-/** Minimal orbit map: rings around the sun, Earth, and the mission's route stops. */
-function RouteMap({ stops }: { stops: Array<{ id: string; name: string; orbit: number }> }) {
-  const nodes = [{ id: 'earth', name: 'Earth', orbit: 0.8, home: true }, ...stops.map(stop => ({ ...stop, home: false }))].map(node => {
+interface MapStop { id: string; name: string; orbit: number }
+
+/** Star chart behind the whole order: Earth, the route stops (or candidate targets when the client names none). */
+function RouteMap({ stops, candidates }: { stops: MapStop[]; candidates: MapStop[] }) {
+  const place = (node: MapStop, angle: number) => {
     const r = node.orbit * ORBIT_STEP
-    const y = MAP_H / 2 + (node.home ? 28 : spread(node.id) * 52)
-    const dy = y - MAP_H / 2
-    return { ...node, x: SUN_X + Math.sqrt(Math.max(r * r - dy * dy, 0)), y }
-  })
+    return { x: SUN_X + r * Math.cos(angle), y: Math.min(Math.max(MAP_CY + r * Math.sin(angle) * MAP_TILT * 2.2, 70), 170) }
+  }
+  const earth = { id: 'earth', name: 'Earth', orbit: 0.8, kind: 'home' as const, ...place({ id: 'earth', name: 'Earth', orbit: 0.8 }, 0.5) }
+  const listed = stops.length > 0 ? stops : candidates
+  const kind = stops.length > 0 ? 'stop' : 'candidate'
+  const others = listed.map(stop => ({ ...stop, kind, ...place(stop, spread(stop.id) * 0.9) }))
+  const nodes = [earth, ...others]
   const path = nodes.map((n, i) => `${i ? 'L' : 'M'}${n.x.toFixed(1)} ${n.y.toFixed(1)}`).join(' ')
+  const pct = (n: { x: number; y: number }) => ({ left: `${(n.x / MAP_W) * 100}%`, top: `${(n.y / MAP_H) * 100}%` })
   return <div className={styles.map} role="img" aria-label={`Route: ${nodes.map(n => n.name).join(' to ')}`}>
-    {STARS.map((star, i) => <i key={i} className={styles.mapStar} style={{ left: `${star.x}%`, top: `${star.y}%`, width: star.size, height: star.size, opacity: star.glow }} />)}
+    {STARS.map((star, i) => <i key={i} className={styles.mapStar} style={{ left: `${star.x}%`, top: `${star.y}%`, width: star.size, height: star.size, opacity: star.glow, background: star.tint, color: star.tint }} />)}
     <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} preserveAspectRatio="none" aria-hidden="true">
-      {[1, 2, 3, 4, 5, 6].map(o => <circle key={o} cx={SUN_X} cy={MAP_H / 2} r={o * ORBIT_STEP} className={styles.mapRing} />)}
-      {nodes.length > 1 && <path d={path} className={styles.mapRoute} />}
+      {[1, 2, 3, 4, 5, 6].map(o => <ellipse key={o} cx={SUN_X} cy={MAP_CY} rx={o * ORBIT_STEP} ry={o * ORBIT_STEP * MAP_TILT * 2.2} className={styles.mapRing} />)}
+      {stops.length > 0
+        ? <path d={path} className={styles.mapRoute} />
+        : others.map(n => <path key={n.id} d={`M${earth.x.toFixed(1)} ${earth.y.toFixed(1)} L${n.x.toFixed(1)} ${n.y.toFixed(1)}`} className={styles.mapSpoke} />)}
     </svg>
-    <i className={styles.mapSun} style={{ left: `${(SUN_X / MAP_W) * 100}%`, top: '50%' }} />
-    {nodes.map(n => <i key={n.id} className={n.home ? styles.mapHome : styles.mapStop} style={{ left: `${(n.x / MAP_W) * 100}%`, top: `${(n.y / MAP_H) * 100}%` }}><b /></i>)}
-    {nodes.map(n => <span key={n.id} className={styles.mapLabel} data-home={n.home || undefined} style={{ left: `${(n.x / MAP_W) * 100}%`, top: `${(n.y / MAP_H) * 100}%` }}>{n.name}</span>)}
+    <i className={styles.mapSun} style={{ left: `${(SUN_X / MAP_W) * 100}%`, top: `${(MAP_CY / MAP_H) * 100}%` }} />
+    {nodes.map(n => <i key={n.id} className={n.kind === 'home' ? styles.mapHome : n.kind === 'stop' ? styles.mapStop : styles.mapCandidate} style={pct(n)}><b /></i>)}
+    {nodes.map(n => <span key={n.id} className={styles.mapLabel} data-home={n.kind === 'home' || undefined} style={pct(n)}>{n.name}</span>)}
   </div>
 }
 
@@ -219,7 +233,17 @@ export default function MissionBoard({
         {help.button && <div className={styles.railHelp}>{help.button}</div>}
       </nav>
       {tab === 'contracts' ? (card ? <>
-        <article key={card.mission.id} className={styles.order} style={{ '--signal': signalColor } as CSSProperties} aria-live="polite" data-testid="mission-board-section-client">
+        <article className={styles.order} style={{ '--signal': signalColor } as CSSProperties} aria-live="polite" data-testid="mission-board-section-client">
+          <RouteMap
+            stops={[card.mission.targetId, card.mission.deliveryTargetId].flatMap(id => {
+              const t = id ? catalog.targets.find(x => x.id === id) : undefined
+              return t ? [{ id: t.id, name: t.name, orbit: t.orbit }] : []
+            })}
+            candidates={catalog.targets
+              .filter(t => t.type !== 'exoplanet' && Object.keys(card.mission.requires.minerals).some(m => t.minerals.includes(m)))
+              .slice(0, 4)
+              .map(t => ({ id: t.id, name: t.name, orbit: t.orbit }))}
+          />
           <header className={styles.orderHead}>
             <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-amber)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={44} />
             <div className={styles.orderWho}>
@@ -233,10 +257,6 @@ export default function MissionBoard({
             </div>}
           </header>
           <div className={styles.cargoHero} aria-label="Cargo">
-            <RouteMap stops={[card.mission.targetId, card.mission.deliveryTargetId].flatMap(id => {
-              const t = id ? catalog.targets.find(x => x.id === id) : undefined
-              return t ? [{ id: t.id, name: t.name, orbit: t.orbit }] : []
-            })} />
             <div className={styles.heroCrates}>
               {Object.entries(card.mission.requires.minerals).map(([id, amount]) => {
                 const meta = catalog.minerals[id]
