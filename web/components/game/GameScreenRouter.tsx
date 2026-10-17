@@ -65,6 +65,8 @@ type ScreenContentProps = {
   screen: Screen
   game: ReturnType<typeof useGame>
   onboardingActive: boolean
+  /** The coach strip is on screen; hub callouts wait so two guides never compete. */
+  coachVisible?: boolean
   /** Overrides HangarScreen's onBack; falls back to the remembered entry scene. */
   onBackFromHangar?: () => void
 }
@@ -86,6 +88,7 @@ function ScreenBody({
   screen,
   game,
   onboardingActive,
+  coachVisible,
   onBackFromHangar,
 }: ScreenContentProps) {
   // Launch sequence state lives here so it's scoped to the fab screen
@@ -218,6 +221,7 @@ function ScreenBody({
           onPlaceStructure={placeStructureFromBase}
           rocketVariant={rocketModelForConfig(game.rocket).tier >= 2 ? 'prospector' : 'explorer'}
           onboardingActive={onboardingActive}
+          coachVisible={coachVisible}
           onOpenScene={s => {
             if (s === 'missions') { game.goToMissions(); return }
             if (s === 'launchpad') { game.openLaunchpad(); return }

@@ -265,7 +265,7 @@ function GameChrome({ children }: { children: ReactNode }) {
               but the visible game tree belongs to this persistent layout. */}
           <div className="game-screen-area">
             {!game.authGateOpen && (
-              <ScreenContent screen={game.screen} game={game} onboardingActive={onboardingActive} />
+              <ScreenContent screen={game.screen} game={game} onboardingActive={onboardingActive} coachVisible={!!coach} />
             )}
           </div>
         <BackendStatus />
