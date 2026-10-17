@@ -487,6 +487,48 @@ enum SceneCatalog {
             if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
             return RocketBuilderScreen(launchEnabled: false, onLaunch: {}, onChooseMission: {}).environment(st).environment(\.flatLayout, true)
         },
+        scene("pad-design-phone", 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .design).environment(st).environment(\.flatLayout, true)
+        },
+        scene("pad-design-landscape", 402, w: 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .design).environment(st).environment(\.flatLayout, true)
+        },
+        scene("pad-building-phone", 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .building, previewProgress: 0.55).environment(st).environment(\.flatLayout, true)
+        },
+        scene("pad-building-landscape", 402, w: 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .building, previewProgress: 0.55).environment(st).environment(\.flatLayout, true)
+        },
+        scene("pad-ready-phone", 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .ready).environment(st).environment(\.flatLayout, true)
+        },
+        scene("pad-ready-landscape", 402, w: 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .ready).environment(st).environment(\.flatLayout, true)
+        },
         scene("guide-free-ops-hub", 874) {
             var gs = GameState(); gs.player.freeOperations = true; gs.player.placed = ["launchpad"]; gs.player.placementPlots = ["launchpad": 0]
             return coached(HubScreen(), gs, screen: .hub)

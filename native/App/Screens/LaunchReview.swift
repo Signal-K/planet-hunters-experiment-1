@@ -6,12 +6,15 @@ import LandnamCore
 struct LaunchReviewScreen: View {
     @Environment(GameStore.self) private var store
     @State private var launching = false
+    /// The rocket is rising on the pad; the vehicle is bought when the rollout ends (web `rolling`).
+    @State private var rolling = false
 
     private var selected: StagedRocket? { store.player.stagedRockets.first { $0.id == store.player.selectedStagedRocketId } }
     private var model: RocketModel {
         selected.flatMap { Rockets.model(id: Rockets.canonicalId($0.rocketId)) } ?? Rockets.models[0]
     }
     private var onPad: Bool { selected?.location == .launchpad }
+    private var assembly: PadPhase { rolling ? .building : (onPad ? .ready : .design) }
     private var ready: Bool {
         guard let mission = store.mission, let target = store.target else { return false }
         return store.catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: model), skills: store.player.unlockedSkillNodes).ok
@@ -21,7 +24,7 @@ struct LaunchReviewScreen: View {
         if launching {
             LaunchSequenceScreen(variant: model.id == "prospector" ? "prospector" : "explorer") { store.launch() }
         } else {
-            RocketBuilderScreen(launchEnabled: launchEnabled, onLaunch: launchTapped, onChooseMission: { store.go(.missions) })
+            RocketBuilderScreen(launchEnabled: launchEnabled && !rolling, onLaunch: launchTapped, onChooseMission: { store.go(.missions) }, assembly: assembly)
         }
     }
 
@@ -35,8 +38,15 @@ struct LaunchReviewScreen: View {
     private func launchTapped() {
         guard store.mission != nil, store.target != nil else { store.go(.missions); return }
         if onPad { launching = true; return }
-        if selected?.location == .hangar { store.rollOutToPad(); return }
-        store.purchaseRocket(model.id)
-        store.rollOutToPad()
+        guard !rolling else { return }
+        let id = model.id
+        let fromHangar = selected?.location == .hangar
+        rolling = true
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(padRolloutSeconds))
+            if !fromHangar { store.purchaseRocket(id) }
+            store.rollOutToPad()
+            rolling = false
+        }
     }
 }

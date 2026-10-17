@@ -37,6 +37,7 @@ interface MissionBoardProps {
   onClose: () => void
   onOpenLog: () => void
   onOpenBuild: () => void
+  onPickTarget?: (id: string) => void
   /** The rocket now stands on the pad in the scene behind the board. */
   rocketImg?: string
   tutorialBlocked: boolean
@@ -95,12 +96,14 @@ function MineralRock({ shape, color }: { shape?: string; color: string }) {
   </span>
 }
 
-const MAP_W = 400
-const MAP_H = 300
-const MAP_CY = 140
-const MAP_TILT = 0.3
-const ORBIT_STEP = 56
-const SUN_X = 24
+type Target = Catalog['targets'][number]
+type MapView = 'system' | 'belt'
+type MapMode = 'route' | 'pick' | 'ambient'
+
+const SUN = { x: 4, y: 44 }
+const UX = 10.5
+const UY = 4.4
+const BELT_R = 5
 const STAR_TINTS = ['#ecebe8', '#ecebe8', '#bcd2ff', '#ffd9e6', '#d9c8ff', '#b9eaf5']
 
 function spread(id: string): number {
@@ -109,41 +112,105 @@ function spread(id: string): number {
   return ((h % 1000) / 1000) * 2 - 1
 }
 
+function lcg(seed: number) {
+  let s = seed
+  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296 }
+}
+
 const STARS = (() => {
-  let seed = 7
-  const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296 }
-  return Array.from({ length: 90 }, () => ({
-    x: rand() * 100, y: rand() * 100, size: 1.5 + rand() * 2.5, glow: 0.35 + rand() * 0.6,
+  const rand = lcg(7)
+  return Array.from({ length: 110 }, () => ({
+    x: rand() * 100, y: rand() * 100, size: 1.5 + rand() * 2.5, glow: 0.3 + rand() * 0.6,
     tint: STAR_TINTS[Math.floor(rand() * STAR_TINTS.length)],
   }))
 })()
 
-interface MapStop { id: string; name: string; orbit: number }
+const orbitPoint = (r: number, angle: number) => ({ x: SUN.x + r * UX * Math.cos(angle), y: SUN.y + r * UY * Math.sin(angle) })
+const EARTH_POS = orbitPoint(1.5, 1.0)
+const BELT_ROCKS = (() => {
+  const rand = lcg(31)
+  return Array.from({ length: 260 }, () => ({ ...orbitPoint(BELT_R + (rand() - 0.5) * 1.1, (rand() * 2 - 1) * 1.4), size: 2 + rand() * 3.5, glow: 0.4 + rand() * 0.5 }))
+})()
+const BELT_FIELD = (() => {
+  const rand = lcg(53)
+  return Array.from({ length: 70 }, () => ({ x: 4 + rand() * 92, y: 14 + rand() * 56, size: 3 + rand() * 7, glow: 0.15 + rand() * 0.35 }))
+})()
 
-/** Star chart behind the whole order: Earth, the route stops (or candidate targets when the client names none). */
-function RouteMap({ stops, candidates }: { stops: MapStop[]; candidates: MapStop[] }) {
-  const place = (node: MapStop, angle: number) => {
-    const r = node.orbit * ORBIT_STEP
-    return { x: SUN_X + r * Math.cos(angle), y: Math.min(Math.max(MAP_CY + r * Math.sin(angle) * MAP_TILT * 2.2, 70), 170) }
-  }
-  const earth = { id: 'earth', name: 'Earth', orbit: 0.8, kind: 'home' as const, ...place({ id: 'earth', name: 'Earth', orbit: 0.8 }, 0.5) }
-  const listed = stops.length > 0 ? stops : candidates
-  const kind = stops.length > 0 ? 'stop' : 'candidate'
-  const others = listed.map(stop => ({ ...stop, kind, ...place(stop, spread(stop.id) * 0.9) }))
-  const nodes = [earth, ...others]
-  const path = nodes.map((n, i) => `${i ? 'L' : 'M'}${n.x.toFixed(1)} ${n.y.toFixed(1)}`).join(' ')
-  const pct = (n: { x: number; y: number }) => ({ left: `${(n.x / MAP_W) * 100}%`, top: `${(n.y / MAP_H) * 100}%` })
-  return <div className={styles.map} role="img" aria-label={`Route: ${nodes.map(n => n.name).join(' to ')}`}>
-    {STARS.map((star, i) => <i key={i} className={styles.mapStar} style={{ left: `${star.x}%`, top: `${star.y}%`, width: star.size, height: star.size, opacity: star.glow, background: star.tint, color: star.tint }} />)}
-    <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} preserveAspectRatio="none" aria-hidden="true">
-      {[1, 2, 3, 4, 5, 6].map(o => <ellipse key={o} cx={SUN_X} cy={MAP_CY} rx={o * ORBIT_STEP} ry={o * ORBIT_STEP * MAP_TILT * 2.2} className={styles.mapRing} />)}
-      {stops.length > 0
-        ? <path d={path} className={styles.mapRoute} />
-        : others.map(n => <path key={n.id} d={`M${earth.x.toFixed(1)} ${earth.y.toFixed(1)} L${n.x.toFixed(1)} ${n.y.toFixed(1)}`} className={styles.mapSpoke} />)}
-    </svg>
-    <i className={styles.mapSun} style={{ left: `${(SUN_X / MAP_W) * 100}%`, top: `${(MAP_CY / MAP_H) * 100}%` }} />
-    {nodes.map(n => <i key={n.id} className={n.kind === 'home' ? styles.mapHome : n.kind === 'stop' ? styles.mapStop : styles.mapCandidate} style={pct(n)}><b /></i>)}
-    {nodes.map(n => <span key={n.id} className={styles.mapLabel} data-home={n.kind === 'home' || undefined} style={pct(n)}>{n.name}</span>)}
+/** Asteroids sit in one belt; zoomed in, they spread across the screen. */
+function beltLayout(list: Target[]): Record<string, { x: number; y: number }> {
+  const cols = 3
+  const rows = Math.max(1, Math.ceil(list.length / cols))
+  return Object.fromEntries(list.map((t, i) => [t.id, {
+    x: 18 + ((i % cols) + 0.5) * (66 / cols) + spread(`${t.id}x`) * 3,
+    y: 24 + (Math.floor(i / cols) + 0.5) * (36 / rows) + spread(`${t.id}y`) * 2.5,
+  }]))
+}
+
+const shortName = (name: string) => name.replace(/^\d+\s+/, '')
+
+interface GalaxyMapProps {
+  targets: Target[]
+  mode: MapMode
+  view: MapView
+  onView: (view: MapView) => void
+  stops?: string[]
+  candidates?: string[]
+  selectedId?: string | null
+  onPick?: (id: string) => void
+}
+
+/** The whole screen: sun, orbits, planets and an asteroid belt you can zoom into. Controls are drawn over it. */
+function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick }: GalaxyMapProps) {
+  const lit = new Set([...stops, ...candidates, ...(selectedId ? [selectedId] : [])])
+  const pickable = mode === 'pick'
+  const real = targets.filter(t => t.type !== 'exoplanet')
+  const planets = real.filter(t => t.type !== 'asteroid')
+  const asteroids = real.filter(t => t.type === 'asteroid')
+  const belt = beltLayout(asteroids)
+  const litAsteroid = asteroids.find(t => lit.has(t.id))
+  const anchor = litAsteroid ? orbitPoint(BELT_R, spread(litAsteroid.id) * 1.1) : orbitPoint(BELT_R, -0.75)
+  const planetPos = (t: Target) => orbitPoint(t.orbit, spread(t.id) * 0.85)
+  const pos = (t: Target) => t.type === 'asteroid' ? anchor : planetPos(t)
+  const route = [EARTH_POS, ...(stops.length ? stops : candidates).flatMap(id => {
+    const t = real.find(x => x.id === id)
+    return t ? [pos(t)] : []
+  })]
+  const style = (p: { x: number; y: number }) => ({ left: `${p.x}%`, top: `${p.y}%` })
+  const line = (pts: { x: number; y: number }[]) => pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ')
+  const node = (t: Target, p: { x: number; y: number }, label: string) => pickable
+    ? <button key={t.id} type="button" className={styles.gxNode}
+      data-lit={lit.has(t.id) || undefined} data-selected={t.id === selectedId || undefined} data-route={stops.includes(t.id) || undefined}
+      style={style(p)} aria-label={t.name} aria-pressed={t.id === selectedId} data-testid={`map-node-${t.id}`} onClick={() => onPick?.(t.id)}>
+      <i /><span>{label}</span>
+    </button>
+    : <div key={t.id} className={`${styles.gxNode} ${styles.gxStaticNode}`}
+      data-lit={lit.has(t.id) || undefined} data-route={stops.includes(t.id) || undefined}
+      style={style(p)} aria-label={t.name} data-testid={`map-node-${t.id}`}>
+      <i /><span>{label}</span>
+    </div>
+  return <div className={styles.gx} data-view={view} data-mode={mode} data-testid="galaxy-map" aria-hidden={mode === 'ambient' || undefined}>
+    {STARS.map((s, i) => <i key={i} className={styles.gxStar} style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, opacity: s.glow, background: s.tint, color: s.tint }} />)}
+    {view === 'system' ? <>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        {[1, 2, 3, 4, 6, 7].map(o => <ellipse key={o} cx={SUN.x} cy={SUN.y} rx={o * UX} ry={o * UY} className={styles.gxRing} />)}
+        {mode !== 'ambient' && route.length > 1 && (stops.length > 0
+          ? <path d={line(route)} className={styles.gxRoute} />
+          : route.slice(1).map((p, i) => <path key={i} d={line([route[0], p])} className={styles.gxSpoke} />))}
+      </svg>
+      {BELT_ROCKS.map((r, i) => <i key={i} className={styles.gxRock} style={{ ...style(r), width: r.size, height: r.size, opacity: r.glow }} />)}
+      <i className={styles.gxSun} style={style(SUN)} />
+      {mode !== 'ambient' && <>
+        <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(EARTH_POS)} aria-label="Earth"><i /><span>Earth</span></div>
+        {planets.map(t => node(t, planetPos(t), t.name))}
+        <button type="button" className={styles.gxBelt} data-lit={litAsteroid ? true : undefined} style={style(anchor)} data-testid="map-belt" onClick={() => onView('belt')}>
+          <i /><span>Asteroid belt<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" /><path d="m15 15 5 5M10.5 8v5M8 10.5h5" /></svg></span>
+        </button>
+      </>}
+    </> : <>
+      {BELT_FIELD.map((r, i) => <i key={i} className={styles.gxRock} style={{ ...style(r), width: r.size, height: r.size, opacity: r.glow }} />)}
+      {asteroids.map(t => node(t, belt[t.id], shortName(t.name)))}
+      <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>Solar system</button>
+    </>}
   </div>
 }
 
@@ -192,7 +259,7 @@ function PickIcon() {
 }
 
 export default function MissionBoard({
-  catalog, player, cards, selectedIndex, onSelectRelative, onAccept, onClose, onOpenLog, onOpenBuild,
+  catalog, player, cards, selectedIndex, onSelectRelative, onAccept, onClose, onOpenLog, onOpenBuild, onPickTarget,
   tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [tab, setTab] = useState<MissionBoardTab>(() => takeMissionBoardTab() ?? 'contracts')
@@ -207,6 +274,17 @@ export default function MissionBoard({
   const client = card?.client
   const clientLevel = client ? clientAffinityLevel(player.clientMissions[client.id] ?? 0) : 0
   const paging = tab === 'contracts' && count > 1
+  const [view, setView] = useState<MapView>('system')
+  const [pickedId, setPickedId] = useState<string | null>(null)
+  const [runId, setRunId] = useState<string | null>(null)
+  const picked = pickedId ? catalog.targets.find(t => t.id === pickedId) ?? null : null
+  const pickedRuns = picked ? freeRuns.filter(run => Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m))) : []
+  const pickedRun = pickedRuns.find(run => run.id === runId) ?? pickedRuns[0] ?? null
+  const routeIds = card ? [card.mission.targetId, card.mission.deliveryTargetId].flatMap(id => id && catalog.targets.some(t => t.id === id) ? [id] : []) : []
+  const candidateIds = card && routeIds.length === 0
+    ? catalog.targets.filter(t => t.type !== 'exoplanet' && Object.keys(card.mission.requires.minerals).some(m => t.minerals.includes(m))).slice(0, 4).map(t => t.id)
+    : []
+  const mapMode: MapMode = tab === 'contracts' && card ? 'route' : tab === 'free' ? 'pick' : 'ambient'
 
   const startStep = (step: ProgramStep) => {
     if (step.state === 'locked' || step.state === 'done') return
@@ -215,10 +293,10 @@ export default function MissionBoard({
 
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
   const tabButtons = <>
-    <button type="button" className={styles.tab} data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
-    {player.freeOperations && <button type="button" className={styles.tab} data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => setTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
-    <button type="button" className={styles.tab} data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => setTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
-    <button type="button" className={styles.tab} data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => setTab('events')}>
+    <button type="button" className={styles.tab} aria-label="Contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
+    {player.freeOperations && <button type="button" className={styles.tab} aria-label="Free run" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => setTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
+    <button type="button" className={styles.tab} aria-label="Program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => setTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
+    <button type="button" className={styles.tab} aria-label="Events" data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => setTab('events')}>
       <StarIcon /><span className={styles.tabLabel}>Events</span>
       {events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
     </button>
@@ -232,69 +310,63 @@ export default function MissionBoard({
         {tabButtons}
         {help.button && <div className={styles.railHelp}>{help.button}</div>}
       </nav>
+      <GalaxyMap targets={catalog.targets} mode={mapMode} view={view} onView={setView} stops={tab === 'contracts' ? routeIds : []} candidates={tab === 'contracts' ? candidateIds : []}
+        selectedId={tab === 'free' ? pickedId : null} onPick={id => { setPickedId(id); setRunId(null) }} />
       {tab === 'contracts' ? (card ? <>
-        <article className={styles.order} style={{ '--signal': signalColor } as CSSProperties} aria-live="polite" data-testid="mission-board-section-client">
-          <RouteMap
-            stops={[card.mission.targetId, card.mission.deliveryTargetId].flatMap(id => {
-              const t = id ? catalog.targets.find(x => x.id === id) : undefined
-              return t ? [{ id: t.id, name: t.name, orbit: t.orbit }] : []
-            })}
-            candidates={catalog.targets
-              .filter(t => t.type !== 'exoplanet' && Object.keys(card.mission.requires.minerals).some(m => t.minerals.includes(m)))
-              .slice(0, 4)
-              .map(t => ({ id: t.id, name: t.name, orbit: t.orbit }))}
-          />
-          <header className={styles.orderHead}>
-            <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-amber)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={44} />
-            <div className={styles.orderWho}>
+        <article className={styles.dock} aria-live="polite" data-testid="mission-board-section-client">
+          <header className={styles.dockHead}>
+            <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-amber)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={36} />
+            <div className={styles.dockWho}>
               <span>{client ? `${client.name} · L${clientLevel}` : 'Your program'}</span>
-              <h2 className={styles.orderTitle}>{card.mission.title}</h2>
+              <h2>{card.mission.title}</h2>
             </div>
-            {paging && <div className={styles.orderNav}>
+            {paging && <div className={styles.dockNav}>
               <button type="button" className={styles.round} data-testid="mission-board-prev" aria-label="Previous contract" onClick={() => onSelectRelative(-1)}><ArrowIcon direction="left" /></button>
-              <span className={styles.orderCount}>{index + 1}/{count}</span>
+              <span>{index + 1}/{count}</span>
               <button type="button" className={styles.round} data-testid="mission-board-next" aria-label="Next contract" onClick={() => onSelectRelative(1)}><ArrowIcon direction="right" /></button>
             </div>}
           </header>
-          <div className={styles.cargoHero} aria-label="Cargo">
-            <div className={styles.heroCrates}>
+          {card.mission.brief && <p className={styles.dockBrief} data-testid="mission-brief">{card.mission.brief}</p>}
+          {!card.unlocked && card.lockedDetail && <p className={styles.dockBrief}>{card.lockedDetail}</p>}
+          <div className={styles.dockDeal}>
+            <div className={styles.dockCargo} aria-label="Cargo">
               {Object.entries(card.mission.requires.minerals).map(([id, amount]) => {
                 const meta = catalog.minerals[id]
                 if (!meta) return null
                 return <span key={id} className={styles.crate}><MineralRock shape={meta.shape} color={meta.color} /><b>{amount}</b><em>{meta.name}</em></span>
               })}
             </div>
-          </div>
-          {card.mission.brief && <p className={styles.orderBrief} data-testid="mission-brief">{card.mission.brief}</p>}
-          {!card.unlocked && card.lockedDetail && <p className={styles.orderLock}>{card.lockedDetail}</p>}
-          <div className={styles.orderDeal}>
             <strong className={styles.pay}><i className={styles.coin} aria-hidden="true">{FRANC}</i>{formatFrancs(card.displayPayout, { compact: true })}</strong>
             <button type="button" className={styles.take} data-testid={`mission-accept-${card.mission.id}`} disabled={!card.unlocked || tutorialBlocked} onClick={() => onAccept(card.mission.id)}>ACCEPT</button>
           </div>
         </article>
-      </> : <article className={styles.order} data-testid="mission-board-section-client">
+      </> : <article className={styles.dock} data-testid="mission-board-section-client">
         {onboardingComplete ? <>
-          <h2 className={styles.orderTitle}>No client signals yet</h2>
-          <p className={styles.orderLock}>Free Ops opens once the Earth storage silo is built.</p>
-          <button type="button" className={styles.take} onClick={onOpenBuild}>BUILD STORAGE SILO</button>
-        </> : <h2 className={styles.orderTitle}>No compatible client signals</h2>}
-      </article>) : <div className={styles.sheet}>
-          {tab === 'free' && <div className={styles.chain} data-testid="mission-board-free">
-            <header className={styles.chainHead}>
-              <div>
-                <h2>Your own mining run</h2>
-                <p>No client, no daily limit. Pick what to mine, keep it or sell it at market price.</p>
-              </div>
-            </header>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 8, marginTop: 8 }}>
-              {freeRuns.map(run => <article key={run.id} data-testid={`free-run-${run.id}`} className={styles.freeRun}>
-                <h3 style={{ margin: 0, font: '800 14px var(--ln-font-display)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{run.title}</h3>
-                <p style={{ margin: 0, font: '14px var(--ln-font-body)' }}>{Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}</p>
-                <button type="button" className={styles.take} onClick={() => onAccept(run.id)}>START RUN</button>
-              </article>)}
-              {freeRuns.length === 0 && <p className={styles.orderLock}>No free runs are available yet.</p>}
-            </div>
-          </div>}
+          <header className={styles.dockHead}><div className={styles.dockWho}><h2>No client signals yet</h2></div></header>
+          <p className={styles.dockBrief}>Free Ops opens once the Earth storage silo is built.</p>
+          <div className={styles.dockDeal}><button type="button" className={styles.take} onClick={onOpenBuild}>BUILD STORAGE SILO</button></div>
+        </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
+      </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
+        <header className={styles.dockHead}>
+          <div className={styles.dockWho}>
+            <span>Free run · no client, sell at market price</span>
+            <h2>{picked ? picked.name : 'Choose a site on the map'}</h2>
+          </div>
+        </header>
+        {!picked && <p className={styles.dockBrief}>Tap a planet, or open the asteroid belt, to pick where to mine.</p>}
+        {picked && <p className={styles.dockBrief}>{picked.brief}</p>}
+        {picked && pickedRuns.length > 1 && <div className={styles.dockRuns} role="group" aria-label="Run">
+          {pickedRuns.map(run => <button key={run.id} type="button" data-testid={`free-run-${run.id}`} data-on={run.id === pickedRun?.id || undefined} onClick={() => setRunId(run.id)}>
+            {Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}
+          </button>)}
+        </div>}
+        {picked && pickedRuns.length === 0 && <p className={styles.dockBrief}>No free run mines this site yet.</p>}
+        <div className={styles.dockDeal}>
+          <strong className={styles.pay}>{pickedRun ? Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ') : ''}</strong>
+          <button type="button" className={styles.take} data-testid="free-run-start" disabled={!picked || !pickedRun}
+            onClick={() => { if (!picked || !pickedRun) return; onAccept(pickedRun.id); onPickTarget?.(picked.id) }}>START RUN</button>
+        </div>
+      </article> : <div className={styles.sheet}>
           {tab === 'program' && <div className={styles.chain} data-testid="mission-board-program">
             <header className={styles.chainHead} data-testid="program-summary">
               <div>

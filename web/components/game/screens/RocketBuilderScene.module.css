@@ -478,7 +478,7 @@
 /* The mission plan strip (contract, plan, launch and the destination cards) sits over the scene: the stage starts or ends clear of it. */
 .root:not([data-assembly='idle']) .actions > :last-child { margin-left: auto; }
 
-@media (orientation: portrait) and (max-width: 700px) {
+@media (max-width: 899px) and (min-height: 521px) {
   :global(body:has([data-testid='mission-launch-review'])) .stage { bottom: 166px; }
 }
 

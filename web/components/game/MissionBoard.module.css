@@ -878,7 +878,7 @@ button.take:disabled { background-color: var(--ln-board-silver); color: var(--ln
 @media (orientation: portrait) and (max-width: 700px) {
   .rail { flex-direction: row; width: auto; flex-wrap: nowrap; align-items: center; }
   .rail button.tab { flex: 0 0 52px; width: 52px; min-height: 52px; padding: 0; gap: 0; }
-  .rail .tabLabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .rail .tabLabel { display: none; }
   .rail button.tab svg { width: 24px; height: 24px; }
   .rail button.log { position: static; flex: 0 0 auto; min-height: 44px; padding: 0 12px; }
   .order { left: 12px; right: 12px; bottom: 12px; width: auto; }
@@ -947,7 +947,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 
 @media (orientation: portrait) and (max-width: 700px) {
   .rail button.tab, .rail button.tab[data-tab] { width: 44px; padding: 0; }
-  .rail .tabLabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .rail .tabLabel { display: none; }
   .orderDeal { flex-wrap: wrap; }
   .manifest { flex: 1 1 100%; }
   .pay { margin-right: auto; }
@@ -1066,4 +1066,101 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .order .orderBrief { padding: 0; border: 10px solid transparent; background-clip: padding-box; border-radius: 10px; background: rgba(6, 7, 12, 0.72); max-width: none; }
 @media (max-width: 600px) {
   .order .heroCrates { flex-direction: row; gap: 14px; padding: 6px 12px; }
+}
+
+/* ── Map-first board ───────────────────────────────────────────────────
+   One star map fills the screen on every tab. Tabs, the dock card and the
+   Program and Events panels are drawn over it. */
+.dispatch { display: block; padding: 0; }
+.rail { z-index: 3; top: 12px; }
+.gx {
+  position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background:
+    radial-gradient(ellipse 42% 38% at 70% 26%, color-mix(in srgb, var(--signal) 28%, transparent), transparent 72%),
+    radial-gradient(ellipse 38% 34% at 22% 66%, rgba(150, 90, 210, 0.28), transparent 72%),
+    radial-gradient(ellipse 34% 30% at 88% 62%, rgba(60, 130, 210, 0.26), transparent 72%),
+    radial-gradient(ellipse 30% 26% at 46% 14%, rgba(210, 90, 140, 0.18), transparent 72%),
+    radial-gradient(ellipse 36% 30% at 52% 44%, rgba(70, 190, 210, 0.12), transparent 72%),
+    #06070c;
+}
+.gx[data-view='belt'] {
+  background:
+    radial-gradient(ellipse 50% 40% at 30% 40%, rgba(120, 100, 200, 0.26), transparent 72%),
+    radial-gradient(ellipse 44% 36% at 78% 50%, rgba(200, 90, 130, 0.2), transparent 72%),
+    radial-gradient(ellipse 40% 30% at 55% 20%, rgba(60, 150, 210, 0.2), transparent 72%),
+    #06070c;
+}
+.gx[data-mode='ambient'] { opacity: 0.75; }
+.gx > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.gxStar { position: absolute; border-radius: 50%; box-shadow: 0 0 5px currentColor; }
+.gxRing { fill: none; stroke: rgba(190, 205, 235, 0.16); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.gxRoute { fill: none; stroke: rgba(236, 235, 232, 0.85); stroke-width: 1.5; stroke-dasharray: 4 6; vector-effect: non-scaling-stroke; animation: mapFlow 1.4s linear infinite; }
+.gxSpoke { fill: none; stroke: rgba(190, 205, 235, 0.32); stroke-width: 1; stroke-dasharray: 2 7; vector-effect: non-scaling-stroke; }
+@media (prefers-reduced-motion: reduce) { .gxRoute { animation: none; } }
+.gxRock { position: absolute; border-radius: 42% 58% 50% 50%; background: #b9b3a6; transform: translate(-50%, -50%); }
+.gxSun { position: absolute; width: 26px; height: 26px; border-radius: 50%; transform: translate(-50%, -50%); background: #f4f1e6; box-shadow: 0 0 12px 4px rgba(244, 241, 230, 0.7), 0 0 60px 20px rgba(200, 210, 255, 0.28); }
+
+.gxNode, .gxBelt, .gxBack {
+  position: absolute; display: flex; align-items: center; gap: 10px; transform: translate(-22px, -50%);
+  min-width: 44px; min-height: 44px; margin: 0; padding: 0; border: 0; background: none; color: #ecebe8; cursor: pointer; pointer-events: auto;
+  font: 700 14px/1 var(--ln-font-body); letter-spacing: 0.08em; text-transform: uppercase;
+}
+.gxNode:disabled { cursor: default; pointer-events: none; opacity: 1; }
+.gxStaticNode { pointer-events: none; }
+.gxNode > i, .gxBelt > i { position: relative; flex: 0 0 auto; width: 12px; height: 12px; margin-left: 16px; border-radius: 50%; background: #dfe6f7; box-shadow: 0 0 10px 3px rgba(150, 190, 255, 0.45); }
+.gxNode > i::after, .gxBelt > i::after { content: ''; position: absolute; inset: -8px; border-radius: 50%; border: 1px solid rgba(236, 235, 232, 0.4); }
+.gxNode > span, .gxBelt > span { padding: 4px 7px; border-radius: 4px; background: rgba(6, 7, 12, 0.7); border: 1px solid rgba(190, 205, 235, 0.28); white-space: nowrap; }
+.gxNode[data-home] > i { background: #cfd8ee; }
+.gxNode[data-home] > span { color: #a3a29d; }
+.gxNode[data-lit] > i, .gxBelt[data-lit] > i { background: #f4f1e6; box-shadow: 0 0 14px 5px color-mix(in srgb, var(--signal) 75%, transparent); }
+.gxNode[data-lit] > i::after, .gxBelt[data-lit] > i::after { border-color: var(--signal); }
+.gxNode[data-selected] > span { background: #ecebe8; color: #16171a; border-color: #ecebe8; }
+.gxNode[data-selected] > i::after { inset: -11px; border-width: 2px; border-color: #ecebe8; }
+.gxBelt > span { display: flex; align-items: center; gap: 8px; border-style: dashed; }
+.gxBelt svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.gxBack { left: 12px; top: 80px; transform: none; gap: 6px; padding: 0 16px 0 10px; border-radius: 999px; background: rgba(22, 23, 26, 0.78); border: 2px solid #34363c; }
+.gxBack svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Bottom dock: the only card on the contracts and free-run tabs. */
+.dock {
+  --ln-board-ink: #ecebe8; --ln-board-muted: #a3a29d;
+  position: absolute; z-index: 2; left: 50%; bottom: 12px; transform: translateX(-50%);
+  width: min(680px, calc(100% - 24px)); display: flex; flex-direction: column; gap: 10px; padding: 12px 14px;
+  color: #ecebe8; background: rgba(8, 10, 16, 0.84); border: 1px solid rgba(190, 205, 235, 0.28); border-top: 3px solid var(--signal); border-radius: 14px;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.dockHead { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dockWho { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.dockWho > span { font: 700 14px/1.2 var(--ln-font-body); letter-spacing: 0.08em; text-transform: uppercase; color: #a3a29d; }
+.dockWho > h2 { margin: 0; font: 800 18px/1.15 var(--ln-font-display); color: #ecebe8; }
+.dockNav { display: flex; align-items: center; gap: 6px; font: 700 14px/1 var(--ln-font-mono); color: #a3a29d; }
+.dockNav button.round { background: rgba(34, 36, 42, 0.9); color: #ecebe8; border: 2px solid #34363c; box-shadow: none; }
+.dockBrief { margin: 0; font: 500 14px/1.4 var(--ln-font-body); color: #b9b8b3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dockDeal { display: flex; align-items: center; gap: 12px; }
+.dockCargo { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; flex-wrap: wrap; }
+.dock .crate { display: inline-flex; align-items: center; gap: 6px; padding: 0; background: none; border: 0; box-shadow: none; }
+.dock .crate > :first-child { display: block; width: 28px; height: 28px; background: none; border: 0; }
+.dock .crate > :first-child svg { width: 100%; height: 100%; }
+.dock .crate b { font: 800 18px/1 var(--ln-font-display); }
+.dock .crate em { font: 600 14px/1 var(--ln-font-body); font-style: normal; color: #d9d8d4; text-transform: uppercase; letter-spacing: 0.06em; }
+.dock .pay { margin: 0; font-size: 18px; flex: 0 0 auto; }
+.dock .coin { background: #ecebe8; color: #16171a; }
+.dock .pay:first-child { margin-right: auto; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; color: #d9d8d4; }
+.dock button.take { flex: 0 0 auto; min-width: 140px; min-height: 44px; }
+.dockRuns { display: flex; flex-wrap: wrap; gap: 8px; }
+.dockRuns button { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 2px solid #34363c; background: rgba(34, 36, 42, 0.9); color: #d9d8d4; font: 700 14px/1 var(--ln-font-body); cursor: pointer; }
+.dockRuns button[data-on] { background: #ecebe8; color: #16171a; border-color: #ecebe8; }
+
+/* Program and Events float over the map as one scrolling panel. */
+.sheet { position: absolute; z-index: 2; top: 68px; bottom: 12px; left: 50%; transform: translateX(-50%); width: min(1040px, calc(100% - 24px)); padding: 0 0 8px; }
+
+@media (orientation: portrait) and (max-width: 700px) {
+  .dockDeal { flex-wrap: wrap; }
+  .dockCargo { flex: 1 1 100%; }
+  .dock .pay { margin-right: auto; }
+  .dock button.take { flex: 1 1 auto; }
+}
+@media (max-height: 520px) {
+  .dock { padding: 8px 12px; gap: 6px; width: min(560px, calc(100% - 24px)); left: auto; right: 12px; transform: none; }
+  .dockBrief { -webkit-line-clamp: 1; }
 }

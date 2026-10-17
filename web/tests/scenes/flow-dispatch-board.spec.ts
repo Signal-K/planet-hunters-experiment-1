@@ -31,4 +31,25 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       }
     })
   })
+
+  test.describe(`board map ${vp}`, () => {
+    test.use({ viewport: size })
+    test('asteroids live in a zoomable belt and a free run is picked on the map', async ({ page }, info) => {
+      await stage(page, 'ui-mission-board')
+      await expect(page.getByTestId('galaxy-map')).toBeVisible()
+      await page.getByTestId('map-belt').click()
+      await expect(page.getByTestId('map-back')).toBeVisible()
+      await page.waitForTimeout(300)
+      await page.screenshot({ path: info.outputPath(`belt-${vp}.png`) })
+      await page.getByTestId('map-back').click()
+      const free = page.getByTestId('mission-board-tab-free')
+      test.skip(!(await free.isVisible()), 'free run tab needs Free Ops')
+      await free.click()
+      await expect(page.getByTestId('mission-board-free')).toBeVisible()
+      await page.getByTestId('map-node-mars').click()
+      await expect(page.getByTestId('free-run-start')).toBeEnabled()
+      await page.waitForTimeout(300)
+      await page.screenshot({ path: info.outputPath(`free-${vp}.png`) })
+    })
+  })
 }
