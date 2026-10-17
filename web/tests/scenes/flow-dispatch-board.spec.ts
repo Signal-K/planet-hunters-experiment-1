@@ -18,4 +18,17 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await page.screenshot({ path: info.outputPath(`dispatch-${vp}.png`) })
     })
   })
+
+  test.describe(`board tabs ${vp}`, () => {
+    test.use({ viewport: size })
+    test('program and events share the dark board look', async ({ page }, info) => {
+      await stage(page, 'ui-mission-board')
+      for (const tab of ['program', 'events']) {
+        await page.getByTestId(`mission-board-tab-${tab}`).click({ timeout: 5000 })
+        await expect(page.getByTestId(`mission-board-${tab}`)).toBeVisible()
+        await page.waitForTimeout(300)
+        await page.screenshot({ path: info.outputPath(`tab-${tab}-${vp}.png`) })
+      }
+    })
+  })
 }
