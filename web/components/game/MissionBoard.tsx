@@ -38,6 +38,7 @@ interface MissionBoardProps {
   onClose: () => void
   onOpenLog: () => void
   onOpenBuild: () => void
+  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search') => void
   onPickTarget?: (id: string) => void
   /** The rocket now stands on the pad in the scene behind the board. */
   rocketImg?: string
@@ -260,7 +261,7 @@ function PickIcon() {
 }
 
 export default function MissionBoard({
-  catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onPickTarget,
+  catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
   tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [tab, setTab] = useState<MissionBoardTab>(() => takeMissionBoardTab() ?? 'contracts')
@@ -319,6 +320,17 @@ export default function MissionBoard({
   const startStep = (step: ProgramStep) => {
     if (step.state === 'locked' || step.state === 'done') return
     onAccept(step.id, step.kind === 'focus' ? 'store' : undefined)
+  }
+
+  const openEvent = (event: SkyBoardCard) => {
+    if (event.id === 'orionids-2026' || event.id === 'draconids-2026') {
+      setTab('free')
+      setView('belt')
+      return
+    }
+    if (event.id === 'saturn-night-2026') return onOpenEvent('saturn-storm-search')
+    if (event.id === 'new-moon-hunt-2026-10') return onOpenEvent('asteroid-discovery')
+    onOpenEvent('launchpad')
   }
 
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
@@ -441,30 +453,20 @@ export default function MissionBoard({
           </div>}
 
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">
-            <article className={styles.eventHero} data-testid="events-orionids">
-              <div className={styles.heroArt} aria-hidden="true"><SkyBanner kind="orionids" /></div>
-              <div className={styles.heroBody}>
-                <h2>{events.orionids.name}</h2>
-                <EventStatus card={events.orionids} />
-                <div className={styles.badges} aria-label="Orionids badge slots">
-                  <Medal tier={events.orionids.earnedTier === 'gold' ? 'gold' : 'empty'} />
-                  <Medal tier={events.orionids.earnedTier === 'silver' ? 'silver' : 'empty'} />
-                </div>
-                <p className={styles.blurb}>{events.orionids.blurb}</p>
-              </div>
-            </article>
-            <div className={styles.stack}>
-              {events.wsw.map(event => <article key={event.id} className={styles.eventCard} data-testid={`events-card-${event.id}`}>
-                <div className={styles.eventArt} aria-hidden="true"><SkyBanner kind={bannerKind(event.id)} /></div>
-                <div className={styles.eventBody}>
-                  <h3>{event.name}</h3>
-                  <div className={styles.badges}>
-                    <Medal tier={event.earnedTier ?? 'silver'} />
+            {events.groups.map(group => <section key={group.status} className={styles.eventGroup} data-testid={`events-group-${group.status}`}>
+              <header className={styles.eventGroupHead}><h2>{group.title}</h2><span>{group.cards.length}</span></header>
+              <div className={styles.eventGrid}>
+                {group.cards.map(event => <article key={event.id} className={styles.eventCard} data-testid={event.id === 'orionids-2026' ? 'events-orionids' : `events-card-${event.id}`}>
+                  <div className={styles.eventArt} aria-hidden="true"><SkyBanner kind={bannerKind(event.id)} /></div>
+                  <div className={styles.eventBody}>
+                    <div className={styles.eventTitle}><h3>{event.name}</h3><EventStatus card={event} /></div>
+                    <p className={styles.eventReward}>{event.rewardLabel}</p>
+                    {event.blurb && <p className={styles.blurb}>{event.blurb}</p>}
+                    <button type="button" className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
                   </div>
-                  <EventStatus card={event} />
-                </div>
-              </article>)}
-            </div>
+                </article>)}
+              </div>
+            </section>)}
           </div>}
       </div>}
     </section>

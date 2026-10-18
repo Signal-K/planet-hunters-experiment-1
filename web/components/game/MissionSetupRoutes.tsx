@@ -60,6 +60,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
       onClose={() => game.goBack()}
       onOpenLog={() => game.go('mission-history')}
       onOpenBuild={() => game.go('build')}
+      onOpenEvent={screen => game.go(screen)}
       onPickTarget={game.onPickTarget}
       rocketImg={rocketDisplayForConfig(game.rocket).img}
       tutorialBlocked={relay.tutorialMissionInProgress}

@@ -55,6 +55,10 @@ describe('mission board view', () => {
       'new-moon-hunt-2026-10',
     ])
     expect(board.wsw.every(card => card.status === 'ended')).toBe(true)
+    expect(board.groups.map(group => group.title)).toEqual(['Upcoming', 'Past events'])
+    expect(board.groups.find(group => group.status === 'ended')?.cards).toHaveLength(4)
+    expect(board.groups.find(group => group.status === 'ended')?.cards.every(card => card.actionLabel === 'PLAY FOR SILVER')).toBe(true)
+    expect(board.groups.find(group => group.status === 'ended')?.cards.every(card => card.rewardLabel === 'REPLAY REWARD · SILVER BADGE')).toBe(true)
     expect(board.attention).toBe(true)
   })
 

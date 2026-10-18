@@ -81,7 +81,7 @@ struct MissionsScreen: View {
                     .padding(.trailing, max(insets.trailing, 12))
                     .padding(.bottom, insets.bottom + 12)
             } else if tab == 1 || tab == 2 {
-                ScrollView { if tab == 1 { ProgramRoadmap { archiveFocus = $0; showArchive = true }.padding(16) } else { EventsBoard().padding(16) } }
+                ScrollView { if tab == 1 { ProgramRoadmap { archiveFocus = $0; showArchive = true }.padding(16) } else { EventsBoard(onOpenDebris: { tab = 3 }).padding(16) } }
                     .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
                     .padding(.top, portrait ? railTop + 64 : railTop)

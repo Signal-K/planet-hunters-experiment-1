@@ -31,6 +31,14 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
           await page.locator('[data-testid^="program-step-"]').nth(1).click()
           await expect(page.getByTestId('program-step-detail')).toContainText('Launch Saturn satellite')
         }
+        if (tab === 'events') {
+          await expect(page.getByTestId('events-group-upcoming')).toBeVisible()
+          await expect(page.getByTestId('events-group-ended')).toBeVisible()
+          await expect(page.getByTestId('event-action-draconids-2026')).toHaveText('PLAY FOR SILVER')
+          const action = page.getByTestId('event-action-draconids-2026')
+          const actionBox = await action.boundingBox()
+          expect(actionBox && actionBox.height >= 44).toBe(true)
+        }
         await page.waitForTimeout(300)
         await page.screenshot({ path: info.outputPath(`tab-${tab}-${vp}.png`) })
       }

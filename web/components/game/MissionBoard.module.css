@@ -475,8 +475,8 @@ button.start {
 .join svg { width: 22px; height: 22px; fill: var(--ln-board-amber); stroke: var(--ln-board-amber); stroke-width: 2.4; }
 
 .events {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(200px, 0.75fr);
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   align-items: start;
   flex: 0 0 auto;
@@ -484,13 +484,18 @@ button.start {
   height: auto;
   overflow: visible;
 }
+.eventGroup { display: grid; gap: 8px; }
+.eventGroupHead { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 0 10px; border: 2px solid var(--ln-board-silver); border-radius: 10px; background: var(--ln-board-paper); }
+.eventGroupHead h2 { margin: 0; font: 800 18px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.eventGroupHead span { display: grid; place-items: center; min-width: 32px; height: 32px; border: 2px solid currentColor; border-radius: 50%; font: 800 14px var(--ln-font-display); }
+.eventGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .eventHero, .eventCard {
   border: 2px solid color-mix(in srgb, var(--ln-board-ink) 10%, transparent);
   border-radius: 18px;
   background-color: var(--ln-board-paper);
   overflow: hidden;
 }
-.eventCard { flex: 0 0 auto; }
+.eventCard { display: grid; grid-template-columns: minmax(112px, .65fr) minmax(0, 1.35fr); flex: 0 0 auto; }
 .eventHero { display: flex; flex-direction: column; min-height: 0; height: auto; }
 .heroArt, .eventArt {
   position: relative;
@@ -514,6 +519,10 @@ button.start {
 .heroBody, .eventBody { padding: 12px 14px 14px; }
 .eventHero h2, .eventBody h3 { margin: 0; font: 800 22px/1.1 var(--ln-font-display); color: var(--ln-board-ink); }
 .eventBody h3 { font-size: 16px; }
+.eventTitle { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.eventTitle .ended, .eventTitle .countdown { flex: none; margin-top: 0; }
+.eventReward { margin: 10px 0 0; color: var(--ln-board-muted); font: 800 14px/1.25 var(--ln-font-display); letter-spacing: .06em; }
+.eventAction { width: 100%; min-height: 44px; margin-top: 12px; border: 2px solid var(--ln-board-ink); border-radius: 10px; background: transparent; color: var(--ln-board-ink); font: 800 14px var(--ln-font-display); letter-spacing: .08em; cursor: pointer; }
 .countdown {
   display: inline-flex;
   align-items: center;
@@ -1088,12 +1097,13 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .freeRun p { margin: 0; font: 14px var(--ln-font-body); color: #a3a29d; }
 
 /* One surface language for every tab: same card fill, border and radius; two equal columns where there are two. */
-.sheet .events { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sheet .events { display: flex; }
 .sheet .eventHero, .sheet .eventCard { border: 2px solid #34363c; border-radius: 14px; background: #16171a; }
 .sheet .chainHead, .sheet .step { border-radius: 14px; }
 .cargoHero { background: #16171a; border: 2px solid #34363c; }
 @media (orientation: portrait) and (max-width: 700px) {
-  .sheet .events { grid-template-columns: minmax(0, 1fr); }
+  .eventGrid { grid-template-columns: minmax(0, 1fr); }
+  .eventCard { grid-template-columns: 112px minmax(0, 1fr); }
 }
 
 /* Contract card: the star chart is the card background; content sits on it. */

@@ -45,6 +45,8 @@ export interface SkyBoardCard {
   countdownLabel: string | null
   earnedTier: 'gold' | 'silver' | null
   blurb: string
+  actionLabel: string
+  rewardLabel: string
 }
 
 export interface EventsBoard {
@@ -52,6 +54,7 @@ export interface EventsBoard {
   wsw: SkyBoardCard[]
   /** Red dot: an event is live or still upcoming. */
   attention: boolean
+  groups: Array<{ status: SkyBoardStatus; title: string; cards: SkyBoardCard[] }>
 }
 
 const INSTRUMENTS: Array<{ id: string; title: string; detail: string; unlockAt: string }> = [
@@ -185,6 +188,17 @@ function countdownLabel(now: number): string {
   return `${plural(days, 'day')} ${plural(hours, 'hour')} to start`
 }
 
+function eventActionLabel(status: SkyBoardStatus): string {
+  if (status === 'ended') return 'PLAY FOR SILVER'
+  if (status === 'live') return 'PARTICIPATE'
+  return 'PREPARE'
+}
+
+function eventRewardLabel(status: SkyBoardStatus, earnedTier: SkyBoardCard['earnedTier']): string {
+  if (earnedTier) return `${earnedTier.toUpperCase()} BADGE EARNED`
+  return status === 'ended' ? 'REPLAY REWARD · SILVER BADGE' : 'EVENT REWARD · GOLD BADGE'
+}
+
 /** Orionids hero plus the World Space Week cards. Orionids is not a WSW event. */
 export function eventsBoard(
   now: number,
@@ -203,6 +217,8 @@ export function eventsBoard(
     countdownLabel: status === 'upcoming' ? countdownLabel(orionidsNow) : null,
     earnedTier: earned === 'gold' || earned === 'silver' ? earned : null,
     blurb: 'Mine debris at night, earn badges',
+    actionLabel: eventActionLabel(status),
+    rewardLabel: eventRewardLabel(status, earned),
   }
   const order = [
     ...WSW_CARD_ORDER.filter(id => (WSW_EVENT_IDS as readonly string[]).includes(id)),
@@ -214,17 +230,24 @@ export function eventsBoard(
     const eventEnd = event ? Date.parse(event.endUtc) : now
     const eventStatus = skyStatus(eventStart, eventEnd, now)
     const tier = badges?.[id]?.tier
+    const earnedTier = tier === 'gold' || tier === 'silver' ? tier : null
     return {
       id,
       name: event?.name ?? id,
       status: eventStatus,
       countdownLabel: eventStatus === 'upcoming' ? null : null,
-      earnedTier: tier === 'gold' || tier === 'silver' ? tier : null,
+      earnedTier,
       blurb: '',
+      actionLabel: eventActionLabel(eventStatus),
+      rewardLabel: eventRewardLabel(eventStatus, earnedTier),
     }
   })
   const attention = orionidsCard.status !== 'ended' || wsw.some(card => card.status === 'live' || card.status === 'upcoming')
-  return { orionids: orionidsCard, wsw, attention }
+  const all = [orionidsCard, ...wsw]
+  const groups: EventsBoard['groups'] = ([['live', 'Live now'], ['upcoming', 'Upcoming'], ['ended', 'Past events']] as const)
+    .map(([groupStatus, title]) => ({ status: groupStatus, title, cards: all.filter(card => card.status === groupStatus) }))
+    .filter(group => group.cards.length > 0)
+  return { orionids: orionidsCard, wsw, attention, groups }
 }
 
 /** Compact WSW mark for a contract card. Hidden when the mission earns no WSW chip. */
