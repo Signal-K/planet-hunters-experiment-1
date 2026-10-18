@@ -5,7 +5,7 @@ import LandnamCore
 /// Orionids is not a WSW event. Badge medals use the board's own pale blue and grey, never orange or green.
 struct EventsBoard: View {
     @Environment(GameStore.self) private var store
-    var onOpenDebris: () -> Void = {}
+    var onOpenDebris: (String) -> Void = { _ in }
 
     private enum Status { case upcoming(String), live, ended }
 
@@ -100,7 +100,7 @@ struct EventsBoard: View {
 
     private func open(_ id: String) {
         switch id {
-        case "orionids-2026", "draconids-2026": onOpenDebris()
+        case "orionids-2026", "draconids-2026": onOpenDebris(id)
         case "saturn-night-2026": store.go(.saturnStormSearch)
         case "new-moon-hunt-2026-10": store.go(.asteroidDiscovery)
         default: store.go(.launchpad)

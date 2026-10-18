@@ -22,6 +22,9 @@ public final class GameStore {
     private var pendingPayout: Int?
     /// This install's ledger entry id (SSL-559).
     public var deviceId: String = Ledger.deviceId()
+    /// One-shot native UI handoff for opening a specific Mission Board tab.
+    /// Kept out of GameState because it is navigation intent, not saved progress.
+    public var requestedMissionBoardTab: Int?
 
     public init(state: GameState = GameState(), catalog: Catalog = Catalog(), saveURL: URL? = nil,
                 clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 * 1000 }) {
@@ -139,6 +142,11 @@ public final class GameStore {
     public func finishWelcome() { var n = state; n.extras[CloudPull.welcomeKey] = nil; if n.screen == .intro { n.screen = .hub }; apply(n) }
 
     public func go(_ screen: Screen) { var n = state; n.screen = screen; apply(n) }
+
+    public func openMissionBoard(tab: Int) {
+        requestedMissionBoardTab = tab
+        go(.missions)
+    }
     public func setEarthBiome(_ biome: String, asMove: Bool = false) {
         guard ["mountains", "desert", "tundra", "coast"].contains(biome), !state.player.earthBiomeMoveUsed || !asMove else { return }
         var n = state; n.player.earthBiome = biome

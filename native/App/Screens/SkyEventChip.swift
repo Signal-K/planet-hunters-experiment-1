@@ -17,10 +17,19 @@ struct SkyEventChip: View {
                             .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 2))
                     }.buttonStyle(.plain).accessibilityAddTraits(open ? .isSelected : [])
                     if open {
-                        Text("\(preset.label) falls while you mine tonight. Laser it, then sell it at the Market spot price.")
-                            .font(AppFont.body(14)).foregroundStyle(Theme.textDim).frame(maxWidth: 260, alignment: .leading)
-                            .padding(10).background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("\(preset.label) falls while you mine tonight. Laser it, then sell it at the Market spot price.")
+                                .font(AppFont.body(14)).foregroundStyle(Theme.textDim).frame(maxWidth: 260, alignment: .leading)
+                            Button { store.openMissionBoard(tab: 2) } label: {
+                                Text("VIEW EVENT").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Color.white)
+                                    .frame(minHeight: 44).padding(.horizontal, 14)
+                                    .background(Theme.blue, in: RoundedRectangle(cornerRadius: 8))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("sky-event-participate")
+                        }
+                        .padding(10).background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
                     }
                 }
             }

@@ -3,6 +3,29 @@ import { VIEWPORTS, stage } from './helpers'
 
 // SSL-423 scene rule: contracts arrive over the live base, not on a text page.
 for (const [vp, size] of Object.entries(VIEWPORTS)) {
+  test.describe(`base event entry ${vp}`, () => {
+    test.use({ viewport: size })
+    test('the active Orionids chip opens the playable event board', async ({ page }, info) => {
+      await stage(page, 'telescope-hub')
+      await page.evaluate(() => localStorage.setItem('landnam.forceOrionids', '1'))
+      await page.reload()
+      const chip = page.getByTestId('sky-event-chip')
+      await expect(chip).toBeVisible()
+      await chip.click()
+      const participate = page.getByTestId('sky-event-participate')
+      await expect(participate).toBeVisible()
+      const box = await participate.boundingBox()
+      expect(box && box.height >= 44).toBe(true)
+      await page.screenshot({ path: info.outputPath(`orionids-base-${vp}.png`) })
+      await participate.click()
+      await expect(page.getByTestId('mission-board-events')).toBeVisible()
+      await expect(page.getByTestId('events-orionids')).toBeVisible()
+      await page.getByTestId('event-action-orionids-2026').click()
+      await expect(page.getByTestId('event-run-context')).toContainText(/Orionids night run/i)
+      await expect(page.getByTestId('free-run-start')).toBeEnabled()
+    })
+  })
+
   test.describe(`dispatch board ${vp}`, () => {
     test.use({ viewport: size })
     test('the contract is a work order over the live base', async ({ page }, info) => {

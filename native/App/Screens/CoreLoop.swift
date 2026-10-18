@@ -15,6 +15,7 @@ struct MissionsScreen: View {
     @State private var showSettings = false
     @State private var selected = 0
     @State private var selectedTargetId: String?
+    @State private var eventFocus: String?
     @State private var tab: Int
     @State private var camera = BaseCamera(x: 0, depth: 0)
     /// `startTitle` opens the board on that contract (scene catalog only).
@@ -37,6 +38,10 @@ struct MissionsScreen: View {
         .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
         .sheet(isPresented: $showArchive) { ArchiveScreen(focus: archiveFocus) }
         .onAppear {
+            if let requested = store.requestedMissionBoardTab {
+                tab = requested
+                store.requestedMissionBoardTab = nil
+            }
             guard let startTitle else { return }
             let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
             if let i = entries.firstIndex(where: { $0.mission.title == startTitle }) { selected = i }
@@ -73,7 +78,7 @@ struct MissionsScreen: View {
             }
 
             if tab == 3 {
-                FreeRunBoard(runs: store.catalog.missions.filter { $0.id.hasPrefix("self-directed-") && !$0.locked }) { store.pickMission($0) }
+                FreeRunBoard(runs: store.catalog.missions.filter { $0.id.hasPrefix("self-directed-") && !$0.locked }, eventFocus: eventFocus) { store.pickMission($0) }
                     .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
                     .padding(.top, portrait ? railTop + 64 : railTop)
@@ -81,7 +86,7 @@ struct MissionsScreen: View {
                     .padding(.trailing, max(insets.trailing, 12))
                     .padding(.bottom, insets.bottom + 12)
             } else if tab == 1 || tab == 2 {
-                ScrollView { if tab == 1 { ProgramRoadmap { archiveFocus = $0; showArchive = true }.padding(16) } else { EventsBoard(onOpenDebris: { tab = 3 }).padding(16) } }
+                ScrollView { if tab == 1 { ProgramRoadmap { archiveFocus = $0; showArchive = true }.padding(16) } else { EventsBoard(onOpenDebris: { id in eventFocus = SkyEvents.event(id)?.name ?? id; tab = 3 }).padding(16) } }
                     .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
                     .padding(.top, portrait ? railTop + 64 : railTop)
@@ -229,6 +234,7 @@ struct MissionsScreen: View {
 /// Free Ops: start your own mining run with no client or daily limit (mirrors web `MissionBoard` Free run tab).
 private struct FreeRunBoard: View {
     let runs: [Mission]
+    let eventFocus: String?
     let onStart: (String) -> Void
     @Environment(\.flatLayout) private var flat
 
@@ -238,6 +244,17 @@ private struct FreeRunBoard: View {
 
     private var content: some View {
             VStack(alignment: .leading, spacing: 10) {
+                if let eventFocus {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(eventFocus.uppercased()) NIGHT RUN").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+                        Text("Mine falling debris to earn the event badge. Your normal cargo is yours to keep or sell.")
+                            .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    }
+                    .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Theme.blueBright.opacity(0.24), in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.blue, lineWidth: 2))
+                    .accessibilityIdentifier("event-run-context")
+                }
                 Text("Your own mining run").font(AppFont.display(20)).foregroundStyle(Theme.ink)
                 Text("No client, no daily limit. Pick what to mine, keep it or sell it at market price.")
                     .font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)

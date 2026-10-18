@@ -18,11 +18,13 @@ export default function SkyEventChip({
   className,
   debrisCount = 0,
   badgeTier = null,
+  onParticipate,
 }: {
   surface: 'base' | 'mining'
   className?: string
   debrisCount?: number
   badgeTier?: BadgeTier | null
+  onParticipate?: () => void
 }) {
   const preset = useDebrisEvent()
   const [open, setOpen] = useState(false)
@@ -83,6 +85,7 @@ export default function SkyEventChip({
         {open && (
           <div className={styles.note} role="status">
             <p>{preset.label} falls while you mine tonight. Laser it after it lands, then sell it at the Market spot price. It does not count toward the mining order.</p>
+            {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={onParticipate}>VIEW EVENT</button>}
             {preset.eventId === 'draconids-2026' && (
               <nav className={styles.playerLinks} aria-label="Continue World Space Week in other games">
                 {WORLD_SPACE_WEEK_PLAYER_LINKS.map(link => (

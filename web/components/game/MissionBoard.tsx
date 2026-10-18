@@ -21,7 +21,7 @@ import {
   type ProgramStep,
   type SkyBoardCard,
 } from '@/lib/mission-board-view'
-import { takeMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
+import { clearMissionBoardTab, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import styles from './MissionBoard.module.css'
 
@@ -311,7 +311,7 @@ export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
   tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
-  const [tab, setTab] = useState<MissionBoardTab>(() => takeMissionBoardTab() ?? 'contracts')
+  const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
@@ -331,6 +331,7 @@ export default function MissionBoard({
   const [view, setView] = useState<MapView>('system')
   const [pickedId, setPickedId] = useState<string | null>(null)
   const [runId, setRunId] = useState<string | null>(null)
+  const [eventFocus, setEventFocus] = useState<string | null>(null)
   const picked = pickedId ? catalog.targets.find(t => t.id === pickedId) ?? null : null
   const pickedRuns = picked ? freeRuns.filter(run => Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m))) : []
   const pickedRun = pickedRuns.find(run => run.id === runId) ?? pickedRuns[0] ?? null
@@ -343,6 +344,8 @@ export default function MissionBoard({
   const selectedProgramStep = steps.find(step => step.id === programStepId)
     ?? steps.find(step => step.state === 'current')
     ?? steps[0]
+
+  useEffect(() => clearMissionBoardTab(), [])
 
   useEffect(() => {
     if (tab !== 'contracts' || !card) return
@@ -375,8 +378,13 @@ export default function MissionBoard({
 
   const openEvent = (event: SkyBoardCard) => {
     if (event.id === 'orionids-2026' || event.id === 'draconids-2026') {
+      const target = catalog.targets.find(candidate => candidate.type === 'asteroid' && freeRuns.some(run =>
+        Object.keys(run.requires.minerals).some(mineral => candidate.minerals.includes(mineral))))
       setTab('free')
       setView('belt')
+      setEventFocus(event.name)
+      setPickedId(target?.id ?? null)
+      setRunId(null)
       return
     }
     if (event.id === 'saturn-night-2026') return onOpenEvent('saturn-storm-search')
@@ -451,6 +459,9 @@ export default function MissionBoard({
           <div className={styles.dockDeal}><button type="button" className={styles.clearFilter} data-testid="mission-destination-clear" onClick={() => setContractTargetId(null)}>SHOW ALL CONTRACTS</button></div>
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
+        {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
+          <b>{eventFocus} night run</b><span>Mine falling debris to earn the event badge. Your normal cargo is yours to keep or sell.</span>
+        </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>
             <span>Free run · no client, sell at market price</span>

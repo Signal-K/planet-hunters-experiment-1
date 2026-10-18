@@ -275,6 +275,7 @@ function ScreenBody({
           }}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
           onOpenMarket={() => game.go('market')}
+          onOpenEvents={() => { requestMissionBoardTab('events'); game.goToMissions() }}
           onFocusResources={(label, minerals) => {
             game.setPlayer(player => ({ ...player, resourceFocus: { label, minerals } }))
             game.addToast(`${label} added to focus`, 'info')
