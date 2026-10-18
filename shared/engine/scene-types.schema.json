@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://landnam.local/schemas/scene-types.schema.json",
+  "title": "Landnam scene type map",
+  "type": "object",
+  "required": ["version", "status", "coordinateSpace", "sharedSlots", "sceneTypes", "objectContract"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "status": { "enum": ["draft", "approved", "retired"] },
+    "coordinateSpace": { "const": "normalized-safe-area" },
+    "about": { "type": "string" },
+    "sharedSlots": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/slot" }
+    },
+    "sceneTypes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description", "slots", "routes"],
+        "properties": {
+          "description": { "type": "string" },
+          "slots": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+          "routes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+        },
+        "additionalProperties": false
+      }
+    },
+    "objectContract": { "type": "object" }
+  },
+  "$defs": {
+    "slot": {
+      "type": "object",
+      "required": ["x", "y", "w", "h", "layer"],
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "w": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "h": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "layer": { "enum": ["world", "chrome", "controls", "overlay"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

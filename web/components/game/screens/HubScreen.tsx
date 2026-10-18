@@ -293,7 +293,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         // taller hit area below covers the gantry without creating an
         // oversized box that shifts the building label away from the structure.
         w: BUILDING_W.launchpad,
-        callout: menuOpen ? undefined : launchpadCallout,
+        callout: menuOpen || editMode ? undefined : launchpadCallout,
         onClick: () => onFocusBuilding('launchpad'),
       }
     }
@@ -420,6 +420,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
             any lift at all. */}
         <div
           className={layoutStyles.surface}
+          inert={subsurface ? true : undefined}
+          aria-hidden={subsurface ? true : undefined}
           ref={node => { camera.ref.current = node; surfaceRef.current = node }}
           data-testid="base-camera"
           data-zoom={camera.cam.zoom.toFixed(2)}
@@ -604,7 +606,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       })()}
 
       {editMode && onPlaceStructure && (
-        <div data-testid="build-picker" style={{ position: 'absolute', left: 0, right: 0, bottom: 72, zIndex: 21, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, pointerEvents: 'none', padding: '0 12px' }}>
+        <div className={layoutStyles.buildPicker} data-testid="build-picker">
           {placeNote && <span style={{ pointerEvents: 'auto', padding: '6px 12px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>{placeNote}</span>}
           {underground && pickedSiteFree && (
             <button type="button" data-testid="build-place-underground" onClick={() => placeOnPlot(siteById('shaft').plot ?? 2)}

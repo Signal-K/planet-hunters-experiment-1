@@ -296,5 +296,5 @@
   .ticker { grid-column: 1 / -1; }
   .map { grid-column: 1; grid-row: 2 / span 2; flex: none; height: clamp(160px, 56vh, 260px); align-self: start; }
   .filters { grid-column: 2; grid-row: 2; }
-  .list { grid-column: 2; grid-row: 3; }
+  .list { grid-column: 2; grid-row: 3; overflow-y: auto; }
 }

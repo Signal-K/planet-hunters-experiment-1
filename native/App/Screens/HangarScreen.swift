@@ -46,19 +46,19 @@ struct HangarScreen: View {
             }
             .overlay(alignment: .top) {
                 status
-                    .padding(.top, short ? 56 : 68)
+                    .padding(.top, short ? 12 : 20)
                     .padding(.horizontal, 12)
             }
             .overlay(alignment: .topLeading) {
-                blueprint(width: narrow ? min(120, geo.size.width * 0.32) : (short ? 112 : min(260, geo.size.width * 0.18)))
-                    .padding(.top, narrow ? 124 : (short ? 56 : 84))
+                blueprint(width: narrow ? min(96, geo.size.width * 0.26) : (short ? 92 : min(156, geo.size.width * 0.14)))
+                    .padding(.top, narrow ? 76 : (short ? 48 : 72))
                     .padding(.leading, narrow ? 12 : 28)
             }
             .overlay(alignment: .bottom) {
                 cards(short: short, narrow: narrow)
-                    .frame(maxWidth: short ? 520 : 1100)
+                    .frame(maxWidth: short ? 500 : 820)
                     .padding(.horizontal, narrow ? 12 : 24)
-                    .padding(.bottom, short ? 58 : 76)
+                    .padding(.bottom, short ? 56 : 68)
             }
             .overlay(alignment: .center) {
                 if stagedInBay || stagedOnPad {
@@ -92,10 +92,10 @@ struct HangarScreen: View {
 
     /// Which mission the rocket is for, or a way to choose one when none is set up.
     private var status: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             Text(hasMission ? "BUILDING FOR \((store.mission?.title ?? "").uppercased())" : "NO MISSION SET UP")
                 .font(AppFont.display(14)).tracking(1.1).lineLimit(2).multilineTextAlignment(.leading)
-                .padding(.leading, 12).padding(.vertical, 6)
+                .padding(.leading, 10).padding(.vertical, 4)
             if !hasMission {
                 Button { store.go(.missions) } label: {
                     Text("CHOOSE MISSION").font(AppFont.display(14)).tracking(1.1)
@@ -109,7 +109,7 @@ struct HangarScreen: View {
             }
         }
         .foregroundStyle(Color.white)
-        .padding(4)
+        .padding(3)
         .glowPanel(Capsule())
         .accessibilityElement(children: .contain)
     }
@@ -144,7 +144,7 @@ struct HangarScreen: View {
             ("prospector", "Prospector"),
             ("surveyor", "Surveyor"),
         ]
-        return HStack(spacing: short ? 12 : (narrow ? 12 : 20)) {
+        return HStack(spacing: short ? 8 : 12) {
             ForEach(vehicles, id: \.id) { vehicle in
                 let model = Rockets.model(id: vehicle.id)
                 let sealed = model.map { $0.locked || store.player.missionsDone < $0.missionsRequired } ?? false
@@ -159,7 +159,7 @@ struct HangarScreen: View {
                     VStack(spacing: 4) {
                         HangarRocketThumbnail(tier: model?.tier ?? 1)
                             .frame(maxWidth: .infinity)
-                            .frame(height: short ? 36 : (narrow ? 56 : 100))
+                            .frame(height: short ? 28 : (narrow ? 44 : 72))
                             .opacity(note == nil ? 1 : 0.55)
                         Text(vehicle.name.uppercased())
                             .font(AppFont.display(14)).tracking(narrow ? 0.4 : 1.1)
@@ -178,10 +178,10 @@ struct HangarScreen: View {
                         }
                     }
                     .foregroundStyle(Color.white)
-                    .padding(.horizontal, short ? 4 : 12)
-                    .padding(.vertical, short ? 4 : 12)
-                    .frame(maxWidth: .infinity, minHeight: short ? 84 : (narrow ? 120 : 148))
-                    .glowPanel(RoundedRectangle(cornerRadius: 16), active: note == nil)
+                    .padding(.horizontal, short ? 4 : 8)
+                    .padding(.vertical, short ? 4 : 8)
+                    .frame(maxWidth: .infinity, minHeight: short ? 76 : (narrow ? 104 : 120))
+                    .glowPanel(RoundedRectangle(cornerRadius: 12), active: note == nil)
                     .opacity(note == nil ? 1 : 0.8)
                 }
                 .buttonStyle(.plain)
@@ -198,6 +198,7 @@ struct HangarScreen: View {
         }
         .padding(short ? 8 : 12)
     }
+
 }
 
 private struct HangarRocketThumbnail: View {

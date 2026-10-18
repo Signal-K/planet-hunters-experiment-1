@@ -51,7 +51,6 @@
   --ln-cyan-border: rgba(112, 217, 234, 0.4);
   --ln-blueprint-bg: #eef3f8;
   --ln-blueprint-paper: #ffffff;
-  --ln-settings-paper: #f2eee4;
   --ln-blueprint-paper-2: #dfe9f3;
   --ln-blueprint-ink: #0f2436;
   --ln-blueprint-blue: #1f78c1;
@@ -4580,7 +4579,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 /* SSL-556: Settings owns a full utility page between the persistent HUD and dock. */
 .ops-settings {
-  --set-bg: var(--ln-settings-paper);
+  --set-bg: var(--ln-blueprint-paper-2);
   --set-card: var(--ln-blueprint-paper);
   --set-ink: var(--ln-blueprint-ink);
   --set-muted: var(--ln-blueprint-ink);

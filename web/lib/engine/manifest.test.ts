@@ -100,6 +100,9 @@ describe('production hub, terrain and actor sprites', () => {
       '/game/assets/base/layers/mountains-near.png',
       // Exchange dock art from SSL-423 that no scene references yet; the base draws base/v7/structures/exchange.png.
       '/game/assets/base/kit/exchange-dock.png',
+      // Rocket Builder renders these large compositing plates directly rather than loading them as engine sprites.
+      '/game/assets/base/v7/launchpad/pad-complex.png',
+      '/game/assets/base/v7/launchpad/pad-scaffold.png',
     ])
     const registered = new Set(Object.values(manifest))
     const unregistered = RENDERED.flatMap(dir => walk(join(PUBLIC, dir)))
