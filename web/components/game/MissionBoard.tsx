@@ -179,6 +179,7 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
   })]
   const style = (p: { x: number; y: number }) => ({ left: `${p.x}%`, top: `${p.y}%` })
   const line = (pts: { x: number; y: number }[]) => pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ')
+  const beltLane = (ids: string[]) => line(ids.flatMap(id => belt[id] ? [belt[id]] : []))
   const node = (t: Target, p: { x: number; y: number }, label: string) => pickable
     ? <button key={t.id} type="button" className={styles.gxNode}
       data-lit={lit.has(t.id) || undefined} data-selected={t.id === selectedId || undefined} data-route={stops.includes(t.id) || undefined}
@@ -194,6 +195,9 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
     {STARS.map((s, i) => <i key={i} className={styles.gxStar} style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, opacity: s.glow, background: s.tint, color: s.tint }} />)}
     {view === 'system' ? <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <ellipse cx="18" cy="44" rx="20" ry="17" className={styles.gxRegion} />
+        <ellipse cx="62" cy="44" rx="25" ry="24" className={styles.gxRegion} />
+        <ellipse cx="92" cy="44" rx="21" ry="29" className={styles.gxRegion} />
         {[1, 2, 3, 4, 6, 7].map(o => <ellipse key={o} cx={SUN.x} cy={SUN.y} rx={o * UX} ry={o * UY} className={styles.gxRing} />)}
         {mode !== 'ambient' && route.length > 1 && (stops.length > 0
           ? <path d={line(route)} className={styles.gxRoute} />
@@ -201,6 +205,9 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
       </svg>
       {BELT_ROCKS.map((r, i) => <i key={i} className={styles.gxRock} style={{ ...style(r), width: r.size, height: r.size, opacity: r.glow }} />)}
       <i className={styles.gxSun} style={style(SUN)} />
+      <span className={styles.gxRegionLabel} style={{ left: '13%', top: '68%' }}>Inner system</span>
+      <span className={styles.gxRegionLabel} style={{ left: '54%', top: '73%' }}>Main belt</span>
+      <span className={styles.gxRegionLabel} style={{ left: '83%', top: '78%' }}>Outer system</span>
       {mode !== 'ambient' && <>
         <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(EARTH_POS)} aria-label="Earth"><i /><span>Earth</span></div>
         {planets.map(t => node(t, planetPos(t), t.name))}
@@ -209,7 +216,17 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
         </button>
       </>}
     </> : <>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <ellipse cx="31" cy="39" rx="22" ry="25" className={styles.gxRegion} />
+        <ellipse cx="68" cy="38" rx="25" ry="25" className={styles.gxRegion} />
+        <ellipse cx="52" cy="66" rx="26" ry="19" className={styles.gxRegion} />
+        <path d={beltLane(['bennu', 'ryugu', 'ceres', 'lutetia', 'psyche', 'eros'])} className={styles.gxLane} />
+        <path d={beltLane(['bennu', 'vesta', 'psyche'])} className={styles.gxLane} />
+        <path d={beltLane(['itokawa', 'vesta', 'lutetia'])} className={styles.gxLane} />
+      </svg>
       {BELT_FIELD.map((r, i) => <i key={i} className={styles.gxRock} style={{ ...style(r), width: r.size, height: r.size, opacity: r.glow }} />)}
+      <span className={styles.gxRegionLabel} style={{ left: '18%', top: '68%' }}>Near-Earth group</span>
+      <span className={styles.gxRegionLabel} style={{ left: '64%', top: '69%' }}>Main-belt group</span>
       {asteroids.map(t => node(t, belt[t.id], shortName(t.name)))}
       <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>Solar system</button>
     </>}

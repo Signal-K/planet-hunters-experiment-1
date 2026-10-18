@@ -1153,11 +1153,14 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .gx > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .gxStar { position: absolute; border-radius: 50%; box-shadow: 0 0 8px 1px currentColor; }
 .gxRing { fill: none; stroke: rgba(118, 188, 228, 0.26); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.gxRegion { fill: rgba(21, 115, 174, .08); stroke: rgba(104, 202, 239, .24); stroke-width: 1; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke; }
+.gxLane { fill: none; stroke: rgba(144, 216, 244, .42); stroke-width: 1.15; stroke-dasharray: 1.5 4; filter: drop-shadow(0 0 3px rgba(55, 184, 231, .55)); vector-effect: non-scaling-stroke; }
 .gxRoute { fill: none; stroke: #b7ecff; stroke-width: 1.8; stroke-dasharray: 4 6; filter: drop-shadow(0 0 4px rgba(73, 202, 240, .9)); vector-effect: non-scaling-stroke; animation: mapFlow 1.4s linear infinite; }
 .gxSpoke { fill: none; stroke: rgba(111, 198, 235, 0.52); stroke-width: 1.2; stroke-dasharray: 2 7; filter: drop-shadow(0 0 3px rgba(60, 176, 230, .45)); vector-effect: non-scaling-stroke; }
 @media (prefers-reduced-motion: reduce) { .gxRoute { animation: none; } }
 .gxRock { position: absolute; border-radius: 42% 58% 50% 50%; background: #a9bed2; box-shadow: 0 0 5px rgba(82, 170, 220, .5); transform: translate(-50%, -50%); }
 .gxSun { position: absolute; width: 26px; height: 26px; border-radius: 50%; transform: translate(-50%, -50%); background: #fff3ce; box-shadow: 0 0 14px 5px rgba(255, 224, 152, 0.85), 0 0 70px 26px rgba(75, 176, 231, 0.4); }
+.gxRegionLabel { position: absolute; z-index: 0; transform: translate(-50%, -50%); color: rgba(169, 218, 241, .42); font: 800 14px/1 var(--ln-font-display); letter-spacing: .16em; text-transform: uppercase; white-space: nowrap; }
 
 .gxNode, .gxBelt, .gxBack {
   position: absolute; display: flex; align-items: center; gap: 10px; transform: translate(-22px, -50%);
