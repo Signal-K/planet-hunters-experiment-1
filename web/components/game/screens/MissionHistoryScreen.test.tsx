@@ -26,6 +26,19 @@ describe('MissionHistoryScreen', () => {
     expect(markup).toContain('No completed missions yet')
   })
 
+  it('explains legacy completions instead of contradicting the lifetime count', () => {
+    const markup = renderToStaticMarkup(
+      <MissionHistoryScreen
+        onBack={() => {}}
+        records={[]}
+        player={{ missionsDone: 1 } as never}
+      />,
+    )
+
+    expect(markup).toContain('1 completed mission predates detailed mission records')
+    expect(markup).not.toContain('No completed missions yet')
+  })
+
   it('lists a classified transit alongside missions', () => {
     const markup = renderToStaticMarkup(
       <MissionHistoryScreen

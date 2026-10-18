@@ -62,6 +62,7 @@ export default function MissionHistoryScreen({ records, targets = [], missions =
   const clientRuns = ordered.filter(record => record.kind !== 'transit' && record.kind !== 'program').length
   const ownRuns = ordered.filter(record => record.kind === 'program').length
   const transits = ordered.filter(record => record.kind === 'transit').length
+  const legacyCompleted = Math.max(0, lifetimeCompleted - missionEntries)
 
   return (
     <section className={styles.screen} data-testid="mission-history-screen">
@@ -80,7 +81,9 @@ export default function MissionHistoryScreen({ records, targets = [], missions =
         {ordered.length === 0 ? (
           <div className={styles.empty}>
             <div className={styles.emptySlots} aria-hidden="true"><span /><span /><span /></div>
-            No completed missions yet. Choose a contract from the Mission Board to start your log.
+            {legacyCompleted > 0
+              ? `${legacyCompleted} completed ${legacyCompleted === 1 ? 'mission predates' : 'missions predate'} detailed mission records. New missions will appear here with their full debrief.`
+              : 'No completed missions yet. Choose a contract from the Mission Board to start your log.'}
           </div>
         ) : (
           <div className={styles.list}>

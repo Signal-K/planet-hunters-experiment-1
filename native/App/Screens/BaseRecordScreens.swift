@@ -144,6 +144,7 @@ struct MissionHistoryScreen: View {
         let ordered = MissionLog.entries(store.player)
         let missionEntries = ordered.filter { !$0.isTransit }.count
         let lifetime = max(store.player.missionsDone, missionEntries)
+        let legacyCompleted = max(0, lifetime - missionEntries)
         MissionRecordPage(title: "Mission log") {
             VStack(alignment: .leading, spacing: 24) {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), spacing: 8)], spacing: 8) {
@@ -166,7 +167,9 @@ struct MissionHistoryScreen: View {
                 .padding(.top, 8)
 
                 if ordered.isEmpty {
-                    Text("No completed missions yet. Choose a contract from the Mission Board to start your log.")
+                    Text(legacyCompleted > 0
+                         ? "\(legacyCompleted) completed \(legacyCompleted == 1 ? "mission predates" : "missions predate") detailed mission records. New missions will appear here with their full debrief."
+                         : "No completed missions yet. Choose a contract from the Mission Board to start your log.")
                         .font(AppFont.body(14)).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
                         .padding(.vertical, 32).padding(.horizontal, 20).frame(maxWidth: .infinity)
                         .background(RecordCream.paper)
