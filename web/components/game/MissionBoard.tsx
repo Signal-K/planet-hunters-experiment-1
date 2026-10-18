@@ -270,6 +270,7 @@ export default function MissionBoard({
   const events = useMemo(() => eventsBoard(now, player.badges, orionidsNow), [now, orionidsNow, player.badges])
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
   const [contractTargetId, setContractTargetId] = useState<string | null>(null)
+  const [programStepId, setProgramStepId] = useState<string | null>(null)
   const visibleCards = contractTargetId ? cards.filter(item => item.targetIds.includes(contractTargetId)) : cards
   const selectedCard = cards[Math.min(selectedIndex, Math.max(0, cards.length - 1))]
   const count = visibleCards.length
@@ -290,6 +291,9 @@ export default function MissionBoard({
     ? catalog.targets.filter(t => t.type !== 'exoplanet' && Object.keys(card.mission.requires.minerals).some(m => t.minerals.includes(m))).slice(0, 4).map(t => t.id)
     : []
   const mapMode: MapMode = tab === 'contracts' || tab === 'free' ? 'pick' : 'ambient'
+  const selectedProgramStep = steps.find(step => step.id === programStepId)
+    ?? steps.find(step => step.state === 'current')
+    ?? steps[0]
 
   useEffect(() => {
     if (tab !== 'contracts' || !card) return
@@ -409,35 +413,31 @@ export default function MissionBoard({
                 <i style={{ width: `${(steps.filter(step => step.state === 'done').length / Math.max(steps.length, 1)) * 100}%` }} />
               </div>
             </header>
-            <ol className={styles.roadmap}>
-              {steps.map((step, stepIndex) => <li key={step.id} className={styles.roadStep} data-state={step.state}>
-                <span className={styles.node} aria-hidden="true">{step.state === 'done' ? <CheckIcon /> : stepIndex + 1}</span>
-                <article className={styles.step} data-state={step.state} data-testid={`program-step-${step.id}`}>
-                  <span className={styles.glyph} aria-hidden="true"><StepGlyph kind={step.kind} /></span>
-                  <div className={styles.stepBody}>
-                    <span className={styles.kicker}>{STEP_KIND_LABEL[step.kind]} · {STEP_STATE_LABEL[step.state]}</span>
-                    <h3>{step.title}</h3>
-                    <p className={styles.reward}><b>Unlocks</b> {step.detail}</p>
-                    {step.state === 'locked' && step.lockLine && (
-                      <div className={styles.gate}>
-                        <span><LockIcon /> Needs: {step.lockLine}</span>
-                        {step.progress && (
-                          <span className={styles.gateMeter}>
-                            <i style={{ width: `${(step.progress.have / step.progress.need) * 100}%` }} />
-                            <em>{step.progress.label} {step.progress.have}/{step.progress.need}</em>
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.mark}>
-                    {step.state === 'done' && <span className={styles.doneMark} aria-label="Done"><CheckIcon /></span>}
-                    {step.state === 'locked' && <span aria-label="Locked"><LockIcon /></span>}
-                    {(step.state === 'current' || step.state === 'available') && <button type="button" className={styles.start} data-testid={`program-start-${step.id}`} onClick={() => startStep(step)}>{step.state === 'current' ? 'START' : 'ACCEPT'}</button>}
-                  </div>
-                </article>
-              </li>)}
-            </ol>
+            <div className={styles.skillTree} role="list" aria-label="Program skill tree">
+              {steps.map((step, stepIndex) => <button key={step.id} type="button" role="listitem" className={styles.skillNode}
+                data-state={step.state} data-selected={step.id === selectedProgramStep?.id || undefined}
+                data-testid={`program-step-${step.id}`} aria-pressed={step.id === selectedProgramStep?.id}
+                onClick={() => setProgramStepId(step.id)}>
+                <span className={styles.skillIndex} aria-hidden="true">{step.state === 'done' ? <CheckIcon /> : stepIndex + 1}</span>
+                <span className={styles.skillGlyph} aria-hidden="true"><StepGlyph kind={step.kind} /></span>
+                <span className={styles.skillCopy}>
+                  <span>{STEP_KIND_LABEL[step.kind]} · {STEP_STATE_LABEL[step.state]}</span>
+                  <strong>{step.title}</strong>
+                </span>
+              </button>)}
+            </div>
+            {selectedProgramStep && <article className={styles.skillDetail} data-state={selectedProgramStep.state} data-testid="program-step-detail">
+              <header>
+                <span className={styles.glyph} aria-hidden="true"><StepGlyph kind={selectedProgramStep.kind} /></span>
+                <div><span className={styles.kicker}>{STEP_KIND_LABEL[selectedProgramStep.kind]} · {STEP_STATE_LABEL[selectedProgramStep.state]}</span><h3>{selectedProgramStep.title}</h3></div>
+              </header>
+              <p className={styles.reward}><b>Unlocks</b> {selectedProgramStep.detail}</p>
+              {selectedProgramStep.state === 'locked' && selectedProgramStep.lockLine && <div className={styles.gate}>
+                <span><LockIcon /> Needs: {selectedProgramStep.lockLine}</span>
+                {selectedProgramStep.progress && <span className={styles.gateMeter}><i style={{ width: `${(selectedProgramStep.progress.have / selectedProgramStep.progress.need) * 100}%` }} /><em>{selectedProgramStep.progress.label} {selectedProgramStep.progress.have}/{selectedProgramStep.progress.need}</em></span>}
+              </div>}
+              {(selectedProgramStep.state === 'current' || selectedProgramStep.state === 'available') && <button type="button" className={styles.start} data-testid={`program-start-${selectedProgramStep.id}`} onClick={() => startStep(selectedProgramStep)}>{selectedProgramStep.state === 'current' ? 'START' : 'ACCEPT'}</button>}
+            </article>}
           </div>}
 
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">

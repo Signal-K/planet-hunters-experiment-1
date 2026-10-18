@@ -27,6 +27,10 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       for (const tab of ['program', 'events']) {
         await page.getByTestId(`mission-board-tab-${tab}`).click({ timeout: 5000 })
         await expect(page.getByTestId(`mission-board-${tab}`)).toBeVisible()
+        if (tab === 'program') {
+          await page.locator('[data-testid^="program-step-"]').nth(1).click()
+          await expect(page.getByTestId('program-step-detail')).toContainText('Launch Saturn satellite')
+        }
         await page.waitForTimeout(300)
         await page.screenshot({ path: info.outputPath(`tab-${tab}-${vp}.png`) })
       }
