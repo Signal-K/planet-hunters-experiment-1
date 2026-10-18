@@ -122,13 +122,35 @@ struct MissionsScreen: View {
     private func destinationFilter(entries: [MissionBoard.Entry]) -> some View {
         let ids = Set(entries.flatMap { feasibleTargetIds(for: $0.mission) })
         let targets = store.catalog.targets.filter { ids.contains($0.id) && $0.type != .exoplanet }
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                filterChip(id: nil, label: "ALL")
-                if targets.contains(where: { $0.type == .asteroid }) {
-                    Text("ASTEROID BELT").font(AppFont.mono(14)).tracking(1.0).foregroundStyle(Theme.textDim)
+        let selectedTarget = selectedTargetId.flatMap { id in targets.first { $0.id == id } }
+        let resultCount = selectedTargetId.map { targetId in
+            entries.filter { feasibleTargetIds(for: $0.mission).contains(targetId) }.count
+        } ?? entries.count
+        return VStack(alignment: .leading, spacing: 6) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    filterChip(id: nil, label: "ALL")
+                    if targets.contains(where: { $0.type == .asteroid }) {
+                        Text("ASTEROID BELT").font(AppFont.mono(14)).tracking(1.0).foregroundStyle(Theme.textDim)
+                    }
+                    ForEach(targets) { target in filterChip(id: target.id, label: target.name.uppercased()) }
                 }
-                ForEach(targets) { target in filterChip(id: target.id, label: target.name.uppercased()) }
+            }
+            if let selectedTarget {
+                HStack(spacing: 8) {
+                    Text("\(selectedTarget.name.uppercased()) · \(resultCount) \(resultCount == 1 ? "CONTRACT" : "CONTRACTS")")
+                        .font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.paper)
+                    Spacer(minLength: 8)
+                    Button("SHOW ALL") { selectedTargetId = nil; selected = 0 }
+                        .font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.paper)
+                        .frame(minHeight: 44).padding(.horizontal, 12)
+                        .overlay(Capsule().stroke(Theme.paper.opacity(0.7), lineWidth: 2))
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("mission-destination-clear")
+                }
+                .padding(.leading, 14)
+                .background(Theme.ink.opacity(0.84), in: Capsule())
+                .accessibilityIdentifier("mission-destination-result")
             }
         }
         .accessibilityIdentifier("mission-destination-filter")

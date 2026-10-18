@@ -1193,6 +1193,9 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
 }
 .dockHead { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.filterStatus { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 32px; padding-bottom: 8px; border-bottom: 1px solid rgba(190, 205, 235, 0.22); color: #b9b8b3; font: 700 14px/1.2 var(--ln-font-body); letter-spacing: 0.06em; text-transform: uppercase; }
+.filterStatus b { color: #ecebe8; }
+.filterStatus button, .clearFilter { min-height: 44px; padding: 0 14px; border: 2px solid #59606d; border-radius: 999px; background: rgba(34, 36, 42, 0.9); color: #ecebe8; font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.08em; cursor: pointer; }
 .dockWho { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
 .dockWho > span { font: 700 14px/1.2 var(--ln-font-body); letter-spacing: 0.08em; text-transform: uppercase; color: #a3a29d; }
 .dockWho > h2 { margin: 0; font: 800 18px/1.15 var(--ln-font-display); color: #ecebe8; }
@@ -1225,5 +1228,6 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 }
 @media (max-height: 520px) {
   .dock { padding: 8px 12px; gap: 6px; width: min(560px, calc(100% - 24px)); left: auto; right: 12px; transform: none; }
+  .filterStatus { padding-bottom: 4px; }
   .dockBrief { -webkit-line-clamp: 1; }
 }

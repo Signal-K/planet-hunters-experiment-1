@@ -334,6 +334,7 @@ export default function MissionBoard({
   const picked = pickedId ? catalog.targets.find(t => t.id === pickedId) ?? null : null
   const pickedRuns = picked ? freeRuns.filter(run => Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m))) : []
   const pickedRun = pickedRuns.find(run => run.id === runId) ?? pickedRuns[0] ?? null
+  const contractTarget = contractTargetId ? catalog.targets.find(target => target.id === contractTargetId) ?? null : null
   const routeIds = card ? [card.mission.targetId, card.mission.deliveryTargetId].flatMap(id => id && catalog.targets.some(t => t.id === id) ? [id] : []) : []
   const candidateIds = card && routeIds.length === 0
     ? catalog.targets.filter(t => t.type !== 'exoplanet' && Object.keys(card.mission.requires.minerals).some(m => t.minerals.includes(m))).slice(0, 4).map(t => t.id)
@@ -409,6 +410,10 @@ export default function MissionBoard({
         }} />
       {tab === 'contracts' ? (card ? <>
         <article className={styles.dock} aria-live="polite" data-testid="mission-board-section-client">
+          {contractTarget && <div className={styles.filterStatus} data-testid="mission-destination-result">
+            <span><b>{contractTarget.name}</b> · {count} {count === 1 ? 'contract' : 'contracts'}</span>
+            <button type="button" data-testid="mission-destination-clear" onClick={() => setContractTargetId(null)}>SHOW ALL</button>
+          </div>}
           <header className={styles.dockHead}>
             <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-amber)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={36} />
             <div className={styles.dockWho}>
@@ -443,6 +448,7 @@ export default function MissionBoard({
         </> : contractTargetId ? <>
           <header className={styles.dockHead}><div className={styles.dockWho}><span>Destination filter</span><h2>No contracts for this location</h2></div></header>
           <p className={styles.dockBrief}>Choose another body or tap the selected location again to show every contract.</p>
+          <div className={styles.dockDeal}><button type="button" className={styles.clearFilter} data-testid="mission-destination-clear" onClick={() => setContractTargetId(null)}>SHOW ALL CONTRACTS</button></div>
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
         <header className={styles.dockHead}>
