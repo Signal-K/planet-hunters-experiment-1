@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
@@ -33,6 +33,7 @@ interface MissionBoardProps {
   cards: MissionRelayCardModel[]
   selectedIndex: number
   onSelectRelative: (offset: number) => void
+  onSelectMission: (id: string) => void
   onAccept: (id: string, disposition?: 'store' | 'sell') => void
   onClose: () => void
   onOpenLog: () => void
@@ -259,7 +260,7 @@ function PickIcon() {
 }
 
 export default function MissionBoard({
-  catalog, player, cards, selectedIndex, onSelectRelative, onAccept, onClose, onOpenLog, onOpenBuild, onPickTarget,
+  catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onPickTarget,
   tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [tab, setTab] = useState<MissionBoardTab>(() => takeMissionBoardTab() ?? 'contracts')
@@ -268,9 +269,13 @@ export default function MissionBoard({
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
   const events = useMemo(() => eventsBoard(now, player.badges, orionidsNow), [now, orionidsNow, player.badges])
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
-  const count = cards.length
-  const index = count === 0 ? 0 : Math.min(selectedIndex, count - 1)
-  const card = cards[index]
+  const [contractTargetId, setContractTargetId] = useState<string | null>(null)
+  const visibleCards = contractTargetId ? cards.filter(item => item.targetIds.includes(contractTargetId)) : cards
+  const selectedCard = cards[Math.min(selectedIndex, Math.max(0, cards.length - 1))]
+  const count = visibleCards.length
+  const visibleSelectedIndex = selectedCard ? visibleCards.findIndex(item => item.mission.id === selectedCard.mission.id) : -1
+  const index = count === 0 ? 0 : visibleSelectedIndex >= 0 ? visibleSelectedIndex : 0
+  const card = visibleCards[index]
   const client = card?.client
   const clientLevel = client ? clientAffinityLevel(player.clientMissions[client.id] ?? 0) : 0
   const paging = tab === 'contracts' && count > 1
@@ -284,7 +289,28 @@ export default function MissionBoard({
   const candidateIds = card && routeIds.length === 0
     ? catalog.targets.filter(t => t.type !== 'exoplanet' && Object.keys(card.mission.requires.minerals).some(m => t.minerals.includes(m))).slice(0, 4).map(t => t.id)
     : []
-  const mapMode: MapMode = tab === 'contracts' && card ? 'route' : tab === 'free' ? 'pick' : 'ambient'
+  const mapMode: MapMode = tab === 'contracts' || tab === 'free' ? 'pick' : 'ambient'
+
+  useEffect(() => {
+    if (tab !== 'contracts' || !card) return
+    const destination = catalog.targets.find(target => target.id === card.mission.targetId)
+    setView(destination?.type === 'asteroid' ? 'belt' : 'system')
+  }, [card?.mission.id, catalog.targets, tab])
+
+  const pickContractTarget = (id: string) => {
+    const next = contractTargetId === id ? null : id
+    setContractTargetId(next)
+    if (!next) return
+    const first = cards.find(item => item.targetIds.includes(next))
+    if (first) onSelectMission(first.mission.id)
+  }
+
+  const selectVisibleRelative = (offset: number) => {
+    if (!contractTargetId) return onSelectRelative(offset)
+    if (visibleCards.length === 0) return
+    const next = (index + offset + visibleCards.length) % visibleCards.length
+    onSelectMission(visibleCards[next].mission.id)
+  }
 
   const startStep = (step: ProgramStep) => {
     if (step.state === 'locked' || step.state === 'done') return
@@ -303,7 +329,7 @@ export default function MissionBoard({
     <button type="button" className={styles.log} data-testid="mission-board-log" onClick={onOpenLog}>LOG</button>
   </>
 
-  return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab}>
+  return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab} data-contract-target={contractTargetId ?? undefined}>
     <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
       <nav className={styles.rail} aria-label="Mission board">
         <button type="button" className={`${styles.round} ${styles.railClose}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><ArrowIcon direction="left" /></button>
@@ -311,7 +337,10 @@ export default function MissionBoard({
         {help.button && <div className={styles.railHelp}>{help.button}</div>}
       </nav>
       <GalaxyMap targets={catalog.targets} mode={mapMode} view={view} onView={setView} stops={tab === 'contracts' ? routeIds : []} candidates={tab === 'contracts' ? candidateIds : []}
-        selectedId={tab === 'free' ? pickedId : null} onPick={id => { setPickedId(id); setRunId(null) }} />
+        selectedId={tab === 'contracts' ? contractTargetId : tab === 'free' ? pickedId : null} onPick={id => {
+          if (tab === 'contracts') pickContractTarget(id)
+          else { setPickedId(id); setRunId(null) }
+        }} />
       {tab === 'contracts' ? (card ? <>
         <article className={styles.dock} aria-live="polite" data-testid="mission-board-section-client">
           <header className={styles.dockHead}>
@@ -321,9 +350,9 @@ export default function MissionBoard({
               <h2>{card.mission.title}</h2>
             </div>
             {paging && <div className={styles.dockNav}>
-              <button type="button" className={styles.round} data-testid="mission-board-prev" aria-label="Previous contract" onClick={() => onSelectRelative(-1)}><ArrowIcon direction="left" /></button>
+              <button type="button" className={styles.round} data-testid="mission-board-prev" aria-label="Previous contract" onClick={() => selectVisibleRelative(-1)}><ArrowIcon direction="left" /></button>
               <span>{index + 1}/{count}</span>
-              <button type="button" className={styles.round} data-testid="mission-board-next" aria-label="Next contract" onClick={() => onSelectRelative(1)}><ArrowIcon direction="right" /></button>
+              <button type="button" className={styles.round} data-testid="mission-board-next" aria-label="Next contract" onClick={() => selectVisibleRelative(1)}><ArrowIcon direction="right" /></button>
             </div>}
           </header>
           {card.mission.brief && <p className={styles.dockBrief} data-testid="mission-brief">{card.mission.brief}</p>}
@@ -345,6 +374,9 @@ export default function MissionBoard({
           <header className={styles.dockHead}><div className={styles.dockWho}><h2>No client signals yet</h2></div></header>
           <p className={styles.dockBrief}>Free Ops opens once the Earth storage silo is built.</p>
           <div className={styles.dockDeal}><button type="button" className={styles.take} onClick={onOpenBuild}>BUILD STORAGE SILO</button></div>
+        </> : contractTargetId ? <>
+          <header className={styles.dockHead}><div className={styles.dockWho}><span>Destination filter</span><h2>No contracts for this location</h2></div></header>
+          <p className={styles.dockBrief}>Choose another body or tap the selected location again to show every contract.</p>
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
         <header className={styles.dockHead}>

@@ -55,6 +55,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
       cards={relay.cardModels}
       selectedIndex={relay.selectedIndex}
       onSelectRelative={relay.selectRelativeSignal}
+      onSelectMission={relay.selectSignal}
       onAccept={(id, disposition) => id === ACADEMY_INTRO_MISSION_ID ? game.go('academy') : game.onPickMission(id, disposition)}
       onClose={() => game.goBack()}
       onOpenLog={() => game.go('mission-history')}

@@ -15,6 +15,7 @@ export interface MissionRelayCardModel {
   mission: Catalog['missions'][number]
   client: Catalog['clients'][string] | null
   targetCount: number
+  targetIds: string[]
   displayPayout: number
   unlocked: boolean
   isStoryMission: boolean
@@ -126,7 +127,7 @@ export function useMissionRelayModels({
         : undefined
       const crewStatus = crewRequirementStatus(m.requires.crew, crew)
       return {
-        mission: m, client, targetCount: mTargets.length, displayPayout,
+        mission: m, client, targetCount: mTargets.length, targetIds: mTargets.map(target => target.id), displayPayout,
         unlocked, isStoryMission, cardState, lockedDetail, routeLabel,
         crewStatus: m.requires.crew
           ? player?.shipCustomizerParts?.['crew-module'] === 'crew-quarters-t1'
@@ -151,12 +152,14 @@ export function useMissionRelayModels({
     const nextIndex = (selectedIndex + offset + cardModels.length) % cardModels.length
     setPreviewId(cardModels[nextIndex]?.mission.id ?? null)
   }
+  const selectSignal = (id: string) => setPreviewId(id)
 
   return {
     cardModels,
     previewModel,
     selectedIndex,
     selectRelativeSignal,
+    selectSignal,
     onboardingComplete,
     tutorialMissionInProgress,
     missionStartBlockedLabel,

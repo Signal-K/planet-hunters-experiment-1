@@ -10,6 +10,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
       const board = page.getByTestId('mission-board')
       await expect(board).toBeVisible()
+      await expect(page.getByTestId('help-button')).toHaveCount(1)
       const accept = board.locator('[data-testid^="mission-accept-"]')
       await expect(accept).toBeVisible()
       const box = await accept.boundingBox()
@@ -37,8 +38,12 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test('asteroids live in a zoomable belt and a free run is picked on the map', async ({ page }, info) => {
       await stage(page, 'ui-mission-board')
       await expect(page.getByTestId('galaxy-map')).toBeVisible()
-      await page.getByTestId('map-belt').click()
+      // Asteroid contracts now open directly in their destination region.
+      if (await page.getByTestId('map-belt').isVisible()) await page.getByTestId('map-belt').click()
       await expect(page.getByTestId('map-back')).toBeVisible()
+      await page.getByTestId('map-node-bennu').click()
+      await expect(page.getByTestId('mission-setup-scaffold')).toHaveAttribute('data-contract-target', 'bennu')
+      await expect(page.getByTestId('map-node-bennu')).toHaveAttribute('aria-pressed', 'true')
       await page.waitForTimeout(300)
       await page.screenshot({ path: info.outputPath(`belt-${vp}.png`) })
       await page.getByTestId('map-back').click()

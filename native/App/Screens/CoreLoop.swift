@@ -14,6 +14,7 @@ struct MissionsScreen: View {
     @State private var showArchive = false
     @State private var showSettings = false
     @State private var selected = 0
+    @State private var selectedTargetId: String?
     @State private var tab: Int
     @State private var camera = BaseCamera(x: 0, depth: 0)
     /// `startTitle` opens the board on that contract (scene catalog only).
@@ -44,7 +45,10 @@ struct MissionsScreen: View {
 
     private func scene(size: CGSize, insets: EdgeInsets) -> some View {
         let portrait = size.height > size.width
-        let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
+        let allEntries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
+        let entries = selectedTargetId.map { targetId in
+            allEntries.filter { feasibleTargetIds(for: $0.mission).contains(targetId) }
+        } ?? allEntries
         let index = entries.isEmpty ? 0 : min(selected, entries.count - 1)
         let side = max(insets.leading, 12)
         let railTop = insets.top + 60
@@ -61,6 +65,12 @@ struct MissionsScreen: View {
 
             rail(portrait: portrait)
                 .padding(.top, railTop).padding(.leading, side)
+
+            if tab == 0, !allEntries.isEmpty {
+                destinationFilter(entries: allEntries)
+                    .padding(.top, insets.top + 8)
+                    .padding(.horizontal, portrait ? 76 : 170)
+            }
 
             if tab == 3 {
                 FreeRunBoard(runs: store.catalog.missions.filter { $0.id.hasPrefix("self-directed-") && !$0.locked }) { store.pickMission($0) }
@@ -101,6 +111,42 @@ struct MissionsScreen: View {
 
     private func accent(_ m: Mission) -> Color {
         Color(hex: m.client.flatMap { Clients.byId[$0] }?.colorHex) ?? Theme.blue
+    }
+
+    private func feasibleTargetIds(for mission: Mission) -> [String] {
+        Targets.feasible(for: mission, targets: store.catalog.targets, parts: store.catalog.parts,
+                         missionsDone: store.player.missionsDone, launchpadUpgraded: store.player.launchpadUpgraded,
+                         launchpadLevel: BuildingLevels.level(store.player, "launchpad"), skills: store.player.unlockedSkillNodes).map(\.id)
+    }
+
+    private func destinationFilter(entries: [MissionBoard.Entry]) -> some View {
+        let ids = Set(entries.flatMap { feasibleTargetIds(for: $0.mission) })
+        let targets = store.catalog.targets.filter { ids.contains($0.id) && $0.type != .exoplanet }
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                filterChip(id: nil, label: "ALL")
+                if targets.contains(where: { $0.type == .asteroid }) {
+                    Text("ASTEROID BELT").font(AppFont.mono(14)).tracking(1.0).foregroundStyle(Theme.textDim)
+                }
+                ForEach(targets) { target in filterChip(id: target.id, label: target.name.uppercased()) }
+            }
+        }
+        .accessibilityIdentifier("mission-destination-filter")
+    }
+
+    private func filterChip(id: String?, label: String) -> some View {
+        let on = selectedTargetId == id
+        return Button {
+            selectedTargetId = on && id != nil ? nil : id
+            selected = 0
+        } label: {
+            Text(label).font(AppFont.display(14)).tracking(1.0)
+                .foregroundStyle(on ? Theme.paper : Theme.ink)
+                .padding(.horizontal, 14).frame(minHeight: 44)
+                .background(on ? Theme.blue : Theme.paper, in: Capsule())
+                .overlay(Capsule().stroke(Theme.ink, lineWidth: 2))
+        }
+        .buttonStyle(.plain)
     }
 
     private func orderWidth(_ size: CGSize, insets: EdgeInsets, portrait: Bool) -> CGFloat {
