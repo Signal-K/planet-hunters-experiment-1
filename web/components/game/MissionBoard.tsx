@@ -299,8 +299,9 @@ export default function MissionBoard({
   useEffect(() => {
     if (tab !== 'contracts' || !card) return
     const destination = catalog.targets.find(target => target.id === card.mission.targetId)
-    setView(destination?.type === 'asteroid' ? 'belt' : 'system')
-  }, [card?.mission.id, catalog.targets, tab])
+    const candidatesAreAsteroids = candidateIds.length > 0 && candidateIds.every(id => catalog.targets.find(target => target.id === id)?.type === 'asteroid')
+    setView(destination?.type === 'asteroid' || candidatesAreAsteroids ? 'belt' : 'system')
+  }, [candidateIds.join(','), card?.mission.id, catalog.targets, tab])
 
   const pickContractTarget = (id: string) => {
     const next = contractTargetId === id ? null : id
@@ -443,6 +444,7 @@ export default function MissionBoard({
                 <span className={styles.glyph} aria-hidden="true"><StepGlyph kind={selectedProgramStep.kind} /></span>
                 <div><span className={styles.kicker}>{STEP_KIND_LABEL[selectedProgramStep.kind]} · {STEP_STATE_LABEL[selectedProgramStep.state]}</span><h3>{selectedProgramStep.title}</h3></div>
               </header>
+              {selectedProgramStep.brief && <p className={styles.skillBrief}>{selectedProgramStep.brief}</p>}
               <p className={styles.reward}><b>Unlocks</b> {selectedProgramStep.detail}</p>
               {selectedProgramStep.state === 'locked' && selectedProgramStep.lockLine && <div className={styles.gate}>
                 <span><LockIcon /> Needs: {selectedProgramStep.lockLine}</span>

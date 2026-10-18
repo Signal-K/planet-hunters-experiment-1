@@ -16,9 +16,12 @@ struct ProgramRoadmap: View {
         let chosenIndex = selectedId.flatMap { id in nodes.firstIndex { $0.id == id } } ?? next ?? nodes.indices.first
         VStack(alignment: .leading, spacing: 12) {
             summary(done: doneCount, total: nodes.count)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 210), spacing: 12)], spacing: 12) {
-                ForEach(Array(nodes.enumerated()), id: \.element.id) { i, node in
-                    skillNode(index: i, node: node, isNext: i == next, selected: i == chosenIndex)
+            ZStack(alignment: .topLeading) {
+                Rectangle().fill(Theme.hairline).frame(width: 3).padding(.leading, 26).padding(.vertical, 28)
+                VStack(spacing: 12) {
+                    ForEach(Array(nodes.enumerated()), id: \.element.id) { i, node in
+                        skillNode(index: i, node: node, isNext: i == next, selected: i == chosenIndex)
+                    }
                 }
             }
             if let chosenIndex {
@@ -56,6 +59,17 @@ struct ProgramRoadmap: View {
         let needs = entry?.requirements.first { !$0.met }
         return VStack(alignment: .leading, spacing: 10) {
             Text(node.title).font(AppFont.display(22, "ExtraBold")).foregroundStyle(Theme.ink)
+            if let entry {
+                Text(entry.summary).font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                if !entry.steps.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("MISSION").font(AppFont.display(14, "ExtraBold")).tracking(1)
+                        ForEach(Array(entry.steps.enumerated()), id: \.offset) { index, step in
+                            Text("\(index + 1). \(step)").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                        }
+                    }
+                }
+            }
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text("UNLOCKS").font(AppFont.display(14, "ExtraBold")).tracking(1)
                 Text(unlocks).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
@@ -63,6 +77,15 @@ struct ProgramRoadmap: View {
             if !node.done, let needs {
                 Label("Needs: \(needs.label) · \(needs.detail)", systemImage: "lock.fill")
                     .font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink)
+            }
+            if let entry, entry.requirements.count > 1 {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("REQUIREMENTS").font(AppFont.display(14, "ExtraBold")).tracking(1)
+                    ForEach(entry.requirements, id: \.label) { requirement in
+                        Label("\(requirement.label) · \(requirement.detail)", systemImage: requirement.met ? "checkmark.circle.fill" : "circle")
+                            .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    }
+                }
             }
             if let id = node.entryId, !node.done {
                 Button { onOpen(id) } label: {

@@ -28,6 +28,7 @@ export interface ProgramStep {
   id: string
   title: string
   detail: string
+  brief?: string
   /** Shown on a locked step. Comes from the mission's unlockAt, or an existing gate. */
   lockLine: string | null
   state: ProgramStepState
@@ -57,16 +58,18 @@ export interface EventsBoard {
   groups: Array<{ status: SkyBoardStatus; title: string; cards: SkyBoardCard[] }>
 }
 
-const INSTRUMENTS: Array<{ id: string; title: string; detail: string; unlockAt: string }> = [
+const INSTRUMENTS: Array<{ id: string; title: string; brief: string; detail: string; unlockAt: string }> = [
   {
     id: TRANSIT_TELESCOPE_MISSION_ID,
     title: 'Launch Space Telescope',
+    brief: 'Build a dedicated launch vehicle and deploy the telescope into Earth orbit. Once commissioned, it provides a daily asteroid-candidate feed in the Control Station.',
     detail: 'Space telescope online · daily instrument feed unlocked',
     unlockAt: 'Reach Free Operations',
   },
   {
     id: SATURN_IMAGER_MISSION_ID,
     title: 'Launch Saturn satellite',
+    brief: 'Prepare and launch the Saturn imager, then review Cassini storm-cloud frames from its daily downlink in the Control Station.',
     detail: 'Saturn satellite online · Cassini storm-cloud feed unlocked',
     unlockAt: 'Reach Free Operations',
   },
@@ -113,6 +116,7 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
       id: spec.id,
       title: mission?.title ?? spec.title,
       detail: mission?.programReward?.outcome ?? spec.detail,
+      brief: mission?.brief ?? spec.brief,
       lockLine: locked ? (mission?.unlockAt ?? spec.unlockAt) : null,
       state: done ? 'done' : locked ? 'locked' : 'available',
       kind: 'instrument',
@@ -126,6 +130,7 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
     id: ACADEMY_INTRO_MISSION_ID,
     title: academy?.title ?? 'Train the First Astronaut',
     detail: academy?.programReward?.outcome ?? 'Astronaut Academy online · crew training unlocked',
+    brief: academy?.brief,
     lockLine: academyLocked ? (academy?.unlockAt ?? 'Reach client level 2 with two clients') : null,
     state: academyDone ? 'done' : academyLocked ? 'locked' : 'available',
     kind: 'academy',
@@ -139,6 +144,7 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
       id: mission.id,
       title: mission.title,
       detail: mission.programReward?.outcome ?? mission.brief,
+      brief: mission.brief,
       lockLine,
       state: delivered ? 'done' : lockLine ? 'locked' : 'available',
       kind: 'build',
@@ -150,6 +156,7 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
     id: SELF_DIRECTED_MINING_MISSION_ID,
     title: mining?.title ?? 'Self-Directed Mining Run',
     detail: mining?.brief ?? 'No client, no daily limit. Mine what looks valuable and sell the haul yourself.',
+    brief: mining?.brief,
     lockLine: free ? null : (mining?.unlockAt ?? 'Reach Free Operations'),
     state: free ? 'available' : 'locked',
     kind: 'mining',
@@ -160,7 +167,8 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
     steps.push({
       id: focus.id,
       title: focus.title,
-      detail: focus.brief,
+    detail: focus.brief,
+    brief: focus.brief,
       lockLine: null,
       state: 'available',
       kind: 'focus',
