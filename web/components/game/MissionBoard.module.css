@@ -1167,6 +1167,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   min-width: 44px; min-height: 44px; margin: 0; padding: 0; border: 0; background: none; color: #ecebe8; cursor: pointer; pointer-events: auto;
   font: 700 14px/1 var(--ln-font-body); letter-spacing: 0.08em; text-transform: uppercase;
 }
+.gxRegionButton { position: absolute; z-index: 1; transform: translate(-50%, -50%); min-height: 44px; padding: 0 12px; border: 1px solid rgba(126, 205, 242, .42); border-radius: 999px; background: rgba(5, 16, 35, .74); color: #d9f5ff; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; pointer-events: auto; cursor: pointer; }
 .gxNode:disabled { cursor: default; pointer-events: none; opacity: 1; }
 .gxStaticNode { pointer-events: none; }
 .gxNode > i, .gxBelt > i { position: relative; flex: 0 0 auto; width: 12px; height: 12px; margin-left: 16px; border-radius: 50%; background: #d9f5ff; box-shadow: 0 0 9px 3px rgba(64, 198, 242, 0.7), 0 0 22px rgba(104, 117, 230, .5); }

@@ -99,7 +99,7 @@ function MineralRock({ shape, color }: { shape?: string; color: string }) {
 }
 
 type Target = Catalog['targets'][number]
-type MapView = 'system' | 'belt'
+type MapView = 'system' | 'inner' | 'belt' | 'outer'
 type MapMode = 'route' | 'pick' | 'ambient'
 
 const SUN = { x: 4, y: 44 }
@@ -129,6 +129,7 @@ const STARS = (() => {
 
 const orbitPoint = (r: number, angle: number) => ({ x: SUN.x + r * UX * Math.cos(angle), y: SUN.y + r * UY * Math.sin(angle) })
 const EARTH_POS = orbitPoint(1.5, 1.0)
+const REGION_EARTH_POS = { x: 38, y: 42 }
 const BELT_ROCKS = (() => {
   const rand = lcg(31)
   return Array.from({ length: 260 }, () => ({ ...orbitPoint(BELT_R + (rand() - 0.5) * 1.1, (rand() * 2 - 1) * 1.4), size: 2 + rand() * 3.5, glow: 0.4 + rand() * 0.5 }))
@@ -146,6 +147,15 @@ function beltLayout(list: Target[]): Record<string, { x: number; y: number }> {
     x: 18 + ((i % cols) + 0.5) * (66 / cols) + spread(`${t.id}x`) * 3,
     y: 24 + (Math.floor(i / cols) + 0.5) * (36 / rows) + spread(`${t.id}y`) * 2.5,
   }]))
+}
+
+function regionLayout(list: Target[]): Record<string, { x: number; y: number }> {
+  const count = Math.max(1, list.length)
+  return Object.fromEntries(list.map((target, index) => {
+    const angle = (-0.75 + (index / count) * Math.PI * 1.5) + spread(target.id) * 0.18
+    const radius = 20 + (index % 2) * 9
+    return [target.id, { x: 49 + Math.cos(angle) * radius, y: 44 + Math.sin(angle) * radius * 0.7 }]
+  }))
 }
 
 const shortName = (name: string) => name.replace(/^\d+\s+/, '')
@@ -168,7 +178,11 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
   const real = targets.filter(t => t.type !== 'exoplanet')
   const planets = real.filter(t => t.type !== 'asteroid')
   const asteroids = real.filter(t => t.type === 'asteroid')
+  const innerPlanets = planets.filter(t => t.orbit <= 4)
+  const outerPlanets = planets.filter(t => t.orbit > 4)
   const belt = beltLayout(asteroids)
+  const inner = regionLayout(innerPlanets)
+  const outer = regionLayout(outerPlanets)
   const litAsteroid = asteroids.find(t => lit.has(t.id))
   const anchor = litAsteroid ? orbitPoint(BELT_R, spread(litAsteroid.id) * 1.1) : orbitPoint(BELT_R, -0.75)
   const planetPos = (t: Target) => orbitPoint(t.orbit, spread(t.id) * 0.85)
@@ -215,7 +229,9 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
           <i /><span>Asteroid belt<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" /><path d="m15 15 5 5M10.5 8v5M8 10.5h5" /></svg></span>
         </button>
       </>}
-    </> : <>
+        <button type="button" className={styles.gxRegionButton} data-testid="map-inner" style={{ left: '20%', top: '67%' }} onClick={() => onView('inner')}>Explore inner system</button>
+        <button type="button" className={styles.gxRegionButton} data-testid="map-outer" style={{ left: '84%', top: '76%' }} onClick={() => onView('outer')}>Explore outer system</button>
+    </> : view === 'belt' ? <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <ellipse cx="31" cy="39" rx="22" ry="25" className={styles.gxRegion} />
         <ellipse cx="68" cy="38" rx="25" ry="25" className={styles.gxRegion} />
@@ -228,6 +244,20 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
       <span className={styles.gxRegionLabel} style={{ left: '18%', top: '68%' }}>Near-Earth group</span>
       <span className={styles.gxRegionLabel} style={{ left: '64%', top: '69%' }}>Main-belt group</span>
       {asteroids.map(t => node(t, belt[t.id], shortName(t.name)))}
+      <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>Solar system</button>
+    </> : <>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <ellipse cx="50" cy="44" rx="34" ry="27" className={styles.gxRegion} />
+        <ellipse cx="50" cy="44" rx="22" ry="17" className={styles.gxRing} />
+        <ellipse cx="50" cy="44" rx="31" ry="24" className={styles.gxRing} />
+        <path d={line(view === 'inner'
+          ? [REGION_EARTH_POS, ...innerPlanets.map(target => inner[target.id])]
+          : outerPlanets.map(target => outer[target.id]))} className={styles.gxLane} />
+      </svg>
+      <i className={styles.gxSun} style={{ left: '50%', top: '44%' }} />
+      {view === 'inner' && <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(REGION_EARTH_POS)} aria-label="Earth"><i /><span>Earth</span></div>}
+      {(view === 'inner' ? innerPlanets : outerPlanets).map(target => node(target, (view === 'inner' ? inner : outer)[target.id], target.name))}
+      <span className={styles.gxRegionLabel} style={{ left: '50%', top: '77%' }}>{view === 'inner' ? 'Inner system' : 'Outer system'}</span>
       <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>Solar system</button>
     </>}
   </div>
@@ -317,7 +347,9 @@ export default function MissionBoard({
     if (tab !== 'contracts' || !card) return
     const destination = catalog.targets.find(target => target.id === card.mission.targetId)
     const candidatesAreAsteroids = candidateIds.length > 0 && candidateIds.every(id => catalog.targets.find(target => target.id === id)?.type === 'asteroid')
-    setView(destination?.type === 'asteroid' || candidatesAreAsteroids ? 'belt' : 'system')
+    if (destination?.type === 'asteroid' || candidatesAreAsteroids) return setView('belt')
+    if (destination) return setView(destination.orbit <= 4 ? 'inner' : 'outer')
+    setView('system')
   }, [candidateIds.join(','), card?.mission.id, catalog.targets, tab])
 
   const pickContractTarget = (id: string) => {
