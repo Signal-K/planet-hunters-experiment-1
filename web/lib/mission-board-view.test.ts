@@ -67,7 +67,7 @@ describe('mission board view', () => {
     expect(board.spacetober.links.map(link => link.href)).toEqual([
       'https://youratlas.cc/app/profile',
       'https://starsailors.space/game',
-      'https://youratlas.cc/',
+      'https://youratlas.cc/orionids',
     ])
   })
 

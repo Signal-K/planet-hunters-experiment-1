@@ -406,6 +406,8 @@ export interface Player {
   fireball2026CaughtAt?: number | null
   /** Fireballs in the Sky reading plus the check. Both are required for the badge. */
   fireballSpotter?: { readAt: number | null; passedAt: number | null } | null
+  /** Orionid fragments caught on one local night. Synced in game_states. Cargo does not hold this count. */
+  orionidsNightCatches?: { night: string; count: number } | null
   // Player's satellite-pointing choice for the *next* daily downlink,
   // picked from the PixiGalaxyStarMap after classifying today's candidate.
   // Consumed (cleared) once that candidate becomes today's daily pick.

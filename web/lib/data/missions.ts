@@ -45,7 +45,7 @@ export function generateSelfDirectedMiningPool(now: number = Date.now()): Missio
 // SSL-578: Orionids Free Ops run, on the board only during the shower window.
 export const ORIONIDS_NIGHT_RUN_ID = 'self-directed-orionids-night-run'
 
-/** Fragments the night run asks for. The launch gate stays at 8U: no ship hold is 20U, and the field does not cap the count. */
+/** Fragments the night run asks for. The launch gate stays at 8U. The 20 is catches across the local night, stored on the player. Cargo only holds what the ship can carry. */
 export const ORIONIDS_FRAGMENT_GOAL = 20
 
 export function orionidsNightRun(): Mission {

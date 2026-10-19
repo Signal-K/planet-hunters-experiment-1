@@ -15,6 +15,7 @@ import {
   orionidsTeaserForcedInstant,
   skyEventNow,
 } from '@/lib/data/sky-events'
+import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import {
   eventsBoard,
   programChain,
@@ -496,12 +497,14 @@ export default function MissionBoard({
         {picked && <p className={styles.dockBrief}>{picked.brief}</p>}
         {picked && pickedRuns.length > 1 && <div className={styles.dockRuns} role="group" aria-label="Run">
           {pickedRuns.map(run => <button key={run.id} type="button" data-testid={`free-run-${run.id}`} data-on={run.id === pickedRun?.id || undefined} onClick={() => setRunId(run.id)}>
-            {Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}
+            {run.id === ORIONIDS_NIGHT_RUN_ID
+              ? `Catch ${ORIONIDS_FRAGMENT_GOAL} Orionid fragments`
+              : Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}
           </button>)}
         </div>}
         {picked && pickedRuns.length === 0 && <p className={styles.dockBrief}>No free run mines this site yet.</p>}
         <div className={styles.dockDeal}>
-          <strong className={styles.pay}>{pickedRun ? Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ') : ''}</strong>
+          <strong className={styles.pay}>{pickedRun ? (pickedRun.id === ORIONIDS_NIGHT_RUN_ID ? `Catch ${ORIONIDS_FRAGMENT_GOAL} Orionid fragments` : Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')) : ''}</strong>
           <button type="button" className={styles.take} data-testid="free-run-start" disabled={!picked || !pickedRun}
             onClick={() => { if (!picked || !pickedRun) return; onAccept(pickedRun.id); onPickTarget?.(picked.id) }}>START RUN</button>
         </div>
