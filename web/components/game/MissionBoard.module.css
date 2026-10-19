@@ -866,7 +866,7 @@ button.start {
 .rail button.tab[data-tab='program'] { color: var(--ln-board-on-accent); }
 .rail button.log { margin-top: 0; box-shadow: 2px 2px 0 var(--ln-board-ink); }
 .rail button.railClose { width: 44px; }
-.railHelp { display: flex; }
+.railHelp { position: absolute; top: 12px; right: 12px; z-index: 6; display: flex; }
 
 .order {
   --signal: var(--ln-board-amber);
@@ -999,7 +999,11 @@ button.take:disabled { background-color: var(--ln-board-silver); color: var(--ln
 }
 .rail button.railClose { width: 44px; padding: 0; }
 .rail button.log { padding: 0 14px; border-radius: 999px; }
-.railHelp { margin-left: auto; }
+.logShort { display: none; }
+@media (orientation: portrait) and (max-width: 700px) {
+  .logFull { display: none; }
+  .logShort { display: inline; }
+}
 .rail .dot { top: 2px; right: 2px; }
 
 /* One calm mode control replaces the permanent five-button toolbar. */
