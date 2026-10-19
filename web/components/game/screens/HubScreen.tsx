@@ -397,11 +397,19 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
 
 
   // The three things a player does from the base come first (build, fly, sell), then the places to look things up.
+  const ownsOrbitalInstrument = !!player.transitSatelliteLaunchedAt
+    || player.deepSpaceTelescopeBuilt
+    || !!player.deepSpaceTelescopeLaunchedAt
+    || !!player.saturnImagerLaunchedAt
   const menuItems: BaseMenuItem[] = [
     { id: 'build', icon: 'build', primary: true, label: 'Build', detail: 'New structures, a control station, satellites', onSelect: () => { setPlaceNote(null); setEditMode(true) } },
     { id: 'contracts', icon: 'mission', primary: true, label: 'New mission', detail: 'Client contracts and free runs', onSelect: () => onOpenScene('missions') },
     { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: firedAlertCount(player) > 0 ? `${firedAlertCount(player)} price alert${firedAlertCount(player) === 1 ? '' : 's'} hit` : player.placed.includes('market') ? 'Spot prices, sell, buy and alerts' : 'Spot prices and selling', onSelect: () => { if (onOpenMarket) onOpenMarket() } },
-    ...(player.placed.includes('control-station') ? [{ id: 'control-station', icon: 'station' as const, label: 'Control station', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }] : []),
+    ...(
+      hasControlStation || ownsOrbitalInstrument
+        ? [{ id: 'control-station', icon: 'station' as const, label: hasControlStation ? 'Control station' : 'Instruments', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }]
+        : []
+    ),
     { id: 'mission-log', icon: 'log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
     ...(player.freeOperations ? [{ id: 'sites', icon: 'sites' as const, label: 'Sites', detail: 'Places to survey and settle', onSelect: () => onOpenScene('surface-ops') }] : []),
   ]

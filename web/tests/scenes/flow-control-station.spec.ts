@@ -18,7 +18,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(errors).toEqual([])
     })
 
-    test('the Menu offers the Control station only once it is built', async ({ page }) => {
+    test('the Menu keeps Control station access for a built station or a legacy telescope owner', async ({ page }, info) => {
       await stage(page, 'm1-hub', { chrome: true })
       await page.getByTestId('hub-menu-btn').dispatchEvent('click')
       await expect(page.getByTestId('base-menu-control-station')).toHaveCount(0)
@@ -26,6 +26,14 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await stage(page, 'm1-hub', { chrome: true, patch: FULL })
       await page.getByTestId('hub-menu-btn').dispatchEvent('click')
       await expect(page.getByTestId('base-menu-control-station')).toBeVisible()
+      await page.goto('about:blank')
+      await stage(page, 'm1-hub', { chrome: true, patch: { deepSpaceTelescopeBuilt: true } })
+      await page.getByTestId('hub-menu-btn').dispatchEvent('click')
+      const legacyEntry = page.getByTestId('base-menu-control-station')
+      await expect(legacyEntry).toBeVisible()
+      await page.screenshot({ path: info.outputPath(`legacy-telescope-entry-${vp}.png`) })
+      await legacyEntry.click()
+      await expect(page.locator('[data-stage-screen]')).toHaveAttribute('data-stage-screen', 'instrument-hub')
     })
   })
 }

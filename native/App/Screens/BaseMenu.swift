@@ -32,7 +32,12 @@ struct BaseMenu: View {
 
     private var rest: [Item] {
         var rows: [Item] = []
-        if store.player.placed.contains("control-station") { rows.append(Item(id: "control-station", label: "Control station", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
+        let ownsOrbitalInstrument = store.player.transitSatelliteLaunchedAt != nil
+            || store.player.deepSpaceTelescopeBuilt
+            || store.player.deepSpaceTelescopeLaunchedAt != nil
+            || store.player.saturnImagerLaunchedAt != nil
+        let hasControlStation = store.player.placed.contains("control-station")
+        if hasControlStation || ownsOrbitalInstrument { rows.append(Item(id: "control-station", label: hasControlStation ? "Control station" : "Instruments", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
         rows.append(Item(id: "mission-log", label: "Mission log", detail: "Past runs and what they paid", symbol: "list.bullet.rectangle", run: { store.go(.missionHistory) }))
         if store.player.freeOperations { rows.append(Item(id: "sites", label: "Sites", detail: "Places to survey and settle", symbol: "globe", run: { store.go(.surfaceOps) })) }
         return rows
