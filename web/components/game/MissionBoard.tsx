@@ -246,7 +246,7 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
       <span className={styles.gxRegionLabel} style={{ left: '18%', top: '68%' }}>Near-Earth group</span>
       <span className={styles.gxRegionLabel} style={{ left: '64%', top: '69%' }}>Main-belt group</span>
       {shownAsteroids.map(t => node(t, belt[t.id], shortName(t.name)))}
-      <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>
+      {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
     </> : <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <ellipse cx="50" cy="44" rx="34" ry="27" className={styles.gxRegion} />
@@ -260,7 +260,7 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
       {view === 'inner' && <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(REGION_EARTH_POS)} aria-label="Earth"><i /><span>Earth</span></div>}
       {(view === 'inner' ? innerPlanets : outerPlanets).map(target => node(target, (view === 'inner' ? inner : outer)[target.id], target.name))}
       <span className={styles.gxRegionLabel} style={{ left: '50%', top: '77%' }}>{view === 'inner' ? 'Inner system' : 'Outer system'}</span>
-      <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>
+      {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
     </>}
   </div>
 }
@@ -422,54 +422,51 @@ export default function MissionBoard({
     <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
       <nav className={styles.rail} aria-label="Mission board">
         <button type="button" className={`${styles.round} ${styles.railClose}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><ArrowIcon direction="left" /></button>
-        <button type="button" className={styles.modeButton} aria-expanded={modeMenuOpen} aria-controls="mission-mode-menu" onClick={() => setModeMenuOpen(open => !open)}>
+        {tab !== 'contracts' && <button type="button" className={styles.modeButton} aria-expanded={modeMenuOpen} aria-controls="mission-mode-menu" onClick={() => setModeMenuOpen(open => !open)}>
           <span>{modeLabel[tab]}</span><DownIcon />{events.attention && tab !== 'events' && <i className={styles.modeDot} aria-label="Event live or upcoming" />}
-        </button>
+        </button>}
         {modeMenuOpen && <div className={styles.modeMenu} id="mission-mode-menu">{tabButtons}</div>}
       </nav>
-      <GalaxyMap targets={mapTargets} mode={mapMode} view={view} onView={setView} stops={tab === 'contracts' ? routeIds : []} candidates={tab === 'contracts' ? candidateIds : []}
+      <GalaxyMap targets={tab === 'contracts' ? [] : mapTargets} mode={tab === 'contracts' ? 'ambient' : mapMode} view={tab === 'contracts' ? 'belt' : view} onView={setView} stops={tab === 'contracts' ? [] : routeIds} candidates={tab === 'contracts' ? [] : candidateIds}
         selectedId={tab === 'contracts' ? contractTargetId : tab === 'free' ? pickedId : null} onPick={id => {
           if (tab === 'contracts') pickContractTarget(id)
           else { setPickedId(id); setRunId(null) }
         }} />
       {tab === 'contracts' ? (card ? <>
-        <article className={styles.dock} aria-live="polite" data-testid="mission-board-section-client">
-          {contractTarget && <div className={styles.filterStatus} data-testid="mission-destination-result">
-            <span><b>{contractTarget.name}</b> · {count} {count === 1 ? 'contract' : 'contracts'}</span>
-            <button type="button" data-testid="mission-destination-clear" onClick={() => setContractTargetId(null)}>SHOW ALL</button>
-          </div>}
-          {paging && <div className={styles.offerStrip} aria-label="Available contracts">
-            {offerWindow.map(({ offer, offerIndex }) => {
-              const offerClient = offer.client
-              return <button key={offer.mission.id} type="button" data-selected={offer.mission.id === card.mission.id || undefined}
-                aria-label={`Select ${offer.mission.title}`} onClick={() => onSelectMission(offer.mission.id)}>
-                <ClientMark initial={offerClient?.initial ?? 'OP'} color={offerClient?.color ?? 'var(--ln-board-amber)'} uiRole={offerClient?.uiRole ?? 'starter'} clientId={offerClient?.id} size={28} />
-                <span>{offerIndex + 1}</span>
-              </button>
-            })}
-          </div>}
-          <header className={styles.dockHead}>
-            <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-amber)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={36} />
-            <div className={styles.dockWho}>
-              <span>{client ? `${client.name} · L${clientLevel}` : 'Your program'}</span>
-              <h2>{card.mission.title}</h2>
+        <article className={styles.contractWorkspace} aria-live="polite" data-testid="mission-board-section-client">
+          <section className={styles.contractOffers} aria-label="Available contracts">
+            <h2>Contracts</h2>
+            <div className={styles.offerStrip}>
+              {offerWindow.map(({ offer, offerIndex }) => {
+                const offerClient = offer.client
+                return <button key={offer.mission.id} type="button" data-selected={offer.mission.id === card.mission.id || undefined}
+                  aria-label={`Select ${offer.mission.title}`} onClick={() => onSelectMission(offer.mission.id)}>
+                  <ClientMark initial={offerClient?.initial ?? 'OP'} color={offerClient?.color ?? 'var(--ln-board-amber)'} uiRole={offerClient?.uiRole ?? 'starter'} clientId={offerClient?.id} size={34} />
+                  <span>{offerIndex + 1}</span>
+                </button>
+              })}
             </div>
-            {paging && <span className={styles.dockCount}>{index + 1}/{count}</span>}
-          </header>
-          {card.mission.brief && <p className={styles.dockBrief} data-testid="mission-brief">{card.mission.brief}</p>}
-          {!card.unlocked && card.lockedDetail && <p className={styles.dockBrief}>{card.lockedDetail}</p>}
-          <div className={styles.requirementTitle}><span>Requirements</span></div>
-          <div className={styles.dockDeal}>
-            <div className={styles.dockCargo} aria-label="Cargo">
+          </section>
+          <section className={styles.contractFocus}>
+            <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-amber)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={68} />
+            <span>{client ? `${client.name} · L${clientLevel}` : 'Your program'}</span>
+            <h2>{card.mission.title}</h2>
+            {card.mission.brief && <p data-testid="mission-brief">{card.mission.brief}</p>}
+            {!card.unlocked && card.lockedDetail && <p>{card.lockedDetail}</p>}
+            <small>{index + 1} / {count}</small>
+          </section>
+          <section className={styles.contractAction}>
+            <h2>Requirements</h2>
+            <div className={styles.contractCargo} aria-label="Cargo">
               {Object.entries(card.mission.requires.minerals).map(([id, amount]) => {
                 const meta = catalog.minerals[id]
                 if (!meta) return null
-                return <span key={id} className={styles.crate}><MineralRock shape={meta.shape} color={meta.color} /><b>{amount}</b><em>{meta.name}</em></span>
+                return <span key={id}><MineralRock shape={meta.shape} color={meta.color} /><b>{amount}</b><em>{meta.name}</em></span>
               })}
             </div>
-            <strong className={styles.pay}><i className={styles.coin} aria-hidden="true">{FRANC}</i>{formatFrancs(card.displayPayout, { compact: true })}</strong>
-            <button type="button" className={styles.take} data-testid={`mission-accept-${card.mission.id}`} disabled={!card.unlocked || tutorialBlocked} onClick={() => onAccept(card.mission.id)}>ACCEPT</button>
-          </div>
+            <strong className={styles.contractPay}><i aria-hidden="true">{FRANC}</i>{formatFrancs(card.displayPayout, { compact: true })}</strong>
+            <button type="button" className={styles.contractTake} data-testid={`mission-accept-${card.mission.id}`} disabled={!card.unlocked || tutorialBlocked} onClick={() => onAccept(card.mission.id)}>ACCEPT</button>
+          </section>
         </article>
       </> : <article className={styles.dock} data-testid="mission-board-section-client">
         {onboardingComplete ? <>

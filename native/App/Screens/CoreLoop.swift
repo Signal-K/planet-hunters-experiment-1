@@ -61,20 +61,25 @@ struct MissionsScreen: View {
             Color.clear
             if tab != 0 { Theme.ink.opacity(0.18).allowsHitTesting(false) }
 
-            HStack(alignment: .top) {
-                HudGearClock { showSettings = true }
-                Spacer()
-                HudChips(francs: store.player.francs)
-            }
-            .padding(.top, insets.top + 8).padding(.leading, side).padding(.trailing, max(insets.trailing, 12))
+            if tab == 0 {
+                Button { store.go(.hub) } label: {
+                    Image(systemName: "chevron.left").font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.paper)
+                        .frame(width: 44, height: 44).background(Theme.ink.opacity(0.72), in: Circle())
+                        .overlay(Circle().stroke(Theme.paper.opacity(0.35), lineWidth: 2))
+                }
+                .buttonStyle(.plain).accessibilityLabel("Back")
+                .padding(.top, insets.top + 12).padding(.leading, side)
+                .zIndex(4)
+            } else {
+                HStack(alignment: .top) {
+                    HudGearClock { showSettings = true }
+                    Spacer()
+                    HudChips(francs: store.player.francs)
+                }
+                .padding(.top, insets.top + 8).padding(.leading, side).padding(.trailing, max(insets.trailing, 12))
 
-            rail(portrait: portrait)
-                .padding(.top, railTop).padding(.leading, side)
-
-            if tab == 0, !allEntries.isEmpty {
-                destinationFilter(entries: allEntries)
-                    .padding(.top, insets.top + 8)
-                    .padding(.horizontal, portrait ? 76 : 170)
+                rail(portrait: portrait)
+                    .padding(.top, railTop).padding(.leading, side)
             }
 
             if tab == 3 {
@@ -101,11 +106,8 @@ struct MissionsScreen: View {
                 }
             } else {
                 let e = entries[index]
-                order(width: orderWidth(size, insets: insets, portrait: portrait), size: size, insets: insets, portrait: portrait, accent: accent(e.mission)) {
-                    contractStrip(entries: entries, selectedIndex: index)
-                    WorkOrder(entry: e, position: index + 1, count: entries.count, player: store.player, portrait: portrait,
-                              onTake: { store.pickMission(e.id) })
-                }
+                ContractWorkspace(entries: entries, selectedIndex: index, player: store.player, portrait: portrait,
+                                  onSelect: { selected = $0 }, onTake: { store.pickMission(e.id) })
                 .id(e.id)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
@@ -305,6 +307,99 @@ private struct FreeRunBoard: View {
                     if runs.isEmpty { Text("No free runs are available yet.").font(AppFont.body(14)).foregroundStyle(Theme.textDim) }
                 }
             }.padding(16)
+    }
+}
+
+private struct ContractWorkspace: View {
+    let entries: [MissionBoard.Entry]
+    let selectedIndex: Int
+    let player: Player
+    let portrait: Bool
+    let onSelect: (Int) -> Void
+    let onTake: () -> Void
+
+    var body: some View {
+        let selected = entries[selectedIndex]
+        let mission = selected.mission
+        let client = mission.client.flatMap { Clients.byId[$0] }
+        let level = client.map { 1 + max(0, player.clientMissions[$0.id] ?? 0) / Clients.affinityMissionThreshold }
+        let layout = portrait ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(HStackLayout(spacing: 0))
+        layout {
+            offers
+                .frame(maxWidth: .infinity, maxHeight: portrait ? nil : .infinity)
+                .background(Theme.hex(0x202656).opacity(0.96))
+            VStack(spacing: portrait ? 8 : 12) {
+                clientMark(client)
+                Text("\((client?.name ?? "Your program").uppercased())\(level.map { " · L\($0)" } ?? "")")
+                    .font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hex(0xB8C8C0)).lineLimit(1)
+                Text(mission.title).font(AppFont.display(portrait ? 24 : 28)).foregroundStyle(Theme.hex(0xF4EFE4))
+                    .multilineTextAlignment(.center).lineLimit(2)
+                Text(mission.brief).font(AppFont.body(14)).foregroundStyle(Theme.hex(0xF4EFE4))
+                    .multilineTextAlignment(.center).lineLimit(portrait ? 3 : 4)
+                Text("\(selectedIndex + 1) / \(entries.count)").font(AppFont.mono(14)).foregroundStyle(Theme.hex(0xB8C8C0))
+            }
+            .padding(portrait ? 14 : 24).frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Theme.hex(0x342C70).opacity(0.96))
+            action(selected, mission: mission)
+                .frame(maxWidth: .infinity, maxHeight: portrait ? nil : .infinity)
+                .background(Theme.hex(0x176A94).opacity(0.96))
+        }
+        .ignoresSafeArea()
+    }
+
+    private var offers: some View {
+        VStack(spacing: 12) {
+            Text("CONTRACTS").font(AppFont.display(18)).tracking(2).foregroundStyle(Theme.hex(0xA8DCF2))
+            let count = min(5, entries.count)
+            let start = selectedIndex - count / 2
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(56), spacing: 10), count: portrait ? 5 : 3), spacing: 10) {
+                ForEach(0..<count, id: \.self) { offset in
+                    let index = (start + offset + entries.count) % entries.count
+                    let contract = entries[index].mission
+                    let client = contract.client.flatMap { Clients.byId[$0] }
+                    Button { onSelect(index) } label: {
+                        ZStack(alignment: .bottomTrailing) {
+                            clientMark(client).frame(width: 52, height: 52)
+                            Text("\(index + 1)").font(AppFont.mono(14)).foregroundStyle(Theme.hex(0xF4EFE4))
+                        }
+                        .frame(width: 56, height: 56)
+                        .overlay(Rectangle().stroke(index == selectedIndex ? Theme.hex(0x58D0EA) : Theme.hex(0xF4EFE4).opacity(0.55), lineWidth: index == selectedIndex ? 3 : 1))
+                    }.buttonStyle(.plain).accessibilityLabel("Select \(contract.title)")
+                }
+            }
+        }.padding(.top, portrait ? 70 : 82).padding(.horizontal, 14).padding(.bottom, 14)
+    }
+
+    private func action(_ entry: MissionBoard.Entry, mission: Mission) -> some View {
+        VStack(spacing: portrait ? 10 : 20) {
+            Text("REQUIREMENTS").font(AppFont.display(18)).tracking(1.5).foregroundStyle(Theme.hex(0x9DE7EF))
+            HStack(spacing: 18) {
+                ForEach(mission.requires.minerals.sorted { $0.key < $1.key }, id: \.key) { id, amount in
+                    if let meta = Minerals.byId[id] {
+                        VStack(spacing: 2) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "hexagon.fill").font(.system(size: 28)).foregroundStyle(Color(hex: meta.colorHex) ?? Theme.paper2)
+                                Text("\(amount)").font(AppFont.display(22)).foregroundStyle(Theme.hex(0xF4EFE4))
+                            }
+                            Text(meta.name.uppercased()).font(AppFont.body(14)).foregroundStyle(Theme.hex(0xD5E0D9))
+                        }
+                    }
+                }
+            }
+            Text(francs(mission.payout.francs)).font(AppFont.display(24)).foregroundStyle(Theme.hex(0xF4EFE4))
+            Button(action: onTake) {
+                Text("ACCEPT").font(AppFont.display(18)).tracking(1.5).foregroundStyle(Theme.hex(0x152033))
+                    .frame(maxWidth: 220, minHeight: 52).background(Theme.hex(0xF4EFE4), in: RoundedRectangle(cornerRadius: 4))
+            }.buttonStyle(.plain).disabled(!entry.unlocked)
+        }.padding(portrait ? 14 : 24)
+    }
+
+    private func clientMark(_ client: Client?) -> some View {
+        ZStack {
+            Circle().fill(mixWhite(client?.colorHex, 0.35, fallback: Theme.paper2))
+            Circle().stroke(Theme.hex(0x152033), lineWidth: 2)
+            Text(client?.initial ?? "OP").font(AppFont.display(18)).foregroundStyle(Theme.hex(0x152033))
+        }.frame(width: 68, height: 68)
     }
 }
 
