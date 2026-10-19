@@ -70,6 +70,7 @@ jobs:
           name: scenes-report-${{ github.run_id }}-${{ github.run_attempt }}
           path: web/tests/.report
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 14
       - name: Upload scene screenshots
         if: always()
@@ -78,6 +79,7 @@ jobs:
           name: scenes-out-${{ github.run_id }}-${{ github.run_attempt }}
           path: web/tests/.out
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 14
 
   ci-required:
