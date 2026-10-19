@@ -15,6 +15,7 @@ import {
   orionidsTeaserForcedInstant,
   skyEventNow,
 } from '@/lib/data/sky-events'
+import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import {
   eventsBoard,
   programChain,
@@ -71,10 +72,6 @@ function CheckIcon() {
 
 function LockIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
-}
-
-function DownIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
 }
 
 const STEP_KIND_LABEL: Record<ProgramStep['kind'], string> = { instrument: 'Instrument', academy: 'Crew', build: 'Build', mining: 'Mining', focus: 'Focus' }
@@ -315,7 +312,6 @@ export default function MissionBoard({
   tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
-  const [modeMenuOpen, setModeMenuOpen] = useState(false)
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
@@ -409,8 +405,7 @@ export default function MissionBoard({
   }
 
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
-  const chooseTab = (next: MissionBoardTab) => { setTab(next); setModeMenuOpen(false) }
-  const modeLabel: Record<MissionBoardTab, string> = { contracts: 'Contracts', free: 'Free run', program: 'Program', events: 'Events' }
+  const chooseTab = (next: MissionBoardTab) => setTab(next)
   const tabButtons = <>
     <button type="button" className={styles.tab} aria-label="Contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
     {player.freeOperations && <button type="button" className={styles.tab} aria-label="Free run" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => chooseTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
@@ -419,18 +414,16 @@ export default function MissionBoard({
       <StarIcon /><span className={styles.tabLabel}>Events</span>
       {events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
     </button>
-    <button type="button" className={styles.log} data-testid="mission-board-log" onClick={() => { setModeMenuOpen(false); onOpenLog() }}>Mission log</button>
+    <button type="button" className={styles.log} data-testid="mission-board-log" aria-label="Mission log" onClick={onOpenLog}><span className={styles.logFull}>Mission log</span><span className={styles.logShort}>Log</span></button>
   </>
 
   return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab} data-contract-target={contractTargetId ?? undefined}>
     <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
       <nav className={styles.rail} aria-label="Mission board">
         <button type="button" className={`${styles.round} ${styles.railClose}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><ArrowIcon direction="left" /></button>
-        {tab !== 'contracts' && <button type="button" className={styles.modeButton} aria-expanded={modeMenuOpen} aria-controls="mission-mode-menu" onClick={() => setModeMenuOpen(open => !open)}>
-          <span>{modeLabel[tab]}</span><DownIcon />{events.attention && tab !== 'events' && <i className={styles.modeDot} aria-label="Event live or upcoming" />}
-        </button>}
-        {modeMenuOpen && <div className={styles.modeMenu} id="mission-mode-menu">{tabButtons}</div>}
+        {tabButtons}
       </nav>
+      {help.button && <div className={styles.railHelp}>{help.button}</div>}
       <GalaxyMap targets={tab === 'contracts' ? [] : mapTargets} mode={tab === 'contracts' ? 'ambient' : mapMode} view={tab === 'contracts' ? 'belt' : view} onView={setView} stops={tab === 'contracts' ? [] : routeIds} candidates={tab === 'contracts' ? [] : candidateIds}
         selectedId={tab === 'contracts' ? contractTargetId : tab === 'free' ? pickedId : null} onPick={id => {
           if (tab === 'contracts') pickContractTarget(id)
@@ -496,12 +489,14 @@ export default function MissionBoard({
         {picked && <p className={styles.dockBrief}>{picked.brief}</p>}
         {picked && pickedRuns.length > 1 && <div className={styles.dockRuns} role="group" aria-label="Run">
           {pickedRuns.map(run => <button key={run.id} type="button" data-testid={`free-run-${run.id}`} data-on={run.id === pickedRun?.id || undefined} onClick={() => setRunId(run.id)}>
-            {Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}
+            {run.id === ORIONIDS_NIGHT_RUN_ID
+              ? `Catch ${ORIONIDS_FRAGMENT_GOAL} Orionid fragments`
+              : Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}
           </button>)}
         </div>}
         {picked && pickedRuns.length === 0 && <p className={styles.dockBrief}>No free run mines this site yet.</p>}
         <div className={styles.dockDeal}>
-          <strong className={styles.pay}>{pickedRun ? Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ') : ''}</strong>
+          <strong className={styles.pay}>{pickedRun ? (pickedRun.id === ORIONIDS_NIGHT_RUN_ID ? `Catch ${ORIONIDS_FRAGMENT_GOAL} Orionid fragments` : Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')) : ''}</strong>
           <button type="button" className={styles.take} data-testid="free-run-start" disabled={!picked || !pickedRun}
             onClick={() => { if (!picked || !pickedRun) return; onAccept(pickedRun.id); onPickTarget?.(picked.id) }}>START RUN</button>
         </div>

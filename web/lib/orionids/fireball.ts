@@ -12,7 +12,7 @@ import {
 import { ORIONIDS_EVENT_ID, ORIONIDS_SOURCE } from './finds'
 
 export const FIREBALL_FRAGMENT_ID = 'fireball_fragment'
-export const FIREBALL_FRAGMENT_PRICE = 22_000_000
+export { FIREBALL_FRAGMENT_PRICE } from '@/lib/data/economy'
 export const FIREBALL_2026_BADGE = 'fireball-2026'
 export const FIREBALL_SPOTTER_BADGE = 'fireball-spotter-2026'
 export const FIREBALL_SUBJECT_ID = 'self'

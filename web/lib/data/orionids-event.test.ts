@@ -34,6 +34,7 @@ describe('SSL-578 Orionids event', () => {
     const run = generateSelfDirectedMiningPool(local(10, 20, 12)).find(m => m.id === ORIONIDS_NIGHT_RUN_ID)
     expect(run?.client).toBeUndefined()
     expect(run?.requires.minerals).toEqual({ orionid_debris: ORIONIDS_FRAGMENT_GOAL })
+    expect(run?.requires.cargo_min).toBe(8)
     expect(run?.brief).toContain('Catch 20 Orionid fragments')
     expect(run?.payout.francs).toBeGreaterThan(0)
   })

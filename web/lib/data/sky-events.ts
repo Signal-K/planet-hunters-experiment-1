@@ -15,12 +15,12 @@ export const WORLD_SPACE_WEEK_PLAYER_LINKS = [
 ] as const
 
 /**
- * Atlas check-in for the Orionids. youratlas.cc publishes tonight's sky on
- * the home page; it does not publish a separate Orionids event path.
+ * Atlas check-in for the Orionids. The stable page is /orionids.
+ * This link has no UTM query; the path is the whole change.
  */
 export const ATLAS_ORIONIDS_CHECKIN = {
   label: 'Atlas Orionids check-in',
-  href: 'https://youratlas.cc/',
+  href: 'https://youratlas.cc/orionids',
 } as const
 
 export type SkyActivityKind =

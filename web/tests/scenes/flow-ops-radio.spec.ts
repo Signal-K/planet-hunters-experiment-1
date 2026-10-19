@@ -89,7 +89,8 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         localStorage.setItem('landnam-game-state-v1:user:e2euser0000001', s as string)
       }, [JSON.stringify({ screen: 'hub', player: { placed: ['launchpad'], missionsDone: 1, flightPlan: { completed: { mining: true }, hidden: true } } })])
       await page.goto('/game')
-      await page.getByTestId('settings-button').click({ timeout: 30_000 })
+      await page.getByTestId('hub-menu-btn').click({ timeout: 30_000 })
+      await page.getByTestId('base-menu-settings').click()
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
       const shelf = page.getByTestId('training-patch-shelf')
       await shelf.scrollIntoViewIfNeeded()
@@ -164,6 +165,8 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     })
 
     test('TESS Show me docks in Flight Plan and starts only on request', async ({ page }, info) => {
+      // Desktop CI boots the live hub under software GL. The assertions finish, then the screenshot overruns the 45s default.
+      test.setTimeout(90_000)
       await openLive(page, { screen: 'hub', tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true }, player: { placed: ['launchpad'], missionsDone: 0 } })
       const scenarioReady = await page.evaluate(() => {
         const bridge = (window as typeof window & { __landnam?: { scenario: (key: string) => boolean; patch: (player: object) => void } }).__landnam

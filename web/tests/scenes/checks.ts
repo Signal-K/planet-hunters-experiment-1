@@ -107,11 +107,12 @@ export async function checkClipping(page: Page, root = 'body'): Promise<CheckRes
       let inScroller = false
       for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
         const ps = getComputedStyle(p)
-        const scrolls = ps.overflowX === 'auto' || ps.overflowX === 'scroll' || ps.overflowY === 'auto' || ps.overflowY === 'scroll'
-        if (!clips(ps.overflowX) && !clips(ps.overflowY)) { if (scrolls) inScroller = true; continue }
+        const scrollsX = ps.overflowX === 'auto' || ps.overflowX === 'scroll'
+        const scrollsY = ps.overflowY === 'auto' || ps.overflowY === 'scroll'
+        if (!clips(ps.overflowX) && !clips(ps.overflowY)) { if (scrollsX || scrollsY) inScroller = true; continue }
         const pr = p.getBoundingClientRect()
-        const cutX = clips(ps.overflowX) && (er.left < pr.left - 2 || er.right > pr.right + 2)
-        const cutY = clips(ps.overflowY) && (er.top < pr.top - 2 || er.bottom > pr.bottom + 2)
+        const cutX = clips(ps.overflowX) && !scrollsX && (er.left < pr.left - 2 || er.right > pr.right + 2)
+        const cutY = clips(ps.overflowY) && !scrollsY && (er.top < pr.top - 2 || er.bottom > pr.bottom + 2)
         if ((cutX || cutY) && pr.width > 0 && pr.height > 0) {
           // Only a failure if the clipped part is a meaningful share of the element (ignores decorative bleed).
           const ix = Math.max(0, Math.min(er.right, pr.right) - Math.max(er.left, pr.left)), iy = Math.max(0, Math.min(er.bottom, pr.bottom) - Math.max(er.top, pr.top))
@@ -119,6 +120,8 @@ export async function checkClipping(page: Page, root = 'body'): Promise<CheckRes
           if (!inScroller && shown < 0.95 && shown > 0) failures.push(`clipped by ${p.tagName.toLowerCase()} (${Math.round((1 - shown) * 100)}% hidden) ${label(el)}`)
           break
         }
+        // This box scrolls on the axis it does not clip, so a later frame must not fail text the player can scroll to.
+        if (scrollsX || scrollsY) inScroller = true
       }
     }
     return { failures: [...new Set(failures)], skipped: [] }

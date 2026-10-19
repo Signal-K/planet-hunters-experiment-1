@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
-  CARGO_BONUS_CAP, CARGO_BONUS_RATE, MINERAL_VALUE, STARTING_FRANCS,
+  CARGO_BONUS_CAP, CARGO_BONUS_RATE, FIREBALL_EXCHANGE_MULTIPLE, FIREBALL_FRAGMENT_PRICE,
+  MINERAL_VALUE, OPEN_MARKET_SELL_RATE, ORIONID_EXCHANGE_PRICE, STARTING_FRANCS,
   ROCKET_PRICES, STRUCTURE_PRICES, CONTRACT_FEES, SURFACE_SITE_ACCESS_FEES,
 } from './economy'
 import { MINERAL_META } from './minerals'
@@ -42,9 +43,18 @@ describe('economy scale', () => {
 
   it('prices every mineral from a rarity band, with no stragglers', () => {
     for (const [id, meta] of Object.entries(MINERAL_META)) {
-      // The 22 Oct fireball is one fragment, priced above exotic on purpose.
+      // The 22 Oct fireball is one fragment: 15× an Orionid's Exchange price, not a rarity-band ore.
       if (id === 'fireball_fragment') {
-        expect(meta.price).toBeGreaterThan(MINERAL_VALUE.exotic * 4)
+        expect(meta.price).toBe(FIREBALL_FRAGMENT_PRICE)
+        expect(meta.price).toBe(ORIONID_EXCHANGE_PRICE * FIREBALL_EXCHANGE_MULTIPLE)
+        expect(FIREBALL_EXCHANGE_MULTIPLE).toBeGreaterThanOrEqual(10)
+        expect(FIREBALL_EXCHANGE_MULTIPLE).toBeLessThanOrEqual(20)
+        const receipt = Math.round(meta.price * OPEN_MARKET_SELL_RATE)
+        expect(receipt).toBeGreaterThan(STARTING_FRANCS)
+        expect(receipt).toBeLessThan(CONTRACT_FEES[3])
+        expect(receipt).toBeLessThan(ROCKET_PRICES.surveyor)
+        expect(receipt).toBeGreaterThanOrEqual(ORIONID_EXCHANGE_PRICE * 10)
+        expect(receipt).toBeLessThanOrEqual(ORIONID_EXCHANGE_PRICE * 20)
         continue
       }
       expect(Object.values(MINERAL_VALUE), `${id} is off-band`).toContain(meta.price)
@@ -77,6 +87,7 @@ describe('economy scale', () => {
     expect(go).toContain(`structurePriceRefinery = ${STRUCTURE_PRICES.refinery.toLocaleString('en-US').replace(/,/g, '_')}`)
     expect(go).toContain(`cargoBonusRate = ${CARGO_BONUS_RATE}`)
     expect(go).toContain(`cargoBonusCap  = ${CARGO_BONUS_CAP}`)
+    expect(go).toContain(FIREBALL_FRAGMENT_PRICE.toLocaleString('en-US').replace(/,/g, '_'))
     for (const [seq, fee] of Object.entries(CONTRACT_FEES)) {
       expect(go, `contract fee ${seq}`).toContain(fee.toLocaleString('en-US').replace(/,/g, '_'))
     }

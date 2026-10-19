@@ -66,7 +66,7 @@ export default function SkyEventChip({
 
   useEffect(() => {
     if (!orionids) return
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const id = window.setInterval(() => setDotOn(on => !on), 600)
     return () => window.clearInterval(id)
   }, [orionids])

@@ -4,6 +4,8 @@ import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
 import { isFreeHaulMission, isOwnProgramMission, laserCapacitorBonus, rocketDisplayForConfig } from '@/lib/data'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { effectiveCargoCapacity } from '@/lib/data/skills'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
@@ -17,6 +19,7 @@ import { isFreeHaulEligibleMission } from '@/lib/data'
 import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-events'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { FIREBALL_2026_BADGE, FIREBALL_SUBJECT_ID, grantFireballCatch } from '@/lib/orionids/fireball'
+import { catchesForNight, recordFragmentCatch } from '@/lib/orionids/night-catches'
 import { queueEventBadge } from '@/lib/orionids/persist'
 import { captureGameEvent } from '@/lib/posthog'
 import { missionResumeScreen } from '@/lib/mission-resume'
@@ -152,8 +155,12 @@ export default function MissionOperationRoutes({
       )
     }
 
-    case 'mining':
+    case 'mining': {
       if (!game.mission || !game.target) return null
+      const chassis = game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)
+      const nightHold = game.mission.id === ORIONIDS_NIGHT_RUN_ID && chassis
+        ? effectiveCargoCapacity(chassis, game.player.unlockedSkillNodes)
+        : undefined
       return (
         <MiningScreen
           mission={game.mission}
@@ -217,6 +224,8 @@ export default function MissionOperationRoutes({
           hasEarthStorage={earthStorageBuilt(game.player)}
           initialEarthDisposition={game.player.freeHaulDisposition}
           orionidsBadgeTier={game.player.badges?.['orionids-2026']?.tier ?? null}
+          fragmentCatches={catchesForNight(game.player.orionidsNightCatches, debrisNow())}
+          cargoCapacity={nightHold}
           fireballCaughtAt={game.player.fireball2026CaughtAt ?? null}
           onFireballCaught={() => {
             const now = debrisNow()
@@ -249,10 +258,15 @@ export default function MissionOperationRoutes({
               const name = getSkyEvent(badge.eventId)?.name ?? preset.label
               game.addToast(`${name} ${badge.tier} badge earned`, 'ok')
             }
-            game.setPlayer(player => applyDebrisMined(player, preset, now).player)
+            game.setPlayer(player => {
+              const mined = applyDebrisMined(player, preset, now).player
+              if (resourceId !== 'orionid_debris') return mined
+              return { ...mined, orionidsNightCatches: recordFragmentCatch(player.orionidsNightCatches, now) }
+            })
           }}
         />
       )
+    }
 
     case 'rover-survey': {
       if (!game.mission || !game.target) return null

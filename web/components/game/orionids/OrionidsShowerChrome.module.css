@@ -32,22 +32,26 @@
 
 .banner {
   position: absolute;
-  top: 8px;
-  left: 50%;
-  z-index: 46;
-  display: flex;
+  top: 228px;
+  left: 12px;
+  right: auto;
+  z-index: 22;
+  width: max-content;
+  max-width: min(280px, calc(100% - 24px));
   align-items: center;
   gap: 8px;
-  width: min(720px, calc(100% - 16px));
   min-height: 44px;
   padding: 8px 8px 8px 12px;
-  transform: translateX(-50%);
   border: 1px solid var(--ln-cyan-border);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--ln-panel) 92%, transparent);
+  background: var(--ln-panel);
   color: var(--ln-text);
   pointer-events: auto;
 }
+
+/* The note sits on the base. Every other screen already fills that corner with its own controls. */
+.banner { display: none; }
+:global(.game-stage-main:has([data-screen="hub"])) .banner { display: flex; }
 
 .banner img {
   width: 28px;
@@ -59,6 +63,10 @@
 .banner p {
   margin: 0;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font: 14px/1.35 var(--ln-font-body);
 }
 
@@ -67,14 +75,15 @@
   min-height: 44px;
   min-width: 44px;
   padding: 0 14px;
-  border: 1px solid var(--ln-cyan-border);
+  border: 1px solid var(--ln-text);
   border-radius: 8px;
-  background: var(--ln-cyan);
-  color: var(--ln-void);
+  background: var(--ln-text);
+  color: var(--ln-panel);
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
+  flex: none;
 }
 
 .sheet {
