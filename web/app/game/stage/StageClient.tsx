@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { GameProvider, useGame } from '@/game-context'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
+import OrionidsShowerChrome from '@/components/game/orionids/OrionidsShowerChrome'
 import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
 import SuiteHopRail from '@/components/game/SuiteHopRail'
 import DevShortcuts from '@/components/dev/DevShortcuts'
@@ -83,6 +84,7 @@ function Stage() {
       )}
       <div className={`portrait-canvas ${immersive ? 'portrait-canvas--full-page' : ''} ${game.screen === 'mining' ? 'portrait-canvas--mining' : ''}`}>
         <div className="game-stage-main">
+          <OrionidsShowerChrome />
               {chrome && (
             <>
               <DevShortcuts />

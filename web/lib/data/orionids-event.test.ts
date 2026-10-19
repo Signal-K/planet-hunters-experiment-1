@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ORIONIDS_DEBRIS_PRESET, ORIONIDS_PEAK_MULTIPLIER, ORIONIDS_PEAK_REMINDER, debrisRatePerMinute, isOrionidsPeakNight, orionidsPeakReminderMs, orionidsPhase, orionidsShareText } from './sky-events'
-import { ORIONIDS_NIGHT_RUN_ID, generateSelfDirectedMiningPool } from './missions'
+import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID, generateSelfDirectedMiningPool } from './missions'
+import { isDebrisEventActive } from './sky-events'
 
 const local = (m: number, d: number, h: number) => new Date(2026, m - 1, d, h, 0, 0, 0).getTime()
 
@@ -10,6 +11,13 @@ describe('SSL-578 Orionids event', () => {
     expect(orionidsPhase(local(10, 19, 12))).toBe('active')
     expect(orionidsPhase(local(10, 21, 23))).toBe('peak')
     expect(orionidsPhase(local(11, 20, 12))).toBe('ended')
+  })
+
+  it('starts peak-night debris at 18:00 local on 21 Oct', () => {
+    expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, local(10, 21, 17))).toBe(false)
+    expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, local(10, 21, 18))).toBe(true)
+    expect(debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, local(10, 21, 18))).toBeGreaterThan(0)
+    expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, local(10, 28, 12))).toBe(false)
   })
 
   it('doubles the debris rate on peak night only', () => {
@@ -25,6 +33,8 @@ describe('SSL-578 Orionids event', () => {
     expect(generateSelfDirectedMiningPool(local(10, 14, 12)).some(m => m.id === ORIONIDS_NIGHT_RUN_ID)).toBe(false)
     const run = generateSelfDirectedMiningPool(local(10, 20, 12)).find(m => m.id === ORIONIDS_NIGHT_RUN_ID)
     expect(run?.client).toBeUndefined()
+    expect(run?.requires.minerals).toEqual({ orionid_debris: ORIONIDS_FRAGMENT_GOAL })
+    expect(run?.brief).toContain('Catch 20 Orionid fragments')
     expect(run?.payout.francs).toBeGreaterThan(0)
   })
 

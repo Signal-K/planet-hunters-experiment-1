@@ -23,6 +23,7 @@ import {
 } from '@/lib/mission-board-view'
 import { clearMissionBoardTab, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
+import OrionidsPlanetMark from '@/components/game/orionids/OrionidsPlanetMark'
 import styles from './MissionBoard.module.css'
 
 // The board stands on the live base: the same plots and kit the Hub draws.
@@ -565,7 +566,8 @@ export default function MissionBoard({
               </nav>
               {events.spacetober.vouchers.map(voucher => (
                 <p key={voucher.subjectId} data-testid="orionids-voucher">
-                  {voucher.name} · Orionids-found · {voucher.tier} voucher · Redeem coming soon
+                  <OrionidsPlanetMark name={voucher.name} />
+                  <span>{voucher.tier} voucher · Redeem coming soon</span>
                 </p>
               ))}
               {events.spacetober.mastery >= 1 && <p data-testid="meteorite-mastery">Meteorite mastery {events.spacetober.mastery}</p>}

@@ -1105,6 +1105,7 @@ func seedCatalog(app core.App) {
 		{"rhodium", mineral{"Rhodium", "Rh", "#f0e8d4", "exotic", "thruster lining supply", "Thruster lining, radiation-hard optics", mineralValueExotic, 2}},
 		// Sky-event debris. Matches web MINERAL_META.orionid_debris and Minerals.swift.
 		{"orionid_debris", mineral{"Orionid Debris", "Od", "#7fd8ff", "uncommon", "event debris", "Event debris; sell at market", mineralValueUncommon, 1}},
+		{"fireball_fragment", mineral{"Fireball Fragment", "Fb", "#b7e3ff", "exotic", "event fragment", "Event fragment; sell at market", 22_000_000, 1}},
 	}
 	for _, m := range minerals {
 		seedRecord(app, "minerals", m.slug, map[string]any{

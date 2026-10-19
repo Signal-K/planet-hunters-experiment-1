@@ -16,6 +16,8 @@ import { TRANSPORT_LESSON_MISSIONS_DONE } from '@/lib/systems/AgencyOnboardingSy
 import { isFreeHaulEligibleMission } from '@/lib/data'
 import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-events'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
+import { FIREBALL_2026_BADGE, FIREBALL_SUBJECT_ID, grantFireballCatch } from '@/lib/orionids/fireball'
+import { queueEventBadge } from '@/lib/orionids/persist'
 import { captureGameEvent } from '@/lib/posthog'
 import { missionResumeScreen } from '@/lib/mission-resume'
 
@@ -215,6 +217,24 @@ export default function MissionOperationRoutes({
           hasEarthStorage={earthStorageBuilt(game.player)}
           initialEarthDisposition={game.player.freeHaulDisposition}
           orionidsBadgeTier={game.player.badges?.['orionids-2026']?.tier ?? null}
+          fireballCaughtAt={game.player.fireball2026CaughtAt ?? null}
+          onFireballCaught={() => {
+            const now = debrisNow()
+            const preview = grantFireballCatch(game.player, now)
+            if (preview.badge && !reportedDebrisBadges.has(preview.badge.eventId)) {
+              reportedDebrisBadges.add(preview.badge.eventId)
+              captureGameEvent('badge_earned', { event_id: preview.badge.eventId, tier: preview.badge.tier, activity: 'fireball' })
+              game.addToast(`Fireball 2026 ${preview.badge.tier} badge. The fragment is worth far more at the Exchange.`, 'ok')
+              queueEventBadge({
+                eventId: FIREBALL_2026_BADGE,
+                tier: preview.badge.tier,
+                earnedAt: preview.badge.earnedAt,
+                subjectId: FIREBALL_SUBJECT_ID,
+                marker: FIREBALL_2026_BADGE,
+              })
+            }
+            game.setPlayer(player => grantFireballCatch(player, now).player)
+          }}
           onDebrisMined={resourceId => {
             const now = debrisNow()
             const preset = DEBRIS_PRESETS.find(p => p.resourceId === resourceId)
