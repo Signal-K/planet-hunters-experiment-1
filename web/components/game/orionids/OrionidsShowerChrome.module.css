@@ -38,7 +38,6 @@
   z-index: 22;
   width: max-content;
   max-width: min(280px, calc(100% - 24px));
-  display: flex;
   align-items: center;
   gap: 8px;
   min-height: 44px;
@@ -50,20 +49,9 @@
   pointer-events: auto;
 }
 
-/* The contracts board fills the stage with offer buttons. The shower note stays on the base. */
-:global(.game-stage-main:has([data-screen="missions"])) .banner {
-  display: none;
-}
-
-/* Short landscape hangar: the fleet sits where the default banner lands. */
-@media (orientation: landscape) and (max-height: 500px) {
-  :global(.game-stage-main:has([data-testid="hangar-screen"])) .banner {
-    top: 64px;
-    left: auto;
-    right: 12px;
-    max-width: min(220px, 36vw);
-  }
-}
+/* The note sits on the base. Every other screen already fills that corner with its own controls. */
+.banner { display: none; }
+:global(.game-stage-main:has([data-screen="hub"])) .banner { display: flex; }
 
 .banner img {
   width: 28px;
