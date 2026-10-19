@@ -3827,7 +3827,7 @@ button.hub-orbital-network__status:disabled { cursor: default; }
   left: 12px;
 }
 @media (orientation: landscape) and (max-height: 500px) {
-  .sky-event-wrap[data-testid="sky-event-base"] { top: 56px !important; left: 300px !important; }
+  .sky-event-wrap[data-testid="sky-event-base"] { top: 64px !important; left: auto !important; right: 12px !important; }
 }
 
 /* The top bar wraps to 2-4 lines on phones, so its height varies. TopBar publishes it as --ln-topbar-h and the

@@ -223,7 +223,7 @@
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
-  .blueprint { top: 8px; width: min(84px, 14vw); }
+  .blueprint { top: 60px; left: 12px; width: min(84px, 14vw); }
   .fleet { bottom: 54px; gap: 8px; width: min(480px, calc(100% - 24px)); }
   .card { min-height: 84px; padding: 4px 8px; gap: 0; }
   .note, .buildPill { min-height: 44px; }
@@ -233,7 +233,7 @@
 }
 
 @media (min-width: 1100px) {
-  .blueprint { top: 20px; width: min(156px, 14vw); }
+  .blueprint { top: 72px; left: 12px; width: min(156px, 14vw); }
   .card { min-height: 126px; }
   .vehicleIcon { height: 76px; }
   .fleet { bottom: 68px; }

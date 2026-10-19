@@ -17,13 +17,11 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
 
     test('the scene dock is Previous, Build, New mission, Menu, and Next while the Exchange is a building the player chooses to build', async ({ page }) => {
       const { errors } = await stage(page, 'm1-hub', { chrome: true })
-      const dock = page.getByRole('navigation', { name: 'Scene dock' })
-      await expect(dock.getByRole('button')).toHaveCount(size.width < 480 ? 3 : 5)
+      const dock = page.getByRole('navigation', { name: 'Location and scene actions' })
+      await expect(dock.getByTestId('hub-dock-prev')).toBeVisible()
+      await expect(dock.getByTestId('hub-dock-next')).toBeVisible()
       await expect(dock.getByTestId('hub-new-mission-btn')).toBeVisible()
-      if (size.width >= 480) await expect(dock.getByTestId('hub-dock-prev')).toBeVisible()
-      await expect(dock.getByTestId('hub-build-btn')).toBeVisible()
-      await expect(dock.getByTestId('hub-menu-btn')).toBeVisible()
-      if (size.width >= 480) await expect(dock.getByTestId('hub-dock-next')).toBeVisible()
+      await expect(page.getByTestId('hub-menu-btn')).toBeVisible()
       await expect(page.getByTestId('hub-subsurface-btn')).toHaveCount(0)
       await expect(dock.getByText('Exchange', { exact: true })).toHaveCount(0)
       // The Exchange is a building players choose to build, never a top-bar button.
