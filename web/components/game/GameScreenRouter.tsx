@@ -22,20 +22,26 @@ import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScr
 
 const ScreenLoading = () => <div className="game-screen-loading" aria-hidden="true" />
 
-const MissionSetupRoutes = dynamic(() => import('@/components/game/MissionSetupRoutes'), { loading: ScreenLoading })
+const loadMissionSetupRoutes = () => import('@/components/game/MissionSetupRoutes')
+const loadMarketScreen = () => import('@/components/game/screens/MarketScreen')
+const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScreen')
+const loadSurfaceOpsScreen = () => import('@/components/game/screens/SurfaceOpsScreen')
+const loadMissionHistoryScreen = () => import('@/components/game/screens/MissionHistoryScreen')
+
+const MissionSetupRoutes = dynamic(loadMissionSetupRoutes, { loading: ScreenLoading })
 const MissionOperationRoutes = dynamic(() => import('@/components/game/MissionOperationRoutes'), { loading: ScreenLoading })
 const RefineryScreen = dynamic(() => import('@/components/game/screens/RefineryScreen'), { loading: ScreenLoading })
-const MarketScreen = dynamic(() => import('@/components/game/screens/MarketScreen'), { loading: ScreenLoading })
+const MarketScreen = dynamic(loadMarketScreen, { loading: ScreenLoading })
 const HangarScreen = dynamic(() => import('@/components/game/screens/HangarScreen'), { loading: ScreenLoading })
 const SkillTreeScreen = dynamic(() => import('@/components/game/screens/SkillTreeScreen'), { loading: ScreenLoading })
-const LaunchpadScreen = dynamic(() => import('@/components/game/screens/LaunchpadScreen'), { loading: ScreenLoading })
+const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(() => import('@/components/game/screens/InstrumentHubScreen'), { loading: ScreenLoading })
 const TessDiscoveryScreen = dynamic(() => import('@/components/game/screens/TessDiscoveryScreen'), { loading: ScreenLoading })
 const SaturnStormSearchScreen = dynamic(() => import('@/components/game/screens/SaturnStormSearchScreen'), { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(() => import('@/components/game/screens/AsteroidDiscoveryScreen'), { loading: ScreenLoading })
-const SurfaceOpsScreen = dynamic(() => import('@/components/game/screens/SurfaceOpsScreen'), { loading: ScreenLoading })
+const SurfaceOpsScreen = dynamic(loadSurfaceOpsScreen, { loading: ScreenLoading })
 const AcademyScreen = dynamic(() => import('@/components/game/screens/AcademyScreen'), { loading: ScreenLoading })
-const MissionHistoryScreen = dynamic(() => import('@/components/game/screens/MissionHistoryScreen'), { loading: ScreenLoading })
+const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
 import { requestMissionBoardTab } from '@/lib/mission-board-nav'
@@ -96,6 +102,29 @@ function ScreenBody({
   const [launchPending, setLaunchPending] = useState(() =>
     process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('launchscene'))
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
+
+  useEffect(() => {
+    if (screen !== 'hub') return
+    const warmCommonDestinations = () => {
+      void Promise.allSettled([
+        loadMissionSetupRoutes(),
+        loadLaunchpadScreen(),
+        loadMarketScreen(),
+        loadSurfaceOpsScreen(),
+        loadMissionHistoryScreen(),
+      ])
+    }
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number
+      cancelIdleCallback?: (id: number) => void
+    }
+    if (idleWindow.requestIdleCallback) {
+      const idleId = idleWindow.requestIdleCallback(warmCommonDestinations, { timeout: 1500 })
+      return () => idleWindow.cancelIdleCallback?.(idleId)
+    }
+    const timer = globalThis.setTimeout(warmCommonDestinations, 600)
+    return () => globalThis.clearTimeout(timer)
+  }, [screen])
   const handleLaunch = useCallback(() => setLaunchPending(true), [])
   const handleLaunchComplete = useCallback(() => {
     setLaunchPending(false)

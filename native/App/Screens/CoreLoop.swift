@@ -102,10 +102,9 @@ struct MissionsScreen: View {
             } else {
                 let e = entries[index]
                 order(width: orderWidth(size, insets: insets, portrait: portrait), size: size, insets: insets, portrait: portrait, accent: accent(e.mission)) {
+                    contractStrip(entries: entries, selectedIndex: index)
                     WorkOrder(entry: e, position: index + 1, count: entries.count, player: store.player, portrait: portrait,
-                              onTake: { store.pickMission(e.id) },
-                              onPrev: { selected = (index - 1 + entries.count) % entries.count },
-                              onNext: { selected = (index + 1) % entries.count })
+                              onTake: { store.pickMission(e.id) })
                 }
                 .id(e.id)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -116,6 +115,35 @@ struct MissionsScreen: View {
 
     private func accent(_ m: Mission) -> Color {
         Color(hex: m.client.flatMap { Clients.byId[$0] }?.colorHex) ?? Theme.blue
+    }
+
+    private func contractStrip(entries: [MissionBoard.Entry], selectedIndex: Int) -> some View {
+        let visibleCount = min(5, entries.count)
+        let start = selectedIndex - visibleCount / 2
+        return HStack(spacing: 8) {
+            Spacer(minLength: 0)
+            ForEach(0..<visibleCount, id: \.self) { offset in
+                let index = (start + offset + entries.count) % entries.count
+                let mission = entries[index].mission
+                let client = mission.client.flatMap { Clients.byId[$0] }
+                Button { selected = index } label: {
+                    ZStack(alignment: .bottomTrailing) {
+                        Circle().fill(mixWhite(client?.colorHex, 0.35, fallback: Theme.paper2))
+                        Circle().stroke(index == selectedIndex ? accent(mission) : Theme.ink, lineWidth: index == selectedIndex ? 4 : 2)
+                        Text(client?.initial ?? "OP").font(AppFont.display(14)).foregroundStyle(Theme.ink)
+                        Text("\(index + 1)").font(AppFont.mono(10)).foregroundStyle(Theme.ink)
+                            .padding(2).background(Theme.paper, in: RoundedRectangle(cornerRadius: 3))
+                            .offset(x: 5, y: 4)
+                    }.frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Select \(mission.title)")
+                .accessibilityAddTraits(index == selectedIndex ? .isSelected : [])
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.bottom, 6)
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.ink.opacity(0.22)).frame(height: 1) }
     }
 
     private func feasibleTargetIds(for mission: Mission) -> [String] {
@@ -288,8 +316,6 @@ private struct WorkOrder: View {
     let player: Player
     let portrait: Bool
     let onTake: () -> Void
-    let onPrev: () -> Void
-    let onNext: () -> Void
 
     var body: some View {
         let m = entry.mission
@@ -306,6 +332,18 @@ private struct WorkOrder: View {
                     .font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.textDim).lineLimit(1)
                 Text(m.title).font(AppFont.display(portrait ? 22 : 24)).foregroundStyle(Theme.ink).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
+            Spacer(minLength: 6)
+            Text("\(position)/\(count)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
+        }
+        if !m.brief.isEmpty {
+            Text(m.brief).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                .multilineTextAlignment(portrait ? .leading : .center).lineLimit(portrait ? 3 : 2)
+                .frame(maxWidth: .infinity, alignment: portrait ? .leading : .center)
+        }
+        HStack(spacing: 10) {
+            Rectangle().fill(accentLine(client?.colorHex)).frame(height: 1)
+            Text("REQUIREMENTS").font(AppFont.display(14)).tracking(1.6).foregroundStyle(accentLine(client?.colorHex))
+            Rectangle().fill(accentLine(client?.colorHex)).frame(height: 1)
         }
         HStack(alignment: .center, spacing: 8) {
             ForEach(m.requires.minerals.sorted { $0.key < $1.key }, id: \.key) { id, amount in
@@ -319,15 +357,9 @@ private struct WorkOrder: View {
         if !entry.unlocked {
             Text(entry.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
         }
-        if count > 1 {
-            HStack {
-                round("chevron.left", "Previous contract", onPrev)
-                Spacer()
-                Text("\(position)/\(count)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
-                round("chevron.right", "Next contract", onNext)
-            }
-        }
     }
+
+    private func accentLine(_ hex: String?) -> Color { Color(hex: hex) ?? Theme.blue }
 
     private var accept: some View {
         Button(action: onTake) {

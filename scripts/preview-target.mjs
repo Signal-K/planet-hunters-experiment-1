@@ -3,12 +3,13 @@
 // Usage: node scripts/preview-target.mjs <file-or-route>
 //        or as a Claude Code PostToolUse hook (reads the hook JSON from stdin).
 // Writes web/.dev-follow.json; <DevFollow/> in the page polls /api/dev/follow and navigates.
-import { writeFileSync, readFileSync } from 'node:fs'
+import { renameSync, writeFileSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const out = join(root, 'web', '.dev-follow.json')
+const pending = `${out}.${process.pid}.tmp`
 
 // Filename stem (case-insensitive, prefix match) -> /game/<screen>.
 const SCREENS = [
@@ -41,5 +42,8 @@ if (!input) {
 if (!input || !/(^\/)|web\//.test(input) || /\.(test|spec)\./.test(input)) process.exit(0)
 const route = toRoute(input)
 if (!route) process.exit(0)
-writeFileSync(out, JSON.stringify({ route, file: input, ts: Date.now() }))
+// Rename keeps the polling API from observing a partially-written JSON file,
+// including when the host write is crossing Docker Desktop's bind mount.
+writeFileSync(pending, JSON.stringify({ route, file: input, ts: Date.now() }))
+renameSync(pending, out)
 console.log(`preview -> ${route}`)

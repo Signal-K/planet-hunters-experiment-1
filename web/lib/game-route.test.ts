@@ -49,4 +49,9 @@ describe('entryScreenForPath (SSL-476)', () => {
     expect(entryScreenForPath('/game/hub-subsurface', [])).toBe('hub-subsurface')
     expect(entryScreenForPath('/game/missions', ['launchpad'])).toBeNull()
   })
+  it('lets the development follow route override the saved gameplay screen', () => {
+    expect(entryScreenForPath('/game/missions', ['launchpad'], true)).toBe('missions')
+    expect(entryScreenForPath('/game/mining', ['launchpad'], true)).toBe('mining')
+    expect(entryScreenForPath('/game/not-a-screen', ['launchpad'], true)).toBeNull()
+  })
 })

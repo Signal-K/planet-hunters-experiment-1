@@ -2,8 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import {
-  SCENE_TRANSITION_IN_MS,
-  SCENE_TRANSITION_OUT_MS,
+  sceneTransitionTiming,
   transitionKind,
   type SceneTransitionKind,
 } from '@/lib/scene-transition'
@@ -41,7 +40,9 @@ export default function SceneTransition({ sceneKey, children }: { sceneKey: stri
       setEpoch(value => value + 1)
       return
     }
-    setKind(transitionKind(held.current.key, sceneKey))
+    const nextKind = transitionKind(held.current.key, sceneKey)
+    const timing = sceneTransitionTiming(nextKind)
+    setKind(nextKind)
     setPhase('out')
     const coverTimer = window.setTimeout(() => {
       if (cancelled) return
@@ -50,8 +51,8 @@ export default function SceneTransition({ sceneKey, children }: { sceneKey: stri
       setEpoch(value => value + 1)
       revealTimer = window.setTimeout(() => {
         if (!cancelled) setPhase('idle')
-      }, SCENE_TRANSITION_IN_MS)
-    }, SCENE_TRANSITION_OUT_MS)
+      }, timing.in)
+    }, timing.out)
     return () => {
       cancelled = true
       window.clearTimeout(coverTimer)

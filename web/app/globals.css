@@ -692,12 +692,14 @@ button { cursor: pointer; }
 }
 .scene-transition-veil[data-phase="out"] {
   pointer-events: auto;
-  animation: scene-veil-cover 180ms ease forwards;
+  animation: scene-veil-cover 80ms ease forwards;
 }
 .scene-transition-veil[data-phase="in"] {
   pointer-events: auto;
-  animation: scene-veil-reveal 200ms ease forwards;
+  animation: scene-veil-reveal 100ms ease forwards;
 }
+.scene-transition-veil[data-phase="out"]:not([data-kind="fade"]) { animation-duration: 180ms; }
+.scene-transition-veil[data-phase="in"]:not([data-kind="fade"]) { animation-duration: 200ms; }
 @keyframes scene-veil-cover { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scene-veil-reveal { from { opacity: 1; } to { opacity: 0; } }
 

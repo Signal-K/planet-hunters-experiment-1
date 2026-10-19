@@ -121,7 +121,7 @@ function lcg(seed: number) {
 
 const STARS = (() => {
   const rand = lcg(7)
-  return Array.from({ length: 110 }, () => ({
+  return Array.from({ length: 56 }, () => ({
     x: rand() * 100, y: rand() * 100, size: 1.5 + rand() * 2.5, glow: 0.3 + rand() * 0.6,
     tint: STAR_TINTS[Math.floor(rand() * STAR_TINTS.length)],
   }))
@@ -132,11 +132,11 @@ const EARTH_POS = orbitPoint(1.5, 1.0)
 const REGION_EARTH_POS = { x: 38, y: 42 }
 const BELT_ROCKS = (() => {
   const rand = lcg(31)
-  return Array.from({ length: 260 }, () => ({ ...orbitPoint(BELT_R + (rand() - 0.5) * 1.1, (rand() * 2 - 1) * 1.4), size: 2 + rand() * 3.5, glow: 0.4 + rand() * 0.5 }))
+  return Array.from({ length: 96 }, () => ({ ...orbitPoint(BELT_R + (rand() - 0.5) * 1.1, (rand() * 2 - 1) * 1.4), size: 2 + rand() * 3.5, glow: 0.4 + rand() * 0.5 }))
 })()
 const BELT_FIELD = (() => {
   const rand = lcg(53)
-  return Array.from({ length: 70 }, () => ({ x: 4 + rand() * 92, y: 14 + rand() * 56, size: 3 + rand() * 7, glow: 0.15 + rand() * 0.35 }))
+  return Array.from({ length: 32 }, () => ({ x: 4 + rand() * 92, y: 14 + rand() * 56, size: 3 + rand() * 7, glow: 0.15 + rand() * 0.35 }))
 })()
 
 /** Asteroids sit in one belt; zoomed in, they spread across the screen. */
@@ -178,6 +178,8 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
   const real = targets.filter(t => t.type !== 'exoplanet')
   const planets = real.filter(t => t.type !== 'asteroid')
   const asteroids = real.filter(t => t.type === 'asteroid')
+  const shownPlanets = mode === 'route' ? planets.filter(t => lit.has(t.id)) : planets
+  const shownAsteroids = mode === 'route' ? asteroids.filter(t => lit.has(t.id)) : asteroids
   const innerPlanets = planets.filter(t => t.orbit <= 4)
   const outerPlanets = planets.filter(t => t.orbit > 4)
   const belt = beltLayout(asteroids)
@@ -224,13 +226,13 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
       <span className={styles.gxRegionLabel} style={{ left: '83%', top: '78%' }}>Outer system</span>
       {mode !== 'ambient' && <>
         <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(EARTH_POS)} aria-label="Earth"><i /><span>Earth</span></div>
-        {planets.map(t => node(t, planetPos(t), t.name))}
+        {shownPlanets.map(t => node(t, planetPos(t), t.name))}
         <button type="button" className={styles.gxBelt} data-lit={litAsteroid ? true : undefined} style={style(anchor)} data-testid="map-belt" onClick={() => onView('belt')}>
           <i /><span>Asteroid belt<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" /><path d="m15 15 5 5M10.5 8v5M8 10.5h5" /></svg></span>
         </button>
       </>}
-        <button type="button" className={styles.gxRegionButton} data-testid="map-inner" style={{ left: '20%', top: '67%' }} onClick={() => onView('inner')}>Explore inner system</button>
-        <button type="button" className={styles.gxRegionButton} data-testid="map-outer" style={{ left: '84%', top: '76%' }} onClick={() => onView('outer')}>Explore outer system</button>
+        {mode === 'pick' && <button type="button" className={styles.gxRegionButton} data-testid="map-inner" style={{ left: '20%', top: '67%' }} onClick={() => onView('inner')}>Explore inner system</button>}
+        {mode === 'pick' && <button type="button" className={styles.gxRegionButton} data-testid="map-outer" style={{ left: '84%', top: '76%' }} onClick={() => onView('outer')}>Explore outer system</button>}
     </> : view === 'belt' ? <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <ellipse cx="31" cy="39" rx="22" ry="25" className={styles.gxRegion} />
@@ -243,8 +245,8 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
       {BELT_FIELD.map((r, i) => <i key={i} className={styles.gxRock} style={{ ...style(r), width: r.size, height: r.size, opacity: r.glow }} />)}
       <span className={styles.gxRegionLabel} style={{ left: '18%', top: '68%' }}>Near-Earth group</span>
       <span className={styles.gxRegionLabel} style={{ left: '64%', top: '69%' }}>Main-belt group</span>
-      {asteroids.map(t => node(t, belt[t.id], shortName(t.name)))}
-      <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>Solar system</button>
+      {shownAsteroids.map(t => node(t, belt[t.id], shortName(t.name)))}
+      <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>
     </> : <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <ellipse cx="50" cy="44" rx="34" ry="27" className={styles.gxRegion} />
@@ -258,7 +260,7 @@ function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], s
       {view === 'inner' && <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(REGION_EARTH_POS)} aria-label="Earth"><i /><span>Earth</span></div>}
       {(view === 'inner' ? innerPlanets : outerPlanets).map(target => node(target, (view === 'inner' ? inner : outer)[target.id], target.name))}
       <span className={styles.gxRegionLabel} style={{ left: '50%', top: '77%' }}>{view === 'inner' ? 'Inner system' : 'Outer system'}</span>
-      <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>Solar system</button>
+      <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>
     </>}
   </div>
 }
@@ -312,6 +314,7 @@ export default function MissionBoard({
   tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
+  const [modeMenuOpen, setModeMenuOpen] = useState(false)
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
@@ -328,6 +331,12 @@ export default function MissionBoard({
   const client = card?.client
   const clientLevel = client ? clientAffinityLevel(player.clientMissions[client.id] ?? 0) : 0
   const paging = tab === 'contracts' && count > 1
+  const offerWindow = paging
+    ? Array.from({ length: Math.min(5, count) }, (_, offset) => {
+        const offerIndex = (index - Math.floor(Math.min(5, count) / 2) + offset + count) % count
+        return { offer: visibleCards[offerIndex], offerIndex }
+      })
+    : []
   const [view, setView] = useState<MapView>('system')
   const [pickedId, setPickedId] = useState<string | null>(null)
   const [runId, setRunId] = useState<string | null>(null)
@@ -341,6 +350,9 @@ export default function MissionBoard({
     ? catalog.targets.filter(t => t.type !== 'exoplanet' && Object.keys(card.mission.requires.minerals).some(m => t.minerals.includes(m))).slice(0, 4).map(t => t.id)
     : []
   const mapMode: MapMode = tab === 'contracts' || tab === 'free' ? 'pick' : 'ambient'
+  const mapTargets = tab === 'contracts'
+    ? catalog.targets.filter(target => cards.some(item => item.targetIds.includes(target.id)))
+    : catalog.targets
   const selectedProgramStep = steps.find(step => step.id === programStepId)
     ?? steps.find(step => step.state === 'current')
     ?? steps[0]
@@ -393,25 +405,29 @@ export default function MissionBoard({
   }
 
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
+  const chooseTab = (next: MissionBoardTab) => { setTab(next); setModeMenuOpen(false) }
+  const modeLabel: Record<MissionBoardTab, string> = { contracts: 'Contracts', free: 'Free run', program: 'Program', events: 'Events' }
   const tabButtons = <>
-    <button type="button" className={styles.tab} aria-label="Contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
-    {player.freeOperations && <button type="button" className={styles.tab} aria-label="Free run" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => setTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
-    <button type="button" className={styles.tab} aria-label="Program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => setTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
-    <button type="button" className={styles.tab} aria-label="Events" data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => setTab('events')}>
+    <button type="button" className={styles.tab} aria-label="Contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
+    {player.freeOperations && <button type="button" className={styles.tab} aria-label="Free run" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => chooseTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
+    <button type="button" className={styles.tab} aria-label="Program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => chooseTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
+    <button type="button" className={styles.tab} aria-label="Events" data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => chooseTab('events')}>
       <StarIcon /><span className={styles.tabLabel}>Events</span>
       {events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
     </button>
-    <button type="button" className={styles.log} data-testid="mission-board-log" onClick={onOpenLog}>LOG</button>
+    <button type="button" className={styles.log} data-testid="mission-board-log" onClick={() => { setModeMenuOpen(false); onOpenLog() }}>Mission log</button>
   </>
 
   return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab} data-contract-target={contractTargetId ?? undefined}>
     <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
       <nav className={styles.rail} aria-label="Mission board">
         <button type="button" className={`${styles.round} ${styles.railClose}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><ArrowIcon direction="left" /></button>
-        {tabButtons}
-        {help.button && <div className={styles.railHelp}>{help.button}</div>}
+        <button type="button" className={styles.modeButton} aria-expanded={modeMenuOpen} aria-controls="mission-mode-menu" onClick={() => setModeMenuOpen(open => !open)}>
+          <span>{modeLabel[tab]}</span><DownIcon />{events.attention && tab !== 'events' && <i className={styles.modeDot} aria-label="Event live or upcoming" />}
+        </button>
+        {modeMenuOpen && <div className={styles.modeMenu} id="mission-mode-menu">{tabButtons}</div>}
       </nav>
-      <GalaxyMap targets={catalog.targets} mode={mapMode} view={view} onView={setView} stops={tab === 'contracts' ? routeIds : []} candidates={tab === 'contracts' ? candidateIds : []}
+      <GalaxyMap targets={mapTargets} mode={mapMode} view={view} onView={setView} stops={tab === 'contracts' ? routeIds : []} candidates={tab === 'contracts' ? candidateIds : []}
         selectedId={tab === 'contracts' ? contractTargetId : tab === 'free' ? pickedId : null} onPick={id => {
           if (tab === 'contracts') pickContractTarget(id)
           else { setPickedId(id); setRunId(null) }
@@ -422,20 +438,27 @@ export default function MissionBoard({
             <span><b>{contractTarget.name}</b> · {count} {count === 1 ? 'contract' : 'contracts'}</span>
             <button type="button" data-testid="mission-destination-clear" onClick={() => setContractTargetId(null)}>SHOW ALL</button>
           </div>}
+          {paging && <div className={styles.offerStrip} aria-label="Available contracts">
+            {offerWindow.map(({ offer, offerIndex }) => {
+              const offerClient = offer.client
+              return <button key={offer.mission.id} type="button" data-selected={offer.mission.id === card.mission.id || undefined}
+                aria-label={`Select ${offer.mission.title}`} onClick={() => onSelectMission(offer.mission.id)}>
+                <ClientMark initial={offerClient?.initial ?? 'OP'} color={offerClient?.color ?? 'var(--ln-board-amber)'} uiRole={offerClient?.uiRole ?? 'starter'} clientId={offerClient?.id} size={28} />
+                <span>{offerIndex + 1}</span>
+              </button>
+            })}
+          </div>}
           <header className={styles.dockHead}>
             <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-amber)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={36} />
             <div className={styles.dockWho}>
               <span>{client ? `${client.name} · L${clientLevel}` : 'Your program'}</span>
               <h2>{card.mission.title}</h2>
             </div>
-            {paging && <div className={styles.dockNav}>
-              <button type="button" className={styles.round} data-testid="mission-board-prev" aria-label="Previous contract" onClick={() => selectVisibleRelative(-1)}><ArrowIcon direction="left" /></button>
-              <span>{index + 1}/{count}</span>
-              <button type="button" className={styles.round} data-testid="mission-board-next" aria-label="Next contract" onClick={() => selectVisibleRelative(1)}><ArrowIcon direction="right" /></button>
-            </div>}
+            {paging && <span className={styles.dockCount}>{index + 1}/{count}</span>}
           </header>
           {card.mission.brief && <p className={styles.dockBrief} data-testid="mission-brief">{card.mission.brief}</p>}
           {!card.unlocked && card.lockedDetail && <p className={styles.dockBrief}>{card.lockedDetail}</p>}
+          <div className={styles.requirementTitle}><span>Requirements</span></div>
           <div className={styles.dockDeal}>
             <div className={styles.dockCargo} aria-label="Cargo">
               {Object.entries(card.mission.requires.minerals).map(([id, amount]) => {

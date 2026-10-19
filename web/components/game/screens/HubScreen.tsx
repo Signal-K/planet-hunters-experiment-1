@@ -54,16 +54,6 @@ const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market', 'control-stat
  * the pill's own height plus its gap — set so the visible building base lands
  * on the ground line. The dock-clearance measurement above depends on it.
  */
-function dockStops(player: Player): Screen[] {
-  const stops: Screen[] = ['missions']
-  if (player.freeOperations) stops.push('market')
-  if (player.activeMission) {
-    const resume = missionResumeScreen(player)
-    if (!stops.includes(resume)) stops.push(resume)
-  }
-  return stops
-}
-
 // Instantiated from the build-plot prefab rather than written out by hand.
 // This same list previously existed in four places (both hub scene files and
 // both screens); the prefab is the one definition and a test asserts it still
@@ -117,13 +107,12 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const [viewSize, setViewSize] = useState(() => (typeof window === 'undefined' ? { w: 1440, h: 900 } : { w: window.innerWidth, h: window.innerHeight }))
   const px = kitScale(viewSize)
   const worldW = STRIP_W * px
-  const builtKinds = [...(player.placed ?? []), ...((player.placed ?? []).includes('launchpad') ? ['hangar'] : [])]
+  const builtKinds = player.placed ?? []
   const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(builtKinds, viewSize.w / px) * px })
   const [editMode, setEditMode] = useState(placementMode)
   const [pickedBuild, setPickedBuild] = useState<string | null>(null)
   const [placeNote, setPlaceNote] = useState<string | null>(null)
   const surfaceRef = useRef<HTMLDivElement | null>(null)
-  const [dockStop, setDockStop] = useState(0)
   // Hub-only UI state is addressable by URL (`/game/hub?menu=1`, `?building=hangar`) so tooling can
   // deep-link to it. Client-only screen, so reading location during init is safe.
   const [menuOpen, setMenuOpen] = useState(() => hubQuery().has('menu'))
@@ -228,11 +217,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       buildStartedAt: startedAt,
     }]
   })
-  const scenicHangar = placed.includes('launchpad') && !placed.includes('hangar') && !placed.includes('garage')
-  const sceneBuildings: HubBuildingDef[] = [
-    ...(scenicHangar ? [{ kind: 'hangar', plotX: 48, w: 52, level: 3, status: 'ok' as const }] : []),
-    ...hubBuildings.filter(building => BASE_SCENE_KINDS.has(building.kind)),
-  ]
+  const sceneBuildings: HubBuildingDef[] = hubBuildings.filter(building => BASE_SCENE_KINDS.has(building.kind))
   // The launchpad speaks only while the Base has no live run. Progression is
   // now exposed through contextual buildings and the persistent chrome rather
   // than a generic card laid over the landscape.
@@ -412,6 +397,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     ),
     { id: 'mission-log', icon: 'log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
     ...(player.freeOperations ? [{ id: 'sites', icon: 'sites' as const, label: 'Sites', detail: 'Places to survey and settle', onSelect: () => onOpenScene('surface-ops') }] : []),
+    { id: 'settings', icon: 'settings', label: 'Settings', detail: 'Sound, display and account', onSelect: openSettings },
   ]
 
   return (
@@ -517,27 +503,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
                 const pad = kind === 'launchpad'
                 return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={siloStyle} calloutAlign={calloutAlign} />
               })}
-              {scenicHangar && (
-                <Building
-                  kind="hangar"
-                  label="Hangar"
-                  sub="READY"
-                  status="ok"
-                  quiet
-                  w={72}
-                  hitH={88}
-                  onClick={() => onFocusBuilding('hangar')}
-                  active={activeBuilding === 'hangar'}
-                  onActiveChange={active => setActiveBuilding(active ? 'hangar' : null)}
-                  style={{
-                    left: units(siteById('hall').x),
-                    width: units(structureSprite('hangar')?.width ?? 78),
-                    minWidth: 44,
-                    bottom: 'var(--hub-ground)',
-                    transform: 'translateX(-50%)',
-                  }}
-                />
-              )}
               {pickedSite && pickedSiteFree && !underground && onPlaceStructure && (
                 <SiteMarker site={pickedSite} label={pickedOption?.name ?? pickedSite.label} onPlace={() => placeOnPlot(pickedSite.plot ?? 0)} />
               )}
@@ -578,12 +543,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         <div className={layoutStyles.topRow}>
           {!subsurface && (
             <div className={layoutStyles.leftCluster}>
-              <button type="button" className={layoutStyles.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-                </svg>
-              </button>
               <HubClockWidget />
             </div>
           )}
@@ -592,6 +551,11 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
               <span className="scene-chip" data-testid="hub-francs-chip">{formatCurrency(player.francs, { compact: true })}</span>
               <StashChip testId="hub-cargo-chip" />
             </div>
+          )}
+          {!subsurface && (
+            <button type="button" className={layoutStyles.cog} data-testid="hub-menu-btn" aria-label="Menu" onClick={() => setMenuOpen(true)}>
+              <span aria-hidden="true" className={layoutStyles.pauseGlyph}><i /><i /></span>
+            </button>
           )}
         </div>
       </div>
@@ -665,23 +629,14 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         }}>
           <div style={{ pointerEvents: 'auto' }}>
             <BaseDock
-              onPrev={() => {
-                const stops = dockStops(player)
-                const next = (dockStop - 1 + stops.length) % stops.length
-                setDockStop(next)
-                onOpenScene(stops[next])
-              }}
-              onNext={() => {
-                const stops = dockStops(player)
-                const next = (dockStop + 1) % stops.length
-                setDockStop(next)
-                onOpenScene(stops[next])
-              }}
+              onPrev={() => undefined}
+              onNext={() => undefined}
               onBuild={() => { setPlaceNote(null); setEditMode(value => !value) }}
               onMission={!subsurface && !editMode && !player.activeMission && !player.pendingLaunch ? () => onOpenScene('missions') : undefined}
-              hubLabel="Menu"
-              hubTestId="hub-menu-btn"
               onHub={() => setMenuOpen(true)}
+              locationLabel="Earth"
+              locationNavigationDisabled
+              showLocationBuild={buildOptions.length > 0}
             />
           </div>
         </div>

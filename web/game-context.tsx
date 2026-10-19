@@ -179,7 +179,12 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       // SSL-476: /game/launchpad is a stable destination too. Without this a cold
       // load restored the saved screen (e.g. hub-subsurface) and the URL sync
       // rewrote the path to it, so the Launchpad opened the underground.
-      const entryScreen = entryScreenForPath(window.location.pathname, loadedState.player.placed)
+      // The editor follow URL is an explicit development instruction, not a
+      // returning-player navigation preference. Honour it during hydration so
+      // the saved Hub screen cannot push the browser away before the route
+      // bridge has a chance to synchronize state.
+      const followsEditor = process.env.NODE_ENV !== 'production' && params.get('follow') === '1'
+      const entryScreen = entryScreenForPath(window.location.pathname, loadedState.player.placed, followsEditor)
       const entryState = entryScreen ? { ...loadedState, screen: entryScreen } : loadedState
       setState(entryState)
       setHydrated(true)
@@ -312,6 +317,16 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     // (dropping preview/isPreview routing) before the real screen lands a tick
     // later. Wait for hydration so only the real screen ever reaches the URL.
     if (!hydrated || !urlSync) return
+    const followsEditor = process.env.NODE_ENV !== 'production'
+      && (new URLSearchParams(window.location.search).get('follow') === '1'
+        || window.localStorage.getItem('dev-follow') === '1')
+    if (followsEditor) {
+      const followedScreen = entryScreenForPath(window.location.pathname, state.player.placed, true)
+      if (followedScreen && canonicalGamePath({ ...state, screen: followedScreen }) !== canonicalGamePath(state)) {
+        ui.setScreenFromUrl(followedScreen)
+        return
+      }
+    }
     if (ui.skipNextUrlSync.current) {
       ui.skipNextUrlSync.current = false
       return

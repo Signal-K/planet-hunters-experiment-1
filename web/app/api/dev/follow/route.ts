@@ -11,7 +11,13 @@ export async function GET() {
   let act: Record<string, unknown> = { actions: [], actionsTs: 0 }
   try { follow = JSON.parse(await readFile(join(process.cwd(), '.dev-follow.json'), 'utf8')) } catch { /* none yet */ }
   try { act = JSON.parse(await readFile(actionsFile(), 'utf8')) } catch { /* none yet */ }
-  return Response.json({ ...follow, ...act })
+  return Response.json({ ...follow, ...act }, {
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      Pragma: 'no-cache',
+      Expires: '0',
+    },
+  })
 }
 
 /** Body: `{ actions: [{ key, hold? } | { click } | { wait }] }`. `click` is an aria-label or visible text. */

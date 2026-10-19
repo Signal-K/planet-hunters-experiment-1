@@ -1,4 +1,4 @@
-.PHONY: help up up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
+.PHONY: help up follow up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 PARENT_COMPOSE   := docker compose -p navigation -f ../docker-compose.yml
@@ -8,6 +8,7 @@ help:
 	@echo ""
 	@echo "  Dev"
 	@echo "    up             Start frontend + parent-owned PocketBase (:3001 / shared :8090 / landnam :8091)"
+	@echo "    follow         Start the stack and arm the persistent Cursor live preview"
 	@echo "                   Landnam-only — for a full Star Sailors session (Saily/Atlas too), see up-ecosystem"
 	@echo "    up-ecosystem   Start the full Star Sailors stack via the root ~/Navigation Makefile"
 	@echo "                   (shared, Landnam, Saily, Atlas backends + forge-service) — opt-in, does"
@@ -43,10 +44,14 @@ help:
 
 up: pb-up
 	$(FRONTEND_COMPOSE) up -d --remove-orphans web
-	@echo "Landnam:         http://localhost:3001/game"
+	@echo "Landnam:         http://localhost:3001/game/hub?follow=1"
 	@echo "Dev mode only. make up unregisters service workers, so it is not offline-PWA proof. Use a production build on a secure origin (see web/app/layout.tsx)."
 	@echo "Shared PB:       http://localhost:8090/_/"
 	@echo "Landnam PB:      http://localhost:8091/_/"
+
+follow: up
+	@node scripts/preview-target.mjs /game/hub
+	@echo "Cursor preview:  http://localhost:3001/game/hub?follow=1"
 
 up-ecosystem:
 	$(MAKE) -C .. up

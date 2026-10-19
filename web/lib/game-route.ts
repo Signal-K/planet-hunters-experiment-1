@@ -1,4 +1,5 @@
 import type { GameState, Screen } from '@/lib/game-types'
+import { VALID_SCREENS } from '@/lib/game-screens'
 
 type RouteState = Pick<GameState, 'screen' | 'missionId' | 'targetId'>
 
@@ -38,7 +39,12 @@ export function trayScreenFromPath(pathname: string): Screen | null {
 }
 
 /** SSL-476/KES-226: the screen a cold load of `pathname` must open, regardless of the saved screen. null = keep the saved one. */
-export function entryScreenForPath(pathname: string, placed: readonly string[]): Screen | null {
+export function entryScreenForPath(pathname: string, placed: readonly string[], preferExplicitRoute = false): Screen | null {
+  if (preferExplicitRoute) {
+    const match = /^\/game\/([^/]+)\/?$/.exec(pathname)
+    const explicit = match?.[1] as Screen | undefined
+    if (explicit && VALID_SCREENS.has(explicit)) return explicit
+  }
   if (pathname === '/game/hub') return 'hub'
   if (pathname === '/game/launchpad' && placed.includes('launchpad')) return 'launchpad'
   return trayScreenFromPath(pathname)

@@ -26,6 +26,11 @@ type BaseDockProps = {
   hubLabel?: string
   hubTestId?: string
   variant?: 'base' | 'flight'
+  /** Base scene location selector. When present, navigation and actions split
+   * into compact edge plates instead of one centered navigation capsule. */
+  locationLabel?: string
+  locationNavigationDisabled?: boolean
+  showLocationBuild?: boolean
 }
 
 /** Dock controls. Arrows sit at the ends; Build and Hub sit in the middle. */
@@ -126,6 +131,23 @@ function MissionIcon() {
   )
 }
 
+function LocationIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.8 12h16.4M12 3.5c2.4 2.5 3.5 5.3 3.5 8.5S14.4 18 12 20.5C9.6 18 8.5 15.2 8.5 12S9.6 6 12 3.5z" />
+    </svg>
+  )
+}
+
+function BuildSiteIcon() {
+  return (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 20h18M5 20v-8l7-4 7 4v8M9 20v-5h6v5M12 4v4" />
+    </svg>
+  )
+}
+
 /** Floating dock: previous at the far left, Build and Hub in the middle, next at the far right. */
 export function BaseDock({
   onPrev,
@@ -147,9 +169,31 @@ export function BaseDock({
   hubTestId = 'hub-btn',
   variant = 'base',
   onMission,
+  locationLabel,
+  locationNavigationDisabled = false,
+  showLocationBuild = true,
 }: BaseDockProps) {
   const flight = variant === 'flight'
   const label = flight ? buildLabel : 'Build'
+  if (locationLabel) {
+    return (
+      <nav aria-label="Location and scene actions" className="scene-location-dock" data-ui-zone={UI_ZONES.bottomNav} data-testid="base-dock">
+        <div className="scene-location-selector" aria-label={`Selected location ${locationLabel}`}>
+          <DockArrowButton direction="left" data-testid="hub-dock-prev" onClick={onPrev} aria-label="Previous location" disabled={locationNavigationDisabled} />
+          <span className="scene-location-label"><LocationIcon /><span>{locationLabel}</span></span>
+          <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label="Next location" disabled={locationNavigationDisabled} />
+        </div>
+        <div className="scene-location-actions">
+          {showLocationBuild && <DockWordButton data-testid="hub-build-btn" data-beacon="hub-build-btn" onClick={onBuild}>
+            {buildIcon ?? <BuildSiteIcon />}<span>Build</span>
+          </DockWordButton>}
+          {onMission && <DockWordButton className="scene-location-action--mission" data-testid="hub-new-mission-btn" onClick={onMission}>
+            <MissionIcon /><span>Find mission</span>
+          </DockWordButton>}
+        </div>
+      </nav>
+    )
+  }
   return (
     <nav
       aria-label="Scene dock"
