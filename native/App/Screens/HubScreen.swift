@@ -180,7 +180,7 @@ struct HubScreen: View {
             if store.player.activeMission != nil {
                 ContractCard(width: z.contractCard.width, collapsible: portrait && z.contractCard.collapseInPortrait)
             }
-            SkyEventChip()
+            SkyEventChip(allDay: true)
         }
         .padding(.leading, insets.leading + z.inset).padding(.top, insets.top + z.inset)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

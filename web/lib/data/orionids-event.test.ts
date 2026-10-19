@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ORIONIDS_DEBRIS_PRESET, ORIONIDS_PEAK_MULTIPLIER, debrisRatePerMinute, isOrionidsPeakNight, orionidsPhase, orionidsShareText } from './sky-events'
+import { ORIONIDS_DEBRIS_PRESET, ORIONIDS_PEAK_MULTIPLIER, ORIONIDS_PEAK_REMINDER, debrisRatePerMinute, isOrionidsPeakNight, orionidsPeakReminderMs, orionidsPhase, orionidsShareText } from './sky-events'
 import { ORIONIDS_NIGHT_RUN_ID, generateSelfDirectedMiningPool } from './missions'
 
 const local = (m: number, d: number, h: number) => new Date(2026, m - 1, d, h, 0, 0, 0).getTime()
@@ -30,5 +30,10 @@ describe('SSL-578 Orionids event', () => {
 
   it('share text names the tier', () => {
     expect(orionidsShareText('gold')).toContain('gold Orionids 2026 badge')
+  })
+
+  it('places the one peak reminder at local 22 Oct 02:00', () => {
+    expect(orionidsPeakReminderMs()).toBe(local(10, 22, 2))
+    expect(ORIONIDS_PEAK_REMINDER.body).toBe("Moon's down — look up. Orionids peak; debris is falling in Landnam.")
   })
 })

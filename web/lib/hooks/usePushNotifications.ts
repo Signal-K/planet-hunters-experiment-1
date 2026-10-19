@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { captureGameEvent } from '@/lib/posthog'
+import { scheduleOrionidsPeakReminder } from '@/lib/orionids/peak-reminder'
 
 type PushState = 'unsupported' | 'denied' | 'granted' | 'default'
 
@@ -62,6 +63,12 @@ export function usePushNotifications(userId?: string) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subscription: sub.toJSON(), userId }),
       })
+      const json = sub.toJSON()
+      try {
+        await scheduleOrionidsPeakReminder({ endpoint: json.endpoint, keys: json.keys })
+      } catch {
+        // The subscription itself succeeded. The peak reminder can be queued on the next visit.
+      }
       setState('granted')
     } catch (err) {
       // Caught rather than thrown so the button just quietly reverts to the

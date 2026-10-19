@@ -15,6 +15,7 @@ import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { notifyFiredAlert } from '@/lib/priceAlertNotify'
 import { captureGameEvent, captureScreenView, initPostHog } from '@/lib/posthog'
+import { scheduleOrionidsPeakReminder } from '@/lib/orionids/peak-reminder'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
@@ -65,6 +66,20 @@ function GameChrome({ children }: { children: ReactNode }) {
   useEffect(() => {
     captureScreenView(game.screen)
   }, [game.screen])
+
+  // One Orionids peak reminder per push subscription. The cron delivers it at local 22 Oct 02:00.
+  useEffect(() => {
+    let cancelled = false
+    async function schedule() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+      if (!sub || cancelled) return
+      await scheduleOrionidsPeakReminder({ endpoint: sub.endpoint, keys: sub.toJSON().keys })
+    }
+    void schedule().catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   // Schedule push notification when transit starts
   useEffect(() => {

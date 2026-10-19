@@ -319,6 +319,16 @@ export function orionidsShareText(tier: BadgeTier): string {
   return `I earned the ${tier} Orionids 2026 badge in Landnam by mining meteor debris.`
 }
 
+/** One peak reminder, local 22 Oct 02:00 (after moonset). */
+export const ORIONIDS_PEAK_REMINDER = {
+  title: 'Orionids peak',
+  body: "Moon's down — look up. Orionids peak; debris is falling in Landnam.",
+} as const
+
+export function orionidsPeakReminderMs(): number {
+  return new Date(2026, 9, 22, 2, 0, 0, 0).getTime()
+}
+
 /** Resource units granted for one mined debris chunk. */
 export const DEBRIS_UNITS_PER_CHUNK = 1
 

@@ -1,37 +1,53 @@
 import SwiftUI
 import LandnamCore
 
-/// "Orionids active" chip (mirrors web SkyEventChip): a 44pt tap target that opens a one-line
-/// explainer. Renders nothing outside the shower window and the player's local night.
+/// "Orionids active" chip (mirrors web SkyEventChip): a 44pt tap target.
+/// On Base (`allDay`) it stays up for the whole shower window. Mining still waits for local night.
 struct SkyEventChip: View {
     @Environment(GameStore.self) private var store
     @State private var open = false
+    var allDay = false
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 60)) { _ in
-            if let preset = SkyEvents.activePreset(at: store.now) {
+            let preset = SkyEvents.activePreset(at: store.now)
+            let daytime = allDay && preset == nil && SkyEvents.isOrionidsWindow(store.now)
+            if let preset = preset {
+                chip(label: preset.chipLabel.uppercased(), orionids: preset.eventId == "orionids-2026", note: "\(preset.label) falls while you mine tonight. Laser it, then sell it at the Market spot price.")
+            } else if daytime {
+                chip(label: "ORIONIDS TONIGHT", orionids: true, note: SkyEvents.orionidsPanelPeak)
+            }
+        }
+    }
+
+    private func chip(label: String, orionids: Bool, note: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button { open.toggle() } label: {
+                Text(label).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 16).frame(minHeight: 44, alignment: .center)
+                    .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 2))
+            }.buttonStyle(.plain).accessibilityAddTraits(open ? .isSelected : []).accessibilityIdentifier("sky-event-chip")
+            if open {
                 VStack(alignment: .leading, spacing: 8) {
-                    Button { open.toggle() } label: {
-                        Text(preset.chipLabel.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
-                            .padding(.horizontal, 16).frame(minHeight: 44, alignment: .center)
-                            .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 2))
-                    }.buttonStyle(.plain).accessibilityAddTraits(open ? .isSelected : [])
-                    if open {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("\(preset.label) falls while you mine tonight. Laser it, then sell it at the Market spot price.")
-                                .font(AppFont.body(14)).foregroundStyle(Theme.textDim).frame(maxWidth: 260, alignment: .leading)
-                            Button { store.openMissionBoard(tab: 2) } label: {
-                                Text("VIEW EVENT").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Color.white)
-                                    .frame(minHeight: 44).padding(.horizontal, 14)
-                                    .background(Theme.blue, in: RoundedRectangle(cornerRadius: 8))
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityIdentifier("sky-event-participate")
+                    if orionids {
+                        Text(SkyEvents.orionidsPanelPeak).font(AppFont.body(14)).foregroundStyle(Theme.textDim).frame(maxWidth: 280, alignment: .leading)
+                        ForEach(SkyEvents.orionidsPanelSteps, id: \.self) { step in
+                            Text(step).font(AppFont.body(14)).foregroundStyle(Theme.ink).frame(maxWidth: 280, alignment: .leading)
                         }
-                        .padding(10).background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
+                    } else {
+                        Text(note).font(AppFont.body(14)).foregroundStyle(Theme.textDim).frame(maxWidth: 260, alignment: .leading)
                     }
+                    Button { store.openMissionBoard(tab: 2) } label: {
+                        Text("VIEW EVENT").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Color.white)
+                            .frame(minHeight: 44).padding(.horizontal, 14)
+                            .background(Theme.blue, in: RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("sky-event-participate")
                 }
+                .padding(10).background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
+                .accessibilityIdentifier(orionids ? "orionids-panel" : "sky-event-note")
             }
         }
     }

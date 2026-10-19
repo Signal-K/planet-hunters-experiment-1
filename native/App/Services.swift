@@ -131,6 +131,7 @@ final class Services {
             Task { for op in ops { await sync.enqueue(op) } }
         }
         LocalNotifications.requestProvisional()
+        scheduleOrionidsPeakReminder()
         store.onSiteDeed = { siteId in Task { await sync.enqueue(SiteDeed.op(siteId: siteId)) } }
         store.onClassified = { verdict in
             // Local save already happened. Without a shared login (Apple sign-in) the verdict stays local.
@@ -208,6 +209,15 @@ final class Services {
     }
 
     func flush() { let s = sync, o = shared; Task { await s.flush(); await o.flush() } }
+
+    /// One local alert at 22 Oct 02:00, mirrored into scheduled_notifications so it is not device-only.
+    private func scheduleOrionidsPeakReminder() {
+        let at = SkyEvents.orionidsPeakReminderMs()
+        guard at > Date().timeIntervalSince1970 * 1000 else { return }
+        LocalNotifications.schedule(title: SkyEvents.orionidsPeakReminderTitle, body: SkyEvents.orionidsPeakReminderBody, at: at)
+        let op = NativeRecords.orionidsPeakReminder(endpoint: LocalNotifications.endpoint, at: at)
+        Task { await sync.enqueue(op) }
+    }
 }
 
 /// Lets the executors report a 401 before `Services` has finished initialising.

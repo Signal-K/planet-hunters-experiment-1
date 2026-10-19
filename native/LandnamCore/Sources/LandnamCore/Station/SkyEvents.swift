@@ -35,11 +35,27 @@ public enum SkyEvents {
         return cal.date(from: c)!.timeIntervalSince1970 * 1000
     }
 
+    /// Local midnight on a calendar date, ms since epoch. Mirrors web `localMidnightMs`.
+    public static func localMidnight(_ year: Int, _ month: Int, _ day: Int, calendar: Calendar = .current) -> Double {
+        var cal = calendar
+        var parts = DateComponents()
+        parts.calendar = cal
+        parts.timeZone = cal.timeZone
+        parts.year = year
+        parts.month = month
+        parts.day = day
+        parts.hour = 0
+        parts.minute = 0
+        parts.second = 0
+        guard let date = cal.date(from: parts) else { return 0 }
+        return date.timeIntervalSince1970 * 1000
+    }
+
     public static let all: [SkyEvent] = [
         SkyEvent(id: "rocket-revolution-2026", name: "Rocket Revolution", startMs: utc(2026, 10, 4), endMs: utc(2026, 10, 11), activities: [.launch]),
         SkyEvent(id: "saturn-night-2026", name: "Saturn All Night", startMs: utc(2026, 10, 4), endMs: utc(2026, 10, 11), activities: [.saturnClassification]),
         SkyEvent(id: "draconids-2026", name: "Draconids Dragon Dust", startMs: utc(2026, 10, 6), endMs: utc(2026, 10, 11), activities: [.debrisMining]),
-        SkyEvent(id: "orionids-2026", name: "Orionids", startMs: utc(2026, 10, 20), endMs: utc(2026, 11, 8), activities: [.debrisMining]),
+        SkyEvent(id: "orionids-2026", name: "Orionids", startMs: localMidnight(2026, 10, 19), endMs: utc(2026, 11, 8), activities: [.debrisMining]),
         SkyEvent(id: "new-moon-hunt-2026-10", name: "New Moon Asteroid Hunt", startMs: utc(2026, 10, 10), endMs: utc(2026, 10, 11), activities: [.asteroidClassification]),
     ]
 
@@ -76,7 +92,7 @@ public enum SkyEvents {
     }
 
     // MARK: debris showers
-    public static let orionids = DebrisPreset(eventId: "orionids-2026", startMs: utc(2026, 10, 20), endMs: utc(2026, 11, 8), peakMs: utc(2026, 10, 22),
+    public static let orionids = DebrisPreset(eventId: "orionids-2026", startMs: localMidnight(2026, 10, 19), endMs: utc(2026, 11, 8), peakMs: utc(2026, 10, 22),
                                                peakRatePerMinute: 12, baseRatePerMinute: 4, speedFactor: 1,
                                                label: "Orionid debris", resourceId: "orionid_debris", chipLabel: "Orionids active")
     public static let draconids = DebrisPreset(eventId: "draconids-2026", startMs: utc(2026, 10, 6), endMs: utc(2026, 10, 11), peakMs: utc(2026, 10, 8),
@@ -129,6 +145,30 @@ public enum SkyEvents {
 
     public static func orionidsShareText(_ tier: BadgeTier) -> String {
         "I earned the \(tier.rawValue) Orionids 2026 badge in Landnam by mining meteor debris."
+    }
+
+    /// Day or night, from local midnight on 19 Oct until the shower ends.
+    public static func isOrionidsWindow(_ ms: Double) -> Bool {
+        ms >= orionids.startMs && ms < orionids.endMs
+    }
+
+    /// One peak-night reminder, local 22 Oct 02:00 (after moonset).
+    public static let orionidsPeakReminderTitle = "Orionids peak"
+    public static let orionidsPeakReminderBody = "Moon's down — look up. Orionids peak; debris is falling in Landnam."
+
+    public static func orionidsPeakReminderMs(calendar: Calendar = .current) -> Double {
+        var cal = calendar
+        var parts = DateComponents()
+        parts.calendar = cal
+        parts.timeZone = cal.timeZone
+        parts.year = 2026
+        parts.month = 10
+        parts.day = 22
+        parts.hour = 2
+        parts.minute = 0
+        parts.second = 0
+        guard let date = cal.date(from: parts) else { return 0 }
+        return date.timeIntervalSince1970 * 1000
     }
 
     // MARK: new moon (Meeus ch. 49, same terms as web)
