@@ -99,7 +99,7 @@ export default function OrionidsShowerChrome() {
         <button type="button" onClick={() => setOpen(true)}>Read the sky</button>
       </div>
       {open && (
-        <div className={styles.sheet} role="dialog" aria-label="Fireballs in the Sky" data-testid="fireball-reading">
+        <section className={styles.sheet} aria-label="Fireballs in the Sky" data-testid="fireball-reading">
           <h2>Fireballs in the Sky</h2>
           {FIREBALL_ARTICLE.map(paragraph => <p key={paragraph.slice(0, 24)}>{paragraph}</p>)}
           <p>
@@ -130,7 +130,7 @@ export default function OrionidsShowerChrome() {
           <button type="button" onClick={finishCheck} data-testid="fireball-check">Check answers</button>
           {spotter && <p data-testid="fireball-spotter-badge">Fireball Spotter · {spotter.tier}</p>}
           {note && <p role="status">{note}</p>}
-        </div>
+        </section>
       )}
     </>
   )

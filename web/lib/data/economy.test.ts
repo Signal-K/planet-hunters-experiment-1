@@ -42,6 +42,11 @@ describe('economy scale', () => {
 
   it('prices every mineral from a rarity band, with no stragglers', () => {
     for (const [id, meta] of Object.entries(MINERAL_META)) {
+      // The 22 Oct fireball is one fragment, priced above exotic on purpose.
+      if (id === 'fireball_fragment') {
+        expect(meta.price).toBeGreaterThan(MINERAL_VALUE.exotic * 4)
+        continue
+      }
       expect(Object.values(MINERAL_VALUE), `${id} is off-band`).toContain(meta.price)
       expect(meta.price).toBe(MINERAL_VALUE[meta.rarity as keyof typeof MINERAL_VALUE])
     }
