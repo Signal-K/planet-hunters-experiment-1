@@ -163,6 +163,10 @@
   margin-right: 4px;
 }
 .steps { margin: 0; padding-left: 20px; list-style: decimal; display: grid; gap: 4px; }
+:global(.mining-screen) .hud {
+  top: 112px !important;
+}
+
 .peakTag {
   min-height: 44px;
   padding: 0 14px;
