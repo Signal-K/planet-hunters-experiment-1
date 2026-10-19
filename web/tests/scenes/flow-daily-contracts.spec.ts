@@ -58,8 +58,14 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test.setTimeout(120_000)
     await openBoard(browser, size, '2026-10-16', 6, undefined, async page => {
       const board = page.getByTestId('mission-board')
+      const offers = page.getByRole('button', { name: /^Select / })
       for (let i = 0; i < 60 && !(await board.innerText()).match(/Build a (Fuel Depot|Battery Station|Fabrication Pad)/); i++) {
-        await page.getByTestId('mission-board-next').dispatchEvent('click')
+        const count = await offers.count()
+        let selected = 0
+        for (let n = 0; n < count; n++) {
+          if ((await offers.nth(n).getAttribute('data-selected')) != null) selected = n
+        }
+        await offers.nth((selected + 1) % Math.max(count, 1)).click()
         await page.waitForTimeout(120)
       }
       await expect(board).toContainText(/Build a (Fuel Depot|Battery Station|Fabrication Pad)/)

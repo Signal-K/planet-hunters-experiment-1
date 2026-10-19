@@ -32,21 +32,37 @@
 
 .banner {
   position: absolute;
-  top: 8px;
-  left: 50%;
-  z-index: 46;
+  top: 228px;
+  left: 12px;
+  right: auto;
+  z-index: 22;
+  width: max-content;
+  max-width: min(280px, calc(100% - 24px));
   display: flex;
   align-items: center;
   gap: 8px;
-  width: min(720px, calc(100% - 16px));
   min-height: 44px;
   padding: 8px 8px 8px 12px;
-  transform: translateX(-50%);
   border: 1px solid var(--ln-cyan-border);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--ln-panel) 92%, transparent);
+  background: var(--ln-panel);
   color: var(--ln-text);
   pointer-events: auto;
+}
+
+/* The contracts board fills the stage with offer buttons. The shower note stays on the base. */
+:global(.game-stage-main:has([data-screen="missions"])) .banner {
+  display: none;
+}
+
+/* Short landscape hangar: the fleet sits where the default banner lands. */
+@media (orientation: landscape) and (max-height: 500px) {
+  :global(.game-stage-main:has([data-testid="hangar-screen"])) .banner {
+    top: 64px;
+    left: auto;
+    right: 12px;
+    max-width: min(220px, 36vw);
+  }
 }
 
 .banner img {
@@ -59,6 +75,10 @@
 .banner p {
   margin: 0;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font: 14px/1.35 var(--ln-font-body);
 }
 
@@ -67,14 +87,15 @@
   min-height: 44px;
   min-width: 44px;
   padding: 0 14px;
-  border: 1px solid var(--ln-cyan-border);
+  border: 1px solid var(--ln-text);
   border-radius: 8px;
-  background: var(--ln-cyan);
-  color: var(--ln-void);
+  background: var(--ln-text);
+  color: var(--ln-panel);
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
+  flex: none;
 }
 
 .sheet {

@@ -44,9 +44,9 @@
   min-width: 44px;
   padding: 0 16px;
   border-radius: 22px;
-  border: 1px solid var(--ln-cyan-border);
+  border: 1px solid var(--ln-text);
   background: var(--ln-panel);
-  color: var(--ln-cyan);
+  color: var(--ln-text);
   font: 700 14px var(--ln-font-display);
   letter-spacing: 0.08em;
   text-transform: uppercase;
