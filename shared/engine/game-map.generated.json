@@ -1,0 +1,845 @@
+{
+  "generatedBy": "scripts/generate-game-map.mjs",
+  "sourceOfTruth": {
+    "routes": "web/lib/game-screens.ts",
+    "nativeScreens": "native/LandnamCore/Sources/LandnamCore/Model/Screen.swift",
+    "qaScenes": "qa/scenes.json",
+    "sceneTypes": "shared/engine/scene-types.json"
+  },
+  "counts": {
+    "webRoutes": 27,
+    "nativeScreenCases": 15,
+    "qaScenes": 49,
+    "authoredSceneFiles": 8,
+    "authoringSources": 5,
+    "webGameComponents": 109,
+    "nativeAppComponents": 51
+  },
+  "scenes": {
+    "routed": [
+      {
+        "route": "academy",
+        "type": "exchange-lab"
+      },
+      {
+        "route": "asteroid-discovery",
+        "type": "exchange-lab"
+      },
+      {
+        "route": "build",
+        "type": "base"
+      },
+      {
+        "route": "debrief",
+        "type": "travel"
+      },
+      {
+        "route": "delivery",
+        "type": "travel"
+      },
+      {
+        "route": "fab",
+        "type": "travel"
+      },
+      {
+        "route": "galaxy",
+        "type": "exchange-lab"
+      },
+      {
+        "route": "hangar",
+        "type": "build"
+      },
+      {
+        "route": "hub",
+        "type": "base"
+      },
+      {
+        "route": "hub-subsurface",
+        "type": "base"
+      },
+      {
+        "route": "instrument-hub",
+        "type": "exchange-lab"
+      },
+      {
+        "route": "intro",
+        "type": "menu"
+      },
+      {
+        "route": "landing",
+        "type": "travel"
+      },
+      {
+        "route": "launchpad",
+        "type": "base"
+      },
+      {
+        "route": "market",
+        "type": "exchange-lab"
+      },
+      {
+        "route": "mining",
+        "type": "field"
+      },
+      {
+        "route": "mission-history",
+        "type": "menu"
+      },
+      {
+        "route": "missions",
+        "type": "menu"
+      },
+      {
+        "route": "narrative-ledger",
+        "type": "menu"
+      },
+      {
+        "route": "refinery",
+        "type": "exchange-lab"
+      },
+      {
+        "route": "rocket-buy",
+        "type": "build"
+      },
+      {
+        "route": "rover-survey",
+        "type": "field"
+      },
+      {
+        "route": "saturn-storm-search",
+        "type": "exchange-lab"
+      },
+      {
+        "route": "skills",
+        "type": "menu"
+      },
+      {
+        "route": "surface-ops",
+        "type": "field"
+      },
+      {
+        "route": "targets",
+        "type": "menu"
+      },
+      {
+        "route": "transit",
+        "type": "travel"
+      }
+    ],
+    "nativeCases": [
+      "academy",
+      "asteroidDiscovery",
+      "hubSubsurface",
+      "instrumentHub",
+      "intro",
+      "launchpad",
+      "market",
+      "missionHistory",
+      "missions",
+      "narrativeLedger",
+      "rocketBuy",
+      "roverSurvey",
+      "saturnStormSearch",
+      "skills",
+      "surfaceOps"
+    ],
+    "qa": [
+      {
+        "id": "intro",
+        "name": "Intro",
+        "flow": "onboarding",
+        "web": "m1-intro",
+        "native": "intro-phone",
+        "tickets": [
+          "SSL-451"
+        ]
+      },
+      {
+        "id": "hub",
+        "name": "Earth Base",
+        "flow": "core-loop",
+        "web": "m1-hub",
+        "native": "hub-phone",
+        "tickets": [
+          "SSL-345",
+          "SSL-451"
+        ]
+      },
+      {
+        "id": "hub-structures",
+        "name": "Base with structures",
+        "flow": "core-loop",
+        "web": "storage-hub",
+        "native": "hub-structures-phone",
+        "tickets": []
+      },
+      {
+        "id": "mission-board",
+        "name": "Contract board",
+        "flow": "core-loop",
+        "web": "ui-mission-board",
+        "native": "launchpad-ops-phone",
+        "tickets": [
+          "SSL-425"
+        ]
+      },
+      {
+        "id": "launch-review",
+        "name": "Launch review",
+        "flow": "core-loop",
+        "web": "ui-target-picker",
+        "native": "launch-review-phone",
+        "tickets": [
+          "SSL-426",
+          "SSL-450",
+          "SSL-411"
+        ]
+      },
+      {
+        "id": "mining",
+        "name": "Mining",
+        "flow": "core-loop",
+        "web": "m1-mining",
+        "native": "mining-phone",
+        "tickets": [
+          "SSL-411",
+          "SSL-430"
+        ]
+      },
+      {
+        "id": "mining-actions",
+        "name": "Mining action row",
+        "flow": "core-loop",
+        "web": "m1-mining",
+        "native": "mining-actionrow-phone",
+        "tickets": [
+          "SSL-411"
+        ]
+      },
+      {
+        "id": "flight",
+        "name": "Transit",
+        "flow": "core-loop",
+        "web": "telescope-transit",
+        "native": "flight-phone",
+        "tickets": []
+      },
+      {
+        "id": "debrief",
+        "name": "Debrief",
+        "flow": "core-loop",
+        "web": "m1-debrief",
+        "native": "debrief-phone",
+        "tickets": [
+          "SSL-462"
+        ]
+      },
+      {
+        "id": "debrief-capacitor",
+        "name": "Debrief laser capacitor",
+        "flow": "core-loop",
+        "web": "m1-debrief",
+        "native": "debrief-capacitor-phone",
+        "tickets": [
+          "SSL-462"
+        ],
+        "note": "Web has no preset; needs 3 missions done"
+      },
+      {
+        "id": "build",
+        "name": "Build",
+        "flow": "core-loop",
+        "web": "ui-build",
+        "native": "build-phone",
+        "tickets": [
+          "SSL-424"
+        ]
+      },
+      {
+        "id": "customiser",
+        "name": "Ship customiser",
+        "flow": "ship",
+        "web": "ship-customizer",
+        "native": "hangar-workshop-phone",
+        "tickets": [
+          "SSL-427",
+          "SSL-472"
+        ]
+      },
+      {
+        "id": "hangar-assembly",
+        "name": "Hangar assembly",
+        "flow": "ship",
+        "web": "ui-hangar-assembly",
+        "native": "hangar-workshop-phone",
+        "tickets": [
+          "SSL-427"
+        ]
+      },
+      {
+        "id": "control-station",
+        "name": "Control station",
+        "flow": "instruments",
+        "web": "ui-instrument-hub",
+        "native": "control-station-phone",
+        "tickets": [
+          "SSL-496"
+        ]
+      },
+      {
+        "id": "tess",
+        "name": "TESS classify",
+        "flow": "instruments",
+        "web": "ui-tess-discovery",
+        "native": "tess-discovery-phone",
+        "tickets": [
+          "SSL-497"
+        ]
+      },
+      {
+        "id": "tess-pointing",
+        "name": "TESS pointing",
+        "flow": "instruments",
+        "web": "ui-tess-discovery",
+        "native": "tess-pointing-phone",
+        "tickets": [
+          "SSL-497"
+        ]
+      },
+      {
+        "id": "asteroid",
+        "name": "Asteroid discovery",
+        "flow": "instruments",
+        "web": "ui-asteroid-discovery",
+        "native": "asteroid-discovery-phone",
+        "tickets": [
+          "SSL-497"
+        ]
+      },
+      {
+        "id": "saturn",
+        "name": "Saturn storm search",
+        "flow": "instruments",
+        "web": "ui-saturn-storm-search",
+        "native": "saturn-imager-phone",
+        "tickets": [
+          "SSL-492"
+        ]
+      },
+      {
+        "id": "sky-badges",
+        "name": "Sky badges",
+        "flow": "instruments",
+        "web": null,
+        "native": "sky-badges-phone",
+        "tickets": [
+          "SSL-491"
+        ]
+      },
+      {
+        "id": "rover",
+        "name": "Rover field",
+        "flow": "field",
+        "web": "ui-rover-survey",
+        "native": "rover-field-phone",
+        "tickets": [
+          "SSL-485",
+          "SSL-486",
+          "SSL-487"
+        ]
+      },
+      {
+        "id": "rover-touchdown",
+        "name": "Rover touchdown",
+        "flow": "field",
+        "web": "ui-rover-survey",
+        "native": "rover-touchdown-phone",
+        "tickets": []
+      },
+      {
+        "id": "skill-tree",
+        "name": "Skill tree",
+        "flow": "progression",
+        "web": "ui-skill-tree",
+        "native": "skill-tree-phone",
+        "tickets": []
+      },
+      {
+        "id": "academy",
+        "name": "Academy",
+        "flow": "progression",
+        "web": "ui-academy",
+        "native": "academy-phone",
+        "tickets": []
+      },
+      {
+        "id": "refinery",
+        "name": "Refinery",
+        "flow": "progression",
+        "web": "ui-refinery",
+        "native": "refinery-phone",
+        "tickets": []
+      },
+      {
+        "id": "surface-ops",
+        "name": "Surface ops",
+        "flow": "progression",
+        "web": "ui-surface-ops",
+        "native": "surface-ops-phone",
+        "tickets": []
+      },
+      {
+        "id": "mission-log",
+        "name": "Mission log",
+        "flow": "records",
+        "web": "ui-mission-log",
+        "native": "mission-log-phone",
+        "tickets": []
+      },
+      {
+        "id": "ledger",
+        "name": "Ledger",
+        "flow": "records",
+        "web": "ui-ledger",
+        "native": "ledger-phone",
+        "tickets": []
+      },
+      {
+        "id": "help",
+        "name": "Help sheet",
+        "flow": "chrome",
+        "web": null,
+        "native": "help-sheet-phone",
+        "tickets": [
+          "SSL-451"
+        ]
+      },
+      {
+        "id": "market",
+        "name": "Market",
+        "flow": "progression",
+        "web": "ui-market",
+        "native": "market-phone",
+        "tickets": []
+      },
+      {
+        "id": "launchpad",
+        "name": "Launchpad",
+        "flow": "core-loop",
+        "web": "ui-launchpad",
+        "native": "launchpad-ops-phone",
+        "tickets": []
+      },
+      {
+        "id": "first-fab",
+        "name": "Fab, first mission",
+        "flow": "core-loop",
+        "web": "m1-fab",
+        "native": "first-fab-live",
+        "tickets": []
+      },
+      {
+        "id": "first-return",
+        "name": "Return flight",
+        "flow": "core-loop",
+        "web": "m1-return",
+        "native": "return-live",
+        "tickets": []
+      },
+      {
+        "id": "first-home",
+        "name": "Home delivery sheet",
+        "flow": "core-loop",
+        "web": "m1-home",
+        "native": "home-live",
+        "tickets": []
+      },
+      {
+        "id": "storage-build",
+        "name": "Build: place silo",
+        "flow": "core-loop",
+        "web": "storage-build",
+        "native": "storage-build-live",
+        "tickets": []
+      },
+      {
+        "id": "transport-hub",
+        "name": "Transport hub",
+        "flow": "core-loop",
+        "web": "transport-hub",
+        "native": "transport-hub-live",
+        "tickets": []
+      },
+      {
+        "id": "transport-fab",
+        "name": "Transport fab",
+        "flow": "core-loop",
+        "web": "transport-fab",
+        "native": "transport-fab-live",
+        "tickets": []
+      },
+      {
+        "id": "transport-mining",
+        "name": "Transport mining",
+        "flow": "core-loop",
+        "web": "transport-mining",
+        "native": "transport-mining-live",
+        "tickets": []
+      },
+      {
+        "id": "transport-delivery",
+        "name": "Transport delivery",
+        "flow": "core-loop",
+        "web": "transport-delivery",
+        "native": "transport-delivery-live",
+        "tickets": []
+      },
+      {
+        "id": "transport-debrief",
+        "name": "Transport debrief",
+        "flow": "core-loop",
+        "web": "transport-debrief",
+        "native": "transport-debrief-live",
+        "tickets": []
+      },
+      {
+        "id": "telescope-hub",
+        "name": "Telescope hub",
+        "flow": "instruments",
+        "web": "telescope-hub",
+        "native": "telescope-hub-live",
+        "tickets": []
+      },
+      {
+        "id": "telescope-fab",
+        "name": "Telescope fab",
+        "flow": "instruments",
+        "web": "telescope-fab",
+        "native": "telescope-fab-live",
+        "tickets": []
+      },
+      {
+        "id": "telescope-debrief",
+        "name": "Telescope debrief",
+        "flow": "instruments",
+        "web": "telescope-debrief",
+        "native": "telescope-debrief-live",
+        "tickets": []
+      },
+      {
+        "id": "landing",
+        "name": "Landing",
+        "flow": "core-loop",
+        "web": "ui-landing",
+        "native": "landing-live",
+        "tickets": []
+      },
+      {
+        "id": "rocket-buy",
+        "name": "Rocket buy",
+        "flow": "ship",
+        "web": "ui-rocket-buy",
+        "native": "rocket-buy-live",
+        "tickets": []
+      },
+      {
+        "id": "hangar-surveyor",
+        "name": "Hangar: Surveyor",
+        "flow": "ship",
+        "web": "ui-hangar-surveyor",
+        "native": "hangar-surveyor-phone",
+        "tickets": [
+          "SSL-611"
+        ]
+      },
+      {
+        "id": "subsurface",
+        "name": "Subsurface",
+        "flow": "core-loop",
+        "web": "ui-subsurface",
+        "native": "hub-ug-built-phone",
+        "tickets": []
+      },
+      {
+        "id": "cp-early",
+        "name": "Checkpoint early (~15 min)",
+        "flow": "core-loop",
+        "web": "cp-early",
+        "native": "cp-early",
+        "tickets": []
+      },
+      {
+        "id": "cp-mid",
+        "name": "Checkpoint mid (~35 min)",
+        "flow": "core-loop",
+        "web": "cp-mid",
+        "native": "cp-mid",
+        "tickets": []
+      },
+      {
+        "id": "cp-late",
+        "name": "Checkpoint late (~55 min)",
+        "flow": "core-loop",
+        "web": "cp-late",
+        "native": "cp-late",
+        "tickets": []
+      }
+    ],
+    "authored": [
+      {
+        "path": "web/public/game/scenes/academy.scene.json",
+        "name": "academy",
+        "entityCount": 2,
+        "componentTypes": [
+          "AcademyController",
+          "TrainingFacility"
+        ]
+      },
+      {
+        "path": "web/public/game/scenes/build-place.scene.json",
+        "name": "build-place",
+        "entityCount": 4,
+        "componentTypes": [
+          "BuildPlot"
+        ]
+      },
+      {
+        "path": "web/public/game/scenes/construction-target.scene.json",
+        "name": "construction-target",
+        "entityCount": 1,
+        "componentTypes": [
+          "ConstructionController"
+        ]
+      },
+      {
+        "path": "web/public/game/scenes/delivery.scene.json",
+        "name": "delivery",
+        "entityCount": 2,
+        "componentTypes": [
+          "DeliveryController",
+          "UnloadPad"
+        ]
+      },
+      {
+        "path": "web/public/game/scenes/hub.scene.json",
+        "name": "hub",
+        "entityCount": 4,
+        "componentTypes": [
+          "BuildPlot"
+        ]
+      },
+      {
+        "path": "web/public/game/scenes/landing.scene.json",
+        "name": "landing",
+        "entityCount": 1,
+        "componentTypes": [
+          "LandingController"
+        ]
+      },
+      {
+        "path": "web/public/game/scenes/mining.scene.json",
+        "name": "mining",
+        "entityCount": 1,
+        "componentTypes": [
+          "MiningController"
+        ]
+      },
+      {
+        "path": "web/public/game/scenes/target-picker.scene.json",
+        "name": "target-picker",
+        "entityCount": 11,
+        "componentTypes": [
+          "CelestialBody"
+        ]
+      }
+    ]
+  },
+  "components": {
+    "web": [
+      "web/components/game/ActionConfirmBar.tsx",
+      "web/components/game/AsteroidSkyPlot.tsx",
+      "web/components/game/AuthGateSheet.tsx",
+      "web/components/game/BackendStatus.tsx",
+      "web/components/game/CommunityButton.tsx",
+      "web/components/game/CommunityHubSheet.tsx",
+      "web/components/game/EnceladusSurveyChart.tsx",
+      "web/components/game/FlightPlan.tsx",
+      "web/components/game/FriendAvatar.tsx",
+      "web/components/game/FriendsButton.tsx",
+      "web/components/game/FriendsSheet.tsx",
+      "web/components/game/GameApp.tsx",
+      "web/components/game/GameScreenRouter.tsx",
+      "web/components/game/LandnamSyncStatus.tsx",
+      "web/components/game/LaunchSequenceCanvas.tsx",
+      "web/components/game/LightcurvePlot.tsx",
+      "web/components/game/MineralChip.tsx",
+      "web/components/game/MissionBoard.tsx",
+      "web/components/game/MissionOperationRoutes.tsx",
+      "web/components/game/MissionPlanStrip.tsx",
+      "web/components/game/MissionSetupRoutes.tsx",
+      "web/components/game/MissionTicker.tsx",
+      "web/components/game/ObservatoryChart.tsx",
+      "web/components/game/ObservatoryReadout.tsx",
+      "web/components/game/OrionidsTeaser.tsx",
+      "web/components/game/PixiGalaxyStarMap.tsx",
+      "web/components/game/PushOptIn.tsx",
+      "web/components/game/ScenePanel.tsx",
+      "web/components/game/SceneTransition.tsx",
+      "web/components/game/ScrapSequenceCanvas.tsx",
+      "web/components/game/SequenceDesktopFrame.tsx",
+      "web/components/game/SettingsSheet.tsx",
+      "web/components/game/ShipInteriorPreview.tsx",
+      "web/components/game/SkyEventChip.tsx",
+      "web/components/game/SolSystemPreview.tsx",
+      "web/components/game/SuiteHopRail.tsx",
+      "web/components/game/TargetSphere.tsx",
+      "web/components/game/TelescopeConsole.tsx",
+      "web/components/game/TerritoryClaimPopup.tsx",
+      "web/components/game/TutorialCompleteSheet.tsx",
+      "web/components/game/UnlockPopup.tsx",
+      "web/components/game/WorldSpaceWeek.tsx",
+      "web/components/game/control-station/ControlStationBoard.tsx",
+      "web/components/game/control-station/SurveyScanConsole.tsx",
+      "web/components/game/hub/AmbientMotes.tsx",
+      "web/components/game/hub/BaseDock.tsx",
+      "web/components/game/hub/BaseLayerScene.tsx",
+      "web/components/game/hub/BaseMenuSheet.tsx",
+      "web/components/game/hub/BaseWorldCanvas.tsx",
+      "web/components/game/hub/Building.tsx",
+      "web/components/game/hub/EarthBaseModules.tsx",
+      "web/components/game/hub/HubClockWidget.tsx",
+      "web/components/game/hub/HubSubsurfaceView.tsx",
+      "web/components/game/hub/HubWorldBackground.tsx",
+      "web/components/game/hub/KitRocket.tsx",
+      "web/components/game/hub/MeteorShowerWeather.tsx",
+      "web/components/game/hub/OpsHubSheet.tsx",
+      "web/components/game/hub/OrbitalInstrumentNetwork.tsx",
+      "web/components/game/hub/PadLaunchSequence.tsx",
+      "web/components/game/hub/PixelStructure.tsx",
+      "web/components/game/hub/RoadRover.tsx",
+      "web/components/game/hub/RocketRollout.tsx",
+      "web/components/game/hub/SiteMarker.tsx",
+      "web/components/game/hub/SoilCrossSection.tsx",
+      "web/components/game/hub/StashChip.tsx",
+      "web/components/game/hub/TerrainScene.tsx",
+      "web/components/game/hub/WorldBackdrop.tsx",
+      "web/components/game/instrument-viewport/InstrumentViewport.tsx",
+      "web/components/game/previews/MissionFlowPreview.tsx",
+      "web/components/game/previews/missionFlowPreviewData.ts",
+      "web/components/game/screens/AcademyCanvas.tsx",
+      "web/components/game/screens/AcademyScreen.tsx",
+      "web/components/game/screens/AsteroidDiscoveryScreen.tsx",
+      "web/components/game/screens/ConstructionTargetCanvas.tsx",
+      "web/components/game/screens/ControlRoomBackdrop.tsx",
+      "web/components/game/screens/DebriefScreen.tsx",
+      "web/components/game/screens/DeliveryCanvas.tsx",
+      "web/components/game/screens/DeliveryScreen.tsx",
+      "web/components/game/screens/DestinationLandscape.tsx",
+      "web/components/game/screens/DownlinkControlDesk.tsx",
+      "web/components/game/screens/FlightBody.tsx",
+      "web/components/game/screens/FlightFlame.tsx",
+      "web/components/game/screens/FlightSky.tsx",
+      "web/components/game/screens/FreeOpsBuildScreen.tsx",
+      "web/components/game/screens/HangarBay.tsx",
+      "web/components/game/screens/HangarScreen.tsx",
+      "web/components/game/screens/HomecomingScreen.tsx",
+      "web/components/game/screens/HubScreen.tsx",
+      "web/components/game/screens/InstrumentHubScreen.tsx",
+      "web/components/game/screens/IntroScreen.tsx",
+      "web/components/game/screens/LandingCanvas.tsx",
+      "web/components/game/screens/LandingScreen.tsx",
+      "web/components/game/screens/LaserCapacitorPanel.tsx",
+      "web/components/game/screens/LaunchpadScreen.tsx",
+      "web/components/game/screens/MarketScreen.tsx",
+      "web/components/game/screens/MiningCanvas.tsx",
+      "web/components/game/screens/MiningControls.tsx",
+      "web/components/game/screens/MiningScreen.tsx",
+      "web/components/game/screens/MissionHistoryScreen.tsx",
+      "web/components/game/screens/NarrativeLedgerScreen.tsx",
+      "web/components/game/screens/RefineryScreen.tsx",
+      "web/components/game/screens/RocketBuilderScene.tsx",
+      "web/components/game/screens/RoverSurveyScreen.tsx",
+      "web/components/game/screens/SaturnStormSearchScreen.tsx",
+      "web/components/game/screens/SkillTreeScreen.tsx",
+      "web/components/game/screens/SkyBadgeRow.tsx",
+      "web/components/game/screens/SurfaceOpsScreen.tsx",
+      "web/components/game/screens/TessDiscoveryScreen.tsx",
+      "web/components/game/screens/TransitScreen.tsx"
+    ],
+    "native": [
+      "native/App/Mining/Landscape.swift",
+      "native/App/Mining/LaserPalette.swift",
+      "native/App/Mining/MiningControls.swift",
+      "native/App/Scenes/FlightWorldScene.swift",
+      "native/App/Scenes/LaunchAtlas.swift",
+      "native/App/Scenes/LaunchScene.swift",
+      "native/App/Scenes/MiningScene.swift",
+      "native/App/Scenes/SceneKit+Landnam.swift",
+      "native/App/Screens/AcademyScreen.swift",
+      "native/App/Screens/ArchiveScreen.swift",
+      "native/App/Screens/AsteroidDiscoveryScreen.swift",
+      "native/App/Screens/BaseCamera.swift",
+      "native/App/Screens/BaseDock.swift",
+      "native/App/Screens/BaseMenu.swift",
+      "native/App/Screens/BaseRecordScreens.swift",
+      "native/App/Screens/BaseUnderground.swift",
+      "native/App/Screens/BaseWorldCanvas.swift",
+      "native/App/Screens/BaseWorldScene.swift",
+      "native/App/Screens/BuildScreen.swift",
+      "native/App/Screens/CoachStrip.swift",
+      "native/App/Screens/ControlStationScreen.swift",
+      "native/App/Screens/CoreLoop.swift",
+      "native/App/Screens/DestinationVista.swift",
+      "native/App/Screens/EventsBoard.swift",
+      "native/App/Screens/FlightScreens.swift",
+      "native/App/Screens/HangarBayArt.swift",
+      "native/App/Screens/HangarScreen.swift",
+      "native/App/Screens/HomecomingScreen.swift",
+      "native/App/Screens/HubScreen.swift",
+      "native/App/Screens/InstrumentGate.swift",
+      "native/App/Screens/InstrumentViewport.swift",
+      "native/App/Screens/LaunchReview.swift",
+      "native/App/Screens/MarketScene.swift",
+      "native/App/Screens/MeteorShowerWeather.swift",
+      "native/App/Screens/MissionPlanStrip.swift",
+      "native/App/Screens/ProgramRoadmap.swift",
+      "native/App/Screens/RocketBuilderScreen.swift",
+      "native/App/Screens/RouteMap.swift",
+      "native/App/Screens/RoverFieldScreen.swift",
+      "native/App/Screens/SaturnStormSearchScreen.swift",
+      "native/App/Screens/SetStyle.swift",
+      "native/App/Screens/SettingsStyle.swift",
+      "native/App/Screens/SharedHud.swift",
+      "native/App/Screens/SignInScreen.swift",
+      "native/App/Screens/SkillTreeScreen.swift",
+      "native/App/Screens/SkyEventChip.swift",
+      "native/App/Screens/SurfaceOpsScreen.swift",
+      "native/App/Screens/TakeonIsoRenderer.swift",
+      "native/App/Screens/TakeonSceneScreen.swift",
+      "native/App/Screens/TessDiscoveryScreen.swift",
+      "native/App/Screens/WelcomeScreen.swift"
+    ],
+    "sharedData": [
+      "shared/authoring/README.md",
+      "shared/authoring/instructions/next.md",
+      "shared/authoring/instructions/persistent.md",
+      "shared/authoring/missions/contract-pilot.toml",
+      "shared/authoring/scenes/earth-base.toml",
+      "shared/layout/base-hud-zones.json",
+      "shared/layout/base-site.json",
+      "shared/scenes/base-world.json",
+      "shared/scenes/biome-pitch.json",
+      "shared/scenes/sky-events.json",
+      "shared/scenes/world-fixture.json"
+    ]
+  },
+  "gaps": {
+    "routesWithoutSceneType": [],
+    "unknownSlots": [],
+    "qaWithoutWebPreset": [
+      "sky-badges",
+      "help"
+    ],
+    "qaWithoutNativeScene": []
+  }
+}

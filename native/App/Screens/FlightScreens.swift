@@ -149,15 +149,15 @@ struct MiningScreen: View {
                 switch press.key {
                 case .upArrow: scene?.setClimb(down ? -1 : 0)
                 case .downArrow: scene?.setClimb(down ? 1 : 0)
-                case .leftArrow: scene?.setScroll(down ? -1 : 0)
-                case .rightArrow: scene?.setScroll(down ? 1 : 0)
+                case .leftArrow: scene?.setSteer(down ? -1 : 0)
+                case .rightArrow: scene?.setSteer(down ? 1 : 0)
                 case .space: scene?.setTrigger(down)
                 default:
                     switch press.characters.lowercased() {
                     case "w": scene?.setClimb(down ? -1 : 0)
                     case "s": scene?.setClimb(down ? 1 : 0)
-                    case "a": scene?.setScroll(down ? -1 : 0)
-                    case "d": scene?.setScroll(down ? 1 : 0)
+                    case "a": scene?.setSteer(down ? -1 : 0)
+                    case "d": scene?.setSteer(down ? 1 : 0)
                     case "f": scene?.setTrigger(down)
                     default: return .ignored
                     }
@@ -179,12 +179,14 @@ struct MiningScreen: View {
         let compact = narrow || short
         let zones = HUDZones.standard
         let trainingCue = store.player.flightPlan.currentTry == "mining" ? "Fire on a labelled seam" : nil
-        let order = MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue)
-            .frame(maxWidth: 220)
-            .onLongPressGesture { showGuide = true }
+        let order = VStack(alignment: .leading, spacing: 6) {
+            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue)
+                .onLongPressGesture { showGuide = true }
+        }
+        .frame(maxWidth: 220)
         return ZStack {
             VStack(alignment: .leading, spacing: 8) {
-                HudGearClock(onSettings: { showSettings = true })
+                GlassGear { showSettings = true }
                 if narrow { order }
                 SkyEventChip().frame(maxWidth: .infinity, alignment: .leading)
                 Spacer()
@@ -198,22 +200,21 @@ struct MiningScreen: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
 
-            HudChips(francs: store.player.francs)
-                .padding(.trailing, insets.trailing + zones.topRight.inset + 52).padding(.top, insets.top + zones.topRight.inset)
+            CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
+                .padding(.trailing, insets.trailing + zones.topRight.inset + 64).padding(.top, insets.top + zones.topRight.inset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 
             // Phones: compact pad and gauge in the clear strip under the ground deposits.
-            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSpeed: { scene?.setScroll($0) }, obstacleAhead: obstacleAhead, tile: short ? 44 : compact ? 52 : 56)
+            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSteer: { scene?.setSteer($0) }, obstacleAhead: obstacleAhead, tile: short ? 44 : compact ? 52 : 56)
                 .padding(.leading, insets.leading + 16)
                 .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 16))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
 
             // Hint sits up top, clear of the d-pad, gauge and deposits (SSL-538 phone layout).
             if let toast {
-                Text(toast).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
+                Text(toast).font(AppFont.display(14)).foregroundStyle(Glass.ink)
                     .padding(.horizontal, 12).padding(.vertical, 8)
-                    .background(Capsule().fill(Theme.hudPanel))
-                    .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1))
+                    .glowPanel(Capsule())
                     .padding(.top, insets.top + zones.topLeft.inset + (narrow ? 112 : 64))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
@@ -229,7 +230,7 @@ struct MiningScreen: View {
                 BaseDock(tile: 44, zones: zones.dock, items: [
                     ("Fire", "bolt.fill", {}),
                     ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
-                ], onPrev: { scene?.nudge(-1) }, onNext: { scene?.nudge(1) }, holdFirst: { scene?.setTrigger($0) })
+                ], onPrev: { scene?.nudge(-1) }, onNext: { scene?.nudge(1) }, holdFirst: { scene?.setTrigger($0) }, glass: true)
             }
             .padding(.bottom, insets.bottom + zones.dock.bottomInset)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -291,22 +292,21 @@ struct MiningActionRow: View {
                         let need = field.required[id] ?? 0
                         let have = min(need, field.cargo[id, default: 0])
                         Text("\(Minerals.byId[id]?.name ?? id) \(have)/\(need)")
-                            .font(AppFont.mono(14)).foregroundStyle(Theme.hudInk).lineLimit(1)
+                            .font(AppFont.mono(14)).foregroundStyle(Glass.ink).lineLimit(1)
                     }
                     if let targetCue {
-                        Text(targetCue).font(AppFont.display(14)).foregroundStyle(Theme.hudInk).lineLimit(1)
+                        Text(targetCue).font(AppFont.display(14)).foregroundStyle(Glass.cyan).lineLimit(1)
                     }
                     GeometryReader { g in
                         ZStack(alignment: .leading) {
-                            Capsule().fill(Theme.hudInk.opacity(0.15))
-                            Capsule().fill(Theme.hudInk).frame(width: max(4, g.size.width * chargePct))
+                            Capsule().fill(.white.opacity(0.14))
+                            Capsule().fill(Glass.cyan).frame(width: max(4, g.size.width * chargePct))
                         }
                     }.frame(height: 8)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 8)
                 .frame(maxWidth: .infinity, minHeight: showFire ? 64 : 44, alignment: .leading)
-                .background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: 4))
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
+                .glowPanel(RoundedRectangle(cornerRadius: 6))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Order. Laser charge \(field.charge) of \(field.chargeCap).")

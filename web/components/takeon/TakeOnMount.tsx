@@ -193,6 +193,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   seedCargoRef.current = seedCargo
   const seedCacheRef = useRef(seedCache)
   seedCacheRef.current = seedCache
+  const callbacksRef = useRef({ onError, onEvent, onRouteChange, onReady })
+  callbacksRef.current = { onError, onEvent, onRouteChange, onReady }
 
   // Only the target identity matters for the mount; a fresh object with the
   // same id must not remount the field.
@@ -287,7 +289,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     const reportError = (reason: unknown) => {
       const nextError = reason instanceof Error ? reason : new Error(String(reason))
       if (!disposed) setError(nextError.message)
-      onError?.(nextError)
+      callbacksRef.current.onError?.(nextError)
     }
 
     async function init() {
@@ -355,13 +357,13 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         })
 
         const handleHostEvent = (event: TakeonHostEvent) => {
-          onEvent?.(event)
+          callbacksRef.current.onEvent?.(event)
           const notification = notificationForTakeonEvent(event)
           if (notification) void scheduleLandnamPush(notification).catch(reportError)
         }
         unbindHostEvents = bindTakeonHostEvents(mounted.game.events, handleHostEvent)
         unbindStateChanged = mounted.game.events.on('stateChanged', () => {
-          onRouteChange?.(mounted?.game.plannedRoute().length ?? 0)
+          callbacksRef.current.onRouteChange?.(mounted?.game.plannedRoute().length ?? 0)
           if (saveTimer) clearTimeout(saveTimer)
           saveTimer = setTimeout(() => void save().catch(reportError), 750)
         })
@@ -372,7 +374,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         // pointer gesture after Controls has handled it and publish the
         // authoritative planned-route length to the host (KES-323).
         const reportPointerRoute = () => {
-          onRouteChange?.(mounted?.game.plannedRoute().length ?? 0)
+          callbacksRef.current.onRouteChange?.(mounted?.game.plannedRoute().length ?? 0)
         }
         canvasElement.addEventListener('pointerup', reportPointerRoute)
         unbindRoutePointer = () => canvasElement.removeEventListener('pointerup', reportPointerRoute)
@@ -434,8 +436,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         }
 
         const initialState = snapshot()
-        onRouteChange?.(mounted.game.plannedRoute().length)
-        if (initialState) onReady?.(initialState)
+        callbacksRef.current.onRouteChange?.(mounted.game.plannedRoute().length)
+        if (initialState) callbacksRef.current.onReady?.(initialState)
       } catch (reason) {
         reportError(reason)
       }
@@ -470,10 +472,6 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     bodyId,
     lifeStage,
     missionId,
-    onError,
-    onEvent,
-    onRouteChange,
-    onReady,
     readOnly,
     rover,
     roverName,

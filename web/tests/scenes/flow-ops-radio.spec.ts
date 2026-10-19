@@ -53,13 +53,20 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       const geometry = await page.evaluate(() => {
         const plan = document.querySelector<HTMLElement>('[data-testid=flight-plan]')!.getBoundingClientRect()
         const screen = document.querySelector<HTMLElement>('.game-screen-area')!.getBoundingClientRect()
-        return { planWidth: plan.width, planTop: plan.top, screenHeight: screen.height }
+        return { planWidth: plan.width, planTop: plan.top, planLeft: plan.left, screenHeight: screen.height }
       })
-      expect(geometry.planTop).toBeGreaterThanOrEqual(60)
+      // Narrow screens put the strip under the HUD row; wide ones share the row, between the gear/clock and the francs chips.
+      if (size.width < 600) expect(geometry.planTop).toBeGreaterThanOrEqual(60)
+      else expect(geometry.planLeft).toBeGreaterThanOrEqual(190)
       expect(geometry.planWidth).toBeLessThanOrEqual(Math.min(560, size.width - 16) + 1)
       await page.getByTestId('flight-plan-hide').click()
       await expect(page.getByTestId('flight-plan')).toHaveCount(0)
-      await expect(page.getByTestId('flight-plan-chip')).toContainText(/OPS · \d+\/\d+/)
+      await expect(page.getByTestId('flight-plan-chip')).toHaveText('?')
+      const chip = (await page.getByTestId('flight-plan-chip').boundingBox())!
+      expect(chip.width).toBeGreaterThanOrEqual(44)
+      expect(chip.height).toBeGreaterThanOrEqual(44)
+      await page.screenshot({ path: info.outputPath(`ops-chip-${vp}.png`) })
+      expect(chip.x).toBeLessThan(size.width / 3)
       expect(Math.abs(await page.locator('.game-screen-area').evaluate(el => el.getBoundingClientRect().height) - geometry.screenHeight)).toBeLessThanOrEqual(1)
       await page.getByTestId('flight-plan-chip').click()
       await expect(page.getByTestId('flight-plan')).toBeVisible()
@@ -87,16 +94,18 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       const shelf = page.getByTestId('training-patch-shelf')
       await shelf.scrollIntoViewIfNeeded()
       await expect(shelf.locator('.patch')).toHaveCount(4)
-      await expect(shelf.locator('.patch[data-state="done"]')).toHaveCount(1)
+      // Mining is done, and Free Ops opens with the launchpad, so its patch reads done too.
+      await expect(shelf.locator('.patch[data-state="done"]')).toHaveCount(2)
       await expect(shelf.locator('.patch[data-state="active"]')).toHaveCount(1)
       await expect(shelf.locator('.patch-ring-segment')).toHaveCount(10)
       await expect(shelf.locator('.patch').nth(0).locator('[data-stitched="true"]')).toHaveCount(6)
       await expect(shelf.locator('.patch').nth(1).locator('[data-stitched="true"]')).toHaveCount(0)
-      await expect(shelf.getByText('Locked · After 3')).toBeVisible()
+      await expect(shelf.getByText('Unlocked')).toBeVisible()
       for (const button of await shelf.getByRole('button', { name: 'Replay' }).all()) {
         expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44)
       }
-      expect((await page.getByTestId('skip-training').boundingBox())!.height).toBeGreaterThanOrEqual(44)
+      // Free Ops is already unlocked here (it opens with the launchpad), so there is nothing left to skip.
+      await expect(page.getByTestId('skip-training')).toHaveCount(0)
       await page.screenshot({ path: info.outputPath(`patch-shelf-${vp}.png`) })
     })
 

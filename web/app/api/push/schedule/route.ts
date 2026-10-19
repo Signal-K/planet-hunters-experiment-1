@@ -12,6 +12,16 @@ export async function POST(req: NextRequest) {
   const pb = new PocketBase(landnamPbUrl())
 
   try {
+    const serviceEmail = process.env.LANDNAM_PB_SERVICE_EMAIL
+    const servicePassword = process.env.LANDNAM_PB_SERVICE_PASSWORD
+    if (serviceEmail && servicePassword) {
+      // List is superuser-only. Authenticate so the duplicate check below keeps one row.
+      try {
+        await withPbRetry(() => pb.collection('_superusers').authWithPassword(serviceEmail, servicePassword))
+      } catch (error) {
+        console.error('push schedule auth error:', error)
+      }
+    }
     await withPbRetry(async () => {
       // Upsert exact duplicates while allowing multiple pending mission alerts per subscription.
       const existing = await pb.collection('scheduled_notifications').getFirstListItem(

@@ -14,6 +14,8 @@ struct MissionsScreen: View {
     @State private var showArchive = false
     @State private var showSettings = false
     @State private var selected = 0
+    @State private var selectedTargetId: String?
+    @State private var eventFocus: String?
     @State private var tab: Int
     @State private var camera = BaseCamera(x: 0, depth: 0)
     /// `startTitle` opens the board on that contract (scene catalog only).
@@ -36,6 +38,10 @@ struct MissionsScreen: View {
         .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
         .sheet(isPresented: $showArchive) { ArchiveScreen(focus: archiveFocus) }
         .onAppear {
+            if let requested = store.requestedMissionBoardTab {
+                tab = requested
+                store.requestedMissionBoardTab = nil
+            }
             guard let startTitle else { return }
             let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
             if let i = entries.firstIndex(where: { $0.mission.title == startTitle }) { selected = i }
@@ -44,7 +50,10 @@ struct MissionsScreen: View {
 
     private func scene(size: CGSize, insets: EdgeInsets) -> some View {
         let portrait = size.height > size.width
-        let entries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
+        let allEntries = MissionBoard.clientBoard(catalog: store.catalog, player: store.player, now: store.now)
+        let entries = selectedTargetId.map { targetId in
+            allEntries.filter { feasibleTargetIds(for: $0.mission).contains(targetId) }
+        } ?? allEntries
         let index = entries.isEmpty ? 0 : min(selected, entries.count - 1)
         let side = max(insets.leading, 12)
         let railTop = insets.top + 60
@@ -52,18 +61,37 @@ struct MissionsScreen: View {
             Color.clear
             if tab != 0 { Theme.ink.opacity(0.18).allowsHitTesting(false) }
 
-            HStack(alignment: .top) {
-                HudGearClock { showSettings = true }
-                Spacer()
-                HudChips(francs: store.player.francs)
+            if tab == 0 {
+                Button { store.go(.hub) } label: {
+                    Image(systemName: "chevron.left").font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.paper)
+                        .frame(width: 44, height: 44).background(Theme.ink.opacity(0.72), in: Circle())
+                        .overlay(Circle().stroke(Theme.paper.opacity(0.35), lineWidth: 2))
+                }
+                .buttonStyle(.plain).accessibilityLabel("Back")
+                .padding(.top, insets.top + 12).padding(.leading, side)
+                .zIndex(4)
+            } else {
+                HStack(alignment: .top) {
+                    HudGearClock { showSettings = true }
+                    Spacer()
+                    HudChips(francs: store.player.francs)
+                }
+                .padding(.top, insets.top + 8).padding(.leading, side).padding(.trailing, max(insets.trailing, 12))
+
+                rail(portrait: portrait)
+                    .padding(.top, railTop).padding(.leading, side)
             }
-            .padding(.top, insets.top + 8).padding(.leading, side).padding(.trailing, max(insets.trailing, 12))
 
-            rail(portrait: portrait)
-                .padding(.top, railTop).padding(.leading, side)
-
-            if tab == 1 || tab == 2 {
-                ScrollView { if tab == 1 { ProgramRoadmap { archiveFocus = $0; showArchive = true }.padding(16) } else { EventsBoard().padding(16) } }
+            if tab == 3 {
+                FreeRunBoard(runs: store.catalog.missions.filter { $0.id.hasPrefix("self-directed-") && !$0.locked }, eventFocus: eventFocus) { store.pickMission($0) }
+                    .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
+                    .padding(.top, portrait ? railTop + 64 : railTop)
+                    .padding(.leading, portrait ? side : side + 144)
+                    .padding(.trailing, max(insets.trailing, 12))
+                    .padding(.bottom, insets.bottom + 12)
+            } else if tab == 1 || tab == 2 {
+                ScrollView { if tab == 1 { ProgramRoadmap { archiveFocus = $0; showArchive = true }.padding(16) } else { EventsBoard(onOpenDebris: { id in eventFocus = SkyEvents.event(id)?.name ?? id; tab = 3 }).padding(16) } }
                     .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
                     .padding(.top, portrait ? railTop + 64 : railTop)
@@ -78,12 +106,8 @@ struct MissionsScreen: View {
                 }
             } else {
                 let e = entries[index]
-                order(width: orderWidth(size, insets: insets, portrait: portrait), size: size, insets: insets, portrait: portrait, accent: accent(e.mission)) {
-                    WorkOrder(entry: e, position: index + 1, count: entries.count, player: store.player, portrait: portrait,
-                              onTake: { store.pickMission(e.id) },
-                              onPrev: { selected = (index - 1 + entries.count) % entries.count },
-                              onNext: { selected = (index + 1) % entries.count })
-                }
+                ContractWorkspace(entries: entries, selectedIndex: index, player: store.player, portrait: portrait,
+                                  onSelect: { selected = $0 }, onTake: { store.pickMission(e.id) })
                 .id(e.id)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
@@ -93,6 +117,93 @@ struct MissionsScreen: View {
 
     private func accent(_ m: Mission) -> Color {
         Color(hex: m.client.flatMap { Clients.byId[$0] }?.colorHex) ?? Theme.blue
+    }
+
+    private func contractStrip(entries: [MissionBoard.Entry], selectedIndex: Int) -> some View {
+        let visibleCount = min(5, entries.count)
+        let start = selectedIndex - visibleCount / 2
+        return HStack(spacing: 8) {
+            Spacer(minLength: 0)
+            ForEach(0..<visibleCount, id: \.self) { offset in
+                let index = (start + offset + entries.count) % entries.count
+                let mission = entries[index].mission
+                let client = mission.client.flatMap { Clients.byId[$0] }
+                Button { selected = index } label: {
+                    ZStack(alignment: .bottomTrailing) {
+                        Circle().fill(mixWhite(client?.colorHex, 0.35, fallback: Theme.paper2))
+                        Circle().stroke(index == selectedIndex ? accent(mission) : Theme.ink, lineWidth: index == selectedIndex ? 4 : 2)
+                        Text(client?.initial ?? "OP").font(AppFont.display(14)).foregroundStyle(Theme.ink)
+                        Text("\(index + 1)").font(AppFont.mono(10)).foregroundStyle(Theme.ink)
+                            .padding(2).background(Theme.paper, in: RoundedRectangle(cornerRadius: 3))
+                            .offset(x: 5, y: 4)
+                    }.frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Select \(mission.title)")
+                .accessibilityAddTraits(index == selectedIndex ? .isSelected : [])
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.bottom, 6)
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.ink.opacity(0.22)).frame(height: 1) }
+    }
+
+    private func feasibleTargetIds(for mission: Mission) -> [String] {
+        Targets.feasible(for: mission, targets: store.catalog.targets, parts: store.catalog.parts,
+                         missionsDone: store.player.missionsDone, launchpadUpgraded: store.player.launchpadUpgraded,
+                         launchpadLevel: BuildingLevels.level(store.player, "launchpad"), skills: store.player.unlockedSkillNodes).map(\.id)
+    }
+
+    private func destinationFilter(entries: [MissionBoard.Entry]) -> some View {
+        let ids = Set(entries.flatMap { feasibleTargetIds(for: $0.mission) })
+        let targets = store.catalog.targets.filter { ids.contains($0.id) && $0.type != .exoplanet }
+        let selectedTarget = selectedTargetId.flatMap { id in targets.first { $0.id == id } }
+        let resultCount = selectedTargetId.map { targetId in
+            entries.filter { feasibleTargetIds(for: $0.mission).contains(targetId) }.count
+        } ?? entries.count
+        return VStack(alignment: .leading, spacing: 6) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    filterChip(id: nil, label: "ALL")
+                    if targets.contains(where: { $0.type == .asteroid }) {
+                        Text("ASTEROID BELT").font(AppFont.mono(14)).tracking(1.0).foregroundStyle(Theme.textDim)
+                    }
+                    ForEach(targets) { target in filterChip(id: target.id, label: target.name.uppercased()) }
+                }
+            }
+            if let selectedTarget {
+                HStack(spacing: 8) {
+                    Text("\(selectedTarget.name.uppercased()) · \(resultCount) \(resultCount == 1 ? "CONTRACT" : "CONTRACTS")")
+                        .font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.paper)
+                    Spacer(minLength: 8)
+                    Button("SHOW ALL") { selectedTargetId = nil; selected = 0 }
+                        .font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.paper)
+                        .frame(minHeight: 44).padding(.horizontal, 12)
+                        .overlay(Capsule().stroke(Theme.paper.opacity(0.7), lineWidth: 2))
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("mission-destination-clear")
+                }
+                .padding(.leading, 14)
+                .background(Theme.ink.opacity(0.84), in: Capsule())
+                .accessibilityIdentifier("mission-destination-result")
+            }
+        }
+        .accessibilityIdentifier("mission-destination-filter")
+    }
+
+    private func filterChip(id: String?, label: String) -> some View {
+        let on = selectedTargetId == id
+        return Button {
+            selectedTargetId = on && id != nil ? nil : id
+            selected = 0
+        } label: {
+            Text(label).font(AppFont.display(14)).tracking(1.0)
+                .foregroundStyle(on ? Theme.paper : Theme.ink)
+                .padding(.horizontal, 14).frame(minHeight: 44)
+                .background(on ? Theme.blue : Theme.paper, in: Capsule())
+                .overlay(Capsule().stroke(Theme.ink, lineWidth: 2))
+        }
+        .buttonStyle(.plain)
     }
 
     private func orderWidth(_ size: CGSize, insets: EdgeInsets, portrait: Bool) -> CGFloat {
@@ -124,6 +235,7 @@ struct MissionsScreen: View {
             railTab(0, "Contracts", "chart.line.uptrend.xyaxis", portrait: portrait)
             railTab(1, "Program", "list.clipboard", portrait: portrait)
             railTab(2, "Events", "star", portrait: portrait)
+            if store.player.freeOperations { railTab(3, "Free run", "scope", portrait: portrait) }
             Button { archiveFocus = nil; showArchive = true } label: {
                 Text("LOG").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
                     .frame(minWidth: portrait ? 56 : 132, minHeight: 44)
@@ -149,6 +261,148 @@ struct MissionsScreen: View {
     }
 }
 
+/// Free Ops: start your own mining run with no client or daily limit (mirrors web `MissionBoard` Free run tab).
+private struct FreeRunBoard: View {
+    let runs: [Mission]
+    let eventFocus: String?
+    let onStart: (String) -> Void
+    @Environment(\.flatLayout) private var flat
+
+    var body: some View {
+        if flat { content } else { ScrollView { content } }
+    }
+
+    private var content: some View {
+            VStack(alignment: .leading, spacing: 10) {
+                if let eventFocus {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(eventFocus.uppercased()) NIGHT RUN").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+                        Text("Mine falling debris to earn the event badge. Your normal cargo is yours to keep or sell.")
+                            .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    }
+                    .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Theme.blueBright.opacity(0.24), in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.blue, lineWidth: 2))
+                    .accessibilityIdentifier("event-run-context")
+                }
+                Text("Your own mining run").font(AppFont.display(20)).foregroundStyle(Theme.ink)
+                Text("No client, no daily limit. Pick what to mine, keep it or sell it at market price.")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+                VStack(spacing: 8) {
+                    ForEach(runs, id: \.id) { run in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(run.title.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+                            Text(run.requires.minerals.sorted { $0.key < $1.key }.map { "\($0.value) \(Minerals.byId[$0.key]?.name ?? $0.key)" }.joined(separator: ", "))
+                                .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                            Button { onStart(run.id) } label: {
+                                Text("START RUN").font(AppFont.display(14)).tracking(1.2).foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity, minHeight: 44)
+                                    .background(Theme.blue, in: RoundedRectangle(cornerRadius: 12))
+                            }.buttonStyle(.plain).accessibilityLabel("Start \(run.title)")
+                        }
+                        .padding(12)
+                        .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.ink, lineWidth: 2))
+                    }
+                    if runs.isEmpty { Text("No free runs are available yet.").font(AppFont.body(14)).foregroundStyle(Theme.textDim) }
+                }
+            }.padding(16)
+    }
+}
+
+private struct ContractWorkspace: View {
+    let entries: [MissionBoard.Entry]
+    let selectedIndex: Int
+    let player: Player
+    let portrait: Bool
+    let onSelect: (Int) -> Void
+    let onTake: () -> Void
+
+    var body: some View {
+        let selected = entries[selectedIndex]
+        let mission = selected.mission
+        let client = mission.client.flatMap { Clients.byId[$0] }
+        let level = client.map { 1 + max(0, player.clientMissions[$0.id] ?? 0) / Clients.affinityMissionThreshold }
+        let layout = portrait ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(HStackLayout(spacing: 0))
+        layout {
+            offers
+                .frame(maxWidth: .infinity, maxHeight: portrait ? nil : .infinity)
+                .background(Theme.hex(0x202656).opacity(0.96))
+            VStack(spacing: portrait ? 8 : 12) {
+                clientMark(client)
+                Text("\((client?.name ?? "Your program").uppercased())\(level.map { " · L\($0)" } ?? "")")
+                    .font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hex(0xB8C8C0)).lineLimit(1)
+                Text(mission.title).font(AppFont.display(portrait ? 24 : 28)).foregroundStyle(Theme.hex(0xF4EFE4))
+                    .multilineTextAlignment(.center).lineLimit(2)
+                Text(mission.brief).font(AppFont.body(14)).foregroundStyle(Theme.hex(0xF4EFE4))
+                    .multilineTextAlignment(.center).lineLimit(portrait ? 3 : 4)
+                Text("\(selectedIndex + 1) / \(entries.count)").font(AppFont.mono(14)).foregroundStyle(Theme.hex(0xB8C8C0))
+            }
+            .padding(portrait ? 14 : 24).frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Theme.hex(0x342C70).opacity(0.96))
+            action(selected, mission: mission)
+                .frame(maxWidth: .infinity, maxHeight: portrait ? nil : .infinity)
+                .background(Theme.hex(0x176A94).opacity(0.96))
+        }
+        .ignoresSafeArea()
+    }
+
+    private var offers: some View {
+        VStack(spacing: 12) {
+            Text("CONTRACTS").font(AppFont.display(18)).tracking(2).foregroundStyle(Theme.hex(0xA8DCF2))
+            let count = min(5, entries.count)
+            let start = selectedIndex - count / 2
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(56), spacing: 10), count: portrait ? 5 : 3), spacing: 10) {
+                ForEach(0..<count, id: \.self) { offset in
+                    let index = (start + offset + entries.count) % entries.count
+                    let contract = entries[index].mission
+                    let client = contract.client.flatMap { Clients.byId[$0] }
+                    Button { onSelect(index) } label: {
+                        ZStack(alignment: .bottomTrailing) {
+                            clientMark(client).frame(width: 52, height: 52)
+                            Text("\(index + 1)").font(AppFont.mono(14)).foregroundStyle(Theme.hex(0xF4EFE4))
+                        }
+                        .frame(width: 56, height: 56)
+                        .overlay(Rectangle().stroke(index == selectedIndex ? Theme.hex(0x58D0EA) : Theme.hex(0xF4EFE4).opacity(0.55), lineWidth: index == selectedIndex ? 3 : 1))
+                    }.buttonStyle(.plain).accessibilityLabel("Select \(contract.title)")
+                }
+            }
+        }.padding(.top, portrait ? 70 : 82).padding(.horizontal, 14).padding(.bottom, 14)
+    }
+
+    private func action(_ entry: MissionBoard.Entry, mission: Mission) -> some View {
+        VStack(spacing: portrait ? 10 : 20) {
+            Text("REQUIREMENTS").font(AppFont.display(18)).tracking(1.5).foregroundStyle(Theme.hex(0x9DE7EF))
+            HStack(spacing: 18) {
+                ForEach(mission.requires.minerals.sorted { $0.key < $1.key }, id: \.key) { id, amount in
+                    if let meta = Minerals.byId[id] {
+                        VStack(spacing: 2) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "hexagon.fill").font(.system(size: 28)).foregroundStyle(Color(hex: meta.colorHex) ?? Theme.paper2)
+                                Text("\(amount)").font(AppFont.display(22)).foregroundStyle(Theme.hex(0xF4EFE4))
+                            }
+                            Text(meta.name.uppercased()).font(AppFont.body(14)).foregroundStyle(Theme.hex(0xD5E0D9))
+                        }
+                    }
+                }
+            }
+            Text(francs(mission.payout.francs)).font(AppFont.display(24)).foregroundStyle(Theme.hex(0xF4EFE4))
+            Button(action: onTake) {
+                Text("ACCEPT").font(AppFont.display(18)).tracking(1.5).foregroundStyle(Theme.hex(0x152033))
+                    .frame(maxWidth: 220, minHeight: 52).background(Theme.hex(0xF4EFE4), in: RoundedRectangle(cornerRadius: 4))
+            }.buttonStyle(.plain).disabled(!entry.unlocked)
+        }.padding(portrait ? 14 : 24)
+    }
+
+    private func clientMark(_ client: Client?) -> some View {
+        ZStack {
+            Circle().fill(mixWhite(client?.colorHex, 0.35, fallback: Theme.paper2))
+            Circle().stroke(Theme.hex(0x152033), lineWidth: 2)
+            Text(client?.initial ?? "OP").font(AppFont.display(18)).foregroundStyle(Theme.hex(0x152033))
+        }.frame(width: 68, height: 68)
+    }
+}
+
 /// The deal on one contract: who, what, cargo, pay, accept. Everything else lives in the archive.
 private struct WorkOrder: View {
     let entry: MissionBoard.Entry
@@ -157,8 +411,6 @@ private struct WorkOrder: View {
     let player: Player
     let portrait: Bool
     let onTake: () -> Void
-    let onPrev: () -> Void
-    let onNext: () -> Void
 
     var body: some View {
         let m = entry.mission
@@ -175,6 +427,18 @@ private struct WorkOrder: View {
                     .font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.textDim).lineLimit(1)
                 Text(m.title).font(AppFont.display(portrait ? 22 : 24)).foregroundStyle(Theme.ink).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
+            Spacer(minLength: 6)
+            Text("\(position)/\(count)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
+        }
+        if !m.brief.isEmpty {
+            Text(m.brief).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                .multilineTextAlignment(portrait ? .leading : .center).lineLimit(portrait ? 3 : 2)
+                .frame(maxWidth: .infinity, alignment: portrait ? .leading : .center)
+        }
+        HStack(spacing: 10) {
+            Rectangle().fill(accentLine(client?.colorHex)).frame(height: 1)
+            Text("REQUIREMENTS").font(AppFont.display(14)).tracking(1.6).foregroundStyle(accentLine(client?.colorHex))
+            Rectangle().fill(accentLine(client?.colorHex)).frame(height: 1)
         }
         HStack(alignment: .center, spacing: 8) {
             ForEach(m.requires.minerals.sorted { $0.key < $1.key }, id: \.key) { id, amount in
@@ -188,15 +452,9 @@ private struct WorkOrder: View {
         if !entry.unlocked {
             Text(entry.lockedReason ?? "Locked").font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
         }
-        if count > 1 {
-            HStack {
-                round("chevron.left", "Previous contract", onPrev)
-                Spacer()
-                Text("\(position)/\(count)").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
-                round("chevron.right", "Next contract", onNext)
-            }
-        }
     }
+
+    private func accentLine(_ hex: String?) -> Color { Color(hex: hex) ?? Theme.blue }
 
     private var accept: some View {
         Button(action: onTake) {

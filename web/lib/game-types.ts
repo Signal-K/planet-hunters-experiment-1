@@ -311,6 +311,8 @@ export interface Player {
   // capping out permanently once enough of a mineral has ever been sold.
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
+  /** Sell alerts set at a built Exchange; see MarketplaceSystem. */
+  priceAlerts?: import('@/lib/systems/MarketplaceSystem').PriceAlert[]
   /** Last published shared AEST price and client-demand snapshot. */
   dailyEconomySnapshot?: DailyEconomySnapshot
   /** Immutable evidence that a player-built client structure completed. */
@@ -396,6 +398,10 @@ export interface Player {
   moonSurveyCharts?: Record<string, MoonSurveyChart>
   // Sky event badges (SSL-491), keyed by event id. Gold/silver by date played.
   badges?: Record<string, import('@/lib/data/sky-events').PlayerBadge>
+  /** Planets found or classified during Orionids. Keyed by subject id. Synced in game_states. */
+  orionidsFinds?: Record<string, import('@/lib/orionids/finds').OrionidsFind>
+  /** Shared meteorite mastery. Level 1 is the only grant; redeem is not built. */
+  meteoriteMastery?: number
   // Player's satellite-pointing choice for the *next* daily downlink,
   // picked from the PixiGalaxyStarMap after classifying today's candidate.
   // Consumed (cleared) once that candidate becomes today's daily pick.
@@ -600,6 +606,10 @@ export interface GameActions {
   excavateSubsurface: () => void
   buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void
+  buyMinerals: (mineralId: string, amount: number) => void
+  setPriceAlert: (mineralId: string, target: number) => void
+  removePriceAlert: (alertId: string) => void
+  checkPriceAlerts: () => void
   sellRefinedGoods: (recipeId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void

@@ -120,6 +120,8 @@ struct ScreenFrame<Content: View>: View {
     @Environment(\.flatLayout) private var flat
     let title: String
     var back: (() -> Void)?
+    /// A scene screen that sits on the night sky (the control room) instead of the blueprint paper.
+    var night = false
     @ViewBuilder var content: Content
     var body: some View {
         scroller {
@@ -127,17 +129,17 @@ struct ScreenFrame<Content: View>: View {
                 HStack(alignment: .center, spacing: 12) {
                     if let back {
                         Button(action: back) {
-                            Text("‹ BASE").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.bluePress)
+                            Text("‹ BASE").font(AppFont.display(14)).tracking(1.6).foregroundStyle(night ? Theme.hex(0x9FD6E4) : Theme.bluePress)
                                 .frame(minWidth: 44, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                         }.buttonStyle(.plain).accessibilityLabel("Back to base")
                     }
-                    Text(title).font(AppFont.display(23)).foregroundStyle(Theme.ink)
+                    Text(title).font(AppFont.display(23)).foregroundStyle(night ? Theme.hex(0xFAF7F0) : Theme.ink)
                 }
                 content
             }
             .padding(16).frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
         }
-        .background(Theme.bg.ignoresSafeArea())
+        .background { if night { LinearGradient(colors: [Theme.hex(0x0E1528), Theme.hex(0x1A2744)], startPoint: .top, endPoint: .bottom).ignoresSafeArea() } else { Theme.bg.ignoresSafeArea() } }
         .foregroundStyle(Theme.ink)
     }
 

@@ -230,9 +230,21 @@
   transform: translateX(-50%);
   z-index: 12;
   padding: 0;
-  border: 0;
-  background: transparent;
+  background: color-mix(in srgb, var(--ln-blueprint-blue) 14%, transparent);
+  border: 2px dashed var(--ln-blueprint-blue);
+  border-radius: 6px;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--ln-blueprint-blue) 55%, transparent);
+  animation: shaftPulse 2.4s ease-in-out infinite;
   cursor: pointer;
+}
+
+@keyframes shaftPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shaftButton { animation: none; }
 }
 
 .spriteWrap {

@@ -1,5 +1,6 @@
 services:
   web:
+    init: true
     build:
       context: ./web
       target: dev
@@ -17,6 +18,9 @@ services:
       PORT: "3001"
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
+      # The follow state lives in /app/.dev-follow.json, inside the host bind
+      # mount below, so recreating this container cannot disconnect the editor.
+      LANDNAM_DEV_FOLLOW: "true"
     ports:
       - "3001:3001"
     healthcheck:

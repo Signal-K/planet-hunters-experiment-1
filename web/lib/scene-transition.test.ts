@@ -2,10 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { sceneTransitionDurationMs, transitionKind } from './scene-transition'
 
 describe('scene transitions', () => {
-  it('stays inside the 250–450ms window', () => {
-    const ms = sceneTransitionDurationMs()
-    expect(ms).toBeGreaterThanOrEqual(250)
-    expect(ms).toBeLessThanOrEqual(450)
+  it('keeps ordinary navigation brisk and reserves longer timing for cinematics', () => {
+    expect(sceneTransitionDurationMs()).toBe(180)
+    expect(sceneTransitionDurationMs('arrival')).toBe(380)
   })
 
   it('climbs from the launch cinematic into transit', () => {

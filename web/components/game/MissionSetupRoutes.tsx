@@ -8,13 +8,13 @@ import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
+import { ROLLOUT_MS } from '@/components/game/screens/RocketBuilderScene'
 import MissionBoard from '@/components/game/MissionBoard'
 import MissionPlanStrip from '@/components/game/MissionPlanStrip'
 import styles from './MissionSetupRoutes.module.css'
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
-const ROLLOUT_MS = 1600
 export type MissionSetupRoute = Extract<Screen, 'missions' | 'targets' | 'rocket-buy' | 'fab'>
 
 interface MissionSetupRoutesProps {
@@ -55,10 +55,13 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
       cards={relay.cardModels}
       selectedIndex={relay.selectedIndex}
       onSelectRelative={relay.selectRelativeSignal}
+      onSelectMission={relay.selectSignal}
       onAccept={(id, disposition) => id === ACADEMY_INTRO_MISSION_ID ? game.go('academy') : game.onPickMission(id, disposition)}
       onClose={() => game.goBack()}
       onOpenLog={() => game.go('mission-history')}
       onOpenBuild={() => game.go('build')}
+      onOpenEvent={screen => game.go(screen)}
+      onPickTarget={game.onPickTarget}
       rocketImg={rocketDisplayForConfig(game.rocket).img}
       tutorialBlocked={relay.tutorialMissionInProgress}
       onboardingComplete={relay.onboardingComplete}
@@ -94,6 +97,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         target={target}
         rocket={game.rocket}
         helpScreen={screen}
+        assembly={rolling ? 'building' : preparing ? 'design' : 'ready'}
         launchTestId={preparing ? 'prepare-launch-btn' : 'launch-btn'}
         launchDisabled={!!rolling || selectedVehicle?.location === 'hangar' || (!preparing && !launchReady)}
         onInstallLoadout={(next, prev) => game.confirmShipCustomizerBuild(next, prev)}

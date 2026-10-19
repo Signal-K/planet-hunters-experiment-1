@@ -94,8 +94,9 @@ final class Services {
         self.store = store
         self.auth = auth
         // A server 401 means the token aged out: renew it, or ask the player to sign in again.
-        mergedBox.handler = { [weak store] st in Task { @MainActor in store?.mergeRemote(st) } }
+        mergedBox.handler = { [weak store] st in Task { @MainActor in store?.mergeRemote(st); store?.leaveOrphanedMissionScreen() } }
         unauthorized.handler = { [weak auth] in Task { @MainActor in await auth?.refreshSession() } }
+        store.leaveOrphanedMissionScreen()
         attach(auth.session)
         let sync = sync, gc = gameCenter, shared = shared, user = sharedUser
         store.onChange = { state in
@@ -130,6 +131,7 @@ final class Services {
             Task { for op in ops { await sync.enqueue(op) } }
         }
         LocalNotifications.requestProvisional()
+        scheduleOrionidsPeakReminder()
         store.onSiteDeed = { siteId in Task { await sync.enqueue(SiteDeed.op(siteId: siteId)) } }
         store.onClassified = { verdict in
             // Local save already happened. Without a shared login (Apple sign-in) the verdict stays local.
@@ -188,7 +190,7 @@ final class Services {
             let result = await CloudPull.fetch(baseURL: base, token: tok, userId: id)
             guard self.session?.userId == id else { return }
             switch result {
-            case .found(let remote): store.mergeRemote(remote)
+            case .found(let remote): store.mergeRemote(remote); store.leaveOrphanedMissionScreen()
             case .none: break
             case .unavailable: return
             }
@@ -207,6 +209,15 @@ final class Services {
     }
 
     func flush() { let s = sync, o = shared; Task { await s.flush(); await o.flush() } }
+
+    /// One local alert at 22 Oct 02:00, mirrored into scheduled_notifications so it is not device-only.
+    private func scheduleOrionidsPeakReminder() {
+        let at = SkyEvents.orionidsPeakReminderMs()
+        guard at > Date().timeIntervalSince1970 * 1000 else { return }
+        LocalNotifications.schedule(title: SkyEvents.orionidsPeakReminderTitle, body: SkyEvents.orionidsPeakReminderBody, at: at)
+        let op = NativeRecords.orionidsPeakReminder(endpoint: LocalNotifications.endpoint, at: at)
+        Task { await sync.enqueue(op) }
+    }
 }
 
 /// Lets the executors report a 401 before `Services` has finished initialising.
@@ -235,6 +246,13 @@ enum LocalNotifications {
     static var endpoint: String { "ios-local:" + Ledger.deviceId() }
     static func requestProvisional() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .provisional]) { _, _ in }
+    }
+    /// Delivers now (SSL-617 sell alerts). iOS shows it even when the app has moved to the background.
+    static func notifyNow(title: String, body: String, id: String) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .provisional]) { _, _ in }
+        let c = UNMutableNotificationContent(); c.title = title; c.body = body
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: c,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)))
     }
     static func schedule(title: String, body: String, at ms: Double) {
         let c = UNMutableNotificationContent(); c.title = title; c.body = body

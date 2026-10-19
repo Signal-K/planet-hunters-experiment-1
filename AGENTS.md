@@ -10,13 +10,13 @@ Rules (mandatory)
 - Never cat or open: `web/app/globals.css` (190 KB, use `rg -n 'token-name' web/app/globals.css`), `web/package-lock.json`, `*-sheet.json`, `web/lib/contexts/useGameLoop.ts` / `pocketbase/main.go` whole (rg first), anything in `.ignore` / `.cursorignore`.
 - Images: view the art reference as `docs/art-reference-sm.jpg` (129 KB), not `docs/art-reference.png` (1.9 MB, ~15x the tokens). View one screenshot at a time, never contact sheets of full-res captures.
 - Tests: run the single file you touched (`cd web && npm run test:file -- lib/foo.test.ts`, `swift test --filter LoopTests` in `native/LandnamCore`). Run the full suite once, at the end.
-- Noise paths are listed in `.cursorignore` (Cursor), `.ignore` (ripgrep, so Codex/Claude Code/Cursor search) and `.claude/settings.json` (Claude Code deny-read). Keep the three in sync. `archive/` holds dead art and docs; do not read it.
+- Noise paths are listed in `.cursorignore` (Cursor), `.ignore` (ripgrep, so Codex/Claude Code/Cursor search) and `.claude/settings.json` (Claude Code deny-read). Keep the three in sync.
 
 Standing rules (short form; details below)
 - One commit with ALL changed files, only after real work. Subject: two different emoji + `↝ [SSL-123]: outcome`. Push to `cycle/4`.
 - No scene titles in UI. One shared HUD on every screen (web `components/game/hub/` + `SyncStatus`, native `App/Screens/SharedHud.swift`), never a per-screen HUD.
 - No orange or green UI colour (user rule, newest wins over older docs). Colours only from CSS variables / `shared/tokens`.
-- PocketBase is the only state store (via the outbox, no direct client writes). No TestFlight uploads.
+- PocketBase is the only state store (via the outbox, no direct client writes). TestFlight uploads happen only from CI (`.github/workflows/testflight.yml`) after a PR merges into `main`; never upload by hand.
 
 Map (where things live)
 
@@ -39,7 +39,7 @@ This is the single source of agent instructions for the Landnam repo. `CLAUDE.md
 
 Process
 1. Commits: commit ALL files with changes, in one commit, and only after real work (a finished, coherent unit: feature, fix, ticket). No tiny or frequent commits, no WIP, checkpoint, CI-poke or one-line churn commits. See "Commit" below for the format.
-2. Branching: work directly on `cycle/4`. No feature branches, no PRs. Never push to `main`.
+2. Branching: work directly on `cycle/4`. No feature branches. Never push to `main` directly; the release path is a PR from `cycle/4` into `main` (CI required must pass), and the merge deploys the web Worker and uploads the iOS build to TestFlight.
 3. No waiting on CI. CI runs typecheck, unit tests, build and Playwright scenes. Run relevant local checks to completion; do not poll CI or block delivery on its queue. Report CI and deployment as unverified unless actually checked.
 4. Done means proof: nothing is "done" without a viewed screenshot of the running build. Every ticket carries a "Done when" line. Close your own Linear tickets. When the fix is on `cycle/4` and your own checks pass (typecheck, the relevant tests, and screenshots you have looked at), mark the ticket Done with a short comment giving the commit and the proof. Do not leave it In Review waiting for real Safari or any check you cannot run; say in the comment what was not run.
 5. Keep discovery bounded: read the active ticket, its latest comments, applicable decisions and the real implementation. Do not scan historical docs or repeat passed checks without a changed input or unresolved failure.
@@ -58,6 +58,15 @@ Base scene
 
 Platforms
 14. Native must match web behavior and appearance. For EACH acceptance slice, implement web, then native iOS/iPadOS and macOS before starting another feature. Compare the same state side by side. Shared SwiftUI code does not prove every destination works; explicitly record each destination checked or blocked.
+
+## Live preview in the editor (Simple Browser)
+
+Liam watches agent work in the Cursor/VS Code Simple Browser on `http://localhost:3001` (`make up`). Next dev HMR reloads it on every save. To make it also show the page you are editing:
+- Claude Code: automatic, a PostToolUse hook in `.claude/settings.json` runs `scripts/preview-target.mjs` on every edit.
+- Codex, Cursor and others (no hook): after editing a screen or component, run `node scripts/preview-target.mjs <edited file or /game/route>`. Do this when you start on a screen and whenever you switch to another one.
+- Liam opens `http://localhost:3001/game/hub?follow=1` once (`?follow=0` stops it). `web/components/dev/DevFollow.tsx` (dev only) then navigates that tab to the last previewed route via `/api/dev/follow`.
+- Every screen and every Hub-only state must be reachable by URL: a gameplay screen is a `/game/<screen>` route (`web/lib/game-screens.ts`), and Hub overlays take query params (`/game/hub?menu=1`, `?building=<kind>`, read in `HubScreen.tsx`). A new scene or overlay must be deep-linkable and added to the map in `scripts/preview-target.mjs`; never make it reachable only by clicking through ephemeral state.
+- Use the same dev server for your own checks when you can; do not start a second one on another port for the same checkout.
 
 ## Priority order (highest wins)
 

@@ -384,6 +384,21 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
   // producing a fresh save carrying a half-finished tutorial. The coach renders
   // the first step for the current screen NOT in doneSteps, so steps 0/1/2
   // being "done" killed the coach on build, hub and missions at once.
+  it('records the mining try for a started plan that already flew a mission', () => {
+    const repaired = normalizeAndRepair({ ...DEFAULT_STATE, player: { ...DEFAULT_STATE.player, missionsDone: 1, placed: ['launchpad'], flightPlan: { completed: {}, hidden: false, activeSince: 1 } } })
+    expect(repaired.player.flightPlan?.completed.mining).toBe(true)
+    const fresh = normalizeAndRepair({ ...DEFAULT_STATE, player: { ...DEFAULT_STATE.player, missionsDone: 0, placed: ['launchpad'], flightPlan: { completed: {}, hidden: false, activeSince: 1 } } })
+    expect(fresh.player.flightPlan?.completed.mining).toBeUndefined()
+  })
+
+  it('keeps a finished training try when the other side wins the merge', () => {
+    const base = local({ player: { ...DEFAULT_STATE.player, missionsDone: 1, flightPlan: { completed: { mining: true }, hidden: false } } })
+    const remoteWins = mergeRemoteState(base, { player: { missionsDone: 2, flightPlan: { completed: {}, hidden: false } } })
+    expect(remoteWins.player.flightPlan?.completed.mining).toBe(true)
+    const localWins = mergeRemoteState(local({ player: { ...DEFAULT_STATE.player, missionsDone: 3, flightPlan: { completed: {}, hidden: false } } }), { player: { missionsDone: 1, flightPlan: { completed: { mining: true }, hidden: false } } })
+    expect(localWins.player.flightPlan?.completed.mining).toBe(true)
+  })
+
   it('does not keep remote doneSteps when the local player wins the merge', () => {
     const merged = mergeRemoteState(local(), {
       player: { missionsDone: 0, placed: ['launchpad'], francs: 42 },

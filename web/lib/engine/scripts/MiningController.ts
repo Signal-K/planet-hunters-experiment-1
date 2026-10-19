@@ -837,7 +837,8 @@ export class MiningController extends ScriptBehaviour {
     const surface = this.opts.surfaceY ?? SURFACE_Y
     const parts = blobParts(mineral, oreIndex)
     const chip = this.opts.chipFill != null ? this.createChip(x, surface, mineral, parts) : null
-    const labelY = chip ? surface - 50 : y + (frames && this.opts.pixelScale ? 12 : 0)
+    // Name pills ride in the sky band just above the ground line (never in the soil, where the HUD lives); lanes stack them upward when seams bunch.
+    const labelY = chip ? surface - 50 : surface - 24
     const label = this.createLabel(mineral, x, labelY, radius)
 
     this.gameObject.addChild(go)

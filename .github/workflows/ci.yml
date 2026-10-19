@@ -6,7 +6,7 @@ on:
   push:
     branches: [cycle/4]
   pull_request:
-    branches: [cycle/4]
+    branches: [cycle/4, main]
 
 permissions:
   contents: read

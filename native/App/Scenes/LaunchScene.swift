@@ -34,7 +34,7 @@ final class LaunchScene: SKScene {
         self.variant = variant
         super.init(size: size)
         scaleMode = .resizeFill
-        backgroundColor = Theme.skyTop.sk
+        backgroundColor = Theme.hex(0x6FA3D6).sk
     }
     required init?(coder: NSCoder) { fatalError() }
 
@@ -54,7 +54,7 @@ final class LaunchScene: SKScene {
 
     // MARK: build
     private func buildSky() {
-        let sky = SKSpriteNode(texture: SK.gradient(top: Theme.skyTop, bottom: Theme.horizon))
+        let sky = SKSpriteNode(texture: SK.gradient(top: Theme.hex(0x6FA3D6), bottom: Theme.hex(0xC9DAEA)))
         sky.size = size; sky.position = CGPoint(x: size.width / 2, y: size.height / 2); sky.zPosition = -30
         addChild(sky)
         spaceOverlay.color = Theme.hex(0x0F2436).sk; spaceOverlay.size = size
@@ -85,28 +85,28 @@ final class LaunchScene: SKScene {
             n.fillColor = fill.sk; n.strokeColor = Theme.ink.sk; n.lineWidth = line; n.lineJoin = .round
             n.zPosition = z; mountains.addChild(n)
         }
-        ridge([0.09, 0.19, 0.07, 0.22, 0.12, 0.17, 0.08, 0.14, 0.1], fill: Theme.paper2, z: -9, line: 2)
-        ridge([0.05, 0.11, 0.04, 0.13, 0.07, 0.1, 0.05], fill: Theme.blueBright.opacity(0.35), z: -8, line: 2.5)
-        let g = SKSpriteNode(color: Theme.paper.sk, size: CGSize(width: size.width, height: gh))
+        ridge([0.09, 0.19, 0.07, 0.22, 0.12, 0.17, 0.08, 0.14, 0.1], fill: Theme.hex(0xA8987F), z: -9, line: 2)
+        ridge([0.05, 0.11, 0.04, 0.13, 0.07, 0.1, 0.05], fill: Theme.hex(0xC2B392), z: -8, line: 2.5)
+        let g = SKSpriteNode(color: Theme.hex(0xB4AE9E).sk, size: CGSize(width: size.width, height: gh))
         g.anchorPoint = .zero; g.zPosition = -5; ground.addChild(g)
         let lip = SKSpriteNode(color: Theme.ink.sk, size: CGSize(width: size.width, height: 3))
         lip.anchorPoint = .zero; lip.position = CGPoint(x: 0, y: gh - 1); lip.zPosition = -4; ground.addChild(lip)
         let k = CGFloat(layout.rocketScale + 0.4)
         func part(_ w: CGFloat, _ h: CGFloat, x: CGFloat, y: CGFloat, fill: Color, line: CGFloat = 2.5, z: CGFloat) {
             let shade = SKShapeNode(rect: CGRect(x: x - w / 2 + 3, y: y - 3, width: w, height: h))
-            shade.fillColor = Theme.blue.opacity(0.4).sk; shade.strokeColor = .clear; shade.zPosition = z - 0.05
+            shade.fillColor = Theme.hex(0x1A2A3C).opacity(0.25).sk; shade.strokeColor = .clear; shade.zPosition = z - 0.05
             let n = SKShapeNode(rect: CGRect(x: x - w / 2, y: y, width: w, height: h))
             n.fillColor = fill.sk; n.strokeColor = Theme.ink.sk; n.lineWidth = line; n.zPosition = z
             ground.addChild(shade); ground.addChild(n)
         }
         let cx = size.width / 2
-        part(190 * k, 12, x: cx, y: padY - 12, fill: Theme.paper, z: -3)
-        part(220 * k, 8, x: cx, y: padY - 20, fill: Theme.paper2, z: -3.2)
+        part(190 * k, 12, x: cx, y: padY - 12, fill: Theme.hex(0xE9E6DE), z: -3)
+        part(220 * k, 8, x: cx, y: padY - 20, fill: Theme.hex(0x8C98A6), z: -3.2)
         for side: CGFloat in [-1, 1] {
             let tx = cx + side * 88 * k
-            part(10, 120 * k, x: tx, y: padY - 12, fill: Theme.paper2, line: 2, z: -3.1)
-            for i in 1...4 { part(26, 3, x: tx, y: padY - 12 + CGFloat(i) * 30 * k, fill: Theme.blueBright, line: 1.5, z: -3.0) }
-            part(36, 5, x: tx - side * 18, y: padY - 12 + 95 * k, fill: Theme.paper2, line: 1.5, z: -3.0)
+            part(10, 120 * k, x: tx, y: padY - 12, fill: Theme.hex(0x5E6E82), line: 2, z: -3.1)
+            for i in 1...4 { part(26, 3, x: tx, y: padY - 12 + CGFloat(i) * 30 * k, fill: Theme.hex(0x2F6FA8), line: 1.5, z: -3.0) }
+            part(36, 5, x: tx - side * 18, y: padY - 12 + 95 * k, fill: Theme.hex(0x8C98A6), line: 1.5, z: -3.0)
         }
     }
 

@@ -783,6 +783,14 @@ export function useAuthSync({
   // bridge — see isResumableMissionScreen.
   const landOnHubUnlessResumable = useCallback((next?: GameState) => {
     const current = next ?? stateRef.current
+    // Cursor's live-follow route is an explicit development destination. Auth
+    // restoration may merge the real account state, but it must not replace
+    // that route with Hub or the preview appears to disconnect after every
+    // refresh/container restart.
+    const followsEditor = process.env.NODE_ENV !== 'production'
+      && (new URLSearchParams(window.location.search).get('follow') === '1'
+        || window.localStorage.getItem('dev-follow') === '1')
+    if (followsEditor) return
     // The placeholder is not the account. Wait until the server record is
     // adopted or confirmed missing, and never let a stale placeholder steer
     // the URL after a native/web save has already been protected.

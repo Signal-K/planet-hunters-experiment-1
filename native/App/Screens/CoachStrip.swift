@@ -7,29 +7,47 @@ struct CoachStrip: View {
     @Environment(GameStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let coach: FlightPlan.Coach
+    var screen: Screen = .hub
     @State private var copyStep: String?
+    /// Owned by `CoachPlacement`, which sizes the frame around the folded chip.
+    @Binding var summoned: Bool
 
     private var hidden: Bool { store.player.flightPlan.hidden }
+    private var offPath: Bool { !FlightPlan.onPath(store.player, screen: screen) }
+    private var folded: Bool { hidden || (offPath && !summoned) }
     private var compactStep: String {
         coach.kicker.components(separatedBy: "·").last?.trimmingCharacters(in: .whitespaces) ?? "TRAINING"
     }
 
     @ViewBuilder
     var body: some View {
-        if hidden {
-            HStack {
-                Spacer(minLength: 0)
-                Button { store.setFlightPlanHidden(false) } label: {
-                    Text("OPS · \(compactStep)")
-                        .font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.ink)
-                        .padding(.horizontal, 12).frame(minHeight: 44)
-                        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Show Ops guidance, \(compactStep)")
+        Group {
+            if folded { chip } else { strip }
+        }
+        .onChange(of: screen) { _, _ in summoned = false }
+        .onChange(of: offPath) { _, _ in summoned = false }
+    }
+
+    /// The "?" chip (web `flight-plan-chip`): brings the coach back for this screen only when it is off the tutorial path.
+    private var chip: some View {
+        HStack {
+            Button {
+                if hidden { store.setFlightPlanHidden(false) }
+                summoned = true
+            } label: {
+                Text("?").font(AppFont.display(18)).foregroundStyle(Theme.ink)
+                    .frame(width: 44, height: 44)
+                    .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
             }
-        } else {
+            .buttonStyle(.plain)
+            .accessibilityLabel("Show Ops guidance, \(compactStep)")
+            .accessibilityIdentifier("flight-plan-chip")
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var strip: some View {
             HStack(spacing: 8) {
                 opsBadge(isDone: copyStep != nil)
                 VStack(alignment: .leading, spacing: 2) {
@@ -47,7 +65,7 @@ struct CoachStrip: View {
                     }
                     .buttonStyle(.plain)
                 }
-                Button { store.setFlightPlanHidden(true) } label: {
+                Button { if offPath { summoned = false } else { store.setFlightPlanHidden(true) } } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(Theme.ink)
@@ -74,7 +92,6 @@ struct CoachStrip: View {
                     if copyStep == next { copyStep = nil }
                 }
             }
-        }
     }
 }
 
@@ -188,5 +205,28 @@ struct HangarModulesPanel: View {
             } else { step += 1 }
         }
         .padding(16)
+    }
+}
+
+
+/// Where the coach floats. Landscape phones have a free band between the gear/clock and the francs chips, so it sits there
+/// instead of covering Back, target and stat cards below the chips; portrait keeps the strip under the chip row.
+struct CoachPlacement: View {
+    @Environment(GameStore.self) private var store
+    let coach: FlightPlan.Coach
+    var screen: Screen = .hub
+    @State private var summoned = false
+    var body: some View {
+        GeometryReader { geo in
+            let landscapePhone = geo.size.height < 500 && geo.size.width > 640
+            // Folded (hidden or off the tutorial path) the "?" chip sits in the top-left corner under the gear and clock.
+            let chipOnly = store.player.flightPlan.hidden || (!FlightPlan.onPath(store.player, screen: screen) && !summoned)
+            CoachStrip(coach: coach, screen: screen, summoned: $summoned)
+                .frame(maxWidth: chipOnly ? 56 : (landscapePhone ? min(430, geo.size.width - 520) : 560))
+                .padding(.horizontal, chipOnly ? 12 : 8)
+                .padding(.top, chipOnly ? 68 : (landscapePhone ? 8 : 68))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: chipOnly ? .topLeading : .top)
+        }
+        .allowsHitTesting(true)
     }
 }

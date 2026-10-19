@@ -27,10 +27,10 @@
 @media (orientation: landscape) and (max-height: 520px) { .host { top: 4px; left: 64px; right: 64px; } .rail { display: none; } .sheet { left: 25%; right: 25%; max-height: 80vh; } }
 
 /* Phone portrait: the top rows belong to the HUD and builder, so the plan rides just above the dock. */
-@media (orientation: portrait) and (max-width: 600px) { .host { top: auto; bottom: 76px; gap: 4px; } .slots { flex-wrap: nowrap; width: 100%; } .slot { flex: 1 1 0; min-width: 0; padding: 4px 8px; } .slot strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .slot span, .slot em { font-size: 14px; letter-spacing: .04em; } }
+@media (max-width: 899px) and (min-height: 521px) { .host { top: auto; bottom: 76px; gap: 4px; } .slots { flex-wrap: nowrap; width: 100%; } .slot { flex: 1 1 0; min-width: 0; padding: 4px 8px; } .slot strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .slot span, .slot em { font-size: 14px; letter-spacing: .04em; } }
 
 /* Desktop: ride the empty band between Launch and Target, above the part tabs. */
 @media (min-width: 900px) and (min-height: 600px) { .host { top: 66px; left: 260px; right: 260px; flex-direction: row; justify-content: center; align-items: center; gap: 16px; } .slots { flex-wrap: nowrap; } .slot { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px; } }
-@media (orientation: portrait) and (max-width: 600px) { .slot em { display: none; } .slot { min-height: 44px; } }
+@media (max-width: 899px) and (min-height: 521px) { .slot em { display: none; } .slot { min-height: 44px; } }
 @media (min-width: 900px) and (min-height: 600px) { .host { left: 290px; right: 270px; gap: 8px; } .slot em { display: none; } button.slot:not(:disabled)::after { content: '\203A'; font-weight: 800; } .slot { padding: 0 12px; } .slot strong { white-space: nowrap; } }
-@media (orientation: portrait) and (max-width: 600px) { button.slot:not(:disabled)::after { content: '\203A'; position: absolute; right: 8px; top: 4px; font-weight: 800; } .slot { position: relative; } }
+@media (max-width: 899px) and (min-height: 521px) { button.slot:not(:disabled)::after { content: '\203A'; position: absolute; right: 8px; top: 4px; font-weight: 800; } .slot { position: relative; } }

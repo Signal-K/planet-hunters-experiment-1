@@ -70,3 +70,19 @@ struct FlightPlanTests {
         #expect(MissionLog.entries(p).first?.kind == .transit)
     }
 }
+
+@Suite struct CoachPathTests {
+    @Test func coachStepsAsideOffItsPath() {
+        var p = Player(); p.placed = ["launchpad"]
+        #expect(FlightPlan.onPath(p, screen: .hub))
+        #expect(FlightPlan.onPath(p, screen: .missions))
+        #expect(FlightPlan.onPath(p, screen: .mining))
+        #expect(!FlightPlan.onPath(p, screen: .missionHistory))
+        #expect(!FlightPlan.onPath(p, screen: .market))
+        p.flightPlan.completed["mining"] = true
+        #expect(FlightPlan.onPath(p, screen: .galaxy))
+        #expect(!FlightPlan.onPath(p, screen: .hangar))
+        p.flightPlan.completed["scan"] = true
+        #expect(FlightPlan.onPath(p, screen: .hangar))
+    }
+}

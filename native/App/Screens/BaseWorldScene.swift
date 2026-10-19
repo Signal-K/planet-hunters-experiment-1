@@ -41,10 +41,7 @@ struct BaseWorldScene: View {
     @State private var dragVertical: Bool?
     private let pulse = true
 
-    /// The glazed hangar stands beside the pad as soon as the pad is built, whether or not it was placed on a plot (matches web `scenicHangar`).
-    private var shownKinds: [String] {
-        placed.contains("launchpad") && !placed.contains("hangar") && !placed.contains("garage") ? placed + ["hangar"] : placed
-    }
+    private var shownKinds: [String] { placed }
 
     private var siloPlaced: Bool { placed.contains("surface-silo") }
     private var siloBuilt: Bool { siloPlaced && excavated }
@@ -71,8 +68,10 @@ struct BaseWorldScene: View {
                     ForEach(shownKinds, id: \.self) { kind in
                         structure(kind, world: world)
                     }
-                    ForEach(shownKinds, id: \.self) { kind in
-                        nameTag(kind, world: world)
+                    if h > 640 {
+                        ForEach(shownKinds, id: \.self) { kind in
+                            nameTag(kind, world: world)
+                        }
                     }
                     if placing { siteMarker(world: world) }
                 }
@@ -95,8 +94,7 @@ struct BaseWorldScene: View {
                 camera.homed = true
             }
             .onChange(of: placed) { old, now in
-                // The first launchpad brings the hangar with it: reframe so both stand in view.
-                if now.contains("launchpad") && !old.contains("launchpad") { withAnimation(.easeInOut(duration: 0.5)) { camera.x = world.homeX(now + ["hangar"]) } }
+                if now.contains("launchpad") && !old.contains("launchpad") { withAnimation(.easeInOut(duration: 0.5)) { camera.x = world.homeX(now) } }
             }
         }
     }
@@ -179,6 +177,13 @@ struct BaseWorldScene: View {
                         .frame(width: 26 * u, height: 16 * u)
                         .frame(minWidth: 44, minHeight: 44)
                         .contentShape(Rectangle())
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(Theme.blue, style: StrokeStyle(lineWidth: 2, dash: [5, 3]))
+                                .background(Theme.blue.opacity(0.14), in: RoundedRectangle(cornerRadius: 6))
+                                .shadow(color: Theme.blue.opacity(0.55), radius: 7)
+                                .modifier(ShaftPulse())
+                        )
                 }
                 .buttonStyle(.plain)
                 .position(x: world.shaftX, y: world.ground + 5 * u - 8 * u)
@@ -282,5 +287,15 @@ struct BaseWorldScene: View {
             .position(x: CGFloat(site.x) * px, y: world.ground - 22 - 3 * px)
             .accessibilityLabel("Place \(kindLabel(kind)) here")
         }
+    }
+}
+
+
+/// Slow opacity pulse on the lift-head highlight, matching the web shaft button.
+private struct ShaftPulse: ViewModifier {
+    @State private var on = false
+    func body(content: Content) -> some View {
+        content.opacity(on ? 1 : 0.55)
+            .onAppear { withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) { on = true } }
     }
 }

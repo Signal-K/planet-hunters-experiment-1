@@ -4,6 +4,7 @@ import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
 import './globals.css'
 import './loop-screens.css'
 import './base-scene.css'
+import { DevFollow } from '@/components/dev/DevFollow'
 
 const SITE_URL = 'https://playlandnam.space'
 const OG_IMAGE = { url: '/og-image.png', width: 1200, height: 630, alt: PRODUCT_NAME }
@@ -53,6 +54,7 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning>
         {children}
+        {process.env.NODE_ENV === 'development' ? <DevFollow /> : null}
         <Script id="pwa-standalone" strategy="afterInteractive">{`
           // body[data-pwa="standalone"] drives the installed-app layout rules.
           // iOS reports installs via navigator.standalone, others via display-mode.

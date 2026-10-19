@@ -30,7 +30,7 @@
       "left": -3,
       "width": 68,
       "height": 56.845,
-      "foot": -0.484
+      "foot": 4.5
     },
     "launchpad": {
       "site": "pad",
@@ -39,7 +39,7 @@
       "left": -6,
       "width": 112,
       "height": 136.48,
-      "foot": -0.484,
+      "foot": 4.5,
       "mount": {
         "x": 60,
         "z": 15
@@ -52,7 +52,7 @@
       "left": -3,
       "width": 74,
       "height": 63.176,
-      "foot": -0.484
+      "foot": 4.5
     },
     "market": {
       "site": "exchange",
@@ -61,7 +61,7 @@
       "left": -3,
       "width": 124,
       "height": 48.954,
-      "foot": -0.484
+      "foot": 4.5
     },
     "surface-silo": {
       "site": "shaft"

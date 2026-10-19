@@ -51,7 +51,6 @@
   --ln-cyan-border: rgba(112, 217, 234, 0.4);
   --ln-blueprint-bg: #eef3f8;
   --ln-blueprint-paper: #ffffff;
-  --ln-settings-paper: #f2eee4;
   --ln-blueprint-paper-2: #dfe9f3;
   --ln-blueprint-ink: #0f2436;
   --ln-blueprint-blue: #1f78c1;
@@ -693,12 +692,14 @@ button { cursor: pointer; }
 }
 .scene-transition-veil[data-phase="out"] {
   pointer-events: auto;
-  animation: scene-veil-cover 180ms ease forwards;
+  animation: scene-veil-cover 80ms ease forwards;
 }
 .scene-transition-veil[data-phase="in"] {
   pointer-events: auto;
-  animation: scene-veil-reveal 200ms ease forwards;
+  animation: scene-veil-reveal 100ms ease forwards;
 }
+.scene-transition-veil[data-phase="out"]:not([data-kind="fade"]) { animation-duration: 180ms; }
+.scene-transition-veil[data-phase="in"]:not([data-kind="fade"]) { animation-duration: 200ms; }
 @keyframes scene-veil-cover { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scene-veil-reveal { from { opacity: 1; } to { opacity: 0; } }
 
@@ -3047,6 +3048,10 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
   pointer-events: none;
 }
 .flight-plan-slot > * { pointer-events: auto; }
+/* Wide enough to share the top row: sit between the gear/clock/help cluster and the francs chips, so the strip never covers Back, target or stat cards below. */
+@media (min-width: 600px) {
+  .flight-plan-slot { top: calc(env(safe-area-inset-top, 0px) + 6px); left: 200px; right: 240px; }
+}
 /* On wide and landscape screens the launch review keeps its plan strip at the top, so the coach strip moves to the bottom instead of covering it. */
 @media (min-width: 701px), (orientation: landscape) {
   body:has([data-testid="mission-launch-review"]) .flight-plan-slot { top: auto; bottom: 156px; }
@@ -3875,6 +3880,8 @@ button.hub-orbital-network__status:disabled { cursor: default; }
    screen (mining overflow, build confirm). It now takes its own row, so no
    guidance element can sit on the control it points at. */
 .flight-plan-chip { position: relative; right: auto; bottom: auto; align-self: flex-end; margin: 0; }
+/* The "?" chip sits in the top-left corner under the gear/clock cluster: empty sky, clear of buildings, labels and the dock. */
+.flight-plan-slot > .flight-plan-chip { position: fixed; left: 8px; right: auto; top: calc(env(safe-area-inset-top, 0px) + 68px); bottom: auto; width: 44px; padding: 0; border-radius: 999px; font-size: 18px; z-index: 40; }
 
 /* SSL-430: the sync chip (offline outbox state) sat on top of the primary
    button on debrief and over the Flight Plan text. On phones it now lives in
@@ -4574,7 +4581,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 /* SSL-556: Settings owns a full utility page between the persistent HUD and dock. */
 .ops-settings {
-  --set-bg: var(--ln-settings-paper);
+  --set-bg: var(--ln-blueprint-paper-2);
   --set-card: var(--ln-blueprint-paper);
   --set-ink: var(--ln-blueprint-ink);
   --set-muted: var(--ln-blueprint-ink);
@@ -4963,3 +4970,6 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   .scene-chip.sync-chip:not(.sync-chip--floating) .sync-chip__dot { width: 12px; height: 12px; }
 }
 .sync-chip--floating { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); right: calc(env(safe-area-inset-right, 0px) + 12px); z-index: 96; }
+
+/* The mission board is its own full screen with no HUD cluster, so the training "?" chip drops to the bottom-left instead of covering the contract header. */
+.game-stage-main:has([data-screen="missions"]) .flight-plan-slot > .flight-plan-chip { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }

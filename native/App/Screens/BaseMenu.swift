@@ -14,22 +14,31 @@ struct BaseMenu: View {
         let run: () -> Void
     }
 
+    private func marketDetail(_ hasMarket: Bool) -> String {
+        let fired = Marketplace.firedCount(store.player)
+        if fired > 0 { return fired == 1 ? "1 price alert hit" : "\(fired) price alerts hit" }
+        return hasMarket ? "Spot prices, sell, buy and alerts" : "Spot prices and selling"
+    }
+
     private var primary: [Item] {
         let hasMarket = store.player.placed.contains("market")
         return [
             Item(id: "build", label: "Build", detail: "New structures, a control station, satellites", symbol: "building.2", primary: true, run: onBuild),
             Item(id: "contracts", label: "New mission", detail: "Client contracts and free runs", symbol: "paperplane", primary: true, run: { store.go(.missions) }),
-            Item(id: "market", label: "Marketplace", detail: hasMarket ? "Sell what you have mined" : "Build the Exchange to sell ore", symbol: "cart", primary: true,
-                 run: { if hasMarket { store.go(.market) } else { onBuild() } }),
+            Item(id: "market", label: "Marketplace", detail: marketDetail(hasMarket), symbol: "cart", primary: true,
+                 run: { store.go(.market) }),
         ]
     }
 
     private var rest: [Item] {
         var rows: [Item] = []
-        if store.player.placed.contains("launchpad") { rows.append(Item(id: "hangar", label: "Hangar", detail: "Ships and their parts", symbol: "house.lodge", run: { store.go(.hangar) })) }
-        if store.player.placed.contains("control-station") { rows.append(Item(id: "control-station", label: "Control station", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
+        let ownsOrbitalInstrument = store.player.transitSatelliteLaunchedAt != nil
+            || store.player.deepSpaceTelescopeBuilt
+            || store.player.deepSpaceTelescopeLaunchedAt != nil
+            || store.player.saturnImagerLaunchedAt != nil
+        let hasControlStation = store.player.placed.contains("control-station")
+        if hasControlStation || ownsOrbitalInstrument { rows.append(Item(id: "control-station", label: hasControlStation ? "Control station" : "Instruments", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
         rows.append(Item(id: "mission-log", label: "Mission log", detail: "Past runs and what they paid", symbol: "list.bullet.rectangle", run: { store.go(.missionHistory) }))
-        rows.append(Item(id: "subsurface", label: "Subsurface", detail: "Silo and underground rooms", symbol: "arrow.down.to.line", run: { store.go(.hubSubsurface) }))
         if store.player.freeOperations { rows.append(Item(id: "sites", label: "Sites", detail: "Places to survey and settle", symbol: "globe", run: { store.go(.surfaceOps) })) }
         return rows
     }
@@ -48,7 +57,7 @@ struct BaseMenu: View {
                                 .overlay(Capsule().stroke(Theme.ink, lineWidth: 1))
                         }.buttonStyle(.plain)
                     }
-                    grid(primary)
+                    grid(primary, single: true)
                     grid(rest)
                 }
                 .padding(16)
@@ -61,8 +70,8 @@ struct BaseMenu: View {
         .accessibilityIdentifier("base-menu")
     }
 
-    private func grid(_ items: [Item]) -> some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 8)], spacing: 8) {
+    private func grid(_ items: [Item], single: Bool = false) -> some View {
+        LazyVGrid(columns: single ? [GridItem(.flexible())] : [GridItem(.adaptive(minimum: 260), spacing: 8)], spacing: 8) {
             ForEach(items) { item in
                 Button { onClose(); item.run() } label: {
                     HStack(spacing: 12) {

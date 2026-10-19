@@ -3,6 +3,7 @@ import { STARTING_FRANCS } from '@/lib/data/economy'
 import { mergeBuildingLevels, sanitizeBuildingLevels } from '@/lib/data/building-levels'
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
 import { sanitizeBadges } from '@/lib/data/sky-events'
+import { reconcileOrionidsFinds, sanitizeMeteoriteMastery, sanitizeOrionidsFinds } from '@/lib/orionids/finds'
 import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, OWN_PROGRAM_CLIENT_ID, TARGETS } from '@/lib/data'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
@@ -81,6 +82,8 @@ export const DEFAULT_STATE: GameState = {
     saturnActiveFrameId: null,
     moonSurveyCharts: {},
     badges: {},
+    orionidsFinds: {},
+    meteoriteMastery: 0,
     saturnImagerLaunchedAt: null,
     instrumentDigestNotifiedOn: {},
     dismissedHubPrompts: {},
@@ -211,6 +214,13 @@ export function normalizeState(input: PartialSave): GameState {
   const discoveredExoplanetTargets = player.discoveredExoplanetTargets && typeof player.discoveredExoplanetTargets === 'object'
     ? player.discoveredExoplanetTargets
     : DEFAULT_STATE.player.discoveredExoplanetTargets
+  const reconciledFinds = reconcileOrionidsFinds({
+    badges,
+    orionidsFinds: sanitizeOrionidsFinds(player.orionidsFinds),
+    meteoriteMastery: sanitizeMeteoriteMastery(player.meteoriteMastery),
+    tessClassifications,
+    discoveredExoplanetTargets,
+  })
   const instrumentDigestNotifiedOn = player.instrumentDigestNotifiedOn
     && typeof player.instrumentDigestNotifiedOn === 'object'
     && !Array.isArray(player.instrumentDigestNotifiedOn)
@@ -317,6 +327,14 @@ export function normalizeState(input: PartialSave): GameState {
     ? Math.max(0, Math.floor(player.missionsDone ?? 0))
     : DEFAULT_STATE.player.missionsDone
   const freeOperations = freeOperationsUnlocked({ missionsDone, placed: placedList, flightPlan: player.flightPlan })
+  // A save that has flown a mission but never recorded the mining try (a legacy or
+  // reconciled save) must not be told to "Tap the tower" for a first run again. Only
+  // repair a plan that was started: a never-started legacy save keeps its own finished rule.
+  const savedPlan = player.flightPlan
+  const planStarted = !!savedPlan && !!(savedPlan.activeSince || savedPlan.replayTry || savedPlan.completed?.mining || savedPlan.completed?.scan || savedPlan.completed?.part)
+  const flightPlan = savedPlan && planStarted && missionsDone > 0 && !savedPlan.completed?.mining && !savedPlan.replayTry
+    ? { ...savedPlan, completed: { ...savedPlan.completed, mining: true as const } }
+    : savedPlan
   const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
   const pendingTerritoryClaimFor = legacyClaim
     ? { targetId: legacyClaim.targetId, clientId: legacyClaim.clientId ?? legacyClaim.contractorId ?? '' }
@@ -329,7 +347,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
@@ -547,6 +565,15 @@ function mergeBadges(local: Player['badges'], remote: Player['badges']): NonNull
   return out
 }
 
+function mergeOrionidsFinds(local: Player['orionidsFinds'], remote: Player['orionidsFinds']): NonNullable<Player['orionidsFinds']> {
+  const out = { ...(remote ?? {}) }
+  for (const [id, find] of Object.entries(local ?? {})) {
+    const other = out[id]
+    if (!other || (find.tier === 'gold' && other.tier !== 'gold')) out[id] = find
+  }
+  return out
+}
+
 function earliestStamp(local: number | null | undefined, remote: number | null | undefined): number | null | undefined {
   if (local && remote) return Math.min(local, remote)
   return local || remote || local
@@ -645,6 +672,18 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.asteroidClassifications = mergeKeyed(current.player.asteroidClassifications, remoteState.player?.asteroidClassifications)
   merged.player.saturnClassifications = mergeKeyed(current.player.saturnClassifications, remoteState.player?.saturnClassifications)
   merged.player.badges = mergeBadges(current.player.badges, remoteState.player?.badges)
+  merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)
+  merged.player.meteoriteMastery = Math.max(current.player.meteoriteMastery ?? 0, remoteState.player?.meteoriteMastery ?? 0)
+  // A finished training try never un-finishes: the flight plan comes from whichever
+  // side won above, so union the completed flags or a stale save re-offers "Tap the tower".
+  const localPlan = current.player.flightPlan
+  const remotePlan = remoteState.player?.flightPlan
+  if (localPlan || remotePlan) {
+    merged.player.flightPlan = {
+      ...(merged.player.flightPlan ?? EMPTY_FLIGHT_PLAN),
+      completed: { ...(remotePlan?.completed ?? {}), ...(localPlan?.completed ?? {}), ...(merged.player.flightPlan?.completed ?? {}) },
+    }
+  }
   for (const field of INSTRUMENT_LAUNCH_FIELDS) {
     merged.player[field] = earliestStamp(current.player[field], remoteState.player?.[field])
   }

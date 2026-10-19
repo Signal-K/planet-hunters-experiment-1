@@ -18,51 +18,10 @@
   background: linear-gradient(180deg, var(--lb-sky-top), var(--lb-sky-horizon) 58%, var(--lb-ground));
 }
 
-.plate,
-.piece,
-.ground,
 .wash {
   position: absolute;
   pointer-events: none;
   image-rendering: pixelated;
-}
-
-.plate {
-  /* The plates are opaque rectangles; fade their edges into the sky. */
-  -webkit-mask-image: radial-gradient(ellipse 72% 78% at 50% 62%, #000 55%, transparent 100%);
-  mask-image: radial-gradient(ellipse 72% 78% at 50% 62%, #000 55%, transparent 100%);
-}
-
-.plateLeft {
-  left: 0;
-  bottom: 12%;
-  width: min(34vw, 280px);
-  height: auto;
-}
-
-.plateRight {
-  right: 0;
-  bottom: 16%;
-  width: min(28vw, 240px);
-  height: auto;
-}
-
-.ground {
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 22%;
-  /* Drawn ground. The old plate had the part cards painted into it, which doubled the live tray. */
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--lb-ridge) 70%, #ffffff) 0, var(--lb-ridge) 6px, var(--lb-ground) 6px, var(--lb-ground) 100%);
-}
-
-.piece {
-  bottom: 16%;
-  width: 88px;
-  height: auto;
-  transform-origin: bottom center;
 }
 
 .wash {
@@ -71,29 +30,6 @@
   mix-blend-mode: multiply;
   opacity: 0.38;
 }
-
-.tower {
-  position: absolute;
-  left: 16px;
-  bottom: 196px;
-  z-index: 2;
-  width: min(22vw, 140px);
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.tower img {
-  display: block;
-  width: 100%;
-  height: auto;
-  image-rendering: pixelated;
-  pointer-events: none;
-}
-
 
 :global(.rocket-builder-host) :global(.launchpad-active-mission) {
   background: var(--ln-blueprint-paper);
@@ -132,8 +68,6 @@
 /* The coach strip sits at the top (68px, 56px tall): start the stage below it so Back, Launch and Customize stay visible. */
 @media (orientation: portrait) and (max-width: 700px) {
   :global(body:has(.flight-plan)) .stage { top: 132px; }
-  /* The plan strip already names the destination; the Target card gives its room to Customize. */
-  .actions .target { display: none; }
 }
 
 .actions {
@@ -205,65 +139,212 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(200px, 34%) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
 
-.body[data-parts='closed'] { grid-template-columns: minmax(0, 1fr); }
+.body[data-parts='open'] { grid-template-columns: minmax(0, 1fr) minmax(320px, 38%); }
 
-.blueprint,
+.pad,
 .choices {
   min-height: 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+.choices {
+  position: relative;
+  z-index: 1;
   border: 3px solid var(--ln-blueprint-ink);
   border-radius: 12px;
   overflow: hidden;
 }
 
-.blueprint {
-  padding: 10px;
-  gap: 8px;
-  background-color: var(--ln-blueprint-blue);
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--ln-blueprint-paper) 22%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--ln-blueprint-paper) 22%, transparent) 1px, transparent 1px);
-  background-size: 24px 24px;
+/* The pad scene: the launch complex drawn in Blender (pad, gantry, rail, hangar), fitted to the room it has. */
+.pad {
+  position: relative;
+  container-type: size;
+  justify-content: flex-end;
+  align-items: center;
 }
 
-.rocketWrap {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr);
-  place-items: center;
-  overflow: hidden;
+/* Ground under the complex: it follows the pad's foot, so it never floats above a tall parts panel. */
+.pad::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  top: calc(100% - 28px);
+  height: 100vh;
+  pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lb-ridge) 70%, #ffffff) 0, var(--lb-ridge) 6px, var(--lb-ground) 6px, var(--lb-ground) 100%);
 }
 
-.rocketWrap img {
-  max-width: 100%;
-  max-height: 100%;
+.complex {
+  position: relative;
+  width: min(100cqw, 127.6cqh);
+  aspect-ratio: 1104 / 865;
+  flex: 0 0 auto;
+  margin-bottom: 4px;
+}
+
+.complex img { position: absolute; image-rendering: pixelated; pointer-events: none; }
+.complexArt { inset: 0; width: 100%; height: 100%; }
+
+.hangarTag {
+  position: absolute;
+  left: 68%;
+  top: 58%;
+  padding: 4px 10px;
+  border: 2px solid var(--ln-blueprint-ink);
+  border-radius: 999px;
+  background: var(--ln-blueprint-paper);
+  color: var(--ln-blueprint-ink);
+  font: 700 14px/1 var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* The rocket stands on the mount; the mount centre and deck height come from the Blender frame. */
+.rocketSlot {
+  position: absolute;
+  left: 32.6%;
+  bottom: 9.2%;
+  height: 64.7%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.rocket {
+  position: static !important;
+  display: block;
   height: 100%;
   width: auto;
-  object-fit: contain;
   image-rendering: pixelated;
 }
 
-.stats {
-  flex: 0 0 auto;
+.scaffold { inset: 0; width: 100%; height: 100%; opacity: 0; }
+
+.weld {
+  position: absolute;
+  left: 32.6%;
+  bottom: 9.2%;
+  width: 28px;
+  height: 6px;
+  margin-left: -14px;
+  background: var(--ln-blueprint-paper);
+  box-shadow: 0 0 10px 4px var(--ln-blueprint-blue);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Idle: an empty pad. Design: the blueprint of the rocket. Building: scaffold up, rocket rises. Ready: standing. */
+.pad[data-phase='idle'] .rocketSlot { display: none; }
+
+.pad[data-phase='design'] .rocket {
+  opacity: 0.42;
+  filter: grayscale(1) brightness(1.7) drop-shadow(0 0 2px var(--ln-blueprint-blue)) drop-shadow(0 0 6px var(--ln-blueprint-blue));
+}
+
+.pad[data-phase='building'] .rocket { animation: rocket-rise var(--lb-build-ms, 1600ms) steps(24, end) forwards; }
+.pad[data-phase='building'] .scaffold { animation: scaffold-fade var(--lb-build-ms, 1600ms) linear forwards; }
+.pad[data-phase='building'] .weld { animation: weld-rise var(--lb-build-ms, 1600ms) steps(24, end) forwards; }
+
+@keyframes rocket-rise {
+  from { clip-path: inset(100% 0 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes scaffold-fade {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  82% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes weld-rise {
+  0%, 100% { opacity: 0; bottom: 9.2%; }
+  8%, 92% { opacity: 1; }
+  100% { bottom: 73.9%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pad[data-phase='building'] .rocket,
+  .pad[data-phase='building'] .scaffold,
+  .pad[data-phase='building'] .weld { animation: none; }
+  .pad[data-phase='building'] .scaffold { opacity: 1; }
+}
+
+/* A transparent hit area over the gantry: tapping the tower opens the mission board. */
+.gantryHit {
+  position: absolute;
+  left: 13%;
+  top: 0;
+  width: 11%;
+  height: 78%;
+  min-width: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.gantryHit > span { display: block; width: 100%; height: 100%; }
+
+/* The big call to action when nothing is on the pad. */
+.choose {
+  position: absolute;
+  left: 50%;
+  top: 14%;
+  transform: translateX(-50%);
+  z-index: 3;
+  width: min(86%, 420px);
+  min-height: 88px;
+  padding: 14px 20px;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 4px solid var(--ln-blueprint-ink);
+  border-radius: 14px;
+  background: var(--ln-blueprint-blue);
+  color: var(--ln-blueprint-paper);
+  box-shadow: 0 6px 0 var(--ln-blueprint-ink);
+  cursor: pointer;
+  animation: choose-pulse 1.8s ease-in-out infinite;
+}
+
+.choose span { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.choose strong { font: 800 clamp(24px, 6vw, 34px)/1.05 var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+
+@keyframes choose-pulse {
+  0%, 100% { box-shadow: 0 6px 0 var(--ln-blueprint-ink), 0 0 0 0 color-mix(in srgb, var(--ln-blueprint-paper) 70%, transparent); }
+  50% { box-shadow: 0 6px 0 var(--ln-blueprint-ink), 0 0 0 12px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) { .choose { animation: none; } }
+
+.stats {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .stats li {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 6px 8px;
+  min-width: 96px;
+  padding: 6px 10px;
+  border: 2px solid var(--ln-blueprint-ink);
   border-radius: 8px;
   background: var(--ln-blueprint-paper);
   color: var(--ln-blueprint-ink);
@@ -362,25 +443,24 @@
   text-transform: uppercase;
 }
 
-/* Portrait phones: rocket on top, choices below. */
+/* Portrait phones: the pad scene on top, choices below. */
 @media (orientation: portrait) {
-  .body { grid-template-columns: 1fr; grid-template-rows: minmax(120px, 30%) minmax(0, 1fr); }
-  .blueprint { flex-direction: row; align-items: stretch; }
-  .stats { flex-direction: column; flex: 0 0 38%; justify-content: center; }
+  .body[data-parts='open'] { grid-template-columns: 1fr; grid-template-rows: minmax(200px, 42%) minmax(0, 1fr); }
+  .stats { flex-direction: row; top: 0; left: 0; right: 0; justify-content: center; }
+  .stats li { flex: 1; min-width: 0; }
   .tabs { gap: 3px; padding: 6px 4px; }
   .tabPart { display: none; }
   .tab { min-height: 72px; padding-inline: 1px; }
   .tabLabel { letter-spacing: -0.04em; }
-  .tower { display: none; }
+  .hangarTag { display: none; }
 }
 
 /* Short landscape phones: tighter chrome, same two columns. */
 @media (orientation: landscape) and (max-height: 520px) {
   .stage { inset: 56px 8px 68px 8px; gap: 6px; }
-  .body { grid-template-columns: minmax(150px, 28%) minmax(0, 1fr); }
-  .blueprint { flex-direction: row; align-items: stretch; padding: 6px; }
-  .stats { flex-direction: column; flex: 0 0 44%; justify-content: center; gap: 4px; }
-  .stats li { padding: 2px 8px; }
+  .body[data-parts='open'] { grid-template-columns: minmax(0, 1fr) minmax(280px, 40%); }
+  .choose { left: auto; right: 0; transform: none; top: 4%; width: min(52%, 400px); min-height: 64px; padding: 8px 16px; }
+  .stats li { padding: 2px 8px; min-width: 80px; }
   .stats strong { font-size: 16px; }
   .optionsHead { display: none; }
   .tabs { padding: 6px; }
@@ -390,4 +470,23 @@
   .option { min-height: 56px; grid-template-columns: 40px minmax(0, 1fr) auto; padding: 4px 8px; }
   .option img { width: 40px; height: 40px; }
   .optionText span { -webkit-line-clamp: 1; }
+}
+
+/* Once a mission is chosen the plan strip already names the destination, so the Target card only shows on the idle pad. */
+.root:not([data-assembly='idle']) .target { display: none; }
+
+/* The mission plan strip (contract, plan, launch and the destination cards) sits over the scene: the stage starts or ends clear of it. */
+.root:not([data-assembly='idle']) .actions > :last-child { margin-left: auto; }
+
+@media (max-width: 899px) and (min-height: 521px) {
+  :global(body:has([data-testid='mission-launch-review'])) .stage { bottom: 166px; }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  :global(body:has([data-testid='mission-launch-review'])) .stage { top: 80px; }
+}
+
+/* With room beside the gantry, the call to action sits in the sky over the hangar instead of covering the tower. */
+@media (orientation: landscape) and (min-height: 521px) {
+  .choose { left: 64%; top: 8%; width: min(46%, 440px); }
 }

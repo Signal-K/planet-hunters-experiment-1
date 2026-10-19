@@ -170,7 +170,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-market', label: 'Market', hint: 'Market with a stocked stash to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-surface-ops', label: 'Surface Ops', hint: 'Surface Ops list with site access to buy and settlements. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -621,7 +621,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'ui-market':
       return {
         screen: 'market',
-        player: { ...POST_ONBOARDING_PLAYER, stash: { iron: 40, nickel: 20, silicates: 15 }, },
+        player: { ...POST_ONBOARDING_PLAYER, placed: [...POST_ONBOARDING_PLAYER.placed, 'market', 'surface-silo'], stash: { iron: 20, nickel: 10, silicates: 5 }, },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

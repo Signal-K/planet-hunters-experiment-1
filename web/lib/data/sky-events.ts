@@ -14,6 +14,15 @@ export const WORLD_SPACE_WEEK_PLAYER_LINKS = [
   { label: 'Open Garden sky events', href: 'https://starsailors.space/game' },
 ] as const
 
+/**
+ * Atlas check-in for the Orionids. youratlas.cc publishes tonight's sky on
+ * the home page; it does not publish a separate Orionids event path.
+ */
+export const ATLAS_ORIONIDS_CHECKIN = {
+  label: 'Atlas Orionids check-in',
+  href: 'https://youratlas.cc/',
+} as const
+
 export type SkyActivityKind =
   | 'launch'
   | 'saturn-classification'
@@ -271,7 +280,62 @@ export function debrisRatePerMinute(preset: DebrisEventPreset, now: Date | numbe
   const peak = Date.parse(preset.peakUtc)
   const half = Math.max(peak - start, end - peak, 1)
   const closeness = Math.max(0, 1 - Math.abs(t - peak) / half)
-  return preset.baseRatePerMinute + (preset.peakRatePerMinute - preset.baseRatePerMinute) * closeness
+  const rate = preset.baseRatePerMinute + (preset.peakRatePerMinute - preset.baseRatePerMinute) * closeness
+  return preset.eventId === 'orionids-2026' && isOrionidsPeakNight(t) ? rate * ORIONIDS_PEAK_MULTIPLIER : rate
+}
+
+/** SSL-578: peak-night debris boost (21-22 Oct, local night). */
+export const ORIONIDS_PEAK_MULTIPLIER = 2
+
+/** Local 21 Oct 18:00 until 22 Oct 06:00, in the player's zone. */
+export function isOrionidsPeakNight(at: Date | number): boolean {
+  const t = toMs(at)
+  if (!Number.isFinite(t)) return false
+  return t >= new Date(2026, 9, 21, 18, 0, 0, 0).getTime() && t < new Date(2026, 9, 22, 6, 0, 0, 0).getTime()
+}
+
+/** Inside the Orionids window (local 19 Oct midnight to 8 Nov), day or night. */
+export function isOrionidsWindow(at: Date | number): boolean {
+  const t = toMs(at)
+  if (!Number.isFinite(t)) return false
+  return t >= orionidsLocalStartMs() && t < Date.parse(ORIONIDS_DEBRIS_PRESET.endUtc)
+}
+
+export type OrionidsPhase = 'teaser' | 'active' | 'peak' | 'ended' | 'off'
+
+export function orionidsPhase(at: Date | number): OrionidsPhase {
+  if (isOrionidsPeakNight(at)) return 'peak'
+  if (isOrionidsWindow(at)) return 'active'
+  if (isOrionidsTeaserWindow(at)) return 'teaser'
+  const t = toMs(at)
+  return Number.isFinite(t) && t >= Date.parse(ORIONIDS_DEBRIS_PRESET.endUtc) ? 'ended' : 'off'
+}
+
+/** Event panel copy, shared by web and native (mirrored in SkyEvents.swift). */
+export const ORIONIDS_PANEL = {
+  title: 'Orionids',
+  what: 'Dust from Halley\'s Comet hits the atmosphere as meteors. Some of it falls on your asteroid field.',
+  when: '19 Oct to 7 Nov. Debris falls at night, 22:00 to 06:00 your time.',
+  peak: 'Peak night 21-22 Oct: debris falls twice as fast.',
+  steps: [
+    'Fly any laser mining run at night.',
+    'Wait for debris to land, then laser it.',
+    'Sell Orionid debris at the Exchange.',
+  ],
+} as const
+
+export function orionidsShareText(tier: BadgeTier): string {
+  return `I earned the ${tier} Orionids 2026 badge in Landnam by mining meteor debris.`
+}
+
+/** One peak reminder, local 22 Oct 02:00 (after moonset). */
+export const ORIONIDS_PEAK_REMINDER = {
+  title: 'Orionids peak',
+  body: "Moon's down — look up. Orionids peak; debris is falling in Landnam.",
+} as const
+
+export function orionidsPeakReminderMs(): number {
+  return new Date(2026, 9, 22, 2, 0, 0, 0).getTime()
 }
 
 /** Resource units granted for one mined debris chunk. */

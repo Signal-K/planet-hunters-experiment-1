@@ -22,6 +22,9 @@ public final class GameStore {
     private var pendingPayout: Int?
     /// This install's ledger entry id (SSL-559).
     public var deviceId: String = Ledger.deviceId()
+    /// One-shot native UI handoff for opening a specific Mission Board tab.
+    /// Kept out of GameState because it is navigation intent, not saved progress.
+    public var requestedMissionBoardTab: Int?
 
     public init(state: GameState = GameState(), catalog: Catalog = Catalog(), saveURL: URL? = nil,
                 clock: @escaping @Sendable () -> Double = { Date().timeIntervalSince1970 * 1000 }) {
@@ -139,6 +142,11 @@ public final class GameStore {
     public func finishWelcome() { var n = state; n.extras[CloudPull.welcomeKey] = nil; if n.screen == .intro { n.screen = .hub }; apply(n) }
 
     public func go(_ screen: Screen) { var n = state; n.screen = screen; apply(n) }
+
+    public func openMissionBoard(tab: Int) {
+        requestedMissionBoardTab = tab
+        go(.missions)
+    }
     public func setEarthBiome(_ biome: String, asMove: Bool = false) {
         guard ["mountains", "desert", "tundra", "coast"].contains(biome), !state.player.earthBiomeMoveUsed || !asMove else { return }
         var n = state; n.player.earthBiome = biome
@@ -316,6 +324,15 @@ public final class GameStore {
     public func collectRefined(_ recipeId: String) { apply(Refinery.applyCollect(state, recipeId: recipeId, now: now)) }
     public func sellRefined(_ recipeId: String, amount: Int) { apply(Refinery.applySell(state, recipeId: recipeId, amount: amount)) }
     public func sell(_ mineralId: String, amount: Int) { apply(Market.applySell(state, mineralId: mineralId, amount: amount, now: now)) }
+    public func buy(_ mineralId: String, amount: Int) { apply(Marketplace.applyBuy(state, mineralId: mineralId, amount: amount, now: now)) }
+    public func setPriceAlert(_ mineralId: String, target: Int) { apply(Marketplace.applySetAlert(state, mineralId: mineralId, target: target)) }
+    public func removePriceAlert(_ id: String) { apply(Marketplace.applyRemoveAlert(state, alertId: id)) }
+    /// Returns the alerts that fired this call so the caller can notify the player.
+    @discardableResult public func checkPriceAlerts() -> [PriceAlert] {
+        let due = Marketplace.dueAlerts(state.player, now: now)
+        if !due.isEmpty { apply(Marketplace.applyFireDue(state, now: now)) }
+        return due
+    }
     /// Fits a chosen part in a rocket-builder slot.
     @discardableResult public func installBuilderPart(_ slot: String, partId: String) -> Bool {
         let next = RocketBuilder.install(state, slot: slot, partId: partId)

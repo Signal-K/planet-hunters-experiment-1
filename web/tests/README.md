@@ -62,3 +62,10 @@ Screenshot evidence is mandatory and checked without any paid vision API. Everyt
 - `tests/scenes/checks.selftest.spec.ts` proves the checkers work: a built page with a known overlap, tiny text, low contrast and clipped text must be reported, and a clean page must report nothing.
 - With `CI` set, Playwright writes the JSON report to `tests/.out/results.json` and the HTML report to `tests/.report`; screenshots are saved next to them in `tests/.out`.
 - Native: `scripts/native-evidence.sh [scene ...]` launches catalog scenes (`SceneCatalog.swift`) in the booted iOS Simulator and saves screenshots with `simctl io booted screenshot`. It captures images only; there are no automated native pixel checks beyond the existing `verify:native-*` scripts.
+
+## Opt-in specs (not part of any routine run)
+
+These skip unless their env var is set, so `npm run test:scenes` stays fast. Agents do not need to run them after unrelated changes; run one only when you touched the area it covers.
+
+- `flow-offline-replay.spec.ts` (`OFFLINE_E2E=1`, SSL-365): real sign-in, build with the network off, reconnect, check PocketBase. Needs local PocketBase (:8090/:8091) and a PRODUCTION build served locally (`next build`, `next start -p 3002`, `SCENES_BASE_URL=http://localhost:3002`) because the service worker only registers in production. Do not use the Playwright-started dev server: its config sets `NEXT_PUBLIC_LANDNAM_ENV=staging`, which points the app at the deployed PocketBase. The spec refuses non-local hosts for its own calls and needs the local test account `ssl365.offline@example.com` on both PocketBases.
+- `pathways.spec.ts`, `flow-fresh-account.spec.ts` (`PLAYTHROUGH=1`): slow full playthroughs.

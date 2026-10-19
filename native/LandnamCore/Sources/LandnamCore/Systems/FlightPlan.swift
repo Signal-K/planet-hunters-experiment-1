@@ -49,6 +49,21 @@ public enum FlightPlan {
     /// Screens that belong to a live cargo run; the scan and part lines never show here (web LOOP_SCREENS).
     private static let loopScreens: Set<Screen> = [.fab, .roverSurvey, .targets, .mining, .debrief, .transit, .landing, .delivery, .rocketBuy]
 
+    /// Whether the coach line is about what the player is doing right now (web `trainingStepOnPath`).
+    /// The "go back to X" line only applies on the base, where the entry lives; on any other screen
+    /// the player is doing something else and the strip folds into the "?" chip.
+    public static func onPath(_ p: Player, screen: Screen) -> Bool {
+        guard let current = p.flightPlan.currentTry else { return false }
+        if screen == .hub { return true }
+        switch current {
+        case "mining":
+            if !p.placed.contains("launchpad") { return screen == .intro || screen == .build }
+            return loopScreens.contains(screen) || screen == .missions || screen == .launchpad
+        case "scan": return loopScreens.contains(screen) || screen == .galaxy
+        default: return loopScreens.contains(screen) || screen == .hangar
+        }
+    }
+
     public static func coach(_ p: Player, screen: Screen, includeHidden: Bool = false) -> Coach? {
         guard (includeHidden || !p.flightPlan.hidden), let current = p.flightPlan.currentTry,
               let index = FlightPlanProgress.tryIds.firstIndex(of: current) else { return nil }

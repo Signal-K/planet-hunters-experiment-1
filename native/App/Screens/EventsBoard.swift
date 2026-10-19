@@ -5,6 +5,7 @@ import LandnamCore
 /// Orionids is not a WSW event. Badge medals use the board's own pale blue and grey, never orange or green.
 struct EventsBoard: View {
     @Environment(GameStore.self) private var store
+    var onOpenDebris: (String) -> Void = { _ in }
 
     private enum Status { case upcoming(String), live, ended }
 
@@ -16,12 +17,51 @@ struct EventsBoard: View {
 
     var body: some View {
         let now = store.now
-        VStack(alignment: .leading, spacing: 12) {
-            hero(now: now)
-            ForEach(Self.wswOrder, id: \.self) { id in card(id, now: now) }
+        let ids = ["orionids-2026"] + Self.wswOrder
+        let groups: [(String, [String])] = [
+            ("LIVE NOW", ids.filter { eventStatus($0, now: now) == 1 }),
+            ("UPCOMING", ids.filter { eventStatus($0, now: now) == 0 }),
+            ("PAST EVENTS", ids.filter { eventStatus($0, now: now) == 2 })
+        ].filter { !$0.1.isEmpty }
+        VStack(alignment: .leading, spacing: 16) {
+            spacetober
+            ForEach(groups, id: \.0) { title, eventIds in
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack { Text(title).font(AppFont.display(18)).tracking(1.1); Spacer(); Text("\(eventIds.count)").font(AppFont.display(14)).frame(width: 32, height: 32).overlay(Circle().stroke(Theme.ink, lineWidth: 2)) }
+                    ForEach(eventIds, id: \.self) { id in card(id, now: now) }
+                }
+            }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("mission-board-events")
+    }
+
+    /// Web `spacetoberStrip`. Badge keys match `SPACETOBER_WEEK_BADGE` / `SPACETOBER_PEAK_BADGE`.
+    private var spacetober: some View {
+        let week = store.player.badges["spacetober-2026-week"]?.tier
+        let peak = store.player.badges["spacetober-2026-peak"]?.tier
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("SPACETOBER").font(AppFont.display(18)).tracking(1.1).foregroundStyle(Theme.ink)
+            Text("World Space Week, then the Orionids peak.").font(AppFont.display(14)).foregroundStyle(Theme.ink)
+            Text("WORLD SPACE WEEK · 4-10 OCT · \(week?.rawValue.uppercased() ?? "NOT IN THE SET")").font(AppFont.display(14)).foregroundStyle(Theme.textDim)
+            Text("ORIONIDS PEAK · 21 OCT 18:00 – 22 OCT 06:00 · \(peak?.rawValue.uppercased() ?? "NOT IN THE SET")").font(AppFont.display(14)).foregroundStyle(Theme.textDim)
+            Link("Open Atlas badges", destination: URL(string: "https://youratlas.cc/app/profile")!)
+            Link("Open Garden sky events", destination: URL(string: "https://starsailors.space/game")!)
+            Link("Atlas Orionids check-in", destination: URL(string: "https://youratlas.cc/")!)
+        }
+        .font(AppFont.display(14))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.ink, lineWidth: 2))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("spacetober-strip")
+    }
+
+    private func eventStatus(_ id: String, now: Double) -> Int {
+        guard let event = SkyEvents.event(id) else { return 2 }
+        if now < event.startMs { return 0 }
+        return now < event.endMs ? 1 : 2
     }
 
     private func status(_ start: Double, _ end: Double, now: Double, countdown: Bool) -> Status {
@@ -53,37 +93,40 @@ struct EventsBoard: View {
             .accessibilityHidden(true)
     }
 
-    private func hero(now: Double) -> some View {
-        let p = SkyEvents.orionids
-        let tier = store.player.badges["orionids-2026"]?.tier
-        return VStack(alignment: .leading, spacing: 8) {
-            Text(SkyEvents.event("orionids-2026")?.name ?? "Orionids").font(AppFont.display(22)).foregroundStyle(Theme.ink)
-            statusLabel(status(p.startMs, p.endMs, now: now, countdown: true))
-            HStack(spacing: 8) { medal(tier, want: .gold); medal(tier, want: .silver) }
-                .accessibilityElement(children: .ignore).accessibilityLabel("Orionids badge slots")
-            Text("Mine debris at night, earn badges").font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading).padding(14)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.ink, lineWidth: 2))
-        .accessibilityIdentifier("events-orionids")
-    }
-
     private func card(_ id: String, now: Double) -> some View {
         let event = SkyEvents.event(id)
         let tier = store.player.badges[id]?.tier
         let s = event.map { status($0.startMs, $0.endMs, now: now, countdown: false) } ?? .ended
-        return HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(event?.name ?? id).font(AppFont.display(16)).foregroundStyle(Theme.ink)
-                statusLabel(s)
+        let ended = eventStatus(id, now: now) == 2
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(event?.name ?? id).font(AppFont.display(16)).foregroundStyle(Theme.ink)
+                    statusLabel(s)
+                }
+                Spacer(minLength: 8)
+                medal(tier)
             }
-            Spacer(minLength: 8)
-            medal(tier ?? .silver)
+            Text(tier != nil ? "\(tier!.rawValue.uppercased()) BADGE EARNED" : ended ? "REPLAY REWARD · SILVER BADGE" : "EVENT REWARD · GOLD BADGE")
+                .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.textDim)
+            Button(ended ? "PLAY FOR SILVER" : eventStatus(id, now: now) == 1 ? "PARTICIPATE" : "PREPARE") { open(id) }
+                .font(AppFont.display(14)).tracking(1).foregroundStyle(Theme.ink)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink, lineWidth: 2))
+                .buttonStyle(.plain)
         }
         .frame(maxWidth: .infinity, alignment: .leading).padding(12)
         .background(Theme.paper, in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.ink, lineWidth: 2))
-        .accessibilityIdentifier("events-card-\(id)")
+        .accessibilityIdentifier(id == "orionids-2026" ? "events-orionids" : "events-card-\(id)")
+    }
+
+    private func open(_ id: String) {
+        switch id {
+        case "orionids-2026", "draconids-2026": onOpenDebris(id)
+        case "saturn-night-2026": store.go(.saturnStormSearch)
+        case "new-moon-hunt-2026-10": store.go(.asteroidDiscovery)
+        default: store.go(.launchpad)
+        }
     }
 }

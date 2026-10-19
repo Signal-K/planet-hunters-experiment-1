@@ -307,7 +307,7 @@ function ShareFromLog({ onShared }: { onShared: () => void }) {
       {discoveries.map(target => (
         <div key={`d-${target.id}`} className={styles.shareCard}>
           <span className={styles.kind}><span className={styles.kindDot} />discovery</span>
-          <strong>{target.name}</strong>
+          <strong>{target.name}{game.player.orionidsFinds && Object.values(game.player.orionidsFinds).some(find => find.targetId === target.id || find.subjectId === target.id) ? ' · Orionids-found' : ''}</strong>
           <div className={styles.postActions}>
             <button type="button" className={styles.button} disabled={busyId === target.id} onClick={() => share('discovery', target.id, 'friends')}>FRIENDS</button>
             <button type="button" className={styles.button} disabled={busyId === target.id} onClick={() => share('discovery', target.id, 'public')}>PUBLIC</button>

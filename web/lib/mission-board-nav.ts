@@ -1,4 +1,4 @@
-export type MissionBoardTab = 'contracts' | 'program' | 'events'
+export type MissionBoardTab = 'contracts' | 'program' | 'events' | 'free'
 
 let pending: MissionBoardTab | null = null
 
@@ -7,8 +7,12 @@ export function requestMissionBoardTab(tab: MissionBoardTab): void {
   pending = tab
 }
 
-export function takeMissionBoardTab(): MissionBoardTab | null {
-  const tab = pending
+/** Read during render without consuming: React Strict Mode may mount the board twice. */
+export function pendingMissionBoardTab(): MissionBoardTab | null {
+  return pending
+}
+
+/** Consume only after the visible board has committed. */
+export function clearMissionBoardTab(): void {
   pending = null
-  return tab
 }

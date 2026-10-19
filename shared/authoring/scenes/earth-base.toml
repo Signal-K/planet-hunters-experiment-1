@@ -1,0 +1,60 @@
+format = 1
+id = "earth-base"
+type = "base"
+description = "A paved launch complex on flat steppe with low escarpments. Buildings appear only when present in the selected fixture."
+
+[[fixtures]]
+id = "empty"
+label = "Empty start"
+state = "fixtures/accounts/empty.json"
+
+[[fixtures]]
+id = "early"
+label = "Early programme"
+state = "fixtures/accounts/early.json"
+
+[[fixtures]]
+id = "developed"
+label = "Developed programme"
+state = "fixtures/accounts/developed.json"
+
+[[fixtures]]
+id = "production-snapshot"
+label = "Production snapshot"
+state = "fixtures/accounts/production-snapshot.json"
+read_only = true
+
+[[objects]]
+id = "world"
+kind = "scene"
+prefab = "base-world"
+slot = "world"
+components = ["BaseWorldSimulation", "BaseCamera"]
+
+[[objects.children]]
+id = "sky"
+kind = "layer"
+asset = "shared/scenes/sky-events.json"
+
+[[objects.children]]
+id = "steppe"
+kind = "terrain"
+asset = "shared/scenes/base-world.json"
+
+[[objects.children]]
+id = "building-sites"
+kind = "collection"
+asset = "shared/layout/base-site.json"
+components = ["BuildSiteInteraction"]
+
+[[objects]]
+id = "shared-hud"
+kind = "ui"
+prefab = "shared-hud"
+slot = "hud"
+
+[[objects]]
+id = "base-dock"
+kind = "ui"
+prefab = "base-dock"
+slot = "primaryAction"

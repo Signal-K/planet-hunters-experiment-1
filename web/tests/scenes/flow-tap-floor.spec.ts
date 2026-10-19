@@ -11,7 +11,7 @@ for (const vp of VIEWPORTS) {
   test.describe(`tap floor ${vp.name}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } })
 
-    test('exchange crates, prices and sell pad stay tappable', async ({ page }) => {
+    test('marketplace sell buttons, prices and tabs stay tappable', async ({ page }) => {
       await page.goto('/game/stage?preset=ui-market&chrome=1')
       await expect(page.locator('[data-stage-ready="true"]')).toBeVisible()
       await expect(page.getByText('Commodity Exchange')).toHaveCount(0)
@@ -22,6 +22,10 @@ for (const vp of VIEWPORTS) {
       const crate = await page.locator('[data-testid="exchange-crate-iron"]').boundingBox()
       const cog = await page.locator('[data-testid="settings-button"]').boundingBox()
       expect(sell && sell.height >= 44 && sell.width >= 44).toBe(true)
+      for (const tab of ['sell', 'buy', 'alerts']) {
+        const box = await page.locator(`[data-testid="market-tab-${tab}"]`).boundingBox()
+        expect(box && box.height >= 44 && box.width >= 44).toBe(true)
+      }
       expect(crate && crate.height >= 44 && crate.width >= 44).toBe(true)
       expect(cog && cog.height >= 44 && cog.width >= 44).toBe(true)
       const fonts = await page.evaluate(() => {

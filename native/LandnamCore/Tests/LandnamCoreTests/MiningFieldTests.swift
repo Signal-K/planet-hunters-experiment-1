@@ -13,6 +13,16 @@ struct MiningFieldTests {
         #expect(f.nodes.contains { $0.mineralId == "silicon" })
     }
 
+    @Test func jettisonFreesAFullHold() {
+        var f = field(cap: 1)
+        let node = f.nodes.first { $0.mineralId == "silicon" }!
+        _ = f.strike(nodeId: node.id)
+        #expect(f.isFull)
+        #expect(f.jettison("silicon") == 1)
+        #expect(!f.isFull)
+        #expect(f.jettison("silicon") == 0)
+    }
+
     @Test func sameSeedSameField() {
         #expect(field() == field())
     }

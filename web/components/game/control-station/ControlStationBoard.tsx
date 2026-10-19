@@ -98,8 +98,10 @@ function EquipmentPreview({ kind }: { kind: InstrumentSignalKind }) {
 export function ControlStationBoard({ model, onBody, onOpen, onBuild, banner }: ControlStationBoardProps) {
   return (
     <div className={styles.workspace} data-testid="control-station">
-      <WorldSpaceWeekBanner banner={banner} />
-      <WorldSpaceWeekChips chips={model.skyBadges} />
+      <div className={styles.ticker}>
+        <WorldSpaceWeekBanner banner={banner} />
+        <WorldSpaceWeekChips chips={model.skyBadges} />
+      </div>
       <div className={styles.map} data-testid="control-station-map" aria-hidden="true">
         <div className={styles.stage}>
           <svg className={styles.diagram} viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} aria-hidden="true">
@@ -171,6 +173,12 @@ export function ControlStationBoard({ model, onBody, onOpen, onBuild, banner }: 
                   data-testid="control-station-row"
                   data-equipment-id={row.equipmentId}
                 >
+                  <div className={row.openSignal ? styles.monitor : styles.monitorOff} aria-hidden="true">
+                    {row.openSignal && row.previewKind ? <EquipmentPreview kind={row.previewKind} /> : (
+                      <span className={styles.offLabel}>{row.buildPrompt ? 'No signal' : row.live ? 'Listening' : 'Standby'}</span>
+                    )}
+                    {row.openSignal && <span className={styles.count}>{row.readyCount}</span>}
+                  </div>
                   <div className={styles.copy}>
                     <span className={styles.name} data-testid="instrument-signal">{row.name}</span>
                     <span className={styles.status}>
@@ -201,10 +209,6 @@ export function ControlStationBoard({ model, onBody, onOpen, onBuild, banner }: 
                   )}
                   {row.openSignal && row.previewKind && (
                     <div className={styles.actions}>
-                      <span className={styles.thumb}>
-                        <EquipmentPreview kind={row.previewKind} />
-                        <span className={styles.count}>{row.readyCount}</span>
-                      </span>
                       <button
                         type="button"
                         className={styles.open}

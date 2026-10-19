@@ -274,6 +274,32 @@ export async function buildLaserField(opts: {
   lip.scale.set(px)
   lip.tint = shadeTint(palette.groundSpeck, 0.32)
   ground.addChild(lip)
+  // Uneven crust: a seeded run of 1-6px rises (and a few dips) above the surface line, so the ground is never a ruler edge.
+  // 64px wide like the soil tiles, so it repeats on the same period as the scroll wrap.
+  if (typeof document !== 'undefined') {
+    const bumpCanvas = document.createElement('canvas')
+    bumpCanvas.width = 64; bumpCanvas.height = 8
+    const g = bumpCanvas.getContext('2d')
+    if (g) {
+      let seed = 0x9e3779b1
+      const rnd = () => { seed = (Math.imul(seed ^ (seed >>> 15), 0x2c1b3c6d) + 0x297a2d39) | 0; return ((seed >>> 0) % 1000) / 1000 }
+      g.fillStyle = '#ffffff'
+      let h = 3
+      for (let x = 0; x < 64; x += 1) {
+        if (x % 5 === 0) h = Math.max(1, Math.min(8, h + Math.round((rnd() - 0.5) * 7)))
+        if (x >= 56) h = Math.round(h + (3 - h) * ((x - 55) / 9))   // ease back to the tile's start height so the seam is invisible
+        g.fillRect(x, 8 - h, 1, h)
+      }
+    }
+    const bumpTex = Texture.from(bumpCanvas)
+    bumpTex.source.scaleMode = 'nearest'
+    bumpTex.source.addressMode = 'repeat'
+    const bumps = new TilingSprite({ texture: bumpTex, width: span, height: 8 })
+    bumps.scale.set(px)
+    bumps.y = -8 * px + 3 * px
+    bumps.tint = shadeTint(palette.ground, 0.3)
+    ground.addChild(bumps)
+  }
   for (let r = 0; r < rows; r++) {
     const soil = new TilingSprite({ texture: soilTex, width: span, height: 64 })
     soil.scale.set(px)
@@ -296,6 +322,7 @@ export async function buildLaserField(opts: {
       const tex = depositTex[d.kind]
       tex.source.scaleMode = 'nearest'
       const node = new Sprite(tex)
+      node.alpha = 0.3   // scenery: dimmed so only the labelled seams read as targets
       node.anchor.set(0.5, 1)
       node.scale.set(px)
       node.x = c * midW + d.x * px
@@ -434,11 +461,11 @@ export function depositKindFor(mineral: string): DepositKind {
 /** Small roomy label pill (cream on navy outline, 14px). Shared by surface and buried deposits. */
 export function depositTag(text: string, x: number, y: number): Container {
   const tag = new Container()
-  const label = new Text({ text, style: { fontFamily: 'Oxanium, system-ui, sans-serif', fontSize: 14, fontWeight: '700', fill: 0x1a2a3c } })
+  const label = new Text({ text, style: { fontFamily: 'Oxanium, system-ui, sans-serif', fontSize: 14, fontWeight: '700', fill: 0xeef2f6 } })
   label.anchor.set(0.5)
   const w = label.width + 14
   const h = label.height + 6
-  const pill = new Graphics().roundRect(-w / 2, -h / 2, w, h, h / 2).fill({ color: 0xf4f1ea, alpha: 0.9 }).stroke({ color: 0x1a2a3c, width: 1.5, alpha: 0.8 })
+  const pill = new Graphics().roundRect(-w / 2, -h / 2, w, h, h / 2).fill({ color: 0x05080f, alpha: 0.82 }).stroke({ color: 0xffffff, width: 1.5, alpha: 0.9 })
   tag.addChild(pill, label)
   tag.x = Math.round(x)
   tag.y = Math.round(y)

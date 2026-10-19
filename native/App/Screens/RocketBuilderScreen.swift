@@ -1,14 +1,26 @@
 import SwiftUI
 import LandnamCore
 
-/// Launchpad rocket builder. Mirrors web `RocketBuilderScene`: destination landscape, blueprint, part tray, target card, Launch.
-/// Swift is not compiled in this environment; keep this beside `web/components/game/screens/RocketBuilderScene.tsx`.
+/// Where the rocket is on the pad (web `AssemblyPhase`, plus `idle` when no mission is chosen).
+enum PadPhase { case idle, design, building, ready }
+
+/// How long the rocket takes to rise on the pad (web `ROLLOUT_MS`).
+let padRolloutSeconds: Double = 1.6
+
+/// Launchpad scene. Mirrors web `RocketBuilderScene`: the launch complex (pad, gantry, rail, hangar), a big Choose a mission when the pad
+/// is empty, then the rocket designed (blueprint), built under a scaffold and ready to launch, plus the part tray.
 struct RocketBuilderScreen: View {
     @Environment(GameStore.self) private var store
     var launchEnabled: Bool
     var onLaunch: () -> Void
     var onChooseMission: () -> Void
+    var assembly: PadPhase = .ready
+    /// Snapshots freeze the rise at this fraction (the live screen animates `buildProgress`).
+    var previewProgress: Double?
     @State private var showSettings = false
+    @State private var buildProgress: Double = 0
+    @State private var pulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedSlot: String?
     @State private var notice = ""
     /// The free Explorer launches as it is: the parts shop stays closed until the player asks for it (web `builder-customize`).
@@ -34,16 +46,23 @@ struct RocketBuilderScreen: View {
         let active = selectedSlot.flatMap { id in shownSlots.contains { $0.id == id } ? id : nil } ?? guidedSlot ?? (shownSlots.first ?? RocketBuilder.slots[0]).id
         GeometryReader { geo in
             let wide = geo.size.width > geo.size.height
+            // Short landscape has no room under the plan strip: the pad stands behind it, like web where the strip sits over the sky.
+            let shortWide = wide && geo.size.height < 520 && !(customizing || guided)
+            let shortIdle = shortWide && phase == .idle
+            let shortMission = shortWide && phase != .idle
             ZStack(alignment: .top) {
                 landView(land)
+                if shortIdle {
+                    padScene(numbers: numbers).padding(.horizontal, 12).padding(.top, 100).padding(.bottom, 72)
+                }
                 VStack(spacing: 8) {
                     HStack(alignment: .top) {
                         HudGearClock { showSettings = true }
                         Spacer(minLength: 8)
-                        HudChips(francs: store.player.francs)
+                        HudChips(francs: store.player.francs, stash: store.player.stash, onSell: { store.go(.market) })
                     }
                     actions
-                    MissionPlanStrip(sheet: $planSheet)
+                    if !shortMission { MissionPlanStrip(sheet: $planSheet) }
                     if guided {
                         Text(guidedSlot.map { id in "STEP \(fittedCount + 1) OF \(RocketBuilder.slots.count) · FIT YOUR \(RocketBuilder.slots.first { $0.id == id }?.label ?? "")" } ?? "ROCKET READY · PRESS LAUNCH")
                             .font(AppFont.display(14, "Bold")).tracking(1.2).foregroundStyle(Theme.paper)
@@ -52,15 +71,25 @@ struct RocketBuilderScreen: View {
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink, lineWidth: 2))
                     }
                     if !(customizing || guided) {
-                        blueprint(fittedCount: fittedCount, numbers: numbers, row: true).frame(height: max(150, geo.size.height * 0.3))
-                        Spacer(minLength: 0)
+                        if shortIdle {
+                            Spacer(minLength: 0)
+                        } else if shortMission {
+                            // Pad on the left, the plan strip beside it: stacked, the strip would hide the pad.
+                            HStack(alignment: .top, spacing: 8) {
+                                padScene(numbers: numbers).frame(width: geo.size.width * 0.5).frame(maxHeight: .infinity)
+                                MissionPlanStrip(sheet: $planSheet).frame(maxWidth: .infinity, alignment: .top)
+                            }.frame(maxHeight: .infinity)
+                        } else {
+                            padScene(numbers: numbers).frame(maxHeight: .infinity)
+                        }
                     } else if wide {
                         HStack(alignment: .top, spacing: 8) {
-                            blueprint(fittedCount: fittedCount, numbers: numbers, row: true).frame(width: geo.size.width * 0.3).frame(maxHeight: .infinity)
+                            padScene(numbers: numbers).frame(maxWidth: .infinity).frame(maxHeight: .infinity)
                             choices(active: active, guidedSlot: guidedSlot, loadout: loadout, compact: geo.size.height < 520)
+                                .frame(width: max(280, geo.size.width * 0.38))
                         }
                     } else {
-                        blueprint(fittedCount: fittedCount, numbers: numbers, row: true).frame(height: max(150, geo.size.height * 0.26))
+                        padScene(numbers: numbers).frame(height: max(200, geo.size.height * 0.4))
                         choices(active: active, guidedSlot: guidedSlot, loadout: loadout, compact: false)
                     }
                 }
@@ -76,14 +105,31 @@ struct RocketBuilderScreen: View {
             }
         }
         .background(Theme.paper)
-                .overlay { if showSettings { SettingsSheet { showSettings = false } } }
+        .overlay { if showSettings { SettingsSheet { showSettings = false } } }
+        .onChange(of: assembly) { _, next in
+            guard next == .building else { return }
+            var reset = Transaction(); reset.disablesAnimations = true
+            withTransaction(reset) { buildProgress = 0 }
+            DispatchQueue.main.async { withAnimation(.linear(duration: reduceMotion ? 0 : padRolloutSeconds)) { buildProgress = 1 } }
+        }
     }
 
+    private var hasMission: Bool { store.mission != nil && store.target != nil }
+    private var phase: PadPhase { hasMission ? assembly : .idle }
+
     private var actions: some View {
-        // Back, Launch and Customize always fit; the Target card only joins them when there is room (the plan strip also names the destination).
+        // Back and the primary button always fit; the Target card only shows on the idle pad (the plan strip names the destination once a mission is chosen).
         ViewThatFits(in: .horizontal) {
-            actionsRow(showTarget: true)
+            actionsRow(showTarget: phase == .idle)
             actionsRow(showTarget: false)
+        }
+    }
+
+    private var primaryLabel: String {
+        switch phase {
+        case .design: "BUILD ROCKET"
+        case .building: "BUILDING"
+        default: "LAUNCH"
         }
     }
 
@@ -94,22 +140,25 @@ struct RocketBuilderScreen: View {
                     .padding(.horizontal, 16).frame(minHeight: 44)
                     .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.ink, lineWidth: 2))
             }.buttonStyle(.plain).accessibilityLabel("Back")
-            Button(action: onLaunch) {
-                Text(store.mission != nil && store.target != nil ? "LAUNCH" : "CONTRACTS").font(AppFont.display(14, "Bold")).tracking(1.4)
-                    .frame(minWidth: 110, minHeight: 44).padding(.horizontal, 12)
-                    .foregroundStyle(launchEnabled ? Theme.paper : Theme.ink)
-                    .background(launchEnabled ? Theme.blue : Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
+            if phase != .idle {
+                let enabled = launchEnabled && phase != .building
+                Button(action: onLaunch) {
+                    Text(primaryLabel).font(AppFont.display(14, "Bold")).tracking(1.4)
+                        .frame(minWidth: 110, minHeight: 44).padding(.horizontal, 12)
+                        .foregroundStyle(enabled ? Theme.paper : Theme.ink)
+                        .background(enabled ? Theme.blue : Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
+                }
+                .buttonStyle(.plain).disabled(!enabled).accessibilityIdentifier(phase == .design ? "prepare-launch-btn" : "launch-btn")
             }
-            .buttonStyle(.plain).disabled(!launchEnabled).accessibilityIdentifier("launch-btn")
-            if !guided && store.mission != nil && store.target != nil {
+            Spacer(minLength: 4)
+            if !guided && phase != .idle {
                 Button { customizing.toggle() } label: {
                     Text(customizing ? "DONE" : "CUSTOMIZE").font(AppFont.display(14, "Bold")).tracking(1.4).foregroundStyle(Theme.ink).lineLimit(1).fixedSize()
                         .padding(.horizontal, 16).frame(minHeight: 44)
                         .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.ink, lineWidth: 2))
                 }.buttonStyle(.plain).accessibilityIdentifier("builder-customize")
             }
-            Spacer(minLength: 4)
             if showTarget { Button(action: onChooseMission) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("TARGET").font(AppFont.display(14, "Bold")).tracking(1.4)
@@ -119,7 +168,7 @@ struct RocketBuilderScreen: View {
                 .frame(minWidth: 110, minHeight: 44, alignment: .leading).padding(.horizontal, 12)
                 .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
-            }.buttonStyle(.plain) }
+            }.buttonStyle(.plain).accessibilityIdentifier("rocket-builder-target") }
         }
     }
 
@@ -140,60 +189,100 @@ struct RocketBuilderScreen: View {
     private func landView(_ land: (skyTop: Color, skyHorizon: Color, ground: Color, tint: Color, pieces: [Landscape.Piece], period: Double)) -> some View {
         ZStack(alignment: .bottom) {
             LinearGradient(colors: [land.skyTop, land.skyHorizon, land.ground], startPoint: .top, endPoint: .bottom)
-            HStack {
-                Image("scene-launchpad-plate-landscape-left").resizable().interpolation(.none).scaledToFit().frame(width: 160)
-                Spacer()
-                Image("scene-launchpad-plate-landscape-right").resizable().interpolation(.none).scaledToFit().frame(width: 140)
-            }
-            .padding(.bottom, 48)
-            // Pieces stand on the horizon (web `.piece`: bottom 16%, left = x / period of the width).
-            GeometryReader { g in
-                ForEach(Array(land.pieces.enumerated()), id: \.offset) { _, piece in
-                    Art.view("mining/terrain_\(piece.kind).png")
-                        .resizable()
-                        .interpolation(.none)
-                        .scaledToFit()
-                        .frame(width: 72, height: 72, alignment: .bottom)
-                        .scaleEffect(x: (piece.flip ? -1 : 1) * piece.scale, y: piece.scale, anchor: .bottom)
-                        .position(x: CGFloat(piece.x / land.period) * g.size.width, y: g.size.height * 0.84 - 36)
-                }
-            }
-            // Drawn ground: the old plate had the part cards painted into it, which doubled the live list.
-            land.ground.frame(height: 72)
             land.tint.opacity(0.38).blendMode(.multiply).allowsHitTesting(false)
         }
         .ignoresSafeArea()
     }
 
-    private var tower: some View {
-        Button(action: onChooseMission) {
-            Image("scene-launchpad-tower").resizable().interpolation(.none).scaledToFit().frame(width: 88)
+    // MARK: Pad scene (web `.pad` / `.complex`)
+
+    /// The launch complex fitted to the room it has, standing on a ground band that follows its foot.
+    private func padScene(numbers: (capacity: Int, range: Int, laser: Int)) -> some View {
+        GeometryReader { g in
+            let w = min(g.size.width, g.size.height * 1.276)
+            let h = w / 1.276
+            let progress: Double = phase == .building ? (previewProgress ?? buildProgress) : (phase == .ready ? 1 : 0)
+            ZStack(alignment: .topLeading) {
+                backdrop.ground
+                    .frame(width: g.size.width + 600, height: 1400)
+                    .position(x: g.size.width / 2, y: g.size.height - 28 + 700)
+                Color.white.opacity(0.2)
+                    .frame(width: g.size.width + 600, height: 4)
+                    .position(x: g.size.width / 2, y: g.size.height - 28 + 2)
+                complex(w: w, h: h, phase: phase, progress: progress)
+                    .frame(width: w, height: h)
+                    .position(x: g.size.width / 2, y: g.size.height - 4 - h / 2)
+                if phase == .idle {
+                    chooseButton(g.size)
+                } else {
+                    statsOverlay(numbers: numbers, size: g.size)
+                }
+            }
         }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-        .padding(.leading, 12)
-        .padding(.bottom, 120)
-        .accessibilityLabel("Choose a mission")
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Launchpad")
     }
 
-    private func blueprint(fittedCount: Int, numbers: (capacity: Int, range: Int, laser: Int), row: Bool) -> some View {
-        HStack(spacing: 8) {
-            Image("scene-launchpad-rocket-multistage").resizable().interpolation(.none).scaledToFit()
-                .opacity(0.55 + Double(fittedCount) * 0.09)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            VStack(spacing: 6) {
-                stat("CAPACITY", numbers.capacity)
-                stat("RANGE", numbers.range)
-                stat("LASER", numbers.laser)
-            }.frame(width: 110)
+    private func complex(w: CGFloat, h: CGFloat, phase: PadPhase, progress: Double) -> some View {
+        ZStack(alignment: .topLeading) {
+            Art.view("base/v7/launchpad/pad-complex.png").resizable().interpolation(.none).frame(width: w, height: h)
+            if w > 520 {
+                Text("HANGAR").font(AppFont.display(14, "Bold")).tracking(1.4).foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.ink, lineWidth: 2))
+                    .position(x: w * 0.68 + 36, y: h * 0.58)
+            }
+            PadBuild(phase: phase, p: progress, w: w, h: h)
+            Button(action: onChooseMission) { Color.clear }
+                .buttonStyle(.plain)
+                .frame(width: max(44, w * 0.11), height: h * 0.78)
+                .position(x: w * 0.185, y: h * 0.39)
+                .accessibilityLabel("Choose a mission")
+                .accessibilityIdentifier("launchpad-status-card")
         }
-        .padding(10)
-        .frame(minHeight: 0, maxHeight: .infinity)
-        .background(Theme.blue)
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.ink, lineWidth: 3))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Rocket blueprint")
+    }
+
+    /// The big call to action when nothing is on the pad.
+    private func chooseButton(_ size: CGSize) -> some View {
+        let portrait = size.width < 520
+        let short = size.height < 300
+        let width = portrait ? min(size.width * 0.86, 420) : min(size.width * 0.46, 440)
+        let cx = portrait ? size.width / 2 : (short ? size.width - width / 2 : size.width * 0.64)
+        let top = short ? size.height * 0.04 : (portrait ? size.height * 0.14 : size.height * 0.08)
+        return Button(action: onChooseMission) {
+            VStack(spacing: 6) {
+                Text("NOTHING ON THE PAD").font(AppFont.display(14, "Bold")).tracking(1.4)
+                Text("CHOOSE A MISSION").font(AppFont.display(portrait ? 26 : 32, "ExtraBold")).tracking(1.4)
+                    .multilineTextAlignment(.center).minimumScaleFactor(0.7)
+            }
+            .foregroundStyle(Theme.paper)
+            .frame(width: width, height: short ? 72 : 96)
+            .background { RoundedRectangle(cornerRadius: 14).fill(Theme.blue).shadow(color: Theme.ink, radius: 0, x: 0, y: 6) }
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.ink, lineWidth: 4))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.paper.opacity(pulsing ? 0 : 0.7), lineWidth: 4).scaleEffect(pulsing ? 1.07 : 1))
+        }
+        .buttonStyle(.plain)
+        .position(x: cx, y: top + (short ? 36 : 48))
+        .accessibilityIdentifier("builder-choose-contract")
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: false)) { pulsing = true }
+        }
+    }
+
+    @ViewBuilder private func statsOverlay(numbers: (capacity: Int, range: Int, laser: Int), size: CGSize) -> some View {
+        if size.width < 520 {
+            HStack(spacing: 6) {
+                stat("CAPACITY", numbers.capacity); stat("RANGE", numbers.range); stat("LASER", numbers.laser)
+            }
+            .frame(width: size.width).frame(maxHeight: .infinity, alignment: .top)
+        } else {
+            VStack(spacing: 6) {
+                stat("CAPACITY", numbers.capacity); stat("RANGE", numbers.range); stat("LASER", numbers.laser)
+            }
+            .frame(width: 110)
+            .position(x: size.width - 55, y: 70)
+        }
     }
 
     private func stat(_ label: String, _ value: Int) -> some View {
@@ -314,5 +403,51 @@ struct RocketBuilderScreen: View {
             b = min(255, b + pull * 0.4)
         }
         return Color(.sRGB, red: r / 255, green: g / 255, blue: b / 255, opacity: 1)
+    }
+}
+
+/// The rocket on the mount: blueprint ghost while designing, rising under a scaffold while building, standing when ready.
+/// Animatable so the rise, the scaffold fade and the weld spark follow `p` frame by frame (web `rocket-rise`, `scaffold-fade`, `weld-rise`).
+struct PadBuild: View, @preconcurrency Animatable {
+    var phase: PadPhase
+    var p: Double
+    var w: CGFloat
+    var h: CGFloat
+    var animatableData: Double {
+        get { p }
+        set { p = newValue }
+    }
+
+    var body: some View {
+        let rocketH = h * 0.647
+        let rocketX = w * 0.326
+        let foot = h * (1 - 0.092)
+        let building = phase == .building
+        let scaffold = building ? min(1, p / 0.12) * (p > 0.82 ? max(0, (1 - p) / 0.18) : 1) : 0
+        ZStack(alignment: .topLeading) {
+            if phase != .idle {
+                Image("scene-launchpad-rocket-multistage").resizable().interpolation(.none).scaledToFit()
+                    .frame(width: rocketH * 0.3756, height: rocketH)
+                    .modifier(DesignGhost(on: phase == .design))
+                    .mask(alignment: .bottom) { Rectangle().frame(height: rocketH * (building ? p : 1)) }
+                    .position(x: rocketX, y: foot - rocketH / 2)
+            }
+            Art.view("base/v7/launchpad/pad-scaffold.png").resizable().interpolation(.none)
+                .frame(width: w, height: h).opacity(scaffold)
+            if building && p > 0.08 && p < 0.92 {
+                Rectangle().fill(Theme.paper).frame(width: 28, height: 6)
+                    .shadow(color: Theme.blue, radius: 6)
+                    .position(x: rocketX, y: foot - rocketH * p)
+            }
+        }
+        .frame(width: w, height: h)
+        .allowsHitTesting(false)
+    }
+}
+
+private struct DesignGhost: ViewModifier {
+    var on: Bool
+    func body(content: Content) -> some View {
+        if on { content.grayscale(1).brightness(0.3).opacity(0.5).shadow(color: Theme.blue, radius: 3) } else { content }
     }
 }

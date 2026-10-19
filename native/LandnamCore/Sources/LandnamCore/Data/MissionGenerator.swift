@@ -174,8 +174,8 @@ public enum MissionGenerator {
     }
 
     /// Renewable self-directed pool: no client, plain market price, no affinity.
-    public static func generateSelfDirected() -> [Mission] {
-        templates.filter { $0.id.hasPrefix("freeops-") && $0.cargoRange.lowerBound + $0.cargoRange.upperBound > 0 }
+    public static func generateSelfDirected(now ms: Double = Date().timeIntervalSince1970 * 1000) -> [Mission] {
+        var runs = templates.filter { $0.id.hasPrefix("freeops-") && $0.cargoRange.lowerBound + $0.cargoRange.upperBound > 0 }
             .enumerated().map { index, t in
                 let keys = eligibleMinerals(t)
                 let mineral = keys[index % keys.count]
@@ -192,6 +192,18 @@ public enum MissionGenerator {
                     payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: 0),
                     onWorldVehicle: onWorldVehicle(for: t))
             }
+        if SkyEvents.isOrionidsWindow(ms) {
+            let amount = 8
+            let raw = Double(Minerals.byId["iron"]?.price ?? 0) * Double(amount)
+            runs.append(Mission(
+                id: "self-directed-orionids-night-run", title: "Orionids night run",
+                brief: "No client. Mine \(amount) units of iron after 22:00 while the Orionids fall. Laser the debris once it lands and sell it at the Exchange. Peak night is 21-22 Oct.",
+                client: nil, tag: "FREE OPS", difficulty: "L1", locked: false, sequence: freeOpsMissionSequence,
+                unlockAt: "Reach Free Operations",
+                requires: MissionRequirements(minerals: ["iron": amount], cargoMin: amount, drillTier: 1, maxOrbit: 5),
+                payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: 0)))
+        }
+        return runs
     }
 
     /// Everything the web catalog offers: the generated board plus the authored missions.

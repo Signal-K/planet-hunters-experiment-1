@@ -13,13 +13,17 @@ import {
   TRANSIT_TELESCOPE_MISSION_ID,
 } from '@/lib/runtimeCatalog'
 import {
+  ATLAS_ORIONIDS_CHECKIN,
+  WORLD_SPACE_WEEK_PLAYER_LINKS,
   getSkyEvent,
+  isOrionidsPeakNight,
   orionidsCountdown,
   orionidsLocalStartMs,
   type PlayerBadge,
 } from '@/lib/data/sky-events'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
-import { WSW_EVENT_IDS, wswBanner, wswChipsForMission } from '@/lib/wsw'
+import { SPACETOBER_PEAK_BADGE, SPACETOBER_WEEK_BADGE, type OrionidsFind } from '@/lib/orionids/finds'
+import { WSW_EVENT_IDS, WSW_RANGE_LABEL, wswBanner, wswChipsForMission } from '@/lib/wsw'
 
 export type ProgramStepState = 'done' | 'current' | 'available' | 'locked'
 export type ProgramStepKind = 'instrument' | 'academy' | 'build' | 'mining' | 'focus'
@@ -28,6 +32,7 @@ export interface ProgramStep {
   id: string
   title: string
   detail: string
+  brief?: string
   /** Shown on a locked step. Comes from the mission's unlockAt, or an existing gate. */
   lockLine: string | null
   state: ProgramStepState
@@ -45,25 +50,48 @@ export interface SkyBoardCard {
   countdownLabel: string | null
   earnedTier: 'gold' | 'silver' | null
   blurb: string
+  actionLabel: string
+  rewardLabel: string
+}
+
+export interface SpacetoberStep {
+  id: 'world-space-week' | 'orionids-peak'
+  name: string
+  when: string
+  status: string
+  tier: 'gold' | 'silver' | null
+}
+
+export interface SpacetoberStrip {
+  title: 'Spacetober'
+  detail: string
+  steps: SpacetoberStep[]
+  links: ReadonlyArray<{ label: string; href: string }>
+  vouchers: Array<{ subjectId: string; name: string; tier: 'gold' | 'silver' }>
+  mastery: number
 }
 
 export interface EventsBoard {
   orionids: SkyBoardCard
   wsw: SkyBoardCard[]
+  spacetober: SpacetoberStrip
   /** Red dot: an event is live or still upcoming. */
   attention: boolean
+  groups: Array<{ status: SkyBoardStatus; title: string; cards: SkyBoardCard[] }>
 }
 
-const INSTRUMENTS: Array<{ id: string; title: string; detail: string; unlockAt: string }> = [
+const INSTRUMENTS: Array<{ id: string; title: string; brief: string; detail: string; unlockAt: string }> = [
   {
     id: TRANSIT_TELESCOPE_MISSION_ID,
     title: 'Launch Space Telescope',
+    brief: 'Build a dedicated launch vehicle and deploy the telescope into Earth orbit. Once commissioned, it provides a daily asteroid-candidate feed in the Control Station.',
     detail: 'Space telescope online · daily instrument feed unlocked',
     unlockAt: 'Reach Free Operations',
   },
   {
     id: SATURN_IMAGER_MISSION_ID,
     title: 'Launch Saturn satellite',
+    brief: 'Prepare and launch the Saturn imager, then review Cassini storm-cloud frames from its daily downlink in the Control Station.',
     detail: 'Saturn satellite online · Cassini storm-cloud feed unlocked',
     unlockAt: 'Reach Free Operations',
   },
@@ -110,6 +138,7 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
       id: spec.id,
       title: mission?.title ?? spec.title,
       detail: mission?.programReward?.outcome ?? spec.detail,
+      brief: mission?.brief ?? spec.brief,
       lockLine: locked ? (mission?.unlockAt ?? spec.unlockAt) : null,
       state: done ? 'done' : locked ? 'locked' : 'available',
       kind: 'instrument',
@@ -123,6 +152,7 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
     id: ACADEMY_INTRO_MISSION_ID,
     title: academy?.title ?? 'Train the First Astronaut',
     detail: academy?.programReward?.outcome ?? 'Astronaut Academy online · crew training unlocked',
+    brief: academy?.brief,
     lockLine: academyLocked ? (academy?.unlockAt ?? 'Reach client level 2 with two clients') : null,
     state: academyDone ? 'done' : academyLocked ? 'locked' : 'available',
     kind: 'academy',
@@ -136,6 +166,7 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
       id: mission.id,
       title: mission.title,
       detail: mission.programReward?.outcome ?? mission.brief,
+      brief: mission.brief,
       lockLine,
       state: delivered ? 'done' : lockLine ? 'locked' : 'available',
       kind: 'build',
@@ -147,6 +178,7 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
     id: SELF_DIRECTED_MINING_MISSION_ID,
     title: mining?.title ?? 'Self-Directed Mining Run',
     detail: mining?.brief ?? 'No client, no daily limit. Mine what looks valuable and sell the haul yourself.',
+    brief: mining?.brief,
     lockLine: free ? null : (mining?.unlockAt ?? 'Reach Free Operations'),
     state: free ? 'available' : 'locked',
     kind: 'mining',
@@ -157,7 +189,8 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
     steps.push({
       id: focus.id,
       title: focus.title,
-      detail: focus.brief,
+    detail: focus.brief,
+    brief: focus.brief,
       lockLine: null,
       state: 'available',
       kind: 'focus',
@@ -185,11 +218,67 @@ function countdownLabel(now: number): string {
   return `${plural(days, 'day')} ${plural(hours, 'hour')} to start`
 }
 
+function eventActionLabel(status: SkyBoardStatus): string {
+  if (status === 'ended') return 'PLAY FOR SILVER'
+  if (status === 'live') return 'PARTICIPATE'
+  return 'PREPARE'
+}
+
+function eventRewardLabel(status: SkyBoardStatus, earnedTier: SkyBoardCard['earnedTier']): string {
+  if (earnedTier) return `${earnedTier.toUpperCase()} BADGE EARNED`
+  return status === 'ended' ? 'REPLAY REWARD · SILVER BADGE' : 'EVENT REWARD · GOLD BADGE'
+}
+
+function peakStepStatus(now: number): string {
+  const start = new Date(2026, 9, 21, 18, 0, 0, 0).getTime()
+  const end = new Date(2026, 9, 22, 6, 0, 0, 0).getTime()
+  if (now < start) return 'upcoming'
+  if (now < end || isOrionidsPeakNight(now)) return 'peak night'
+  return 'passed'
+}
+
+export function spacetoberStrip(
+  now: number,
+  badges: Record<string, PlayerBadge> | undefined,
+  finds: Record<string, OrionidsFind> | undefined,
+  mastery = 0,
+): SpacetoberStrip {
+  const week = badges?.[SPACETOBER_WEEK_BADGE]
+  const peak = badges?.[SPACETOBER_PEAK_BADGE]
+  const weekTier = week?.tier === 'gold' || week?.tier === 'silver' ? week.tier : null
+  const peakTier = peak?.tier === 'gold' || peak?.tier === 'silver' ? peak.tier : null
+  return {
+    title: 'Spacetober',
+    detail: 'World Space Week, then the Orionids peak.',
+    steps: [
+      {
+        id: 'world-space-week',
+        name: 'World Space Week',
+        when: WSW_RANGE_LABEL,
+        status: wswBanner(badges, now).live ? 'live' : 'ended',
+        tier: weekTier,
+      },
+      {
+        id: 'orionids-peak',
+        name: 'Orionids peak',
+        when: '21 Oct 18:00 – 22 Oct 06:00',
+        status: peakStepStatus(now),
+        tier: peakTier,
+      },
+    ],
+    links: [...WORLD_SPACE_WEEK_PLAYER_LINKS, ATLAS_ORIONIDS_CHECKIN],
+    vouchers: Object.values(finds ?? {}).map(find => ({ subjectId: find.subjectId, name: find.name, tier: find.tier })),
+    mastery,
+  }
+}
+
 /** Orionids hero plus the World Space Week cards. Orionids is not a WSW event. */
 export function eventsBoard(
   now: number,
   badges: Record<string, PlayerBadge> | undefined,
   orionidsNow = now,
+  finds?: Record<string, OrionidsFind>,
+  mastery = 0,
 ): EventsBoard {
   const orionids = getSkyEvent('orionids-2026')
   const start = orionidsLocalStartMs()
@@ -203,6 +292,8 @@ export function eventsBoard(
     countdownLabel: status === 'upcoming' ? countdownLabel(orionidsNow) : null,
     earnedTier: earned === 'gold' || earned === 'silver' ? earned : null,
     blurb: 'Mine debris at night, earn badges',
+    actionLabel: eventActionLabel(status),
+    rewardLabel: eventRewardLabel(status, earned),
   }
   const order = [
     ...WSW_CARD_ORDER.filter(id => (WSW_EVENT_IDS as readonly string[]).includes(id)),
@@ -214,17 +305,24 @@ export function eventsBoard(
     const eventEnd = event ? Date.parse(event.endUtc) : now
     const eventStatus = skyStatus(eventStart, eventEnd, now)
     const tier = badges?.[id]?.tier
+    const earnedTier = tier === 'gold' || tier === 'silver' ? tier : null
     return {
       id,
       name: event?.name ?? id,
       status: eventStatus,
       countdownLabel: eventStatus === 'upcoming' ? null : null,
-      earnedTier: tier === 'gold' || tier === 'silver' ? tier : null,
+      earnedTier,
       blurb: '',
+      actionLabel: eventActionLabel(eventStatus),
+      rewardLabel: eventRewardLabel(eventStatus, earnedTier),
     }
   })
   const attention = orionidsCard.status !== 'ended' || wsw.some(card => card.status === 'live' || card.status === 'upcoming')
-  return { orionids: orionidsCard, wsw, attention }
+  const all = [orionidsCard, ...wsw]
+  const groups: EventsBoard['groups'] = ([['live', 'Live now'], ['upcoming', 'Upcoming'], ['ended', 'Past events']] as const)
+    .map(([groupStatus, title]) => ({ status: groupStatus, title, cards: all.filter(card => card.status === groupStatus) }))
+    .filter(group => group.cards.length > 0)
+  return { orionids: orionidsCard, wsw, spacetober: spacetoberStrip(orionidsNow, badges, finds, mastery), attention, groups }
 }
 
 /** Compact WSW mark for a contract card. Hidden when the mission earns no WSW chip. */

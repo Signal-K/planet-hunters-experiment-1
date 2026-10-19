@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
@@ -21,24 +21,11 @@ import {
   type ProgramStep,
   type SkyBoardCard,
 } from '@/lib/mission-board-view'
-import { takeMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
+import { clearMissionBoardTab, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
-import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
-import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
-import { homeCenter, kitScale } from '@/lib/scene/base-site'
-import { sanitizeEarthBiome } from '@/lib/scene/base-world'
-import { useViewSize } from '@/lib/hooks/useViewSize'
-import { EarthBaseModules } from '@/components/game/hub/EarthBaseModules'
-import { buildHubBuildingDefs } from '@/lib/hub-building-defs'
-import { buildPlotEntities } from '@/lib/engine/prefabs'
-import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
-import SettingsSheet from '@/components/game/SettingsSheet'
-import FriendsSheet from '@/components/game/FriendsSheet'
 import styles from './MissionBoard.module.css'
 
 // The board stands on the live base: the same plots and kit the Hub draws.
-const BASE_PLOTS = buildPlotEntities()
-const BOARD_BASE_KINDS = new Set(['launchpad', 'hangar', 'market'])
 
 interface MissionBoardProps {
   catalog: Catalog
@@ -46,32 +33,23 @@ interface MissionBoardProps {
   cards: MissionRelayCardModel[]
   selectedIndex: number
   onSelectRelative: (offset: number) => void
+  onSelectMission: (id: string) => void
   onAccept: (id: string, disposition?: 'store' | 'sell') => void
   onClose: () => void
   onOpenLog: () => void
   onOpenBuild: () => void
+  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search') => void
+  onPickTarget?: (id: string) => void
   /** The rocket now stands on the pad in the scene behind the board. */
   rocketImg?: string
   tutorialBlocked: boolean
   onboardingComplete: boolean
 }
 
-function CogIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
-}
-
 function ArrowIcon({ direction }: { direction: 'left' | 'right' }) {
   return direction === 'left'
     ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>
     : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
-}
-
-function PeopleIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="3" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-}
-
-function CubeIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9L12 3z" /><path d="M12 12 20 7.5M12 12v9M12 12 4 7.5" /></svg>
 }
 
 function ChartIcon() {
@@ -109,7 +87,7 @@ function StepGlyph({ kind }: { kind: ProgramStep['kind'] }) {
 }
 
 function MineralRock({ shape, color }: { shape?: string; color: string }) {
-  const ink = 'var(--ln-board-ink)'
+  const ink = '#0f1012'
   return <span className={styles.rock} aria-hidden="true">
     <svg viewBox="0 0 24 24">
       {shape === 'diamond' && <path d="M12 2.5 20 9.5 12 21.5 4 9.5Z" fill={color} stroke={ink} strokeWidth="1.6" strokeLinejoin="round" />}
@@ -118,6 +96,173 @@ function MineralRock({ shape, color }: { shape?: string; color: string }) {
       {(!shape || shape === 'circle') && <path d="M8 7.5c2.2-3 7.2-2.4 8.4.4 2.6.4 3.4 4.2 1.2 6.2-.6 2.8-4.2 4.6-7.6 3.2C6.2 16.2 4.6 12.2 6.2 9.4 6.4 8.6 7 7.8 8 7.5Z" fill={color} stroke={ink} strokeWidth="1.6" strokeLinejoin="round" />}
     </svg>
   </span>
+}
+
+type Target = Catalog['targets'][number]
+type MapView = 'system' | 'inner' | 'belt' | 'outer'
+type MapMode = 'route' | 'pick' | 'ambient'
+
+const SUN = { x: 4, y: 44 }
+const UX = 10.5
+const UY = 4.4
+const BELT_R = 5
+const STAR_TINTS = ['#ecebe8', '#ecebe8', '#bcd2ff', '#ffd9e6', '#d9c8ff', '#b9eaf5']
+
+function spread(id: string): number {
+  let h = 0
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return ((h % 1000) / 1000) * 2 - 1
+}
+
+function lcg(seed: number) {
+  let s = seed
+  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296 }
+}
+
+const STARS = (() => {
+  const rand = lcg(7)
+  return Array.from({ length: 56 }, () => ({
+    x: rand() * 100, y: rand() * 100, size: 1.5 + rand() * 2.5, glow: 0.3 + rand() * 0.6,
+    tint: STAR_TINTS[Math.floor(rand() * STAR_TINTS.length)],
+  }))
+})()
+
+const orbitPoint = (r: number, angle: number) => ({ x: SUN.x + r * UX * Math.cos(angle), y: SUN.y + r * UY * Math.sin(angle) })
+const EARTH_POS = orbitPoint(1.5, 1.0)
+const REGION_EARTH_POS = { x: 38, y: 42 }
+const BELT_ROCKS = (() => {
+  const rand = lcg(31)
+  return Array.from({ length: 96 }, () => ({ ...orbitPoint(BELT_R + (rand() - 0.5) * 1.1, (rand() * 2 - 1) * 1.4), size: 2 + rand() * 3.5, glow: 0.4 + rand() * 0.5 }))
+})()
+const BELT_FIELD = (() => {
+  const rand = lcg(53)
+  return Array.from({ length: 32 }, () => ({ x: 4 + rand() * 92, y: 14 + rand() * 56, size: 3 + rand() * 7, glow: 0.15 + rand() * 0.35 }))
+})()
+
+/** Asteroids sit in one belt; zoomed in, they spread across the screen. */
+function beltLayout(list: Target[]): Record<string, { x: number; y: number }> {
+  const cols = 3
+  const rows = Math.max(1, Math.ceil(list.length / cols))
+  return Object.fromEntries(list.map((t, i) => [t.id, {
+    x: 18 + ((i % cols) + 0.5) * (66 / cols) + spread(`${t.id}x`) * 3,
+    y: 24 + (Math.floor(i / cols) + 0.5) * (36 / rows) + spread(`${t.id}y`) * 2.5,
+  }]))
+}
+
+function regionLayout(list: Target[]): Record<string, { x: number; y: number }> {
+  const count = Math.max(1, list.length)
+  return Object.fromEntries(list.map((target, index) => {
+    const angle = (-0.75 + (index / count) * Math.PI * 1.5) + spread(target.id) * 0.18
+    const radius = 20 + (index % 2) * 9
+    return [target.id, { x: 49 + Math.cos(angle) * radius, y: 44 + Math.sin(angle) * radius * 0.7 }]
+  }))
+}
+
+const shortName = (name: string) => name.replace(/^\d+\s+/, '')
+
+interface GalaxyMapProps {
+  targets: Target[]
+  mode: MapMode
+  view: MapView
+  onView: (view: MapView) => void
+  stops?: string[]
+  candidates?: string[]
+  selectedId?: string | null
+  onPick?: (id: string) => void
+}
+
+/** The whole screen: sun, orbits, planets and an asteroid belt you can zoom into. Controls are drawn over it. */
+function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick }: GalaxyMapProps) {
+  const lit = new Set([...stops, ...candidates, ...(selectedId ? [selectedId] : [])])
+  const pickable = mode === 'pick'
+  const real = targets.filter(t => t.type !== 'exoplanet')
+  const planets = real.filter(t => t.type !== 'asteroid')
+  const asteroids = real.filter(t => t.type === 'asteroid')
+  const shownPlanets = mode === 'route' ? planets.filter(t => lit.has(t.id)) : planets
+  const shownAsteroids = mode === 'route' ? asteroids.filter(t => lit.has(t.id)) : asteroids
+  const innerPlanets = planets.filter(t => t.orbit <= 4)
+  const outerPlanets = planets.filter(t => t.orbit > 4)
+  const belt = beltLayout(asteroids)
+  const inner = regionLayout(innerPlanets)
+  const outer = regionLayout(outerPlanets)
+  const litAsteroid = asteroids.find(t => lit.has(t.id))
+  const anchor = litAsteroid ? orbitPoint(BELT_R, spread(litAsteroid.id) * 1.1) : orbitPoint(BELT_R, -0.75)
+  const planetPos = (t: Target) => orbitPoint(t.orbit, spread(t.id) * 0.85)
+  const pos = (t: Target) => t.type === 'asteroid' ? anchor : planetPos(t)
+  const route = [EARTH_POS, ...(stops.length ? stops : candidates).flatMap(id => {
+    const t = real.find(x => x.id === id)
+    return t ? [pos(t)] : []
+  })]
+  const style = (p: { x: number; y: number }) => ({ left: `${p.x}%`, top: `${p.y}%` })
+  const line = (pts: { x: number; y: number }[]) => pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ')
+  const beltLane = (ids: string[]) => line(ids.flatMap(id => belt[id] ? [belt[id]] : []))
+  const node = (t: Target, p: { x: number; y: number }, label: string) => pickable
+    ? <button key={t.id} type="button" className={styles.gxNode}
+      data-lit={lit.has(t.id) || undefined} data-selected={t.id === selectedId || undefined} data-route={stops.includes(t.id) || undefined}
+      style={style(p)} aria-label={t.name} aria-pressed={t.id === selectedId} data-testid={`map-node-${t.id}`} onClick={() => onPick?.(t.id)}>
+      <i /><span>{label}</span>
+    </button>
+    : <div key={t.id} className={`${styles.gxNode} ${styles.gxStaticNode}`}
+      data-lit={lit.has(t.id) || undefined} data-route={stops.includes(t.id) || undefined}
+      style={style(p)} aria-label={t.name} data-testid={`map-node-${t.id}`}>
+      <i /><span>{label}</span>
+    </div>
+  return <div className={styles.gx} data-view={view} data-mode={mode} data-testid="galaxy-map" aria-hidden={mode === 'ambient' || undefined}>
+    {STARS.map((s, i) => <i key={i} className={styles.gxStar} style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, opacity: s.glow, background: s.tint, color: s.tint }} />)}
+    {view === 'system' ? <>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <ellipse cx="18" cy="44" rx="20" ry="17" className={styles.gxRegion} />
+        <ellipse cx="62" cy="44" rx="25" ry="24" className={styles.gxRegion} />
+        <ellipse cx="92" cy="44" rx="21" ry="29" className={styles.gxRegion} />
+        {[1, 2, 3, 4, 6, 7].map(o => <ellipse key={o} cx={SUN.x} cy={SUN.y} rx={o * UX} ry={o * UY} className={styles.gxRing} />)}
+        {mode !== 'ambient' && route.length > 1 && (stops.length > 0
+          ? <path d={line(route)} className={styles.gxRoute} />
+          : route.slice(1).map((p, i) => <path key={i} d={line([route[0], p])} className={styles.gxSpoke} />))}
+      </svg>
+      {BELT_ROCKS.map((r, i) => <i key={i} className={styles.gxRock} style={{ ...style(r), width: r.size, height: r.size, opacity: r.glow }} />)}
+      <i className={styles.gxSun} style={style(SUN)} />
+      <span className={styles.gxRegionLabel} style={{ left: '13%', top: '68%' }}>Inner system</span>
+      <span className={styles.gxRegionLabel} style={{ left: '54%', top: '73%' }}>Main belt</span>
+      <span className={styles.gxRegionLabel} style={{ left: '83%', top: '78%' }}>Outer system</span>
+      {mode !== 'ambient' && <>
+        <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(EARTH_POS)} aria-label="Earth"><i /><span>Earth</span></div>
+        {shownPlanets.map(t => node(t, planetPos(t), t.name))}
+        <button type="button" className={styles.gxBelt} data-lit={litAsteroid ? true : undefined} style={style(anchor)} data-testid="map-belt" onClick={() => onView('belt')}>
+          <i /><span>Asteroid belt<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" /><path d="m15 15 5 5M10.5 8v5M8 10.5h5" /></svg></span>
+        </button>
+      </>}
+        {mode === 'pick' && <button type="button" className={styles.gxRegionButton} data-testid="map-inner" style={{ left: '20%', top: '67%' }} onClick={() => onView('inner')}>Explore inner system</button>}
+        {mode === 'pick' && <button type="button" className={styles.gxRegionButton} data-testid="map-outer" style={{ left: '84%', top: '76%' }} onClick={() => onView('outer')}>Explore outer system</button>}
+    </> : view === 'belt' ? <>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <ellipse cx="31" cy="39" rx="22" ry="25" className={styles.gxRegion} />
+        <ellipse cx="68" cy="38" rx="25" ry="25" className={styles.gxRegion} />
+        <ellipse cx="52" cy="66" rx="26" ry="19" className={styles.gxRegion} />
+        <path d={beltLane(['bennu', 'ryugu', 'ceres', 'lutetia', 'psyche', 'eros'])} className={styles.gxLane} />
+        <path d={beltLane(['bennu', 'vesta', 'psyche'])} className={styles.gxLane} />
+        <path d={beltLane(['itokawa', 'vesta', 'lutetia'])} className={styles.gxLane} />
+      </svg>
+      {BELT_FIELD.map((r, i) => <i key={i} className={styles.gxRock} style={{ ...style(r), width: r.size, height: r.size, opacity: r.glow }} />)}
+      <span className={styles.gxRegionLabel} style={{ left: '18%', top: '68%' }}>Near-Earth group</span>
+      <span className={styles.gxRegionLabel} style={{ left: '64%', top: '69%' }}>Main-belt group</span>
+      {shownAsteroids.map(t => node(t, belt[t.id], shortName(t.name)))}
+      {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
+    </> : <>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <ellipse cx="50" cy="44" rx="34" ry="27" className={styles.gxRegion} />
+        <ellipse cx="50" cy="44" rx="22" ry="17" className={styles.gxRing} />
+        <ellipse cx="50" cy="44" rx="31" ry="24" className={styles.gxRing} />
+        <path d={line(view === 'inner'
+          ? [REGION_EARTH_POS, ...innerPlanets.map(target => inner[target.id])]
+          : outerPlanets.map(target => outer[target.id]))} className={styles.gxLane} />
+      </svg>
+      <i className={styles.gxSun} style={{ left: '50%', top: '44%' }} />
+      {view === 'inner' && <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(REGION_EARTH_POS)} aria-label="Earth"><i /><span>Earth</span></div>}
+      {(view === 'inner' ? innerPlanets : outerPlanets).map(target => node(target, (view === 'inner' ? inner : outer)[target.id], target.name))}
+      <span className={styles.gxRegionLabel} style={{ left: '50%', top: '77%' }}>{view === 'inner' ? 'Inner system' : 'Outer system'}</span>
+      {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
+    </>}
+  </div>
 }
 
 const EVENT_BANNERS = {
@@ -160,118 +305,206 @@ function boardClock(): { now: number; orionidsNow: number } {
   return { now, orionidsNow: now }
 }
 
+function PickIcon() {
+  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 4 20 10M4 20l9-9M9 5c3-2 7-1 10 2M5 9c-2 3-1 7 2 10" /></svg>
+}
+
 export default function MissionBoard({
-  catalog, player, cards, selectedIndex, onSelectRelative, onAccept, onClose, onOpenLog, onOpenBuild,
+  catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
   tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
-  const { grade } = useTimeOfDay()
-  const [tab, setTab] = useState<MissionBoardTab>(() => takeMissionBoardTab() ?? 'contracts')
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [friendsOpen, setFriendsOpen] = useState(false)
+  const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
+  const [modeMenuOpen, setModeMenuOpen] = useState(false)
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
-  const events = useMemo(() => eventsBoard(now, player.badges, orionidsNow), [now, orionidsNow, player.badges])
-  const count = cards.length
-  const index = count === 0 ? 0 : Math.min(selectedIndex, count - 1)
-  const card = cards[index]
+  const events = useMemo(
+    () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0),
+    [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsFinds],
+  )
+  const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
+  const [contractTargetId, setContractTargetId] = useState<string | null>(null)
+  const [programStepId, setProgramStepId] = useState<string | null>(null)
+  const visibleCards = contractTargetId ? cards.filter(item => item.targetIds.includes(contractTargetId)) : cards
+  const selectedCard = cards[Math.min(selectedIndex, Math.max(0, cards.length - 1))]
+  const count = visibleCards.length
+  const visibleSelectedIndex = selectedCard ? visibleCards.findIndex(item => item.mission.id === selectedCard.mission.id) : -1
+  const index = count === 0 ? 0 : visibleSelectedIndex >= 0 ? visibleSelectedIndex : 0
+  const card = visibleCards[index]
   const client = card?.client
   const clientLevel = client ? clientAffinityLevel(player.clientMissions[client.id] ?? 0) : 0
   const paging = tab === 'contracts' && count > 1
+  const offerWindow = paging
+    ? Array.from({ length: Math.min(5, count) }, (_, offset) => {
+        const offerIndex = (index - Math.floor(Math.min(5, count) / 2) + offset + count) % count
+        return { offer: visibleCards[offerIndex], offerIndex }
+      })
+    : []
+  const [view, setView] = useState<MapView>('system')
+  const [pickedId, setPickedId] = useState<string | null>(null)
+  const [runId, setRunId] = useState<string | null>(null)
+  const [eventFocus, setEventFocus] = useState<string | null>(null)
+  const picked = pickedId ? catalog.targets.find(t => t.id === pickedId) ?? null : null
+  const pickedRuns = picked ? freeRuns.filter(run => Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m))) : []
+  const pickedRun = pickedRuns.find(run => run.id === runId) ?? pickedRuns[0] ?? null
+  const contractTarget = contractTargetId ? catalog.targets.find(target => target.id === contractTargetId) ?? null : null
+  const routeIds = card ? [card.mission.targetId, card.mission.deliveryTargetId].flatMap(id => id && catalog.targets.some(t => t.id === id) ? [id] : []) : []
+  const candidateIds = card && routeIds.length === 0
+    ? catalog.targets.filter(t => t.type !== 'exoplanet' && Object.keys(card.mission.requires.minerals).some(m => t.minerals.includes(m))).slice(0, 4).map(t => t.id)
+    : []
+  const mapMode: MapMode = tab === 'contracts' || tab === 'free' ? 'pick' : 'ambient'
+  const mapTargets = tab === 'contracts'
+    ? catalog.targets.filter(target => cards.some(item => item.targetIds.includes(target.id)))
+    : catalog.targets
+  const selectedProgramStep = steps.find(step => step.id === programStepId)
+    ?? steps.find(step => step.state === 'current')
+    ?? steps[0]
+
+  useEffect(() => clearMissionBoardTab(), [])
+
+  useEffect(() => {
+    if (tab !== 'contracts' || !card) return
+    const destination = catalog.targets.find(target => target.id === card.mission.targetId)
+    const candidatesAreAsteroids = candidateIds.length > 0 && candidateIds.every(id => catalog.targets.find(target => target.id === id)?.type === 'asteroid')
+    if (destination?.type === 'asteroid' || candidatesAreAsteroids) return setView('belt')
+    if (destination) return setView(destination.orbit <= 4 ? 'inner' : 'outer')
+    setView('system')
+  }, [candidateIds.join(','), card?.mission.id, catalog.targets, tab])
+
+  const pickContractTarget = (id: string) => {
+    const next = contractTargetId === id ? null : id
+    setContractTargetId(next)
+    if (!next) return
+    const first = cards.find(item => item.targetIds.includes(next))
+    if (first) onSelectMission(first.mission.id)
+  }
+
+  const selectVisibleRelative = (offset: number) => {
+    if (!contractTargetId) return onSelectRelative(offset)
+    if (visibleCards.length === 0) return
+    const next = (index + offset + visibleCards.length) % visibleCards.length
+    onSelectMission(visibleCards[next].mission.id)
+  }
 
   const startStep = (step: ProgramStep) => {
     if (step.state === 'locked' || step.state === 'done') return
     onAccept(step.id, step.kind === 'focus' ? 'store' : undefined)
   }
 
-  const baseBuildings = useMemo(
-    () => buildHubBuildingDefs(player, BASE_PLOTS).filter(building => BOARD_BASE_KINDS.has(building.kind)),
-    [player],
-  )
-  // The board's backdrop is the base itself: same world, same structures, framed on what is built.
-  const view = useViewSize()
-  const boardPx = kitScale(view)
-  const boardCamX = view.w / 2 - homeCenter(baseBuildings.map(b => b.kind), view.w / boardPx) * boardPx
+  const openEvent = (event: SkyBoardCard) => {
+    if (event.id === 'orionids-2026' || event.id === 'draconids-2026') {
+      const target = catalog.targets.find(candidate => candidate.type === 'asteroid' && freeRuns.some(run =>
+        Object.keys(run.requires.minerals).some(mineral => candidate.minerals.includes(mineral))))
+      setTab('free')
+      setView('belt')
+      setEventFocus(event.name)
+      setPickedId(target?.id ?? null)
+      setRunId(null)
+      return
+    }
+    if (event.id === 'saturn-night-2026') return onOpenEvent('saturn-storm-search')
+    if (event.id === 'new-moon-hunt-2026-10') return onOpenEvent('asteroid-discovery')
+    onOpenEvent('launchpad')
+  }
+
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
+  const chooseTab = (next: MissionBoardTab) => { setTab(next); setModeMenuOpen(false) }
+  const modeLabel: Record<MissionBoardTab, string> = { contracts: 'Contracts', free: 'Free run', program: 'Program', events: 'Events' }
   const tabButtons = <>
-    <button type="button" className={styles.tab} data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => setTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
-    <button type="button" className={styles.tab} data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => setTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
-    <button type="button" className={styles.tab} data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => setTab('events')}>
+    <button type="button" className={styles.tab} aria-label="Contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
+    {player.freeOperations && <button type="button" className={styles.tab} aria-label="Free run" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => chooseTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
+    <button type="button" className={styles.tab} aria-label="Program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => chooseTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
+    <button type="button" className={styles.tab} aria-label="Events" data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => chooseTab('events')}>
       <StarIcon /><span className={styles.tabLabel}>Events</span>
       {events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
     </button>
-    <button type="button" className={styles.log} data-testid="mission-board-log" onClick={onOpenLog}>LOG</button>
+    <button type="button" className={styles.log} data-testid="mission-board-log" onClick={() => { setModeMenuOpen(false); onOpenLog() }}>Mission log</button>
   </>
 
-  return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab}>
-    <div className={styles.sky} aria-hidden="true" style={{ '--px': `${boardPx}px`, '--hub-ground': '20%' } as CSSProperties}>
-      <BaseWorldCanvas px={boardPx} camera={{ x: boardCamX, y: 0, zoom: 1 }} time={grade} biome={sanitizeEarthBiome(player.earthBiome)} />
-      <div style={{ position: 'absolute', inset: 0, transform: `translateX(${boardCamX}px)` }}>
-        <EarthBaseModules buildings={baseBuildings} parts={player.shipCustomizerParts} padRocket />
-      </div>
-      {tab !== 'contracts' && <div className={styles.dim} />}
-    </div>
-    <div className={styles.chrome}>
-      <button type="button" className={`${styles.round} ${styles.cog}`} data-testid="settings-button" aria-label="Settings" onClick={() => setSettingsOpen(true)}><CogIcon /></button>
-      <div className={styles.clock}><HubClockWidget /></div>
-      <div className={styles.chips}>
-        <span className={styles.chip} data-testid="hub-francs-chip">{formatFrancs(player.francs, { compact: true })}</span>
-        <span className={`${styles.chip} ${styles.cargoChip}`} data-testid="hub-cargo-chip" aria-label="Cargo"><CubeIcon /></span>
-        <button type="button" className={styles.round} data-testid="friends-button" aria-label="Friends" onClick={() => setFriendsOpen(true)}><PeopleIcon /></button>
-      </div>
-    </div>
-    {tab === 'contracts' ? <section className={styles.dispatch} data-testid="mission-board" aria-label="Mission board">
+  return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab} data-contract-target={contractTargetId ?? undefined}>
+    <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
       <nav className={styles.rail} aria-label="Mission board">
         <button type="button" className={`${styles.round} ${styles.railClose}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><ArrowIcon direction="left" /></button>
-        {tabButtons}
-        {help.button && <div className={styles.railHelp}>{help.button}</div>}
+        {tab !== 'contracts' && <button type="button" className={styles.modeButton} aria-expanded={modeMenuOpen} aria-controls="mission-mode-menu" onClick={() => setModeMenuOpen(open => !open)}>
+          <span>{modeLabel[tab]}</span><DownIcon />{events.attention && tab !== 'events' && <i className={styles.modeDot} aria-label="Event live or upcoming" />}
+        </button>}
+        {modeMenuOpen && <div className={styles.modeMenu} id="mission-mode-menu">{tabButtons}</div>}
       </nav>
-      {card ? <>
-        <article key={card.mission.id} className={styles.order} style={{ '--signal': signalColor } as CSSProperties} aria-live="polite" data-testid="mission-board-section-client">
-          <div className={styles.signal} aria-hidden="true">
-            <i className={styles.beam} /><i className={styles.pulse} /><i className={styles.ring} /><i className={styles.ring} />
-          </div>
-          <header className={styles.orderHead}>
-            <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-amber)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={44} />
-            <div className={styles.orderWho}>
-              <span>{client?.name ?? 'Your program'}{client ? ` · L${clientLevel}` : ''}</span>
-              <h2 className={styles.orderTitle}>{card.mission.title}</h2>
+      <GalaxyMap targets={tab === 'contracts' ? [] : mapTargets} mode={tab === 'contracts' ? 'ambient' : mapMode} view={tab === 'contracts' ? 'belt' : view} onView={setView} stops={tab === 'contracts' ? [] : routeIds} candidates={tab === 'contracts' ? [] : candidateIds}
+        selectedId={tab === 'contracts' ? contractTargetId : tab === 'free' ? pickedId : null} onPick={id => {
+          if (tab === 'contracts') pickContractTarget(id)
+          else { setPickedId(id); setRunId(null) }
+        }} />
+      {tab === 'contracts' ? (card ? <>
+        <article className={styles.contractWorkspace} aria-live="polite" data-testid="mission-board-section-client">
+          <section className={styles.contractOffers} aria-label="Available contracts">
+            <h2>Contracts</h2>
+            <div className={styles.offerStrip}>
+              {offerWindow.map(({ offer, offerIndex }) => {
+                const offerClient = offer.client
+                return <button key={offer.mission.id} type="button" data-selected={offer.mission.id === card.mission.id || undefined}
+                  aria-label={`Select ${offer.mission.title}`} onClick={() => onSelectMission(offer.mission.id)}>
+                  <ClientMark initial={offerClient?.initial ?? 'OP'} color={offerClient?.color ?? 'var(--ln-board-amber)'} uiRole={offerClient?.uiRole ?? 'starter'} clientId={offerClient?.id} size={34} />
+                  <span>{offerIndex + 1}</span>
+                </button>
+              })}
             </div>
-          </header>
-          <div className={styles.orderDeal}>
-            <div className={styles.manifest} aria-label="Cargo">
+          </section>
+          <section className={styles.contractFocus}>
+            <ClientMark initial={client?.initial ?? 'OP'} color={client?.color ?? 'var(--ln-board-amber)'} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={68} />
+            <span>{client ? `${client.name} · L${clientLevel}` : 'Your program'}</span>
+            <h2>{card.mission.title}</h2>
+            {card.mission.brief && <p data-testid="mission-brief">{card.mission.brief}</p>}
+            {!card.unlocked && card.lockedDetail && <p>{card.lockedDetail}</p>}
+            <small>{index + 1} / {count}</small>
+          </section>
+          <section className={styles.contractAction}>
+            <h2>Requirements</h2>
+            <div className={styles.contractCargo} aria-label="Cargo">
               {Object.entries(card.mission.requires.minerals).map(([id, amount]) => {
                 const meta = catalog.minerals[id]
                 if (!meta) return null
-                return <span key={id} className={styles.crate} title={meta.name}><MineralRock shape={meta.shape} color={meta.color} /><b>{amount}</b><em>{meta.name}</em></span>
+                return <span key={id}><MineralRock shape={meta.shape} color={meta.color} /><b>{amount}</b><em>{meta.name}</em></span>
               })}
             </div>
-            <strong className={styles.pay}><i className={styles.coin} aria-hidden="true">{FRANC}</i>{formatFrancs(card.displayPayout, { compact: true })}</strong>
-            <button type="button" className={styles.take} data-testid={`mission-accept-${card.mission.id}`} disabled={!card.unlocked || tutorialBlocked} onClick={() => onAccept(card.mission.id)}>ACCEPT</button>
-          </div>
-          {!card.unlocked && card.lockedDetail && <p className={styles.orderLock}>{card.lockedDetail}</p>}
-          {paging && <footer className={styles.orderNav}>
-            <button type="button" className={styles.round} data-testid="mission-board-prev" aria-label="Previous contract" onClick={() => onSelectRelative(-1)}><ArrowIcon direction="left" /></button>
-            {count <= 8 && <div className={styles.orderDots}>
-              {cards.map((item, dot) => <button key={item.mission.id} type="button" className={styles.dotBtn} data-active={dot === index} aria-label={`Contract ${dot + 1}`} onClick={() => onSelectRelative(dot - index)}><i /></button>)}
-            </div>}
-            <span className={styles.orderCount}>{index + 1}/{count}</span>
-            <button type="button" className={styles.round} data-testid="mission-board-next" aria-label="Next contract" onClick={() => onSelectRelative(1)}><ArrowIcon direction="right" /></button>
-          </footer>}
+            <strong className={styles.contractPay}><i aria-hidden="true">{FRANC}</i>{formatFrancs(card.displayPayout, { compact: true })}</strong>
+            <button type="button" className={styles.contractTake} data-testid={`mission-accept-${card.mission.id}`} disabled={!card.unlocked || tutorialBlocked} onClick={() => onAccept(card.mission.id)}>ACCEPT</button>
+          </section>
         </article>
-      </> : <article className={styles.order} data-testid="mission-board-section-client">
+      </> : <article className={styles.dock} data-testid="mission-board-section-client">
         {onboardingComplete ? <>
-          <h2 className={styles.orderTitle}>No client signals yet</h2>
-          <p className={styles.orderLock}>Free Ops opens once the Earth storage silo is built.</p>
-          <button type="button" className={styles.take} onClick={onOpenBuild}>BUILD STORAGE SILO</button>
-        </> : <h2 className={styles.orderTitle}>No compatible client signals</h2>}
-      </article>}
-    </section> : <section className={styles.panel} data-testid="mission-board" aria-label="Mission board">
-      <button type="button" className={`${styles.round} ${styles.close}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
-      {help.button && <div className={styles.help}>{help.button}</div>}
-      <nav className={styles.tabs} aria-label="Mission board">{tabButtons}</nav>
-      <div className={styles.stage}>
-        <div className={styles.body}>
+          <header className={styles.dockHead}><div className={styles.dockWho}><h2>No client signals yet</h2></div></header>
+          <p className={styles.dockBrief}>Free Ops opens once the Earth storage silo is built.</p>
+          <div className={styles.dockDeal}><button type="button" className={styles.take} onClick={onOpenBuild}>BUILD STORAGE SILO</button></div>
+        </> : contractTargetId ? <>
+          <header className={styles.dockHead}><div className={styles.dockWho}><span>Destination filter</span><h2>No contracts for this location</h2></div></header>
+          <p className={styles.dockBrief}>Choose another body or tap the selected location again to show every contract.</p>
+          <div className={styles.dockDeal}><button type="button" className={styles.clearFilter} data-testid="mission-destination-clear" onClick={() => setContractTargetId(null)}>SHOW ALL CONTRACTS</button></div>
+        </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
+      </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
+        {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
+          <b>{eventFocus} night run</b><span>Mine falling debris to earn the event badge. Your normal cargo is yours to keep or sell.</span>
+        </div>}
+        <header className={styles.dockHead}>
+          <div className={styles.dockWho}>
+            <span>Free run · no client, sell at market price</span>
+            <h2>{picked ? picked.name : 'Choose a site on the map'}</h2>
+          </div>
+        </header>
+        {!picked && <p className={styles.dockBrief}>Tap a planet, or open the asteroid belt, to pick where to mine.</p>}
+        {picked && <p className={styles.dockBrief}>{picked.brief}</p>}
+        {picked && pickedRuns.length > 1 && <div className={styles.dockRuns} role="group" aria-label="Run">
+          {pickedRuns.map(run => <button key={run.id} type="button" data-testid={`free-run-${run.id}`} data-on={run.id === pickedRun?.id || undefined} onClick={() => setRunId(run.id)}>
+            {Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}
+          </button>)}
+        </div>}
+        {picked && pickedRuns.length === 0 && <p className={styles.dockBrief}>No free run mines this site yet.</p>}
+        <div className={styles.dockDeal}>
+          <strong className={styles.pay}>{pickedRun ? Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ') : ''}</strong>
+          <button type="button" className={styles.take} data-testid="free-run-start" disabled={!picked || !pickedRun}
+            onClick={() => { if (!picked || !pickedRun) return; onAccept(pickedRun.id); onPickTarget?.(picked.id) }}>START RUN</button>
+        </div>
+      </article> : <div className={styles.sheet}>
           {tab === 'program' && <div className={styles.chain} data-testid="mission-board-program">
             <header className={styles.chainHead} data-testid="program-summary">
               <div>
@@ -282,68 +515,78 @@ export default function MissionBoard({
                 <i style={{ width: `${(steps.filter(step => step.state === 'done').length / Math.max(steps.length, 1)) * 100}%` }} />
               </div>
             </header>
-            <ol className={styles.roadmap}>
-              {steps.map((step, stepIndex) => <li key={step.id} className={styles.roadStep} data-state={step.state}>
-                <span className={styles.node} aria-hidden="true">{step.state === 'done' ? <CheckIcon /> : stepIndex + 1}</span>
-                <article className={styles.step} data-state={step.state} data-testid={`program-step-${step.id}`}>
-                  <span className={styles.glyph} aria-hidden="true"><StepGlyph kind={step.kind} /></span>
-                  <div className={styles.stepBody}>
-                    <span className={styles.kicker}>{STEP_KIND_LABEL[step.kind]} · {STEP_STATE_LABEL[step.state]}</span>
-                    <h3>{step.title}</h3>
-                    <p className={styles.reward}><b>Unlocks</b> {step.detail}</p>
-                    {step.state === 'locked' && step.lockLine && (
-                      <div className={styles.gate}>
-                        <span><LockIcon /> Needs: {step.lockLine}</span>
-                        {step.progress && (
-                          <span className={styles.gateMeter}>
-                            <i style={{ width: `${(step.progress.have / step.progress.need) * 100}%` }} />
-                            <em>{step.progress.label} {step.progress.have}/{step.progress.need}</em>
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.mark}>
-                    {step.state === 'done' && <span className={styles.doneMark} aria-label="Done"><CheckIcon /></span>}
-                    {step.state === 'locked' && <span aria-label="Locked"><LockIcon /></span>}
-                    {(step.state === 'current' || step.state === 'available') && <button type="button" className={styles.start} data-testid={`program-start-${step.id}`} onClick={() => startStep(step)}>{step.state === 'current' ? 'START' : 'ACCEPT'}</button>}
-                  </div>
-                </article>
-              </li>)}
-            </ol>
+            <div className={styles.skillTree} role="list" aria-label="Program skill tree">
+              {steps.map((step, stepIndex) => <button key={step.id} type="button" role="listitem" className={styles.skillNode}
+                data-state={step.state} data-selected={step.id === selectedProgramStep?.id || undefined}
+                data-testid={`program-step-${step.id}`} aria-pressed={step.id === selectedProgramStep?.id}
+                onClick={() => setProgramStepId(step.id)}>
+                <span className={styles.skillIndex} aria-hidden="true">{step.state === 'done' ? <CheckIcon /> : stepIndex + 1}</span>
+                <span className={styles.skillGlyph} aria-hidden="true"><StepGlyph kind={step.kind} /></span>
+                <span className={styles.skillCopy}>
+                  <span>{STEP_KIND_LABEL[step.kind]} · {STEP_STATE_LABEL[step.state]}</span>
+                  <strong>{step.title}</strong>
+                </span>
+              </button>)}
+            </div>
+            {selectedProgramStep && <article className={styles.skillDetail} data-state={selectedProgramStep.state} data-testid="program-step-detail">
+              <header>
+                <span className={styles.glyph} aria-hidden="true"><StepGlyph kind={selectedProgramStep.kind} /></span>
+                <div><span className={styles.kicker}>{STEP_KIND_LABEL[selectedProgramStep.kind]} · {STEP_STATE_LABEL[selectedProgramStep.state]}</span><h3>{selectedProgramStep.title}</h3></div>
+              </header>
+              {selectedProgramStep.brief && <p className={styles.skillBrief}>{selectedProgramStep.brief}</p>}
+              <p className={styles.reward}><b>Unlocks</b> {selectedProgramStep.detail}</p>
+              {selectedProgramStep.state === 'locked' && selectedProgramStep.lockLine && <div className={styles.gate}>
+                <span><LockIcon /> Needs: {selectedProgramStep.lockLine}</span>
+                {selectedProgramStep.progress && <span className={styles.gateMeter}><i style={{ width: `${(selectedProgramStep.progress.have / selectedProgramStep.progress.need) * 100}%` }} /><em>{selectedProgramStep.progress.label} {selectedProgramStep.progress.have}/{selectedProgramStep.progress.need}</em></span>}
+              </div>}
+              {(selectedProgramStep.state === 'current' || selectedProgramStep.state === 'available') && <button type="button" className={styles.start} data-testid={`program-start-${selectedProgramStep.id}`} onClick={() => startStep(selectedProgramStep)}>{selectedProgramStep.state === 'current' ? 'START' : 'ACCEPT'}</button>}
+            </article>}
           </div>}
 
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">
-            <article className={styles.hero} data-testid="events-orionids">
-              <div className={styles.heroArt} aria-hidden="true"><SkyBanner kind="orionids" /></div>
-              <div className={styles.heroBody}>
-                <h2>{events.orionids.name}</h2>
-                <EventStatus card={events.orionids} />
-                <div className={styles.badges} aria-label="Orionids badge slots">
-                  <Medal tier={events.orionids.earnedTier === 'gold' ? 'gold' : 'empty'} />
-                  <Medal tier={events.orionids.earnedTier === 'silver' ? 'silver' : 'empty'} />
-                </div>
-                <p className={styles.blurb}>{events.orionids.blurb}</p>
-              </div>
-            </article>
-            <div className={styles.stack}>
-              {events.wsw.map(event => <article key={event.id} className={styles.eventCard} data-testid={`events-card-${event.id}`}>
-                <div className={styles.eventArt} aria-hidden="true"><SkyBanner kind={bannerKind(event.id)} /></div>
-                <div className={styles.eventBody}>
-                  <h3>{event.name}</h3>
-                  <div className={styles.badges}>
-                    <Medal tier={event.earnedTier ?? 'silver'} />
+            <section className={styles.spacetober} data-testid="spacetober-strip" aria-label="Spacetober">
+              <header>
+                <h2>{events.spacetober.title}</h2>
+                <p>{events.spacetober.detail}</p>
+              </header>
+              <ol>
+                {events.spacetober.steps.map(step => (
+                  <li key={step.id} data-testid={`spacetober-${step.id}`}>
+                    <strong>{step.name}</strong>
+                    <span>{step.when}</span>
+                    <em>{step.status}{step.tier ? ` · ${step.tier} in the set` : ''}</em>
+                  </li>
+                ))}
+              </ol>
+              <nav aria-label="Spacetober links">
+                {events.spacetober.links.map(link => (
+                  <a key={link.href} href={link.href} target="_blank" rel="noreferrer">{link.label}</a>
+                ))}
+              </nav>
+              {events.spacetober.vouchers.map(voucher => (
+                <p key={voucher.subjectId} data-testid="orionids-voucher">
+                  {voucher.name} · Orionids-found · {voucher.tier} voucher · Redeem coming soon
+                </p>
+              ))}
+              {events.spacetober.mastery >= 1 && <p data-testid="meteorite-mastery">Meteorite mastery {events.spacetober.mastery}</p>}
+            </section>
+            {events.groups.map(group => <section key={group.status} className={styles.eventGroup} data-testid={`events-group-${group.status}`}>
+              <header className={styles.eventGroupHead}><h2>{group.title}</h2><span>{group.cards.length}</span></header>
+              <div className={styles.eventGrid}>
+                {group.cards.map(event => <article key={event.id} className={styles.eventCard} data-testid={event.id === 'orionids-2026' ? 'events-orionids' : `events-card-${event.id}`}>
+                  <div className={styles.eventArt} aria-hidden="true"><SkyBanner kind={bannerKind(event.id)} /></div>
+                  <div className={styles.eventBody}>
+                    <div className={styles.eventTitle}><h3>{event.name}</h3><EventStatus card={event} /></div>
+                    <p className={styles.eventReward}>{event.rewardLabel}</p>
+                    {event.blurb && <p className={styles.blurb}>{event.blurb}</p>}
+                    <button type="button" className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
                   </div>
-                  <EventStatus card={event} />
-                </div>
-              </article>)}
-            </div>
+                </article>)}
+              </div>
+            </section>)}
           </div>}
-        </div>
-      </div>
-    </section>}
+      </div>}
+    </section>
     {help.layer}
-    {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
-    {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
   </div>
 }

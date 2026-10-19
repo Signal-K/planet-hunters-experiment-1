@@ -9,6 +9,7 @@ import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { queueUpdate } from '@/lib/offline/pbOutbox'
 import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
+import { applyBuyMinerals, applySetPriceAlert, applyRemovePriceAlert, applyFireDueAlerts } from '@/lib/systems/MarketplaceSystem'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState } from '@/lib/game-types'
 import type { Mission, ShipRoomKind, StructureBlueprint, SubsurfaceRoomId } from '@/lib/data'
@@ -19,6 +20,22 @@ export function useEconomyActions(
 ) {
   const sellMinerals = useCallback((mineralId: string, amount: number) => {
     setState(s => applySellMinerals(s, mineralId, amount))
+  }, [setState])
+
+  const buyMinerals = useCallback((mineralId: string, amount: number) => {
+    setState(s => applyBuyMinerals(s, mineralId, amount))
+  }, [setState])
+
+  const setPriceAlert = useCallback((mineralId: string, target: number) => {
+    setState(s => applyFireDueAlerts(applySetPriceAlert(s, mineralId, target)))
+  }, [setState])
+
+  const removePriceAlert = useCallback((alertId: string) => {
+    setState(s => applyRemovePriceAlert(s, alertId))
+  }, [setState])
+
+  const checkPriceAlerts = useCallback(() => {
+    setState(s => applyFireDueAlerts(s))
   }, [setState])
 
   const sellRefinedGoods = useCallback((recipeId: string, amount: number) => {
@@ -145,7 +162,7 @@ export function useEconomyActions(
   }, [setState])
 
   return {
-    sellMinerals, sellRefinedGoods, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad, upgradeBuilding,
+    sellMinerals, buyMinerals, setPriceAlert, removePriceAlert, checkPriceAlerts, sellRefinedGoods, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad, upgradeBuilding,
     excavateSubsurface, buildSubsurfaceRoom,
     unlockSkillNode, acceptLoan, abandonMission,
     confirmShipCustomizerBuild,

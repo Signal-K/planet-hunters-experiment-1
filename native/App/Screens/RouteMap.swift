@@ -47,17 +47,25 @@ struct RouteMap: View {
                                    with: .color(reachable ? Theme.blue.opacity(0.55) : Theme.ink.opacity(0.14)),
                                    lineWidth: reachable ? 1.5 : 1)
                     }
+                    let reachableTargets = targets.filter { $0.orbit <= maxOrbit }
+                    if reachableTargets.count > 1 {
+                        var lane = Path()
+                        lane.move(to: point(reachableTargets[0], in: size))
+                        for target in reachableTargets.dropFirst() { lane.addLine(to: point(target, in: size)) }
+                        ctx.stroke(lane, with: .color(Theme.blueBright.opacity(0.48)), style: StrokeStyle(lineWidth: 1.2, dash: [3, 6]))
+                    }
                 }
                 ForEach(targets) { t in
                     let picked = t.id == pickedId
                     let p = point(t, in: size)
                     Button { onPick(t.id) } label: {
                         VStack(spacing: 2) {
-                            Circle().fill(picked ? Theme.blue : Theme.paper)
+                            Circle().fill(picked ? Theme.blueBright : Theme.paper)
                                 .frame(width: picked ? 16 : 12, height: picked ? 16 : 12)
-                                .overlay(Circle().stroke(Theme.ink, lineWidth: 2))
-                            if picked { Text(t.name.uppercased()).font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.ink)
-                                .padding(.horizontal, 6).background(Theme.paper.opacity(0.9), in: Capsule()) }
+                                .overlay(Circle().stroke(Theme.paper, lineWidth: 2))
+                                .shadow(color: Theme.blueBright.opacity(0.8), radius: picked ? 9 : 5)
+                            if picked { Text(t.name.uppercased()).font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.paper)
+                                .padding(.horizontal, 6).background(Theme.ink.opacity(0.82), in: Capsule()) }
                         }
                         .frame(minWidth: 44, minHeight: 44)
                         .contentShape(Rectangle())
@@ -69,8 +77,8 @@ struct RouteMap: View {
             }
         }
         .frame(height: 200)
-        .background(Theme.paper)
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 2))
+        .background(LinearGradient(colors: [Theme.ink, Theme.bluePress.opacity(0.9), Theme.ink], startPoint: .topLeading, endPoint: .bottomTrailing))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.blueBright.opacity(0.6), lineWidth: 2))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }

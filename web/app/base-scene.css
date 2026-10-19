@@ -16,6 +16,13 @@
   z-index: 5;
   transform: translateY(30px);
 }
+
+/* A short landscape viewport has room for the world and one navigation row,
+   not a second row of structure pills. The buildings keep their accessible
+   button names and remain directly tappable; Menu provides the named list. */
+@media (orientation: landscape) and (max-height: 640px) {
+  .hub-building-name { display: none; }
+}
 .hub-mission-status {
   display: flex;
   align-items: center;
@@ -67,4 +74,94 @@
 @media (orientation: landscape) and (max-height: 640px) and (max-width: 799px) {
   .hub-mission-status { padding: 0; border: 0; background: none; }
   .hub-mission-status__text { display: none; }
+}
+
+/* Narrow windows: the "No mission in progress" text only crowds the structure labels above it, so keep the button alone and lift it clear of them. */
+@media (max-width: 699px) {
+  .hub-mission-status { padding: 0; border: 0; background: none; margin-bottom: 10px; }
+  .hub-mission-status__text { display: none; }
+}
+
+/* New mission lives in the dock (Build, Mission, Menu). Three words need more room, and phones drop the arrows to fit. */
+.scene-dock--mission { max-width: min(460px, calc(100vw - 16px)); }
+.scene-dock-word--mission { background: var(--ln-world-trim-blue) !important; color: var(--ln-world-hull-lit) !important; }
+@media (max-width: 479px) { .scene-dock--mission .scene-dock-arrow { display: none; } }
+
+/* SSL-628: scene-first Base controls. Small instrument plates hug the lower
+   edges, leaving the landscape between them instead of forming a website nav. */
+.scene-location-dock {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  width: calc(100vw - 24px);
+  pointer-events: none;
+}
+.scene-location-selector,
+.scene-location-actions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  border: 2px solid var(--ln-world-outline);
+  border-radius: 3px;
+  background: var(--ln-world-hull-lit);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--ln-world-outline) 28%, transparent);
+  pointer-events: auto;
+}
+.scene-location-label {
+  display: flex;
+  place-items: center;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 88px;
+  min-height: 44px;
+  padding: 0 10px;
+  border-inline: 2px solid var(--ln-world-outline);
+  border-bottom: 4px solid var(--ln-world-glass);
+  background: color-mix(in srgb, var(--ln-world-outline) 90%, var(--ln-world-trim-blue));
+  color: var(--ln-world-hull-lit);
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.04em;
+}
+.scene-location-dock .scene-dock-arrow,
+.scene-location-dock .scene-dock-word {
+  min-height: 44px;
+  border: 0 !important;
+  border-radius: 0;
+  background: var(--ln-world-hull-lit) !important;
+  color: var(--ln-world-outline) !important;
+}
+.portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-location-dock .scene-dock-arrow,
+.portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-location-dock .scene-dock-word {
+  border: 0 !important;
+  background: var(--ln-world-hull-lit) !important;
+  color: var(--ln-world-outline) !important;
+}
+.scene-location-dock .scene-dock-arrow:disabled { opacity: 0.38; cursor: default; }
+.scene-location-actions .scene-dock-word {
+  gap: 8px;
+  min-width: 118px;
+  padding: 0 12px 0 8px;
+  border-right: 4px solid var(--ln-world-glass) !important;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.scene-location-actions .scene-dock-word + .scene-dock-word { border-left: 2px solid var(--ln-world-outline) !important; }
+.scene-location-actions .scene-dock-word svg { width: 25px; height: 25px; padding-right: 7px; border-right: 1px solid color-mix(in srgb, var(--ln-world-outline) 52%, transparent); }
+.scene-location-action--mission {
+  border-right-color: var(--ln-world-trim-blue) !important;
+}
+.portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-location-action--mission {
+  border-right: 4px solid var(--ln-world-trim-blue) !important;
+}
+@media (max-width: 700px) {
+  .scene-location-dock { gap: 6px; width: calc(100vw - 12px); }
+  .scene-location-label { min-width: 62px; padding-inline: 6px; }
+  .scene-location-label svg { display: none; }
+  .scene-location-actions .scene-dock-word { min-width: 84px; padding-inline: 7px; }
 }

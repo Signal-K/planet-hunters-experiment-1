@@ -60,7 +60,7 @@ enum SceneCatalog {
         view.environment(store).environment(offlineFeed)
             .overlay(alignment: .top) {
                 if let c = FlightPlan.coach(store.player, screen: screen, includeHidden: true) {
-                    CoachStrip(coach: c).environment(store)
+                    CoachStrip(coach: c, screen: screen, summoned: .constant(false)).environment(store)
                         .frame(maxWidth: 560)
                         .padding(.horizontal, 8)
                         .padding(.top, 68)
@@ -76,6 +76,20 @@ enum SceneCatalog {
     static func exchangeState() -> GameState {
         var gs = starterState(); gs.player.francs = 12500
         gs.player.stash = ["iron": 14, "silicon": 6, "carbon": 3]; gs.screen = .market
+        gs.player.placed = ["launchpad", "market", "surface-silo"]
+        return gs
+    }
+
+    static func exchangeAlertState() -> GameState {
+        var gs = exchangeState()
+        let spot = Marketplace.spot("iron", player: gs.player, now: Date().timeIntervalSince1970 * 1000)
+        gs.player.priceAlerts = [PriceAlert(id: "alert-iron", mineralId: "iron", target: spot + 40),
+                                 PriceAlert(id: "alert-silicon", mineralId: "silicon", target: 1, firedAt: 1)]
+        return gs
+    }
+
+    static func exchangeLockedState() -> GameState {
+        var gs = exchangeState(); gs.player.placed = ["launchpad"]
         return gs
     }
 
@@ -371,6 +385,10 @@ enum SceneCatalog {
         scene("mission-events-phone", 874) {
             MissionsScreen(startTab: 2).environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },
+        scene("mission-free-run-phone", 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true
+            return MissionsScreen(startTab: 3).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true)
+        },
         scene("mission-events-live", 874) {
             MissionsScreen(startTab: 2).environment(GameStore(state: basePlayer(), clock: { wswNoon }))
         },
@@ -469,6 +487,48 @@ enum SceneCatalog {
             if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
             return RocketBuilderScreen(launchEnabled: false, onLaunch: {}, onChooseMission: {}).environment(st).environment(\.flatLayout, true)
         },
+        scene("pad-design-phone", 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .design).environment(st).environment(\.flatLayout, true)
+        },
+        scene("pad-design-landscape", 402, w: 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .design).environment(st).environment(\.flatLayout, true)
+        },
+        scene("pad-building-phone", 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .building, previewProgress: 0.55).environment(st).environment(\.flatLayout, true)
+        },
+        scene("pad-building-landscape", 402, w: 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .building, previewProgress: 0.55).environment(st).environment(\.flatLayout, true)
+        },
+        scene("pad-ready-phone", 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .ready).environment(st).environment(\.flatLayout, true)
+        },
+        scene("pad-ready-landscape", 402, w: 874) {
+            var gs = basePlayer(); gs.player.freeOperations = true; gs.player.missionsDone = 6; gs.player.placed = ["launchpad"]
+            let st = GameStore(state: gs)
+            st.go(.launchpad)
+            if let id = st.catalog.missions.first(where: { $0.isOwnProgram && $0.construction == nil })?.id { st.pickMission(id) }
+            return RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .ready).environment(st).environment(\.flatLayout, true)
+        },
         scene("guide-free-ops-hub", 874) {
             var gs = GameState(); gs.player.freeOperations = true; gs.player.placed = ["launchpad"]; gs.player.placementPlots = ["launchpad": 0]
             return coached(HubScreen(), gs, screen: .hub)
@@ -507,6 +567,14 @@ enum SceneCatalog {
         scene("mining-guide-landscape", 402, w: 874) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
         scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-landscape", 402, w: 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("exchange-desktop", 900, w: 1440) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("exchange-buy-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        scene("exchange-alerts-phone", 844, w: 390) { MarketScreen(tab: .alerts).environment(GameStore(state: exchangeAlertState())).environment(\.flatLayout, true) },
+        scene("exchange-locked-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeLockedState())).environment(\.flatLayout, true) },
+        scene("coach-chip-phone", 844, w: 390) {
+            var gs = exchangeState(); gs.player.flightPlan.complete("mining")
+            return coached(MarketScreen(), gs, screen: .market).environment(\.flatLayout, true)
+        },
         scene("coach-exchange-landscape", 428, w: 926) {
             var gs = exchangeState(); gs.player.flightPlan.complete("mining")
             return coached(MarketScreen(), gs, screen: .market).environment(\.flatLayout, true)
@@ -561,13 +629,35 @@ enum SceneCatalog {
             gs = SurfaceOps.applyMined(gs, "moon-south-pole", mineral: "iron", amount: 12)
             return SurfaceOpsScreen(at: t0).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true)
         },
-        scene("mission-log-phone", 640) {
+        scene("mission-log-phone", 1400) {
             var gs = basePlayer()
             gs.player.completedMissions = [CompletedMissionRecord(id: "m1", title: "Iron for the pad", targetId: "ceres", clientName: "Vulcan", targetName: "Ceres", completedAt: t0, runId: "r1", kind: .client),
                                            CompletedMissionRecord(id: "m2", title: "Own survey run", targetId: "eros", clientName: nil, targetName: "Eros", completedAt: t0 - 86_400_000, runId: "r2", kind: .program)]
             gs.player.transitSatelliteLaunchedAt = t0 - 200_000_000
             gs.player.tessClassifications = ["toi-4": TessClassification(subjectId: "toi-4", verdict: .planet, ranges: [], submittedAt: t0 - 3_600_000)]
             return MissionHistoryScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
+        },
+        scene("mission-log-landscape", 402, w: 874) {
+            var gs = basePlayer()
+            gs.player.completedMissions = [CompletedMissionRecord(id: "m1", title: "Iron for the pad", targetId: "ceres", clientName: "Vulcan", targetName: "Ceres", completedAt: t0, runId: "r1", kind: .client),
+                                           CompletedMissionRecord(id: "m2", title: "Own survey run", targetId: "eros", clientName: nil, targetName: "Eros", completedAt: t0 - 86_400_000, runId: "r2", kind: .program)]
+            gs.player.transitSatelliteLaunchedAt = t0 - 200_000_000
+            gs.player.tessClassifications = ["toi-4": TessClassification(subjectId: "toi-4", verdict: .planet, ranges: [], submittedAt: t0 - 3_600_000)]
+            return MissionHistoryScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
+        },
+        scene("mission-log-desktop", 900, w: 1440) {
+            var gs = basePlayer()
+            gs.player.completedMissions = [CompletedMissionRecord(id: "m1", title: "Iron for the pad", targetId: "ceres", clientName: "Vulcan", targetName: "Ceres", completedAt: t0, runId: "r1", kind: .client),
+                                           CompletedMissionRecord(id: "m2", title: "Own survey run", targetId: "eros", clientName: nil, targetName: "Eros", completedAt: t0 - 86_400_000, runId: "r2", kind: .program)]
+            gs.player.transitSatelliteLaunchedAt = t0 - 200_000_000
+            gs.player.tessClassifications = ["toi-4": TessClassification(subjectId: "toi-4", verdict: .planet, ranges: [], submittedAt: t0 - 3_600_000)]
+            return MissionHistoryScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
+        },
+        scene("base-menu-phone", 874) { BaseMenu(onClose: {}, onBuild: {}).environment(GameStore(state: siloState(ore: 24))) },
+        scene("base-menu-desktop", 900, w: 1440) { BaseMenu(onClose: {}, onBuild: {}).environment(GameStore(state: siloState(ore: 24))) },
+        scene("hub-silo-surface-phone", 874) {
+            let world = BaseWorld(w: phone, h: 874)
+            return HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), startX: world.shaftFocusX, startDepth: 0).environment(GameStore(state: siloState(ore: 24)))
         },
         scene("ledger-phone", 1900) { NarrativeLedgerScreen().environment(GameStore(state: GameState())).environment(\.flatLayout, true) },
     ] + baseWorldScenes }

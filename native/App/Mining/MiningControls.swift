@@ -2,10 +2,10 @@ import SwiftUI
 import LandnamCore
 
 /// Mining steering pad, bottom-left, in the rover d-pad style (SSL-536).
-/// Up/down hold altitude, left/right hold speed. Mirrors web `MiningDPad`.
+/// Up/down hold altitude, left/right slide the ship along the sky.
 struct MiningDPad: View {
     var onAltitude: (Double) -> Void
-    var onSpeed: (Double) -> Void
+    var onSteer: (Double) -> Void
     var obstacleAhead = false
     var tile: CGFloat = 52
     private static let ink = Theme.hex(0x1A2A3C)
@@ -16,9 +16,9 @@ struct MiningDPad: View {
         VStack(spacing: 0) {
             pad("chevron.up", obstacleAhead ? "Climb, obstacle ahead" : "Climb", corners: [.topLeading, .topTrailing], emphasized: obstacleAhead) { onAltitude($0 ? -1 : 0) }
             HStack(spacing: 0) {
-                pad("chevron.left", "Slow down", corners: [.topLeading, .bottomLeading]) { onSpeed($0 ? -1 : 0) }
+                pad("chevron.left", "Move left", corners: [.topLeading, .bottomLeading]) { onSteer($0 ? -1 : 0) }
                 Color.clear.frame(width: tile, height: tile).accessibilityHidden(true)
-                pad("chevron.right", "Speed up", corners: [.topTrailing, .bottomTrailing]) { onSpeed($0 ? 1 : 0) }
+                pad("chevron.right", "Move right", corners: [.topTrailing, .bottomTrailing]) { onSteer($0 ? 1 : 0) }
             }
             pad("chevron.down", "Descend", corners: [.bottomLeading, .bottomTrailing]) { onAltitude($0 ? 1 : 0) }
         }
@@ -43,16 +43,15 @@ struct MiningDPad: View {
 
         var body: some View {
             let shape = UnevenRoundedRectangle(
-                topLeadingRadius: corners.contains(.topLeading) ? 14 : 0,
-                bottomLeadingRadius: corners.contains(.bottomLeading) ? 14 : 0,
-                bottomTrailingRadius: corners.contains(.bottomTrailing) ? 14 : 0,
-                topTrailingRadius: corners.contains(.topTrailing) ? 14 : 0)
+                topLeadingRadius: corners.contains(.topLeading) ? 6 : 0,
+                bottomLeadingRadius: corners.contains(.bottomLeading) ? 6 : 0,
+                bottomTrailingRadius: corners.contains(.bottomTrailing) ? 6 : 0,
+                topTrailingRadius: corners.contains(.topTrailing) ? 6 : 0)
             Image(systemName: icon)
                 .font(.system(size: 18, weight: .heavy))
-                .foregroundStyle(down ? Theme.hex(0x2F6FA8) : MiningDPad.ink)
+                .foregroundStyle(down || emphasized ? Glass.cyan : .white)
                 .frame(width: tile, height: tile)
-                .background(shape.fill(down ? MiningDPad.pressed : emphasized ? Theme.blue : MiningDPad.paper))
-                .overlay(shape.stroke(MiningDPad.ink, lineWidth: emphasized ? 3 : 2))
+                .glowPanel(shape, active: down || emphasized)
                 .contentShape(shape)
                 .gesture(DragGesture(minimumDistance: 0)
                     .onChanged { _ in if !down { down = true; hold(true) } }
@@ -80,12 +79,12 @@ struct LaserGauge: View {
                 Spacer()
                 Text("\(charge)/\(cap)").font(AppFont.display(14)).monospacedDigit()
             }
-            .foregroundStyle(Self.ink)
+            .foregroundStyle(Glass.ink)
             GeometryReader { g in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Theme.hex(0xC9D3DE))
+                    Capsule().fill(.white.opacity(0.14))
                     Capsule()
-                        .fill(low ? AnyShapeStyle(Self.brick) : AnyShapeStyle(LinearGradient(colors: [Theme.hex(0x2F6FA8), Theme.hex(0x3FB6C4)], startPoint: .leading, endPoint: .trailing)))
+                        .fill(low ? AnyShapeStyle(Self.brick) : AnyShapeStyle(Glass.cyan))
                         .frame(width: g.size.width * pct)
                         .animation(.linear(duration: 0.16), value: pct)
                     if charging {
@@ -107,9 +106,78 @@ struct LaserGauge: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 8)
         .frame(width: width)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hex(0xF4F1EA, 0.94)))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(low ? Self.brick : Self.ink, lineWidth: 2))
+        .glowPanel(RoundedRectangle(cornerRadius: 6), active: low)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Laser capacity \(charge) of \(cap)")
+    }
+}
+
+
+/// Cargo hold chip: tap to jettison anything you picked up by mistake (one unit, or the lot of a mineral).
+struct CargoMenu: View {
+    let field: MiningField
+    let onJettison: (String, Bool) -> Void
+    private static let ink = Theme.hex(0x1A2A3C)
+
+    var body: some View {
+        Menu {
+            if field.cargo.isEmpty {
+                Text("Hold empty")
+            }
+            ForEach(field.cargo.keys.sorted(), id: \.self) { id in
+                let n = field.cargo[id, default: 0]
+                let name = Minerals.byId[id]?.name ?? id
+                Button("Jettison 1 \(name)") { onJettison(id, false) }
+                if n > 1 { Button("Jettison all \(name) (\(n))", role: .destructive) { onJettison(id, true) } }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "shippingbox.fill")
+                Text("HOLD \(field.cargoUnits)/\(field.cargoCapacity)").tracking(1.1)
+                Image(systemName: "arrow.down.to.line")
+            }
+            .font(AppFont.display(14))
+            .foregroundStyle(field.isFull ? Glass.cyan : Glass.ink)
+            .padding(.horizontal, 12).frame(minHeight: 44)
+            .glowPanel(RoundedRectangle(cornerRadius: 6), active: field.isFull)
+        }
+        .accessibilityLabel("Cargo hold \(field.cargoUnits) of \(field.cargoCapacity). Jettison cargo.")
+    }
+}
+
+
+/// Out There style panels for the mining HUD: near-black frosted fill, glowing white outline, no solid colour blocks.
+private struct GlassHudKey: EnvironmentKey { static let defaultValue = false }
+extension EnvironmentValues {
+    var glassHud: Bool {
+        get { self[GlassHudKey.self] }
+        set { self[GlassHudKey.self] = newValue }
+    }
+}
+
+enum Glass {
+    static let ink = Theme.hex(0xEEF2F6)
+    static let cyan = Theme.hex(0x9FD6E4)
+}
+
+extension View {
+    func glowPanel<S: InsettableShape>(_ shape: S, active: Bool = false) -> some View {
+        self
+            .background(shape.fill(LinearGradient(colors: [Theme.hex(0x0A101C, active ? 0.6 : 0.78), Theme.hex(0x04080F, 0.88)], startPoint: .topLeading, endPoint: .bottomTrailing)))
+            .overlay(shape.stroke(.white.opacity(0.92), lineWidth: 1.5))
+            .shadow(color: .white.opacity(active ? 0.7 : 0.3), radius: active ? 12 : 7)
+    }
+}
+
+/// Top-left settings gear in the glass style (the mining screen has no clock or currency).
+struct GlassGear: View {
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "gearshape.fill").font(.system(size: 18, weight: .bold)).foregroundStyle(Glass.ink)
+                .frame(width: 44, height: 44).contentShape(Rectangle())
+                .glowPanel(RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain).accessibilityLabel("Settings")
     }
 }

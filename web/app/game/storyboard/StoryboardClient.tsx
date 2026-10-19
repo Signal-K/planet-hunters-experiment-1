@@ -8,8 +8,9 @@ export interface Registry {
   scenes: { id: string; name: string; flow: string; web: string | null; native?: string | null; tickets: string[]; note?: string }[]
 }
 
-// Scenes that mount a heavy engine start paused: click Run. (ui-rover-survey currently kills headless Chrome.)
-const HEAVY = new Set(['ui-rover-survey'])
+// Scenes that genuinely need manual opt-in can be listed here. Rover Survey
+// mounts safely now that host callback changes no longer reconstruct TakeOn.
+const HEAVY = new Set<string>()
 
 export interface FocusState { scenes: string[]; note: string; ticket: string; title: string; description: string; files: string[] }
 interface Comment { id: string; at: string; from: 'user' | 'agent'; text: string; re?: string }

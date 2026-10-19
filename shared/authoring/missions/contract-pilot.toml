@@ -1,0 +1,33 @@
+format = 1
+id = "contract-pilot"
+type = "contract"
+title = "Client delivery"
+description = "Accept a client request, prepare a vehicle, deliver the cargo and receive the quoted payout."
+
+[availability]
+fixture = "early"
+repeatable = true
+
+[[steps]]
+id = "accept"
+scene = "earth-base"
+action = "accept-contract"
+
+[[steps]]
+id = "prepare"
+scene = "launch-review"
+action = "confirm-flight-plan"
+
+[[steps]]
+id = "deliver"
+scene = "delivery"
+action = "unload-cargo"
+
+[[steps]]
+id = "debrief"
+scene = "debrief"
+action = "collect-payout"
+
+[reward]
+currency = "francs"
+amount = 12000000

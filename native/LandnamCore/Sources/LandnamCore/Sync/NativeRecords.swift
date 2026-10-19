@@ -55,6 +55,31 @@ public enum NativeRecords {
                 data: ["endpoint": .string(endpoint), "keys": .object(["platform": .string("ios")]), "user_id": .string(userId)])
     }
 
+    /// One Orionids peak reminder. The record id is stable per device endpoint so a relaunch
+    /// is the same PocketBase row (`sent` is true because iOS delivers it via LocalNotifications).
+    public static func orionidsPeakReminder(endpoint: String, at: Double) -> OutboxOp {
+        .create(collection: "scheduled_notifications", id: reminderRecordId(endpoint), data: [
+            "endpoint": .string(endpoint), "keys": .object(["platform": .string("ios")]), "scheduled_for": .number(at.rounded()),
+            "title": .string(SkyEvents.orionidsPeakReminderTitle), "body": .string(SkyEvents.orionidsPeakReminderBody), "sent": .bool(true)])
+    }
+
+    /// 15-character PocketBase id, stable for one endpoint.
+    static func reminderRecordId(_ endpoint: String) -> String {
+        var hash: UInt64 = 14_695_981_039_346_656_037
+        for byte in endpoint.utf8 {
+            hash ^= UInt64(byte)
+            hash = hash &* 1_099_511_628_211
+        }
+        let alphabet = Array("abcdefghijklmnopqrstuvwxyz0123456789")
+        var out = ""
+        var n = hash
+        for _ in 0..<15 {
+            out.append(alphabet[Int(n % 36)])
+            n /= 36
+        }
+        return out
+    }
+
     /// Mirror of a locally scheduled iOS notification. `sent` is true because iOS delivers it itself;
     /// the web cron only sends unsent https (Web Push) endpoints.
     public static func scheduledNotification(endpoint: String, title: String, body: String, at: Double) -> OutboxOp {

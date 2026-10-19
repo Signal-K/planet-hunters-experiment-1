@@ -110,6 +110,19 @@ import Foundation
         #expect(b["saturn-night-2026"]?.tier == .gold)
     }
 
+    @Test func orionidsOpensAtLocalMidnightOn19Oct() {
+        let start = SkyEvents.localMidnight(2026, 10, 19)
+        #expect(SkyEvents.event("orionids-2026")?.startMs == start)
+        #expect(SkyEvents.orionids.startMs == start)
+        #expect(SkyEvents.badgeTier("orionids-2026", at: start) == .gold)
+        #expect(SkyEvents.badgeTier("orionids-2026", at: start - 1) == nil)
+        #expect(SkyEvents.isOrionidsWindow(start + 12 * 3_600_000))
+        #expect(SkyEvents.activePreset(at: start + 12 * 3_600_000) == nil)
+        let reminder = SkyEvents.orionidsPeakReminderMs()
+        #expect(reminder == SkyEvents.localMidnight(2026, 10, 22) + 2 * 3_600_000)
+        #expect(SkyEvents.orionidsPeakReminderBody == "Moon's down — look up. Orionids peak; debris is falling in Landnam.")
+    }
+
     @Test func debrisNeedsWindowAndNight() {
         var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeZone(identifier: "UTC")!
         let night = ms("2026-10-22T23:00:00Z"), day = ms("2026-10-22T12:00:00Z")

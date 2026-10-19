@@ -1,0 +1,75 @@
+name: TestFlight
+
+# A merged PR into main (CI required passed on the PR) builds the iOS app and uploads it to TestFlight.
+# Needs repo secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64 (App Store Connect API key with App Manager access).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    name: Archive and upload
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require App Store Connect secrets
+        run: |
+          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8_BASE64; do
+            test -n "${!v}" || { echo "::error::Missing secret $v"; exit 1; }
+          done
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Domain tests
+        working-directory: native/LandnamCore
+        run: swift test
+
+      - name: Write API key
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
+
+      - name: Archive
+        working-directory: native
+        run: |
+          xcodegen generate
+          xcodebuild archive -project Landnam.xcodeproj -scheme Landnam \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Landnam.xcarchive" \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            -quiet
+
+      - name: Export and upload to TestFlight
+        working-directory: native
+        run: |
+          cat > "$RUNNER_TEMP/export.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>NDP87SHHDT</string>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Landnam.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/export.plist" -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"

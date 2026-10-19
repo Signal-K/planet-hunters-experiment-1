@@ -1,13 +1,13 @@
 .screen.screen {
-  background: var(--ln-blueprint-bg);
-  color: var(--ln-blueprint-ink);
+  background: var(--ln-world-night-mid);
+  color: var(--ln-world-outline);
   overflow: hidden;
 }
 
 .grid {
   width: 100%;
   height: 100%;
-  background-color: var(--ln-blueprint-bg);
+  background: linear-gradient(var(--ln-world-night-top), var(--ln-world-night-mid));
 }
 
 .screen .frame.frame {
