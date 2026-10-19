@@ -165,6 +165,8 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     })
 
     test('TESS Show me docks in Flight Plan and starts only on request', async ({ page }, info) => {
+      // Desktop CI boots the live hub under software GL. The assertions finish, then the screenshot overruns the 45s default.
+      test.setTimeout(90_000)
       await openLive(page, { screen: 'hub', tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true }, player: { placed: ['launchpad'], missionsDone: 0 } })
       const scenarioReady = await page.evaluate(() => {
         const bridge = (window as typeof window & { __landnam?: { scenario: (key: string) => boolean; patch: (player: object) => void } }).__landnam
