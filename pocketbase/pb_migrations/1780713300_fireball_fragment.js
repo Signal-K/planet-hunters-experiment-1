@@ -1,5 +1,5 @@
 // One rare Orionids fragment. Matches web MINERAL_META.fireball_fragment.
-// Priced above the exotic band: this is the 22 Oct 02:00 piece, not ordinary debris.
+// Book value is 15× the Orionid Exchange price (1,680,000 × 0.8 = 20,160,000).
 migrate((app) => {
   const col = app.findCollectionByNameOrId('minerals')
   let record
@@ -12,7 +12,7 @@ migrate((app) => {
   record.set('name', 'Fireball Fragment')
   record.set('sym', 'Fb')
   record.set('color', '#b7e3ff')
-  record.set('base_price', 22000000)
+  record.set('base_price', 20160000)
   record.set('rarity', 'exotic')
   record.set('demand_role', 'event fragment')
   record.set('construction_use', 'Event fragment; sell at market')

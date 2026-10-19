@@ -19,6 +19,7 @@ import { useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_FRAGMENT_GOAL } from '@/lib/data/missions'
 import { FIREBALL_FRAGMENT_ID } from '@/lib/orionids/fireball'
+import { holdHasRoom } from '@/lib/orionids/night-catches'
 import styles from './MiningTargetCue.module.css'
 
 // First-time-entering-Free-Ops-mining explainer — dismiss-once, same
@@ -95,7 +96,7 @@ function GuideMark({ kind }: { kind: string }) {
   )
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
@@ -139,6 +140,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   initialEarthDisposition?: 'store' | 'sell'
   /** SSL-475: fired for every sky-event debris chunk mined (first one earns the badge). */
   onDebrisMined?: (resourceId: string) => void
+  /** Fragments already caught this local night. The night-run goal reads this, not the hold. */
+  fragmentCatches?: number
+  /** Ship hold, in units. When set, further ore stays out of cargo. An Orionid catch still counts. */
+  cargoCapacity?: number
   fireballCaughtAt?: number | null
   onFireballCaught?: () => void
   /** Tier already stored for the Orionids badge, so the mining HUD can show it once. */
@@ -164,7 +169,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // 4× the ore required — laserChargeCap is a flat 5-7 from skill nodes regardless of mission
   // size, so a harder Free Ops order (e.g. 8 units of one mineral) could demand more hits than
   // the skill-based cap could ever supply, making the mission mathematically unwinnable.
-  const totalOreNeeded = Object.values(mission.requires.minerals).reduce((sum, v) => sum + v, 0)
+  const mineralNeed = Object.values(mission.requires.minerals).reduce((sum, v) => sum + v, 0)
+  const nightRun = mission.id === ORIONIDS_NIGHT_RUN_ID
+  const totalOreNeeded = nightRun ? Math.max(mineralNeed, ORIONIDS_FRAGMENT_GOAL) : mineralNeed
   const isOnboarding = typeof mission.sequence === 'number' && mission.sequence <= FREE_OPS_START_MISSIONS_DONE
   // A full charge lasts about twice as long as before (SSL-538).
   const MAX_CHARGES = ((isOnboarding
@@ -173,6 +180,12 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>(initialCargo ?? {})
   const [cargo, setCargo] = useState<Record<string, number>>(initialCargo ?? {})
+  const [catches, setCatches] = useState(fragmentCatches ?? 0)
+  const catchesRef = useRef(fragmentCatches ?? 0)
+  const shownCatches = Math.max(catches, fragmentCatches ?? 0)
+  catchesRef.current = shownCatches
+  const holdFullNotedRef = useRef(false)
+  useEffect(() => { setCatches(count => Math.max(count, fragmentCatches ?? 0)) }, [fragmentCatches])
   const [cargoOpen, setCargoOpen] = useState(false)
   /** Drop cargo overboard so a wrong pick-up never leaves the hold stuck. */
   const jettison = useCallback((mineral: string, all: boolean) => {
@@ -231,16 +244,22 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // ore in the deposit's full mineral pool.
   const neededMineralsRef = useRef<Set<string> | null>(null)
   neededMineralsRef.current = new Set(
-    Object.entries(mission.requires.minerals)
-      .filter(([id, amount]) => (cargo[id] ?? 0) < amount)
-      .map(([id]) => id)
+    nightRun
+      ? (shownCatches < ORIONIDS_FRAGMENT_GOAL ? ['orionid_debris'] : [])
+      : Object.entries(mission.requires.minerals)
+        .filter(([id, amount]) => (cargo[id] ?? 0) < amount)
+        .map(([id]) => id)
   )
 
-  const orderFilled = Object.entries(mission.requires.minerals).every(
-    ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
-  )
+  const orderFilled = nightRun
+    ? shownCatches >= ORIONIDS_FRAGMENT_GOAL
+    : Object.entries(mission.requires.minerals).every(
+      ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
+    )
 
-  const stillNeeded = unitsStillNeeded(mission.requires.minerals, cargo)
+  const stillNeeded = nightRun
+    ? Math.max(0, ORIONIDS_FRAGMENT_GOAL - shownCatches)
+    : unitsStillNeeded(mission.requires.minerals, cargo)
   // A magazine that cannot reliably cover the remaining units offers a recharge
   // that keeps the cargo already collected (SSL-413).
   const needsRecharge = miningNeedsRecharge(laserCharges, stillNeeded)
@@ -280,14 +299,24 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const onFireballCaughtRef = useRef(onFireballCaught)
   onFireballCaughtRef.current = onFireballCaught
   const collectMineral = useCallback((mineral: string) => {
-    // Shower debris rides in cargo. It fills the order only when the order asks for it.
+    // Shower debris rides in cargo when the hold has room. The night-run goal counts the catch either way.
     if (DEBRIS_RESOURCE_IDS.includes(mineral)) onDebrisMinedRef.current?.(mineral)
     if (mineral === FIREBALL_FRAGMENT_ID) onFireballCaughtRef.current?.()
-    cargoRef.current = {
-      ...cargoRef.current,
-      [mineral]: (cargoRef.current[mineral] ?? 0) + 1,
+    if (mineral === 'orionid_debris') {
+      catchesRef.current += 1
+      setCatches(catchesRef.current)
     }
-    setCargo(cargoRef.current)
+    const room = cargoCapacity == null || holdHasRoom(cargoRef.current, cargoCapacity)
+    if (room) {
+      cargoRef.current = {
+        ...cargoRef.current,
+        [mineral]: (cargoRef.current[mineral] ?? 0) + 1,
+      }
+      setCargo(cargoRef.current)
+    } else if (!holdFullNotedRef.current) {
+      holdFullNotedRef.current = true
+      addToast?.(mineral === 'orionid_debris' ? 'Hold is full. Catches still count.' : 'Hold is full.', 'ok')
+    }
 
     // Temple-Run-style transient hints — tutorial-scoped, separate from the
     // persistent coach banner. Each fires at most once per run.
@@ -302,15 +331,17 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         const name = minerals[mineral]?.name ?? mineral
         addToast(`You don't need ${name} for this order — skip it`, 'warn')
       }
-      const nowFilled = Object.entries(mission.requires.minerals).every(
-        ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
-      )
+      const nowFilled = nightRun
+        ? catchesRef.current >= ORIONIDS_FRAGMENT_GOAL
+        : Object.entries(mission.requires.minerals).every(
+          ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
+        )
       if (nowFilled && !hintedOrderFilledRef.current) {
         hintedOrderFilledRef.current = true
         addToast('Order filled — tap the order to return', 'ok')
       }
     }
-  }, [trainingMiningTry, addToast, mission.requires.minerals, minerals])
+  }, [trainingMiningTry, addToast, mission.requires.minerals, minerals, cargoCapacity, nightRun])
 
   function fireLaser(quiet = false) {
     if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
@@ -377,6 +408,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     }
     // SSL-411: a disabled RETURN swallowed taps (read as rageclicks on the
     // bare controls panel). Stay tappable and say what is still missing.
+    if (nightRun) {
+      const left = Math.max(0, ORIONIDS_FRAGMENT_GOAL - catchesRef.current)
+      addToast?.(`Order not filled yet: catch ${left} more Orionid fragments`, 'warn')
+      return
+    }
     const missing = Object.entries(mission.requires.minerals)
       .map(([id, amount]) => ({ id, left: amount - (cargoRef.current[id] ?? 0) }))
       .filter(m => m.left > 0)
@@ -735,9 +771,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         {bumpNote ? <div className="mining-bump-note" role="status" data-testid="mining-bump">Hull bumped: −1 charge</div> : null}
         <SkyEventChip
           surface="mining"
-          debrisCount={cargo.orionid_debris ?? 0}
-          fragmentGoal={mission.id === ORIONIDS_NIGHT_RUN_ID ? ORIONIDS_FRAGMENT_GOAL : undefined}
-          badgeTier={(cargo.orionid_debris ?? 0) > 0 ? orionidsBadgeTier : null}
+          debrisCount={nightRun ? shownCatches : (cargo.orionid_debris ?? 0)}
+          fragmentGoal={nightRun ? ORIONIDS_FRAGMENT_GOAL : undefined}
+          badgeTier={(nightRun ? shownCatches : (cargo.orionid_debris ?? 0)) > 0 ? orionidsBadgeTier : null}
         />
         {sceneStatus !== 'ready' && (
           <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">
@@ -793,8 +829,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             assistive tech; charges live inside FIRE LASER and order progress
             inside the return button. */}
         <span className="ln-sr-only" data-testid="mining-order-readout">
-          {Object.entries(mission.requires.minerals).map(([id, amount]) =>
-            `${minerals[id]?.name ?? id}: ${Math.min(cargo[id] ?? 0, amount)} of ${amount} collected. `).join('')}
+          {nightRun
+            ? `Orionid fragments: ${Math.min(shownCatches, ORIONIDS_FRAGMENT_GOAL)} of ${ORIONIDS_FRAGMENT_GOAL} caught. `
+            : Object.entries(mission.requires.minerals).map(([id, amount]) =>
+              `${minerals[id]?.name ?? id}: ${Math.min(cargo[id] ?? 0, amount)} of ${amount} collected. `).join('')}
         </span>
 
         {remoteSiloAvailable && (isFreeOps || orderFilled || laserCharges <= 0) && (

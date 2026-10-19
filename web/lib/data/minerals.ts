@@ -1,7 +1,7 @@
 // Landnam game data — minerals
 
 import type { MineralMeta, Mission } from './types'
-import { MINERAL_VALUE, type MineralRarity } from './economy'
+import { FIREBALL_FRAGMENT_PRICE, MINERAL_VALUE, type MineralRarity } from './economy'
 
 // Ore shapes are chosen so that every mineral pool an archetype can actually
 // produce together (see ARCHETYPE_POOLS in target-archetypes.ts) has distinct
@@ -38,7 +38,7 @@ export const MINERAL_META: Record<string, MineralMeta> = {
   orionid_debris:  { name: 'Orionid Debris',  sym: 'Od', color: '#7fd8ff', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'diamond' },
   draconid_debris: { name: 'Draconid Debris', sym: 'Dd', color: '#b1d8f4', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'triangle' },
   // One fragment per player on the Orionids peak. Priced above the exotic band on purpose.
-  fireball_fragment: { name: 'Fireball Fragment', sym: 'Fb', color: '#b7e3ff', price: 22_000_000, rarity: 'exotic', constructionUse: 'Event fragment; sell at market', laserAccess: 1, shape: 'diamond' },
+  fireball_fragment: { name: 'Fireball Fragment', sym: 'Fb', color: '#b7e3ff', price: FIREBALL_FRAGMENT_PRICE, rarity: 'exotic', constructionUse: 'Event fragment; sell at market', laserAccess: 1, shape: 'diamond' },
 }
 
 /** Rarity band per mineral, for anything pricing against MINERAL_VALUE. */
