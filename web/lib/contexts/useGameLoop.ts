@@ -32,6 +32,8 @@ import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } f
 import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
+import { grantOrionidsPlanetFind } from '@/lib/orionids/finds'
+import { queueMeteoriteMastery, queueOrionidsFind } from '@/lib/orionids/persist'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { applyHomeSplit, clientDemand, clientPayout, type HomeSplit } from '@/lib/systems/HomeDeliverySystem'
@@ -732,11 +734,34 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const resolveSurveyScan = useCallback(() => {
     const current = stateRef.current
     const scan = current.player.activeScan
-    if (!scan || applyResolveScan(current, Date.now()) === current) return
-    setState(s => applyResolveScan(s, Date.now()))
+    const at = Date.now()
+    if (!scan || applyResolveScan(current, at) === current) return
+    const target = catalog.targets.find(item => item.id === scan.targetId)
+    let marked = false
+    setState(s => {
+      const resolved = applyResolveScan(s, at)
+      if (resolved === s || target?.type !== 'planet') return resolved
+      const found = grantOrionidsPlanetFind(resolved.player, {
+        subjectId: target.id,
+        targetId: target.id,
+        name: target.name,
+        at,
+      })
+      if (found.granted) {
+        marked = true
+        queueOrionidsFind(found.granted)
+        if (found.masteryGranted) queueMeteoriteMastery(found.granted.earnedAt)
+      }
+      return found.player === resolved.player ? resolved : { ...resolved, player: found.player }
+    })
     captureGameEvent('survey_scan_completed', { target_id: scan.targetId })
-    addToast('Scan complete. Body charted and research XP awarded.', 'ok')
-  }, [addToast, setState, stateRef])
+    addToast(
+      marked
+        ? 'Scan complete. Planet charted. Orionids-found voucher owned. Redeem coming soon.'
+        : 'Scan complete. Body charted and research XP awarded.',
+      'ok',
+    )
+  }, [addToast, catalog.targets, setState, stateRef])
 
   const upgradeLicenseGrade = useCallback((grade: Exclude<LicenseGrade, 'Grade I'>) => {
     setState(s => applyUpgradeLicenseGrade(s, grade))
@@ -776,6 +801,22 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (!stateRef.current.player.tessClassifications?.[subjectId]) {
       addToast(`Transit classified. +${RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION} research XP`, 'ok')
       enqueueSurvey('lnm_citizen_task_done', 3000)
+    }
+    const findPreview = verdict === 'planet' && !subjectId.startsWith(TRAINING_ID_PREFIX)
+      ? grantOrionidsPlanetFind(stateRef.current.player, {
+        subjectId,
+        targetId: discoveredTarget?.id ?? null,
+        name: discoveredTarget?.name ?? subjectId,
+        at: submittedAt,
+      })
+      : null
+    if (findPreview?.granted) {
+      addToast(
+        findPreview.masteryGranted
+          ? 'Orionids-found. Voucher owned. Meteorite mastery 1. Redeem coming soon.'
+          : 'Orionids-found. Voucher owned. Redeem coming soon.',
+        'ok',
+      )
     }
 
     setState(s => {
@@ -825,7 +866,19 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         player: { ...next.player, freeOperations: freeOperationsUnlocked(next.player) },
         tutorial: !freeOperationsUnlocked(next.player),
       }
-      return existing ? settled : applyGainResearchXP(settled, RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION)
+      const withXp = existing ? settled : applyGainResearchXP(settled, RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION)
+      if (verdict !== 'planet' || subjectId.startsWith(TRAINING_ID_PREFIX)) return withXp
+      const found = grantOrionidsPlanetFind(withXp.player, {
+        subjectId,
+        targetId: discoveredTarget?.id ?? null,
+        name: discoveredTarget?.name ?? subjectId,
+        at: submittedAt,
+      })
+      if (found.granted) {
+        queueOrionidsFind(found.granted)
+        if (found.masteryGranted) queueMeteoriteMastery(found.granted.earnedAt)
+      }
+      return found.player === withXp.player ? withXp : { ...withXp, player: found.player }
     })
 
     const userId = pbShared.authStore.record?.id

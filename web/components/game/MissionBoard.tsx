@@ -318,7 +318,10 @@ export default function MissionBoard({
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
-  const events = useMemo(() => eventsBoard(now, player.badges, orionidsNow), [now, orionidsNow, player.badges])
+  const events = useMemo(
+    () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0),
+    [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsFinds],
+  )
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
   const [contractTargetId, setContractTargetId] = useState<string | null>(null)
   const [programStepId, setProgramStepId] = useState<string | null>(null)
@@ -541,6 +544,32 @@ export default function MissionBoard({
           </div>}
 
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">
+            <section className={styles.spacetober} data-testid="spacetober-strip" aria-label="Spacetober">
+              <header>
+                <h2>{events.spacetober.title}</h2>
+                <p>{events.spacetober.detail}</p>
+              </header>
+              <ol>
+                {events.spacetober.steps.map(step => (
+                  <li key={step.id} data-testid={`spacetober-${step.id}`}>
+                    <strong>{step.name}</strong>
+                    <span>{step.when}</span>
+                    <em>{step.status}{step.tier ? ` · ${step.tier} in the set` : ''}</em>
+                  </li>
+                ))}
+              </ol>
+              <nav aria-label="Spacetober links">
+                {events.spacetober.links.map(link => (
+                  <a key={link.href} href={link.href} target="_blank" rel="noreferrer">{link.label}</a>
+                ))}
+              </nav>
+              {events.spacetober.vouchers.map(voucher => (
+                <p key={voucher.subjectId} data-testid="orionids-voucher">
+                  {voucher.name} · Orionids-found · {voucher.tier} voucher · Redeem coming soon
+                </p>
+              ))}
+              {events.spacetober.mastery >= 1 && <p data-testid="meteorite-mastery">Meteorite mastery {events.spacetober.mastery}</p>}
+            </section>
             {events.groups.map(group => <section key={group.status} className={styles.eventGroup} data-testid={`events-group-${group.status}`}>
               <header className={styles.eventGroupHead}><h2>{group.title}</h2><span>{group.cards.length}</span></header>
               <div className={styles.eventGrid}>

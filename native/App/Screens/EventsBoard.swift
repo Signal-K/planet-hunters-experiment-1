@@ -24,6 +24,7 @@ struct EventsBoard: View {
             ("PAST EVENTS", ids.filter { eventStatus($0, now: now) == 2 })
         ].filter { !$0.1.isEmpty }
         VStack(alignment: .leading, spacing: 16) {
+            spacetober
             ForEach(groups, id: \.0) { title, eventIds in
                 VStack(alignment: .leading, spacing: 8) {
                     HStack { Text(title).font(AppFont.display(18)).tracking(1.1); Spacer(); Text("\(eventIds.count)").font(AppFont.display(14)).frame(width: 32, height: 32).overlay(Circle().stroke(Theme.ink, lineWidth: 2)) }
@@ -33,6 +34,28 @@ struct EventsBoard: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("mission-board-events")
+    }
+
+    /// Web `spacetoberStrip`. Badge keys match `SPACETOBER_WEEK_BADGE` / `SPACETOBER_PEAK_BADGE`.
+    private var spacetober: some View {
+        let week = store.player.badges["spacetober-2026-week"]?.tier
+        let peak = store.player.badges["spacetober-2026-peak"]?.tier
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("SPACETOBER").font(AppFont.display(18)).tracking(1.1).foregroundStyle(Theme.ink)
+            Text("World Space Week, then the Orionids peak.").font(AppFont.display(14)).foregroundStyle(Theme.ink)
+            Text("WORLD SPACE WEEK · 4-10 OCT · \(week?.rawValue.uppercased() ?? "NOT IN THE SET")").font(AppFont.display(14)).foregroundStyle(Theme.textDim)
+            Text("ORIONIDS PEAK · 21 OCT 18:00 – 22 OCT 06:00 · \(peak?.rawValue.uppercased() ?? "NOT IN THE SET")").font(AppFont.display(14)).foregroundStyle(Theme.textDim)
+            Link("Open Atlas badges", destination: URL(string: "https://youratlas.cc/app/profile")!)
+            Link("Open Garden sky events", destination: URL(string: "https://starsailors.space/game")!)
+            Link("Atlas Orionids check-in", destination: URL(string: "https://youratlas.cc/")!)
+        }
+        .font(AppFont.display(14))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.ink, lineWidth: 2))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("spacetober-strip")
     }
 
     private func eventStatus(_ id: String, now: Double) -> Int {

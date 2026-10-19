@@ -22,6 +22,7 @@ import {
   orionidsTeaserDevForced,
   orionidsTeaserForcedInstant,
   shouldShowOrionidsTeaser,
+  ATLAS_ORIONIDS_CHECKIN,
   WORLD_SPACE_WEEK_PLAYER_LINKS,
 } from './sky-events'
 import { MINERAL_META } from './minerals'
@@ -53,6 +54,7 @@ describe('World Space Week player links', () => {
       { label: 'Open Atlas badges', href: 'https://youratlas.cc/app/profile' },
       { label: 'Open Garden sky events', href: 'https://starsailors.space/game' },
     ])
+    expect(ATLAS_ORIONIDS_CHECKIN).toEqual({ label: 'Atlas Orionids check-in', href: 'https://youratlas.cc/' })
   })
 })
 

@@ -398,6 +398,10 @@ export interface Player {
   moonSurveyCharts?: Record<string, MoonSurveyChart>
   // Sky event badges (SSL-491), keyed by event id. Gold/silver by date played.
   badges?: Record<string, import('@/lib/data/sky-events').PlayerBadge>
+  /** Planets found or classified during Orionids. Keyed by subject id. Synced in game_states. */
+  orionidsFinds?: Record<string, import('@/lib/orionids/finds').OrionidsFind>
+  /** Shared meteorite mastery. Level 1 is the only grant; redeem is not built. */
+  meteoriteMastery?: number
   // Player's satellite-pointing choice for the *next* daily downlink,
   // picked from the PixiGalaxyStarMap after classifying today's candidate.
   // Consumed (cleared) once that candidate becomes today's daily pick.

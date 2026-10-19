@@ -14,6 +14,15 @@ export const WORLD_SPACE_WEEK_PLAYER_LINKS = [
   { label: 'Open Garden sky events', href: 'https://starsailors.space/game' },
 ] as const
 
+/**
+ * Atlas check-in for the Orionids. youratlas.cc publishes tonight's sky on
+ * the home page; it does not publish a separate Orionids event path.
+ */
+export const ATLAS_ORIONIDS_CHECKIN = {
+  label: 'Atlas Orionids check-in',
+  href: 'https://youratlas.cc/',
+} as const
+
 export type SkyActivityKind =
   | 'launch'
   | 'saturn-classification'

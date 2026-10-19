@@ -60,6 +60,15 @@ describe('mission board view', () => {
     expect(board.groups.find(group => group.status === 'ended')?.cards.every(card => card.actionLabel === 'PLAY FOR SILVER')).toBe(true)
     expect(board.groups.find(group => group.status === 'ended')?.cards.every(card => card.rewardLabel === 'REPLAY REWARD · SILVER BADGE')).toBe(true)
     expect(board.attention).toBe(true)
+    expect(board.spacetober.title).toBe('Spacetober')
+    expect(board.spacetober.steps.map(step => step.id)).toEqual(['world-space-week', 'orionids-peak'])
+    expect(board.spacetober.steps[0]?.status).toBe('ended')
+    expect(board.spacetober.steps[1]?.status).toBe('upcoming')
+    expect(board.spacetober.links.map(link => link.href)).toEqual([
+      'https://youratlas.cc/app/profile',
+      'https://starsailors.space/game',
+      'https://youratlas.cc/',
+    ])
   })
 
   it('shows a WSW earned/total mark only when the mission can earn a chip', () => {

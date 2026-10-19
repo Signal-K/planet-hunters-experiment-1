@@ -484,6 +484,33 @@ button.start {
   height: auto;
   overflow: visible;
 }
+.spacetober {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--ln-board-ink);
+  border-radius: 14px;
+  background: var(--ln-board-paper);
+  color: var(--ln-board-ink);
+}
+.spacetober h2 { margin: 0; font: 800 18px/1.2 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.spacetober p, .spacetober li, .spacetober a { margin: 0; font: 600 14px/1.4 var(--ln-font-body); }
+.spacetober ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.spacetober li { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; }
+.spacetober strong { font: 800 14px/1.3 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; }
+.spacetober em { font-style: normal; letter-spacing: .04em; text-transform: uppercase; }
+.spacetober nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.spacetober a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--ln-board-ink);
+  border-radius: 10px;
+  color: var(--ln-board-ink);
+  text-decoration: none;
+}
 .eventGroup { display: grid; gap: 8px; }
 .eventGroupHead { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 0 10px; border: 2px solid var(--ln-board-silver); border-radius: 10px; background: var(--ln-board-paper); }
 .eventGroupHead h2 { margin: 0; font: 800 18px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }

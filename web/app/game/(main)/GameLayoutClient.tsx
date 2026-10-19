@@ -16,6 +16,7 @@ import ToastLayer from '@/components/ui/ToastLayer'
 import { notifyFiredAlert } from '@/lib/priceAlertNotify'
 import { captureGameEvent, captureScreenView, initPostHog } from '@/lib/posthog'
 import { scheduleOrionidsPeakReminder } from '@/lib/orionids/peak-reminder'
+import { queueMeteoriteMastery, queueOrionidsFind } from '@/lib/orionids/persist'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
@@ -66,6 +67,17 @@ function GameChrome({ children }: { children: ReactNode }) {
   useEffect(() => {
     captureScreenView(game.screen)
   }, [game.screen])
+
+  // Finds already in the save (including ones backfilled on load) get one outbox upsert.
+  const queuedFinds = useRef('')
+  useEffect(() => {
+    const finds = Object.values(game.player.orionidsFinds ?? {})
+    const key = `${game.player.meteoriteMastery ?? 0}:${finds.map(find => `${find.subjectId}:${find.tier}`).sort().join('|')}`
+    if (queuedFinds.current === key) return
+    queuedFinds.current = key
+    for (const find of finds) queueOrionidsFind(find)
+    if ((game.player.meteoriteMastery ?? 0) >= 1 && finds[0]) queueMeteoriteMastery(finds[0].earnedAt)
+  }, [game.player.meteoriteMastery, game.player.orionidsFinds])
 
   // One Orionids peak reminder per push subscription. The cron delivers it at local 22 Oct 02:00.
   useEffect(() => {
