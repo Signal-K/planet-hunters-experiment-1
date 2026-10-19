@@ -32,6 +32,34 @@ export function queueOrionidsFind(find: OrionidsFind): void {
   )
 }
 
+export function queueEventBadge(badge: {
+  eventId: string
+  tier: OrionidsFind['tier']
+  earnedAt: number
+  subjectId: string
+  marker?: string
+}): void {
+  const user = pbLandnam.authStore.record?.id
+  if (!user) return
+  const eventId = filterValue(badge.eventId)
+  const subjectId = filterValue(badge.subjectId)
+  void queueUpsert(
+    'event_badges',
+    `user = "${user}" && event_id = "${eventId}" && subject_id = "${subjectId}"`,
+    {
+      user,
+      event_id: eventId,
+      tier: badge.tier,
+      source: ORIONIDS_SOURCE,
+      earned_at: badge.earnedAt,
+      subject_id: subjectId,
+      marker: badge.marker ?? eventId,
+      voucher: '',
+    },
+    pocketBaseId(`event_badges:${user}:${eventId}:${subjectId}`),
+  )
+}
+
 export function queueMeteoriteMastery(earnedAt: number): void {
   const user = pbLandnam.authStore.record?.id
   if (!user) return

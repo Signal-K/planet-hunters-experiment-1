@@ -32,6 +32,7 @@ import { ScreenContent } from '@/components/game/GameScreenRouter'
 import { useHelpOpen } from '@/lib/help/open-state'
 import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
+import OrionidsShowerChrome from '@/components/game/orionids/OrionidsShowerChrome'
 
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
@@ -281,6 +282,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             positioned inside this stage so it can never land on the shared
             nav — a bottom row in portrait, a left rail on landscape phones. */}
         <div className="game-stage-main">
+          <OrionidsShowerChrome />
           <LandnamSyncStatus />
           <DevShortcuts />
           {/* Suite return rail (SSL-296): hop back to the SSC garden / Spectra. */}

@@ -212,7 +212,7 @@ export interface MiningControllerOptions {
    */
   debris?: {
     /** Live spawn config; null (or rate 0) when the event is not active. */
-    getSpawn: () => { mineral: string; ratePerMinute: number; speedFactor: number } | null
+    getSpawn: () => { mineral: string; ratePerMinute: number; speedFactor: number; onceMineral?: string } | null
   }
   /** Raster shower art. Omit to keep the vector chunk fallback. */
   debrisArt?: DebrisArtSet | null
@@ -302,6 +302,8 @@ export class MiningController extends ScriptBehaviour {
   private streakAccumulator = 0
   /** First active frame drops a chunk immediately so the shower is visible. */
   private debrisPrimed = false
+  /** One rare fragment per mining session. The caller decides whether it is due. */
+  private onceDebrisSpawned = false
   private debrisCounter = 0
   private hitStop = 0
   private oreCounter = 0
@@ -489,6 +491,10 @@ export class MiningController extends ScriptBehaviour {
       this.debrisPrimed = true
       this.debrisAccumulator = Math.max(this.debrisAccumulator, 1)
       this.streakAccumulator = Math.max(this.streakAccumulator, 1)
+    }
+    if (spawn.onceMineral && !this.onceDebrisSpawned) {
+      this.onceDebrisSpawned = true
+      this.spawnDebris(spawn.onceMineral, spawn.speedFactor)
     }
     const rate = spawn.ratePerMinute
     this.debrisAccumulator += (rate / 60) * dt

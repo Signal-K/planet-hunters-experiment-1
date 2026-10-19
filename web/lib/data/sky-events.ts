@@ -258,11 +258,12 @@ export function debrisWindowStartMs(preset: DebrisEventPreset): number {
   return Date.parse(preset.startUtc)
 }
 
-/** Window (start inclusive / end exclusive) AND local night. Pure. */
+/** Window (start inclusive / end exclusive) and local night. Orionids peak night opens at 18:00. Pure. */
 export function isDebrisEventActive(preset: DebrisEventPreset, now: Date | number): boolean {
   const t = toMs(now)
   if (!Number.isFinite(t)) return false
   if (t < debrisWindowStartMs(preset) || t >= Date.parse(preset.endUtc)) return false
+  if (preset.eventId === 'orionids-2026' && isOrionidsPeakNight(t)) return true
   return isLocalNight(t)
 }
 
@@ -315,12 +316,13 @@ export function orionidsPhase(at: Date | number): OrionidsPhase {
 export const ORIONIDS_PANEL = {
   title: 'Orionids',
   what: 'Dust from Halley\'s Comet hits the atmosphere as meteors. Some of it falls on your asteroid field.',
-  when: '19 Oct to 7 Nov. Debris falls at night, 22:00 to 06:00 your time.',
-  peak: 'Peak night 21-22 Oct: debris falls twice as fast.',
+  when: '19 Oct to 7 Nov. Debris falls at night, 22:00 to 06:00 your time. On peak night it starts at 18:00.',
+  peak: 'Peak night 21-22 Oct: debris falls twice as fast from 18:00. At 02:00 on 22 Oct one fireball fragment falls.',
   steps: [
-    'Fly any laser mining run at night.',
+    'Fly the Orionids night run and catch 20 fragments.',
     'Wait for debris to land, then laser it.',
     'Sell Orionid debris at the Exchange.',
+    'Classify a planet tonight for a voucher.',
   ],
 } as const
 
