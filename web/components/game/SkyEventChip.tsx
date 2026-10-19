@@ -17,12 +17,14 @@ export default function SkyEventChip({
   surface,
   className,
   debrisCount = 0,
+  fragmentGoal,
   badgeTier = null,
   onParticipate,
 }: {
   surface: 'base' | 'mining'
   className?: string
   debrisCount?: number
+  fragmentGoal?: number
   badgeTier?: BadgeTier | null
   onParticipate?: () => void
 }) {
@@ -135,7 +137,17 @@ export default function SkyEventChip({
             )}
           </div>
         )}
-        {orionids && debrisCount > 0 && (
+        {orionids && fragmentGoal != null && (
+          <div className={styles.tally} data-testid="orionids-fragment-counter">
+            <img src={variant.iconResource} alt="" />
+            <strong>Catch {fragmentGoal} Orionid fragments</strong>
+            <span>{Math.min(debrisCount, fragmentGoal)} / {fragmentGoal}</span>
+          </div>
+        )}
+        {orionids && peak && surface === 'mining' && !daytimeEntry && (
+          <div className={styles.peakTag} data-testid="orionids-peak-tag">Peak ×2</div>
+        )}
+        {orionids && debrisCount > 0 && fragmentGoal == null && (
           <div className={styles.tally} data-testid="orionid-debris-count">
             <img src={variant.iconResource} alt="" />
             <strong>Orionid debris {debrisCount}</strong>

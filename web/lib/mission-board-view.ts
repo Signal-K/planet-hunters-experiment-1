@@ -291,7 +291,7 @@ export function eventsBoard(
     status,
     countdownLabel: status === 'upcoming' ? countdownLabel(orionidsNow) : null,
     earnedTier: earned === 'gold' || earned === 'silver' ? earned : null,
-    blurb: 'Mine debris at night, earn badges',
+    blurb: 'Mine debris at night, earn badges. Classify a planet tonight for a voucher.',
     actionLabel: eventActionLabel(status),
     rewardLabel: eventRewardLabel(status, earned),
   }

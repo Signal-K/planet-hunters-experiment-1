@@ -10,6 +10,7 @@ import type { MineralMeta } from '@/lib/data'
 import { prefersReducedMotion } from '@/lib/pixi/launchSpriteAnim'
 import { recoilOffset } from '@/lib/engine/miningJuice'
 import { activeDebrisPreset, debrisRatePerMinute, type DebrisEventPreset } from '@/lib/data/sky-events'
+import { FIREBALL_FRAGMENT_ID, fireballDue } from '@/lib/orionids/fireball'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { loadOrionidsArt } from '@/lib/orionids/loadArt'
 import { miningCanvasIsDark } from '@/lib/orionids/theme'
@@ -57,13 +58,17 @@ interface MiningCanvasProps {
   trainingMiningTry?: boolean
   /** SSL-475: sky-event debris. Omit (or event inactive) for the unchanged scene. */
   debrisPreset?: DebrisEventPreset | null
+  /** Caught-at stamp. One fragment falls after local 22 Oct 02:00 until this is set. */
+  fireballCaughtAt?: number | null
 }
 
-export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null, fireballCaughtAt = null }: MiningCanvasProps) {
   void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
   debrisPresetRef.current = debrisPreset
+  const fireballCaughtRef = useRef(fireballCaughtAt)
+  fireballCaughtRef.current = fireballCaughtAt
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
   const onFireRequestRef = useRef(onFireRequest)
@@ -255,6 +260,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
                 mineral: preset.resourceId,
                 speedFactor: preset.speedFactor,
                 ratePerMinute: debrisRatePerMinute(preset, debrisNow()),
+                onceMineral: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current) ? FIREBALL_FRAGMENT_ID : undefined,
               }
             },
           },

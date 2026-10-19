@@ -402,6 +402,10 @@ export interface Player {
   orionidsFinds?: Record<string, import('@/lib/orionids/finds').OrionidsFind>
   /** Shared meteorite mastery. Level 1 is the only grant; redeem is not built. */
   meteoriteMastery?: number
+  /** Unix ms when this player caught the 22 Oct 02:00 fireball fragment. */
+  fireball2026CaughtAt?: number | null
+  /** Fireballs in the Sky reading plus the check. Both are required for the badge. */
+  fireballSpotter?: { readAt: number | null; passedAt: number | null } | null
   // Player's satellite-pointing choice for the *next* daily downlink,
   // picked from the PixiGalaxyStarMap after classifying today's candidate.
   // Consumed (cleared) once that candidate becomes today's daily pick.

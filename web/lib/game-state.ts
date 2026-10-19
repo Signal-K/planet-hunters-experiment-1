@@ -4,6 +4,7 @@ import { mergeBuildingLevels, sanitizeBuildingLevels } from '@/lib/data/building
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
 import { sanitizeBadges } from '@/lib/data/sky-events'
 import { reconcileOrionidsFinds, sanitizeMeteoriteMastery, sanitizeOrionidsFinds } from '@/lib/orionids/finds'
+import { sanitizeFireballCaughtAt, sanitizeFireballSpotter } from '@/lib/orionids/fireball'
 import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, OWN_PROGRAM_CLIENT_ID, TARGETS } from '@/lib/data'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
@@ -84,6 +85,8 @@ export const DEFAULT_STATE: GameState = {
     badges: {},
     orionidsFinds: {},
     meteoriteMastery: 0,
+    fireball2026CaughtAt: null,
+    fireballSpotter: { readAt: null, passedAt: null },
     saturnImagerLaunchedAt: null,
     instrumentDigestNotifiedOn: {},
     dismissedHubPrompts: {},
@@ -347,7 +350,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
@@ -674,6 +677,11 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.badges = mergeBadges(current.player.badges, remoteState.player?.badges)
   merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)
   merged.player.meteoriteMastery = Math.max(current.player.meteoriteMastery ?? 0, remoteState.player?.meteoriteMastery ?? 0)
+  merged.player.fireball2026CaughtAt = earliestStamp(current.player.fireball2026CaughtAt, remoteState.player?.fireball2026CaughtAt) ?? null
+  merged.player.fireballSpotter = {
+    readAt: earliestStamp(current.player.fireballSpotter?.readAt, remoteState.player?.fireballSpotter?.readAt) ?? null,
+    passedAt: earliestStamp(current.player.fireballSpotter?.passedAt, remoteState.player?.fireballSpotter?.passedAt) ?? null,
+  }
   // A finished training try never un-finishes: the flight plan comes from whichever
   // side won above, so union the completed flags or a stale save re-offers "Tap the tower".
   const localPlan = current.player.flightPlan

@@ -372,6 +372,19 @@ describe('MiningController ore sym labels', () => {
     expect(xs[2] - xs[1]).toBe(280)
   })
 
+  it('drops one rare fragment and does not drop a second', () => {
+    const { controller } = makeController(vi.fn(), {
+      mineralColors: { ...MINERAL_COLORS, fireball_fragment: '#b7e3ff' },
+      debris: { getSpawn: () => ({ mineral: 'orionid_debris', ratePerMinute: 1, speedFactor: 1, onceMineral: 'fireball_fragment' }) },
+    })
+    controller.start()
+    controller.update(0.05)
+    const ores = (controller as unknown as { ores: { mineral: string }[] }).ores
+    expect(ores.filter(ore => ore.mineral === 'fireball_fragment')).toHaveLength(1)
+    controller.update(1)
+    expect(ores.filter(ore => ore.mineral === 'fireball_fragment')).toHaveLength(1)
+  })
+
   it('does not spawn shower debris when the event is off', () => {
     const { controller, host } = makeController(vi.fn(), { debris: { getSpawn: () => null } })
     controller.start()

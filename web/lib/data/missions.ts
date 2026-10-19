@@ -45,20 +45,23 @@ export function generateSelfDirectedMiningPool(now: number = Date.now()): Missio
 // SSL-578: Orionids Free Ops run, on the board only during the shower window.
 export const ORIONIDS_NIGHT_RUN_ID = 'self-directed-orionids-night-run'
 
+/** Fragments the night run asks for. The launch gate stays at 8U: no ship hold is 20U, and the field does not cap the count. */
+export const ORIONIDS_FRAGMENT_GOAL = 20
+
 export function orionidsNightRun(): Mission {
-  const amount = 8
-  const iron = MINERAL_META.iron
+  const amount = ORIONIDS_FRAGMENT_GOAL
+  const debris = MINERAL_META.orionid_debris
   return {
     id: ORIONIDS_NIGHT_RUN_ID,
     title: 'Orionids night run',
-    brief: `No client. Mine ${amount} units of iron after 22:00 while the Orionids fall. Laser the debris once it lands and sell it at the Exchange. Peak night is 21-22 Oct.`,
+    brief: `No client. Catch ${amount} Orionid fragments while the shower falls. On peak night debris starts at 18:00 and falls twice as fast. One fireball fragment falls at 02:00 on 22 Oct.`,
     tag: 'FREE OPS',
     difficulty: 'L1',
     locked: false,
     sequence: FREE_OPS_MISSION_SEQUENCE,
     unlockAt: 'Reach Free Operations',
-    requires: { minerals: { iron: amount }, cargo_min: amount, drill_tier: 1, max_orbit: 5 },
-    payout: { francs: normalizeMissionPayout((iron?.price ?? 0) * amount, FREE_OPS_MISSION_SEQUENCE), affinity: 0 },
+    requires: { minerals: { orionid_debris: amount }, cargo_min: 8, drill_tier: 1, max_orbit: 5 },
+    payout: { francs: normalizeMissionPayout((debris?.price ?? 0) * amount, FREE_OPS_MISSION_SEQUENCE), affinity: 0 },
   }
 }
 

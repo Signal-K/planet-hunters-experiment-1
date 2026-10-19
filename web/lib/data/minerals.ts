@@ -37,6 +37,8 @@ export const MINERAL_META: Record<string, MineralMeta> = {
   // ── Sky-event debris (SSL-475/491) — only ever spawns during its event, sells at spot ─
   orionid_debris:  { name: 'Orionid Debris',  sym: 'Od', color: '#7fd8ff', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'diamond' },
   draconid_debris: { name: 'Draconid Debris', sym: 'Dd', color: '#b1d8f4', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'triangle' },
+  // One fragment per player on the Orionids peak. Priced above the exotic band on purpose.
+  fireball_fragment: { name: 'Fireball Fragment', sym: 'Fb', color: '#b7e3ff', price: 22_000_000, rarity: 'exotic', constructionUse: 'Event fragment; sell at market', laserAccess: 1, shape: 'diamond' },
 }
 
 /** Rarity band per mineral, for anything pricing against MINERAL_VALUE. */
@@ -63,6 +65,7 @@ export const MINERAL_COLORS: Record<string, string> = {
   uranium:   '#8fd16a',
   orionid_debris:  '#7fd8ff',
   draconid_debris: '#b1d8f4',
+  fireball_fragment: '#b7e3ff',
 }
 
 export function sellCargo(cargo: Record<string, number>, minerals: Record<string, MineralMeta> = MINERAL_META): number {

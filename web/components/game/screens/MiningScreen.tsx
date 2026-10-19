@@ -17,6 +17,8 @@ import SkyEventChip from '@/components/game/SkyEventChip'
 import { LaserGauge, MiningDPad } from './MiningControls'
 import { useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
+import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_FRAGMENT_GOAL } from '@/lib/data/missions'
+import { FIREBALL_FRAGMENT_ID } from '@/lib/orionids/fireball'
 import styles from './MiningTargetCue.module.css'
 
 // First-time-entering-Free-Ops-mining explainer — dismiss-once, same
@@ -93,7 +95,7 @@ function GuideMark({ kind }: { kind: string }) {
   )
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, orionidsBadgeTier = null }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
@@ -137,6 +139,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   initialEarthDisposition?: 'store' | 'sell'
   /** SSL-475: fired for every sky-event debris chunk mined (first one earns the badge). */
   onDebrisMined?: (resourceId: string) => void
+  fireballCaughtAt?: number | null
+  onFireballCaught?: () => void
   /** Tier already stored for the Orionids badge, so the mining HUD can show it once. */
   orionidsBadgeTier?: 'gold' | 'silver' | null
 }) {
@@ -273,9 +277,12 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
   const onDebrisMinedRef = useRef(onDebrisMined)
   onDebrisMinedRef.current = onDebrisMined
+  const onFireballCaughtRef = useRef(onFireballCaught)
+  onFireballCaughtRef.current = onFireballCaught
   const collectMineral = useCallback((mineral: string) => {
-    // Shower debris rides in cargo and sells at the Market. It is not part of the order.
+    // Shower debris rides in cargo. It fills the order only when the order asks for it.
     if (DEBRIS_RESOURCE_IDS.includes(mineral)) onDebrisMinedRef.current?.(mineral)
+    if (mineral === FIREBALL_FRAGMENT_ID) onFireballCaughtRef.current?.()
     cargoRef.current = {
       ...cargoRef.current,
       [mineral]: (cargoRef.current[mineral] ?? 0) + 1,
@@ -716,6 +723,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           chargingRef={chargingRef}
           trainingMiningTry={trainingMiningTry}
           debrisPreset={debrisPreset}
+          fireballCaughtAt={fireballCaughtAt}
         />
         <MiningDPad
           disabled={sceneStatus !== 'ready'}
@@ -728,6 +736,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         <SkyEventChip
           surface="mining"
           debrisCount={cargo.orionid_debris ?? 0}
+          fragmentGoal={mission.id === ORIONIDS_NIGHT_RUN_ID ? ORIONIDS_FRAGMENT_GOAL : undefined}
           badgeTier={(cargo.orionid_debris ?? 0) > 0 ? orionidsBadgeTier : null}
         />
         {sceneStatus !== 'ready' && (
