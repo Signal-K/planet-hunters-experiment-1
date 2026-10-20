@@ -511,11 +511,11 @@ button.start {
   color: var(--ln-board-ink);
   text-decoration: none;
 }
-.eventGroup { display: grid; gap: 8px; }
+.eventGroup { display: grid; gap: 8px; width: 100%; }
 .eventGroupHead { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 0 10px; border: 2px solid var(--ln-board-silver); border-radius: 10px; background: var(--ln-board-paper); }
 .eventGroupHead h2 { margin: 0; font: 800 18px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
 .eventGroupHead span { display: grid; place-items: center; min-width: 32px; height: 32px; border: 2px solid currentColor; border-radius: 50%; font: 800 14px var(--ln-font-display); }
-.eventGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.eventGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
 .eventHero, .eventCard {
   border: 2px solid color-mix(in srgb, var(--ln-board-ink) 10%, transparent);
   border-radius: 18px;
@@ -550,8 +550,23 @@ button.start {
 .eventTitle .ended, .eventTitle .countdown { flex: none; margin-top: 0; }
 .eventReward { margin: 10px 0 0; color: var(--ln-board-muted); font: 800 14px/1.25 var(--ln-font-display); letter-spacing: .06em; }
 .eventAction { width: 100%; min-height: 44px; margin-top: 12px; border: 2px solid var(--ln-board-ink); border-radius: 10px; background: transparent; color: var(--ln-board-ink); font: 800 14px var(--ln-font-display); letter-spacing: .08em; cursor: pointer; }
+.eventAtlas {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 2px solid #34363c;
+  border-radius: 10px;
+  color: #ecebe8;
+  background: #16171a;
+  text-decoration: none;
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: .08em;
+}
 .fragmentBench { display: grid; gap: 8px; margin-top: 12px; }
-.fragmentBench p { margin: 0; font: 400 14px/1.4 var(--ln-font-body); }
+.fragmentBench p { margin: 0; font: 800 14px/1.4 var(--ln-font-display); letter-spacing: .06em; }
+.fragmentActions { display: flex; gap: 8px; }
+.fragmentActions .eventAction { margin-top: 0; }
 .fragmentBench .eventAction:disabled { opacity: 0.45; cursor: default; }
 .countdown {
   display: inline-flex;
@@ -1344,6 +1359,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .requirementTitle { display: flex; align-items: center; gap: 10px; color: var(--signal); font: 800 14px/1 var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; }
 .requirementTitle::before, .requirementTitle::after { content: ''; height: 1px; flex: 1; background: color-mix(in srgb, var(--signal) 65%, transparent); }
 .dockDeal { display: flex; align-items: center; gap: 12px; }
+.freeAction { justify-content: flex-end; }
 .dockCargo { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; flex-wrap: wrap; }
 .dock .crate { display: inline-flex; align-items: center; gap: 6px; padding: 0; background: none; border: 0; box-shadow: none; }
 .dock .crate > :first-child { display: block; width: 28px; height: 28px; background: none; border: 0; }

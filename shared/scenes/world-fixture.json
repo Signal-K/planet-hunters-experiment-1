@@ -77,12 +77,12 @@
       },
       "steps": 30,
       "wind": 0,
-      "alive": true,
-      "x": 100.00009999999989,
-      "y": 59.99981999999993,
-      "vx": 100,
-      "vy": -180,
-      "count": 1
+      "alive": false,
+      "x": null,
+      "y": null,
+      "vx": null,
+      "vy": null,
+      "count": 0
     }
   ]
 }

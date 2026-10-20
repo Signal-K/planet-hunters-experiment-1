@@ -77,7 +77,7 @@ export default function SkyEventChip({
         />
       )}
       <div className={[styles.hud, 'sky-event-wrap', className].filter(Boolean).join(' ')} data-testid={`sky-event-${surface}`}>
-        {orionids && surface === 'base' ? (
+        {(!open || !orionids) && (orionids && surface === 'base' ? (
           <button
             type="button"
             className={styles.eventButton}
@@ -111,12 +111,13 @@ export default function SkyEventChip({
           >
             {preset.chipLabel}
           </button>
-        )}
+        ))}
         {open && orionids && (
           <section className={styles.panel} data-testid="orionids-panel" aria-label="Orionids event">
             <div className={styles.panelHeading}>
               <h2 className={styles.panelTitle}>{ORIONIDS_PANEL.title}</h2>
               <span>{peak ? 'PEAK x2' : 'LIVE'}</span>
+              <button type="button" className={styles.panelClose} aria-label="Close Orionids details" onClick={() => setOpen(false)}>Close</button>
             </div>
             <p className={styles.summary}>Launch through the shower. Fragments are caught on the way up, any hour. Peak night is double.</p>
             <div className={styles.meta} aria-label="Orionids dates">

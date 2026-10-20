@@ -72,6 +72,9 @@ const tapRole = async (page: Page, name: RegExp) => {
   return true
 }
 
+const openMissionBoard = async (page: Page) =>
+  tap(page, 'hub-new-mission-btn') || tapRole(page, /^(find|new) mission$/i)
+
 let pickShip: string | null = null
 let picked: string | null = null
 
@@ -108,6 +111,7 @@ async function drive(page: Page, until: (s: Snap) => boolean, start: (page: Page
           await tap(page, 'plan-vehicle')
           if (await tapRole(page, new RegExp(`^${pickShip}`, 'i'))) { picked = pickShip; pickShip = null; await page.waitForTimeout(800) }
         }
+        if (s.screen === 'rocket-buy' && await tap(page, 'prepare-launch-btn')) break
         await tapRole(page, /^launch$/i); break
       case 'galaxy': case 'instrument-hub': case 'mission-history':
         if (!(await tap(page, 'top-bar-back'))) await tapRole(page, /^back/i); break
@@ -139,7 +143,7 @@ test.describe('player pathways from a post-onboarding save', () => {
     await open(page, POST_ONBOARDING)
     const before = (await snap(page))!.player
     const done = await drive(page, s => s.player.missionsDone > before.missionsDone, async (p, s) => {
-      if (s.screen === 'hub' || s.screen === 'build') await tapRole(p, /new mission/i)
+      if (s.screen === 'hub' || s.screen === 'build') await openMissionBoard(p)
       else await tapRole(p, /^accept/i)
     }, log)
     expect(done.player.francs).toBeGreaterThan(before.francs - 1_000_000)
@@ -152,7 +156,7 @@ test.describe('player pathways from a post-onboarding save', () => {
     await open(page, POST_ONBOARDING)
     const before = (await snap(page))!.player
     const done = await drive(page, s => s.player.missionsDone > before.missionsDone, async (p, s) => {
-      if (s.screen === 'hub' || s.screen === 'build') { await tapRole(p, /new mission/i); return }
+      if (s.screen === 'hub' || s.screen === 'build') { await openMissionBoard(p); return }
       const board = p.getByTestId('mission-board')
       for (let i = 0; i < 80 && !/Build a (Fuel Depot|Battery Station|Fabrication Pad)/.test(await board.innerText()); i++) {
         await p.getByTestId('mission-board-next').dispatchEvent('click', undefined, { timeout: 1500 }).catch(() => {})
@@ -171,7 +175,7 @@ test.describe('player pathways from a post-onboarding save', () => {
     await open(page, POST_ONBOARDING)
     const before = (await snap(page))!.player
     const done = await drive(page, s => s.player.missionsDone > before.missionsDone, async (p, s) => {
-      if (s.screen === 'hub' || s.screen === 'build') { await tapRole(p, /new mission/i); return }
+      if (s.screen === 'hub' || s.screen === 'build') { await openMissionBoard(p); return }
       await tap(p, 'mission-board-tab-program')
       await tap(p, 'program-start-freeops-self-directed-mining')
     }, log)
@@ -182,7 +186,7 @@ test.describe('player pathways from a post-onboarding save', () => {
   test('miner without a silo is told before launch that the haul will be sold', withPage(async page => {
     const noSilo = { ...POST_ONBOARDING, player: { ...POST_ONBOARDING.player, placed: ['launchpad', 'market'], placementPlots: { launchpad: 0, market: 1 } } }
     await open(page, noSilo)
-    await tapRole(page, /new mission/i)
+    await openMissionBoard(page)
     await expect.poll(async () => tap(page, 'mission-board-tab-program'), { timeout: 20_000 }).toBe(true)
     await tap(page, 'program-start-freeops-self-directed-mining')
     await expect(page.getByTestId('plan-no-silo')).toContainText(/sold when you land/i, { timeout: 20_000 })
@@ -204,7 +208,7 @@ test.describe('player pathways from a post-onboarding save', () => {
     const log: string[] = []
     await open(page, POST_ONBOARDING)
     const done = await drive(page, s => !!s.player.transitSatelliteLaunchedAt || !!s.player.deepSpaceTelescopeLaunchedAt, async (p, s) => {
-      if (s.screen === 'hub' || s.screen === 'build') { await tapRole(p, /new mission/i); return }
+      if (s.screen === 'hub' || s.screen === 'build') { await openMissionBoard(p); return }
       await tap(p, 'mission-board-tab-program')
       await tap(p, 'program-start-story-transit-telescope-launch')
     }, log)
@@ -218,7 +222,7 @@ test.describe('player pathways from a post-onboarding save', () => {
     await open(page, POST_ONBOARDING)
     const before = (await snap(page))!.player
     const done = await drive(page, s => s.player.missionsDone > before.missionsDone, async (p, s) => {
-      if (s.screen === 'hub' || s.screen === 'build') { await tapRole(p, /new mission/i); return }
+      if (s.screen === 'hub' || s.screen === 'build') { await openMissionBoard(p); return }
       await tap(p, 'mission-board-tab-program')
       await tap(p, 'program-start-freeops-self-directed-mining')
     }, log)
@@ -233,7 +237,7 @@ test.describe('player pathways from a post-onboarding save', () => {
     await open(page, { ...POST_ONBOARDING, player: { ...POST_ONBOARDING.player, stash: { iron: 40, aluminium: 40, copper: 20 } } })
     const before = (await snap(page))!.player
     const done = await drive(page, s => s.player.missionsDone > before.missionsDone, async (p, s) => {
-      if (s.screen === 'hub' || s.screen === 'build') { await tapRole(p, /new mission/i); return }
+      if (s.screen === 'hub' || s.screen === 'build') { await openMissionBoard(p); return }
       await tap(p, 'mission-board-tab-program')
       await tap(p, 'program-start-program-build-remote-silo')
     }, log)

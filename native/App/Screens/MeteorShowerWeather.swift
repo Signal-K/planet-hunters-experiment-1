@@ -12,10 +12,9 @@ struct MeteorShowerWeather: View {
     private static let trail: [(Double, Color)] = [
         (1, Color(red: 0.95, green: 0.97, blue: 1)), (1, Color(red: 0.95, green: 0.97, blue: 1)),
         (1, Color(red: 0.81, green: 0.90, blue: 1)), (1, Color(red: 0.81, green: 0.90, blue: 1)),
-        (1, Color(red: 0.61, green: 0.78, blue: 0.95)), (1, Color(red: 0.61, green: 0.78, blue: 0.95)),
-        (1, Color(red: 0.44, green: 0.64, blue: 0.85)), (1, Color(red: 0.44, green: 0.64, blue: 0.85)),
-        (0.8, Color(red: 0.29, green: 0.50, blue: 0.72)), (0.8, Color(red: 0.29, green: 0.50, blue: 0.72)),
-        (0.5, Color(red: 0.29, green: 0.50, blue: 0.72)), (0.25, Color(red: 0.29, green: 0.50, blue: 0.72)),
+        (1, Color(red: 0.61, green: 0.78, blue: 0.95)),
+        (0.7, Color(red: 0.44, green: 0.64, blue: 0.85)),
+        (0.35, Color(red: 0.29, green: 0.50, blue: 0.72)),
     ]
 
     var body: some View {
@@ -34,8 +33,8 @@ struct MeteorShowerWeather: View {
                         let f = phase / 0.22
                         let steps = (f * 28).rounded(.down) / 28
                         let fade = f < 0.1 ? f / 0.1 : (f > 0.8 ? (1 - f) / 0.2 : 1)
-                        let x = size.width * left - steps * 280
-                        let y = size.height * 0.55 * top + steps * 280
+                        let x = size.width * left - steps * 112
+                        let y = size.height * 0.42 * top + steps * 76
                         for (k, (a, c)) in Self.trail.enumerated() {
                             let r = CGRect(x: (x + CGFloat(k) * Self.px).rounded(), y: (y - CGFloat(k) * Self.px).rounded(), width: Self.px, height: Self.px)
                             gc.fill(Path(r), with: .color(c.opacity(a * fade)))

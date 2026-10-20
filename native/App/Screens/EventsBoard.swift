@@ -1,8 +1,8 @@
 import SwiftUI
 import LandnamCore
 
-/// The mission board's Events tab (mirrors web `mission-board-events`): the Orionids hero, then the World Space Week cards.
-/// Orionids is not a WSW event. Badge medals use the board's own pale blue and grey, never orange or green.
+/// The mission board's compact Events tab. Event cards carry the useful state and action;
+/// Atlas is linked once rather than repeated as a second event browser.
 struct EventsBoard: View {
     @Environment(GameStore.self) private var store
     var onOpenDebris: (String) -> Void = { _ in }
@@ -18,50 +18,32 @@ struct EventsBoard: View {
     var body: some View {
         let now = store.now
         let ids = ["orionids-2026"] + Self.wswOrder
-        let groups: [(String, [String])] = [
-            ("LIVE NOW", ids.filter { eventStatus($0, now: now) == 1 }),
-            ("UPCOMING", ids.filter { eventStatus($0, now: now) == 0 }),
-            ("PAST EVENTS", ids.filter { eventStatus($0, now: now) == 2 })
-        ].filter { !$0.1.isEmpty }
+        let orderedIds = ids.sorted { eventSortRank($0, now: now) < eventSortRank($1, now: now) }
         VStack(alignment: .leading, spacing: 16) {
-            spacetober
-            ForEach(groups, id: \.0) { title, eventIds in
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack { Text(title).font(AppFont.display(18)).tracking(1.1); Spacer(); Text("\(eventIds.count)").font(AppFont.display(14)).frame(width: 32, height: 32).overlay(Circle().stroke(Theme.ink, lineWidth: 2)) }
-                    ForEach(eventIds, id: \.self) { id in card(id, now: now) }
-                }
+            ForEach(orderedIds, id: \.self) { id in
+                card(id, now: now)
             }
+            Link("OPEN IN ATLAS", destination: URL(string: "https://youratlas.cc/orionids")!)
+                .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.ink)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink, lineWidth: 2))
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("mission-board-events")
-    }
-
-    /// Web `spacetoberStrip`. Badge keys match `SPACETOBER_WEEK_BADGE` / `SPACETOBER_PEAK_BADGE`.
-    private var spacetober: some View {
-        let week = store.player.badges["spacetober-2026-week"]?.tier
-        let peak = store.player.badges["spacetober-2026-peak"]?.tier
-        return VStack(alignment: .leading, spacing: 8) {
-            Text("SPACETOBER").font(AppFont.display(18)).tracking(1.1).foregroundStyle(Theme.ink)
-            Text("World Space Week, then the Orionids peak.").font(AppFont.display(14)).foregroundStyle(Theme.ink)
-            Text("WORLD SPACE WEEK · 4-10 OCT · \(week?.rawValue.uppercased() ?? "NOT IN THE SET")").font(AppFont.display(14)).foregroundStyle(Theme.textDim)
-            Text("ORIONIDS PEAK · 21 OCT 18:00 – 22 OCT 06:00 · \(peak?.rawValue.uppercased() ?? "NOT IN THE SET")").font(AppFont.display(14)).foregroundStyle(Theme.textDim)
-            Link("Open Atlas badges", destination: URL(string: "https://youratlas.cc/app/profile")!)
-            Link("Open Garden sky events", destination: URL(string: "https://starsailors.space/game")!)
-            Link("Atlas Orionids check-in", destination: URL(string: "https://youratlas.cc/")!)
-        }
-        .font(AppFont.display(14))
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.ink, lineWidth: 2))
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("spacetober-strip")
     }
 
     private func eventStatus(_ id: String, now: Double) -> Int {
         guard let event = SkyEvents.event(id) else { return 2 }
         if now < event.startMs { return 0 }
         return now < event.endMs ? 1 : 2
+    }
+
+    private func eventSortRank(_ id: String, now: Double) -> Int {
+        switch eventStatus(id, now: now) {
+        case 1: return 0 // Live first.
+        case 0: return 1 // Then the next thing the player can prepare for.
+        default: return 2
+        }
     }
 
     private func status(_ start: Double, _ end: Double, now: Double, countdown: Bool) -> Status {

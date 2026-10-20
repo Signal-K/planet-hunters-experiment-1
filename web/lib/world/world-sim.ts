@@ -227,8 +227,8 @@ export function applySky(world: World, sky: SkyState, view: WorldView, dt: numbe
     }
     if (ev.kind === 'meteors' && ev.perMinute) emitAtRate(world, `m:${ev.id}`, ev.perMinute / 60, dt, () => {
       const angle = (world.rng.next() < 0.5 ? -1 : 1) * world.rng.range(0.35, 0.75)
-      const speed = world.rng.range(160, 240)
-      spawn(world, 'meteor', { x: world.rng.range(0, view.w), y: world.rng.range(view.h * 0.55, view.h * 0.95), vx: Math.sin(angle) * speed, vy: -Math.cos(angle) * speed, event: ev.id })
+      const speed = world.rng.range(100, 130)
+      spawn(world, 'meteor', { x: world.rng.range(0, view.w), y: world.rng.range(view.h * 0.78, view.h * 0.98), vx: Math.sin(angle) * speed, vy: -Math.cos(angle) * speed, event: ev.id })
     })
   }
   for (const id of [...world.activeEvents]) if (!live.has(id)) world.activeEvents.delete(id)

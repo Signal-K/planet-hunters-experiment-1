@@ -276,8 +276,8 @@ private struct FreeRunBoard: View {
             VStack(alignment: .leading, spacing: 10) {
                 if let eventFocus {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("\(eventFocus.uppercased()) NIGHT RUN").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
-                        Text("Mine falling debris to earn the event badge. Your normal cargo is yours to keep or sell.")
+                        Text(eventFocus.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+                        Text("Launch catches fragments · no cargo used")
                             .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                     }
                     .padding(12).frame(maxWidth: .infinity, alignment: .leading)

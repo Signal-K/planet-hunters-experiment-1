@@ -72,7 +72,6 @@
   padding-left: 8px;
   border-left: 1px solid var(--ln-hairline);
   color: var(--ln-text);
-  text-transform: none;
 }
 
 .fallback {
@@ -227,6 +226,20 @@
 .panelHeading > span {
   color: var(--ln-text);
   text-transform: none;
+}
+.panelClose {
+  min-width: 44px;
+  min-height: 44px;
+  margin-left: auto;
+  padding: 0 10px;
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-surface-2);
+  color: var(--ln-text);
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
 }
 .summary { color: var(--ln-text); }
 .meta {
