@@ -24,7 +24,6 @@ import {
 } from '@/lib/mission-board-view'
 import { clearMissionBoardTab, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
-import OrionidsPlanetMark from '@/components/game/orionids/OrionidsPlanetMark'
 import styles from './MissionBoard.module.css'
 
 // The board stands on the live base: the same plots and kit the Hub draws.
@@ -405,6 +404,7 @@ export default function MissionBoard({
   }
 
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
+  const atlasEventLink = events.spacetober.links.find(link => link.href.includes('/orionids'))
   const chooseTab = (next: MissionBoardTab) => setTab(next)
   const tabButtons = <>
     <button type="button" className={styles.tab} aria-label="Contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
@@ -477,16 +477,15 @@ export default function MissionBoard({
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
         {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
-          <b>{eventFocus} night run</b><span>Mine falling debris to earn the event badge. Your normal cargo is yours to keep or sell.</span>
+          <b>{eventFocus}</b><span>Debris bonus active</span>
         </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>
-            <span>Free run · no client, sell at market price</span>
-            <h2>{picked ? picked.name : 'Choose a site on the map'}</h2>
+            <span>Free run</span>
+            <h2>{picked ? shortName(picked.name) : 'Choose a site'}</h2>
           </div>
         </header>
         {!picked && <p className={styles.dockBrief}>Tap a planet, or open the asteroid belt, to pick where to mine.</p>}
-        {picked && <p className={styles.dockBrief}>{picked.brief}</p>}
         {picked && pickedRuns.length > 1 && <div className={styles.dockRuns} role="group" aria-label="Run">
           {pickedRuns.map(run => <button key={run.id} type="button" data-testid={`free-run-${run.id}`} data-on={run.id === pickedRun?.id || undefined} onClick={() => setRunId(run.id)}>
             {run.id === ORIONIDS_NIGHT_RUN_ID
@@ -495,8 +494,7 @@ export default function MissionBoard({
           </button>)}
         </div>}
         {picked && pickedRuns.length === 0 && <p className={styles.dockBrief}>No free run mines this site yet.</p>}
-        <div className={styles.dockDeal}>
-          <strong className={styles.pay}>{pickedRun ? (pickedRun.id === ORIONIDS_NIGHT_RUN_ID ? `Catch ${ORIONIDS_FRAGMENT_GOAL} Orionid fragments` : Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')) : ''}</strong>
+        <div className={`${styles.dockDeal} ${styles.freeAction}`}>
           <button type="button" className={styles.take} data-testid="free-run-start" disabled={!picked || !pickedRun}
             onClick={() => { if (!picked || !pickedRun) return; onAccept(pickedRun.id); onPickTarget?.(picked.id) }}>START RUN</button>
         </div>
@@ -540,47 +538,19 @@ export default function MissionBoard({
           </div>}
 
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">
-            <section className={styles.spacetober} data-testid="spacetober-strip" aria-label="Spacetober">
-              <header>
-                <h2>{events.spacetober.title}</h2>
-                <p>{events.spacetober.detail}</p>
-              </header>
-              <ol>
-                {events.spacetober.steps.map(step => (
-                  <li key={step.id} data-testid={`spacetober-${step.id}`}>
-                    <strong>{step.name}</strong>
-                    <span>{step.when}</span>
-                    <em>{step.status}{step.tier ? ` · ${step.tier} in the set` : ''}</em>
-                  </li>
-                ))}
-              </ol>
-              <nav aria-label="Spacetober links">
-                {events.spacetober.links.map(link => (
-                  <a key={link.href} href={link.href} target="_blank" rel="noreferrer">{link.label}</a>
-                ))}
-              </nav>
-              {events.spacetober.vouchers.map(voucher => (
-                <p key={voucher.subjectId} data-testid="orionids-voucher">
-                  <OrionidsPlanetMark name={voucher.name} />
-                  <span>{voucher.tier} voucher · Redeem coming soon</span>
-                </p>
-              ))}
-              {events.spacetober.mastery >= 1 && <p data-testid="meteorite-mastery">Meteorite mastery {events.spacetober.mastery}</p>}
-            </section>
-            {events.groups.map(group => <section key={group.status} className={styles.eventGroup} data-testid={`events-group-${group.status}`}>
-              <header className={styles.eventGroupHead}><h2>{group.title}</h2><span>{group.cards.length}</span></header>
+            {events.groups.map(group => <section key={group.status} className={styles.eventGroup} aria-label={group.title} data-testid={`events-group-${group.status}`}>
               <div className={styles.eventGrid}>
                 {group.cards.map(event => <article key={event.id} className={styles.eventCard} data-testid={event.id === 'orionids-2026' ? 'events-orionids' : `events-card-${event.id}`}>
                   <div className={styles.eventArt} aria-hidden="true"><SkyBanner kind={bannerKind(event.id)} /></div>
                   <div className={styles.eventBody}>
                     <div className={styles.eventTitle}><h3>{event.name}</h3><EventStatus card={event} /></div>
                     <p className={styles.eventReward}>{event.rewardLabel}</p>
-                    {event.blurb && <p className={styles.blurb}>{event.blurb}</p>}
                     <button type="button" className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
                   </div>
                 </article>)}
               </div>
             </section>)}
+            {atlasEventLink && <a className={styles.eventAtlas} href={atlasEventLink.href} target="_blank" rel="noreferrer">OPEN IN ATLAS</a>}
           </div>}
       </div>}
     </section>

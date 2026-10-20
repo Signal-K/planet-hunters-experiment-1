@@ -422,14 +422,14 @@
     "meteor": {
       "shape": "streak",
       "colour": "#f4f8fb",
-      "length": 26,
+      "length": 6,
       "width": 1.4,
       "layer": 4,
       "depth": 0,
       "sky": true,
       "body": {
         "gravity": 0,
-        "life": 0.9
+        "life": 0.28
       }
     },
     "raindrop": {

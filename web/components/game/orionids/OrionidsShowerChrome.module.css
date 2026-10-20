@@ -7,28 +7,21 @@
 }
 
 .sky {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.22;
-  mix-blend-mode: multiply;
-  image-rendering: pixelated;
+  display: none;
 }
 
 .streak,
 .streakLate {
   position: absolute;
-  width: 180px;
+  width: 82px;
   height: auto;
   image-rendering: pixelated;
-  opacity: 0.55;
+  opacity: 0.42;
   animation: orionids-drift 16s linear infinite;
 }
 
-.streak { top: 12%; left: -20%; }
-.streakLate { top: 38%; left: -10%; animation-delay: -8s; animation-duration: 22s; }
+.streak { top: 8%; left: -10%; }
+.streakLate { top: 22%; left: -8%; animation-delay: -8s; animation-duration: 22s; }
 
 .sheet button {
   min-height: 44px;
@@ -119,8 +112,10 @@
 }
 
 @keyframes orionids-drift {
-  from { transform: translateX(0); }
-  to { transform: translateX(140vw); }
+  0% { transform: translateX(0); opacity: 0; }
+  4% { opacity: 0.42; }
+  64% { opacity: 0.42; }
+  72%, 100% { transform: translateX(112vw); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

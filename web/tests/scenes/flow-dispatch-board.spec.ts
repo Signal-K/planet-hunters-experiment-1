@@ -28,7 +28,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await expect(page.getByTestId('mission-board-events')).toBeVisible()
       await expect(page.getByTestId('events-orionids')).toBeVisible()
       await page.getByTestId('event-action-orionids-2026').click()
-      await expect(page.getByTestId('event-run-context')).toContainText(/Orionids night run/i)
+      await expect(page.getByTestId('event-run-context')).toContainText(/Orionids.*Debris bonus active/i)
       await expect(page.getByTestId('free-run-start')).toBeEnabled()
     })
   })

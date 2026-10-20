@@ -156,8 +156,8 @@ public struct World: Sendable {
             if ev.kind == .meteors, let perMinute = ev.perMinute {
                 emitAtRate("m:\(ev.id)", perSecond: perMinute / 60, dt: dt) { w in
                     let angle = (w.rng.next() < 0.5 ? -1.0 : 1.0) * w.rng.range(0.35, 0.75)
-                    let speed = w.rng.range(160, 240)
-                    let x = w.rng.range(0, view.w), y = w.rng.range(view.h * 0.55, view.h * 0.95)
+                    let speed = w.rng.range(100, 130)
+                    let x = w.rng.range(0, view.w), y = w.rng.range(view.h * 0.78, view.h * 0.98)
                     w.spawn("meteor", Over(x: x, y: y, vx: sin(angle) * speed, vy: -cos(angle) * speed, event: ev.id))
                 }
             }
