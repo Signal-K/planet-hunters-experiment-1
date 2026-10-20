@@ -40,6 +40,9 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(box && box.height >= 44 && box.width >= 44).toBe(true)
       await page.waitForTimeout(600)
       await page.screenshot({ path: info.outputPath(`dispatch-${vp}.png`) })
+      await page.getByTestId('mission-board-close').click()
+      await expect(page.locator('[data-screen="hub"]')).toBeVisible()
+      await page.screenshot({ path: info.outputPath(`dispatch-close-${vp}.png`) })
     })
   })
 

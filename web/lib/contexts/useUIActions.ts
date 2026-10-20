@@ -4,6 +4,7 @@ import type { Screen, GameState } from '@/lib/game-types'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
 import { isHostScene, resolveLogicalBack, type HostScene } from '@/lib/screen-back'
+import { releaseEditorFollow } from '@/lib/dev-follow'
 
 let toastSeq = 0
 function nextToastId() { return `t${++toastSeq}` }
@@ -67,6 +68,7 @@ export function useUIActions(
   }, [rememberHost])
 
   const goBack = useCallback((fallback: Screen = 'hub') => {
+    releaseEditorFollow()
     let destination: Screen | null = null
     setState(s => {
       destination = resolveLogicalBack({
