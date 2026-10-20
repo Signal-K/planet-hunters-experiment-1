@@ -20,7 +20,11 @@ import PageSurface from '@/components/ui/PageSurface'
 import { buyBlocker, exchangeBuilt } from '@/lib/systems/MarketplaceSystem'
 import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScreen'
 
-const ScreenLoading = () => <div className="game-screen-loading" aria-hidden="true" />
+const ScreenLoading = () => (
+  <div className="game-screen-loading" role="status" aria-label="Loading screen">
+    <span>LOADING</span>
+  </div>
+)
 
 const loadMissionSetupRoutes = () => import('@/components/game/MissionSetupRoutes')
 const loadMarketScreen = () => import('@/components/game/screens/MarketScreen')

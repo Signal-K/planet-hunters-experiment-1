@@ -3,7 +3,7 @@ import { sceneTransitionDurationMs, transitionKind } from './scene-transition'
 
 describe('scene transitions', () => {
   it('keeps ordinary navigation brisk and reserves longer timing for cinematics', () => {
-    expect(sceneTransitionDurationMs()).toBe(180)
+    expect(sceneTransitionDurationMs()).toBe(0)
     expect(sceneTransitionDurationMs('arrival')).toBe(380)
   })
 

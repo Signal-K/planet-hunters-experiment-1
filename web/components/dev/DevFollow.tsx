@@ -53,7 +53,10 @@ export function DevFollow() {
       }
     }
     const tick = async () => {
-      if (stopped) return
+      // Player navigation (especially an in-game Back button) releases the
+      // editor follower. Re-check every poll because this effect deliberately
+      // stays mounted across game routes.
+      if (stopped || localStorage.getItem('dev-follow') !== '1') return
       restoreMarker()
       try {
         const res = await fetch('/api/dev/follow', { cache: 'no-store' })
