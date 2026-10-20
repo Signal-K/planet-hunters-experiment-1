@@ -24,7 +24,7 @@ export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModul
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building } from '@/components/game/hub/Building'
 import { SiteMarker } from '@/components/game/hub/SiteMarker'
-import { STRIP_W, homeCenter, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
+import { STRIP_W, displaySite, homeCenter, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
@@ -157,7 +157,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     .map(e => {
       const plot = readComponentNumber(e, 'BuildPlot', 'index', 0)
       const kind = Object.entries(effectivePlots).find(([, index]) => index === plot)?.[0]
-      const site = kind ? homeSite(kind) : null
+      const authoredSite = kind ? homeSite(kind) : null
+      const site = authoredSite ? displaySite(authoredSite) : null
       const sprite = kind ? structureSprite(kind) : null
       if (!site) {
         const widthPct = kind ? structureWidthPct(kind, isUpgradableBuilding(kind) ? buildingLevel(player, kind) : 1) : 0
@@ -370,7 +371,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
 
   const underground = pickedBuild === 'surface-silo'
   // The one site the picked build may stand on, offered only while it is free.
-  const pickedSite = editMode && pickedBuild ? homeSite(pickedBuild) : null
+  const authoredPickedSite = editMode && pickedBuild ? homeSite(pickedBuild) : null
+  const pickedSite = authoredPickedSite ? displaySite(authoredPickedSite) : null
   const pickedOption = buildOptions.find(o => o.id === pickedBuild)
   const pickedSiteFree = !!pickedSite && pickedSite.plot != null && !placed.includes(pickedBuild ?? '') && !Object.values(effectivePlots).includes(pickedSite.plot)
   const placeOnPlot = (plot: number) => {
@@ -490,7 +492,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
                   : structureProps(kind)
                 // Outer plots open their callout inward so a 208px bubble
                 // can't run off the edge of the scene.
-                const xFrac = (homeSite(kind)?.x ?? STRIP_W / 2) / STRIP_W
+                const authoredSite = homeSite(kind)
+                const xFrac = (authoredSite ? displaySite(authoredSite).x : STRIP_W / 2) / STRIP_W
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
                 const silo = kind === 'surface-silo'
                 const editable = editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind)
@@ -637,6 +640,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
               locationLabel="Earth"
               locationNavigationDisabled
               showLocationBuild={buildOptions.length > 0}
+              buildLabel={editMode ? 'Done' : 'Build'}
+              buildTestId={editMode ? 'hub-build-done-btn' : 'hub-build-btn'}
             />
           </div>
         </div>

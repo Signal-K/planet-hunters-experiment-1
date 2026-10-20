@@ -179,7 +179,10 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
         <>
           <header className="ops-settings__head">
             <h2 className="ops-settings__page">Settings</h2>
-            <CloseButton onClick={onClose} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button type="button" className="ops-settings__btn" data-testid="sign-out" onClick={handleSignOut}>Sign out</button>
+              <CloseButton onClick={onClose} />
+            </div>
           </header>
 
           <div className="ops-settings__stack">

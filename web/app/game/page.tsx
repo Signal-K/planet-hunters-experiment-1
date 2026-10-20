@@ -26,6 +26,8 @@ function GameRouteBridge() {
 
   useEffect(() => {
     const presetName = searchParams.get('preset')
+    const entry = searchParams.get('entry')
+    if (entry === 'orionids') window.sessionStorage.setItem('landnam-entry', entry)
     const preset = presetName ? resolvePreset(presetName) : null
     // A saved deep screen (e.g. 'missions') only means something once this
     // device has an active authenticated session — otherwise the auth gate is
@@ -48,6 +50,7 @@ function GameRouteBridge() {
     }
     // The landing page's "Create account" link opens the gate on Sign Up.
     if (searchParams.get('gate') === 'signup') params.set('gate', 'signup')
+    if (entry === 'orionids') params.set('entry', 'orionids')
     const qs = params.toString()
     const query = qs ? `?${qs}` : ''
     router.replace(`/game/${route}${query}`)

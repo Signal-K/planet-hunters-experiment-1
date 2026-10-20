@@ -59,4 +59,20 @@ describe('AuthGateSheet', () => {
 
     await act(async () => root.unmount())
   })
+
+  it('keeps the Orionids destination visible through authentication', async () => {
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<AuthGateSheet entry="orionids" error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={vi.fn(async () => {})} />)
+    })
+
+    expect(host.textContent).toContain('Fly the Orionids')
+    expect(host.textContent).toContain('straight into the Orionids launch')
+    expect(host.querySelector('[data-testid="auth-gate-submit"]')?.textContent).toBe('Continue to Orionids')
+
+    await act(async () => root.unmount())
+  })
 })

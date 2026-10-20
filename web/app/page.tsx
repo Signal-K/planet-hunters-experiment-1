@@ -29,6 +29,16 @@ export default function Home() {
           <Link className={styles.primary} href="/game" data-testid="landing-enter-operations">Continue</Link>
           <Link className={styles.secondary} href="/game?gate=signup" data-testid="landing-create-account">Start new game</Link>
         </div>
+        <aside className={styles.event} aria-label="Orionids event">
+          <div>
+            <span>ORIONIDS LIVE</span>
+            <strong>Fly through the meteor shower</strong>
+            <p>Start with one guided launch, catch fragments and keep the badge in your full Landnam game.</p>
+          </div>
+          <Link className={styles.eventCta} href="/game?entry=orionids&amp;gate=signup" data-testid="landing-orionids">
+            FLY THE ORIONIDS
+          </Link>
+        </aside>
       </section>
 
       <ol className={styles.pillars}>

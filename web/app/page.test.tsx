@@ -6,6 +6,8 @@ describe('Landnam landing page', () => {
   it('lets a visitor see the growing Earth Base before entering operations', () => {
     const markup = renderToStaticMarkup(<Home />)
     expect(markup).toContain('data-testid="landnam-landing"')
+    expect(markup).toContain('data-testid="landing-orionids"')
+    expect(markup).toContain('/game?entry=orionids&amp;gate=signup')
     expect(markup).toContain('Base growing from one launchpad')
     expect(markup).toContain('Continue')
     expect(markup).toContain('Start new game')

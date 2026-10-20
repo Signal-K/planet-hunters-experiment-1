@@ -41,6 +41,7 @@ import { applyHomeSplit, clientDemand, clientPayout, type HomeSplit } from '@/li
 import { completeFlightPlanEvent, currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
+import { ORIONIDS_NIGHT_RUN_ID, orionidsNightRun } from '@/lib/data/missions'
 
 // 42s/orbit-unit — a ~65% cut from the original 2min/unit pace (KES-262):
 // full round trips were running long enough that players felt locked out of
@@ -335,8 +336,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // Counterpart to mission_completed — without a started event, Trends/
     // Funnels can't tell "never picked a mission" apart from "picked one and
     // dropped off before finishing it".
+    const entryMission = id === ORIONIDS_NIGHT_RUN_ID ? orionidsNightRun() : null
     const pickedMission = catalog.missions.find(m => m.id === id)
       ?? stateRef.current.player.dailyClientPool?.missions.find(m => m.id === id)
+      ?? entryMission
       ?? null
     if (pickedMission) {
       captureGameEvent('mission_started', {
@@ -346,9 +349,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       })
     }
     setState(s => {
-      if (s.screen !== 'missions' && s.screen !== 'launchpad') return s
+      const isOrionidsEntry = id === ORIONIDS_NIGHT_RUN_ID
+      if (s.screen !== 'missions' && s.screen !== 'launchpad' && !isOrionidsEntry) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
+        ?? entryMission
         ?? null
       if (!mission) return s
       let nextDailyPool = s.player.dailyClientPool
@@ -374,13 +379,24 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const dailyClientPool = (nextDailyPool && id.startsWith('dcp-'))
         ? { ...nextDailyPool, acceptedId: id }
         : nextDailyPool
+      // The landing-page event route is deliberately a minimal onboarding:
+      // provision only the starter pad that the canonical launch/recovery
+      // loop requires. The rest of the Base and training remain untouched for
+      // the player to return to after the shower run.
+      const entryPlayer = isOrionidsEntry && !prepared.player.placed.includes('launchpad')
+        ? {
+            ...prepared.player,
+            placed: [...prepared.player.placed, 'launchpad'],
+            placementPlots: { ...(prepared.player.placementPlots ?? {}), launchpad: 0 },
+          }
+        : prepared.player
       const base = {
         ...prepared,
         player: {
-          ...prepared.player,
+          ...entryPlayer,
           dailyClientPool,
-          francs: prepared.player.francs - (mission.jointProject?.playerCost ?? 0),
-          freeHaulDisposition: freeHaulDisposition ?? prepared.player.freeHaulDisposition,
+          francs: entryPlayer.francs - (mission.jointProject?.playerCost ?? 0),
+          freeHaulDisposition: freeHaulDisposition ?? entryPlayer.freeHaulDisposition,
         },
       }
       if (mission?.targetId) {

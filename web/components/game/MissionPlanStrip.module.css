@@ -32,5 +32,5 @@
 /* Desktop: ride the empty band between Launch and Target, above the part tabs. */
 @media (min-width: 900px) and (min-height: 600px) { .host { top: 66px; left: 260px; right: 260px; flex-direction: row; justify-content: center; align-items: center; gap: 16px; } .slots { flex-wrap: nowrap; } .slot { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px; } }
 @media (max-width: 899px) and (min-height: 521px) { .slot em { display: none; } .slot { min-height: 44px; } }
-@media (min-width: 900px) and (min-height: 600px) { .host { left: 290px; right: 270px; gap: 8px; } .slot em { display: none; } button.slot:not(:disabled)::after { content: '\203A'; font-weight: 800; } .slot { padding: 0 12px; } .slot strong { white-space: nowrap; } }
+@media (min-width: 900px) and (min-height: 600px) { .host { left: 290px; right: 270px; gap: 8px; flex-wrap: wrap; } .hold { flex: 0 0 100%; width: max-content; max-width: 100%; text-align: center; } .slot em { display: none; } button.slot:not(:disabled)::after { content: '\203A'; font-weight: 800; } .slot { padding: 0 12px; } .slot strong { white-space: nowrap; } }
 @media (max-width: 899px) and (min-height: 521px) { button.slot:not(:disabled)::after { content: '\203A'; position: absolute; right: 8px; top: 4px; font-weight: 800; } .slot { position: relative; } }

@@ -97,6 +97,40 @@
 
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
 
+.event {
+  width: min(100%, 620px);
+  margin-top: 4px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid rgba(159, 208, 255, 0.72);
+  border-radius: 8px;
+  background: rgba(15, 22, 54, 0.76);
+  box-shadow: 3px 3px 0 rgba(107, 180, 238, 0.42);
+  backdrop-filter: blur(6px);
+}
+.event div { display: grid; gap: 4px; }
+.event span { color: #9fd0ff; font: 800 14px var(--ln-font-mono); letter-spacing: 0.14em; }
+.event strong { font: 800 16px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; }
+.event p { max-width: 42ch; font: 400 14px/1.4 var(--ln-font-body); color: rgba(255, 255, 255, 0.82); }
+.eventCta {
+  min-width: 190px;
+  min-height: 52px;
+  padding: 0 18px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: #fff;
+  border: 1px solid #9fd0ff;
+  border-radius: 6px;
+  background: var(--ln-bp-blue);
+  font: 800 14px var(--ln-font-display);
+  letter-spacing: 0.12em;
+  text-decoration: none;
+}
+
 .primary,
 .secondary {
   min-height: 52px;
@@ -116,6 +150,7 @@
 .secondary:hover { background: rgba(255, 255, 255, 0.16); }
 .primary:focus-visible,
 .secondary:focus-visible,
+.eventCta:focus-visible,
 .signin:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 
 .pillars {
@@ -145,6 +180,8 @@
   .shade { background: linear-gradient(180deg, rgba(15, 22, 54, 0.72), rgba(15, 22, 54, 0.3) 45%, transparent 70%, rgba(15, 22, 54, 0.5)); }
   .brand i { display: none; }
   .pillars { display: none; }
+  .event { align-items: stretch; flex-direction: column; gap: 12px; }
+  .eventCta { width: 100%; }
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
@@ -152,4 +189,7 @@
   .hero { gap: 8px; margin-top: 0; }
   .title { font-size: clamp(28px, 5vw, 40px); }
   .copy { font-size: 16px; }
+  .event { padding: 10px 12px; gap: 12px; }
+  .event p { display: none; }
+  .eventCta { min-height: 44px; }
 }

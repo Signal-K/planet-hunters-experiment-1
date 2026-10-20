@@ -174,7 +174,7 @@ export function BaseDock({
   showLocationBuild = true,
 }: BaseDockProps) {
   const flight = variant === 'flight'
-  const label = flight ? buildLabel : 'Build'
+  const label = buildLabel
   if (locationLabel) {
     return (
       <nav aria-label="Location and scene actions" className="scene-location-dock" data-ui-zone={UI_ZONES.bottomNav} data-testid="base-dock">
@@ -184,8 +184,8 @@ export function BaseDock({
           <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label="Next location" disabled={locationNavigationDisabled} />
         </div>
         <div className="scene-location-actions">
-          {showLocationBuild && <DockWordButton data-testid="hub-build-btn" data-beacon="hub-build-btn" onClick={onBuild}>
-            {buildIcon ?? <BuildSiteIcon />}<span>Build</span>
+          {showLocationBuild && <DockWordButton data-testid={buildTestId} data-beacon={buildBeacon} onClick={onBuild}>
+            {buildIcon ?? <BuildSiteIcon />}<span>{buildLabel}</span>
           </DockWordButton>}
           {onMission && <DockWordButton className="scene-location-action--mission" data-testid="hub-new-mission-btn" onClick={onMission}>
             <MissionIcon /><span>Find mission</span>

@@ -31,6 +31,16 @@ export interface SkyGrade {
 
 export const SITES = site.sites as BaseSite[]
 const STRUCTURES = site.structures as Record<string, StructureSprite>
+const WEB_SITE_COMPRESSION = 0.84
+
+/**
+ * Web scene placement keeps the authored order and footprints but pulls the
+ * large-screen gaps inward. The shared site map remains the cross-platform
+ * source of truth; this is only a camera composition adjustment for web.
+ */
+export function displaySite(source: BaseSite): BaseSite {
+  return { ...source, x: STRIP_W / 2 + (source.x - STRIP_W / 2) * WEB_SITE_COMPRESSION }
+}
 
 /** Points per kit unit. Portrait fits the hangar and pad across the width (between 1.5 and 2); landscape is 2
  *  under 600 pt tall, else 3. Native uses the same rule. */
@@ -43,8 +53,8 @@ export function kitScale(view: { w: number; h: number }): number {
 /** Strip x (kit units) the camera starts centred on: the middle of everything built, or the pad site on a fresh
  *  base. When the built span is wider than the view, the pad stays in frame. */
 export function homeCenter(kinds: readonly string[], viewUnits: number): number {
-  const sites = kinds.map(homeSite).filter((s): s is BaseSite => !!s && s.id !== 'shaft')
-  const pad = siteById('pad')
+  const sites = kinds.map(homeSite).filter((s): s is BaseSite => !!s && s.id !== 'shaft').map(displaySite)
+  const pad = displaySite(siteById('pad'))
   if (!sites.length) return pad.x
   const l = Math.min(...sites.map(s => s.x - s.half))
   const r = Math.max(...sites.map(s => s.x + s.half))
