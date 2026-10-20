@@ -16,6 +16,7 @@ import {
   submitFireballQuiz,
 } from '@/lib/orionids/fireball'
 import { queueEventBadge } from '@/lib/orionids/persist'
+import { OPEN_ORIONIDS_READING_EVENT } from '@/lib/orionids/reading'
 import styles from './OrionidsShowerChrome.module.css'
 
 export default function OrionidsShowerChrome() {
@@ -31,6 +32,12 @@ export default function OrionidsShowerChrome() {
     tick()
     const id = window.setInterval(tick, 30_000)
     return () => window.clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    const showReading = () => setOpen(true)
+    window.addEventListener(OPEN_ORIONIDS_READING_EVENT, showReading)
+    return () => window.removeEventListener(OPEN_ORIONIDS_READING_EVENT, showReading)
   }, [])
 
   useEffect(() => {
@@ -92,11 +99,6 @@ export default function OrionidsShowerChrome() {
         <img className={styles.sky} src={art.sky} alt="" />
         <img className={styles.streak} src={art.streaks[0].file} alt="" />
         <img className={styles.streakLate} src={art.streaks[2].file} alt="" />
-      </div>
-      <div className={styles.banner} role="status" data-testid="orionids-banner">
-        <img src={art.meteorIcon} alt="" width={28} height={28} />
-        <p>The Orionids shower is happening. Best after moonset, about 02:00 local on 21–22 Oct.</p>
-        <button type="button" onClick={() => setOpen(true)}>Read the sky</button>
       </div>
       {open && (
         <section className={styles.sheet} aria-label="Fireballs in the Sky" data-testid="fireball-reading">

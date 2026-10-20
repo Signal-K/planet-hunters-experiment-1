@@ -5,6 +5,7 @@ import { captureGameEvent } from '@/lib/posthog'
 import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { ORIONIDS_VARIANTS, orionidsVariantForSurface } from '@/lib/orionids/theme'
 import { ORIONIDS_DEBRIS_PRESET, ORIONIDS_PANEL, WORLD_SPACE_WEEK_PLAYER_LINKS, isOrionidsPeakNight, isOrionidsWindow, orionidsShareText, type BadgeTier } from '@/lib/data/sky-events'
+import { openOrionidsReading } from '@/lib/orionids/reading'
 import styles from './SkyEventChip.module.css'
 
 const seenSurfaces = new Set<string>()
@@ -42,7 +43,6 @@ export default function SkyEventChip({
   // SSL-578: Base keeps an Orionids entry all day in the window; debris itself waits for night.
   const daytimeEntry = !activePreset && inWindow && surface === 'base'
   const preset = activePreset ?? (daytimeEntry ? ORIONIDS_DEBRIS_PRESET : null)
-  const [dotOn, setDotOn] = useState(true)
   const orionids = preset?.eventId === 'orionids-2026'
   const share = async () => {
     if (!badgeTier) return
@@ -64,13 +64,6 @@ export default function SkyEventChip({
     captureGameEvent('sky_event_seen', { event_id: preset.eventId, surface })
   }, [preset, surface])
 
-  useEffect(() => {
-    if (!orionids) return
-    if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const id = window.setInterval(() => setDotOn(on => !on), 600)
-    return () => window.clearInterval(id)
-  }, [orionids])
-
   if (!preset) return null
   return (
     <>
@@ -84,7 +77,20 @@ export default function SkyEventChip({
         />
       )}
       <div className={[styles.hud, 'sky-event-wrap', className].filter(Boolean).join(' ')} data-testid={`sky-event-${surface}`}>
-        {orionids && !daytimeEntry ? (
+        {orionids && surface === 'base' ? (
+          <button
+            type="button"
+            className={styles.eventButton}
+            data-testid="sky-event-chip"
+            aria-expanded={open}
+            aria-label={`Orionids ${daytimeEntry ? 'tonight' : 'live'}. Open event details.`}
+            onClick={() => setOpen(o => !o)}
+          >
+            <img src={variant.meteorIcon} alt="" />
+            <span>Orionids</span>
+            <small>{daytimeEntry ? 'Tonight' : 'Live'}</small>
+          </button>
+        ) : orionids ? (
           <button
             type="button"
             className={styles.chip}
@@ -93,7 +99,7 @@ export default function SkyEventChip({
             aria-label="Orionids active. Debris falls while you mine tonight."
             onClick={() => setOpen(o => !o)}
           >
-            <img src={dotOn ? variant.chipOn : variant.chipOff} alt="" width={235} height={44} />
+            <img src={variant.chipOn} alt="" width={235} height={44} />
           </button>
         ) : (
           <button
@@ -108,15 +114,20 @@ export default function SkyEventChip({
         )}
         {open && orionids && (
           <section className={styles.panel} data-testid="orionids-panel" aria-label="Orionids event">
-            <h2 className={styles.panelTitle}>{ORIONIDS_PANEL.title}</h2>
-            <p>{ORIONIDS_PANEL.what}</p>
-            <p><strong className={styles.label}>When</strong> {ORIONIDS_PANEL.when}</p>
-            <p data-peak={peak ? 'on' : 'off'}><strong className={styles.label}>{peak ? 'Peak now' : 'Peak'}</strong> {ORIONIDS_PANEL.peak}</p>
-            <ol className={styles.steps}>
-              {ORIONIDS_PANEL.steps.map(step => <li key={step}>{step}</li>)}
-            </ol>
-            <p><strong className={styles.label}>Badge</strong> {badgeTier ? `You hold the ${badgeTier} Orionids badge.` : 'Mine your first debris to earn gold. After the shower it is silver.'}</p>
-            {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={onParticipate}>VIEW EVENT</button>}
+            <div className={styles.panelHeading}>
+              <h2 className={styles.panelTitle}>{ORIONIDS_PANEL.title}</h2>
+              <span>{peak ? 'Peak now' : daytimeEntry ? 'Tonight' : 'Live'}</span>
+            </div>
+            <p className={styles.summary}>{daytimeEntry ? 'A night run opens at 22:00 local time.' : 'Catch falling fragments during the Orionids night run.'}</p>
+            <div className={styles.meta} aria-label="Orionids dates">
+              <span>19 Oct–7 Nov</span>
+              <span>Peak 21–22 Oct</span>
+            </div>
+            <p className={styles.reward}>{badgeTier ? `${badgeTier} badge earned` : 'First debris earns Gold · Silver replay later'}</p>
+            <div className={styles.actions}>
+              {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={onParticipate}>VIEW EVENT</button>}
+              {surface === 'base' && <button type="button" className={styles.secondary} data-testid="orionids-read-sky" onClick={openOrionidsReading}>READ THE SKY</button>}
+            </div>
             {badgeTier && (
               <button type="button" className={styles.fallback} data-testid="orionids-share" onClick={() => { void share() }}>
                 {shared ? 'Copied' : 'Share badge'}
