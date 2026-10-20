@@ -34,6 +34,7 @@ import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
 import { grantOrionidsPlanetFind } from '@/lib/orionids/finds'
 import { queueMeteoriteMastery, queueOrionidsFind } from '@/lib/orionids/persist'
+import { applyLaunchCatch, combineFragments, redeemFragments, FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL } from '@/lib/orionids/fragments'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { applyHomeSplit, clientDemand, clientPayout, type HomeSplit } from '@/lib/systems/HomeDeliverySystem'
@@ -523,6 +524,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const isFirstEver = current.player.missionsDone === 0
     let launchedTransitStartedAt: number | null = null
     let earnedLaunchBadge: 'gold' | 'silver' | null = null
+    let ascentFragments = 0
     setState(s => {
       const vehicle = s.player.stagedRockets?.find(candidate => candidate.id === s.player.selectedStagedRocketId)
       if ((s.screen !== 'fab' && s.screen !== 'launchpad') || !s.missionId || !s.targetId || s.player.activeMission || !vehicle || vehicle.location !== 'launchpad') return s
@@ -551,10 +553,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const badged = grantSkyBadges(s.player, 'launch', at)
       const earned = badged.badges?.['rocket-revolution-2026']
       if (earned && earned !== beforeBadge) earnedLaunchBadge = earned.tier
+      const ascended = applyLaunchCatch(badged, at)
+      ascentFragments = (ascended.orionidsFragments?.caught ?? 0) - (badged.orionidsFragments?.caught ?? 0)
       return {
         ...s,
         player: {
-          ...badged,
+          ...ascended,
           pendingLaunch: remainingStagedRockets.length > 0,
           pendingRocketId: nextStagedRocket?.rocketId,
           pendingRocketLocation: nextStagedRocket?.location,
@@ -599,6 +603,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
     captureGameEvent('rocket_launched', { mission_id: currentMission.id, target_id: current.targetId, is_first_ever: isFirstEver })
     if (earnedLaunchBadge) addToast(`Rocket Revolution badge · ${earnedLaunchBadge === 'gold' ? 'Gold' : 'Silver'}`, 'ok')
+    if (ascentFragments > 0) addToast(`${ascentFragments} Orionid fragments caught on the way up`, 'ok')
     if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
     if (currentMissionCrew.length > 0) enqueueSurvey('lnm_crew_first_launch', 4000)
   }, [addToast, catalog.missions, catalog.targets, setState, stateRef])
@@ -721,6 +726,28 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
     addToast(hasDelivery ? 'Redock complete — course set for delivery' : 'Redock complete — return to Earth for recovery', 'ok')
   }, [addToast, catalog.targets, setState])
+
+  const onRedeemFragments = useCallback(() => {
+    let did = false
+    setState(s => {
+      const next = redeemFragments(s.player)
+      if (next === s.player) return s
+      did = true
+      return { ...s, player: next }
+    })
+    if (did) addToast(`Redeemed ${FRAGMENT_REDEEM_BATCH} fragments for research`, 'ok')
+  }, [addToast, setState])
+
+  const onCombineFragments = useCallback(() => {
+    let did = false
+    setState(s => {
+      const next = combineFragments(s.player)
+      if (next === s.player) return s
+      did = true
+      return { ...s, player: next }
+    })
+    if (did) addToast(`Combined ${FRAGMENTS_PER_FIREBALL} fragments into a fireball`, 'ok')
+  }, [addToast, setState])
 
   const gainResearchXP = useCallback((amount: number) => {
     setState(s => applyGainResearchXP(s, amount))
@@ -1478,7 +1505,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
-    onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onLaunch, resumeMissionRun,
+    onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onLaunch, onRedeemFragments, onCombineFragments, resumeMissionRun,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverSurveyComplete, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,

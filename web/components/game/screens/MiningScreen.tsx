@@ -306,7 +306,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       catchesRef.current += 1
       setCatches(catchesRef.current)
     }
-    const room = cargoCapacity == null || holdHasRoom(cargoRef.current, cargoCapacity)
+    const room = cargoCapacity == null || holdHasRoom(cargoRef.current, cargoCapacity, mineral)
     if (room) {
       cargoRef.current = {
         ...cargoRef.current,

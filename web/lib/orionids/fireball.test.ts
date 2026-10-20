@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { MINERAL_META } from '@/lib/data/minerals'
-import { FIREBALL_EXCHANGE_MULTIPLE, ORIONID_EXCHANGE_PRICE } from '@/lib/data/economy'
+import { FIREBALL_EXCHANGE_MULTIPLE, OPEN_MARKET_SELL_RATE, ORIONID_EXCHANGE_PRICE, ORIONID_FRAGMENT_BOOK } from '@/lib/data/economy'
 import {
   FIREBALL_ARTICLE,
   FIREBALL_FRAGMENT_ID,
@@ -48,7 +48,8 @@ describe('fireball catch badge', () => {
 
   it('prices the fragment at 15× one Orionid fragment on the Exchange', () => {
     expect(MINERAL_META[FIREBALL_FRAGMENT_ID].price).toBe(FIREBALL_FRAGMENT_PRICE)
-    expect(FIREBALL_FRAGMENT_PRICE).toBe(ORIONID_EXCHANGE_PRICE * FIREBALL_EXCHANGE_MULTIPLE)
+    expect(FIREBALL_FRAGMENT_PRICE).toBe(ORIONID_FRAGMENT_BOOK * FIREBALL_EXCHANGE_MULTIPLE)
+    expect(Math.round(FIREBALL_FRAGMENT_PRICE * OPEN_MARKET_SELL_RATE)).toBe(ORIONID_EXCHANGE_PRICE * FIREBALL_EXCHANGE_MULTIPLE)
     expect(FIREBALL_EXCHANGE_MULTIPLE).toBe(15)
   })
 })

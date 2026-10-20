@@ -71,7 +71,7 @@
 .eventButton small {
   padding-left: 8px;
   border-left: 1px solid var(--ln-hairline);
-  color: var(--ln-cyan);
+  color: var(--ln-text);
 }
 
 .fallback {

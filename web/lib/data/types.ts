@@ -191,6 +191,8 @@ export interface MineralMeta {
   // shape is what actually disambiguates them on screen. Defaults to 'circle'
   // when unset.
   shape?: 'circle' | 'diamond' | 'rect' | 'triangle'
+  /** Cargo units one piece occupies. Event fragments are 0. Defaults to 1. */
+  cargoUnits?: number
 }
 
 export interface Client {

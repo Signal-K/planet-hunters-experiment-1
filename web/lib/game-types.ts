@@ -400,13 +400,17 @@ export interface Player {
   badges?: Record<string, import('@/lib/data/sky-events').PlayerBadge>
   /** Planets found or classified during Orionids. Keyed by subject id. Synced in game_states. */
   orionidsFinds?: Record<string, import('@/lib/orionids/finds').OrionidsFind>
-  /** Shared meteorite mastery. Level 1 is the only grant; redeem is not built. */
+  /** Shared meteorite mastery. Redeem stores the fragment count; deeper levels can follow. */
   meteoriteMastery?: number
+  /** Fragments caught during the shower, and how many were redeemed for research. Synced in game_states. */
+  orionidsFragments?: { caught: number; redeemed: number } | null
+  /** Unix ms when the Atlas looked-up check-in was granted. */
+  orionidsLookedUpAt?: number | null
   /** Unix ms when this player caught the 22 Oct 02:00 fireball fragment. */
   fireball2026CaughtAt?: number | null
   /** Fireballs in the Sky reading plus the check. Both are required for the badge. */
   fireballSpotter?: { readAt: number | null; passedAt: number | null } | null
-  /** Orionid fragments caught on one local night. Synced in game_states. Cargo does not hold this count. */
+  /** Older per-night catch count. New progress uses orionidsFragments. */
   orionidsNightCatches?: { night: string; count: number } | null
   // Player's satellite-pointing choice for the *next* daily downlink,
   // picked from the PixiGalaxyStarMap after classifying today's candidate.
@@ -587,6 +591,8 @@ export interface GameActions {
   onAssembleFabricatedRocket: (rocketId: string) => void
   onTransferToLaunchpad: () => void
   onLaunch: () => void
+  onRedeemFragments: () => void
+  onCombineFragments: () => void
   resumeMissionRun: (key: string) => void
   onMiningDone: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   onDeliveryArrived: () => void

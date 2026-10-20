@@ -36,8 +36,9 @@ describe('Orionids night catches', () => {
   })
 
   it('lets cargo stop at the hold while a catch still fits the count', () => {
-    expect(holdHasRoom({ orionid_debris: 7 }, 8)).toBe(true)
-    expect(holdHasRoom({ orionid_debris: 8 }, 8)).toBe(false)
-    expect(holdHasRoom({ orionid_debris: 10, iron: 0 }, 10)).toBe(false)
+    expect(holdHasRoom({ orionid_debris: 40 }, 8)).toBe(true)
+    expect(holdHasRoom({ iron: 7, orionid_debris: 20 }, 8)).toBe(true)
+    expect(holdHasRoom({ iron: 8 }, 8)).toBe(false)
+    expect(holdHasRoom({ iron: 8, orionid_debris: 10 }, 8, 'orionid_debris')).toBe(true)
   })
 })

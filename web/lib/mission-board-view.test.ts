@@ -47,7 +47,12 @@ describe('mission board view', () => {
     const board = eventsBoard(NOW, {}, NOW)
     expect(board.orionids.status).toBe('upcoming')
     expect(board.orionids.countdownLabel).toMatch(/to start/)
-    expect(board.orionids.blurb).toBe('Mine debris at night, earn badges. Classify a planet tonight for a voucher.')
+    expect(board.orionids.blurb).toBe('Launch through the shower and catch fragments on the way up. They fall any time in the window.')
+    expect(board.groups.find(group => group.status === 'upcoming')?.cards.map(card => card.id)).toEqual([
+      'orionids-2026',
+      'leonids-2026',
+      'geminids-2026',
+    ])
     expect(board.wsw.map(card => card.id)).toEqual([
       'draconids-2026',
       'saturn-night-2026',

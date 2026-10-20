@@ -6,6 +6,7 @@ import { sanitizeBadges } from '@/lib/data/sky-events'
 import { reconcileOrionidsFinds, sanitizeMeteoriteMastery, sanitizeOrionidsFinds } from '@/lib/orionids/finds'
 import { sanitizeFireballCaughtAt, sanitizeFireballSpotter } from '@/lib/orionids/fireball'
 import { mergeNightCatches, sanitizeNightCatches } from '@/lib/orionids/night-catches'
+import { fragmentsFromSave, mergeFragments } from '@/lib/orionids/fragments'
 import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, OWN_PROGRAM_CLIENT_ID, TARGETS } from '@/lib/data'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
@@ -86,6 +87,8 @@ export const DEFAULT_STATE: GameState = {
     badges: {},
     orionidsFinds: {},
     meteoriteMastery: 0,
+    orionidsFragments: { caught: 0, redeemed: 0 },
+    orionidsLookedUpAt: null,
     orionidsNightCatches: null,
     fireball2026CaughtAt: null,
     fireballSpotter: { readAt: null, passedAt: null },
@@ -352,7 +355,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
@@ -679,6 +682,8 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.badges = mergeBadges(current.player.badges, remoteState.player?.badges)
   merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)
   merged.player.meteoriteMastery = Math.max(current.player.meteoriteMastery ?? 0, remoteState.player?.meteoriteMastery ?? 0)
+  merged.player.orionidsFragments = mergeFragments(current.player.orionidsFragments, remoteState.player?.orionidsFragments)
+  merged.player.orionidsLookedUpAt = earliestStamp(current.player.orionidsLookedUpAt, remoteState.player?.orionidsLookedUpAt) ?? null
   merged.player.orionidsNightCatches = mergeNightCatches(current.player.orionidsNightCatches, remoteState.player?.orionidsNightCatches)
   merged.player.fireball2026CaughtAt = earliestStamp(current.player.fireball2026CaughtAt, remoteState.player?.fireball2026CaughtAt) ?? null
   merged.player.fireballSpotter = {

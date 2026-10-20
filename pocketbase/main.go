@@ -1103,10 +1103,12 @@ func seedCatalog(app core.App) {
 		{"palladium", mineral{"Palladium", "Pd", "#d4cce8", "rare", "fuel cell demand", "Hydrogen fuel cells, electronics", mineralValueRare, 1}},
 		{"iridium", mineral{"Iridium", "Ir", "#b8b4cc", "rare", "high-temp alloy demand", "High-temp alloys, ignition components", mineralValueRare, 2}},
 		{"rhodium", mineral{"Rhodium", "Rh", "#f0e8d4", "exotic", "thruster lining supply", "Thruster lining, radiation-hard optics", mineralValueExotic, 2}},
-		// Sky-event debris. Matches web MINERAL_META.orionid_debris and Minerals.swift.
-		{"orionid_debris", mineral{"Orionid Debris", "Od", "#7fd8ff", "uncommon", "event debris", "Event debris; sell at market", mineralValueUncommon, 1}},
-		// 15× the Orionid Exchange price (1_680_000 × 0.8). See FIREBALL_FRAGMENT_PRICE.
-		{"fireball_fragment", mineral{"Fireball Fragment", "Fb", "#b7e3ff", "exotic", "event fragment", "Event fragment; sell at market", 20_160_000, 1}},
+		// Sky-event debris. Fragment book is 120_000 (a modest bonus). See ORIONID_FRAGMENT_BOOK.
+		{"orionid_debris", mineral{"Orionid Debris", "Od", "#7fd8ff", "uncommon", "event debris", "Event debris; sell at market", 120_000, 1}},
+		{"leonid_debris", mineral{"Leonid Debris", "Ld", "#9fd6e4", "uncommon", "event debris", "Event debris; sell at market", 120_000, 1}},
+		{"geminid_debris", mineral{"Geminid Debris", "Gd", "#b7e3ff", "uncommon", "event debris", "Event debris; sell at market", 120_000, 1}},
+		// 15× the Orionid fragment book. Exchange receipt is 15× one fragment sale. See FIREBALL_FRAGMENT_PRICE.
+		{"fireball_fragment", mineral{"Fireball Fragment", "Fb", "#b7e3ff", "exotic", "event fragment", "Event fragment; sell at market", 1_800_000, 1}},
 	}
 	for _, m := range minerals {
 		seedRecord(app, "minerals", m.slug, map[string]any{
