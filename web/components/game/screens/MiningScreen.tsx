@@ -750,7 +750,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </>
         )}
         {fireballCard && (
-          <div className={styles.fireballCard} data-testid="fireball-reward" role="dialog" aria-label="Fireball caught">
+          <div className={styles.fireballCard} data-testid="fireball-reward" role="status" aria-label="Fireball caught">
             <strong>FIREBALL CAUGHT</strong>
             <p>Fireball fragment</p>
             <p>Exchange worth {fireballWorth}</p>
