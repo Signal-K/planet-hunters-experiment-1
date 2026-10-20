@@ -1,15 +1,13 @@
 /**
  * Scene-to-scene motion (SSL-441).
  *
- * Every routed change fades through the dark command-deck backdrop.
- * Three hops in the flight loop use a short in-world move on top of that
- * fade: the rocket leaving the pad, arrival at a body, and the return
- * into debrief. Ordinary navigation is deliberately quicker than those
- * cinematic hops. Reduced motion skips the hold and swaps immediately.
+ * Ordinary routed changes swap immediately. Three hops in the flight loop
+ * retain a short in-world move: the rocket leaving the pad, arrival at a
+ * body, and the return into debrief. Reduced motion skips every hold.
  */
 
-export const SCENE_TRANSITION_OUT_MS = 80
-export const SCENE_TRANSITION_IN_MS = 100
+export const SCENE_TRANSITION_OUT_MS = 0
+export const SCENE_TRANSITION_IN_MS = 0
 export const CINEMATIC_TRANSITION_OUT_MS = 180
 export const CINEMATIC_TRANSITION_IN_MS = 200
 

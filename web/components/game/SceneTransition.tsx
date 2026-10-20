@@ -41,6 +41,16 @@ export default function SceneTransition({ sceneKey, children }: { sceneKey: stri
       return
     }
     const nextKind = transitionKind(held.current.key, sceneKey)
+    // Menu and screen navigation should feel immediate. Only actual flight
+    // beats retain a cinematic veil; holding ordinary routes here made every
+    // button feel laggy and exposed an empty dynamic-import fallback.
+    if (nextKind === 'fade') {
+      held.current = { key: sceneKey, node: latest.current }
+      setKind('fade')
+      setPhase('idle')
+      setEpoch(value => value + 1)
+      return
+    }
     const timing = sceneTransitionTiming(nextKind)
     setKind(nextKind)
     setPhase('out')

@@ -30,47 +30,6 @@
 .streak { top: 12%; left: -20%; }
 .streakLate { top: 38%; left: -10%; animation-delay: -8s; animation-duration: 22s; }
 
-.banner {
-  position: absolute;
-  top: 228px;
-  left: 12px;
-  right: auto;
-  z-index: 22;
-  width: max-content;
-  max-width: min(280px, calc(100% - 24px));
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 8px 8px 8px 12px;
-  border: 1px solid var(--ln-cyan-border);
-  border-radius: 8px;
-  background: var(--ln-panel);
-  color: var(--ln-text);
-  pointer-events: auto;
-}
-
-/* The note sits on the base. Every other screen already fills that corner with its own controls. */
-.banner { display: none; }
-:global(.game-stage-main:has([data-screen="hub"])) .banner { display: flex; }
-
-.banner img {
-  width: 28px;
-  height: 28px;
-  flex: none;
-  image-rendering: pixelated;
-}
-
-.banner p {
-  margin: 0;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font: 14px/1.35 var(--ln-font-body);
-}
-
-.banner button,
 .sheet button {
   min-height: 44px;
   min-width: 44px;

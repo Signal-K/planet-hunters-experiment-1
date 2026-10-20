@@ -15,7 +15,7 @@ export function debrisNow(): number {
   return skyEventNow(dev)
 }
 
-/** The active debris preset (window + local night), re-checked every minute. Null otherwise. */
+/** The active debris preset, re-checked every minute. Orionids is live all day in its window. */
 export function useDebrisEvent(): DebrisEventPreset | null {
   const [preset, setPreset] = useState<DebrisEventPreset | null>(null)
   useEffect(() => {

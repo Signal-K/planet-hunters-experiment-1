@@ -39,6 +39,41 @@
   height: 44px;
 }
 
+.eventButton {
+  min-height: 44px;
+  max-width: calc(100vw - 24px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 8px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 8px;
+  background: var(--ln-panel);
+  color: var(--ln-text);
+  box-shadow: var(--ln-shadow-panel);
+  cursor: pointer;
+}
+
+.eventButton img {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.eventButton span,
+.eventButton small {
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.eventButton small {
+  padding-left: 8px;
+  border-left: 1px solid var(--ln-hairline);
+  color: var(--ln-cyan);
+}
+
 .fallback {
   min-height: 44px;
   min-width: 44px;
@@ -77,6 +112,26 @@
   color: var(--ln-void);
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.secondary {
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 0 14px;
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-surface-2);
+  color: var(--ln-text);
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: .08em;
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -148,6 +203,12 @@
   gap: 8px;
 }
 .panel p { margin: 0; }
+.panelHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
 .panelTitle {
   margin: 0;
   font: 700 16px var(--ln-font-display);
@@ -155,14 +216,28 @@
   text-transform: uppercase;
   color: var(--ln-cyan);
 }
-.label {
-  font: 700 14px var(--ln-font-display);
-  letter-spacing: 0.08em;
+.panelHeading > span,
+.meta,
+.reward {
+  font: 800 14px/1.3 var(--ln-font-display);
+  letter-spacing: .06em;
   text-transform: uppercase;
-  color: var(--ln-cyan);
-  margin-right: 4px;
 }
-.steps { margin: 0; padding-left: 20px; list-style: decimal; display: grid; gap: 4px; }
+.panelHeading > span {
+  color: var(--ln-cyan);
+}
+.summary { color: var(--ln-text); }
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--ln-text-dim);
+}
+.reward {
+  padding-top: 8px;
+  border-top: 1px solid var(--ln-hairline);
+  color: var(--ln-cyan);
+}
 :global(.mining-screen) .hud {
   top: 112px !important;
 }

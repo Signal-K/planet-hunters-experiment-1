@@ -996,7 +996,21 @@ button { cursor: pointer; }
 
 /* Fallback while a code-split screen chunk loads (GameScreenRouter's
    next/dynamic screens). Matches .game-screen so there's no flash/jump. */
-.game-screen-loading { position: absolute; inset: 0; background: var(--ln-bp-bg, #eef4fa); }
+.game-screen-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--ln-void);
+  color: var(--ln-cyan-bright);
+  font: 800 var(--ln-fs-body) var(--ln-font-display);
+  letter-spacing: .18em;
+}
+.game-screen-loading span { animation: screen-loading-pulse 700ms ease-in-out infinite alternate; }
+@keyframes screen-loading-pulse { from { opacity: .4; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .game-screen-loading span { animation: none; opacity: 1; }
+}
 
 /* The Hub and Launchpad share one physical campus. Each screen enters with a
    short ground-line camera move so navigation feels like approaching the pad,
