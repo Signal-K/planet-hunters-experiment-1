@@ -40,7 +40,7 @@ export default function SkyEventChip({
     const id = window.setInterval(tick, 60_000)
     return () => window.clearInterval(id)
   }, [])
-  // SSL-578: Base keeps an Orionids entry all day in the window; debris itself waits for night.
+  // SSL-578: the shower is live every hour in the window. Launch catches the fragments.
   const daytimeEntry = !activePreset && inWindow && surface === 'base'
   const preset = activePreset ?? (daytimeEntry ? ORIONIDS_DEBRIS_PRESET : null)
   const orionids = preset?.eventId === 'orionids-2026'
@@ -67,7 +67,7 @@ export default function SkyEventChip({
   if (!preset) return null
   return (
     <>
-      {orionids && !daytimeEntry && (
+      {orionids && (
         <img
           className={styles.sky}
           data-blend={variant.skyBlend}
@@ -83,12 +83,12 @@ export default function SkyEventChip({
             className={styles.eventButton}
             data-testid="sky-event-chip"
             aria-expanded={open}
-            aria-label={`Orionids ${daytimeEntry ? 'tonight' : 'live'}. Open event details.`}
+            aria-label={peak ? 'Orionids peak times two. Open event details.' : 'Orionids live. Open event details.'}
             onClick={() => setOpen(o => !o)}
           >
             <img src={variant.meteorIcon} alt="" />
             <span>Orionids</span>
-            <small>{daytimeEntry ? 'Tonight' : 'Live'}</small>
+            <small>{peak ? 'PEAK x2' : 'LIVE'}</small>
           </button>
         ) : orionids ? (
           <button
@@ -96,7 +96,7 @@ export default function SkyEventChip({
             className={styles.chip}
             data-testid="sky-event-chip"
             aria-expanded={open}
-            aria-label="Orionids active. Debris falls while you mine tonight."
+            aria-label="Orionids active. Fragments are caught on the way up."
             onClick={() => setOpen(o => !o)}
           >
             <img src={variant.chipOn} alt="" width={235} height={44} />
@@ -109,17 +109,17 @@ export default function SkyEventChip({
             aria-expanded={open}
             onClick={() => setOpen(o => !o)}
           >
-            {daytimeEntry ? 'Orionids tonight' : preset.chipLabel}
+            {preset.chipLabel}
           </button>
         ))}
         {open && orionids && (
           <section className={styles.panel} data-testid="orionids-panel" aria-label="Orionids event">
             <div className={styles.panelHeading}>
               <h2 className={styles.panelTitle}>{ORIONIDS_PANEL.title}</h2>
-              <span>{peak ? 'Peak now' : daytimeEntry ? 'Tonight' : 'Live'}</span>
+              <span>{peak ? 'PEAK x2' : 'LIVE'}</span>
               <button type="button" className={styles.panelClose} aria-label="Close Orionids details" onClick={() => setOpen(false)}>Close</button>
             </div>
-            <p className={styles.summary}>{daytimeEntry ? 'A night run opens at 22:00 local time.' : 'Catch falling fragments during the Orionids night run.'}</p>
+            <p className={styles.summary}>Launch through the shower. Fragments are caught on the way up, any hour. Peak night is double.</p>
             <div className={styles.meta} aria-label="Orionids dates">
               <span>19 Oct–7 Nov</span>
               <span>Peak 21–22 Oct</span>
@@ -156,8 +156,8 @@ export default function SkyEventChip({
             <span>{Math.min(debrisCount, fragmentGoal)} / {fragmentGoal}</span>
           </div>
         )}
-        {orionids && peak && surface === 'mining' && !daytimeEntry && (
-          <div className={styles.peakTag} data-testid="orionids-peak-tag">Peak ×2</div>
+        {orionids && peak && surface === 'mining' && (
+          <div className={styles.peakTag} data-testid="orionids-peak-tag">PEAK x2</div>
         )}
         {orionids && debrisCount > 0 && fragmentGoal == null && (
           <div className={styles.tally} data-testid="orionid-debris-count">

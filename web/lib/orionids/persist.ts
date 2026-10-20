@@ -60,6 +60,41 @@ export function queueEventBadge(badge: {
   )
 }
 
+export function queueFragmentLedger(input: { caught: number; redeemed: number; level: number; earnedAt: number }): void {
+  const user = pbLandnam.authStore.record?.id
+  if (!user || input.caught <= 0) return
+  void queueUpsert(
+    'meteorite_mastery',
+    `user = "${user}"`,
+    {
+      user,
+      level: Math.max(0, Math.floor(input.level)),
+      fragments: Math.floor(input.caught),
+      redeemed: Math.floor(input.redeemed),
+      source: ORIONIDS_SOURCE,
+      event_id: ORIONIDS_EVENT_ID,
+      earned_at: input.earnedAt,
+    },
+    pocketBaseId(`meteorite_mastery:${user}`),
+  )
+}
+
+export async function readAtlasLookedUp(): Promise<{ tier: 'gold' | 'silver'; earnedAt: number } | null> {
+  const user = pbLandnam.authStore.record?.id
+  if (!user) return null
+  try {
+    const row = await pbLandnam.collection('event_badges').getFirstListItem(
+      `user = "${filterValue(user)}" && event_id = "orionids-2026" && subject_id = "check-in" && marker = "after-moonset"`,
+    )
+    const tier = typeof row.get === 'function' ? row.get('tier') : (row as { tier?: unknown }).tier
+    const earned = typeof row.get === 'function' ? row.get('earned_at') : (row as { earned_at?: unknown }).earned_at
+    if (tier !== 'gold' && tier !== 'silver') return null
+    return { tier, earnedAt: typeof earned === 'number' && Number.isFinite(earned) ? earned : Date.now() }
+  } catch {
+    return null
+  }
+}
+
 export function queueMeteoriteMastery(earnedAt: number): void {
   const user = pbLandnam.authStore.record?.id
   if (!user) return

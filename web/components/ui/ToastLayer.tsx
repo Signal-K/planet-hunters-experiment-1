@@ -7,6 +7,8 @@ export interface Toast {
   id: string
   message: string
   kind?: 'info' | 'ok' | 'warn'
+  /** Survives a screen change. The launch catch uses this so transit still shows it. */
+  sticky?: boolean
 }
 
 interface ToastLayerProps {
@@ -29,10 +31,11 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
 
   useEffect(() => {
     const show = setTimeout(() => setVisible(true), 16)
-    const hide = setTimeout(() => setVisible(false), 3200)
-    const remove = setTimeout(() => onDismiss(toast.id), 3700)
+    const hold = toast.sticky ? 8000 : 3200
+    const hide = setTimeout(() => setVisible(false), hold)
+    const remove = setTimeout(() => onDismiss(toast.id), hold + 500)
     return () => { clearTimeout(show); clearTimeout(hide); clearTimeout(remove) }
-  }, [toast.id, onDismiss])
+  }, [toast.id, toast.sticky, onDismiss])
 
   const accent = toast.kind === 'ok' ? '#17703f' : toast.kind === 'warn' ? '#36c6e2' : 'rgba(112,217,234,0.8)'
 

@@ -15,10 +15,11 @@ import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
 import SkyEventChip from '@/components/game/SkyEventChip'
 import { LaserGauge, MiningDPad } from './MiningControls'
-import { useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
+import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_FRAGMENT_GOAL } from '@/lib/data/missions'
-import { FIREBALL_FRAGMENT_ID } from '@/lib/orionids/fireball'
+import { FIREBALL_FRAGMENT_ID, FIREBALL_FRAGMENT_PRICE, fireballDue } from '@/lib/orionids/fireball'
+import { OPEN_MARKET_SELL_RATE } from '@/lib/data/economy'
 import { holdHasRoom } from '@/lib/orionids/night-catches'
 import styles from './MiningTargetCue.module.css'
 
@@ -298,15 +299,23 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   onDebrisMinedRef.current = onDebrisMined
   const onFireballCaughtRef = useRef(onFireballCaught)
   onFireballCaughtRef.current = onFireballCaught
+  const [fireballCaughtLocal, setFireballCaughtLocal] = useState(false)
+  const [fireballCard, setFireballCard] = useState(false)
+  const fireballMoment = fireballDue(debrisNow(), fireballCaughtAt) && !fireballCaughtLocal
+  const fireballWorth = formatCurrency(Math.round(FIREBALL_FRAGMENT_PRICE * OPEN_MARKET_SELL_RATE))
   const collectMineral = useCallback((mineral: string) => {
     // Shower debris rides in cargo when the hold has room. The night-run goal counts the catch either way.
     if (DEBRIS_RESOURCE_IDS.includes(mineral)) onDebrisMinedRef.current?.(mineral)
-    if (mineral === FIREBALL_FRAGMENT_ID) onFireballCaughtRef.current?.()
+    if (mineral === FIREBALL_FRAGMENT_ID) {
+      onFireballCaughtRef.current?.()
+      setFireballCaughtLocal(true)
+      setFireballCard(true)
+    }
     if (mineral === 'orionid_debris') {
       catchesRef.current += 1
       setCatches(catchesRef.current)
     }
-    const room = cargoCapacity == null || holdHasRoom(cargoRef.current, cargoCapacity)
+    const room = cargoCapacity == null || holdHasRoom(cargoRef.current, cargoCapacity, mineral)
     if (room) {
       cargoRef.current = {
         ...cargoRef.current,
@@ -719,8 +728,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             )}
             {targetCue ? (
               <span className={styles.targetCueStatus} data-testid="mining-target-cue">
-                {minerals[targetCue.mineral]?.name ?? targetCue.mineral} · {targetCue.inRange ? 'FIRE NOW' : 'WAIT'}
+                {targetCue.mineral === FIREBALL_FRAGMENT_ID ? 'FIREBALL' : (minerals[targetCue.mineral]?.name ?? targetCue.mineral)} · {targetCue.inRange ? 'FIRE NOW' : 'WAIT'}
               </span>
+            ) : fireballMoment ? (
+              <span className={styles.targetCueStatus} data-testid="mining-target-cue">FIREBALL · WAIT</span>
             ) : trainingMiningTry ? <span className={styles.targetCueStatus} data-testid="mining-target-cue">Fire on a labelled seam</span> : null}
           </span>
         </DockWordButton>
@@ -728,6 +739,24 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
       <div className="mining-stage">
       <div className="mining-viewport" style={{ background: palette.skyCss }}>
+        {fireballMoment && !fireballCard && (
+          <>
+            <div className={styles.fireballBanner} data-testid="fireball-banner" role="status">FIREBALL</div>
+            <div className={styles.fireballStreak} data-testid="fireball-streak" aria-hidden="true">
+              {Array.from({ length: 16 }, (_, index) => (
+                <span key={index} className={index >= 12 ? styles.fireballHead : styles.fireballPixel} />
+              ))}
+            </div>
+          </>
+        )}
+        {fireballCard && (
+          <div className={styles.fireballCard} data-testid="fireball-reward" role="status" aria-label="Fireball caught">
+            <strong>FIREBALL CAUGHT</strong>
+            <p>Fireball fragment</p>
+            <p>Exchange worth {fireballWorth}</p>
+            <button type="button" data-testid="fireball-reward-continue" onClick={() => setFireballCard(false)}>CONTINUE</button>
+          </div>
+        )}
         <MiningCanvas
           key={runKey}
           palette={palette}

@@ -82,6 +82,20 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     activities: ['debris-mining'],
   },
   {
+    id: 'leonids-2026',
+    name: 'Leonids',
+    startUtc: '2026-11-17T00:00:00Z',
+    endUtc: '2026-11-18T00:00:00Z',
+    activities: ['debris-mining'],
+  },
+  {
+    id: 'geminids-2026',
+    name: 'Geminids',
+    startUtc: '2026-12-13T00:00:00Z',
+    endUtc: '2026-12-15T00:00:00Z',
+    activities: ['debris-mining'],
+  },
+  {
     id: 'new-moon-hunt-2026-10',
     name: 'New Moon Asteroid Hunt',
     startUtc: '2026-10-10T00:00:00Z',
@@ -172,9 +186,9 @@ export function sanitizeBadges(raw: unknown): Record<string, PlayerBadge> {
 }
 
 // ---- Debris events (SSL-475 Orionids, SSL-491 Draconids) -------------------
-// One engine, driven by presets. A preset is only "active" inside its UTC
-// window AND during the player's local night, so outside it the mining scene
-// is exactly the pre-event scene.
+// One engine, driven by presets. Orionids, Leonids and Geminids fall any
+// hour inside their window. Draconids stays a night shower. Outside the
+// window the mining scene is the pre-event scene.
 export interface DebrisEventPreset {
   eventId: string
   /** Shower window, UTC. */
@@ -192,6 +206,8 @@ export interface DebrisEventPreset {
   resourceId: string
   /** Chip text. */
   chipLabel: string
+  /** When set, debris falls for the whole window, not only at night. */
+  allHours?: boolean
 }
 
 /** Local night: 22:00 until dawn (06:00). */
@@ -224,6 +240,7 @@ export const ORIONIDS_DEBRIS_PRESET: DebrisEventPreset = {
   label: 'Orionid debris',
   resourceId: 'orionid_debris',
   chipLabel: 'Orionids active',
+  allHours: true,
 }
 
 export const DRACONIDS_DEBRIS_PRESET: DebrisEventPreset = {
@@ -239,7 +256,42 @@ export const DRACONIDS_DEBRIS_PRESET: DebrisEventPreset = {
   chipLabel: 'Draconids active',
 }
 
-export const DEBRIS_PRESETS: ReadonlyArray<DebrisEventPreset> = [ORIONIDS_DEBRIS_PRESET, DRACONIDS_DEBRIS_PRESET]
+/** Queued. Same shower config as the Orionids, inactive until 17 Nov. */
+export const LEONIDS_DEBRIS_PRESET: DebrisEventPreset = {
+  eventId: 'leonids-2026',
+  startUtc: '2026-11-17T00:00:00Z',
+  endUtc: '2026-11-18T00:00:00Z',
+  peakUtc: '2026-11-17T12:00:00Z',
+  peakRatePerMinute: 12,
+  baseRatePerMinute: 4,
+  speedFactor: 1,
+  label: 'Leonid debris',
+  resourceId: 'leonid_debris',
+  chipLabel: 'Leonids active',
+  allHours: true,
+}
+
+/** Queued. Same shower config as the Orionids, inactive until 13 Dec. */
+export const GEMINIDS_DEBRIS_PRESET: DebrisEventPreset = {
+  eventId: 'geminids-2026',
+  startUtc: '2026-12-13T00:00:00Z',
+  endUtc: '2026-12-15T00:00:00Z',
+  peakUtc: '2026-12-14T00:00:00Z',
+  peakRatePerMinute: 12,
+  baseRatePerMinute: 4,
+  speedFactor: 1,
+  label: 'Geminid debris',
+  resourceId: 'geminid_debris',
+  chipLabel: 'Geminids active',
+  allHours: true,
+}
+
+export const DEBRIS_PRESETS: ReadonlyArray<DebrisEventPreset> = [
+  ORIONIDS_DEBRIS_PRESET,
+  DRACONIDS_DEBRIS_PRESET,
+  LEONIDS_DEBRIS_PRESET,
+  GEMINIDS_DEBRIS_PRESET,
+]
 
 /** Resource ids that only exist during a debris event. */
 export const DEBRIS_RESOURCE_IDS: ReadonlyArray<string> = DEBRIS_PRESETS.map(p => p.resourceId)
@@ -258,11 +310,12 @@ export function debrisWindowStartMs(preset: DebrisEventPreset): number {
   return Date.parse(preset.startUtc)
 }
 
-/** Window (start inclusive / end exclusive) and local night. Orionids peak night opens at 18:00. Pure. */
+/** Window (start inclusive / end exclusive). All-hour showers skip the night gate. Draconids stays night-only, with the Orionids peak night as its own extra. Pure. */
 export function isDebrisEventActive(preset: DebrisEventPreset, now: Date | number): boolean {
   const t = toMs(now)
   if (!Number.isFinite(t)) return false
   if (t < debrisWindowStartMs(preset) || t >= Date.parse(preset.endUtc)) return false
+  if (preset.allHours) return true
   if (preset.eventId === 'orionids-2026' && isOrionidsPeakNight(t)) return true
   return isLocalNight(t)
 }
@@ -315,14 +368,14 @@ export function orionidsPhase(at: Date | number): OrionidsPhase {
 /** Event panel copy, shared by web and native (mirrored in SkyEvents.swift). */
 export const ORIONIDS_PANEL = {
   title: 'Orionids',
-  what: 'Dust from Halley\'s Comet hits the atmosphere as meteors. Some of it falls on your asteroid field.',
-  when: '19 Oct to 7 Nov. Debris falls at night, 22:00 to 06:00 your time. On peak night it starts at 18:00.',
-  peak: 'Peak night 21-22 Oct: debris falls twice as fast from 18:00. At 02:00 on 22 Oct one fireball fragment falls.',
+  what: 'Dust from Halley\'s Comet hits the atmosphere as meteors. The rocket flies through it on the way up.',
+  when: '19 Oct to 7 Nov. Fragments fall any time you launch, not only at night. Peak night catches twice as many.',
+  peak: 'Peak night 21-22 Oct: twice the fragments from 18:00. At 02:00 on 22 Oct one fireball fragment falls.',
   steps: [
-    'Fly the Orionids night run and catch 20 fragments.',
-    'Wait for debris to land, then laser it.',
-    'Sell Orionid debris at the Exchange.',
-    'Classify a planet tonight for a voucher.',
+    'Launch through the shower. Fragments are caught on the way up.',
+    'They take no cargo space.',
+    'Redeem 2 for research, or combine 15 into a fireball.',
+    'Sell the rest at the Exchange. The payout is a modest bonus.',
   ],
 } as const
 

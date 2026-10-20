@@ -563,6 +563,11 @@ button.start {
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: .08em;
 }
+.fragmentBench { display: grid; gap: 8px; margin-top: 12px; }
+.fragmentBench p { margin: 0; font: 800 14px/1.4 var(--ln-font-display); letter-spacing: .06em; }
+.fragmentActions { display: flex; gap: 8px; }
+.fragmentActions .eventAction { margin-top: 0; }
+.fragmentBench .eventAction:disabled { opacity: 0.45; cursor: default; }
 .countdown {
   display: inline-flex;
   align-items: center;

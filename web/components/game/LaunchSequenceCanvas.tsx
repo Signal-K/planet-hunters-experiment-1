@@ -5,6 +5,9 @@ import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { buildLaunchScene, LAUNCH_W, LAUNCH_H, launchFrameDt } from '@/lib/pixi/launchScene'
 import { PadLaunchSequence } from '@/components/game/hub/PadLaunchSequence'
+import { fragmentsCaughtOnLaunch } from '@/lib/orionids/launch-catch'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { skyEventNow } from '@/lib/data/sky-events'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import SequenceDesktopFrame from '@/components/game/SequenceDesktopFrame'
 
@@ -34,6 +37,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
   completeRef.current = onComplete
   // The stage resizes when the desktop frame kicks in; rebuild the scene then so it lays out at the real size.
   const isDesktop = useIsDesktop()
+  const ascentFragments = fragmentsCaughtOnLaunch(skyEventNow(isDevLauncherEnabled()))
 
   // Single guarded entry point — the watchdog, the scene's natural
   // completion, and the dev skip button all route through this so a
@@ -161,7 +165,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
       showClock
       renderStage={style => (
         <div ref={divRef} data-testid="launch-sequence-stage" style={{ background: '#d5ecf7', ...style }}>
-          <PadLaunchSequence onComplete={fireComplete} />
+          <PadLaunchSequence onComplete={fireComplete} fragments={ascentFragments} />
         </div>
       )}
     >

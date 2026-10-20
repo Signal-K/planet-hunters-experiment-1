@@ -62,6 +62,8 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
       onOpenBuild={() => game.go('build')}
       onOpenEvent={screen => game.go(screen)}
       onPickTarget={game.onPickTarget}
+      onRedeemFragments={game.onRedeemFragments}
+      onCombineFragments={game.onCombineFragments}
       rocketImg={rocketDisplayForConfig(game.rocket).img}
       tutorialBlocked={relay.tutorialMissionInProgress}
       onboardingComplete={relay.onboardingComplete}

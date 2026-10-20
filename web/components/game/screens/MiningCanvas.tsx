@@ -261,6 +261,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
                 speedFactor: preset.speedFactor,
                 ratePerMinute: debrisRatePerMinute(preset, debrisNow()),
                 onceMineral: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current) ? FIREBALL_FRAGMENT_ID : undefined,
+                onceHero: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current),
               }
             },
           },

@@ -1,7 +1,7 @@
 // Landnam game data — minerals
 
 import type { MineralMeta, Mission } from './types'
-import { FIREBALL_FRAGMENT_PRICE, MINERAL_VALUE, type MineralRarity } from './economy'
+import { FIREBALL_FRAGMENT_PRICE, MINERAL_VALUE, ORIONID_FRAGMENT_BOOK, type MineralRarity } from './economy'
 
 // Ore shapes are chosen so that every mineral pool an archetype can actually
 // produce together (see ARCHETYPE_POOLS in target-archetypes.ts) has distinct
@@ -35,10 +35,12 @@ export const MINERAL_META: Record<string, MineralMeta> = {
   hydrogen:  { name: 'Hydrogen',  sym: 'H',  color: '#9becff', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Propellant, reactor feedstock',           laserAccess: 1, shape: 'triangle' },
   uranium:   { name: 'Uranium',   sym: 'U',  color: '#8fd16a', price: MINERAL_VALUE.rare, rarity: 'rare',     constructionUse: 'Compact power systems, shielding',        laserAccess: 2, shape: 'triangle' },
   // ── Sky-event debris (SSL-475/491) — only ever spawns during its event, sells at spot ─
-  orionid_debris:  { name: 'Orionid Debris',  sym: 'Od', color: '#7fd8ff', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'diamond' },
+  orionid_debris:  { name: 'Orionid Debris',  sym: 'Od', color: '#7fd8ff', price: ORIONID_FRAGMENT_BOOK, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'diamond', cargoUnits: 0 },
   draconid_debris: { name: 'Draconid Debris', sym: 'Dd', color: '#b1d8f4', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'triangle' },
-  // One fragment per player on the Orionids peak. Priced above the exotic band on purpose.
-  fireball_fragment: { name: 'Fireball Fragment', sym: 'Fb', color: '#b7e3ff', price: FIREBALL_FRAGMENT_PRICE, rarity: 'exotic', constructionUse: 'Event fragment; sell at market', laserAccess: 1, shape: 'diamond' },
+  leonid_debris:   { name: 'Leonid Debris',   sym: 'Ld', color: '#9fd6e4', price: ORIONID_FRAGMENT_BOOK, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'diamond', cargoUnits: 0 },
+  geminid_debris:  { name: 'Geminid Debris',  sym: 'Gd', color: '#b7e3ff', price: ORIONID_FRAGMENT_BOOK, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'rect', cargoUnits: 0 },
+  // One fragment per player on the Orionids peak, or combined from 15 fragments. 15× a fragment.
+  fireball_fragment: { name: 'Fireball Fragment', sym: 'Fb', color: '#b7e3ff', price: FIREBALL_FRAGMENT_PRICE, rarity: 'exotic', constructionUse: 'Event fragment; sell at market', laserAccess: 1, shape: 'diamond', cargoUnits: 0 },
 }
 
 /** Rarity band per mineral, for anything pricing against MINERAL_VALUE. */
@@ -65,7 +67,15 @@ export const MINERAL_COLORS: Record<string, string> = {
   uranium:   '#8fd16a',
   orionid_debris:  '#7fd8ff',
   draconid_debris: '#b1d8f4',
+  leonid_debris:   '#9fd6e4',
+  geminid_debris:  '#b7e3ff',
   fireball_fragment: '#b7e3ff',
+}
+
+/** Cargo units one piece occupies. Missing minerals count as 1. Fragments are 0. */
+export function cargoUnits(id: string, minerals: Record<string, MineralMeta> = MINERAL_META): number {
+  const units = minerals[id]?.cargoUnits
+  return typeof units === 'number' && units >= 0 ? units : 1
 }
 
 export function sellCargo(cargo: Record<string, number>, minerals: Record<string, MineralMeta> = MINERAL_META): number {

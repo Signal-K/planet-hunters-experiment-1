@@ -14,8 +14,10 @@ import {
   orionidsTeaserDevForced,
   orionidsTeaserForcedInstant,
   skyEventNow,
+  isOrionidsWindow,
 } from '@/lib/data/sky-events'
 import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL, heldFragments } from '@/lib/orionids/fragments'
 import {
   eventsBoard,
   programChain,
@@ -41,6 +43,8 @@ interface MissionBoardProps {
   onOpenBuild: () => void
   onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search') => void
   onPickTarget?: (id: string) => void
+  onRedeemFragments?: () => void
+  onCombineFragments?: () => void
   /** The rocket now stands on the pad in the scene behind the board. */
   rocketImg?: string
   tutorialBlocked: boolean
@@ -308,7 +312,7 @@ function PickIcon() {
 
 export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
-  tutorialBlocked, onboardingComplete,
+  onRedeemFragments, onCombineFragments, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
   const help = useHelp('missions')
@@ -388,7 +392,10 @@ export default function MissionBoard({
   }
 
   const openEvent = (event: SkyBoardCard) => {
-    if (event.id === 'orionids-2026' || event.id === 'draconids-2026') {
+    if (event.id === 'leonids-2026' || event.id === 'geminids-2026') {
+      if (event.status === 'upcoming') return
+    }
+    if (event.id === 'orionids-2026' || event.id === 'draconids-2026' || event.id === 'leonids-2026' || event.id === 'geminids-2026') {
       const target = catalog.targets.find(candidate => candidate.type === 'asteroid' && freeRuns.some(run =>
         Object.keys(run.requires.minerals).some(mineral => candidate.minerals.includes(mineral))))
       setTab('free')
@@ -477,7 +484,7 @@ export default function MissionBoard({
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
         {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
-          <b>{eventFocus}</b><span>Debris bonus active</span>
+          <b>{eventFocus}</b><span>Launch catches fragments · no cargo used</span>
         </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>
@@ -550,6 +557,19 @@ export default function MissionBoard({
                 </article>)}
               </div>
             </section>)}
+            {(isOrionidsWindow(orionidsNow) || heldFragments(player.stash) > 0 || (player.orionidsFragments?.caught ?? 0) > 0) && (
+              <div className={styles.fragmentBench} data-testid="orionids-fragments">
+                <p>HELD {heldFragments(player.stash)} · CAUGHT {player.orionidsFragments?.caught ?? 0} · REDEEMED {player.orionidsFragments?.redeemed ?? 0}</p>
+                {player.badges?.['orionids-looked-up'] && <p data-testid="orionids-looked-up">LOOKED UP · {player.badges['orionids-looked-up'].tier.toUpperCase()}</p>}
+                <p data-testid="orionids-fireball-progress">FIREBALL {heldFragments(player.stash)} / {FRAGMENTS_PER_FIREBALL}</p>
+                <div className={styles.fragmentActions}>
+                  <button type="button" className={styles.eventAction} data-testid="orionids-redeem" disabled={heldFragments(player.stash) < FRAGMENT_REDEEM_BATCH} onClick={onRedeemFragments}>REDEEM {FRAGMENT_REDEEM_BATCH}</button>
+                  {heldFragments(player.stash) >= FRAGMENTS_PER_FIREBALL && (
+                    <button type="button" className={styles.eventAction} data-testid="orionids-combine" onClick={onCombineFragments}>MAKE FIREBALL</button>
+                  )}
+                </div>
+              </div>
+            )}
             {atlasEventLink && <a className={styles.eventAtlas} href={atlasEventLink.href} target="_blank" rel="noreferrer">OPEN IN ATLAS</a>}
           </div>}
       </div>}

@@ -3,6 +3,7 @@
 
 import type { GameState } from '@/lib/game-types'
 import { MINERAL_META } from '@/lib/data'
+import { GEMINIDS_DEBRIS_PRESET, LEONIDS_DEBRIS_PRESET, debrisWindowStartMs } from '@/lib/data/sky-events'
 import { sellUnitPrice, storageCapacity, storedUnits } from './EconomySystem'
 
 /** The Exchange charges a dealer margin over the spot (sell) price, so buying and re-selling never profits. */
@@ -40,6 +41,15 @@ export function buyUnitPrice(mineralId: string, player: PricePlayer, clientId?: 
   return Math.max(spot + 1, Math.round(spot * BUY_MARKUP))
 }
 
+/** Leonids and Geminids stay off the board until their windows open. After that they stay listed so leftovers can sell. */
+const QUEUED_SHOWER_PRESETS = [LEONIDS_DEBRIS_PRESET, GEMINIDS_DEBRIS_PRESET]
+
+function showerListed(id: string, now: number): boolean {
+  const preset = QUEUED_SHOWER_PRESETS.find(entry => entry.resourceId === id)
+  if (!preset) return true
+  return now >= debrisWindowStartMs(preset)
+}
+
 /** Every mineral with a market price, cheapest first, with what is held of it. */
 export function spotBoard(player: PricePlayer & { stash?: Record<string, number> }, clientId?: string, now: number = Date.now()): SpotQuote[] {
   return Object.entries(MINERAL_META)
@@ -47,7 +57,7 @@ export function spotBoard(player: PricePlayer & { stash?: Record<string, number>
       const spot = sellUnitPrice(id, player, clientId, now).price
       return { id, name: meta.name, spot, ask: buyUnitPrice(id, player, clientId, now), held: player.stash?.[id] ?? 0 }
     })
-    .filter(q => q.spot > 0)
+    .filter(q => q.spot > 0 && showerListed(q.id, now))
     .sort((a, b) => a.spot - b.spot || a.name.localeCompare(b.name))
 }
 

@@ -422,3 +422,15 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
 .mining-hold__row button { min-height: 44px; padding: 0 10px; background: #05080f; color: #fff; border: 1.5px solid rgba(255, 255, 255, 0.8); border-radius: 4px; font: inherit; cursor: pointer; }
 .mining-hold__empty { min-height: 32px; opacity: 0.7; }
 @media (max-width: 600px) { .mining-hold { top: 190px; } }
+/* The hub hold is portaled in the HUD, under the launchpad prompt (z-index 80).
+   On a phone that prompt sits in the same top-right corner, so drop the hold
+   below it. Two classes beat the mining-hold top rule above. */
+.mining-hold.stash-hold {
+  position: fixed;
+  z-index: 90;
+  top: 64px;
+  right: 8px;
+}
+@media (max-width: 600px) {
+  .mining-hold.stash-hold { top: 292px; }
+}

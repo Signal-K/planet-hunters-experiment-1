@@ -19,7 +19,7 @@ import { isFreeHaulEligibleMission } from '@/lib/data'
 import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-events'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { FIREBALL_2026_BADGE, FIREBALL_SUBJECT_ID, grantFireballCatch } from '@/lib/orionids/fireball'
-import { catchesForNight, recordFragmentCatch } from '@/lib/orionids/night-catches'
+import { addCaughtFragments } from '@/lib/orionids/fragments'
 import { queueEventBadge } from '@/lib/orionids/persist'
 import { captureGameEvent } from '@/lib/posthog'
 import { missionResumeScreen } from '@/lib/mission-resume'
@@ -78,6 +78,7 @@ export default function MissionOperationRoutes({
           returning={!!game.player.returningToEarth}
           isDelivery={!!game.player.headingToDelivery}
           francs={game.player.francs}
+          fragmentCount={Math.max(0, Math.floor(game.player.stash?.orionid_debris ?? 0))}
           parts={game.player.shipCustomizerParts}
           onBack={() => game.go('hub')}
           onPrev={() => stepFlightDock(game, -1)}
@@ -224,7 +225,7 @@ export default function MissionOperationRoutes({
           hasEarthStorage={earthStorageBuilt(game.player)}
           initialEarthDisposition={game.player.freeHaulDisposition}
           orionidsBadgeTier={game.player.badges?.['orionids-2026']?.tier ?? null}
-          fragmentCatches={catchesForNight(game.player.orionidsNightCatches, debrisNow())}
+          fragmentCatches={game.player.orionidsFragments?.caught ?? 0}
           cargoCapacity={nightHold}
           fireballCaughtAt={game.player.fireball2026CaughtAt ?? null}
           onFireballCaught={() => {
@@ -261,7 +262,7 @@ export default function MissionOperationRoutes({
             game.setPlayer(player => {
               const mined = applyDebrisMined(player, preset, now).player
               if (resourceId !== 'orionid_debris') return mined
-              return { ...mined, orionidsNightCatches: recordFragmentCatch(player.orionidsNightCatches, now) }
+              return addCaughtFragments(mined, 1, 'count')
             })
           }}
         />

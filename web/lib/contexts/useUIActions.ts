@@ -176,8 +176,8 @@ export function useUIActions(
     setState(s => ({ ...s, menuOpen: v }))
   }, [setState])
 
-  const addToast = useCallback((message: string, kind: Toast['kind'] = 'info') => {
-    setToasts(ts => [...ts, { id: nextToastId(), message, kind }])
+  const addToast = useCallback((message: string, kind: Toast['kind'] = 'info', options?: { sticky?: boolean }) => {
+    setToasts(ts => [...ts, { id: nextToastId(), message, kind, sticky: options?.sticky }])
   }, [])
 
   const dismissToast = useCallback((id: string) => {

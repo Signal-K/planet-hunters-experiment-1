@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ORIONIDS_DEBRIS_PRESET, ORIONIDS_PEAK_MULTIPLIER, ORIONIDS_PEAK_REMINDER, debrisRatePerMinute, isOrionidsPeakNight, orionidsPeakReminderMs, orionidsPhase, orionidsShareText } from './sky-events'
+import { GEMINIDS_DEBRIS_PRESET, LEONIDS_DEBRIS_PRESET, ORIONIDS_DEBRIS_PRESET, ORIONIDS_PEAK_MULTIPLIER, ORIONIDS_PEAK_REMINDER, debrisRatePerMinute, isOrionidsPeakNight, orionidsPeakReminderMs, orionidsPhase, orionidsShareText } from './sky-events'
 import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID, generateSelfDirectedMiningPool } from './missions'
 import { isDebrisEventActive } from './sky-events'
 
@@ -13,11 +13,12 @@ describe('SSL-578 Orionids event', () => {
     expect(orionidsPhase(local(11, 20, 12))).toBe('ended')
   })
 
-  it('starts peak-night debris at 18:00 local on 21 Oct', () => {
-    expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, local(10, 21, 17))).toBe(false)
+  it('drops fragments all day in the window, and still doubles the rate on peak night', () => {
+    expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, local(10, 21, 17))).toBe(true)
     expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, local(10, 21, 18))).toBe(true)
     expect(debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, local(10, 21, 18))).toBeGreaterThan(0)
-    expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, local(10, 28, 12))).toBe(false)
+    expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, local(10, 28, 12))).toBe(true)
+    expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, local(10, 18, 12))).toBe(false)
   })
 
   it('doubles the debris rate on peak night only', () => {
@@ -35,12 +36,23 @@ describe('SSL-578 Orionids event', () => {
     expect(run?.client).toBeUndefined()
     expect(run?.requires.minerals).toEqual({ orionid_debris: ORIONIDS_FRAGMENT_GOAL })
     expect(run?.requires.cargo_min).toBe(8)
-    expect(run?.brief).toContain('Catch 20 Orionid fragments')
+    expect(run?.title).toBe('Orionids shower run')
+    expect(run?.brief).toContain('Launch through the shower')
     expect(run?.payout.francs).toBeGreaterThan(0)
   })
 
   it('share text names the tier', () => {
     expect(orionidsShareText('gold')).toContain('gold Orionids 2026 badge')
+  })
+
+  it('keeps Leonids and Geminids queued until their dates', () => {
+    expect(isDebrisEventActive(LEONIDS_DEBRIS_PRESET, local(10, 20, 12))).toBe(false)
+    expect(isDebrisEventActive(LEONIDS_DEBRIS_PRESET, Date.parse('2026-11-17T12:00:00Z'))).toBe(true)
+    expect(isDebrisEventActive(LEONIDS_DEBRIS_PRESET, Date.parse('2026-11-18T00:00:00Z'))).toBe(false)
+    expect(isDebrisEventActive(GEMINIDS_DEBRIS_PRESET, local(11, 17, 12))).toBe(false)
+    expect(isDebrisEventActive(GEMINIDS_DEBRIS_PRESET, Date.parse('2026-12-13T12:00:00Z'))).toBe(true)
+    expect(isDebrisEventActive(GEMINIDS_DEBRIS_PRESET, Date.parse('2026-12-14T18:00:00Z'))).toBe(true)
+    expect(isDebrisEventActive(GEMINIDS_DEBRIS_PRESET, Date.parse('2026-12-15T00:00:00Z'))).toBe(false)
   })
 
   it('places the one peak reminder at local 22 Oct 02:00', () => {
