@@ -13,6 +13,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await expect(chip).toBeVisible()
       await expect(page.getByTestId('orionids-banner')).toHaveCount(0)
       await chip.click()
+      await expect(chip).toHaveCount(0)
       const participate = page.getByTestId('sky-event-participate')
       await expect(participate).toBeVisible()
       const readSky = page.getByTestId('orionids-read-sky')

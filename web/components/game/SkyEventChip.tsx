@@ -77,7 +77,7 @@ export default function SkyEventChip({
         />
       )}
       <div className={[styles.hud, 'sky-event-wrap', className].filter(Boolean).join(' ')} data-testid={`sky-event-${surface}`}>
-        {orionids && surface === 'base' ? (
+        {(!open || !orionids) && (orionids && surface === 'base' ? (
           <button
             type="button"
             className={styles.eventButton}
@@ -111,12 +111,13 @@ export default function SkyEventChip({
           >
             {daytimeEntry ? 'Orionids tonight' : preset.chipLabel}
           </button>
-        )}
+        ))}
         {open && orionids && (
           <section className={styles.panel} data-testid="orionids-panel" aria-label="Orionids event">
             <div className={styles.panelHeading}>
               <h2 className={styles.panelTitle}>{ORIONIDS_PANEL.title}</h2>
               <span>{peak ? 'Peak now' : daytimeEntry ? 'Tonight' : 'Live'}</span>
+              <button type="button" className={styles.panelClose} aria-label="Close Orionids details" onClick={() => setOpen(false)}>Close</button>
             </div>
             <p className={styles.summary}>{daytimeEntry ? 'A night run opens at 22:00 local time.' : 'Catch falling fragments during the Orionids night run.'}</p>
             <div className={styles.meta} aria-label="Orionids dates">

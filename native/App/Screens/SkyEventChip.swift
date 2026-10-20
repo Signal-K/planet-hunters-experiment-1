@@ -22,13 +22,24 @@ struct SkyEventChip: View {
 
     private func chip(label: String, orionids: Bool, note: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Button { open.toggle() } label: {
-                Text(label).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
-                    .padding(.horizontal, 16).frame(minHeight: 44, alignment: .center)
-                    .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 2))
-            }.buttonStyle(.plain).accessibilityAddTraits(open ? .isSelected : []).accessibilityIdentifier("sky-event-chip")
-            if open {
+            if !open {
+                Button { open = true } label: {
+                    Text(label).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 16).frame(minHeight: 44, alignment: .center)
+                        .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 2))
+                }.buttonStyle(.plain).accessibilityIdentifier("sky-event-chip")
+            } else {
                 VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Text(orionids ? "ORIONIDS" : "SKY EVENT").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.bluePress)
+                        Spacer(minLength: 8)
+                        Button { open = false } label: {
+                            Text("CLOSE").font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.ink)
+                                .frame(minWidth: 44, minHeight: 44).padding(.horizontal, 8)
+                                .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
+                        }.buttonStyle(.plain)
+                    }
                     if orionids {
                         Text(SkyEvents.orionidsPanelPeak).font(AppFont.body(14)).foregroundStyle(Theme.textDim).frame(maxWidth: 280, alignment: .leading)
                         ForEach(SkyEvents.orionidsPanelSteps, id: \.self) { step in
