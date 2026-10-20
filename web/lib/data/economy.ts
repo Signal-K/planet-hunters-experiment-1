@@ -201,20 +201,16 @@ export const REMOTE_MINERAL_SILO_CAPACITY = 180
 export const OPEN_MARKET_SELL_RATE = 0.8
 
 /**
- * Book value of the 22 Oct fireball fragment.
+ * Book value of one Orionid fragment, and of the 22 Oct fireball.
  *
- * One Orionid fragment sells at the Exchange for the uncommon band times the
- * open-market rate: 1,680,000 × 0.8 = 1,344,000. Fifteen times that quote is
- * 20,160,000.
- *
- * Ten times (13,440,000) would pay less than the first contract (15,000,000)
- * and read as a stack of ordinary debris. Twenty times (26,880,000) would
- * clear the third contract fee (22,000,000) from a single rock. Fifteen times
- * sits between them. The Exchange then pays 80% of the book (16,128,000):
- * about one early contract, against a 9,000,000 start and a 13,000,000
- * Prospector. A full 6U Explorer of Orionid fragments sells for 8,064,000,
- * so the fireball is about two starter holds.
+ * A fragment is a modest bonus, not a haul. Book 120,000 sells at the
+ * Exchange for 96,000. Twenty catches, the shower-run goal, pay 1,920,000:
+ * about one daily quest, and about 13% of the first contract fee (15,000,000).
+ * They take no cargo, so a player can hold them without giving up a real ore
+ * load. The fireball book is 15× the fragment book (1,800,000). The Exchange
+ * pays 80% of that (1,440,000), which is exactly 15× one fragment's sale.
  */
 export const FIREBALL_EXCHANGE_MULTIPLE = 15
-export const ORIONID_EXCHANGE_PRICE = Math.round(MINERAL_VALUE.uncommon * OPEN_MARKET_SELL_RATE)
-export const FIREBALL_FRAGMENT_PRICE = ORIONID_EXCHANGE_PRICE * FIREBALL_EXCHANGE_MULTIPLE
+export const ORIONID_FRAGMENT_BOOK = 120_000
+export const ORIONID_EXCHANGE_PRICE = Math.round(ORIONID_FRAGMENT_BOOK * OPEN_MARKET_SELL_RATE)
+export const FIREBALL_FRAGMENT_PRICE = ORIONID_FRAGMENT_BOOK * FIREBALL_EXCHANGE_MULTIPLE

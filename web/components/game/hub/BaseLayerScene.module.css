@@ -363,6 +363,49 @@
   transform: translateX(-50%);
 }
 
+.padFragments {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.padFragment {
+  position: absolute;
+  bottom: 28%;
+  width: calc(4 * var(--px, 3px));
+  height: calc(4 * var(--px, 3px));
+  background: var(--ln-world-glass);
+  box-shadow: 0 0 0 2px var(--ln-world-outline);
+  animation: padFragmentRise 2.4s linear infinite;
+}
+
+.padFragmentCount {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  margin: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  background: var(--dusk-panel);
+  color: var(--dusk-ink);
+  border: 2px solid var(--ln-world-outline);
+  font: 800 14px/1.2 var(--ln-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@keyframes padFragmentRise {
+  from { transform: translateY(24px) rotate(45deg); opacity: 0; }
+  20% { opacity: 1; }
+  to { transform: translateY(-240px) rotate(45deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .padFragment { animation: none; transform: rotate(45deg); opacity: 1; }
+}
+
 .padCloudDrift {
   position: absolute;
   left: 0;

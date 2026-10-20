@@ -437,6 +437,8 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       onAssembleFabricatedRocket: loop.onAssembleFabricatedRocket,
       onTransferToLaunchpad: loop.onTransferToLaunchpad,
       onLaunch: loop.onLaunch,
+      onRedeemFragments: loop.onRedeemFragments,
+      onCombineFragments: loop.onCombineFragments,
       resumeMissionRun: loop.resumeMissionRun,
       onMiningDone: loop.onMiningDone,
       onDeliveryArrived: loop.onDeliveryArrived,

@@ -14,8 +14,10 @@ import {
   orionidsTeaserDevForced,
   orionidsTeaserForcedInstant,
   skyEventNow,
+  isOrionidsWindow,
 } from '@/lib/data/sky-events'
 import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL, heldFragments } from '@/lib/orionids/fragments'
 import {
   eventsBoard,
   programChain,
@@ -42,6 +44,8 @@ interface MissionBoardProps {
   onOpenBuild: () => void
   onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search') => void
   onPickTarget?: (id: string) => void
+  onRedeemFragments?: () => void
+  onCombineFragments?: () => void
   /** The rocket now stands on the pad in the scene behind the board. */
   rocketImg?: string
   tutorialBlocked: boolean
@@ -309,7 +313,7 @@ function PickIcon() {
 
 export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
-  tutorialBlocked, onboardingComplete,
+  onRedeemFragments, onCombineFragments, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
   const help = useHelp('missions')
@@ -389,7 +393,10 @@ export default function MissionBoard({
   }
 
   const openEvent = (event: SkyBoardCard) => {
-    if (event.id === 'orionids-2026' || event.id === 'draconids-2026') {
+    if (event.id === 'leonids-2026' || event.id === 'geminids-2026') {
+      if (event.status === 'upcoming') return
+    }
+    if (event.id === 'orionids-2026' || event.id === 'draconids-2026' || event.id === 'leonids-2026' || event.id === 'geminids-2026') {
       const target = catalog.targets.find(candidate => candidate.type === 'asteroid' && freeRuns.some(run =>
         Object.keys(run.requires.minerals).some(mineral => candidate.minerals.includes(mineral))))
       setTab('free')
@@ -477,7 +484,7 @@ export default function MissionBoard({
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
         {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
-          <b>{eventFocus} night run</b><span>Mine falling debris to earn the event badge. Your normal cargo is yours to keep or sell.</span>
+          <b>{eventFocus} shower run</b><span>Launch through the shower. Fragments are caught on the way up and take no cargo.</span>
         </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>
@@ -566,6 +573,14 @@ export default function MissionBoard({
                 </p>
               ))}
               {events.spacetober.mastery >= 1 && <p data-testid="meteorite-mastery">Meteorite mastery {events.spacetober.mastery}</p>}
+              {(isOrionidsWindow(orionidsNow) || heldFragments(player.stash) > 0 || (player.orionidsFragments?.caught ?? 0) > 0) && (
+                <div className={styles.fragmentBench} data-testid="orionids-fragments">
+                  <p>Fragments held {heldFragments(player.stash)}. Caught {player.orionidsFragments?.caught ?? 0}. They take no cargo. Redeemed {player.orionidsFragments?.redeemed ?? 0} for research. Meteorite mastery uses that count later.</p>
+                  {player.badges?.['orionids-looked-up'] && <p data-testid="orionids-looked-up">Looked up · {player.badges['orionids-looked-up'].tier} badge</p>}
+                  <button type="button" className={styles.eventAction} data-testid="orionids-redeem" disabled={heldFragments(player.stash) < FRAGMENT_REDEEM_BATCH} onClick={onRedeemFragments}>REDEEM 5 FOR RESEARCH</button>
+                  <button type="button" className={styles.eventAction} data-testid="orionids-combine" disabled={heldFragments(player.stash) < FRAGMENTS_PER_FIREBALL} onClick={onCombineFragments}>COMBINE 15 INTO A FIREBALL</button>
+                </div>
+              )}
             </section>
             {events.groups.map(group => <section key={group.status} className={styles.eventGroup} data-testid={`events-group-${group.status}`}>
               <header className={styles.eventGroupHead}><h2>{group.title}</h2><span>{group.cards.length}</span></header>

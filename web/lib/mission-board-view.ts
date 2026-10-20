@@ -291,7 +291,7 @@ export function eventsBoard(
     status,
     countdownLabel: status === 'upcoming' ? countdownLabel(orionidsNow) : null,
     earnedTier: earned === 'gold' || earned === 'silver' ? earned : null,
-    blurb: 'Mine debris at night, earn badges. Classify a planet tonight for a voucher.',
+    blurb: 'Launch through the shower and catch fragments on the way up. They fall any time in the window.',
     actionLabel: eventActionLabel(status),
     rewardLabel: eventRewardLabel(status, earned),
   }
@@ -317,8 +317,26 @@ export function eventsBoard(
       rewardLabel: eventRewardLabel(eventStatus, earnedTier),
     }
   })
-  const attention = orionidsCard.status !== 'ended' || wsw.some(card => card.status === 'live' || card.status === 'upcoming')
-  const all = [orionidsCard, ...wsw]
+  const queued = ['leonids-2026', 'geminids-2026'].map(id => {
+    const event = getSkyEvent(id)
+    const eventStart = event ? Date.parse(event.startUtc) : now
+    const eventEnd = event ? Date.parse(event.endUtc) : now
+    const eventStatus = skyStatus(eventStart, eventEnd, now)
+    const tier = badges?.[id]?.tier
+    const earnedTier = tier === 'gold' || tier === 'silver' ? tier : null
+    return {
+      id,
+      name: event?.name ?? id,
+      status: eventStatus,
+      countdownLabel: null,
+      earnedTier,
+      blurb: eventStatus === 'upcoming' ? 'Queued. The same shower opens on its dates.' : 'Launch through the shower. Fragments take no cargo.',
+      actionLabel: eventActionLabel(eventStatus),
+      rewardLabel: eventRewardLabel(eventStatus, earnedTier),
+    }
+  })
+  const attention = orionidsCard.status !== 'ended' || wsw.some(card => card.status === 'live' || card.status === 'upcoming') || queued.some(card => card.status === 'live' || card.status === 'upcoming')
+  const all = [orionidsCard, ...wsw, ...queued]
   const groups: EventsBoard['groups'] = ([['live', 'Live now'], ['upcoming', 'Upcoming'], ['ended', 'Past events']] as const)
     .map(([groupStatus, title]) => ({ status: groupStatus, title, cards: all.filter(card => card.status === groupStatus) }))
     .filter(group => group.cards.length > 0)

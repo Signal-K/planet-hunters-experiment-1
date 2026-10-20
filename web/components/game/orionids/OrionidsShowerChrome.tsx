@@ -95,7 +95,7 @@ export default function OrionidsShowerChrome() {
       </div>
       <div className={styles.banner} role="status" data-testid="orionids-banner">
         <img src={art.meteorIcon} alt="" width={28} height={28} />
-        <p>The Orionids shower is happening. Best after moonset, about 02:00 local on 21–22 Oct.</p>
+        <p>The Orionids shower is happening. Catch fragments on the way up, any hour. Peak night is double.</p>
         <button type="button" onClick={() => setOpen(true)}>Read the sky</button>
       </div>
       {open && (

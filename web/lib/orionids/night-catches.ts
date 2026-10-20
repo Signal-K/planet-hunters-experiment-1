@@ -1,6 +1,8 @@
-// Orionids night-run progress (SSL-578). The goal is fragments caught across
-// one local night, stored on the player and synced with the rest of the save.
-// Cargo is a separate hold: it keeps only what the ship can carry.
+// Older night-run progress (SSL-578). New catches use orionidsFragments.
+// This field still round-trips so a save from the night rule is not dropped.
+// Cargo mass ignores fragments: they take no hold space.
+
+import { cargoUnits } from '@/lib/data/minerals'
 
 export interface OrionidsNightCatches {
   night: string
@@ -53,7 +55,15 @@ export function mergeNightCatches(
   return local.night > incoming.night ? local : incoming
 }
 
-export function holdHasRoom(cargo: Record<string, number>, capacity: number): boolean {
-  const units = Object.values(cargo).reduce((sum, amount) => sum + (amount > 0 ? amount : 0), 0)
-  return units < capacity
+export function cargoMass(cargo: Record<string, number>): number {
+  return Object.entries(cargo).reduce((sum, [id, amount]) => {
+    if (amount <= 0) return sum
+    return sum + amount * cargoUnits(id)
+  }, 0)
+}
+
+/** True when one more unit of `adding` fits. A zero-weight fragment always fits. */
+export function holdHasRoom(cargo: Record<string, number>, capacity: number, adding?: string): boolean {
+  if (adding && cargoUnits(adding) === 0) return true
+  return cargoMass(cargo) < capacity
 }

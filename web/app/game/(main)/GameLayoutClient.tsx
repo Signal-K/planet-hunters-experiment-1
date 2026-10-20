@@ -16,7 +16,10 @@ import ToastLayer from '@/components/ui/ToastLayer'
 import { notifyFiredAlert } from '@/lib/priceAlertNotify'
 import { captureGameEvent, captureScreenView, initPostHog } from '@/lib/posthog'
 import { scheduleOrionidsPeakReminder } from '@/lib/orionids/peak-reminder'
-import { queueMeteoriteMastery, queueOrionidsFind } from '@/lib/orionids/persist'
+import { pbLandnam } from '@/lib/pb-landnam'
+import { queueEventBadge, queueFragmentLedger, queueMeteoriteMastery, queueOrionidsFind, readAtlasLookedUp } from '@/lib/orionids/persist'
+import { grantLookedUp, LOOKED_UP_BADGE_ID, LOOKED_UP_LANDNAM_SUBJECT, LOOKED_UP_MARKER } from '@/lib/orionids/looked-up'
+import { ORIONIDS_EVENT_ID } from '@/lib/orionids/finds'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
@@ -79,6 +82,49 @@ function GameChrome({ children }: { children: ReactNode }) {
     for (const find of finds) queueOrionidsFind(find)
     if ((game.player.meteoriteMastery ?? 0) >= 1 && finds[0]) queueMeteoriteMastery(finds[0].earnedAt)
   }, [game.player.meteoriteMastery, game.player.orionidsFinds])
+
+  const queuedLedger = useRef('')
+  useEffect(() => {
+    const ledger = game.player.orionidsFragments
+    if (!ledger || ledger.caught <= 0) return
+    const key = `${ledger.caught}:${ledger.redeemed}:${game.player.meteoriteMastery ?? 0}`
+    if (queuedLedger.current === key) return
+    queuedLedger.current = key
+    queueFragmentLedger({
+      caught: ledger.caught,
+      redeemed: ledger.redeemed,
+      level: game.player.meteoriteMastery ?? 0,
+      earnedAt: game.player.orionidsLookedUpAt ?? Date.now(),
+    })
+  }, [game.player.meteoriteMastery, game.player.orionidsFragments, game.player.orionidsLookedUpAt])
+
+  // Atlas writes the check-in row. One read after the save is ready grants the Landnam badge.
+  const lookedUp = useRef(false)
+  const grantLooked = useRef(game.setPlayer)
+  const toastLooked = useRef(game.addToast)
+  grantLooked.current = game.setPlayer
+  toastLooked.current = game.addToast
+  useEffect(() => {
+    if (game.awaitingRemoteState || lookedUp.current) return
+    if (!pbLandnam.authStore.record?.id) return
+    if (game.player.badges?.[LOOKED_UP_BADGE_ID]) {
+      lookedUp.current = true
+      return
+    }
+    lookedUp.current = true
+    void readAtlasLookedUp().then(row => {
+      if (!row) return
+      grantLooked.current(player => grantLookedUp(player, row.earnedAt, row.tier))
+      queueEventBadge({
+        eventId: ORIONIDS_EVENT_ID,
+        tier: row.tier,
+        earnedAt: row.earnedAt,
+        subjectId: LOOKED_UP_LANDNAM_SUBJECT,
+        marker: LOOKED_UP_MARKER,
+      })
+      toastLooked.current('Looked up. Research recorded.', 'ok')
+    })
+  }, [game.awaitingRemoteState, game.player.badges])
 
   // One Orionids peak reminder per push subscription. The cron delivers it at local 22 Oct 02:00.
   useEffect(() => {

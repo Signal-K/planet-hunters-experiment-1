@@ -147,9 +147,9 @@ describe('isLocalNight', () => {
 
 describe('isDebrisEventActive (Orionids)', () => {
   const p = ORIONIDS_DEBRIS_PRESET
-  it('is active mid-window at night, inactive by day', () => {
+  it('is active any hour inside the window', () => {
     expect(isDebrisEventActive(p, local(10, 28, 23))).toBe(true)
-    expect(isDebrisEventActive(p, local(10, 28, 12))).toBe(false)
+    expect(isDebrisEventActive(p, local(10, 28, 12))).toBe(true)
   })
   it('is inactive before the window and after it, even at night', () => {
     expect(isDebrisEventActive(p, local(10, 10, 23))).toBe(false)
@@ -158,7 +158,7 @@ describe('isDebrisEventActive (Orionids)', () => {
   })
   it('opens at local midnight on 19 Oct', () => {
     expect(isDebrisEventActive(p, local(10, 19, 0))).toBe(true)
-    expect(isDebrisEventActive(p, local(10, 19, 12))).toBe(false)
+    expect(isDebrisEventActive(p, local(10, 19, 12))).toBe(true)
     expect(isDebrisEventActive(p, local(10, 19, 23))).toBe(true)
     expect(badgeTierFor('orionids-2026', local(10, 18, 23))).toBeNull()
     expect(badgeTierFor('orionids-2026', local(10, 19, 23))).toBe('gold')
@@ -175,13 +175,13 @@ describe('isDebrisEventActive (Orionids)', () => {
     expect(activeDebrisPreset(local(10, 28, 23))?.eventId).toBe('orionids-2026')
     expect(activeDebrisPreset(local(10, 8, 23))?.eventId).toBe('draconids-2026')
     expect(activeDebrisPreset(local(10, 15, 23))).toBeNull()
-    expect(activeDebrisPreset(local(10, 28, 12))).toBeNull()
+    expect(activeDebrisPreset(local(10, 28, 12))?.eventId).toBe('orionids-2026')
   })
 })
 
 describe('debrisRatePerMinute', () => {
   it('is zero outside the event and ramps to the peak rate', () => {
-    expect(debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, local(10, 28, 12))).toBe(0)
+    expect(debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, local(10, 28, 12))).toBeGreaterThan(0)
     const peak = debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, Date.parse('2026-10-22T00:00:00Z') + 0)
     const later = debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, local(11, 6, 23))
     if (peak > 0) expect(peak).toBeGreaterThan(later)

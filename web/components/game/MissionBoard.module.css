@@ -550,6 +550,9 @@ button.start {
 .eventTitle .ended, .eventTitle .countdown { flex: none; margin-top: 0; }
 .eventReward { margin: 10px 0 0; color: var(--ln-board-muted); font: 800 14px/1.25 var(--ln-font-display); letter-spacing: .06em; }
 .eventAction { width: 100%; min-height: 44px; margin-top: 12px; border: 2px solid var(--ln-board-ink); border-radius: 10px; background: transparent; color: var(--ln-board-ink); font: 800 14px var(--ln-font-display); letter-spacing: .08em; cursor: pointer; }
+.fragmentBench { display: grid; gap: 8px; margin-top: 12px; }
+.fragmentBench p { margin: 0; font: 400 14px/1.4 var(--ln-font-body); }
+.fragmentBench .eventAction:disabled { opacity: 0.45; cursor: default; }
 .countdown {
   display: inline-flex;
   align-items: center;
