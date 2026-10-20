@@ -171,7 +171,7 @@ function GameCanvas() {
     }
     if (priorScreenRef.current === game.screen) return
     priorScreenRef.current = game.screen
-    game.toasts.forEach(toast => game.dismissToast(toast.id))
+    game.toasts.forEach(toast => { if (!toast.sticky) game.dismissToast(toast.id) })
   }, [game.dismissToast, game.screen, game.toasts])
 
   const surveyBlocked = !!coach

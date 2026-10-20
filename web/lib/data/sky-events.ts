@@ -374,7 +374,7 @@ export const ORIONIDS_PANEL = {
   steps: [
     'Launch through the shower. Fragments are caught on the way up.',
     'They take no cargo space.',
-    'Redeem them for research, or combine 15 into a fireball.',
+    'Redeem 2 for research, or combine 15 into a fireball.',
     'Sell the rest at the Exchange. The payout is a modest bonus.',
   ],
 } as const

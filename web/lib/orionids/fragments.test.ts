@@ -34,9 +34,12 @@ describe('fragment ledger', () => {
     const next = redeemFragments(held)
     expect(next.researchXP).toBe(FRAGMENT_REDEEM_RESEARCH)
     expect(next.orionidsFragments).toEqual({ caught: 5, redeemed: FRAGMENT_REDEEM_BATCH })
-    expect(next.stash?.orionid_debris).toBeUndefined()
+    expect(next.stash?.orionid_debris).toBe(5 - FRAGMENT_REDEEM_BATCH)
     expect(next.meteoriteMastery).toBe(1)
-    expect(redeemFragments(next)).toBe(next)
+    const again = redeemFragments(next)
+    expect(again.stash?.orionid_debris).toBe(5 - FRAGMENT_REDEEM_BATCH * 2)
+    expect(again.orionidsFragments?.redeemed).toBe(FRAGMENT_REDEEM_BATCH * 2)
+    expect(redeemFragments(again)).toBe(again)
   })
 
   it('combines 15 fragments into one fireball', () => {

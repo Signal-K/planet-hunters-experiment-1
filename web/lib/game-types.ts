@@ -674,7 +674,7 @@ export interface GameActions {
   assignCrewToStructure: (structureId: string, crewId: string | null) => void
   shareChartsWithClient: (clientId: string) => void
   toasts: Toast[]
-  addToast: (message: string, kind?: Toast['kind']) => void
+  addToast: (message: string, kind?: Toast['kind'], options?: { sticky?: boolean }) => void
   dismissToast: (id: string) => void
   mission: Mission | null
   target: Target | null
