@@ -385,6 +385,24 @@ describe('MiningController ore sym labels', () => {
     expect(ores.filter(ore => ore.mineral === 'fireball_fragment')).toHaveLength(1)
   })
 
+  it('drops the fireball on the ship and aims the cue at it', () => {
+    const onTargetCue = vi.fn()
+    const { controller } = makeController(vi.fn(), {
+      mineralColors: { ...MINERAL_COLORS, fireball_fragment: '#b7e3ff' },
+      onTargetCue,
+      debris: { getSpawn: () => ({ mineral: 'orionid_debris', ratePerMinute: 1, speedFactor: 1, onceMineral: 'fireball_fragment', onceHero: true }) },
+    })
+    controller.start()
+    controller.update(0.05)
+    const ores = (controller as unknown as { ores: { mineral: string; hero?: boolean; go: { transform: { position: { x: number } } } }[] }).ores
+    const fireball = ores.find(ore => ore.mineral === 'fireball_fragment')
+    expect(fireball?.go.transform.position.x).toBe(SHIP_X)
+    expect(fireball?.hero).toBe(true)
+    expect(onTargetCue).toHaveBeenCalledWith('fireball_fragment', false)
+    controller.update(0.2)
+    expect(fireball?.go.transform.position.x).toBe(SHIP_X)
+  })
+
   it('does not spawn shower debris when the event is off', () => {
     const { controller, host } = makeController(vi.fn(), { debris: { getSpawn: () => null } })
     controller.start()

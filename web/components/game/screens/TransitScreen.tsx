@@ -32,6 +32,7 @@ interface Props {
   isDelivery?: boolean
   francs?: number
   parts?: InstalledCustomizerPartsByKind | null
+  fragmentCount?: number
 }
 
 function CogIcon() {
@@ -73,6 +74,7 @@ export default function TransitScreen({
   isDelivery = false,
   francs = 0,
   parts,
+  fragmentCount = 0,
 }: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
@@ -196,6 +198,11 @@ export default function TransitScreen({
           </div>
           <div className={styles.cluster}>
             <span className="scene-chip" data-testid="flight-francs-chip">{formatCurrency(francs, { compact: true })}</span>
+            {fragmentCount > 0 && (
+              <span className="scene-chip" data-testid="flight-fragment-chip" aria-label={`${fragmentCount} fragments`}>
+                {fragmentCount} fragments
+              </span>
+            )}
             <span className="scene-chip" data-testid="flight-cargo-chip" aria-label="Cargo">
               <CubeIcon />
             </span>

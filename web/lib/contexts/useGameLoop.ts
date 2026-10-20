@@ -55,7 +55,7 @@ interface GameLoopOpts {
   stateRef: React.RefObject<GameState>
   setState: React.Dispatch<React.SetStateAction<GameState>>
   catalog: Catalog
-  addToast: (message: string, kind?: Toast['kind']) => void
+  addToast: (message: string, kind?: Toast['kind'], options?: { sticky?: boolean }) => void
 }
 
 function snapshotActiveMission(state: GameState): MissionRunSnapshot | null {
@@ -603,7 +603,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
     captureGameEvent('rocket_launched', { mission_id: currentMission.id, target_id: current.targetId, is_first_ever: isFirstEver })
     if (earnedLaunchBadge) addToast(`Rocket Revolution badge · ${earnedLaunchBadge === 'gold' ? 'Gold' : 'Silver'}`, 'ok')
-    if (ascentFragments > 0) addToast(`${ascentFragments} Orionid fragments caught on the way up`, 'ok')
+    if (ascentFragments > 0) addToast(`${ascentFragments} Orionid fragments caught on the way up`, 'info', { sticky: true })
     if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
     if (currentMissionCrew.length > 0) enqueueSurvey('lnm_crew_first_launch', 4000)
   }, [addToast, catalog.missions, catalog.targets, setState, stateRef])

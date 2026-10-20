@@ -78,6 +78,7 @@ export default function MissionOperationRoutes({
           returning={!!game.player.returningToEarth}
           isDelivery={!!game.player.headingToDelivery}
           francs={game.player.francs}
+          fragmentCount={Math.max(0, Math.floor(game.player.stash?.orionid_debris ?? 0))}
           parts={game.player.shipCustomizerParts}
           onBack={() => game.go('hub')}
           onPrev={() => stepFlightDock(game, -1)}

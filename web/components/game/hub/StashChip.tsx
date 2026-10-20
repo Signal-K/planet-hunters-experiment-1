@@ -23,7 +23,7 @@ export function StashChip({ testId, className = 'scene-chip', children }: { test
         {units > 0 ? <b style={{ marginLeft: 6 }}>{units}</b> : null}
       </button>
       {open && (
-        <div className="mining-hold" role="region" aria-label="Stash" data-testid="stash-panel" style={{ position: 'fixed', top: 64, right: 8, pointerEvents: 'auto' }}>
+        <div className="mining-hold stash-hold" role="region" aria-label="Stash" data-testid="stash-panel">
           <div className="mining-hold__title">Stash · {units}</div>
           {entries.length === 0 ? <div className="mining-hold__empty">Empty. Mine something first.</div> : null}
           {entries.map(([id, n]) => (

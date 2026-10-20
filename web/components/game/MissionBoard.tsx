@@ -577,8 +577,11 @@ export default function MissionBoard({
                 <div className={styles.fragmentBench} data-testid="orionids-fragments">
                   <p>Fragments held {heldFragments(player.stash)}. Caught {player.orionidsFragments?.caught ?? 0}. They take no cargo. Redeemed {player.orionidsFragments?.redeemed ?? 0} for research. Meteorite mastery uses that count later.</p>
                   {player.badges?.['orionids-looked-up'] && <p data-testid="orionids-looked-up">Looked up · {player.badges['orionids-looked-up'].tier} badge</p>}
-                  <button type="button" className={styles.eventAction} data-testid="orionids-redeem" disabled={heldFragments(player.stash) < FRAGMENT_REDEEM_BATCH} onClick={onRedeemFragments}>REDEEM 5 FOR RESEARCH</button>
-                  <button type="button" className={styles.eventAction} data-testid="orionids-combine" disabled={heldFragments(player.stash) < FRAGMENTS_PER_FIREBALL} onClick={onCombineFragments}>COMBINE 15 INTO A FIREBALL</button>
+                  <p data-testid="orionids-fireball-progress">{heldFragments(player.stash)}/{FRAGMENTS_PER_FIREBALL} to a fireball</p>
+                  <button type="button" className={styles.eventAction} data-testid="orionids-redeem" disabled={heldFragments(player.stash) < FRAGMENT_REDEEM_BATCH} onClick={onRedeemFragments}>REDEEM {FRAGMENT_REDEEM_BATCH} FOR RESEARCH</button>
+                  {heldFragments(player.stash) >= FRAGMENTS_PER_FIREBALL && (
+                    <button type="button" className={styles.eventAction} data-testid="orionids-combine" onClick={onCombineFragments}>COMBINE {FRAGMENTS_PER_FIREBALL} INTO A FIREBALL</button>
+                  )}
                 </div>
               )}
             </section>

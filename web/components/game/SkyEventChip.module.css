@@ -72,6 +72,7 @@
   padding-left: 8px;
   border-left: 1px solid var(--ln-hairline);
   color: var(--ln-text);
+  text-transform: none;
 }
 
 .fallback {
@@ -224,7 +225,8 @@
   text-transform: uppercase;
 }
 .panelHeading > span {
-  color: var(--ln-cyan);
+  color: var(--ln-text);
+  text-transform: none;
 }
 .summary { color: var(--ln-text); }
 .meta {
@@ -250,8 +252,8 @@
   border-radius: 8px;
   border: 1px solid var(--ln-cyan-border);
   background: var(--ln-panel);
-  color: var(--ln-cyan);
+  color: var(--ln-text);
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-transform: none;
 }

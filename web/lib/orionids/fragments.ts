@@ -8,10 +8,10 @@ import { FIREBALL_FRAGMENT_ID } from '@/lib/orionids/fireball'
 import { fragmentsCaughtOnLaunch } from '@/lib/orionids/launch-catch'
 
 export const ORIONID_DEBRIS_ID = 'orionid_debris'
-/** Held fragments spent for one research grant. */
-export const FRAGMENT_REDEEM_BATCH = 5
-/** Research XP for one redeem. A classification is 15; this is the smaller step. */
-export const FRAGMENT_REDEEM_RESEARCH = 8
+/** Held fragments spent for one research grant. One ordinary launch (2) is enough. */
+export const FRAGMENT_REDEEM_BATCH = 2
+/** Research XP for one redeem. A classification is 15; two fragments are the smaller step. */
+export const FRAGMENT_REDEEM_RESEARCH = 3
 /** Fragments combined into one fireball. Matches the 15× price, so the trade is even. */
 export const FRAGMENTS_PER_FIREBALL = 15
 

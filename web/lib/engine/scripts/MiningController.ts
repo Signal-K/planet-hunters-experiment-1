@@ -212,7 +212,7 @@ export interface MiningControllerOptions {
    */
   debris?: {
     /** Live spawn config; null (or rate 0) when the event is not active. */
-    getSpawn: () => { mineral: string; ratePerMinute: number; speedFactor: number; onceMineral?: string } | null
+    getSpawn: () => { mineral: string; ratePerMinute: number; speedFactor: number; onceMineral?: string; onceHero?: boolean } | null
   }
   /** Raster shower art. Omit to keep the vector chunk fallback. */
   debrisArt?: DebrisArtSet | null
@@ -264,6 +264,8 @@ interface OreEntity {
   animTime: number
   variant: number
   frames?: Texture[] | null
+  /** A one-off fireball. It falls on the ship and does not scroll away. */
+  hero?: boolean
 }
 
 interface LaserEntity {
@@ -373,7 +375,7 @@ export class MiningController extends ScriptBehaviour {
 
     const visibleChipLabels: Array<{ ore: OreEntity; center: number; halfWidth: number }> = []
     for (const ore of this.ores) {
-      ore.go.transform.position.x -= dx
+      if (!ore.hero) ore.go.transform.position.x -= dx
       if (ore.frames && ore.frames.length > 1 && ore.sprite) {
         ore.animTime += dt
         const frame = ore.frames[Math.floor(ore.animTime / 0.6) % ore.frames.length]
@@ -441,13 +443,16 @@ export class MiningController extends ScriptBehaviour {
     this.opts.onScroll?.(this.totalScrollX)
 
     const needed = this.opts.neededMineralsRef?.current
-    const targetOres = this.ores.filter(o => o.go.active && o.fallSpeed === undefined && (!needed || needed.size === 0 || needed.has(o.mineral)))
+    const heroes = this.ores.filter(o => o.go.active && o.hero)
+    const seamTargets = this.ores.filter(o => o.go.active && o.fallSpeed === undefined && (!needed || needed.size === 0 || needed.has(o.mineral)))
+    const targetOres = heroes.length > 0 ? heroes : seamTargets
     const target = targetOres.reduce<OreEntity | null>((best, ore) => {
       if (!best) return ore
       return Math.abs(ore.go.transform.position.x - SHIP_X) < Math.abs(best.go.transform.position.x - SHIP_X) ? ore : best
     }, null)
     const targetDistance = target ? Math.abs(target.go.transform.position.x - SHIP_X) : Number.POSITIVE_INFINITY
-    const inRange = targetDistance < HIT_TOLERANCE
+    const landed = !target?.phase || target.phase === 'intact'
+    const inRange = landed && targetDistance < HIT_TOLERANCE
     const targetState = target ? `${target.mineral}:${inRange}` : ''
     if (targetState !== this.targetCueState) {
       this.targetCueState = targetState
@@ -494,7 +499,7 @@ export class MiningController extends ScriptBehaviour {
     }
     if (spawn.onceMineral && !this.onceDebrisSpawned) {
       this.onceDebrisSpawned = true
-      this.spawnDebris(spawn.onceMineral, spawn.speedFactor)
+      this.spawnDebris(spawn.onceMineral, spawn.speedFactor, !!spawn.onceHero)
     }
     const rate = spawn.ratePerMinute
     this.debrisAccumulator += (rate / 60) * dt
@@ -571,9 +576,9 @@ export class MiningController extends ScriptBehaviour {
     ore.sprite.anchor.set(piece.ax, piece.ay)
   }
 
-  private spawnDebris(mineral: string, speedFactor: number): void {
-    const x = 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
-    const y = -20 - Math.random() * 40
+  private spawnDebris(mineral: string, speedFactor: number, hero = false): void {
+    const x = hero ? SHIP_X : 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
+    const y = hero ? -36 : -20 - Math.random() * 40
     const colorHex = this.opts.mineralColors[mineral] ?? LASER_COLOR
     const mineralColor = parseInt(colorHex.replace('#', ''), 16)
     const art = this.opts.debrisArt
@@ -594,8 +599,8 @@ export class MiningController extends ScriptBehaviour {
       renderer = new ShapeRenderer(
         {
           shape: this.opts.mineralShapes?.[mineral] ?? 'diamond',
-          width: 22,
-          height: 22,
+          width: hero ? 48 : 22,
+          height: hero ? 48 : 22,
           color: ORE_FILL,
           strokeColor: ORE_STROKE,
           strokeWidth: 1.5,
@@ -606,12 +611,13 @@ export class MiningController extends ScriptBehaviour {
       go.start()
       renderer.setTint(mineralColor)
     }
+    if (sprite && hero) sprite.scale.set(2.4)
     this.gameObject.addChild(go)
     this.ores.push({
-      go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, 11), labelBaseY: y, mineral,
-      hp: 1, maxHp: 1, radius: art ? DEBRIS_RADIUS : 11, flashTimer: 0, mineralColor,
-      fallSpeed: DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor),
-      phase: 'fall', animTime: 0, variant,
+      go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, hero ? 24 : 11), labelBaseY: y, mineral,
+      hp: 1, maxHp: 1, radius: hero ? 56 : (art ? DEBRIS_RADIUS : 11), flashTimer: 0, mineralColor,
+      fallSpeed: DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor) * (hero ? 1.35 : 1),
+      phase: 'fall', animTime: 0, variant, hero,
     })
   }
 
