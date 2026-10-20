@@ -17,7 +17,8 @@ describe('game route server boundary', () => {
     const layout = source('layout.tsx')
 
     expect(page).toContain('generateStaticParams')
-    expect(page).toContain('dynamicParams = false')
+    expect(page).toContain('dynamicParams = true')
+    expect(page).toContain('if (!VALID_SCREENS.has(screen as Screen)) notFound()')
     expect(page).not.toMatch(/use client|GameScreenRouter|@\/lib\/data|@\/game-context|pixi|GameLayoutClient/)
 
     expect(client).toContain("ssr: false")
