@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { EARTH_BIOMES } from './base-world'
-import { GROUND, SITES, STRIP_W, backdropFor, homeCenter, homeSite, kitScale, siteById, validateBaseSite } from './base-site'
+import { GROUND, SITES, STRIP_W, backdropFor, displaySite, homeCenter, homeSite, kitScale, siteById, validateBaseSite } from './base-site'
 
 describe('base site map', () => {
   it('has no overlaps: sites and structures fit the strip', () => {
@@ -43,7 +43,7 @@ describe('base site map', () => {
   })
 
   it('frames what is built: the pad site on a fresh base, hangar and pad whole on every phone', () => {
-    expect(homeCenter([], 195)).toBe(siteById('pad').x)
+    expect(homeCenter([], 195)).toBe(displaySite(siteById('pad')).x)
     for (const view of [{ w: 390, h: 844 }, { w: 926, h: 428 }, { w: 1440, h: 900 }]) {
       const units = view.w / kitScale(view)
       const c = homeCenter(['hangar', 'launchpad'], units)

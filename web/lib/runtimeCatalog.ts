@@ -3,6 +3,7 @@ import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } 
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
 import { tagMissionCategories } from './data/mission-generator'
+import { ORIONIDS_NIGHT_RUN_ID, orionidsNightRun } from './data/missions'
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -110,9 +111,12 @@ export function buildRuntimeCatalog({
   const hasSelfDirectedMining = catalog.missions.some(mission =>
     mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction,
   )
-  const relationshipMissions = hasSelfDirectedMining || !fallbackSelfDirectedMining
+  let relationshipMissions = hasSelfDirectedMining || !fallbackSelfDirectedMining
     ? catalog.missions
     : [...catalog.missions, fallbackSelfDirectedMining]
+  if (missionId === ORIONIDS_NIGHT_RUN_ID && !relationshipMissions.some(mission => mission.id === ORIONIDS_NIGHT_RUN_ID)) {
+    relationshipMissions = [...relationshipMissions, orionidsNightRun()]
+  }
   const existingMissionIds = new Set(relationshipMissions.map(mission => mission.id))
   const transitTelescopeMission: Mission[] = shouldIncludeTransitTelescopeMission && !existingMissionIds.has(TRANSIT_TELESCOPE_MISSION_ID)
     ? [{

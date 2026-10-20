@@ -44,7 +44,29 @@ function GameChrome({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [communityOpen, setCommunityOpen] = useState(false)
+  const [orionidsEntryActive, setOrionidsEntryActive] = useState(false)
   const { phase: backdropSkyPhase } = useTimeOfDay()
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('entry') === 'orionids'
+      || window.sessionStorage.getItem('landnam-entry') === 'orionids'
+    if (!requested) return
+    window.sessionStorage.setItem('landnam-entry', 'orionids')
+    setOrionidsEntryActive(true)
+  }, [])
+
+  useEffect(() => {
+    if (!orionidsEntryActive || game.authGateOpen || !game.hydrated || game.awaitingRemoteState) return
+    if (game.missionId === 'self-directed-orionids-night-run' || game.player.activeMission?.id === 'self-directed-orionids-night-run') {
+      window.sessionStorage.removeItem('landnam-entry')
+      return
+    }
+    // Auth completion itself redirects to the saved/default screen. Let that
+    // settle first, then replace it with the mission setup; otherwise the
+    // auth redirect can win the same render and send a fresh player to Hub.
+    const start = window.setTimeout(() => game.onPickMission('self-directed-orionids-night-run', 'sell'), 500)
+    return () => window.clearTimeout(start)
+  }, [game.authGateOpen, game.awaitingRemoteState, game.hydrated, game.missionId, game.onPickMission, game.player.activeMission?.id, game.screen, orionidsEntryActive])
 
   useCoreLoopAnalytics(game.screen, game.player.flightPlan)
 
@@ -215,9 +237,9 @@ function GameChrome({ children }: { children: ReactNode }) {
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (orionidsEntryActive || settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, settingsOpen])
+  }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, orionidsEntryActive, settingsOpen])
 
   const coachIndex = flightStep ? ['mining', 'scan', 'part'].indexOf(flightStep.try) : -1
   // Only the required-looking onboarding (not the optional guide) changes the hub's own copy.
@@ -415,6 +437,7 @@ function GameChrome({ children }: { children: ReactNode }) {
         {game.authGateOpen && (
           <AuthGateSheet
             error={game.authGateError}
+            entry={orionidsEntryActive ? 'orionids' : null}
             onSignIn={game.signInFromGate}
             onCreateAccount={game.createAccountFromGate}
           />

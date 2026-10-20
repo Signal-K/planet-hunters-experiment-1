@@ -36,6 +36,50 @@ function GameCanvas() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [hubOpen, setHubOpen] = useState(false)
+  const orionidsEntry = useRef<'orionids' | null>(
+    typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('entry') === 'orionids'
+      || window.sessionStorage.getItem('landnam-entry') === 'orionids')
+      ? 'orionids'
+      : null,
+  )
+  const [orionidsEntryActive, setOrionidsEntryActive] = useState(orionidsEntry.current === 'orionids')
+  const orionidsEntryStage = useRef<'waiting' | 'started'>('waiting')
+
+  // The first render is server-rendered, where `window` does not exist. Read
+  // the handoff again after hydration before the canonical route drops its
+  // query string.
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('entry') === 'orionids'
+      || window.sessionStorage.getItem('landnam-entry') === 'orionids'
+    if (!requested) return
+    orionidsEntry.current = 'orionids'
+    window.sessionStorage.setItem('landnam-entry', 'orionids')
+    setOrionidsEntryActive(true)
+  }, [])
+
+  useEffect(() => {
+    if (orionidsEntry.current !== 'orionids' || !game.hydrated || game.authGateOpen) return
+    if (game.missionId === 'self-directed-orionids-night-run' || game.player.activeMission?.id === 'self-directed-orionids-night-run') {
+      orionidsEntryStage.current = 'started'
+      window.sessionStorage.removeItem('landnam-entry')
+      return
+    }
+    if (orionidsEntryStage.current === 'waiting') {
+      orionidsEntryStage.current = 'started'
+      game.onPickMission('self-directed-orionids-night-run', 'sell')
+      window.sessionStorage.removeItem('landnam-entry')
+    }
+  }, [game.authGateOpen, game.hydrated, game.missionId, game.onPickMission, game.player.activeMission?.id])
+
+  useEffect(() => {
+    if (!orionidsEntryActive || orionidsEntryStage.current !== 'started') return
+    const inRun = game.missionId === 'self-directed-orionids-night-run'
+      || game.player.activeMission?.id === 'self-directed-orionids-night-run'
+    if (!inRun && game.player.completedMissions?.some(mission => mission.id === 'self-directed-orionids-night-run')) {
+      setOrionidsEntryActive(false)
+      orionidsEntry.current = null
+    }
+  }, [game.missionId, game.player.activeMission?.id, game.player.completedMissions, orionidsEntryActive])
 
   useCoreLoopAnalytics(game.screen, game.player.flightPlan)
 
@@ -129,9 +173,9 @@ function GameCanvas() {
   }, [game.screen, game.lastCargo, game.mission, game.target])
 
   const coachSteps = useMemo(() => {
-    if (!game.tutorial || game.player.freeOperations) return []
+    if (!game.tutorial || game.player.freeOperations || orionidsEntryActive) return []
     return trainingCoachSteps(agencyTrainingStage(game.player))
-  }, [game.player, game.tutorial])
+  }, [game.player, game.tutorial, orionidsEntryActive])
 
   const coach = useMemo(() => {
     const activeCoach = coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
@@ -259,8 +303,21 @@ function GameCanvas() {
         {game.authGateOpen && (
           <AuthGateSheet
             error={game.authGateError}
-            onSignIn={game.signInFromGate}
-            onCreateAccount={game.createAccountFromGate}
+            entry={orionidsEntryActive ? 'orionids' : null}
+            onSignIn={async (email, password) => {
+              await game.signInFromGate(email, password)
+            }}
+            onCreateAccount={async (email, password) => {
+              await game.createAccountFromGate(email, password)
+              // A brand-new account has no remote save to merge. Start the
+              // authored mission immediately instead of waiting for a second
+              // auth-state render; that render may already be showing Intro.
+              if (orionidsEntry.current === 'orionids' && orionidsEntryStage.current === 'waiting') {
+                orionidsEntryStage.current = 'started'
+                game.onPickMission('self-directed-orionids-night-run', 'sell')
+                window.sessionStorage.removeItem('landnam-entry')
+              }
+            }}
           />
         )}
       </div>

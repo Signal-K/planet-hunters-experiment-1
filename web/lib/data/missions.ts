@@ -45,7 +45,7 @@ export function generateSelfDirectedMiningPool(now: number = Date.now()): Missio
 // SSL-578: Orionids Free Ops run, on the board only during the shower window.
 export const ORIONIDS_NIGHT_RUN_ID = 'self-directed-orionids-night-run'
 
-/** Fragments the shower run asks for. The launch gate stays at 8U. The 20 is catches stored on the player, any hour in the window. Fragments take no cargo. */
+/** Fragments the shower run asks for. The 20 is catches stored on the player, any hour in the window. Fragments take no cargo. */
 export const ORIONIDS_FRAGMENT_GOAL = 20
 
 export function orionidsNightRun(): Mission {
@@ -60,7 +60,12 @@ export function orionidsNightRun(): Mission {
     locked: false,
     sequence: FREE_OPS_MISSION_SEQUENCE,
     unlockAt: 'Reach Free Operations',
-    requires: { minerals: { orionid_debris: amount }, cargo_min: 8, drill_tier: 1, max_orbit: 5 },
+    // The shower is collected during ascent; Eros supplies the ordinary
+    // starter-compatible mining leg so the run can use the normal loop.
+    targetId: 'eros',
+    // The event is a valid first mission: fragments take no hold space, and
+    // the 6U Explorer can carry the ordinary mining haul for the trip home.
+    requires: { minerals: { orionid_debris: amount }, cargo_min: 6, drill_tier: 1, max_orbit: 5 },
     payout: { francs: normalizeMissionPayout((debris?.price ?? 0) * amount, FREE_OPS_MISSION_SEQUENCE), affinity: 0 },
   }
 }

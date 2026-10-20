@@ -22,4 +22,21 @@ describe('BaseDock', () => {
     expect(markup).toContain('aria-label="Next"')
     expect(markup).not.toContain('Base')
   })
+
+  it('turns the location Build action into an explicit Done control', () => {
+    const markup = renderToStaticMarkup(
+      <BaseDock
+        onPrev={vi.fn()}
+        onNext={vi.fn()}
+        onBuild={vi.fn()}
+        onHub={vi.fn()}
+        locationLabel="Earth"
+        buildLabel="Done"
+        buildTestId="hub-build-done-btn"
+      />,
+    )
+
+    expect(markup).toContain('data-testid="hub-build-done-btn"')
+    expect(markup).toContain('>Done<')
+  })
 })

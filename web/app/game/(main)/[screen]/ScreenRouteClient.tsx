@@ -27,6 +27,10 @@ export default function ScreenRouteClient({ params }: { params: Promise<{ screen
     // opened underneath the entry gate. Letting it write into GameState here
     // races sign-in's canonical Earth Base redirect and can reopen Contracts.
     if (game.authGateOpen || !game.authUserId) return
+    // The landing-page Orionids handoff changes state immediately after auth.
+    // Its old /intro segment may still be resolving; do not let that stale
+    // segment overwrite the mission before GameProvider pushes /launchpad.
+    if (window.sessionStorage.getItem('landnam-entry') === 'orionids') return
     // /game/missions owns the whole creation flow. Do not let the stable URL
     // reset an in-progress internal step during hydration or a rerender.
     if (screen === 'missions' && isMissionSetupInternalScreen(game.screen)) return

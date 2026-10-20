@@ -7,6 +7,7 @@ import { STAGING_PLAYTEST_EMAIL_SUFFIX } from '@/lib/staging-account'
 
 interface AuthGateSheetProps {
   error: string | null
+  entry?: 'orionids' | null
   onSignIn: (email: string, password: string) => Promise<void>
   onCreateAccount: (email: string, password: string) => Promise<void>
 }
@@ -18,7 +19,8 @@ function revealOnFocus(e: React.FocusEvent<HTMLInputElement>) {
   window.setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)
 }
 
-export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: AuthGateSheetProps) {
+export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateAccount }: AuthGateSheetProps) {
+  const [requestedEntry, setRequestedEntry] = useState<'orionids' | null>(entry)
   const [mode, setMode] = useState<'signin' | 'signup'>(() => {
     if (typeof window === 'undefined') return 'signin'
     return new URLSearchParams(window.location.search).get('gate') === 'signup' ? 'signup' : 'signin'
@@ -35,7 +37,11 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
   const [isLocal, setIsLocal] = useState(false)
   useEffect(() => {
     setIsLocal(/^(localhost|127\.0\.0\.1)$/.test(window.location.hostname))
-  }, [])
+    const fromUrl = new URLSearchParams(window.location.search).get('entry')
+    if (entry === 'orionids' || fromUrl === 'orionids' || window.sessionStorage.getItem('landnam-entry') === 'orionids') {
+      setRequestedEntry('orionids')
+    }
+  }, [entry])
   const [keyboardInset, setKeyboardInset] = useState<number | null>(null)
   useEffect(() => {
     const vv = window.visualViewport
@@ -105,11 +111,13 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
 
         <div className="auth-gate__content">
           <div className="auth-gate__eyebrow">{PRODUCT_WORDMARK} · {PRODUCT_DESCRIPTOR}</div>
-          <div className="auth-gate__heading">{mode === 'signin' ? 'Welcome Back' : 'New Space Program'}</div>
+          <div className="auth-gate__heading">{requestedEntry === 'orionids' ? 'Fly the Orionids' : mode === 'signin' ? 'Welcome Back' : 'New Space Program'}</div>
           {/* SSL-302: the subtitle used to stay on the "resume" line for both
               tabs — a brand-new player on Sign Up has nothing to resume. */}
           <p className="auth-gate__intro" data-testid="auth-gate-intro">
-            {mode === 'signin'
+            {requestedEntry === 'orionids'
+              ? 'Sign in or create your program. We’ll take you straight into the Orionids launch, then the rest of Landnam stays open.'
+              : mode === 'signin'
               ? 'Return to your launchpad and take on your agency’s next mission.'
               : 'Choose a landing site, build your launchpad, and grow your space program one mission at a time.'}
           </p>
@@ -171,7 +179,11 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
             data-testid="auth-gate-submit"
             className="auth-gate__primary"
           >
-            {submitting ? (mode === 'signin' ? 'Opening program…' : 'Starting program…') : (mode === 'signin' ? 'Return to Base' : 'Start Program')}
+            {submitting
+              ? (mode === 'signin' ? 'Opening program…' : 'Starting program…')
+              : requestedEntry === 'orionids'
+                ? 'Continue to Orionids'
+                : (mode === 'signin' ? 'Return to Base' : 'Start Program')}
           </button>
         </form>
 

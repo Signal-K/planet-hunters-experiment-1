@@ -12,6 +12,16 @@ import { DEFAULT_STATE } from './game-state'
 import { createCrewMember } from './systems/CrewSystem'
 
 describe('buildRuntimeCatalog', () => {
+  it('keeps an active Orionids run resolvable when a remote catalog omits the event row', () => {
+    const catalog = buildRuntimeCatalog({
+      catalog: { ...STATIC_CATALOG, missions: STATIC_CATALOG.missions.filter(mission => mission.id !== 'self-directed-orionids-night-run') },
+      freeOperations: false,
+      missionId: 'self-directed-orionids-night-run',
+      missionsDone: 0,
+    })
+
+    expect(catalog.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('eros')
+  })
   it('adds a stored-haul mission for missing construction focus materials', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
