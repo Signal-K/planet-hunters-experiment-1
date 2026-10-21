@@ -99,7 +99,7 @@ test.describe('staging playthrough', () => {
       const status = await purgeTestAccount(page).catch(() => 0)
       events.push(`purge-playtest ${status}`)
       await info.attach('browser-http-log', { body: events.join('\n'), contentType: 'text/plain' })
-      expect(status, 'staging test account must be disposed').toBe(204)
+      expect(status, 'staging test account must be disposed').toBe(200)
     }
   })
 })
