@@ -22,12 +22,22 @@ struct BaseDock: View {
     var glass = false
     /// When set, a Mission button sits between Build and Menu and the arrows drop away to make room.
     var onMission: (() -> Void)?
+    /// Base's first carousel slice: the selected world location is called out separately
+    /// from its small lower-edge actions. Navigation remains disabled until visited
+    /// locations are persisted in the shared model.
+    var locationLabel: String?
+    var locationNavigationDisabled = false
 
     private var middle: [(title: String, symbol: String, action: () -> Void)] {
         items ?? [("Build", "hammer.fill", { if let onBuild { onBuild() } else { store.go(.build) } })] + (onMission.map { m in [("Mission", "paperplane", { m() })] } ?? []) + [onMenu.map { menu in ("Menu", "list.bullet", { menu() }) } ?? ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) })]
     }
 
     var body: some View {
+        if let locationLabel { locationDock(locationLabel) }
+        else { standardDock }
+    }
+
+    private var standardDock: some View {
         HStack(spacing: zones.gap) {
             if !glass && onMission == nil { arrow("chevron.left", label: onPrev == nil ? "Previous" : "Scroll left") { if let onPrev { onPrev() } else { step(-1) } } }
             Spacer(minLength: 0)
@@ -53,6 +63,53 @@ struct BaseDock: View {
         .modifier(DockBackdrop(glass: glass))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Scene dock")
+    }
+
+    private func locationDock(_ label: String) -> some View {
+        HStack(alignment: .bottom, spacing: 12) {
+            HStack(spacing: 0) {
+                locationArrow("chevron.left", label: "Previous location") { onPrev?() }
+                Label(label, systemImage: "globe")
+                    .font(AppFont.display(14)).tracking(0.6)
+                    .lineLimit(1)
+                    .foregroundStyle(Theme.hudPanel)
+                    .frame(minWidth: 88, minHeight: 44)
+                    .padding(.horizontal, 10)
+                    .background(Theme.blue)
+                    .accessibilityLabel("Selected location \(label)")
+                locationArrow("chevron.right", label: "Next location") { onNext?() }
+            }
+            .overlay(Rectangle().stroke(Theme.hudInk, lineWidth: 2))
+
+            Spacer(minLength: 0)
+
+            HStack(spacing: 0) {
+                DockButton(title: "Build", symbol: "hammer.fill", action: { if let onBuild { onBuild() } else { store.go(.build) } })
+                if let onMission {
+                    Divider().overlay(Theme.hudInk)
+                    DockButton(title: "Find mission", symbol: "paperplane", action: onMission)
+                }
+                Divider().overlay(Theme.hudInk)
+                DockButton(title: "Menu", symbol: "line.3.horizontal", action: { if let onMenu { onMenu() } else { store.go(.instrumentHub) } })
+            }
+            .padding(4)
+            .background(Theme.hudPanel)
+            .overlay(Rectangle().stroke(Theme.hudInk, lineWidth: 2))
+        }
+        .padding(.horizontal, 12)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Location and scene actions")
+    }
+
+    private func locationArrow(_ symbol: String, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Theme.hudInk)
+                .frame(width: 44, height: 44)
+        }
+        .buttonStyle(.plain)
+        .disabled(locationNavigationDisabled)
+        .accessibilityLabel(label)
     }
 
     private func arrow(_ symbol: String, label: String, action: @escaping () -> Void) -> some View {

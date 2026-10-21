@@ -148,6 +148,14 @@ function BuildSiteIcon() {
   )
 }
 
+function MenuIcon() {
+  return (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M5 7h14M5 12h14M5 17h14" />
+    </svg>
+  )
+}
+
 /** Floating dock: previous at the far left, Build and Hub in the middle, next at the far right. */
 export function BaseDock({
   onPrev,
@@ -190,6 +198,9 @@ export function BaseDock({
           {onMission && <DockWordButton className="scene-location-action--mission" data-testid="hub-new-mission-btn" onClick={onMission}>
             <MissionIcon /><span>Find mission</span>
           </DockWordButton>}
+          <DockWordButton className="scene-location-action--menu" data-testid={hubTestId} onClick={onHub}>
+            {hubIcon ?? <MenuIcon />}<span>{hubLabel === 'Hub' ? 'Menu' : hubLabel}</span>
+          </DockWordButton>
         </div>
       </nav>
     )

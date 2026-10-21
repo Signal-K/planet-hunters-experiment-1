@@ -83,7 +83,9 @@ struct HubScreen: View {
                      onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onBuild: { placeNote = nil; placing.toggle() },
                      onMenu: { menuOpen = true },
-                     onMission: (!placing && store.player.activeMission == nil && !store.player.pendingLaunch) ? { store.go(.missions) } : nil)
+                     onMission: (!placing && store.player.activeMission == nil && !store.player.pendingLaunch) ? { store.go(.missions) } : nil,
+                     locationLabel: "Earth",
+                     locationNavigationDisabled: true)
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             if menuOpen { BaseMenu(onClose: { menuOpen = false }, onBuild: { placeNote = nil; placing = true }) }

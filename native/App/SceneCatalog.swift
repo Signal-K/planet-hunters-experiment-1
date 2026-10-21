@@ -106,17 +106,18 @@ enum SceneCatalog {
         return gs
     }
 
-    /// The web `baseArt=starter` base: launchpad and hangar (silo is underground only).
+    /// The starter base owns only its launchpad. Other structures appear only once
+    /// their fixture or saved world state explicitly places them.
     static func starterState() -> GameState {
         var gs = GameState()
-        gs.player.placed = ["launchpad", "hangar"]
+        gs.player.placed = ["launchpad"]
         return gs
     }
 
     /// Starter base with the silo built and `ore` units stored, for the cutaway.
     static func siloState(ore: Int) -> GameState {
         var gs = starterState()
-        gs.player.placed = ["launchpad", "hangar", "surface-silo"]
+        gs.player.placed = ["launchpad", "surface-silo"]
         gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1]
         if ore > 0 { gs.player.stash = ["copper": ore] }
         return gs
