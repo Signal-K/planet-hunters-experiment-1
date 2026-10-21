@@ -116,7 +116,7 @@ struct HubScreen: View {
         if !Construction.canAfford(b, player: store.player) {
             placeNote = "\(b.name) · Need \(Construction.gaps(b, player: store.player).joined(separator: ", "))"; return
         }
-        if store.place(id, plot: plot) { placeNote = nil; picked = nil; placing = false } else { placeNote = "That could not be placed. Try another slot." }
+        if store.place(id, plot: plot) { placeNote = nil; picked = nil; placing = false } else { placeNote = "That slot is taken or locked. Try another slot." }
     }
 
     private func picker(width: CGFloat, insets: EdgeInsets) -> some View {

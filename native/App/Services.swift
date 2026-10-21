@@ -119,9 +119,17 @@ final class Services {
             }
         }
         Task { @MainActor [weak self] in
+            var lastRetry = Date.distantPast
             while true {
                 let snap = await sync.snapshot()
                 self?.pendingWrites = snap.waiting; self?.failedWrites = snap.failed
+                // A server-only outage leaves the network path satisfied, so neither the reachability change nor the
+                // app-active trigger fires when it recovers. While writes wait, retry every 15s (offline passes do not
+                // burn attempts; rejected ones keep their own backoff).
+                if snap.waiting > 0, self?.online == true, Date().timeIntervalSince(lastRetry) >= 15 {
+                    lastRetry = Date()
+                    await sync.flush(); await shared.flush()
+                }
                 try? await Task.sleep(for: .seconds(1))
             }
         }

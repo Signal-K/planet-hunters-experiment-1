@@ -1,6 +1,7 @@
 'use client'
 
 import { firedAlertCount } from '@/lib/systems/MarketplaceSystem'
+import { captureGameEvent } from '@/lib/posthog'
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
@@ -378,8 +379,15 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const placeOnPlot = (plot: number) => {
     const option = buildOptions.find(o => o.id === pickedBuild)
     if (!option || !onPlaceStructure) return
-    if (!option.affordable) { setPlaceNote(`${option.name} · ${option.reason ?? 'Not enough resources'}`); return }
-    if (onPlaceStructure(option.id, plot)) { setPlaceNote(null); setEditMode(placementMode) } else setPlaceNote('That could not be placed. Try another slot.')
+    if (!option.affordable) {
+      setPlaceNote(`${option.name} · ${option.reason ?? 'Not enough resources'}`)
+      captureGameEvent('structure_placement_blocked', { structure_kind: option.id, reason: 'unaffordable', detail: option.reason ?? null })
+      return
+    }
+    if (onPlaceStructure(option.id, plot)) { setPlaceNote(null); setEditMode(placementMode) } else {
+      setPlaceNote('That slot is taken or locked. Try another slot.')
+      captureGameEvent('structure_placement_blocked', { structure_kind: option.id, reason: 'slot_unavailable', plot })
+    }
   }
 
 
@@ -586,7 +594,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
 
       {editMode && onPlaceStructure && (
         <div className={layoutStyles.buildPicker} data-testid="build-picker">
-          {placeNote && <span style={{ pointerEvents: 'auto', padding: '6px 12px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>{placeNote}</span>}
+          {placeNote && <span data-testid="hub-place-note" style={{ pointerEvents: 'auto', padding: '6px 12px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>{placeNote}</span>}
           {underground && pickedSiteFree && (
             <button type="button" data-testid="build-place-underground" onClick={() => placeOnPlot(siteById('shaft').plot ?? 2)}
               style={{ pointerEvents: 'auto', minHeight: 44, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1 var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
