@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Landnam mission",
+  "description": "One mission definition. Compiled into shared/missions/authored-missions.json, which the web and native catalogs both read.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "id", "title", "brief", "tag", "difficulty", "locked", "sequence", "requires", "payout"],
+  "properties": {
+    "format": { "const": 1, "description": "Authoring format version. Not copied into the compiled JSON." },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Stable mission id used by saves, the board and both platforms. Never rename a shipped mission." },
+    "title": { "type": "string", "minLength": 1, "description": "Name shown on the mission board." },
+    "brief": { "type": "string", "minLength": 1, "description": "The client's request in plain language, shown to the player." },
+    "tag": { "type": "string", "minLength": 1, "description": "Board badge such as TRANSPORT or FREE OPS." },
+    "difficulty": { "type": "string", "pattern": "^L[1-9]$", "description": "L1 is the easiest." },
+    "client": { "type": "string", "description": "Client id. Leave out for player-owned work, which pays no fee." },
+    "locked": { "type": "boolean", "description": "Locked missions stay on the board but cannot be accepted yet." },
+    "sequence": {
+      "anyOf": [
+        { "type": "integer", "minimum": 1 },
+        { "enum": ["transport", "free-ops"] }
+      ],
+      "description": "Where the mission sits in progression. Use a name so it follows the game's own constants: transport is the onboarding transport lesson, free-ops is the first Free Ops tier."
+    },
+    "unlock_at": { "type": "string", "description": "Plain-language unlock condition shown while the mission is locked or gated." },
+    "target": { "type": "string", "description": "Target id where the ore is mined." },
+    "delivery_target": { "type": "string", "description": "Target id for the second leg of a two-leg job, before the flight home." },
+    "requires": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minerals", "cargo_min", "drill_tier", "max_orbit"],
+      "properties": {
+        "minerals": {
+          "type": "object",
+          "description": "Mineral id to the amount that must be delivered.",
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        },
+        "cargo_min": { "type": "integer", "minimum": 0, "description": "Smallest cargo hold, in units, that can fly this mission." },
+        "drill_tier": { "type": "integer", "minimum": 1, "description": "Drill tier needed to reach the ore." },
+        "max_orbit": { "type": "integer", "minimum": 0, "description": "Furthest orbit band the vehicle must reach." }
+      }
+    },
+    "payout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["affinity"],
+      "anyOf": [{ "required": ["francs"] }, { "required": ["floor_sequence"] }],
+      "description": "Give exactly one of francs or floor_sequence.",
+      "properties": {
+        "francs": { "type": "integer", "minimum": 0, "description": "A fixed fee in francs. Use 0 for player-owned work." },
+        "floor_sequence": { "type": "integer", "minimum": 1, "description": "Pay the standard contract fee for this sequence. Follows the fee curve when it is retuned." },
+        "affinity": { "type": "integer", "minimum": 0, "description": "Client affinity earned." }
+      }
+    },
+    "tickets": { "type": "array", "items": { "type": "string", "pattern": "^SSL-[0-9]+$" }, "description": "Linear tickets this mission belongs to." },
+    "preview": { "$ref": "#/definitions/preview" },
+    "note": { "type": "string", "description": "Plain-language note for whoever edits this mission next." }
+  },
+  "definitions": {
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Where the Scene Studio opens this in the real game, with no login.",
+      "properties": {
+        "route": { "type": "string", "description": "Game screen to open, such as missions." },
+        "state": { "type": "string", "description": "Stage fixture (dev preset) that puts the game in the right state." }
+      }
+    }
+  }
+}

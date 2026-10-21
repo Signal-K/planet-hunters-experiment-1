@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Landnam scene script",
+  "description": "One scene: its type, where it is implemented today, how to open it in the real game, and the game objects it is made of. Web and native read the same declarations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "id", "type", "name", "runtime", "preview"],
+  "properties": {
+    "format": { "const": 1, "description": "Authoring format version." },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Same as the file name and the game route (for example hangar)." },
+    "type": { "enum": ["base", "travel", "field", "build", "exchange-lab", "menu"], "description": "Scene type from shared/engine/scene-types.json. It fixes which slots exist." },
+    "name": { "type": "string", "minLength": 1, "description": "Internal name for tools and tickets. Never shown in the game UI." },
+    "summary": { "type": "string", "description": "One or two plain sentences: what the player does here." },
+    "tickets": { "type": "array", "items": { "type": "string", "pattern": "^SSL-[0-9]+$" }, "description": "Linear tickets that touch this scene. `studio where SSL-123` finds scenes from these." },
+    "qa": { "type": "array", "items": { "type": "string" }, "description": "Storyboard and QA scene ids (qa/scenes.json) that show this scene. They carry the native snapshot names, so the Studio can show native beside web." },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface"],
+      "description": "Where this scene is implemented today.",
+      "properties": {
+        "surface": { "enum": ["canvas", "dom"], "description": "Same vocabulary as web/lib/data/scenes.ts. canvas: a PixiJS surface with data-driven game objects. dom: a React or SwiftUI screen with no object graph yet, still to be migrated." },
+        "web": { "type": "array", "items": { "type": "string" }, "description": "Web files that draw this scene, repo-relative." },
+        "native": { "type": "array", "items": { "type": "string" }, "description": "Native files that draw this scene, repo-relative." },
+        "engine": { "type": "array", "items": { "type": "string" }, "description": "Existing engine scene JSON files, repo-relative." },
+        "data": { "type": "array", "items": { "type": "string" }, "description": "Authoring sources this scene reads, relative to shared/authoring/." }
+      }
+    },
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["route"],
+      "description": "How the Scene Studio opens this scene in the real game with no login.",
+      "properties": {
+        "route": { "type": "string", "description": "Game screen id. Must be a route of this scene type." },
+        "state": { "type": "string", "description": "Default stage fixture (dev preset)." }
+      }
+    },
+    "states": {
+      "type": "array",
+      "description": "Curated setups to show. Every stage fixture for this screen is listed automatically as well.",
+      "items": { "$ref": "#/definitions/state" }
+    },
+    "objects": {
+      "type": "array",
+      "description": "The scene's game objects as a flat list. `parent` builds the tree.",
+      "items": { "$ref": "#/definitions/object" }
+    }
+  },
+  "definitions": {
+    "rect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "w", "h"],
+      "description": "Rectangle in the 0 to 1 safe-area space of the scene.",
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1, "description": "Left edge." },
+        "y": { "type": "number", "minimum": 0, "maximum": 1, "description": "Top edge." },
+        "w": { "type": "number", "minimum": 0, "maximum": 1, "description": "Width." },
+        "h": { "type": "number", "minimum": 0, "maximum": 1, "description": "Height." }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "preset"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "label": { "type": "string", "minLength": 1 },
+        "preset": { "type": "string", "description": "Stage fixture (dev preset) key." },
+        "patch": { "type": "object", "description": "Shallow-merged into the player after load, to reach states no fixture covers." },
+        "note": { "type": "string" }
+      }
+    },
+    "object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Stable name, unique in the scene." },
+        "kind": {
+          "enum": ["group", "world", "layer", "terrain", "collection", "structure", "decoration", "vehicle", "instrument", "ui", "button", "panel", "label", "marker"],
+          "description": "What sort of game object this is."
+        },
+        "parent": { "type": "string", "description": "Id of the object this one belongs to. Leave out for a top-level object." },
+        "slot": { "enum": ["world", "hud", "objective", "primaryAction", "secondaryAction", "modal"], "description": "Fixed place in the scene type. The same slot is in the same place on web and native." },
+        "rect": { "$ref": "#/definitions/rect" },
+        "prefab": { "type": "string", "description": "Reusable object this one is an instance of, such as shared-hud." },
+        "asset": { "type": "string", "description": "Data or art file this object loads, repo-relative." },
+        "components": { "type": "array", "items": { "type": "string" }, "description": "Behaviours, such as Clickable or Movable." },
+        "bindings": { "type": "object", "description": "What game state this object reads or writes." },
+        "label": { "type": "string", "description": "Text on the object, when it has any." },
+        "status": { "enum": ["implemented", "proposed"], "description": "implemented: exists in the game. proposed: drawn in the Studio as a request for an agent to build." },
+        "note": { "type": "string", "description": "Plain-language instruction for this object." }
+      }
+    }
+  }
+}

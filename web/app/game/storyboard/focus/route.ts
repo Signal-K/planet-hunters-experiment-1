@@ -3,9 +3,10 @@ import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { storyboardDir } from '@/lib/storyboard-dir'
 
 const run = promisify(execFile)
-const FOCUS_FILE = process.env.STORYBOARD_FOCUS_FILE ?? '/tmp/landnam-sb/focus.json'
+const focusFile = () => process.env.STORYBOARD_FOCUS_FILE ?? path.join(storyboardDir(), 'focus.json')
 const RECENT_MS = 10 * 60_000
 
 // What is being edited right now, for the storyboard highlight:
@@ -15,7 +16,7 @@ export async function GET() {
   if (!isDevLauncherEnabled()) return new Response('Not found', { status: 404 })
   const root = path.join(process.cwd(), '..')
   let focus: { scenes?: string[]; note?: string; ticket?: string; title?: string; description?: string } = {}
-  try { focus = JSON.parse(await readFile(FOCUS_FILE, 'utf8')) } catch { /* no focus declared */ }
+  try { focus = JSON.parse(await readFile(focusFile(), 'utf8')) } catch { /* no focus declared */ }
   const files: string[] = []
   try {
     const { stdout } = await run('git', ['status', '--porcelain', '--untracked-files=all'], { cwd: root, maxBuffer: 4_000_000 })

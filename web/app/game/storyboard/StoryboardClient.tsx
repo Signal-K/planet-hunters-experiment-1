@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { resolvePreset } from '@/lib/devPresets'
 
 export interface Registry {
   flows: Record<string, string>
@@ -120,6 +121,7 @@ export default function StoryboardClient({ registry }: { registry: Registry }) {
                     <strong>{s.name}</strong> <code>{s.web ?? 'native only'}</code> {s.tickets.join(' ')}
                     {s.web && <a href={`/game/stage?preset=${encodeURIComponent(s.web)}`} target="_blank" rel="noreferrer" style={{ ...btn(false), display: 'inline-grid', placeItems: 'center', marginLeft: 8, textDecoration: 'none' }}>Open</a>}
                     <button style={{ ...btn(false), minHeight: 44, marginLeft: 8 }} onClick={() => copy(ref)}>{copied === ref ? 'Copied' : 'Copy ref'}</button>
+                    {s.web && resolvePreset(s.web)?.screen && <a href={`/game/studio?scene=${resolvePreset(s.web)?.screen}&state=${encodeURIComponent(s.web)}`} style={{ ...btn(false), display: 'inline-grid', placeItems: 'center', marginLeft: 8, textDecoration: 'none' }}>Edit in Studio</a>}
                     {s.note && <div style={{ opacity: 0.7 }}>{s.note}</div>}
                   </figcaption>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>

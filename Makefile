@@ -1,6 +1,7 @@
 .PHONY: help up follow up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
+export LANDNAM_HOST_ROOT := $(CURDIR)
 PARENT_COMPOSE   := docker compose -p navigation -f ../docker-compose.yml
 
 help:
@@ -45,6 +46,7 @@ help:
 up: pb-up
 	$(FRONTEND_COMPOSE) up -d --remove-orphans web
 	@echo "Landnam:         http://localhost:3001/game/hub?follow=1"
+	@echo "Scene Studio:    http://localhost:3001/game/studio   (every scene, editable scripts, native beside web, no login)"
 	@echo "Dev mode only. make up unregisters service workers, so it is not offline-PWA proof. Use a production build on a secure origin (see web/app/layout.tsx)."
 	@echo "Shared PB:       http://localhost:8090/_/"
 	@echo "Landnam PB:      http://localhost:8091/_/"

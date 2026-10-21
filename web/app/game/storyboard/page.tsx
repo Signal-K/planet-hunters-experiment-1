@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic'
 // Keep it open next to the terminal; "Copy ref" puts a scene reference on the clipboard to paste to an agent.
 export default function StoryboardPage() {
   if (!isDevLauncherEnabled()) redirect('/game')
-  const registry = JSON.parse(readFileSync(path.join(process.cwd(), '..', 'qa', 'scenes.json'), 'utf8')) as Registry
+  const root = process.env.LANDNAM_REPO_ROOT ?? path.join(process.cwd(), '..')
+  const registry = JSON.parse(readFileSync(path.join(root, 'qa', 'scenes.json'), 'utf8')) as Registry
   return <StoryboardClient registry={registry} />
 }

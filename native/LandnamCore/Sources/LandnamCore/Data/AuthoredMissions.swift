@@ -2,7 +2,8 @@ import Foundation
 
 /// The hand-authored missions from web `missions.ts` (`AUTHORED_MISSIONS` and the player-programme
 /// builds). The generated board lives in `MissionGenerator`; this is everything else the web catalog
-/// carries, so the two games offer the same work.
+/// carries, so the two games offer the same work. The Belt Courier Run and the self-directed mining
+/// run are built from the compiled `shared/authoring/missions` declarations, the same ones web reads.
 public enum AuthoredMissions {
     public static let transportSequence = MissionGenerator.transportSequence
     public static let selfDirectedMiningId = "freeops-self-directed-mining"
@@ -14,6 +15,20 @@ public enum AuthoredMissions {
 
     private static func floor(_ n: Int) -> Int { MissionGenerator.payoutFloor(sequence: n) }
     private static func materials(_ m: Cargo) -> Cargo { m }
+
+    private static let declarations: [AuthoredMissionDeclaration] = {
+        do { return try JSONDecoder().decode(AuthoredMissionFile.self, from: Data(AuthoredMissionDeclarations.json.utf8)).missions }
+        catch { preconditionFailure("AuthoredMissionDeclarations.json is not valid: \(error)") }
+    }()
+
+    /// One mission from `shared/authoring/missions`, built from the compiled declarations (web `authoredMission`).
+    /// Edit the TOML, then `npm run authoring:compile`; the Scene Studio does that on save.
+    public static func declared(_ id: String) -> Mission {
+        guard let declaration = declarations.first(where: { $0.id == id }) else {
+            preconditionFailure("mission \"\(id)\" is not in shared/authoring/missions; run npm run authoring:compile")
+        }
+        return declaration.mission
+    }
 
     /// Player-programme construction: owned work, no client fee.
     public static let programBuilds: [Mission] = {
@@ -50,12 +65,7 @@ public enum AuthoredMissions {
                 requires: MissionRequirements(minerals: [:], cargoMin: 0, drillTier: 1, maxOrbit: 0),
                 payout: MissionPayout(francs: 0, affinity: 0), construction: nil, payload: nil,
                 programReward: ProgramReward(researchXP: 0, outcome: "Astronaut Academy online · crew training unlocked")),
-        Mission(id: "lnm_m3_relay_bennu_vesta", title: "Belt Courier Run",
-                brief: "Atlas Aggregate needs iron and carbon lifted from Bennu, then dropped at their Vesta depot for off-world construction. Bulk metals like these are too plentiful on Earth to ship home, but Vesta has none. You're paid for both jobs: mining the ore and running the relay to Vesta.",
-                client: "atlas-aggregate", tag: "TRANSPORT", difficulty: "L1", locked: false, sequence: transportSequence, unlockAt: "Complete 1 contract",
-                targetId: "bennu", deliveryTargetId: "vesta",
-                requires: MissionRequirements(minerals: ["iron": 3, "carbon": 2], cargoMin: 5, drillTier: 1, maxOrbit: 4),
-                payout: MissionPayout(francs: floor(3), affinity: 3), construction: nil, payload: nil, programReward: nil),
+        declared("lnm_m3_relay_bennu_vesta"),
         Mission(id: "lnm_m3_relay_itokawa_eros", title: "Nickel Line Handoff",
                 brief: "Helioforge Metals needs nickel pulled from Itokawa, then handed off at Eros before you fly home. You're paid for both jobs: mining the ore and running the relay to Eros.",
                 client: "helioforge-metals", tag: "TRANSPORT", difficulty: "L1", locked: false, sequence: transportSequence, unlockAt: "Complete 1 contract",
@@ -68,12 +78,7 @@ public enum AuthoredMissions {
                 targetId: "psyche", deliveryTargetId: "ceres",
                 requires: MissionRequirements(minerals: ["nickel": 2, "cobalt": 2], cargoMin: 4, drillTier: 2, maxOrbit: 5),
                 payout: MissionPayout(francs: floor(4), affinity: 4), construction: nil, payload: nil, programReward: nil),
-        Mission(id: selfDirectedMiningId, title: "Self-Directed Mining Run",
-                brief: "No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.",
-                client: nil, tag: "FREE OPS", difficulty: "L2", locked: false, sequence: MissionGenerator.freeOpsMissionSequence, unlockAt: "Reach Free Operations",
-                targetId: nil, deliveryTargetId: nil,
-                requires: MissionRequirements(minerals: ["nickel": 1], cargoMin: 1, drillTier: 1, maxOrbit: 2),
-                payout: MissionPayout(francs: 0, affinity: 0), construction: nil, payload: nil, programReward: nil),
+        declared(selfDirectedMiningId),
         Mission(id: crewedProspectingId, title: "Crewed Prospecting Flight",
                 brief: "Ferrum wants a trained mining specialist aboard to assess a surface before automated construction begins. The first qualified astronaut to reach Eros earns a frontier bonus.",
                 client: "ferrum-orbital-construction", tag: "CREW", difficulty: "L2", locked: false, sequence: MissionGenerator.freeOpsMissionSequence,
@@ -82,4 +87,76 @@ public enum AuthoredMissions {
                                               crew: CrewRequirement(branch: "mining", minTier: 1, minLevel: 1)),
                 payout: MissionPayout(francs: floor(4), affinity: 4), construction: nil, payload: nil, programReward: nil),
     ]
+}
+
+private struct AuthoredMissionFile: Decodable, Sendable {
+    let missions: [AuthoredMissionDeclaration]
+}
+
+/// A mission as written in `shared/authoring/missions/*.toml` and compiled into `AuthoredMissionDeclarations.json`.
+struct AuthoredMissionDeclaration: Decodable, Sendable {
+    /// A number, or a name that follows the game's own constants so retuning them retunes the mission.
+    enum Sequence: Decodable, Sendable {
+        case number(Int), transport, freeOps
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            if let number = try? container.decode(Int.self) { self = .number(number); return }
+            switch try container.decode(String.self) {
+            case "transport": self = .transport
+            case "free-ops": self = .freeOps
+            case let other: throw DecodingError.dataCorruptedError(in: container, debugDescription: "unknown mission sequence \"\(other)\"")
+            }
+        }
+
+        var value: Int {
+            switch self {
+            case .number(let n): n
+            case .transport: MissionGenerator.transportSequence
+            case .freeOps: MissionGenerator.freeOpsMissionSequence
+            }
+        }
+    }
+
+    struct Requires: Decodable, Sendable {
+        let minerals: Cargo
+        let cargoMin: Int
+        let drillTier: Int
+        let maxOrbit: Int
+        enum CodingKeys: String, CodingKey { case minerals, cargoMin = "cargo_min", drillTier = "drill_tier", maxOrbit = "max_orbit" }
+    }
+
+    struct Payout: Decodable, Sendable {
+        let francs: Int?
+        let floorSequence: Int?
+        let affinity: Int
+        enum CodingKeys: String, CodingKey { case francs, floorSequence = "floor_sequence", affinity }
+    }
+
+    let id: String
+    let title: String
+    let brief: String
+    let tag: String
+    let difficulty: String
+    let client: String?
+    let locked: Bool
+    let sequence: Sequence
+    let unlockAt: String?
+    let target: String?
+    let deliveryTarget: String?
+    let requires: Requires
+    let payout: Payout
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, brief, tag, difficulty, client, locked, sequence, target, requires, payout
+        case unlockAt = "unlock_at", deliveryTarget = "delivery_target"
+    }
+
+    var mission: Mission {
+        Mission(id: id, title: title, brief: brief, client: client, tag: tag, difficulty: difficulty, locked: locked,
+                sequence: sequence.value, unlockAt: unlockAt, targetId: target, deliveryTargetId: deliveryTarget,
+                requires: MissionRequirements(minerals: requires.minerals, cargoMin: requires.cargoMin, drillTier: requires.drillTier, maxOrbit: requires.maxOrbit),
+                payout: MissionPayout(francs: payout.francs ?? MissionGenerator.payoutFloor(sequence: payout.floorSequence ?? 1), affinity: payout.affinity),
+                construction: nil, payload: nil, programReward: nil)
+    }
 }

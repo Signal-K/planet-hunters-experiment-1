@@ -1,0 +1,18 @@
+#:schema ../schema/scene.schema.json
+# Skill Tree: scene script. Edit here or in the Scene Studio (http://localhost:3001/game/studio?scene=skills).
+# Objects listed here are the scene's game objects. Objects marked status = "proposed" are requests for an agent to build.
+format = 1
+id = "skills"
+type = "menu"
+name = "Skill Tree"
+summary = "Four branches: mining, cargo, range and engineering."
+qa = ["skill-tree"]
+
+[runtime]
+surface = "dom"
+web = ["web/components/game/screens/SkillTreeScreen.tsx"]
+native = ["native/App/Screens/SkillTreeScreen.swift"]
+
+[preview]
+route = "skills"
+state = "ui-skill-tree"

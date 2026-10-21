@@ -2,6 +2,7 @@
 
 import { missionPayoutFloor, normalizeMissionPayout } from './payouts'
 import type { Mission } from './types'
+import authoredDeclarations from './authored-missions.json'
 import { CLIENT_SLOTS } from './clients'
 import { MINERAL_META } from './minerals'
 import { ROCKET_MODELS } from './rockets'
@@ -77,6 +78,53 @@ export function orionidsNightRun(): Mission {
 // lives in Free Ops (see generateFreeOpsMissions).
 export const TRANSPORT_SEQUENCE = 2
 
+/** A mission as written in shared/authoring/missions/*.toml and compiled to authored-missions.json. */
+interface AuthoredMissionDeclaration {
+  id: string
+  title: string
+  brief: string
+  tag: string
+  difficulty: string
+  client?: string
+  locked: boolean
+  sequence: number | 'transport' | 'free-ops'
+  unlock_at?: string
+  target?: string
+  delivery_target?: string
+  requires: { minerals: Record<string, number>; cargo_min: number; drill_tier: number; max_orbit: number }
+  payout: { francs?: number; floor_sequence?: number; affinity: number }
+}
+
+const AUTHORED_DECLARATIONS = (authoredDeclarations as unknown as { missions: AuthoredMissionDeclaration[] }).missions
+
+/** Named sequences follow the game's own constants, so retuning them retunes authored missions too. */
+const NAMED_SEQUENCES = { transport: TRANSPORT_SEQUENCE, 'free-ops': FREE_OPS_MISSION_SEQUENCE } as const
+
+export function missionFromDeclaration(d: AuthoredMissionDeclaration): Mission {
+  return {
+    id: d.id,
+    title: d.title,
+    brief: d.brief,
+    ...(d.client !== undefined && { client: d.client }),
+    tag: d.tag,
+    difficulty: d.difficulty,
+    locked: d.locked,
+    sequence: typeof d.sequence === 'number' ? d.sequence : NAMED_SEQUENCES[d.sequence],
+    ...(d.unlock_at !== undefined && { unlockAt: d.unlock_at }),
+    ...(d.target !== undefined && { targetId: d.target }),
+    ...(d.delivery_target !== undefined && { deliveryTargetId: d.delivery_target }),
+    requires: { minerals: { ...d.requires.minerals }, cargo_min: d.requires.cargo_min, drill_tier: d.requires.drill_tier, max_orbit: d.requires.max_orbit },
+    payout: { francs: d.payout.francs ?? missionPayoutFloor(d.payout.floor_sequence ?? 1), affinity: d.payout.affinity },
+  }
+}
+
+/** One mission from shared/authoring/missions. Edit the TOML, then `npm run authoring:compile` (the Scene Studio does it on save). */
+export function authoredMission(id: string): Mission {
+  const declaration = AUTHORED_DECLARATIONS.find(d => d.id === id)
+  if (!declaration) throw new Error(`mission "${id}" is not in shared/authoring/missions; run npm run authoring:compile`)
+  return missionFromDeclaration(declaration)
+}
+
 // Free Ops self-directed mining — no client, no daily limit, no cooldown.
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
 export const RESOURCE_FOCUS_MISSION_ID = 'focus-resource-mining'
@@ -139,31 +187,7 @@ export const AUTHORED_MISSIONS: Mission[] = [
     },
     payout: { francs: 0, affinity: 0 },
   },
-  {
-    id: 'lnm_m3_relay_bennu_vesta',
-    title: 'Belt Courier Run',
-    brief: 'Atlas Aggregate needs iron and carbon lifted from Bennu, then dropped at their Vesta depot for off-world construction — bulk metals like these are too plentiful on Earth to ship home, but Vesta has none. You\'re paid for both jobs: mining the ore and running the relay to Vesta.',
-    client: 'atlas-aggregate',
-    tag: 'TRANSPORT',
-    difficulty: 'L1',
-    locked: false,
-    sequence: TRANSPORT_SEQUENCE,
-    unlockAt: 'Complete 1 contract',
-    targetId: 'bennu',
-    deliveryTargetId: 'vesta',
-    requires: {
-      minerals: { iron: 3, carbon: 2 },
-      cargo_min: 5,
-      drill_tier: 1,
-      max_orbit: 4,
-    },
-    payout: {
-      // Transport still pays the old M3 contract fee: it is two jobs (mining
-      // plus relay) and still needs a fresh single-use vehicle.
-      francs: missionPayoutFloor(3),
-      affinity: 3,
-    },
-  },
+  authoredMission('lnm_m3_relay_bennu_vesta'),
   {
     id: 'lnm_m3_relay_itokawa_eros',
     title: 'Nickel Line Handoff',
@@ -214,35 +238,8 @@ export const AUTHORED_MISSIONS: Mission[] = [
       affinity: 4,
     },
   },
-  // Free Ops self-directed mining: no client, no daily limit, no cooldown —
-  // the player picks any reachable target and sells the haul themselves at
-  // market price. This is the self-directed mining teaching moment that used
-  // to fill the M3 onboarding slot before M3 became a client transport job.
-  {
-    id: SELF_DIRECTED_MINING_MISSION_ID,
-    title: 'Self-Directed Mining Run',
-    brief: 'No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.',
-    tag: 'FREE OPS',
-    difficulty: 'L2',
-    locked: false,
-    sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Reach Free Operations',
-    requires: {
-      // Sold at market on Earth return, so this must avoid earthAbundant
-      // minerals (iron, silicon, carbon, ...) — Earth already has plenty.
-      // This is the first player-owned loop after the Flight Plan. It must
-      // launch on the Explorer fitted during training; requiring cobalt/T2
-      // here silently turned a Free Ops unlock into a contract gate.
-      minerals: { nickel: 1 },
-      cargo_min: 1,
-      drill_tier: 1,
-      max_orbit: 2,
-    },
-    payout: {
-      francs: 0,
-      affinity: 0,
-    },
-  },
+  // Free Ops self-directed mining: shared/authoring/missions/free-mining.toml
+  authoredMission(SELF_DIRECTED_MINING_MISSION_ID),
   {
     id: 'freeops-crewed-prospecting',
     title: 'Crewed Prospecting Flight',

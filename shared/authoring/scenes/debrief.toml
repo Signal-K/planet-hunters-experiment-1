@@ -1,0 +1,19 @@
+#:schema ../schema/scene.schema.json
+# Debrief: scene script. Edit here or in the Scene Studio (http://localhost:3001/game/studio?scene=debrief).
+# Objects listed here are the scene's game objects. Objects marked status = "proposed" are requests for an agent to build.
+format = 1
+id = "debrief"
+type = "travel"
+name = "Debrief"
+summary = "Payout and cargo settlement after a run, and the touchdown at home."
+tickets = ["SSL-462"]
+qa = ["debrief", "debrief-capacitor", "first-home", "transport-debrief", "telescope-debrief"]
+
+[runtime]
+surface = "dom"
+web = ["web/components/game/screens/DebriefScreen.tsx", "web/components/game/screens/HomecomingScreen.tsx"]
+native = ["native/App/Screens/CoreLoop.swift", "native/App/Screens/HomecomingScreen.swift"]
+
+[preview]
+route = "debrief"
+state = "m1-debrief"

@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Render native SceneCatalog fixtures to PNG on an already-booted iOS Simulator (headless, no window)
-# and copy them to $SNAPSHOT_DIR (default /tmp/landnam-snap) where /game/storyboard picks them up.
+# and copy them to $SNAPSHOT_DIR (default web/.storyboard/snap) where /game/storyboard and the Scene Studio pick them up.
 #   scripts/native-shots.sh                       every scene
 #   scripts/native-shots.sh hub-phone mining-phone only these SceneCatalog ids
 # Env: SIM_ID (simulator udid; default: first booted iPhone).
 set -euo pipefail
-cd "$(dirname "$0")/../native"
-OUT="${SNAPSHOT_DIR:-/tmp/landnam-snap}"; mkdir -p "$OUT"
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$REPO/native"
+OUT="${SNAPSHOT_DIR:-$REPO/web/.storyboard/snap}"; mkdir -p "$OUT"
 SIM_ID="${SIM_ID:-$(xcrun simctl list devices booted | grep -m1 iPhone | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')}"
 [ -n "$SIM_ID" ] || { echo "No booted iPhone simulator. Boot one: xcrun simctl boot <name>" >&2; exit 1; }
 IDS="$(IFS=,; echo "$*")"

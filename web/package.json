@@ -11,6 +11,9 @@
     "start": "next start -p 3001",
     "typecheck": "next typegen && tsc --noEmit",
     "sync:shared": "node ../scripts/sync-all-shared.mjs",
+  "authoring:compile": "node ../scripts/authoring.mjs compile",
+  "authoring:check": "node ../scripts/authoring.mjs check",
+  "studio": "node ../scripts/studio.mjs",
     "sync:native-assets": "node ../scripts/sync-native-assets.mjs",
     "verify:scene-surfaces": "node scripts/verify-scene-surfaces.mjs",
     "verify:hue-palette": "node scripts/verify-hue-palette.mjs",
@@ -44,6 +47,7 @@
     "react-dom": "19.2.7",
     "recharts": "^3.8.1",
     "resend": "^6.12.4",
+    "toml-eslint-parser": "^1.0.3",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
