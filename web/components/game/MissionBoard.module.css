@@ -885,7 +885,15 @@ button.start {
 .rail button.tab[data-tab='program'] { color: var(--ln-board-on-accent); }
 .rail button.log { margin-top: 0; box-shadow: 2px 2px 0 var(--ln-board-ink); }
 .rail button.railClose { width: 44px; }
-.railHelp { position: absolute; top: 12px; right: 12px; z-index: 6; display: flex; }
+.railHelp { position: absolute; top: 12px; right: 12px; z-index: 6; display: flex; align-items: center; gap: 8px; }
+.balance { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border: 2px solid var(--ln-board-ink); border-radius: var(--ln-r-pill); background-color: var(--ln-board-paper); color: var(--ln-board-ink); font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.06em; white-space: nowrap; }
+.balance b { font-weight: 800; }
+/* The tab rail fills the top row on a phone, so the chip drops under the help button and shows francs only. */
+@media (max-width: 560px) {
+  .railHelp { flex-direction: column-reverse; align-items: flex-end; gap: 6px; }
+  .balance i { display: none; }
+}
+.balance i { font-style: normal; font-weight: 700; opacity: 0.75; }
 
 .order {
   --signal: var(--ln-board-amber);
