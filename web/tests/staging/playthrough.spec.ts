@@ -56,7 +56,11 @@ test.describe('staging playthrough', () => {
     const email = `staging-run-${runId()}@landnam.test`
     const password = `Staging-${runId()}-pass!`
     page.on('requestfailed', request => events.push(`FAILED ${request.method()} ${request.url()} ${request.failure()?.errorText ?? ''}`))
-    page.on('response', response => { if (response.status() >= 400) events.push(`HTTP ${response.status()} ${response.request().method()} ${response.url()}`) })
+    page.on('response', async response => {
+      if (response.status() < 400) return
+      const body = await response.text().catch(() => '')
+      events.push(`HTTP ${response.status()} ${response.request().method()} ${response.url()} ${body.slice(0, 300)}`)
+    })
 
     try {
       await page.goto(`${stagingBaseUrl.replace(/\/$/, '')}/game?gate=signup`, { waitUntil: 'networkidle' })
@@ -97,6 +101,7 @@ test.describe('staging playthrough', () => {
     } finally {
       const status = await purgeTestAccount(page).catch(() => 0)
       events.push(`purge-playtest ${status}`)
+      if (process.env.STAGING_HTTP_LOG) console.log(events.join('\n'))
       await info.attach('browser-http-log', { body: events.join('\n'), contentType: 'text/plain' })
       expect(status, 'staging test account must be disposed').toBe(200)
     }

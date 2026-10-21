@@ -215,18 +215,31 @@ struct CoachPlacement: View {
     @Environment(GameStore.self) private var store
     let coach: FlightPlan.Coach
     var screen: Screen = .hub
+    /// Docked: the coach is a rail in the top safe-area inset, so every screen lays out below it and nothing overlaps it
+    /// (web `tutorial-rail`: gameplay controls must not overlap it). Floating: the landscape-phone band.
+    var docked = false
     @State private var summoned = false
+
+    private var chipOnly: Bool { store.player.flightPlan.hidden || (!FlightPlan.onPath(store.player, screen: screen) && !summoned) }
+
     var body: some View {
-        GeometryReader { geo in
-            let landscapePhone = geo.size.height < 500 && geo.size.width > 640
-            // Folded (hidden or off the tutorial path) the "?" chip sits in the top-left corner under the gear and clock.
-            let chipOnly = store.player.flightPlan.hidden || (!FlightPlan.onPath(store.player, screen: screen) && !summoned)
+        if docked {
             CoachStrip(coach: coach, screen: screen, summoned: $summoned)
-                .frame(maxWidth: chipOnly ? 56 : (landscapePhone ? min(430, geo.size.width - 520) : 560))
+                .frame(maxWidth: chipOnly ? 56 : 560)
                 .padding(.horizontal, chipOnly ? 12 : 8)
-                .padding(.top, chipOnly ? 68 : (landscapePhone ? 8 : 68))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: chipOnly ? .topLeading : .top)
+                .padding(.vertical, 6)
+                .frame(maxWidth: .infinity, alignment: chipOnly ? .leading : .center)
+        } else {
+            GeometryReader { geo in
+                let landscapePhone = geo.size.height < 500 && geo.size.width > 640
+                // Folded (hidden or off the tutorial path) the "?" chip sits in the top-left corner under the gear and clock.
+                CoachStrip(coach: coach, screen: screen, summoned: $summoned)
+                    .frame(maxWidth: chipOnly ? 56 : (landscapePhone ? min(430, geo.size.width - 520) : 560))
+                    .padding(.horizontal, chipOnly ? 12 : 8)
+                    .padding(.top, chipOnly ? 68 : (landscapePhone ? 8 : 68))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: chipOnly ? .topLeading : .top)
+            }
+            .allowsHitTesting(true)
         }
-        .allowsHitTesting(true)
     }
 }

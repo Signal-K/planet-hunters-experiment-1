@@ -106,7 +106,7 @@ struct MissionsScreen: View {
                 }
             } else {
                 let e = entries[index]
-                ContractWorkspace(entries: entries, selectedIndex: index, player: store.player, portrait: portrait,
+                ContractWorkspace(entries: entries, selectedIndex: index, player: store.player, portrait: portrait, topInset: insets.top,
                                   onSelect: { selected = $0 }, onTake: { store.pickMission(e.id) })
                 .id(e.id)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -315,6 +315,8 @@ private struct ContractWorkspace: View {
     let selectedIndex: Int
     let player: Player
     let portrait: Bool
+    /// Real top safe-area inset including the coach rail, so the title and client row start below the Back button (SSL-626).
+    let topInset: CGFloat
     let onSelect: (Int) -> Void
     let onTake: () -> Void
 
@@ -367,7 +369,7 @@ private struct ContractWorkspace: View {
                     }.buttonStyle(.plain).accessibilityLabel("Select \(contract.title)")
                 }
             }
-        }.padding(.top, portrait ? 70 : 82).padding(.horizontal, 14).padding(.bottom, 14)
+        }.padding(.top, portrait ? topInset + 64 : 82).padding(.horizontal, 14).padding(.bottom, 14)
     }
 
     private func action(_ entry: MissionBoard.Entry, mission: Mission) -> some View {
