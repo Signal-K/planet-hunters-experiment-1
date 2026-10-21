@@ -562,6 +562,7 @@ button.start {
   text-decoration: none;
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: .08em;
+  text-transform: uppercase;
 }
 .fragmentBench { display: grid; gap: 8px; margin-top: 12px; }
 .fragmentBench p { margin: 0; font: 800 14px/1.4 var(--ln-font-display); letter-spacing: .06em; }
