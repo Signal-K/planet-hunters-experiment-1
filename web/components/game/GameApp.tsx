@@ -15,7 +15,7 @@ import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
-import { initPostHog, captureScreenView, captureGameEvent } from '@/lib/posthog'
+import { initPostHog, captureScreenView, captureGameEvent, captureTutorialStepStarted } from '@/lib/posthog'
 import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 import { SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
 import DevShortcuts from '@/components/dev/DevShortcuts'
@@ -194,8 +194,7 @@ function GameCanvas() {
   // there's no way to see where inside M1/M2/M3 players actually stall.
   useEffect(() => {
     if (!coach) return
-    captureGameEvent('tutorial_step_started', {
-      step_id: coach.id,
+    captureTutorialStepStarted(String(coach.id), {
       screen: coach.screen,
       step_index: coachIndex,
       total_steps: coachSteps.length,

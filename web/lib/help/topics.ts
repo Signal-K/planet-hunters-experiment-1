@@ -48,6 +48,12 @@ const LAUNCH_HELP: HelpTopic = {
   ],
 }
 
+// Shared by the Control Station and the TESS review so both "?" sheets explain the data analysis.
+const DATA_ANALYSIS_CARD = {
+  title: 'What the data analysis is',
+  body: 'Each item is a real observation from a real telescope or survey. You look at it and classify what you see, such as a dip in a star\'s light. Your answers feed real citizen science projects and earn badges and rewards here.',
+}
+
 export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
   'instrument-hub': {
     id: 'control-station',
@@ -61,6 +67,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
         title: 'Open a project',
         body: 'Filter by place, then open a row that has a count. That opens the review for those items.',
       },
+      DATA_ANALYSIS_CARD,
     ],
   },
   // The TESS transit review screen.
@@ -68,6 +75,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     id: 'tess',
     title: 'Reading the light curve',
     cards: [
+      DATA_ANALYSIS_CARD,
       {
         title: 'Find the dip',
         body: 'A planet passing in front of its star makes the light dip for a short while, then recover. Drag across the dip on the chart to mark it.',

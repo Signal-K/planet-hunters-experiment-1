@@ -15,9 +15,10 @@ import HelpSheet from './HelpSheet'
  * header (TopBar `right` or the SetupFrame header), `layer` renders anywhere
  * in the screen, and `reportAction` tells a running "Show me" that the player
  * did the thing it asked for. Both are null when the screen has no topic.
- * Nothing here opens by itself: the sheet needs a tap on the "?".
+ * The sheet opens only on a tap on the "?", except with `firstVisit`, which
+ * opens it once per topic on the player's first visit to the screen.
  */
-export function useHelp(screen: Screen, options: { onReplayTraining?: () => void } = {}): {
+export function useHelp(screen: Screen, options: { onReplayTraining?: () => void; firstVisit?: boolean } = {}): {
   button: ReactNode
   layer: ReactNode
   reportAction: (actionId: string) => void
@@ -28,13 +29,23 @@ export function useHelp(screen: Screen, options: { onReplayTraining?: () => void
   const [run, setRun] = useState<CoachRun>(() => idleRun(topic))
   const step = currentStep(run)
   const open = sheetOpen || step != null
-  const { onReplayTraining } = options
+  const { onReplayTraining, firstVisit } = options
 
   // A different screen means a different topic: drop any open help.
   useEffect(() => {
     setSheetOpen(false)
     setRun(idleRun(topic))
   }, [topic])
+
+  // Instrument screens give no hint of what they are for, so show the help once.
+  useEffect(() => {
+    if (!firstVisit || !topic) return
+    const key = `ln-help-seen:${topic.id}`
+    // Marked seen on dismissal, not here: StrictMode re-runs this effect and would otherwise close the sheet.
+    try { if (window.localStorage.getItem(key)) return } catch { return }
+    setSheetOpen(true)
+    captureGameEvent('help_opened', { topic: topic.id, screen, via: 'first_visit' })
+  }, [firstVisit, topic, screen])
 
   // Pause the Flight Plan beacon and 8s hint while help is on screen.
   useEffect(() => (open ? acquireHelpOpen() : undefined), [open])
@@ -44,7 +55,11 @@ export function useHelp(screen: Screen, options: { onReplayTraining?: () => void
   }, [screen, topic])
 
   const openSheet = useCallback(() => { setSheetOpen(true); track('help_opened') }, [track])
-  const closeSheet = useCallback(() => { setSheetOpen(false); track('help_closed', { via: 'sheet' }) }, [track])
+  const closeSheet = useCallback(() => {
+    setSheetOpen(false)
+    if (topic) { try { window.localStorage.setItem(`ln-help-seen:${topic.id}`, '1') } catch { /* private mode */ } }
+    track('help_closed', { via: 'sheet' })
+  }, [track, topic])
 
   const trackStep = useCallback((target: CoachRun) => {
     const next = currentStep(target)

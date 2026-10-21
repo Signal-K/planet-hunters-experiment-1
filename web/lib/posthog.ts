@@ -106,6 +106,15 @@ export function captureGameEvent(name: string, props?: Record<string, unknown>) 
   runWhenReady(() => posthog.capture(name, props))
 }
 
+// The coach hides while sheets or popups are open, so its effect re-runs and
+// re-sent the same step hundreds of times. One start event per step per page load.
+const startedTutorialSteps = new Set<string>()
+export function captureTutorialStepStarted(stepId: string, props: Record<string, unknown>) {
+  if (startedTutorialSteps.has(stepId)) return
+  startedTutorialSteps.add(stepId)
+  captureGameEvent('tutorial_step_started', { step_id: stepId, ...props })
+}
+
 // SSL-342: the end of training and the start of Free Ops are one moment in
 // the agency loop. Two routes reach it (the last guided mission, or placing
 // the storage silo), so both call this to emit identical events.
