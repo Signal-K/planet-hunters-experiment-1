@@ -534,7 +534,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       </div>
       {/* ── End persistent Base world ── */}
 
-      {!subsurface && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} onParticipate={onOpenEvents} />}
+      {!subsurface && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} onParticipate={onOpenEvents} playerLocation={player.skyEventLocation} />}
 
       {/* Top HUD — always fixed above the slide. Rebuilt 2026-08-21 (KES-226)
           back to a dark scrim (the KES-220 light version was scrapped same

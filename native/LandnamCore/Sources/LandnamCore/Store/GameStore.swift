@@ -153,6 +153,7 @@ public final class GameStore {
         if asMove { n.player.earthBiomeMoveUsed = true }
         apply(n)
     }
+    public func setSkyEventLocation(_ location: PlayerLocation?) { var n = state; n.player.skyEventLocation = location; apply(n) }
     public func reset() { let next = GameState(); refreshCatalog(for: next); state = next; persist() }
 
     /// Settings: reopen one training try on the screen it is played on (web `openTrainingTry`).

@@ -28,6 +28,7 @@ import {
 import { clearMissionBoardTab, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import styles from './MissionBoard.module.css'
+import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
 
 // The board stands on the live base: the same plots and kit the Hub draws.
 
@@ -318,6 +319,7 @@ export default function MissionBoard({
   const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
+  const localOrionids = useMemo(() => localSkyEventWindow(ORIONIDS_EPHEMERIS, player.skyEventLocation), [player.skyEventLocation])
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
   const events = useMemo(
     () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0),
@@ -553,6 +555,7 @@ export default function MissionBoard({
                   <div className={styles.eventBody}>
                     <div className={styles.eventTitle}><h3>{event.name}</h3><EventStatus card={event} /></div>
                     <p className={styles.eventReward}>{event.rewardLabel}</p>
+                    {event.id === 'orionids-2026' && <p className={styles.eventReward} data-testid="orionids-local-window">{localOrionids.location.city ?? localOrionids.location.timeZone}: best {formatViewingWindow(localOrionids.best, localOrionids.location.timeZone)} · moon-free {formatViewingWindow(localOrionids.moonFree, localOrionids.location.timeZone)}</p>}
                     <button type="button" className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
                   </div>
                 </article>)}

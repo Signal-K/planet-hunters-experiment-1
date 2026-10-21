@@ -12,6 +12,7 @@ import { PushOptIn } from '@/components/game/PushOptIn'
 import { TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
 import { trainingPatchProgress } from '@/lib/data/tutorial'
 import { EARTH_BIOMES, biomeLayers } from '@/lib/scene/base-world'
+import { SKY_EVENT_CITIES, deviceSkyLocation, sanitizePlayerLocation } from '@/lib/data/sky-event-window'
 
 interface SettingsSheetProps {
   onClose: () => void
@@ -96,6 +97,10 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   const [confirmSkipTraining, setConfirmSkipTraining] = useState(false)
   const [moveBiome, setMoveBiome] = useState(game.player.earthBiome ?? 'mountains')
   const [confirmMoveBase, setConfirmMoveBase] = useState(false)
+  const initialSkyLocation = game.player.skyEventLocation ?? deviceSkyLocation()
+  const [skyCity, setSkyCity] = useState(game.player.skyEventLocation?.city ?? '')
+  const [skyLatitude, setSkyLatitude] = useState(String(initialSkyLocation.latitude))
+  const [skyTimeZone, setSkyTimeZone] = useState(initialSkyLocation.timeZone)
   const [showPatchNotes, setShowPatchNotes] = useState(false)
   const [showFullscreen, setShowFullscreen] = useState(false)
   const [orientation, setOrientation] = useState<OrientationPreference>('auto')
@@ -282,6 +287,27 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                 </Row>
               </div>
             </section>}
+
+            <section>
+              <h3 className="ops-settings__label">Sky events</h3>
+              <div className="ops-settings__panel" data-testid="sky-event-location-settings">
+                <label className="ops-settings__field"><span>City</span><select value={skyCity} onChange={event => {
+                  const city = SKY_EVENT_CITIES.find(candidate => candidate.city === event.target.value)
+                  setSkyCity(event.target.value)
+                  if (city) { setSkyLatitude(String(city.latitude)); setSkyTimeZone(city.timeZone) }
+                }}><option value="">Manual</option>{SKY_EVENT_CITIES.map(city => <option key={city.city} value={city.city}>{city.city}</option>)}</select></label>
+                <label className="ops-settings__field"><span>Coarse latitude</span><input type="number" min="-90" max="90" step="1" value={skyLatitude} onChange={event => { setSkyCity(''); setSkyLatitude(event.target.value) }} /></label>
+                <label className="ops-settings__field"><span>Timezone</span><input value={skyTimeZone} onChange={event => { setSkyCity(''); setSkyTimeZone(event.target.value) }} placeholder="Europe/Tallinn" /></label>
+                <p className="ops-settings__sub">Only the city, latitude rounded to 1°, and timezone are saved. No longitude or GPS.</p>
+                <div className="ops-settings__actions">
+                  <button type="button" className="ops-settings__btn" data-testid="save-sky-event-location" onClick={() => {
+                    const next = sanitizePlayerLocation({ city: skyCity || undefined, latitude: Number(skyLatitude), timeZone: skyTimeZone })
+                    if (next) game.setPlayer(player => ({ ...player, skyEventLocation: next }))
+                  }}>Save</button>
+                  <button type="button" className="ops-settings__btn" data-testid="clear-sky-event-location" onClick={() => game.setPlayer(player => ({ ...player, skyEventLocation: null }))}>Clear</button>
+                </div>
+              </div>
+            </section>
 
             {game.player.freeOperations && <section>
               <h3 className="ops-settings__label">Game</h3>

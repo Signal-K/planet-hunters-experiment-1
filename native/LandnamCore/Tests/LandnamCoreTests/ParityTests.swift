@@ -18,7 +18,9 @@ import Foundation
 
     @Test func boardMatchesWeb() throws {
         let web = try load()
-        let swift = MissionGenerator.fullBoard()
+        // The Orionids run is appended only while the live event window is open;
+        // this static fixture covers the year-round generated board.
+        let swift = MissionGenerator.fullBoard().filter { $0.id != "self-directed-orionids-night-run" }
         #expect(swift.map(\.id) == web.missions.map(\.id))
         for (s, w) in zip(swift, web.missions) {
             #expect(s.title == w.title, "\(w.id) title")

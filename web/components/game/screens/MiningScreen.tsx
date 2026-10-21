@@ -97,7 +97,7 @@ function GuideMark({ kind }: { kind: string }) {
   )
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
@@ -149,6 +149,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   onFireballCaught?: () => void
   /** Tier already stored for the Orionids badge, so the mining HUD can show it once. */
   orionidsBadgeTier?: 'gold' | 'silver' | null
+  skyEventLocation?: import('@/lib/game-types').PlayerLocation | null
 }) {
   const debrisPreset = useDebrisEvent()
   // Charge count is mission-aware, not coach-aware.
@@ -789,6 +790,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           trainingMiningTry={trainingMiningTry}
           debrisPreset={debrisPreset}
           fireballCaughtAt={fireballCaughtAt}
+          skyEventLocation={skyEventLocation}
         />
         <MiningDPad
           disabled={sceneStatus !== 'ready'}
@@ -800,6 +802,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         {bumpNote ? <div className="mining-bump-note" role="status" data-testid="mining-bump">Hull bumped: −1 charge</div> : null}
         <SkyEventChip
           surface="mining"
+          playerLocation={skyEventLocation}
           debrisCount={nightRun ? shownCatches : (cargo.orionid_debris ?? 0)}
           fragmentGoal={nightRun ? ORIONIDS_FRAGMENT_GOAL : undefined}
           badgeTier={(nightRun ? shownCatches : (cargo.orionid_debris ?? 0)) > 0 ? orionidsBadgeTier : null}

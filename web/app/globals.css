@@ -4757,6 +4757,9 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   container-type: inline-size;
 }
 .ops-settings__panel.ops-settings__training { padding: 12px; }
+.ops-settings__field { display: grid; gap: 8px; color: var(--set-ink); font: 800 14px/1.2 var(--ln-font-display), system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+.ops-settings__field input, .ops-settings__field select { min-height: 44px; width: 100%; border: 2px solid var(--set-ink); border-radius: 2px; background: var(--set-card); color: var(--set-ink); padding: 8px 12px; font: 400 16px/1.2 var(--ln-font-body), system-ui, sans-serif; }
+.ops-settings__actions { display: flex; flex-wrap: wrap; gap: 12px; }
 .ops-settings .patch[data-state='done'] .patch-ring { color: var(--ln-blueprint-blue); }
 .ops-settings .patch[data-state='done'] .patch-ring-segment[data-stitched='true'] { stroke: var(--ln-blueprint-blue); }
 .ops-settings .patch[data-state='done'] .patch-status { color: var(--ln-blueprint-blue); }

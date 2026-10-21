@@ -91,6 +91,12 @@ struct EventsBoard: View {
             }
             Text(tier != nil ? "\(tier!.rawValue.uppercased()) BADGE EARNED" : ended ? "REPLAY REWARD · SILVER BADGE" : "EVENT REWARD · GOLD BADGE")
                 .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.textDim)
+            if id == "orionids-2026" {
+                let local = SkyEventWindows.localWindow(location: store.player.skyEventLocation)
+                Text("\(local.location.city ?? local.location.timeZone): best \(SkyEventWindows.label(local.best, timeZone: local.location.timeZone)) · moon-free \(SkyEventWindows.label(local.moonFree, timeZone: local.location.timeZone))")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    .accessibilityIdentifier("orionids-local-window")
+            }
             Button(ended ? "PLAY FOR SILVER" : eventStatus(id, now: now) == 1 ? "PARTICIPATE" : "PREPARE") { open(id) }
                 .font(AppFont.display(14)).tracking(1).foregroundStyle(Theme.ink)
                 .frame(maxWidth: .infinity, minHeight: 44)

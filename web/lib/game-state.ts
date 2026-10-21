@@ -26,6 +26,7 @@ import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
 import { dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
 import { GAME_SCREENS } from '@/lib/game-screens'
 import { sanitizeEarthBiome } from '@/lib/scene/base-world'
+import { sanitizePlayerLocation } from '@/lib/data/sky-event-window'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
@@ -72,6 +73,7 @@ export const DEFAULT_STATE: GameState = {
     buildingLevels: {},
     earthBiome: 'mountains',
     earthBiomeMoveUsed: false,
+    skyEventLocation: null,
     loanDebt: 0,
     loanOffered: false,
     seen_planets: [],
@@ -389,6 +391,7 @@ export function normalizeState(input: PartialSave): GameState {
       deepSpaceTelescopeLaunchedAt: telescopeLaunchedAt ?? (player.deepSpaceTelescopeBuilt ? Date.now() : null),
       earthBiome: sanitizeEarthBiome(player.earthBiome),
       earthBiomeMoveUsed: player.earthBiomeMoveUsed === true,
+      skyEventLocation: sanitizePlayerLocation(player.skyEventLocation),
     },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     // The retired private emergency-loan popup must not survive an old save.

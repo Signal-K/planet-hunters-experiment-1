@@ -11,7 +11,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
       await expect(page.getByTestId('help-sheet')).toBeVisible()
       await expect(page.getByText('What the data analysis is')).toBeVisible()
-      await page.screenshot({ path: `/private/tmp/claude-501/shots/help-first-visit-${vp}.png` })
+      await page.screenshot({ path: info.outputPath(`help-first-visit-${vp}.png`) })
       await page.getByTestId('help-close').click()
       await page.reload()
       await expect(page.locator('[data-stage-ready="true"]')).toBeVisible({ timeout: 30_000 })

@@ -19,7 +19,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         await expect(page.getByTestId('instrument-hub-screen')).toBeVisible()
         await expect(page.getByText(/exoplanet hunters/i).first()).toBeVisible()
         await expect(page.getByText(/asteroid discovery/i).first()).toBeVisible()
-        await page.screenshot({ path: `/private/tmp/claude-501/shots/legacy-telescope-${vp}.png` })
+        await page.screenshot({ path: test.info().outputPath(`legacy-telescope-${vp}.png`) })
       })
     }
   })

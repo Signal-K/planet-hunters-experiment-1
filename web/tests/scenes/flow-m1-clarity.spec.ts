@@ -21,7 +21,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
           .filter(el => { const a = getComputedStyle(el).animationName; return a && a !== 'none' })
           .map(el => `${el.tagName}.${el.className}`))
         expect(animated).toEqual([])
-        if (preset === 'm1-home') await page.screenshot({ path: `/private/tmp/claude-501/shots/m1-clarity-${vp}.png` })
+        if (preset === 'm1-home') await page.screenshot({ path: test.info().outputPath(`m1-clarity-${vp}.png`) })
       })
     }
   })

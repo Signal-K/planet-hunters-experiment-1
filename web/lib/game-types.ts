@@ -220,7 +220,15 @@ export interface ResourceFocus {
   minerals: Record<string, number>
 }
 
+/** Privacy-preserving sky-event location: no longitude or precise coordinates. */
+export interface PlayerLocation {
+  city?: string
+  latitude: number
+  timeZone: string
+}
+
 export interface Player {
+  skyEventLocation?: PlayerLocation | null
   francs: number
   activeMission: { id: string; label: string } | null
   /** Paused operational contexts. There is intentionally no artificial cap. */

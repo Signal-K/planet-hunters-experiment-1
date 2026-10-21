@@ -228,6 +228,7 @@ export default function MissionOperationRoutes({
           fragmentCatches={game.player.orionidsFragments?.caught ?? 0}
           cargoCapacity={nightHold}
           fireballCaughtAt={game.player.fireball2026CaughtAt ?? null}
+          skyEventLocation={game.player.skyEventLocation}
           onFireballCaught={() => {
             const now = debrisNow()
             const preview = grantFireballCatch(game.player, now)

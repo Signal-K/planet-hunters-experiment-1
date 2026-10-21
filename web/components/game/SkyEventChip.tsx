@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import { captureGameEvent } from '@/lib/posthog'
 import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { ORIONIDS_VARIANTS, orionidsVariantForSurface } from '@/lib/orionids/theme'
-import { ORIONIDS_DEBRIS_PRESET, ORIONIDS_PANEL, WORLD_SPACE_WEEK_PLAYER_LINKS, isOrionidsPeakNight, isOrionidsWindow, orionidsShareText, type BadgeTier } from '@/lib/data/sky-events'
+import { ORIONIDS_DEBRIS_PRESET, ORIONIDS_PANEL, WORLD_SPACE_WEEK_PLAYER_LINKS, isOrionidsWindow, orionidsShareText, type BadgeTier } from '@/lib/data/sky-events'
+import { formatViewingWindow, isInLocalEventBonusWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
+import type { PlayerLocation } from '@/lib/game-types'
 import { openOrionidsReading } from '@/lib/orionids/reading'
 import styles from './SkyEventChip.module.css'
 
@@ -21,6 +23,7 @@ export default function SkyEventChip({
   fragmentGoal,
   badgeTier = null,
   onParticipate,
+  playerLocation,
 }: {
   surface: 'base' | 'mining'
   className?: string
@@ -28,6 +31,7 @@ export default function SkyEventChip({
   fragmentGoal?: number
   badgeTier?: BadgeTier | null
   onParticipate?: () => void
+  playerLocation?: PlayerLocation | null
 }) {
   const activePreset = useDebrisEvent()
   const [open, setOpen] = useState(false)
@@ -35,11 +39,11 @@ export default function SkyEventChip({
   const [peak, setPeak] = useState(false)
   const [shared, setShared] = useState(false)
   useEffect(() => {
-    const tick = () => { const now = debrisNow(); setInWindow(isOrionidsWindow(now)); setPeak(isOrionidsPeakNight(now)) }
+    const tick = () => { const now = debrisNow(); setInWindow(isOrionidsWindow(now)); setPeak(isInLocalEventBonusWindow(now, playerLocation)) }
     tick()
     const id = window.setInterval(tick, 60_000)
     return () => window.clearInterval(id)
-  }, [])
+  }, [playerLocation])
   // SSL-578: the shower is live every hour in the window. Launch catches the fragments.
   const daytimeEntry = !activePreset && inWindow && surface === 'base'
   const preset = activePreset ?? (daytimeEntry ? ORIONIDS_DEBRIS_PRESET : null)
@@ -55,6 +59,7 @@ export default function SkyEventChip({
     } catch { /* cancelled */ }
   }
   const variant = ORIONIDS_VARIANTS[orionidsVariantForSurface(surface)]
+  const localWindow = localSkyEventWindow(ORIONIDS_EPHEMERIS, playerLocation)
 
   useEffect(() => {
     if (!preset) return
@@ -122,7 +127,7 @@ export default function SkyEventChip({
             <p className={styles.summary}>Launch through the shower. Fragments are caught on the way up, any hour. Peak night is double.</p>
             <div className={styles.meta} aria-label="Orionids dates">
               <span>19 Oct–7 Nov</span>
-              <span>Peak 21–22 Oct</span>
+              <span data-testid="orionids-local-window">{localWindow.location.city ?? localWindow.location.timeZone} · {formatViewingWindow(localWindow.best, localWindow.location.timeZone)}</span>
             </div>
             <p className={styles.reward}>{badgeTier ? `${badgeTier} badge earned` : 'First debris earns Gold · Silver replay later'}</p>
             {badgeTier && (

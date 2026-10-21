@@ -128,7 +128,9 @@ import Foundation
         let night = ms("2026-10-22T23:00:00Z"), day = ms("2026-10-22T12:00:00Z")
         #expect(SkyEvents.activePreset(at: night, calendar: cal)?.resourceId == "orionid_debris")
         #expect(SkyEvents.activePreset(at: day, calendar: cal) == nil)
-        #expect(SkyEvents.ratePerMinute(SkyEvents.orionids, at: ms("2026-10-22T00:30:00Z"), calendar: cal) > 11)
+        let location = PlayerLocation(city: "Tallinn", latitude: 59, timeZone: "Europe/Tallinn")
+        let bonus = SkyEventWindows.localWindow(location: location).best!.start.timeIntervalSince1970 * 1000
+        #expect(SkyEvents.ratePerMinute(SkyEvents.orionids, at: bonus, calendar: cal, location: location) > 11)
         #expect(SkyEvents.activePreset(at: ms("2026-10-08T23:00:00Z"), calendar: cal)?.resourceId == "draconid_debris")
         #expect(SkyEvents.ratePerMinute(SkyEvents.orionids, at: day, calendar: cal) == 0)
     }

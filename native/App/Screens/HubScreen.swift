@@ -319,6 +319,9 @@ struct SettingsSheet: View {
     @State private var confirmReset = false
     @State private var moveBiome = "mountains"
     @State private var confirmMoveBase = false
+    @State private var skyCity = ""
+    @State private var skyLatitude = "0"
+    @State private var skyTimeZone = TimeZone.current.identifier
     @State private var showPatchNotes = false
     @State private var confirmSkipTraining = false
     @State private var width: CGFloat = 390
@@ -392,6 +395,7 @@ struct SettingsSheet: View {
             displaySection(wide: wideChoices)
             #endif
             trainingSection
+            skyEventsSection
             if !store.player.placed.isEmpty && !store.player.earthBiomeMoveUsed { baseLandscapeSection.id("base-landscape-move") }
             VStack(spacing: 16) {
                 SettingsHeading(text: "Account")
@@ -501,6 +505,40 @@ struct SettingsSheet: View {
             }.settingsCard()
         }
         .onAppear { moveBiome = store.player.earthBiome }
+    }
+
+    private var skyEventsSection: some View {
+        VStack(spacing: 16) {
+            SettingsHeading(text: "Sky events")
+            VStack(alignment: .leading, spacing: 16) {
+                Picker("City", selection: $skyCity) {
+                    Text("Manual").tag("")
+                    ForEach(SkyEventWindows.cities.compactMap(\.city), id: \.self) { Text($0).tag($0) }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: skyCity) { _, city in
+                    guard let selected = SkyEventWindows.cities.first(where: { $0.city == city }) else { return }
+                    skyLatitude = String(Int(selected.latitude)); skyTimeZone = selected.timeZone
+                }
+                TextField("Coarse latitude", text: $skyLatitude).textFieldStyle(.roundedBorder).frame(minHeight: 44)
+                TextField("Timezone", text: $skyTimeZone).textFieldStyle(.roundedBorder).frame(minHeight: 44)
+                Text("Only the city, latitude rounded to 1°, and timezone are saved. No longitude or GPS.")
+                    .font(AppFont.body(14)).foregroundStyle(SettingsStyle.muted)
+                HStack(spacing: 12) {
+                    SettingsButton(title: "Save", fill: false) {
+                        guard let latitude = Double(skyLatitude), TimeZone(identifier: skyTimeZone) != nil else { return }
+                        store.setSkyEventLocation(PlayerLocation(city: skyCity.isEmpty ? nil : skyCity, latitude: latitude, timeZone: skyTimeZone))
+                    }.accessibilityIdentifier("save-sky-event-location")
+                    SettingsButton(title: "Clear", fill: false) { store.setSkyEventLocation(nil) }
+                        .accessibilityIdentifier("clear-sky-event-location")
+                }
+            }.settingsCard()
+        }
+        .onAppear {
+            let location = store.player.skyEventLocation ?? SkyEventWindows.deviceLocation()
+            skyCity = location.city ?? ""; skyLatitude = String(Int(location.latitude)); skyTimeZone = location.timeZone
+        }
+        .accessibilityIdentifier("sky-event-location-settings")
     }
 
     #if os(iOS)
