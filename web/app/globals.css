@@ -1084,6 +1084,7 @@ button { cursor: pointer; }
   pointer-events: none;
 }
 .portrait-canvas:has(.transit-screen) .toast-stack,
+.portrait-canvas:has([data-testid="transit-screen"]) .toast-stack,
 .portrait-canvas:has(.debrief-game) .toast-stack,
 .portrait-canvas:has([data-testid="rover-survey-screen"]) .toast-stack,
 .portrait-canvas:has([data-testid="delivery-screen"]) .toast-stack,
@@ -1134,17 +1135,19 @@ button { cursor: pointer; }
 }
 .toast-item > span { min-width: 0; }
 .toast-dismiss {
+  --toast-ring: var(--ln-hairline);
   flex: none;
-  width: 22px;
-  height: 22px;
+  /* 44px tap target around a 22px ring. The margins pull the extra size into the toast's own 8px 12px padding. */
+  width: 44px;
+  height: 44px;
+  margin: -8px -12px -8px -11px;
   padding: 0;
   color: var(--ln-text-dim);
-  background: transparent;
-  border: 1px solid var(--ln-hairline);
-  border-radius: var(--ln-r-pill);
+  background: radial-gradient(circle, transparent 10px, var(--toast-ring) 10px 11px, transparent 11px);
+  border: 0;
   font: 700 16px/1 var(--ln-font-body);
 }
-.toast-dismiss:hover { color: var(--ln-text); border-color: var(--ln-cyan-border); }
+.toast-dismiss:hover { --toast-ring: var(--ln-cyan-border); color: var(--ln-text); }
 
 @media (max-width: 1023px) {
   .portrait-canvas:has(.bottom-tab-bar) .sync-status {
