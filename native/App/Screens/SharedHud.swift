@@ -37,6 +37,7 @@ struct HudChips: View {
     var onSell: (() -> Void)? = nil
     @State private var stashOpen = false
     @Environment(Services.self) private var services: Services?
+    @Environment(\.helpButtonReserve) private var helpReserve
     var body: some View {
         HStack(spacing: 8) {
             if let label = SyncChip.label(online: services?.online ?? true, pending: services?.pendingWrites ?? 0, failed: services?.failedWrites ?? 0) {
@@ -49,6 +50,7 @@ struct HudChips: View {
                 .accessibilityLabel("Francs")
             stashChip
         }
+        .padding(.trailing, helpReserve)
     }
 }
 

@@ -11,7 +11,14 @@ import LandnamCore
 }
 
 private struct CoachControllerKey: EnvironmentKey { static let defaultValue: CoachController? = nil }
+/// Width a screen's help "?" button takes from the top-right corner, so the francs and stash chips sit beside it, not under it.
+private struct HelpButtonReserveKey: EnvironmentKey { static let defaultValue: CGFloat = 0 }
+
 extension EnvironmentValues {
+    var helpButtonReserve: CGFloat {
+        get { self[HelpButtonReserveKey.self] }
+        set { self[HelpButtonReserveKey.self] = newValue }
+    }
     var coach: CoachController? {
         get { self[CoachControllerKey.self] }
         set { self[CoachControllerKey.self] = newValue }
@@ -70,6 +77,7 @@ private struct HelpModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .environment(\.coach, coach)
+            .environment(\.helpButtonReserve, 52)
             .onAppear {
                 if firstVisit, !UserDefaults.standard.bool(forKey: seenKey) { coach.sheetOpen = true }
             }
