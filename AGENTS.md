@@ -16,7 +16,7 @@ Standing rules (short form; details below)
 - One commit with ALL changed files, only after real work. Subject: two different emoji + `↝ [SSL-123]: outcome`. Push to `cycle/4`.
 - No scene titles in UI. One shared HUD on every screen (web `components/game/hub/` + `SyncStatus`, native `App/Screens/SharedHud.swift`), never a per-screen HUD.
 - No orange or green UI colour (user rule, newest wins over older docs). Colours only from CSS variables / `shared/tokens`.
-- PocketBase is the only state store (via the outbox, no direct client writes). TestFlight uploads happen only from CI (`.github/workflows/testflight.yml`) after a PR merges into `main`; never upload by hand.
+- PocketBase is the only state store (via the outbox, no direct client writes). The TestFlight workflow was deleted (Liam, 21 Oct); do not upload to TestFlight or recreate the workflow without asking.
 
 Map (where things live)
 
@@ -39,7 +39,7 @@ This is the single source of agent instructions for the Landnam repo. `CLAUDE.md
 
 Process
 1. Commits: commit ALL files with changes, in one commit, and only after real work (a finished, coherent unit: feature, fix, ticket). No tiny or frequent commits, no WIP, checkpoint, CI-poke or one-line churn commits. See "Commit" below for the format.
-2. Branching: work directly on `cycle/4`. No feature branches. Never push to `main` directly; the release path is a PR from `cycle/4` into `main` (CI required must pass), and the merge deploys the web Worker and uploads the iOS build to TestFlight.
+2. Branching: work directly on `cycle/4`. No feature branches. Never push to `main` directly; the release path is a PR from `cycle/4` into `main` (CI required must pass), and the merge deploys the web Worker (no TestFlight upload).
 3. No waiting on CI. CI runs typecheck, unit tests, build and Playwright scenes. Run relevant local checks to completion; do not poll CI or block delivery on its queue. Report CI and deployment as unverified unless actually checked.
 4. Done means proof: nothing is "done" without a viewed screenshot of the running build. Every ticket carries a "Done when" line. Close your own Linear tickets. When the fix is on `cycle/4` and your own checks pass (typecheck, the relevant tests, and screenshots you have looked at), mark the ticket Done with a short comment giving the commit and the proof. Do not leave it In Review waiting for real Safari or any check you cannot run; say in the comment what was not run.
 5. Keep discovery bounded: read the active ticket, its latest comments, applicable decisions and the real implementation. Do not scan historical docs or repeat passed checks without a changed input or unresolved failure.
