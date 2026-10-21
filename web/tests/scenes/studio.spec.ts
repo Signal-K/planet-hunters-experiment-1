@@ -36,6 +36,8 @@ test.beforeAll(() => {
 test.afterAll(() => cleanup())
 
 async function openStudio(page: Page, query: string) {
+  // A real note also posts a comment for any agent watching the storyboard thread; tests must not message agents.
+  await page.route('**/game/storyboard/comments', route => (route.request().method() === 'POST' ? route.fulfill({ json: {} }) : route.continue()))
   await page.goto(`/game/studio?${query}`, { timeout: 90_000 })
   await expect(page.getByTestId('studio')).toBeVisible({ timeout: 60_000 })
 }

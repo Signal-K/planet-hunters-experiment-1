@@ -4,7 +4,7 @@ Every scene and mission is a plain text script in this folder. You can read and 
 
 ## Open the Studio
 
-Start the dev stack (`make up`), then open <http://localhost:3001/game/studio>. In Cursor use `Cmd+Shift+P`, then **Simple Browser: Show**. It is built to sit in half a window next to a chat or a script: one fluid column, no fixed panes, light or dark to match your system (More, then Theme).
+Start the dev stack (`make up`; the first time after pulling this, run `make web-deps` once so the Docker web container gets the TOML parser), then open <http://localhost:3001/game/studio>. In Cursor use `Cmd+Shift+P`, then **Simple Browser: Show**. It is built to sit in half a window next to a chat or a script: one fluid column, no fixed panes, light or dark to match your system (More, then Theme).
 
 - **Pick a scene** with the first button or `Ctrl/Cmd+K`. Pick a setup with the second (every stage fixture for that screen is listed). Pick a device size at the right.
 - **Review** (default): type what is wrong in the box and press Add note, or pin it on the preview. Mark things to keep. Add inspiration (paste a screenshot). Choose **Fix exactly** or **Give me options**, then **Copy brief for an agent** and paste it into the chat.
