@@ -34,7 +34,7 @@ CI runs the same `npm run test:scenes` in the `scenes` job (see `docs/ci.md`) an
 | --- | --- | --- |
 | Fast per-PR | `npm run test:unit` + `npm run test:scenes` | every PR (CI `unit`, `scenes`) |
 | Phone smoke | `npm run test:scenes:phone` | local iteration |
-| Full staging prerelease | `STAGING_BASE_URL=… STAGING_LANDNAM_PB_URL=… npm run test:staging` | before a release |
+| Full staging prerelease | `STAGING_BASE_URL=… STAGING_LANDNAM_PB_URL=… npm run test:staging` | before a release. Real sign-up on the staging Worker (live PocketBase, accounts purged), Free Ops handoff, then at 390x844, 926x428 and 1440x900 one flown run (contract, or a Free run when the starter contract is on a build hold), server save check and reload. This is the release gate's authenticated playthrough (SSL-626). Bundled Chromium, not installed Chrome |
 
 `retries: 2` in `playwright.config.ts` absorbs browser crashes (see Known flakiness). A test that needed a retry is reported as flaky, not hidden.
 

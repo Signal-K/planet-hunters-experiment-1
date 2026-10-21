@@ -22,13 +22,21 @@ describe('loop screens use one chrome', () => {
     expect(source).toMatch(/<TopBar/)
   })
 
-  it.each(['TransitScreen', 'MiningScreen', 'LaunchpadScreen'])('%s uses the shared base dock and clock, with no scene title', name => {
-    const source = readFileSync(join(screensDir, `${name}.tsx`), 'utf8')
+  it('MiningScreen uses the shared base dock and clock, with no scene title', () => {
+    const source = readFileSync(join(screensDir, 'MiningScreen.tsx'), 'utf8')
     expect(source).toContain('<BaseDock')
-    // The Launchpad is the rocket builder scene, which owns the shared HUD (SSL-560).
-    const hud = name === 'LaunchpadScreen' ? readFileSync(join(screensDir, 'RocketBuilderScene.tsx'), 'utf8') : source
-    expect(hud).toContain('<HubClockWidget')
+    expect(source).toContain('<HubClockWidget')
     expect(source).not.toMatch(/<TopBar/)
+    expect(source).not.toContain('COURSE LOCKED')
+    expect(source).not.toContain('LAUNCHPAD')
+  })
+
+  // SSL-645: Transit and the Launchpad are scenes (flight, pad) with only a back control. They no longer
+  // mount their own dock or clock, and the Launchpad's own tests pin that. They must still not grow a
+  // one-off header or a scene title.
+  it.each(['TransitScreen', 'LaunchpadScreen'])('%s mounts no private dock, header or scene title', name => {
+    const source = readFileSync(join(screensDir, `${name}.tsx`), 'utf8')
+    expect(source).not.toMatch(/<BaseDock|<TopBar/)
     expect(source).not.toContain('COURSE LOCKED')
     expect(source).not.toContain('LAUNCHPAD')
   })

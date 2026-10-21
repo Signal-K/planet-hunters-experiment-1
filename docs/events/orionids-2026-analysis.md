@@ -2,6 +2,8 @@
 
 Written 19 Oct 2026, then revised the same day for the web event pass. This is a description of the live web loop, not a pitch. Native is unchanged.
 
+> **Update, 22 Oct 2026 (SSL-630, SSL-646).** The catch described below, debris mined with the laser after 22:00 and held in cargo, is no longer how fragments are caught. The rocket now catches them on the way up, at any hour of the window: 2 per launch, 4 on peak night (21 Oct 18:00 to 22 Oct 06:00), none outside the window, at negligible cargo cost. The launch shows a sticky "N Orionid fragments caught on the way up" toast. The passages below on night-only debris, the 22:00 start and the cargo limit are superseded. The chip, panel, banner, voucher and 02:00 fireball passages were not re-checked against the current build. Source: `web/lib/orionids/launch-catch.ts`. Rendered proof at 390x844, 926x428 and 1440x900: `web/tests/scenes/flow-orionids-launch.spec.ts`.
+
 The shower is open from local midnight on 19 Oct through 8 Nov 2026 00:00 UTC. On an ordinary night, debris falls from 22:00 to 06:00 local. On peak night it starts at 18:00 on 21 Oct and runs until 06:00 on 22 Oct, and the rate is doubled. Outside that night the rate still moves: it starts at 4 particles a minute and climbs toward 12 as the UTC peak (22 Oct 00:00) gets closer, then falls back. A normal night in the window is the same scene at the un-doubled rate.
 
 ## A normal night in the window

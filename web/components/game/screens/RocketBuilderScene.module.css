@@ -521,7 +521,8 @@
   .tabLabel { letter-spacing: -0.04em; }
   .stats li { min-width: 0; padding: 7px 6px; column-gap: 4px; }
   .statIcon { width: 18px; height: 18px; }
-  .statCopy { font-size: 12px; letter-spacing: .08em; }
+  /* 14px is the floor for any text; the three chips share 390px, so the tracking gives way, not the size. */
+  .statCopy { letter-spacing: .02em; }
 }
 
 /* Short landscape phones: tighter chrome, same two columns. */
