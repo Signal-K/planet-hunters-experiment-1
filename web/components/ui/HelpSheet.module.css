@@ -64,8 +64,9 @@
 }
 
 .primary {
-  background: var(--ln-cyan-soft);
-  color: var(--ln-cyan-bright);
+  background: var(--ln-bp-blue, #1f78c1);
+  border-color: var(--ln-bp-ink, #0f2436);
+  color: var(--ln-bp-paper, #fff);
 }
 
 .body {

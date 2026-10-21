@@ -96,7 +96,11 @@ export function useHelp(screen: Screen, options: { onReplayTraining?: () => void
   if (!topic) return { button: null, layer: null, reportAction, open: false }
 
   return {
-    button: <HelpButton onClick={openSheet} label={`Help: ${topic.title}`} />,
+    // The sheet owns the active help surface. Leaving its trigger mounted in
+    // the top bar puts it physically behind the sheet's Close control on
+    // narrow instrument screens, which is both visually noisy and creates
+    // overlapping tap targets. Closing the sheet restores this trigger.
+    button: open ? null : <HelpButton onClick={openSheet} label={`Help: ${topic.title}`} />,
     layer: (
       <>
         {sheetOpen && (
