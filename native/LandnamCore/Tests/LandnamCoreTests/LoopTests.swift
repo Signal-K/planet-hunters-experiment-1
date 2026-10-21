@@ -261,6 +261,13 @@ import Foundation
 }
 
 @Suite struct HelpTests {
+    @Test func controlStationAndTessShareTheDataAnalysisCard() {
+        let hub = Help.topic(for: .instrumentHub)!, tess = Help.topic(for: .galaxy)!
+        let card = hub.cards.first { $0.title == "What the data analysis is" }
+        #expect(card != nil)
+        #expect(tess.cards.contains(card!))
+    }
+
     @Test func topicsHaveBoundedCardsAndResolvableAnchors() {
         for (_, t) in Help.topics {
             #expect((Help.minCards...Help.maxCards).contains(t.cards.count))
