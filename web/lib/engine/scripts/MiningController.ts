@@ -381,8 +381,9 @@ export class MiningController extends ScriptBehaviour {
         const frame = ore.frames[Math.floor(ore.animTime / 0.6) % ore.frames.length]
         if (ore.sprite.texture !== frame) ore.sprite.texture = frame
       }
-      if (ore.sprite) ore.sprite.x = ore.go.transform.position.x
-      if (ore.chip) ore.chip.x = ore.go.transform.position.x
+      // SSL-344: draw on whole pixels. Fractional x on pixelated art shimmers between frames and reads as the deposit jittering. Hit tests keep the exact position.
+      if (ore.sprite) ore.sprite.x = Math.round(ore.go.transform.position.x)
+      if (ore.chip) ore.chip.x = Math.round(ore.go.transform.position.x)
       if (ore.label) {
         const halfLabel = ore.label.width * (ore.chip ? 0.58 : 0.5)
         const oreX = ore.go.transform.position.x
@@ -556,7 +557,7 @@ export class MiningController extends ScriptBehaviour {
 
   private placeDebris(ore: OreEntity, y: number): void {
     ore.go.transform.position.y = y
-    if (ore.sprite) ore.sprite.y = y
+    if (ore.sprite) ore.sprite.y = Math.round(y)
     if (ore.label) ore.label.y = y
   }
 
