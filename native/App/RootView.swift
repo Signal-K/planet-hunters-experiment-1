@@ -39,7 +39,7 @@ struct RootView: View {
             case .instrumentHub: ControlStationScreen()
             case .saturnStormSearch: SaturnStormSearchScreen()
             case .asteroidDiscovery: AsteroidDiscoveryScreen()
-            case .galaxy: TessDiscoveryScreen()
+            case .galaxy: TessDiscoveryScreen().helpable(.galaxy, firstVisit: true)
             default: StubScreen(screen: store.screen)
             }
         }

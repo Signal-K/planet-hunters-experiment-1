@@ -68,8 +68,10 @@ public enum Help {
         .instrumentHub: HelpTopic(id: "control-station", title: "Control Station", cards: [
             HelpCard(title: "Where things are", body: "The map shows each telescope and satellite you operate. A number means that equipment has items ready to classify."),
             HelpCard(title: "Open a project", body: "Filter by place, then open a row that has a count. That opens the review for those items."),
+            Help.dataAnalysisCard,
         ]),
         .galaxy: HelpTopic(id: "tess", title: "Reading the light curve", cards: [
+            Help.dataAnalysisCard,
             HelpCard(title: "Find the dip", body: "A planet passing in front of its star makes the light dip for a short while, then recover. Drag across the dip on the chart to mark it."),
             HelpCard(title: "Confirm Transit", body: "Use Confirm Transit when the marked dip looks like a real, repeating drop with a clean shape."),
             HelpCard(title: "Mark Noise or Skip", body: "Use Mark Noise when the marked dip is just jitter or a glitch. Use Skip when you cannot tell. Skip needs no mark."),
@@ -78,6 +80,9 @@ public enum Help {
             HelpCoachStep(id: "verdict", targets: ["tess-verdicts"], anchor: "tess-verdicts", hint: "Confirm Transit if it is a real dip, Mark Noise if it is not, Skip if unsure."),
         ]),
     ]
+
+    /// Shared by the Control Station and TESS sheets (mirrors web DATA_ANALYSIS_CARD).
+    static let dataAnalysisCard = HelpCard(title: "What the data analysis is", body: "Each item is a real observation from a real telescope or survey. You look at it and classify what you see, such as a dip in a star's light. Your answers feed real citizen science projects and earn badges and rewards here.")
 
     public static func topic(for screen: Screen) -> HelpTopic? { topics[screen] }
 }

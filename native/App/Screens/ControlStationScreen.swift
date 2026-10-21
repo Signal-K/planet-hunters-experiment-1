@@ -44,7 +44,7 @@ struct ControlStationScreen: View {
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Room.outline, lineWidth: 2))
             SkyBadgeRow(badges: store.player.badges)
         }
-        .helpable(.instrumentHub)
+        .helpable(.instrumentHub, firstVisit: true)
     }
 
     private func filters(_ m: ControlStation.Model) -> some View {
