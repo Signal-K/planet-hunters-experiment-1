@@ -1,13 +1,12 @@
-import { chromium, defineConfig } from '@playwright/test'
-import { existsSync } from 'node:fs'
+import { defineConfig } from '@playwright/test'
 
 // Scene checks: every test mounts ONE screen from fixture state via /game/stage.
 // No sign-in, no loop, no backend. Locally: `npm run test:scenes`.
 // SCENES_CHANNEL=chrome uses the installed Chrome instead of the downloaded Chromium.
 const port = process.env.PORT ?? '3001'
-const localChrome = !process.env.CI && !existsSync(chromium.executablePath())
-  && existsSync('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
-const channel = process.env.SCENES_CHANNEL || (localChrome ? 'chrome' : undefined)
+// The installed Chrome closes pages and crashes mid-run under Playwright (random "Target page closed" failures), so it is
+// never a silent fallback. Playwright's own headless shell is enough: `npx playwright install chromium-headless-shell`.
+const channel = process.env.SCENES_CHANNEL || undefined
 export default defineConfig({
   testDir: process.env.STAGING_PLAYTHROUGH ? './tests/staging' : './tests/scenes',
   outputDir: './tests/.out',
