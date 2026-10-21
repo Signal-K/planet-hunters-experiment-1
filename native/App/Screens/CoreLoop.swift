@@ -340,7 +340,8 @@ private struct ContractWorkspace: View {
                     .multilineTextAlignment(.center).lineLimit(portrait ? 3 : 4)
                 Text("\(selectedIndex + 1) / \(entries.count)").font(AppFont.mono(14)).foregroundStyle(Theme.hex(0xB8C8C0))
             }
-            .padding(portrait ? 14 : 24).frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Landscape: the floating coach band sits over the top ~85pt of this panel, so keep the avatar below it.
+            .padding(portrait ? 14 : 24).padding(.top, portrait ? 0 : 48).frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme.hex(0x342C70).opacity(0.96))
             action(selected, mission: mission)
                 .frame(maxWidth: .infinity, maxHeight: portrait ? nil : .infinity)

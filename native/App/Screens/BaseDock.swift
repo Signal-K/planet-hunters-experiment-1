@@ -93,7 +93,9 @@ struct BaseDock: View {
                 .foregroundStyle(Theme.hudPanel)
                 .frame(minWidth: 88, minHeight: 44)
                 .padding(.horizontal, 10)
-                .background(Theme.blue)
+                // A ShapeStyle background ignores safe areas by default; in landscape that stretched the fill through the
+                // leading inset to the screen edge and over the previous arrow.
+                .background(Theme.blue, ignoresSafeAreaEdges: [])
                 .accessibilityLabel("Selected location \(label)")
             locationArrow("chevron.right", label: "Next location") { onNext?() }
         }
@@ -113,7 +115,7 @@ struct BaseDock: View {
         // Divider is vertically greedy: without this the group fills the screen height and its panel covers the scene.
         .fixedSize(horizontal: false, vertical: true)
         .padding(4)
-        .background(Theme.hudPanel)
+        .background(Theme.hudPanel, ignoresSafeAreaEdges: [])
         .overlay(Rectangle().stroke(Theme.hudInk, lineWidth: 2))
     }
 

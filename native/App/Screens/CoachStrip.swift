@@ -234,10 +234,13 @@ struct CoachPlacement: View {
                 let landscapePhone = geo.size.height < 500 && geo.size.width > 640
                 // Folded (hidden or off the tutorial path) the "?" chip sits in the top-left corner under the gear and clock.
                 CoachStrip(coach: coach, screen: screen, summoned: $summoned)
-                    .frame(maxWidth: chipOnly ? 56 : (landscapePhone ? min(430, geo.size.width - 520) : 560))
-                    .padding(.horizontal, chipOnly ? 12 : 8)
+                    // geo is already inside the safe area. Landscape band: starts after the gear, clock and sky-event chip (~190pt) and ends
+                    // before the francs and stash chips (~210pt from the right), so the strip never lands on either.
+                    .frame(maxWidth: chipOnly ? 56 : (landscapePhone ? min(430, max(280, geo.size.width - 420)) : 560))
+                    .padding(.leading, chipOnly ? 12 : (landscapePhone ? 204 : 8))
+                    .padding(.trailing, chipOnly || landscapePhone ? 0 : 8)
                     .padding(.top, chipOnly ? 68 : (landscapePhone ? 8 : 68))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: chipOnly ? .topLeading : .top)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: chipOnly || landscapePhone ? .topLeading : .top)
             }
             .allowsHitTesting(true)
         }
