@@ -9,6 +9,7 @@ import { clientAffinityLevel } from '@/lib/systems/AcademySystem'
 import { FRANC, formatFrancs } from '@/lib/format'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import {
+  ATLAS_ORIONIDS_CHECKIN,
   orionidsDevForced,
   orionidsForcedInstant,
   orionidsTeaserDevForced,
@@ -411,7 +412,7 @@ export default function MissionBoard({
   }
 
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
-  const atlasEventLink = events.spacetober.links.find(link => link.href.includes('/orionids'))
+  const atlasEventLink = events.spacetober.links.find(link => link.href === ATLAS_ORIONIDS_CHECKIN.href)
   const chooseTab = (next: MissionBoardTab) => setTab(next)
   const tabButtons = <>
     <button type="button" className={styles.tab} aria-label="Contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
@@ -570,7 +571,7 @@ export default function MissionBoard({
                 </div>
               </div>
             )}
-            {atlasEventLink && <a className={styles.eventAtlas} href={atlasEventLink.href} target="_blank" rel="noreferrer">OPEN IN ATLAS</a>}
+            {atlasEventLink && <a className={styles.eventAtlas} href={atlasEventLink.href} target="_blank" rel="noreferrer">{atlasEventLink.label}</a>}
           </div>}
       </div>}
     </section>

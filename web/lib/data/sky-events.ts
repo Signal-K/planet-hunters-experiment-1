@@ -15,12 +15,11 @@ export const WORLD_SPACE_WEEK_PLAYER_LINKS = [
 ] as const
 
 /**
- * Atlas check-in for the Orionids. The stable page is /orionids.
- * This link has no UTM query; the path is the whole change.
+ * Public Orionids link on the events board. Landnam's own site, not Atlas.
  */
 export const ATLAS_ORIONIDS_CHECKIN = {
-  label: 'Atlas Orionids check-in',
-  href: 'https://youratlas.cc/orionids',
+  label: 'playlandnam.space',
+  href: 'https://playlandnam.space',
 } as const
 
 export type SkyActivityKind =

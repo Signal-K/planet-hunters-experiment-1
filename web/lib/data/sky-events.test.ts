@@ -54,7 +54,7 @@ describe('World Space Week player links', () => {
       { label: 'Open Atlas badges', href: 'https://youratlas.cc/app/profile' },
       { label: 'Open Garden sky events', href: 'https://starsailors.space/game' },
     ])
-    expect(ATLAS_ORIONIDS_CHECKIN).toEqual({ label: 'Atlas Orionids check-in', href: 'https://youratlas.cc/orionids' })
+    expect(ATLAS_ORIONIDS_CHECKIN).toEqual({ label: 'playlandnam.space', href: 'https://playlandnam.space' })
   })
 })
 
