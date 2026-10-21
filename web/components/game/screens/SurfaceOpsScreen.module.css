@@ -482,6 +482,55 @@
   }
 }
 
+/* SSL-374: a phone in landscape is wider than 880px but only ~430px tall, so the
+   narrow-width rules above never applied and the FIELD canvas started below the fold.
+   Short screens get the same compact FIELD header. */
+@media (max-height: 560px) {
+  .content[data-view='field'] .siteRail,
+  .content[data-view='field'] .sectionCopy {
+    display: none;
+  }
+
+  .content[data-view='field'] .fieldPanel {
+    padding: var(--ln-s-3);
+  }
+
+  .content[data-view='field'] .sectionHeading h2 {
+    font-size: 20px;
+    line-height: 1.2;
+  }
+
+  .content[data-view='field'] .routeReadout {
+    margin-bottom: var(--ln-s-2);
+  }
+
+  /* Controls on the left, the live terrain beside them, so it starts on the first screen. */
+  .content[data-view='field'] .fieldPanel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    grid-template-rows: auto auto 1fr;
+    column-gap: var(--ln-s-3);
+    align-content: start;
+    /* The control column scrolls so no control is cut off; the terrain stays put beside it. */
+    overflow-y: auto;
+  }
+
+  .content[data-view='field'] .fieldPanel > *:not(.takeonMount) {
+    grid-column: 1;
+  }
+
+  .content[data-view='field'] .takeonMount {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    margin-top: 0;
+    min-height: 160px;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: calc(100dvh - 190px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .siteCard,
   .capacityTrack > span {
