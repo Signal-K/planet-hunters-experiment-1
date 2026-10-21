@@ -307,6 +307,7 @@ function GameCanvas() {
             onSignIn={async (email, password) => {
               await game.signInFromGate(email, password)
             }}
+            onRequestPasswordReset={game.requestPasswordResetFromGate}
             onCreateAccount={async (email, password) => {
               await game.createAccountFromGate(email, password)
               // A brand-new account has no remote save to merge. Start the

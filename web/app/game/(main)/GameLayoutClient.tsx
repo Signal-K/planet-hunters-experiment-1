@@ -439,6 +439,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             error={game.authGateError}
             entry={orionidsEntryActive ? 'orionids' : null}
             onSignIn={game.signInFromGate}
+            onRequestPasswordReset={game.requestPasswordResetFromGate}
             onCreateAccount={game.createAccountFromGate}
           />
         )}

@@ -19,7 +19,7 @@ describe('AuthGateSheet', () => {
     ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
     await act(async () => {
-      root.render(<AuthGateSheet error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={vi.fn(async () => {})} />)
+      root.render(<AuthGateSheet error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={vi.fn(async () => {})} onRequestPasswordReset={vi.fn(async () => {})} />)
     })
 
     expect(host.querySelector('.auth-gate')?.classList.contains('theme-blueprint')).toBe(true)
@@ -37,7 +37,7 @@ describe('AuthGateSheet', () => {
     ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
     await act(async () => {
-      root.render(<AuthGateSheet error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={onCreateAccount} />)
+      root.render(<AuthGateSheet error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={onCreateAccount} onRequestPasswordReset={vi.fn(async () => {})} />)
     })
     await act(async () => {
       ;[...host.querySelectorAll('button')].find(button => button.textContent === 'Sign Up')?.click()
@@ -66,12 +66,32 @@ describe('AuthGateSheet', () => {
     ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
     await act(async () => {
-      root.render(<AuthGateSheet entry="orionids" error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={vi.fn(async () => {})} />)
+      root.render(<AuthGateSheet entry="orionids" error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={vi.fn(async () => {})} onRequestPasswordReset={vi.fn(async () => {})} />)
     })
 
     expect(host.textContent).toContain('Fly the Orionids')
     expect(host.textContent).toContain('straight into the Orionids launch')
     expect(host.querySelector('[data-testid="auth-gate-submit"]')?.textContent).toBe('Continue to Orionids')
+
+    await act(async () => root.unmount())
+  })
+
+  it('requests password-reset instructions from the sign-in form', async () => {
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const onRequestPasswordReset = vi.fn(async () => {})
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<AuthGateSheet error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={vi.fn(async () => {})} onRequestPasswordReset={onRequestPasswordReset} />)
+    })
+    await act(async () => {
+      setValue(host.querySelector('[data-testid="auth-gate-email"]') as HTMLInputElement, 'miner@example.com')
+      ;(host.querySelector('[data-testid="auth-gate-forgot-password"]') as HTMLButtonElement).click()
+    })
+
+    expect(onRequestPasswordReset).toHaveBeenCalledWith('miner@example.com')
+    expect(host.textContent).toContain('we’ve sent password-reset instructions')
 
     await act(async () => root.unmount())
   })

@@ -10,6 +10,7 @@ interface AuthGateSheetProps {
   entry?: 'orionids' | null
   onSignIn: (email: string, password: string) => Promise<void>
   onCreateAccount: (email: string, password: string) => Promise<void>
+  onRequestPasswordReset: (email: string) => Promise<void>
 }
 
 // iOS Safari's keyboard covers the lower fields and does not scroll the sheet
@@ -19,7 +20,7 @@ function revealOnFocus(e: React.FocusEvent<HTMLInputElement>) {
   window.setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)
 }
 
-export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateAccount }: AuthGateSheetProps) {
+export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateAccount, onRequestPasswordReset }: AuthGateSheetProps) {
   const [requestedEntry, setRequestedEntry] = useState<'orionids' | null>(entry)
   const [mode, setMode] = useState<'signin' | 'signup'>(() => {
     if (typeof window === 'undefined') return 'signin'
@@ -30,6 +31,7 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [resetRequested, setResetRequested] = useState(false)
   // iOS leaves the layout viewport at full height when the keyboard opens, so
   // the bounded panel runs under it. Mirror the keyboard's height into a CSS
   // var so the sheet lifts above it and the panel scrolls internally.
@@ -71,6 +73,23 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
       } else {
         await onCreateAccount(email, password)
       }
+    } catch {
+      // error shown via props
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handlePasswordReset() {
+    if (!email.trim()) {
+      setValidationError('Enter the email address for your account first.')
+      return
+    }
+    setValidationError(null)
+    setSubmitting(true)
+    try {
+      await onRequestPasswordReset(email.trim())
+      setResetRequested(true)
     } catch {
       // error shown via props
     } finally {
@@ -163,13 +182,30 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
               placeholder="Confirm password"
               data-testid="auth-gate-password-confirmation"
               className="auth-gate__input"
-            onFocus={revealOnFocus}
+              onFocus={revealOnFocus}
             />
+          )}
+          {mode === 'signin' && (
+            <button
+              type="button"
+              className="auth-gate__reset-link"
+              data-testid="auth-gate-forgot-password"
+              disabled={submitting}
+              onClick={() => { void handlePasswordReset() }}
+            >
+              Forgot password?
+            </button>
           )}
 
           {(error ?? validationError) && (
             <div className="auth-gate__error" role="alert">
               {error ?? validationError}
+            </div>
+          )}
+
+          {resetRequested && !(error ?? validationError) && (
+            <div className="auth-gate__notice" role="status">
+              If that email has an account, we’ve sent password-reset instructions.
             </div>
           )}
 
