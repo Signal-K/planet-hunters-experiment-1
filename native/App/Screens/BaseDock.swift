@@ -66,39 +66,55 @@ struct BaseDock: View {
     }
 
     private func locationDock(_ label: String) -> some View {
-        HStack(alignment: .bottom, spacing: 12) {
-            HStack(spacing: 0) {
-                locationArrow("chevron.left", label: "Previous location") { onPrev?() }
-                Label(label, systemImage: "globe")
-                    .font(AppFont.display(14)).tracking(0.6)
-                    .lineLimit(1)
-                    .foregroundStyle(Theme.hudPanel)
-                    .frame(minWidth: 88, minHeight: 44)
-                    .padding(.horizontal, 10)
-                    .background(Theme.blue)
-                    .accessibilityLabel("Selected location \(label)")
-                locationArrow("chevron.right", label: "Next location") { onNext?() }
+        // Side by side when the width allows it; on narrow phones in portrait the actions drop below the location
+        // picker. A single HStack here overflowed 393pt and dragged the whole base scene off centre (SSL-626).
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .bottom, spacing: 12) {
+                locationPicker(label)
+                Spacer(minLength: 0)
+                locationActions
             }
-            .overlay(Rectangle().stroke(Theme.hudInk, lineWidth: 2))
-
-            Spacer(minLength: 0)
-
-            HStack(spacing: 0) {
-                DockButton(title: "Build", symbol: "hammer.fill", action: { if let onBuild { onBuild() } else { store.go(.build) } })
-                if let onMission {
-                    Divider().overlay(Theme.hudInk)
-                    DockButton(title: "Find mission", symbol: "paperplane", action: onMission)
-                }
-                Divider().overlay(Theme.hudInk)
-                DockButton(title: "Menu", symbol: "line.3.horizontal", action: { if let onMenu { onMenu() } else { store.go(.instrumentHub) } })
+            VStack(alignment: .leading, spacing: 8) {
+                locationPicker(label)
+                locationActions.frame(maxWidth: .infinity, alignment: .trailing)
             }
-            .padding(4)
-            .background(Theme.hudPanel)
-            .overlay(Rectangle().stroke(Theme.hudInk, lineWidth: 2))
         }
         .padding(.horizontal, 12)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Location and scene actions")
+    }
+
+    private func locationPicker(_ label: String) -> some View {
+        HStack(spacing: 0) {
+            locationArrow("chevron.left", label: "Previous location") { onPrev?() }
+            Label(label, systemImage: "globe")
+                .font(AppFont.display(14)).tracking(0.6)
+                .lineLimit(1)
+                .foregroundStyle(Theme.hudPanel)
+                .frame(minWidth: 88, minHeight: 44)
+                .padding(.horizontal, 10)
+                .background(Theme.blue)
+                .accessibilityLabel("Selected location \(label)")
+            locationArrow("chevron.right", label: "Next location") { onNext?() }
+        }
+        .overlay(Rectangle().stroke(Theme.hudInk, lineWidth: 2))
+    }
+
+    private var locationActions: some View {
+        HStack(spacing: 0) {
+            DockButton(title: "Build", symbol: "hammer.fill", action: { if let onBuild { onBuild() } else { store.go(.build) } })
+            if let onMission {
+                Divider().overlay(Theme.hudInk)
+                DockButton(title: "Find mission", symbol: "paperplane", action: onMission)
+            }
+            Divider().overlay(Theme.hudInk)
+            DockButton(title: "Menu", symbol: "line.3.horizontal", action: { if let onMenu { onMenu() } else { store.go(.instrumentHub) } })
+        }
+        // Divider is vertically greedy: without this the group fills the screen height and its panel covers the scene.
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(4)
+        .background(Theme.hudPanel)
+        .overlay(Rectangle().stroke(Theme.hudInk, lineWidth: 2))
     }
 
     private func locationArrow(_ symbol: String, label: String, action: @escaping () -> Void) -> some View {
