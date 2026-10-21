@@ -17,6 +17,7 @@ for (const [name, size] of Object.entries(VIEWPORTS)) {
     await expect(panel).toBeVisible()
     await expect(panel).toContainText('Peak')
     await expect(page.getByTestId('orionids-share')).toBeVisible()
+    await expect(page.getByTestId('orionids-return-hook')).toContainText('Launch again')
     await page.screenshot({ path: `${OUT}/base-panel-${name}.png` })
   })
 }

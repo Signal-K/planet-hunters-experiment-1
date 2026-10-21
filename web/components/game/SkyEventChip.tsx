@@ -125,6 +125,11 @@ export default function SkyEventChip({
               <span>Peak 21–22 Oct</span>
             </div>
             <p className={styles.reward}>{badgeTier ? `${badgeTier} badge earned` : 'First debris earns Gold · Silver replay later'}</p>
+            {badgeTier && (
+              <p className={styles.summary} data-testid="orionids-return-hook">
+                {peak ? 'Peak night is on: every fragment counts double. Launch again.' : 'The shower runs to 7 Nov. Launch again to catch more, peak night 21–22 Oct pays double.'}
+              </p>
+            )}
             <div className={styles.actions}>
               {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={onParticipate}>VIEW EVENT</button>}
               {surface === 'base' && <button type="button" className={styles.secondary} data-testid="orionids-read-sky" onClick={openOrionidsReading}>READ THE SKY</button>}

@@ -49,6 +49,8 @@ test('scan training: mark the dip, confirm the transit, move on to the part try'
     await open(page)
     const confirm = page.getByTestId('tess-verdict-planet')
     await page.getByRole('button', { name: /open galaxy/i }).dispatchEvent('click', undefined, { timeout: 15_000 })
+    // First visit opens the data-analysis briefing over the chart (SSL-640); dismiss it like a player would.
+    await page.getByTestId('help-close').click({ timeout: 15_000 }).catch(() => {})
     if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/scan-0.png` })
     await expect(confirm).toBeVisible({ timeout: 30_000 })
     if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/scan-1-before.png` })
