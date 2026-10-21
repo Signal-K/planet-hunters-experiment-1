@@ -179,6 +179,62 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       { title: 'Build from a recipe', body: 'Road Segment and Surface Silo show BUILD when you can afford them. Short cards name where to mine the missing material in Free Ops.' },
     ],
   },
+  transit: {
+    id: 'transit',
+    title: 'In flight',
+    cards: [
+      { title: 'The trip takes real time', body: 'The rocket flies on its own. The timer and the line show how far along it is. You can leave the screen and come back, the flight keeps going.' },
+      { title: 'Boost and resume', body: 'Boost skips ahead on the trip. If you close the game mid flight, the same run is waiting when you return.' },
+    ],
+  },
+  landing: {
+    id: 'landing',
+    title: 'Landing and ascent',
+    cards: [
+      { title: 'Descent and ascent', body: 'The rocket lands, and later lifts off again. Each has its own timer. Continue unlocks when the timer finishes.' },
+      { title: 'Nothing to steer', body: 'The landing is automatic. Wait for it, then carry on to the work on the ground.' },
+    ],
+  },
+  delivery: {
+    id: 'delivery',
+    title: 'Cargo transfer',
+    cards: [
+      { title: 'Hand over the cargo', body: 'The cargo goes to the client at this body. Start the unload and wait for the timer. Pay arrives when the whole order is delivered.' },
+      { title: 'What the client wants', body: 'The order says how much of which ore the client needs. Bring all of it so the full payout lands.' },
+    ],
+  },
+  refinery: {
+    id: 'refinery',
+    title: 'Refinery',
+    cards: [
+      { title: 'Turn ore into goods', body: 'Pick a recipe. It takes the ore from your stash and runs for a set time. Check the inputs and the output value before you start.' },
+      { title: 'Collect when done', body: 'Finished goods wait for you. Collect them to add them to the stash. Nothing is lost while you are away.' },
+    ],
+  },
+  skills: {
+    id: 'skills',
+    title: 'Skill tree',
+    cards: [
+      { title: 'Spend points on unlocks', body: 'Points come from research and play. Pick a node to see what it unlocks, then unlock it. Unlocks are permanent.' },
+      { title: 'License grade', body: 'Your license grade sets how far up the tree you can go. Upgrade it to open the next tier.' },
+    ],
+  },
+  academy: {
+    id: 'academy',
+    title: 'Astronaut academy',
+    cards: [
+      { title: 'Train and hire crew', body: 'Roster shows your crew. Training raises a branch. Hiring adds someone new. Both cost francs and time.' },
+      { title: 'Unlock it first', body: 'The academy opens once it is researched and the building is placed on the base. Until then the screen shows it as locked.' },
+    ],
+  },
+  'surface-ops': {
+    id: 'surface-ops',
+    title: 'Surface operations',
+    cards: [
+      { title: 'Sites and access', body: 'Each site needs access before you can work there. Buy access, then send a ferry with what the site needs.' },
+      { title: 'Logistics and field', body: 'Logistics moves cargo between the base and a site. Field runs an operation on the ground once the site is ready.' },
+    ],
+  },
 }
 
 export function getHelpTopic(screen: Screen): HelpTopic | null {

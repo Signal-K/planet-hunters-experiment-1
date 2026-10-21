@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useHelp } from '@/components/ui/useHelp'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
@@ -20,6 +21,7 @@ interface RefineryScreenProps {
 }
 
 export default function RefineryScreen({ player, onBack, onStartRefine, onCollect }: RefineryScreenProps) {
+  const help = useHelp('refinery')
   const [now, setNow] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
   const stash = player.stash ?? {}
@@ -42,7 +44,8 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
 
   return (
     <div className="game-screen theme-blueprint">
-      <TopBar eyebrow="INDUSTRY" title="Refinery" onBack={onBack} />
+      <TopBar eyebrow="INDUSTRY" title="Refinery" onBack={onBack} right={help.button} />
+      {help.layer}
       <ScenePanel ambient="industrial" className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
         <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)' }}>On-site Ore Processing</div>

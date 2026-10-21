@@ -274,6 +274,10 @@ import Foundation
             for s in t.coach { #expect(s.targets.contains(s.anchor)) }
         }
         #expect(Help.topic(for: .hub) == nil)
+        // Mirrors the web topics added for SSL-431.
+        for (screen, title) in [(Screen.transit, "In flight"), (.delivery, "Cargo transfer"), (.skills, "Skill tree"), (.academy, "Astronaut academy"), (.surfaceOps, "Surface operations")] {
+            #expect(Help.topic(for: screen)?.title == title)
+        }
     }
 
     @Test func coachRunAdvancesOnlyOnItsAction() {

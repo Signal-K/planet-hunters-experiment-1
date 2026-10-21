@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useHelp } from '@/components/ui/useHelp'
 import type { Target } from '@/lib/data'
 import { BaseDock } from '@/components/game/hub/BaseDock'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
@@ -76,6 +77,7 @@ export default function TransitScreen({
   parts,
   fragmentCount = 0,
 }: Props) {
+  const help = useHelp('transit')
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
   const [now, setNow] = useState(() => Date.now())
@@ -206,6 +208,7 @@ export default function TransitScreen({
             <span className="scene-chip" data-testid="flight-cargo-chip" aria-label="Cargo">
               <CubeIcon />
             </span>
+            {help.button}
           </div>
         </div>
       </div>
@@ -222,6 +225,7 @@ export default function TransitScreen({
           onHub={onHub ?? onBack}
         />
       </div>
+      {help.layer}
     </div>
   )
 }
