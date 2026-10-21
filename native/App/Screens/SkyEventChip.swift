@@ -45,6 +45,12 @@ struct SkyEventChip: View {
                         ForEach(SkyEvents.orionidsPanelSteps, id: \.self) { step in
                             Text(step).font(AppFont.body(14)).foregroundStyle(Theme.ink).frame(maxWidth: 280, alignment: .leading)
                         }
+                        // Return hook (mirrors web SkyEventChip): a player who already earned the badge is told to launch again.
+                        if store.player.badges["orionids-2026"] != nil {
+                            Text("The shower runs to 7 Nov. Launch again to catch more, peak night 21–22 Oct pays double.")
+                                .font(AppFont.body(14)).foregroundStyle(Theme.ink).frame(maxWidth: 280, alignment: .leading)
+                                .accessibilityIdentifier("orionids-return-hook")
+                        }
                     } else {
                         Text(note).font(AppFont.body(14)).foregroundStyle(Theme.textDim).frame(maxWidth: 260, alignment: .leading)
                     }
