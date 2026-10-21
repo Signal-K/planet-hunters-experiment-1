@@ -41,18 +41,20 @@ struct TransitScreen: View {
                 let p = progress(ctx.date)
                 ZStack(alignment: .topLeading) {
                     FlightWorldScene(progress: p, returning: store.player.returningToEarth ?? false)
-                    HudGearClock(onSettings: { showSettings = true })
-                        .padding(.leading, insets.leading + zones.topLeft.inset).padding(.top, insets.top + zones.topLeft.inset)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    HudChips(francs: store.player.francs)
-                        .padding(.trailing, insets.trailing + zones.topRight.inset).padding(.top, insets.top + zones.topRight.inset)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                     VStack(spacing: 24) {
                         FlightProgressBar(value: p)
-                        BaseDock(tile: 44, zones: zones.dock, items: [
-                            (p >= 1 ? "Arrive" : "Boost", p >= 1 ? "flag.fill" : "bolt.fill", { if p >= 1 { store.transitArrived() } else if store.player.arrivalAt == nil { boost += 0.14 } }),
-                            ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
-                        ])
+                        HStack(spacing: 8) {
+                            Button("BACK") { store.go(.hub) }.frame(minWidth: 44, minHeight: 44)
+                            Button(p >= 1 ? "ARRIVE" : "BOOST") {
+                                if p >= 1 { store.transitArrived() }
+                                else if store.player.arrivalAt == nil { boost += 0.14 }
+                            }.frame(minWidth: 44, minHeight: 44)
+                        }
+                        .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.ink)
+                        .buttonStyle(.plain)
+                        .padding(8)
+                        .background(Theme.paper)
+                        .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
                     }
                     .padding(.bottom, insets.bottom + zones.dock.bottomInset)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -60,7 +62,6 @@ struct TransitScreen: View {
             }
         }
         .background(Color(red: 0.05, green: 0.04, blue: 0.16).ignoresSafeArea())
-        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
     }
 }
 
@@ -186,7 +187,6 @@ struct MiningScreen: View {
         .frame(maxWidth: 220)
         return ZStack {
             VStack(alignment: .leading, spacing: 8) {
-                GlassGear { showSettings = true }
                 if narrow { order }
                 SkyEventChip().frame(maxWidth: .infinity, alignment: .leading)
                 Spacer()

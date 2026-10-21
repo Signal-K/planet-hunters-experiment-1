@@ -42,17 +42,17 @@ async function openStudio(page: Page, query: string) {
   await expect(page.getByTestId('studio')).toBeVisible({ timeout: 60_000 })
 }
 
-for (const [name, size] of [...Object.entries(VIEWPORTS), ['half-window', { width: 640, height: 900 }]] as const) {
+for (const [name, size] of [...Object.entries(VIEWPORTS), ['half-window', { width: 640, height: 900 }], ['cursor-window', { width: 681, height: 669 }]] as const) {
   test(`studio fits ${name} with the real game inside and the note box in reach`, async ({ page }) => {
     await page.setViewportSize(size)
     await openStudio(page, `scene=${SCENE}&vp=ph`)
     expect(await page.evaluate(() => innerWidth)).toBe(size.width)
     const frame = page.getByTestId('studio-web-frame')
     await expect(frame).toBeVisible({ timeout: 60_000 })
-    await expect(frame).toHaveAttribute('src', /\/game\/stage\?preset=ui-launchpad/)
+    await expect(frame).toHaveAttribute('src', /\/game\/stage\?preset=sandbox%3A/)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    const note = await page.getByTestId('note-input').boundingBox()
-    expect(note && note.y >= 0 && note.y + note.height <= size.height).toBe(true)
+    await page.getByRole('button', { name: /Notes/ }).click()
+    await expect(page.getByTestId('note-input')).toBeVisible()
     // text never drops under the 14px floor
     const smallest = await page.evaluate(() => Math.min(...[...document.querySelectorAll('[data-testid=studio] *')].filter(el => el.childNodes.length && [...el.childNodes].some(n => n.nodeType === 3 && n.textContent?.trim())).map(el => parseFloat(getComputedStyle(el).fontSize))))
     expect(smallest).toBeGreaterThanOrEqual(14)
@@ -70,15 +70,16 @@ test('the scene picker lists every scene and opens one', async ({ page }) => {
   expect(await list.locator('[data-testid^="scene-"]:not([data-testid="scene-list"]):not([data-testid="scene-picker"]):not([data-testid="scene-filter"])').count()).toBeGreaterThanOrEqual(27)
   await page.getByTestId('scene-filter').fill('hangar')
   await page.getByTestId('scene-hangar').click()
-  await expect(page.getByTestId('scene-title')).toHaveText('Hangar')
+  await expect(page.getByTestId('scene-picker')).toContainText('Hangar')
   await expect(page).toHaveURL(/scene=hangar/)
-  await expect(page.getByTestId('fixture-select').locator('option')).not.toHaveCount(0)
+  await expect(page.getByTestId('preset-select').locator('option')).not.toHaveCount(0)
 })
 
 test('a note becomes file content, can be pinned, marked fixed, turned into a brief and deleted', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.setViewportSize({ width: 640, height: 900 })
   await openStudio(page, `scene=${SCENE}&vp=ph`)
+  await page.getByRole('button', { name: /Notes/ }).click()
   await page.getByTestId('note-input').fill('The launch button looks like a website button')
   await page.getByTestId('add-note').click()
   await expect(page.getByTestId('notes-list').locator('textarea')).toHaveCount(1)
@@ -112,6 +113,7 @@ test('a note becomes file content, can be pinned, marked fixed, turned into a br
 test('inspiration: a chosen screenshot is shrunk, stored and listed', async ({ page }) => {
   await page.setViewportSize({ width: 640, height: 900 })
   await openStudio(page, `scene=${SCENE}&vp=ph`)
+  await page.getByRole('button', { name: /Notes/ }).click()
   await page.getByTestId('inspiration-summary').click()
   await page.getByTestId('inspo-source').fill('Dorfromantik')
   await page.getByTestId('inspo-likes').fill('soft shadows and the way pieces click into place')
@@ -165,7 +167,7 @@ test('editing a mission in the Studio recompiles what web and native both read, 
   await expect(cargo).toBeVisible()
   await cargo.fill('3')
   await cargo.blur()
-  await expect(page.getByTestId('status')).toContainText('Compiled', { timeout: 15_000 })
+  await expect.poll(() => JSON.parse(read(COMPILED[0])).missions.find((m: { id: string }) => m.id === 'freeops-self-directed-mining').requires.cargo_min).toBe(3)
   const declared = JSON.parse(read(COMPILED[0]))
   expect(declared.missions.find((m: { id: string }) => m.id === 'freeops-self-directed-mining').requires.cargo_min).toBe(3)
   expect(read(COMPILED[1])).toBe(read(COMPILED[0]))

@@ -77,6 +77,8 @@ Liam watches agent work in the Cursor/VS Code Simple Browser on `http://localhos
 - `mode = "fix"`: follow the notes exactly. `mode = "explore"`: he does not know what will look good, so propose at least two genuinely different directions, each fixing every wrong pin, say which traits of his inspiration you borrowed, and show all three viewports. Never answer with a variation of what he rejected.
 - When you deliver, set `status = "addressed"` in the feedback file, set `status = "implemented"` on proposed objects you built, and put the handoff in Linear as usual.
 - Scene objects and the two compiled missions are authored in TOML. After editing `shared/authoring/**` run `node scripts/authoring.mjs check` (compile writes the runtime files for web and native; CI fails when they are stale). Never hand-edit `shared/scenes/base-world.json`, `shared/missions/*.json` or `AuthoredMissions.generated.swift`.
+- Studio scenes use the sandbox stage by default: it removes campaign gates, help, balance and event chrome unless a Thing enables them. Put every independent setup in `[[things]]` and a named, instructed combination in `[[presets]]`.
+- Put multi-scene walkthroughs in `shared/authoring/flows/`. Select a flow in Studio to visit its scenes and presets in sequence. Sandbox Things and flows are web-stage only; native snapshots remain legacy checkpoint proof.
 
 ## Priority order (highest wins)
 

@@ -2,15 +2,11 @@
 
 import { requestAlertPermission } from '@/lib/priceAlertNotify'
 import { useEffect, useState } from 'react'
-import { BaseDock } from '@/components/game/hub/BaseDock'
-import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { REFINERY_RECIPES } from '@/lib/data'
 import { openMarketSellPrice } from '@/lib/systems/EconomySystem'
 import { spotBoard, type PriceAlert, type SpotQuote } from '@/lib/systems/MarketplaceSystem'
 import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
 import { formatCurrency } from '@/lib/format'
-import { isDevLauncherEnabled } from '@/lib/devAccess'
-import { openSettings } from '@/lib/mining/openChrome'
 import { captureGameEvent } from '@/lib/posthog'
 import { MINERAL_META } from '@/lib/data'
 import styles from './MarketScreen.module.css'
@@ -53,7 +49,7 @@ interface MarketScreenProps {
 
 export default function MarketScreen({
   stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, exchangeBuilt, priceAlerts = [], buyBlocker,
-  onSell, onBuy, onSetAlert, onRemoveAlert, refinedGoods, onSellRefined, onBack, onBuild, onHub, onNext, clientId,
+  onSell, onBuy, onSetAlert, onRemoveAlert, refinedGoods, onSellRefined, onBack, onBuild, clientId,
 }: MarketScreenProps) {
   const [tab, setTab] = useState<Tab>('sell')
   const [armed, setArmed] = useState(false)
@@ -88,17 +84,7 @@ export default function MarketScreen({
     <div className={`market-screen ${styles.scene}`} data-testid="exchange-scene">
       <img className={styles.backdrop} src={`${ART}/exchange-plate-dock.png`} alt="" draggable={false} />
 
-      <div className={styles.hud} data-dev-launcher={isDevLauncherEnabled() ? 'true' : 'false'}>
-        <div className={styles.cluster}>
-          <button type="button" className={styles.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06A2 2 0 014.29 16.9l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06A2 2 0 017.04 4.3l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-            </svg>
-          </button>
-          <HubClockWidget />
-        </div>
-      </div>
+      <button type="button" className={styles.exit} data-testid="market-back" onClick={onBack}>Back</button>
 
       <section className={styles.panel} aria-label="Marketplace" data-testid="marketplace-panel">
         <div className={styles.top}>
@@ -192,9 +178,6 @@ export default function MarketScreen({
         )}
       </section>
 
-      <div className={styles.dock}>
-        <BaseDock onPrev={onBack} onNext={onNext} onBuild={onBuild} onHub={onHub} />
-      </div>
     </div>
   )
 }

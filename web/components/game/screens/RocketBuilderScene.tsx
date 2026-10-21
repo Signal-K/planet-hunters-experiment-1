@@ -1,15 +1,9 @@
 'use client'
-import { StashChip } from '@/components/game/hub/StashChip'
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
-import { openSettings } from '@/lib/mining/openChrome'
-import { useHelp } from '@/components/ui/useHelp'
 import { formatCurrency } from '@/lib/format'
-import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import type { RocketConfig, Target } from '@/lib/data'
-import type { Screen } from '@/lib/game-types'
-import flight from './FlightScene.module.css'
 import styles from './RocketBuilderScene.module.css'
 import {
   BLUEPRINT_MODULES,
@@ -29,12 +23,12 @@ import {
 interface RocketBuilderSceneProps {
   missionTitle?: string | null
   target?: Pick<Target, 'id' | 'name' | 'type' | 'archetype'> | null
+  /** A physical vehicle is actually staged on the pad, rather than merely a default configuration. */
+  hasStagedRocket?: boolean
   rocket: RocketConfig
   installed?: BuilderLoadout | null
   missionsDone: number
   skills?: string[]
-  francs: number
-  helpScreen?: Screen
   towerLabel: string
   launchTestId?: string
   launchDisabled?: boolean
@@ -42,6 +36,7 @@ interface RocketBuilderSceneProps {
   onBack?: () => void
   onLaunch: () => void
   onInstall?: (next: BuilderLoadout, prev: BuilderLoadout) => boolean
+  onDismantle?: () => void
   launching?: boolean
   launchRocketName?: string
   launchRocketSrc?: string
@@ -62,12 +57,11 @@ const COMPLEX_ART = '/game/assets/base/v7/launchpad'
 export default function RocketBuilderScene({
   missionTitle,
   target = null,
+  hasStagedRocket = false,
   rocket,
   installed,
   missionsDone,
   skills = [],
-  francs,
-  helpScreen = 'launchpad',
   towerLabel,
   launchTestId = 'launch-btn',
   launchDisabled = false,
@@ -75,6 +69,7 @@ export default function RocketBuilderScene({
   onChooseMission,
   onLaunch,
   onInstall,
+  onDismantle,
   launching = false,
   launchRocketName = 'Explorer',
   launchRocketSrc = '',
@@ -82,7 +77,6 @@ export default function RocketBuilderScene({
   guided = false,
   assembly = 'ready',
 }: RocketBuilderSceneProps) {
-  const help = useHelp(helpScreen)
   const loadout = asLoadout(installed)
   const [selected, setSelected] = useState<BuilderSlotId | null>(null)
   const [notice, setNotice] = useState('')
@@ -94,8 +88,10 @@ export default function RocketBuilderScene({
   const fitted = fittedModules(loadout)
   const fittedCount = BUILDER_SLOTS.filter(slot => partIdForSlot(loadout, slot)).length
   const targetLabel = target ? target.name : 'Choose a mission'
-  const phase: 'idle' | AssemblyPhase = target ? assembly : 'idle'
+  const hasLaunchPlan = Boolean(missionTitle && target)
+  const phase: 'idle' | AssemblyPhase = !hasLaunchPlan ? 'idle' : hasStagedRocket ? assembly : 'design'
   const launchLabel = phase === 'design' ? 'Build rocket' : phase === 'building' ? 'Building' : 'Launch'
+  const [confirmingDismantle, setConfirmingDismantle] = useState(false)
 
   // Only what can be fitted today: locked parts and slots with nothing available yet stay out of sight instead of reading as dead ends.
   const available = (slot: (typeof BUILDER_SLOTS)[number]) => allPartsForSlot(slot).filter(part => (part.unlockedAtMissions ?? 0) <= missionsDone || part.id === partIdForSlot(loadout, slot))
@@ -136,33 +132,17 @@ export default function RocketBuilderScene({
         <div className={styles.wash} />
       </div>
 
-      <div className={`${flight.chrome} launchpad-shared-hud`}>
-        <div className={flight.top}>
-          <div className={flight.cluster}>
-            <button type="button" className={flight.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06A2 2 0 014.29 16.9l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06A2 2 0 017.04 4.3l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
-            </button>
-            <div className={flight.clock}><HubClockWidget /></div>
-            {help.button}
-          </div>
-          <div className={flight.cluster}>
-            <span className="scene-chip" data-testid="launchpad-francs-chip">{formatCurrency(francs, { compact: true })}</span>
-            <StashChip testId="launchpad-cargo-chip" />
-          </div>
-        </div>
-      </div>
-      {help.layer}
 
       <div className={styles.stage}>
         <div className={styles.actions}>
           {onBack && <button type="button" className={styles.back} data-testid="top-bar-back" aria-label="back" onClick={onBack}>&lsaquo; Back</button>}
-          {/* With no mission picked there is nothing to build: the big call to action on the pad opens the contracts. */}
-          {target && <button type="button" className={styles.launch} data-testid={launchTestId} data-assembly={phase} disabled={launchDisabled || phase === 'building'} onClick={onLaunch}>{launchLabel}</button>}
+          {hasLaunchPlan && <button type="button" className={styles.launch} data-testid={launchTestId} data-assembly={phase} disabled={launchDisabled || phase === 'building'} onClick={onLaunch}>{launchLabel}</button>}
           <button type="button" className={styles.target} data-testid="rocket-builder-target" onClick={onChooseMission}>
-            <span>Target</span>
-            <strong>{targetLabel}</strong>
+            <span>{hasLaunchPlan ? 'Change mission' : 'Select mission'}</span>
+            <strong>{hasLaunchPlan ? `${missionTitle} · ${targetLabel}` : targetLabel}</strong>
           </button>
-          {!guided && target && <button type="button" className={styles.back} data-testid="builder-customize" aria-expanded={customizing} onClick={() => setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
+          {!guided && hasLaunchPlan && <button type="button" className={`${styles.back} ${styles.customize}`} data-testid="builder-customize" aria-expanded={customizing} onClick={() => setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
+          {hasStagedRocket && onDismantle && <button type="button" className={styles.dismantle} data-testid="builder-dismantle" onClick={() => setConfirmingDismantle(true)}>Dismantle</button>}
         </div>
 
         {guided && (
@@ -177,7 +157,6 @@ export default function RocketBuilderScene({
           <section className={styles.pad} aria-label="Launchpad" data-phase={phase} data-fitted-count={fittedCount}>
             <div className={styles.complex} data-testid="launchpad-complex">
               <img className={styles.complexArt} src={`${COMPLEX_ART}/pad-complex.png`} alt="" />
-              <span className={styles.hangarTag} aria-hidden="true">Hangar</span>
               <div className={styles.rocketSlot}>
                 <img className={styles.rocket} src="/art/scenes/launchpad/launchpad-rocket-multistage.png" alt="" data-testid="launch-rocket" />
               </div>
@@ -195,10 +174,17 @@ export default function RocketBuilderScene({
             )}
             {phase !== 'idle' && (
               <ul className={styles.stats} data-testid="rocket-builder-stats" data-capacity={stats.capacity} data-range={stats.range} data-laser={stats.laser}>
-                <li><span>Capacity</span><strong>{stats.capacity}</strong></li>
-                <li><span>Range</span><strong>{stats.range}</strong></li>
-                <li><span>Laser</span><strong>{stats.laser}</strong></li>
+                <li data-stat="capacity"><span className={styles.statIcon} aria-hidden="true" /><span className={styles.statCopy}>Capacity</span><strong>{stats.capacity}</strong><i aria-hidden="true" /></li>
+                <li data-stat="range"><span className={styles.statIcon} aria-hidden="true" /><span className={styles.statCopy}>Range</span><strong>{stats.range}</strong><i aria-hidden="true" /></li>
+                <li data-stat="laser"><span className={styles.statIcon} aria-hidden="true" /><span className={styles.statCopy}>Laser</span><strong>{stats.laser}</strong><i aria-hidden="true" /></li>
               </ul>
+            )}
+            {confirmingDismantle && (
+              <div className={styles.dismantleConfirm} role="alert">
+                <span>Dismantle this unlaunched rocket?</span>
+                <button type="button" onClick={() => { setConfirmingDismantle(false); onDismantle?.() }}>Confirm</button>
+                <button type="button" onClick={() => setConfirmingDismantle(false)}>Keep</button>
+              </div>
             )}
           </section>
 

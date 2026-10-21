@@ -2,13 +2,16 @@ import { redirect } from 'next/navigation'
 import { loadData, loadScene, loadStudioIndex, studioEnabled } from '@/lib/authoring/studio-load'
 import { resolveFocusScenes } from '@/lib/authoring/studio-model'
 import type { ViewportKey } from '@/lib/authoring/studio-model'
+import { defaultSelection, presetSelection, setValue, toggleThing } from '@/lib/authoring/things'
+import type { Selection } from '@/lib/authoring/things'
 import StudioClient from './StudioClient'
 import type { Target } from './StudioClient'
+import type { View } from './PresetPicker'
 
 export const dynamic = 'force-dynamic'
 
 // Scene Studio (dev only): every scene as a script you can see, edit and preview in the real game with no login.
-// Deep links: /game/studio?scene=hangar&state=ui-hangar-assembly&vp=ph&mode=edit  or  ?data=world:base-world
+// Deep links: /game/studio?scene=hub&preset=full-base&vp=ph&tab=things or ?data=world:base-world.
 export default async function StudioPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   if (!studioEnabled()) redirect('/game')
   const params = await searchParams
@@ -18,28 +21,42 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
   let target: Target
   let scene = null
   let dataBundle = null
-  let fixture: string | null = null
+  let view: View = { kind: 'start' }
+  let selection: Selection = { on: [], values: {} }
   try {
     if (data && (data[0] === 'world' || data[0] === 'mission') && data[1]) {
       target = { type: 'data', kind: data[0], id: data[1] }
       dataBundle = loadData(target.kind, target.id)
-      fixture = params.state ?? dataBundle.previewState ?? null
+      view = params.state ?? dataBundle.previewState ? { kind: 'checkpoint', key: params.state ?? dataBundle.previewState! } : { kind: 'start' }
     } else {
       const focused = resolveFocusScenes(index.scenes, index.focus?.scenes ?? [])[0]
       const id = params.scene ?? focused ?? 'hub'
       target = { type: 'scene', id }
       scene = loadScene(id)
-      const keys = scene.fixtures.map(f => f.key)
-      const preview = (scene.scene.value as { preview?: { state?: string } } | null)?.preview?.state
-      fixture = params.state && keys.includes(params.state) ? params.state : preview && keys.includes(preview) ? preview : keys[0] ?? null
+      const doc = scene.scene.value as { things?: import('@/lib/authoring/docs').Thing[]; presets?: import('@/lib/authoring/docs').ScenePreset[] } | null
+      const things = doc?.things ?? []
+      selection = defaultSelection(things)
+      if (params.state && scene.fixtures.some(f => f.key === params.state)) view = { kind: 'checkpoint', key: params.state }
+      else if (params.preset) {
+        const preset = (doc?.presets ?? []).find(item => item.id === params.preset)
+        if (preset) { view = { kind: 'preset', id: preset.id }; selection = presetSelection(preset, things) }
+      } else if (params.things || params.values) {
+        let next = selection
+        for (const id of (params.things ?? '').split(',').filter(Boolean)) next = toggleThing(next, things, id)
+        for (const item of (params.values ?? '').split(',').filter(Boolean)) { const [id, raw] = item.split(':'); const value = Number(raw); if (id && Number.isFinite(value)) next = setValue(next, id, value) }
+        selection = next; view = { kind: 'custom' }
+      }
     }
   } catch {
     target = { type: 'scene', id: 'hub' }
     scene = loadScene('hub')
-    fixture = scene.fixtures[0]?.key ?? null
+    selection = defaultSelection(((scene.scene.value as { things?: import('@/lib/authoring/docs').Thing[] } | null)?.things ?? []))
   }
 
   const vp: ViewportKey = params.vp === 'ls' || params.vp === 'dk' ? params.vp : 'ph'
-  const mode = params.mode === 'edit' || params.tab === 'objects' || params.tab === 'source' ? 'edit' : 'review'
-  return <StudioClient initialIndex={index} initialTarget={target} initialScene={scene} initialData={dataBundle} initialFixture={fixture} initialVp={vp} initialMode={mode} follow={params.follow === '1'} />
+  const tab = params.tab === 'notes' || params.tab === 'script' ? params.tab : params.mode === 'edit' ? 'script' : 'things'
+  const flow = params.flow ? index.flows.find(item => item.id === params.flow) : undefined
+  const requestedStep = Math.max(0, Number(params.step ?? '1') - 1)
+  const initialFlow = flow ? { id: flow.id, step: Math.min(requestedStep, Math.max(0, flow.steps.length - 1)) } : null
+  return <StudioClient initialIndex={index} initialTarget={target} initialScene={scene} initialData={dataBundle} initialView={view} initialSelection={selection} initialVp={vp} initialTab={tab} initialEditing={params.mode === 'edit' || params.tab === 'objects'} initialFlow={initialFlow} follow={params.follow === '1'} />
 }

@@ -17,3 +17,30 @@ native = ["native/App/Screens/TessDiscoveryScreen.swift"]
 [preview]
 route = "galaxy"
 state = "ui-tess-discovery"
+
+# ---------------------------------------------------------------------------------------------------------------
+# Everything that can be in the console. Switch things on in the Studio (Things tab), then save the combination as a
+# preset. First-visit help sheets are off in the sandbox.
+# ---------------------------------------------------------------------------------------------------------------
+
+[[things]]
+id = "telescope-online"
+label = "Telescope online"
+group = "Instruments"
+default = true
+state = { visualFixture = "tess", player = { transitSatelliteLaunchedAt = "@now-1d", transitSatelliteLevel = 1 } }
+
+[[things]]
+id = "some-annotations"
+label = "Some observations done"
+group = "Progress"
+state = { player = { researchAnnotations = 3, researchXP = 180 } }
+
+[[presets]]
+id = "first-light-curve"
+name = "First light curve"
+things = ["telescope-online"]
+instructions = """
+The first transit candidate from the telescope the player launched. The light curve fills the screen and the verdict dock
+sits within thumb reach. Every control is at least 44px. Nothing explains itself in a wall of text.
+"""

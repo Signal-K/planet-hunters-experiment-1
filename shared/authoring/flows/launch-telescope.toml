@@ -1,0 +1,54 @@
+#:schema ../schema/flow.schema.json
+format = 1
+id = "launch-telescope"
+name = "Launch the telescope"
+summary = "Walk the telescope from a working base through fabrication, launch, flight, and first light."
+tickets = ["SSL-615", "SSL-645"]
+
+[[steps]]
+scene = "hub"
+preset = "full-base"
+title = "Ready base"
+instructions = "Find the working launch complex and the telescope route. The scene stands alone with no campaign callout, balance chip, or help sheet."
+
+[[steps]]
+scene = "launchpad"
+preset = "telescope-on-the-pad"
+title = "Telescope on the pad"
+instructions = "Check that the telescope is ready at the pad. The action should live on the scene, not in a dashboard panel."
+
+[[steps]]
+scene = "fab"
+preset = "telescope-plan"
+title = "Plan the telescope"
+instructions = "Inspect the telescope fabrication plan and its required parts. It must remain playable without a prior mission."
+
+[[steps]]
+scene = "fab"
+preset = "telescope-launch"
+title = "Commit the launch"
+instructions = "Trigger the telescope launch sequence. Watch for obsolete mountain, forest, or snow art and report it rather than accepting it."
+
+[[steps]]
+scene = "transit"
+preset = "telescope-ride"
+title = "Ride to orbit"
+instructions = "Check the in-flight scene and telescope craft. It should not show a generic asteroid as the telescope target."
+
+[[steps]]
+scene = "debrief"
+preset = "telescope-in-orbit"
+title = "Confirm orbit"
+instructions = "Confirm the telescope reaches orbit and the mission settles cleanly with no first-visit sheet."
+
+[[steps]]
+scene = "galaxy"
+preset = "first-light-curve"
+title = "First light"
+instructions = "Open the instrument console and read the first-light curve. The sandbox suppresses the OPS BRIEFING help sheet."
+
+[[steps]]
+scene = "hub"
+preset = "telescope-night"
+title = "Night network"
+instructions = "Return to the night base and see the telescope network in the sky. No date-driven event banner appears unless a thing asks for it."

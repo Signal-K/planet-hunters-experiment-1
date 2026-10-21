@@ -30,6 +30,32 @@ export interface SceneState {
   note?: string
 }
 
+/** One thing that can be in a scene. Switching it on layers `state` and `query` over the scene's starting point. */
+export interface Thing {
+  id: string
+  label: string
+  group?: string
+  note?: string
+  /** Things sharing a value here are choices: only one at a time. */
+  exclusive?: string
+  default?: boolean
+  /** Merged over the game state: tables merge, lists gain entries, anything else is replaced. */
+  state?: Record<string, unknown>
+  /** URL knobs of the stage, such as time and sky. Several things on the same key are joined with commas. */
+  query?: Record<string, string>
+  /** A slider. Always applied; `{value}` and `{rest}` (max minus value) can be used inside `state` strings. */
+  range?: { min: number; max: number; step?: number; value: number }
+}
+
+/** A named setup of a scene: which things are on, and plain-language instructions for whoever tests or builds it. */
+export interface ScenePreset {
+  id: string
+  name: string
+  things?: string[]
+  values?: Record<string, number>
+  instructions?: string
+}
+
 export interface SceneDoc {
   format: 1
   id: string
@@ -41,7 +67,26 @@ export interface SceneDoc {
   runtime: { surface: 'canvas' | 'dom'; web?: string[]; native?: string[]; engine?: string[]; data?: string[] }
   preview: { route: string; state?: string }
   states?: SceneState[]
+  things?: Thing[]
+  presets?: ScenePreset[]
   objects?: SceneObject[]
+}
+
+export interface FlowStep {
+  scene: string
+  preset?: string
+  title: string
+  instructions?: string
+}
+
+/** A mission or sequence as a script: scenes in order, each with the setup to open and what to do or check there. */
+export interface FlowDoc {
+  format: 1
+  id: string
+  name: string
+  summary?: string
+  tickets?: string[]
+  steps: FlowStep[]
 }
 
 export interface MissionDoc {

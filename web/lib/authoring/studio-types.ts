@@ -49,8 +49,19 @@ export interface DataDocBundle {
   sig: string
 }
 
+/** A flow as the Studio's picker and step strip need it. */
+export interface FlowSummary {
+  id: string
+  name: string
+  summary: string
+  file: string
+  steps: { scene: string; preset?: string; title: string; instructions?: string }[]
+  errors: number
+}
+
 export interface StudioIndex {
   scenes: import('./scenes.ts').SceneSummary[]
+  flows: FlowSummary[]
   data: { kind: 'world' | 'mission'; id: string; title: string; file: string; errors: number }[]
   focus: import('./focus.ts').Focus | null
 }

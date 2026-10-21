@@ -1,6 +1,7 @@
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS } from '@/lib/data'
+import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
 const FIRST_MINERAL = Object.keys(FIRST_MISSION.requires.minerals)[0] ?? 'iron'
@@ -192,8 +193,49 @@ export const DEV_GROUPS: DevGroup[] = [
   },
 ]
 
+/** Campaign-free starting points for the Scene Studio's sandbox: the `sandbox-*` cases of `fixture()` below. */
+export const SANDBOX_FIXTURES = ['sandbox-hub', 'sandbox-transit'] as const
+
+/**
+ * A stage fixture by name. `sandbox:<fixture>[:<setup>]` is the same fixture with its campaign context removed and a
+ * scene script's setup layered on (lib/sandbox.ts). The `sandbox-*` fixtures below are the campaign-free starting
+ * points those scenes use: the shape a screen needs and nothing more.
+ */
 export function resolvePreset(name: string): Partial<GameState> | null {
+  if (isSandboxName(name)) return resolveSandbox(name, fixture)
+  return fixture(name)
+}
+
+function fixture(name: string): Partial<GameState> | null {
   switch (name) {
+    // ── Sandbox starting points (SSL-641): no campaign, nothing built, nothing owed ──
+    case 'sandbox-hub':
+      return {
+        screen: 'hub',
+        player: { ...BASE_PLAYER, missionsDone: 3, placed: [], placementPlots: {}, freeOperations: true },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'sandbox-transit': {
+      // Outbound to Eros, an hour long, 20 minutes in. The scene's things move the destination, the ship and the progress.
+      const transitStartedAt = Date.now() - 20 * 60_000
+      return {
+        screen: 'transit',
+        player: {
+          ...BASE_PLAYER, missionsDone: 3, freeOperations: true,
+          activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, missionPhase: 'transit',
+          transitStartedAt, arrivalAt: transitStartedAt + 60 * 60_000,
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+    }
+
     // ── Mission 1 ──
     case 'm1-intro':
       return {

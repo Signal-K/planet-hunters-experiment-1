@@ -5,6 +5,12 @@ import Foundation
 /// all three are done.
 public enum FlightPlan {
     public static let tryLabels = ["mining": "Mining", "scan": "Scan", "part": "Part"]
+    /// Finished training tries can be replayed as paid practice operations.
+    /// The reward settles on the actual mission/classification/fit completion,
+    /// never when the player opens the replay from Settings.
+    public static let replayFrancs = 120
+    public static let replayResearchXP = 10
+    public static let replayIron = 2
 
     public struct PatchProgress: Equatable, Sendable {
         public let stitched: Int
@@ -138,7 +144,15 @@ public enum FlightPlan {
     /// Marks a try done on a real event and re-derives Free Ops and the tutorial flag.
     public static func completeTry(_ s: inout GameState, _ id: String) {
         let wasFree = s.player.freeOperations
-        if s.player.flightPlan.currentTry == id { s.player.flightPlan.complete(id) }
+        let paidReplay = s.player.flightPlan.replayTry == id && s.player.flightPlan.completed[id] == true
+        if s.player.flightPlan.currentTry == id {
+            if paidReplay {
+                s.player.francs += replayFrancs
+                s.player.researchXP += replayResearchXP
+                s.player.stash["iron", default: 0] += replayIron
+            }
+            s.player.flightPlan.complete(id)
+        }
         s.player.freeOperations = Transitions.freeOperationsUnlocked(s.player)
         s.tutorial = !s.player.freeOperations
         if !wasFree && s.player.freeOperations { s.popup = "tutorial-complete" }

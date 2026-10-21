@@ -120,8 +120,12 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const [activeBuilding, setActiveBuilding] = useState<string | null>(() => hubQuery().get('building'))
   const [rollingOut, setRollingOut] = useState(() => consumeRocketRolloutPending())
   const finishRollout = useCallback(() => setRollingOut(false), [])
-  // The pad stays empty unless a mission or launch is in progress (docs/STYLE.md rule 6). Rollout draws its own rocket.
-  const rocketOnPad = padLanding || ((!!player.activeMission || !!player.pendingLaunch) && !rollingOut)
+  const selectedStagedRocket = player.stagedRockets?.find(rocket => rocket.id === player.selectedStagedRocketId)
+  const stagedRocketOnPad = selectedStagedRocket?.location === 'launchpad'
+  const stagedRocketInHangar = selectedStagedRocket?.location === 'hangar'
+  // Pending launch only says a vehicle has been assigned. Its physical location decides whether the pad is occupied.
+  // Rollout draws its own rocket while it is moving from the hangar.
+  const rocketOnPad = padLanding || ((!!player.activeMission || stagedRocketOnPad) && !rollingOut)
   // The terrain baseline is part of the world composition. It must not move
   // when the dock grows or the mobile browser chrome changes height: doing so
   // pulled the launchpad up into the mountain range to make room for UI. The
@@ -265,8 +269,11 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         onOpen: () => onOpenScene(resume),
       }
     }
-    if (player.pendingLaunch) {
+    if (stagedRocketOnPad) {
       return { state: 'waiting', label: 'CRAFT ON PAD', ariaLabel: 'Open the tower: craft waiting on the pad', onOpen: () => onOpenScene('launchpad') }
+    }
+    if (stagedRocketInHangar) {
+      return { state: 'waiting', label: 'CRAFT IN HANGAR', ariaLabel: 'Open Hangar: vehicle assigned to the mission', onOpen: () => onOpenScene('hangar') }
     }
     return null
   })()
@@ -275,9 +282,9 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     if (kind === 'launchpad') {
       return {
         kind, label: 'Launchpad',
-        sub: player.activeMission ? 'IN FLIGHT' : 'READY',
-        status: (player.activeMission ? 'warn' : 'ok') as 'ok' | 'warn',
-        hot: !!player.pendingLaunch,
+        sub: player.activeMission ? 'IN FLIGHT' : stagedRocketInHangar ? 'VEHICLE IN HANGAR' : stagedRocketOnPad ? 'CRAFT ON PAD' : 'READY',
+        status: (player.activeMission || stagedRocketInHangar ? 'warn' : 'ok') as 'ok' | 'warn',
+        hot: stagedRocketOnPad,
         // Match the rendered mobile footprint of the authored sprite. The
         // taller hit area below covers the gantry without creating an
         // oversized box that shifts the building label away from the structure.

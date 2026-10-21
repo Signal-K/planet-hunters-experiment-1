@@ -86,19 +86,18 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         onPick={game.onPickMission}
         onViewContracts={() => game.go('missions')}
         onLaunchpadAction={() => game.go('fab')}
-        onOpenHangar={() => game.go('hangar')}
         missionsDone={game.player.missionsDone}
         freeOperations={game.player.freeOperations}
         catalog={game.catalog}
         player={game.player}
         rocketImageSrc={rocketDisplay.img}
         selectedRocketName={rocketDisplay.name}
-        francs={game.player.francs}
         hydrated={game.hydrated}
         mission={{ title: game.mission.title }}
         target={target}
         rocket={game.rocket}
-        helpScreen={screen}
+        hasStagedRocket={selectedVehicle?.location === 'launchpad'}
+        onDismantle={() => game.onDismantleStagedRocket()}
         assembly={rolling ? 'building' : preparing ? 'design' : 'ready'}
         launchTestId={preparing ? 'prepare-launch-btn' : 'launch-btn'}
         launchDisabled={!!rolling || selectedVehicle?.location === 'hangar' || (!preparing && !launchReady)}

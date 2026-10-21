@@ -1,37 +1,49 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { buildAgentPrompt } from '@/lib/authoring/agent-prompt'
-import type { FeedbackDoc, Pin, Rect, SceneDoc, SceneObject } from '@/lib/authoring/docs'
+import type { FeedbackDoc, Pin, Rect, SceneDoc, SceneObject, ScenePreset } from '@/lib/authoring/docs'
 import type { EditOp } from '@/lib/authoring/edit'
-import { VIEWPORTS, objectRect, resolveFocusScenes, snap, uniqueId } from '@/lib/authoring/studio-model'
+import { VIEWPORTS, drawerWidth, lineOfId, objectRect, resolveFocusScenes, scriptHref, snap, stageSrc, uniqueId } from '@/lib/authoring/studio-model'
 import type { ViewportKey } from '@/lib/authoring/studio-model'
-import type { DataDocBundle, DocBundle, SceneBundle, StudioIndex } from '@/lib/authoring/studio-types'
+import type { DataDocBundle, DocBundle, FlowSummary, SceneBundle, StudioIndex } from '@/lib/authoring/studio-types'
 import type { Path } from '@/lib/authoring/toml'
 import Composer from './Composer'
 import Inspector from './Inspector'
 import MoreMenu from './MoreMenu'
 import PreviewStage from './PreviewStage'
 import type { StagePin, Tool } from './PreviewStage'
+import PresetPicker from './PresetPicker'
+import type { View } from './PresetPicker'
 import ReviewPanel from './ReviewPanel'
 import type { ThreadMessage } from './ReviewPanel'
 import ScenePicker from './ScenePicker'
+import ScriptMenu from './ScriptMenu'
+import ScriptPanel from './ScriptPanel'
 import SourceView from './SourceView'
+import ThingsPanel from './ThingsPanel'
+import FlowBar from './FlowBar'
+import { composeSetup, defaultSelection, matchingPreset, presetId, presetSelection, sameSelection, setValue, toggleThing } from '@/lib/authoring/things'
+import type { Selection } from '@/lib/authoring/things'
 import { getData, getFocus, getIndex, getScene, isUnchanged, send } from './studio-api'
 import styles from './Studio.module.css'
 
 export type Target = { type: 'scene'; id: string } | { type: 'data'; kind: 'world' | 'mission'; id: string }
-export type Mode = 'review' | 'edit'
 type Theme = 'auto' | 'light' | 'dark'
+type Tab = 'things' | 'notes' | 'script'
 
 interface Props {
   initialIndex: StudioIndex
   initialTarget: Target
   initialScene: SceneBundle | null
   initialData: DataDocBundle | null
-  initialFixture: string | null
+  initialView: View
+  initialSelection: Selection
   initialVp: ViewportKey
-  initialMode: Mode
+  initialTab: Tab
+  initialEditing: boolean
+  initialFlow: { id: string; step: number } | null
   follow: boolean
 }
 
@@ -48,9 +60,12 @@ export default function StudioClient(props: Props) {
   const [target, setTarget] = useState(props.initialTarget)
   const [scene, setScene] = useState(props.initialScene)
   const [data, setData] = useState(props.initialData)
-  const [fixture, setFixture] = useState(props.initialFixture)
+  const [view, setView] = useState<View>(props.initialView)
+  const [selection, setSelection] = useState<Selection>(props.initialSelection)
   const [vp, setVp] = useState(props.initialVp)
-  const [mode, setMode] = useState<Mode>(props.initialTarget.type === 'data' ? 'edit' : props.initialMode)
+  const [tab, setTab] = useState<Tab>(props.initialTab)
+  const [editObjects, setEditObjects] = useState(props.initialEditing)
+  const [flowState, setFlowState] = useState(props.initialFlow)
   const [tool, setTool] = useState<Tool>('select')
   const [selectedPath, setSelectedPath] = useState<Path>([])
   const [objectsOn, setObjectsOn] = useState(true)
@@ -66,15 +81,17 @@ export default function StudioClient(props: Props) {
   const [theme, setTheme] = useState<Theme>('auto')
   const [kind, setKind] = useState<'wrong' | 'keep'>('wrong')
   const busy = useRef(false)
-  const wanted = useRef<string | null>(props.initialFixture)
+  const wanted = useRef<{ view?: View; selection?: Selection } | null>(null)
 
   const sceneDoc = (scene?.scene.value ?? null) as SceneDoc | null
   const feedbackDoc = (scene?.feedback.value ?? null) as FeedbackDoc | null
   const objects: SceneObject[] = sceneDoc?.objects ?? []
   const activeDoc: DocBundle | null = target.type === 'scene' ? scene?.scene ?? null : data?.doc ?? null
   const fixtures = scene?.fixtures ?? []
+  const things = sceneDoc?.things ?? []
+  const presets = sceneDoc?.presets ?? []
   const focusScenes = useMemo(() => resolveFocusScenes(index.scenes, index.focus?.scenes ?? []), [index.scenes, index.focus])
-  const editing = mode === 'edit' || target.type === 'data'
+  const editing = editObjects || target.type === 'data'
 
   const say = useCallback((text: string, bad = false) => setStatus({ text, bad, at: Date.now() }), [])
   useEffect(() => {
@@ -100,15 +117,17 @@ export default function StudioClient(props: Props) {
           const next = await getScene(target.id)
           if (!alive || isUnchanged(next)) return
           setScene(next); setData(null)
-          const preview = (next.scene.value as Partial<SceneDoc> | null)?.preview?.state
-          const keys = next.fixtures.map(f => f.key)
-          setFixture(wanted.current && keys.includes(wanted.current) ? wanted.current : preview && keys.includes(preview) ? preview : keys[0] ?? null)
+          const doc = next.scene.value as Partial<SceneDoc> | null
+          const nextThings = doc?.things ?? []
+          const requested = wanted.current
+          setView(requested?.view ?? { kind: 'start' })
+          setSelection(requested?.selection ?? defaultSelection(nextThings))
         } else {
           const next = await getData(target.kind, target.id)
           if (!alive || isUnchanged(next)) return
           setData(next); setScene(null)
-          setFixture(next.previewState ?? null)
-          setMode('edit')
+          setView(next.previewState ? { kind: 'checkpoint', key: next.previewState } : { kind: 'start' })
+          setTab('script'); setEditObjects(true)
         }
         wanted.current = null
         setSelectedPath([]); setUndoStack([]); setRedoStack([]); setTool('select'); setDraft('')
@@ -126,12 +145,20 @@ export default function StudioClient(props: Props) {
   useEffect(() => {
     const params = new URLSearchParams()
     params.set(target.type === 'scene' ? 'scene' : 'data', target.type === 'scene' ? target.id : `${target.kind}:${target.id}`)
-    if (fixture) params.set('state', fixture)
+    if (view.kind === 'preset') params.set('preset', view.id)
+    else if (view.kind === 'checkpoint') params.set('state', view.key)
+    else if (view.kind === 'custom') {
+      if (selection.on.length) params.set('things', selection.on.join(','))
+      const values = Object.entries(selection.values).map(([id, value]) => `${id}:${value}`)
+      if (values.length) params.set('values', values.join(','))
+    }
     params.set('vp', vp)
-    if (target.type === 'scene' && mode === 'edit') params.set('mode', 'edit')
+    if (target.type === 'scene') params.set('tab', tab)
+    if (target.type === 'scene' && editObjects) params.set('mode', 'edit')
+    if (flowState) { params.set('flow', flowState.id); params.set('step', String(flowState.step + 1)) }
     if (props.follow) params.set('follow', '1')
     window.history.replaceState(null, '', `${window.location.pathname}?${params}`)
-  }, [target, fixture, vp, mode, props.follow])
+  }, [target, view, selection, vp, tab, editObjects, flowState, props.follow])
 
   // Pick up edits made in the code editor, and the focus an agent declares.
   useEffect(() => {
@@ -226,21 +253,29 @@ export default function StudioClient(props: Props) {
   }
 
   const sceneFile = scene?.scene.file ?? ''
+  const entry = sceneDoc?.preview?.state
+  const checkpoint = view.kind === 'checkpoint' ? view.key : null
+  const currentPreset = view.kind === 'preset' ? presets.find(p => p.id === view.id) ?? null : null
+  const setup = composeSetup(things, selection)
+  const src = checkpoint ? stageSrc(checkpoint, null, bump) : entry ? stageSrc(entry, setup, bump) : null
+  const currentStateKey = checkpoint ?? currentPreset?.id
+  const flow = flowState ? index.flows.find(candidate => candidate.id === flowState.id) ?? null : null
+  const unresolved = (feedbackDoc?.pins ?? []).filter(pin => pin.kind === 'wrong' && !pin.resolved).length
   const objectsOnStage = objects.flatMap((object, i) => { const rect = scene ? objectRect(object, scene.slots) : null; return rect ? [{ object, index: i, rect }] : [] })
   const pins: StagePin[] = useMemo(() => {
     const counts = { wrong: 0, keep: 0 }
-    return (feedbackDoc?.pins ?? []).map((pin, index) => ({ pin, index, n: ++counts[pin.kind] })).filter(p => p.pin.at !== undefined && (p.pin.viewport ?? vp) === vp && (!p.pin.state || p.pin.state === fixture))
-  }, [feedbackDoc, vp, fixture])
+    return (feedbackDoc?.pins ?? []).map((pin, index) => ({ pin, index, n: ++counts[pin.kind] })).filter(p => p.pin.at !== undefined && (p.pin.viewport ?? vp) === vp && (!p.pin.state || p.pin.state === currentStateKey))
+  }, [feedbackDoc, vp, currentStateKey])
 
   const prompt = useMemo(() => {
     if (!scene || !sceneDoc) return ''
-    return buildAgentPrompt({ scene: sceneDoc, feedback: scene.feedback.exists ? feedbackDoc : null, notes: scene.notes, origin: typeof window === 'undefined' ? '' : window.location.origin, state: fixture ?? undefined })
-  }, [scene, sceneDoc, feedbackDoc, fixture])
+    return buildAgentPrompt({ scene: sceneDoc, feedback: scene.feedback.exists ? feedbackDoc : null, notes: scene.notes, origin: typeof window === 'undefined' ? '' : window.location.origin, state: currentStateKey, preset: currentPreset ?? undefined, flow: flow ? { name: flow.name, step: flowState?.step ?? 0, instructions: flow.steps[flowState?.step ?? 0]?.instructions } : undefined })
+  }, [scene, sceneDoc, feedbackDoc, currentStateKey, currentPreset, flow, flowState])
 
-  const noteLabel = (kind: string) => `Studio ${kind === 'keep' ? 'keep' : 'note'} on ${scene?.id ?? ''} (${VIEWPORTS[vp].label}${fixture ? `, ${fixture}` : ''})`
+  const noteLabel = (kind: string) => `Studio ${kind === 'keep' ? 'keep' : 'note'} on ${scene?.id ?? ''} (${VIEWPORTS[vp].label}${currentStateKey ? `, ${currentStateKey}` : ''})`
   const onPin = (kind: 'wrong' | 'keep', at: { x: number; y: number }, note: string) => {
     if (!scene) return
-    const pin: Pin = { kind, note, at, viewport: vp, ...(fixture ? { state: fixture } : {}) }
+    const pin: Pin = { kind, note, at, viewport: vp, ...(currentStateKey ? { state: currentStateKey } : {}) }
     const reopen: EditOp[] = feedbackDoc?.status === 'addressed' ? [{ op: 'set', path: ['status'], value: 'open' }] : []
     edit(scene.feedback.file, [...reopen, { op: 'append', path: ['pins'], value: pin as unknown as Record<string, unknown> }], kind === 'wrong' ? 'Pinned' : 'Marked to keep')
     comment(`${noteLabel(kind)}: ${note}`)
@@ -256,7 +291,7 @@ export default function StudioClient(props: Props) {
     const note = draft.trim()
     if (!note || !scene) return
     const reopen: EditOp[] = feedbackDoc?.status === 'addressed' ? [{ op: 'set', path: ['status'], value: 'open' }] : []
-    onNoteOps([...reopen, { op: 'append', path: ['pins'], value: { kind, note, viewport: vp, ...(fixture ? { state: fixture } : {}) } }], kind === 'wrong' ? 'Note added' : 'Marked to keep')
+    onNoteOps([...reopen, { op: 'append', path: ['pins'], value: { kind, note, viewport: vp, ...(currentStateKey ? { state: currentStateKey } : {}) } }], kind === 'wrong' ? 'Note added' : 'Marked to keep')
     setDraft('')
   }
   const onDraw = (rect: Rect) => {
@@ -265,7 +300,56 @@ export default function StudioClient(props: Props) {
     setTool('select')
   }
   const onRect = (i: number, rect: Rect) => edit(sceneFile, [{ op: 'set', path: ['objects', i, 'rect'], value: rect as unknown as Record<string, unknown> }], 'Moved')
-  const pickScene = (id: string) => { setTarget({ type: 'scene', id }); setPickerOpen(false) }
+  const setFromView = (next: View) => {
+    if (next.kind === 'preset') {
+      const preset = presets.find(item => item.id === next.id)
+      if (preset) setSelection(presetSelection(preset, things))
+    } else if (next.kind === 'start') setSelection(defaultSelection(things))
+    setView(next); setBump(value => value + 1)
+  }
+  const setThing = (id: string) => {
+    const next = toggleThing(selection, things, id)
+    setSelection(next)
+    const match = matchingPreset(next, presets, things)
+    setView(match ? { kind: 'preset', id: match.id } : sameSelection(next, defaultSelection(things), things) ? { kind: 'start' } : { kind: 'custom' })
+    setBump(value => value + 1)
+  }
+  const setThingValue = (id: string, value: number) => {
+    const next = setValue(selection, id, value)
+    setSelection(next)
+    const match = matchingPreset(next, presets, things)
+    setView(match ? { kind: 'preset', id: match.id } : sameSelection(next, defaultSelection(things), things) ? { kind: 'start' } : { kind: 'custom' })
+    setBump(current => current + 1)
+  }
+  const savePreset = (name: string, instructions: string) => {
+    if (!scene) return
+    const id = presetId(name, presets.map(item => item.id))
+    const value: ScenePreset = { id, name, things: selection.on, ...(Object.keys(selection.values).length ? { values: selection.values } : {}), ...(instructions ? { instructions } : {}) }
+    edit(scene.scene.file, [{ op: 'append', path: ['presets'], value: value as unknown as Record<string, unknown> }], 'Preset saved')
+    setView({ kind: 'preset', id })
+  }
+  const updatePreset = (instructions?: string) => {
+    if (!scene || !currentPreset) return
+    const index = presets.findIndex(item => item.id === currentPreset.id)
+    if (index < 0) return
+    const ops: EditOp[] = [
+      { op: 'set', path: ['presets', index, 'things'], value: selection.on },
+      { op: 'set', path: ['presets', index, 'values'], value: selection.values },
+    ]
+    if (instructions !== undefined) ops.push(instructions ? { op: 'set', path: ['presets', index, 'instructions'], value: instructions } : { op: 'remove', path: ['presets', index, 'instructions'] })
+    edit(scene.scene.file, ops, 'Preset saved')
+  }
+  const pickScene = (id: string, next?: { view?: View; selection?: Selection }) => { wanted.current = next ?? null; setTarget({ type: 'scene', id }); setPickerOpen(false) }
+  const pickFlow = (id: string, step = 0) => {
+    const next = index.flows.find(candidate => candidate.id === id)
+    const item = next?.steps[step]
+    if (!next || !item) return
+    const bundle = item.scene === scene?.id ? scene : null
+    const doc = bundle?.scene.value as SceneDoc | null
+    const chosen = doc?.presets?.find(p => p.id === item.preset)
+    setFlowState({ id, step })
+    pickScene(item.scene, chosen && doc ? { view: { kind: 'preset', id: chosen.id }, selection: presetSelection(chosen, doc.things ?? []) } : undefined)
+  }
   const jump = (file: string, line: number) => { setTimeout(() => document.getElementById(`src-${file}-${line}`)?.scrollIntoView({ block: 'center' }), 50) }
 
   // Keyboard: Ctrl/Cmd+K picks a scene; in edit mode V/D tools, nudge, delete and undo.
@@ -296,132 +380,78 @@ export default function StudioClient(props: Props) {
   })
 
   const problems = [...(scene?.scene.diagnostics ?? []), ...(scene?.feedback.diagnostics ?? []), ...(data?.doc.diagnostics ?? [])].filter(d => d.severity === 'error').length
-  const nativeSrc = fixture && scene?.nativeByFixture[fixture] ? `/game/storyboard/native/${scene.nativeByFixture[fixture]}.png?b=${bump}` : null
+  const nativeSrc = checkpoint && scene?.nativeByFixture[checkpoint] ? `/game/storyboard/native/${scene.nativeByFixture[checkpoint]}.png?b=${bump}` : null
   const title = target.type === 'scene' ? sceneDoc?.name ?? target.id : target.kind === 'mission' ? (data?.doc.value as { title?: string } | null)?.title ?? target.id : target.id
-  const summary = target.type === 'scene' ? sceneDoc?.summary : target.kind === 'world' ? 'The data the base world is built from. Saving recompiles it for web and native.' : (data?.doc.value as { brief?: string } | null)?.brief
   const pinTool = tool === 'wrong' || tool === 'keep'
+  const hostRoot = scene?.hostRoot
+  const scriptFiles = target.type === 'scene' && scene ? [
+    { label: 'Scene script', file: scene.scene.file, line: currentPreset ? lineOfId(scene.scene.text, 'presets', currentPreset.id) : undefined },
+    { label: 'Always instructions', file: scene.notes.alwaysFile },
+    { label: 'Feedback', file: scene.feedback.file, missing: !scene.feedback.exists },
+    ...(flow ? [{ label: 'Mission flow', file: flow.file }] : []),
+  ] : data ? [{ label: 'Data file', file: data.doc.file }] : []
+  const inspector = activeDoc?.value ? <Inspector kind={target.type === 'scene' ? 'scene' : target.kind} schema={target.type === 'scene' ? scene!.schemas.scene : data!.schema} value={activeDoc.value} diagnostics={activeDoc.diagnostics} selectedPath={selectedPath} onSelectPath={setSelectedPath} onOps={(ops, label, select) => edit(activeDoc.file, ops, label, select)} /> : <section className={styles.card}><p className={styles.hint}>This file has a syntax error. Fix it in the source below or in your editor.</p></section>
+  const source = <SourceView docs={target.type === 'scene' && scene ? [{ label: 'Scene', doc: scene.scene }, { label: 'Notes file', doc: scene.feedback }] : data ? [{ label: 'File', doc: data.doc }] : []} hostRoot={hostRoot} onJump={jump} />
+  const chromeRef = useRef<HTMLDivElement>(null)
+  const [drawer, setDrawer] = useState(360)
+  useEffect(() => {
+    const measure = () => setDrawer(drawerWidth(window.innerWidth, window.innerHeight, chromeRef.current?.offsetHeight ?? 56 + 24 + 36, VIEWPORTS[vp]))
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [vp, flow])
 
   return (
     <div className={styles.studio} data-theme={theme} data-testid="studio">
       <header className={styles.bar}>
         <ScenePicker index={index} label={title} currentId={target.type === 'scene' ? target.id : ''} focusIds={focusScenes} open={pickerOpen} onOpen={setPickerOpen} onPickScene={pickScene}
-          onPickData={(kind, id) => { setTarget({ type: 'data', kind, id }); setPickerOpen(false) }} />
-        <select className={styles.select} value={fixture ?? ''} onChange={e => { setFixture(e.target.value); setBump(b => b + 1) }} aria-label="State" title="Which setup of this scene to show" data-testid="fixture-select" disabled={target.type === 'scene' && !fixtures.length}>
-          {target.type === 'data' && fixture && <option value={fixture}>{fixture}</option>}
-          {fixtures.map(f => <option key={f.key} value={f.key} title={f.hint}>{f.label}{f.group && f.group !== 'Curated' ? ` (${f.group})` : ''}</option>)}
-        </select>
+          onPickFlow={pickFlow} onPickData={(kind, id) => { setTarget({ type: 'data', kind, id }); setPickerOpen(false) }} />
+        {target.type === 'scene' && <PresetPicker presets={presets} checkpoints={fixtures} view={view} onChange={setFromView} />}
         <span className={styles.seg} role="group" aria-label="Device size">
           {(Object.keys(VIEWPORTS) as ViewportKey[]).map(k => <button key={k} type="button" aria-pressed={vp === k} onClick={() => setVp(k)} data-testid={`vp-${k}`} title={VIEWPORTS[k].hint}>{k === 'ls' ? 'Wide' : VIEWPORTS[k].label}</button>)}
         </span>
+        <span className={styles.barEnd}><ScriptMenu files={scriptFiles} hostRoot={hostRoot} /><MoreMenu theme={theme} onTheme={chooseTheme} showNative={showNative} canNative={vp === 'ph'} onNative={() => setShowNative(n => !n)} openHref={src} /></span>
       </header>
-
-      <div className={styles.page}>
-        <div className={styles.gHead}>
-          <div className={styles.head}>
-            <h1 data-testid="scene-title">{title}</h1>
-            {target.type === 'scene' && sceneDoc && <span className={styles.muted}>{sceneDoc.id} · {sceneDoc.type}</span>}
-            <span className={styles.headRight}>
-              {target.type === 'scene' && (
-                <span className={styles.seg} role="group" aria-label="Mode">
-                  <button type="button" aria-pressed={mode === 'review'} onClick={() => { setMode('review'); setTool('select') }} data-testid="mode-review">Review</button>
-                  <button type="button" aria-pressed={mode === 'edit'} onClick={() => { setMode('edit'); setTool('select') }} data-testid="mode-edit">Edit</button>
-                </span>
-              )}
-            </span>
-            {problems > 0 && <button type="button" className={styles.chip} style={{ borderColor: 'var(--wrong)', color: 'var(--wrong)' }} onClick={() => { setMode('edit'); setTimeout(() => document.querySelector('[data-testid="source-details"]')?.setAttribute('open', ''), 50) }}>{problems} problem{problems === 1 ? '' : 's'}</button>}
-          </div>
-          {index.focus && (focusScenes.length > 0 || index.focus.ticket) && (
-            <div className={styles.working} data-testid="working-in">
-              <span className={styles.muted}>Working in</span>
-              {focusScenes.map(id => <button key={id} type="button" className={`${styles.chip} ${target.type === 'scene' && target.id === id ? styles.chipOn : ''}`} onClick={() => pickScene(id)}>{id}</button>)}
-              {index.focus.ticket && <span className={styles.muted}>{index.focus.ticket}{index.focus.title ? `: ${index.focus.title}` : ''}</span>}
-            </div>
-          )}
-          {summary && <p className={styles.summary}>{summary}</p>}
-        </div>
-        {!editing && scene && <div className={styles.gTop}><Composer draft={draft} onDraft={setDraft} kind={kind} onKind={setKind} tool={tool} onTool={setTool} onAdd={addNote} /></div>}
-        <section className={styles.gStage}>
-          <div className={styles.stageBar}>
-            {editing && (
-              <>
-                {target.type === 'scene' && (
-                  <span className={styles.seg} role="group" aria-label="Tool">
-                    <button type="button" aria-pressed={tool === 'select'} onClick={() => setTool('select')} data-testid="tool-select" title="Select and move (V)">Select</button>
-                    <button type="button" aria-pressed={tool === 'draw'} onClick={() => setTool('draw')} data-testid="tool-draw" title="Draw a UI element (D)">Draw</button>
-                  </span>
-                )}
-                <button type="button" className={styles.btn} disabled={!undoStack.length} onClick={() => restore('undo')} data-testid="undo">Undo</button>
-                <button type="button" className={styles.btn} disabled={!redoStack.length} onClick={() => restore('redo')} data-testid="redo">Redo</button>
-                {target.type === 'scene' && <button type="button" className={`${styles.btn} ${objectsOn ? styles.btnOn : ''}`} aria-pressed={objectsOn} onClick={() => setObjectsOn(o => !o)} data-testid="toggle-objects" title="Show the scene's objects over the preview">Objects</button>}
-              </>
-            )}
-            <button type="button" className={`${styles.btn} ${styles.btnQuiet}`} onClick={() => setBump(b => b + 1)} data-testid="reload">Reload</button>
-            <MoreMenu theme={theme} onTheme={chooseTheme} showNative={showNative} canNative={vp === 'ph'} onNative={() => setShowNative(n => !n)} openHref={fixture ? `/game/stage?preset=${fixture}` : null} />
-          </div>
+      {flow && flowState && <FlowBar flow={flow} step={flowState.step} onStep={step => pickFlow(flow.id, step)} onClose={() => setFlowState(null)} />}
+      <div ref={chromeRef} className={styles.body} style={{ '--drawer-w': `${drawer}px` } as CSSProperties}>
+        <section className={styles.stageArea}>
           <PreviewStage
-            vp={vp}
-            fixture={fixture}
-            bump={bump}
+            vp={vp} src={src}
             nativeSrc={nativeSrc}
             showNative={showNative}
             objects={objectsOnStage}
             selected={selectedPath[0] === 'objects' ? objects[selectedPath[1] as number]?.id ?? null : null}
             tool={tool}
             overlayOn={editing && objectsOn && target.type === 'scene'}
-            reserveWide={270}
-            reserveNarrow={editing ? 270 : 480}
             pins={target.type === 'scene' ? pins : []}
             pinNote={pinTool ? draft : ''}
+            onReload={() => setBump(value => value + 1)}
+            extra={editing && target.type === 'scene' ? <><span className={styles.seg} role="group" aria-label="Tool"><button type="button" aria-pressed={tool === 'select'} onClick={() => setTool('select')} data-testid="tool-select">Select</button><button type="button" aria-pressed={tool === 'draw'} onClick={() => setTool('draw')} data-testid="tool-draw">Draw</button></span><button type="button" className={styles.btn} disabled={!undoStack.length} onClick={() => restore('undo')} data-testid="undo">Undo</button><button type="button" className={styles.btn} disabled={!redoStack.length} onClick={() => restore('redo')} data-testid="redo">Redo</button><button type="button" className={`${styles.btn} ${objectsOn ? styles.btnOn : ''}`} onClick={() => setObjectsOn(value => !value)} data-testid="toggle-objects">Objects</button></> : undefined}
             onSelect={id => { const i = objects.findIndex(o => o.id === id); setSelectedPath(i >= 0 ? ['objects', i] : []) }}
             onRect={onRect}
             onDraw={onDraw}
             onPin={onPin}
-            onPinClick={i => { setHighlightPin(i); setMode('review') }}
+            onPinClick={i => { setHighlightPin(i); setTab('notes') }}
           />
         </section>
-
-        <aside className={styles.gSide}>
-          {!editing && scene && (
+        <aside className={styles.drawer}>
+          {target.type === 'scene' && <div className={styles.tabs}><button type="button" className={styles.tab} aria-selected={tab === 'things'} onClick={() => setTab('things')}>Things ({things.length})</button><button type="button" className={styles.tab} aria-selected={tab === 'notes'} onClick={() => setTab('notes')}>Notes {unresolved > 0 && <span className={`${styles.count} ${styles.countWrong}`}>{unresolved}</span>}</button><button type="button" className={styles.tab} aria-selected={tab === 'script'} onClick={() => setTab('script')}>Script</button>{problems > 0 && <button type="button" className={`${styles.chip} ${styles.tabEnd}`} onClick={() => setTab('script')}>{problems} problem{problems === 1 ? '' : 's'}</button>}</div>}
+          <div className={styles.tabBody}>
+          {target.type === 'scene' && tab === 'things' && <ThingsPanel things={things} title={view.kind === 'preset' ? currentPreset?.name ?? 'Preset' : view.kind === 'custom' ? 'Custom' : view.kind === 'checkpoint' ? 'Game checkpoint' : 'Start'} base={currentPreset} dirty={!!currentPreset && !sameSelection(selection, presetSelection(currentPreset, things), things)} selection={selection} onToggle={setThing} onValue={setThingValue} onReset={() => setFromView(currentPreset ? { kind: 'preset', id: currentPreset.id } : { kind: 'start' })} onSave={savePreset} onUpdate={() => updatePreset()} onInstructions={text => updatePreset(text)} scriptHref={hostRoot ? scriptHref(hostRoot, sceneFile, lineOfId(scene?.scene.text ?? '', 'things', things[0]?.id ?? '')) : null} />}
+          {target.type === 'scene' && tab === 'notes' && scene && <><Composer draft={draft} onDraft={setDraft} kind={kind} onKind={setKind} tool={tool} onTool={setTool} onAdd={addNote} />
             <ReviewPanel
               sceneId={scene.id}
               feedback={scene.feedback}
-              notes={scene.notes}
               onOps={onNoteOps}
               onRef={async dataUrl => { const r = await send({ action: 'ref', scene: scene.id, dataUrl }); if (!r.ok) { say(r.error, true); return null } return r.ref ?? null }}
-              onNote={async (which, text) => { busy.current = true; const r = await send({ action: 'note', scene: scene.id, which, text }); busy.current = false; say(r.ok ? 'Saved.' : r.error, !r.ok) }}
-              onPromote={async () => { const r = await send({ action: 'promote', scene: scene.id }); say(r.ok ? 'Moved to rules.' : r.error, !r.ok); const next = await getScene(scene.id); if (!isUnchanged(next)) setScene(next) }}
               prompt={prompt}
               thread={thread}
               onChat={comment}
               highlighted={highlightPin}
             />
-          )}
-          {editing && activeDoc?.value && (
-            <Inspector
-              kind={target.type === 'scene' ? 'scene' : target.kind}
-              schema={target.type === 'scene' ? scene!.schemas.scene : data!.schema}
-              value={activeDoc.value}
-              diagnostics={activeDoc.diagnostics}
-              selectedPath={selectedPath}
-              onSelectPath={setSelectedPath}
-              onOps={(ops, label, select) => edit(activeDoc.file, ops, label, select)}
-            />
-          )}
-          {editing && !activeDoc?.value && <section className={styles.card}><p className={styles.hint}>This file has a syntax error. Fix it in the source below or in your editor.</p></section>}
-          {editing && (
-            <section className={styles.card}>
-              <details data-testid="source-details" open={problems > 0}>
-                <summary>Source{problems ? ` (${problems} problem${problems === 1 ? '' : 's'})` : ''}</summary>
-                <div className={styles.body}>
-                  <SourceView
-                    docs={target.type === 'scene' && scene ? [{ label: 'Scene', doc: scene.scene }, { label: 'Notes file', doc: scene.feedback }] : data ? [{ label: 'File', doc: data.doc }] : []}
-                    hostRoot={scene?.hostRoot}
-                    onJump={jump}
-                  />
-                </div>
-              </details>
-            </section>
-          )}
+          </>}
+          {(target.type === 'data' || tab === 'script') && <ScriptPanel files={scriptFiles} hostRoot={hostRoot} notes={scene ? { always: scene.notes.always, next: scene.notes.next } : undefined} onNote={scene ? async (which, text) => { busy.current = true; const result = await send({ action: 'note', scene: scene.id, which, text }); busy.current = false; say(result.ok ? 'Saved.' : result.error, !result.ok) } : undefined} onPromote={scene ? async () => { const result = await send({ action: 'promote', scene: scene.id }); say(result.ok ? 'Moved to rules.' : result.error, !result.ok) } : undefined} editing={target.type === 'data' ? true : editObjects} onEditing={target.type === 'scene' ? value => { setEditObjects(value); setTool('select') } : undefined} problems={problems} inspector={inspector} source={source} />}
+          </div>
         </aside>
       </div>
       {status.text && <div className={`${styles.toast} ${status.bad ? styles.toastBad : ''}`} role="status" data-testid="status">{status.text}</div>}

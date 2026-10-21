@@ -17,12 +17,12 @@ struct RocketBuilderScreen: View {
     var assembly: PadPhase = .ready
     /// Snapshots freeze the rise at this fraction (the live screen animates `buildProgress`).
     var previewProgress: Double?
-    @State private var showSettings = false
     @State private var buildProgress: Double = 0
     @State private var pulsing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedSlot: String?
     @State private var notice = ""
+    @State private var confirmingDismantle = false
     /// The free Explorer launches as it is: the parts shop stays closed until the player asks for it (web `builder-customize`).
     @State private var customizing: Bool = {
         #if DEBUG
@@ -56,11 +56,6 @@ struct RocketBuilderScreen: View {
                     padScene(numbers: numbers).padding(.horizontal, 12).padding(.top, 100).padding(.bottom, 72)
                 }
                 VStack(spacing: 8) {
-                    HStack(alignment: .top) {
-                        HudGearClock { showSettings = true }
-                        Spacer(minLength: 8)
-                        HudChips(francs: store.player.francs, stash: store.player.stash, onSell: { store.go(.market) })
-                    }
                     actions
                     if !shortMission { MissionPlanStrip(sheet: $planSheet) }
                     if guided {
@@ -96,16 +91,24 @@ struct RocketBuilderScreen: View {
                 .padding(.horizontal, 12)
                 .padding(.top, 12)
                 .padding(.bottom, 72)
-                BaseDock(tile: 44, zones: HUDZones.standard.dock, onPrev: { store.go(.hub) })
-                    .padding(.bottom, 8)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
                 if let sheet = planSheet {
                     MissionPlanSheet(sheet: sheet) { planSheet = nil }.frame(maxHeight: .infinity, alignment: .bottom).zIndex(2)
+                }
+                if confirmingDismantle {
+                    VStack(spacing: 10) {
+                        Text("DISMANTLE THIS UNLAUNCHED ROCKET?").font(AppFont.display(14, "Bold")).tracking(1.1).multilineTextAlignment(.center)
+                        HStack(spacing: 8) {
+                            Button("CONFIRM") { confirmingDismantle = false; store.dismantleStagedRocket() }
+                            Button("KEEP") { confirmingDismantle = false }
+                        }
+                    }
+                    .foregroundStyle(Theme.ink).padding(14).background(Theme.paper, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.ink, lineWidth: 2))
+                    .padding(20).frame(maxHeight: .infinity, alignment: .center).zIndex(3)
                 }
             }
         }
         .background(Theme.paper)
-        .overlay { if showSettings { SettingsSheet { showSettings = false } } }
         .onChange(of: assembly) { _, next in
             guard next == .building else { return }
             var reset = Transaction(); reset.disablesAnimations = true
@@ -116,11 +119,14 @@ struct RocketBuilderScreen: View {
 
     private var hasMission: Bool { store.mission != nil && store.target != nil }
     private var phase: PadPhase { hasMission ? assembly : .idle }
+    private var hasStagedRocket: Bool {
+        store.player.stagedRockets.contains { $0.id == store.player.selectedStagedRocketId && $0.location == .launchpad }
+    }
 
     private var actions: some View {
         // Back and the primary button always fit; the Target card only shows on the idle pad (the plan strip names the destination once a mission is chosen).
         ViewThatFits(in: .horizontal) {
-            actionsRow(showTarget: phase == .idle)
+            actionsRow(showTarget: true)
             actionsRow(showTarget: false)
         }
     }
@@ -161,14 +167,21 @@ struct RocketBuilderScreen: View {
             }
             if showTarget { Button(action: onChooseMission) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("TARGET").font(AppFont.display(14, "Bold")).tracking(1.4)
-                    Text(store.target?.name ?? "Choose a mission").font(AppFont.body(14, "Bold")).lineLimit(1)
+                    Text(phase == .idle ? "SELECT MISSION" : "CHANGE MISSION").font(AppFont.display(14, "Bold")).tracking(1.4)
+                    Text(phase == .idle ? "Choose a mission" : "\(store.mission?.title ?? "Mission") · \(store.target?.name ?? "Target")").font(AppFont.body(14, "Bold")).lineLimit(1)
                 }
                 .foregroundStyle(Theme.ink)
                 .frame(minWidth: 110, minHeight: 44, alignment: .leading).padding(.horizontal, 12)
                 .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
             }.buttonStyle(.plain).accessibilityIdentifier("rocket-builder-target") }
+            if hasStagedRocket {
+                Button { confirmingDismantle = true } label: {
+                    Text("DISMANTLE").font(AppFont.display(14, "Bold")).tracking(1.2)
+                        .foregroundStyle(Theme.paper).frame(minHeight: 44).padding(.horizontal, 12)
+                        .background(Theme.ink.opacity(0.78), in: Capsule()).overlay(Capsule().stroke(Theme.paper.opacity(0.7), lineWidth: 2))
+                }.buttonStyle(.plain).accessibilityIdentifier("builder-dismantle")
+            }
         }
     }
 
@@ -187,9 +200,24 @@ struct RocketBuilderScreen: View {
     }
 
     private func landView(_ land: (skyTop: Color, skyHorizon: Color, ground: Color, tint: Color, pieces: [Landscape.Piece], period: Double)) -> some View {
-        ZStack(alignment: .bottom) {
-            LinearGradient(colors: [land.skyTop, land.skyHorizon, land.ground], startPoint: .top, endPoint: .bottom)
-            land.tint.opacity(0.38).blendMode(.multiply).allowsHitTesting(false)
+        GeometryReader { geo in
+            ZStack(alignment: .bottom) {
+                LinearGradient(colors: [Theme.ink, land.skyTop.opacity(0.72), land.skyHorizon.opacity(0.54)], startPoint: .top, endPoint: .bottom)
+                ForEach(0..<15, id: \.self) { index in
+                    Circle()
+                        .fill(Theme.paper.opacity(index.isMultiple(of: 3) ? 0.52 : 0.28))
+                        .frame(width: index.isMultiple(of: 4) ? 2 : 1, height: index.isMultiple(of: 4) ? 2 : 1)
+                        .position(x: geo.size.width * (0.06 + Double((index * 37) % 89) / 100), y: geo.size.height * (0.05 + Double((index * 29) % 52) / 100))
+                }
+                VStack(spacing: 0) {
+                    Rectangle().fill(Theme.paper.opacity(0.24)).frame(height: 3)
+                    Rectangle()
+                        .fill(Theme.ink.opacity(0.82))
+                        .overlay(alignment: .top) { Rectangle().fill(land.ground.opacity(0.34)).frame(height: 12) }
+                }
+                .frame(height: geo.size.height * 0.34)
+                .frame(maxWidth: .infinity)
+            }
         }
         .ignoresSafeArea()
     }
@@ -203,10 +231,10 @@ struct RocketBuilderScreen: View {
             let h = w / 1.276
             let progress: Double = phase == .building ? (previewProgress ?? buildProgress) : (phase == .ready ? 1 : 0)
             ZStack(alignment: .topLeading) {
-                backdrop.ground
+                Theme.ink.opacity(0.82)
                     .frame(width: g.size.width + 600, height: 1400)
                     .position(x: g.size.width / 2, y: g.size.height - 28 + 700)
-                Color.white.opacity(0.2)
+                Theme.paper.opacity(0.24)
                     .frame(width: g.size.width + 600, height: 4)
                     .position(x: g.size.width / 2, y: g.size.height - 28 + 2)
                 complex(w: w, h: h, phase: phase, progress: progress)
@@ -226,12 +254,6 @@ struct RocketBuilderScreen: View {
     private func complex(w: CGFloat, h: CGFloat, phase: PadPhase, progress: Double) -> some View {
         ZStack(alignment: .topLeading) {
             Art.view("base/v7/launchpad/pad-complex.png").resizable().interpolation(.none).frame(width: w, height: h)
-            if w > 520 {
-                Text("HANGAR").font(AppFont.display(14, "Bold")).tracking(1.4).foregroundStyle(Theme.ink)
-                    .padding(.horizontal, 10).padding(.vertical, 4)
-                    .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.ink, lineWidth: 2))
-                    .position(x: w * 0.68 + 36, y: h * 0.58)
-            }
             PadBuild(phase: phase, p: progress, w: w, h: h)
             Button(action: onChooseMission) { Color.clear }
                 .buttonStyle(.plain)
@@ -286,13 +308,29 @@ struct RocketBuilderScreen: View {
     }
 
     private func stat(_ label: String, _ value: Int) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(label).font(AppFont.display(14, "Bold")).tracking(1)
-            Text("\(value)").font(AppFont.display(20, "ExtraBold"))
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 7) {
+                statMark(label)
+                Text(label).font(AppFont.display(14, "Bold")).tracking(1)
+            }
+            Text("\(value)").font(AppFont.display(24, "ExtraBold"))
+            Rectangle().fill(Theme.blue).frame(height: 3)
         }
         .foregroundStyle(Theme.ink)
-        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 8).padding(.vertical, 4)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+        .frame(maxWidth: .infinity, alignment: .leading).padding(9)
+        .background(LinearGradient(colors: [Theme.paper, Theme.paper2], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink.opacity(0.7), lineWidth: 2))
+        .shadow(color: Theme.ink.opacity(0.45), radius: 0, x: 3, y: 3)
+    }
+
+    @ViewBuilder private func statMark(_ label: String) -> some View {
+        if label == "CAPACITY" {
+            RoundedRectangle(cornerRadius: 3).stroke(Theme.blue, lineWidth: 2).overlay(HStack(spacing: 2) { Rectangle().fill(Theme.blue); Rectangle().fill(Theme.blue); Rectangle().fill(Theme.blue) }.padding(3))
+        } else if label == "RANGE" {
+            Image(systemName: "location.north.fill").font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.blue)
+        } else {
+            Image(systemName: "laser.burst").font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.blue)
+        }
     }
 
     /// Only slots with something fittable today: locked parts and empty tabs stay out of sight instead of reading as dead ends.

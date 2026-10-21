@@ -61,7 +61,7 @@ struct HubScreen: View {
                 oreFraction: oreFraction,
                 excavated: store.player.subsurfaceExcavated || !store.player.subsurfaceBuilt.isEmpty,
                 secondTank: store.player.subsurfaceBuilt.contains("mineral-vault"),
-                        padOccupied: store.player.activeMission != nil || store.player.pendingLaunch,
+                padOccupied: store.player.activeMission != nil || selectedStagedRocket?.location == .launchpad,
                 padCore: homecoming,
                 padLift: padLift,
                 padDismantle: padDismantle,
@@ -97,6 +97,11 @@ struct HubScreen: View {
         let capacity = 40 * BuildingLevels.siloCapacityMultiplier(store.player.buildingLevels["surface-silo"] ?? 1)
         let held = store.player.stash.values.reduce(0, +)
         return min(1, Double(held) / Double(max(capacity, 1)))
+    }
+
+    private var selectedStagedRocket: StagedRocket? {
+        guard let id = store.player.selectedStagedRocketId else { return nil }
+        return store.player.stagedRockets.first { $0.id == id }
     }
 
     /// Builds the silo on the first free plot; when it is locked or unaffordable the Build screen explains why.
@@ -340,7 +345,7 @@ struct SettingsSheet: View {
     var body: some View {
         GeometryReader { geo in
             let pageWidth = geo.size.width
-            settingsBody(short: geo.size.height < 500)
+            settingsBody()
                 .frame(width: pageWidth, height: geo.size.height)
                 .background(SettingsStyle.bg)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -357,10 +362,8 @@ struct SettingsSheet: View {
 
     }
 
-    private func settingsBody(short: Bool) -> some View {
+    private func settingsBody() -> some View {
         VStack(spacing: 0) {
-            SettingsSkyHeader().frame(height: short ? 20 : 44).clipped()
-                .overlay(alignment: .bottom) { Rectangle().fill(SettingsStyle.ink).frame(height: 3) }
             HStack {
                 Text(showPatchNotes ? "PATCH NOTES" : "SETTINGS").font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SettingsStyle.ink)
                 Spacer()
@@ -373,8 +376,8 @@ struct SettingsSheet: View {
                 }.buttonStyle(.plain).accessibilityLabel(showPatchNotes ? "Back" : "Close")
             }.padding(.horizontal, 20).padding(.vertical, 12)
                 .background(SettingsStyle.card)
-                .overlay(alignment: .top) { Rectangle().fill(SettingsStyle.blue).frame(height: 4) }
-                .overlay(alignment: .bottom) { Rectangle().fill(SettingsStyle.ink).frame(height: 3) }
+                .overlay(alignment: .top) { Rectangle().fill(SettingsStyle.blue).frame(height: 2) }
+                .overlay(alignment: .bottom) { Rectangle().fill(SettingsStyle.ink.opacity(0.2)).frame(height: 1) }
             ScrollViewReader { proxy in
                 ScrollView { if showPatchNotes { SettingsPatchNotes() } else { content } }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -433,6 +436,10 @@ struct SettingsSheet: View {
         VStack(spacing: 16) {
             SettingsHeading(text: "Training")
             VStack(spacing: 12) {
+                Text("Completed tries pay again on completion: +\(FlightPlan.replayFrancs) francs · +\(FlightPlan.replayResearchXP) research XP · +\(FlightPlan.replayIron) iron")
+                    .font(AppFont.body(14)).foregroundStyle(SettingsStyle.ink)
+                    .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(SettingsStyle.blue.opacity(0.22), in: RoundedRectangle(cornerRadius: 8))
                 ForEach(Array(zip(["mining", "scan", "part"], ["Mining", "Planet scan", "Part tweak"])), id: \.0) { id, title in
                     let progress = FlightPlan.patchProgress(store.player, screen: store.screen, tryId: id)
                     HStack(spacing: 12) {
@@ -487,8 +494,8 @@ struct SettingsSheet: View {
                                 }.frame(height: 48).clipped()
                                 Text(id.capitalized).font(AppFont.display(14)).lineLimit(1)
                             }.frame(maxWidth: .infinity).padding(6)
-                                .background(moveBiome == id ? Theme.hudPanel : Theme.paper)
-                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(moveBiome == id ? Theme.blue : SettingsStyle.ink, lineWidth: 2))
+                                .background(moveBiome == id ? SettingsStyle.blue.opacity(0.22) : SettingsStyle.bg.opacity(0.7))
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(moveBiome == id ? SettingsStyle.blue : SettingsStyle.ink.opacity(0.3), lineWidth: 1))
                         }.buttonStyle(.plain).frame(minHeight: 68)
                     }
                 }
@@ -561,11 +568,11 @@ struct SettingsSheet: View {
                 let on = i == selected
                 Button { orientation = pref.rawValue } label: {
                     Text(pref.title.uppercased()).font(AppFont.display(14)).tracking(14 * 0.06)
-                        .foregroundStyle(on ? SettingsStyle.card : SettingsStyle.ink)
+                        .foregroundStyle(SettingsStyle.ink)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, minHeight: 52)
-                        .background(on ? SettingsStyle.blue : SettingsStyle.card, in: RoundedRectangle(cornerRadius: 2))
-                        .overlay(RoundedRectangle(cornerRadius: 2).stroke(SettingsStyle.ink, lineWidth: 2))
+                        .background(on ? SettingsStyle.blue : SettingsStyle.bg.opacity(0.7), in: RoundedRectangle(cornerRadius: SettingsStyle.radius))
+                        .overlay(RoundedRectangle(cornerRadius: SettingsStyle.radius).stroke(SettingsStyle.ink.opacity(0.32), lineWidth: 1))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

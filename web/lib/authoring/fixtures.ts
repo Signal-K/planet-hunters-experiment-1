@@ -1,5 +1,5 @@
 // Stage fixtures for a screen: the curated [[states]] of its scene script, then every dev preset that opens that screen.
-import { DEV_GROUPS, resolvePreset } from '@/lib/devPresets'
+import { DEV_GROUPS, SANDBOX_FIXTURES, resolvePreset } from '@/lib/devPresets'
 import type { Fixture } from './studio-types'
 
 let byScreen: Map<string, Fixture[]> | null = null
@@ -25,4 +25,4 @@ export function fixturesForRoute(route: string, curated: { label: string; preset
   return [...first, ...auto.filter(a => !first.some(f => f.key === a.key))]
 }
 
-export const allFixtureKeys = (): Set<string> => new Set([...index().values()].flat().map(f => f.key))
+export const allFixtureKeys = (): Set<string> => new Set([...index().values()].flat().map(f => f.key).concat(SANDBOX_FIXTURES))

@@ -1,6 +1,6 @@
 // Turns a scene's feedback into one brief an agent can act on. Everything it says comes from files under shared/authoring/,
 // so an agent that never sees this prompt can reach the same facts by reading them.
-import type { FeedbackDoc, SceneDoc, SceneObject } from './docs.ts'
+import type { FeedbackDoc, SceneDoc, SceneObject, ScenePreset } from './docs.ts'
 
 export const VIEWPORT_NAMES = { ph: 'phone portrait 390x844', ls: 'phone landscape 926x428', dk: 'desktop 1440x900' } as const
 
@@ -16,15 +16,17 @@ export interface PromptInput {
   notes: { always: string; next: string }
   origin: string
   state?: string
+  preset?: ScenePreset
+  flow?: { name: string; step: number; instructions?: string }
 }
 
 const pct = (n: number) => `${Math.round(n * 100)}%`
 
-export function buildAgentPrompt({ scene, feedback, notes, origin, state }: PromptInput): string {
+export function buildAgentPrompt({ scene, feedback, notes, origin, state, preset, flow }: PromptInput): string {
   const base = `shared/authoring`
   const lines: string[] = []
   lines.push(`Work on the Landnam scene "${scene.id}" (${scene.name}), scene type ${scene.type}.`)
-  lines.push(`Open it in the Scene Studio: ${origin}/game/studio?scene=${scene.id}${state ? `&state=${state}` : ''}`)
+  lines.push(`Open it in the Scene Studio: ${origin}/game/studio?scene=${scene.id}${preset ? `&preset=${preset.id}` : state ? `&state=${state}` : ''}`)
   lines.push('')
   lines.push('Read first:')
   lines.push(`- ${base}/scenes/${scene.id}.toml (the scene script; objects with status = "proposed" are requests to build)`)
@@ -35,6 +37,20 @@ export function buildAgentPrompt({ scene, feedback, notes, origin, state }: Prom
   const mode = feedback?.mode ?? 'fix'
   lines.push('')
   lines.push(`Mode ${mode}: ${MODES[mode]}`)
+
+  if (scene.presets?.length) {
+    lines.push('')
+    lines.push('Saved presets:')
+    for (const item of scene.presets) lines.push(`- ${item.name} (${item.id})${item.instructions ? `: ${item.instructions}` : ''}`)
+  }
+  if (preset) {
+    lines.push('')
+    lines.push(`Current preset: ${preset.name} (${preset.id})${preset.instructions ? `. Instructions: ${preset.instructions}` : ''}`)
+  }
+  if (flow) {
+    lines.push('')
+    lines.push(`Mission flow: ${flow.name}, step ${flow.step + 1}${flow.instructions ? `. Instructions: ${flow.instructions}` : ''}`)
+  }
 
   const pins = feedback?.pins ?? []
   const where = (pin: (typeof pins)[number]) => {

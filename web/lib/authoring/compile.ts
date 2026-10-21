@@ -35,7 +35,7 @@ const json = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`
 
 export function listDocs(root: string): { relPath: string; kind: DocKind }[] {
   const docs: { relPath: string; kind: DocKind }[] = []
-  for (const dir of ['worlds', 'scenes', 'missions', 'feedback']) {
+  for (const dir of ['worlds', 'scenes', 'missions', 'flows', 'feedback']) {
     const abs = join(root, AUTHORING_DIR, dir)
     if (!existsSync(abs)) continue
     for (const name of readdirSync(abs).sort()) {

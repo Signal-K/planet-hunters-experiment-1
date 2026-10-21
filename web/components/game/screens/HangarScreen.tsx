@@ -1,5 +1,4 @@
 'use client'
-import { StashChip } from '@/components/game/hub/StashChip'
 import { useState } from 'react'
 import { ROCKET_IDS, ROCKET_MODELS, hasShipCustomizer } from '@/lib/data'
 import type { InstalledCustomizerPartsByKind } from '@/lib/data'
@@ -9,10 +8,6 @@ import HangarBay from './HangarBay'
 import { formatCurrency } from '@/lib/format'
 import { captureGameEvent } from '@/lib/posthog'
 import { kitRocketBuilt, markRocketRolloutPending } from '@/lib/rocket-rollout'
-import { useHelp } from '@/components/ui/useHelp'
-import { BaseDock } from '@/components/game/hub/BaseDock'
-import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
-import { openSettings } from '@/lib/mining/openChrome'
 import styles from './HangarScreen.module.css'
 
 interface HangarScreenProps {
@@ -27,9 +22,6 @@ interface HangarScreenProps {
   trainingPartTry?: boolean
   onConfirmShipCustomizerBuild?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onBack: () => void
-  onBuild?: () => void
-  onHub?: () => void
-  onNext?: () => void
   /** Title of the mission this vehicle is being built for; null when no mission is set up yet. */
   missionTitle?: string | null
   /** Rocket ids that can carry the set-up mission; null when there is no mission context. */
@@ -63,23 +55,13 @@ function RocketThumbnail({ tier }: { tier: number }) {
   )
 }
 
-function GearIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06A2 2 0 014.29 16.9l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06A2 2 0 017.04 4.3l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-    </svg>
-  )
-}
-
 export default function HangarScreen({
   francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched,
-  trainingPartTry = false, onConfirmShipCustomizerBuild, onBack, onBuild, onHub, onNext,
+  trainingPartTry = false, onConfirmShipCustomizerBuild, onBack,
   missionTitle = null, compatibleRocketIds = null, stagedTier = null, onChooseMission, onBuildRocket,
 }: HangarScreenProps) {
   const customizerUnlocked = trainingPartTry || hasShipCustomizer(unlockedSkillNodes) || !!crewModuleResearched || !!landingResearched
   const [customizerOpen, setCustomizerOpen] = useState(false)
-  const help = useHelp('hangar')
   const installed = shipCustomizerParts ?? {}
   const hasMission = compatibleRocketIds !== null
 
@@ -96,17 +78,6 @@ export default function HangarScreen({
         <HangarBay stagedTier={stagedTier} />
       </div>
 
-      <header className={styles.hud}>
-        <div className={styles.cluster}>
-          <button type="button" className={styles.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}><GearIcon /></button>
-          <HubClockWidget />
-          {help.button}
-        </div>
-        <div className={styles.cluster}>
-          <span className="scene-chip" data-testid="hangar-francs-chip">{formatCurrency(francs, { compact: true })}</span>
-          <StashChip testId="hangar-cargo-chip" />
-        </div>
-      </header>
       <button
         type="button"
         className={styles.blueprint}
@@ -171,16 +142,7 @@ export default function HangarScreen({
         })}
       </div>
 
-      <div className={styles.dock}>
-        <BaseDock
-          onPrev={onBack}
-          onNext={onNext ?? onBack}
-          onBuild={onBuild ?? onBack}
-          onHub={onHub ?? onBack}
-        />
-      </div>
-
-      {help.layer}
+      <button type="button" className={styles.exit} data-testid="hangar-exit-bay" onClick={onBack}>Exit bay</button>
 
       {customizerOpen && (
         <div data-testid="hangar-customizer-overlay" style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'var(--set-bg)' }}>

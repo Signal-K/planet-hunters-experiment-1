@@ -134,6 +134,22 @@ public enum Loop {
         return rollOutToPad(s) ?? s
     }
 
+    /// Dismantle an unlaunched vehicle while retaining its mission setup.
+    public static func dismantleStagedRocket(_ s: GameState) -> GameState {
+        guard s.player.activeMission == nil,
+              let id = s.player.selectedStagedRocketId,
+              s.player.stagedRockets.contains(where: { $0.id == id }) else { return s }
+        var n = s
+        n.player.stagedRockets.removeAll { $0.id == id }
+        let next = n.player.stagedRockets.first
+        n.player.pendingLaunch = !n.player.stagedRockets.isEmpty
+        n.player.selectedStagedRocketId = next?.id
+        n.player.pendingRocketId = next?.rocketId
+        n.player.pendingRocketLocation = next?.location
+        n.player.pendingRocketSource = next?.source
+        return n
+    }
+
     // MARK: launch
 
     public static func travelArrival(target: Target?, player: Player, now: Double) -> Double? {

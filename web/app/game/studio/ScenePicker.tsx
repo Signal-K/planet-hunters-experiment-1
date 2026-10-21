@@ -14,11 +14,12 @@ interface Props {
   open: boolean
   onOpen: (open: boolean) => void
   onPickScene: (id: string) => void
+  onPickFlow: (id: string) => void
   onPickData: (kind: 'world' | 'mission', id: string) => void
 }
 
 /** One button that opens a searchable list of every scene. Replaces a permanent sidebar so the page can use the full width. */
-export default function ScenePicker({ index, label, currentId, focusIds, open, onOpen, onPickScene, onPickData }: Props) {
+export default function ScenePicker({ index, label, currentId, focusIds, open, onOpen, onPickScene, onPickFlow, onPickData }: Props) {
   const [q, setQ] = useState('')
   const ref = useRef<HTMLDivElement>(null)
 
@@ -44,6 +45,13 @@ export default function ScenePicker({ index, label, currentId, focusIds, open, o
         <div className={styles.popover} role="listbox" data-testid="scene-list">
           <input autoFocus className={styles.input} placeholder="Find a scene or ticket" value={q} onChange={e => setQ(e.target.value)} data-testid="scene-filter"
             onKeyDown={e => { if (e.key === 'Enter') { const first = index.scenes.find(s => match([s.id, s.name, ...s.tickets])); if (first) onPickScene(first.id) } }} />
+          {index.flows.some(f => match([f.id, f.name, f.summary])) && <div className={styles.group}>Missions</div>}
+          {index.flows.filter(f => match([f.id, f.name, f.summary])).map(f => (
+            <button key={f.id} type="button" className={styles.row} onClick={() => onPickFlow(f.id)} data-testid={`flow-${f.id}`} title={f.summary}>
+              <span>{f.name}</span>
+              <span className={styles.badges}><span className={styles.tag}>{f.steps.length} steps</span>{f.errors > 0 && <span className={`${styles.tag} ${styles.tagWrong}`}>!</span>}</span>
+            </button>
+          ))}
           {TYPES.map(([type, name]) => {
             const scenes = index.scenes.filter(s => s.type === type && match([s.id, s.name, ...s.tickets]))
             if (!scenes.length) return null

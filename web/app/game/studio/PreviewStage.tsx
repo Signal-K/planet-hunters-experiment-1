@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import type { PointerEvent as ReactPointerEvent } from 'react'
+import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react'
 import type { Pin, Rect, SceneObject } from '@/lib/authoring/docs'
-import { VIEWPORTS, clampRect, dragRect, snap, stageSrc } from '@/lib/authoring/studio-model'
+import { VIEWPORTS, clampRect, dragRect, snap } from '@/lib/authoring/studio-model'
 import type { Corner, ViewportKey } from '@/lib/authoring/studio-model'
 import styles from './Studio.module.css'
 
@@ -25,20 +25,20 @@ export interface StagePin {
 
 interface Props {
   vp: ViewportKey
-  fixture: string | null
-  bump: number
+  /** The stage page to show. A new value loads behind the current one and replaces it once the game is up. */
+  src: string | null
   nativeSrc: string | null
   showNative: boolean
   objects: StageObject[]
   selected: string | null
   tool: Tool
   overlayOn: boolean
-  /** Window height not available to the frame: the rest of the page, when side by side and when stacked. */
-  reserveWide: number
-  reserveNarrow: number
   pins: StagePin[]
   /** Text already typed in the note box: a pin click uses it straight away instead of asking. */
   pinNote: string
+  /** Controls that sit beside the caption, such as the edit tools. */
+  extra?: ReactNode
+  onReload: () => void
   onSelect: (id: string | null) => void
   onRect: (index: number, rect: Rect) => void
   onDraw: (rect: Rect) => void
@@ -55,32 +55,43 @@ interface Drag {
   rect: Rect
 }
 
+interface Frame {
+  id: number
+  src: string
+  ready: boolean
+}
+
 const MIN_FRAME = 250
+const CAPTION_H = 36
 const CORNERS: Corner[] = ['nw', 'ne', 'sw', 'se']
 const pct = (n: number) => `${n * 100}%`
 const place = (r: Rect) => ({ left: pct(r.x), top: pct(r.y), width: pct(r.w), height: pct(r.h) })
 const handleAt = (c: Corner) => ({ [c.includes('n') ? 'top' : 'bottom']: -8, [c.includes('w') ? 'left' : 'right']: -8, cursor: `${c}-resize` })
 
 export default function PreviewStage(props: Props) {
-  const { vp, fixture, bump, nativeSrc, showNative, objects, selected, tool, overlayOn, pins } = props
+  const { vp, src, nativeSrc, showNative, objects, selected, tool, overlayOn, pins } = props
   const { w, h } = VIEWPORTS[vp]
-  const wrapRef = useRef<HTMLDivElement>(null)
+  const areaRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
-  const [avail, setAvail] = useState({ w: 600, h: 700 })
+  const [avail, setAvail] = useState({ w: 360, h: 640 })
   const [drag, setDrag] = useState<Drag | null>(null)
   const [pending, setPending] = useState<{ kind: 'wrong' | 'keep'; at: { x: number; y: number } } | null>(null)
   const [nativeOk, setNativeOk] = useState(false)
   const [which, setWhich] = useState<'web' | 'native'>('web')
+  const [frames, setFrames] = useState<Frame[]>([])
+  const nextId = useRef(1)
 
+  // The scene gets everything the window leaves: all of its height, and the width of its column.
   useEffect(() => {
-    const measure = () => setAvail({ w: wrapRef.current?.clientWidth ?? 600, h: Math.max(400, window.innerHeight - (window.innerWidth < 620 ? props.reserveNarrow : props.reserveWide)) })
+    const el = areaRef.current
+    if (!el) return
+    const measure = () => setAvail({ w: el.clientWidth, h: Math.max(160, el.clientHeight - CAPTION_H) })
     measure()
     const observer = new ResizeObserver(measure)
-    if (wrapRef.current) observer.observe(wrapRef.current)
-    window.addEventListener('resize', measure)
-    return () => { observer.disconnect(); window.removeEventListener('resize', measure) }
-  }, [props.reserveWide, props.reserveNarrow])
-  useEffect(() => setPending(null), [tool, fixture, vp])
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  useEffect(() => setPending(null), [tool, src, vp])
   // Only show a native frame when a snapshot really exists, so an empty white box never takes the place of the preview.
   useEffect(() => {
     setNativeOk(false)
@@ -88,7 +99,23 @@ export default function PreviewStage(props: Props) {
     const image = new Image()
     image.onload = () => setNativeOk(true)
     image.src = nativeSrc
-  }, [nativeSrc, bump])
+  }, [nativeSrc])
+
+  // A new stage page loads behind the one on screen and swaps in once the game inside it is up, so choosing a thing never flashes white.
+  useEffect(() => {
+    if (!src) { setFrames([]); return }
+    setFrames(current => (current.at(-1)?.src === src ? current : [...current.filter(f => f.ready).slice(-1), { id: nextId.current++, src, ready: false }]))
+  }, [src])
+  const settle = (id: number, frame: HTMLIFrameElement) => {
+    let tries = 0
+    const check = () => {
+      let up = false
+      try { up = frame.contentDocument?.querySelector('[data-stage-ready="true"]') != null } catch { up = true }
+      if (up || ++tries > 100) setFrames(current => (current.some(f => f.id === id) ? current.filter(f => f.id >= id).map(f => (f.id === id ? { ...f, ready: true } : f)) : current))
+      else setTimeout(check, 100)
+    }
+    check()
+  }
 
   const hasNative = showNative && vp === 'ph' && nativeOk
   const twoUp = hasNative && avail.w >= MIN_FRAME * 2 + 20
@@ -132,23 +159,21 @@ export default function PreviewStage(props: Props) {
   }
 
   return (
-    <div ref={wrapRef} data-testid="studio-stage">
-      {hasNative && !twoUp && (
-        <div className={styles.line} style={{ marginBottom: 8 }}>
-          <span className={styles.seg} role="group" aria-label="Platform">
-            <button type="button" aria-pressed={which === 'web'} onClick={() => setWhich('web')}>Web</button>
-            <button type="button" aria-pressed={which === 'native'} onClick={() => setWhich('native')}>Native</button>
-          </span>
-        </div>
-      )}
+    <div ref={areaRef} className={styles.stage} data-testid="studio-stage">
       <div className={styles.frames}>
         {showWeb && (
           <div>
-            <div className={styles.frameCaption}>Web · {VIEWPORTS[vp].label.toLowerCase()} {VIEWPORTS[vp].hint}</div>
-            <div className={styles.frameBox} style={{ width: fw, height: fh }}>
-              {fixture ? (
-                <iframe key={`${fixture}-${bump}-${vp}`} title="Web preview" data-testid="studio-web-frame" src={stageSrc(fixture, bump)} style={{ width: w, height: h, transform: `scale(${scale})` }} />
-              ) : (
+            <div className={styles.frameBox} style={{ width: fw, height: fh }} data-testid="studio-frame-box">
+              {src ? frames.map(frame => (
+                <iframe
+                  key={frame.id}
+                  title="Web preview"
+                  data-testid="studio-web-frame"
+                  src={frame.src}
+                  onLoad={e => { if (!frame.ready) settle(frame.id, e.currentTarget) }}
+                  style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, transform: `scale(${scale})`, visibility: frame.ready || frames.length === 1 ? 'visible' : 'hidden' }}
+                />
+              )) : (
                 <div className={styles.empty}>This scene has no stage fixture yet, so there is nothing to preview.</div>
               )}
               <div ref={overlayRef} className={styles.overlay} data-testid="studio-overlay">
@@ -185,18 +210,25 @@ export default function PreviewStage(props: Props) {
         )}
         {hasNative && (twoUp || which === 'native') && (
           <div>
-            <div className={styles.frameCaption}>Native · iPhone snapshot</div>
             <div className={styles.frameBox} style={{ width: fw, height: fh }}>
               <img src={nativeSrc ?? ''} alt="Native snapshot" data-testid="studio-native-frame" />
             </div>
           </div>
         )}
       </div>
-      {showNative && !hasNative && (
-        <p className={styles.muted} data-testid="native-note">
-          {vp !== 'ph' ? 'Native snapshots are phone only.' : nativeSrc ? 'Native: no snapshot yet. Run scripts/native-shots.sh to render one from the iOS Simulator.' : 'Native: no snapshot is linked to this fixture.'}
-        </p>
-      )}
+      <div className={styles.frameCaption} data-testid="stage-caption">
+        <span>{VIEWPORTS[vp].label} {VIEWPORTS[vp].hint} · {Math.round(scale * 100)}%</span>
+        {hasNative && !twoUp && (
+          <span className={styles.seg} role="group" aria-label="Platform">
+            <button type="button" aria-pressed={which === 'web'} onClick={() => setWhich('web')}>Web</button>
+            <button type="button" aria-pressed={which === 'native'} onClick={() => setWhich('native')}>Native</button>
+          </span>
+        )}
+        {hasNative && twoUp && <span>· web beside native</span>}
+        <button type="button" className={`${styles.btn} ${styles.btnQuiet}`} style={{ height: 28 }} onClick={props.onReload} data-testid="reload">Reload</button>
+        {props.extra}
+        {showNative && !hasNative && nativeSrc && <span data-testid="native-note">Native: no snapshot yet. Run scripts/native-shots.sh.</span>}
+      </div>
     </div>
   )
 }

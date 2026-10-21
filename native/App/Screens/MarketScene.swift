@@ -43,28 +43,18 @@ struct MarketScreen: View {
                     .padding(.leading, max(12, safe.leading + 8))
                     .padding(.trailing, max(12, safe.trailing + 8))
                     .frame(maxWidth: .infinity, alignment: .center)
-                HudGearClock(onSettings: { showSettings = true })
-                    .padding(.leading, max(zones.topLeft.inset + (short ? 8 : 12), safe.leading + 8))
-                    .padding(.top, max(zones.topLeft.inset + (short ? 8 : 12), safe.top + 8))
+                Button("BACK") { store.go(.hub) }
+                    .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.ink)
+                    .frame(minWidth: 44, minHeight: 44).padding(.horizontal, 12)
+                    .background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+                    .buttonStyle(.plain)
+                    .padding(.leading, max(12, safe.leading + 8))
+                    .padding(.top, max(12, safe.top + 8))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                HudChips(francs: store.player.francs)
-                    .padding(.trailing, max(zones.topRight.inset + 12, safe.trailing + 8))
-                    .padding(.top, max(zones.topRight.inset + (short ? 8 : 12), safe.top + 8))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                BaseDock(tile: 44, zones: zones.dock,
-                         items: [
-                            ("Build", "hammer.fill", { store.go(.build) }),
-                            ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
-                         ],
-                         onPrev: { store.go(.hub) },
-                         onNext: { store.go(store.player.activeMission == nil ? .missions : .launchpad) })
-                    .padding(.bottom, max(zones.dock.bottomInset + 8, safe.bottom + 8))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
         }
         .ignoresSafeArea(edges: [.top, .horizontal])
         .background(Theme.tokenBlueprintBg.ignoresSafeArea())
-        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
         .task(id: armed) {
             guard armed else { return }
             try? await Task.sleep(nanoseconds: 4_000_000_000)

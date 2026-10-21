@@ -4394,6 +4394,9 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   z-index: 17;
 }
 .mining-screen .laser-chrome .settings-cog { top: 8px; left: 8px; }
+.mining-screen .laser-chrome .settings-cog,
+.mining-screen .laser-chrome [data-testid="hub-clock-widget"],
+.mining-screen .laser-chrome [data-testid="mining-francs-chip"] { display: none; }
 .mining-screen .laser-chrome__help { position: absolute; z-index: 21; top: 8px; left: 60px; width: 44px; height: 44px; }
 .mining-screen .laser-chrome .laser-chrome__clock { left: 112px; }
 .laser-chrome__clock {
@@ -4958,6 +4961,70 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 .ops-settings__stack--notes { gap: 24px; }
 .ops-settings__panel.ops-settings__note { padding: 24px; }
 .ops-settings__presets .ops-settings__label { margin: 0 0 12px; }
+
+/* Settings is a quiet instrument room, not a second blueprint page. */
+.ops-settings {
+  --set-bg: var(--dusk-deep);
+  --set-card: color-mix(in srgb, var(--dusk-panel) 92%, transparent);
+  --set-ink: var(--dusk-ink);
+  --set-muted: var(--ln-text-dim);
+  --set-danger: #d66b78;
+  background:
+    radial-gradient(circle at 18% 6%, color-mix(in srgb, var(--ln-world-dusk-mid) 48%, transparent), transparent 34rem),
+    linear-gradient(180deg, var(--ln-world-dusk-top), var(--dusk-deep) 42%);
+}
+.ops-settings.ln-page-surface .ops-settings__card {
+  grid-template-rows: auto minmax(0, 1fr);
+  background: transparent;
+}
+.ops-settings__sky { display: none; }
+.ops-settings__card .ops-settings__head {
+  min-height: 64px;
+  padding: max(12px, env(safe-area-inset-top, 0px)) clamp(16px, 4vw, 48px) 12px;
+  border: 0;
+  background: color-mix(in srgb, var(--dusk-deep) 82%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--dusk-ink) 22%, transparent);
+}
+.ops-settings__page { color: var(--dusk-ink); font-size: 16px; letter-spacing: .2em; }
+.ops-settings__close {
+  border: 1px solid color-mix(in srgb, var(--dusk-ink) 35%, transparent);
+  border-radius: 50%; background: color-mix(in srgb, var(--dusk-panel) 76%, transparent); color: var(--dusk-ink);
+}
+.ops-settings__card .ops-settings__stack {
+  width: min(1120px, 100%); padding: clamp(20px, 4vw, 48px); gap: 32px;
+}
+.ops-settings__label { color: color-mix(in srgb, var(--dusk-ink) 72%, var(--ln-text-muted)); font-size: 12px; }
+.ops-settings__panel {
+  gap: 18px; padding: 18px; border: 1px solid color-mix(in srgb, var(--dusk-ink) 20%, transparent);
+  border-radius: 12px; background: var(--set-card); box-shadow: 0 16px 36px rgba(0, 0, 0, .18);
+}
+.ops-settings__card .ops-settings__panel { box-shadow: 0 16px 36px rgba(0, 0, 0, .18); }
+.ops-settings__name, .ops-settings .patch-name { color: var(--dusk-ink); font-size: 15px; }
+.ops-settings__sub, .ops-settings .patch-status { color: var(--set-muted); }
+.ops-settings .patch { padding: 10px 4px; border-bottom: 1px solid color-mix(in srgb, var(--dusk-ink) 12%, transparent); }
+.ops-settings .patch:last-child { border-bottom: 0; }
+.ops-settings .patch-ring-track, .ops-settings .patch-ring-segment { stroke: color-mix(in srgb, var(--dusk-ink) 28%, transparent); }
+.ops-settings .patch-ring, .ops-settings .patch-ring text { color: var(--dusk-ink); fill: currentColor; }
+.ops-settings .patch[data-state='done'] .patch-ring, .ops-settings .patch[data-state='done'] .patch-status { color: var(--ln-teal, #0e6f66); }
+.ops-settings .patch[data-state='done'] .patch-ring-segment[data-stitched='true'] { stroke: var(--ln-teal, #0e6f66); }
+.ops-settings__btn, .ops-settings__preset {
+  min-height: 44px; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--dusk-ink) 36%, transparent);
+  border-radius: 8px; background: color-mix(in srgb, var(--dusk-deep) 62%, transparent); color: var(--dusk-ink);
+}
+.ops-settings__card .ops-settings__btn { color: var(--dusk-ink); }
+.ops-settings__btn::before { display: none; }
+.ops-settings .ln-set-segment > button {
+  min-height: 44px; border: 1px solid color-mix(in srgb, var(--dusk-ink) 28%, transparent); border-radius: 8px;
+  background: color-mix(in srgb, var(--dusk-deep) 56%, transparent); color: var(--dusk-ink);
+}
+.ops-settings .ln-set-segment > button[aria-pressed="true"] {
+  background: var(--ln-teal, #0e6f66); border-color: var(--ln-teal, #0e6f66); color: var(--dusk-ink);
+}
+.ops-settings__field input, .ops-settings__field select { border-color: color-mix(in srgb, var(--dusk-ink) 28%, transparent); border-radius: 8px; background: var(--dusk-deep); color: var(--dusk-ink); }
+.ops-settings__replay-reward { margin: 0; padding: 8px 10px; color: var(--dusk-ink); background: color-mix(in srgb, var(--ln-teal, #0e6f66) 22%, transparent); border-left: 2px solid var(--ln-teal, #0e6f66); font: 600 14px/1.4 var(--ln-font-body); }
+.ops-settings__notes-link { color: var(--dusk-ink); }
+.ops-settings__note h3, .ops-settings__note li { color: var(--dusk-ink); }
+@media (max-width: 639px) { .ops-settings__card .ops-settings__stack { padding: 20px 16px 32px; gap: 24px; } }
 
 /* SSL-536: terrain bump feedback in the mining scene (brick red, never orange). */
 .mining-bump-note {

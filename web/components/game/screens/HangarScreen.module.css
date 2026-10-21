@@ -41,7 +41,7 @@
   position: absolute;
   z-index: 4;
   left: 50%;
-  bottom: 62px;
+  bottom: 20px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
@@ -163,78 +163,46 @@
   pointer-events: none;
 }
 
-.hud {
+.exit {
   position: absolute;
-  inset: 0 0 auto 0;
   z-index: 6;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px 12px 0;
-  pointer-events: none;
-}
-
-.cluster {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  pointer-events: auto;
-}
-
-.cluster :global(.scene-chip) {
-  min-height: 44px;
-  height: 44px;
-}
-
-.cog {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
+  left: max(12px, 3vw);
+  top: 16px;
   min-width: 44px;
   min-height: 44px;
-  padding: 0;
-  border: 1px solid var(--ln-world-outline);
-  border-radius: 4px;
-  background: var(--ln-world-hull-lit);
-  color: var(--ln-world-outline);
+  padding: 0 14px;
+  border: 1.5px solid var(--ln-world-hull-lit);
+  border-radius: 999px;
+  background: rgba(3, 6, 12, 0.88);
+  color: var(--ln-world-hull-lit);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
-}
-
-.dock {
-  position: absolute;
-  z-index: 6;
-  left: 50%;
-  bottom: 8px;
-  width: max-content;
-  max-width: calc(100% - 16px);
-  transform: translateX(-50%);
-  pointer-events: auto;
 }
 
 @media (max-width: 720px) {
   .blueprint { top: 64px; left: 12px; width: min(96px, 26vw); }
   .status { top: 12px; }
-  .fleet { bottom: 62px; gap: 6px; width: calc(100% - 20px); }
+  .fleet { bottom: 20px; gap: 6px; width: calc(100% - 20px); }
   .card { min-height: 104px; padding: 6px; align-content: center; gap: 2px; }
   .vehicleIcon { height: 54px; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
   .blueprint { top: 60px; left: 12px; width: min(84px, 14vw); }
-  .fleet { bottom: 54px; gap: 8px; width: min(480px, calc(100% - 24px)); }
+  .fleet { bottom: 12px; gap: 8px; width: min(480px, calc(100% - 24px)); }
   .card { min-height: 84px; padding: 4px 8px; gap: 0; }
   .note, .buildPill { min-height: 44px; }
   .vehicleIcon { height: 40px; }
   .status { top: 8px; }
-  .dock { bottom: 4px; }
+  .exit { top: 8px; }
 }
 
 @media (min-width: 1100px) {
   .blueprint { top: 72px; left: 12px; width: min(156px, 14vw); }
   .card { min-height: 126px; }
   .vehicleIcon { height: 76px; }
-  .fleet { bottom: 68px; }
+  .fleet { bottom: 24px; }
 }

@@ -599,6 +599,7 @@ export interface GameActions {
   onFabricateRocketPart: (rocketId: string, componentId: string) => void
   onAssembleFabricatedRocket: (rocketId: string) => void
   onTransferToLaunchpad: () => void
+  onDismantleStagedRocket: () => void
   onLaunch: () => void
   onRedeemFragments: () => void
   onCombineFragments: () => void

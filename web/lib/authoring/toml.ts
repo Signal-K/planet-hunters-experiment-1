@@ -162,9 +162,21 @@ export function tomlKey(key: string): string {
   return BARE_KEY.test(key) ? key : JSON.stringify(key)
 }
 
-/** A TOML value on one line: strings, numbers, booleans, arrays and inline tables. */
+/** A string as TOML. Text with line breaks becomes a multi-line string, so prose stays readable when the file is opened in an editor. */
+function tomlString(text: string): string {
+  if (!text.includes('\n')) return JSON.stringify(text)
+  const body = text
+    .replaceAll('\\', '\\\\')
+    .replaceAll('\r', '\\r')
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`)
+    .replaceAll('"""', '""\\"')
+    .replace(/"$/, '\\"')
+  return `"""\n${body}"""`
+}
+
+/** A TOML value: strings (multi-line when they contain line breaks), numbers, booleans, arrays and inline tables. */
 export function tomlValue(value: unknown): string {
-  if (typeof value === 'string') return JSON.stringify(value)
+  if (typeof value === 'string') return tomlString(value)
   if (typeof value === 'boolean') return value ? 'true' : 'false'
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) throw new Error(`TOML cannot hold ${value}`)

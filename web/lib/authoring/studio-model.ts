@@ -1,6 +1,8 @@
 // Pure helpers behind the Scene Studio's canvas and hierarchy. No React, no network: easy to test, and the same maths
 // decides what the overlay draws and what a drag writes back to the file.
+import { sandboxName } from '../sandbox.ts'
 import type { Rect, SceneObject } from './docs.ts'
+import type { Setup } from './things.ts'
 
 export const VIEWPORTS = {
   ph: { w: 390, h: 844, label: 'Phone', hint: 'portrait 390x844' },
@@ -87,7 +89,48 @@ export function dragRect(start: Rect, corner: Corner | null, dx: number, dy: num
   return { x: snap(l), y: snap(t), w: snap(r - l), h: snap(b - t) }
 }
 
-export const stageSrc = (fixture: string, bump: number): string => `/game/stage?preset=${encodeURIComponent(fixture)}&_=${bump}`
+/**
+ * The stage page for a view. With a setup it is the sandbox: the entry fixture with its campaign removed, the setup's state
+ * layered on, and its URL switches (time, sky, ...). Without one it is a game checkpoint exactly as the fixture defines it.
+ */
+export function stageSrc(entry: string, setup: Setup | null, bump: number): string {
+  const params = new URLSearchParams({ preset: setup ? sandboxName(entry, setup.state) : entry })
+  for (const [key, value] of Object.entries(setup?.query ?? {})) params.set(key, value)
+  params.set('_', String(bump))
+  return `/game/stage?${params}`
+}
+
+/** A link that opens a repo file in Cursor, at a line when one is known. Needs the repo's path on this machine. */
+export function scriptHref(hostRoot: string, file: string, line?: number): string {
+  const root = hostRoot.replace(/\/+$/, '')
+  return `cursor://file${root.startsWith('/') ? '' : '/'}${root}/${file}${line ? `:${line}:1` : ''}`
+}
+
+/** The line of the `[[table]]` header whose entry has this `id`, so a link can open the file at that thing or preset. */
+export function lineOfId(text: string, table: string, id: string): number | undefined {
+  const lines = text.split('\n')
+  let header = 0
+  let inTable = false
+  for (let i = 0; i < lines.length; i++) {
+    const open = lines[i].match(/^\[\[([A-Za-z0-9_.-]+)\]\]/)
+    if (open) { inTable = open[1] === table; header = i + 1; continue }
+    if (lines[i].startsWith('[')) { inTable = false; continue }
+    if (inTable && new RegExp(`^id\\s*=\\s*"${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`).test(lines[i])) return header
+  }
+  return undefined
+}
+
+/**
+ * How the stage and the drawer share the window width. The scene is as tall as the window allows, so what its width
+ * leaves over goes to the drawer: the scene never shrinks to make room for notes, and the notes use every spare pixel.
+ */
+export function drawerWidth(windowWidth: number, windowHeight: number, chromeHeight: number, frame: { w: number; h: number }): number {
+  const frameHeight = Math.max(240, windowHeight - chromeHeight)
+  const frameWidth = Math.min(frame.w, (frameHeight * frame.w) / frame.h)
+  const MIN = 300
+  const MAX = 460
+  return Math.round(Math.min(MAX, Math.max(MIN, windowWidth - frameWidth - 24)))
+}
 
 /** Focus ids may be scene script ids or qa/scenes.json ids; this maps them all to scene script ids, without repeats. */
 export function resolveFocusScenes(scenes: { id: string; qa: string[] }[], ids: string[]): string[] {

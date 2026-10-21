@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FeedbackDoc } from '@/lib/authoring/docs'
 import type { EditOp } from '@/lib/authoring/edit'
 import type { DocBundle } from '@/lib/authoring/studio-types'
@@ -28,11 +28,8 @@ async function toDataUrl(file: Blob, maxSide = 1280): Promise<string> {
 interface Props {
   sceneId: string
   feedback: DocBundle
-  notes: { always: string; next: string }
   onOps: (ops: EditOp[], label: string) => void
   onRef: (dataUrl: string) => Promise<string | null>
-  onNote: (which: 'always' | 'next', text: string) => void
-  onPromote: () => void
   prompt: string
   thread: ThreadMessage[]
   onChat: (text: string) => void
@@ -48,10 +45,7 @@ export default function ReviewPanel(p: Props) {
   const [likes, setLikes] = useState('')
   const [pending, setPending] = useState<string | null>(null)
   const [chat, setChat] = useState('')
-  const [rules, setRules] = useState({ always: p.notes.always, next: p.notes.next })
-  const timers = useRef<Partial<Record<'always' | 'next', ReturnType<typeof setTimeout>>>>({})
   const fileInput = useRef<HTMLInputElement>(null)
-  useEffect(() => setRules({ always: p.notes.always, next: p.notes.next }), [p.notes.always, p.notes.next])
 
   const counts = { wrong: 0, keep: 0 }
   const rows = pins.map((pin, index) => ({ pin, index, n: ++counts[pin.kind] }))
@@ -67,11 +61,6 @@ export default function ReviewPanel(p: Props) {
     if (!source.trim() && !likes.trim() && !image) return
     p.onOps([...reopen, { op: 'append', path: ['inspiration'], value: { ...(source.trim() ? { source: source.trim() } : {}), ...(image ? { image } : {}), ...(likes.trim() ? { likes: likes.trim() } : {}) } }], 'Inspiration added')
     setSource(''); setLikes(''); setPending(null)
-  }
-  const editRule = (which: 'always' | 'next', text: string) => {
-    setRules(r => ({ ...r, [which]: text }))
-    clearTimeout(timers.current[which])
-    timers.current[which] = setTimeout(() => p.onNote(which, text), 600)
   }
   const inspo = doc.inspiration ?? []
 
@@ -138,17 +127,6 @@ export default function ReviewPanel(p: Props) {
           <div className={styles.body}>
             <textarea key={doc.direction ?? ''} className={styles.input} defaultValue={doc.direction ?? ''} placeholder="The feel you want, what it should remind you of." data-testid="direction"
               onBlur={e => { const next = e.target.value.trim(); if (next !== (doc.direction ?? '')) p.onOps(next ? [...reopen, { op: 'set', path: ['direction'], value: next }] : [{ op: 'remove', path: ['direction'] }], 'Saved') }} />
-          </div>
-        </details>
-
-        <details>
-          <summary data-testid="rules-summary">Rules for this scene and next pass</summary>
-          <div className={styles.body}>
-            <p className={styles.hint}>Always: rules that stay true. Every agent reads them.</p>
-            <textarea className={styles.input} value={rules.always} onChange={e => editRule('always', e.target.value)} data-testid="notes-always" />
-            <p className={styles.hint} style={{ marginTop: 12 }}>Next pass: what the next agent should do.</p>
-            <textarea className={styles.input} value={rules.next} onChange={e => editRule('next', e.target.value)} data-testid="notes-next" />
-            <div style={{ marginTop: 8 }}><button type="button" className={styles.btn} disabled={!rules.next.trim()} onClick={p.onPromote}>Move next pass to rules</button></div>
           </div>
         </details>
 

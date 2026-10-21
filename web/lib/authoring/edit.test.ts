@@ -59,12 +59,44 @@ describe('parseToml', () => {
 })
 
 describe('tomlValue', () => {
-  it('writes one-line TOML for every supported value', () => {
-    expect(tomlValue('a "q"\n')).toBe('"a \\"q\\"\\n"')
+  it('writes every supported value', () => {
+    expect(tomlValue('a "q"')).toBe('"a \\"q\\""')
     expect(tomlValue([1, 2.5, 'x'])).toBe('[1, 2.5, "x"]')
     expect(tomlValue({ x: 0.1, y: 2 })).toBe('{ x = 0.1, y = 2 }')
     expect(() => tomlValue(Number.NaN)).toThrow()
     expect(() => tomlValue(null)).toThrow()
+  })
+
+  it('writes text with line breaks as a multi-line string, so prose stays readable in the file', () => {
+    expect(tomlValue('Check the pad.\nThen launch.')).toBe('"""\nCheck the pad.\nThen launch."""')
+  })
+
+  it('reads back exactly what it wrote, whatever the text holds', () => {
+    const samples = [
+      'one\ntwo',
+      '\nstarts with a break',
+      'ends with a break\n',
+      'say "hello"\nand "bye"',
+      'ends with a quote"\n"',
+      'quote run """ inside\nmore',
+      'path C:\\temp\\new\nline',
+      'tab\there\nand a\r\nwindows break',
+      'zażółć gęślą jaźń\nemoji-free',
+      'x\n"',
+      '"\n',
+    ]
+    for (const text of samples) {
+      const parsed = parseToml(`k = ${tomlValue(text)}\n`)
+      expect(parsed.ok, JSON.stringify(text)).toBe(true)
+      if (parsed.ok) expect(parsed.doc.value.k, JSON.stringify(text)).toBe(text)
+    }
+  })
+
+  it('keeps multi-line text inside arrays and inline tables valid', () => {
+    const value = { notes: ['a\nb', 'c'], nested: { text: 'x\ny' } }
+    const parsed = parseToml(`k = ${tomlValue(value)}\n`)
+    expect(parsed.ok).toBe(true)
+    if (parsed.ok) expect(parsed.doc.value.k).toEqual(value)
   })
 })
 

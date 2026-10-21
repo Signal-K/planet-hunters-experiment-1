@@ -7,11 +7,11 @@ import { compileAll } from './compile.ts'
 import { applyEdits } from './edit.ts'
 import { readFocus, writeFocus } from './focus.ts'
 import { listScenes } from './scenes.ts'
-import type { CompileSummary, DataDocBundle, DocBundle, Fixture, SceneBundle, StudioIndex, StudioResponse } from './studio-types.ts'
+import type { CompileSummary, DataDocBundle, DocBundle, Fixture, FlowSummary, SceneBundle, StudioIndex, StudioResponse } from './studio-types.ts'
 import { AUTHORING_DIR, docKindOf, hasErrors, loadContext, loadSchema, validateDocument } from './validate.ts'
 import type { AuthoringContext } from './validate.ts'
 import type { EditOp } from './edit.ts'
-import type { MissionDoc, SceneDoc } from './docs.ts'
+import type { FlowDoc, MissionDoc, SceneDoc } from './docs.ts'
 
 const SCENE_ID = /^[a-z0-9][a-z0-9-]*$/
 const WRITABLE = /\.(toml|md|jpg|jpeg|png|webp)$/
@@ -106,7 +106,20 @@ export function loadIndex(root: string, context: AuthoringContext): StudioIndex 
       data.push({ kind, id: name.replace(/\.toml$/, ''), title: kind === 'mission' ? `${value.title ?? name} (${value.id ?? ''})` : name.replace(/\.toml$/, ''), file, errors: diagnostics.filter(d => d.severity === 'error').length })
     }
   }
-  return { scenes: listScenes(root, context), data, focus: readFocus(root) }
+  return { scenes: listScenes(root, context), flows: listFlows(root, context), data, focus: readFocus(root) }
+}
+
+function listFlows(root: string, context: AuthoringContext): FlowSummary[] {
+  const dir = join(root, AUTHORING_DIR, 'flows')
+  if (!existsSync(dir)) return []
+  return readdirSync(dir).filter(name => name.endsWith('.toml')).sort().flatMap(name => {
+    const file = `${AUTHORING_DIR}/flows/${name}`
+    const { doc, diagnostics } = validateDocument(readFileSync(join(root, file), 'utf8'), file, context)
+    const value = doc?.value as Partial<FlowDoc> | undefined
+    if (!value || !Array.isArray(value.steps)) return []
+    const steps = value.steps.filter(step => typeof step?.scene === 'string' && typeof step?.title === 'string')
+    return [{ id: name.replace(/\.toml$/, ''), name: value.name ?? name, summary: value.summary ?? '', file, steps, errors: diagnostics.filter(d => d.severity === 'error').length }]
+  })
 }
 
 function compileSummary(root: string, context: AuthoringContext): CompileSummary {

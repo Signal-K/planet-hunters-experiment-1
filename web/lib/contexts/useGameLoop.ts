@@ -38,7 +38,7 @@ import { applyLaunchCatch, combineFragments, redeemFragments, FRAGMENT_REDEEM_BA
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { applyHomeSplit, clientDemand, clientPayout, type HomeSplit } from '@/lib/systems/HomeDeliverySystem'
-import { completeFlightPlanEvent, currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
+import { completeFlightPlanEvent, currentTrainingTry, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 import { ORIONIDS_NIGHT_RUN_ID, orionidsNightRun } from '@/lib/data/missions'
@@ -501,6 +501,30 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
   }, [catalog.missions, setState])
 
+  /** Remove only an unlaunched physical vehicle. Mission selection stays in place so the player can build a replacement or change it. */
+  const onDismantleStagedRocket = useCallback(() => {
+    setState(s => {
+      if (s.player.activeMission) return s
+      const selectedId = s.player.selectedStagedRocketId
+      const vehicle = s.player.stagedRockets?.find(candidate => candidate.id === selectedId)
+      if (!vehicle) return s
+      const stagedRockets = (s.player.stagedRockets ?? []).filter(candidate => candidate.id !== vehicle.id)
+      const next = stagedRockets[0]
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          pendingLaunch: stagedRockets.length > 0,
+          stagedRockets,
+          selectedStagedRocketId: next?.id,
+          pendingRocketId: next?.rocketId,
+          pendingRocketLocation: next?.location,
+          pendingRocketSource: next?.source,
+        },
+      }
+    })
+  }, [setState])
+
   const onFabricateRocketPart = useCallback((rocketId: string, componentId: string) => {
     setState(s => {
       if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
@@ -864,6 +888,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
     setState(s => {
       const existing = s.player.tessClassifications?.[subjectId]
+      const replayReward = earnsTrainingReplayReward(s.player.flightPlan, 'scan')
       // The training candidate is deliberately available before Free Ops. Once
       // it is classified, Galaxy would immediately re-render as its normal
       // locked Telescope gate because the active try has advanced to Part.
@@ -883,6 +908,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         player: {
           ...(existing ? s.player : grantWswBadges(s.player, 'citizen-science', submittedAt)),
           researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,
+          francs: s.player.francs + (replayReward ? TRAINING_REPLAY_REWARD.francs : 0),
+          researchXP: (s.player.researchXP ?? 0) + (replayReward ? TRAINING_REPLAY_REWARD.researchXP : 0),
+          stash: replayReward ? {
+            ...(s.player.stash ?? {}),
+            iron: (s.player.stash?.iron ?? 0) + TRAINING_REPLAY_REWARD.stash.iron,
+          } : s.player.stash,
           flightPlan: completeFlightPlanEvent(s.player.flightPlan, 'tess-classified'),
           tessClassifications: {
             ...(s.player.tessClassifications ?? {}),
@@ -909,7 +940,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         player: { ...next.player, freeOperations: freeOperationsUnlocked(next.player) },
         tutorial: !freeOperationsUnlocked(next.player),
       }
-      const withXp = existing ? settled : applyGainResearchXP(settled, RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION)
+      const withXp = existing || replayReward ? settled : applyGainResearchXP(settled, RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION)
       if (verdict !== 'planet' || subjectId.startsWith(TRAINING_ID_PREFIX)) return withXp
       const found = grantOrionidsPlanetFind(withXp.player, {
         subjectId,
@@ -1191,6 +1222,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         clientMissions[client] = (clientMissions[client] ?? 0) + Math.max(1, affinity)
       }
       const stash = { ...(s.player.stash ?? {}) }
+      const replayReward = earnsTrainingReplayReward(s.player.flightPlan, 'mining')
+      if (replayReward) {
+        stash.iron = (stash.iron ?? 0) + TRAINING_REPLAY_REWARD.stash.iron
+      }
       // A delivery-target contract already moved the minerals out of the ship
       // at the unload berth, so they never entered Earth Base storage.
       if (!mission?.deliveryTargetId) {
@@ -1198,7 +1233,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           stash[id] = Math.max(0, (stash[id] ?? 0) - amount)
         }
       }
-      let francs = s.player.francs + total
+      let francs = s.player.francs + total + (replayReward ? TRAINING_REPLAY_REWARD.francs : 0)
       // Treasury-backed emergency loan (KES-286/KES-287): the whole
       // outstanding balance is repaid from the next payout in one shot,
       // capped at what the payout actually covers — mirrors what
@@ -1309,6 +1344,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         player: {
           ...wswBadgedPlayer,
           francs,
+          researchXP: (wswBadgedPlayer.researchXP ?? 0) + (replayReward ? TRAINING_REPLAY_REWARD.researchXP : 0),
           activeMission: null,
           missionRunId: undefined,
           missionPhase: undefined,
@@ -1521,7 +1557,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
-    onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onLaunch, onRedeemFragments, onCombineFragments, resumeMissionRun,
+    onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onDismantleStagedRocket, onLaunch, onRedeemFragments, onCombineFragments, resumeMissionRun,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverSurveyComplete, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,

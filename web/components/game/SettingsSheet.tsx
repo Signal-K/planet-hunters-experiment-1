@@ -9,7 +9,7 @@ import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { readStoredOrientation, storeOrientation, type OrientationPreference } from '@/lib/orientation'
 import PageSurface from '@/components/ui/PageSurface'
 import { PushOptIn } from '@/components/game/PushOptIn'
-import { TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
+import { TRAINING_REPLAY_REWARD, TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
 import { trainingPatchProgress } from '@/lib/data/tutorial'
 import { EARTH_BIOMES, biomeLayers } from '@/lib/scene/base-world'
 import { SKY_EVENT_CITIES, deviceSkyLocation, sanitizePlayerLocation } from '@/lib/data/sky-event-window'
@@ -42,53 +42,6 @@ function CloseButton({ onClick, label = 'Close' }: { onClick: () => void; label?
 
 function Row({ children }: { children: React.ReactNode }) {
   return <div className="ops-settings__row">{children}</div>
-}
-
-/** Cream and blue pixel horizon. No green, yellow, or orange. */
-function SettingsSky() {
-  return (
-    <div className="ops-settings__sky" aria-hidden="true">
-      <svg viewBox="0 0 320 96" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
-        <rect width="320" height="96" fill="var(--ln-blueprint-paper-2)" />
-        <rect width="320" height="34" fill="var(--ln-blueprint-blue)" opacity="0.28" />
-        <rect y="34" width="320" height="14" fill="var(--ln-blueprint-blue)" opacity="0.12" />
-        <g fill="var(--ln-blueprint-ink)">
-          <rect x="16" y="12" width="3" height="3" />
-          <rect x="58" y="22" width="2" height="2" />
-          <rect x="112" y="8" width="3" height="3" />
-          <rect x="176" y="18" width="2" height="2" />
-          <rect x="230" y="10" width="3" height="3" />
-          <rect x="292" y="20" width="2" height="2" />
-        </g>
-        <g fill="var(--ln-blueprint-blue)">
-          <rect x="0" y="56" width="40" height="40" />
-          <rect x="28" y="44" width="28" height="52" />
-          <rect x="52" y="60" width="24" height="36" />
-          <rect x="72" y="38" width="32" height="58" />
-          <rect x="100" y="52" width="22" height="44" />
-          <rect x="188" y="48" width="28" height="48" />
-          <rect x="210" y="34" width="36" height="62" />
-          <rect x="242" y="54" width="24" height="42" />
-          <rect x="262" y="42" width="30" height="54" />
-          <rect x="288" y="58" width="32" height="38" />
-        </g>
-        <g fill="var(--ln-blueprint-ink)">
-          <rect x="0" y="74" width="52" height="22" />
-          <rect x="40" y="66" width="36" height="30" />
-          <rect x="72" y="78" width="44" height="18" />
-          <rect x="108" y="70" width="28" height="26" />
-          <rect x="196" y="72" width="40" height="24" />
-          <rect x="228" y="62" width="36" height="34" />
-          <rect x="260" y="76" width="60" height="20" />
-        </g>
-        <g fill="var(--ln-blueprint-paper)">
-          <rect x="146" y="80" width="32" height="6" />
-          <rect x="158" y="62" width="6" height="18" />
-        </g>
-        <polygon points="158,62 161,52 164,62" fill="var(--ln-blueprint-ink)" />
-      </svg>
-    </div>
-  )
 }
 
 export default function SettingsSheet({ onClose }: SettingsSheetProps) {
@@ -162,7 +115,6 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
       testId="settings-sheet"
       ariaLabel="Settings"
     >
-      <SettingsSky />
       {showPatchNotes ? (
         <>
           <header className="ops-settings__head">
@@ -185,7 +137,6 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
           <header className="ops-settings__head">
             <h2 className="ops-settings__page">Settings</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <button type="button" className="ops-settings__btn" data-testid="sign-out" onClick={handleSignOut}>Sign out</button>
               <CloseButton onClick={onClose} />
             </div>
           </header>
@@ -229,6 +180,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
             <section>
               <h3 className="ops-settings__label">Training</h3>
               <div className="ops-settings__panel ops-settings__training" style={{ padding: 12 }}>
+                <p className="ops-settings__replay-reward">Completed tries pay again on completion: +{TRAINING_REPLAY_REWARD.francs} francs · +{TRAINING_REPLAY_REWARD.researchXP} research XP · +{TRAINING_REPLAY_REWARD.stash.iron} iron</p>
                 <div className="patch-shelf" data-testid="training-patch-shelf" role="list" aria-label="Mission patches">
                   {TRAINING_TRY_IDS.map(tryId => {
                     const active = currentTrainingTry(game.player.flightPlan) === tryId

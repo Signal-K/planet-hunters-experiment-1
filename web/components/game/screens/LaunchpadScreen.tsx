@@ -1,8 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import { BaseDock } from '@/components/game/hub/BaseDock'
-import flight from './FlightScene.module.css'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import type { RocketConfig, Target } from '@/lib/data'
@@ -18,18 +16,15 @@ interface LaunchpadScreenProps {
   onPick: (id: string, freeHaulDisposition?: 'store' | 'sell') => void
   onViewContracts: () => void
   onLaunchpadAction: () => void
-  onOpenHangar: () => void
   onResumeMission?: () => void
   missionRuns?: Array<{ key: string; label: string; phase: string }>
   onResumeMissionRun?: (key: string) => void
-  onViewMissionLog?: () => void
   missionsDone: number
   freeOperations: boolean
   catalog: Catalog
   player: Player
   rocketImageSrc?: string
   selectedRocketName?: string
-  francs?: number
   hydrated?: boolean
   missionMenuOpen?: boolean
   onMissionMenuOpenChange?: (open: boolean) => void
@@ -41,19 +36,16 @@ interface LaunchpadScreenProps {
   mission?: { title: string } | null
   target?: Pick<Target, 'id' | 'name' | 'type' | 'archetype'> | null
   rocket?: RocketConfig
+  hasStagedRocket?: boolean
+  onDismantle?: () => void
   onInstallLoadout?: (next: BuilderLoadout, prev: BuilderLoadout) => boolean
   onRequestLaunch?: () => void
   launching?: boolean
   onLaunchComplete?: () => void
-  helpScreen?: 'launchpad' | 'fab' | 'targets' | 'rocket-buy'
   launchTestId?: string
   launchDisabled?: boolean
   /** Design, being built on the pad, or ready to launch. Defaults to ready. */
   assembly?: AssemblyPhase
-}
-
-function HangarGlyph() {
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 21V8l3-4h10l3 4v13M4 9h16M8 21v-7h8v7" /></svg>
 }
 
 function MissionGlyph() {
@@ -63,9 +55,9 @@ function MissionGlyph() {
 const STARTER_ROCKET: RocketConfig = { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' }
 
 export default function LaunchpadScreen({
-  onBack, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, player, rocketImageSrc = '', selectedRocketName = 'Explorer', francs = 0, hydrated = false, onAbandonMission,
-  mission = null, target = null, rocket = STARTER_ROCKET, onInstallLoadout, onRequestLaunch, launching = false, onLaunchComplete, helpScreen = 'launchpad', launchTestId = 'launch-btn', launchDisabled = false,
-  missionsDone, guided = false, assembly,
+  onBack, onViewContracts, onLaunchpadAction, onResumeMission, missionRuns = [], onResumeMissionRun, player, rocketImageSrc = '', selectedRocketName = 'Explorer', hydrated = false, onAbandonMission,
+  mission = null, target = null, rocket = STARTER_ROCKET, onInstallLoadout, onRequestLaunch, launching = false, onLaunchComplete, launchTestId = 'launch-btn', launchDisabled = false,
+  missionsDone, guided = false, assembly, hasStagedRocket = false, onDismantle,
 }: LaunchpadScreenProps) {
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
@@ -94,12 +86,11 @@ export default function LaunchpadScreen({
       <RocketBuilderScene
         missionTitle={mission?.title ?? player.activeMission?.label ?? null}
         target={target}
+        hasStagedRocket={hasStagedRocket}
         rocket={rocket}
         installed={player.shipCustomizerParts}
         missionsDone={missionsDone}
         skills={player.unlockedSkillNodes}
-        francs={francs}
-        helpScreen={helpScreen}
         towerLabel={towerLabel}
         launchTestId={launchTestId}
         launchDisabled={launchDisabled}
@@ -107,6 +98,7 @@ export default function LaunchpadScreen({
         onBack={onBack}
         onLaunch={launch}
         onInstall={onInstallLoadout}
+        onDismantle={onDismantle}
         launching={launching}
         launchRocketName={selectedRocketName}
         launchRocketSrc={rocketImageSrc}
@@ -171,20 +163,6 @@ export default function LaunchpadScreen({
         />
       )}
 
-      <div className={`${flight.dock} launchpad-shared-dock`}>
-        <BaseDock
-          variant="flight"
-          buildLabel="Hangar"
-          buildTestId="launchpad-open-hangar-btn"
-          buildIcon={<HangarGlyph />}
-          hubLabel="Log"
-          hubTestId="launchpad-mission-log-btn"
-          onPrev={onBack}
-          onNext={() => (missionRuns.length > 0 ? setMissionRunsOpen(true) : onViewContracts())}
-          onBuild={onOpenHangar}
-          onHub={() => onViewMissionLog?.()}
-        />
-      </div>
     </div>
   )
 }
