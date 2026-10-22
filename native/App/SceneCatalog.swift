@@ -315,6 +315,18 @@ enum SceneCatalog {
             gs.screen = .debrief
             return DebriefScreen().environment(GameStore(state: gs, catalog: cat)).environment(\.flatLayout, true)
         },
+        // SSL-651: a filled Orionids shower run at debrief (web ui/orionids-shower-debrief).
+        scene("debrief-shower-run-phone", 874) {
+            var gs = GameState()
+            let cat = Catalog()
+            gs.player.freeOperations = true; gs.player.missionsDone = 5
+            gs.player.orionidsFragments = OrionidsFragments(caught: 25, redeemed: 0)
+            gs.player.orionidsRunBaseline = 5
+            gs.missionId = OrionidsRun.missionId; gs.targetId = "eros"
+            gs.lastCargo = ["orionid_debris": 6, "iron": 2]
+            gs.screen = .debrief
+            return DebriefScreen().environment(GameStore(state: gs, catalog: cat)).environment(\.flatLayout, true)
+        },
         scene("debrief-capacitor-phone", 300) {
             let st = GameStore()
             st.go(.missions)

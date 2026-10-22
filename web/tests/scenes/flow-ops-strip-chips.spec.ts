@@ -16,27 +16,31 @@ const seed = {
     placed: ['launchpad', 'surface-silo', 'market'],
     missionsDone: 1,
     francs: 20_000_000,
+    // A two-digit Stash count widens the chip row even with the sync chip hidden (the staging run found it at 926x428).
+    stash: { iron: 12, platinum: 5 },
     flightPlan: { completed: {}, hidden: false },
   },
 }
 
-async function open(page: Page, route: string) {
+async function open(page: Page, route: string, synced = false) {
   const record = { id: USER, collectionId: '_pb_users_auth_', collectionName: 'users', email: 'e2e@example.test', verified: true }
   await page.route(/\/api\/(collections|realtime|health)/, route =>
     /auth-refresh/.test(route.request().url())
       ? route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ token: token(), record }) })
       : route.abort('connectionrefused'))
-  await page.addInitScript(([s, t, r, user]) => {
+  await page.addInitScript(([s, t, r, user, linked]) => {
     if (localStorage.getItem('seeded')) return
     localStorage.setItem('seeded', '1')
     localStorage.setItem('pocketbase_auth', JSON.stringify({ token: t, record: JSON.parse(r as string) }))
+    // A stored Landnam session for the same user is what a fully synced player has: no sync chip at all.
+    if (linked) localStorage.setItem('pocketbase_auth_landnam', JSON.stringify({ token: t, record: JSON.parse(r as string) }))
     localStorage.setItem(`landnam-game-state-v1:user:${user}`, s as string)
-  }, [JSON.stringify(seed), token(), JSON.stringify(record), USER])
+  }, [JSON.stringify(seed), token(), JSON.stringify(record), USER, synced])
   await page.goto(route, { waitUntil: 'domcontentloaded' })
 }
 
 for (const [vp, size] of Object.entries(VIEWPORTS)) {
-  for (const state of ['NOT SYNCED', 'OFFLINE'] as const) {
+  for (const state of ['NOT SYNCED', 'OFFLINE', 'SYNCED'] as const) {
     for (const route of ['/game/hub', '/game/missions', '/game/launchpad', '/game/transit', '/game/landing', '/game/delivery']) {
       test(`OPS strip clears every top chip with the sync chip at ${state} (${vp}, ${route})`, async ({}, info) => {
         test.setTimeout(120_000)
@@ -44,14 +48,20 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         try {
           const context = await browser.newContext({ viewport: size, baseURL: 'http://localhost:3001' })
           const page = await context.newPage()
-          await open(page, route)
+          await open(page, route, state === 'SYNCED')
           expect(await page.evaluate(() => innerWidth), 'real viewport width').toBe(size.width)
           await expect(page.getByTestId('flight-plan-slot')).toBeVisible({ timeout: 30_000 })
           // A real network cut blanks the dev page (its chunks stop loading); the chip only listens to navigator.onLine and the offline event.
           if (state === 'OFFLINE') await page.evaluate(() => { Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false }); window.dispatchEvent(new Event('offline')) })
           const chip = page.getByTestId('sync-chip')
-          await expect(chip).toBeVisible({ timeout: 30_000 })
-          await expect(chip).toHaveAttribute('aria-label', new RegExp(`^${state}`))
+          if (state === 'SYNCED') {
+            // A synced session shows no sync chip; the row is then as wide as the Stash count makes it, and that alone can overrun a fixed 200px.
+            await page.waitForTimeout(1500)
+            await expect(chip).toHaveCount(0)
+          } else {
+            await expect(chip).toBeVisible({ timeout: 30_000 })
+            await expect(chip).toHaveAttribute('aria-label', new RegExp(`^${state}`))
+          }
           const slot = page.getByTestId('flight-plan-slot')
           await expect(slot, 'the OPS strip is on screen').toBeVisible({ timeout: 15_000 })
           await page.waitForTimeout(800)

@@ -261,6 +261,12 @@ public final class GameStore {
         SkyEvents.grant(&n.player.badges, activity: .debrisMining, at: now, only: preset.eventId)
         apply(n)
     }
+    /// Fragments mined with the laser count toward the ledger (web `addCaughtFragments(mined, 1, 'count')`).
+    public func fragmentsMined(_ n: Int) {
+        var s = state
+        OrionidsRun.addCaught(&s.player, n, toStash: false)
+        apply(s)
+    }
     public func transitArrived() { apply(Loop.transitArrived(state, catalog: catalog, now: now)) }
     public func miningDone(_ cargo: Cargo) { apply(Loop.miningDone(state, cargo: cargo, catalog: catalog, now: now)) }
     public func roverSurveyComplete() { apply(Loop.roverSurveyComplete(state)) }

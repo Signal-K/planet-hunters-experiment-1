@@ -33,6 +33,8 @@ public enum Loop {
         // Off-world builds carry the materials from the stash; no kit, no flight.
         if let plan = mission.construction, mission.isOwnProgram, plan.requiredMaterials.contains(where: { (s.player.stash[$0.key] ?? 0) < $0.value }) { return s }
         var base = s
+        // SSL-651: the shower run's 20 fragments count from this accept.
+        if id == OrionidsRun.missionId { OrionidsRun.start(&base.player) }
         base.player.freeHaulDisposition = haul ?? s.player.freeHaulDisposition
         base.doneSteps["2"] = true
         guard let targetId = mission.targetId else {
@@ -177,6 +179,8 @@ public enum Loop {
         n.player.transitStartedAt = now
         n.player.missionPhase = .transit
         n.player.activeMission = ActiveMission(id: mission.id, label: "\(mission.title) → \(target.name)")
+        // The ascent flies through the shower: fragments are home at once (web applyLaunchCatch, SSL-578).
+        OrionidsRun.applyLaunchCatch(&n.player, at: now)
         n.screen = .transit
         n.doneSteps["5"] = true
         return n
@@ -259,17 +263,21 @@ public enum Loop {
     /// (already through the onboarding floor), so the ledger and screen agree.
     public static func debriefDone(_ s: GameState, payout rawTotal: Int, affinity: Int, consumed: Cargo = [:],
                                    disposition: HaulDisposition? = nil, catalog: Catalog, now: Double) -> GameState {
-        guard s.screen == .debrief, let missionId = s.missionId, s.targetId != nil, let cargo = s.lastCargo else { return s }
+        guard s.screen == .debrief, let missionId = s.missionId, s.targetId != nil, let haulCargo = s.lastCargo else { return s }
         let mission = catalog.mission(missionId)
         var n = s
+        // SSL-651: a filled shower run pays its francs and keeps the fragments as fragments. Read once up front, because settling resets the count.
+        let showerFilled = missionId == OrionidsRun.missionId && OrionidsRun.filled(s.player)
+        let cargo = showerFilled ? OrionidsRun.withoutFragments(haulCargo) : haulCargo
+        if showerFilled { OrionidsRun.settle(&n.player, missionsDone: s.player.missionsDone) }
         let isFreeHaul = mission.map { $0.isOwnProgram && $0.deliveryTargetId == nil && $0.construction == nil } ?? false
-            && cargo.values.contains { $0 > 0 }
+            && haulCargo.values.contains { $0 > 0 }
         if isFreeHaul && !s.player.cargoSettledOffworld {
             let effective = disposition ?? s.player.freeHaulDisposition ?? (Market.earthStorageBuilt(s.player) ? .store : .sell)
             n = Market.applyFreeHaulDisposition(n, haul: cargo, disposition: effective, now: now)
             n.player.freeHaulDisposition = nil
         }
-        let total = isFreeHaul && !s.player.cargoSettledOffworld ? 0 : rawTotal
+        let total = (isFreeHaul && !s.player.cargoSettledOffworld) || showerFilled ? 0 : rawTotal
         let consume = isFreeHaul && !s.player.cargoSettledOffworld ? [:] : consumed
         let missionsDone = n.player.missionsDone + 1
         let isStory = mission?.tag == "STORY" && mission?.deliveryTargetId == nil

@@ -282,8 +282,8 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         for (;;) {
           if (Date.now() - t0 > 200_000) throw new Error(`the flight did not finish in 200 s. Path: ${path.join(' > ')}`)
           const s = await snap(page)
-          // The debrief returns to the pad on some paths and to Base on others; both mean the run is over.
-          if (s && s.missionsDone >= 1 && (s.screen === 'hub' || s.screen === 'launchpad')) break
+          // The debrief returns to the pad on some paths, to Base on others, and to the Galaxy chart while the scan try is still open; all three mean the run is over.
+          if (s && s.missionsDone >= 1 && (s.screen === 'hub' || s.screen === 'launchpad' || s.screen === 'galaxy')) break
           const screen = s?.screen ?? 'none'
           if (path[path.length - 1] !== screen) path.push(screen)
 
@@ -330,8 +330,9 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         }
         info.annotations.push({ type: 'path', description: path.join(' > ') })
         expect(toastSeen, 'the Orionid fragment toast showed on the launch').toBe(true)
-        if ((await snap(page))?.screen === 'launchpad') {
-          await tap(page, 'top-bar-back')
+        const endScreen = (await snap(page))?.screen
+        if (endScreen === 'launchpad' || endScreen === 'galaxy') {
+          if (!(await tap(page, 'top-bar-back'))) await page.goto('/game/hub')
           await expect(page.locator('[data-screen="hub"]')).toBeVisible({ timeout: 20_000 })
         }
         await page.waitForTimeout(1500)

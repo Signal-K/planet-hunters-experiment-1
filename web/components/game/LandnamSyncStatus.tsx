@@ -49,6 +49,7 @@ export default function LandnamSyncStatus() {
     return () => { unsubscribe(); stop() }
   }, [])
 
+  useTopChipInset()
   const label = syncLabel(game.landnamSynced, outbox, online)
   const host = useChipSlot(mounted && !!game.authUserId && !!label)
   if (!mounted || !game.authUserId || !label) return null
@@ -89,27 +90,50 @@ function useChipSlot(active: boolean): HTMLElement | null {
       if (!slot) { slot = document.createElement('span'); slot.setAttribute('data-sync-slot', ''); slot.style.display = 'contents' }
       if (slot.nextElementSibling !== francs) francs.parentElement?.insertBefore(slot, francs)
       setHost(current => current === slot ? current : slot)
-      publishRowInset(francs.parentElement, sizes)
     }
-    const sizes = new ResizeObserver(() => { if (!frame) frame = requestAnimationFrame(place) })
     place()
     const observer = new MutationObserver(() => { if (!frame) frame = requestAnimationFrame(place) })
     observer.observe(document.body, { childList: true, subtree: true })
     const onResize = () => { if (!frame) frame = requestAnimationFrame(place) }
     window.addEventListener('resize', onResize)
     return () => {
-      observer.disconnect(); sizes.disconnect(); window.removeEventListener('resize', onResize)
+      observer.disconnect(); window.removeEventListener('resize', onResize)
       if (frame) cancelAnimationFrame(frame)
       document.querySelector('[data-sync-slot]')?.remove()
-      document.documentElement.style.removeProperty('--top-chip-inset')
     }
   }, [active])
   return host
 }
 
-/** SSL-655: the OPS coach strip starts after the real top chip row (it grows when the sync chip shows), not at a fixed 200px. */
+/**
+ * SSL-655: the OPS coach strip starts after the real top chip row, not at a fixed 200px. The row grows with the
+ * sync chip, a two-digit Stash count or the dev badge, so this runs whether or not the sync chip is showing.
+ */
+function useTopChipInset() {
+  useEffect(() => {
+    let frame = 0
+    const measure = () => {
+      frame = 0
+      const francs = Array.from(document.querySelectorAll<HTMLElement>('[data-testid$="-francs-chip"], .top-bar .scene-chip'))
+        .find(el => el.offsetParent !== null)
+      publishRowInset(francs?.parentElement ?? null, sizes)
+    }
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(measure) }
+    const sizes = new ResizeObserver(schedule)
+    measure()
+    const observer = new MutationObserver(schedule)
+    observer.observe(document.body, { childList: true, subtree: true })
+    window.addEventListener('resize', schedule)
+    return () => {
+      observer.disconnect(); sizes.disconnect(); window.removeEventListener('resize', schedule)
+      if (frame) cancelAnimationFrame(frame)
+      document.documentElement.style.removeProperty('--top-chip-inset')
+    }
+  }, [])
+}
+
 function publishRowInset(row: HTMLElement | null, sizes: ResizeObserver) {
-  if (!row) return
+  if (!row) { document.documentElement.style.removeProperty('--top-chip-inset'); return }
   const chips = Array.from(row.querySelectorAll<HTMLElement>('.scene-chip'))
   chips.forEach(el => sizes.observe(el))
   const rights = chips
