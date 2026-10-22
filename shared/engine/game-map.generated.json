@@ -20,10 +20,12 @@
     "authoredPrefabInstances": 5,
     "compiledScenes": 27,
     "compiledObjectNodes": 23,
-    "webRuntimeSceneConsumers": 0,
-    "nativeRuntimeSceneConsumers": 0,
-    "webGameComponents": 111,
-    "nativeAppComponents": 51
+    "webRuntimeSceneConsumers": 1,
+    "nativeRuntimeSceneConsumers": 1,
+    "webRuntimeScenes": 1,
+    "nativeRuntimeScenes": 1,
+    "webGameComponents": 112,
+    "nativeAppComponents": 52
   },
   "scenes": {
     "routed": [
@@ -1330,6 +1332,7 @@
       "web/components/game/OrionidsTeaser.tsx",
       "web/components/game/PixiGalaxyStarMap.tsx",
       "web/components/game/PushOptIn.tsx",
+      "web/components/game/SceneGraphLayer.tsx",
       "web/components/game/ScenePanel.tsx",
       "web/components/game/SceneTransition.tsx",
       "web/components/game/ScrapSequenceCanvas.tsx",
@@ -1427,6 +1430,7 @@
       "native/App/Screens/AcademyScreen.swift",
       "native/App/Screens/ArchiveScreen.swift",
       "native/App/Screens/AsteroidDiscoveryScreen.swift",
+      "native/App/Screens/AuthoredSceneLayer.swift",
       "native/App/Screens/BaseCamera.swift",
       "native/App/Screens/BaseDock.swift",
       "native/App/Screens/BaseMenu.swift",
@@ -1468,8 +1472,18 @@
       "native/App/Screens/TessDiscoveryScreen.swift",
       "native/App/Screens/WelcomeScreen.swift"
     ],
-    "webSceneConsumers": [],
-    "nativeSceneConsumers": [],
+    "webSceneConsumers": [
+      "web/components/game/SceneGraphLayer.tsx"
+    ],
+    "nativeSceneConsumers": [
+      "native/App/Screens/AuthoredSceneLayer.swift"
+    ],
+    "webRuntimeScenes": [
+      "launchpad"
+    ],
+    "nativeRuntimeScenes": [
+      "launchpad"
+    ],
     "sharedData": [
       "shared/authoring/README.md",
       "shared/authoring/flows/launch-telescope.toml",
@@ -1549,8 +1563,7 @@
       "transit"
     ],
     "compiledScenesWithoutRuntimeConsumer": [
-      "hub",
-      "launchpad"
+      "hub"
     ]
   }
 }

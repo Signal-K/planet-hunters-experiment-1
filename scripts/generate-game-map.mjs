@@ -60,14 +60,19 @@ const authoredScenes = authoredSceneFiles.map(path => {
 })
 
 const filesContaining = (files, pattern) => files.filter(path => pattern.test(read(path)))
+const webGameFiles = productionFiles(walk('web/components/game', ['.ts', '.tsx']))
+const nativeAppFiles = productionFiles([...walk('native/App/Mining', ['.swift']), ...walk('native/App/Scenes', ['.swift']), ...walk('native/App/Screens', ['.swift'])])
 const webRuntimeConsumers = filesContaining(
-  productionFiles(walk('web/components/game', ['.ts', '.tsx'])),
+  webGameFiles,
   /\b(?:authoredScene|resolveScene)\s*\(/,
 )
 const nativeRuntimeConsumers = filesContaining(
-  productionFiles([...walk('native/App/Mining', ['.swift']), ...walk('native/App/Scenes', ['.swift']), ...walk('native/App/Screens', ['.swift'])]),
+  nativeAppFiles,
   /\bAuthoredSceneGraph\./,
 )
+const referencedScenes = (files, pattern) => [...new Set(files.flatMap(path => [...read(path).matchAll(pattern)].map(match => match[1])))].sort()
+const webRuntimeScenes = referencedScenes(webGameFiles, /<SceneGraphLayer\s+sceneId="([^"]+)"/g)
+const nativeRuntimeScenes = referencedScenes(nativeAppFiles, /AuthoredSceneLayer\(sceneID:\s*"([^"]+)"\)/g)
 
 const routeOwners = Object.entries(sceneTypes.sceneTypes).flatMap(([type, value]) =>
   value.routes.map(route => ({ route, type })))
@@ -98,6 +103,8 @@ const map = {
     compiledObjectNodes: compiledSceneGraph.scenes.reduce((total, scene) => total + scene.objects.length, 0),
     webRuntimeSceneConsumers: webRuntimeConsumers.length,
     nativeRuntimeSceneConsumers: nativeRuntimeConsumers.length,
+    webRuntimeScenes: webRuntimeScenes.length,
+    nativeRuntimeScenes: nativeRuntimeScenes.length,
     webGameComponents: productionFiles(walk('web/components/game', ['.ts', '.tsx'])).length,
     nativeAppComponents: productionFiles([
       ...walk('native/App/Mining', ['.swift']),
@@ -122,6 +129,8 @@ const map = {
     ]).sort(),
     webSceneConsumers: webRuntimeConsumers,
     nativeSceneConsumers: nativeRuntimeConsumers,
+    webRuntimeScenes,
+    nativeRuntimeScenes,
     sharedData: productionFiles([
       ...walk('shared/layout', ['.json']),
       ...walk('shared/scenes', ['.json']),
@@ -135,7 +144,7 @@ const map = {
     qaWithoutNativeScene: qa.scenes.filter(scene => !scene.native).map(scene => scene.id),
     scenesWithoutObjects: authoredSceneScripts.filter(scene => scene.objects === 0).map(scene => scene.id),
     compiledScenesWithoutRuntimeConsumer: compiledSceneGraph.scenes.filter(scene =>
-      scene.objects.length > 0 && webRuntimeConsumers.length === 0 && nativeRuntimeConsumers.length === 0
+      scene.objects.length > 0 && (!webRuntimeScenes.includes(scene.id) || !nativeRuntimeScenes.includes(scene.id))
     ).map(scene => scene.id)
   }
 }

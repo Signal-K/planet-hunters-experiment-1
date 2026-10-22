@@ -89,11 +89,33 @@ function useChipSlot(active: boolean): HTMLElement | null {
       if (!slot) { slot = document.createElement('span'); slot.setAttribute('data-sync-slot', ''); slot.style.display = 'contents' }
       if (slot.nextElementSibling !== francs) francs.parentElement?.insertBefore(slot, francs)
       setHost(current => current === slot ? current : slot)
+      publishRowInset(francs.parentElement, sizes)
     }
+    const sizes = new ResizeObserver(() => { if (!frame) frame = requestAnimationFrame(place) })
     place()
     const observer = new MutationObserver(() => { if (!frame) frame = requestAnimationFrame(place) })
     observer.observe(document.body, { childList: true, subtree: true })
-    return () => { observer.disconnect(); if (frame) cancelAnimationFrame(frame); document.querySelector('[data-sync-slot]')?.remove() }
+    const onResize = () => { if (!frame) frame = requestAnimationFrame(place) }
+    window.addEventListener('resize', onResize)
+    return () => {
+      observer.disconnect(); sizes.disconnect(); window.removeEventListener('resize', onResize)
+      if (frame) cancelAnimationFrame(frame)
+      document.querySelector('[data-sync-slot]')?.remove()
+      document.documentElement.style.removeProperty('--top-chip-inset')
+    }
   }, [active])
   return host
+}
+
+/** SSL-655: the OPS coach strip starts after the real top chip row (it grows when the sync chip shows), not at a fixed 200px. */
+function publishRowInset(row: HTMLElement | null, sizes: ResizeObserver) {
+  if (!row) return
+  const chips = Array.from(row.querySelectorAll<HTMLElement>('.scene-chip'))
+  chips.forEach(el => sizes.observe(el))
+  const rights = chips
+    .map(el => el.getBoundingClientRect())
+    .filter(r => r.width > 0 && r.left < window.innerWidth / 2)
+    .map(r => r.right)
+  if (!rights.length) return
+  document.documentElement.style.setProperty('--top-chip-inset', `${Math.ceil(Math.max(...rights)) + 8}px`)
 }

@@ -52,6 +52,7 @@ struct RocketBuilderScreen: View {
             let shortMission = shortWide && phase != .idle
             ZStack(alignment: .top) {
                 landView(land)
+                AuthoredSceneLayer(sceneID: "launchpad")
                 if shortIdle {
                     padScene(numbers: numbers).padding(.horizontal, 12).padding(.top, 100).padding(.bottom, 72)
                 }
