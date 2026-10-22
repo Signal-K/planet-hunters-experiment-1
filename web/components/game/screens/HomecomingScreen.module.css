@@ -24,33 +24,33 @@
 .meter {
   position: relative; overflow: hidden; display: inline-block; min-width: 150px;
   padding: 8px 12px 12px; border-radius: 10px; background: #e6ebf1; border: 1.5px solid #8aa0b8;
-  font: 700 13px/1 var(--ln-font-mono, monospace);
+  font: 700 14px/1 var(--ln-font-mono, monospace);
 }
 .meter i { position: absolute; left: 0; bottom: 0; height: 4px; background: #2f6fd0; }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; overflow: auto; padding: 2px; }
 .card { padding: 14px; border-radius: 14px; background: #fbfaf6; border: 1.5px solid #c9d3de; display: flex; flex-direction: column; gap: 12px; }
 .cardHead { display: flex; align-items: center; gap: 10px; font: 800 16px/1 var(--ln-font-display, system-ui); }
 .swatch { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid #1a2a3c; }
-.units { margin-left: auto; font: 700 13px/1 var(--ln-font-mono, monospace); color: #4a5d73; }
+.units { margin-left: auto; font: 700 14px/1 var(--ln-font-mono, monospace); color: #4a5d73; }
 .choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .choice { min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 10px 8px; border-radius: 12px; border: 1.5px solid transparent; }
 .choice[data-kind='client'] { background: #e1ebf8; border-color: #9fb9de; }
 .choice[data-kind='silo'] { background: #e6ebf1; border-color: #a9b8c9; }
 .choice[data-kind='sell'] { background: #efece4; border-color: #c8c0ae; }
 .choice[data-disabled='true'] { opacity: 0.5; }
-.choiceLabel { font: 800 13px/1.15 var(--ln-font-display, system-ui); }
-.choiceNote { font: 600 12px/1.2 var(--ln-font-body, system-ui); color: #4a5d73; min-height: 15px; }
+.choiceLabel { font: 800 14px/1.15 var(--ln-font-display, system-ui); }
+.choiceNote { font: 600 14px/1.2 var(--ln-font-body, system-ui); color: #4a5d73; min-height: 17px; }
 .stepper { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; }
 .stepper button {
-  width: 34px; height: 34px; border-radius: 10px; border: 1.5px solid #1a2a3c; background: #f4f1ea; color: #1a2a3c;
+  flex: none; width: 44px; height: 44px; border-radius: 10px; border: 1.5px solid #1a2a3c; background: #f4f1ea; color: #1a2a3c;
   font: 800 18px/1 var(--ln-font-display, system-ui); cursor: pointer;
 }
 .stepper button:disabled { opacity: 0.35; cursor: default; }
-.stepper output { min-width: 28px; text-align: center; font: 800 18px/1 var(--ln-font-mono, monospace); }
+.stepper output { flex: 1 1 0; min-width: 0; text-align: center; font: 800 18px/1 var(--ln-font-mono, monospace); }
 .foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1.5px solid #d6dde6; padding-top: 14px; }
 .summary { display: flex; gap: 22px; margin: 0; }
 .summary div { display: flex; flex-direction: column; gap: 4px; }
-.summary dt { font: 700 11px/1 var(--ln-font-mono, monospace); text-transform: uppercase; letter-spacing: 0.08em; color: #4a5d73; }
+.summary dt { font: 700 14px/1 var(--ln-font-mono, monospace); text-transform: uppercase; letter-spacing: 0.08em; color: #4a5d73; }
 .summary dd { margin: 0; font: 800 17px/1 var(--ln-font-display, system-ui); }
 .confirm {
   min-height: 48px; padding: 0 26px; border-radius: 14px; border: 2px solid #1a2a3c;
@@ -60,11 +60,12 @@
   .sheet { padding: 16px 14px 14px; gap: 12px; max-height: 82vh; }
   .head { flex-direction: column; gap: 10px; }
   .cards { grid-template-columns: minmax(0, 1fr); }
-  .choices { gap: 6px; }
-  .stepper button { width: 32px; min-width: 32px; }
-  .stepper output { min-width: 20px; }
-  .choice { padding: 8px 6px; }
-  .choiceLabel { font-size: 12px; }
+  /* Three 44px steppers do not fit side by side on a phone: each destination is a row, label and note left, stepper right. */
+  .choices { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .choice { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; row-gap: 2px; align-items: center; padding: 8px 10px; }
+  .choiceLabel, .choiceNote { grid-column: 1; min-height: 0; }
+  .stepper { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; gap: 2px; }
+  .stepper output { flex: none; min-width: 28px; }
   .confirm { width: 100%; }
 }
 @media (max-height: 520px) {
@@ -73,6 +74,7 @@
   .title { font-size: 18px; }
   .cards { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
   .choice { padding: 6px; gap: 4px; }
+  .stepper { gap: 0; }
 }
 
 /* Settle: crates leave the hold, the rocket is taken apart from the top down in pixel steps. */

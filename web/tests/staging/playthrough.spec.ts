@@ -171,8 +171,9 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       const surveyProblems: string[] = []
       const sound = async () => {
         const card = page.getByTestId('survey-sheet')
-        if (await card.isVisible().catch(() => false)) {
-          await shot('survey')
+        // The card can come straight back (it waits behind a coach callout or popup and returns when that clears), so skip until it stays gone.
+        for (let round = 0; round < 3 && await card.isVisible().catch(() => false); round++) {
+          await shot(round === 0 ? 'survey' : `survey-again-${round}`)
           surveyProblems.push(...await card.evaluate(el => {
             const bad: string[] = []
             for (const b of el.querySelectorAll('button')) {
@@ -196,6 +197,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
           info.annotations.push({ type: 'survey', description: skipCovered ? 'a survey card appeared with Skip covered by another overlay, then was skipped' : 'a survey card appeared and was skipped' })
           await card.getByRole('button', { name: 'SKIP' }).dispatchEvent('click').catch(() => {})
           await expect(card).toBeHidden({ timeout: 5000 })
+          await page.waitForTimeout(1500)
         }
         await page.addStyleTag({ content: '[data-testid="dev-shortcuts-toggle"] { display: none !important; }' })
         await expectSound(page, errors)
@@ -274,6 +276,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         let shotTransit = false
         let shotMining = false
         let shotDebrief = false
+        let shotCargo = false
         let toastSeen = false
         const t0 = Date.now()
         for (;;) {
@@ -287,6 +290,13 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
           if (!toastSeen && await page.locator('.toast-item', { hasText: /Orionid fragments caught on the way up/ }).count() > 0) {
             toastSeen = true
             await expect(page.locator('.toast-item', { hasText: /2 Orionid fragments/ })).toBeVisible()
+          }
+          // Cargo home (the settle step) opens over the Base a moment after landing. It is a screen the player must use, so it is checked as shown.
+          if (!shotCargo && await page.getByTestId('delivery-confirm').isVisible().catch(() => false)) {
+            shotCargo = true
+            await page.waitForTimeout(1000)
+            await shot('cargo-home')
+            await sound()
           }
           if (await tap(page, 'launch-sequence-skip-btn') || await tap(page, 'tutorial-complete-close') || await tap(page, 'delivery-confirm')) {
             await page.waitForTimeout(500)

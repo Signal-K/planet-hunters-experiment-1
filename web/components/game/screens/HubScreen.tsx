@@ -640,7 +640,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
 
       {/* The surface dock is reserved for all-scene navigation only. Base-only
           actions remain on their physical buildings or in their own surfaces. */}
-      {(
+      {/* The delivery sheet of a homecoming covers the dock, so it is not drawn under it (it would only be an inert, overlapped control). */}
+      {!homecoming && (
         <div className="hub-bottom-dock" style={{
           position: 'absolute', left: 0, right: 0, bottom: 8, zIndex: subsurface ? 40 : 20,
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none',
