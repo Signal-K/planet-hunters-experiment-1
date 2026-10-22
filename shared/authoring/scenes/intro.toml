@@ -1,0 +1,19 @@
+#:schema ../schema/scene.schema.json
+# Intro: scene script. Edit here or in the Scene Studio (http://localhost:3001/game/studio?scene=intro).
+# Objects listed here are the scene's game objects. Objects marked status = "proposed" are requests for an agent to build.
+format = 1
+id = "intro"
+type = "menu"
+name = "Intro"
+summary = "Cold open and sign-in. The first screen of a new account."
+tickets = ["SSL-451"]
+qa = ["intro"]
+
+[runtime]
+surface = "dom"
+web = ["web/components/game/screens/IntroScreen.tsx"]
+native = ["native/App/Screens/BaseRecordScreens.swift"]
+
+[preview]
+route = "intro"
+state = "m1-intro"

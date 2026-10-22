@@ -11,6 +11,9 @@
     "start": "next start -p 3001",
     "typecheck": "next typegen && tsc --noEmit",
     "sync:shared": "node ../scripts/sync-all-shared.mjs",
+  "authoring:compile": "node ../scripts/authoring.mjs compile",
+  "authoring:check": "node ../scripts/authoring.mjs check",
+  "studio": "node ../scripts/studio.mjs",
     "sync:native-assets": "node ../scripts/sync-native-assets.mjs",
     "verify:scene-surfaces": "node scripts/verify-scene-surfaces.mjs",
     "verify:hue-palette": "node scripts/verify-hue-palette.mjs",
@@ -27,7 +30,7 @@
     "lint": "npm run lint:design-tokens && npm run verify:hue-palette && npm run verify:native-text-floor && npm run verify:native-tap-targets && npm run verify:native-contrast && npm run verify:scene-surfaces && npm run typecheck",
     "test:scenes": "playwright test scenes",
     "test:scenes:phone": "playwright test scenes --grep \"^phone\"",
-    "test:staging": "test -n \"$STAGING_BASE_URL\" && test -n \"$STAGING_LANDNAM_PB_URL\" && STAGING_PLAYTHROUGH=1 SCENES_CHANNEL=chrome SCENES_BASE_URL=\"$STAGING_BASE_URL\" playwright test tests/staging --workers=1",
+    "test:staging": "test -n \"$STAGING_BASE_URL\" && test -n \"$STAGING_LANDNAM_PB_URL\" && STAGING_PLAYTHROUGH=1 SCENES_BASE_URL=\"$STAGING_BASE_URL\" playwright test tests/staging --workers=1",
     "test:file": "vitest run",
     "test:related": "vitest related --run",
     "test:scene": "playwright test"
@@ -44,6 +47,7 @@
     "react-dom": "19.2.7",
     "recharts": "^3.8.1",
     "resend": "^6.12.4",
+    "toml-eslint-parser": "^1.0.3",
     "web-push": "^3.6.7"
   },
   "devDependencies": {

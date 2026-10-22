@@ -56,7 +56,13 @@ export async function expectSound(page: Page, errors: string[] = []) {
       }
       return r
     }
-    const buttons = [...document.querySelectorAll('button,a[href],[role=button]')].filter(visible)
+    // A HelpSheet's scrim blocks pointer input to every control outside its
+    // own subtree. Those controls remain visible by design, but are not
+    // simultaneously actionable and therefore must not be reported as tap
+    // target collisions with the modal's Close/Show me controls.
+    const modal = document.querySelector('[data-testid="help-scrim"]')
+    const actionable = (el: Element) => !modal || modal.contains(el)
+    const buttons = [...document.querySelectorAll('button,a[href],[role=button]')].filter(el => visible(el) && actionable(el))
     for (const b of buttons) {
       const r = b.getBoundingClientRect()
       if (r.width < 43.5 || r.height < 43.5) out.taps.push(`${Math.round(r.width)}x${Math.round(r.height)} ${label(b)}`)

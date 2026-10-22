@@ -1,5 +1,5 @@
 import { chromium, expect, test, type Page } from '@playwright/test'
-import { VIEWPORTS } from './helpers'
+import { VIEWPORTS, expectSound } from './helpers'
 
 // SSL-611: settling a free run's haul. Stored crates sink into the silo, sold crates fly to the francs counter, the rocket
 // is taken apart, then the base returns. Bundled Chromium is launched directly (installed Chrome dies after ~30s here).
@@ -63,3 +63,30 @@ test('settle: crates leave, the rocket is dismantled, the haul is sold and store
     await expect(page.getByTestId('homecoming-screen')).toHaveCount(0, { timeout: 10_000 })
   } finally { await browser.close().catch(() => {}) }
 })
+
+// SSL-626: the staging playthrough found the settle sheet with 32-34px steppers, 11-13px labels and its Settle button under
+// the Base dock on phones. It is a screen every flight ends on, so it must meet the same floors at all three sizes.
+for (const [vp, size] of Object.entries(VIEWPORTS)) {
+  test(`cargo home sheet is sound at ${size.width}x${size.height}`, async ({}, info) => {
+    test.setTimeout(120_000)
+    const browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
+    try {
+      const page = await (await browser.newContext({ viewport: size, baseURL: 'http://localhost:3001' })).newPage()
+      const errors: string[] = []
+      page.on('pageerror', e => errors.push(e.message))
+      await open(page, true)
+      expect(await page.evaluate(() => innerWidth)).toBe(size.width)
+      await expect(page.getByTestId('delivery-sheet')).toBeVisible({ timeout: 30_000 })
+      await page.waitForTimeout(800)
+      await page.screenshot({ path: info.outputPath(`cargo-home-${vp}.png`) })
+      // The sheet's own Settle button must not sit under the Base dock.
+      const covered = await page.getByTestId('delivery-confirm').evaluate(el => {
+        const r = el.getBoundingClientRect()
+        const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+        return !top || !el.contains(top)
+      })
+      expect(covered, 'the Settle cargo button is reachable').toBe(false)
+      await expectSound(page, errors)
+    } finally { await browser.close().catch(() => {}) }
+  })
+}

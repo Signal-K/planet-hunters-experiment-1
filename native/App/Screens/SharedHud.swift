@@ -37,18 +37,23 @@ struct HudChips: View {
     var onSell: (() -> Void)? = nil
     @State private var stashOpen = false
     @Environment(Services.self) private var services: Services?
+    @Environment(\.helpButtonReserve) private var helpReserve
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     var body: some View {
         HStack(spacing: 8) {
             if let label = SyncChip.label(online: services?.online ?? true, pending: services?.pendingWrites ?? 0, failed: services?.failedWrites ?? 0) {
-                SyncChip(label: label, warn: !(services?.online ?? true) || (services?.failedWrites ?? 0) > 0)
+                SyncChip(label: label, warn: !(services?.online ?? true) || (services?.failedWrites ?? 0) > 0, compact: horizontalSizeClass == .compact)
             }
+            // One line always: with the sync chip and the help button the row is tight, and "₣9.0 / M" wrapped.
             Text(Economy.format(francs: francs)).font(AppFont.mono(14)).foregroundStyle(Theme.hudInk)
+                .lineLimit(1).fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, 8).frame(minWidth: 44, minHeight: 36)
                 .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
                 .accessibilityLabel("Francs")
             stashChip
         }
+        .padding(.trailing, helpReserve)
     }
 }
 
@@ -96,19 +101,32 @@ extension HudChips {
 struct SyncChip: View {
     let label: String
     var warn = false
+    /// Icon and count only (iPhone widths); the full text stays in the accessibility label.
+    var compact = false
     static func label(online: Bool, pending: Int, failed: Int) -> String? {
         if !online { return pending > 0 ? "OFFLINE · \(pending)" : "OFFLINE" }
         if pending > 0 { return "SYNCING \(pending)" }
         if failed > 0 { return "NOT SYNCED" }
         return nil
     }
+    private var compactIcon: String {
+        if label.hasPrefix("OFFLINE") { return "wifi.slash" }
+        if label.hasPrefix("NOT") { return "exclamationmark.triangle" }
+        return "arrow.triangle.2.circlepath"
+    }
     var body: some View {
         HStack(spacing: 5) {
+            if compact {
+                Image(systemName: compactIcon).font(.system(size: 13, weight: .semibold)).foregroundStyle(warn ? Color(red: 0.608, green: 0.231, blue: 0.196) : Theme.hudInk)
+                let count = label.filter(\.isNumber)
+                if !count.isEmpty { Text(count).font(AppFont.mono(14)).foregroundStyle(Theme.hudInk).fixedSize() }
+            } else {
             Circle().fill(warn ? Color(red: 0.608, green: 0.231, blue: 0.196) : Color(red: 0.25, green: 0.5, blue: 0.95)).frame(width: 7, height: 7)
             Text(label).font(AppFont.mono(11)).foregroundStyle(Theme.hudInk)
                 .fixedSize(horizontal: true, vertical: false).layoutPriority(1)
+            }
         }
-        .padding(.horizontal, 8).frame(minHeight: 36)
+        .padding(.horizontal, 8).frame(minWidth: compact ? 44 : nil, minHeight: 36)
         .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
         .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
         .accessibilityElement(children: .combine).accessibilityLabel("Sync status \(label)")

@@ -40,7 +40,7 @@ interface InstrumentHubScreenProps {
 export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild, onClaimSurveyPlot, targets = [], onStartScan, onResolveScan }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [bodyId, setBodyId] = useState('all')
-  const help = useHelp('instrument-hub')
+  const help = useHelp('instrument-hub', { firstVisit: true })
   const awaitingFeed = loading && signals.length === 0
   const now = useMemo(() => skyEventNow(isDevLauncherEnabled()), [])
   const model = useMemo(

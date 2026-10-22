@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isSurveySafeScreen, SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
+import { holdSurveys, isSurveyHeld, isSurveySafeScreen, subscribeSurveyHold, SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
 
 describe('survey gating allowlist', () => {
   it('allows surveys only on resting screens', () => {
@@ -19,5 +19,33 @@ describe('survey gating allowlist', () => {
 
   it('is the single source both survey call sites import (no duplicated copy to drift)', () => {
     expect(SURVEY_SAFE_SCREENS.length).toBeGreaterThan(0)
+  })
+})
+
+// SSL-649: an open Base callout sits above the survey card and can hide its Skip, so the card waits for it.
+describe('survey hold for open callouts', () => {
+  it('holds until every hold is released, and tells subscribers each time it changes', () => {
+    const seen: boolean[] = []
+    const unsubscribe = subscribeSurveyHold(() => seen.push(isSurveyHeld()))
+    expect(isSurveyHeld()).toBe(false)
+    const releaseFirst = holdSurveys()
+    const releaseSecond = holdSurveys()
+    expect(isSurveyHeld()).toBe(true)
+    releaseFirst()
+    expect(isSurveyHeld()).toBe(true)
+    releaseSecond()
+    expect(isSurveyHeld()).toBe(false)
+    expect(seen).toEqual([true, true, true, false])
+    unsubscribe()
+  })
+
+  it('ignores a release that is called twice', () => {
+    const release = holdSurveys()
+    const other = holdSurveys()
+    release()
+    release()
+    expect(isSurveyHeld()).toBe(true)
+    other()
+    expect(isSurveyHeld()).toBe(false)
   })
 })

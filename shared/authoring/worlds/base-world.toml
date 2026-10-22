@@ -1,0 +1,1238 @@
+#:schema ../schema/world.schema.json
+# Base world: every background piece of the Earth base as a game object (SSL-423).
+#
+# SOURCE OF TRUTH. `npm run authoring:compile` writes shared/scenes/base-world.json from this file and
+# web (lib/world) and native (LandnamCore World) both load that JSON. Edit here, not there.
+format = 1
+version = 1
+about = "Base world scene (SSL-423): every background piece is a game object. Web (lib/world) and native (LandnamCore World) load this file, step the same physics and draw entities in depth order. Units: kit units; x along the strip, y height above the ground line, depth is the parallax factor (1 moves with the strip, 0 stays with the screen). Sprites carry their Blender frame: w, h, x0 (left edge from the entity x), v0 (bottom edge from the entity y). `entities` are in every landscape; `biomes` adds each landscape's own horizon, far ground, ground-level plants and drifts (all flat launch-range land). Nothing here is built by the player; structures are drawn on top from base-site.json."
+
+[physics]
+gravity = -60
+fixedStep = 0.0166667
+groundY = 0
+windScale = 1
+
+# Sprites carry their Blender frame: w, h, x0 (left edge from the entity x), v0 (bottom edge from the entity y).
+
+[sprites.escarpment-a-mid]
+src = "base/v7/world/escarpment-a-mid.png"
+w = 236
+h = 26.43
+x0 = -8
+v0 = -0.5
+
+[sprites.escarpment-a-far]
+src = "base/v7/world/escarpment-a-far.png"
+w = 236
+h = 26.43
+x0 = -8
+v0 = -0.5
+
+[sprites.escarpment-b-mid]
+src = "base/v7/world/escarpment-b-mid.png"
+w = 166
+h = 20.509
+x0 = -8
+v0 = -0.5
+
+[sprites.escarpment-b-far]
+src = "base/v7/world/escarpment-b-far.png"
+w = 166
+h = 20.509
+x0 = -8
+v0 = -0.5
+
+[sprites.escarpment-c-mid]
+src = "base/v7/world/escarpment-c-mid.png"
+w = 316
+h = 17.557
+x0 = -8
+v0 = -0.5
+
+[sprites.escarpment-c-far]
+src = "base/v7/world/escarpment-c-far.png"
+w = 316
+h = 17.557
+x0 = -8
+v0 = -0.5
+
+[sprites.escarpment-butte-mid]
+src = "base/v7/world/escarpment-butte-mid.png"
+w = 76
+h = 22.385
+x0 = -8
+v0 = -0.5
+
+[sprites.escarpment-butte-far]
+src = "base/v7/world/escarpment-butte-far.png"
+w = 76
+h = 22.385
+x0 = -8
+v0 = -0.5
+
+[sprites.steppe-plain]
+src = "base/v7/world/steppe-plain.jpg"
+w = 680
+h = 47.933
+x0 = 0
+v0 = 10.161
+
+[sprites.ground-complex]
+src = "base/v7/ground/ground-complex.jpg"
+w = 680
+h = 64.351
+x0 = 0
+v0 = -53.223
+
+[sprites.tussock-0]
+src = "base/v7/world/tussock-0.png"
+w = 18
+h = 9.849
+x0 = -9
+v0 = 1.152
+
+[sprites.tussock-1]
+src = "base/v7/world/tussock-1.png"
+w = 15
+h = 10.759
+x0 = -7.5
+v0 = 1.152
+
+[sprites.tussock-2]
+src = "base/v7/world/tussock-2.png"
+w = 22
+h = 10.747
+x0 = -11
+v0 = 1.152
+
+[sprites.balloon]
+src = "base/v7/world/balloon.png"
+w = 14
+h = 27.675
+x0 = -7
+v0 = 1.677
+
+[sprites.far-rocket]
+src = "base/v7/world/far-rocket.png"
+w = 6
+h = 19.57
+x0 = -3
+v0 = 0.71
+
+[sprites.cloud-0]
+src = "base/v7/sky/cloud-0.png"
+w = 84
+h = 20.894
+x0 = -12
+v0 = -1
+
+[sprites.cloud-1]
+src = "base/v7/sky/cloud-1.png"
+w = 68
+h = 22.954
+x0 = -12
+v0 = -1
+
+[sprites.cloud-2]
+src = "base/v7/sky/cloud-2.png"
+w = 104
+h = 20.996
+x0 = -12
+v0 = -1
+
+[sprites.butte-a-far]
+src = "base/v7/world/butte-a-far.png"
+w = 236
+h = 26.43
+x0 = -8
+v0 = -0.5
+
+[sprites.butte-butte-far]
+src = "base/v7/world/butte-butte-far.png"
+w = 76
+h = 22.385
+x0 = -8
+v0 = -0.5
+
+[sprites.butte-b-mid]
+src = "base/v7/world/butte-b-mid.png"
+w = 166
+h = 20.509
+x0 = -8
+v0 = -0.5
+
+[sprites.butte-butte-mid]
+src = "base/v7/world/butte-butte-mid.png"
+w = 76
+h = 22.385
+x0 = -8
+v0 = -0.5
+
+[sprites.dune-ridge-far]
+src = "base/v7/world/dune-ridge-far.png"
+w = 368
+h = 11.651
+x0 = -4
+v0 = -0.5
+
+[sprites.dune-ridge-mid]
+src = "base/v7/world/dune-ridge-mid.png"
+w = 308
+h = 12.561
+x0 = -4
+v0 = -0.5
+
+[sprites.snow-ridge-far]
+src = "base/v7/world/snow-ridge-far.png"
+w = 368
+h = 12.815
+x0 = -4
+v0 = -0.5
+
+[sprites.snow-ridge-mid]
+src = "base/v7/world/snow-ridge-mid.png"
+w = 308
+h = 14.192
+x0 = -4
+v0 = -0.5
+
+[sprites.coast-dune-ridge-far]
+src = "base/v7/world/coast-dune-ridge-far.png"
+w = 368
+h = 11.455
+x0 = -4
+v0 = -0.5
+
+[sprites.coast-dune-ridge-mid]
+src = "base/v7/world/coast-dune-ridge-mid.png"
+w = 308
+h = 12.376
+x0 = -4
+v0 = -0.5
+
+[sprites.headland-far]
+src = "base/v7/world/headland-far.png"
+w = 256
+h = 24.406
+x0 = -8
+v0 = -0.5
+
+[sprites.headland-mid]
+src = "base/v7/world/headland-mid.png"
+w = 256
+h = 24.406
+x0 = -8
+v0 = -0.5
+
+[sprites.sand-drift-0]
+src = "base/v7/world/sand-drift-0.png"
+w = 30
+h = 6.833
+x0 = -15
+v0 = 0.184
+
+[sprites.sand-drift-1]
+src = "base/v7/world/sand-drift-1.png"
+w = 22
+h = 6.866
+x0 = -11
+v0 = 0.184
+
+[sprites.snow-drift-0]
+src = "base/v7/world/snow-drift-0.png"
+w = 30
+h = 7.01
+x0 = -15
+v0 = 0.184
+
+[sprites.snow-drift-1]
+src = "base/v7/world/snow-drift-1.png"
+w = 22
+h = 6.557
+x0 = -11
+v0 = 0.184
+
+[sprites.saxaul]
+src = "base/v7/world/saxaul.png"
+w = 16
+h = 6.836
+x0 = -8
+v0 = 1.152
+
+[sprites.dune-grass]
+src = "base/v7/world/dune-grass.png"
+w = 22
+h = 10.747
+x0 = -11
+v0 = 1.152
+
+[sprites.ice]
+src = "base/v7/world/ice.png"
+w = 16
+h = 9.936
+x0 = -8
+v0 = 1.152
+
+[sprites.plain-desert]
+src = "base/v7/ground/plain-desert.jpg"
+w = 680
+h = 47.933
+x0 = 0
+v0 = 10.161
+
+[sprites.plain-tundra]
+src = "base/v7/ground/plain-tundra.jpg"
+w = 680
+h = 47.933
+x0 = 0
+v0 = 10.161
+
+[sprites.plain-coast]
+src = "base/v7/ground/plain-coast.jpg"
+w = 680
+h = 47.933
+x0 = 0
+v0 = 10.161
+
+# Entities present in every landscape. x runs along the strip, y is height above the ground line,
+# depth is the parallax factor (1 moves with the strip, 0 stays with the screen).
+
+[[entities]]
+id = "ground"
+sprite = "ground-complex"
+x = -80
+y = 0
+depth = 1
+layer = 30
+
+[[entities]]
+id = "cloud-1"
+sprite = "cloud-0"
+x = 40
+y = 150
+depth = 0.05
+layer = 5
+body = { wind = 1, vx = 2 }
+wrap = [-140, 660]
+sky = true
+
+[[entities]]
+id = "cloud-2"
+sprite = "cloud-1"
+x = 260
+y = 120
+depth = 0.07
+layer = 5
+body = { wind = 1, vx = 3 }
+wrap = [-140, 660]
+sky = true
+
+[[entities]]
+id = "cloud-3"
+sprite = "cloud-2"
+x = 470
+y = 168
+depth = 0.04
+layer = 5
+body = { wind = 1, vx = 1.5 }
+wrap = [-140, 660]
+sky = true
+
+[[entities]]
+id = "cloud-4"
+sprite = "cloud-1"
+x = 150
+y = 96
+depth = 0.06
+layer = 5
+body = { wind = 1, vx = 2.4 }
+wrap = [-140, 660]
+sky = true
+
+[[entities]]
+id = "cloud-5"
+sprite = "cloud-2"
+x = 360
+y = 84
+depth = 0.05
+layer = 5
+body = { wind = 1, vx = 1.8 }
+wrap = [-140, 660]
+sky = true
+
+[[entities]]
+id = "cloud-6"
+sprite = "cloud-0"
+x = 560
+y = 132
+depth = 0.07
+layer = 5
+body = { wind = 1, vx = 2.8 }
+wrap = [-140, 660]
+sky = true
+
+[[entities]]
+id = "cloud-7"
+sprite = "cloud-2"
+x = -20
+y = 110
+depth = 0.04
+layer = 5
+body = { wind = 1, vx = 1.2 }
+wrap = [-140, 660]
+sky = true
+
+# Prefabs are spawned by emitters (rain, meteors, exhaust) and by the sky calendar.
+
+[prefabs.meteor]
+shape = "streak"
+colour = "#f4f8fb"
+length = 6
+width = 1.4
+layer = 4
+depth = 0
+sky = true
+body = { gravity = 0, life = 0.28 }
+
+[prefabs.raindrop]
+shape = "line"
+colour = "#d6e2ec"
+length = 5
+width = 1
+alpha = 0.7
+layer = 40
+depth = 0.9
+body = { gravity = 1.2, wind = 0.6, ground = "splash", life = 3 }
+
+[prefabs.splash]
+shape = "puff"
+colour = "#d6e2ec"
+radius = 0.9
+alpha = 0.6
+layer = 41
+depth = 0.9
+body = { gravity = 0, life = 0.25 }
+
+[prefabs.bolt]
+shape = "bolt"
+colour = "#f6f8ff"
+width = 2
+layer = 9
+depth = 0.1
+body = { gravity = 0, life = 0.22 }
+
+[prefabs.plume]
+shape = "puff"
+colour = "#f3f1ea"
+radius = 1.4
+alpha = 0.8
+layer = 12
+depth = 0.15
+body = { gravity = 0, wind = 0.35, drag = 0.6, grow = 0.22, fade = true, life = 14 }
+
+[prefabs.far-rocket]
+sprite = "far-rocket"
+layer = 13
+depth = 0.15
+scale = 0.7
+body = { gravity = 0, ay = 1.6, pitch = 0.012, life = 70 }
+emit = { prefab = "plume", every = 0.12 }
+
+[prefabs.balloon]
+sprite = "balloon"
+layer = 14
+depth = 0.5
+scale = 0.8
+body = { gravity = 0, ay = 0.6, vy = 2, wind = 0.8, drag = 0.2, life = 240 }
+
+[prefabs.satellite]
+shape = "dot"
+colour = "#ffffff"
+radius = 1.1
+layer = 3
+depth = 0
+sky = true
+body = { gravity = 0, life = 60 }
+
+[prefabs.fog]
+shape = "bank"
+colour = "#e4ebf0"
+alpha = 0.55
+height = 26
+layer = 25
+depth = 0.6
+body = { gravity = 0, wind = 0.3, life = 600 }
+
+[prefabs.snowflake]
+shape = "dot"
+colour = "#f6f9fc"
+radius = 0.6
+alpha = 0.9
+layer = 40
+depth = 0.9
+body = { gravity = 0.06, wind = 0.9, drag = 0.3, ground = "stop", life = 9 }
+
+[prefabs.dust]
+shape = "line"
+colour = "#e8d9b8"
+length = 22
+width = 2
+alpha = 0.32
+layer = 26
+depth = 0.7
+body = { gravity = 0, wind = 1, life = 3 }
+
+# mountains: this landscape's own horizon, far ground, ground-level plants and drifts.
+
+[[biomes.mountains]]
+id = "escarpment-far-1"
+sprite = "escarpment-c-far"
+x = -60
+y = 56
+depth = 0.12
+layer = 10
+
+[[biomes.mountains]]
+id = "escarpment-far-2"
+sprite = "escarpment-b-far"
+x = 300
+y = 56.5
+depth = 0.12
+layer = 10
+
+[[biomes.mountains]]
+id = "escarpment-far-3"
+sprite = "escarpment-butte-far"
+x = 520
+y = 56
+depth = 0.12
+layer = 10
+
+[[biomes.mountains]]
+id = "escarpment-mid-1"
+sprite = "escarpment-a-mid"
+x = 90
+y = 54
+depth = 0.2
+layer = 11
+
+[[biomes.mountains]]
+id = "escarpment-mid-2"
+sprite = "escarpment-butte-mid"
+x = 430
+y = 54.5
+depth = 0.2
+layer = 11
+
+[[biomes.mountains]]
+id = "steppe"
+sprite = "steppe-plain"
+x = -80
+y = 0
+depth = 0.6
+layer = 20
+
+[[biomes.mountains]]
+id = "tussock-1"
+sprite = "tussock-0"
+x = 40
+y = 30
+depth = 0.7
+scale = 0.6
+layer = 22
+
+[[biomes.mountains]]
+id = "tussock-2"
+sprite = "tussock-2"
+x = 150
+y = 38
+depth = 0.66
+scale = 0.5
+layer = 22
+
+[[biomes.mountains]]
+id = "tussock-3"
+sprite = "tussock-1"
+x = 268
+y = 26
+depth = 0.74
+scale = 0.7
+layer = 22
+
+[[biomes.mountains]]
+id = "tussock-4"
+sprite = "tussock-0"
+x = 392
+y = 34
+depth = 0.68
+scale = 0.55
+layer = 22
+
+[[biomes.mountains]]
+id = "tussock-5"
+sprite = "tussock-2"
+x = 470
+y = 22
+depth = 0.78
+scale = 0.75
+layer = 22
+
+[[biomes.mountains]]
+id = "escarpment-far-4"
+sprite = "escarpment-a-far"
+x = 180
+y = 56
+depth = 0.12
+layer = 10
+
+[[biomes.mountains]]
+id = "escarpment-mid-3"
+sprite = "escarpment-b-mid"
+x = 250
+y = 54
+depth = 0.2
+layer = 11
+
+[[biomes.mountains]]
+id = "escarpment-mid-4"
+sprite = "escarpment-c-mid"
+x = -80
+y = 54.2
+depth = 0.2
+layer = 11
+
+[[biomes.mountains]]
+id = "escarpment-mid-5"
+sprite = "escarpment-a-mid"
+x = 560
+y = 54
+depth = 0.2
+layer = 11
+
+[[biomes.mountains]]
+id = "tussock-10"
+sprite = "tussock-1"
+x = 90
+y = 24
+depth = 0.72
+layer = 22
+scale = 0.55
+
+[[biomes.mountains]]
+id = "tussock-11"
+sprite = "tussock-0"
+x = 205
+y = 32
+depth = 0.68
+layer = 22
+scale = 0.5
+
+[[biomes.mountains]]
+id = "tussock-12"
+sprite = "tussock-2"
+x = 330
+y = 36
+depth = 0.67
+layer = 22
+scale = 0.5
+
+[[biomes.mountains]]
+id = "tussock-13"
+sprite = "tussock-1"
+x = 430
+y = 22
+depth = 0.78
+layer = 22
+scale = 0.7
+
+[[biomes.mountains]]
+id = "tussock-14"
+sprite = "tussock-0"
+x = -10
+y = 22
+depth = 0.76
+layer = 22
+scale = 0.65
+
+[[biomes.mountains]]
+id = "tussock-15"
+sprite = "tussock-2"
+x = 540
+y = 34
+depth = 0.7
+layer = 22
+scale = 0.6
+
+[[biomes.mountains]]
+id = "tussock-16"
+sprite = "tussock-1"
+x = 10
+y = 40
+depth = 0.64
+layer = 22
+scale = 0.4
+
+[[biomes.mountains]]
+id = "tussock-17"
+sprite = "tussock-0"
+x = 235
+y = 44
+depth = 0.62
+layer = 22
+scale = 0.4
+
+# desert: this landscape's own horizon, far ground, ground-level plants and drifts.
+
+[[biomes.desert]]
+id = "butte-far-1"
+sprite = "butte-a-far"
+x = -40
+y = 56
+depth = 0.12
+layer = 10
+
+[[biomes.desert]]
+id = "butte-far-2"
+sprite = "butte-butte-far"
+x = 400
+y = 56.5
+depth = 0.12
+layer = 10
+
+[[biomes.desert]]
+id = "dune-far"
+sprite = "dune-ridge-far"
+x = 150
+y = 55
+depth = 0.16
+layer = 10
+
+[[biomes.desert]]
+id = "butte-mid"
+sprite = "butte-b-mid"
+x = 250
+y = 53.5
+depth = 0.2
+layer = 11
+
+[[biomes.desert]]
+id = "dune-mid"
+sprite = "dune-ridge-mid"
+x = -30
+y = 46
+depth = 0.4
+layer = 21
+
+[[biomes.desert]]
+id = "plain"
+sprite = "plain-desert"
+x = -80
+y = 0
+depth = 0.6
+layer = 20
+
+[[biomes.desert]]
+id = "saxaul-1"
+sprite = "saxaul"
+x = 46
+y = 32
+depth = 0.68
+layer = 22
+scale = 0.6
+
+[[biomes.desert]]
+id = "saxaul-2"
+sprite = "saxaul"
+x = 205
+y = 24
+depth = 0.74
+layer = 22
+scale = 0.75
+
+[[biomes.desert]]
+id = "saxaul-3"
+sprite = "saxaul"
+x = 372
+y = 36
+depth = 0.66
+layer = 22
+scale = 0.5
+
+[[biomes.desert]]
+id = "saxaul-4"
+sprite = "saxaul"
+x = 488
+y = 22
+depth = 0.78
+layer = 22
+scale = 0.8
+
+[[biomes.desert]]
+id = "drift-1"
+sprite = "sand-drift-0"
+x = 108
+y = -5
+depth = 1
+layer = 31
+
+[[biomes.desert]]
+id = "drift-2"
+sprite = "sand-drift-1"
+x = 268
+y = -7
+depth = 1
+layer = 31
+
+[[biomes.desert]]
+id = "drift-3"
+sprite = "sand-drift-0"
+x = 420
+y = -4
+depth = 1
+layer = 31
+
+[[biomes.desert]]
+id = "butte-far-3"
+sprite = "butte-a-far"
+x = 560
+y = 56
+depth = 0.12
+layer = 10
+
+[[biomes.desert]]
+id = "butte-mid-2"
+sprite = "butte-butte-mid"
+x = 90
+y = 53.5
+depth = 0.2
+layer = 11
+
+[[biomes.desert]]
+id = "butte-mid-3"
+sprite = "butte-b-mid"
+x = 500
+y = 53.5
+depth = 0.2
+layer = 11
+
+[[biomes.desert]]
+id = "dune-far-2"
+sprite = "dune-ridge-far"
+x = -60
+y = 55
+depth = 0.16
+layer = 10
+
+[[biomes.desert]]
+id = "dune-mid-2"
+sprite = "dune-ridge-mid"
+x = 330
+y = 46
+depth = 0.4
+layer = 21
+
+[[biomes.desert]]
+id = "saxaul-10"
+sprite = "saxaul"
+x = 120
+y = 38
+depth = 0.64
+layer = 22
+scale = 0.45
+
+[[biomes.desert]]
+id = "saxaul-11"
+sprite = "saxaul"
+x = 300
+y = 30
+depth = 0.72
+layer = 22
+scale = 0.6
+
+[[biomes.desert]]
+id = "saxaul-12"
+sprite = "saxaul"
+x = -20
+y = 28
+depth = 0.74
+layer = 22
+scale = 0.7
+
+[[biomes.desert]]
+id = "saxaul-13"
+sprite = "saxaul"
+x = 440
+y = 26
+depth = 0.76
+layer = 22
+scale = 0.55
+
+[[biomes.desert]]
+id = "saxaul-14"
+sprite = "saxaul"
+x = 560
+y = 34
+depth = 0.68
+layer = 22
+scale = 0.5
+
+[[biomes.desert]]
+id = "saxaul-15"
+sprite = "dune-grass"
+x = 165
+y = 42
+depth = 0.62
+layer = 22
+scale = 0.4
+
+# tundra: this landscape's own horizon, far ground, ground-level plants and drifts.
+
+[[biomes.tundra]]
+id = "ridge-far-1"
+sprite = "snow-ridge-far"
+x = -40
+y = 56
+depth = 0.12
+layer = 10
+
+[[biomes.tundra]]
+id = "ridge-far-2"
+sprite = "snow-ridge-far"
+x = 330
+y = 56.5
+depth = 0.12
+layer = 10
+
+[[biomes.tundra]]
+id = "ridge-mid"
+sprite = "snow-ridge-mid"
+x = 120
+y = 46
+depth = 0.4
+layer = 21
+
+[[biomes.tundra]]
+id = "plain"
+sprite = "plain-tundra"
+x = -80
+y = 0
+depth = 0.6
+layer = 20
+
+[[biomes.tundra]]
+id = "ice-1"
+sprite = "ice"
+x = 60
+y = 30
+depth = 0.7
+layer = 22
+scale = 0.6
+
+[[biomes.tundra]]
+id = "ice-2"
+sprite = "ice"
+x = 300
+y = 36
+depth = 0.66
+layer = 22
+scale = 0.5
+
+[[biomes.tundra]]
+id = "ice-3"
+sprite = "ice"
+x = 455
+y = 24
+depth = 0.76
+layer = 22
+scale = 0.75
+
+[[biomes.tundra]]
+id = "drift-1"
+sprite = "snow-drift-0"
+x = 12
+y = -5
+depth = 1
+layer = 31
+
+[[biomes.tundra]]
+id = "drift-2"
+sprite = "snow-drift-1"
+x = 110
+y = -7
+depth = 1
+layer = 31
+
+[[biomes.tundra]]
+id = "drift-3"
+sprite = "snow-drift-0"
+x = 268
+y = -4
+depth = 1
+layer = 31
+
+[[biomes.tundra]]
+id = "drift-4"
+sprite = "snow-drift-1"
+x = 420
+y = -6
+depth = 1
+layer = 31
+
+[[biomes.tundra]]
+id = "ridge-far-3"
+sprite = "snow-ridge-far"
+x = -180
+y = 56
+depth = 0.14
+layer = 10
+
+[[biomes.tundra]]
+id = "ridge-far-4"
+sprite = "snow-ridge-far"
+x = 560
+y = 56.2
+depth = 0.14
+layer = 10
+
+[[biomes.tundra]]
+id = "ridge-mid-2"
+sprite = "snow-ridge-mid"
+x = 420
+y = 46
+depth = 0.4
+layer = 21
+
+[[biomes.tundra]]
+id = "ridge-mid-3"
+sprite = "snow-ridge-mid"
+x = -100
+y = 46
+depth = 0.4
+layer = 21
+
+[[biomes.tundra]]
+id = "ice-10"
+sprite = "ice"
+x = 150
+y = 40
+depth = 0.64
+layer = 22
+scale = 0.45
+
+[[biomes.tundra]]
+id = "ice-11"
+sprite = "ice"
+x = 220
+y = 26
+depth = 0.74
+layer = 22
+scale = 0.65
+
+[[biomes.tundra]]
+id = "ice-12"
+sprite = "ice"
+x = 380
+y = 30
+depth = 0.7
+layer = 22
+scale = 0.55
+
+[[biomes.tundra]]
+id = "ice-13"
+sprite = "ice"
+x = 10
+y = 22
+depth = 0.78
+layer = 22
+scale = 0.7
+
+[[biomes.tundra]]
+id = "ice-14"
+sprite = "ice"
+x = 520
+y = 38
+depth = 0.66
+layer = 22
+scale = 0.5
+
+# coast: this landscape's own horizon, far ground, ground-level plants and drifts.
+
+[[biomes.coast]]
+id = "headland"
+sprite = "headland-far"
+x = 330
+y = 56
+depth = 0.12
+layer = 10
+
+[[biomes.coast]]
+id = "dune-far"
+sprite = "coast-dune-ridge-far"
+x = 60
+y = 50
+depth = 0.32
+layer = 21
+
+[[biomes.coast]]
+id = "dune-mid"
+sprite = "coast-dune-ridge-mid"
+x = -40
+y = 42
+depth = 0.45
+layer = 21
+
+[[biomes.coast]]
+id = "plain"
+sprite = "plain-coast"
+x = -80
+y = 0
+depth = 0.6
+layer = 20
+
+[[biomes.coast]]
+id = "grass-1"
+sprite = "dune-grass"
+x = 40
+y = 30
+depth = 0.7
+layer = 22
+scale = 0.6
+
+[[biomes.coast]]
+id = "grass-2"
+sprite = "dune-grass"
+x = 160
+y = 38
+depth = 0.66
+layer = 22
+scale = 0.5
+
+[[biomes.coast]]
+id = "grass-3"
+sprite = "dune-grass"
+x = 280
+y = 24
+depth = 0.76
+layer = 22
+scale = 0.75
+
+[[biomes.coast]]
+id = "grass-4"
+sprite = "dune-grass"
+x = 410
+y = 33
+depth = 0.68
+layer = 22
+scale = 0.55
+
+[[biomes.coast]]
+id = "grass-5"
+sprite = "dune-grass"
+x = 500
+y = 26
+depth = 0.74
+layer = 22
+scale = 0.7
+
+[[biomes.coast]]
+id = "drift-1"
+sprite = "sand-drift-1"
+x = 108
+y = -6
+depth = 1
+layer = 31
+
+[[biomes.coast]]
+id = "drift-2"
+sprite = "sand-drift-0"
+x = 420
+y = -4
+depth = 1
+layer = 31
+
+[[biomes.coast]]
+id = "headland-2"
+sprite = "headland-far"
+x = -100
+y = 56
+depth = 0.12
+layer = 10
+
+[[biomes.coast]]
+id = "dune-far-2"
+sprite = "coast-dune-ridge-far"
+x = 380
+y = 50
+depth = 0.32
+layer = 21
+
+[[biomes.coast]]
+id = "dune-mid-2"
+sprite = "coast-dune-ridge-mid"
+x = 330
+y = 42
+depth = 0.45
+layer = 21
+
+[[biomes.coast]]
+id = "dune-mid-3"
+sprite = "coast-dune-ridge-mid"
+x = 560
+y = 42
+depth = 0.45
+layer = 21
+
+[[biomes.coast]]
+id = "grass-10"
+sprite = "dune-grass"
+x = 100
+y = 24
+depth = 0.74
+layer = 22
+scale = 0.65
+
+[[biomes.coast]]
+id = "grass-11"
+sprite = "dune-grass"
+x = 220
+y = 30
+depth = 0.7
+layer = 22
+scale = 0.6
+
+[[biomes.coast]]
+id = "grass-12"
+sprite = "dune-grass"
+x = 350
+y = 38
+depth = 0.66
+layer = 22
+scale = 0.45
+
+[[biomes.coast]]
+id = "grass-13"
+sprite = "dune-grass"
+x = 470
+y = 22
+depth = 0.78
+layer = 22
+scale = 0.75
+
+[[biomes.coast]]
+id = "grass-14"
+sprite = "dune-grass"
+x = -10
+y = 36
+depth = 0.68
+layer = 22
+scale = 0.55
+
+[[biomes.coast]]
+id = "grass-15"
+sprite = "dune-grass"
+x = 560
+y = 32
+depth = 0.7
+layer = 22
+scale = 0.6

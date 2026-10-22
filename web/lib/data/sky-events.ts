@@ -5,6 +5,8 @@
 // opens nothing is earned. Landnam had no badge system before this module.
 
 import type { Player } from '@/lib/game-types'
+import type { PlayerLocation } from '@/lib/game-types'
+import { isInLocalEventBonusWindow } from './sky-event-window'
 
 export type BadgeTier = 'gold' | 'silver'
 
@@ -325,7 +327,7 @@ export function activeDebrisPreset(now: Date | number): DebrisEventPreset | null
 }
 
 /** Particles per minute now: 0 when inactive, else a linear ramp base -> peak -> base. */
-export function debrisRatePerMinute(preset: DebrisEventPreset, now: Date | number): number {
+export function debrisRatePerMinute(preset: DebrisEventPreset, now: Date | number, location?: PlayerLocation | null): number {
   if (!isDebrisEventActive(preset, now)) return 0
   const t = toMs(now)
   const start = debrisWindowStartMs(preset)
@@ -334,7 +336,7 @@ export function debrisRatePerMinute(preset: DebrisEventPreset, now: Date | numbe
   const half = Math.max(peak - start, end - peak, 1)
   const closeness = Math.max(0, 1 - Math.abs(t - peak) / half)
   const rate = preset.baseRatePerMinute + (preset.peakRatePerMinute - preset.baseRatePerMinute) * closeness
-  return preset.eventId === 'orionids-2026' && isOrionidsPeakNight(t) ? rate * ORIONIDS_PEAK_MULTIPLIER : rate
+  return preset.eventId === 'orionids-2026' && isInLocalEventBonusWindow(t, location) ? rate * ORIONIDS_PEAK_MULTIPLIER : rate
 }
 
 /** SSL-578: peak-night debris boost (21-22 Oct, local night). */

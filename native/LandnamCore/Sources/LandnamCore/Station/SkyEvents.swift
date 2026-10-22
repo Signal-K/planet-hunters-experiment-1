@@ -116,12 +116,12 @@ public enum SkyEvents {
     }
 
     /// Particles per minute: 0 when inactive, otherwise a linear ramp base, peak, base.
-    public static func ratePerMinute(_ p: DebrisPreset, at ms: Double, calendar: Calendar = .current) -> Double {
+    public static func ratePerMinute(_ p: DebrisPreset, at ms: Double, calendar: Calendar = .current, location: PlayerLocation? = nil) -> Double {
         guard isActive(p, at: ms, calendar: calendar) else { return 0 }
         let half = max(p.peakMs - p.startMs, p.endMs - p.peakMs, 1)
         let closeness = max(0, 1 - abs(ms - p.peakMs) / half)
         let rate = p.baseRatePerMinute + (p.peakRatePerMinute - p.baseRatePerMinute) * closeness
-        return p.eventId == orionids.eventId && isOrionidsPeakNight(ms, calendar: calendar) ? rate * orionidsPeakMultiplier : rate
+        return p.eventId == orionids.eventId && SkyEventWindows.isInOrionidsBonusWindow(ms, location: location) ? rate * orionidsPeakMultiplier : rate
     }
 
     /// SSL-578: peak-night debris boost, mirrors web ORIONIDS_PEAK_MULTIPLIER.

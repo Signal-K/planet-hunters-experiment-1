@@ -32,6 +32,11 @@
   pointer-events: auto;
 }
 
+/* Survey is an operation surface: its readout and scan controls are the only chrome it needs. */
+.cog,
+.clock,
+.chips { display: none; }
+
 .cog {
   position: absolute;
   top: 8px;

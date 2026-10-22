@@ -3,6 +3,7 @@ import {
   EMPTY_FLIGHT_PLAN,
   completeFlightPlanEvent,
   currentTrainingTry,
+  earnsTrainingReplayReward,
   isTrainingComplete,
   replayFlightPlanTry,
   revealFlightPlanHint,
@@ -35,6 +36,13 @@ describe('FlightPlanSystem', () => {
     expect(replay.completed.mining).toBe(true)
     expect(currentTrainingTry(replay)).toBe('mining')
     expect(isTrainingComplete(skipFlightPlan(replay))).toBe(true)
+  })
+
+  it('pays only when a previously completed try finishes again', () => {
+    const firstRun = replayFlightPlanTry(startFlightPlan(EMPTY_FLIGHT_PLAN, 1), 'mining')
+    expect(earnsTrainingReplayReward(firstRun, 'mining')).toBe(false)
+    const replay = replayFlightPlanTry({ ...EMPTY_FLIGHT_PLAN, completed: { mining: true } }, 'mining')
+    expect(earnsTrainingReplayReward(replay, 'mining')).toBe(true)
   })
 
   it('the coach steps aside on screens unrelated to the try', () => {

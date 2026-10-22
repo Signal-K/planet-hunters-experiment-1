@@ -39,4 +39,23 @@ describe('BaseDock', () => {
     expect(markup).toContain('data-testid="hub-build-done-btn"')
     expect(markup).toContain('>Done<')
   })
+
+  it('keeps the location selector labelled and exposes Menu as a compact utility action', () => {
+    const markup = renderToStaticMarkup(
+      <BaseDock
+        onPrev={vi.fn()}
+        onNext={vi.fn()}
+        onBuild={vi.fn()}
+        onHub={vi.fn()}
+        locationLabel="Earth"
+        locationNavigationDisabled
+      />,
+    )
+
+    expect(markup).toContain('aria-label="Selected location Earth"')
+    expect(markup).toContain('aria-label="Previous location"')
+    expect(markup).toContain('aria-label="Next location"')
+    expect(markup).toContain('data-testid="hub-btn"')
+    expect(markup).toContain('>Menu<')
+  })
 })

@@ -1,0 +1,31 @@
+#:schema ../schema/mission.schema.json
+# Canonical free mining run: no client, no daily limit, no cooldown. The player picks any reachable target and sells
+# the haul at market price. Compiled into shared/missions/authored-missions.json for web and native.
+format = 1
+id = "freeops-self-directed-mining"
+title = "Self-Directed Mining Run"
+brief = "No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price."
+tag = "FREE OPS"
+difficulty = "L2"
+locked = false
+sequence = "free-ops"
+unlock_at = "Reach Free Operations"
+
+# Sold at market on Earth return, so this must avoid earth-abundant minerals (iron, silicon, carbon).
+# It is the first player-owned loop after the Flight Plan and must launch on the Explorer fitted during training.
+# Requiring cobalt or tier 2 here silently turned a Free Ops unlock into a contract gate.
+[requires]
+cargo_min = 1
+drill_tier = 1
+max_orbit = 2
+
+[requires.minerals]
+nickel = 1
+
+[payout]
+francs = 0
+affinity = 0
+
+[preview]
+route = "missions"
+state = "cp-mid"

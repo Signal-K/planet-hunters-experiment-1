@@ -30,59 +30,28 @@
   user-select: none;
 }
 
-.hud {
+.exit {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 12px;
+  left: 12px;
   z-index: 6;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px 12px 0;
-  pointer-events: none;
-}
-
-.hud[data-dev-launcher='true'] {
-  padding-left: 72px;
-}
-
-.cluster {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  pointer-events: auto;
-}
-
-.cog {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
   min-width: 44px;
   min-height: 44px;
-  padding: 0;
+  padding: 0 14px;
   border: 1px solid var(--ln-world-outline);
   border-radius: 4px;
   background: var(--ln-world-hull-lit);
   color: var(--ln-world-outline);
+  font: 800 14px var(--ln-font-display);
+  letter-spacing: .1em;
+  text-transform: uppercase;
   cursor: pointer;
-}
-
-.cluster :global(.scene-chip) {
-  min-height: 44px;
-  height: 44px;
-  border-radius: 4px;
-  padding: 0 12px;
-  font-size: 16px;
 }
 
 .panel {
   position: absolute;
   z-index: 2;
-  inset: 68px 12px 76px;
+  inset: 68px 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -255,7 +224,7 @@
 
 .btn:focus-visible,
 .tab:focus-visible,
-.cog:focus-visible {
+.exit:focus-visible {
   outline: 2px solid var(--ln-blueprint-blue);
   outline-offset: 2px;
 }
@@ -267,23 +236,5 @@
 }
 
 @media (max-height: 520px) {
-  .panel { inset: 64px 12px 68px; gap: 6px; padding: 8px 12px; }
+  .panel { inset: 64px 12px 12px; gap: 6px; padding: 8px 12px; }
 }
-
-.dock {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  z-index: 6;
-  display: flex;
-  justify-content: center;
-  min-width: 0;
-  pointer-events: none;
-}
-
-.dock :global(.scene-dock) {
-  max-width: 100%;
-  pointer-events: auto;
-}
-

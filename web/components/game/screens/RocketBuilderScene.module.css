@@ -3,7 +3,7 @@
   inset: 0;
   overflow: hidden;
   color: var(--ln-blueprint-ink);
-  background: var(--ln-blueprint-bg);
+  background: var(--ln-world-night-top);
 }
 
 :global(.ln-scene-launchpad.rocket-builder-host) {
@@ -15,7 +15,33 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--lb-sky-top), var(--lb-sky-horizon) 58%, var(--lb-ground));
+  background:
+    radial-gradient(ellipse at 45% 76%, color-mix(in srgb, var(--ln-world-dusk-horizon) 18%, transparent), transparent 38%),
+    linear-gradient(180deg, var(--ln-world-night-top) 0%, var(--ln-world-night-mid) 66%, var(--ln-world-asphalt) 66%);
+}
+
+.land::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 34%;
+  opacity: 0.46;
+  background-image: radial-gradient(circle, var(--ln-world-hull-lit) 0 1px, transparent 1.5px);
+  background-size: 91px 71px;
+  background-position: 12px 8px;
+}
+
+.land::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34%;
+  border-top: 3px solid color-mix(in srgb, var(--ln-world-hull-lit) 36%, var(--ln-world-asphalt));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-world-concrete) 80%, var(--ln-world-asphalt)) 0 12px, transparent 12px),
+    repeating-linear-gradient(90deg, transparent 0 56px, color-mix(in srgb, var(--ln-world-hull-lit) 11%, transparent) 56px 58px),
+    var(--ln-world-asphalt);
 }
 
 .wash {
@@ -55,7 +81,7 @@
 .stage {
   position: absolute;
   z-index: 4;
-  inset: 64px 12px 76px 12px;
+  inset: 16px 12px 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -121,6 +147,21 @@
 
 .target span { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: var(--ln-tr-label); }
 .target strong { font: 700 14px/1.2 var(--ln-font-body, var(--ln-font-display)); letter-spacing: 0; text-transform: none; }
+.actions > .back:last-child { margin-left: auto; }
+.customize { margin-left: 0; }
+
+.dismantle {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid color-mix(in srgb, var(--ln-world-hull-lit) 70%, var(--ln-world-outline));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ln-world-outline) 74%, transparent);
+  color: var(--ln-world-hull-lit);
+  font: 700 14px/1 var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
 
 .guide {
   flex: 0 0 auto;
@@ -178,7 +219,7 @@
   top: calc(100% - 28px);
   height: 100vh;
   pointer-events: none;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--lb-ridge) 70%, #ffffff) 0, var(--lb-ridge) 6px, var(--lb-ground) 6px, var(--lb-ground) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ln-world-hull-lit) 38%, var(--ln-world-asphalt)) 0, var(--ln-world-asphalt) 6px, var(--ln-world-asphalt) 100%);
 }
 
 .complex {
@@ -191,21 +232,6 @@
 
 .complex img { position: absolute; image-rendering: pixelated; pointer-events: none; }
 .complexArt { inset: 0; width: 100%; height: 100%; }
-
-.hangarTag {
-  position: absolute;
-  left: 68%;
-  top: 58%;
-  padding: 4px 10px;
-  border: 2px solid var(--ln-blueprint-ink);
-  border-radius: 999px;
-  background: var(--ln-blueprint-paper);
-  color: var(--ln-blueprint-ink);
-  font: 700 14px/1 var(--ln-font-display);
-  letter-spacing: var(--ln-tr-label);
-  text-transform: uppercase;
-  pointer-events: none;
-}
 
 /* The rocket stands on the mount; the mount centre and deck height come from the Blender frame. */
 .rocketSlot {
@@ -340,18 +366,54 @@
 }
 
 .stats li {
-  display: flex;
-  flex-direction: column;
-  min-width: 96px;
-  padding: 6px 10px;
-  border: 2px solid var(--ln-blueprint-ink);
-  border-radius: 8px;
-  background: var(--ln-blueprint-paper);
-  color: var(--ln-blueprint-ink);
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto 3px;
+  column-gap: 8px;
+  align-items: center;
+  min-width: 132px;
+  padding: 9px 10px 8px;
+  border: 2px solid color-mix(in srgb, var(--ln-world-hull-lit) 62%, var(--ln-world-outline));
+  border-radius: 10px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ln-world-hull-lit) 96%, var(--ln-world-glass)) 0 72%, var(--ln-world-hull-shade) 72%);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--ln-world-outline) 50%, transparent);
+  color: var(--ln-world-outline);
 }
 
-.stats span { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
-.stats strong { font: 800 20px/1.1 var(--ln-font-display); }
+.statIcon { grid-row: 1 / span 2; width: 22px; height: 22px; border: 2px solid var(--ln-world-trim-blue); border-radius: 50%; background: color-mix(in srgb, var(--ln-world-glass) 46%, transparent); }
+.stats li[data-stat='capacity'] .statIcon { border-radius: 4px; background: repeating-linear-gradient(90deg, var(--ln-world-trim-blue) 0 3px, transparent 3px 6px); }
+.stats li[data-stat='range'] .statIcon { clip-path: polygon(50% 0, 100% 100%, 50% 76%, 0 100%); }
+.stats li[data-stat='laser'] .statIcon { border-radius: 2px 12px 2px 12px; transform: rotate(-28deg); }
+.statCopy { font: 700 14px/1.1 var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.stats strong { grid-column: 2; font: 800 24px/.95 var(--ln-font-display); }
+.stats i { grid-column: 1 / -1; width: 100%; height: 3px; background: repeating-linear-gradient(90deg, var(--ln-world-trim-blue) 0 13%, color-mix(in srgb, var(--ln-world-outline) 18%, transparent) 13% 18%); }
+
+.dismantleConfirm {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: 24%;
+  transform: translateX(-50%);
+  width: min(88%, 400px);
+  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px solid var(--ln-world-outline);
+  border-radius: 12px;
+  background: var(--ln-world-hull-lit);
+  box-shadow: 3px 3px 0 var(--ln-world-outline);
+  color: var(--ln-world-outline);
+  font: 700 14px/1.2 var(--ln-font-display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.dismantleConfirm span { width: 100%; text-align: center; }
+.dismantleConfirm button { min-height: 44px; padding: 0 12px; border: 2px solid var(--ln-world-outline); border-radius: 7px; background: var(--ln-blueprint-paper); color: var(--ln-world-outline); font: inherit; cursor: pointer; }
+.dismantleConfirm button:first-of-type { background: var(--ln-blueprint-blue); color: var(--ln-blueprint-paper); }
 
 .choices {
   background: var(--ln-blueprint-paper);
@@ -445,6 +507,11 @@
 
 /* Portrait phones: the pad scene on top, choices below. */
 @media (orientation: portrait) {
+  .actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .back, .launch, .target, .dismantle { min-width: 0; padding-inline: 10px; }
+  .target { grid-column: 1 / -1; grid-row: 2; max-width: none; margin-left: 0; }
+  .customize { grid-column: 1; grid-row: 3; }
+  .dismantle { grid-column: 2; grid-row: 3; }
   .body[data-parts='open'] { grid-template-columns: 1fr; grid-template-rows: minmax(200px, 42%) minmax(0, 1fr); }
   .stats { flex-direction: row; top: 0; left: 0; right: 0; justify-content: center; }
   .stats li { flex: 1; min-width: 0; }
@@ -452,7 +519,10 @@
   .tabPart { display: none; }
   .tab { min-height: 72px; padding-inline: 1px; }
   .tabLabel { letter-spacing: -0.04em; }
-  .hangarTag { display: none; }
+  .stats li { min-width: 0; padding: 7px 6px; column-gap: 4px; }
+  .statIcon { width: 18px; height: 18px; }
+  /* 14px is the floor for any text; the three chips share 390px, so the tracking gives way, not the size. */
+  .statCopy { letter-spacing: .02em; }
 }
 
 /* Short landscape phones: tighter chrome, same two columns. */

@@ -726,7 +726,8 @@ final class MiningScene: SKScene {
             guard let lane = laneX[id] else { continue }
             var x = (lane - scrollX).truncatingRemainder(dividingBy: span)
             if x < -36 { x += span }
-            node.position = CGPoint(x: x, y: surfaceY - 15 * px)
+            // SSL-344: whole-pixel x so pixelated chips do not shimmer as the field scrolls (matches web).
+            node.position = CGPoint(x: x.rounded(), y: surfaceY - 15 * px)
             if let tag = node.childNode(withName: "ore-label") {
                 let labelWidth = (tag.userData?["labelWidth"] as? NSNumber)?.doubleValue ?? Double(tag.frame.width)
                 let halfWidth = max(32, CGFloat(labelWidth) * 0.58)

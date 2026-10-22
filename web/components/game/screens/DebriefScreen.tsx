@@ -16,8 +16,9 @@ import DestinationLandscape from '@/components/game/screens/DestinationLandscape
 import { formatCurrency } from '@/lib/format'
 import type { PlayerBadge } from '@/lib/data/sky-events'
 import { SkyBadgeRow } from './SkyBadgeRow'
+import { withoutShowerFragments } from '@/lib/orionids/shower-run'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -44,15 +45,24 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   laserCapacitorLevel?: number
   stashUnits?: number
   badges?: Record<string, PlayerBadge>
+  /** SSL-651: a filled Orionids shower run. Its francs are paid and its fragments kept, not sold. */
+  showerRun?: { francs: number; fragments: number } | null
 }) {
   const isFreeHaul = isFreeHaulMission(mission, cargo)
+  // Collecting settles the run, which clears the count. Keep showing what was paid until the screen leaves.
+  const shownRunRef = useRef(showerRun ?? null)
+  if (showerRun) shownRunRef.current = showerRun
+  const shownRun = shownRunRef.current
   const isOrbitalInstrumentDeployment = mission.payload?.type === 'satellite'
   const help = useHelp('debrief')
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
   const disposition = initialDisposition ?? (hasEarthStorage ? 'store' : 'sell')
   const haulUnits = Object.values(cargo).reduce((sum, n) => sum + Math.max(0, n), 0)
-  const overflowUnits = hasEarthStorage ? Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0)) : haulUnits
+  // A filled shower run keeps its fragments, so only the rest of the haul is sold or stored.
+  const settledCargo = shownRun ? withoutShowerFragments(cargo) : cargo
+  const settledUnits = Object.values(settledCargo).reduce((sum, n) => sum + Math.max(0, n), 0)
+  const overflowUnits = hasEarthStorage ? Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0)) : settledUnits
   const [scrapping, setScrapping] = useState(false)
   const rocketDisplay = rocketDisplayForConfig(rocket)
   const starterRocket = rocketModelForConfig(rocket)
@@ -128,9 +138,20 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </section>
         )}
 
+        {shownRun && (
+          <section className={styles.card} data-surface="cream" data-testid="debrief-shower-run">
+            <p className={styles.kicker}>Orionids shower run</p>
+            <PayRow testId="debrief-shower-payout" label="Run payout" value={shownRun.francs} />
+            <div className={styles.row} data-testid="debrief-shower-fragments">
+              <span>Fragments kept</span>
+              <span>{shownRun.fragments}</span>
+            </div>
+          </section>
+        )}
+
         {isOrbitalInstrumentDeployment ? null : isFreeHaul ? (
           <CargoDestinationPanel
-            cargo={cargo}
+            cargo={settledCargo}
             disposition={disposition}
             hasEarthStorage={!!hasEarthStorage}
             storageUsed={storageUsed ?? 0}
@@ -221,13 +242,13 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         >
           {isFreeHaul
             ? willStore
-              ? overflowUnits > 0 ? `Store haul · sell ${overflowUnits} over cap` : 'Keep haul on Earth'
-              : `Collect ${formatCurrency(haulMarketValue ?? 0)}`
+              ? overflowUnits > 0 ? `Store haul · sell ${overflowUnits} over cap` : shownRun ? `Collect ${formatCurrency(shownRun.francs)} · keep haul` : 'Keep haul on Earth'
+              : `Collect ${formatCurrency((haulMarketValue ?? 0) + (shownRun?.francs ?? 0))}`
             : delivered
               ? isProgramOperation
                 ? 'Log Program Outcome'
                 : `Collect ${formatCurrency(total)}`
-              : 'Return to Base'}
+              : shownRun ? `Collect ${formatCurrency(shownRun.francs)}` : 'Return to Base'}
         </PrimaryBtn>
       </div>
 

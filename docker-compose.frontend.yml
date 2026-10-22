@@ -5,8 +5,13 @@ services:
       context: ./web
       target: dev
     pull_policy: never
+    # Warm the Scene Studio's routes once the server is up, whoever started the container (make up, docker restart, a test run).
+    # Next compiles each route on its first request, about 10 seconds on a cold start; this does it before anyone asks.
+    command: ["sh", "-c", "LANDNAM_WEB_URL=http://127.0.0.1:3001 node /repo/scripts/warm-studio.mjs --wait > /tmp/warm-studio.log 2>&1 & exec npm run dev"]
     volumes:
       - ./web:/app
+      # The Scene Studio reads and writes shared/authoring and compiles runtime files for web and native.
+      - ./:/repo
       - web_node_modules:/app/node_modules
       - web_next_cache:/app/.next
     environment:
@@ -21,6 +26,9 @@ services:
       # The follow state lives in /app/.dev-follow.json, inside the host bind
       # mount below, so recreating this container cannot disconnect the editor.
       LANDNAM_DEV_FOLLOW: "true"
+      LANDNAM_REPO_ROOT: /repo
+      # Absolute repo path on the host, for Open in Cursor links. Exported by the Makefile.
+      LANDNAM_HOST_ROOT: ${LANDNAM_HOST_ROOT:-}
     ports:
       - "3001:3001"
     healthcheck:

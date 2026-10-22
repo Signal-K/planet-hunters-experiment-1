@@ -37,8 +37,12 @@ public struct SkyCraft: Equatable, Sendable {
             }
             return SkyCraft(state: state, label: label, accessibilityLabel: "Resume \(active.label)", opens: resume)
         }
-        if player.pendingLaunch {
-            return SkyCraft(state: .waiting, label: "CRAFT ON PAD", accessibilityLabel: "Open Launchpad: craft waiting on the pad", opens: .launchpad)
+        if let selectedId = player.selectedStagedRocketId,
+           let vehicle = player.stagedRockets.first(where: { $0.id == selectedId }) {
+            if vehicle.location == .launchpad {
+                return SkyCraft(state: .waiting, label: "CRAFT ON PAD", accessibilityLabel: "Open Launchpad: craft waiting on the pad", opens: .launchpad)
+            }
+            return SkyCraft(state: .waiting, label: "CRAFT IN HANGAR", accessibilityLabel: "Open Hangar: vehicle assigned to the mission", opens: .fab)
         }
         return nil
     }

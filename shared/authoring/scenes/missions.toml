@@ -1,0 +1,19 @@
+#:schema ../schema/scene.schema.json
+# Mission Board: scene script. Edit here or in the Scene Studio (http://localhost:3001/game/studio?scene=missions).
+# Objects listed here are the scene's game objects. Objects marked status = "proposed" are requests for an agent to build.
+format = 1
+id = "missions"
+type = "menu"
+name = "Mission Board"
+summary = "The live list of client contracts and Free Ops work to choose from."
+tickets = ["SSL-425"]
+qa = ["mission-board"]
+
+[runtime]
+surface = "dom"
+web = ["web/components/game/MissionBoard.tsx", "web/components/game/MissionSetupRoutes.tsx"]
+native = ["native/App/Screens/CoreLoop.swift"]
+
+[preview]
+route = "missions"
+state = "ui-mission-board"

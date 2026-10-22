@@ -153,6 +153,7 @@ public final class GameStore {
         if asMove { n.player.earthBiomeMoveUsed = true }
         apply(n)
     }
+    public func setSkyEventLocation(_ location: PlayerLocation?) { var n = state; n.player.skyEventLocation = location; apply(n) }
     public func reset() { let next = GameState(); refreshCatalog(for: next); state = next; persist() }
 
     /// Settings: reopen one training try on the screen it is played on (web `openTrainingTry`).
@@ -201,7 +202,10 @@ public final class GameStore {
 
     /// Space Telescope: one verdict per subject with the dip marks that justified it.
     public func classifyTess(_ subjectId: String, verdict: TessVerdict, ranges: [TransitRange], candidate: TessCandidate? = nil) {
-        guard state.player.tessClassifications[subjectId] == nil else { return }
+        let paidTrainingReplay = subjectId.hasPrefix(MissionLog.trainingPrefix)
+            && state.player.flightPlan.replayTry == "scan"
+            && state.player.flightPlan.completed["scan"] == true
+        guard state.player.tessClassifications[subjectId] == nil || paidTrainingReplay else { return }
         let marks = Tess.normalized(ranges)
         var n = state
         if verdict == .planet, let candidate, !subjectId.hasPrefix(MissionLog.trainingPrefix) {
@@ -278,6 +282,7 @@ public final class GameStore {
     }
     public func buyLaserCapacitor(expectedLevel: Int, reservedUnits: Int = 0) { apply(LaserCapacitor.applyBuy(state, expectedLevel: expectedLevel, reservedUnits: reservedUnits)) }
     public func abandonMission() { apply(state.player.activeMission == nil ? Loop.cancelSetup(state) : Loop.abandonMission(state)) }
+    public func dismantleStagedRocket() { apply(Loop.dismantleStagedRocket(state)) }
     public func openAcademy() { apply(Academy.settleEconomy(Academy.migrate(state, now: now), now: now)) }
     public func researchAcademy() { apply(Academy.applyResearchAcademy(state)) }
     public func setAcademyFunding(_ funded: Bool) { apply(Academy.applySetFunding(state, funded: funded)) }

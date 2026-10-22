@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useHelp } from '@/components/ui/useHelp'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import {
@@ -65,6 +66,7 @@ interface AcademyScreenProps {
 }
 
 export default function AcademyScreen(props: AcademyScreenProps) {
+  const help = useHelp('academy')
   const [tab, setTab] = useState<Tab>('roster')
   const [now, setNow] = useState(0)
   const [trainingBranch, setTrainingBranch] = useState<SkillBranch>('mining')
@@ -97,7 +99,8 @@ export default function AcademyScreen(props: AcademyScreenProps) {
 
   return (
     <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="academy-screen">
-      <TopBar eyebrow="CREW" title="Astronaut Academy" onBack={props.onBack} solid />
+      <TopBar eyebrow="CREW" title="Astronaut Academy" onBack={props.onBack} solid right={help.button} />
+      {help.layer}
 
       {!built ? (
         <main className={styles.locked}>

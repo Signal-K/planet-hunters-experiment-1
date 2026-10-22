@@ -2,10 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Target } from '@/lib/data'
-import { BaseDock } from '@/components/game/hub/BaseDock'
-import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
-import { formatCurrency } from '@/lib/format'
-import { openSettings } from '@/lib/mining/openChrome'
 import { transitBodyShiftPercent } from '@/lib/pixi/transitFlight'
 import { FlightBody } from '@/components/game/screens/FlightBody'
 import { FlightFlame } from '@/components/game/screens/FlightFlame'
@@ -68,13 +64,8 @@ export default function TransitScreen({
   returning = false,
   onArrive,
   onBack,
-  onPrev,
-  onNext,
-  onHub,
   isDelivery = false,
-  francs = 0,
   parts,
-  fragmentCount = 0,
 }: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
@@ -188,39 +179,11 @@ export default function TransitScreen({
         <span style={{ width: `${progress}%` }} />
       </div>
 
-      <div className={styles.chrome}>
-        <div className={styles.top}>
-          <div className={styles.cluster}>
-            <button type="button" className={styles.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
-              <CogIcon />
-            </button>
-            <div className={styles.clock}><HubClockWidget /></div>
-          </div>
-          <div className={styles.cluster}>
-            <span className="scene-chip" data-testid="flight-francs-chip">{formatCurrency(francs, { compact: true })}</span>
-            {fragmentCount > 0 && (
-              <span className="scene-chip" data-testid="flight-fragment-chip" aria-label={`${fragmentCount} fragments`}>
-                {fragmentCount} fragments
-              </span>
-            )}
-            <span className="scene-chip" data-testid="flight-cargo-chip" aria-label="Cargo">
-              <CubeIcon />
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.dock}>
-        <BaseDock
-          variant="flight"
-          buildLabel="Boost"
-          buildTestId="transit-boost-btn"
-          buildIcon={<BoostIcon />}
-          onPrev={onPrev ?? onBack}
-          onNext={onNext ?? onBack}
-          onBuild={boost}
-          onHub={onHub ?? onBack}
-        />
+      <div className={styles.controls}>
+        <button type="button" className={styles.exit} onClick={onBack}>Back</button>
+        <button type="button" className={styles.boost} data-testid="transit-boost-btn" disabled={arrived} onClick={arrived ? onArrive : boost}>
+          {arrived ? 'Arrive' : 'Boost'}
+        </button>
       </div>
     </div>
   )

@@ -14,14 +14,21 @@ struct RootView: View {
         if auth.session == nil { SignInScreen() } else { game }
     }
 
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    private var coachToShow: FlightPlan.Coach? {
+        guard !store.welcomePending, store.screen != .mining, store.screen != .landing, store.screen != .intro else { return nil }
+        return FlightPlan.coach(store.player, screen: store.screen, includeHidden: true)
+    }
+
     private var game: some View {
         Group {
             switch store.welcomePending ? nil : store.screen {
             case nil: WelcomeScreen()
             case .intro: IntroScreen()
             case .hub, .hubSubsurface: HubScreen()
-            case .skills: SkillTreeScreen()
-            case .academy: AcademyScreen()
+            case .skills: SkillTreeScreen().helpable(.skills)
+            case .academy: AcademyScreen().helpable(.academy)
             case .missionHistory: MissionHistoryScreen()
             case .narrativeLedger: NarrativeLedgerScreen()
             case .missions: MissionsScreen().helpable(.missions)
@@ -29,23 +36,29 @@ struct RootView: View {
             case .launchpad: LaunchReviewScreen()
             case .hangar: HangarScreen().helpable(.hangar)
             case .build: BuildScreen()
-            case .surfaceOps: SurfaceOpsScreen()
-            case .transit: TransitScreen()
+            case .surfaceOps: SurfaceOpsScreen().helpable(.surfaceOps)
+            case .transit: TransitScreen().helpable(.transit)
             case .roverSurvey: if TakeonSceneFlag.enabled && takeonGoRuntimeAvailable { TakeonSceneScreen(onExit: { store.go(.hub) }) } else { RoverFieldScreen() }
             case .mining, .landing: MiningScreen().helpable(.mining)
-            case .delivery: DeliveryScreen()
+            case .delivery: DeliveryScreen().helpable(.delivery)
             case .debrief: if store.player.homeDeliveryPending { HomecomingScreen() } else { DebriefScreen() }
             case .market: MarketScreen()
             case .instrumentHub: ControlStationScreen()
             case .saturnStormSearch: SaturnStormSearchScreen()
             case .asteroidDiscovery: AsteroidDiscoveryScreen()
-            case .galaxy: TessDiscoveryScreen()
+            case .galaxy: TessDiscoveryScreen().helpable(.galaxy, firstVisit: true)
             default: StubScreen(screen: store.screen)
             }
         }
+        // Portrait and iPad: the coach is a rail in the top inset, so screens lay out below it. Compact height (a phone
+        // in landscape) keeps the floating strip in its free band.
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if let coach = coachToShow, verticalSizeClass != .compact {
+                CoachPlacement(coach: coach, screen: store.screen, docked: true)
+            }
+        }
         .overlay(alignment: .top) {
-            if !store.welcomePending, store.screen != .mining, store.screen != .landing, store.screen != .intro,
-               let coach = FlightPlan.coach(store.player, screen: store.screen, includeHidden: true) {
+            if let coach = coachToShow, verticalSizeClass == .compact {
                 CoachPlacement(coach: coach, screen: store.screen)
             }
         }

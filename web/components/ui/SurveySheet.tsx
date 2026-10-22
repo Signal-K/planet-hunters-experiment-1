@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useSyncExternalStore } from 'react'
+import { isSurveyHeld, subscribeSurveyHold } from '@/lib/survey-gating'
 import { SURVEY_DEFS, isSurveyRuntimeEnabled, submitSurveyResponse, trackSurveyShown, onSurveyDismissed, type Survey, type SurveyQuestion } from '@/lib/surveys'
 
 type Responses = Record<string, string | number>
@@ -13,7 +14,7 @@ function RatingQuestion({ question, value, onChange }: { question: SurveyQuestio
     : {}
   return (
     <div>
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, color: 'var(--ln-text)', marginBottom: 14, lineHeight: 1.4 }}>
+      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, color: 'var(--ln-text)', marginBottom: 14, lineHeight: 1.4 }}>
         {question.question}
       </div>
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
@@ -37,7 +38,7 @@ function RatingQuestion({ question, value, onChange }: { question: SurveyQuestio
         ))}
       </div>
       {value != null && labels[value] && (
-        <div style={{ textAlign: 'center', marginTop: 8, fontFamily: 'var(--ln-font-display)', fontSize: 10, letterSpacing: '0.14em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
+        <div style={{ textAlign: 'center', marginTop: 8, fontFamily: 'var(--ln-font-display)', fontSize: 14, letterSpacing: '0.08em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
           {labels[value]}
         </div>
       )}
@@ -48,7 +49,7 @@ function RatingQuestion({ question, value, onChange }: { question: SurveyQuestio
 function MultipleChoiceQuestion({ question, value, onChange }: { question: SurveyQuestion; value: string | undefined; onChange: (v: string) => void }) {
   return (
     <div>
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, color: 'var(--ln-text)', marginBottom: 12, lineHeight: 1.4 }}>
+      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, color: 'var(--ln-text)', marginBottom: 12, lineHeight: 1.4 }}>
         {question.question}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -59,10 +60,10 @@ function MultipleChoiceQuestion({ question, value, onChange }: { question: Surve
             data-testid="survey-choice"
             onClick={() => onChange(choice)}
             style={{
-              padding: '10px 14px', borderRadius: 10, border: 'none', textAlign: 'left',
+              padding: '10px 14px', minHeight: 44, borderRadius: 10, border: 'none', textAlign: 'left',
               background: value === choice ? 'var(--ln-cyan-soft)' : 'var(--ln-surface)',
               color: value === choice ? 'var(--ln-cyan-bright)' : 'var(--ln-text-dim)',
-              fontFamily: 'var(--ln-font-body)', fontSize: 13, cursor: 'pointer',
+              fontFamily: 'var(--ln-font-body)', fontSize: 14, cursor: 'pointer',
               outline: value === choice ? '1px solid var(--ln-cyan-border)' : '1px solid var(--ln-hairline)',
               transition: 'background 100ms, color 100ms',
             }}
@@ -78,7 +79,7 @@ function MultipleChoiceQuestion({ question, value, onChange }: { question: Surve
 function OpenQuestion({ question, value, onChange }: { question: SurveyQuestion; value: string | undefined; onChange: (v: string) => void }) {
   return (
     <div>
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, color: 'var(--ln-text)', marginBottom: 12, lineHeight: 1.4 }}>
+      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, color: 'var(--ln-text)', marginBottom: 12, lineHeight: 1.4 }}>
         {question.question}
       </div>
       <textarea
@@ -91,14 +92,17 @@ function OpenQuestion({ question, value, onChange }: { question: SurveyQuestion;
           width: '100%', padding: '10px 12px', boxSizing: 'border-box',
           background: 'var(--ln-void)', border: '1px solid var(--ln-hairline)',
           borderRadius: 10, resize: 'none', outline: 'none',
-          fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)', lineHeight: 1.5,
+          fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text)', lineHeight: 1.5,
         }}
       />
     </div>
   )
 }
 
-export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
+export default function SurveySheet({ blockWhile: screenBlocked }: { blockWhile?: boolean }) {
+  // An open Base callout holds the card back as well (SSL-649); both mount points get it from here.
+  const calloutHeld = useSyncExternalStore(subscribeSurveyHold, isSurveyHeld, () => false)
+  const blockWhile = !!screenBlocked || calloutHeld
   const [surveyKey, setSurveyKey] = useState<string | null>(null)
   const [survey, setSurvey] = useState<Survey | null>(null)
   const [qIndex, setQIndex] = useState(0)
@@ -157,7 +161,9 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
     }, 800)
   }, [blockWhile, surveyKey, showSurvey])
 
-  if (!survey || !surveyKey) return null
+  // A coach callout or popup that opens after the card is up would sit over it (hiding SKIP), so the card waits.
+  // Its state is kept, and it comes back when the overlay clears.
+  if (!survey || !surveyKey || blockWhile) return null
 
   const question = survey.questions[qIndex]
   const currentValue = question ? responses[question.id] : undefined
@@ -196,16 +202,16 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
       padding: '16px 16px 24px', boxShadow: 'var(--ln-shadow-panel)',
     }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
             Quick question {survey.questions.length > 1 ? `${qIndex + 1} / ${survey.questions.length}` : ''}
           </div>
-          <button type="button" onClick={handleSkip} style={{ background: 'none', border: 'none', color: 'var(--ln-text-muted)', fontFamily: 'var(--ln-font-display)', fontSize: 10, letterSpacing: '0.12em', cursor: 'pointer', padding: 4 }}>
+          <button type="button" onClick={handleSkip} style={{ background: 'none', border: 'none', color: 'var(--ln-text-muted)', fontFamily: 'var(--ln-font-display)', fontSize: 14, letterSpacing: '0.08em', cursor: 'pointer', minWidth: 44, minHeight: 44, margin: '-12px -8px -12px 0', padding: '0 8px' }}>
             SKIP
           </button>
         </div>
 
         {done ? (
-          <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: 'var(--ln-font-display)', fontSize: 13, color: 'var(--ln-cyan-bright)', letterSpacing: '0.08em' }}>
+          <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: 'var(--ln-font-display)', fontSize: 14, color: 'var(--ln-cyan-bright)', letterSpacing: '0.08em' }}>
             Thanks — that helps a lot.
           </div>
         ) : question ? (
@@ -232,10 +238,10 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
               onClick={handleNext}
               disabled={!canAdvance}
               style={{
-                marginTop: 16, width: '100%', padding: 13, borderRadius: 10, border: 'none',
+                marginTop: 16, width: '100%', minHeight: 44, padding: 13, borderRadius: 10, border: 'none',
                 background: canAdvance ? 'var(--ln-cyan)' : 'var(--ln-surface-2)',
                 color: canAdvance ? 'var(--ln-text-on-cyan)' : 'var(--ln-text-muted)',
-                fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
+                fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
                 letterSpacing: '0.14em', textTransform: 'uppercase',
                 cursor: canAdvance ? 'pointer' : 'not-allowed',
                 transition: 'background 150ms, color 150ms',

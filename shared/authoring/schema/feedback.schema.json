@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Landnam scene feedback",
+  "description": "What is wrong with a scene, what to keep, and what inspires it. Written in the Scene Studio, read by every agent. Pins accumulate: a pin marked wrong is a standing rule for that scene even after it is resolved.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "scene"],
+  "properties": {
+    "format": { "const": 1, "description": "Authoring format version." },
+    "scene": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Scene id this feedback belongs to." },
+    "mode": {
+      "enum": ["fix", "explore"],
+      "description": "fix: the author knows what to do, so follow the pins and notes exactly. explore: the author does not know what will look good, so propose genuinely different directions that fix every wrong pin and borrow what the inspiration does well."
+    },
+    "status": { "enum": ["open", "addressed"], "description": "open: an agent should act on this. addressed: the agent has delivered and is waiting for review." },
+    "direction": { "type": "string", "description": "Overall feel in the author's own words." },
+    "pins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "note"],
+        "properties": {
+          "kind": { "enum": ["wrong", "keep"], "description": "wrong: change this and never bring it back. keep: this works, do not touch it." },
+          "note": { "type": "string", "minLength": 1, "description": "What is wrong or good, in the author's own words." },
+          "at": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["x", "y"],
+            "description": "Where the pin sits in the preview frame, 0 to 1.",
+            "properties": {
+              "x": { "type": "number", "minimum": 0, "maximum": 1 },
+              "y": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          },
+          "viewport": { "enum": ["ph", "ls", "dk"], "description": "ph: phone portrait 390x844. ls: phone landscape 926x428. dk: desktop 1440x900." },
+          "state": { "type": "string", "description": "Stage fixture that was showing, so the view can be reproduced." },
+          "object": { "type": "string", "description": "Scene object the pin points at, when there is one." },
+          "resolved": { "type": "boolean", "description": "The author has confirmed this is fixed. A resolved wrong pin still applies." }
+        }
+      }
+    },
+    "inspiration": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "source": { "type": "string", "description": "App, game or link." },
+          "image": { "type": "string", "description": "Screenshot under shared/authoring/feedback/refs/." },
+          "likes": { "type": "string", "description": "What about it the author likes." }
+        }
+      }
+    }
+  }
+}

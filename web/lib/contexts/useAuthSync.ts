@@ -851,6 +851,40 @@ export function useAuthSync({
     }
   }, [landOnHubUnlessResumable, noteWarming, openSession])
 
+  const requestPasswordResetFromGate = useCallback(async (email: string) => {
+    setAuthGateError(null)
+    try {
+      await waitForBackendHealth(() => pbShared.health.check(), { onWait: noteWarming })
+      await retryTransient(
+        () => pbShared.collection('users').requestPasswordReset(email),
+        { onWait: noteWarming },
+      )
+    } catch (e) {
+      const msg = isTransientAuthFailure(e)
+        ? WARMING_GAVE_UP
+        : authErrorMessage(e, 'Unable to request a password reset. Try again in a moment.')
+      setAuthGateError(msg)
+      throw new Error(msg)
+    }
+  }, [noteWarming])
+
+  const confirmPasswordResetFromGate = useCallback(async (token: string, password: string) => {
+    setAuthGateError(null)
+    try {
+      await waitForBackendHealth(() => pbShared.health.check(), { onWait: noteWarming })
+      await retryTransient(
+        () => pbShared.collection('users').confirmPasswordReset(token, password, password),
+        { onWait: noteWarming },
+      )
+    } catch (e) {
+      const msg = isTransientAuthFailure(e)
+        ? WARMING_GAVE_UP
+        : 'That reset link has expired or was already used. Request a new one from Sign In.'
+      setAuthGateError(msg)
+      throw new Error(msg)
+    }
+  }, [noteWarming])
+
   const createAccountFromGate = useCallback(async (email: string, password: string) => {
     setAuthGateError(null)
     try {
@@ -1000,7 +1034,7 @@ export function useAuthSync({
     authUserId, backendReady,
     landnamSynced,
     awaitingRemoteState,
-    authGateOpen, authGateError, signInFromGate, createAccountFromGate,
+    authGateOpen, authGateError, signInFromGate, requestPasswordResetFromGate, confirmPasswordResetFromGate, createAccountFromGate,
     resetGame, signOut,
   }
 }

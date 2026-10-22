@@ -50,6 +50,9 @@ function GameRouteBridge() {
     }
     // The landing page's "Create account" link opens the gate on Sign Up.
     if (searchParams.get('gate') === 'signup') params.set('gate', 'signup')
+    // The emailed password-reset link; the auth gate reads and removes it.
+    const resetToken = searchParams.get('reset_token')
+    if (resetToken) params.set('reset_token', resetToken)
     if (entry === 'orionids') params.set('entry', 'orionids')
     const qs = params.toString()
     const query = qs ? `?${qs}` : ''

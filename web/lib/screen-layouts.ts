@@ -117,6 +117,7 @@ export const GAME_ROUTES = [
   { path: '/game/launcher', surface: 'dev', dev: true },
   { path: '/game/stage', surface: 'dev', dev: true },
   { path: '/game/storyboard', surface: 'dev', dev: true },
+  { path: '/game/studio', surface: 'dev', dev: true },
   { path: '/game/demo', surface: 'dev', dev: true },
   { path: '/game/demo/[preset]', surface: 'dev', dev: true, redirectTo: '/game/<preset screen>' },
   { path: '/game/mission/[[...slug]]', surface: 'dev', dev: true, redirectTo: '/game/<preset screen>' },

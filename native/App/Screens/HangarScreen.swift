@@ -5,10 +5,8 @@ import LandnamCore
 /// The floor is a row of rocket cards; tapping an open card builds that rocket for the mission that is set up.
 struct HangarScreen: View {
     @Environment(GameStore.self) private var store
-    @State private var showSettings = false
     @State private var configuring = false
     @State private var launching = false
-    private let zones = HUDZones.standard
 
     private var customizerUnlocked: Bool {
         store.player.unlockedSkillNodes.contains("ship-customizer-1")
@@ -32,7 +30,6 @@ struct HangarScreen: View {
             HangarModulesPanel(onClose: { configuring = false })
         } else {
             bay
-                .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
         }
     }
 
@@ -76,10 +73,17 @@ struct HangarScreen: View {
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .clipped()
-            .overlay(alignment: .top) { hud(short: short) }
-            .overlay(alignment: .bottom) {
-                BaseDock(tile: 44, zones: zones.dock, onPrev: { store.go(.hub) }, onNext: { store.go(.launchpad) })
-                    .padding(.bottom, short ? 4 : 8)
+            .overlay(alignment: .bottomLeading) {
+                Button { store.go(.hub) } label: {
+                    Text("EXIT BAY").font(AppFont.display(14, "Bold")).tracking(1.2)
+                        .foregroundStyle(Theme.paper)
+                        .padding(.horizontal, 14).frame(minHeight: 44)
+                        .background(Theme.ink.opacity(0.88), in: Capsule())
+                        .overlay(Capsule().stroke(Theme.paper, lineWidth: 1.5))
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, narrow ? 12 : 28)
+                .padding(.bottom, short ? 8 : 16)
             }
         }
         .foregroundStyle(Theme.ink)
@@ -188,15 +192,6 @@ struct HangarScreen: View {
                 .accessibilityLabel(note.map { "\(vehicle.name), \($0)" } ?? "Build \(vehicle.name) for \(cost)")
             }
         }
-    }
-
-    private func hud(short: Bool) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            HudGearClock(onSettings: { showSettings = true })
-            Spacer(minLength: 8)
-            HudChips(francs: store.player.francs, stash: store.player.stash, onSell: { store.go(.market) })
-        }
-        .padding(short ? 8 : 12)
     }
 
 }

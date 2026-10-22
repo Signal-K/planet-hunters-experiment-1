@@ -3,6 +3,14 @@ export const TRAINING_TRY_IDS = ['mining', 'scan', 'part'] as const
 export type TrainingTryId = typeof TRAINING_TRY_IDS[number]
 export type FlightPlanEvent = 'mining-debriefed' | 'tess-classified' | 'part-tweaked'
 
+/** A replay is a paid practice operation, settled only after its matching
+ * real action is completed again. */
+export const TRAINING_REPLAY_REWARD = {
+  francs: 120,
+  researchXP: 10,
+  stash: { iron: 2 },
+} as const
+
 export interface FlightPlanProgress {
   completed: Partial<Record<TrainingTryId, true>>
   hidden: boolean
@@ -57,6 +65,10 @@ export function completeFlightPlanEvent(progress: FlightPlanProgress | undefined
 
 export function replayFlightPlanTry(progress: FlightPlanProgress | undefined, tryId: TrainingTryId): FlightPlanProgress {
   return { ...startFlightPlan(progress, Date.now()), replayTry: tryId, hidden: false }
+}
+
+export function earnsTrainingReplayReward(progress: FlightPlanProgress | undefined, tryId: TrainingTryId): boolean {
+  return progress?.replayTry === tryId && progress.completed?.[tryId] === true
 }
 
 export function skipFlightPlan(progress: FlightPlanProgress | undefined): FlightPlanProgress {

@@ -6,7 +6,7 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     // tests/ holds Playwright scene specs; they run under `npm run test:scenes`.
-    exclude: [...configDefaults.exclude, 'tests/**'],
+    exclude: [...configDefaults.exclude, 'tests/**', '.next/**', '.open-next/**'],
   },
   resolve: {
     alias: {

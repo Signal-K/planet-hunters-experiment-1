@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { GEMINIDS_DEBRIS_PRESET, LEONIDS_DEBRIS_PRESET, ORIONIDS_DEBRIS_PRESET, ORIONIDS_PEAK_MULTIPLIER, ORIONIDS_PEAK_REMINDER, debrisRatePerMinute, isOrionidsPeakNight, orionidsPeakReminderMs, orionidsPhase, orionidsShareText } from './sky-events'
 import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID, generateSelfDirectedMiningPool } from './missions'
 import { isDebrisEventActive } from './sky-events'
+import { localSkyEventWindow } from './sky-event-window'
 
 const local = (m: number, d: number, h: number) => new Date(2026, m - 1, d, h, 0, 0, 0).getTime()
 
@@ -24,10 +25,12 @@ describe('SSL-578 Orionids event', () => {
   it('doubles the debris rate on peak night only', () => {
     expect(isOrionidsPeakNight(local(10, 22, 3))).toBe(true)
     expect(isOrionidsPeakNight(local(10, 22, 23))).toBe(false)
-    const peak = debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, local(10, 21, 23))
+    const location = { city: 'Tallinn', latitude: 59, timeZone: 'Europe/Tallinn' }
+    const window = localSkyEventWindow({ radiantRightAscensionDeg: 95, radiantDeclinationDeg: 16, peakUtc: ORIONIDS_DEBRIS_PRESET.peakUtc }, location).best!
+    const peak = debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, window.startMs, location)
     expect(peak).toBeGreaterThan(ORIONIDS_DEBRIS_PRESET.peakRatePerMinute)
     expect(peak).toBeLessThanOrEqual(ORIONIDS_DEBRIS_PRESET.peakRatePerMinute * ORIONIDS_PEAK_MULTIPLIER)
-    expect(debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, local(10, 22, 23))).toBeLessThanOrEqual(ORIONIDS_DEBRIS_PRESET.peakRatePerMinute)
+    expect(debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, window.startMs - 60_000, location)).toBeLessThanOrEqual(ORIONIDS_DEBRIS_PRESET.peakRatePerMinute)
   })
 
   it('puts the Orionids night run on the board only during the window', () => {

@@ -1,0 +1,19 @@
+#:schema ../schema/scene.schema.json
+# Asteroid Discovery: scene script. Edit here or in the Scene Studio (http://localhost:3001/game/studio?scene=asteroid-discovery).
+# Objects listed here are the scene's game objects. Objects marked status = "proposed" are requests for an agent to build.
+format = 1
+id = "asteroid-discovery"
+type = "exchange-lab"
+name = "Asteroid Discovery"
+summary = "Asteroid discovery review, reached from the Control Station."
+tickets = ["SSL-497"]
+qa = ["asteroid"]
+
+[runtime]
+surface = "dom"
+web = ["web/components/game/screens/AsteroidDiscoveryScreen.tsx"]
+native = ["native/App/Screens/AsteroidDiscoveryScreen.swift"]
+
+[preview]
+route = "asteroid-discovery"
+state = "ui-asteroid-discovery"

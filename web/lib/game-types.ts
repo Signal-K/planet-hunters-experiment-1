@@ -220,7 +220,15 @@ export interface ResourceFocus {
   minerals: Record<string, number>
 }
 
+/** Privacy-preserving sky-event location: no longitude or precise coordinates. */
+export interface PlayerLocation {
+  city?: string
+  latitude: number
+  timeZone: string
+}
+
 export interface Player {
+  skyEventLocation?: PlayerLocation | null
   francs: number
   activeMission: { id: string; label: string } | null
   /** Paused operational contexts. There is intentionally no artificial cap. */
@@ -404,6 +412,8 @@ export interface Player {
   meteoriteMastery?: number
   /** Fragments caught during the shower, and how many were redeemed for research. Synced in game_states. */
   orionidsFragments?: { caught: number; redeemed: number } | null
+  /** Ledger `caught` count when the shower run was accepted. The run's order counts catches past it (SSL-651). */
+  orionidsRunBaseline?: number | null
   /** Unix ms when the Atlas looked-up check-in was granted. */
   orionidsLookedUpAt?: number | null
   /** Unix ms when this player caught the 22 Oct 02:00 fireball fragment. */
@@ -559,6 +569,8 @@ export interface GameActions {
   authGateOpen: boolean
   authGateError: string | null
   signInFromGate: (email: string, password: string) => Promise<void>
+  requestPasswordResetFromGate: (email: string) => Promise<void>
+  confirmPasswordResetFromGate: (token: string, password: string) => Promise<void>
   createAccountFromGate: (email: string, password: string) => Promise<void>
   go: (screen: Screen) => void
   goBack: (fallback?: Screen) => void
@@ -590,6 +602,7 @@ export interface GameActions {
   onFabricateRocketPart: (rocketId: string, componentId: string) => void
   onAssembleFabricatedRocket: (rocketId: string) => void
   onTransferToLaunchpad: () => void
+  onDismantleStagedRocket: () => void
   onLaunch: () => void
   onRedeemFragments: () => void
   onCombineFragments: () => void

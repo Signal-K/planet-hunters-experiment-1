@@ -11,8 +11,13 @@
     "nativeScreenCases": 15,
     "qaScenes": 49,
     "authoredSceneFiles": 8,
-    "authoringSources": 5,
-    "webGameComponents": 109,
+    "authoredSceneScripts": 27,
+    "authoringSources": 34,
+    "authoredObjectNodes": 23,
+    "authoredGameObjects": 17,
+    "authoredUiElements": 6,
+    "authoredPrefabInstances": 5,
+    "webGameComponents": 111,
     "nativeAppComponents": 51
   },
   "scenes": {
@@ -652,6 +657,224 @@
           "CelestialBody"
         ]
       }
+    ],
+    "scripts": [
+      {
+        "id": "academy",
+        "path": "shared/authoring/scenes/academy.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "asteroid-discovery",
+        "path": "shared/authoring/scenes/asteroid-discovery.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "build",
+        "path": "shared/authoring/scenes/build.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "debrief",
+        "path": "shared/authoring/scenes/debrief.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "delivery",
+        "path": "shared/authoring/scenes/delivery.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "fab",
+        "path": "shared/authoring/scenes/fab.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "galaxy",
+        "path": "shared/authoring/scenes/galaxy.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "hangar",
+        "path": "shared/authoring/scenes/hangar.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "hub-subsurface",
+        "path": "shared/authoring/scenes/hub-subsurface.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "hub",
+        "path": "shared/authoring/scenes/hub.toml",
+        "objects": 11,
+        "gameObjects": 9,
+        "uiElements": 2,
+        "prefabs": 4
+      },
+      {
+        "id": "instrument-hub",
+        "path": "shared/authoring/scenes/instrument-hub.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "intro",
+        "path": "shared/authoring/scenes/intro.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "landing",
+        "path": "shared/authoring/scenes/landing.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "launchpad",
+        "path": "shared/authoring/scenes/launchpad.toml",
+        "objects": 12,
+        "gameObjects": 8,
+        "uiElements": 4,
+        "prefabs": 1
+      },
+      {
+        "id": "market",
+        "path": "shared/authoring/scenes/market.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "mining",
+        "path": "shared/authoring/scenes/mining.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "mission-history",
+        "path": "shared/authoring/scenes/mission-history.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "missions",
+        "path": "shared/authoring/scenes/missions.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "narrative-ledger",
+        "path": "shared/authoring/scenes/narrative-ledger.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "refinery",
+        "path": "shared/authoring/scenes/refinery.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "rocket-buy",
+        "path": "shared/authoring/scenes/rocket-buy.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "rover-survey",
+        "path": "shared/authoring/scenes/rover-survey.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "saturn-storm-search",
+        "path": "shared/authoring/scenes/saturn-storm-search.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "skills",
+        "path": "shared/authoring/scenes/skills.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "surface-ops",
+        "path": "shared/authoring/scenes/surface-ops.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "targets",
+        "path": "shared/authoring/scenes/targets.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      },
+      {
+        "id": "transit",
+        "path": "shared/authoring/scenes/transit.toml",
+        "objects": 0,
+        "gameObjects": 0,
+        "uiElements": 0,
+        "prefabs": 0
+      }
     ]
   },
   "components": {
@@ -724,6 +947,8 @@
       "web/components/game/hub/TerrainScene.tsx",
       "web/components/game/hub/WorldBackdrop.tsx",
       "web/components/game/instrument-viewport/InstrumentViewport.tsx",
+      "web/components/game/orionids/OrionidsPlanetMark.tsx",
+      "web/components/game/orionids/OrionidsShowerChrome.tsx",
       "web/components/game/previews/MissionFlowPreview.tsx",
       "web/components/game/previews/missionFlowPreviewData.ts",
       "web/components/game/screens/AcademyCanvas.tsx",
@@ -821,10 +1046,39 @@
     ],
     "sharedData": [
       "shared/authoring/README.md",
+      "shared/authoring/flows/launch-telescope.toml",
       "shared/authoring/instructions/next.md",
       "shared/authoring/instructions/persistent.md",
-      "shared/authoring/missions/contract-pilot.toml",
-      "shared/authoring/scenes/earth-base.toml",
+      "shared/authoring/missions/client-contract.toml",
+      "shared/authoring/missions/free-mining.toml",
+      "shared/authoring/scenes/academy.toml",
+      "shared/authoring/scenes/asteroid-discovery.toml",
+      "shared/authoring/scenes/build.toml",
+      "shared/authoring/scenes/debrief.toml",
+      "shared/authoring/scenes/delivery.toml",
+      "shared/authoring/scenes/fab.toml",
+      "shared/authoring/scenes/galaxy.toml",
+      "shared/authoring/scenes/hangar.toml",
+      "shared/authoring/scenes/hub-subsurface.toml",
+      "shared/authoring/scenes/hub.toml",
+      "shared/authoring/scenes/instrument-hub.toml",
+      "shared/authoring/scenes/intro.toml",
+      "shared/authoring/scenes/landing.toml",
+      "shared/authoring/scenes/launchpad.toml",
+      "shared/authoring/scenes/market.toml",
+      "shared/authoring/scenes/mining.toml",
+      "shared/authoring/scenes/mission-history.toml",
+      "shared/authoring/scenes/missions.toml",
+      "shared/authoring/scenes/narrative-ledger.toml",
+      "shared/authoring/scenes/refinery.toml",
+      "shared/authoring/scenes/rocket-buy.toml",
+      "shared/authoring/scenes/rover-survey.toml",
+      "shared/authoring/scenes/saturn-storm-search.toml",
+      "shared/authoring/scenes/skills.toml",
+      "shared/authoring/scenes/surface-ops.toml",
+      "shared/authoring/scenes/targets.toml",
+      "shared/authoring/scenes/transit.toml",
+      "shared/authoring/worlds/base-world.toml",
       "shared/layout/base-hud-zones.json",
       "shared/layout/base-site.json",
       "shared/scenes/base-world.json",
@@ -840,6 +1094,33 @@
       "sky-badges",
       "help"
     ],
-    "qaWithoutNativeScene": []
+    "qaWithoutNativeScene": [],
+    "scenesWithoutObjects": [
+      "academy",
+      "asteroid-discovery",
+      "build",
+      "debrief",
+      "delivery",
+      "fab",
+      "galaxy",
+      "hangar",
+      "hub-subsurface",
+      "instrument-hub",
+      "intro",
+      "landing",
+      "market",
+      "mining",
+      "mission-history",
+      "missions",
+      "narrative-ledger",
+      "refinery",
+      "rocket-buy",
+      "rover-survey",
+      "saturn-storm-search",
+      "skills",
+      "surface-ops",
+      "targets",
+      "transit"
+    ]
   }
 }

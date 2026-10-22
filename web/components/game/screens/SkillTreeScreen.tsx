@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useHelp } from '@/components/ui/useHelp'
 import TopBar from '@/components/ui/TopBar'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { SKILL_NODES, canUnlockSkillNode, hasSkill } from '@/lib/data/skills'
@@ -48,6 +49,7 @@ export default function SkillTreeScreen({
   onUpgradeLicenseGrade,
   firsts,
 }: SkillTreeScreenProps) {
+  const help = useHelp('skills')
   const [selectedNodeId, setSelectedNodeId] = useState<SkillNodeId>(SKILL_NODES[0].id)
   const gradeIndex = LICENSE_GRADE_ORDER.indexOf(licenseGrade)
   const nextGrade = LICENSE_GRADE_ORDER[gradeIndex + 1]
@@ -72,7 +74,8 @@ export default function SkillTreeScreen({
       <HubWorldBackground phase="night" composition="earth-base-wide" />
       <div className={styles.sceneWash} aria-hidden="true" />
 
-      <TopBar eyebrow="ACADEMY" title="Skill Tree" onBack={onBack} glass />
+      <TopBar eyebrow="ACADEMY" title="Skill Tree" onBack={onBack} glass right={help.button} />
+      {help.layer}
 
       <div data-ui-zone={UI_ZONES.screenContent} data-testid="skill-tree-content" className={styles.content}>
         <header className={styles.hero}>

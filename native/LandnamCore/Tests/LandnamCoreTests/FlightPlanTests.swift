@@ -12,6 +12,23 @@ struct FlightPlanTests {
         #expect(!store.player.freeOperations)
     }
 
+    @Test func replayedTrainingTryPaysAfterItsRealCompletion() {
+        var gs = GameState()
+        gs.player.flightPlan.completed = ["mining": true, "scan": true, "part": true]
+        gs.player.francs = 500
+        gs.player.researchXP = 20
+        gs.player.stash = ["iron": 1]
+        let store = GameStore(state: gs)
+
+        store.replayTry("scan")
+        store.classifyTess("training-tess-1", verdict: .planet, ranges: [TransitRange(x1: 1, x2: 1.2)], candidate: Tess.trainingCandidate)
+
+        #expect(store.player.francs == 500 + FlightPlan.replayFrancs)
+        #expect(store.player.researchXP == 20 + FlightPlan.replayResearchXP)
+        #expect(store.player.stash["iron"] == 1 + FlightPlan.replayIron)
+        #expect(store.player.flightPlan.replayTry == nil)
+    }
+
     @Test func hangarFitCompletesPartAndOpensFreeOpsOnlyWhenAllTriesDone() {
         var gs = GameState(); gs.player.flightPlan.complete("mining"); gs.player.flightPlan.complete("scan")
         let store = GameStore(state: gs)

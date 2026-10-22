@@ -27,6 +27,26 @@ describe('Launchpad own-program actions', () => {
     }
   })
 
+  it('keeps an unplanned pad empty and only exposes launch controls for a staged vehicle', () => {
+    const noop = vi.fn()
+    const empty = renderToStaticMarkup(
+      <LaunchpadScreen onBack={noop} onPick={noop} onViewContracts={noop} onLaunchpadAction={noop} missionsDone={0} freeOperations={false} catalog={STATIC_CATALOG} player={DEFAULT_STATE.player} />,
+    )
+    expect(empty).toContain('data-assembly="idle"')
+    expect(empty).toContain('Select mission')
+    expect(empty).not.toContain('data-testid="launch-btn"')
+
+    const mission = STATIC_CATALOG.missions.find(candidate => candidate.targetId)!
+    const target = STATIC_CATALOG.targets.find(candidate => candidate.id === mission.targetId)!
+    const planned = renderToStaticMarkup(
+      <LaunchpadScreen onBack={noop} onPick={noop} onViewContracts={noop} onLaunchpadAction={noop} missionsDone={0} freeOperations={false} catalog={STATIC_CATALOG} player={DEFAULT_STATE.player} mission={{ title: mission.title }} target={target} />,
+    )
+    expect(planned).toContain('data-assembly="design"')
+    expect(planned).toContain('Build rocket')
+    expect(planned).toContain('Change mission')
+    expect(planned).not.toContain('data-testid="builder-dismantle"')
+  })
+
   it('keeps mission resume explicit in the footer', () => {
     const player = {
       ...DEFAULT_STATE.player,
@@ -42,9 +62,7 @@ describe('Launchpad own-program actions', () => {
         onPick={noop}
         onViewContracts={noop}
         onLaunchpadAction={noop}
-        onOpenHangar={noop}
         onResumeMission={noop}
-        onViewMissionLog={noop}
         missionsDone={player.missionsDone}
         freeOperations={player.freeOperations}
         catalog={STATIC_CATALOG}
@@ -56,9 +74,8 @@ describe('Launchpad own-program actions', () => {
     expect(markup).toContain('data-testid="launchpad-active-mission-callout"')
     expect(markup).toContain('DISMISS')
     expect(markup).toContain('aria-label="Jump back to active mission"')
-    expect(markup).toContain('data-testid="launchpad-mission-log-btn"')
-    expect(markup).toContain('data-testid="base-dock"')
-    expect(markup).toContain('data-testid="launchpad-francs-chip"')
+    expect(markup).not.toContain('data-testid="base-dock"')
+    expect(markup).not.toContain('data-testid="launchpad-francs-chip"')
     expect(markup).not.toContain('LAUNCHPAD')
     expect(markup).not.toContain('FRANCS')
     expect(markup).not.toContain('data-testid="launchpad-primary-mission-btn"')
@@ -73,7 +90,7 @@ describe('Launchpad own-program actions', () => {
     }
     const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player })
     const markup = renderToStaticMarkup(
-      <LaunchpadScreen onBack={vi.fn()} onPick={vi.fn()} onViewContracts={vi.fn()} onLaunchpadAction={vi.fn()} onOpenHangar={vi.fn()} missionsDone={3} freeOperations catalog={catalog} player={player} missionMenuOpen />,
+      <LaunchpadScreen onBack={vi.fn()} onPick={vi.fn()} onViewContracts={vi.fn()} onLaunchpadAction={vi.fn()} missionsDone={3} freeOperations catalog={catalog} player={player} missionMenuOpen />,
     )
     expect(markup).not.toContain('data-testid="launchpad-new-mission-menu"')
     expect(markup).not.toContain('data-testid="launchpad-new-mission-resource-focus-btn"')
@@ -101,7 +118,6 @@ describe('Launchpad own-program actions', () => {
         onPick={noop}
         onViewContracts={noop}
         onLaunchpadAction={noop}
-        onOpenHangar={noop}
         missionsDone={player.missionsDone}
         freeOperations={player.freeOperations}
         catalog={catalog}
@@ -110,10 +126,10 @@ describe('Launchpad own-program actions', () => {
     )
 
     expect(markup).toContain('data-testid="launchpad-new-mission-btn"')
-    expect(markup).toContain('data-testid="launchpad-open-hangar-btn"')
-    expect(markup).toContain('data-testid="settings-button"')
-    expect(markup).toContain('data-testid="hub-dock-prev"')
-    expect(markup).toContain('data-testid="hub-dock-next"')
+    expect(markup).toContain('data-testid="top-bar-back"')
+    expect(markup).not.toContain('data-testid="settings-button"')
+    expect(markup).not.toContain('data-testid="hub-dock-prev"')
+    expect(markup).not.toContain('data-testid="hub-dock-next"')
     expect(markup).not.toContain('NEW MISSION')
     expect(markup).not.toContain('LAUNCHPAD')
     expect(markup).not.toContain('data-testid="launchpad-primary-mission-btn"')
@@ -144,7 +160,6 @@ describe('Launchpad own-program actions', () => {
         onPick={noop}
         onViewContracts={noop}
         onLaunchpadAction={noop}
-        onOpenHangar={noop}
         missionsDone={player.missionsDone}
         freeOperations={player.freeOperations}
         catalog={catalog}
@@ -180,7 +195,6 @@ describe('Launchpad own-program actions', () => {
           onPick={vi.fn()}
           onViewContracts={onViewContracts}
           onLaunchpadAction={vi.fn()}
-          onOpenHangar={vi.fn()}
           missionsDone={player.missionsDone}
           freeOperations={player.freeOperations}
           catalog={catalog}
@@ -227,7 +241,6 @@ describe('Launchpad own-program actions', () => {
           onPick={onPick}
           onViewContracts={onViewContracts}
           onLaunchpadAction={vi.fn()}
-          onOpenHangar={vi.fn()}
           missionsDone={player.missionsDone}
           freeOperations={player.freeOperations}
           catalog={catalog}
@@ -274,7 +287,6 @@ describe('Launchpad own-program actions', () => {
           onPick={vi.fn()}
           onViewContracts={onViewContracts}
           onLaunchpadAction={vi.fn()}
-          onOpenHangar={vi.fn()}
           onResumeMission={onResumeMission}
           missionsDone={player.missionsDone}
           freeOperations={player.freeOperations}

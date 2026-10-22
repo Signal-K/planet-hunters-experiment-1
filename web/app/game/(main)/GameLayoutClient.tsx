@@ -14,7 +14,7 @@ import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { notifyFiredAlert } from '@/lib/priceAlertNotify'
-import { captureGameEvent, captureScreenView, initPostHog } from '@/lib/posthog'
+import { captureGameEvent, captureScreenView, captureTutorialStepStarted, initPostHog } from '@/lib/posthog'
 import { scheduleOrionidsPeakReminder } from '@/lib/orionids/peak-reminder'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { queueEventBadge, queueFragmentLedger, queueMeteoriteMastery, queueOrionidsFind, readAtlasLookedUp } from '@/lib/orionids/persist'
@@ -256,12 +256,34 @@ function GameChrome({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timer)
   }, [coach?.id, currentScreen, helpOpen])
 
+  // A deploy replaces CSS/JS chunk files, so a tab opened before it fails to load the
+  // next route's chunk ("No link element found for chunk"). Reload once to pick up the new build.
+  useEffect(() => {
+    const isStaleChunk = (message: unknown) =>
+      typeof message === 'string' && /No link element found for chunk|Loading (CSS )?chunk .* failed|ChunkLoadError/i.test(message)
+    const reloadOnce = (message: unknown) => {
+      if (!isStaleChunk(message)) return
+      try {
+        if (window.sessionStorage.getItem('ln-chunk-reload')) return
+        window.sessionStorage.setItem('ln-chunk-reload', '1')
+      } catch { return }
+      window.location.reload()
+    }
+    const onError = (event: ErrorEvent) => reloadOnce(event.message)
+    const onRejection = (event: PromiseRejectionEvent) => reloadOnce((event.reason as Error | undefined)?.message ?? String(event.reason))
+    window.addEventListener('error', onError)
+    window.addEventListener('unhandledrejection', onRejection)
+    return () => {
+      window.removeEventListener('error', onError)
+      window.removeEventListener('unhandledrejection', onRejection)
+    }
+  }, [])
+
   // SSL-342: per-step training analytics for the live shell (mirrors GameApp).
   // Fires only when the active step itself changes.
   useEffect(() => {
     if (!coach) return
-    captureGameEvent('tutorial_step_started', {
-      step_id: coach.id,
+    captureTutorialStepStarted(coach.id, {
       screen: coach.screen,
       step_index: coachIndex,
       total_steps: 3,
@@ -439,6 +461,8 @@ function GameChrome({ children }: { children: ReactNode }) {
             error={game.authGateError}
             entry={orionidsEntryActive ? 'orionids' : null}
             onSignIn={game.signInFromGate}
+            onRequestPasswordReset={game.requestPasswordResetFromGate}
+            onConfirmPasswordReset={game.confirmPasswordResetFromGate}
             onCreateAccount={game.createAccountFromGate}
           />
         )}

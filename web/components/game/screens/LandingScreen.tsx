@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useHelp } from '@/components/ui/useHelp'
 import type { Target } from '@/lib/data'
 import {
   LANDING_ASCEND_DURATION_MS,
@@ -51,6 +52,7 @@ const COPY: Record<LandingSequenceMode, {
 export default function LandingScreen({ target, mode, startedAt, onBack, onContinue }: LandingScreenProps) {
   // A saved run can reopen this screen with no descent clock (Belt Courier
   // stalled at 0% and a frozen 00:08). That run is already due: land it.
+  const help = useHelp('landing')
   const clockMissing = startedAt == null || !Number.isFinite(startedAt)
   const [now, setNow] = useState(() => Date.now())
   const durationMs = mode === 'descend' ? LANDING_DESCEND_DURATION_MS : LANDING_ASCEND_DURATION_MS
@@ -82,7 +84,8 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
 
   return (
     <div className={`game-screen theme-blueprint ln-scene-landing ${styles.screen}`} data-testid="landing-screen">
-      <TopBar eyebrow={copy.eyebrow} title={copy.title} onBack={onBack} />
+      <TopBar eyebrow={copy.eyebrow} title={copy.title} onBack={onBack} right={help.button} />
+      {help.layer}
 
       <div className={styles.stage}>
         <LandingCanvas progress={progress} mode={mode} />

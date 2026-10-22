@@ -17,6 +17,11 @@
   max-height: min(82dvh, 640px);
   display: flex;
   flex-direction: column;
+  /* The sheet is always a light surface, so pin its text and panel tokens: dark screens (theme-deep) would otherwise give light text on this white sheet. */
+  --ln-text: var(--ln-bp-ink, #0f2436);
+  --ln-text-muted: color-mix(in srgb, var(--ln-bp-ink, #0f2436) 72%, #fff);
+  --ln-panel: #f3f8fc;
+  --ln-cyan-border: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 45%, #fff);
   background: var(--ln-blueprint-paper, #fff);
   color: var(--ln-text);
   border: 2px solid var(--ln-cyan-border);
@@ -64,8 +69,9 @@
 }
 
 .primary {
-  background: var(--ln-cyan-soft);
-  color: var(--ln-cyan-bright);
+  background: var(--ln-bp-blue, #1f78c1);
+  border-color: var(--ln-bp-ink, #0f2436);
+  color: var(--ln-bp-paper, #fff);
 }
 
 .body {

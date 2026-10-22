@@ -38,7 +38,7 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
 ]
 
 export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining }: TessDiscoveryScreenProps) {
-  const help = useHelp('galaxy', { onReplayTraining })
+  const help = useHelp('galaxy', { onReplayTraining, firstVisit: true })
   const classifications = useMemo(() => player.tessClassifications ?? {}, [player.tessClassifications])
   const [candidate, setCandidate] = useState<TessCandidate | null>(null)
   const [pool, setPool] = useState<TessCandidate[]>([])

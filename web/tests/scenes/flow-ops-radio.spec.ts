@@ -112,7 +112,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
 
     test('"?" sheet reads as an Ops briefing with numbered transmissions', async ({ page }, info) => {
       await stage(page, 'ui-instrument-hub')
-      await page.getByTestId('help-button').first().click()
+      // The Control Station opens its help once on the first visit; the "?" is the path after that.
       await expect(page.getByTestId('help-sheet')).toBeVisible()
       await expect(page.getByText('OPS BRIEFING')).toBeVisible()
       await expect(page.getByTestId('help-card').first()).toContainText('01')
@@ -177,7 +177,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       expect(scenarioReady).toBe(true)
       await expect(page.getByTestId('flight-plan-slot')).toHaveCount(1)
       await expect(page.getByTestId('help-coach')).toHaveCount(0)
-      await page.locator('[data-testid="help-button"]:visible').first().click()
+      // TESS opens its help on the first visit, so the sheet is already up.
       await expect(page.getByTestId('help-sheet')).toBeVisible()
       await page.getByTestId('help-show-me').click()
       const hint = page.getByTestId('help-coach-hint')

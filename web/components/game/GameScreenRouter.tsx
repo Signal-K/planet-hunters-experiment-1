@@ -511,9 +511,6 @@ function ScreenBody({
           onChooseMission={() => game.goToMissions()}
           onBuildRocket={game.onPurchaseRocket}
           onBack={onBackFromHangar ?? game.returnFromHangar}
-          onBuild={() => game.go('build')}
-          onHub={() => game.go('instrument-hub')}
-          onNext={() => game.go('launchpad')}
         />
       )
 
@@ -583,7 +580,6 @@ function ScreenBody({
             if (game.player.pendingLaunch) return game.go('fab')
             game.goToMissions()
           }}
-          onOpenHangar={() => game.go('hangar')}
           missionMenuOpen={game.launchpadMissionMenuOpen}
           onMissionMenuOpenChange={game.setLaunchpadMissionMenuOpen}
           onResumeMission={game.player.activeMission && !activeSettled ? () => {
@@ -599,7 +595,6 @@ function ScreenBody({
             }
             game.resumeMissionRun(key)
           }}
-          onViewMissionLog={() => game.go('mission-history')}
           onOpenSiloBuild={() => game.go('build')}
           onOpenControlStation={() => game.go('instrument-hub')}
           onAbandonMission={game.player.activeMission && !activeSettled ? () => game.abandonMission({ confirmed: true }) : undefined}
@@ -610,10 +605,11 @@ function ScreenBody({
           player={game.player}
           rocketImageSrc={rocketDisplay.img}
           selectedRocketName={rocketDisplay.name}
-          francs={game.player.francs}
           mission={game.mission ? { title: game.mission.title } : null}
           target={game.target}
           rocket={game.rocket}
+          hasStagedRocket={game.player.stagedRockets?.some(vehicle => vehicle.id === game.player.selectedStagedRocketId && vehicle.location === 'launchpad') ?? false}
+          onDismantle={() => game.onDismantleStagedRocket()}
           guided={onboardingActive}
           onInstallLoadout={(next, prev) => game.confirmShipCustomizerBuild(next, prev)}
           onRequestLaunch={() => {

@@ -1,12 +1,64 @@
-# Landnam authoring sources
+# Landnam authoring
 
-This folder is the player-visible game's editable source layer. It is intentionally plain text.
+Every scene and mission is a plain text script in this folder. You can read and edit it in Cursor, open it in the **Scene Studio** to see it running with no login, and leave plain-language notes that every agent reads. Web and native read the same files.
 
-- `instructions/persistent.md` applies to every authoring pass until edited.
-- `instructions/next.md` is consumed by the next authoring pass and then cleared through the authoring UI, with the change visible in git.
-- `scenes/*.toml` describes scene objects and preview fixtures.
-- `missions/*.toml` describes mission steps, availability and rewards.
+## Open the Studio
 
-The authoring studio must never invent a hidden format. “Convert to TOML” produces a diff for review; saving writes these files. Preview, web and native load the same declarations through platform adapters. Production account fixtures are read-only snapshots with secrets and personal data removed.
+Start the dev stack (`make up`; the first time after pulling this, run `make web-deps` once so the Docker web container gets the TOML parser), then open <http://localhost:3001/game/studio>. In Cursor use `Cmd+Shift+P`, then **Simple Browser: Show**. The stage fills the available height and a single drawer sits beside it from 620px wide up. Below that, the drawer moves below the stage. Theme follows your system unless changed in More.
 
-Each object has a stable `id`, `kind` and `slot`. Visible or interactive children are objects too. `asset`, `prefab`, `components`, `bindings` and nested `children` are optional additions, not alternatives to the object tree.
+- **Pick a scene or mission** with the first button or `Ctrl/Cmd+K`. Pick a saved setup or campaign checkpoint with the next picker, and a device size beside it.
+- **Things** are everything that can be brought into the sandbox scene. Switch them on, set sliders, then save the combination as a named preset with instructions. Sandbox scenes suppress campaign context unless a thing requests it.
+- **Notes** holds the composer, pins, inspiration, and the agent brief. **Script** opens source files in Cursor, edits standing instructions, and enables object drawing and the inspector.
+- **Mission flows** are named sequences in `flows/`; select one from Missions and walk each scripted scene and preset in order.
+- **Data** (in the scene picker): the base world and the missions. Saving recompiles what web and native load.
+- `?follow=1` on the URL makes the Studio jump to whatever scene an agent says it is working in.
+- **Open the script** (every Open in Cursor button, the Script menu and the source view) asks the dev server to open the file at the right line. Cursor's built-in browser will not follow `cursor://` links, and the dev server in Docker cannot launch an app, so a small helper on your machine does it: `make up` starts it (`node scripts/host-opener.mjs status | start | stop`; log in your temp folder as `landnam-host-opener.log`). It listens on `127.0.0.1:3098` only, answers only the Studio's server, and opens only files inside the repo. With the helper off, the button says so and offers Copy path and a plain `cursor://` link, which a normal browser follows. The file opens in the Cursor window you used last.
+
+Native appears beside web for phone sizes once a snapshot exists: `scripts/native-shots.sh hub-phone` renders one from the iOS Simulator (snapshots are phone only today).
+
+## The files
+
+| Path | What it is |
+| --- | --- |
+| `scenes/<scene>.toml` | One script per scene (27, every route). Type, where it is implemented, how to open it, curated setups, and its game objects. |
+| `feedback/<scene>.toml` | Your notes, pins (wrong and keep), inspiration and direction for that scene. Written by the Studio. Every agent reads it. |
+| `feedback/refs/` | Inspiration screenshots, shrunk when added. |
+| `instructions/persistent.md` | Rules for every scene. |
+| `instructions/scenes/<scene>.md` and `.next.md` | Rules that stay true for one scene, and the brief for the next pass. |
+| `worlds/base-world.toml` | **Source of truth** for the base world. Compiles to `shared/scenes/base-world.json`. |
+| `missions/*.toml` | **Source of truth** for two canonical missions (a client contract and free mining). Compile to `shared/missions/authored-missions.json`. |
+| `flows/*.toml` | A named mission walkthrough: scenes in order, their presets, and plain-language instructions. |
+| `schema/*.schema.json` | The format of each file. Cursor's TOML extension (recommended in `.vscode/extensions.json`) uses it for completion, help and red squiggles through the `#:schema` line at the top of each file. |
+
+Objects are a flat list with a `parent` link, the way Godot scenes are. `status = "proposed"` marks an element you drew for an agent to build.
+
+## What is compiled and who reads it
+
+`node scripts/authoring.mjs compile` writes these, and `check` fails (and CI fails) if any is stale:
+
+- `shared/scenes/base-world.json` and `web/lib/world/base-world.json`: the base world. Web `lib/world` and native `LandnamCore/World` already load it, unchanged.
+- `shared/missions/authored-missions.json`, `web/lib/data/authored-missions.json` and `native/LandnamCore/.../AuthoredMissions.generated.swift`: web `missions.ts` and native `AuthoredMissions.swift` build the two missions from these. Payout follows the fee curve and sequences follow the game's own constants.
+
+Editing a mission or the world in the Studio, or in a text editor followed by `compile`, changes both platforms. A native app needs a rebuild to pick it up.
+
+## Commands
+
+```bash
+node scripts/authoring.mjs check          # validate everything and fail on stale runtime files (CI runs this as a test)
+node scripts/authoring.mjs compile        # write the runtime files
+node scripts/authoring.mjs validate       # problems with file:line:column
+node scripts/studio.mjs where SSL-345     # which scenes a ticket or files belong to
+node scripts/studio.mjs changed           # scenes touched by uncommitted work
+node scripts/studio.mjs focus hub --ticket SSL-345   # declare what you are working in (Studio and storyboard show it)
+node scripts/studio.mjs briefs            # scenes with open notes from you
+cd web && npm run test:file -- lib/authoring          # unit tests
+cd web && SCENES_BASE_URL=http://localhost:3001 npx playwright test tests/scenes/studio.spec.ts
+```
+
+## Honest limits today
+
+- Only the base world and two missions are compiled and consumed. The other scene scripts describe each screen and hold your notes and drawn proposals, but the screens are still React and SwiftUI. Migrating a screen to data-driven objects is the next step per scene, and these scripts are where its objects go.
+- Dragging objects works for screen-space elements. World-space objects (buildings on the base) are edited in the inspector, not dragged.
+- Native previews are phone-size snapshots from the iOS Simulator, not a live render. A shared runtime would remove that gap; the decision is open in SSL-642 and recorded in ZenNotes (`projects/landnam/decisions/scene-scripts-and-scene-studio`).
+- The Studio is dev only. It is disabled outside `next dev`.
+- Things, presets, and flows currently run in the web sandbox only. Native previews are phone snapshots for legacy campaign checkpoints.

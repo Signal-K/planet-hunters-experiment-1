@@ -1084,10 +1084,12 @@ button { cursor: pointer; }
   pointer-events: none;
 }
 .portrait-canvas:has(.transit-screen) .toast-stack,
+.portrait-canvas:has([data-testid="transit-screen"]) .toast-stack,
 .portrait-canvas:has(.debrief-game) .toast-stack,
 .portrait-canvas:has([data-testid="rover-survey-screen"]) .toast-stack,
 .portrait-canvas:has([data-testid="delivery-screen"]) .toast-stack,
-.portrait-canvas:has([data-testid="launch-shell"]) .toast-stack {
+.portrait-canvas:has([data-testid="launch-shell"]) .toast-stack,
+.portrait-canvas:has(.game-screen-loading) .toast-stack {
   top: auto;
   bottom: 196px;
   left: auto;
@@ -1110,7 +1112,8 @@ button { cursor: pointer; }
   right: 16px;
   bottom: calc(var(--ln-nav-h, 72px) + 24px);
   width: min(380px, calc(100% - 32px));
-  max-height: min(320px, calc(100% - 220px));
+  /* The tallest question has six 44px choices, the header and Next: about 470px, so the card shows it whole where the screen allows. */
+  max-height: min(500px, calc(100% - 220px));
   overflow: auto;
   background: var(--ln-panel);
   border: 2px solid var(--ln-cyan-border);
@@ -1122,7 +1125,7 @@ button { cursor: pointer; }
   right: 16px;
   bottom: auto;
   width: min(320px, calc(100% - 32px));
-  max-height: min(280px, calc(100% - 280px));
+  max-height: min(500px, calc(100% - 200px));
 }
 
 .toast-item {
@@ -1134,17 +1137,19 @@ button { cursor: pointer; }
 }
 .toast-item > span { min-width: 0; }
 .toast-dismiss {
+  --toast-ring: var(--ln-hairline);
   flex: none;
-  width: 22px;
-  height: 22px;
+  /* 44px tap target around a 22px ring. The margins pull the extra size into the toast's own 8px 12px padding. */
+  width: 44px;
+  height: 44px;
+  margin: -8px -12px -8px -11px;
   padding: 0;
   color: var(--ln-text-dim);
-  background: transparent;
-  border: 1px solid var(--ln-hairline);
-  border-radius: var(--ln-r-pill);
+  background: radial-gradient(circle, transparent 10px, var(--toast-ring) 10px 11px, transparent 11px);
+  border: 0;
   font: 700 16px/1 var(--ln-font-body);
 }
-.toast-dismiss:hover { color: var(--ln-text); border-color: var(--ln-cyan-border); }
+.toast-dismiss:hover { --toast-ring: var(--ln-cyan-border); color: var(--ln-text); }
 
 @media (max-width: 1023px) {
   .portrait-canvas:has(.bottom-tab-bar) .sync-status {
@@ -1401,7 +1406,11 @@ button { cursor: pointer; }
 .auth-gate__input { width: 100%; min-height: 48px; box-sizing: border-box; padding: var(--ln-s-4); color: var(--ln-bp-ink); background: var(--ln-bp-paper); border: 1.5px solid var(--ln-bp-line-strong); border-radius: 8px; outline: none; font: 400 16px var(--ln-font-body); }
 .auth-gate__input:focus { border-color: var(--ln-cyan); box-shadow: 0 0 0 2px rgba(63,169,255,.14), 0 0 18px rgba(63,169,255,.12); }
 .auth-gate__input::placeholder { color: var(--ln-text-muted); }
+.auth-gate__reset-link { align-self: flex-end; min-height: 44px; padding: var(--ln-s-1) 0; color: var(--ln-bp-blue); background: transparent; border: 0; cursor: pointer; font: 700 14px var(--ln-font-display); letter-spacing: .06em; text-decoration: underline; text-underline-offset: 3px; }
+.auth-gate__reset-link:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 3px; }
+.auth-gate__reset-link:disabled { cursor: not-allowed; opacity: .6; }
 .auth-gate__error { padding: var(--ln-s-3); color: var(--ln-crit); background: rgba(255,90,106,.1); border: 1px solid rgba(255,90,106,.36); border-radius: var(--ln-r-md); font: 400 14px/1.4 var(--ln-font-body); }
+.auth-gate__notice { padding: var(--ln-s-3); color: var(--ln-bp-ink); background: var(--ln-bp-paper-2); border: 1px solid var(--ln-bp-blue); border-radius: var(--ln-r-md); font: 400 14px/1.4 var(--ln-font-body); }
 .auth-gate__primary { width: 100%; min-height: 48px; padding: var(--ln-s-4); margin-top: var(--ln-s-1); color: white; background: var(--ln-bp-blue); border: 2px solid var(--ln-bp-ink); border-radius: 8px; cursor: pointer; font: 800 14px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; box-shadow: 3px 3px 0 var(--ln-bp-line-strong); }
 .auth-gate__primary:hover { background: var(--ln-cyan-bright); }
 .auth-gate__primary:disabled { cursor: not-allowed; color: var(--ln-bp-ink); background: var(--ln-bp-paper-2); opacity: 1; box-shadow: none; }
@@ -4390,6 +4399,9 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   z-index: 17;
 }
 .mining-screen .laser-chrome .settings-cog { top: 8px; left: 8px; }
+.mining-screen .laser-chrome .settings-cog,
+.mining-screen .laser-chrome [data-testid="hub-clock-widget"],
+.mining-screen .laser-chrome [data-testid="mining-francs-chip"] { display: none; }
 .mining-screen .laser-chrome__help { position: absolute; z-index: 21; top: 8px; left: 60px; width: 44px; height: 44px; }
 .mining-screen .laser-chrome .laser-chrome__clock { left: 112px; }
 .laser-chrome__clock {
@@ -4753,6 +4765,9 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   container-type: inline-size;
 }
 .ops-settings__panel.ops-settings__training { padding: 12px; }
+.ops-settings__field { display: grid; gap: 8px; color: var(--set-ink); font: 800 14px/1.2 var(--ln-font-display), system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+.ops-settings__field input, .ops-settings__field select { min-height: 44px; width: 100%; border: 2px solid var(--set-ink); border-radius: 2px; background: var(--set-card); color: var(--set-ink); padding: 8px 12px; font: 400 16px/1.2 var(--ln-font-body), system-ui, sans-serif; }
+.ops-settings__actions { display: flex; flex-wrap: wrap; gap: 12px; }
 .ops-settings .patch[data-state='done'] .patch-ring { color: var(--ln-blueprint-blue); }
 .ops-settings .patch[data-state='done'] .patch-ring-segment[data-stitched='true'] { stroke: var(--ln-blueprint-blue); }
 .ops-settings .patch[data-state='done'] .patch-status { color: var(--ln-blueprint-blue); }
@@ -4952,6 +4967,70 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 .ops-settings__panel.ops-settings__note { padding: 24px; }
 .ops-settings__presets .ops-settings__label { margin: 0 0 12px; }
 
+/* Settings is a quiet instrument room, not a second blueprint page. */
+.ops-settings {
+  --set-bg: var(--dusk-deep);
+  --set-card: color-mix(in srgb, var(--dusk-panel) 92%, transparent);
+  --set-ink: var(--dusk-ink);
+  --set-muted: var(--ln-text-dim);
+  --set-danger: #d66b78;
+  background:
+    radial-gradient(circle at 18% 6%, color-mix(in srgb, var(--ln-world-dusk-mid) 48%, transparent), transparent 34rem),
+    linear-gradient(180deg, var(--ln-world-dusk-top), var(--dusk-deep) 42%);
+}
+.ops-settings.ln-page-surface .ops-settings__card {
+  grid-template-rows: auto minmax(0, 1fr);
+  background: transparent;
+}
+.ops-settings__sky { display: none; }
+.ops-settings__card .ops-settings__head {
+  min-height: 64px;
+  padding: max(12px, env(safe-area-inset-top, 0px)) clamp(16px, 4vw, 48px) 12px;
+  border: 0;
+  background: color-mix(in srgb, var(--dusk-deep) 82%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--dusk-ink) 22%, transparent);
+}
+.ops-settings__page { color: var(--dusk-ink); font-size: 16px; letter-spacing: .2em; }
+.ops-settings__close {
+  border: 1px solid color-mix(in srgb, var(--dusk-ink) 35%, transparent);
+  border-radius: 50%; background: color-mix(in srgb, var(--dusk-panel) 76%, transparent); color: var(--dusk-ink);
+}
+.ops-settings__card .ops-settings__stack {
+  width: min(1120px, 100%); padding: clamp(20px, 4vw, 48px); gap: 32px;
+}
+.ops-settings__label { color: color-mix(in srgb, var(--dusk-ink) 72%, var(--ln-text-muted)); font-size: 12px; }
+.ops-settings__panel {
+  gap: 18px; padding: 18px; border: 1px solid color-mix(in srgb, var(--dusk-ink) 20%, transparent);
+  border-radius: 12px; background: var(--set-card); box-shadow: 0 16px 36px rgba(0, 0, 0, .18);
+}
+.ops-settings__card .ops-settings__panel { box-shadow: 0 16px 36px rgba(0, 0, 0, .18); }
+.ops-settings__name, .ops-settings .patch-name { color: var(--dusk-ink); font-size: 15px; }
+.ops-settings__sub, .ops-settings .patch-status { color: var(--set-muted); }
+.ops-settings .patch { padding: 10px 4px; border-bottom: 1px solid color-mix(in srgb, var(--dusk-ink) 12%, transparent); }
+.ops-settings .patch:last-child { border-bottom: 0; }
+.ops-settings .patch-ring-track, .ops-settings .patch-ring-segment { stroke: color-mix(in srgb, var(--dusk-ink) 28%, transparent); }
+.ops-settings .patch-ring, .ops-settings .patch-ring text { color: var(--dusk-ink); fill: currentColor; }
+.ops-settings .patch[data-state='done'] .patch-ring, .ops-settings .patch[data-state='done'] .patch-status { color: var(--ln-teal, #0e6f66); }
+.ops-settings .patch[data-state='done'] .patch-ring-segment[data-stitched='true'] { stroke: var(--ln-teal, #0e6f66); }
+.ops-settings__btn, .ops-settings__preset {
+  min-height: 44px; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--dusk-ink) 36%, transparent);
+  border-radius: 8px; background: color-mix(in srgb, var(--dusk-deep) 62%, transparent); color: var(--dusk-ink);
+}
+.ops-settings__card .ops-settings__btn { color: var(--dusk-ink); }
+.ops-settings__btn::before { display: none; }
+.ops-settings .ln-set-segment > button {
+  min-height: 44px; border: 1px solid color-mix(in srgb, var(--dusk-ink) 28%, transparent); border-radius: 8px;
+  background: color-mix(in srgb, var(--dusk-deep) 56%, transparent); color: var(--dusk-ink);
+}
+.ops-settings .ln-set-segment > button[aria-pressed="true"] {
+  background: var(--ln-teal, #0e6f66); border-color: var(--ln-teal, #0e6f66); color: var(--dusk-ink);
+}
+.ops-settings__field input, .ops-settings__field select { border-color: color-mix(in srgb, var(--dusk-ink) 28%, transparent); border-radius: 8px; background: var(--dusk-deep); color: var(--dusk-ink); }
+.ops-settings__replay-reward { margin: 0; padding: 8px 10px; color: var(--dusk-ink); background: color-mix(in srgb, var(--ln-teal, #0e6f66) 22%, transparent); border-left: 2px solid var(--ln-teal, #0e6f66); font: 600 14px/1.4 var(--ln-font-body); }
+.ops-settings__notes-link { color: var(--dusk-ink); }
+.ops-settings__note h3, .ops-settings__note li { color: var(--dusk-ink); }
+@media (max-width: 639px) { .ops-settings__card .ops-settings__stack { padding: 20px 16px 32px; gap: 24px; } }
+
 /* SSL-536: terrain bump feedback in the mining scene (brick red, never orange). */
 .mining-bump-note {
   position: absolute;
@@ -4971,14 +5050,14 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 
 /* SSL-559: sync chip lives in the top-right chip row (left of francs) in every layout; no amber. */
-.scene-chip.sync-chip { gap: 5px; font: 700 10px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; white-space: nowrap; pointer-events: none; }
+.scene-chip.sync-chip { gap: 5px; font: 700 14px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; white-space: nowrap; pointer-events: none; }
 .sync-chip__dot { width: 7px; height: 7px; border-radius: 999px; background: #3f80f2; flex: none; }
 .sync-chip[data-offline='true'] .sync-chip__dot { background: #9b3b32; }
 /* Keep the sync state readable at every width; the dot alone is ambiguous. */
 .scene-chip.sync-chip:not(.sync-chip--floating) .sync-chip__label { display: inline; }
 .scene-chip.sync-chip:not(.sync-chip--floating) { min-width: max-content; }
-/* A phone's top row has no room for the words beside the balance: keep the dot (the label stays in aria-label and the tooltip). */
-@media (max-width: 430px), (orientation: landscape) and (max-height: 640px) {
+/* A phone's top row has no room for the 14px words beside the balance: keep the dot (the label stays in aria-label and the tooltip). */
+@media (max-width: 600px), (orientation: landscape) and (max-height: 640px) {
   .scene-chip.sync-chip:not(.sync-chip--floating) { min-width: 44px; justify-content: center; padding-left: 0; padding-right: 0; }
   .scene-chip.sync-chip:not(.sync-chip--floating) .sync-chip__label { display: none !important; }
   .scene-chip.sync-chip:not(.sync-chip--floating) .sync-chip__dot { width: 12px; height: 12px; }

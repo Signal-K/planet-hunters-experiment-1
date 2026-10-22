@@ -4,6 +4,7 @@
 //        or as a Claude Code PostToolUse hook (reads the hook JSON from stdin).
 // Writes web/.dev-follow.json; <DevFollow/> in the page polls /api/dev/follow and navigates.
 import { renameSync, writeFileSync, readFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
@@ -20,10 +21,15 @@ const SCREENS = [
   ['instrumenthub', 'instrument-hub'], ['instrumentviewport', 'instrument-hub'],
   ['refinery', 'refinery'], ['missionboard', 'missions'], ['missions', 'missions'],
   ['galaxy', 'galaxy'], ['targets', 'targets'], ['skills', 'skills'], ['academy', 'academy'],
+  ['shower-run', 'ui/orionids-shower-debrief'],
   ['build', 'build'], ['intro', 'intro'], ['roveryvey', 'rover-survey'], ['surfaceops', 'surface-ops'],
 ]
 
 function toRoute(input) {
+  // A scene script, its feedback or its notes: show it in the Scene Studio.
+  const authored = input.replace(root + '/', '').match(/^shared\/authoring\/(?:scenes|feedback)\/([a-z0-9-]+)\.toml$/)
+    ?? input.replace(root + '/', '').match(/^shared\/authoring\/instructions\/scenes\/([a-z0-9-]+)(?:\.next)?\.md$/)
+  if (authored) return `/game/studio?scene=${authored[1]}`
   if (input.startsWith('/')  && !input.includes('.')) return input
   if (/^\/?(web\/)?app\/game\//.test(input.replace(root + '/', ''))) {
     const m = input.match(/app\/game\/(?:\([^)]*\)\/)?([^/]+)/)
@@ -40,6 +46,8 @@ if (!input) {
   try { input = JSON.parse(readFileSync(0, 'utf8')).tool_input?.file_path } catch { /* no stdin */ }
 }
 if (!input || !/(^\/)|web\//.test(input) || /\.(test|spec)\./.test(input)) process.exit(0)
+// Whatever file is edited, keep "which scenes is this work in" current (shared with the storyboard and the Studio).
+spawnSync(process.execPath, ['--no-warnings', join(root, 'scripts', 'studio.mjs'), 'touch', input], { stdio: 'ignore', timeout: 8000 })
 const route = toRoute(input)
 if (!route) process.exit(0)
 // Rename keeps the polling API from observing a partially-written JSON file,

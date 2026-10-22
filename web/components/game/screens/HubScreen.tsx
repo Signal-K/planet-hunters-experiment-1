@@ -1,6 +1,7 @@
 'use client'
 
 import { firedAlertCount } from '@/lib/systems/MarketplaceSystem'
+import { captureGameEvent } from '@/lib/posthog'
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
@@ -119,8 +120,12 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const [activeBuilding, setActiveBuilding] = useState<string | null>(() => hubQuery().get('building'))
   const [rollingOut, setRollingOut] = useState(() => consumeRocketRolloutPending())
   const finishRollout = useCallback(() => setRollingOut(false), [])
-  // The pad stays empty unless a mission or launch is in progress (docs/STYLE.md rule 6). Rollout draws its own rocket.
-  const rocketOnPad = padLanding || ((!!player.activeMission || !!player.pendingLaunch) && !rollingOut)
+  const selectedStagedRocket = player.stagedRockets?.find(rocket => rocket.id === player.selectedStagedRocketId)
+  const stagedRocketOnPad = selectedStagedRocket?.location === 'launchpad'
+  const stagedRocketInHangar = selectedStagedRocket?.location === 'hangar'
+  // Pending launch only says a vehicle has been assigned. Its physical location decides whether the pad is occupied.
+  // Rollout draws its own rocket while it is moving from the hangar.
+  const rocketOnPad = padLanding || ((!!player.activeMission || stagedRocketOnPad) && !rollingOut)
   // The terrain baseline is part of the world composition. It must not move
   // when the dock grows or the mobile browser chrome changes height: doing so
   // pulled the launchpad up into the mountain range to make room for UI. The
@@ -264,8 +269,11 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         onOpen: () => onOpenScene(resume),
       }
     }
-    if (player.pendingLaunch) {
+    if (stagedRocketOnPad) {
       return { state: 'waiting', label: 'CRAFT ON PAD', ariaLabel: 'Open the tower: craft waiting on the pad', onOpen: () => onOpenScene('launchpad') }
+    }
+    if (stagedRocketInHangar) {
+      return { state: 'waiting', label: 'CRAFT IN HANGAR', ariaLabel: 'Open Hangar: vehicle assigned to the mission', onOpen: () => onOpenScene('hangar') }
     }
     return null
   })()
@@ -274,9 +282,9 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     if (kind === 'launchpad') {
       return {
         kind, label: 'Launchpad',
-        sub: player.activeMission ? 'IN FLIGHT' : 'READY',
-        status: (player.activeMission ? 'warn' : 'ok') as 'ok' | 'warn',
-        hot: !!player.pendingLaunch,
+        sub: player.activeMission ? 'IN FLIGHT' : stagedRocketInHangar ? 'VEHICLE IN HANGAR' : stagedRocketOnPad ? 'CRAFT ON PAD' : 'READY',
+        status: (player.activeMission || stagedRocketInHangar ? 'warn' : 'ok') as 'ok' | 'warn',
+        hot: stagedRocketOnPad,
         // Match the rendered mobile footprint of the authored sprite. The
         // taller hit area below covers the gantry without creating an
         // oversized box that shifts the building label away from the structure.
@@ -378,8 +386,15 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const placeOnPlot = (plot: number) => {
     const option = buildOptions.find(o => o.id === pickedBuild)
     if (!option || !onPlaceStructure) return
-    if (!option.affordable) { setPlaceNote(`${option.name} · ${option.reason ?? 'Not enough resources'}`); return }
-    if (onPlaceStructure(option.id, plot)) { setPlaceNote(null); setEditMode(placementMode) } else setPlaceNote('That could not be placed. Try another slot.')
+    if (!option.affordable) {
+      setPlaceNote(`${option.name} · ${option.reason ?? 'Not enough resources'}`)
+      captureGameEvent('structure_placement_blocked', { structure_kind: option.id, reason: 'unaffordable', detail: option.reason ?? null })
+      return
+    }
+    if (onPlaceStructure(option.id, plot)) { setPlaceNote(null); setEditMode(placementMode) } else {
+      setPlaceNote('That slot is taken or locked. Try another slot.')
+      captureGameEvent('structure_placement_blocked', { structure_kind: option.id, reason: 'slot_unavailable', plot })
+    }
   }
 
 
@@ -534,7 +549,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       </div>
       {/* ── End persistent Base world ── */}
 
-      {!subsurface && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} onParticipate={onOpenEvents} />}
+      {!subsurface && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} onParticipate={onOpenEvents} playerLocation={player.skyEventLocation} />}
 
       {/* Top HUD — always fixed above the slide. Rebuilt 2026-08-21 (KES-226)
           back to a dark scrim (the KES-220 light version was scrapped same
@@ -586,7 +601,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
 
       {editMode && onPlaceStructure && (
         <div className={layoutStyles.buildPicker} data-testid="build-picker">
-          {placeNote && <span style={{ pointerEvents: 'auto', padding: '6px 12px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>{placeNote}</span>}
+          {placeNote && <span data-testid="hub-place-note" style={{ pointerEvents: 'auto', padding: '6px 12px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>{placeNote}</span>}
           {underground && pickedSiteFree && (
             <button type="button" data-testid="build-place-underground" onClick={() => placeOnPlot(siteById('shaft').plot ?? 2)}
               style={{ pointerEvents: 'auto', minHeight: 44, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1 var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -625,7 +640,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
 
       {/* The surface dock is reserved for all-scene navigation only. Base-only
           actions remain on their physical buildings or in their own surfaces. */}
-      {(
+      {/* The delivery sheet of a homecoming covers the dock, so it is not drawn under it (it would only be an inert, overlapped control). */}
+      {!homecoming && (
         <div className="hub-bottom-dock" style={{
           position: 'absolute', left: 0, right: 0, bottom: 8, zIndex: subsurface ? 40 : 20,
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none',

@@ -1,6 +1,7 @@
 'use client'
 
 import { mineralSourceHints } from '@/lib/data/mineral-sources'
+import { useHelp } from '@/components/ui/useHelp'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Boxes,
@@ -111,6 +112,7 @@ export default function SurfaceOpsScreen({
   onFabricate,
   onSeedBiosphere,
 }: SurfaceOpsScreenProps) {
+  const help = useHelp('surface-ops')
   const [selectedSiteId, setSelectedSiteId] = useState(SURFACE_SITES[0].id)
   const [selectedPad, setSelectedPad] = useState<0 | 1 | 2>(0)
   const [view, setView] = useState<SurfaceView>('logistics')
@@ -229,7 +231,9 @@ export default function SurfaceOpsScreen({
         onBack={onBack}
         solid
         francs={player.francs}
+        right={help.button}
       />
+      {help.layer}
 
       <main className={styles.content} data-view={view}>
         <section className={styles.siteRail} aria-label="Surface sites">

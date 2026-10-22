@@ -161,6 +161,17 @@ import Foundation
         #expect(Loop.launch(s, catalog: catalog, now: t0).screen == .fab)
     }
 
+    @Test func dismantlingAnUnlaunchedRocketKeepsTheMissionPlan() {
+        var s = GameState(); s.screen = .missions
+        let mission = catalog.missions.first { $0.sequence == 1 }!
+        s = Loop.pickMission(s, id: mission.id, catalog: catalog)
+        let dismantled = Loop.dismantleStagedRocket(s)
+        #expect(dismantled.missionId == mission.id)
+        #expect(dismantled.targetId != nil)
+        #expect(dismantled.player.stagedRockets.isEmpty)
+        #expect(!dismantled.player.pendingLaunch)
+    }
+
     @Test func hangarBuildsTheChosenRocketForTheSetUpMission() {
         var s = GameState(); s.screen = .missions
         s.player.missionsDone = 1
@@ -261,12 +272,23 @@ import Foundation
 }
 
 @Suite struct HelpTests {
+    @Test func controlStationAndTessShareTheDataAnalysisCard() {
+        let hub = Help.topic(for: .instrumentHub)!, tess = Help.topic(for: .galaxy)!
+        let card = hub.cards.first { $0.title == "What the data analysis is" }
+        #expect(card != nil)
+        #expect(tess.cards.contains(card!))
+    }
+
     @Test func topicsHaveBoundedCardsAndResolvableAnchors() {
         for (_, t) in Help.topics {
             #expect((Help.minCards...Help.maxCards).contains(t.cards.count))
             for s in t.coach { #expect(s.targets.contains(s.anchor)) }
         }
         #expect(Help.topic(for: .hub) == nil)
+        // Mirrors the web topics added for SSL-431.
+        for (screen, title) in [(Screen.transit, "In flight"), (.delivery, "Cargo transfer"), (.skills, "Skill tree"), (.academy, "Astronaut academy"), (.surfaceOps, "Surface operations")] {
+            #expect(Help.topic(for: screen)?.title == title)
+        }
     }
 
     @Test func coachRunAdvancesOnlyOnItsAction() {
@@ -332,9 +354,16 @@ import Foundation
         #expect(SkyCraft.current(for: Player(), now: 0) == nil)
     }
     @Test func waitingOnPadOpensLaunchpad() {
-        var p = Player(); p.pendingLaunch = true
+        var p = Player(); p.pendingLaunch = true; p.selectedStagedRocketId = "pad"
+        p.stagedRockets = [StagedRocket(id: "pad", rocketId: "explorer", rocket: RocketConfig(chassis: "hull-mk1", propulsion: "ion-a1", drill: "hand-drill"), location: .launchpad, source: .company, missionId: "m", targetId: "eros")]
         let c = SkyCraft.current(for: p, now: 0)
         #expect(c?.state == .waiting && c?.opens == .launchpad)
+    }
+    @Test func craftInHangarDoesNotReadAsCraftOnPad() {
+        var p = Player(); p.pendingLaunch = true; p.selectedStagedRocketId = "hangar"
+        p.stagedRockets = [StagedRocket(id: "hangar", rocketId: "explorer", rocket: RocketConfig(chassis: "hull-mk1", propulsion: "ion-a1", drill: "hand-drill"), location: .hangar, source: .company, missionId: "m", targetId: "eros")]
+        let c = SkyCraft.current(for: p, now: 0)
+        #expect(c?.label == "CRAFT IN HANGAR" && c?.opens == .fab)
     }
     @Test func flyingThenArrivedThenMining() {
         var p = Player(); p.activeMission = ActiveMission(id: "m", label: "Job"); p.missionPhase = .transit; p.arrivalAt = 100

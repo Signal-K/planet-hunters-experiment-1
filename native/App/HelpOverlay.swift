@@ -11,7 +11,14 @@ import LandnamCore
 }
 
 private struct CoachControllerKey: EnvironmentKey { static let defaultValue: CoachController? = nil }
+/// Width a screen's help "?" button takes from the top-right corner, so the francs and stash chips sit beside it, not under it.
+private struct HelpButtonReserveKey: EnvironmentKey { static let defaultValue: CGFloat = 0 }
+
 extension EnvironmentValues {
+    var helpButtonReserve: CGFloat {
+        get { self[HelpButtonReserveKey.self] }
+        set { self[HelpButtonReserveKey.self] = newValue }
+    }
     var coach: CoachController? {
         get { self[CoachControllerKey.self] }
         set { self[CoachControllerKey.self] = newValue }
@@ -50,20 +57,30 @@ extension View {
     }
 
     /// Adds the "?" button, the help sheet and the coach overlay for a screen that has a topic.
-    @ViewBuilder func helpable(_ screen: Screen) -> some View {
-        if let topic = Help.topic(for: screen) { modifier(HelpModifier(topic: topic)) } else { self }
+    /// With `firstVisit` the sheet opens once, then only on the "?" (web useHelp firstVisit).
+    @ViewBuilder func helpable(_ screen: Screen, firstVisit: Bool = false) -> some View {
+        if let topic = Help.topic(for: screen) { modifier(HelpModifier(topic: topic, firstVisit: firstVisit)) } else { self }
     }
 }
 
 private struct HelpModifier: ViewModifier {
     let topic: HelpTopic
+    let firstVisit: Bool
     @State private var coach: CoachController
+    private var seenKey: String { "ln-help-seen:\(topic.id)" }
 
-    init(topic: HelpTopic) { self.topic = topic; _coach = State(initialValue: CoachController(topic: topic)) }
+    init(topic: HelpTopic, firstVisit: Bool) {
+        self.topic = topic; self.firstVisit = firstVisit
+        _coach = State(initialValue: CoachController(topic: topic))
+    }
 
     func body(content: Content) -> some View {
         content
             .environment(\.coach, coach)
+            .environment(\.helpButtonReserve, 52)
+            .onAppear {
+                if firstVisit, !UserDefaults.standard.bool(forKey: seenKey) { coach.sheetOpen = true }
+            }
             .overlay(alignment: .topTrailing) {
                 Button { coach.sheetOpen = true } label: {
                     Text("?").font(AppFont.display(20, "Bold")).foregroundStyle(Theme.ink)
@@ -83,6 +100,9 @@ private struct HelpModifier: ViewModifier {
                                    rects: rects, size: geo.size, onNext: { coach.run.advance() }, onStop: { coach.run.stop() })
                     }
                 }
+            }
+            .onChange(of: coach.sheetOpen) { _, open in
+                if !open { UserDefaults.standard.set(true, forKey: seenKey) }
             }
             .sheet(isPresented: Binding(get: { coach.sheetOpen }, set: { coach.sheetOpen = $0 })) {
                 HelpSheet(topic: topic, onShowMe: topic.coach.isEmpty ? nil : {

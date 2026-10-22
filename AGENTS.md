@@ -16,7 +16,8 @@ Standing rules (short form; details below)
 - One commit with ALL changed files, only after real work. Subject: two different emoji + `↝ [SSL-123]: outcome`. Push to `cycle/4`.
 - No scene titles in UI. One shared HUD on every screen (web `components/game/hub/` + `SyncStatus`, native `App/Screens/SharedHud.swift`), never a per-screen HUD.
 - No orange or green UI colour (user rule, newest wins over older docs). Colours only from CSS variables / `shared/tokens`.
-- PocketBase is the only state store (via the outbox, no direct client writes). TestFlight uploads happen only from CI (`.github/workflows/testflight.yml`) after a PR merges into `main`; never upload by hand.
+- PocketBase is the only state store (via the outbox, no direct client writes). The TestFlight workflow was deleted (Liam, 21 Oct); do not upload to TestFlight or recreate the workflow without asking.
+- If there are files that are uncommitted when you do a commit, COMMIT ALL of them. Do not say "this is not my work so I'm not committing it". Do not leave a messy worktree.
 
 Map (where things live)
 
@@ -32,6 +33,7 @@ Map (where things live)
 | Sync / state | `game-context.tsx`, `lib/game-state*.ts`, `lib/sync/*`, `lib/offline/*`, `lib/contexts/useAuthSync.ts`, `components/game/LandnamSyncStatus.tsx` | `LandnamCore/.../Sync/*`, `Store/GameStore.swift` |
 | Backend | `lib/pb*.ts` | `pocketbase/` (Go hooks, `pb_migrations/`) |
 | Design tokens | `app/globals.css` (rg only), `shared/tokens/tokens.json` -> `npm run sync:shared` | `App/Theme.swift` (`Theme.generated.swift` is generated) |
+| Scene scripts, Studio | `shared/authoring/` (TOML, schemas, notes), `app/game/studio/`, `lib/authoring/`, `scripts/authoring.mjs`, `scripts/studio.mjs` | `AuthoredMissions.swift` + generated `AuthoredMissions.generated.swift` |
 
 This is the single source of agent instructions for the Landnam repo. `CLAUDE.md` imports this file; `web/AGENTS.md` and `web/CLAUDE.md` are thin pointers. Do not copy rules into other files.
 
@@ -39,7 +41,7 @@ This is the single source of agent instructions for the Landnam repo. `CLAUDE.md
 
 Process
 1. Commits: commit ALL files with changes, in one commit, and only after real work (a finished, coherent unit: feature, fix, ticket). No tiny or frequent commits, no WIP, checkpoint, CI-poke or one-line churn commits. See "Commit" below for the format.
-2. Branching: work directly on `cycle/4`. No feature branches. Never push to `main` directly; the release path is a PR from `cycle/4` into `main` (CI required must pass), and the merge deploys the web Worker and uploads the iOS build to TestFlight.
+2. Branching: work directly on `cycle/4`. No feature branches. Never push to `main` directly; the release path is a PR from `cycle/4` into `main` (CI required must pass), and the merge deploys the web Worker (no TestFlight upload).
 3. No waiting on CI. CI runs typecheck, unit tests, build and Playwright scenes. Run relevant local checks to completion; do not poll CI or block delivery on its queue. Report CI and deployment as unverified unless actually checked.
 4. Done means proof: nothing is "done" without a viewed screenshot of the running build. Every ticket carries a "Done when" line. Close your own Linear tickets. When the fix is on `cycle/4` and your own checks pass (typecheck, the relevant tests, and screenshots you have looked at), mark the ticket Done with a short comment giving the commit and the proof. Do not leave it In Review waiting for real Safari or any check you cannot run; say in the comment what was not run.
 5. Keep discovery bounded: read the active ticket, its latest comments, applicable decisions and the real implementation. Do not scan historical docs or repeat passed checks without a changed input or unresolved failure.
@@ -67,6 +69,17 @@ Liam watches agent work in the Cursor/VS Code Simple Browser on `http://localhos
 - Liam opens `http://localhost:3001/game/hub?follow=1` once (`?follow=0` stops it). `web/components/dev/DevFollow.tsx` (dev only) then navigates that tab to the last previewed route via `/api/dev/follow`.
 - Every screen and every Hub-only state must be reachable by URL: a gameplay screen is a `/game/<screen>` route (`web/lib/game-screens.ts`), and Hub overlays take query params (`/game/hub?menu=1`, `?building=<kind>`, read in `HubScreen.tsx`). A new scene or overlay must be deep-linkable and added to the map in `scripts/preview-target.mjs`; never make it reachable only by clicking through ephemeral state.
 - Use the same dev server for your own checks when you can; do not start a second one on another port for the same checkout.
+
+## Scene Studio (every scene as a script, with Liam's feedback)
+
+`http://localhost:3001/game/studio` (dev only, no login) shows any scene and setup in the real game, with the native snapshot beside it. Each scene is a script, `shared/authoring/scenes/<scene>.toml`, and Liam's notes live beside it. Full guide: `shared/authoring/README.md`.
+- At the start of a task run `node scripts/studio.mjs where <ticket or files>` and then `node scripts/studio.mjs focus <scenes> --ticket SSL-123`, so it is clear what scenes you are in. The edit hook keeps it current after that. Open the editor on them with `node scripts/studio.mjs open <scene>`.
+- Before changing a scene, read its script, `shared/authoring/feedback/<scene>.toml` and `shared/authoring/instructions/scenes/<scene>*.md` (`node scripts/studio.mjs briefs` lists scenes with open notes). Liam's pins are requirements. A pin marked `wrong` is a standing rule: never bring it back, even once `resolved`. A pin marked `keep` must not change. Objects with `status = "proposed"` are elements he drew for you to build.
+- `mode = "fix"`: follow the notes exactly. `mode = "explore"`: he does not know what will look good, so propose at least two genuinely different directions, each fixing every wrong pin, say which traits of his inspiration you borrowed, and show all three viewports. Never answer with a variation of what he rejected.
+- When you deliver, set `status = "addressed"` in the feedback file, set `status = "implemented"` on proposed objects you built, and put the handoff in Linear as usual.
+- Scene objects and the two compiled missions are authored in TOML. After editing `shared/authoring/**` run `node scripts/authoring.mjs check` (compile writes the runtime files for web and native; CI fails when they are stale). Never hand-edit `shared/scenes/base-world.json`, `shared/missions/*.json` or `AuthoredMissions.generated.swift`.
+- Studio scenes use the sandbox stage by default: it removes campaign gates, help, balance and event chrome unless a Thing enables them. Put every independent setup in `[[things]]` and a named, instructed combination in `[[presets]]`.
+- Put multi-scene walkthroughs in `shared/authoring/flows/`. Select a flow in Studio to visit its scenes and presets in sequence. Sandbox Things and flows are web-stage only; native snapshots remain legacy checkpoint proof.
 
 ## Priority order (highest wins)
 

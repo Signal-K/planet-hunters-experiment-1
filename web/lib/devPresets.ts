@@ -1,6 +1,8 @@
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS } from '@/lib/data'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
 const FIRST_MINERAL = Object.keys(FIRST_MISSION.requires.minerals)[0] ?? 'iron'
@@ -170,6 +172,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-surface-ops', label: 'Surface Ops', hint: 'Surface Ops list with site access to buy and settlements. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -192,8 +196,49 @@ export const DEV_GROUPS: DevGroup[] = [
   },
 ]
 
+/** Campaign-free starting points for the Scene Studio's sandbox: the `sandbox-*` cases of `fixture()` below. */
+export const SANDBOX_FIXTURES = ['sandbox-hub', 'sandbox-transit'] as const
+
+/**
+ * A stage fixture by name. `sandbox:<fixture>[:<setup>]` is the same fixture with its campaign context removed and a
+ * scene script's setup layered on (lib/sandbox.ts). The `sandbox-*` fixtures below are the campaign-free starting
+ * points those scenes use: the shape a screen needs and nothing more.
+ */
 export function resolvePreset(name: string): Partial<GameState> | null {
+  if (isSandboxName(name)) return resolveSandbox(name, fixture)
+  return fixture(name)
+}
+
+function fixture(name: string): Partial<GameState> | null {
   switch (name) {
+    // ── Sandbox starting points (SSL-641): no campaign, nothing built, nothing owed ──
+    case 'sandbox-hub':
+      return {
+        screen: 'hub',
+        player: { ...BASE_PLAYER, missionsDone: 3, placed: [], placementPlots: {}, freeOperations: true },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'sandbox-transit': {
+      // Outbound to Eros, an hour long, 20 minutes in. The scene's things move the destination, the ship and the progress.
+      const transitStartedAt = Date.now() - 20 * 60_000
+      return {
+        screen: 'transit',
+        player: {
+          ...BASE_PLAYER, missionsDone: 3, freeOperations: true,
+          activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, missionPhase: 'transit',
+          transitStartedAt, arrivalAt: transitStartedAt + 60 * 60_000,
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+    }
+
     // ── Mission 1 ──
     case 'm1-intro':
       return {
@@ -617,6 +662,31 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         lastCargo: null,
         popup: null,
       }
+
+    // SSL-651: the Orionids shower run with its order filled. 25 caught in all, 5 before this run was accepted.
+    case 'ui-orionids-shower-mining':
+    case 'ui-orionids-shower-debrief': {
+      const home = name === 'ui-orionids-shower-debrief'
+      const haul = { orionid_debris: 19, iron: 2 }
+      return {
+        screen: home ? 'debrief' : 'mining',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          activeMission: { id: ORIONIDS_NIGHT_RUN_ID, label: 'Orionids shower run' },
+          missionPhase: home ? 'debrief' : 'mining',
+          orionidsFragments: { caught: 25, redeemed: 0 },
+          orionidsRunBaseline: 5,
+          stash: home ? haul : {},
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: ORIONIDS_NIGHT_RUN_ID,
+        targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: home ? haul : null,
+        popup: null,
+      }
+    }
 
     case 'ui-market':
       return {

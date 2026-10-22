@@ -10,282 +10,282 @@
   "sprites": {
     "escarpment-a-mid": {
       "src": "base/v7/world/escarpment-a-mid.png",
-      "w": 236.0,
+      "w": 236,
       "h": 26.43,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "escarpment-a-far": {
       "src": "base/v7/world/escarpment-a-far.png",
-      "w": 236.0,
+      "w": 236,
       "h": 26.43,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "escarpment-b-mid": {
       "src": "base/v7/world/escarpment-b-mid.png",
-      "w": 166.0,
+      "w": 166,
       "h": 20.509,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "escarpment-b-far": {
       "src": "base/v7/world/escarpment-b-far.png",
-      "w": 166.0,
+      "w": 166,
       "h": 20.509,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "escarpment-c-mid": {
       "src": "base/v7/world/escarpment-c-mid.png",
-      "w": 316.0,
+      "w": 316,
       "h": 17.557,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "escarpment-c-far": {
       "src": "base/v7/world/escarpment-c-far.png",
-      "w": 316.0,
+      "w": 316,
       "h": 17.557,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "escarpment-butte-mid": {
       "src": "base/v7/world/escarpment-butte-mid.png",
-      "w": 76.0,
+      "w": 76,
       "h": 22.385,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "escarpment-butte-far": {
       "src": "base/v7/world/escarpment-butte-far.png",
-      "w": 76.0,
+      "w": 76,
       "h": 22.385,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "steppe-plain": {
       "src": "base/v7/world/steppe-plain.jpg",
-      "w": 680.0,
+      "w": 680,
       "h": 47.933,
-      "x0": 0.0,
+      "x0": 0,
       "v0": 10.161
     },
     "ground-complex": {
       "src": "base/v7/ground/ground-complex.jpg",
-      "w": 680.0,
+      "w": 680,
       "h": 64.351,
-      "x0": 0.0,
+      "x0": 0,
       "v0": -53.223
     },
     "tussock-0": {
       "src": "base/v7/world/tussock-0.png",
-      "w": 18.0,
+      "w": 18,
       "h": 9.849,
-      "x0": -9.0,
+      "x0": -9,
       "v0": 1.152
     },
     "tussock-1": {
       "src": "base/v7/world/tussock-1.png",
-      "w": 15.0,
+      "w": 15,
       "h": 10.759,
       "x0": -7.5,
       "v0": 1.152
     },
     "tussock-2": {
       "src": "base/v7/world/tussock-2.png",
-      "w": 22.0,
+      "w": 22,
       "h": 10.747,
-      "x0": -11.0,
+      "x0": -11,
       "v0": 1.152
     },
     "balloon": {
       "src": "base/v7/world/balloon.png",
-      "w": 14.0,
+      "w": 14,
       "h": 27.675,
-      "x0": -7.0,
+      "x0": -7,
       "v0": 1.677
     },
     "far-rocket": {
       "src": "base/v7/world/far-rocket.png",
-      "w": 6.0,
+      "w": 6,
       "h": 19.57,
-      "x0": -3.0,
+      "x0": -3,
       "v0": 0.71
     },
     "cloud-0": {
       "src": "base/v7/sky/cloud-0.png",
-      "w": 84.0,
+      "w": 84,
       "h": 20.894,
-      "x0": -12.0,
-      "v0": -1.0
+      "x0": -12,
+      "v0": -1
     },
     "cloud-1": {
       "src": "base/v7/sky/cloud-1.png",
-      "w": 68.0,
+      "w": 68,
       "h": 22.954,
-      "x0": -12.0,
-      "v0": -1.0
+      "x0": -12,
+      "v0": -1
     },
     "cloud-2": {
       "src": "base/v7/sky/cloud-2.png",
-      "w": 104.0,
+      "w": 104,
       "h": 20.996,
-      "x0": -12.0,
-      "v0": -1.0
+      "x0": -12,
+      "v0": -1
     },
     "butte-a-far": {
       "src": "base/v7/world/butte-a-far.png",
-      "w": 236.0,
+      "w": 236,
       "h": 26.43,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "butte-butte-far": {
       "src": "base/v7/world/butte-butte-far.png",
-      "w": 76.0,
+      "w": 76,
       "h": 22.385,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "butte-b-mid": {
       "src": "base/v7/world/butte-b-mid.png",
-      "w": 166.0,
+      "w": 166,
       "h": 20.509,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "butte-butte-mid": {
       "src": "base/v7/world/butte-butte-mid.png",
-      "w": 76.0,
+      "w": 76,
       "h": 22.385,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "dune-ridge-far": {
       "src": "base/v7/world/dune-ridge-far.png",
-      "w": 368.0,
+      "w": 368,
       "h": 11.651,
-      "x0": -4.0,
+      "x0": -4,
       "v0": -0.5
     },
     "dune-ridge-mid": {
       "src": "base/v7/world/dune-ridge-mid.png",
-      "w": 308.0,
+      "w": 308,
       "h": 12.561,
-      "x0": -4.0,
+      "x0": -4,
       "v0": -0.5
     },
     "snow-ridge-far": {
       "src": "base/v7/world/snow-ridge-far.png",
-      "w": 368.0,
+      "w": 368,
       "h": 12.815,
-      "x0": -4.0,
+      "x0": -4,
       "v0": -0.5
     },
     "snow-ridge-mid": {
       "src": "base/v7/world/snow-ridge-mid.png",
-      "w": 308.0,
+      "w": 308,
       "h": 14.192,
-      "x0": -4.0,
+      "x0": -4,
       "v0": -0.5
     },
     "coast-dune-ridge-far": {
       "src": "base/v7/world/coast-dune-ridge-far.png",
-      "w": 368.0,
+      "w": 368,
       "h": 11.455,
-      "x0": -4.0,
+      "x0": -4,
       "v0": -0.5
     },
     "coast-dune-ridge-mid": {
       "src": "base/v7/world/coast-dune-ridge-mid.png",
-      "w": 308.0,
+      "w": 308,
       "h": 12.376,
-      "x0": -4.0,
+      "x0": -4,
       "v0": -0.5
     },
     "headland-far": {
       "src": "base/v7/world/headland-far.png",
-      "w": 256.0,
+      "w": 256,
       "h": 24.406,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "headland-mid": {
       "src": "base/v7/world/headland-mid.png",
-      "w": 256.0,
+      "w": 256,
       "h": 24.406,
-      "x0": -8.0,
+      "x0": -8,
       "v0": -0.5
     },
     "sand-drift-0": {
       "src": "base/v7/world/sand-drift-0.png",
-      "w": 30.0,
+      "w": 30,
       "h": 6.833,
-      "x0": -15.0,
+      "x0": -15,
       "v0": 0.184
     },
     "sand-drift-1": {
       "src": "base/v7/world/sand-drift-1.png",
-      "w": 22.0,
+      "w": 22,
       "h": 6.866,
-      "x0": -11.0,
+      "x0": -11,
       "v0": 0.184
     },
     "snow-drift-0": {
       "src": "base/v7/world/snow-drift-0.png",
-      "w": 30.0,
+      "w": 30,
       "h": 7.01,
-      "x0": -15.0,
+      "x0": -15,
       "v0": 0.184
     },
     "snow-drift-1": {
       "src": "base/v7/world/snow-drift-1.png",
-      "w": 22.0,
+      "w": 22,
       "h": 6.557,
-      "x0": -11.0,
+      "x0": -11,
       "v0": 0.184
     },
     "saxaul": {
       "src": "base/v7/world/saxaul.png",
-      "w": 16.0,
+      "w": 16,
       "h": 6.836,
-      "x0": -8.0,
+      "x0": -8,
       "v0": 1.152
     },
     "dune-grass": {
       "src": "base/v7/world/dune-grass.png",
-      "w": 22.0,
+      "w": 22,
       "h": 10.747,
-      "x0": -11.0,
+      "x0": -11,
       "v0": 1.152
     },
     "ice": {
       "src": "base/v7/world/ice.png",
-      "w": 16.0,
+      "w": 16,
       "h": 9.936,
-      "x0": -8.0,
+      "x0": -8,
       "v0": 1.152
     },
     "plain-desert": {
       "src": "base/v7/ground/plain-desert.jpg",
-      "w": 680.0,
+      "w": 680,
       "h": 47.933,
-      "x0": 0.0,
+      "x0": 0,
       "v0": 10.161
     },
     "plain-tundra": {
       "src": "base/v7/ground/plain-tundra.jpg",
-      "w": 680.0,
+      "w": 680,
       "h": 47.933,
-      "x0": 0.0,
+      "x0": 0,
       "v0": 10.161
     },
     "plain-coast": {
       "src": "base/v7/ground/plain-coast.jpg",
-      "w": 680.0,
+      "w": 680,
       "h": 47.933,
-      "x0": 0.0,
+      "x0": 0,
       "v0": 10.161
     }
   },

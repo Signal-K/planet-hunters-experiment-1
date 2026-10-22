@@ -48,6 +48,12 @@ const LAUNCH_HELP: HelpTopic = {
   ],
 }
 
+// Shared by the Control Station and the TESS review so both "?" sheets explain the data analysis.
+const DATA_ANALYSIS_CARD = {
+  title: 'What the data analysis is',
+  body: 'Each item is a real observation from a real telescope or survey. You look at it and classify what you see, such as a dip in a star\'s light. Your answers feed real citizen science projects and earn badges and rewards here.',
+}
+
 export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
   'instrument-hub': {
     id: 'control-station',
@@ -61,6 +67,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
         title: 'Open a project',
         body: 'Filter by place, then open a row that has a count. That opens the review for those items.',
       },
+      DATA_ANALYSIS_CARD,
     ],
   },
   // The TESS transit review screen.
@@ -68,6 +75,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     id: 'tess',
     title: 'Reading the light curve',
     cards: [
+      DATA_ANALYSIS_CARD,
       {
         title: 'Find the dip',
         body: 'A planet passing in front of its star makes the light dip for a short while, then recover. Drag across the dip on the chart to mark it.',
@@ -169,6 +177,62 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     cards: [
       { title: 'Sell the haul', body: 'Ore you brought home sells here for francs. The price on the card is the price you are paid.' },
       { title: 'Build from a recipe', body: 'Road Segment and Surface Silo show BUILD when you can afford them. Short cards name where to mine the missing material in Free Ops.' },
+    ],
+  },
+  transit: {
+    id: 'transit',
+    title: 'In flight',
+    cards: [
+      { title: 'The trip takes real time', body: 'The rocket flies on its own. The timer and the line show how far along it is. You can leave the screen and come back, the flight keeps going.' },
+      { title: 'Boost and resume', body: 'Boost skips ahead on the trip. If you close the game mid flight, the same run is waiting when you return.' },
+    ],
+  },
+  landing: {
+    id: 'landing',
+    title: 'Landing and ascent',
+    cards: [
+      { title: 'Descent and ascent', body: 'The rocket lands, and later lifts off again. Each has its own timer. Continue unlocks when the timer finishes.' },
+      { title: 'Nothing to steer', body: 'The landing is automatic. Wait for it, then carry on to the work on the ground.' },
+    ],
+  },
+  delivery: {
+    id: 'delivery',
+    title: 'Cargo transfer',
+    cards: [
+      { title: 'Hand over the cargo', body: 'The cargo goes to the client at this body. Start the unload and wait for the timer. Pay arrives when the whole order is delivered.' },
+      { title: 'What the client wants', body: 'The order says how much of which ore the client needs. Bring all of it so the full payout lands.' },
+    ],
+  },
+  refinery: {
+    id: 'refinery',
+    title: 'Refinery',
+    cards: [
+      { title: 'Turn ore into goods', body: 'Pick a recipe. It takes the ore from your stash and runs for a set time. Check the inputs and the output value before you start.' },
+      { title: 'Collect when done', body: 'Finished goods wait for you. Collect them to add them to the stash. Nothing is lost while you are away.' },
+    ],
+  },
+  skills: {
+    id: 'skills',
+    title: 'Skill tree',
+    cards: [
+      { title: 'Spend points on unlocks', body: 'Points come from research and play. Pick a node to see what it unlocks, then unlock it. Unlocks are permanent.' },
+      { title: 'License grade', body: 'Your license grade sets how far up the tree you can go. Upgrade it to open the next tier.' },
+    ],
+  },
+  academy: {
+    id: 'academy',
+    title: 'Astronaut academy',
+    cards: [
+      { title: 'Train and hire crew', body: 'Roster shows your crew. Training raises a branch. Hiring adds someone new. Both cost francs and time.' },
+      { title: 'Unlock it first', body: 'The academy opens once it is researched and the building is placed on the base. Until then the screen shows it as locked.' },
+    ],
+  },
+  'surface-ops': {
+    id: 'surface-ops',
+    title: 'Surface operations',
+    cards: [
+      { title: 'Sites and access', body: 'Each site needs access before you can work there. Buy access, then send a ferry with what the site needs.' },
+      { title: 'Logistics and field', body: 'Logistics moves cargo between the base and a site. Field runs an operation on the ground once the site is ready.' },
     ],
   },
 }

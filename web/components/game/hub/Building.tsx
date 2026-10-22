@@ -4,6 +4,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { structureBuildMs, hubConstructionProgress } from '@/lib/systems/HubConstructionSystem'
 import { useSharedSecond } from '@/lib/hooks/useSharedSecond'
+import { holdSurveys } from '@/lib/survey-gating'
 
 /**
  * DOM half of a hub structure — hit area, status pill, and the notification
@@ -161,6 +162,9 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
     return () => window.removeEventListener('resize', measure)
   }, [calloutOpen, callout?.placement, nudge])
   const tailLeft = Math.max(CALLOUT_TAIL_INSET, Math.min(CALLOUT_W - CALLOUT_TAIL_INSET, -bubbleLeft - nudge))
+
+  // A survey card would sit under an open callout and hide its own Skip (SSL-649), so it waits.
+  useEffect(() => (calloutOpen ? holdSurveys() : undefined), [calloutOpen])
 
   // Small delay so it reads as the base speaking up, rather than slamming
   // into view on load. Matches the mockup's 900ms auto-open.

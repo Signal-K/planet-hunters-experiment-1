@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Landnam world",
+  "description": "A world is the set of game objects (terrain, clouds, weather, sky events) that web and native step with the same physics. Compiled to shared/scenes/<name>.json, which both platforms load unchanged.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "physics", "sprites", "entities", "prefabs", "biomes"],
+  "properties": {
+    "format": { "const": 1, "description": "Authoring format version. Not copied into the compiled JSON." },
+    "version": { "type": "integer", "minimum": 1, "description": "Runtime schema version read by web and native." },
+    "about": { "type": "string", "description": "Plain-language description of the world and its units." },
+    "physics": { "$ref": "#/definitions/physics" },
+    "sprites": {
+      "type": "object",
+      "description": "Named sprite frames. Each carries its Blender frame: w, h, x0 (left edge from the entity x) and v0 (bottom edge from the entity y).",
+      "additionalProperties": { "$ref": "#/definitions/sprite" }
+    },
+    "entities": {
+      "type": "array",
+      "description": "Entities present in every landscape.",
+      "items": { "$ref": "#/definitions/entity" }
+    },
+    "prefabs": {
+      "type": "object",
+      "description": "Entity templates spawned by emitters and the sky calendar (rain, meteors, exhaust).",
+      "additionalProperties": { "$ref": "#/definitions/entity" }
+    },
+    "biomes": {
+      "type": "object",
+      "description": "Each landscape's own horizon, far ground, plants and drifts, added to the shared entities.",
+      "additionalProperties": { "type": "array", "items": { "$ref": "#/definitions/entity" } }
+    }
+  },
+  "definitions": {
+    "physics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gravity", "fixedStep", "groundY", "windScale"],
+      "properties": {
+        "gravity": { "type": "number", "description": "Acceleration along y, kit units per second squared. Negative falls." },
+        "fixedStep": { "type": "number", "minimum": 0.001, "maximum": 0.1, "description": "Simulation step in seconds. Web and native must match." },
+        "groundY": { "type": "number", "description": "Height of the ground line in kit units." },
+        "windScale": { "type": "number", "minimum": 0, "description": "Multiplier on the weather's wind." }
+      }
+    },
+    "sprite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["src", "w", "h", "x0", "v0"],
+      "properties": {
+        "src": { "type": "string", "description": "Image path under web/public/game/assets/." },
+        "w": { "type": "number", "minimum": 0, "description": "Width in kit units." },
+        "h": { "type": "number", "minimum": 0, "description": "Height in kit units." },
+        "x0": { "type": "number", "description": "Left edge relative to the entity x." },
+        "v0": { "type": "number", "description": "Bottom edge relative to the entity y." }
+      }
+    },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Simple physics for a moving entity.",
+      "properties": {
+        "vx": { "type": "number", "description": "Horizontal velocity, kit units per second." },
+        "vy": { "type": "number", "description": "Vertical velocity, kit units per second." },
+        "ax": { "type": "number", "description": "Horizontal acceleration." },
+        "ay": { "type": "number", "description": "Vertical acceleration." },
+        "gravity": { "type": "number", "description": "Multiplier on world gravity. 0 floats." },
+        "wind": { "type": "number", "minimum": 0, "maximum": 1, "description": "How strongly the body follows the wind, 0 to 1." },
+        "drag": { "type": "number", "minimum": 0, "description": "Velocity damping per second." },
+        "ground": { "enum": ["none", "stop", "splash", "bounce"], "description": "What happens when the body reaches the ground." },
+        "bounce": { "type": "number", "minimum": 0, "description": "Rebound strength when ground is bounce." },
+        "life": { "type": "number", "minimum": 0, "description": "Seconds until the body is removed." },
+        "grow": { "type": "number", "description": "Scale growth per second (exhaust puffs)." },
+        "fade": { "type": "boolean", "description": "Fade out over its life." },
+        "pitch": { "type": "number", "description": "Heading change per second for thrusting bodies, radians." }
+      }
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Stable name. Spawned prefabs have none." },
+        "sprite": { "type": "string", "description": "Key in [sprites]." },
+        "shape": { "enum": ["streak", "line", "puff", "bolt", "dot", "bank", "disc", "ribbon", "comet"], "description": "Drawn shape when there is no sprite." },
+        "colour": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "description": "Shape colour as #rrggbb." },
+        "length": { "type": "number", "minimum": 0 },
+        "width": { "type": "number", "minimum": 0 },
+        "radius": { "type": "number", "minimum": 0 },
+        "height": { "type": "number", "minimum": 0 },
+        "alpha": { "type": "number", "minimum": 0, "maximum": 1, "description": "Opacity, 0 to 1." },
+        "x": { "type": "number", "description": "Position along the strip, kit units." },
+        "y": { "type": "number", "description": "Height above the ground line, kit units." },
+        "depth": { "type": "number", "minimum": 0, "maximum": 1, "description": "Parallax factor. 1 moves with the strip, 0 stays with the screen." },
+        "layer": { "type": "number", "description": "Draw order. Higher draws in front." },
+        "scale": { "type": "number", "minimum": 0 },
+        "sky": { "type": "boolean", "description": "Sky objects live in screen space instead of on the strip." },
+        "body": { "$ref": "#/definitions/body" },
+        "wrap": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "number" },
+          "description": "[min, max] x range the entity wraps around."
+        },
+        "emit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["prefab", "every"],
+          "description": "Spawns a prefab on a timer.",
+          "properties": {
+            "prefab": { "type": "string", "description": "Key in [prefabs]." },
+            "every": { "type": "number", "minimum": 0, "description": "Seconds between spawns." }
+          }
+        }
+      }
+    }
+  }
+}

@@ -9,7 +9,6 @@ import { homeCenter, kitScale } from '@/lib/scene/base-site'
 
 const SHOWCASE: HubBuildingDef[] = [
   { kind: 'launchpad', plotX: 50, w: 30, level: 3 },
-  { kind: 'hangar', plotX: 20, w: 30, level: 2 },
   { kind: 'market', plotX: 80, w: 30, level: 2 },
 ]
 

@@ -13,12 +13,47 @@ import { trainingTryStep } from '@/lib/data/tutorial'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import { OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
+import { SANDBOX_NOW, isSandboxName } from '@/lib/sandbox'
+
+// In the sandbox the base shows the scene, not the player's situation: no clock, no balance, no cargo count.
+// `?hud=1` brings them back for a look at how the chrome sits over the scene.
+const SANDBOX_CSS = `
+[data-stage-sandbox="true"] [data-testid="hub-clock-widget"],
+[data-stage-sandbox="true"] [data-testid="hub-francs-chip"],
+[data-stage-sandbox="true"] [data-testid="hub-cargo-chip"] { display: none !important; }
+`
+
+interface StageMode {
+  /** The scene stands on its own: no campaign, no real date, no follow-ups (lib/sandbox.ts). */
+  sandbox: boolean
+  /** The Orionids event is a thing a scene can show on request; otherwise it only appears in its real window. */
+  shower: boolean
+  hud: boolean
+}
 
 // Minimal shell: same wrapper classes as the live game so CSS matches, but none
 // of the loop machinery (Flight Plan, auth gate, tickers, sync, analytics).
 function Stage() {
   const game = useGame()
   const patched = useRef(false)
+  // Decided in the first effect, which runs before any screen mounts, so a screen never sees the real date first.
+  const [mode, setMode] = useState<StageMode | null>(null)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const sandbox = isSandboxName(params.get('preset'))
+    const shower = params.get('shower') === '1'
+    const w = window as unknown as { __LANDNAM_DEV_NOW?: number; __LANDNAM_FORCE_ORIONIDS?: boolean }
+    if (sandbox) {
+      w.__LANDNAM_DEV_NOW = SANDBOX_NOW
+      // Every screen's first-visit help sheet (ln-help-seen:<topic>) counts as seen. Nothing is written, so it never reaches the real game.
+      const read = Storage.prototype.getItem
+      Storage.prototype.getItem = function (this: Storage, key: string): string | null {
+        return key.startsWith('ln-help-seen:') ? '1' : read.call(this, key)
+      }
+    }
+    if (sandbox && shower) w.__LANDNAM_FORCE_ORIONIDS = true
+    setMode({ sandbox, shower, hud: params.get('hud') === '1' })
+  }, [])
 
   useEffect(() => {
     if (!game.hydrated || patched.current) return
@@ -76,7 +111,8 @@ function Stage() {
   const immersive = LOCATION_SCREENS.has(game.screen as Screen)
 
   return (
-    <main className="game-stage" aria-label="Landnam stage" data-stage-ready={game.hydrated ? 'true' : 'false'} data-stage-screen={game.screen}>
+    <main className="game-stage" aria-label="Landnam stage" data-stage-ready={game.hydrated && mode ? 'true' : 'false'} data-stage-screen={game.screen} data-stage-sandbox={mode?.sandbox ? 'true' : 'false'}>
+      {mode?.sandbox && !mode.hud && <style>{SANDBOX_CSS}</style>}
       {!immersive && (
         <div className="game-stage-backdrop" aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}>
           <HubWorldBackground phase="day" />
@@ -84,7 +120,7 @@ function Stage() {
       )}
       <div className={`portrait-canvas ${immersive ? 'portrait-canvas--full-page' : ''} ${game.screen === 'mining' ? 'portrait-canvas--mining' : ''}`}>
         <div className="game-stage-main">
-          <OrionidsShowerChrome />
+          {mode && (!mode.sandbox || mode.shower) && <OrionidsShowerChrome />}
               {chrome && (
             <>
               <DevShortcuts />
@@ -92,7 +128,7 @@ function Stage() {
             </>
           )}
           <div className="game-screen-area">
-            {game.hydrated && <ScreenContent screen={game.screen} game={game} onboardingActive={false} />}
+            {game.hydrated && mode && <ScreenContent screen={game.screen} game={game} onboardingActive={false} />}
           </div>
           <div className="flight-plan-slot" data-testid="flight-plan-slot">
             {planStep && <FlightPlan key={planStep.id} stepIndex={['mining', 'scan', 'part'].indexOf(planStep.try)} step={planStep} total={3} onSkip={() => {}} />}

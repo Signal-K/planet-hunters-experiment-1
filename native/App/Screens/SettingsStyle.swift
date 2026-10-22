@@ -1,22 +1,22 @@
 import SwiftUI
 
-/// Settings-only instrument panels, matching the web overlay (SSL-556).
+/// Settings is a quiet dusk instrument room, matching the web overlay.
 enum SettingsStyle {
-    static let bg = Theme.hex(0xF2EEE4)
-    static let blue = Theme.hex(0x1F78C1)
-    static let trim = Theme.hex(0xDFE9F3)
-    static let card = Color.white
-    static let ink = Theme.hex(0x0F2436)
-    static let muted = ink
+    static let bg = Theme.hex(0x0C1424)
+    static let blue = Theme.teal
+    static let trim = Theme.hex(0x152033)
+    static let card = Theme.hex(0x152033)
+    static let ink = Theme.hex(0xF7F4EE)
+    static let muted = Theme.hex(0xB4B4BC)
     static let danger = Theme.hex(0xC8293E)
-    static let radius: CGFloat = 2
-    static let pad: CGFloat = 24
-    static let gap: CGFloat = 32
-    static let border: CGFloat = 2
+    static let radius: CGFloat = 12
+    static let pad: CGFloat = 18
+    static let gap: CGFloat = 24
+    static let border: CGFloat = 1
 }
 
 extension View {
-    /// Square white instrument panel with a bold ink outline.
+    /// Low-contrast dusk instrument panel with a thin readable edge.
     func settingsCard(border: Color = SettingsStyle.ink, padding: CGFloat = SettingsStyle.pad) -> some View {
         self.padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -27,7 +27,7 @@ extension View {
 
 }
 
-/// Cream and blue pixel horizon for the settings sheet. No green, yellow, or orange.
+/// Minimal star signal; settings no longer carries the retired blueprint skyline.
 struct SettingsSkyHeader: View {
     var body: some View {
         Canvas { context, size in
@@ -35,13 +35,11 @@ struct SettingsSkyHeader: View {
             let h = size.height
             let step: CGFloat = 8
             func snap(_ v: CGFloat) -> CGFloat { (v / step).rounded(.down) * step }
-            context.fill(Path(CGRect(x: 0, y: 0, width: w, height: h)), with: .color(SettingsStyle.trim))
-            context.fill(Path(CGRect(x: 0, y: 0, width: w, height: h * 0.36)), with: .color(SettingsStyle.blue.opacity(0.28)))
-            context.fill(Path(CGRect(x: 0, y: h * 0.36, width: w, height: h * 0.14)), with: .color(SettingsStyle.blue.opacity(0.12)))
+            context.fill(Path(CGRect(x: 0, y: 0, width: w, height: h)), with: .color(SettingsStyle.bg))
             let stars: [(CGFloat, CGFloat)] = [(0.06, 0.14), (0.2, 0.26), (0.38, 0.1), (0.58, 0.22), (0.74, 0.12), (0.9, 0.24)]
             for s in stars {
                 let r = CGRect(x: snap(s.0 * w), y: snap(s.1 * h), width: 3, height: 3)
-                context.fill(Path(r), with: .color(SettingsStyle.ink))
+                context.fill(Path(r), with: .color(SettingsStyle.ink.opacity(0.42)))
             }
             func ridge(_ levels: [CGFloat], color: Color) {
                 var path = Path()
@@ -57,17 +55,7 @@ struct SettingsSkyHeader: View {
                 path.closeSubpath()
                 context.fill(path, with: .color(color))
             }
-            ridge([0.62, 0.48, 0.66, 0.42, 0.58, 0.7, 0.5, 0.38, 0.56, 0.46, 0.64], color: SettingsStyle.blue)
-            ridge([0.82, 0.72, 0.86, 0.74, 0.9, 0.78, 0.7, 0.84, 0.76], color: SettingsStyle.ink)
-            let px = snap(w * 0.5)
-            context.fill(Path(CGRect(x: px - 16, y: h - 10, width: 32, height: 6)), with: .color(SettingsStyle.card))
-            context.fill(Path(CGRect(x: px - 3, y: h - 28, width: 6, height: 18)), with: .color(SettingsStyle.card))
-            var nose = Path()
-            nose.move(to: CGPoint(x: px - 3, y: h - 28))
-            nose.addLine(to: CGPoint(x: px, y: h - 38))
-            nose.addLine(to: CGPoint(x: px + 3, y: h - 28))
-            nose.closeSubpath()
-            context.fill(nose, with: .color(SettingsStyle.ink))
+            ridge([0.9, 0.84, 0.92, 0.82, 0.9, 0.94, 0.86, 0.8, 0.9, 0.84, 0.92], color: SettingsStyle.trim)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 88)
@@ -111,7 +99,7 @@ struct SettingsPlay: View {
     }
 }
 
-/// Uppercase blue action with a 44pt target.
+/// Dusk action with a 44pt target.
 struct SettingsButton: View {
     let title: String
     var color: Color = SettingsStyle.blue
@@ -122,20 +110,20 @@ struct SettingsButton: View {
     let action: () -> Void
     var body: some View {
         Button(action: action) {
-            let fg: Color = solid ? SettingsStyle.card : (enabled ? color : SettingsStyle.muted)
+            let fg: Color = solid ? SettingsStyle.ink : (enabled ? SettingsStyle.ink : SettingsStyle.muted)
             HStack(spacing: 8) {
                 SettingsPlay(color: fg)
                 Text(title.uppercased()).font(AppFont.display(14)).tracking(14 * 0.08).foregroundStyle(fg)
             }
             .padding(.horizontal, compact ? 16 : 20).frame(minWidth: compact ? 52 : 88, maxWidth: fill ? .infinity : nil, minHeight: 52)
-            .background(solid ? color : SettingsStyle.card, in: RoundedRectangle(cornerRadius: SettingsStyle.radius))
-            .overlay(RoundedRectangle(cornerRadius: SettingsStyle.radius).stroke(enabled ? color : SettingsStyle.ink, lineWidth: SettingsStyle.border))
+            .background(solid ? color : SettingsStyle.bg.opacity(0.7), in: RoundedRectangle(cornerRadius: SettingsStyle.radius))
+            .overlay(RoundedRectangle(cornerRadius: SettingsStyle.radius).stroke(enabled ? SettingsStyle.ink.opacity(0.36) : SettingsStyle.ink.opacity(0.2), lineWidth: SettingsStyle.border))
             .contentShape(Rectangle())
         }.buttonStyle(.plain).disabled(!enabled)
     }
 }
 
-/// Square selectors; the active option is blue with white text.
+/// Dusk selectors with a teal active state.
 struct SettingsSegment: View {
     let options: [String]
     let selected: Int
@@ -146,11 +134,11 @@ struct SettingsSegment: View {
                 let on = i == selected
                 Button { onSelect(i) } label: {
                     Text(title.uppercased()).font(AppFont.display(14)).tracking(14 * 0.08)
-                        .foregroundStyle(on ? SettingsStyle.card : SettingsStyle.ink)
+                        .foregroundStyle(SettingsStyle.ink)
                         .frame(maxWidth: .infinity, minHeight: 52)
-                        .background(on ? SettingsStyle.blue : SettingsStyle.card, in: RoundedRectangle(cornerRadius: 2))
-                        .overlay(RoundedRectangle(cornerRadius: 2).stroke(SettingsStyle.ink, lineWidth: SettingsStyle.border))
-                        .contentShape(RoundedRectangle(cornerRadius: 2))
+                        .background(on ? SettingsStyle.blue : SettingsStyle.bg.opacity(0.7), in: RoundedRectangle(cornerRadius: SettingsStyle.radius))
+                        .overlay(RoundedRectangle(cornerRadius: SettingsStyle.radius).stroke(SettingsStyle.ink.opacity(0.32), lineWidth: SettingsStyle.border))
+                        .contentShape(RoundedRectangle(cornerRadius: SettingsStyle.radius))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(title)

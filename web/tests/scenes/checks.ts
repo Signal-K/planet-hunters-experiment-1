@@ -178,7 +178,12 @@ export async function collectStructural(page: Page): Promise<{ small: string[]; 
       }
       return r
     }
-    const buttons = [...document.querySelectorAll('button,a[href],[role=button]')].filter(visible)
+    // Modal help blocks interaction with controls behind its full-screen
+    // scrim. Keep evidence checks aligned with `expectSound`: only controls
+    // inside the active modal are simultaneous tap targets.
+    const modal = document.querySelector('[data-testid="help-scrim"]')
+    const actionable = (el: Element) => !modal || modal.contains(el)
+    const buttons = [...document.querySelectorAll('button,a[href],[role=button]')].filter(el => visible(el) && actionable(el))
     for (const b of buttons) { const r = b.getBoundingClientRect(); if (r.width < 43.5 || r.height < 43.5) out.taps.push(`${Math.round(r.width)}x${Math.round(r.height)} ${label(b)}`) }
     for (let i = 0; i < buttons.length; i++) for (let j = i + 1; j < buttons.length; j++) {
       const a = buttons[i], b = buttons[j]

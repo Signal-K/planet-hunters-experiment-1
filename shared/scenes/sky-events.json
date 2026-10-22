@@ -44,7 +44,9 @@
       "name": "Orionids",
       "start": "10-02",
       "peak": "10-21",
+      "peakUtc": "2026-10-22T00:00:00Z",
       "end": "11-07",
+      "radiant": { "rightAscensionDeg": 95, "declinationDeg": 16 },
       "perMinute": 5,
       "spreadDays": 4
     },

@@ -2,7 +2,7 @@
 # Tell the live storyboard (/game/storyboard) what you are working on: it shows that one scene, the Linear ticket and a description.
 #   scripts/storyboard-focus.sh mining --ticket SSL-562 --title "Laser gauge" --desc "What and why, one or two sentences"
 #   scripts/storyboard-focus.sh --clear
-DIR="${STORYBOARD_DIR:-/tmp/landnam-sb}"; FILE="${STORYBOARD_FOCUS_FILE:-$DIR/focus.json}"
+DIR="${STORYBOARD_DIR:-$(cd "$(dirname "$0")/.." && pwd)/web/.storyboard}"; FILE="${STORYBOARD_FOCUS_FILE:-$DIR/focus.json}"
 mkdir -p "$DIR"
 [ "${1:-}" = "--clear" ] && { echo '{}' > "$FILE"; echo cleared; exit 0; }
 ids=(); note=""; ticket=""; title=""; desc=""

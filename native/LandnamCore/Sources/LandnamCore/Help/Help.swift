@@ -65,11 +65,33 @@ public enum Help {
         ], coach: [
             HelpCoachStep(id: "fire", targets: ["mining-fire-laser"], anchor: "mining-fire-laser", hint: "Wait for a coloured seam to pass the fixed laser line, then fire.", completeOn: "fire"),
         ]),
+        .transit: HelpTopic(id: "transit", title: "In flight", cards: [
+            HelpCard(title: "The trip takes real time", body: "The rocket flies on its own. The timer and the line show how far along it is. You can leave the screen and come back, the flight keeps going."),
+            HelpCard(title: "Boost and resume", body: "Boost skips ahead on the trip. If you close the game mid flight, the same run is waiting when you return."),
+        ]),
+        .delivery: HelpTopic(id: "delivery", title: "Cargo transfer", cards: [
+            HelpCard(title: "Hand over the cargo", body: "The cargo goes to the client at this body. Start the unload and wait for the timer. Pay arrives when the whole order is delivered."),
+            HelpCard(title: "What the client wants", body: "The order says how much of which ore the client needs. Bring all of it so the full payout lands."),
+        ]),
+        .skills: HelpTopic(id: "skills", title: "Skill tree", cards: [
+            HelpCard(title: "Spend points on unlocks", body: "Points come from research and play. Pick a node to see what it unlocks, then unlock it. Unlocks are permanent."),
+            HelpCard(title: "License grade", body: "Your license grade sets how far up the tree you can go. Upgrade it to open the next tier."),
+        ]),
+        .academy: HelpTopic(id: "academy", title: "Astronaut academy", cards: [
+            HelpCard(title: "Train and hire crew", body: "Roster shows your crew. Training raises a branch. Hiring adds someone new. Both cost francs and time."),
+            HelpCard(title: "Unlock it first", body: "The academy opens once it is researched and the building is placed on the base. Until then the screen shows it as locked."),
+        ]),
+        .surfaceOps: HelpTopic(id: "surface-ops", title: "Surface operations", cards: [
+            HelpCard(title: "Sites and access", body: "Each site needs access before you can work there. Buy access, then send a ferry with what the site needs."),
+            HelpCard(title: "Logistics and field", body: "Logistics moves cargo between the base and a site. Field runs an operation on the ground once the site is ready."),
+        ]),
         .instrumentHub: HelpTopic(id: "control-station", title: "Control Station", cards: [
             HelpCard(title: "Where things are", body: "The map shows each telescope and satellite you operate. A number means that equipment has items ready to classify."),
             HelpCard(title: "Open a project", body: "Filter by place, then open a row that has a count. That opens the review for those items."),
+            Help.dataAnalysisCard,
         ]),
         .galaxy: HelpTopic(id: "tess", title: "Reading the light curve", cards: [
+            Help.dataAnalysisCard,
             HelpCard(title: "Find the dip", body: "A planet passing in front of its star makes the light dip for a short while, then recover. Drag across the dip on the chart to mark it."),
             HelpCard(title: "Confirm Transit", body: "Use Confirm Transit when the marked dip looks like a real, repeating drop with a clean shape."),
             HelpCard(title: "Mark Noise or Skip", body: "Use Mark Noise when the marked dip is just jitter or a glitch. Use Skip when you cannot tell. Skip needs no mark."),
@@ -78,6 +100,9 @@ public enum Help {
             HelpCoachStep(id: "verdict", targets: ["tess-verdicts"], anchor: "tess-verdicts", hint: "Confirm Transit if it is a real dip, Mark Noise if it is not, Skip if unsure."),
         ]),
     ]
+
+    /// Shared by the Control Station and TESS sheets (mirrors web DATA_ANALYSIS_CARD).
+    static let dataAnalysisCard = HelpCard(title: "What the data analysis is", body: "Each item is a real observation from a real telescope or survey. You look at it and classify what you see, such as a dip in a star's light. Your answers feed real citizen science projects and earn badges and rewards here.")
 
     public static func topic(for screen: Screen) -> HelpTopic? { topics[screen] }
 }

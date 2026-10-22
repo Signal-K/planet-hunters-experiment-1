@@ -54,13 +54,14 @@ struct FlightWorldScene: View {
 
     private func asteroid(w: CGFloat, h: CGFloat, t: Double) -> some View {
         let p = CGFloat(min(1, max(0, progress)))
-        let k = pixelScale(min(w * 0.20, h * 0.34) * (0.55 + 0.45 * p), native: 48)
+        let k = pixelScale(min(w * 0.32, h * 0.34) * (0.6 + 0.4 * p), native: 48)
         let side = 48 * k
         let x = w * (1.15 - 0.33 * p)
         return Art.view("base/kit/asteroid-pixel.png")
             .resizable().interpolation(.none)
             .frame(width: side, height: 40 * k)
-            .position(x: min(x, w - side * 0.45), y: h * 0.50 + (sin(t * 0.6) * 2).rounded() * k - (h > w ? h * 0.12 : 0))
+            // SSL-534: the whole body stays on screen (a clamp at 0.45 of its width cut it off); on a tall screen it sits low so the space is used.
+            .position(x: min(x, w - side * 0.5 - w * 0.06), y: h * (h > w ? 0.64 : 0.50) + (sin(t * 0.6) * 2).rounded() * k)
     }
 
     private func rocket(w: CGFloat, h: CGFloat, t: Double) -> some View {
@@ -77,6 +78,6 @@ struct FlightWorldScene: View {
                 .rotationEffect(.degrees(90))
         }
         .frame(width: len, height: thick)
-        .position(x: w * (w > h ? 0.36 : 0.40), y: h * 0.50 + (sin(t * 1.3) * 2).rounded() * k - (h > w ? h * 0.12 : 0))
+        .position(x: w * (w > h ? 0.36 : 0.40), y: h * (h > w ? 0.32 : 0.50) + (sin(t * 1.3) * 2).rounded() * k)
     }
 }

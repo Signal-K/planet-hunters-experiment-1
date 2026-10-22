@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useHelp } from '@/components/ui/useHelp'
 import { defaultSpec, type ResourceKey } from '@takeon/engine'
 import type { MineralMeta, Mission, Target } from '@/lib/data'
 import { deliveryUnloadProgress } from '@/lib/systems/DeliverySystem'
@@ -41,6 +42,7 @@ export default function DeliveryScreen({
   useTakeonDropoff,
   rocketImageSrc,
 }: DeliveryScreenProps) {
+  const help = useHelp('delivery')
   const [now, setNow] = useState(0)
   const completedRef = useRef(false)
   const progress = deliveryUnloadProgress(startedAt, now)
@@ -152,7 +154,9 @@ export default function DeliveryScreen({
           eyebrow={`DELIVERY TARGET · ${target.name.toUpperCase()}`}
           title="Cargo Transfer"
           onBack={onBack}
+          right={help.button}
         />
+        {help.layer}
 
         <div className={styles.stage}>
           <TakeOnMount
@@ -233,7 +237,9 @@ export default function DeliveryScreen({
         eyebrow={`DELIVERY TARGET · ${target.name.toUpperCase()}`}
         title="Cargo Transfer"
         onBack={onBack}
+        right={help.button}
       />
+      {help.layer}
 
       <div className={styles.stage}>
         <DeliveryCanvas progress={progress} cargoUnits={cargoUnits} />

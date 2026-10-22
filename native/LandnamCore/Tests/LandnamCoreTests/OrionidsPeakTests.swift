@@ -10,9 +10,11 @@ final class OrionidsPeakTests: XCTestCase {
     func testPeakNightDoublesRate() {
         XCTAssertTrue(SkyEvents.isOrionidsPeakNight(local(10, 22, 3)))
         XCTAssertFalse(SkyEvents.isOrionidsPeakNight(local(10, 22, 23)))
-        let peak = SkyEvents.ratePerMinute(SkyEvents.orionids, at: local(10, 21, 23))
+        let location = PlayerLocation(city: "Tallinn", latitude: 59, timeZone: "Europe/Tallinn")
+        let window = SkyEventWindows.localWindow(location: location).best!
+        let peak = SkyEvents.ratePerMinute(SkyEvents.orionids, at: window.start.timeIntervalSince1970 * 1000, location: location)
         XCTAssertGreaterThan(peak, SkyEvents.orionids.peakRatePerMinute)
-        XCTAssertLessThanOrEqual(SkyEvents.ratePerMinute(SkyEvents.orionids, at: local(10, 22, 23)), SkyEvents.orionids.peakRatePerMinute)
+        XCTAssertLessThanOrEqual(SkyEvents.ratePerMinute(SkyEvents.orionids, at: window.start.addingTimeInterval(-60).timeIntervalSince1970 * 1000, location: location), SkyEvents.orionids.peakRatePerMinute)
     }
 
     func testShareTextNamesTier() {
