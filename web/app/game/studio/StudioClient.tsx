@@ -1,11 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { CSSProperties } from 'react'
 import { buildAgentPrompt } from '@/lib/authoring/agent-prompt'
 import type { FeedbackDoc, Pin, Rect, SceneDoc, SceneObject, ScenePreset } from '@/lib/authoring/docs'
 import type { EditOp } from '@/lib/authoring/edit'
-import { VIEWPORTS, drawerWidth, lineOfId, objectRect, resolveFocusScenes, scriptHref, snap, stageSrc, uniqueId } from '@/lib/authoring/studio-model'
+import { VIEWPORTS, lineOfId, objectRect, resolveFocusScenes, scriptHref, snap, stageSrc, uniqueId } from '@/lib/authoring/studio-model'
 import type { ViewportKey } from '@/lib/authoring/studio-model'
 import type { DataDocBundle, DocBundle, FlowSummary, SceneBundle, StudioIndex } from '@/lib/authoring/studio-types'
 import type { Path } from '@/lib/authoring/toml'
@@ -392,29 +391,10 @@ export default function StudioClient(props: Props) {
   ] : data ? [{ label: 'Data file', file: data.doc.file }] : []
   const inspector = activeDoc?.value ? <Inspector kind={target.type === 'scene' ? 'scene' : target.kind} schema={target.type === 'scene' ? scene!.schemas.scene : data!.schema} value={activeDoc.value} diagnostics={activeDoc.diagnostics} selectedPath={selectedPath} onSelectPath={setSelectedPath} onOps={(ops, label, select) => edit(activeDoc.file, ops, label, select)} /> : <section className={styles.card}><p className={styles.hint}>This file has a syntax error. Fix it in the source below or in your editor.</p></section>
   const source = <SourceView docs={target.type === 'scene' && scene ? [{ label: 'Scene', doc: scene.scene }, { label: 'Notes file', doc: scene.feedback }] : data ? [{ label: 'File', doc: data.doc }] : []} hostRoot={hostRoot} onJump={jump} />
-  const chromeRef = useRef<HTMLDivElement>(null)
-  const [drawer, setDrawer] = useState(360)
-  useEffect(() => {
-    const measure = () => setDrawer(drawerWidth(window.innerWidth, window.innerHeight, chromeRef.current?.offsetHeight ?? 56 + 24 + 36, VIEWPORTS[vp]))
-    measure()
-    window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
-  }, [vp, flow])
-
+  const previewRef = useRef<HTMLElement>(null)
   return (
     <div className={styles.studio} data-theme={theme} data-testid="studio">
-      <header className={styles.bar}>
-        <ScenePicker index={index} label={title} currentId={target.type === 'scene' ? target.id : ''} focusIds={focusScenes} open={pickerOpen} onOpen={setPickerOpen} onPickScene={pickScene}
-          onPickFlow={pickFlow} onPickData={(kind, id) => { setTarget({ type: 'data', kind, id }); setPickerOpen(false) }} />
-        {target.type === 'scene' && <PresetPicker presets={presets} checkpoints={fixtures} view={view} onChange={setFromView} />}
-        <span className={styles.seg} role="group" aria-label="Device size">
-          {(Object.keys(VIEWPORTS) as ViewportKey[]).map(k => <button key={k} type="button" aria-pressed={vp === k} onClick={() => setVp(k)} data-testid={`vp-${k}`} title={VIEWPORTS[k].hint}>{k === 'ls' ? 'Wide' : VIEWPORTS[k].label}</button>)}
-        </span>
-        <span className={styles.barEnd}><ScriptMenu files={scriptFiles} hostRoot={hostRoot} /><MoreMenu theme={theme} onTheme={chooseTheme} showNative={showNative} canNative={vp === 'ph'} onNative={() => setShowNative(n => !n)} openHref={src} /></span>
-      </header>
-      {flow && flowState && <FlowBar flow={flow} step={flowState.step} onStep={step => pickFlow(flow.id, step)} onClose={() => setFlowState(null)} />}
-      <div ref={chromeRef} className={styles.body} style={{ '--drawer-w': `${drawer}px` } as CSSProperties}>
-        <section className={styles.stageArea}>
+      {target.type === 'scene' && <section ref={previewRef} className={styles.stageArea} data-testid="studio-preview-area">
           <PreviewStage
             vp={vp} src={src}
             nativeSrc={nativeSrc}
@@ -433,12 +413,23 @@ export default function StudioClient(props: Props) {
             onPin={onPin}
             onPinClick={i => { setHighlightPin(i); setTab('notes') }}
           />
-        </section>
-        <aside className={styles.drawer}>
+      </section>}
+      <header className={styles.bar}>
+        <ScenePicker index={index} label={title} currentId={target.type === 'scene' ? target.id : ''} focusIds={focusScenes} open={pickerOpen} onOpen={setPickerOpen} onPickScene={pickScene}
+          onPickFlow={pickFlow} onPickData={(kind, id) => { setTarget({ type: 'data', kind, id }); setPickerOpen(false) }} />
+        {target.type === 'scene' && <PresetPicker presets={presets} checkpoints={fixtures} view={view} onChange={setFromView} />}
+        <span className={styles.seg} role="group" aria-label="Device size">
+          {(Object.keys(VIEWPORTS) as ViewportKey[]).map(k => <button key={k} type="button" aria-pressed={vp === k} onClick={() => setVp(k)} data-testid={`vp-${k}`} title={VIEWPORTS[k].hint}>{k === 'ls' ? 'Wide' : VIEWPORTS[k].label}</button>)}
+        </span>
+        <span className={styles.barEnd}><ScriptMenu files={scriptFiles} hostRoot={hostRoot} /><MoreMenu theme={theme} onTheme={chooseTheme} showNative={showNative} canNative={vp === 'ph'} onNative={() => setShowNative(n => !n)} openHref={src} /></span>
+      </header>
+      {flow && flowState && <FlowBar flow={flow} step={flowState.step} onStep={step => pickFlow(flow.id, step)} onClose={() => setFlowState(null)} />}
+      <div className={styles.body}>
+        <aside className={styles.drawer} data-testid="studio-tools">
           {target.type === 'scene' && <div className={styles.tabs}><button type="button" className={styles.tab} aria-selected={tab === 'things'} onClick={() => setTab('things')}>Things ({things.length})</button><button type="button" className={styles.tab} aria-selected={tab === 'notes'} onClick={() => setTab('notes')}>Notes {unresolved > 0 && <span className={`${styles.count} ${styles.countWrong}`}>{unresolved}</span>}</button><button type="button" className={styles.tab} aria-selected={tab === 'script'} onClick={() => setTab('script')}>Script</button>{problems > 0 && <button type="button" className={`${styles.chip} ${styles.tabEnd}`} onClick={() => setTab('script')}>{problems} problem{problems === 1 ? '' : 's'}</button>}</div>}
           <div className={styles.tabBody}>
           {target.type === 'scene' && tab === 'things' && <ThingsPanel things={things} title={view.kind === 'preset' ? currentPreset?.name ?? 'Preset' : view.kind === 'custom' ? 'Custom' : view.kind === 'checkpoint' ? 'Game checkpoint' : 'Start'} base={currentPreset} dirty={!!currentPreset && !sameSelection(selection, presetSelection(currentPreset, things), things)} selection={selection} onToggle={setThing} onValue={setThingValue} onReset={() => setFromView(currentPreset ? { kind: 'preset', id: currentPreset.id } : { kind: 'start' })} onSave={savePreset} onUpdate={() => updatePreset()} onInstructions={text => updatePreset(text)} scriptHref={hostRoot ? scriptHref(hostRoot, sceneFile, lineOfId(scene?.scene.text ?? '', 'things', things[0]?.id ?? '')) : null} />}
-          {target.type === 'scene' && tab === 'notes' && scene && <><Composer draft={draft} onDraft={setDraft} kind={kind} onKind={setKind} tool={tool} onTool={setTool} onAdd={addNote} />
+          {target.type === 'scene' && tab === 'notes' && scene && <><Composer draft={draft} onDraft={setDraft} kind={kind} onKind={setKind} tool={tool} onTool={next => { setTool(next); if (next === 'wrong' || next === 'keep') previewRef.current?.scrollIntoView({ block: 'start' }) }} onAdd={addNote} />
             <ReviewPanel
               sceneId={scene.id}
               feedback={scene.feedback}

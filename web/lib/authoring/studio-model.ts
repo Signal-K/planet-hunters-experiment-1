@@ -120,18 +120,6 @@ export function lineOfId(text: string, table: string, id: string): number | unde
   return undefined
 }
 
-/**
- * How the stage and the drawer share the window width. The scene is as tall as the window allows, so what its width
- * leaves over goes to the drawer: the scene never shrinks to make room for notes, and the notes use every spare pixel.
- */
-export function drawerWidth(windowWidth: number, windowHeight: number, chromeHeight: number, frame: { w: number; h: number }): number {
-  const frameHeight = Math.max(240, windowHeight - chromeHeight)
-  const frameWidth = Math.min(frame.w, (frameHeight * frame.w) / frame.h)
-  const MIN = 300
-  const MAX = 460
-  return Math.round(Math.min(MAX, Math.max(MIN, windowWidth - frameWidth - 24)))
-}
-
 /** Focus ids may be scene script ids or qa/scenes.json ids; this maps them all to scene script ids, without repeats. */
 export function resolveFocusScenes(scenes: { id: string; qa: string[] }[], ids: string[]): string[] {
   const resolved = ids.map(id => scenes.find(s => s.id === id)?.id ?? scenes.find(s => s.qa.includes(id))?.id).filter((id): id is string => !!id)

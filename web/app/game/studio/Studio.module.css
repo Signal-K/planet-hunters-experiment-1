@@ -1,7 +1,6 @@
 /*
- * Scene Studio. The scene is the window: a slim bar, the scene as large as the window allows, and one drawer beside it for
- * Things, Notes and Script. It is built for half an editor window next to a chat or a script (640 wide and up it sits
- * side by side; below that the drawer drops under the scene). Light or dark follows the system (or the toggle).
+ * Scene Studio. The scene is the window: a near-full-width preview comes first, then all navigation, Things, Notes and Script
+ * controls below it. The same stack works in a full editor window or a narrow pane beside a script. Light or dark follows the system.
  * Game tokens only, hairline borders, soft surfaces.
  */
 .studio {
@@ -20,10 +19,10 @@
   /* The game's global CSS makes <body> a centring flex box, so the Studio claims the viewport itself. */
   width: 100%;
   align-self: stretch;
-  height: 100dvh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   background: var(--bg);
   color: var(--ink);
   font: 14px/1.5 system-ui, -apple-system, sans-serif;
@@ -162,21 +161,34 @@ textarea.input { height: auto; min-height: 88px; padding: 8px 12px; resize: vert
 .step[aria-current='step'] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
 .flowText { margin: 4px 0 0; color: var(--muted); max-width: 80ch; }
 
-/* ---- body: the scene, and the drawer beside it ---- */
+/* ---- body: the scene first, with the workspace below it ---- */
 .body {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--drawer-w, clamp(300px, 34vw, 440px));
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
-.stageArea { min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 12px; }
-.noDrawer { grid-template-columns: minmax(0, 1fr); }
-.drawer { min-width: 0; min-height: 0; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: var(--bg); }
+.stageArea {
+  flex: none;
+  width: 100%;
+  height: 100dvh;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  padding: 12px clamp(12px, 2vw, 28px);
+}
+.drawer {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
 .tabs { flex: none; display: flex; align-items: center; gap: 2px; padding: 8px 12px 0; border-bottom: 1px solid var(--line); }
 .tab { height: 34px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .tab[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
 .tabEnd { margin-left: auto; }
-.tabBody { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.tabBody { padding: 12px clamp(12px, 2vw, 28px) 28px; display: flex; flex-direction: column; gap: 12px; }
 .count { min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--soft); color: var(--muted); text-align: center; }
 .countWrong { background: var(--wrong); color: var(--on-accent); }
 
@@ -319,12 +331,7 @@ textarea.input { height: auto; min-height: 88px; padding: 8px 12px; resize: vert
 .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 40; max-width: 92vw; padding: 8px 16px; border-radius: 999px; background: var(--ink); color: var(--surface); box-shadow: 0 8px 24px var(--shadow); }
 .toastBad { background: var(--wrong); color: var(--on-accent); }
 
-/* Under 620px the drawer drops below the scene, which still fills the window; scroll to reach the drawer. */
 @media (max-width: 620px) {
-  .studio { height: auto; min-height: 100dvh; overflow: visible; }
-  .body { display: block; }
-  .stageArea { height: calc(100dvh - 56px); min-height: 360px; padding: 8px 12px; }
-  .drawer { border-left: 0; border-top: 1px solid var(--line); }
-  .tabBody { overflow: visible; }
+  .stageArea { height: 100dvh; min-height: 360px; padding: 8px 12px; }
   .select { max-width: 150px; }
 }

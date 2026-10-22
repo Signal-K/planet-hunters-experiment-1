@@ -45,19 +45,26 @@ async function openStudio(page: Page, query: string) {
 for (const [name, size] of [...Object.entries(VIEWPORTS), ['half-window', { width: 640, height: 900 }], ['cursor-window', { width: 681, height: 669 }]] as const) {
   test(`studio fits ${name} with the real game inside and the note box in reach`, async ({ page }) => {
     await page.setViewportSize(size)
-    await openStudio(page, `scene=${SCENE}&vp=ph`)
+    const device = name === 'landscape' ? 'ls' : name === 'desktop' ? 'dk' : 'ph'
+    await openStudio(page, `scene=${SCENE}&vp=${device}`)
     expect(await page.evaluate(() => innerWidth)).toBe(size.width)
     const frame = page.getByTestId('studio-web-frame')
     await expect(frame).toBeVisible({ timeout: 60_000 })
     await expect(frame).toHaveAttribute('src', /\/game\/stage\?preset=sandbox%3A/)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    const preview = await page.getByTestId('studio-preview-area').boundingBox()
+    const tools = await page.getByTestId('studio-tools').boundingBox()
+    expect(preview).not.toBeNull()
+    expect(tools).not.toBeNull()
+    expect(preview!.width).toBeGreaterThanOrEqual(size.width - 2)
+    expect(tools!.y).toBeGreaterThanOrEqual(preview!.y + preview!.height - 1)
+    await page.waitForTimeout(3500)
+    await page.screenshot({ path: `${OUT}/studio-${name}.png` })
     await page.getByRole('button', { name: /Notes/ }).click()
     await expect(page.getByTestId('note-input')).toBeVisible()
     // text never drops under the 14px floor
     const smallest = await page.evaluate(() => Math.min(...[...document.querySelectorAll('[data-testid=studio] *')].filter(el => el.childNodes.length && [...el.childNodes].some(n => n.nodeType === 3 && n.textContent?.trim())).map(el => parseFloat(getComputedStyle(el).fontSize))))
     expect(smallest).toBeGreaterThanOrEqual(14)
-    await page.waitForTimeout(3500)
-    await page.screenshot({ path: `${OUT}/studio-${name}.png` })
   })
 }
 
