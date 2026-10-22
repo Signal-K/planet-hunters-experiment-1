@@ -128,12 +128,14 @@ reach. After the sequence the flight begins.
 [[objects]]
 id = "world"
 kind = "world"
+mechanics = ["world"]
 slot = "world"
 components = ["BaseWorldSimulation", "BaseCamera"]
 
 [[objects]]
 id = "launchpad-complex"
 kind = "group"
+mechanics = ["rocket-assembly"]
 parent = "world"
 prefab = "launchpad"
 components = ["LaunchpadState"]
@@ -142,6 +144,7 @@ note = "Reusable launch complex assembled from the child game objects below."
 [[objects]]
 id = "apron"
 kind = "terrain"
+mechanics = ["rocket-assembly"]
 parent = "launchpad-complex"
 layout = "shared"
 space = "parent"
@@ -153,24 +156,28 @@ note = "Legacy fused pad, tower and hangar sprite. Named subparts below are not 
 [[objects]]
 id = "service-tower"
 kind = "structure"
+mechanics = ["rocket-assembly"]
 parent = "launchpad-complex"
 components = ["LaunchTowerAnimation"]
 
 [[objects]]
 id = "launch-stand"
 kind = "structure"
+mechanics = ["rocket-assembly"]
 parent = "launchpad-complex"
 components = ["LaunchStandState"]
 
 [[objects]]
 id = "support-hangar"
 kind = "structure"
+mechanics = ["rocket-assembly"]
 parent = "launchpad-complex"
 components = ["Clickable"]
 
 [[objects]]
 id = "staged-rocket"
 kind = "vehicle"
+mechanics = ["rocket-assembly"]
 parent = "launchpad-complex"
 layout = "shared"
 space = "parent"
@@ -183,6 +190,7 @@ bindings = { visible = "player.selectedStagedRocketId" }
 [[objects]]
 id = "launch-control"
 kind = "instrument"
+mechanics = ["mission-planning"]
 parent = "launchpad-complex"
 layout = "shared"
 space = "parent"
@@ -193,6 +201,7 @@ components = ["MissionLaunchControl"]
 [[objects]]
 id = "assembly-scaffold"
 kind = "structure"
+mechanics = ["rocket-assembly"]
 parent = "launchpad-complex"
 layout = "shared"
 space = "parent"
@@ -204,6 +213,7 @@ note = "Assembly animation uses the rocket frame for its welding path."
 [[objects]]
 id = "back-control"
 kind = "button"
+mechanics = ["mission-planning"]
 rect = { x = 0.03, y = 0.025, w = 0.22, h = 0.07 }
 label = "Back"
 components = ["Clickable"]
@@ -211,6 +221,7 @@ components = ["Clickable"]
 [[objects]]
 id = "mission-selector"
 kind = "panel"
+mechanics = ["mission-planning"]
 rect = { x = 0.03, y = 0.11, w = 0.94, h = 0.09 }
 components = ["MissionSelector"]
 bindings = { reads = "missionId" }
@@ -218,6 +229,7 @@ bindings = { reads = "missionId" }
 [[objects]]
 id = "pad-status"
 kind = "panel"
+mechanics = ["mission-planning"]
 rect = { x = 0.12, y = 0.28, w = 0.76, h = 0.16 }
 components = ["LaunchpadStatus"]
 bindings = { reads = "missionId,player.selectedStagedRocketId" }
@@ -225,6 +237,7 @@ bindings = { reads = "missionId,player.selectedStagedRocketId" }
 [[objects]]
 id = "launch-action"
 kind = "button"
+mechanics = ["mission-planning","rocket-assembly"]
 slot = "primaryAction"
 label = "Launch"
 components = ["Clickable", "MissionLaunchAction"]

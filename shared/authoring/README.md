@@ -38,7 +38,9 @@ Objects are a flat serialized scene graph with a `parent` link, matching the hie
 
 - `shared/scenes/base-world.json` and `web/lib/world/base-world.json`: the base world. Web `lib/world` and native `LandnamCore/World` already load it, unchanged.
 - `shared/missions/authored-missions.json`, `web/lib/data/authored-missions.json` and `native/LandnamCore/.../AuthoredMissions.generated.swift`: web `missions.ts` and native `AuthoredMissions.swift` build the two missions from these. Payout follows the fee curve and sequences follow the game's own constants.
-- `shared/engine/authored-scenes.json`, `web/lib/engine/authored-scenes.json` and native `AuthoredScenes.generated.swift`: one validated scene graph for all 27 scenes. Web `SceneGraph.ts` and native `AuthoredSceneGraph.swift` resolve its normalized safe-area slots with the same rules. The current React/Pixi and SwiftUI renderers are not yet migrated to paint this draw list; the generated game map reports that gap.
+- `shared/engine/authored-scenes.json`, `web/lib/engine/authored-scenes.json` and native `AuthoredScenes.generated.swift`: one validated object graph and mechanic ownership catalog for every route. `shared/engine/mechanics.json` records real domain source owners and known native gaps. Component names and mechanic references are checked, not interpreted as executable code.
+- `layout = "host"` (the default) means the existing renderer still controls the object. `layout = "shared"` means a live adapter consumes its rectangle. `space = "parent"` makes that rectangle local to its parent; otherwise it is in the scene safe area. The Launchpad adapter renders the pad art, rocket, assembly scaffold and mission hotspot from the shared prefab subtree on both platforms. Its fused pad sprite is still legacy art, not independently editable tower/hangar art.
+- The compiler validates the complete batch before writing any output. A bad scene cannot update web data while leaving Swift or missions behind. `node scripts/generate-game-map.mjs --check` also guards against unowned web systems/native systems and industry files, empty scene graphs and missing mechanic ownership. Native route gaps remain explicit rather than being disguised as parity.
 
 Editing a mission or the world in the Studio, or in a text editor followed by `compile`, changes both platforms. A native app needs a rebuild to pick it up.
 
@@ -58,7 +60,7 @@ cd web && SCENES_BASE_URL=http://localhost:3001 npx playwright test tests/scenes
 
 ## Honest limits today
 
-- All 27 scene scripts now compile into the shared engine contract, but only Hub and Launchpad have object graphs and the production React/Pixi and SwiftUI views do not yet paint the resolved list. Compilation proves shared input and geometry, not runtime or visual parity. Migrating each renderer remains the next step per scene.
+- All 27 existing routes have object/mechanic contracts, not 27 completed engine migrations. Studio's Project workspace distinguishes host-owned layout, shared geometry and missing native sources. The legacy route inventory is not a required player journey; routes can remain compatibility deep links when several scenes are composed into one experience.
 - Dragging objects works for screen-space elements. World-space objects (buildings on the base) are edited in the inspector, not dragged.
 - Native previews are phone-size snapshots from the iOS Simulator, not a live render. A shared runtime would remove that gap; the decision is open in SSL-642 and recorded in ZenNotes (`projects/landnam/decisions/scene-scripts-and-scene-studio`).
 - The Studio is dev only. It is disabled outside `next dev`.

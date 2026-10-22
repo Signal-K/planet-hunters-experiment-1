@@ -10,7 +10,10 @@ import Testing
         let shared = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
         #expect(AuthoredSceneDeclarations.json == shared)
         #expect(AuthoredSceneGraph.scenes.count == 27)
-        #expect(AuthoredSceneGraph.scenes.filter { !$0.objects.isEmpty }.map(\.id) == ["hub", "launchpad"])
+        #expect(AuthoredSceneGraph.scenes.allSatisfy { !$0.objects.isEmpty })
+        #expect(AuthoredSceneGraph.scenes.flatMap(\.objects).allSatisfy { !($0.mechanics ?? []).isEmpty })
+        #expect(AuthoredSceneGraph.mechanics.count == 25)
+        #expect(Set(AuthoredSceneGraph.scenes.map(\.route)).subtracting(Screen.allCases.map(\.rawValue)) == ["refinery"])
     }
 
     @Test(arguments: [(390.0, 844.0), (926.0, 428.0), (1440.0, 900.0)])
@@ -34,5 +37,15 @@ import Testing
         #expect(abs(launch.frame.y - 672.66) < 0.000_001)
         #expect(abs(launch.frame.w - 140.4) < 0.000_001)
         #expect(abs(launch.frame.h - 106.82) < 0.000_001)
+    }
+
+    @Test func prefabLocalGeometryKeepsTheRocketOnTheMount() throws {
+        let scene = try #require(AuthoredSceneGraph.scene("launchpad"))
+        let parts = AuthoredSceneGraph.resolve(scene, width: 1104, height: 865, prefabRoot: "launchpad-complex")
+        let rocket = try #require(parts.first { $0.object.id == "staged-rocket" })
+        #expect(abs(rocket.frame.x + rocket.frame.w / 2 - 359.904) < 0.000_001)
+        #expect(abs(rocket.frame.y + rocket.frame.h - 785.42) < 0.000_001)
+        #expect(parts.first { $0.object.id == "launch-control" }?.object.action == "choose-mission")
+        #expect(!parts.contains { $0.object.id == "mission-selector" })
     }
 }

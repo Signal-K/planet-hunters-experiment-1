@@ -52,6 +52,7 @@ public struct AuthoredMechanic: Codable, Equatable, Sendable {
     public let name: String
     public let web: [String]
     public let native: [String]
+    public let components: [String]
     public let note: String
 }
 

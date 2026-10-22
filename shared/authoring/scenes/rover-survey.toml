@@ -25,7 +25,7 @@ state = "ui-rover-survey"
 id = "survey-field"
 kind = "world"
 layout = "host"
-mechanics = ["instruments"]
+mechanics = ["field-engine", "sandbox", "instruments"]
 note = "Rover field or TakeOn adapter selected by the feature flag."
 
 [[objects]]
@@ -33,7 +33,7 @@ id = "rover"
 kind = "vehicle"
 parent = "survey-field"
 layout = "host"
-mechanics = ["instruments"]
+mechanics = ["field-engine"]
 note = "Surface survey vehicle, separate from laser extraction."
 
 [[objects]]
@@ -49,7 +49,7 @@ id = "drive-controls"
 kind = "panel"
 parent = "survey-field"
 layout = "host"
-mechanics = ["instruments"]
+mechanics = ["field-engine"]
 note = "Movement and interaction commands."
 
 [[objects]]

@@ -16,6 +16,7 @@
           "name": { "type": "string", "minLength": 1 },
           "web": { "type": "array", "items": { "type": "string", "pattern": "^web/" } },
           "native": { "type": "array", "items": { "type": "string", "pattern": "^native/" } },
+          "components": { "type": "array", "items": { "type": "string" } },
           "note": { "type": "string", "minLength": 1 }
         }
       }

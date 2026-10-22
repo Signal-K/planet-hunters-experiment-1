@@ -181,9 +181,12 @@ const sceneRules: Rule<SceneDoc> = ({ value, relPath, context, report }) => {
     object.mechanics?.forEach((id, j) => {
       if (!context.mechanics?.some(mechanic => mechanic.id === id)) report(['objects', i, 'mechanics', j], 'mechanic', `unknown mechanic "${id}" in shared/engine/mechanics.json`)
     })
+    object.components?.forEach((name, j) => {
+      if (context.mechanics && !context.mechanics.some(mechanic => mechanic.components?.includes(name))) report(['objects', i, 'components', j], 'component', `unregistered component "${name}"; register its mechanic ownership first`)
+    })
     if (object.space === 'parent' && !object.parent) report(['objects', i, 'space'], 'parent-space', 'parent-local geometry requires a parent')
     if (object.layout === 'shared' && (!object.rect || object.rect.w <= 0 || object.rect.h <= 0)) report(['objects', i, 'layout'], 'shared-geometry', 'shared layout requires a non-empty rectangle')
-    if (object.action && (value.id !== 'launchpad' || object.parent !== 'launchpad-complex' || object.layout !== 'shared')) report(['objects', i, 'action'], 'action-adapter', 'choose-mission requires the shared launchpad prefab adapter')
+    if (object.action && (value.preview.route !== 'launchpad' || object.parent !== 'launchpad-complex' || object.layout !== 'shared')) report(['objects', i, 'action'], 'action-adapter', 'choose-mission requires the shared launchpad prefab adapter')
     if (object.layout === 'shared' && object.asset && !object.nativeAsset) report(['objects', i, 'nativeAsset'], 'asset-adapter', 'shared art needs a native asset adapter')
     if (object.parent !== undefined) {
       if (!index.has(object.parent)) report(['objects', i, 'parent'], 'parent', `parent "${object.parent}" is not an object in this scene`)

@@ -44,6 +44,28 @@ struct SnapshotTests {
         try #require(!scenes.isEmpty, "no scene matches $SCENE")
         for s in scenes { try render(s.make(), size: s.size, name: s.id) }
     }
+
+    /// Same telescope/design state as web's telescope-fab fixture, plus deterministic assembly beats.
+    @Test func authoredPrefab() throws {
+        var state = SceneCatalog.pickedState(.fab, mission: Instruments.transitMissionId, missionsDone: 4)
+        state.targetId = Instruments.transitTargetId
+        state.rocket = Rockets.config(for: Rockets.model(id: "prospector")!)
+        state.tutorial = false
+        for id in FlightPlanProgress.tryIds { state.player.flightPlan.complete(id) }
+        let store = GameStore(state: state)
+        for (name, size) in [
+            ("phone", CGSize(width: 390, height: 844)),
+            ("landscape", CGSize(width: 926, height: 428)),
+            ("desktop", CGSize(width: 1440, height: 900)),
+        ] {
+            try render(RocketBuilderScreen(launchEnabled: true, onLaunch: {}, onChooseMission: {}, assembly: .design)
+                .environment(store).environment(\.flatLayout, true), size: size, name: "authored-prefab-\(name)")
+        }
+        for (name, progress) in [("start", 0.2), ("middle", 0.5), ("end", 0.85)] {
+            try render(LaunchpadPrefab(phase: .building, progress: progress, width: 552, height: 432.5, onChooseMission: {}),
+                       size: CGSize(width: 552, height: 432.5), name: "authored-assembly-\(name)")
+        }
+    }
 }
 
 @MainActor

@@ -62,7 +62,11 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/World/WorldSim.swift",
         "native/LandnamCore/Sources/LandnamCore/World/SkyCalendar.swift"
       ],
-      "note": "Same world source; render adapters still host-owned."
+      "note": "Same world source; render adapters still host-owned.",
+      "components": [
+        "BaseWorldSimulation",
+        "BaseCamera"
+      ]
     },
     {
       "id": "construction",
@@ -75,7 +79,10 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Industry/Construction.swift",
         "native/LandnamCore/Sources/LandnamCore/Industry/BuildingLevels.swift"
       ],
-      "note": "Fixed-site placement and underground rooms; compare unlocks and costs before migration."
+      "note": "Fixed-site placement and underground rooms; compare unlocks and costs before migration.",
+      "components": [
+        "BuildSiteInteraction"
+      ]
     },
     {
       "id": "mission-planning",
@@ -91,7 +98,10 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Data/MissionGenerator.swift",
         "native/LandnamCore/Sources/LandnamCore/Data/DailyClientMissions.swift"
       ],
-      "note": "Canonical mission state and optional client contracts; no editor-only mission store."
+      "note": "Canonical mission state and optional client contracts; no editor-only mission store.",
+      "components": [
+        "Clickable"
+      ]
     },
     {
       "id": "rocket-assembly",
@@ -104,7 +114,18 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Systems/RocketBuilder.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Loop.swift"
       ],
-      "note": "Purchasing, fitting and launch stay behind existing state transitions. Shared prefab geometry is consumed on both hosts."
+      "note": "Purchasing, fitting and launch stay behind existing state transitions. Shared prefab geometry is consumed on both hosts.",
+      "components": [
+        "LaunchpadState",
+        "LaunchTowerAnimation",
+        "LaunchStandState",
+        "StagedRocket",
+        "LaunchSequence",
+        "MissionLaunchControl",
+        "MissionSelector",
+        "LaunchpadStatus",
+        "MissionLaunchAction"
+      ]
     },
     {
       "id": "flight",
@@ -116,7 +137,8 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Systems/Loop.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
       ],
-      "note": "Physical travel, separate from transit photometry. Use persisted timestamps."
+      "note": "Physical travel, separate from transit photometry. Use persisted timestamps.",
+      "components": []
     },
     {
       "id": "landing",
@@ -127,7 +149,8 @@ enum AuthoredSceneDeclarations {
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
       ],
-      "note": "Native landing route currently renders MiningScreen, not the web landing sequence."
+      "note": "Native landing route currently renders MiningScreen, not the web landing sequence.",
+      "components": []
     },
     {
       "id": "laser-mining",
@@ -141,7 +164,8 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Mining/MiningField.swift",
         "native/LandnamCore/Sources/LandnamCore/Mining/Prospecting.swift"
       ],
-      "note": "Canonical ship laser; not the rover or field engine."
+      "note": "Canonical ship laser; not the rover or field engine.",
+      "components": []
     },
     {
       "id": "delivery",
@@ -154,7 +178,8 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/HomeDelivery.swift"
       ],
-      "note": "Separate destination unload, return leg and home cargo allocation. Settlement must be idempotent."
+      "note": "Separate destination unload, return leg and home cargo allocation. Settlement must be idempotent.",
+      "components": []
     },
     {
       "id": "economy",
@@ -170,7 +195,8 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Industry/Refinery.swift",
         "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift"
       ],
-      "note": "Refinery has native domain code but no native route or screen. Daily economy needs command-trace comparison."
+      "note": "Refinery has native domain code but no native route or screen. Daily economy needs command-trace comparison.",
+      "components": []
     },
     {
       "id": "progression",
@@ -183,7 +209,8 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Systems/Progression.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Milestones.swift"
       ],
-      "note": "XP source and native progression differ in granularity; source mapping is not behavior parity."
+      "note": "XP source and native progression differ in granularity; source mapping is not behavior parity.",
+      "components": []
     },
     {
       "id": "training",
@@ -196,7 +223,8 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Systems/FlightPlan.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
       ],
-      "note": "Training does not gate Free Ops. Replay rewards use the same completion transitions."
+      "note": "Training does not gate Free Ops. Replay rewards use the same completion transitions.",
+      "components": []
     },
     {
       "id": "academy",
@@ -208,7 +236,8 @@ enum AuthoredSceneDeclarations {
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Industry/Academy.swift"
       ],
-      "note": "Roster and training ownership. Crew never increases citizen-science yield."
+      "note": "Roster and training ownership. Crew never increases citizen-science yield.",
+      "components": []
     },
     {
       "id": "surface-logistics",
@@ -220,7 +249,8 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Industry/SurfaceOps.swift",
         "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
       ],
-      "note": "Native settlement logistics exists; embedded field factory and biosphere commands need separate adapters."
+      "note": "Native settlement logistics exists; embedded field factory and biosphere commands need separate adapters.",
+      "components": []
     },
     {
       "id": "field-refining",
@@ -229,7 +259,8 @@ enum AuthoredSceneDeclarations {
         "web/lib/systems/OffworldRefinerySystem.ts"
       ],
       "native": [],
-      "note": "No equivalent native field refinery adapter identified; base Refinery is a different mechanic."
+      "note": "No equivalent native field refinery adapter identified; base Refinery is a different mechanic.",
+      "components": []
     },
     {
       "id": "ownership",
@@ -238,7 +269,8 @@ enum AuthoredSceneDeclarations {
         "web/lib/systems/OwnershipSystem.ts"
       ],
       "native": [],
-      "note": "No equivalent native transfer domain identified."
+      "note": "No equivalent native transfer domain identified.",
+      "components": []
     },
     {
       "id": "site-rights",
@@ -247,7 +279,8 @@ enum AuthoredSceneDeclarations {
         "web/lib/systems/SiteRightsSystem.ts"
       ],
       "native": [],
-      "note": "Native SurfaceOps site access is not the full lease/deed model."
+      "note": "Native SurfaceOps site access is not the full lease/deed model.",
+      "components": []
     },
     {
       "id": "treasury",
@@ -256,7 +289,8 @@ enum AuthoredSceneDeclarations {
         "web/lib/systems/TreasurySystem.ts"
       ],
       "native": [],
-      "note": "No equivalent native treasury ledger or loan implementation identified."
+      "note": "No equivalent native treasury ledger or loan implementation identified.",
+      "components": []
     },
     {
       "id": "sandbox",
@@ -265,7 +299,8 @@ enum AuthoredSceneDeclarations {
         "web/lib/systems/SandboxSystem.ts"
       ],
       "native": [],
-      "note": "Do not confuse field sandbox domain rules with Studio preview presets."
+      "note": "Do not confuse field sandbox domain rules with Studio preview presets.",
+      "components": []
     },
     {
       "id": "instruments",
@@ -280,7 +315,8 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Station/Surveys.swift",
         "native/LandnamCore/Sources/LandnamCore/Station/CitizenFeed.swift"
       ],
-      "note": "Instrument state and feed navigation; no fictional citizen-science mission wrapper."
+      "note": "Instrument state and feed navigation; no fictional citizen-science mission wrapper.",
+      "components": []
     },
     {
       "id": "tess",
@@ -291,7 +327,8 @@ enum AuthoredSceneDeclarations {
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/Tess.swift"
       ],
-      "note": "Real light curves and verdicts; independent of spacecraft Transit."
+      "note": "Real light curves and verdicts; independent of spacecraft Transit.",
+      "components": []
     },
     {
       "id": "asteroid-review",
@@ -302,7 +339,8 @@ enum AuthoredSceneDeclarations {
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/Asteroid.swift"
       ],
-      "note": "Observation frames and classifications."
+      "note": "Observation frames and classifications.",
+      "components": []
     },
     {
       "id": "saturn-review",
@@ -313,7 +351,8 @@ enum AuthoredSceneDeclarations {
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/Saturn.swift"
       ],
-      "note": "Storm annotations and classifications."
+      "note": "Storm annotations and classifications.",
+      "components": []
     },
     {
       "id": "records",
@@ -327,7 +366,8 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Industry/NarrativeLedger.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift"
       ],
-      "note": "Read canonical records; do not create a parallel editor save."
+      "note": "Read canonical records; do not create a parallel editor save.",
+      "components": []
     },
     {
       "id": "persistence",
@@ -341,7 +381,25 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Sync/Outbox.swift",
         "native/LandnamCore/Sources/LandnamCore/Sync/CloudSync.swift"
       ],
-      "note": "Host service, not a scene object. All changes use canonical save/outbox paths."
+      "note": "Host service, not a scene object. All changes use canonical save/outbox paths.",
+      "components": []
+    },
+    {
+      "id": "field-engine",
+      "name": "TakeOn rover and field runtime",
+      "web": [
+        "web/lib/takeon/goRuntime.ts",
+        "web/lib/takeon/events.ts",
+        "web/lib/takeon/LandnamSync.ts",
+        "web/lib/takeon/field-operation.ts"
+      ],
+      "native": [
+        "native/TakeonKit/Sources/TakeonKit/TakeonEngine.swift",
+        "native/TakeonKit/Sources/TakeonKit/GoTakeonEngine.swift",
+        "native/App/TakeonPersistence.swift"
+      ],
+      "note": "Shared Go engine with host adapters. Native field factory/biosphere state commands remain separate gaps; a linked runtime is not full game parity.",
+      "components": []
     }
   ],
   "scenes": [
@@ -363,7 +421,67 @@ enum AuthoredSceneDeclarations {
           "web/public/game/scenes/academy.scene.json"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "academy",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "academy"
+          ],
+          "note": "Academy scene and research station."
+        },
+        {
+          "id": "crew-roster",
+          "kind": "collection",
+          "parent": "academy",
+          "layout": "host",
+          "mechanics": [
+            "academy"
+          ],
+          "note": "Each crew member has identity, XP and condition."
+        },
+        {
+          "id": "candidate-list",
+          "kind": "collection",
+          "parent": "academy",
+          "layout": "host",
+          "mechanics": [
+            "academy"
+          ],
+          "note": "Recruitable candidates."
+        },
+        {
+          "id": "training-controls",
+          "kind": "panel",
+          "parent": "academy",
+          "layout": "host",
+          "mechanics": [
+            "academy"
+          ],
+          "note": "Train or rehire through Academy and Crew systems."
+        },
+        {
+          "id": "funding-controls",
+          "kind": "panel",
+          "parent": "academy",
+          "layout": "host",
+          "mechanics": [
+            "academy"
+          ],
+          "note": "Enable or disable research funding."
+        },
+        {
+          "id": "research-action",
+          "kind": "button",
+          "parent": "academy",
+          "layout": "host",
+          "mechanics": [
+            "academy"
+          ],
+          "note": "Apply research through the canonical state transition."
+        }
+      ]
     },
     {
       "id": "asteroid-discovery",
@@ -379,7 +497,57 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/AsteroidDiscoveryScreen.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "observation-frames",
+          "kind": "instrument",
+          "layout": "host",
+          "mechanics": [
+            "asteroid-review"
+          ],
+          "note": "Real sequential observation imagery."
+        },
+        {
+          "id": "candidate-list",
+          "kind": "collection",
+          "parent": "observation-frames",
+          "layout": "host",
+          "mechanics": [
+            "asteroid-review"
+          ],
+          "note": "Available review candidates."
+        },
+        {
+          "id": "annotation-layer",
+          "kind": "collection",
+          "parent": "observation-frames",
+          "layout": "host",
+          "mechanics": [
+            "asteroid-review"
+          ],
+          "note": "Player marks on observation frames."
+        },
+        {
+          "id": "verdict-controls",
+          "kind": "panel",
+          "parent": "observation-frames",
+          "layout": "host",
+          "mechanics": [
+            "asteroid-review"
+          ],
+          "note": "Submit classification through the instrument feed."
+        },
+        {
+          "id": "next-action",
+          "kind": "button",
+          "parent": "observation-frames",
+          "layout": "host",
+          "mechanics": [
+            "asteroid-review"
+          ],
+          "note": "Next candidate or return to the station."
+        }
+      ]
     },
     {
       "id": "build",
@@ -389,8 +557,8 @@ enum AuthoredSceneDeclarations {
       "runtime": {
         "surface": "canvas",
         "web": [
-          "web/components/game/screens/FreeOpsBuildScreen.tsx",
-          "web/components/game/screens/HubScreen.tsx"
+          "web/components/game/screens/HubScreen.tsx",
+          "web/components/game/GameScreenRouter.tsx"
         ],
         "native": [
           "native/App/Screens/BuildScreen.swift"
@@ -399,7 +567,67 @@ enum AuthoredSceneDeclarations {
           "web/public/game/scenes/hub.scene.json"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "base-world",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "world"
+          ],
+          "note": "Same world as the Hub; not a second construction mode."
+        },
+        {
+          "id": "build-sites",
+          "kind": "collection",
+          "parent": "base-world",
+          "layout": "host",
+          "mechanics": [
+            "construction"
+          ],
+          "note": "Fixed sites from shared/layout/base-site.json."
+        },
+        {
+          "id": "placement-ghost",
+          "kind": "structure",
+          "parent": "base-world",
+          "layout": "host",
+          "mechanics": [
+            "construction"
+          ],
+          "note": "Selected building preview at a legal site."
+        },
+        {
+          "id": "build-catalog",
+          "kind": "panel",
+          "parent": "base-world",
+          "layout": "host",
+          "mechanics": [
+            "construction"
+          ],
+          "note": "Available structures and resource requirements."
+        },
+        {
+          "id": "place-action",
+          "kind": "button",
+          "parent": "base-world",
+          "layout": "host",
+          "mechanics": [
+            "construction"
+          ],
+          "note": "Confirm placement through the game state transition."
+        },
+        {
+          "id": "cancel-action",
+          "kind": "button",
+          "parent": "base-world",
+          "layout": "host",
+          "mechanics": [
+            "construction"
+          ],
+          "note": "Leave placement without purchasing."
+        }
+      ]
     },
     {
       "id": "debrief",
@@ -417,7 +645,67 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/HomecomingScreen.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "home-berth",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Homecoming scene when a cargo split is pending."
+        },
+        {
+          "id": "cargo-allocation",
+          "kind": "panel",
+          "parent": "home-berth",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Allocate each mineral between client, storage and exchange."
+        },
+        {
+          "id": "settle-action",
+          "kind": "button",
+          "parent": "home-berth",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Settle exactly once through HomeDelivery."
+        },
+        {
+          "id": "mission-result",
+          "kind": "panel",
+          "parent": "home-berth",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Completed operation, payouts and affinity."
+        },
+        {
+          "id": "progression-result",
+          "kind": "panel",
+          "parent": "home-berth",
+          "layout": "host",
+          "mechanics": [
+            "progression"
+          ],
+          "note": "XP and unlocks resulting from the operation."
+        },
+        {
+          "id": "continue-action",
+          "kind": "button",
+          "parent": "home-berth",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Return to the same canonical base state."
+        }
+      ]
     },
     {
       "id": "delivery",
@@ -437,7 +725,57 @@ enum AuthoredSceneDeclarations {
           "web/public/game/scenes/delivery.scene.json"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "delivery-berth",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Physical destination unloading scene."
+        },
+        {
+          "id": "delivery-ship",
+          "kind": "vehicle",
+          "parent": "delivery-berth",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Arriving cargo vehicle."
+        },
+        {
+          "id": "cargo-unload",
+          "kind": "collection",
+          "parent": "delivery-berth",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Cargo transfer animation."
+        },
+        {
+          "id": "unload-progress",
+          "kind": "panel",
+          "parent": "delivery-berth",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Persisted unload timer."
+        },
+        {
+          "id": "return-action",
+          "kind": "button",
+          "parent": "delivery-berth",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "After unload, start the empty Earth-return leg."
+        }
+      ]
     },
     {
       "id": "fab",
@@ -454,7 +792,67 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/LaunchReview.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "launchpad-preview",
+          "kind": "group",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Launchpad presentation shared with Launchpad and rocket purchase."
+        },
+        {
+          "id": "assembly-rocket",
+          "kind": "vehicle",
+          "parent": "launchpad-preview",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Design, building and ready phases."
+        },
+        {
+          "id": "mission-plan",
+          "kind": "panel",
+          "parent": "launchpad-preview",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Review the chosen mission and destination."
+        },
+        {
+          "id": "part-choices",
+          "kind": "collection",
+          "parent": "launchpad-preview",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Optional fitting UI."
+        },
+        {
+          "id": "build-launch-action",
+          "kind": "button",
+          "parent": "launchpad-preview",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Assembly then launch through the real mission transition."
+        },
+        {
+          "id": "free-ops-picker",
+          "kind": "panel",
+          "parent": "launchpad-preview",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Web fallback when no mission is selected; native route gating differs."
+        }
+      ]
     },
     {
       "id": "galaxy",
@@ -470,7 +868,57 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/TessDiscoveryScreen.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "light-curve",
+          "kind": "instrument",
+          "layout": "host",
+          "mechanics": [
+            "tess"
+          ],
+          "note": "Real TESS observation plot; not a galaxy travel map."
+        },
+        {
+          "id": "candidate-list",
+          "kind": "collection",
+          "parent": "light-curve",
+          "layout": "host",
+          "mechanics": [
+            "tess"
+          ],
+          "note": "Available observation subjects."
+        },
+        {
+          "id": "classification-controls",
+          "kind": "panel",
+          "parent": "light-curve",
+          "layout": "host",
+          "mechanics": [
+            "tess"
+          ],
+          "note": "Transit annotation and verdict submission."
+        },
+        {
+          "id": "observation-detail",
+          "kind": "panel",
+          "parent": "light-curve",
+          "layout": "host",
+          "mechanics": [
+            "tess"
+          ],
+          "note": "Subject data and context."
+        },
+        {
+          "id": "next-action",
+          "kind": "button",
+          "parent": "light-curve",
+          "layout": "host",
+          "mechanics": [
+            "tess"
+          ],
+          "note": "Continue through the real instrument feed."
+        }
+      ]
     },
     {
       "id": "hangar",
@@ -487,7 +935,67 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/HangarScreen.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "hangar-bay",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Self-contained vehicle bay without Hub chrome."
+        },
+        {
+          "id": "owned-ships",
+          "kind": "collection",
+          "parent": "hangar-bay",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Each staged or owned craft is a vehicle instance."
+        },
+        {
+          "id": "selected-ship",
+          "kind": "vehicle",
+          "parent": "hangar-bay",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Current craft in the bay."
+        },
+        {
+          "id": "part-slots",
+          "kind": "collection",
+          "parent": "hangar-bay",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Fitted components and available parts."
+        },
+        {
+          "id": "fit-action",
+          "kind": "button",
+          "parent": "hangar-bay",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Install through the existing loadout and economy systems."
+        },
+        {
+          "id": "exit-action",
+          "kind": "button",
+          "parent": "hangar-bay",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Leave the bay; no duplicate campaign state."
+        }
+      ]
     },
     {
       "id": "hub-subsurface",
@@ -503,7 +1011,57 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/BaseUnderground.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "underground",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "construction"
+          ],
+          "note": "The below-soil deck of the same base."
+        },
+        {
+          "id": "rooms",
+          "kind": "collection",
+          "parent": "underground",
+          "layout": "host",
+          "mechanics": [
+            "construction"
+          ],
+          "note": "Built storage and service rooms; generated from player state."
+        },
+        {
+          "id": "excavation-sites",
+          "kind": "collection",
+          "parent": "underground",
+          "layout": "host",
+          "mechanics": [
+            "construction"
+          ],
+          "note": "Available underground room sites."
+        },
+        {
+          "id": "storage-readout",
+          "kind": "panel",
+          "parent": "underground",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Canonical stash and capacity."
+        },
+        {
+          "id": "return-action",
+          "kind": "button",
+          "parent": "underground",
+          "layout": "host",
+          "mechanics": [
+            "construction"
+          ],
+          "note": "Return to the surface."
+        }
+      ]
     },
     {
       "id": "hub",
@@ -535,6 +1093,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "world",
           "kind": "world",
+          "mechanics": [
+            "world"
+          ],
           "slot": "world",
           "prefab": "base-world",
           "components": [
@@ -546,6 +1107,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "sky",
           "kind": "layer",
+          "mechanics": [
+            "world"
+          ],
           "parent": "world",
           "asset": "shared/scenes/sky-events.json",
           "note": "A planet is only a point of light from the sky calendar. No planet discs."
@@ -553,6 +1117,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "steppe",
           "kind": "terrain",
+          "mechanics": [
+            "world"
+          ],
           "parent": "world",
           "asset": "shared/authoring/worlds/base-world.toml",
           "note": "Escarpments, steppe, paved ground, clouds and weather. Edit the world data to change them on web and native."
@@ -560,6 +1127,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "building-sites",
           "kind": "collection",
+          "mechanics": [
+            "construction"
+          ],
           "parent": "world",
           "asset": "shared/layout/base-site.json",
           "components": [
@@ -570,6 +1140,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "site-hall",
           "kind": "structure",
+          "mechanics": [
+            "rocket-assembly"
+          ],
           "parent": "building-sites",
           "label": "Hangar",
           "components": [
@@ -579,6 +1152,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "site-pad",
           "kind": "structure",
+          "mechanics": [
+            "rocket-assembly"
+          ],
           "parent": "building-sites",
           "label": "Launchpad",
           "prefab": "launchpad",
@@ -590,6 +1166,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "site-ops",
           "kind": "structure",
+          "mechanics": [
+            "instruments"
+          ],
           "parent": "building-sites",
           "label": "Control station",
           "components": [
@@ -599,6 +1178,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "site-exchange",
           "kind": "structure",
+          "mechanics": [
+            "economy"
+          ],
           "parent": "building-sites",
           "label": "Exchange",
           "components": [
@@ -609,6 +1191,10 @@ enum AuthoredSceneDeclarations {
         {
           "id": "site-shaft",
           "kind": "structure",
+          "mechanics": [
+            "construction",
+            "delivery"
+          ],
           "parent": "building-sites",
           "label": "Silo",
           "components": [
@@ -619,6 +1205,10 @@ enum AuthoredSceneDeclarations {
         {
           "id": "shared-hud",
           "kind": "ui",
+          "mechanics": [
+            "persistence",
+            "economy"
+          ],
           "slot": "hud",
           "prefab": "shared-hud",
           "note": "One shared HUD on every screen. Never a per-screen HUD."
@@ -626,6 +1216,10 @@ enum AuthoredSceneDeclarations {
         {
           "id": "base-dock",
           "kind": "ui",
+          "mechanics": [
+            "training",
+            "mission-planning"
+          ],
           "prefab": "base-dock",
           "note": "Bottom centre: previous, Build, Menu, next. No shared slot fits it yet (see bottom-nav in shared/layout/base-hud-zones.json)."
         }
@@ -646,7 +1240,67 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/ControlStationScreen.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "control-station",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "instruments"
+          ],
+          "note": "Instrument station scene."
+        },
+        {
+          "id": "instrument-feed",
+          "kind": "collection",
+          "parent": "control-station",
+          "layout": "host",
+          "mechanics": [
+            "instruments"
+          ],
+          "note": "One signal UI element per unresolved observation."
+        },
+        {
+          "id": "body-selector",
+          "kind": "panel",
+          "parent": "control-station",
+          "layout": "host",
+          "mechanics": [
+            "instruments"
+          ],
+          "note": "Filter observations by body."
+        },
+        {
+          "id": "survey-console",
+          "kind": "instrument",
+          "parent": "control-station",
+          "layout": "host",
+          "mechanics": [
+            "instruments"
+          ],
+          "note": "Start and resolve survey scans."
+        },
+        {
+          "id": "survey-charts",
+          "kind": "collection",
+          "parent": "control-station",
+          "layout": "host",
+          "mechanics": [
+            "instruments"
+          ],
+          "note": "Earned charts and claimable plots."
+        },
+        {
+          "id": "inspect-action",
+          "kind": "button",
+          "parent": "control-station",
+          "layout": "host",
+          "mechanics": [
+            "instruments"
+          ],
+          "note": "Open the appropriate instrument review."
+        }
+      ]
     },
     {
       "id": "intro",
@@ -662,7 +1316,37 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/BaseRecordScreens.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "biome-preview",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "world"
+          ],
+          "note": "Selected landing-site environment."
+        },
+        {
+          "id": "biome-picker",
+          "kind": "panel",
+          "parent": "biome-preview",
+          "layout": "host",
+          "mechanics": [
+            "construction"
+          ],
+          "note": "Choose the base biome before the first placement."
+        },
+        {
+          "id": "begin-action",
+          "kind": "button",
+          "parent": "biome-preview",
+          "layout": "host",
+          "mechanics": [
+            "training"
+          ],
+          "note": "Continue through the canonical intro transition."
+        }
+      ]
     },
     {
       "id": "landing",
@@ -682,7 +1366,57 @@ enum AuthoredSceneDeclarations {
           "web/public/game/scenes/landing.scene.json"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "landing-world",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "landing"
+          ],
+          "note": "Target approach environment."
+        },
+        {
+          "id": "landing-craft",
+          "kind": "vehicle",
+          "parent": "landing-world",
+          "layout": "host",
+          "mechanics": [
+            "landing"
+          ],
+          "note": "Descent or redocking animation."
+        },
+        {
+          "id": "landing-progress",
+          "kind": "panel",
+          "parent": "landing-world",
+          "layout": "host",
+          "mechanics": [
+            "landing"
+          ],
+          "note": "Progress from the persisted landing start timestamp."
+        },
+        {
+          "id": "continue-action",
+          "kind": "button",
+          "parent": "landing-world",
+          "layout": "host",
+          "mechanics": [
+            "landing"
+          ],
+          "note": "Complete touchdown or redocking once ready."
+        },
+        {
+          "id": "pause-action",
+          "kind": "button",
+          "parent": "landing-world",
+          "layout": "host",
+          "mechanics": [
+            "landing"
+          ],
+          "note": "Pause at the hub without discarding the operation."
+        }
+      ]
     },
     {
       "id": "launchpad",
@@ -704,6 +1438,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "world",
           "kind": "world",
+          "mechanics": [
+            "world"
+          ],
           "slot": "world",
           "components": [
             "BaseWorldSimulation",
@@ -713,6 +1450,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "launchpad-complex",
           "kind": "group",
+          "mechanics": [
+            "rocket-assembly"
+          ],
           "parent": "world",
           "prefab": "launchpad",
           "components": [
@@ -723,6 +1463,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "apron",
           "kind": "terrain",
+          "mechanics": [
+            "rocket-assembly"
+          ],
           "parent": "launchpad-complex",
           "layout": "shared",
           "space": "parent",
@@ -739,6 +1482,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "service-tower",
           "kind": "structure",
+          "mechanics": [
+            "rocket-assembly"
+          ],
           "parent": "launchpad-complex",
           "components": [
             "LaunchTowerAnimation"
@@ -747,6 +1493,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "launch-stand",
           "kind": "structure",
+          "mechanics": [
+            "rocket-assembly"
+          ],
           "parent": "launchpad-complex",
           "components": [
             "LaunchStandState"
@@ -755,6 +1504,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "support-hangar",
           "kind": "structure",
+          "mechanics": [
+            "rocket-assembly"
+          ],
           "parent": "launchpad-complex",
           "components": [
             "Clickable"
@@ -763,6 +1515,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "staged-rocket",
           "kind": "vehicle",
+          "mechanics": [
+            "rocket-assembly"
+          ],
           "parent": "launchpad-complex",
           "layout": "shared",
           "space": "parent",
@@ -785,6 +1540,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "launch-control",
           "kind": "instrument",
+          "mechanics": [
+            "mission-planning"
+          ],
           "parent": "launchpad-complex",
           "layout": "shared",
           "space": "parent",
@@ -802,6 +1560,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "assembly-scaffold",
           "kind": "structure",
+          "mechanics": [
+            "rocket-assembly"
+          ],
           "parent": "launchpad-complex",
           "layout": "shared",
           "space": "parent",
@@ -818,6 +1579,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "back-control",
           "kind": "button",
+          "mechanics": [
+            "mission-planning"
+          ],
           "rect": {
             "x": 0.03,
             "y": 0.025,
@@ -832,6 +1596,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "mission-selector",
           "kind": "panel",
+          "mechanics": [
+            "mission-planning"
+          ],
           "rect": {
             "x": 0.03,
             "y": 0.11,
@@ -848,6 +1615,9 @@ enum AuthoredSceneDeclarations {
         {
           "id": "pad-status",
           "kind": "panel",
+          "mechanics": [
+            "mission-planning"
+          ],
           "rect": {
             "x": 0.12,
             "y": 0.28,
@@ -864,6 +1634,10 @@ enum AuthoredSceneDeclarations {
         {
           "id": "launch-action",
           "kind": "button",
+          "mechanics": [
+            "mission-planning",
+            "rocket-assembly"
+          ],
           "slot": "primaryAction",
           "label": "Launch",
           "components": [
@@ -890,7 +1664,67 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/MarketScene.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "exchange",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "economy"
+          ],
+          "note": "Physical exchange building interior."
+        },
+        {
+          "id": "mineral-stock",
+          "kind": "collection",
+          "parent": "exchange",
+          "layout": "host",
+          "mechanics": [
+            "economy"
+          ],
+          "note": "One UI entry per tradable mineral."
+        },
+        {
+          "id": "price-readout",
+          "kind": "panel",
+          "parent": "exchange",
+          "layout": "host",
+          "mechanics": [
+            "economy"
+          ],
+          "note": "Supply-driven prices and dealer spread."
+        },
+        {
+          "id": "trade-controls",
+          "kind": "panel",
+          "parent": "exchange",
+          "layout": "host",
+          "mechanics": [
+            "economy"
+          ],
+          "note": "Buy/sell through the canonical economy."
+        },
+        {
+          "id": "trade-result",
+          "kind": "panel",
+          "parent": "exchange",
+          "layout": "host",
+          "mechanics": [
+            "economy"
+          ],
+          "note": "Wallet and inventory changes."
+        },
+        {
+          "id": "treasury-service",
+          "kind": "group",
+          "parent": "exchange",
+          "layout": "host",
+          "mechanics": [
+            "treasury"
+          ],
+          "note": "Domain ownership only; no native treasury equivalent identified."
+        }
+      ]
     },
     {
       "id": "mining",
@@ -912,7 +1746,87 @@ enum AuthoredSceneDeclarations {
           "web/public/game/scenes/mining.scene.json"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "mining-field",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "laser-mining"
+          ],
+          "note": "Seeded target field; the ship laser remains canonical."
+        },
+        {
+          "id": "mining-ship",
+          "kind": "vehicle",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "laser-mining"
+          ],
+          "note": "Player ship and laser origin."
+        },
+        {
+          "id": "ore-nodes",
+          "kind": "collection",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "laser-mining"
+          ],
+          "note": "Runtime-spawned nodes, one game object per mineral node."
+        },
+        {
+          "id": "laser",
+          "kind": "instrument",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "laser-mining"
+          ],
+          "note": "Pointer-driven beam and extraction."
+        },
+        {
+          "id": "cargo-readout",
+          "kind": "panel",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "laser-mining"
+          ],
+          "note": "Capacity and mined cargo from canonical state."
+        },
+        {
+          "id": "mining-controls",
+          "kind": "panel",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "laser-mining"
+          ],
+          "note": "Charges, tools and extraction controls."
+        },
+        {
+          "id": "return-action",
+          "kind": "button",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Finish mining and start the delivery or home leg."
+        },
+        {
+          "id": "training-guide",
+          "kind": "panel",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "training"
+          ],
+          "note": "Optional flight-plan overlay."
+        }
+      ]
     },
     {
       "id": "mission-history",
@@ -928,7 +1842,37 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/BaseRecordScreens.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "mission-records",
+          "kind": "collection",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Canonical completed mission history."
+        },
+        {
+          "id": "record-detail",
+          "kind": "panel",
+          "parent": "mission-records",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Selected operation, cargo and outcome."
+        },
+        {
+          "id": "back-action",
+          "kind": "button",
+          "parent": "mission-records",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Return to the base."
+        }
+      ]
     },
     {
       "id": "missions",
@@ -945,7 +1889,67 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/CoreLoop.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "mission-board",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Optional contracts and self-directed operations, sourced from the live catalog."
+        },
+        {
+          "id": "client-contracts",
+          "kind": "collection",
+          "parent": "mission-board",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Each entry is a mission UI element with client, requirements and payout."
+        },
+        {
+          "id": "own-program",
+          "kind": "collection",
+          "parent": "mission-board",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Free Ops work independent of contracts."
+        },
+        {
+          "id": "target-picker",
+          "kind": "panel",
+          "parent": "mission-board",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Destination selection for the selected mission."
+        },
+        {
+          "id": "accept-action",
+          "kind": "button",
+          "parent": "mission-board",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Accept through the existing mission lifecycle."
+        },
+        {
+          "id": "training-control",
+          "kind": "panel",
+          "parent": "mission-board",
+          "layout": "host",
+          "mechanics": [
+            "training"
+          ],
+          "note": "Optional training, never a Free Ops gate."
+        }
+      ]
     },
     {
       "id": "narrative-ledger",
@@ -961,7 +1965,37 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/BaseRecordScreens.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "ledger-entries",
+          "kind": "collection",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Narrative entries derived from canonical progression and discoveries."
+        },
+        {
+          "id": "entry-detail",
+          "kind": "panel",
+          "parent": "ledger-entries",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Selected record and its source."
+        },
+        {
+          "id": "back-action",
+          "kind": "button",
+          "parent": "ledger-entries",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Return to the base."
+        }
+      ]
     },
     {
       "id": "refinery",
@@ -975,7 +2009,57 @@ enum AuthoredSceneDeclarations {
         ],
         "native": []
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "recipe-list",
+          "kind": "collection",
+          "layout": "host",
+          "mechanics": [
+            "economy"
+          ],
+          "note": "Refinery recipes from the game catalog."
+        },
+        {
+          "id": "recipe-detail",
+          "kind": "panel",
+          "parent": "recipe-list",
+          "layout": "host",
+          "mechanics": [
+            "economy"
+          ],
+          "note": "Input minerals, cost and duration."
+        },
+        {
+          "id": "refinery-job",
+          "kind": "instrument",
+          "parent": "recipe-list",
+          "layout": "host",
+          "mechanics": [
+            "economy"
+          ],
+          "note": "Current timed job from player state."
+        },
+        {
+          "id": "start-action",
+          "kind": "button",
+          "parent": "recipe-list",
+          "layout": "host",
+          "mechanics": [
+            "economy"
+          ],
+          "note": "Validate resources and start the selected job."
+        },
+        {
+          "id": "collect-action",
+          "kind": "button",
+          "parent": "recipe-list",
+          "layout": "host",
+          "mechanics": [
+            "economy"
+          ],
+          "note": "Collect completed output. No native screen yet."
+        }
+      ]
     },
     {
       "id": "rocket-buy",
@@ -991,7 +2075,57 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/LaunchReview.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "launchpad-preview",
+          "kind": "group",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Mission preparation uses the Launchpad renderer."
+        },
+        {
+          "id": "vehicle-options",
+          "kind": "collection",
+          "parent": "launchpad-preview",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Rocket/loadout selection from the shared catalog."
+        },
+        {
+          "id": "mission-plan",
+          "kind": "panel",
+          "parent": "launchpad-preview",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Destination, vehicle and cargo requirements."
+        },
+        {
+          "id": "purchase-action",
+          "kind": "button",
+          "parent": "launchpad-preview",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Purchase or roll out using the canonical wallet and staged vehicle."
+        },
+        {
+          "id": "part-choices",
+          "kind": "collection",
+          "parent": "launchpad-preview",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Optional fitting controls."
+        }
+      ]
     },
     {
       "id": "rover-survey",
@@ -1008,7 +2142,69 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/TakeonSceneScreen.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "survey-field",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "field-engine",
+            "sandbox",
+            "instruments"
+          ],
+          "note": "Rover field or TakeOn adapter selected by the feature flag."
+        },
+        {
+          "id": "rover",
+          "kind": "vehicle",
+          "parent": "survey-field",
+          "layout": "host",
+          "mechanics": [
+            "field-engine"
+          ],
+          "note": "Surface survey vehicle, separate from laser extraction."
+        },
+        {
+          "id": "survey-markers",
+          "kind": "collection",
+          "parent": "survey-field",
+          "layout": "host",
+          "mechanics": [
+            "instruments"
+          ],
+          "note": "Field observation targets."
+        },
+        {
+          "id": "drive-controls",
+          "kind": "panel",
+          "parent": "survey-field",
+          "layout": "host",
+          "mechanics": [
+            "field-engine"
+          ],
+          "note": "Movement and interaction commands."
+        },
+        {
+          "id": "survey-result",
+          "kind": "panel",
+          "parent": "survey-field",
+          "layout": "host",
+          "mechanics": [
+            "instruments"
+          ],
+          "note": "Observation result before returning."
+        },
+        {
+          "id": "complete-action",
+          "kind": "button",
+          "parent": "survey-field",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "note": "Complete the survey using the canonical transition."
+        }
+      ]
     },
     {
       "id": "saturn-storm-search",
@@ -1024,7 +2220,57 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/SaturnStormSearchScreen.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "saturn-observation",
+          "kind": "instrument",
+          "layout": "host",
+          "mechanics": [
+            "saturn-review"
+          ],
+          "note": "Real Saturn imagery."
+        },
+        {
+          "id": "candidate-list",
+          "kind": "collection",
+          "parent": "saturn-observation",
+          "layout": "host",
+          "mechanics": [
+            "saturn-review"
+          ],
+          "note": "Available storm subjects."
+        },
+        {
+          "id": "annotation-layer",
+          "kind": "collection",
+          "parent": "saturn-observation",
+          "layout": "host",
+          "mechanics": [
+            "saturn-review"
+          ],
+          "note": "Storm markings."
+        },
+        {
+          "id": "verdict-controls",
+          "kind": "panel",
+          "parent": "saturn-observation",
+          "layout": "host",
+          "mechanics": [
+            "saturn-review"
+          ],
+          "note": "Classify the observation."
+        },
+        {
+          "id": "next-action",
+          "kind": "button",
+          "parent": "saturn-observation",
+          "layout": "host",
+          "mechanics": [
+            "saturn-review"
+          ],
+          "note": "Next candidate or return to the station."
+        }
+      ]
     },
     {
       "id": "skills",
@@ -1040,7 +2286,57 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/SkillTreeScreen.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "skill-tree",
+          "kind": "collection",
+          "layout": "host",
+          "mechanics": [
+            "progression"
+          ],
+          "note": "Skill nodes and their prerequisite edges."
+        },
+        {
+          "id": "licence",
+          "kind": "panel",
+          "parent": "skill-tree",
+          "layout": "host",
+          "mechanics": [
+            "progression"
+          ],
+          "note": "Current licence grade and next requirements."
+        },
+        {
+          "id": "skill-detail",
+          "kind": "panel",
+          "parent": "skill-tree",
+          "layout": "host",
+          "mechanics": [
+            "progression"
+          ],
+          "note": "Selected node costs and effects."
+        },
+        {
+          "id": "unlock-action",
+          "kind": "button",
+          "parent": "skill-tree",
+          "layout": "host",
+          "mechanics": [
+            "progression"
+          ],
+          "note": "Spend skill points through Progression."
+        },
+        {
+          "id": "upgrade-action",
+          "kind": "button",
+          "parent": "skill-tree",
+          "layout": "host",
+          "mechanics": [
+            "progression"
+          ],
+          "note": "Upgrade the licence when eligible."
+        }
+      ]
     },
     {
       "id": "surface-ops",
@@ -1060,7 +2356,97 @@ enum AuthoredSceneDeclarations {
           "web/public/game/scenes/construction-target.scene.json"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "surface-world",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "surface-logistics"
+          ],
+          "note": "Selected off-world site."
+        },
+        {
+          "id": "settlement-pads",
+          "kind": "collection",
+          "parent": "surface-world",
+          "layout": "host",
+          "mechanics": [
+            "surface-logistics"
+          ],
+          "note": "Physical launchpad construction sites."
+        },
+        {
+          "id": "settlement-structures",
+          "kind": "collection",
+          "parent": "surface-world",
+          "layout": "host",
+          "mechanics": [
+            "surface-logistics"
+          ],
+          "note": "Constructed structures and build progress."
+        },
+        {
+          "id": "ferry",
+          "kind": "vehicle",
+          "parent": "surface-world",
+          "layout": "host",
+          "mechanics": [
+            "surface-logistics"
+          ],
+          "note": "Cargo transport state, retry and reconciliation."
+        },
+        {
+          "id": "logistics-controls",
+          "kind": "panel",
+          "parent": "surface-world",
+          "layout": "host",
+          "mechanics": [
+            "surface-logistics"
+          ],
+          "note": "Site access, storage, build, dispatch and acknowledge."
+        },
+        {
+          "id": "field-world",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "field-engine",
+            "sandbox"
+          ],
+          "note": "Embedded TakeOn field, not a replacement for ship laser mining."
+        },
+        {
+          "id": "field-factory",
+          "kind": "collection",
+          "parent": "field-world",
+          "layout": "host",
+          "mechanics": [
+            "field-refining"
+          ],
+          "note": "Field-built structures and refinery pipeline; native field adapter pending."
+        },
+        {
+          "id": "site-deeds",
+          "kind": "group",
+          "parent": "surface-world",
+          "layout": "host",
+          "mechanics": [
+            "site-rights"
+          ],
+          "note": "Domain ownership for site purchases and leases. Not a separately rendered panel or just settlement access."
+        },
+        {
+          "id": "ownership-service",
+          "kind": "group",
+          "parent": "surface-world",
+          "layout": "host",
+          "mechanics": [
+            "ownership"
+          ],
+          "note": "Transfers of owned entities; no native equivalent identified."
+        }
+      ]
     },
     {
       "id": "targets",
@@ -1070,8 +2456,8 @@ enum AuthoredSceneDeclarations {
       "runtime": {
         "surface": "canvas",
         "web": [
-          "web/components/TargetPicker/",
-          "web/components/game/MissionSetupRoutes.tsx"
+          "web/components/game/MissionSetupRoutes.tsx",
+          "web/components/game/screens/LaunchpadScreen.tsx"
         ],
         "native": [
           "native/App/Screens/LaunchReview.swift"
@@ -1080,7 +2466,47 @@ enum AuthoredSceneDeclarations {
           "web/public/game/scenes/target-picker.scene.json"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "mission-plan",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Route currently renders mission preparation; do not infer a standalone solar map from its name."
+        },
+        {
+          "id": "target-picker",
+          "kind": "collection",
+          "parent": "mission-plan",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Destination choices use the shared target catalog."
+        },
+        {
+          "id": "launchpad-preview",
+          "kind": "group",
+          "parent": "mission-plan",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Reusable launchpad presentation from the mission setup adapter."
+        },
+        {
+          "id": "continue-action",
+          "kind": "button",
+          "parent": "mission-plan",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Proceed with the selected destination."
+        }
+      ]
     },
     {
       "id": "transit",
@@ -1097,7 +2523,67 @@ enum AuthoredSceneDeclarations {
           "native/App/Screens/FlightScreens.swift"
         ]
       },
-      "objects": []
+      "objects": [
+        {
+          "id": "flight-world",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "note": "Target-specific flight environment; not the TESS light-curve scene."
+        },
+        {
+          "id": "flight-rocket",
+          "kind": "vehicle",
+          "parent": "flight-world",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "note": "Vehicle moving through the current flight leg."
+        },
+        {
+          "id": "destination",
+          "kind": "decoration",
+          "parent": "flight-world",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "note": "Catalog-driven destination visual."
+        },
+        {
+          "id": "flight-progress",
+          "kind": "panel",
+          "parent": "flight-world",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "note": "Persisted departure and arrival timestamps."
+        },
+        {
+          "id": "arrival-action",
+          "kind": "button",
+          "parent": "flight-world",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "note": "Transition to landing, mining, survey or debrief according to the mission."
+        },
+        {
+          "id": "return-action",
+          "kind": "button",
+          "parent": "flight-world",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "note": "Return to the base without replacing the active flight."
+        }
+      ]
     }
   ]
 }

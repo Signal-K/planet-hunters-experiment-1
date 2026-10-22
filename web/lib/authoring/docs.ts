@@ -13,6 +13,7 @@ export interface MechanicContract {
   name: string
   web: string[]
   native: string[]
+  components: string[]
   note: string
 }
 

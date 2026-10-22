@@ -13,7 +13,11 @@
         "native/LandnamCore/Sources/LandnamCore/World/WorldSim.swift",
         "native/LandnamCore/Sources/LandnamCore/World/SkyCalendar.swift"
       ],
-      "note": "Same world source; render adapters still host-owned."
+      "note": "Same world source; render adapters still host-owned.",
+      "components": [
+        "BaseWorldSimulation",
+        "BaseCamera"
+      ]
     },
     {
       "id": "construction",
@@ -26,7 +30,10 @@
         "native/LandnamCore/Sources/LandnamCore/Industry/Construction.swift",
         "native/LandnamCore/Sources/LandnamCore/Industry/BuildingLevels.swift"
       ],
-      "note": "Fixed-site placement and underground rooms; compare unlocks and costs before migration."
+      "note": "Fixed-site placement and underground rooms; compare unlocks and costs before migration.",
+      "components": [
+        "BuildSiteInteraction"
+      ]
     },
     {
       "id": "mission-planning",
@@ -42,7 +49,10 @@
         "native/LandnamCore/Sources/LandnamCore/Data/MissionGenerator.swift",
         "native/LandnamCore/Sources/LandnamCore/Data/DailyClientMissions.swift"
       ],
-      "note": "Canonical mission state and optional client contracts; no editor-only mission store."
+      "note": "Canonical mission state and optional client contracts; no editor-only mission store.",
+      "components": [
+        "Clickable"
+      ]
     },
     {
       "id": "rocket-assembly",
@@ -55,7 +65,18 @@
         "native/LandnamCore/Sources/LandnamCore/Systems/RocketBuilder.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Loop.swift"
       ],
-      "note": "Purchasing, fitting and launch stay behind existing state transitions. Shared prefab geometry is consumed on both hosts."
+      "note": "Purchasing, fitting and launch stay behind existing state transitions. Shared prefab geometry is consumed on both hosts.",
+      "components": [
+        "LaunchpadState",
+        "LaunchTowerAnimation",
+        "LaunchStandState",
+        "StagedRocket",
+        "LaunchSequence",
+        "MissionLaunchControl",
+        "MissionSelector",
+        "LaunchpadStatus",
+        "MissionLaunchAction"
+      ]
     },
     {
       "id": "flight",
@@ -67,7 +88,8 @@
         "native/LandnamCore/Sources/LandnamCore/Systems/Loop.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
       ],
-      "note": "Physical travel, separate from transit photometry. Use persisted timestamps."
+      "note": "Physical travel, separate from transit photometry. Use persisted timestamps.",
+      "components": []
     },
     {
       "id": "landing",
@@ -78,7 +100,8 @@
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
       ],
-      "note": "Native landing route currently renders MiningScreen, not the web landing sequence."
+      "note": "Native landing route currently renders MiningScreen, not the web landing sequence.",
+      "components": []
     },
     {
       "id": "laser-mining",
@@ -92,7 +115,8 @@
         "native/LandnamCore/Sources/LandnamCore/Mining/MiningField.swift",
         "native/LandnamCore/Sources/LandnamCore/Mining/Prospecting.swift"
       ],
-      "note": "Canonical ship laser; not the rover or field engine."
+      "note": "Canonical ship laser; not the rover or field engine.",
+      "components": []
     },
     {
       "id": "delivery",
@@ -105,7 +129,8 @@
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/HomeDelivery.swift"
       ],
-      "note": "Separate destination unload, return leg and home cargo allocation. Settlement must be idempotent."
+      "note": "Separate destination unload, return leg and home cargo allocation. Settlement must be idempotent.",
+      "components": []
     },
     {
       "id": "economy",
@@ -121,7 +146,8 @@
         "native/LandnamCore/Sources/LandnamCore/Industry/Refinery.swift",
         "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift"
       ],
-      "note": "Refinery has native domain code but no native route or screen. Daily economy needs command-trace comparison."
+      "note": "Refinery has native domain code but no native route or screen. Daily economy needs command-trace comparison.",
+      "components": []
     },
     {
       "id": "progression",
@@ -134,7 +160,8 @@
         "native/LandnamCore/Sources/LandnamCore/Systems/Progression.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Milestones.swift"
       ],
-      "note": "XP source and native progression differ in granularity; source mapping is not behavior parity."
+      "note": "XP source and native progression differ in granularity; source mapping is not behavior parity.",
+      "components": []
     },
     {
       "id": "training",
@@ -147,7 +174,8 @@
         "native/LandnamCore/Sources/LandnamCore/Systems/FlightPlan.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
       ],
-      "note": "Training does not gate Free Ops. Replay rewards use the same completion transitions."
+      "note": "Training does not gate Free Ops. Replay rewards use the same completion transitions.",
+      "components": []
     },
     {
       "id": "academy",
@@ -159,7 +187,8 @@
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Industry/Academy.swift"
       ],
-      "note": "Roster and training ownership. Crew never increases citizen-science yield."
+      "note": "Roster and training ownership. Crew never increases citizen-science yield.",
+      "components": []
     },
     {
       "id": "surface-logistics",
@@ -171,7 +200,8 @@
         "native/LandnamCore/Sources/LandnamCore/Industry/SurfaceOps.swift",
         "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
       ],
-      "note": "Native settlement logistics exists; embedded field factory and biosphere commands need separate adapters."
+      "note": "Native settlement logistics exists; embedded field factory and biosphere commands need separate adapters.",
+      "components": []
     },
     {
       "id": "field-refining",
@@ -180,7 +210,8 @@
         "web/lib/systems/OffworldRefinerySystem.ts"
       ],
       "native": [],
-      "note": "No equivalent native field refinery adapter identified; base Refinery is a different mechanic."
+      "note": "No equivalent native field refinery adapter identified; base Refinery is a different mechanic.",
+      "components": []
     },
     {
       "id": "ownership",
@@ -189,7 +220,8 @@
         "web/lib/systems/OwnershipSystem.ts"
       ],
       "native": [],
-      "note": "No equivalent native transfer domain identified."
+      "note": "No equivalent native transfer domain identified.",
+      "components": []
     },
     {
       "id": "site-rights",
@@ -198,7 +230,8 @@
         "web/lib/systems/SiteRightsSystem.ts"
       ],
       "native": [],
-      "note": "Native SurfaceOps site access is not the full lease/deed model."
+      "note": "Native SurfaceOps site access is not the full lease/deed model.",
+      "components": []
     },
     {
       "id": "treasury",
@@ -207,7 +240,8 @@
         "web/lib/systems/TreasurySystem.ts"
       ],
       "native": [],
-      "note": "No equivalent native treasury ledger or loan implementation identified."
+      "note": "No equivalent native treasury ledger or loan implementation identified.",
+      "components": []
     },
     {
       "id": "sandbox",
@@ -216,7 +250,8 @@
         "web/lib/systems/SandboxSystem.ts"
       ],
       "native": [],
-      "note": "Do not confuse field sandbox domain rules with Studio preview presets."
+      "note": "Do not confuse field sandbox domain rules with Studio preview presets.",
+      "components": []
     },
     {
       "id": "instruments",
@@ -231,7 +266,8 @@
         "native/LandnamCore/Sources/LandnamCore/Station/Surveys.swift",
         "native/LandnamCore/Sources/LandnamCore/Station/CitizenFeed.swift"
       ],
-      "note": "Instrument state and feed navigation; no fictional citizen-science mission wrapper."
+      "note": "Instrument state and feed navigation; no fictional citizen-science mission wrapper.",
+      "components": []
     },
     {
       "id": "tess",
@@ -242,7 +278,8 @@
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/Tess.swift"
       ],
-      "note": "Real light curves and verdicts; independent of spacecraft Transit."
+      "note": "Real light curves and verdicts; independent of spacecraft Transit.",
+      "components": []
     },
     {
       "id": "asteroid-review",
@@ -253,7 +290,8 @@
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/Asteroid.swift"
       ],
-      "note": "Observation frames and classifications."
+      "note": "Observation frames and classifications.",
+      "components": []
     },
     {
       "id": "saturn-review",
@@ -264,7 +302,8 @@
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/Saturn.swift"
       ],
-      "note": "Storm annotations and classifications."
+      "note": "Storm annotations and classifications.",
+      "components": []
     },
     {
       "id": "records",
@@ -278,7 +317,8 @@
         "native/LandnamCore/Sources/LandnamCore/Industry/NarrativeLedger.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift"
       ],
-      "note": "Read canonical records; do not create a parallel editor save."
+      "note": "Read canonical records; do not create a parallel editor save.",
+      "components": []
     },
     {
       "id": "persistence",
@@ -292,7 +332,25 @@
         "native/LandnamCore/Sources/LandnamCore/Sync/Outbox.swift",
         "native/LandnamCore/Sources/LandnamCore/Sync/CloudSync.swift"
       ],
-      "note": "Host service, not a scene object. All changes use canonical save/outbox paths."
+      "note": "Host service, not a scene object. All changes use canonical save/outbox paths.",
+      "components": []
+    },
+    {
+      "id": "field-engine",
+      "name": "TakeOn rover and field runtime",
+      "web": [
+        "web/lib/takeon/goRuntime.ts",
+        "web/lib/takeon/events.ts",
+        "web/lib/takeon/LandnamSync.ts",
+        "web/lib/takeon/field-operation.ts"
+      ],
+      "native": [
+        "native/TakeonKit/Sources/TakeonKit/TakeonEngine.swift",
+        "native/TakeonKit/Sources/TakeonKit/GoTakeonEngine.swift",
+        "native/App/TakeonPersistence.swift"
+      ],
+      "note": "Shared Go engine with host adapters. Native field factory/biosphere state commands remain separate gaps; a linked runtime is not full game parity.",
+      "components": []
     }
   ]
 }
