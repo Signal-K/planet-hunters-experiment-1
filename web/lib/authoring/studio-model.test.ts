@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildObjectTree, clampRect, descendantsOf, dragRect, objectRect, snap, uniqueId } from './studio-model.ts'
+import { buildObjectTree, clampRect, compositionSummary, descendantsOf, dragRect, objectDomain, objectRect, snap, uniqueId } from './studio-model.ts'
 import type { SceneObject } from './docs.ts'
 
 const slots = { hud: { x: 0.02, y: 0.02, w: 0.96, h: 0.1 }, world: { x: 0, y: 0, w: 1, h: 1 } }
@@ -31,6 +31,20 @@ describe('studio model', () => {
   it('makes unique ids', () => {
     expect(uniqueId('ui', objects)).toBe('ui-1')
     expect(uniqueId('ui', [...objects, { id: 'ui-1', kind: 'ui' }, { id: 'ui-2', kind: 'ui' }])).toBe('ui-3')
+  })
+
+  it('classifies every node as a game object or UI element and reports composition density', () => {
+    expect(objectDomain({ kind: 'structure' })).toBe('game-object')
+    expect(objectDomain({ kind: 'button' })).toBe('ui-element')
+    expect(compositionSummary(objects)).toEqual({
+      total: 6,
+      gameObjects: 3,
+      uiElements: 3,
+      prefabs: 0,
+      nested: 3,
+      density: 'composed',
+    })
+    expect(compositionSummary([]).density).toBe('empty')
   })
 
   it('snaps to short numbers and keeps a rect inside the scene', () => {

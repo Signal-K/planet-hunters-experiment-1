@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import FileList from './FileList'
 import type { ScriptFile } from './FileList'
 import styles from './Studio.module.css'
+import { usePopoverSide } from './usePopoverSide'
 
 interface Props {
   files: ScriptFile[]
@@ -14,6 +15,7 @@ interface Props {
 export default function ScriptMenu({ files, hostRoot }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const { side, style } = usePopoverSide(open, ref)
   useEffect(() => {
     if (!open) return
     const away = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
@@ -26,7 +28,7 @@ export default function ScriptMenu({ files, hostRoot }: Props) {
     <div className={styles.anchor} ref={ref}>
       <button type="button" className={styles.btn} onClick={() => setOpen(o => !o)} aria-expanded={open} data-testid="script-menu" title="Open the script in your editor">Script ▾</button>
       {open && (
-        <div className={`${styles.popover} ${styles.menu}`} style={{ padding: '4px 16px 12px' }}>
+        <div className={`${styles.popover} ${styles.menu}`} data-side={side} style={{ ...style, padding: '4px 16px 12px' }}>
           <div className={styles.group} style={{ padding: '12px 0 0' }}>Open in your editor</div>
           <FileList files={files} hostRoot={hostRoot} />
         </div>

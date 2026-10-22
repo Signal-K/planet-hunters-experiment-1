@@ -172,3 +172,13 @@ test('a new account accepts the shower run with its count recorded at zero', asy
   // A number, not missing: the order counts from this accept.
   expect(state?.player?.orionidsRunBaseline).toBe(0)
 })
+
+// Both screens open by URL, so they can be looked at on the running stack without a save.
+test('the shower run screens open from their dev URLs', async ({ page }) => {
+  test.setTimeout(90_000)
+  await page.setViewportSize(VIEWPORTS.desktop)
+  await page.goto('/game/ui/orionids-shower-debrief')
+  await expect(page.getByTestId('debrief-shower-run')).toBeVisible({ timeout: 30_000 })
+  await page.goto('/game/ui/orionids-shower-mining')
+  await expect(page.getByTestId('mining-order-readout')).toContainText('20 of 20', { timeout: 30_000 })
+})

@@ -17,6 +17,7 @@ Standing rules (short form; details below)
 - No scene titles in UI. One shared HUD on every screen (web `components/game/hub/` + `SyncStatus`, native `App/Screens/SharedHud.swift`), never a per-screen HUD.
 - No orange or green UI colour (user rule, newest wins over older docs). Colours only from CSS variables / `shared/tokens`.
 - PocketBase is the only state store (via the outbox, no direct client writes). The TestFlight workflow was deleted (Liam, 21 Oct); do not upload to TestFlight or recreate the workflow without asking.
+- If there are files that are uncommitted when you do a commit, COMMIT ALL of them. Do not say "this is not my work so I'm not committing it". Do not leave a messy worktree.
 
 Map (where things live)
 

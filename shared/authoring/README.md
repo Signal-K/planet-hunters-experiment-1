@@ -12,6 +12,7 @@ Start the dev stack (`make up`; the first time after pulling this, run `make web
 - **Mission flows** are named sequences in `flows/`; select one from Missions and walk each scripted scene and preset in order.
 - **Data** (in the scene picker): the base world and the missions. Saving recompiles what web and native load.
 - `?follow=1` on the URL makes the Studio jump to whatever scene an agent says it is working in.
+- **Open the script** (every Open in Cursor button, the Script menu and the source view) asks the dev server to open the file at the right line. Cursor's built-in browser will not follow `cursor://` links, and the dev server in Docker cannot launch an app, so a small helper on your machine does it: `make up` starts it (`node scripts/host-opener.mjs status | start | stop`; log in your temp folder as `landnam-host-opener.log`). It listens on `127.0.0.1:3098` only, answers only the Studio's server, and opens only files inside the repo. With the helper off, the button says so and offers Copy path and a plain `cursor://` link, which a normal browser follows. The file opens in the Cursor window you used last.
 
 Native appears beside web for phone sizes once a snapshot exists: `scripts/native-shots.sh hub-phone` renders one from the iOS Simulator (snapshots are phone only today).
 

@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useSyncExternalStore } from 'react'
+import { isSurveyHeld, subscribeSurveyHold } from '@/lib/survey-gating'
 import { SURVEY_DEFS, isSurveyRuntimeEnabled, submitSurveyResponse, trackSurveyShown, onSurveyDismissed, type Survey, type SurveyQuestion } from '@/lib/surveys'
 
 type Responses = Record<string, string | number>
@@ -98,7 +99,10 @@ function OpenQuestion({ question, value, onChange }: { question: SurveyQuestion;
   )
 }
 
-export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
+export default function SurveySheet({ blockWhile: screenBlocked }: { blockWhile?: boolean }) {
+  // An open Base callout holds the card back as well (SSL-649); both mount points get it from here.
+  const calloutHeld = useSyncExternalStore(subscribeSurveyHold, isSurveyHeld, () => false)
+  const blockWhile = !!screenBlocked || calloutHeld
   const [surveyKey, setSurveyKey] = useState<string | null>(null)
   const [survey, setSurvey] = useState<Survey | null>(null)
   const [qIndex, setQIndex] = useState(0)

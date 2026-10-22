@@ -4,6 +4,7 @@ import { resolveFocusScenes } from '@/lib/authoring/studio-model'
 import type { ViewportKey } from '@/lib/authoring/studio-model'
 import { defaultSelection, presetSelection, setValue, toggleThing } from '@/lib/authoring/things'
 import type { Selection } from '@/lib/authoring/things'
+import OpenLinks from './OpenLinks'
 import StudioClient from './StudioClient'
 import type { Target } from './StudioClient'
 import type { View } from './PresetPicker'
@@ -11,7 +12,7 @@ import type { View } from './PresetPicker'
 export const dynamic = 'force-dynamic'
 
 // Scene Studio (dev only): every scene as a script you can see, edit and preview in the real game with no login.
-// Deep links: /game/studio?scene=hub&preset=full-base&vp=ph&tab=things or ?data=world:base-world.
+// Deep links: /game/studio?scene=hub&preset=full-base&vp=ph&tab=objects or ?data=world:base-world.
 export default async function StudioPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   if (!studioEnabled()) redirect('/game')
   const params = await searchParams
@@ -54,9 +55,14 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
   }
 
   const vp: ViewportKey = params.vp === 'ls' || params.vp === 'dk' ? params.vp : 'ph'
-  const tab = params.tab === 'notes' || params.tab === 'script' ? params.tab : params.mode === 'edit' ? 'script' : 'things'
+  const tab = params.tab === 'notes' || params.tab === 'objects' || params.tab === 'project' || params.tab === 'setup'
+    ? params.tab
+    : params.tab === 'script' ? 'project'
+    : params.tab === 'things' ? 'setup'
+    : params.mode === 'edit' ? 'objects'
+    : 'objects'
   const flow = params.flow ? index.flows.find(item => item.id === params.flow) : undefined
   const requestedStep = Math.max(0, Number(params.step ?? '1') - 1)
   const initialFlow = flow ? { id: flow.id, step: Math.min(requestedStep, Math.max(0, flow.steps.length - 1)) } : null
-  return <StudioClient initialIndex={index} initialTarget={target} initialScene={scene} initialData={dataBundle} initialView={view} initialSelection={selection} initialVp={vp} initialTab={tab} initialEditing={params.mode === 'edit' || params.tab === 'objects'} initialFlow={initialFlow} follow={params.follow === '1'} />
+  return <OpenLinks><StudioClient initialIndex={index} initialTarget={target} initialScene={scene} initialData={dataBundle} initialView={view} initialSelection={selection} initialVp={vp} initialTab={tab} initialFlow={initialFlow} follow={params.follow === '1'} /></OpenLinks>
 }

@@ -64,6 +64,18 @@ export interface StudioIndex {
   flows: FlowSummary[]
   data: { kind: 'world' | 'mission'; id: string; title: string; file: string; errors: number }[]
   focus: import('./focus.ts').Focus | null
+  inventory: {
+    counts: {
+      webRoutes: number
+      nativeScreenCases: number
+      authoredSceneScripts: number
+      authoredObjectNodes: number
+      authoredGameObjects: number
+      authoredUiElements: number
+      authoredPrefabInstances: number
+    }
+    gaps: { scenesWithoutObjects: string[] }
+  }
 }
 
 export type StudioRequest =
@@ -84,3 +96,8 @@ export interface CompileSummary {
 export type StudioResponse =
   | { ok: true; before?: string; doc?: DocBundle; compile?: CompileSummary; ref?: string }
   | { ok: false; error: string; stale?: boolean }
+
+/** What `POST /api/dev/studio/open` answers when the page asks for a script to be opened in the editor. */
+export type OpenResponse =
+  | { ok: true; file: string; line?: number; command?: string }
+  | { ok: false; reason: 'bad-request' | 'helper-offline' | 'editor-failed' | 'forbidden' | 'not-found'; message: string }

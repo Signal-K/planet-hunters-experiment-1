@@ -25,6 +25,25 @@ interface Props {
   scriptHref: string | null
 }
 
+interface Run {
+  /** The choice these belong to, or null for things that can be on together. */
+  choice: string | null
+  items: Thing[]
+}
+
+/** Things that are choices of the same kind, side by side, are drawn as one track; every other thing is a key of its own. */
+function runsOf(items: Thing[]): Run[] {
+  const runs: Run[] = []
+  for (const thing of items) {
+    if (thing.range) continue
+    const choice = thing.exclusive ?? null
+    const last = runs.at(-1)
+    if (last && choice !== null && last.choice === choice) last.items.push(thing)
+    else runs.push({ choice, items: [thing] })
+  }
+  return runs
+}
+
 /** Everything that can be in this scene. Bring things in, see them in the real game, and save the combination as a preset. */
 export default function ThingsPanel(p: Props) {
   const [saving, setSaving] = useState(false)
@@ -58,7 +77,7 @@ export default function ThingsPanel(p: Props) {
     <div className={styles.stack} data-testid="things-panel">
       <section className={styles.card}>
         <div className={styles.presetRow}>
-          <strong data-testid="preset-name">{p.title}{p.dirty ? ' (changed)' : ''}</strong>
+          <strong className={styles.presetName} data-state={p.base ? 'preset' : 'other'} data-testid="preset-name">{p.title}{p.dirty ? ' (changed)' : ''}</strong>
           <span className={styles.badges}>
             {p.dirty && p.base && <button type="button" className={styles.btn} onClick={p.onUpdate} data-testid="preset-update">Save changes</button>}
             <button type="button" className={styles.btn} onClick={p.onReset} data-testid="things-reset" title="Back to the preset's things, or the scene's starting point">Reset</button>
@@ -85,13 +104,19 @@ export default function ThingsPanel(p: Props) {
         <div className={styles.things}>
           {groups.map(group => (
             <div key={group.name}>
-              <div className={styles.thingGroup}>{group.name}</div>
+              <div className={styles.thingGroup}>
+                <span>{group.name}</span>
+                {group.items.some(thing => !thing.range && p.selection.on.includes(thing.id)) && <em className={styles.groupMeta}>{group.items.filter(thing => !thing.range && p.selection.on.includes(thing.id)).length} on</em>}
+              </div>
               <div className={styles.thingRow}>
-                {group.items.map(thing => thing.range ? null : (
-                  <button key={thing.id} type="button" className={styles.thing} aria-pressed={p.selection.on.includes(thing.id)} title={thing.note} data-testid={`thing-${thing.id}`} onClick={() => p.onToggle(thing.id)}>
-                    {thing.label}
-                  </button>
-                ))}
+                {runsOf(group.items).map(run => {
+                  const keys = run.items.map(thing => (
+                    <button key={thing.id} type="button" className={styles.thing} aria-pressed={p.selection.on.includes(thing.id)} title={thing.note} data-testid={`thing-${thing.id}`} onClick={() => p.onToggle(thing.id)}>
+                      {thing.label}
+                    </button>
+                  ))
+                  return run.choice ? <div key={run.items[0].id} className={styles.choice} role="group" aria-label={`${group.name}, choose one`}>{keys}</div> : keys
+                })}
               </div>
               {group.items.filter(thing => thing.range).map(thing => {
                 const range = thing.range!

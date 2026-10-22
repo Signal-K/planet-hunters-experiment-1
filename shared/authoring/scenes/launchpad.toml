@@ -119,3 +119,89 @@ instructions = """
 Lift-off. Flames, gantry, and the sky must all match the base (flat steppe, no mountains, no forest). Skip is always in
 reach. After the sequence the flight begins.
 """
+
+# ---------------------------------------------------------------------------------------------------------------
+# Composition. Every visible or interactive part is either a game object or a UI element. The launchpad complex is a
+# reusable prefab instance; its parts remain explicit children so the Studio can reveal and inspect the assembly.
+# ---------------------------------------------------------------------------------------------------------------
+
+[[objects]]
+id = "world"
+kind = "world"
+slot = "world"
+components = ["BaseWorldSimulation", "BaseCamera"]
+
+[[objects]]
+id = "launchpad-complex"
+kind = "group"
+parent = "world"
+prefab = "launchpad"
+components = ["LaunchpadState"]
+note = "Reusable launch complex assembled from the child game objects below."
+
+[[objects]]
+id = "apron"
+kind = "terrain"
+parent = "launchpad-complex"
+asset = "shared/authoring/worlds/base-world.toml"
+note = "Paved ground over flat steppe. Every structure rests on this surface."
+
+[[objects]]
+id = "service-tower"
+kind = "structure"
+parent = "launchpad-complex"
+components = ["LaunchTowerAnimation"]
+
+[[objects]]
+id = "launch-stand"
+kind = "structure"
+parent = "launchpad-complex"
+components = ["LaunchStandState"]
+
+[[objects]]
+id = "support-hangar"
+kind = "structure"
+parent = "launchpad-complex"
+components = ["Clickable"]
+
+[[objects]]
+id = "staged-rocket"
+kind = "vehicle"
+parent = "launchpad-complex"
+components = ["StagedRocket", "LaunchSequence"]
+bindings = { visible = "player.selectedStagedRocketId" }
+
+[[objects]]
+id = "launch-control"
+kind = "instrument"
+parent = "launchpad-complex"
+components = ["MissionLaunchControl"]
+
+[[objects]]
+id = "back-control"
+kind = "button"
+rect = { x = 0.03, y = 0.025, w = 0.22, h = 0.07 }
+label = "Back"
+components = ["Clickable"]
+
+[[objects]]
+id = "mission-selector"
+kind = "panel"
+rect = { x = 0.03, y = 0.11, w = 0.94, h = 0.09 }
+components = ["MissionSelector"]
+bindings = { reads = "missionId" }
+
+[[objects]]
+id = "pad-status"
+kind = "panel"
+rect = { x = 0.12, y = 0.28, w = 0.76, h = 0.16 }
+components = ["LaunchpadStatus"]
+bindings = { reads = "missionId,player.selectedStagedRocketId" }
+
+[[objects]]
+id = "launch-action"
+kind = "button"
+slot = "primaryAction"
+label = "Launch"
+components = ["Clickable", "MissionLaunchAction"]
+bindings = { enabled = "missionId,player.selectedStagedRocketId" }

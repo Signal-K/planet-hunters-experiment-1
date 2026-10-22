@@ -5,6 +5,9 @@ services:
       context: ./web
       target: dev
     pull_policy: never
+    # Warm the Scene Studio's routes once the server is up, whoever started the container (make up, docker restart, a test run).
+    # Next compiles each route on its first request, about 10 seconds on a cold start; this does it before anyone asks.
+    command: ["sh", "-c", "LANDNAM_WEB_URL=http://127.0.0.1:3001 node /repo/scripts/warm-studio.mjs --wait > /tmp/warm-studio.log 2>&1 & exec npm run dev"]
     volumes:
       - ./web:/app
       # The Scene Studio reads and writes shared/authoring and compiles runtime files for web and native.

@@ -1,4 +1,4 @@
-.PHONY: help up follow up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
+.PHONY: help up follow opener warm-studio up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 export LANDNAM_HOST_ROOT := $(CURDIR)
@@ -9,11 +9,15 @@ help:
 	@echo ""
 	@echo "  Dev"
 	@echo "    up             Start frontend + parent-owned PocketBase (:3001 / shared :8090 / landnam :8091)"
+	@echo "                   Also starts the Cursor helper (lets the Studio open scripts in Cursor). The web"
+	@echo "                   container warms the Studio's routes itself every time it starts."
 	@echo "    follow         Start the stack and arm the persistent Cursor live preview"
 	@echo "                   Landnam-only — for a full Star Sailors session (Saily/Atlas too), see up-ecosystem"
 	@echo "    up-ecosystem   Start the full Star Sailors stack via the root ~/Navigation Makefile"
 	@echo "                   (shared, Landnam, Saily, Atlas backends + forge-service) — opt-in, does"
 	@echo "                   not change what plain 'up' starts"
+	@echo "    opener         Run the Cursor helper in the foreground (make up already starts it)"
+	@echo "    warm-studio    Compile the Studio's routes now and print each timing (the container does it at start)"
 	@echo "    pb-up          Start parent-owned shared + Landnam PocketBase only"
 	@echo "    pb-stop        Stop parent-owned shared + Landnam PocketBase only"
 	@echo "    down           Stop the stack"
@@ -45,6 +49,7 @@ help:
 
 up: pb-up
 	$(FRONTEND_COMPOSE) up -d --remove-orphans web
+	@node scripts/host-opener.mjs start || true
 	@echo "Landnam:         http://localhost:3001/game/hub?follow=1"
 	@echo "Scene Studio:    http://localhost:3001/game/studio   (every scene, editable scripts, native beside web, no login)"
 	@echo "Dev mode only. make up unregisters service workers, so it is not offline-PWA proof. Use a production build on a secure origin (see web/app/layout.tsx)."
@@ -70,7 +75,16 @@ reset-dev-data:
 test-reset-dev-data:
 	bash ./scripts/test-reset-dev-data.sh
 
+# The Studio's "Open in Cursor" buttons go through a small helper on this machine (Cursor's browser blocks cursor:// links, and
+# the dev server in Docker cannot launch an app). `make up` starts it in the background; this runs it in the foreground.
+opener:
+	node scripts/host-opener.mjs serve
+
+warm-studio:
+	node scripts/warm-studio.mjs --wait
+
 down:
+	-@node scripts/host-opener.mjs stop
 	$(FRONTEND_COMPOSE) down --remove-orphans
 	$(PARENT_COMPOSE) stop landnam-backend backend
 	@lsof -ti :3001 | xargs kill -9 2>/dev/null && echo "Killed process on :3001" || true

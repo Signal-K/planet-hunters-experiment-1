@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { buildAgentPrompt } from '@/lib/authoring/agent-prompt'
 import type { FeedbackDoc, Pin, Rect, SceneDoc, SceneObject, ScenePreset } from '@/lib/authoring/docs'
 import type { EditOp } from '@/lib/authoring/edit'
@@ -9,11 +10,13 @@ import type { ViewportKey } from '@/lib/authoring/studio-model'
 import type { DataDocBundle, DocBundle, FlowSummary, SceneBundle, StudioIndex } from '@/lib/authoring/studio-types'
 import type { Path } from '@/lib/authoring/toml'
 import Composer from './Composer'
+import DeviceIcon from './DeviceIcon'
 import Inspector from './Inspector'
 import MoreMenu from './MoreMenu'
 import PreviewStage from './PreviewStage'
 import type { StagePin, Tool } from './PreviewStage'
 import PresetPicker from './PresetPicker'
+import ProjectInventory from './ProjectInventory'
 import type { View } from './PresetPicker'
 import ReviewPanel from './ReviewPanel'
 import type { ThreadMessage } from './ReviewPanel'
@@ -30,7 +33,7 @@ import styles from './Studio.module.css'
 
 export type Target = { type: 'scene'; id: string } | { type: 'data'; kind: 'world' | 'mission'; id: string }
 type Theme = 'auto' | 'light' | 'dark'
-type Tab = 'things' | 'notes' | 'script'
+type Tab = 'objects' | 'setup' | 'notes' | 'project'
 
 interface Props {
   initialIndex: StudioIndex
@@ -41,7 +44,6 @@ interface Props {
   initialSelection: Selection
   initialVp: ViewportKey
   initialTab: Tab
-  initialEditing: boolean
   initialFlow: { id: string; step: number } | null
   follow: boolean
 }
@@ -63,7 +65,6 @@ export default function StudioClient(props: Props) {
   const [selection, setSelection] = useState<Selection>(props.initialSelection)
   const [vp, setVp] = useState(props.initialVp)
   const [tab, setTab] = useState<Tab>(props.initialTab)
-  const [editObjects, setEditObjects] = useState(props.initialEditing)
   const [flowState, setFlowState] = useState(props.initialFlow)
   const [tool, setTool] = useState<Tool>('select')
   const [selectedPath, setSelectedPath] = useState<Path>([])
@@ -90,7 +91,7 @@ export default function StudioClient(props: Props) {
   const things = sceneDoc?.things ?? []
   const presets = sceneDoc?.presets ?? []
   const focusScenes = useMemo(() => resolveFocusScenes(index.scenes, index.focus?.scenes ?? []), [index.scenes, index.focus])
-  const editing = editObjects || target.type === 'data'
+  const editing = tab === 'objects' || target.type === 'data'
 
   const say = useCallback((text: string, bad = false) => setStatus({ text, bad, at: Date.now() }), [])
   useEffect(() => {
@@ -126,7 +127,7 @@ export default function StudioClient(props: Props) {
           if (!alive || isUnchanged(next)) return
           setData(next); setScene(null)
           setView(next.previewState ? { kind: 'checkpoint', key: next.previewState } : { kind: 'start' })
-          setTab('script'); setEditObjects(true)
+          setTab('project')
         }
         wanted.current = null
         setSelectedPath([]); setUndoStack([]); setRedoStack([]); setTool('select'); setDraft('')
@@ -153,11 +154,10 @@ export default function StudioClient(props: Props) {
     }
     params.set('vp', vp)
     if (target.type === 'scene') params.set('tab', tab)
-    if (target.type === 'scene' && editObjects) params.set('mode', 'edit')
     if (flowState) { params.set('flow', flowState.id); params.set('step', String(flowState.step + 1)) }
     if (props.follow) params.set('follow', '1')
     window.history.replaceState(null, '', `${window.location.pathname}?${params}`)
-  }, [target, view, selection, vp, tab, editObjects, flowState, props.follow])
+  }, [target, view, selection, vp, tab, flowState, props.follow])
 
   // Pick up edits made in the code editor, and the focus an agent declares.
   useEffect(() => {
@@ -392,8 +392,20 @@ export default function StudioClient(props: Props) {
   const inspector = activeDoc?.value ? <Inspector kind={target.type === 'scene' ? 'scene' : target.kind} schema={target.type === 'scene' ? scene!.schemas.scene : data!.schema} value={activeDoc.value} diagnostics={activeDoc.diagnostics} selectedPath={selectedPath} onSelectPath={setSelectedPath} onOps={(ops, label, select) => edit(activeDoc.file, ops, label, select)} /> : <section className={styles.card}><p className={styles.hint}>This file has a syntax error. Fix it in the source below or in your editor.</p></section>
   const source = <SourceView docs={target.type === 'scene' && scene ? [{ label: 'Scene', doc: scene.scene }, { label: 'Notes file', doc: scene.feedback }] : data ? [{ label: 'File', doc: data.doc }] : []} hostRoot={hostRoot} onJump={jump} />
   const previewRef = useRef<HTMLElement>(null)
+  // The scene fills the first screen above the deck, so it needs the deck's real height: the deck wraps to more rows on a narrow window.
+  const deckRef = useRef<HTMLElement>(null)
+  const [deckH, setDeckH] = useState(56)
+  useEffect(() => {
+    const el = deckRef.current
+    if (!el) return
+    const measure = () => setDeckH(Math.ceil(el.getBoundingClientRect().height))
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
   return (
-    <div className={styles.studio} data-theme={theme} data-testid="studio">
+    <div className={styles.studio} data-theme={theme} data-testid="studio" style={{ '--deck-h': `${deckH}px` } as CSSProperties}>
       {target.type === 'scene' && <section ref={previewRef} className={styles.stageArea} data-testid="studio-preview-area">
           <PreviewStage
             vp={vp} src={src}
@@ -414,21 +426,31 @@ export default function StudioClient(props: Props) {
             onPinClick={i => { setHighlightPin(i); setTab('notes') }}
           />
       </section>}
-      <header className={styles.bar}>
+      <header ref={deckRef} className={styles.bar}>
         <ScenePicker index={index} label={title} currentId={target.type === 'scene' ? target.id : ''} focusIds={focusScenes} open={pickerOpen} onOpen={setPickerOpen} onPickScene={pickScene}
           onPickFlow={pickFlow} onPickData={(kind, id) => { setTarget({ type: 'data', kind, id }); setPickerOpen(false) }} />
         {target.type === 'scene' && <PresetPicker presets={presets} checkpoints={fixtures} view={view} onChange={setFromView} />}
         <span className={styles.seg} role="group" aria-label="Device size">
-          {(Object.keys(VIEWPORTS) as ViewportKey[]).map(k => <button key={k} type="button" aria-pressed={vp === k} onClick={() => setVp(k)} data-testid={`vp-${k}`} title={VIEWPORTS[k].hint}>{k === 'ls' ? 'Wide' : VIEWPORTS[k].label}</button>)}
+          {(Object.keys(VIEWPORTS) as ViewportKey[]).map(k => <button key={k} type="button" aria-pressed={vp === k} aria-label={k === 'ls' ? 'Wide' : VIEWPORTS[k].label} onClick={() => setVp(k)} data-testid={`vp-${k}`} title={VIEWPORTS[k].hint}><DeviceIcon k={k} /><span className={styles.segLabel}>{k === 'ls' ? 'Wide' : VIEWPORTS[k].label}</span></button>)}
         </span>
+        {target.type === 'scene' && <button type="button" className={styles.btn} onClick={() => setBump(value => value + 1)} data-testid="studio-reload">Reload</button>}
+        {target.type === 'scene' && <button type="button" className={`${styles.btn} ${tab === 'objects' ? styles.btnPrimary : ''}`} onClick={() => { setTab('objects'); setTool('select') }} data-testid="header-objects">Objects</button>}
+        <button type="button" className={`${styles.btn} ${tab === 'project' ? styles.btnPrimary : ''}`} onClick={() => setTab('project')} data-testid="header-project">Project</button>
         <span className={styles.barEnd}><ScriptMenu files={scriptFiles} hostRoot={hostRoot} /><MoreMenu theme={theme} onTheme={chooseTheme} showNative={showNative} canNative={vp === 'ph'} onNative={() => setShowNative(n => !n)} openHref={src} /></span>
       </header>
       {flow && flowState && <FlowBar flow={flow} step={flowState.step} onStep={step => pickFlow(flow.id, step)} onClose={() => setFlowState(null)} />}
       <div className={styles.body}>
         <aside className={styles.drawer} data-testid="studio-tools">
-          {target.type === 'scene' && <div className={styles.tabs}><button type="button" className={styles.tab} aria-selected={tab === 'things'} onClick={() => setTab('things')}>Things ({things.length})</button><button type="button" className={styles.tab} aria-selected={tab === 'notes'} onClick={() => setTab('notes')}>Notes {unresolved > 0 && <span className={`${styles.count} ${styles.countWrong}`}>{unresolved}</span>}</button><button type="button" className={styles.tab} aria-selected={tab === 'script'} onClick={() => setTab('script')}>Script</button>{problems > 0 && <button type="button" className={`${styles.chip} ${styles.tabEnd}`} onClick={() => setTab('script')}>{problems} problem{problems === 1 ? '' : 's'}</button>}</div>}
+          {target.type === 'scene' && <div className={styles.tabs} role="tablist" aria-label="Studio workspace">
+            <button type="button" role="tab" className={styles.tab} aria-selected={tab === 'objects'} onClick={() => { setTab('objects'); setTool('select') }}>Objects ({objects.length})</button>
+            <button type="button" role="tab" className={styles.tab} aria-selected={tab === 'setup'} onClick={() => setTab('setup')}>Setup ({things.length})</button>
+            <button type="button" role="tab" className={styles.tab} aria-selected={tab === 'notes'} onClick={() => setTab('notes')}>Notes {unresolved > 0 && <span className={`${styles.count} ${styles.countWrong}`}>{unresolved}</span>}</button>
+            <button type="button" role="tab" className={styles.tab} aria-selected={tab === 'project'} onClick={() => setTab('project')}>Project</button>
+            {problems > 0 && <button type="button" className={`${styles.chip} ${styles.tabEnd}`} onClick={() => setTab('project')}>{problems} problem{problems === 1 ? '' : 's'}</button>}
+          </div>}
           <div className={styles.tabBody}>
-          {target.type === 'scene' && tab === 'things' && <ThingsPanel things={things} title={view.kind === 'preset' ? currentPreset?.name ?? 'Preset' : view.kind === 'custom' ? 'Custom' : view.kind === 'checkpoint' ? 'Game checkpoint' : 'Start'} base={currentPreset} dirty={!!currentPreset && !sameSelection(selection, presetSelection(currentPreset, things), things)} selection={selection} onToggle={setThing} onValue={setThingValue} onReset={() => setFromView(currentPreset ? { kind: 'preset', id: currentPreset.id } : { kind: 'start' })} onSave={savePreset} onUpdate={() => updatePreset()} onInstructions={text => updatePreset(text)} scriptHref={hostRoot ? scriptHref(hostRoot, sceneFile, lineOfId(scene?.scene.text ?? '', 'things', things[0]?.id ?? '')) : null} />}
+          {target.type === 'scene' && tab === 'objects' && inspector}
+          {target.type === 'scene' && tab === 'setup' && <ThingsPanel things={things} title={view.kind === 'preset' ? currentPreset?.name ?? 'Preset' : view.kind === 'custom' ? 'Custom' : view.kind === 'checkpoint' ? 'Game checkpoint' : 'Start'} base={currentPreset} dirty={!!currentPreset && !sameSelection(selection, presetSelection(currentPreset, things), things)} selection={selection} onToggle={setThing} onValue={setThingValue} onReset={() => setFromView(currentPreset ? { kind: 'preset', id: currentPreset.id } : { kind: 'start' })} onSave={savePreset} onUpdate={() => updatePreset()} onInstructions={text => updatePreset(text)} scriptHref={hostRoot ? scriptHref(hostRoot, sceneFile, lineOfId(scene?.scene.text ?? '', 'things', things[0]?.id ?? '')) : null} />}
           {target.type === 'scene' && tab === 'notes' && scene && <><Composer draft={draft} onDraft={setDraft} kind={kind} onKind={setKind} tool={tool} onTool={next => { setTool(next); if (next === 'wrong' || next === 'keep') previewRef.current?.scrollIntoView({ block: 'start' }) }} onAdd={addNote} />
             <ReviewPanel
               sceneId={scene.id}
@@ -441,7 +463,10 @@ export default function StudioClient(props: Props) {
               highlighted={highlightPin}
             />
           </>}
-          {(target.type === 'data' || tab === 'script') && <ScriptPanel files={scriptFiles} hostRoot={hostRoot} notes={scene ? { always: scene.notes.always, next: scene.notes.next } : undefined} onNote={scene ? async (which, text) => { busy.current = true; const result = await send({ action: 'note', scene: scene.id, which, text }); busy.current = false; say(result.ok ? 'Saved.' : result.error, !result.ok) } : undefined} onPromote={scene ? async () => { const result = await send({ action: 'promote', scene: scene.id }); say(result.ok ? 'Moved to rules.' : result.error, !result.ok) } : undefined} editing={target.type === 'data' ? true : editObjects} onEditing={target.type === 'scene' ? value => { setEditObjects(value); setTool('select') } : undefined} problems={problems} inspector={inspector} source={source} />}
+          {(target.type === 'data' || tab === 'project') && <>
+            <ProjectInventory inventory={index.inventory} currentScene={target.type === 'scene' ? target.id : undefined} />
+            <ScriptPanel files={scriptFiles} hostRoot={hostRoot} notes={scene ? { always: scene.notes.always, next: scene.notes.next } : undefined} onNote={scene ? async (which, text) => { busy.current = true; const result = await send({ action: 'note', scene: scene.id, which, text }); busy.current = false; say(result.ok ? 'Saved.' : result.error, !result.ok) } : undefined} onPromote={scene ? async () => { const result = await send({ action: 'promote', scene: scene.id }); say(result.ok ? 'Moved to rules.' : result.error, !result.ok) } : undefined} editing={target.type === 'data'} problems={problems} inspector={inspector} source={source} />
+          </>}
           </div>
         </aside>
       </div>

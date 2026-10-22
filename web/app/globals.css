@@ -1112,7 +1112,8 @@ button { cursor: pointer; }
   right: 16px;
   bottom: calc(var(--ln-nav-h, 72px) + 24px);
   width: min(380px, calc(100% - 32px));
-  max-height: min(440px, calc(100% - 220px));
+  /* The tallest question has six 44px choices, the header and Next: about 470px, so the card shows it whole where the screen allows. */
+  max-height: min(500px, calc(100% - 220px));
   overflow: auto;
   background: var(--ln-panel);
   border: 2px solid var(--ln-cyan-border);
@@ -1124,8 +1125,7 @@ button { cursor: pointer; }
   right: 16px;
   bottom: auto;
   width: min(320px, calc(100% - 32px));
-  /* A four-answer question at 14px text and 44px choices is about 400px tall: show it whole where the screen allows. */
-  max-height: min(460px, calc(100% - 200px));
+  max-height: min(500px, calc(100% - 200px));
 }
 
 .toast-item {

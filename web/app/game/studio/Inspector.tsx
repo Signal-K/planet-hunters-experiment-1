@@ -5,11 +5,12 @@ import type { SceneObject } from '@/lib/authoring/docs'
 import type { EditOp } from '@/lib/authoring/edit'
 import { defaultFor, deref, fieldKind, schemaAt } from '@/lib/authoring/schema-path'
 import type { Schema } from '@/lib/authoring/schema'
-import { buildObjectTree, descendantsOf, uniqueId } from '@/lib/authoring/studio-model'
+import { buildObjectTree, compositionSummary, descendantsOf, objectDomain, uniqueId } from '@/lib/authoring/studio-model'
 import type { ObjectNode } from '@/lib/authoring/studio-model'
 import type { Path } from '@/lib/authoring/toml'
 import type { Diagnostic } from '@/lib/authoring/validate'
 import styles from './Studio.module.css'
+import workbench from './ObjectWorkbench.module.css'
 
 export interface InspectorProps {
   kind: 'scene' | 'world' | 'mission'
@@ -59,7 +60,8 @@ function ObjectRows({ nodes, depth, selected, onSelect }: { nodes: ObjectNode[];
               <span className={styles.caret}>{n.children.length ? '▾' : '·'}</span>
               <span>{n.object.label ?? n.object.id}</span>
               {n.object.status === 'proposed' && <span className={`${styles.tag} ${styles.tagNow}`}>proposed</span>}
-              <span className={styles.nodeKind}>{n.object.kind}</span>
+              {n.object.prefab && <span className={workbench.prefab} title={`Prefab: ${n.object.prefab}`}>{n.object.prefab}</span>}
+              <span className={workbench.domain}>{objectDomain(n.object) === 'ui-element' ? 'UI' : 'Object'}</span>
             </button>
             <ObjectRows nodes={n.children} depth={depth + 1} selected={selected} onSelect={onSelect} />
           </div>
@@ -218,6 +220,7 @@ const HIDE_ROOT = new Set(['objects', 'states', 'format', 'sprites', 'entities',
 export default function Inspector({ kind, schema, value, diagnostics, selectedPath, onSelectPath, onOps }: InspectorProps) {
   const [open, setOpen] = useState<Set<string>>(() => new Set())
   const objects = (Array.isArray(value.objects) ? value.objects : []) as SceneObject[]
+  const composition = compositionSummary(objects)
   const selected = get(value, selectedPath)
   const selectedSchema = schemaAt(schema, selectedPath)
 
@@ -279,9 +282,21 @@ export default function Inspector({ kind, schema, value, diagnostics, selectedPa
   const title = current ? current.label ?? current.id : selectedPath.length ? selectedPath.join(' / ') : kind === 'scene' ? 'Scene' : kind === 'world' ? 'World' : 'Mission'
 
   return (
-    <div className={styles.stack}>
+    <div className={workbench.layout} data-testid="object-workbench">
       <section className={styles.card}>
-        <h3 className={styles.cardTitle}>Objects</h3>
+        <h3 className={styles.cardTitle}>Hierarchy</h3>
+        {kind === 'scene' && <>
+          <div className={workbench.density} data-density={composition.density} data-testid="composition-density">
+            <strong>{composition.density === 'empty' ? 'Scene composition is empty' : `${composition.density[0].toUpperCase()}${composition.density.slice(1)} composition`}</strong>
+            <span>{composition.total} authored node{composition.total === 1 ? '' : 's'}</span>
+          </div>
+          <div className={workbench.summary} aria-label="Scene composition summary">
+            <div className={workbench.metric}><strong>{composition.gameObjects}</strong><span>Game objects</span></div>
+            <div className={workbench.metric}><strong>{composition.uiElements}</strong><span>UI elements</span></div>
+            <div className={workbench.metric}><strong>{composition.prefabs}</strong><span>Prefabs</span></div>
+            <div className={workbench.metric}><strong>{composition.nested}</strong><span>Nested</span></div>
+          </div>
+        </>}
         {hierarchy}
         {kind === 'scene' && (
           <div className={styles.line} style={{ marginTop: 8 }}>

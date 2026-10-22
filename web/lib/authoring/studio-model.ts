@@ -42,6 +42,39 @@ export interface ObjectNode {
   children: ObjectNode[]
 }
 
+export type ObjectDomain = 'game-object' | 'ui-element'
+
+const UI_KINDS = new Set(['ui', 'button', 'panel', 'label', 'marker'])
+
+/** Every authored node belongs to one of the Studio's two domains. */
+export function objectDomain(object: Pick<SceneObject, 'kind'>): ObjectDomain {
+  return UI_KINDS.has(object.kind) ? 'ui-element' : 'game-object'
+}
+
+export interface CompositionSummary {
+  total: number
+  gameObjects: number
+  uiElements: number
+  prefabs: number
+  nested: number
+  density: 'empty' | 'light' | 'composed' | 'dense'
+}
+
+/** A transparent structural density measure: counts authored nodes, without pretending to judge rendered art. */
+export function compositionSummary(objects: SceneObject[]): CompositionSummary {
+  const gameObjects = objects.filter(object => objectDomain(object) === 'game-object').length
+  const uiElements = objects.length - gameObjects
+  const total = objects.length
+  return {
+    total,
+    gameObjects,
+    uiElements,
+    prefabs: objects.filter(object => !!object.prefab).length,
+    nested: objects.filter(object => !!object.parent).length,
+    density: total === 0 ? 'empty' : total < 6 ? 'light' : total < 16 ? 'composed' : 'dense',
+  }
+}
+
 /** The flat `objects` list as a tree, in file order, using `parent`. An object whose parent is missing sits at the top. */
 export function buildObjectTree(objects: SceneObject[]): ObjectNode[] {
   const nodes = objects.map((object, index): ObjectNode => ({ object, index, children: [] }))

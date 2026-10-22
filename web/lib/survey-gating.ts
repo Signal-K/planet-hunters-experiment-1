@@ -18,3 +18,26 @@ export const SURVEY_SAFE_SCREENS: Screen[] = [
 export function isSurveySafeScreen(screen: Screen | string): boolean {
   return (SURVEY_SAFE_SCREENS as string[]).includes(screen)
 }
+
+// SSL-649: a Base callout is a prompt the player has to read, and it is portaled above the survey card, so it can hide the
+// card's Skip. The card waits while any callout is open and comes back when the last one closes.
+const holds = new Set<symbol>()
+const listeners = new Set<() => void>()
+const notify = () => { listeners.forEach(listener => listener()) }
+
+/** Holds surveys back until the returned release function is called. */
+export function holdSurveys(): () => void {
+  const hold = Symbol('survey-hold')
+  holds.add(hold)
+  notify()
+  return () => { if (holds.delete(hold)) notify() }
+}
+
+export function isSurveyHeld(): boolean {
+  return holds.size > 0
+}
+
+export function subscribeSurveyHold(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => { listeners.delete(listener) }
+}

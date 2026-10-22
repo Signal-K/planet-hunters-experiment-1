@@ -21,6 +21,22 @@ const walk = (path, extensions) => {
 }
 
 const productionFiles = files => files.filter(path => !/\.(test|spec)\./.test(path))
+const uiKinds = new Set(['ui', 'button', 'panel', 'label', 'marker'])
+const authoredSceneScripts = walk('shared/authoring/scenes', ['.toml']).map(path => {
+  const source = read(path)
+  const objects = source.split(/^\[\[objects\]\]\s*$/m).slice(1).map(block => ({
+    kind: block.match(/^kind\s*=\s*"([^"]+)"/m)?.[1] ?? 'unknown',
+    prefab: block.match(/^prefab\s*=\s*"([^"]+)"/m)?.[1] ?? null,
+  }))
+  return {
+    id: source.match(/^id\s*=\s*"([^"]+)"/m)?.[1] ?? path.split('/').at(-1)?.replace(/\.toml$/, '') ?? path,
+    path,
+    objects: objects.length,
+    gameObjects: objects.filter(object => !uiKinds.has(object.kind)).length,
+    uiElements: objects.filter(object => uiKinds.has(object.kind)).length,
+    prefabs: objects.filter(object => object.prefab !== null).length,
+  }
+})
 const qa = json('qa/scenes.json')
 const sceneTypes = json('shared/engine/scene-types.json')
 const screenSource = read('web/lib/game-screens.ts')
@@ -60,7 +76,12 @@ const map = {
     nativeScreenCases: nativeCases.length,
     qaScenes: qa.scenes.length,
     authoredSceneFiles: authoredScenes.length,
+    authoredSceneScripts: authoredSceneScripts.length,
     authoringSources: walk('shared/authoring', ['.md', '.toml']).length,
+    authoredObjectNodes: authoredSceneScripts.reduce((total, scene) => total + scene.objects, 0),
+    authoredGameObjects: authoredSceneScripts.reduce((total, scene) => total + scene.gameObjects, 0),
+    authoredUiElements: authoredSceneScripts.reduce((total, scene) => total + scene.uiElements, 0),
+    authoredPrefabInstances: authoredSceneScripts.reduce((total, scene) => total + scene.prefabs, 0),
     webGameComponents: productionFiles(walk('web/components/game', ['.ts', '.tsx'])).length,
     nativeAppComponents: productionFiles([
       ...walk('native/App/Mining', ['.swift']),
@@ -72,7 +93,8 @@ const map = {
     routed: webRoutes.map(route => ({ route, type: routeOwners.find(entry => entry.route === route)?.type ?? null })),
     nativeCases,
     qa: qa.scenes,
-    authored: authoredScenes
+    authored: authoredScenes,
+    scripts: authoredSceneScripts
   },
   components: {
     web: productionFiles(walk('web/components/game', ['.ts', '.tsx'])),
@@ -91,7 +113,8 @@ const map = {
     routesWithoutSceneType: webRoutes.filter(route => !mappedRoutes.has(route)),
     unknownSlots: Object.values(sceneTypes.sceneTypes).flatMap(value => value.slots).filter(slot => !allSlots.has(slot)),
     qaWithoutWebPreset: qa.scenes.filter(scene => !scene.web).map(scene => scene.id),
-    qaWithoutNativeScene: qa.scenes.filter(scene => !scene.native).map(scene => scene.id)
+    qaWithoutNativeScene: qa.scenes.filter(scene => !scene.native).map(scene => scene.id),
+    scenesWithoutObjects: authoredSceneScripts.filter(scene => scene.objects === 0).map(scene => scene.id)
   }
 }
 

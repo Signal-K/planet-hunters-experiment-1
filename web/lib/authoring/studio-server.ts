@@ -106,7 +106,11 @@ export function loadIndex(root: string, context: AuthoringContext): StudioIndex 
       data.push({ kind, id: name.replace(/\.toml$/, ''), title: kind === 'mission' ? `${value.title ?? name} (${value.id ?? ''})` : name.replace(/\.toml$/, ''), file, errors: diagnostics.filter(d => d.severity === 'error').length })
     }
   }
-  return { scenes: listScenes(root, context), flows: listFlows(root, context), data, focus: readFocus(root) }
+  const mapFile = join(root, 'shared/engine/game-map.generated.json')
+  const inventory: StudioIndex['inventory'] = existsSync(mapFile)
+    ? (() => { const map = JSON.parse(readFileSync(mapFile, 'utf8')) as StudioIndex['inventory']; return { counts: map.counts, gaps: map.gaps } })()
+    : { counts: { webRoutes: 0, nativeScreenCases: 0, authoredSceneScripts: 0, authoredObjectNodes: 0, authoredGameObjects: 0, authoredUiElements: 0, authoredPrefabInstances: 0 }, gaps: { scenesWithoutObjects: [] } }
+  return { scenes: listScenes(root, context), flows: listFlows(root, context), data, focus: readFocus(root), inventory }
 }
 
 function listFlows(root: string, context: AuthoringContext): FlowSummary[] {

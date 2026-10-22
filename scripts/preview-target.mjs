@@ -21,6 +21,7 @@ const SCREENS = [
   ['instrumenthub', 'instrument-hub'], ['instrumentviewport', 'instrument-hub'],
   ['refinery', 'refinery'], ['missionboard', 'missions'], ['missions', 'missions'],
   ['galaxy', 'galaxy'], ['targets', 'targets'], ['skills', 'skills'], ['academy', 'academy'],
+  ['shower-run', 'ui/orionids-shower-debrief'],
   ['build', 'build'], ['intro', 'intro'], ['roveryvey', 'rover-survey'], ['surfaceops', 'surface-ops'],
 ]
 

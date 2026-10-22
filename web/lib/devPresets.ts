@@ -1,6 +1,7 @@
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS } from '@/lib/data'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
@@ -171,6 +172,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-surface-ops', label: 'Surface Ops', hint: 'Surface Ops list with site access to buy and settlements. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -659,6 +662,31 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null,
         popup: null,
       }
+
+    // SSL-651: the Orionids shower run with its order filled. 25 caught in all, 5 before this run was accepted.
+    case 'ui-orionids-shower-mining':
+    case 'ui-orionids-shower-debrief': {
+      const home = name === 'ui-orionids-shower-debrief'
+      const haul = { orionid_debris: 19, iron: 2 }
+      return {
+        screen: home ? 'debrief' : 'mining',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          activeMission: { id: ORIONIDS_NIGHT_RUN_ID, label: 'Orionids shower run' },
+          missionPhase: home ? 'debrief' : 'mining',
+          orionidsFragments: { caught: 25, redeemed: 0 },
+          orionidsRunBaseline: 5,
+          stash: home ? haul : {},
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: ORIONIDS_NIGHT_RUN_ID,
+        targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: home ? haul : null,
+        popup: null,
+      }
+    }
 
     case 'ui-market':
       return {

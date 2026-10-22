@@ -62,7 +62,8 @@ interface Frame {
 }
 
 const MIN_FRAME = 250
-const CAPTION_H = 36
+/** What the caption under the frame takes until it has been measured: its gap above, its height and a little slack. */
+const CAPTION_H = 54
 const CORNERS: Corner[] = ['nw', 'ne', 'sw', 'se']
 const pct = (n: number) => `${n * 100}%`
 const place = (r: Rect) => ({ left: pct(r.x), top: pct(r.y), width: pct(r.w), height: pct(r.h) })
@@ -72,6 +73,7 @@ export default function PreviewStage(props: Props) {
   const { vp, src, nativeSrc, showNative, objects, selected, tool, overlayOn, pins } = props
   const { w, h } = VIEWPORTS[vp]
   const areaRef = useRef<HTMLDivElement>(null)
+  const captionRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const [avail, setAvail] = useState({ w: 360, h: 640 })
   const [drag, setDrag] = useState<Drag | null>(null)
@@ -79,16 +81,22 @@ export default function PreviewStage(props: Props) {
   const [nativeOk, setNativeOk] = useState(false)
   const [which, setWhich] = useState<'web' | 'native'>('web')
   const [frames, setFrames] = useState<Frame[]>([])
+  const [slow, setSlow] = useState(false)
   const nextId = useRef(1)
 
-  // The scene gets everything the window leaves: all of its height, and the width of its column.
+  // The scene gets everything the window leaves: all of its height, less the caption as it really is (it wraps when the edit tools show).
   useEffect(() => {
     const el = areaRef.current
     if (!el) return
-    const measure = () => setAvail({ w: el.clientWidth, h: Math.max(160, el.clientHeight - CAPTION_H) })
+    const measure = () => {
+      const caption = captionRef.current
+      const room = caption ? caption.offsetHeight + (parseFloat(getComputedStyle(caption).marginTop) || 0) + 4 : CAPTION_H
+      setAvail({ w: el.clientWidth, h: Math.max(160, el.clientHeight - room) })
+    }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(el)
+    if (captionRef.current) observer.observe(captionRef.current)
     return () => observer.disconnect()
   }, [])
   useEffect(() => setPending(null), [tool, src, vp])
@@ -106,6 +114,14 @@ export default function PreviewStage(props: Props) {
     if (!src) { setFrames([]); return }
     setFrames(current => (current.at(-1)?.src === src ? current : [...current.filter(f => f.ready).slice(-1), { id: nextId.current++, src, ready: false }]))
   }, [src])
+  // The first load after the dev server restarts compiles the scene, which takes a while. Say so rather than show a blank box.
+  useEffect(() => {
+    setSlow(false)
+    if (!src) return
+    const timer = setTimeout(() => setSlow(true), 6000)
+    return () => clearTimeout(timer)
+  }, [src])
+  const live = frames.some(f => f.ready)
   const settle = (id: number, frame: HTMLIFrameElement) => {
     let tries = 0
     const check = () => {
@@ -162,8 +178,8 @@ export default function PreviewStage(props: Props) {
     <div ref={areaRef} className={styles.stage} data-testid="studio-stage">
       <div className={styles.frames}>
         {showWeb && (
-          <div>
-            <div className={styles.frameBox} style={{ width: fw, height: fh }} data-testid="studio-frame-box">
+          <div className={styles.device}>
+            <div className={styles.frameBox} style={{ width: fw, height: fh }} data-vp={vp} data-testid="studio-frame-box">
               {src ? frames.map(frame => (
                 <iframe
                   key={frame.id}
@@ -175,6 +191,12 @@ export default function PreviewStage(props: Props) {
                 />
               )) : (
                 <div className={styles.empty}>This scene has no stage fixture yet, so there is nothing to preview.</div>
+              )}
+              {src && (
+                <div className={styles.boot} data-live={live} data-testid="stage-boot" role="status" aria-hidden={live}>
+                  <i className={styles.bootRing} />
+                  <span className={styles.bootText}>{slow ? 'Still compiling the scene. The first load after a restart takes 10 to 20 seconds.' : 'Starting the game'}</span>
+                </div>
               )}
               <div ref={overlayRef} className={styles.overlay} data-testid="studio-overlay">
                 {overlayOn && objects.map(o => {
@@ -209,14 +231,15 @@ export default function PreviewStage(props: Props) {
           </div>
         )}
         {hasNative && (twoUp || which === 'native') && (
-          <div>
-            <div className={styles.frameBox} style={{ width: fw, height: fh }}>
+          <div className={styles.device}>
+            <div className={styles.frameBox} style={{ width: fw, height: fh }} data-vp={vp}>
               <img src={nativeSrc ?? ''} alt="Native snapshot" data-testid="studio-native-frame" />
             </div>
           </div>
         )}
       </div>
-      <div className={styles.frameCaption} data-testid="stage-caption">
+      <div ref={captionRef} className={styles.frameCaption} data-testid="stage-caption">
+        <i className={styles.led} data-on={live} title={live ? 'The game is running' : 'The game is starting'} />
         <span>{VIEWPORTS[vp].label} {VIEWPORTS[vp].hint} · {Math.round(scale * 100)}%</span>
         {hasNative && !twoUp && (
           <span className={styles.seg} role="group" aria-label="Platform">

@@ -452,7 +452,9 @@ id = "site-pad"
 kind = "structure"
 parent = "building-sites"
 label = "Launchpad"
+prefab = "launchpad"
 components = ["Clickable"]
+note = "A reusable Launchpad prefab. Its child-object composition is declared in launchpad.toml."
 
 [[objects]]
 id = "site-ops"

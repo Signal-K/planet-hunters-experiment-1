@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { StudioIndex } from '@/lib/authoring/studio-types'
 import styles from './Studio.module.css'
+import { usePopoverSide } from './usePopoverSide'
 
 const TYPES: [string, string][] = [['base', 'Base'], ['travel', 'Travel'], ['field', 'Field'], ['build', 'Build'], ['exchange-lab', 'Exchange and lab'], ['menu', 'Menus and records']]
 
@@ -22,10 +23,14 @@ interface Props {
 export default function ScenePicker({ index, label, currentId, focusIds, open, onOpen, onPickScene, onPickFlow, onPickData }: Props) {
   const [q, setQ] = useState('')
   const ref = useRef<HTMLDivElement>(null)
+  const filter = useRef<HTMLInputElement>(null)
+  const { side, style } = usePopoverSide(open, ref)
 
   useEffect(() => {
     if (!open) return
     setQ('')
+    // Focus the search without scrolling the page to it: the menu opens beside the bar, which may be at the bottom of the window.
+    filter.current?.focus({ preventScroll: true })
     const away = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) onOpen(false) }
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onOpen(false) }
     document.addEventListener('mousedown', away)
@@ -42,8 +47,8 @@ export default function ScenePicker({ index, label, currentId, focusIds, open, o
         <strong>{label}</strong> <span className={styles.muted}>▾</span>
       </button>
       {open && (
-        <div className={styles.popover} role="listbox" data-testid="scene-list">
-          <input autoFocus className={styles.input} placeholder="Find a scene or ticket" value={q} onChange={e => setQ(e.target.value)} data-testid="scene-filter"
+        <div className={styles.popover} data-side={side} style={style} role="listbox" data-testid="scene-list">
+          <input ref={filter} className={styles.input} placeholder="Find a scene or ticket" value={q} onChange={e => setQ(e.target.value)} data-testid="scene-filter"
             onKeyDown={e => { if (e.key === 'Enter') { const first = index.scenes.find(s => match([s.id, s.name, ...s.tickets])); if (first) onPickScene(first.id) } }} />
           {index.flows.some(f => match([f.id, f.name, f.summary])) && <div className={styles.group}>Missions</div>}
           {index.flows.filter(f => match([f.id, f.name, f.summary])).map(f => (
