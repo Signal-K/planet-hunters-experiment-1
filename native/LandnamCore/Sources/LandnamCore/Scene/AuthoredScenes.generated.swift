@@ -1299,6 +1299,16 @@ enum AuthoredSceneDeclarations {
             "instruments"
           ],
           "note": "Open the appropriate instrument review."
+        },
+        {
+          "id": "research-calendar",
+          "kind": "collection",
+          "parent": "control-station",
+          "layout": "host",
+          "mechanics": [
+            "instruments"
+          ],
+          "note": "Wall calendar: one stamp per UTC day with a research task done (classification, survey, event), soft streak, and the monthly community bar."
         }
       ]
     },

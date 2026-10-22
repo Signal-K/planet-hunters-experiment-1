@@ -168,6 +168,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-rover-survey', label: 'Rover Survey', hint: 'Starter-rover live TakeOn field — survey before ship-laser extraction', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
+      { key: 'ui-research-calendar-empty', label: 'Research calendar, empty', hint: 'Control Station with no stamps yet', stage: 'free-ops' },
+      { key: 'ui-research-calendar-month-half', label: 'Research calendar, half month', hint: 'Control Station with stamps on most days so far this month', stage: 'free-ops' },
       { key: 'ui-instrument-hub', label: 'Control Station', hint: 'One hub for telescopes and satellites. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -208,6 +210,27 @@ export const SANDBOX_FIXTURES = ['sandbox-hub', 'sandbox-transit'] as const
 export function resolvePreset(name: string): Partial<GameState> | null {
   if (isSandboxName(name)) return resolveSandbox(name, fixture)
   return fixture(name)
+}
+
+function instrumentHubFixture(researchStamps?: Player['researchStamps']): Partial<GameState> {
+  return {
+    screen: 'instrument-hub',
+    player: {
+      ...ASTEROID_DISCOVERY_PLAYER,
+      transitSatelliteLaunchedAt: Date.now() - 86_400_000,
+      transitSatelliteLevel: 1,
+      deepSpaceTelescopeBuilt: true,
+      saturnImagerLaunchedAt: Date.now() - 86_400_000,
+      ...(researchStamps ? { researchStamps } : {}),
+    },
+    tutorial: false,
+    doneSteps: TRAINING_DONE,
+    missionId: null,
+    targetId: null,
+    rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+    lastCargo: null,
+    popup: null,
+  }
 }
 
 function fixture(name: string): Partial<GameState> | null {
@@ -589,24 +612,23 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
-    case 'ui-instrument-hub':
-      return {
-        screen: 'instrument-hub',
-        player: {
-          ...ASTEROID_DISCOVERY_PLAYER,
-          transitSatelliteLaunchedAt: Date.now() - 86_400_000,
-          transitSatelliteLevel: 1,
-          deepSpaceTelescopeBuilt: true,
-          saturnImagerLaunchedAt: Date.now() - 86_400_000,
-        },
-        tutorial: false,
-        doneSteps: TRAINING_DONE,
-        missionId: null,
-        targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null,
-        popup: null,
+    case 'ui-research-calendar-empty':
+      return instrumentHubFixture({})
+
+    case 'ui-research-calendar-month-half': {
+      // Most days of this UTC month up to today, with a second kind on some, so streak, gaps and the dot all show.
+      const today = new Date()
+      const stamps: NonNullable<Player['researchStamps']> = {}
+      for (let day = 1; day <= today.getUTCDate(); day += 1) {
+        if (day % 3 === 0) continue
+        const key = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), day)).toISOString().slice(0, 10)
+        stamps[key] = day % 4 === 0 ? ['classification', 'event'] : ['survey']
       }
+      return instrumentHubFixture(stamps)
+    }
+
+    case 'ui-instrument-hub':
+      return instrumentHubFixture()
 
     case 'ui-saturn-storm-search':
       return {

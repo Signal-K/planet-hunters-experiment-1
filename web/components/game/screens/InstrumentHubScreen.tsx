@@ -13,6 +13,7 @@ import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
 import SurveyScanConsole from '@/components/game/control-station/SurveyScanConsole'
 import type { Target } from '@/lib/data'
+import { ResearchCalendar } from '@/components/game/control-station/ResearchCalendar'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import { skyEventNow } from '@/lib/data/sky-events'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
@@ -86,6 +87,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild
             )}
           </section>
         )}
+        <ResearchCalendar stamps={player.researchStamps} now={now} />
         <SkyBadgeRow badges={player.badges} />
       </div>
     </ScenePanel>

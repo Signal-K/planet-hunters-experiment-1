@@ -6,7 +6,7 @@ id = "instrument-hub"
 type = "exchange-lab"
 name = "Control Station"
 summary = "One hub for investigative equipment, grouped by location. Open hands a ready item to the classify screen."
-tickets = ["SSL-496"]
+tickets = ["SSL-496", "SSL-663"]
 qa = ["control-station"]
 
 [runtime]
@@ -67,3 +67,11 @@ parent = "control-station"
 layout = "host"
 mechanics = ["instruments"]
 note = "Open the appropriate instrument review."
+
+[[objects]]
+id = "research-calendar"
+kind = "collection"
+parent = "control-station"
+layout = "host"
+mechanics = ["instruments"]
+note = "Wall calendar: one stamp per UTC day with a research task done (classification, survey, event), soft streak, and the monthly community bar."
