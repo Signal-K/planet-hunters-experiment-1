@@ -19,10 +19,13 @@
   /* The game's global CSS makes <body> a centring flex box, so the Studio claims the viewport itself. */
   width: 100%;
   align-self: stretch;
-  min-height: 100dvh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   background: var(--bg);
   color: var(--ink);
   font: 14px/1.5 system-ui, -apple-system, sans-serif;
@@ -54,7 +57,8 @@
 
 /* ---- bar ---- */
 .bar {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 20;
   flex: none;
   display: flex;
@@ -170,8 +174,8 @@ textarea.input { height: auto; min-height: 88px; padding: 8px 12px; resize: vert
 .stageArea {
   flex: none;
   width: 100%;
-  height: 100dvh;
-  min-height: 360px;
+  height: calc(100dvh - 56px);
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   padding: 12px clamp(12px, 2vw, 28px);
@@ -332,6 +336,6 @@ textarea.input { height: auto; min-height: 88px; padding: 8px 12px; resize: vert
 .toastBad { background: var(--wrong); color: var(--on-accent); }
 
 @media (max-width: 620px) {
-  .stageArea { height: 100dvh; min-height: 360px; padding: 8px 12px; }
+  .stageArea { height: calc(100dvh - 56px); min-height: 320px; padding: 8px 12px; }
   .select { max-width: 150px; }
 }
