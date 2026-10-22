@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
+import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { ACADEMY_INTRO_MISSION_ID, isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
 import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
@@ -74,13 +75,13 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const target = game.target
   const selectedRocket = rocketModelForConfig(game.rocket)
   const crewStatus = crewRequirementStatus(game.mission.requires.crew, game.player.crew ?? [])
-  const launchReady = validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [] }).ok && (!game.mission.requires.crew || crewStatus.met)
+  const launchReady = validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [], loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)) }).ok && (!game.mission.requires.crew || crewStatus.met)
   const preparing = !selectedVehicle || selectedVehicle.location !== 'launchpad'
   const ownProgram = isOwnProgramMission(game.mission)
 
   return (
     <div data-testid="mission-launch-review" className={styles.builderHost}>
-      <MissionPlanStrip game={game} launched={launchPending} blockedReason={launchReady ? null : (validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [] }).problems[0] ?? crewStatus.reason ?? 'Mission requirements not met')} />
+      <MissionPlanStrip game={game} launched={launchPending} blockedReason={launchReady ? null : (validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [], loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)) }).problems[0] ?? crewStatus.reason ?? 'Mission requirements not met')} />
       <LaunchpadScreen
         onBack={() => game.go(ownProgram ? 'launchpad' : 'missions')}
         onPick={game.onPickMission}

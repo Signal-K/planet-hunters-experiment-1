@@ -17,7 +17,7 @@ struct LaunchReviewScreen: View {
     private var assembly: PadPhase { rolling ? .building : (onPad ? .ready : .design) }
     private var ready: Bool {
         guard let mission = store.mission, let target = store.target else { return false }
-        return store.catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: model), skills: store.player.unlockedSkillNodes).ok
+        return store.catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: model), skills: store.player.unlockedSkillNodes, loadoutBonus: RocketBuilder.loadoutBonus(store.player.shipCustomizerParts)).ok
     }
 
     var body: some View {

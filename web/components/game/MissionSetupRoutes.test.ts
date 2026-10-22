@@ -25,7 +25,7 @@ describe('R1 mission setup', () => {
     const styles = read('./MissionSetupRoutes.module.css')
 
     expect(routes).toContain('LaunchpadScreen')
-    expect(builder).toContain('launchpad-rocket-multistage.png')
+    expect(builder).toContain('LaunchpadPrefab')
     expect(builder).toContain('builderLandscape')
     expect(styles).toContain('.review')
     expect(styles).toContain('.inlineChoices')

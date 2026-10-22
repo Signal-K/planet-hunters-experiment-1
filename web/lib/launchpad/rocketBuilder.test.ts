@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { validateBuild } from '@/lib/data/parts'
+import { MISSIONS, TARGETS } from '@/lib/data'
 import { applyConfirmShipCustomizerBuild } from '@/lib/systems/EconomySystem'
 import type { GameState } from '@/lib/game-types'
 import {
@@ -9,6 +11,7 @@ import {
   installSlot,
   nextPartId,
   partIdForSlot,
+  loadoutBonuses,
   rocketBuilderStats,
   type BuilderLoadout,
 } from './rocketBuilder'
@@ -84,5 +87,22 @@ describe('rocket builder choices', () => {
       for (const part of parts) expect(partEffectLabel(slot, part)).toMatch(/range|capacity|Laser/)
     }
     expect(allPartsForSlot(BUILDER_SLOTS[3]).every(part => part.id.includes('laser'))).toBe(true)
+  })
+})
+
+describe('launch review counts what the builder chips show (SSL-647)', () => {
+  it('a fitted cargo hold lifts the minimum check by the same units the Capacity chip adds', () => {
+    const cargo = BUILDER_SLOTS[2]
+    const best = allPartsForSlot(cargo).at(-1)!
+    const loadout = installSlot({}, cargo, best.id)
+    const bonus = loadoutBonuses(loadout)
+    expect(bonus.capacity).toBe(rocketBuilderStats(rocket, loadout, []).capacity - rocketBuilderStats(rocket, {}, []).capacity)
+    expect(bonus.capacity).toBeGreaterThan(0)
+    const mission = { ...MISSIONS[0], requires: { ...MISSIONS[0].requires, cargo_min: rocketBuilderStats(rocket, loadout, []).capacity } }
+    const target = TARGETS.find(t => t.id === 'mars')!
+    const without = validateBuild({ mission, target, rocket })
+    const withHold = validateBuild({ mission, target, rocket, loadoutBonus: bonus })
+    expect(without.problems.some(p => p.includes('cargo'))).toBe(true)
+    expect(withHold.problems.some(p => p.includes('cargo'))).toBe(false)
   })
 })

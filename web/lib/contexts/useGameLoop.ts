@@ -1,4 +1,5 @@
 import { buildingLevel } from '@/lib/data/building-levels'
+import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
@@ -101,6 +102,7 @@ function stagedRocketSupportsMission(stagedRocket: StagedRocket, state: GameStat
     rocket: stagedRocket.rocket,
     parts: catalog.parts,
     unlockedSkillNodes: state.player.unlockedSkillNodes ?? [],
+    loadoutBonus: loadoutBonuses(asLoadout(state.player.shipCustomizerParts)),
   }).ok
 }
 

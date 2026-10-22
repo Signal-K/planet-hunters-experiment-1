@@ -158,19 +158,31 @@ export function rocketBuilderStats(
   const chassis = parts.chassis.find(part => part.id === rocket.chassis) ?? parts.chassis[0]
   const propulsion = parts.propulsion.find(part => part.id === rocket.propulsion) ?? parts.propulsion[0]
   const drill = parts.drill.find(part => part.id === rocket.drill) ?? parts.drill[0]
-  const engine = partIdForSlot(installed, BUILDER_SLOTS[0])
-  const fuel = partIdForSlot(installed, BUILDER_SLOTS[1])
-  const cargo = partIdForSlot(installed, BUILDER_SLOTS[2])
+  const fitted = loadoutBonuses(installed)
   const laser = partIdForSlot(installed, BUILDER_SLOTS[3])
-  const booster = partIdForSlot(installed, BUILDER_SLOTS[4])
   const laserPart = laser ? customizerPartById(laser) : undefined
   return {
-    capacity: effectiveCargoCapacity(chassis, skills) + Math.floor(bonus(cargo, part => part.successBonus) / 10),
-    range: effectiveMaxOrbit(propulsion, skills)
-      + Math.floor(bonus(engine, part => part.power) / 5)
+    capacity: effectiveCargoCapacity(chassis, skills) + fitted.capacity,
+    range: effectiveMaxOrbit(propulsion, skills) + fitted.range,
+    laser: getLaserChargeCap(skills) + (laserPart ? laserPart.power : (drill.rate ?? 1)),
+  }
+}
+
+/**
+ * What the fitted customizer parts add on top of the chassis and propulsion. The Capacity and Range chips
+ * show chassis + this, and launch review (`validateBuild`) must count the same numbers (SSL-647).
+ */
+export function loadoutBonuses(installed: BuilderLoadout | null | undefined): { capacity: number; range: number } {
+  const fitted = installed ?? {}
+  const engine = partIdForSlot(fitted, BUILDER_SLOTS[0])
+  const fuel = partIdForSlot(fitted, BUILDER_SLOTS[1])
+  const cargo = partIdForSlot(fitted, BUILDER_SLOTS[2])
+  const booster = partIdForSlot(fitted, BUILDER_SLOTS[4])
+  return {
+    capacity: Math.floor(bonus(cargo, part => part.successBonus) / 10),
+    range: Math.floor(bonus(engine, part => part.power) / 5)
       + Math.floor(bonus(fuel, part => part.successBonus) / 7)
       + Math.floor(bonus(booster, part => part.power) / 4),
-    laser: getLaserChargeCap(skills) + (laserPart ? laserPart.power : (drill.rate ?? 1)),
   }
 }
 

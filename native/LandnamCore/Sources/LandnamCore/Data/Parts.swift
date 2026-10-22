@@ -50,15 +50,15 @@ public struct PartCatalog: Sendable {
         return RocketConfig(chassis: hull.id, propulsion: prop.id, drill: drl.id)
     }
 
-    public func validate(mission: Mission, target: Target, rocket: RocketConfig, skills: [String] = []) -> BuildCheck {
+    public func validate(mission: Mission, target: Target, rocket: RocketConfig, skills: [String] = [], loadoutBonus: (capacity: Int, range: Int) = (0, 0)) -> BuildCheck {
         let hull = chassis.first { $0.id == rocket.chassis } ?? chassis[0]
         let prop = propulsion.first { $0.id == rocket.propulsion } ?? propulsion[0]
         let drl = drill.first { $0.id == rocket.drill } ?? drill[0]
         var problems: [String] = []
-        let reach = effectiveMaxOrbit(prop, skills: skills)
+        let reach = effectiveMaxOrbit(prop, skills: skills) + loadoutBonus.range
         if reach < target.orbit { problems.append("Propulsion can only reach Orbit \(reach), mission needs Orbit \(target.orbit)") }
-        let capacity = effectiveCargo(hull, skills: skills)
-        if capacity < mission.requires.cargoMin { problems.append("Chassis cargo (\(capacity)U) below mission minimum (\(mission.requires.cargoMin)U)") }
+        let capacity = effectiveCargo(hull, skills: skills) + loadoutBonus.capacity
+        if capacity < mission.requires.cargoMin { problems.append("Ship cargo (\(capacity)U) below mission minimum (\(mission.requires.cargoMin)U)") }
         if drl.id != "cargo-module-t1" && drl.tier < mission.requires.drillTier {
             problems.append("Drill T\(drl.tier) below mission requirement T\(mission.requires.drillTier)")
         }
