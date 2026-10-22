@@ -89,16 +89,20 @@ test.describe('shower run count', () => {
     await page.getByTestId('dismiss-freeops-mining-explainer').click()
     await page.screenshot({ path: `${OUT}/mining-15-of-20.png` })
   })
+})
 
-  test('twenty catches since accept fill the order', async ({ page }) => {
+for (const [vp, size] of Object.entries(VIEWPORTS)) {
+  test(`twenty catches since accept fill the order at ${vp}`, async ({ page }) => {
+    await page.setViewportSize(size)
     await open(page, seed('mining', { orionidsFragments: { caught: 25, redeemed: 0 }, orionidsRunBaseline: 5 }))
     await expect(page.getByTestId('mining-order-readout')).toContainText('20 of 20', { timeout: 30_000 })
+    expect(await page.evaluate(() => innerWidth)).toBe(size.width)
     await page.getByTestId('mining-gate-sell').click()
     await page.waitForTimeout(1500)
     await page.getByTestId('dismiss-freeops-mining-explainer').click()
-    await page.screenshot({ path: `${OUT}/mining-20-of-20.png` })
+    await page.screenshot({ path: `${OUT}/mining-20-of-20-${vp}.png` })
   })
-})
+}
 
 for (const [vp, size] of Object.entries(VIEWPORTS)) {
   test.describe(`shower run debrief ${vp}`, () => {
@@ -149,4 +153,22 @@ test('a run that is not filled shows no shower card and pays no run francs', asy
   ))
   await expect(page.getByTestId('collect-reward-btn')).toBeVisible({ timeout: 30_000 })
   await expect(page.getByTestId('debrief-shower-run')).toHaveCount(0)
+})
+
+// A real account on the local stack, through the landing entry: the shower run is accepted with the count recorded.
+test('a new account accepts the shower run with its count recorded at zero', async ({ page }) => {
+  test.setTimeout(150_000)
+  await page.setViewportSize(VIEWPORTS.phone)
+  await page.goto('/')
+  await page.getByTestId('landing-orionids').click()
+  await page.getByTestId('auth-gate-quick-account').click()
+  await expect(page.getByTestId('auth-gate-email')).toBeHidden({ timeout: 90_000 })
+  await expect(page.getByTestId('mission-launch-review')).toBeVisible({ timeout: 30_000 })
+  const state = await page.evaluate(() => {
+    const key = Object.keys(localStorage).find(k => k.startsWith('landnam-game-state-v1'))
+    return key ? JSON.parse(localStorage.getItem(key) ?? 'null') : null
+  })
+  expect(state?.missionId).toBe(RUN_ID)
+  // A number, not missing: the order counts from this accept.
+  expect(state?.player?.orionidsRunBaseline).toBe(0)
 })
