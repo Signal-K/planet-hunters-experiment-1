@@ -160,6 +160,7 @@ export const DEV_GROUPS: DevGroup[] = [
     label: 'Recent UI',
     color: '#9b8cf0',
     shots: [
+      { key: 'ui-free-ops-fab', label: 'Free Ops launch', hint: 'Free Ops with no mission opens the launch route and lands on the Mission Board', stage: 'free-ops' },
       { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
       { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
       { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -469,6 +470,9 @@ function fixture(name: string): Partial<GameState> | null {
       }
 
     // ── Recently overhauled UI surfaces ──
+    case 'ui-free-ops-fab':
+      // Free Ops opens the launch route with no mission picked; it must hand over to the Mission Board.
+      return { ...fixture('ui-mission-board'), screen: 'fab' }
     case 'ui-mission-board':
       return {
         screen: 'missions',

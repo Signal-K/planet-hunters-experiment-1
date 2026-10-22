@@ -7,7 +7,6 @@ import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { ACADEMY_INTRO_MISSION_ID, isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
 import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
-import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import { ROLLOUT_MS } from '@/components/game/screens/RocketBuilderScene'
 import MissionBoard from '@/components/game/MissionBoard'
@@ -47,7 +46,13 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
     if (screen === 'fab' && game.mission && game.target && selectedVehicle?.location === 'hangar') onTransferToLaunchpad()
   }, [game.mission, game.target, onTransferToLaunchpad, screen, selectedVehicle?.location])
 
-  if (screen === 'fab' && (!game.mission || !game.target)) return <FreeOpsBuildScreen onBack={() => game.goBack()} onMissions={() => game.go('missions')} onInfrastructure={() => game.go('build')} />
+  // Free Ops has no setup screen of its own: with no mission picked, the launch route sends the player to the Mission Board,
+  // where own-program work and client contracts share the same launch review.
+  const goMissions = game.go
+  const noSetup = screen === 'fab' && (!game.mission || !game.target)
+  useEffect(() => { if (noSetup) goMissions('missions') }, [noSetup, goMissions])
+
+  if (screen === 'fab' && (!game.mission || !game.target)) return null
 
   if (screen === 'missions') {
     return <MissionBoard
