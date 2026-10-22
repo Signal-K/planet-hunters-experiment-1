@@ -157,7 +157,9 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
     }, 800)
   }, [blockWhile, surveyKey, showSurvey])
 
-  if (!survey || !surveyKey) return null
+  // A coach callout or popup that opens after the card is up would sit over it (hiding SKIP), so the card waits.
+  // Its state is kept, and it comes back when the overlay clears.
+  if (!survey || !surveyKey || blockWhile) return null
 
   const question = survey.questions[qIndex]
   const currentValue = question ? responses[question.id] : undefined

@@ -165,6 +165,42 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       }
       const path: string[] = []
 
+      // Two things on a staging page are not the game a player gets. The DEV badge is dev tooling that production turns off,
+      // so it is hidden for the structural checks. A PostHog survey card can appear over any screen: the card's own sizes
+      // are checked, then it is skipped, as a player does.
+      const surveyProblems: string[] = []
+      const sound = async () => {
+        const card = page.getByTestId('survey-sheet')
+        if (await card.isVisible().catch(() => false)) {
+          await shot('survey')
+          surveyProblems.push(...await card.evaluate(el => {
+            const bad: string[] = []
+            for (const b of el.querySelectorAll('button')) {
+              const r = b.getBoundingClientRect()
+              if (r.width < 43.5 || r.height < 43.5) bad.push(`${Math.round(r.width)}x${Math.round(r.height)} button:${(b.textContent ?? '').trim().slice(0, 12)}`)
+            }
+            for (const t of el.querySelectorAll('*')) {
+              const own = [...t.childNodes].some(n => n.nodeType === 3 && (n.textContent ?? '').trim())
+              if (own && parseFloat(getComputedStyle(t).fontSize) < 13.9) bad.push(`${getComputedStyle(t).fontSize} text:${(t.textContent ?? '').trim().slice(0, 12)}`)
+            }
+            // Where the screen has room, every answer shows without scrolling inside the card.
+            if (innerHeight > 600 && el.scrollHeight - el.clientHeight > 1) bad.push(`${el.scrollHeight - el.clientHeight}px of the card is hidden below its edge`)
+            return bad
+          }))
+          // Another overlay can open over the card after it shows (a Base prompt is portaled above the canvas). Not a failure here: recorded.
+          const skipCovered = await card.getByRole('button', { name: 'SKIP' }).evaluate(el => {
+            const r = el.getBoundingClientRect()
+            const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+            return !top || !el.contains(top)
+          })
+          info.annotations.push({ type: 'survey', description: skipCovered ? 'a survey card appeared with Skip covered by another overlay, then was skipped' : 'a survey card appeared and was skipped' })
+          await card.getByRole('button', { name: 'SKIP' }).dispatchEvent('click').catch(() => {})
+          await expect(card).toBeHidden({ timeout: 5000 })
+        }
+        await page.addStyleTag({ content: '[data-testid="dev-shortcuts-toggle"] { display: none !important; }' })
+        await expectSound(page, errors)
+      }
+
       try {
         const sharedAuth = await signUp(page, info, email, password)
         // A window resize can silently no-op, so the real viewport is checked, not assumed.
@@ -176,7 +212,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         await expect(page.getByTestId('building-launchpad')).toBeVisible({ timeout: 20_000 })
         await page.waitForTimeout(1500)
         await shot('base')
-        await expectSound(page, errors)
+        await sound()
         const start = await snap(page)
         expect(start?.francs, 'a new account starts with 9,000,000 francs').toBe(9_000_000)
 
@@ -227,7 +263,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
           path.push('free-ops')
         }
         await shot('launch-review')
-        await expectSound(page, errors)
+        await sound()
         if (await prepare.isVisible()) await prepare.dispatchEvent('click')
         await expect(launch).toBeVisible({ timeout: 20_000 })
         await launch.dispatchEvent('click')
@@ -243,7 +279,8 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         for (;;) {
           if (Date.now() - t0 > 200_000) throw new Error(`the flight did not finish in 200 s. Path: ${path.join(' > ')}`)
           const s = await snap(page)
-          if (s && s.missionsDone >= 1 && s.screen === 'hub') break
+          // The debrief returns to the pad on some paths and to Base on others; both mean the run is over.
+          if (s && s.missionsDone >= 1 && (s.screen === 'hub' || s.screen === 'launchpad')) break
           const screen = s?.screen ?? 'none'
           if (path[path.length - 1] !== screen) path.push(screen)
 
@@ -259,7 +296,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
             if (!shotTransit && await page.getByTestId('transit-screen').isVisible()) {
               shotTransit = true
               await shot('transit')
-              await expectSound(page, errors)
+              await sound()
             }
             await page.waitForTimeout(1000)
             continue
@@ -272,7 +309,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
             const next = page.locator('[data-testid^="delivery-"]:not([data-testid*="pause"]):not([data-testid*="back"])').first()
             if (await next.count()) await next.dispatchEvent('click', undefined, { timeout: 1500 }).catch(() => {})
           } else if (screen === 'debrief') {
-            if (!shotDebrief) { shotDebrief = true; await page.waitForTimeout(1200); await shot('debrief'); await expectSound(page, errors) }
+            if (!shotDebrief) { shotDebrief = true; await page.waitForTimeout(1200); await shot('debrief'); await sound() }
             const next = page.getByRole('button', { name: /^(continue|collect|done|skip|close|deliver|back)/i }).first()
             if (await next.count() && await next.isVisible()) await next.dispatchEvent('click', undefined, { timeout: 1500 }).catch(() => {})
           } else if (screen !== 'hub') {
@@ -283,9 +320,14 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         }
         info.annotations.push({ type: 'path', description: path.join(' > ') })
         expect(toastSeen, 'the Orionid fragment toast showed on the launch').toBe(true)
+        if ((await snap(page))?.screen === 'launchpad') {
+          await tap(page, 'top-bar-back')
+          await expect(page.locator('[data-screen="hub"]')).toBeVisible({ timeout: 20_000 })
+        }
         await page.waitForTimeout(1500)
         await shot('base-after')
-        await expectSound(page, errors)
+        await sound()
+        expect(surveyProblems, 'any survey card that appeared meets the 14px and 44px floors').toEqual([])
 
         const after = await snap(page)
         expect(after?.missionsDone).toBeGreaterThanOrEqual(1)
