@@ -124,7 +124,7 @@ const FABRICATION_PAD_CONSTRUCTION: MissionConstructionPlan = {
 } satisfies MissionConstructionPlan
 
 export const DEFAULT_MISSION_TEMPLATES: MissionTemplate[] = [
-  { id: 'starter-bulk', tag: 'STARTER', difficulty: 'L1', mineralKeys: ['platinum', 'palladium'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, clientRole: 'starter', payoutFormula: 'contract fee + cargo value bonus' },
+  { id: 'starter-bulk', tag: 'STARTER', difficulty: 'L1', mineralKeys: ['platinum', 'palladium'], cargoRange: [4, 6], drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, clientRole: 'starter', payoutFormula: 'contract fee + cargo value bonus' },
   { id: 'volatile-bulk', tag: 'BULK',    difficulty: 'L2', mineralKeys: ['palladium', 'platinum', 'iridium'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.35, clientRole: 'bulk', payoutFormula: 'contract fee + cargo value bonus' },
   { id: 'metal-prospect', tag: 'PROSPECT', difficulty: 'L2', mineralKeys: ['iridium', 'rhodium', 'gold'], cargoRange: [3, 6], drillTierMin: 2, orbitMax: 5, payoutMultiplier: 2.25, clientRole: 'prospect', payoutFormula: 'contract fee + cargo value bonus' },
   { id: 'command-reserve', tag: 'COMMAND', difficulty: 'L3', mineralKeys: ['rhodium', 'rare', 'iridium'], cargoRange: [2, 4], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.5, clientRole: 'command', payoutFormula: 'contract fee + cargo value bonus' },

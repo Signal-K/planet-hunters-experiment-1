@@ -39,6 +39,7 @@ const authoredSceneScripts = walk('shared/authoring/scenes', ['.toml']).map(path
 })
 const qa = json('qa/scenes.json')
 const sceneTypes = json('shared/engine/scene-types.json')
+const compiledSceneGraph = json('shared/engine/authored-scenes.json')
 const screenSource = read('web/lib/game-screens.ts')
 const screenBlock = screenSource.match(/const SCREEN_LIST = \{([\s\S]*?)\n\}/)?.[1] ?? ''
 const webRoutes = [...screenBlock.matchAll(/^\s*(?:'([^']+)'|([a-z][\w-]*)):\s*true,/gm)]
@@ -58,6 +59,16 @@ const authoredScenes = authoredSceneFiles.map(path => {
   return { path, name: data.name, entityCount: data.entities?.length ?? 0, componentTypes: [...componentTypes].sort() }
 })
 
+const filesContaining = (files, pattern) => files.filter(path => pattern.test(read(path)))
+const webRuntimeConsumers = filesContaining(
+  productionFiles(walk('web/components/game', ['.ts', '.tsx'])),
+  /\b(?:authoredScene|resolveScene)\s*\(/,
+)
+const nativeRuntimeConsumers = filesContaining(
+  productionFiles([...walk('native/App/Mining', ['.swift']), ...walk('native/App/Scenes', ['.swift']), ...walk('native/App/Screens', ['.swift'])]),
+  /\bAuthoredSceneGraph\./,
+)
+
 const routeOwners = Object.entries(sceneTypes.sceneTypes).flatMap(([type, value]) =>
   value.routes.map(route => ({ route, type })))
 const mappedRoutes = new Set(routeOwners.map(entry => entry.route))
@@ -69,7 +80,8 @@ const map = {
     routes: 'web/lib/game-screens.ts',
     nativeScreens: 'native/LandnamCore/Sources/LandnamCore/Model/Screen.swift',
     qaScenes: 'qa/scenes.json',
-    sceneTypes: 'shared/engine/scene-types.json'
+    sceneTypes: 'shared/engine/scene-types.json',
+    compiledScenes: 'shared/engine/authored-scenes.json'
   },
   counts: {
     webRoutes: webRoutes.length,
@@ -82,6 +94,10 @@ const map = {
     authoredGameObjects: authoredSceneScripts.reduce((total, scene) => total + scene.gameObjects, 0),
     authoredUiElements: authoredSceneScripts.reduce((total, scene) => total + scene.uiElements, 0),
     authoredPrefabInstances: authoredSceneScripts.reduce((total, scene) => total + scene.prefabs, 0),
+    compiledScenes: compiledSceneGraph.scenes.length,
+    compiledObjectNodes: compiledSceneGraph.scenes.reduce((total, scene) => total + scene.objects.length, 0),
+    webRuntimeSceneConsumers: webRuntimeConsumers.length,
+    nativeRuntimeSceneConsumers: nativeRuntimeConsumers.length,
     webGameComponents: productionFiles(walk('web/components/game', ['.ts', '.tsx'])).length,
     nativeAppComponents: productionFiles([
       ...walk('native/App/Mining', ['.swift']),
@@ -94,7 +110,8 @@ const map = {
     nativeCases,
     qa: qa.scenes,
     authored: authoredScenes,
-    scripts: authoredSceneScripts
+    scripts: authoredSceneScripts,
+    compiled: compiledSceneGraph.scenes
   },
   components: {
     web: productionFiles(walk('web/components/game', ['.ts', '.tsx'])),
@@ -103,6 +120,8 @@ const map = {
       ...walk('native/App/Scenes', ['.swift']),
       ...walk('native/App/Screens', ['.swift'])
     ]).sort(),
+    webSceneConsumers: webRuntimeConsumers,
+    nativeSceneConsumers: nativeRuntimeConsumers,
     sharedData: productionFiles([
       ...walk('shared/layout', ['.json']),
       ...walk('shared/scenes', ['.json']),
@@ -114,7 +133,10 @@ const map = {
     unknownSlots: Object.values(sceneTypes.sceneTypes).flatMap(value => value.slots).filter(slot => !allSlots.has(slot)),
     qaWithoutWebPreset: qa.scenes.filter(scene => !scene.web).map(scene => scene.id),
     qaWithoutNativeScene: qa.scenes.filter(scene => !scene.native).map(scene => scene.id),
-    scenesWithoutObjects: authoredSceneScripts.filter(scene => scene.objects === 0).map(scene => scene.id)
+    scenesWithoutObjects: authoredSceneScripts.filter(scene => scene.objects === 0).map(scene => scene.id),
+    compiledScenesWithoutRuntimeConsumer: compiledSceneGraph.scenes.filter(scene =>
+      scene.objects.length > 0 && webRuntimeConsumers.length === 0 && nativeRuntimeConsumers.length === 0
+    ).map(scene => scene.id)
   }
 }
 

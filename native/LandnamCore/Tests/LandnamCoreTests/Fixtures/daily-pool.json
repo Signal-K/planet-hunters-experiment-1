@@ -8,36 +8,36 @@
    {
     "id": "dcp-2026-10-16-helios-propulsion-depot-0",
     "title": "Palladium starter contract",
-    "brief": "Helios Propulsion Depot needs 5 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "brief": "Helios Propulsion Depot needs 6 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
     "client": "helios-propulsion-depot",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 5,
+    "cargo": 6,
     "drill": 1,
     "orbit": 4,
-    "francs": 25680000,
+    "francs": 26016000,
     "affinity": 11,
     "minerals": {
-     "palladium": 5
+     "palladium": 6
     },
     "construction": null
    },
    {
     "id": "dcp-2026-10-16-helios-propulsion-depot-1",
     "title": "Platinum starter contract",
-    "brief": "Helios Propulsion Depot needs 5 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "brief": "Helios Propulsion Depot needs 4 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
     "client": "helios-propulsion-depot",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 5,
+    "cargo": 4,
     "drill": 1,
     "orbit": 4,
-    "francs": 25680000,
-    "affinity": 11,
+    "francs": 25344000,
+    "affinity": 10,
     "minerals": {
-     "platinum": 5
+     "platinum": 4
     },
     "construction": null
    },
@@ -230,18 +230,18 @@
    {
     "id": "dcp-2026-10-17-helios-propulsion-depot-0",
     "title": "Platinum starter contract",
-    "brief": "Helios Propulsion Depot needs 6 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "brief": "Helios Propulsion Depot needs 4 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
     "client": "helios-propulsion-depot",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 6,
+    "cargo": 4,
     "drill": 1,
     "orbit": 4,
-    "francs": 26016000,
-    "affinity": 11,
+    "francs": 25344000,
+    "affinity": 10,
     "minerals": {
-     "platinum": 6
+     "platinum": 4
     },
     "construction": null
    },
@@ -266,18 +266,18 @@
    {
     "id": "dcp-2026-10-17-helios-propulsion-depot-2",
     "title": "Platinum starter contract",
-    "brief": "Helios Propulsion Depot needs 7 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "brief": "Helios Propulsion Depot needs 4 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
     "client": "helios-propulsion-depot",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 7,
+    "cargo": 4,
     "drill": 1,
     "orbit": 4,
-    "francs": 26352000,
-    "affinity": 12,
+    "francs": 25344000,
+    "affinity": 10,
     "minerals": {
-     "platinum": 7
+     "platinum": 4
     },
     "construction": null
    },
@@ -753,36 +753,36 @@
    {
     "id": "dcp-2026-10-16-helios-propulsion-depot-0",
     "title": "Palladium starter contract",
-    "brief": "Helios Propulsion Depot needs 5 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "brief": "Helios Propulsion Depot needs 6 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
     "client": "helios-propulsion-depot",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 5,
+    "cargo": 6,
     "drill": 1,
     "orbit": 4,
-    "francs": 25680000,
+    "francs": 26016000,
     "affinity": 11,
     "minerals": {
-     "palladium": 5
+     "palladium": 6
     },
     "construction": null
    },
    {
     "id": "dcp-2026-10-16-helios-propulsion-depot-1",
     "title": "Platinum starter contract",
-    "brief": "Helios Propulsion Depot needs 5 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "brief": "Helios Propulsion Depot needs 4 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
     "client": "helios-propulsion-depot",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 5,
+    "cargo": 4,
     "drill": 1,
     "orbit": 4,
-    "francs": 25680000,
-    "affinity": 11,
+    "francs": 25344000,
+    "affinity": 10,
     "minerals": {
-     "platinum": 5
+     "platinum": 4
     },
     "construction": null
    },
@@ -807,25 +807,7 @@
    {
     "id": "dcp-2026-10-16-helios-propulsion-depot-3",
     "title": "Platinum starter contract",
-    "brief": "Helios Propulsion Depot needs 6 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
-    "client": "helios-propulsion-depot",
-    "tag": "STARTER",
-    "difficulty": "L1",
-    "seq": 4,
-    "cargo": 6,
-    "drill": 1,
-    "orbit": 4,
-    "francs": 26016000,
-    "affinity": 11,
-    "minerals": {
-     "platinum": 6
-    },
-    "construction": null
-   },
-   {
-    "id": "dcp-2026-10-16-helios-propulsion-depot-4",
-    "title": "Palladium starter contract",
-    "brief": "Helios Propulsion Depot needs 4 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "brief": "Helios Propulsion Depot needs 4 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
     "client": "helios-propulsion-depot",
     "tag": "STARTER",
     "difficulty": "L1",
@@ -836,7 +818,25 @@
     "francs": 25344000,
     "affinity": 10,
     "minerals": {
-     "palladium": 4
+     "platinum": 4
+    },
+    "construction": null
+   },
+   {
+    "id": "dcp-2026-10-16-helios-propulsion-depot-4",
+    "title": "Palladium starter contract",
+    "brief": "Helios Propulsion Depot needs 6 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "client": "helios-propulsion-depot",
+    "tag": "STARTER",
+    "difficulty": "L1",
+    "seq": 4,
+    "cargo": 6,
+    "drill": 1,
+    "orbit": 4,
+    "francs": 26016000,
+    "affinity": 11,
+    "minerals": {
+     "palladium": 6
     },
     "construction": null
    },
@@ -1347,18 +1347,18 @@
    {
     "id": "dcp-2026-10-16-lumen-research-0",
     "title": "Palladium starter contract",
-    "brief": "Lumen Research needs 5 units of palladium for strategic sample reserve and sensor research. Preferred cargo earns a client premium.",
+    "brief": "Lumen Research needs 6 units of palladium for strategic sample reserve and sensor research. Preferred cargo earns a client premium.",
     "client": "lumen-research",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 5,
+    "cargo": 6,
     "drill": 1,
     "orbit": 4,
-    "francs": 25820000,
+    "francs": 26184000,
     "affinity": 11,
     "minerals": {
-     "palladium": 5
+     "palladium": 6
     },
     "construction": null
    },
@@ -1401,18 +1401,18 @@
    {
     "id": "dcp-2026-10-16-pioneer-works-0",
     "title": "Palladium starter contract",
-    "brief": "Pioneer Works needs 5 units of palladium for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
+    "brief": "Pioneer Works needs 6 units of palladium for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
     "client": "pioneer-works",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 5,
+    "cargo": 6,
     "drill": 1,
     "orbit": 4,
-    "francs": 25680000,
+    "francs": 26016000,
     "affinity": 11,
     "minerals": {
-     "palladium": 5
+     "palladium": 6
     },
     "construction": null
    },
@@ -1545,54 +1545,54 @@
    {
     "id": "dcp-2026-11-03-helios-propulsion-depot-0",
     "title": "Platinum starter contract",
-    "brief": "Helios Propulsion Depot needs 6 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "brief": "Helios Propulsion Depot needs 5 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
     "client": "helios-propulsion-depot",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 6,
+    "cargo": 5,
     "drill": 1,
     "orbit": 4,
-    "francs": 26016000,
+    "francs": 25680000,
     "affinity": 11,
     "minerals": {
-     "platinum": 6
+     "platinum": 5
     },
     "construction": null
    },
    {
     "id": "dcp-2026-11-03-helios-propulsion-depot-1",
     "title": "Palladium starter contract",
-    "brief": "Helios Propulsion Depot needs 6 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "brief": "Helios Propulsion Depot needs 4 units of palladium for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
     "client": "helios-propulsion-depot",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 6,
+    "cargo": 4,
     "drill": 1,
     "orbit": 4,
-    "francs": 26016000,
-    "affinity": 11,
+    "francs": 25344000,
+    "affinity": 10,
     "minerals": {
-     "palladium": 6
+     "palladium": 4
     },
     "construction": null
    },
    {
     "id": "dcp-2026-11-03-helios-propulsion-depot-2",
     "title": "Platinum starter contract",
-    "brief": "Helios Propulsion Depot needs 7 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
+    "brief": "Helios Propulsion Depot needs 5 units of platinum for catalytic thruster components and drive system supply. Preferred cargo earns a client premium.",
     "client": "helios-propulsion-depot",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 7,
+    "cargo": 5,
     "drill": 1,
     "orbit": 4,
-    "francs": 26352000,
-    "affinity": 12,
+    "francs": 25680000,
+    "affinity": 11,
     "minerals": {
-     "platinum": 7
+     "platinum": 5
     },
     "construction": null
    },
@@ -2193,18 +2193,18 @@
    {
     "id": "dcp-2026-11-03-lumen-research-1",
     "title": "Palladium starter contract",
-    "brief": "Lumen Research needs 5 units of palladium for strategic sample reserve and sensor research. Preferred cargo earns a client premium.",
+    "brief": "Lumen Research needs 6 units of palladium for strategic sample reserve and sensor research. Preferred cargo earns a client premium.",
     "client": "lumen-research",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 5,
+    "cargo": 6,
     "drill": 1,
     "orbit": 4,
-    "francs": 25820000,
+    "francs": 26184000,
     "affinity": 11,
     "minerals": {
-     "palladium": 5
+     "palladium": 6
     },
     "construction": null
    },
@@ -2229,18 +2229,18 @@
    {
     "id": "dcp-2026-11-03-pioneer-works-0",
     "title": "Platinum starter contract",
-    "brief": "Pioneer Works needs 5 units of platinum for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
+    "brief": "Pioneer Works needs 4 units of platinum for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
     "client": "pioneer-works",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 5,
+    "cargo": 4,
     "drill": 1,
     "orbit": 4,
-    "francs": 25680000,
-    "affinity": 11,
+    "francs": 25344000,
+    "affinity": 10,
     "minerals": {
-     "platinum": 5
+     "platinum": 4
     },
     "construction": null
    },
@@ -2265,18 +2265,18 @@
    {
     "id": "dcp-2026-11-03-pioneer-works-2",
     "title": "Platinum starter contract",
-    "brief": "Pioneer Works needs 6 units of platinum for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
+    "brief": "Pioneer Works needs 4 units of platinum for base expansion reserves and general frontier supply. Preferred cargo earns a client premium.",
     "client": "pioneer-works",
     "tag": "STARTER",
     "difficulty": "L1",
     "seq": 4,
-    "cargo": 6,
+    "cargo": 4,
     "drill": 1,
     "orbit": 4,
-    "francs": 26016000,
-    "affinity": 11,
+    "francs": 25344000,
+    "affinity": 10,
     "minerals": {
-     "platinum": 6
+     "platinum": 4
     },
     "construction": null
    },

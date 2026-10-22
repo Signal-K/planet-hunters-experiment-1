@@ -24,6 +24,7 @@ export interface Diagnostic {
 }
 
 export interface SceneTypesFile {
+  coordinateSpace?: string
   sharedSlots: Record<string, { x: number; y: number; w: number; h: number; layer: string }>
   sceneTypes: Record<string, { description: string; slots: string[]; routes: string[] }>
 }
