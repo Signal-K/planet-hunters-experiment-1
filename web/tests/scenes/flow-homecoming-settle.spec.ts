@@ -77,8 +77,6 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await open(page, true)
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
       await expect(page.getByTestId('delivery-sheet')).toBeVisible({ timeout: 30_000 })
-      // This page has no backend, so the shared sync chip shows NOT SYNCED at 10px. That is its own defect (SSL-652), not the sheet's.
-      await page.addStyleTag({ content: '[data-testid="sync-chip"] { display: none !important; }' })
       await page.waitForTimeout(800)
       await page.screenshot({ path: info.outputPath(`cargo-home-${vp}.png`) })
       // The sheet's own Settle button must not sit under the Base dock.
