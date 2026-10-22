@@ -20,6 +20,7 @@ import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-ev
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { FIREBALL_2026_BADGE, FIREBALL_SUBJECT_ID, grantFireballCatch } from '@/lib/orionids/fireball'
 import { addCaughtFragments } from '@/lib/orionids/fragments'
+import { showerRunCatches, showerRunFilled, showerRunPayout, withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { queueEventBadge } from '@/lib/orionids/persist'
 import { captureGameEvent } from '@/lib/posthog'
 import { missionResumeScreen } from '@/lib/mission-resume'
@@ -67,6 +68,10 @@ export default function MissionOperationRoutes({
 }: MissionOperationRoutesProps) {
   const debriefCargo = game.deliveredCargo ?? game.lastCargo ?? {}
   const debriefIsFreeHaul = game.mission ? isFreeHaulMission(game.mission, debriefCargo) && !game.player.cargoSettledOffworld : false
+  // SSL-651: a filled shower run pays its francs and keeps the fragments, so the debrief shows both and leaves them out of the sale.
+  const showerRun = game.mission?.id === ORIONIDS_NIGHT_RUN_ID && showerRunFilled(game.player)
+    ? { francs: showerRunPayout(game.player.missionsDone), fragments: showerRunCatches(game.player) }
+    : null
 
   switch (screen) {
     case 'transit':
@@ -225,7 +230,7 @@ export default function MissionOperationRoutes({
           hasEarthStorage={earthStorageBuilt(game.player)}
           initialEarthDisposition={game.player.freeHaulDisposition}
           orionidsBadgeTier={game.player.badges?.['orionids-2026']?.tier ?? null}
-          fragmentCatches={game.player.orionidsFragments?.caught ?? 0}
+          fragmentCatches={showerRunCatches(game.player)}
           cargoCapacity={nightHold}
           fireballCaughtAt={game.player.fireball2026CaughtAt ?? null}
           skyEventLocation={game.player.skyEventLocation}
@@ -353,7 +358,8 @@ export default function MissionOperationRoutes({
           hasEarthStorage={earthStorageBuilt(game.player)}
           storageCapacity={storageCapacity(game.player)}
           storageUsed={storedUnits(game.player.stash)}
-          haulMarketValue={sellQuote(debriefCargo, game.player, debriefIsFreeHaul ? undefined : game.player.lastClient)}
+          haulMarketValue={sellQuote(showerRun ? withoutShowerFragments(debriefCargo) : debriefCargo, game.player, debriefIsFreeHaul ? undefined : game.player.lastClient)}
+          showerRun={showerRun}
           initialDisposition={game.player.freeHaulDisposition}
         />
       )

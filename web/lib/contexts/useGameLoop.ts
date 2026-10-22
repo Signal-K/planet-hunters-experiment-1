@@ -42,6 +42,7 @@ import { completeFlightPlanEvent, currentTrainingTry, earnsTrainingReplayReward,
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 import { ORIONIDS_NIGHT_RUN_ID, orionidsNightRun } from '@/lib/data/missions'
+import { settleShowerRun, showerRunFilled, startShowerRun, withoutShowerFragments } from '@/lib/orionids/shower-run'
 
 // 42s/orbit-unit — a ~65% cut from the original 2min/unit pace (KES-262):
 // full round trips were running long enough that players felt locked out of
@@ -390,13 +391,15 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
             placementPlots: { ...(prepared.player.placementPlots ?? {}), launchpad: 0 },
           }
         : prepared.player
+      // SSL-651: the shower run's 20 fragments count from this accept.
+      const runPlayer = isOrionidsEntry ? startShowerRun(entryPlayer) : entryPlayer
       const base = {
         ...prepared,
         player: {
-          ...entryPlayer,
+          ...runPlayer,
           dailyClientPool,
-          francs: entryPlayer.francs - (mission.jointProject?.playerCost ?? 0),
-          freeHaulDisposition: freeHaulDisposition ?? entryPlayer.freeHaulDisposition,
+          francs: runPlayer.francs - (mission.jointProject?.playerCost ?? 0),
+          freeHaulDisposition: freeHaulDisposition ?? runPlayer.freeHaulDisposition,
         },
       }
       if (mission?.targetId) {
@@ -1172,6 +1175,16 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // market. Runs as its own state step before the payout/ledger update below
     // so the sell revenue is on the balance the main update reads. Client
     // contracts and no-mineral runs are untouched — nothing changes for them.
+    //
+    // SSL-651: a filled Orionids shower run pays its francs and keeps the
+    // fragments as fragments. Read once up front, because settling resets the
+    // count the haul step below would otherwise ask.
+    const showerFilled = current.missionId === ORIONIDS_NIGHT_RUN_ID && showerRunFilled(current.player)
+    if (showerFilled) {
+      setState(s => s.screen !== 'debrief' || s.missionId !== ORIONIDS_NIGHT_RUN_ID
+        ? s
+        : { ...s, player: settleShowerRun(s.player, s.player.missionsDone) })
+    }
     setState(s => {
       if (s.screen !== 'debrief' || !s.missionId || !s.lastCargo) return s
       const m = catalog.missions.find(item => item.id === s.missionId)
@@ -1179,7 +1192,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ?? null
       if (!m || s.player.cargoSettledOffworld || !isFreeHaulMission(m, s.lastCargo)) return s
       const effective = disposition ?? s.player.freeHaulDisposition ?? (earthStorageBuilt(s.player) ? 'store' : 'sell')
-      const settled = applyFreeHaulDisposition(s, s.lastCargo, effective, Date.now())
+      const haul = showerFilled ? withoutShowerFragments(s.lastCargo) : s.lastCargo
+      const settled = applyFreeHaulDisposition(s, haul, effective, Date.now())
       // Clear the pre-mining choice (KES-283) once it's been consumed here, so
       // it never carries over and silently pre-picks the next free haul.
       return settled.player.freeHaulDisposition ? { ...settled, player: { ...settled.player, freeHaulDisposition: undefined } } : settled

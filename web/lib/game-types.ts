@@ -412,6 +412,8 @@ export interface Player {
   meteoriteMastery?: number
   /** Fragments caught during the shower, and how many were redeemed for research. Synced in game_states. */
   orionidsFragments?: { caught: number; redeemed: number } | null
+  /** Ledger `caught` count when the shower run was accepted. The run's order counts catches past it (SSL-651). */
+  orionidsRunBaseline?: number | null
   /** Unix ms when the Atlas looked-up check-in was granted. */
   orionidsLookedUpAt?: number | null
   /** Unix ms when this player caught the 22 Oct 02:00 fireball fragment. */
