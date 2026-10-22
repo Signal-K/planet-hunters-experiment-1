@@ -44,3 +44,45 @@ instructions = """
 The first transit candidate from the telescope the player launched. The light curve fills the screen and the verdict dock
 sits within thumb reach. Every control is at least 44px. Nothing explains itself in a wall of text.
 """
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "light-curve"
+kind = "instrument"
+layout = "host"
+mechanics = ["tess"]
+note = "Real TESS observation plot; not a galaxy travel map."
+
+[[objects]]
+id = "candidate-list"
+kind = "collection"
+parent = "light-curve"
+layout = "host"
+mechanics = ["tess"]
+note = "Available observation subjects."
+
+[[objects]]
+id = "classification-controls"
+kind = "panel"
+parent = "light-curve"
+layout = "host"
+mechanics = ["tess"]
+note = "Transit annotation and verdict submission."
+
+[[objects]]
+id = "observation-detail"
+kind = "panel"
+parent = "light-curve"
+layout = "host"
+mechanics = ["tess"]
+note = "Subject data and context."
+
+[[objects]]
+id = "next-action"
+kind = "button"
+parent = "light-curve"
+layout = "host"
+mechanics = ["tess"]
+note = "Continue through the real instrument feed."

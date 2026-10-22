@@ -7,14 +7,28 @@ export interface Rect {
   h: number
 }
 
+/** Source-backed ownership, deliberately distinct from tested behavior parity. */
+export interface MechanicContract {
+  id: string
+  name: string
+  web: string[]
+  native: string[]
+  note: string
+}
+
 export interface SceneObject {
   id: string
   kind: string
   parent?: string
   slot?: string
   rect?: Rect
+  space?: 'safe-area' | 'parent'
+  layout?: 'host' | 'shared'
+  mechanics?: string[]
+  action?: 'choose-mission'
   prefab?: string
   asset?: string
+  nativeAsset?: string
   components?: string[]
   bindings?: Record<string, unknown>
   label?: string

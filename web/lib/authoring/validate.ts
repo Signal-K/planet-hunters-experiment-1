@@ -7,7 +7,7 @@ import { closest, validateSchema } from './schema.ts'
 import type { Schema } from './schema.ts'
 import { parseToml, spanForPath } from './toml.ts'
 import type { ParsedToml, Path } from './toml.ts'
-import type { FeedbackDoc, FlowDoc, MissionDoc, SceneDoc, SceneObject, WorldDoc, WorldEntity } from './docs.ts'
+import type { FeedbackDoc, FlowDoc, MechanicContract, MissionDoc, SceneDoc, SceneObject, WorldDoc, WorldEntity } from './docs.ts'
 
 export type DocKind = 'world' | 'scene' | 'mission' | 'feedback' | 'flow'
 
@@ -36,6 +36,8 @@ export interface AuthoringContext {
   presets?: ReadonlySet<string>
   /** Field names of the game's own state, so a thing's `state` can be checked. Left out, they are not checked. */
   stateKeys?: { state: ReadonlySet<string>; player: ReadonlySet<string> } | null
+  mechanics?: MechanicContract[]
+  contractDiagnostics?: Diagnostic[]
 }
 
 export const AUTHORING_DIR = 'shared/authoring'
@@ -61,7 +63,33 @@ export function loadContext(root: string, presets?: ReadonlySet<string>): Author
   const sceneTypes = JSON.parse(readFileSync(join(root, 'shared/engine/scene-types.json'), 'utf8')) as SceneTypesFile
   const state = scrapeInterfaceKeys(root, 'GameState')
   const player = scrapeInterfaceKeys(root, 'Player')
-  return { root, sceneTypes, presets, stateKeys: state && player ? { state, player } : null }
+  return { root, sceneTypes, presets, stateKeys: state && player ? { state, player } : null, ...loadMechanics(root) }
+}
+
+function loadMechanics(root: string): Pick<AuthoringContext, 'mechanics' | 'contractDiagnostics'> {
+  const file = 'shared/engine/mechanics.json'
+  if (!existsSync(join(root, file))) return {}
+  const contractDiagnostics: Diagnostic[] = []
+  const report = (message: string) => contractDiagnostics.push({ file, severity: 'error', code: 'mechanic-contract', message, line: 1, column: 1, endLine: 1, endColumn: 1 })
+  try {
+    const data = JSON.parse(readFileSync(join(root, file), 'utf8')) as { mechanics: MechanicContract[] }
+    const schema = JSON.parse(readFileSync(join(root, AUTHORING_DIR, 'schema/mechanics.schema.json'), 'utf8')) as Schema
+    const issues = validateSchema(data, schema)
+    for (const issue of issues) report(`${issue.path.join('.')}: ${issue.message}`)
+    if (issues.length) return { mechanics: [], contractDiagnostics }
+    const ids = new Set<string>()
+    for (const mechanic of data.mechanics) {
+      if (ids.has(mechanic.id)) report(`duplicate mechanic ${mechanic.id}`)
+      ids.add(mechanic.id)
+      for (const path of [...mechanic.web, ...mechanic.native]) {
+        if (path.split('/').includes('..') || !existsSync(join(root, path))) report(`${mechanic.id}: missing or invalid source ${path}`)
+      }
+    }
+    return { mechanics: data.mechanics, contractDiagnostics }
+  } catch (error) {
+    report(`cannot read mechanic contract: ${error instanceof Error ? error.message : String(error)}`)
+    return { mechanics: [], contractDiagnostics }
+  }
 }
 
 /** Every stage fixture key, read from the source of web/lib/devPresets.ts (plain Node cannot import that file). */
@@ -150,6 +178,13 @@ const sceneRules: Rule<SceneDoc> = ({ value, relPath, context, report }) => {
     else index.set(object.id, i)
   })
   objects.forEach((object, i) => {
+    object.mechanics?.forEach((id, j) => {
+      if (!context.mechanics?.some(mechanic => mechanic.id === id)) report(['objects', i, 'mechanics', j], 'mechanic', `unknown mechanic "${id}" in shared/engine/mechanics.json`)
+    })
+    if (object.space === 'parent' && !object.parent) report(['objects', i, 'space'], 'parent-space', 'parent-local geometry requires a parent')
+    if (object.layout === 'shared' && (!object.rect || object.rect.w <= 0 || object.rect.h <= 0)) report(['objects', i, 'layout'], 'shared-geometry', 'shared layout requires a non-empty rectangle')
+    if (object.action && (value.id !== 'launchpad' || object.parent !== 'launchpad-complex' || object.layout !== 'shared')) report(['objects', i, 'action'], 'action-adapter', 'choose-mission requires the shared launchpad prefab adapter')
+    if (object.layout === 'shared' && object.asset && !object.nativeAsset) report(['objects', i, 'nativeAsset'], 'asset-adapter', 'shared art needs a native asset adapter')
     if (object.parent !== undefined) {
       if (!index.has(object.parent)) report(['objects', i, 'parent'], 'parent', `parent "${object.parent}" is not an object in this scene`)
       else if (isOwnAncestor(object, objects, index)) report(['objects', i, 'parent'], 'parent-cycle', `"${object.id}" is its own ancestor`)

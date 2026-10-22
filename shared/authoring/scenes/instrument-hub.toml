@@ -17,3 +17,53 @@ native = ["native/App/Screens/ControlStationScreen.swift"]
 [preview]
 route = "instrument-hub"
 state = "ui-instrument-hub"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "control-station"
+kind = "world"
+layout = "host"
+mechanics = ["instruments"]
+note = "Instrument station scene."
+
+[[objects]]
+id = "instrument-feed"
+kind = "collection"
+parent = "control-station"
+layout = "host"
+mechanics = ["instruments"]
+note = "One signal UI element per unresolved observation."
+
+[[objects]]
+id = "body-selector"
+kind = "panel"
+parent = "control-station"
+layout = "host"
+mechanics = ["instruments"]
+note = "Filter observations by body."
+
+[[objects]]
+id = "survey-console"
+kind = "instrument"
+parent = "control-station"
+layout = "host"
+mechanics = ["instruments"]
+note = "Start and resolve survey scans."
+
+[[objects]]
+id = "survey-charts"
+kind = "collection"
+parent = "control-station"
+layout = "host"
+mechanics = ["instruments"]
+note = "Earned charts and claimable plots."
+
+[[objects]]
+id = "inspect-action"
+kind = "button"
+parent = "control-station"
+layout = "host"
+mechanics = ["instruments"]
+note = "Open the appropriate instrument review."

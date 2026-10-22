@@ -27,8 +27,13 @@ public struct AuthoredSceneObject: Codable, Equatable, Sendable {
     public let parent: String?
     public let slot: String?
     public let rect: SceneRect?
+    public let space: String?
+    public let layout: String?
+    public let mechanics: [String]?
+    public let action: String?
     public let prefab: String?
     public let asset: String?
+    public let nativeAsset: String?
     public let components: [String]?
     public let label: String?
     public let status: String?
@@ -40,6 +45,14 @@ public struct AuthoredScene: Codable, Equatable, Sendable {
     public let route: String
     public let surface: String
     public let objects: [AuthoredSceneObject]
+}
+
+public struct AuthoredMechanic: Codable, Equatable, Sendable {
+    public let id: String
+    public let name: String
+    public let web: [String]
+    public let native: [String]
+    public let note: String
 }
 
 public struct ResolvedSceneObject: Equatable, Sendable {
@@ -64,6 +77,7 @@ private struct AuthoredSceneFile: Codable {
     let coordinateSpace: String
     let slots: [String: SceneSlot]
     let scenes: [AuthoredScene]
+    let mechanics: [AuthoredMechanic]
 }
 
 public enum AuthoredSceneGraph {
@@ -73,13 +87,15 @@ public enum AuthoredSceneGraph {
     }()
 
     public static var scenes: [AuthoredScene] { file.scenes }
+    public static var mechanics: [AuthoredMechanic] { file.mechanics }
     public static func scene(_ id: String) -> AuthoredScene? { file.scenes.first { $0.id == id } }
 
     public static func resolve(
         _ scene: AuthoredScene,
         width: Double,
         height: Double,
-        insets: SceneInsets = SceneInsets()
+        insets: SceneInsets = SceneInsets(),
+        prefabRoot: String? = nil
     ) -> [ResolvedSceneObject] {
         let safe = SceneRect(
             x: insets.left,
@@ -87,20 +103,33 @@ public enum AuthoredSceneGraph {
             w: width - insets.left - insets.right,
             h: height - insets.top - insets.bottom
         )
-        func pixels(_ rect: SceneRect) -> SceneRect {
-            SceneRect(x: safe.x + rect.x * safe.w, y: safe.y + rect.y * safe.h, w: rect.w * safe.w, h: rect.h * safe.h)
+        func pixels(_ rect: SceneRect, in bounds: SceneRect) -> SceneRect {
+            SceneRect(x: bounds.x + rect.x * bounds.w, y: bounds.y + rect.y * bounds.h, w: rect.w * bounds.w, h: rect.h * bounds.h)
+        }
+
+        var ids = Set(scene.objects.map(\.id))
+        if let root = prefabRoot {
+            precondition(ids.contains(root), "Missing prefab root \(root)")
+            ids = [root]
+            var count = 0
+            while count != ids.count {
+                count = ids.count
+                for object in scene.objects where object.parent.map({ ids.contains($0) }) == true { ids.insert(object.id) }
+            }
         }
 
         var resolved: [String: ResolvedSceneObject] = [:]
-        var pending = scene.objects
+        var pending = scene.objects.filter { ids.contains($0.id) }
         while !pending.isEmpty {
             let before = pending.count
             for index in pending.indices.reversed() {
                 let object = pending[index]
                 let parent = object.parent.flatMap { resolved[$0] }
-                if object.parent != nil && parent == nil { continue }
+                let isRoot = object.id == prefabRoot
+                if !isRoot && object.parent != nil && parent == nil { continue }
                 let slot = object.slot.flatMap { file.slots[$0] }
-                let frame = object.rect.map(pixels) ?? slot.map { pixels($0.rect) } ?? parent?.frame ?? safe
+                let bounds = object.space == "parent" ? parent?.frame ?? safe : safe
+                let frame = isRoot ? safe : object.rect.map { pixels($0, in: bounds) } ?? slot.map { pixels($0.rect, in: safe) } ?? parent?.frame ?? safe
                 resolved[object.id] = ResolvedSceneObject(
                     object: object,
                     frame: frame,

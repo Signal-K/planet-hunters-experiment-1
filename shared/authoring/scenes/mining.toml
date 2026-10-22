@@ -18,3 +18,69 @@ engine = ["web/public/game/scenes/mining.scene.json"]
 [preview]
 route = "mining"
 state = "m1-mining"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "mining-field"
+kind = "world"
+layout = "host"
+mechanics = ["laser-mining"]
+note = "Seeded target field; the ship laser remains canonical."
+
+[[objects]]
+id = "mining-ship"
+kind = "vehicle"
+parent = "mining-field"
+layout = "host"
+mechanics = ["laser-mining"]
+note = "Player ship and laser origin."
+
+[[objects]]
+id = "ore-nodes"
+kind = "collection"
+parent = "mining-field"
+layout = "host"
+mechanics = ["laser-mining"]
+note = "Runtime-spawned nodes, one game object per mineral node."
+
+[[objects]]
+id = "laser"
+kind = "instrument"
+parent = "mining-field"
+layout = "host"
+mechanics = ["laser-mining"]
+note = "Pointer-driven beam and extraction."
+
+[[objects]]
+id = "cargo-readout"
+kind = "panel"
+parent = "mining-field"
+layout = "host"
+mechanics = ["laser-mining"]
+note = "Capacity and mined cargo from canonical state."
+
+[[objects]]
+id = "mining-controls"
+kind = "panel"
+parent = "mining-field"
+layout = "host"
+mechanics = ["laser-mining"]
+note = "Charges, tools and extraction controls."
+
+[[objects]]
+id = "return-action"
+kind = "button"
+parent = "mining-field"
+layout = "host"
+mechanics = ["delivery"]
+note = "Finish mining and start the delivery or home leg."
+
+[[objects]]
+id = "training-guide"
+kind = "panel"
+parent = "mining-field"
+layout = "host"
+mechanics = ["training"]
+note = "Optional flight-plan overlay."

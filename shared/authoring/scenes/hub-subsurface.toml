@@ -16,3 +16,45 @@ native = ["native/App/Screens/BaseUnderground.swift"]
 [preview]
 route = "hub-subsurface"
 state = "ui-subsurface"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "underground"
+kind = "world"
+layout = "host"
+mechanics = ["construction"]
+note = "The below-soil deck of the same base."
+
+[[objects]]
+id = "rooms"
+kind = "collection"
+parent = "underground"
+layout = "host"
+mechanics = ["construction"]
+note = "Built storage and service rooms; generated from player state."
+
+[[objects]]
+id = "excavation-sites"
+kind = "collection"
+parent = "underground"
+layout = "host"
+mechanics = ["construction"]
+note = "Available underground room sites."
+
+[[objects]]
+id = "storage-readout"
+kind = "panel"
+parent = "underground"
+layout = "host"
+mechanics = ["delivery"]
+note = "Canonical stash and capacity."
+
+[[objects]]
+id = "return-action"
+kind = "button"
+parent = "underground"
+layout = "host"
+mechanics = ["construction"]
+note = "Return to the surface."

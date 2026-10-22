@@ -17,3 +17,53 @@ native = ["native/App/Screens/RoverFieldScreen.swift", "native/App/Screens/Takeo
 [preview]
 route = "rover-survey"
 state = "ui-rover-survey"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "survey-field"
+kind = "world"
+layout = "host"
+mechanics = ["instruments"]
+note = "Rover field or TakeOn adapter selected by the feature flag."
+
+[[objects]]
+id = "rover"
+kind = "vehicle"
+parent = "survey-field"
+layout = "host"
+mechanics = ["instruments"]
+note = "Surface survey vehicle, separate from laser extraction."
+
+[[objects]]
+id = "survey-markers"
+kind = "collection"
+parent = "survey-field"
+layout = "host"
+mechanics = ["instruments"]
+note = "Field observation targets."
+
+[[objects]]
+id = "drive-controls"
+kind = "panel"
+parent = "survey-field"
+layout = "host"
+mechanics = ["instruments"]
+note = "Movement and interaction commands."
+
+[[objects]]
+id = "survey-result"
+kind = "panel"
+parent = "survey-field"
+layout = "host"
+mechanics = ["instruments"]
+note = "Observation result before returning."
+
+[[objects]]
+id = "complete-action"
+kind = "button"
+parent = "survey-field"
+layout = "host"
+mechanics = ["flight"]
+note = "Complete the survey using the canonical transition."

@@ -10,8 +10,8 @@ qa = ["launchpad"]
 
 [runtime]
 surface = "dom"
-web = ["web/components/game/screens/LaunchpadScreen.tsx"]
-native = ["native/App/Screens/LaunchReview.swift"]
+web = ["web/components/game/screens/LaunchpadScreen.tsx", "web/components/game/LaunchpadPrefab.tsx"]
+native = ["native/App/Screens/LaunchReview.swift", "native/App/Screens/LaunchpadPrefab.swift"]
 
 [preview]
 route = "launchpad"
@@ -143,8 +143,12 @@ note = "Reusable launch complex assembled from the child game objects below."
 id = "apron"
 kind = "terrain"
 parent = "launchpad-complex"
-asset = "shared/authoring/worlds/base-world.toml"
-note = "Paved ground over flat steppe. Every structure rests on this surface."
+layout = "shared"
+space = "parent"
+rect = { x = 0, y = 0, w = 1, h = 1 }
+asset = "web/public/game/assets/base/v7/launchpad/pad-complex.png"
+nativeAsset = "base/v7/launchpad/pad-complex.png"
+note = "Legacy fused pad, tower and hangar sprite. Named subparts below are not yet separate art; do not count them as independent renderers."
 
 [[objects]]
 id = "service-tower"
@@ -168,6 +172,11 @@ components = ["Clickable"]
 id = "staged-rocket"
 kind = "vehicle"
 parent = "launchpad-complex"
+layout = "shared"
+space = "parent"
+rect = { x = 0.2308, y = 0.261, w = 0.1904, h = 0.647 }
+asset = "web/public/art/scenes/launchpad/launchpad-rocket-multistage.png"
+nativeAsset = "scene-launchpad-rocket-multistage"
 components = ["StagedRocket", "LaunchSequence"]
 bindings = { visible = "player.selectedStagedRocketId" }
 
@@ -175,7 +184,22 @@ bindings = { visible = "player.selectedStagedRocketId" }
 id = "launch-control"
 kind = "instrument"
 parent = "launchpad-complex"
+layout = "shared"
+space = "parent"
+rect = { x = 0.13, y = 0, w = 0.11, h = 0.78 }
+action = "choose-mission"
 components = ["MissionLaunchControl"]
+
+[[objects]]
+id = "assembly-scaffold"
+kind = "structure"
+parent = "launchpad-complex"
+layout = "shared"
+space = "parent"
+rect = { x = 0, y = 0, w = 1, h = 1 }
+asset = "web/public/game/assets/base/v7/launchpad/pad-scaffold.png"
+nativeAsset = "base/v7/launchpad/pad-scaffold.png"
+note = "Assembly animation uses the rocket frame for its welding path."
 
 [[objects]]
 id = "back-control"

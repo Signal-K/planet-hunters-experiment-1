@@ -8,7 +8,6 @@ import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import RocketBuilderScene, { type AssemblyPhase } from '@/components/game/screens/RocketBuilderScene'
 import type { BuilderLoadout } from '@/lib/launchpad/rocketBuilder'
-import SceneGraphLayer from '@/components/game/SceneGraphLayer'
 
 interface LaunchpadScreenProps {
   onBack: () => void
@@ -84,7 +83,6 @@ export default function LaunchpadScreen({
       data-testid="launchpad-focus-screen"
       data-game-hydrated={hydrated ? 'true' : 'false'}
     >
-      <SceneGraphLayer sceneId="launchpad" />
       <RocketBuilderScene
         missionTitle={mission?.title ?? player.activeMission?.label ?? null}
         target={target}

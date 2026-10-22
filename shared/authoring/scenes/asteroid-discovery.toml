@@ -17,3 +17,45 @@ native = ["native/App/Screens/AsteroidDiscoveryScreen.swift"]
 [preview]
 route = "asteroid-discovery"
 state = "ui-asteroid-discovery"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "observation-frames"
+kind = "instrument"
+layout = "host"
+mechanics = ["asteroid-review"]
+note = "Real sequential observation imagery."
+
+[[objects]]
+id = "candidate-list"
+kind = "collection"
+parent = "observation-frames"
+layout = "host"
+mechanics = ["asteroid-review"]
+note = "Available review candidates."
+
+[[objects]]
+id = "annotation-layer"
+kind = "collection"
+parent = "observation-frames"
+layout = "host"
+mechanics = ["asteroid-review"]
+note = "Player marks on observation frames."
+
+[[objects]]
+id = "verdict-controls"
+kind = "panel"
+parent = "observation-frames"
+layout = "host"
+mechanics = ["asteroid-review"]
+note = "Submit classification through the instrument feed."
+
+[[objects]]
+id = "next-action"
+kind = "button"
+parent = "observation-frames"
+layout = "host"
+mechanics = ["asteroid-review"]
+note = "Next candidate or return to the station."

@@ -98,6 +98,7 @@ function sceneDeclaration(value: SceneDoc): Record<string, unknown> {
     type: value.type,
     route: value.preview.route,
     surface: value.runtime.surface,
+    runtime: value.runtime,
     objects: value.objects ?? [],
   }
 }
@@ -113,7 +114,7 @@ export interface CompileOptions {
 export function compileAll(options: CompileOptions): CompileResult {
   const { root, write, overlay = {} } = options
   const context: AuthoringContext = loadContext(root, options.presets ?? scrapePresetKeys(root))
-  const diagnostics: Diagnostic[] = []
+  const diagnostics: Diagnostic[] = [...(context.contractDiagnostics ?? [])]
   const valid = new Map<string, unknown>()
   const readText = (relPath: string) => overlay[relPath] ?? readFileSync(join(root, relPath), 'utf8')
 
@@ -160,6 +161,7 @@ export function compileAll(options: CompileOptions): CompileResult {
       version: 1,
       coordinateSpace: context.sceneTypes.coordinateSpace ?? 'normalized-safe-area',
       slots: context.sceneTypes.sharedSlots,
+      mechanics: context.mechanics ?? [],
       scenes: sceneSources.map(source => sceneDeclaration(valid.get(source) as SceneDoc)),
     })
     outputs.push(
@@ -170,6 +172,8 @@ export function compileAll(options: CompileOptions): CompileResult {
   }
 
   const files: CompileResult['files'] = []
+  // A bad scene must never leave web, Swift and the mission/world data on different revisions.
+  if (hasErrors(diagnostics)) return { ok: false, diagnostics, files }
   for (const output of outputs) {
     const abs = join(root, output.path)
     const current = existsSync(abs) ? readFileSync(abs, 'utf8') : null

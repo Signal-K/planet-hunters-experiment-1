@@ -96,3 +96,53 @@ instructions = """
 The launch itself. The background is the base kit: flat steppe, paved apron. No mountains, no forest, no snow. Skip is in
 reach and the flight starts when it ends.
 """
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "launchpad-preview"
+kind = "group"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Launchpad presentation shared with Launchpad and rocket purchase."
+
+[[objects]]
+id = "assembly-rocket"
+kind = "vehicle"
+parent = "launchpad-preview"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Design, building and ready phases."
+
+[[objects]]
+id = "mission-plan"
+kind = "panel"
+parent = "launchpad-preview"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Review the chosen mission and destination."
+
+[[objects]]
+id = "part-choices"
+kind = "collection"
+parent = "launchpad-preview"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Optional fitting UI."
+
+[[objects]]
+id = "build-launch-action"
+kind = "button"
+parent = "launchpad-preview"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Assembly then launch through the real mission transition."
+
+[[objects]]
+id = "free-ops-picker"
+kind = "panel"
+parent = "launchpad-preview"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Web fallback when no mission is selected; native route gating differs."

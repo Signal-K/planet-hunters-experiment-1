@@ -17,3 +17,53 @@ engine = ["web/public/game/scenes/academy.scene.json"]
 [preview]
 route = "academy"
 state = "ui-academy"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "academy"
+kind = "world"
+layout = "host"
+mechanics = ["academy"]
+note = "Academy scene and research station."
+
+[[objects]]
+id = "crew-roster"
+kind = "collection"
+parent = "academy"
+layout = "host"
+mechanics = ["academy"]
+note = "Each crew member has identity, XP and condition."
+
+[[objects]]
+id = "candidate-list"
+kind = "collection"
+parent = "academy"
+layout = "host"
+mechanics = ["academy"]
+note = "Recruitable candidates."
+
+[[objects]]
+id = "training-controls"
+kind = "panel"
+parent = "academy"
+layout = "host"
+mechanics = ["academy"]
+note = "Train or rehire through Academy and Crew systems."
+
+[[objects]]
+id = "funding-controls"
+kind = "panel"
+parent = "academy"
+layout = "host"
+mechanics = ["academy"]
+note = "Enable or disable research funding."
+
+[[objects]]
+id = "research-action"
+kind = "button"
+parent = "academy"
+layout = "host"
+mechanics = ["academy"]
+note = "Apply research through the canonical state transition."

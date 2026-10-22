@@ -16,3 +16,53 @@ native = ["native/App/Screens/MarketScene.swift"]
 [preview]
 route = "market"
 state = "ui-market"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "exchange"
+kind = "world"
+layout = "host"
+mechanics = ["economy"]
+note = "Physical exchange building interior."
+
+[[objects]]
+id = "mineral-stock"
+kind = "collection"
+parent = "exchange"
+layout = "host"
+mechanics = ["economy"]
+note = "One UI entry per tradable mineral."
+
+[[objects]]
+id = "price-readout"
+kind = "panel"
+parent = "exchange"
+layout = "host"
+mechanics = ["economy"]
+note = "Supply-driven prices and dealer spread."
+
+[[objects]]
+id = "trade-controls"
+kind = "panel"
+parent = "exchange"
+layout = "host"
+mechanics = ["economy"]
+note = "Buy/sell through the canonical economy."
+
+[[objects]]
+id = "trade-result"
+kind = "panel"
+parent = "exchange"
+layout = "host"
+mechanics = ["economy"]
+note = "Wallet and inventory changes."
+
+[[objects]]
+id = "treasury-service"
+kind = "group"
+parent = "exchange"
+layout = "host"
+mechanics = ["treasury"]
+note = "Domain ownership only; no native treasury equivalent identified."

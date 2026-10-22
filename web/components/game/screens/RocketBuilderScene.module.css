@@ -236,10 +236,6 @@
 /* The rocket stands on the mount; the mount centre and deck height come from the Blender frame. */
 .rocketSlot {
   position: absolute;
-  left: 32.6%;
-  bottom: 9.2%;
-  height: 64.7%;
-  transform: translateX(-50%);
   pointer-events: none;
 }
 
@@ -247,7 +243,8 @@
   position: static !important;
   display: block;
   height: 100%;
-  width: auto;
+  width: 100%;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 
@@ -255,8 +252,8 @@
 
 .weld {
   position: absolute;
-  left: 32.6%;
-  bottom: 9.2%;
+  left: var(--rocket-center);
+  bottom: var(--rocket-foot);
   width: 28px;
   height: 6px;
   margin-left: -14px;
@@ -291,9 +288,9 @@
 }
 
 @keyframes weld-rise {
-  0%, 100% { opacity: 0; bottom: 9.2%; }
+  0%, 100% { opacity: 0; bottom: var(--rocket-foot); }
   8%, 92% { opacity: 1; }
-  100% { bottom: 73.9%; }
+  100% { bottom: var(--rocket-top); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -306,10 +303,6 @@
 /* A transparent hit area over the gantry: tapping the tower opens the mission board. */
 .gantryHit {
   position: absolute;
-  left: 13%;
-  top: 0;
-  width: 11%;
-  height: 78%;
   min-width: 44px;
   padding: 0;
   border: 0;

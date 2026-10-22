@@ -16,3 +16,45 @@ native = ["native/App/Screens/SkillTreeScreen.swift"]
 [preview]
 route = "skills"
 state = "ui-skill-tree"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "skill-tree"
+kind = "collection"
+layout = "host"
+mechanics = ["progression"]
+note = "Skill nodes and their prerequisite edges."
+
+[[objects]]
+id = "licence"
+kind = "panel"
+parent = "skill-tree"
+layout = "host"
+mechanics = ["progression"]
+note = "Current licence grade and next requirements."
+
+[[objects]]
+id = "skill-detail"
+kind = "panel"
+parent = "skill-tree"
+layout = "host"
+mechanics = ["progression"]
+note = "Selected node costs and effects."
+
+[[objects]]
+id = "unlock-action"
+kind = "button"
+parent = "skill-tree"
+layout = "host"
+mechanics = ["progression"]
+note = "Spend skill points through Progression."
+
+[[objects]]
+id = "upgrade-action"
+kind = "button"
+parent = "skill-tree"
+layout = "host"
+mechanics = ["progression"]
+note = "Upgrade the licence when eligible."

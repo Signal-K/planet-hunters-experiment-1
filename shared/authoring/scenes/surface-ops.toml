@@ -17,3 +17,76 @@ engine = ["web/public/game/scenes/construction-target.scene.json"]
 [preview]
 route = "surface-ops"
 state = "ui-surface-ops"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "surface-world"
+kind = "world"
+layout = "host"
+mechanics = ["surface-logistics"]
+note = "Selected off-world site."
+
+[[objects]]
+id = "settlement-pads"
+kind = "collection"
+parent = "surface-world"
+layout = "host"
+mechanics = ["surface-logistics"]
+note = "Physical launchpad construction sites."
+
+[[objects]]
+id = "settlement-structures"
+kind = "collection"
+parent = "surface-world"
+layout = "host"
+mechanics = ["surface-logistics"]
+note = "Constructed structures and build progress."
+
+[[objects]]
+id = "ferry"
+kind = "vehicle"
+parent = "surface-world"
+layout = "host"
+mechanics = ["surface-logistics"]
+note = "Cargo transport state, retry and reconciliation."
+
+[[objects]]
+id = "logistics-controls"
+kind = "panel"
+parent = "surface-world"
+layout = "host"
+mechanics = ["surface-logistics"]
+note = "Site access, storage, build, dispatch and acknowledge."
+
+[[objects]]
+id = "field-world"
+kind = "world"
+layout = "host"
+mechanics = ["sandbox"]
+note = "Embedded TakeOn field, not a replacement for ship laser mining."
+
+[[objects]]
+id = "field-factory"
+kind = "collection"
+parent = "field-world"
+layout = "host"
+mechanics = ["field-refining"]
+note = "Field-built structures and refinery pipeline; native field adapter pending."
+
+[[objects]]
+id = "site-deeds"
+kind = "panel"
+parent = "surface-world"
+layout = "host"
+mechanics = ["site-rights"]
+note = "Site ownership and leasing domain, not just settlement access."
+
+[[objects]]
+id = "ownership-service"
+kind = "group"
+parent = "surface-world"
+layout = "host"
+mechanics = ["ownership"]
+note = "Transfers of owned entities; no native equivalent identified."

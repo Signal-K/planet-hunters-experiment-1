@@ -5,7 +5,7 @@ format = 1
 id = "intro"
 type = "menu"
 name = "Intro"
-summary = "Cold open and sign-in. The first screen of a new account."
+summary = "Choose the base biome and begin placement after authentication. Sign-in is a host gate, not this scene."
 tickets = ["SSL-451"]
 qa = ["intro"]
 
@@ -17,3 +17,29 @@ native = ["native/App/Screens/BaseRecordScreens.swift"]
 [preview]
 route = "intro"
 state = "m1-intro"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "biome-preview"
+kind = "world"
+layout = "host"
+mechanics = ["world"]
+note = "Selected landing-site environment."
+
+[[objects]]
+id = "biome-picker"
+kind = "panel"
+parent = "biome-preview"
+layout = "host"
+mechanics = ["construction"]
+note = "Choose the base biome before the first placement."
+
+[[objects]]
+id = "begin-action"
+kind = "button"
+parent = "biome-preview"
+layout = "host"
+mechanics = ["training"]
+note = "Continue through the canonical intro transition."

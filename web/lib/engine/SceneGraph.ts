@@ -1,4 +1,5 @@
 import declarations from './authored-scenes.json'
+import type { MechanicContract } from '../authoring/docs'
 
 export interface SceneRect { x: number; y: number; w: number; h: number }
 export interface SceneInsets { top: number; right: number; bottom: number; left: number }
@@ -9,8 +10,13 @@ export interface AuthoredSceneObject {
   parent?: string
   slot?: string
   rect?: SceneRect
+  space?: 'safe-area' | 'parent'
+  layout?: 'host' | 'shared'
+  mechanics?: string[]
+  action?: 'choose-mission'
   prefab?: string
   asset?: string
+  nativeAsset?: string
   components?: string[]
   label?: string
   status?: 'implemented' | 'proposed'
@@ -21,6 +27,7 @@ export interface AuthoredScene {
   type: string
   route: string
   surface: 'canvas' | 'dom'
+  runtime?: { web?: string[]; native?: string[]; engine?: string[] }
   objects: AuthoredSceneObject[]
 }
 
@@ -35,6 +42,7 @@ interface AuthoredSceneFile {
   coordinateSpace: string
   slots: Record<string, SceneRect & { layer: string }>
   scenes: AuthoredScene[]
+  mechanics: MechanicContract[]
 }
 
 const file = declarations as AuthoredSceneFile
@@ -59,11 +67,11 @@ export function resolveScene(
     w: width - (insets.left ?? 0) - (insets.right ?? 0),
     h: height - (insets.top ?? 0) - (insets.bottom ?? 0),
   }
-  const pixels = (rect: SceneRect): SceneRect => ({
-    x: safe.x + rect.x * safe.w,
-    y: safe.y + rect.y * safe.h,
-    w: rect.w * safe.w,
-    h: rect.h * safe.h,
+  const pixels = (rect: SceneRect, bounds = safe): SceneRect => ({
+    x: bounds.x + rect.x * bounds.w,
+    y: bounds.y + rect.y * bounds.h,
+    w: rect.w * bounds.w,
+    h: rect.h * bounds.h,
   })
   const resolved = new Map<string, ResolvedSceneObject>()
   const pending = [...scene.objects]
@@ -74,7 +82,7 @@ export function resolveScene(
       const parent = object.parent ? resolved.get(object.parent) : undefined
       if (object.parent && !parent) continue
       const slot = object.slot ? file.slots[object.slot] : undefined
-      const frame = object.rect ? pixels(object.rect) : slot ? pixels(slot) : parent?.frame ?? safe
+      const frame = object.rect ? pixels(object.rect, object.space === 'parent' ? parent?.frame : safe) : slot ? pixels(slot) : parent?.frame ?? safe
       resolved.set(object.id, {
         ...object,
         frame,
@@ -86,4 +94,19 @@ export function resolveScene(
     if (pending.length === before) throw new Error(`Scene ${scene.id} contains an unresolved object hierarchy`)
   }
   return scene.objects.map(object => resolved.get(object.id)!)
+}
+
+/** A prefab is a named subtree, resolved in its host's local bounds, not the screen's. */
+export function resolvePrefab(scene: AuthoredScene, rootId: string, width: number, height: number): ResolvedSceneObject[] {
+  const root = scene.objects.find(object => object.id === rootId)
+  if (!root) throw new Error(`Scene ${scene.id} has no prefab root ${rootId}`)
+  const ids = new Set([rootId])
+  let count = 0
+  while (count !== ids.size) {
+    count = ids.size
+    for (const object of scene.objects) if (object.parent && ids.has(object.parent)) ids.add(object.id)
+  }
+  return resolveScene({ ...scene, objects: scene.objects.filter(object => ids.has(object.id)).map(object =>
+    object.id === rootId ? { ...object, parent: undefined, slot: undefined, rect: { x: 0, y: 0, w: 1, h: 1 } } : object,
+  ) }, width, height)
 }

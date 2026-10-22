@@ -37,7 +37,7 @@ async function open(page: Page, route: string) {
 
 for (const [vp, size] of Object.entries(VIEWPORTS)) {
   for (const state of ['NOT SYNCED', 'OFFLINE'] as const) {
-    for (const route of ['/game/hub', '/game/missions']) {
+    for (const route of ['/game/hub', '/game/missions', '/game/launchpad', '/game/transit', '/game/landing', '/game/delivery']) {
       test(`OPS strip clears every top chip with the sync chip at ${state} (${vp}, ${route})`, async ({}, info) => {
         test.setTimeout(120_000)
         const browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })

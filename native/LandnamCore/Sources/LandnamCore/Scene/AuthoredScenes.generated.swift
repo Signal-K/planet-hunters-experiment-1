@@ -50,12 +50,319 @@ enum AuthoredSceneDeclarations {
       "layer": "overlay"
     }
   },
+  "mechanics": [
+    {
+      "id": "world",
+      "name": "World simulation and sky calendar",
+      "web": [
+        "web/lib/world/world-sim.ts",
+        "web/lib/world/sky-calendar.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/World/WorldSim.swift",
+        "native/LandnamCore/Sources/LandnamCore/World/SkyCalendar.swift"
+      ],
+      "note": "Same world source; render adapters still host-owned."
+    },
+    {
+      "id": "construction",
+      "name": "Base construction and upgrades",
+      "web": [
+        "web/lib/systems/ConstructionSystem.ts",
+        "web/lib/systems/HubConstructionSystem.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Industry/Construction.swift",
+        "native/LandnamCore/Sources/LandnamCore/Industry/BuildingLevels.swift"
+      ],
+      "note": "Fixed-site placement and underground rooms; compare unlocks and costs before migration."
+    },
+    {
+      "id": "mission-planning",
+      "name": "Contracts, Free Ops and mission lifecycle",
+      "web": [
+        "web/lib/systems/MissionRunLifecycle.ts",
+        "web/lib/data/mission-generator.ts",
+        "web/lib/data/daily-client-missions.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Systems/MissionBoard.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Loop.swift",
+        "native/LandnamCore/Sources/LandnamCore/Data/MissionGenerator.swift",
+        "native/LandnamCore/Sources/LandnamCore/Data/DailyClientMissions.swift"
+      ],
+      "note": "Canonical mission state and optional client contracts; no editor-only mission store."
+    },
+    {
+      "id": "rocket-assembly",
+      "name": "Rocket assembly and loadout",
+      "web": [
+        "web/lib/launchpad/rocketBuilder.ts",
+        "web/lib/data/shipCustomizer.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Systems/RocketBuilder.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Loop.swift"
+      ],
+      "note": "Purchasing, fitting and launch stay behind existing state transitions. Shared prefab geometry is consumed on both hosts."
+    },
+    {
+      "id": "flight",
+      "name": "Flight and return-leg transitions",
+      "web": [
+        "web/lib/mission-flow.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Systems/Loop.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
+      ],
+      "note": "Physical travel, separate from transit photometry. Use persisted timestamps."
+    },
+    {
+      "id": "landing",
+      "name": "Landing and redocking",
+      "web": [
+        "web/lib/systems/LandingSystem.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
+      ],
+      "note": "Native landing route currently renders MiningScreen, not the web landing sequence."
+    },
+    {
+      "id": "laser-mining",
+      "name": "Laser mining, charges and cargo",
+      "web": [
+        "web/lib/systems/MiningSystem.ts",
+        "web/lib/systems/mining-charges.ts",
+        "web/lib/engine/scripts/MiningController.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Mining/MiningField.swift",
+        "native/LandnamCore/Sources/LandnamCore/Mining/Prospecting.swift"
+      ],
+      "note": "Canonical ship laser; not the rover or field engine."
+    },
+    {
+      "id": "delivery",
+      "name": "Delivery unloading and home cargo settlement",
+      "web": [
+        "web/lib/systems/DeliverySystem.ts",
+        "web/lib/systems/HomeDeliverySystem.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/HomeDelivery.swift"
+      ],
+      "note": "Separate destination unload, return leg and home cargo allocation. Settlement must be idempotent."
+    },
+    {
+      "id": "economy",
+      "name": "Market, daily economy and refinery jobs",
+      "web": [
+        "web/lib/systems/EconomySystem.ts",
+        "web/lib/systems/DailyEconomySystem.ts",
+        "web/lib/systems/MarketplaceSystem.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Systems/Market.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Marketplace.swift",
+        "native/LandnamCore/Sources/LandnamCore/Industry/Refinery.swift",
+        "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift"
+      ],
+      "note": "Refinery has native domain code but no native route or screen. Daily economy needs command-trace comparison."
+    },
+    {
+      "id": "progression",
+      "name": "Skills, licences and XP",
+      "web": [
+        "web/lib/systems/ProgressionSystem.ts",
+        "web/lib/systems/XPSystem.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Systems/Progression.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Milestones.swift"
+      ],
+      "note": "XP source and native progression differ in granularity; source mapping is not behavior parity."
+    },
+    {
+      "id": "training",
+      "name": "Optional flight-plan training",
+      "web": [
+        "web/lib/systems/FlightPlanSystem.ts",
+        "web/lib/systems/AgencyOnboardingSystem.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Systems/FlightPlan.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
+      ],
+      "note": "Training does not gate Free Ops. Replay rewards use the same completion transitions."
+    },
+    {
+      "id": "academy",
+      "name": "Academy, staff and crew",
+      "web": [
+        "web/lib/systems/AcademySystem.ts",
+        "web/lib/systems/CrewSystem.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Industry/Academy.swift"
+      ],
+      "note": "Roster and training ownership. Crew never increases citizen-science yield."
+    },
+    {
+      "id": "surface-logistics",
+      "name": "Off-world sites, construction and ferries",
+      "web": [
+        "web/lib/systems/SurfaceOpsSystem.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Industry/SurfaceOps.swift",
+        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
+      ],
+      "note": "Native settlement logistics exists; embedded field factory and biosphere commands need separate adapters."
+    },
+    {
+      "id": "field-refining",
+      "name": "Field refinery pipeline",
+      "web": [
+        "web/lib/systems/OffworldRefinerySystem.ts"
+      ],
+      "native": [],
+      "note": "No equivalent native field refinery adapter identified; base Refinery is a different mechanic."
+    },
+    {
+      "id": "ownership",
+      "name": "Ownership transfers",
+      "web": [
+        "web/lib/systems/OwnershipSystem.ts"
+      ],
+      "native": [],
+      "note": "No equivalent native transfer domain identified."
+    },
+    {
+      "id": "site-rights",
+      "name": "Site purchases and leases",
+      "web": [
+        "web/lib/systems/SiteRightsSystem.ts"
+      ],
+      "native": [],
+      "note": "Native SurfaceOps site access is not the full lease/deed model."
+    },
+    {
+      "id": "treasury",
+      "name": "Treasury ledger, science rewards and loans",
+      "web": [
+        "web/lib/systems/TreasurySystem.ts"
+      ],
+      "native": [],
+      "note": "No equivalent native treasury ledger or loan implementation identified."
+    },
+    {
+      "id": "sandbox",
+      "name": "Field sandbox rules",
+      "web": [
+        "web/lib/systems/SandboxSystem.ts"
+      ],
+      "native": [],
+      "note": "Do not confuse field sandbox domain rules with Studio preview presets."
+    },
+    {
+      "id": "instruments",
+      "name": "Instrument feed and survey scans",
+      "web": [
+        "web/lib/systems/InstrumentFeedSystem.ts",
+        "web/lib/systems/SurveyScanSystem.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Station/Instruments.swift",
+        "native/LandnamCore/Sources/LandnamCore/Station/ControlStation.swift",
+        "native/LandnamCore/Sources/LandnamCore/Station/Surveys.swift",
+        "native/LandnamCore/Sources/LandnamCore/Station/CitizenFeed.swift"
+      ],
+      "note": "Instrument state and feed navigation; no fictional citizen-science mission wrapper."
+    },
+    {
+      "id": "tess",
+      "name": "Transit photometry classification",
+      "web": [
+        "web/lib/tess-subjects.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Station/Tess.swift"
+      ],
+      "note": "Real light curves and verdicts; independent of spacecraft Transit."
+    },
+    {
+      "id": "asteroid-review",
+      "name": "Asteroid candidate review",
+      "web": [
+        "web/lib/asteroid-subjects.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Station/Asteroid.swift"
+      ],
+      "note": "Observation frames and classifications."
+    },
+    {
+      "id": "saturn-review",
+      "name": "Saturn storm review",
+      "web": [
+        "web/lib/saturn-subjects.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Station/Saturn.swift"
+      ],
+      "note": "Storm annotations and classifications."
+    },
+    {
+      "id": "records",
+      "name": "Mission history and narrative ledger",
+      "web": [
+        "web/lib/mission-log.ts",
+        "web/lib/data/narrative-ledger.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Station/MissionLog.swift",
+        "native/LandnamCore/Sources/LandnamCore/Industry/NarrativeLedger.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift"
+      ],
+      "note": "Read canonical records; do not create a parallel editor save."
+    },
+    {
+      "id": "persistence",
+      "name": "Offline-first game state and outbox",
+      "web": [
+        "web/lib/game-state.ts",
+        "web/lib/offline/outbox.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Store/GameStore.swift",
+        "native/LandnamCore/Sources/LandnamCore/Sync/Outbox.swift",
+        "native/LandnamCore/Sources/LandnamCore/Sync/CloudSync.swift"
+      ],
+      "note": "Host service, not a scene object. All changes use canonical save/outbox paths."
+    }
+  ],
   "scenes": [
     {
       "id": "academy",
       "type": "exchange-lab",
       "route": "academy",
       "surface": "canvas",
+      "runtime": {
+        "surface": "canvas",
+        "web": [
+          "web/components/game/screens/AcademyScreen.tsx",
+          "web/components/game/screens/AcademyCanvas.tsx"
+        ],
+        "native": [
+          "native/App/Screens/AcademyScreen.swift"
+        ],
+        "engine": [
+          "web/public/game/scenes/academy.scene.json"
+        ]
+      },
       "objects": []
     },
     {
@@ -63,6 +370,15 @@ enum AuthoredSceneDeclarations {
       "type": "exchange-lab",
       "route": "asteroid-discovery",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/AsteroidDiscoveryScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/AsteroidDiscoveryScreen.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -70,6 +386,19 @@ enum AuthoredSceneDeclarations {
       "type": "base",
       "route": "build",
       "surface": "canvas",
+      "runtime": {
+        "surface": "canvas",
+        "web": [
+          "web/components/game/screens/FreeOpsBuildScreen.tsx",
+          "web/components/game/screens/HubScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/BuildScreen.swift"
+        ],
+        "engine": [
+          "web/public/game/scenes/hub.scene.json"
+        ]
+      },
       "objects": []
     },
     {
@@ -77,6 +406,17 @@ enum AuthoredSceneDeclarations {
       "type": "travel",
       "route": "debrief",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/DebriefScreen.tsx",
+          "web/components/game/screens/HomecomingScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/CoreLoop.swift",
+          "native/App/Screens/HomecomingScreen.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -84,6 +424,19 @@ enum AuthoredSceneDeclarations {
       "type": "travel",
       "route": "delivery",
       "surface": "canvas",
+      "runtime": {
+        "surface": "canvas",
+        "web": [
+          "web/components/game/screens/DeliveryScreen.tsx",
+          "web/components/game/screens/DeliveryCanvas.tsx"
+        ],
+        "native": [
+          "native/App/Screens/CoreLoop.swift"
+        ],
+        "engine": [
+          "web/public/game/scenes/delivery.scene.json"
+        ]
+      },
       "objects": []
     },
     {
@@ -91,6 +444,16 @@ enum AuthoredSceneDeclarations {
       "type": "travel",
       "route": "fab",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/RocketBuilderScene.tsx",
+          "web/components/game/MissionSetupRoutes.tsx"
+        ],
+        "native": [
+          "native/App/Screens/LaunchReview.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -98,6 +461,15 @@ enum AuthoredSceneDeclarations {
       "type": "exchange-lab",
       "route": "galaxy",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/TessDiscoveryScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/TessDiscoveryScreen.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -105,6 +477,16 @@ enum AuthoredSceneDeclarations {
       "type": "build",
       "route": "hangar",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/HangarScreen.tsx",
+          "web/components/game/screens/HangarBay.tsx"
+        ],
+        "native": [
+          "native/App/Screens/HangarScreen.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -112,6 +494,15 @@ enum AuthoredSceneDeclarations {
       "type": "base",
       "route": "hub-subsurface",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/hub/HubSubsurfaceView.tsx"
+        ],
+        "native": [
+          "native/App/Screens/BaseUnderground.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -119,6 +510,27 @@ enum AuthoredSceneDeclarations {
       "type": "base",
       "route": "hub",
       "surface": "canvas",
+      "runtime": {
+        "surface": "canvas",
+        "web": [
+          "web/components/game/screens/HubScreen.tsx",
+          "web/components/game/hub/"
+        ],
+        "native": [
+          "native/App/Screens/HubScreen.swift",
+          "native/App/Screens/BaseWorldCanvas.swift",
+          "native/App/Screens/BaseWorldScene.swift",
+          "native/App/Screens/BaseDock.swift",
+          "native/App/Screens/BaseCamera.swift",
+          "native/App/Screens/SharedHud.swift"
+        ],
+        "engine": [
+          "web/public/game/scenes/hub.scene.json"
+        ],
+        "data": [
+          "worlds/base-world.toml"
+        ]
+      },
       "objects": [
         {
           "id": "world",
@@ -224,6 +636,16 @@ enum AuthoredSceneDeclarations {
       "type": "exchange-lab",
       "route": "instrument-hub",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/InstrumentHubScreen.tsx",
+          "web/components/game/control-station/"
+        ],
+        "native": [
+          "native/App/Screens/ControlStationScreen.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -231,6 +653,15 @@ enum AuthoredSceneDeclarations {
       "type": "menu",
       "route": "intro",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/IntroScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/BaseRecordScreens.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -238,6 +669,19 @@ enum AuthoredSceneDeclarations {
       "type": "travel",
       "route": "landing",
       "surface": "canvas",
+      "runtime": {
+        "surface": "canvas",
+        "web": [
+          "web/components/game/screens/LandingScreen.tsx",
+          "web/components/game/screens/LandingCanvas.tsx"
+        ],
+        "native": [
+          "native/App/Screens/FlightScreens.swift"
+        ],
+        "engine": [
+          "web/public/game/scenes/landing.scene.json"
+        ]
+      },
       "objects": []
     },
     {
@@ -245,6 +689,17 @@ enum AuthoredSceneDeclarations {
       "type": "base",
       "route": "launchpad",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/LaunchpadScreen.tsx",
+          "web/components/game/LaunchpadPrefab.tsx"
+        ],
+        "native": [
+          "native/App/Screens/LaunchReview.swift",
+          "native/App/Screens/LaunchpadPrefab.swift"
+        ]
+      },
       "objects": [
         {
           "id": "world",
@@ -269,8 +724,17 @@ enum AuthoredSceneDeclarations {
           "id": "apron",
           "kind": "terrain",
           "parent": "launchpad-complex",
-          "asset": "shared/authoring/worlds/base-world.toml",
-          "note": "Paved ground over flat steppe. Every structure rests on this surface."
+          "layout": "shared",
+          "space": "parent",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1
+          },
+          "asset": "web/public/game/assets/base/v7/launchpad/pad-complex.png",
+          "nativeAsset": "base/v7/launchpad/pad-complex.png",
+          "note": "Legacy fused pad, tower and hangar sprite. Named subparts below are not yet separate art; do not count them as independent renderers."
         },
         {
           "id": "service-tower",
@@ -300,6 +764,16 @@ enum AuthoredSceneDeclarations {
           "id": "staged-rocket",
           "kind": "vehicle",
           "parent": "launchpad-complex",
+          "layout": "shared",
+          "space": "parent",
+          "rect": {
+            "x": 0.2308,
+            "y": 0.261,
+            "w": 0.1904,
+            "h": 0.647
+          },
+          "asset": "web/public/art/scenes/launchpad/launchpad-rocket-multistage.png",
+          "nativeAsset": "scene-launchpad-rocket-multistage",
           "components": [
             "StagedRocket",
             "LaunchSequence"
@@ -312,9 +786,34 @@ enum AuthoredSceneDeclarations {
           "id": "launch-control",
           "kind": "instrument",
           "parent": "launchpad-complex",
+          "layout": "shared",
+          "space": "parent",
+          "rect": {
+            "x": 0.13,
+            "y": 0,
+            "w": 0.11,
+            "h": 0.78
+          },
+          "action": "choose-mission",
           "components": [
             "MissionLaunchControl"
           ]
+        },
+        {
+          "id": "assembly-scaffold",
+          "kind": "structure",
+          "parent": "launchpad-complex",
+          "layout": "shared",
+          "space": "parent",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1
+          },
+          "asset": "web/public/game/assets/base/v7/launchpad/pad-scaffold.png",
+          "nativeAsset": "base/v7/launchpad/pad-scaffold.png",
+          "note": "Assembly animation uses the rocket frame for its welding path."
         },
         {
           "id": "back-control",
@@ -382,6 +881,15 @@ enum AuthoredSceneDeclarations {
       "type": "exchange-lab",
       "route": "market",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/MarketScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/MarketScene.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -389,6 +897,21 @@ enum AuthoredSceneDeclarations {
       "type": "field",
       "route": "mining",
       "surface": "canvas",
+      "runtime": {
+        "surface": "canvas",
+        "web": [
+          "web/components/game/screens/MiningScreen.tsx",
+          "web/components/game/screens/MiningCanvas.tsx",
+          "web/components/game/screens/MiningControls.tsx"
+        ],
+        "native": [
+          "native/App/Screens/FlightScreens.swift",
+          "native/App/Scenes/MiningScene.swift"
+        ],
+        "engine": [
+          "web/public/game/scenes/mining.scene.json"
+        ]
+      },
       "objects": []
     },
     {
@@ -396,6 +919,15 @@ enum AuthoredSceneDeclarations {
       "type": "menu",
       "route": "mission-history",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/MissionHistoryScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/BaseRecordScreens.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -403,6 +935,16 @@ enum AuthoredSceneDeclarations {
       "type": "menu",
       "route": "missions",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/MissionBoard.tsx",
+          "web/components/game/MissionSetupRoutes.tsx"
+        ],
+        "native": [
+          "native/App/Screens/CoreLoop.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -410,6 +952,15 @@ enum AuthoredSceneDeclarations {
       "type": "menu",
       "route": "narrative-ledger",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/NarrativeLedgerScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/BaseRecordScreens.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -417,6 +968,13 @@ enum AuthoredSceneDeclarations {
       "type": "exchange-lab",
       "route": "refinery",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/RefineryScreen.tsx"
+        ],
+        "native": []
+      },
       "objects": []
     },
     {
@@ -424,6 +982,15 @@ enum AuthoredSceneDeclarations {
       "type": "build",
       "route": "rocket-buy",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/MissionSetupRoutes.tsx"
+        ],
+        "native": [
+          "native/App/Screens/LaunchReview.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -431,6 +998,16 @@ enum AuthoredSceneDeclarations {
       "type": "field",
       "route": "rover-survey",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/RoverSurveyScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/RoverFieldScreen.swift",
+          "native/App/Screens/TakeonSceneScreen.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -438,6 +1015,15 @@ enum AuthoredSceneDeclarations {
       "type": "exchange-lab",
       "route": "saturn-storm-search",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/SaturnStormSearchScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/SaturnStormSearchScreen.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -445,6 +1031,15 @@ enum AuthoredSceneDeclarations {
       "type": "menu",
       "route": "skills",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/SkillTreeScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/SkillTreeScreen.swift"
+        ]
+      },
       "objects": []
     },
     {
@@ -452,6 +1047,19 @@ enum AuthoredSceneDeclarations {
       "type": "field",
       "route": "surface-ops",
       "surface": "canvas",
+      "runtime": {
+        "surface": "canvas",
+        "web": [
+          "web/components/game/screens/SurfaceOpsScreen.tsx",
+          "web/components/game/screens/ConstructionTargetCanvas.tsx"
+        ],
+        "native": [
+          "native/App/Screens/SurfaceOpsScreen.swift"
+        ],
+        "engine": [
+          "web/public/game/scenes/construction-target.scene.json"
+        ]
+      },
       "objects": []
     },
     {
@@ -459,6 +1067,19 @@ enum AuthoredSceneDeclarations {
       "type": "menu",
       "route": "targets",
       "surface": "canvas",
+      "runtime": {
+        "surface": "canvas",
+        "web": [
+          "web/components/TargetPicker/",
+          "web/components/game/MissionSetupRoutes.tsx"
+        ],
+        "native": [
+          "native/App/Screens/LaunchReview.swift"
+        ],
+        "engine": [
+          "web/public/game/scenes/target-picker.scene.json"
+        ]
+      },
       "objects": []
     },
     {
@@ -466,6 +1087,16 @@ enum AuthoredSceneDeclarations {
       "type": "travel",
       "route": "transit",
       "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/TransitScreen.tsx",
+          "web/components/game/MissionOperationRoutes.tsx"
+        ],
+        "native": [
+          "native/App/Screens/FlightScreens.swift"
+        ]
+      },
       "objects": []
     }
   ]
