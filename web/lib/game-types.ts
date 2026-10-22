@@ -570,6 +570,7 @@ export interface GameActions {
   authGateError: string | null
   signInFromGate: (email: string, password: string) => Promise<void>
   requestPasswordResetFromGate: (email: string) => Promise<void>
+  confirmPasswordResetFromGate: (token: string, password: string) => Promise<void>
   createAccountFromGate: (email: string, password: string) => Promise<void>
   go: (screen: Screen) => void
   goBack: (fallback?: Screen) => void

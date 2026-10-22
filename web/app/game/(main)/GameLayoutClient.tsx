@@ -462,6 +462,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             entry={orionidsEntryActive ? 'orionids' : null}
             onSignIn={game.signInFromGate}
             onRequestPasswordReset={game.requestPasswordResetFromGate}
+            onConfirmPasswordReset={game.confirmPasswordResetFromGate}
             onCreateAccount={game.createAccountFromGate}
           />
         )}

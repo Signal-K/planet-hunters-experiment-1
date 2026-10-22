@@ -179,6 +179,7 @@ test('edit mode: draw an element, move it, undo, and see a mistake with its line
 
   // a mistake in the file is shown with its line in the source
   writeFileSync(sceneFile, `${read(sceneFile)}\n[[objects]]\nid = "oops"\nkind = "ui"\nslott = "hud"\n`)
+  await page.getByRole('tab', { name: 'Project', exact: true }).click()
   await expect(page.getByTestId('source-details')).toHaveAttribute('open', '', { timeout: 15_000 })
   const diagnostic = page.getByTestId('diagnostic').first()
   await expect(diagnostic).toContainText('unknown key "slott" (did you mean "slot"?)')

@@ -421,6 +421,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       authGateError: auth.authGateError,
       signInFromGate: auth.signInFromGate,
       requestPasswordResetFromGate: auth.requestPasswordResetFromGate,
+      confirmPasswordResetFromGate: auth.confirmPasswordResetFromGate,
       createAccountFromGate: auth.createAccountFromGate,
       resetGame: useCallback(() => { void auth.resetGame(DEFAULT_STATE) }, [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
       signOut: auth.signOut,

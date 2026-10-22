@@ -418,7 +418,7 @@ export default function StudioClient(props: Props) {
             pins={target.type === 'scene' ? pins : []}
             pinNote={pinTool ? draft : ''}
             onReload={() => setBump(value => value + 1)}
-            extra={editing && target.type === 'scene' ? <><span className={styles.seg} role="group" aria-label="Tool"><button type="button" aria-pressed={tool === 'select'} onClick={() => setTool('select')} data-testid="tool-select">Select</button><button type="button" aria-pressed={tool === 'draw'} onClick={() => setTool('draw')} data-testid="tool-draw">Draw</button></span><button type="button" className={styles.btn} disabled={!undoStack.length} onClick={() => restore('undo')} data-testid="undo">Undo</button><button type="button" className={styles.btn} disabled={!redoStack.length} onClick={() => restore('redo')} data-testid="redo">Redo</button><button type="button" className={`${styles.btn} ${objectsOn ? styles.btnOn : ''}`} onClick={() => setObjectsOn(value => !value)} data-testid="toggle-objects">Objects</button></> : undefined}
+            extra={editing && target.type === 'scene' ? <><span className={styles.seg} role="group" aria-label="Tool"><button type="button" aria-pressed={tool === 'select'} onClick={() => setTool('select')} data-testid="tool-select">Select</button><button type="button" aria-pressed={tool === 'draw'} onClick={() => setTool('draw')} data-testid="tool-draw">Draw</button></span><button type="button" className={`${styles.btn} ${objectsOn ? styles.btnOn : ''}`} onClick={() => setObjectsOn(value => !value)} data-testid="toggle-objects">Objects</button></> : undefined}
             onSelect={id => { const i = objects.findIndex(o => o.id === id); setSelectedPath(i >= 0 ? ['objects', i] : []) }}
             onRect={onRect}
             onDraw={onDraw}
@@ -434,6 +434,8 @@ export default function StudioClient(props: Props) {
           {(Object.keys(VIEWPORTS) as ViewportKey[]).map(k => <button key={k} type="button" aria-pressed={vp === k} aria-label={k === 'ls' ? 'Wide' : VIEWPORTS[k].label} onClick={() => setVp(k)} data-testid={`vp-${k}`} title={VIEWPORTS[k].hint}><DeviceIcon k={k} /><span className={styles.segLabel}>{k === 'ls' ? 'Wide' : VIEWPORTS[k].label}</span></button>)}
         </span>
         {target.type === 'scene' && <button type="button" className={styles.btn} onClick={() => setBump(value => value + 1)} data-testid="studio-reload">Reload</button>}
+        <button type="button" className={styles.btn} disabled={!undoStack.length} onClick={() => restore('undo')} data-testid="undo">Undo</button>
+        <button type="button" className={styles.btn} disabled={!redoStack.length} onClick={() => restore('redo')} data-testid="redo">Redo</button>
         {target.type === 'scene' && <button type="button" className={`${styles.btn} ${tab === 'objects' ? styles.btnPrimary : ''}`} onClick={() => { setTab('objects'); setTool('select') }} data-testid="header-objects">Objects</button>}
         <button type="button" className={`${styles.btn} ${tab === 'project' ? styles.btnPrimary : ''}`} onClick={() => setTab('project')} data-testid="header-project">Project</button>
         <span className={styles.barEnd}><ScriptMenu files={scriptFiles} hostRoot={hostRoot} /><MoreMenu theme={theme} onTheme={chooseTheme} showNative={showNative} canNative={vp === 'ph'} onNative={() => setShowNative(n => !n)} openHref={src} /></span>

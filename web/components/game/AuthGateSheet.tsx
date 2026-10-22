@@ -11,6 +11,7 @@ interface AuthGateSheetProps {
   onSignIn: (email: string, password: string) => Promise<void>
   onCreateAccount: (email: string, password: string) => Promise<void>
   onRequestPasswordReset: (email: string) => Promise<void>
+  onConfirmPasswordReset: (token: string, password: string) => Promise<void>
 }
 
 // iOS Safari's keyboard covers the lower fields and does not scroll the sheet
@@ -20,7 +21,7 @@ function revealOnFocus(e: React.FocusEvent<HTMLInputElement>) {
   window.setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)
 }
 
-export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateAccount, onRequestPasswordReset }: AuthGateSheetProps) {
+export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateAccount, onRequestPasswordReset, onConfirmPasswordReset }: AuthGateSheetProps) {
   const [requestedEntry, setRequestedEntry] = useState<'orionids' | null>(entry)
   const [mode, setMode] = useState<'signin' | 'signup'>(() => {
     if (typeof window === 'undefined') return 'signin'
@@ -32,6 +33,19 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
   const [submitting, setSubmitting] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [resetRequested, setResetRequested] = useState(false)
+  // The reset email links to /game?reset_token=...; read it once and drop it
+  // from the address bar so it is not kept in history or shared by accident.
+  const [resetToken, setResetToken] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    return new URLSearchParams(window.location.search).get('reset_token')
+  })
+  const [passwordChanged, setPasswordChanged] = useState(false)
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has('reset_token')) return
+    url.searchParams.delete('reset_token')
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+  }, [])
   // iOS leaves the layout viewport at full height when the keyboard opens, so
   // the bounded panel runs under it. Mirror the keyboard's height into a CSS
   // var so the sheet lifts above it and the panel scrolls internally.
@@ -61,14 +75,21 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (mode === 'signup' && password !== passwordConfirmation) {
+    if ((mode === 'signup' || resetToken) && password !== passwordConfirmation) {
       setValidationError('Passwords do not match.')
       return
     }
     setValidationError(null)
     setSubmitting(true)
     try {
-      if (mode === 'signin') {
+      if (resetToken) {
+        await onConfirmPasswordReset(resetToken, password)
+        setResetToken(null)
+        setPassword('')
+        setPasswordConfirmation('')
+        setPasswordChanged(true)
+        setMode('signin')
+      } else if (mode === 'signin') {
         await onSignIn(email, password)
       } else {
         await onCreateAccount(email, password)
@@ -130,27 +151,29 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
 
         <div className="auth-gate__content">
           <div className="auth-gate__eyebrow">{PRODUCT_WORDMARK} · {PRODUCT_DESCRIPTOR}</div>
-          <div className="auth-gate__heading">{requestedEntry === 'orionids' ? 'Fly the Orionids' : mode === 'signin' ? 'Welcome Back' : 'New Space Program'}</div>
+          <div className="auth-gate__heading">{resetToken ? 'New Password' : requestedEntry === 'orionids' ? 'Fly the Orionids' : mode === 'signin' ? 'Welcome Back' : 'New Space Program'}</div>
           {/* SSL-302: the subtitle used to stay on the "resume" line for both
               tabs — a brand-new player on Sign Up has nothing to resume. */}
           <p className="auth-gate__intro" data-testid="auth-gate-intro">
-            {requestedEntry === 'orionids'
+            {resetToken
+              ? 'Choose a new password for your account.'
+              : requestedEntry === 'orionids'
               ? 'Sign in or create your program. We’ll take you straight into the Orionids launch, then the rest of Landnam stays open.'
               : mode === 'signin'
               ? 'Return to your launchpad and take on your agency’s next mission.'
               : 'Choose a landing site, build your launchpad, and grow your space program one mission at a time.'}
           </p>
 
-          <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
+          {!resetToken && <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
             {(['signin', 'signup'] as const).map(m => (
               <button key={m} className={`auth-gate__tab${mode === m ? ' is-active' : ''}`} onClick={() => setMode(m)} role="tab" aria-selected={mode === m}>
                 {m === 'signin' ? 'Sign In' : 'Sign Up'}
               </button>
             ))}
-          </div>
+          </div>}
 
         <form onSubmit={handleSubmit} className="auth-gate__form">
-          <input
+          {!resetToken && <input
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
@@ -160,19 +183,19 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
             data-testid="auth-gate-email"
             className="auth-gate__input"
             onFocus={revealOnFocus}
-          />
+          />}
           <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
-            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-            placeholder="Password"
+            autoComplete={mode === 'signin' && !resetToken ? 'current-password' : 'new-password'}
+            placeholder={resetToken ? 'New password' : 'Password'}
             data-testid="auth-gate-password"
             className="auth-gate__input"
             onFocus={revealOnFocus}
           />
-          {mode === 'signup' && (
+          {(mode === 'signup' || resetToken) && (
             <input
               type="password"
               value={passwordConfirmation}
@@ -185,7 +208,7 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
               onFocus={revealOnFocus}
             />
           )}
-          {mode === 'signin' && (
+          {mode === 'signin' && !resetToken && (
             <button
               type="button"
               className="auth-gate__reset-link"
@@ -203,6 +226,12 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
             </div>
           )}
 
+          {passwordChanged && !(error ?? validationError) && (
+            <div className="auth-gate__notice" role="status" data-testid="auth-gate-password-changed">
+              Password updated. Sign in with your new password.
+            </div>
+          )}
+
           {resetRequested && !(error ?? validationError) && (
             <div className="auth-gate__notice" role="status">
               If that email has an account, we’ve sent password-reset instructions.
@@ -211,13 +240,15 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
 
           <button
             type="submit"
-            disabled={submitting || !email.trim() || !password}
+            disabled={submitting || (!resetToken && !email.trim()) || !password}
             data-testid="auth-gate-submit"
             className="auth-gate__primary"
           >
             {submitting
-              ? (mode === 'signin' ? 'Opening program…' : 'Starting program…')
-              : requestedEntry === 'orionids'
+              ? (resetToken ? 'Saving…' : mode === 'signin' ? 'Opening program…' : 'Starting program…')
+              : resetToken
+                ? 'Save Password'
+                : requestedEntry === 'orionids'
                 ? 'Continue to Orionids'
                 : (mode === 'signin' ? 'Return to Base' : 'Start Program')}
           </button>
