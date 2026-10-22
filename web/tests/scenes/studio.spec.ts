@@ -91,6 +91,17 @@ test('the scene picker lists every scene and opens one', async ({ page }) => {
   await expect(page.getByTestId('preset-select').locator('option')).not.toHaveCount(0)
 })
 
+test('the Project workspace reports whole-game object coverage without claiming parity', async ({ page }) => {
+  await page.setViewportSize(VIEWPORTS.desktop)
+  await openStudio(page, 'scene=launchpad&vp=dk&tab=project')
+  const inventory = page.getByTestId('project-inventory')
+  await expect(inventory).toBeVisible()
+  await expect(inventory).toContainText(/\d+ of \d+ scenes have an object graph/)
+  await expect(inventory).toContainText('Game objects')
+  await expect(inventory).toContainText('UI elements')
+  await expect(inventory).toContainText('Prefabs')
+})
+
 test('a note becomes file content, can be pinned, marked fixed, turned into a brief and deleted', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.setViewportSize({ width: 640, height: 900 })
