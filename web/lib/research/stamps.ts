@@ -94,3 +94,13 @@ export function communityBar(ownThisMonth: number, communityOthers = 0) {
   const total = communityOthers + ownThisMonth
   return { total, goal: COMMUNITY_GOAL, fill: Math.min(1, total / COMMUNITY_GOAL), reached: total >= COMMUNITY_GOAL, bonusPct: COMMUNITY_WEEKLY_REVENUE_PCT }
 }
+
+/** Today's research tasks, one per stamp kind a player can earn now. Same copy on web and native. */
+export const DAILY_TASKS: readonly { kind: StampKind; label: string }[] = [
+  { kind: 'classification', label: 'Classify one item from your instruments' },
+  { kind: 'survey', label: 'Finish a survey scan' },
+  { kind: 'event', label: 'Catch debris during a sky event' },
+]
+
+export const RESEARCH_TITLE = 'Daily research'
+export const RESEARCH_BLURB = 'Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% weekly revenue. Miss a day and nothing is lost.'

@@ -1,6 +1,6 @@
 'use client'
 
-import { communityBar, monthGrid, stampStreak, stampsInMonth, type ResearchStamps } from '@/lib/research/stamps'
+import { DAILY_TASKS, RESEARCH_BLURB, RESEARCH_TITLE, communityBar, monthGrid, stampDayKey, stampStreak, stampsInMonth, type ResearchStamps } from '@/lib/research/stamps'
 import styles from './ResearchCalendar.module.css'
 
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -18,9 +18,23 @@ export function ResearchCalendar({ stamps, now, communityOthers = 0 }: { stamps?
   return (
     <section className={styles.plate} data-testid="research-calendar" aria-label="Research calendar">
       <div className={styles.head}>
-        <h2 className={styles.title}>Research log, {MONTHS[month]}</h2>
+        <h2 className={styles.title}>{RESEARCH_TITLE}</h2>
         <span className={styles.streak} data-testid="research-streak">{streak > 0 ? `${streak} day${streak === 1 ? '' : 's'} running` : 'No streak yet'}</span>
       </div>
+      <p className={styles.note} data-testid="research-blurb">{RESEARCH_BLURB}</p>
+      <ul className={styles.tasks} aria-label="Today's research">
+        {DAILY_TASKS.map(t => {
+          const done = (stamps?.[stampDayKey(now)] ?? []).includes(t.kind)
+          return (
+            <li key={t.kind} className={styles.task} data-testid={`research-task-${t.kind}`} data-done={done}>
+              <span className={styles.taskMark} aria-hidden />
+              <span>{t.label}</span>
+              <span className={styles.taskState}>{done ? 'Stamped' : 'Open'}</span>
+            </li>
+          )
+        })}
+      </ul>
+      <div className={styles.monthLabel}>{MONTHS[month]} {year}</div>
       <div className={styles.grid} role="grid">
         {DOW.map((l, i) => <div key={i} className={styles.dow} aria-hidden>{l}</div>)}
         {weeks.flat().map((c, i) => c

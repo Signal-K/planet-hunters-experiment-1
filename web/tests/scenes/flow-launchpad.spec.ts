@@ -21,7 +21,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       await expect(dock.getByTestId('hub-dock-prev')).toBeVisible()
       await expect(dock.getByTestId('hub-dock-next')).toBeVisible()
       await expect(dock.getByTestId('hub-new-mission-btn')).toBeVisible()
-      await expect(page.getByTestId('hub-menu-btn')).toBeVisible()
+      await expect(page.getByTestId('hub-btn')).toBeVisible()
       await expect(page.getByTestId('hub-subsurface-btn')).toHaveCount(0)
       await expect(dock.getByText('Exchange', { exact: true })).toHaveCount(0)
       // The Exchange is a building players choose to build, never a top-bar button.
@@ -32,7 +32,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
 
     test('the Menu lists where to go from the base, and Contracts opens the contracts', async ({ page }) => {
       const { errors } = await stage(page, 'm1-hub', { chrome: true })
-      await page.getByTestId('hub-menu-btn').dispatchEvent('click')
+      await page.getByTestId('hub-btn').dispatchEvent('click')
       for (const id of ['build', 'contracts', 'market', 'mission-log']) await expect(page.getByTestId(`base-menu-${id}`)).toBeVisible()
       await page.screenshot({ path: `tests/.out/base-menu-${vp}.png` })
       await page.getByTestId('base-menu-contracts').dispatchEvent('click')

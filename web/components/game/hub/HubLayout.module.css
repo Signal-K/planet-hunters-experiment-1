@@ -63,24 +63,6 @@
   gap: 8px;
   min-width: 0;
 }
-.cog {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0;
-  margin-left: auto;
-  border: 2px solid var(--ln-world-outline);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--ln-world-outline) 88%, var(--ln-world-trim-blue));
-  color: var(--ln-world-hull-lit);
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--ln-world-glass) 45%, transparent);
-  cursor: pointer;
-}
-.pauseGlyph { display: flex; gap: 4px; }
-.pauseGlyph i { display: block; width: 4px; height: 17px; border-radius: 1px; background: currentColor; }
 .root :global(.scene-chip) {
   height: 44px;
   min-height: 44px;

@@ -10,7 +10,7 @@ for (const [viewport, size] of Object.entries(VIEWPORTS)) {
         patch: { freeOperations: true, skyEventLocation: { city: 'Tallinn', latitude: 59, timeZone: 'Europe/Tallinn' } },
       })
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
-      await page.getByTestId('hub-menu-btn').click()
+      await page.getByTestId('hub-btn').click()
       await page.getByTestId('base-menu-settings').click()
       const settings = page.getByTestId('sky-event-location-settings')
       await settings.scrollIntoViewIfNeeded()

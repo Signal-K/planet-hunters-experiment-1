@@ -364,6 +364,16 @@ enum SceneCatalog {
             let sigs = [InstrumentSignal(id: "n", kind: .deepSpace, title: "NEOCP"), InstrumentSignal(id: "s", kind: .saturn, title: "Frame")]
             return ControlStationScreen(signals: sigs).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
         },
+        // Daily research plate (SSL-664): half a month of stamps up to the snapshot clock, with a survey and a catch today.
+        scene("research-calendar-phone", 800) {
+            var p = Player()
+            let todayKey = ResearchStampRules.dayKey(wswNoon)
+            let today = Int(todayKey.suffix(2))!, prefix = todayKey.prefix(8)
+            for day in 1...today where day % 3 != 0 {
+                p.researchStamps.days["\(prefix)\(String(format: "%02d", day))"] = day % 4 == 0 ? [.classification, .event] : [.survey]
+            }
+            return ResearchCalendarPanel(stamps: p.researchStamps, now: wswNoon).padding(12).background(Theme.hex(0x1A2744))
+        },
         scene("mission-board-wsw-phone", 874) {
             MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },

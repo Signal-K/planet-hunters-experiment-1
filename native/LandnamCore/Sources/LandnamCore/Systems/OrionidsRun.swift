@@ -44,8 +44,13 @@ public enum OrionidsRun {
         if toStash { p.stash["orionid_debris", default: 0] += amount }
     }
 
+    /// A catch on the day stamps the research calendar as a community event (web `addStamp(..., 'event')`).
+    public static func stampCatch(_ p: inout Player, at ms: Double) { ResearchStampRules.add(&p, .event, at: ms) }
+
     public static func applyLaunchCatch(_ p: inout Player, at ms: Double) {
-        addCaught(&p, fragmentsCaughtOnLaunch(at: ms), toStash: true)
+        let caught = fragmentsCaughtOnLaunch(at: ms)
+        addCaught(&p, caught, toStash: true)
+        if caught > 0 { stampCatch(&p, at: ms) }
     }
 
     private static func baseline(_ p: Player) -> Int { max(0, p.orionidsRunBaseline ?? 0) }

@@ -39,7 +39,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
 
     test('existing player can move once and the hub scene follows the selected landscape', async ({ page }, info) => {
       await stage(page, 'm1-hub', { patch: { placed: ['launchpad'], earthBiome: 'mountains' } })
-      await page.getByTestId('hub-menu-btn').click()
+      await page.getByTestId('hub-btn').click()
       await page.getByTestId('base-menu-settings').click()
       const choices = page.getByRole('group', { name: 'Choose a new base landscape' })
       await choices.getByRole('button', { name: 'coast' }).click()

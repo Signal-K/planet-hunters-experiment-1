@@ -196,6 +196,7 @@ public final class GameStore {
         SkyEvents.grant(&n.player.badges, activity: .saturnClassification, at: at)
         WswBadges.grant(&n.player.badges, .citizenScience, at: at)
         n.player.researchAnnotations += 1
+        ResearchStampRules.add(&n.player, .classification, at: at)
         apply(n)
         onClassified?(.saturn(frame: candidateId, verdict: verdict))
     }
@@ -217,6 +218,7 @@ public final class GameStore {
         n.player.researchAnnotations += 1
         n.player.researchXP += Self.firstClassificationXP
         FlightPlan.completeTry(&n, "scan")
+        ResearchStampRules.add(&n.player, .classification, at: clock())
         apply(n)
         onClassified?(.tess(subject: subjectId, verdict: verdict, ranges: marks))
     }
@@ -236,6 +238,7 @@ public final class GameStore {
         WswBadges.grant(&n.player.badges, .citizenScience, at: clock())
         n.player.researchAnnotations += 1
         n.player.researchXP += Self.firstClassificationXP
+        ResearchStampRules.add(&n.player, .classification, at: clock())
         apply(n)
         onClassified?(.asteroid(candidate: candidateId, verdict: verdict))
     }
@@ -265,6 +268,7 @@ public final class GameStore {
     public func fragmentsMined(_ n: Int) {
         var s = state
         OrionidsRun.addCaught(&s.player, n, toStash: false)
+        if n > 0 { OrionidsRun.stampCatch(&s.player, at: now) }
         apply(s)
     }
     public func transitArrived() { apply(Loop.transitArrived(state, catalog: catalog, now: now)) }

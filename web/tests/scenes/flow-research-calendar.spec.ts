@@ -40,5 +40,7 @@ test('resolving a survey scan stamps today on the calendar', async ({ page }) =>
   await cal.scrollIntoViewIfNeeded()
   await expect(cal.locator('[data-today="true"][data-stamped="true"]')).toBeVisible({ timeout: 15_000 })
   await expect(page.getByTestId('research-streak')).toHaveText('1 day running')
+  await expect(page.getByTestId('research-task-survey')).toHaveAttribute('data-done', 'true')
+  await expect(page.getByTestId('research-task-classification')).toHaveAttribute('data-done', 'false')
   expect(errors).toEqual([])
 })

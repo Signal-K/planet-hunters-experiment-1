@@ -89,7 +89,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
         localStorage.setItem('landnam-game-state-v1:user:e2euser0000001', s as string)
       }, [JSON.stringify({ screen: 'hub', player: { placed: ['launchpad'], missionsDone: 1, flightPlan: { completed: { mining: true }, hidden: true } } })])
       await page.goto('/game')
-      await page.getByTestId('hub-menu-btn').click({ timeout: 30_000 })
+      await page.getByTestId('hub-btn').click({ timeout: 30_000 })
       await page.getByTestId('base-menu-settings').click()
       expect(await page.evaluate(() => innerWidth)).toBe(size.width)
       const shelf = page.getByTestId('training-patch-shelf')

@@ -570,11 +570,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
               <StashChip testId="hub-cargo-chip" />
             </div>
           )}
-          {!subsurface && (
-            <button type="button" className={layoutStyles.cog} data-testid="hub-menu-btn" aria-label="Menu" onClick={() => setMenuOpen(true)}>
-              <span aria-hidden="true" className={layoutStyles.pauseGlyph}><i /><i /></span>
-            </button>
-          )}
         </div>
       </div>
 

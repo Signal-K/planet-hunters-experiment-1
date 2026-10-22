@@ -12,6 +12,13 @@
 .head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .title { font: 800 14px var(--ln-font-display); letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
 .streak { font: 700 14px var(--ln-font-body); }
+.tasks { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.task { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 10px; border: 1px solid color-mix(in srgb, var(--ln-world-outline) 30%, transparent); border-radius: 8px; font: 600 14px var(--ln-font-body); background: var(--ln-world-hull-lit); }
+.task > span:nth-child(2) { flex: 1; min-width: 0; }
+.taskMark { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ln-world-outline); }
+.task[data-done='true'] .taskMark { background: var(--ln-world-trim-blue); }
+.taskState { flex: none; font: 800 14px var(--ln-font-display); letter-spacing: 0.1em; text-transform: uppercase; }
+.monthLabel { font: 800 14px var(--ln-font-display); letter-spacing: 0.12em; text-transform: uppercase; }
 .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .dow { font: 700 14px var(--ln-font-display); letter-spacing: 0.08em; text-align: center; opacity: 0.75; }
 .day {
