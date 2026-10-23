@@ -28,7 +28,7 @@ public enum Market {
     /// One unit of a mineral right now. Client premium applies only to preferred minerals.
     /// `bonus: false` reads the quote without the community research bonus (the Exchange ask, SSL-673).
     public static func unitPrice(_ id: String, player: Player, clientId: String?, now: Double, bonus: Bool = true) -> Quote {
-        guard let meta = Minerals.byId[id] else { return Quote(price: 0, base: 0, premiumApplied: false) }
+        guard let meta = Minerals.byId[id], !Minerals.isArtifact(id) else { return Quote(price: 0, base: 0, premiumApplied: false) }
         let sold = decayedUnitsSold(player.marketSupply[id] ?? 0, lastSoldAt: player.marketSupplyUpdatedAt[id], now: now)
         // Match web `sellUnitPrice`: a published shared daily quote is authoritative;
         // per-player supply pressure is only the fallback for older saves.
@@ -55,7 +55,7 @@ public enum Market {
     public static func applySell(_ s: GameState, mineralId: String, amount: Int, now: Double, clientId: String?? = nil) -> GameState {
         let held = s.player.stash[mineralId] ?? 0
         let qty = min(amount, held)
-        guard qty > 0, Minerals.byId[mineralId] != nil else { return s }
+        guard qty > 0, Minerals.byId[mineralId] != nil, !Minerals.isArtifact(mineralId) else { return s }
         let effective: String? = clientId == nil ? s.player.lastClient : (clientId!)
         var n = s
         let sold = decayedUnitsSold(s.player.marketSupply[mineralId] ?? 0, lastSoldAt: s.player.marketSupplyUpdatedAt[mineralId], now: now)

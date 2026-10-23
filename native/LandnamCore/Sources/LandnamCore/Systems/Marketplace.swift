@@ -43,7 +43,7 @@ public enum Marketplace {
         Minerals.byId.keys.compactMap { id -> SpotQuote? in
             guard let meta = Minerals.byId[id] else { return nil }
             let s = spot(id, player: p, now: now)
-            guard s > 0 else { return nil }
+            guard (s > 0 && !Minerals.isArtifact(id)) || (Minerals.isArtifact(id) && (p.stash[id] ?? 0) > 0) else { return nil }
             return SpotQuote(id: id, name: meta.name, spot: s, ask: buyUnitPrice(id, player: p, now: now), held: p.stash[id] ?? 0)
         }
         .sorted { $0.spot != $1.spot ? $0.spot < $1.spot : $0.name < $1.name }
@@ -52,6 +52,7 @@ public enum Marketplace {
     /// Why the player cannot buy `amount`, or nil when they can.
     public static func buyBlocker(_ p: Player, _ id: String, amount: Int = 1, now: Double) -> String? {
         guard Minerals.byId[id] != nil else { return "Not on the market" }
+        guard !Minerals.isArtifact(id) else { return "Artifacts are protected research evidence" }
         guard exchangeBuilt(p) else { return "Build the Exchange to buy" }
         let capacity = Market.storageCapacity(p)
         if capacity - Market.storedUnits(p.stash) < amount { return capacity <= 0 ? "Build a silo to store ore" : "Silo is full" }

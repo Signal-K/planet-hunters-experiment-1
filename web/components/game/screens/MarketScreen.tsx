@@ -9,7 +9,7 @@ import { spotBoard, type PriceAlert, type SpotQuote } from '@/lib/systems/Market
 import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
 import { formatCurrency } from '@/lib/format'
 import { captureGameEvent } from '@/lib/posthog'
-import { MINERAL_META } from '@/lib/data'
+import { MINERAL_META, isArtifactMineralId } from '@/lib/data'
 import styles from './MarketScreen.module.css'
 
 const ART = '/art/scenes/exchange'
@@ -117,6 +117,7 @@ export default function MarketScreen({
             {board.map(q => {
               const alert = alertFor(q.id)
               const blocked = tab === 'buy' ? buyBlocker(q.id, 1) : null
+              const protectedArtifact = isArtifactMineralId(q.id)
               return (
                 <li className={styles.row} key={q.id} data-testid={`exchange-price-${q.id}`} data-fired={tab === 'alerts' && alert?.firedAt != null ? 'true' : undefined}>
                   <div className={styles.who}>
@@ -132,7 +133,8 @@ export default function MarketScreen({
                     <span className={styles.trend} data-trend={priceTrend(q.spot, q.id)} aria-hidden="true" />
                   </span>
                   <div className={styles.actions}>
-                    {tab === 'sell' && (
+                    {tab === 'sell' && protectedArtifact && q.held > 0 && <span className={styles.held}>Protected research evidence</span>}
+                    {tab === 'sell' && !protectedArtifact && (
                       <>
                         <button type="button" className={styles.btn} data-testid={`exchange-crate-${q.id}`} disabled={q.held <= 0} aria-label={`Sell one ${q.name}. ${q.held} held.`}
                           onClick={() => { captureGameEvent('market_sell_one', { mineral_id: q.id, unit_price: q.spot, refined: false }); onSell(q.id, 1) }}>Sell 1</button>

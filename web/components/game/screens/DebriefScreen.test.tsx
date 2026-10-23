@@ -148,7 +148,7 @@ describe('DebriefScreen own-program outcomes', () => {
     expect(host.textContent).toContain('daily instrument feed unlocked')
     expect(host.textContent).toContain('remains in Earth orbit')
     expect(host.textContent).toContain('sky-side status indicator')
-    expect(host.textContent).toContain('Log Program Outcome')
+    expect(host.textContent).toContain('Complete mission')
     expect(host.textContent).not.toContain('Loan repayment')
 
     await act(async () => {
@@ -191,7 +191,7 @@ describe('DebriefScreen own-program outcomes', () => {
     expect(host.querySelector('[data-testid="debrief-mining-fee"]')?.textContent).toContain('320')
     expect(host.querySelector('[data-testid="debrief-transport-fee"]')?.textContent).toContain('320')
     expect(host.textContent).toContain('Build a Mineral Vault')
-    expect(host.textContent).toContain('Collect')
+    expect(host.textContent).toContain('Complete mission')
     expect(host.querySelector('[data-testid="debrief-store"]')).toBeNull()
     expect(host.querySelector('[data-testid="debrief-sell"]')).toBeNull()
     expect(host.querySelector('[data-testid="resolve-cargo-btn"]')).toBeNull()
@@ -236,7 +236,7 @@ describe('DebriefScreen own-program outcomes', () => {
     // 4c2c98cc (SSL-512): no keep/sell toggle in the debrief; launch planning owns the choice.
     const kept = await renderDebrief()
     expect(kept.host.textContent).toContain('Earth storage')
-    expect(kept.host.textContent).toContain('Keep haul on Earth')
+    expect(kept.host.textContent).toContain('Complete mission · keep haul')
     expect(kept.host.textContent).toContain('Mining fee · your program')
     expect(kept.host.textContent).toContain('Transport fee · return')
     expect(kept.host.querySelector('[data-testid="debrief-sell"]')).toBeNull()

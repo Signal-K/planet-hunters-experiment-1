@@ -6,7 +6,7 @@ import type { GameState } from '@/lib/game-types'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
-import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
+import { MINERAL_META, isArtifactMineralId, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { nextLaserCapacitorTier, spendOreUnits } from '@/lib/data/mining-upgrades'
 import { structureIsStaffed } from './AcademySystem'
 import { buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
@@ -67,7 +67,7 @@ export function sellUnitPrice(
   now: number = Date.now(),
 ): { price: number; base: number; premiumApplied: boolean; bonusApplied: boolean } {
   const meta = MINERAL_META[mineralId]
-  if (!meta) return { price: 0, base: 0, premiumApplied: false, bonusApplied: false }
+  if (!meta || isArtifactMineralId(mineralId)) return { price: 0, base: 0, premiumApplied: false, bonusApplied: false }
   const snapshotQuote = player.dailyEconomySnapshot?.prices[mineralId]
   const unitsSold = decayedUnitsSold(player.marketSupply?.[mineralId] ?? 0, player.marketSupplyUpdatedAt?.[mineralId], now)
   // A published daily snapshot is authoritative. The old per-player supply
@@ -112,7 +112,7 @@ export function applySellMinerals(
   const held = stash[mineralId] ?? 0
   const sellAmount = Math.min(amount, held)
   if (sellAmount <= 0) return s
-  if (!MINERAL_META[mineralId]) return s
+  if (!MINERAL_META[mineralId] || isArtifactMineralId(mineralId)) return s
   const marketSupply = { ...(s.player.marketSupply ?? {}) }
   const marketSupplyUpdatedAt = { ...(s.player.marketSupplyUpdatedAt ?? {}) }
   const unitsSold = decayedUnitsSold(marketSupply[mineralId] ?? 0, marketSupplyUpdatedAt[mineralId], now)

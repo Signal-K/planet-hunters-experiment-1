@@ -54,6 +54,13 @@ import Foundation
         #expect(healed == fresh)
     }
 
+    @Test func eventArtifactsCannotBeSold() {
+        var s = GameState(); s.player.stash = ["orionid_debris": 3]
+        let blocked = Market.applySell(s, mineralId: "orionid_debris", amount: 3, now: 0, clientId: .some(nil))
+        #expect(blocked == s)
+        #expect(Market.unitPrice("orionid_debris", player: s.player, clientId: nil, now: 0).price == 0)
+    }
+
     @Test func sharedDailyMarketQuotesOverrideCommonFallbackPrices() {
         var p = Player()
         p.extras["dailyEconomySnapshot"] = .object([

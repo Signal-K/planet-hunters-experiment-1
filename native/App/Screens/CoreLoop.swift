@@ -285,8 +285,8 @@ private struct FreeRunBoard: View {
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.blue, lineWidth: 2))
                     .accessibilityIdentifier("event-run-context")
                 }
-                Text("Your own mining run").font(AppFont.display(20)).foregroundStyle(Theme.ink)
-                Text("No client, no daily limit. Pick what to mine, keep it or sell it at market price.")
+                Text(runs.contains(where: { $0.id == OrionidsRun.surfaceResearchMissionId }) ? "Next Orionids mission" : "Your own mining run").font(AppFont.display(20)).foregroundStyle(Theme.ink)
+                Text(runs.contains(where: { $0.id == OrionidsRun.surfaceResearchMissionId }) ? "The next tier is a rover observation. Deploy the rover, log the marked outcrop, and add the result to community research." : "No client, no daily limit. Pick what to mine, keep it or sell it at market price.")
                     .font(AppFont.body(14)).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
                 VStack(spacing: 8) {
                     ForEach(runs, id: \.id) { run in
@@ -782,7 +782,7 @@ struct DebriefScreen: View {
                 if !orbital {
                     RecordDockButton(title: scrapped ? "Dismantled" : "Teardown", filled: false, enabled: !scrapped) { scrapped = true }
                 }
-                RecordDockButton(title: run.map { "COLLECT & RETURN TO BASE · \(Economy.format(francs: $0.francs + (willStore ? 0 : sale)))" } ?? collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
+                RecordDockButton(title: run.map { "COMPLETE MISSION · RETURN TO BASE · \(Economy.format(francs: $0.francs + (willStore ? 0 : sale)))" } ?? collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
                     guard !collecting else { return }
                     collecting = true
                     shownRun = run
@@ -800,11 +800,11 @@ struct DebriefScreen: View {
 
     private func collectTitle(free: Bool, store: Bool, overflow: Int, sale: Int, program: Bool, payout: Int) -> String {
         if free {
-            if store { return overflow > 0 ? "Store haul · sell \(overflow) over cap" : "Keep haul on Earth" }
-            return "Collect \(Economy.format(francs: sale))"
+            if store { return overflow > 0 ? "Complete mission · sell \(overflow) over cap" : "Complete mission · keep haul" }
+            return "Complete mission · collect \(Economy.format(francs: sale))"
         }
-        if program { return "Log Program Outcome" }
-        return "Collect \(Economy.format(francs: payout))"
+        if program { return "Complete mission · log outcome" }
+        return "Complete mission · collect \(Economy.format(francs: payout))"
     }
 
     private func statusLine(_ text: String, crit: Bool) -> some View {
