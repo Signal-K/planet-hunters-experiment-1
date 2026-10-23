@@ -40,7 +40,7 @@ export default function NotificationBell() {
 
   return <>
     <BellButton count={items.length} onClick={() => { setOpen(true); void load() }} />
-    {open && <div role="dialog" aria-modal="true" aria-label="Notifications" style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(2, 8, 18, .65)', display: 'grid', placeItems: 'start end', padding: 16 }} onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false) }}>
+    {open && <div aria-label="Notifications" style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(2, 8, 18, .65)', display: 'grid', placeItems: 'start end', padding: 16 }} onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false) }}>
       <section style={{ width: 'min(390px, 100%)', maxHeight: 'min(620px, calc(100vh - 32px))', overflow: 'auto', marginTop: 48, padding: 18, border: '1px solid var(--ln-cyan-border)', borderRadius: 10, background: 'var(--ln-panel)', boxShadow: '0 20px 50px rgba(0,0,0,.45)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}><h2 style={{ margin: 0, fontFamily: 'var(--ln-font-display)', fontSize: 15, letterSpacing: '.12em' }}>NOTIFICATIONS</h2><button type="button" onClick={() => setOpen(false)} style={{ minWidth: 44, minHeight: 44, border: 0, background: 'transparent', color: 'var(--ln-text)', fontSize: 20, cursor: 'pointer' }} aria-label="Close notifications">×</button></div>
         {error && <p style={{ color: 'var(--ln-crimson-press)', fontSize: 14 }}>{error}</p>}
