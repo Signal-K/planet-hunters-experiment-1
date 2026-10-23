@@ -4,7 +4,7 @@ Every scene and mission is a plain text script in this folder. You can read and 
 
 ## Open the Studio
 
-Start the dev stack (`make up`; the first time after pulling this, run `make web-deps` once so the Docker web container gets the TOML parser), then open <http://localhost:3001/game/studio>. In Cursor use `Cmd+Shift+P`, then **Simple Browser: Show**. The stage fills the available height and a single drawer sits beside it from 620px wide up. Below that, the drawer moves below the stage. Theme follows your system unless changed in More.
+Start the dev stack (`make up`; the first time after pulling this, run `make web-deps` once so the Docker web container gets the TOML parser), then open <http://localhost:4320/game/studio>. In Cursor use `Cmd+Shift+P`, then **Simple Browser: Show**. The stage fills the available height and a single drawer sits beside it from 620px wide up. Below that, the drawer moves below the stage. Theme follows your system unless changed in More.
 
 - **Pick a scene or mission** with the first button or `Ctrl/Cmd+K`. Pick a saved setup or campaign checkpoint with the next picker, and a device size beside it.
 - **Setup** controls everything that can be brought into the sandbox scene. Switch objects and state on, set sliders, then save the combination as a named preset with instructions. Sandbox scenes suppress campaign context unless a setup requests it.
@@ -55,7 +55,7 @@ node scripts/studio.mjs changed           # scenes touched by uncommitted work
 node scripts/studio.mjs focus hub --ticket SSL-345   # declare what you are working in (Studio and storyboard show it)
 node scripts/studio.mjs briefs            # scenes with open notes from you
 cd web && npm run test:file -- lib/authoring          # unit tests
-cd web && SCENES_BASE_URL=http://localhost:3001 npx playwright test tests/scenes/studio.spec.ts
+cd web && SCENES_BASE_URL=http://localhost:4320 npx playwright test tests/scenes/studio.spec.ts
 ```
 
 ## Honest limits today

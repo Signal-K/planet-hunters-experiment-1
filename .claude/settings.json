@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && (make up >/tmp/landnam-make-up.log 2>&1 &) ; echo 'Landnam stack starting (make up). Live preview: open http://localhost:3001/game/hub?follow=1 in the Simple Browser (Cmd+Shift+P, Simple Browser: Show); it follows every edit.'"
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && (make up >/tmp/landnam-make-up.log 2>&1 &) ; echo 'Landnam stack starting (make up). Live preview: open http://localhost:4320/game/hub?follow=1 in the Simple Browser (Cmd+Shift+P, Simple Browser: Show); it follows every edit.'"
           }
         ]
       }

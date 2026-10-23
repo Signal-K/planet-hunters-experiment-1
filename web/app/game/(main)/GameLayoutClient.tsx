@@ -236,6 +236,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   // navigation. Render the persistent scene from that state so route segment
   // replacement cannot tear down and recreate the background between steps.
   const currentScreen = game.screen
+  const eventMissionActive = game.missionId === 'self-directed-orionids-night-run' || game.player.activeMission?.id === 'self-directed-orionids-night-run'
   const activeTry = currentTrainingTry(game.player.flightPlan)
   const flightStep = activeTry
     ? trainingTryStep(activeTry, currentScreen, { returning: !!game.player.returningToEarth })
@@ -249,9 +250,9 @@ function GameChrome({ children }: { children: ReactNode }) {
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (orionidsEntryActive || settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (orionidsEntryActive || eventMissionActive || settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, orionidsEntryActive, settingsOpen])
+  }, [communityOpen, eventMissionActive, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, orionidsEntryActive, settingsOpen])
 
   const coachIndex = flightStep ? ['mining', 'scan', 'part'].indexOf(flightStep.try) : -1
   // Only the required-looking onboarding (not the optional guide) changes the hub's own copy.

@@ -2,7 +2,7 @@ import Testing
 import Foundation
 @testable import LandnamCore
 
-/// Opt-in: LANDNAM_LIVE_PB=http://localhost:8091 LANDNAM_LIVE_EMAIL/PASSWORD. Local instances only.
+/// Opt-in: LANDNAM_LIVE_PB=http://localhost:8095 LANDNAM_LIVE_EMAIL/PASSWORD. Local instances only.
 @Suite struct PocketBaseLiveTests {
     @Test func outboxReplaysAgainstLocalPocketBase() async throws {
         let env = ProcessInfo.processInfo.environment

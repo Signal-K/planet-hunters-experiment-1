@@ -2,13 +2,16 @@
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 export LANDNAM_HOST_ROOT := $(CURDIR)
+export LANDNAM_WEB_PORT ?= 4320
+export LANDNAM_PB_PORT ?= 8095
+export LANDNAM_PB_DEV_PORT ?= 8096
 PARENT_COMPOSE   := docker compose -p navigation -f ../docker-compose.yml
 
 help:
 	@echo "Landnam — available targets"
 	@echo ""
 	@echo "  Dev"
-	@echo "    up             Start frontend + parent-owned PocketBase (:3001 / shared :8090 / landnam :8091)"
+	@echo "    up             Start frontend + parent-owned PocketBase (:$(LANDNAM_WEB_PORT) / shared :8090 / landnam :$(LANDNAM_PB_PORT))"
 	@echo "                   Also starts the Cursor helper (lets the Studio open scripts in Cursor). The web"
 	@echo "                   container warms the Studio's routes itself every time it starts."
 	@echo "    follow         Start the stack and arm the persistent Cursor live preview"
@@ -36,7 +39,7 @@ help:
 	@echo "                   named volume that shadows whatever the rebuilt image installs"
 	@echo "    logs           Follow stack logs"
 	@echo "    web-dev        Run Next.js dev server locally (no Docker)"
-	@echo "    pb-dev         Run Landnam PocketBase as a native binary on :8093 (no Docker) —"
+	@echo "    pb-dev         Run Landnam PocketBase as a native binary on :$(LANDNAM_PB_DEV_PORT) (no Docker) —"
 	@echo "                   web already defaults NEXT_PUBLIC_LANDNAM_PB_URL to this port"
 	@echo "    web-build      Production build locally"
 	@echo "    web-check      Typecheck + production build"
@@ -50,15 +53,15 @@ help:
 up: pb-up
 	$(FRONTEND_COMPOSE) up -d --remove-orphans web
 	@node scripts/host-opener.mjs start || true
-	@echo "Landnam:         http://localhost:3001/game/hub?follow=1"
-	@echo "Scene Studio:    http://localhost:3001/game/studio   (every scene, editable scripts, native beside web, no login)"
+	@echo "Landnam:         http://localhost:$(LANDNAM_WEB_PORT)/game/hub?follow=1"
+	@echo "Scene Studio:    http://localhost:$(LANDNAM_WEB_PORT)/game/studio   (every scene, editable scripts, native beside web, no login)"
 	@echo "Dev mode only. make up unregisters service workers, so it is not offline-PWA proof. Use a production build on a secure origin (see web/app/layout.tsx)."
 	@echo "Shared PB:       http://localhost:8090/_/"
-	@echo "Landnam PB:      http://localhost:8091/_/"
+	@echo "Landnam PB:      http://localhost:$(LANDNAM_PB_PORT)/_/"
 
 follow: up
 	@node scripts/preview-target.mjs /game/hub
-	@echo "Cursor preview:  http://localhost:3001/game/hub?follow=1"
+	@echo "Cursor preview:  http://localhost:$(LANDNAM_WEB_PORT)/game/hub?follow=1"
 
 up-ecosystem:
 	$(MAKE) -C .. up
@@ -87,7 +90,7 @@ down:
 	-@node scripts/host-opener.mjs stop
 	$(FRONTEND_COMPOSE) down --remove-orphans
 	$(PARENT_COMPOSE) stop landnam-backend backend
-	@lsof -ti :3001 | xargs kill -9 2>/dev/null && echo "Killed process on :3001" || true
+	@lsof -ti :$(LANDNAM_WEB_PORT) | xargs kill -9 2>/dev/null && echo "Killed process on :$(LANDNAM_WEB_PORT)" || true
 
 build:
 	$(PARENT_COMPOSE) build backend landnam-backend
@@ -115,7 +118,7 @@ web-dev:
 # pocketbase/pb_data (gitignored), separate from the Docker-volume-backed
 # pb-up path so the two don't collide.
 pb-dev:
-	cd pocketbase && SHARED_PB_URL=$${SHARED_PB_URL:-http://localhost:8090} go run . serve --http=0.0.0.0:8093
+	cd pocketbase && SHARED_PB_URL=$${SHARED_PB_URL:-http://localhost:8090} go run . serve --http=0.0.0.0:$(LANDNAM_PB_DEV_PORT)
 
 web-build:
 	cd web && npm run build

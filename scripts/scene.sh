@@ -6,7 +6,7 @@
 #   scripts/scene.sh all                       the whole matrix (about 4 min)
 #   scripts/scene.sh native hub-phone          native SceneCatalog snapshot (needs a booted simulator)
 # Checkpoints jump to a point in the hour: cp-early (~15 min), cp-mid (~35), cp-late (~55).
-# Tweak state in a browser: http://localhost:3001/game/stage?preset=cp-mid&patch={"francs":0}
+# Tweak state in a browser: http://localhost:4320/game/stage?preset=cp-mid&patch={"francs":0}
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; OUT=/tmp/landnam-scenes; mkdir -p "$OUT"
 cd "$ROOT/web"

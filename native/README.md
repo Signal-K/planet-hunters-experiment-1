@@ -31,7 +31,7 @@ identity token and nonce to `POST /api/landnam-auth/apple` on the Landnam Pocket
 token, stored in the Keychain. `POST /api/landnam-auth/clerk` does the same for Clerk session
 tokens when `CLERK_ISSUER` is set. Migration `1780712900_users_apple_clerk_identity.go` adds
 `appleSub` and `clerkId` to `users`. Set `LANDNAM_PB_URL` to point the app at a PocketBase
-instance (default `http://localhost:8091`). The Apple capability needs a signing team in Xcode.
+instance (default `http://localhost:8095`). The Apple capability needs a signing team in Xcode.
 
 ## Cloud save and offline
 
@@ -41,7 +41,7 @@ adopted (only when strictly further along than local), and a mobile welcome is s
 that first read succeeds, so a fresh install can never overwrite a web save.
 
 `xcodebuild test -scheme LandnamUI -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` drives real sign-in
-against local PocketBase (shared :8090, Landnam :8091) with a user `tester@example.com` / `TesterPass123`.
+against local PocketBase (shared :8090, Landnam :8095) with a user `tester@example.com` / `TesterPass123`.
 
 ## Verifying UI without launching the app
 

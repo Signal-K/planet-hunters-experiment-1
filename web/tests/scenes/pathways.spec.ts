@@ -130,7 +130,7 @@ const withPage = (fn: (page: Page) => Promise<void>) => async () => {
   // Launched inside the test: a browser launched in beforeAll is closed ~30s in by the runner on this machine.
   const browser: Browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
   try {
-    const context = await browser.newContext({ viewport: VIEWPORTS.phone, baseURL: 'http://localhost:3001' })
+    const context = await browser.newContext({ viewport: VIEWPORTS.phone, baseURL: 'http://localhost:4320' })
     const pg = await context.newPage()
     await fn(pg)
   } finally { await browser.close().catch(() => {}) }

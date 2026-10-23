@@ -106,7 +106,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         onDismantle={() => game.onDismantleStagedRocket()}
         assembly={rolling ? 'building' : preparing ? 'design' : 'ready'}
         launchTestId={preparing ? 'prepare-launch-btn' : 'launch-btn'}
-        launchDisabled={!!rolling || selectedVehicle?.location === 'hangar' || (!preparing && !launchReady)}
+        launchDisabled={!!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || (!preparing && !launchReady)}
         onInstallLoadout={(next, prev) => game.confirmShipCustomizerBuild(next, prev)}
         onRequestLaunch={() => { if (preparing) setRolling(selectedRocket.id); else onLaunch() }}
         launching={launchPending}

@@ -125,7 +125,9 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const stagedRocketInHangar = selectedStagedRocket?.location === 'hangar'
   // Pending launch only says a vehicle has been assigned. Its physical location decides whether the pad is occupied.
   // Rollout draws its own rocket while it is moving from the hangar.
-  const rocketOnPad = padLanding || ((!!player.activeMission || stagedRocketOnPad) && !rollingOut)
+  // An active mission is not a physical vehicle. The pad is occupied only by
+  // an explicitly staged rocket (or by the short landing/homecoming scene).
+  const rocketOnPad = padLanding || (stagedRocketOnPad && !rollingOut)
   // The terrain baseline is part of the world composition. It must not move
   // when the dock grows or the mobile browser chrome changes height: doing so
   // pulled the launchpad up into the mountain range to make room for UI. The

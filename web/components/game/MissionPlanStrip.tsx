@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import type { useGame } from '@/game-context'
-import { ROCKET_MODELS, isOwnProgramMission, rocketConfigForModel, rocketModelForConfig, validateBuild } from '@/lib/data'
+import { ROCKET_MODELS, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
 import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
+import { activeDebrisPreset } from '@/lib/data/sky-events'
+import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import styles from './MissionPlanStrip.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -21,9 +23,11 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
   const { mission, target, player } = game
   if (!mission || !target) return null
 
-  const rocket = rocketModelForConfig(game.rocket)
+  const selectedVehicle = player.stagedRockets?.find(vehicle => vehicle.id === player.selectedStagedRocketId && (vehicle.location === 'hangar' || vehicle.location === 'launchpad'))
+  const selectedRocket = selectedVehicle ? ROCKET_MODELS.find(model => model.id === selectedVehicle.rocketId) : null
   const minerals = Object.keys(mission.requires.minerals).map(id => game.catalog.minerals[id]?.name ?? id)
   const step = launched ? 2 : 1
+  const activeEvent = activeDebrisPreset(debrisNow())
   // A run on your own account keeps nothing without a silo: say so before launch, not after landing.
   const noSilo = isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
@@ -45,13 +49,15 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
           <span>Destination</span><strong>{target.name}</strong><em>Change</em>
         </button>
         <button type="button" className={styles.slot} data-testid="plan-vehicle" disabled={launched} onClick={() => setSheet('vehicle')}>
-          <span>Vehicle</span><strong>{rocket.name}</strong><em>Change</em>
+          <span>Vehicle</span><strong>{selectedRocket?.name ?? 'Choose vehicle'}</strong><em>{selectedRocket ? 'Change' : 'Choose'}</em>
         </button>
         <div className={styles.slot} data-testid="plan-cargo"><span>Cargo</span><strong>{minerals.join(', ') || 'None'}</strong></div>
       </div>
       {noSilo && !launched && (
         <p className={styles.hold} data-testid="plan-no-silo" role="status">
-          No storage silo: ore you mine is sold when you land. <button type="button" className={styles.link} onClick={() => game.go('build')}>Build a silo</button> to keep it.
+          {activeEvent ? `${activeEvent.label.replace(' debris', '')} storage is free during the event. ` : 'No storage silo: ore you mine is sold when you land. '}
+          <button type="button" className={styles.link} onClick={() => game.go('build')}>Build a silo</button>{' '}
+          {activeEvent ? 'to keep what you mine.' : 'to keep it.'}
         </p>
       )}
       {blockedReason && <p className={styles.hold} data-testid="plan-clearance" role="status">Build hold: {blockedReason}</p>}
@@ -72,7 +78,7 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
             {sheet === 'vehicle' && rockets.map(model => {
               const cost = model.costFrancs === 0 ? 'Free' : formatCurrency(model.costFrancs, { compact: true })
               return (
-                <li key={model.id}><button type="button" data-current={model.id === rocket.id || undefined} onClick={() => {
+                <li key={model.id}><button type="button" data-current={model.id === selectedRocket?.id || undefined} onClick={() => {
                   if (player.francs < model.costFrancs) { game.addToast(`Not enough francs: you need ${formatCurrency(model.costFrancs - player.francs, { compact: true })} more`, 'warn'); return }
                   game.onPurchaseRocket(model.id)
                   setSheet(null)

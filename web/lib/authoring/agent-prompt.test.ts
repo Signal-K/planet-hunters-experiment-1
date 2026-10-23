@@ -17,11 +17,11 @@ const feedback: FeedbackDoc = {
 }
 
 describe('buildAgentPrompt', () => {
-  const text = buildAgentPrompt({ scene, feedback, notes: { always: 'Cards are allowed here.', next: 'Start with the room slots' }, origin: 'http://localhost:3001', state: 'ui-hangar-assembly' })
+  const text = buildAgentPrompt({ scene, feedback, notes: { always: 'Cards are allowed here.', next: 'Start with the room slots' }, origin: 'http://localhost:4320', state: 'ui-hangar-assembly' })
 
   it('says which scene, how to open it and what to read', () => {
     expect(text).toContain('Work on the Landnam scene "hangar" (Hangar), scene type build.')
-    expect(text).toContain('http://localhost:3001/game/studio?scene=hangar&state=ui-hangar-assembly')
+    expect(text).toContain('http://localhost:4320/game/studio?scene=hangar&state=ui-hangar-assembly')
     expect(text).toContain('shared/authoring/feedback/hangar.toml')
   })
 

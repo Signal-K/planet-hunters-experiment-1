@@ -154,14 +154,14 @@ export default function RocketBuilderScene({
 
         <div className={styles.body} data-parts={showParts ? 'open' : 'closed'}>
           <section className={styles.pad} aria-label="Launchpad" data-phase={phase} data-fitted-count={fittedCount}>
-            <LaunchpadPrefab towerLabel={towerLabel} onChooseMission={onChooseMission} />
+            <LaunchpadPrefab towerLabel={towerLabel} onChooseMission={onChooseMission} showRocket={phase === 'building' || phase === 'ready'} />
             {phase === 'idle' && (
               <button type="button" className={styles.choose} data-testid="builder-choose-contract" data-beacon="launchpad-view-contracts" onClick={onChooseMission}>
                 <span>Nothing on the pad</span>
                 <strong>Choose a mission</strong>
               </button>
             )}
-            {phase !== 'idle' && (
+            {(phase === 'building' || phase === 'ready') && (
               <ul className={styles.stats} data-testid="rocket-builder-stats" data-capacity={stats.capacity} data-range={stats.range} data-laser={stats.laser}>
                 <li data-stat="capacity"><span className={styles.statIcon} aria-hidden="true" /><span className={styles.statCopy}>Capacity</span><strong>{stats.capacity}</strong><i aria-hidden="true" /></li>
                 <li data-stat="range"><span className={styles.statIcon} aria-hidden="true" /><span className={styles.statCopy}>Range</span><strong>{stats.range}</strong><i aria-hidden="true" /></li>

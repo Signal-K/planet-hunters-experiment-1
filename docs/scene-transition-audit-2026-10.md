@@ -4,7 +4,7 @@ Playtest note: scene changes were hard cuts. `GameScreenRouter` swapped `game.sc
 
 This pass wraps every routed screen in `SceneTransition` (`web/components/game/SceneTransition.tsx`, kinds in `web/lib/scene-transition.ts`). The swap happens while a void veil is fully opaque. Total motion is 180ms cover + 200ms reveal = 380ms. `prefers-reduced-motion: reduce` skips the hold and swaps immediately.
 
-Frames from the local preset pass (`m1-mining`, `m1-hub`, `ui-target-picker` on `localhost:3001`):
+Frames from the local preset pass (`m1-mining`, `m1-hub`, `ui-target-picker` on `localhost:4320`):
 
 - `docs/scene-transition-audit/mining-after-phone.png` — mining, coach only, 390×844
 - `docs/scene-transition-audit/mining-after-phone-guide.png` — mining with the controls guide open, 390×844

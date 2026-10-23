@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { GameState } from '@/lib/game-types'
 import { normalizeAndRepair, type PartialSave } from '@/lib/game-state'
 import { MINERAL_META, CLIENT_SLOTS, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, STRUCTURES, customizerPartById } from '@/lib/data'
@@ -6,6 +6,9 @@ import { buyUnitPrice } from './MarketplaceSystem'
 import { applyBuyLaserCapacitor, applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, refinedUnitPrice, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, rocketPurchaseRefusal, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+
+afterEach(() => vi.useRealTimers())
 
 function makeState(overrides: Partial<GameState['player']> = {}): GameState {
   return {
@@ -369,6 +372,16 @@ describe('Academy and staffing economy', () => {
     const silo = STRUCTURES.find(structure => structure.id === 'surface-silo')!
     const early = { ...makeState({ francs: silo.cost, missionsDone: 0, freeOperations: true, placed: ['launchpad'] }), tutorial: true }
     expect(applyPlaceStructure(early, silo, silo.kind, 1)).toBe(early)
+  })
+
+  it('lets a new Orionids entrant build the surface silo free during the active event', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 9, 23, 12, 0, 0))
+    const silo = STRUCTURES.find(structure => structure.id === 'surface-silo')!
+    const eventState = makeState({ francs: 0, missionsDone: 0, freeOperations: false, placed: ['launchpad'] })
+    const built = applyPlaceStructure({ ...eventState, missionId: ORIONIDS_NIGHT_RUN_ID }, silo, silo.kind, 1)
+    expect(built.player.placed).toContain('surface-silo')
+    expect(built.player.francs).toBe(0)
   })
 
   it('does not re-raise the Free Ops handoff when a Free Ops player builds another structure', () => {

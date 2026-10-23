@@ -45,7 +45,7 @@ test('scan training: mark the dip, confirm the transit, move on to the part try'
   test.setTimeout(120_000)
   const browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
   try {
-    const page = await (await browser.newContext({ viewport: VIEWPORTS.phone, baseURL: 'http://localhost:3001' })).newPage()
+    const page = await (await browser.newContext({ viewport: VIEWPORTS.phone, baseURL: 'http://localhost:4320' })).newPage()
     await open(page)
     const confirm = page.getByTestId('tess-verdict-planet')
     await page.getByRole('button', { name: /open galaxy/i }).dispatchEvent('click', undefined, { timeout: 15_000 })

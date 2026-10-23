@@ -32,7 +32,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test.setTimeout(120_000)
     const browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
     try {
-      const page = await (await browser.newContext({ viewport: size, baseURL: 'http://localhost:3001', hasTouch: vp !== 'desktop' })).newPage()
+      const page = await (await browser.newContext({ viewport: size, baseURL: 'http://localhost:4320', hasTouch: vp !== 'desktop' })).newPage()
       const record = { id: USER, collectionId: '_pb_users_auth_', collectionName: 'users', email: 'fresh@example.test', verified: true }
       await page.addInitScript(() => { const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, k: string, ...r: unknown[]) { return /webgl/.test(k) ? null : (g as (...a: unknown[]) => unknown).call(this, k, ...r) } as typeof g })
       await page.route(/\/api\/(collections|realtime|health)/, r => /auth-refresh/.test(r.request().url()) ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ token: token(), record }) }) : r.abort('connectionrefused'))
@@ -92,7 +92,7 @@ test('a brand-new account starts at the intro, places the launchpad, and reaches
   test.setTimeout(120_000)
   const browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
   try {
-    const page = await (await browser.newContext({ viewport: VIEWPORTS.phone, baseURL: 'http://localhost:3001', hasTouch: true })).newPage()
+    const page = await (await browser.newContext({ viewport: VIEWPORTS.phone, baseURL: 'http://localhost:4320', hasTouch: true })).newPage()
     const record = { id: USER, collectionId: '_pb_users_auth_', collectionName: 'users', email: 'fresh@example.test', verified: true }
     await page.addInitScript(() => { const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, k: string, ...r: unknown[]) { return /webgl/.test(k) ? null : (g as (...a: unknown[]) => unknown).call(this, k, ...r) } as typeof g })
     await page.route(/\/api\/(collections|realtime|health)/, r => /auth-refresh/.test(r.request().url()) ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ token: token(), record }) }) : r.abort('connectionrefused'))

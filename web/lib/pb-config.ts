@@ -2,7 +2,7 @@
 //
 // NEXT_PUBLIC_* values are inlined when `next build` runs. A staging Worker
 // built for landnam-web-staging.liam-55d.workers.dev shipped
-// http://localhost:8090 and http://localhost:8091 (SSL-439): the browser
+// http://localhost:8090 and http://localhost:8095 (SSL-439): the browser
 // then refused the connection and the PocketBase SDK surfaced that as
 // "Something went wrong." /api/backend-health returned 503, so the data-link
 // pill never left CONNECTING / WARMING UP.
@@ -16,7 +16,7 @@ const DEPLOYED_SHARED_PB_URL = 'https://signal-k-starsailors.fly.dev'
 const DEPLOYED_LANDNAM_PB_URL = 'https://signal-k-landnam.fly.dev'
 
 const DEV_SHARED_PB_URL = 'http://localhost:8090'
-const DEV_LANDNAM_PB_URL = 'http://localhost:8093'
+const DEV_LANDNAM_PB_URL = 'http://localhost:8096'
 
 export function isLoopbackPbUrl(url: string): boolean {
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(url)

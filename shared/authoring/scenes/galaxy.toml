@@ -1,5 +1,5 @@
 #:schema ../schema/scene.schema.json
-# Galaxy Map: scene script. Edit here or in the Scene Studio (http://localhost:3001/game/studio?scene=galaxy).
+# Galaxy Map: scene script. Edit here or in the Scene Studio (http://localhost:4320/game/studio?scene=galaxy).
 # Objects listed here are the scene's game objects. Objects marked status = "proposed" are requests for an agent to build.
 format = 1
 id = "galaxy"

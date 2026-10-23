@@ -64,5 +64,5 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
   const flow = params.flow ? index.flows.find(item => item.id === params.flow) : undefined
   const requestedStep = Math.max(0, Number(params.step ?? '1') - 1)
   const initialFlow = flow ? { id: flow.id, step: Math.min(requestedStep, Math.max(0, flow.steps.length - 1)) } : null
-  return <OpenLinks><StudioClient initialIndex={index} initialTarget={target} initialScene={scene} initialData={dataBundle} initialView={view} initialSelection={selection} initialVp={vp} initialTab={tab} initialFlow={initialFlow} follow={params.follow === '1'} /></OpenLinks>
+  return <OpenLinks><StudioClient initialIndex={index} initialTarget={target} initialScene={scene} initialData={dataBundle} initialView={view} initialSelection={selection} initialVp={vp} initialTab={tab} initialFlow={initialFlow} follow={params.follow !== '0'} /></OpenLinks>
 }

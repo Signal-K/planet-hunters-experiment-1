@@ -7,5 +7,5 @@ const actions = process.argv.slice(2).map((s) => {
   if (kind === 'click') return { click: [a, b].filter(Boolean).join(':') }
   return { wait: Number(a ?? 300) }
 })
-const res = await fetch('http://localhost:3001/api/dev/follow', { method: 'POST', body: JSON.stringify({ actions }) })
+const res = await fetch('http://localhost:4320/api/dev/follow', { method: 'POST', body: JSON.stringify({ actions }) })
 console.log(res.ok ? `queued ${actions.length} actions` : `failed ${res.status}`)

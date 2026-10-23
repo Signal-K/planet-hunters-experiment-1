@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 
-const base = process.env.LANDNAM_WEB_URL ?? "http://localhost:3001";
+const base = process.env.LANDNAM_WEB_URL ?? "http://localhost:4320";
 const logPath = join(tmpdir(), "landnam-warm-studio.log");
 
 // In the order the Studio asks for them. The open route answers 415 with no body, which still compiles it.

@@ -44,7 +44,7 @@ services:
     environment:
       NEXT_TELEMETRY_DISABLED: "1"
       NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8090
-      NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8091
+      NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8095
       CI: "true"
 
 

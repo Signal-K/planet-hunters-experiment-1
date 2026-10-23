@@ -13,6 +13,8 @@ import { buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapaci
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
 import { freeOperationsUnlocked, trainingFinished } from './AgencyOnboardingSystem'
 import { RESEARCH_BONUS_RATE, researchBonusActive } from '@/lib/research/stamps'
+import { ORIONIDS_DEBRIS_PRESET, isDebrisEventActive } from '@/lib/data/sky-events'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
 export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
@@ -471,8 +473,11 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
   if (!structure || structure.kind !== kind) return s
   if (s.player.placed.includes(kind)) return s
   if (kind === 'astronaut-academy' && !s.player.academyResearched) return s
-  if (!structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations, missionsDone: s.player.missionsDone, academyResearched: s.player.academyResearched })) return s
-  if (s.player.francs < structure.cost) return s
+  const eventSiloFree = kind === 'surface-silo'
+    && s.missionId === ORIONIDS_NIGHT_RUN_ID
+    && isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, Date.now())
+  if (!eventSiloFree && !structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations, missionsDone: s.player.missionsDone, academyResearched: s.player.academyResearched })) return s
+  if (!eventSiloFree && s.player.francs < structure.cost) return s
   if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
   const stash = { ...(s.player.stash ?? {}) }
   for (const [mineral, amount] of Object.entries(structure.costMaterials ?? {})) {
@@ -491,7 +496,7 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
     player: {
       ...s.player,
       ...(enteredFreeOperations ? { freeOperations: true } : {}),
-      francs: s.player.francs - structure.cost,
+      francs: s.player.francs - (eventSiloFree ? 0 : structure.cost),
       stash,
       placed,
       placementPlots: { ...s.player.placementPlots, [kind]: plot },

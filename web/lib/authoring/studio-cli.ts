@@ -17,10 +17,10 @@ const HELP = `Landnam Scene Studio, for agents and for you
   open <scene> [--state key]   Print the Studio link and point the editor's Simple Browser at it.
   briefs                       Scenes with open notes from you, and where the files are.
 
-The Studio runs with the dev stack (make up): ${'$'}STUDIO_URL or http://localhost:3001/game/studio.
+The Studio runs with the dev stack (make up): ${'$'}STUDIO_URL or http://localhost:4320/game/studio.
 Scene scripts are shared/authoring/scenes/<scene>.toml. Read the feedback file and notes before changing a scene.`
 
-const base = () => (process.env.STUDIO_URL ?? 'http://localhost:3001').replace(/\/$/, '')
+const base = () => (process.env.STUDIO_URL ?? 'http://localhost:4320').replace(/\/$/, '')
 const link = (id: string, state?: string) => `${base()}/game/studio?scene=${id}${state ? `&state=${state}` : ''}`
 
 function flag(args: string[], name: string): string | undefined {
@@ -133,4 +133,3 @@ export function main(argv: string[], root: string): number {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   process.exit(main(process.argv.slice(2), process.env.LANDNAM_REPO_ROOT ?? process.cwd()))
 }
-

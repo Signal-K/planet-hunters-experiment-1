@@ -51,7 +51,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test.setTimeout(120_000)
     const browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
     try {
-      const page = await (await browser.newContext({ viewport: size, baseURL: 'http://localhost:3001' })).newPage()
+      const page = await (await browser.newContext({ viewport: size, baseURL: 'http://localhost:4320' })).newPage()
       await open(page)
       expect(await page.evaluate(() => innerWidth), 'real viewport width').toBe(size.width)
       await page.waitForTimeout(2500)
