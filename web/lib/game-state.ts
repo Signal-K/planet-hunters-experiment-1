@@ -91,6 +91,7 @@ export const DEFAULT_STATE: GameState = {
     orionidsFinds: {},
     meteoriteMastery: 0,
     orionidsFragments: { caught: 0, redeemed: 0 },
+    orionidsEventStage: 0,
     orionidsLookedUpAt: null,
     orionidsNightCatches: null,
     fireball2026CaughtAt: null,
@@ -693,6 +694,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)
   merged.player.meteoriteMastery = Math.max(current.player.meteoriteMastery ?? 0, remoteState.player?.meteoriteMastery ?? 0)
   merged.player.orionidsFragments = mergeFragments(current.player.orionidsFragments, remoteState.player?.orionidsFragments)
+  merged.player.orionidsEventStage = Math.max(current.player.orionidsEventStage ?? 0, remoteState.player?.orionidsEventStage ?? 0) as 0 | 1 | 2
   merged.player.orionidsLookedUpAt = earliestStamp(current.player.orionidsLookedUpAt, remoteState.player?.orionidsLookedUpAt) ?? null
   merged.player.orionidsNightCatches = mergeNightCatches(current.player.orionidsNightCatches, remoteState.player?.orionidsNightCatches)
   merged.player.fireball2026CaughtAt = earliestStamp(current.player.fireball2026CaughtAt, remoteState.player?.fireball2026CaughtAt) ?? null

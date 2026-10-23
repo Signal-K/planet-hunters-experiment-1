@@ -481,7 +481,7 @@ import Foundation
             let out = Loop.transitArrived(arrival(m), catalog: catalog, now: t0)
             #expect(out.screen == .roverSurvey && out.player.missionPhase == .survey)
         }
-        #expect(catalog.missions.filter { $0.onWorldVehicle != nil }.allSatisfy { $0.id.contains("freeops-rover-landing") })
+        #expect(catalog.missions.filter { $0.onWorldVehicle != nil }.allSatisfy { $0.id.contains("freeops-rover-landing") || $0.id == OrionidsRun.surfaceResearchMissionId })
     }
 
     @Test func tutorialTransportLessonAndLandingTouchdownUseTheRover() {

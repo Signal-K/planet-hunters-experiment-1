@@ -317,6 +317,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const fireballMoment = fireballDue(debrisNow(), fireballCaughtAt) && !fireballCaughtLocal
   const fireballWorth = formatCurrency(Math.round(FIREBALL_FRAGMENT_PRICE * OPEN_MARKET_SELL_RATE))
   const collectMineral = useCallback((mineral: string) => {
+    if (nightRun && !DEBRIS_RESOURCE_IDS.includes(mineral) && mineral !== FIREBALL_FRAGMENT_ID) return
     // Shower debris rides in cargo when the hold has room. The night-run goal counts the catch either way.
     if (DEBRIS_RESOURCE_IDS.includes(mineral)) onDebrisMinedRef.current?.(mineral)
     if (mineral === FIREBALL_FRAGMENT_ID) {
@@ -450,6 +451,13 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // Local-dev-only shortcut: fills the order instantly so testing later
   // screens doesn't require playing the mining minigame by hand each time.
   function handleDevSkip() {
+    if (nightRun) {
+      catchesRef.current = ORIONIDS_FRAGMENT_GOAL
+      setCatches(ORIONIDS_FRAGMENT_GOAL)
+      cargoRef.current = { ...cargoRef.current, orionid_debris: ORIONIDS_FRAGMENT_GOAL }
+      onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
+      return
+    }
     cargoRef.current = { ...cargoRef.current, ...mission.requires.minerals }
     onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
   }
@@ -561,9 +569,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               Choose Storage Destination
             </div>
             <p style={{ margin: '0 0 14px', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
-              {nightRun
-                ? 'The fragments stay with you. Pick where the rest of the haul goes before you start drilling.'
-                : 'No client is owed this haul. Pick where whatever you mine on this run goes before you start drilling.'}
+              {'No client is owed this haul. Pick where whatever you mine on this run goes before you start drilling.'}
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <button
@@ -618,7 +624,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             </div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45, paddingRight: 20 }}>
               {nightRun
-                ? `Catch ${ORIONIDS_FRAGMENT_GOAL} Orionid fragments on this run, launch included. Fill the order and the run pays its francs, and you keep the fragments. The rest of the haul is yours to sell.`
+                ? `Catch ${ORIONIDS_FRAGMENT_GOAL} Orionid fragments on this run, launch included. They are protected research evidence, not ordinary cargo, and are kept when the event run is complete.`
                 : 'You picked the target and the order. No daily limit — mine what looks valuable, then sell the haul yourself at market price instead of a fixed client payout.'}
             </div>
           </Panel>

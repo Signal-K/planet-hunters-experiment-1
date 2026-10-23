@@ -33,7 +33,7 @@ interface LaunchpadScreenProps {
   onOpenControlStation?: () => void
   /** Scrub the active run after the launchpad confirm rail (SSL-512). */
   onAbandonMission?: () => void
-  mission?: { title: string } | null
+  mission?: { title: string; payload?: { type: string; name: string; cargoCost: number } } | null
   target?: Pick<Target, 'id' | 'name' | 'type' | 'archetype'> | null
   rocket?: RocketConfig
   hasStagedRocket?: boolean
@@ -85,6 +85,7 @@ export default function LaunchpadScreen({
     >
       <RocketBuilderScene
         missionTitle={mission?.title ?? player.activeMission?.label ?? null}
+        missionPayload={mission?.payload}
         target={target}
         hasStagedRocket={hasStagedRocket}
         rocket={rocket}

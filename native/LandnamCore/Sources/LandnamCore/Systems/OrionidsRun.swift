@@ -27,6 +27,7 @@ public struct OrionidsFragments: Codable, Equatable, Sendable {
 /// from the moment the run is accepted, not from the lifetime ledger, and a filled run pays once.
 public enum OrionidsRun {
     public static let missionId = "self-directed-orionids-night-run"
+    public static let surfaceResearchMissionId = "self-directed-orionids-surface-research"
     public static let fragmentGoal = 20
     /// Fragments one launch catches outside peak night.
     public static let launchCatchBase = 2
@@ -86,10 +87,23 @@ public enum OrionidsRun {
         let price = Double(Minerals.byId["orionid_debris"]?.price ?? 0)
         return Mission(
             id: missionId, title: "Orionids shower run",
-            brief: "No client. Launch through the shower and catch \(fragmentGoal) Orionid fragments on the way up. They fall any time through 7 Nov and take no cargo. Peak night pays double.",
+            brief: "No client. Launch through the shower and catch \(fragmentGoal) Orionid fragments. Event evidence is protected and is the only collection objective. Peak night pays double.",
             client: nil, tag: "FREE OPS", difficulty: "L1", locked: false, sequence: MissionGenerator.freeOpsMissionSequence,
             unlockAt: "Reach Free Operations", targetId: "eros",
-            requires: MissionRequirements(minerals: ["orionid_debris": fragmentGoal], cargoMin: 6, drillTier: 1, maxOrbit: 5),
+            requires: MissionRequirements(minerals: ["orionid_debris": fragmentGoal], cargoMin: 0, drillTier: 1, maxOrbit: 5),
             payout: MissionPayout(francs: MissionGenerator.normalizePayout(raw: price * Double(fragmentGoal), sequence: MissionGenerator.freeOpsMissionSequence), affinity: 0))
+    }
+
+    /// The second event tier changes activity from mining to a rover observation.
+    public static func surfaceResearchMission() -> Mission {
+        Mission(id: surfaceResearchMissionId, title: "Orionids surface observation",
+                brief: "Drive the rover to the marked Orionids outcrop and log the blue fracture pattern for the community research record.",
+                client: nil, tag: "EVENT RESEARCH", difficulty: "L1", locked: false,
+                sequence: MissionGenerator.freeOpsMissionSequence,
+                unlockAt: "Complete the Orionids debris capture", targetId: "eros",
+                requires: MissionRequirements(minerals: [:], cargoMin: 0, drillTier: 1, maxOrbit: 5),
+                payout: MissionPayout(francs: 0, affinity: 0), construction: nil,
+                payload: MissionPayload(type: .rover, name: "Orionids field rover", cargoCost: 0, instrumentId: nil),
+                programReward: nil, onWorldVehicle: MissionGenerator.starterRoverVehicle)
     }
 }

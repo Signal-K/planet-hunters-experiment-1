@@ -125,6 +125,8 @@ public struct Player: Codable, Equatable, Sendable {
     public var shipCustomizerParts: [String: String] = [:]
     /// Orionid fragment ledger (web `orionidsFragments`). `caught` and `redeemed` only move up.
     public var orionidsFragments: OrionidsFragments = OrionidsFragments()
+    /// Orionids event chain: 0 capture, 1 surface observation available, 2 complete.
+    public var orionidsEventStage: Int = 0
     /// Ledger `caught` count at the moment the shower run was accepted (web `orionidsRunBaseline`, SSL-651).
     public var orionidsRunBaseline: Int?
     /// UTC day to research tasks done that day (web `researchStamps`, SSL-663).
@@ -182,7 +184,7 @@ public struct Player: Codable, Equatable, Sendable {
         get("loanOffered", &loanOffered); getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
         get("seenPlanets", &seenPlanets); get("researchXP", &researchXP); get("subsurfaceExcavated", &subsurfaceExcavated)
         get("subsurfaceBuilt", &subsurfaceBuilt); get("landingResearched", &landingResearched)
-        get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("priceAlerts", &priceAlerts); get("shipCustomizerParts", &shipCustomizerParts); get("orionidsFragments", &orionidsFragments); get("researchStamps", &researchStamps); getOpt("orionidsRunBaseline", &orionidsRunBaseline); get("laserCapacitorLevel", &laserCapacitorLevel)
+        get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("priceAlerts", &priceAlerts); get("shipCustomizerParts", &shipCustomizerParts); get("orionidsFragments", &orionidsFragments); get("orionidsEventStage", &orionidsEventStage); get("researchStamps", &researchStamps); getOpt("orionidsRunBaseline", &orionidsRunBaseline); get("laserCapacitorLevel", &laserCapacitorLevel)
         buildingLevels = BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)
         launchpadUpgraded = launchpadUpgraded || (buildingLevels["launchpad"] ?? 1) >= 2
         Self.mergeTelescope(&self)
@@ -247,7 +249,7 @@ public struct Player: Codable, Equatable, Sendable {
         try put("loanOffered", loanOffered); try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
         try put("seenPlanets", seenPlanets); try put("researchXP", researchXP); try put("subsurfaceExcavated", subsurfaceExcavated)
         try put("subsurfaceBuilt", subsurfaceBuilt); try put("landingResearched", landingResearched)
-        try put("licenseGrade", licenseGrade); try put("flightPlan", flightPlan); try put("priceAlerts", priceAlerts); try put("shipCustomizerParts", shipCustomizerParts); try put("orionidsFragments", orionidsFragments); try put("researchStamps", researchStamps); try putOpt("orionidsRunBaseline", orionidsRunBaseline); try put("laserCapacitorLevel", laserCapacitorLevel)
+        try put("licenseGrade", licenseGrade); try put("flightPlan", flightPlan); try put("priceAlerts", priceAlerts); try put("shipCustomizerParts", shipCustomizerParts); try put("orionidsFragments", orionidsFragments); try put("orionidsEventStage", orionidsEventStage); try put("researchStamps", researchStamps); try putOpt("orionidsRunBaseline", orionidsRunBaseline); try put("laserCapacitorLevel", laserCapacitorLevel)
     }
 }
 

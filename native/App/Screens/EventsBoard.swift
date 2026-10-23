@@ -89,7 +89,7 @@ struct EventsBoard: View {
                 Spacer(minLength: 8)
                 medal(tier)
             }
-            Text(tier != nil ? "\(tier!.rawValue.uppercased()) BADGE EARNED" : ended ? "REPLAY REWARD · SILVER BADGE" : "EVENT REWARD · GOLD BADGE")
+            Text(id == "orionids-2026" && store.player.orionidsEventStage == 1 ? "TIER 2 · SURFACE OBSERVATION READY" : tier != nil ? "\(tier!.rawValue.uppercased()) BADGE EARNED" : ended ? "REPLAY REWARD · SILVER BADGE" : "EVENT REWARD · GOLD BADGE")
                 .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.textDim)
             if id == "orionids-2026" {
                 let local = SkyEventWindows.localWindow(location: store.player.skyEventLocation)
@@ -97,7 +97,7 @@ struct EventsBoard: View {
                     .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                     .accessibilityIdentifier("orionids-local-window")
             }
-            Button(ended ? "PLAY FOR SILVER" : eventStatus(id, now: now) == 1 ? "PARTICIPATE" : "PREPARE") { open(id) }
+            Button(id == "orionids-2026" && store.player.orionidsEventStage == 1 ? "CONTINUE RESEARCH" : ended ? "PLAY FOR SILVER" : eventStatus(id, now: now) == 1 ? "PARTICIPATE" : "PREPARE") { open(id) }
                 .font(AppFont.display(14)).tracking(1).foregroundStyle(Theme.ink)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink, lineWidth: 2))
@@ -111,7 +111,10 @@ struct EventsBoard: View {
 
     private func open(_ id: String) {
         switch id {
-        case "orionids-2026", "draconids-2026": onOpenDebris(id)
+        case "orionids-2026":
+            if store.player.orionidsEventStage == 1 { store.pickMission(OrionidsRun.surfaceResearchMissionId) }
+            else { onOpenDebris(id) }
+        case "draconids-2026": onOpenDebris(id)
         case "saturn-night-2026": store.go(.saturnStormSearch)
         case "new-moon-hunt-2026-10": store.go(.asteroidDiscovery)
         default: store.go(.launchpad)

@@ -22,6 +22,25 @@ describe('buildRuntimeCatalog', () => {
 
     expect(catalog.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('eros')
   })
+  it('offers the next Orionids tier only after debris capture', () => {
+    const next = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: 3,
+      player: { ...DEFAULT_STATE.player, freeOperations: true, orionidsEventStage: 1 },
+    })
+    expect(next.missions.find(mission => mission.id === 'self-directed-orionids-surface-research')).toMatchObject({
+      payload: { type: 'rover' },
+      requires: { minerals: {} },
+    })
+    const complete = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: 4,
+      player: { ...DEFAULT_STATE.player, freeOperations: true, orionidsEventStage: 2 },
+    })
+    expect(complete.missions.some(mission => mission.id === 'self-directed-orionids-surface-research')).toBe(false)
+  })
   it('adds a stored-haul mission for missing construction focus materials', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,

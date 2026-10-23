@@ -16,6 +16,7 @@ struct RoverFieldScreen: View {
     }
 
     private var targetName: String { store.target?.name ?? "Target" }
+    private var orionidsResearch: Bool { store.mission?.id == OrionidsRun.surfaceResearchMissionId }
 
     var body: some View {
         GeometryReader { geo in
@@ -58,8 +59,8 @@ struct RoverFieldScreen: View {
         Panel(accent: Theme.blueBright) {
             VStack(alignment: .leading, spacing: 10) {
                 Eyebrow(text: "Touchdown · \(targetName)")
-                Text("Deploy the Mule rover").font(AppFont.display(20))
-                Text("The Prospector is your rocket. The Mule is the rover in its hold. Deploy it to scout the terrain and log one outcrop. Ship laser extraction begins after the survey.")
+                Text(orionidsResearch ? "Deploy the Orionids field rover" : "Deploy the Mule rover").font(AppFont.display(20))
+                Text(orionidsResearch ? "The rover is loaded in your payload. Drive it onto the meteor, find the blue fracture outcrop, and log the observation for community research." : "The Prospector is your rocket. The Mule is the rover in its hold. Deploy it to scout the terrain and log one outcrop. Ship laser extraction begins after the survey.")
                     .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                 PrimaryButton(title: "DEPLOY MULE ROVER") { deployed = true }
             }
@@ -111,10 +112,10 @@ struct RoverFieldScreen: View {
                     Spacer()
                     Text(prospecting.logged != nil ? "OBSERVATION LOGGED" : "SCOUTING").font(AppFont.display(14)).tracking(1.0)
                 }
-                Text(prospecting.loggedOutcrop.map { "\($0.label) logged. The ship laser is ready for extraction." }
+                Text(prospecting.loggedOutcrop.map { orionidsResearch ? "\($0.label) logged. The Orionids observation is ready for debrief." : "\($0.label) logged. The ship laser is ready for extraction." }
                      ?? "Use the drive pad to scout the field, then tap an exposed outcrop to log a surface observation.")
                     .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
-                PrimaryButton(title: "CONTINUE TO SHIP LASER") { store.roverSurveyComplete() }
+                PrimaryButton(title: orionidsResearch ? "LOG OBSERVATION" : "CONTINUE TO SHIP LASER") { store.roverSurveyComplete() }
                     .disabled(!prospecting.canContinue).opacity(prospecting.canContinue ? 1 : 0.45)
             }
         }
