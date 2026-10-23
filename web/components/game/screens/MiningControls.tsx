@@ -20,7 +20,7 @@ function Arrow({ dir }: { dir: Dir }) {
 }
 
 /**
- * Mining steering pad, bottom-left (rover d-pad style). Up/down hold altitude, left/right hold speed.
+ * Mining steering pad, bottom-left (rover d-pad style). Up/down hold altitude, left/right steer the ship.
  * Keyboard W/S/arrows still work; this is the main touch control (SSL-536).
  */
 export function MiningDPad({ disabled, onAltitude, onSpeed, obstacleAhead = false }: {
@@ -44,7 +44,7 @@ export function MiningDPad({ disabled, onAltitude, onSpeed, obstacleAhead = fals
       onLostPointerCapture: stop,
     }
   }
-  const label: Record<Dir, string> = { up: 'Climb', down: 'Descend', left: 'Slow down', right: 'Speed up' }
+  const label: Record<Dir, string> = { up: 'Climb', down: 'Descend', left: 'Reverse', right: 'Forward' }
   return (
     <div className={styles.dpad} role="group" aria-label="Steer" data-testid="mining-dpad">
       {(['up', 'left', 'right', 'down'] as Dir[]).map(dir => (

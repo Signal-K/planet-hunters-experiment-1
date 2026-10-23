@@ -8,6 +8,9 @@ export interface AnchoredTexture {
 
 /** Raster set for one sky-event shower. Absent means the vector fallback. */
 export interface DebrisArtSet {
+  /** Event-specific sky treatment layered over the procedural backdrop. */
+  sky: Texture | null
+  skyBlend: 'normal' | 'multiply' | 'screen'
   fallFrames: Texture[]
   fallFps: number
   /** Ground contact inside a fall frame, 0..1. */

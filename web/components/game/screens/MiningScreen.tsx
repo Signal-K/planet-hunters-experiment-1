@@ -206,6 +206,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const gateOpen = !!isFreeHaulEligible && earthDisposition == null
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
+  const steerRef = useRef<((dir: number) => void) | null>(null)
   const altitudeRef = useRef<((dir: number) => void) | null>(null)
   const [bumpNote, setBumpNote] = useState(false)
   const [firingHeld, setFiringHeld] = useState(false)
@@ -402,14 +403,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         e.preventDefault()
         altitudeRef.current?.(1)
       } else if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
-        scrollRef.current?.(-1)
+        steerRef.current?.(-1)
       } else if (e.code === 'KeyD' || e.code === 'ArrowRight') {
-        scrollRef.current?.(1)
+        steerRef.current?.(1)
       }
     }
     function onKeyUp(e: KeyboardEvent) {
       if (['KeyW', 'ArrowUp', 'KeyS', 'ArrowDown'].includes(e.code)) altitudeRef.current?.(0)
-      if (['KeyA', 'ArrowLeft', 'KeyD', 'ArrowRight'].includes(e.code)) scrollRef.current?.(0)
+      if (['KeyA', 'ArrowLeft', 'KeyD', 'ArrowRight'].includes(e.code)) steerRef.current?.(0)
     }
     window.addEventListener('keydown', onKey)
     window.addEventListener('keyup', onKeyUp)
@@ -785,6 +786,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           fireRef={fireRef}
           onFireRequest={() => fireLaser()}
           scrollRef={scrollRef}
+          steerRef={steerRef}
           altitudeRef={altitudeRef}
           onBump={() => {
             // Clipping terrain dents the hull and costs a laser charge; never an instant fail (SSL-536).
@@ -804,7 +806,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         <MiningDPad
           disabled={sceneStatus !== 'ready'}
           onAltitude={dir => altitudeRef.current?.(dir)}
-          onSpeed={dir => scrollRef.current?.(dir)}
+          onSpeed={dir => steerRef.current?.(dir)}
           obstacleAhead={obstacleAhead}
         />
         <LaserGauge charges={laserCharges} max={MAX_CHARGES} charging={isCharging} firing={firingHeld} />

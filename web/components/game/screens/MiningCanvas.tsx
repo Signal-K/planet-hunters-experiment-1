@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
-import { Application, Container } from 'pixi.js'
+import { Application, Container, Sprite } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
@@ -45,6 +45,8 @@ interface MiningCanvasProps {
   /** Direct canvas tap/click must route back through the screen's fireLaser() so the charge-budget and gate checks it owns aren't bypassed — see the pointerdown handler below. */
   onFireRequest?: () => void
   scrollRef: React.MutableRefObject<((dx: number) => void) | null>
+  /** Steer left (-1), neutral (0), or right (1). */
+  steerRef?: React.MutableRefObject<((dir: number) => void) | null>
   /** Climb (-1), hold (0) or descend (1). Set by the d-pad, keys and vertical drags (SSL-536). */
   altitudeRef?: React.MutableRefObject<((dir: number) => void) | null>
   /** The hull clipped a mountain or ridge: bumped up and damaged, never an instant fail. */
@@ -64,7 +66,7 @@ interface MiningCanvasProps {
   skyEventLocation?: PlayerLocation | null
 }
 
-export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, steerRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
   void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
@@ -212,6 +214,24 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           ? await loadOrionidsArt(miningCanvasIsDark(palette.skyTop) ? 'dark' : 'blueprint')
           : null
         if (destroyed) return
+        if (debrisArt?.sky) {
+          const eventSky = new Sprite(debrisArt.sky)
+          eventSky.width = worldW
+          eventSky.height = surfaceY
+          eventSky.alpha = 0.82
+          eventSky.blendMode = debrisArt.skyBlend
+          field.backdrop.addChildAt(eventSky, 0)
+        }
+        if (shower?.eventId === 'orionids-2026') {
+          const eventTerrainTint = (container: Container) => container.children.forEach(child => {
+            if (child instanceof Sprite) child.tint = 0x2f7794
+          })
+          eventTerrainTint(field.far)
+          eventTerrainTint(field.mid)
+          eventTerrainTint(field.near)
+          eventTerrainTint(field.ground)
+          eventTerrainTint(field.surface)
+        }
         const controllerObj = scene.find('mining-controller')
         const controller = new MiningController(new RuntimeContext(), {
           container: oreLayer,
@@ -219,6 +239,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           worldHeight: worldH,
           surfaceY,
           shipY,
+          shipX: () => shipX,
           minerals,
           leadMinerals,
           scrollScreens,
@@ -271,17 +292,21 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
 
         let sceneTime = 0
         const CLIMB_SPEED = 180
+        const STEER_SPEED = 150
         const SHIP_BELLY = 14
         const SHIP_HALF_W = 30
         const BUMP_KICK = 18
         let altitude = 0
         let climb = 0
+        let shipX = SHIP_X
+        let steering = 0
         let bumpCooldown = 0
         let lastObstacleAhead: boolean | null = null
         const minAlt = Math.min(0, 64 - shipY)
         const maxAlt = Math.max(0, surfaceY - 56 - shipY)
         const beamTop = field.beam.y
         const beamSpan = Math.max(24, surfaceY - beamTop)
+        if (steerRef) steerRef.current = (dir: number) => { steering = Math.max(-1, Math.min(1, dir)) }
         if (altitudeRef) altitudeRef.current = (dir: number) => { climb = Math.max(-1, Math.min(1, dir)) }
         let lastFireAt = -1
         app.ticker.add(ticker => {
@@ -291,24 +316,30 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           const kick = prefersReducedMotion() || lastFireAt < 0 ? 0 : recoilOffset((performance.now() - lastFireAt) / 1000)
           // The ship stays level; altitude moves it between the sky ceiling and just above the ground.
           const dt = ticker.deltaMS / 1000
+          shipX = Math.max(40, Math.min(worldW - 40, shipX + steering * STEER_SPEED * dt))
+          field.ship.x = shipX
+          field.beam.x = shipX
+          field.spark.x = shipX
+          field.dig.x = shipX
           altitude = Math.max(minAlt, Math.min(maxAlt, altitude + climb * CLIMB_SPEED * dt))
           if (bumpCooldown > 0) bumpCooldown -= dt
           const clear = Math.max(
-            obstacleHeightAt(field, SHIP_X - SHIP_HALF_W),
-            obstacleHeightAt(field, SHIP_X),
-            obstacleHeightAt(field, SHIP_X + SHIP_HALF_W),
+            obstacleHeightAt(field, shipX - SHIP_HALF_W),
+            obstacleHeightAt(field, shipX),
+            obstacleHeightAt(field, shipX + SHIP_HALF_W),
           )
           const obstacleAhead = Math.max(
-            obstacleHeightAt(field, SHIP_X + 80),
-            obstacleHeightAt(field, SHIP_X + 120),
-            obstacleHeightAt(field, SHIP_X + 160),
+            obstacleHeightAt(field, shipX + 80),
+            obstacleHeightAt(field, shipX + 120),
+            obstacleHeightAt(field, shipX + 160),
           )
-          const shouldClimb = obstacleAhead > 18 && shipY + altitude + SHIP_BELLY > surfaceY - obstacleAhead - 12
+          const hullBottom = shipY + altitude + SHIP_BELLY
+          const shouldClimb = obstacleAhead > 18 && hullBottom > surfaceY - obstacleAhead - 8
           if (shouldClimb !== lastObstacleAhead) {
             lastObstacleAhead = shouldClimb
             onObstacleAheadRef?.current?.(shouldClimb)
           }
-          if (clear > 0 && shipY + altitude + SHIP_BELLY > surfaceY - clear) {
+          if (clear > 0 && hullBottom > surfaceY - clear + 4) {
             altitude = Math.max(minAlt, surfaceY - clear - SHIP_BELLY - shipY - BUMP_KICK)
             if (bumpCooldown <= 0) {
               bumpCooldown = 1.6
@@ -373,31 +404,31 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         let dragStartX: number | null = null
         let dragStartY = 0
         let dragging = false
-        let steering = false
+        let verticalSteering = false
         const DRAG_THRESHOLD_PX = 10
         const DRAG_FULL_SPEED_PX = 120
         const endDrag = () => {
           if (dragging) scrollRef.current?.(0)
-          if (steering) altitudeRef?.current?.(0)
+          if (verticalSteering) altitudeRef?.current?.(0)
           dragStartX = null
           dragging = false
-          steering = false
+          verticalSteering = false
         }
         input.onAny(event => {
           if (event.type === 'pointerdown') {
             dragStartX = event.screen.x
             dragStartY = event.screen.y
             dragging = false
-            steering = false
+            verticalSteering = false
           } else if (event.type === 'pointermove' && dragStartX !== null) {
             const delta = event.screen.x - dragStartX
             const dy = event.screen.y - dragStartY
-            if (!dragging && !steering && Math.abs(dy) >= DRAG_THRESHOLD_PX && Math.abs(dy) > Math.abs(delta)) steering = true
-            if (steering) { altitudeRef?.current?.(Math.max(-1, Math.min(1, dy / 60))); return }
+            if (!dragging && !verticalSteering && Math.abs(dy) >= DRAG_THRESHOLD_PX && Math.abs(dy) > Math.abs(delta)) verticalSteering = true
+            if (verticalSteering) { altitudeRef?.current?.(Math.max(-1, Math.min(1, dy / 60))); return }
             if (!dragging && Math.abs(delta) >= DRAG_THRESHOLD_PX) dragging = true
             if (dragging) scrollRef.current?.(Math.max(-1, Math.min(1, -delta / DRAG_FULL_SPEED_PX)))
           } else if (event.type === 'pointerup') {
-            const wasDrag = dragging || steering
+            const wasDrag = dragging || verticalSteering
             endDrag()
             // A direct canvas tap must go through the screen's fireLaser(), not
             // straight to attemptFire(), so the charge-budget and gate checks
@@ -439,6 +470,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
       chargingRef?.current?.(false)
       fireRef.current = null
       scrollRef.current = null
+      if (steerRef) steerRef.current = null
       if (altitudeRef) altitudeRef.current = null
       if (oreNearRef) oreNearRef.current = null
       controllerRef.current = null
