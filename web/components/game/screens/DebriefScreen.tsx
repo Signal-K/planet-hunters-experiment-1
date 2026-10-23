@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import { calibrateOnboardingPayout, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig, loanInstalmentFor } from '@/lib/data'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
@@ -53,6 +54,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const shownRunRef = useRef(showerRun ?? null)
   if (showerRun) shownRunRef.current = showerRun
   const shownRun = shownRunRef.current
+  const isOrionidsRun = mission.id === ORIONIDS_NIGHT_RUN_ID
   const isOrbitalInstrumentDeployment = mission.payload?.type === 'satellite'
   const help = useHelp('debrief')
   const [collecting, setCollecting] = useState(false)
@@ -146,6 +148,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               <span>Fragments kept</span>
               <span>{shownRun.fragments}</span>
             </div>
+          </section>
+        )}
+
+        {isOrionidsRun && (
+          <section className={styles.card} data-surface="cream" data-testid="debrief-orionids-knowledge">
+            <p className={styles.kicker}>Orionids knowledge log</p>
+            <p className={styles.note}>This run is saved to your Data Pad as a meteor-shower observation. Add your own Orionids photos in the Atlas app to keep building the event record.</p>
+            <a href="https://playlandnam.space" target="_blank" rel="noreferrer" className={styles.link}>Open Atlas photos</a>
           </section>
         )}
 

@@ -716,6 +716,17 @@ struct DebriefScreen: View {
                         }
                     }
 
+                    if m?.id == OrionidsRun.missionId {
+                        CreamCard {
+                            Text("ORIONIDS KNOWLEDGE LOG").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                            Text("This run is saved to your Data Pad as a meteor-shower observation. Add your own Orionids photos in the Atlas app to keep building the event record.")
+                                .font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                            Link("Open Atlas photos", destination: URL(string: "https://playlandnam.space")!)
+                                .font(AppFont.body(14)).fontWeight(.bold).foregroundStyle(Theme.blue)
+                                .underline()
+                        }
+                    }
+
                     if showLaser, let m {
                         LaserCapacitorPanel(
                             level: store.player.laserCapacitorLevel,

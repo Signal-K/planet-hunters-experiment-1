@@ -1176,6 +1176,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell') => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
+    if (current.missionId === ORIONIDS_NIGHT_RUN_ID) stampResearch('event')
     // A self-directed ("free") haul lands in the stash on return; here the
     // player's Debrief choice decides whether it stays on Earth or is sold at
     // market. Runs as its own state step before the payout/ledger update below
@@ -1553,7 +1554,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // sequence, so only count "ran out of missions" from the first Free Ops
     // tier onward (the same point it could first fire before SSL-332).
     if (newMissionsDone >= FREE_OPS_MISSION_SEQUENCE && !catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
-  }, [addToast, catalog.missions, setState, stateRef])
+  }, [addToast, catalog.missions, setState, stampResearch, stateRef])
 
   const onDebriefDoneRef = useRef(onDebriefDone)
   onDebriefDoneRef.current = onDebriefDone
