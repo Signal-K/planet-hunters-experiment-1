@@ -102,6 +102,8 @@ describe('DebriefScreen own-program outcomes', () => {
 
     expect(host.querySelector('[data-testid="debrief-orionids-knowledge"]')?.textContent).toContain('Data Pad')
     expect(host.textContent).toContain('Atlas app')
+    expect(host.querySelector('[data-testid="mission-next-handoff"]')?.textContent).toContain('Events board')
+    expect(host.querySelector('[data-testid="collect-reward-btn"]')?.textContent).toContain('continue research')
     expect(host.querySelector('a[href="https://playlandnam.space"]')).not.toBeNull()
     root.unmount()
   })
