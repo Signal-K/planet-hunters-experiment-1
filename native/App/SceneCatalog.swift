@@ -217,6 +217,17 @@ enum SceneCatalog {
         return gs
     }
 
+    /// SSL-574: the transport lesson's unload at its client berth, `elapsed` ms into the 8 s clock.
+    static func deliveryState(elapsed: Double) -> GameState {
+        var gs = pickedState(.delivery, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1, phase: .delivery)
+        let m = Catalog().mission("lnm_m3_relay_bennu_vesta")
+        gs.deliveryTargetId = m?.deliveryTargetId
+        gs.lastCargo = m?.requires.minerals ?? ["iron": 4]
+        gs.player.headingToDelivery = true
+        gs.player.deliveryUnloadStartedAt = landingNow - elapsed
+        return gs
+    }
+
     /// SSL-553: untimed trip home.
     static func returnState() -> GameState { var gs = transitState(returning: true); gs.player.arrivalAt = nil; return gs }
     /// SSL-553: landed back on the pad with the haul to settle (surface silo built).
@@ -519,7 +530,9 @@ enum SceneCatalog {
         scene("transport-hub-live", 874) { var gs = basePlayer(); gs.player.missionsDone = 1; return HubScreen().environment(GameStore(state: gs)) },
         scene("transport-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))).environment(\.flatLayout, true) },
         scene("transport-mining-live", 874) { MiningScreen().environment(GameStore(state: pickedState(.mining, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1, phase: .mining))) },
-        scene("transport-delivery-live", 874) { DeliveryScreen().environment(GameStore(state: pickedState(.delivery, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))) },
+        scene("transport-delivery-live", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 3_000), clock: { landingNow })) },
+        scene("delivery-done-phone", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 8_000), clock: { landingNow })) },
+        scene("delivery-landscape", 402, w: 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 3_000), clock: { landingNow })) },
         scene("transport-debrief-live", 874) { DebriefScreen().environment(GameStore(state: pickedState(.debrief, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))) },
         scene("telescope-hub-live", 874) { var gs = basePlayer(); gs.player.deepSpaceTelescopeBuilt = true; return HubScreen().environment(GameStore(state: gs)) },
         scene("telescope-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab, mission: Instruments.transitMissionId, missionsDone: 5))).environment(\.flatLayout, true) },

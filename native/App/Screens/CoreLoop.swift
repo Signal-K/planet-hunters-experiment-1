@@ -537,7 +537,7 @@ private func mixWhite(_ hex: String?, _ pct: Double, fallback: Color) -> Color {
     return Color(.sRGB, red: c.r * pct + (1 - pct), green: c.g * pct + (1 - pct), blue: c.b * pct + (1 - pct))
 }
 
-private extension Color {
+extension Color {
     init?(hex: String?) {
         guard let hex, hex.hasPrefix("#"), let v = UInt32(hex.dropFirst(), radix: 16) else { return nil }
         self = Theme.hex(v)
@@ -588,15 +588,6 @@ struct LaunchScreen: View {
                 PrimaryButton(title: "Launch", enabled: store.player.stagedRockets.contains { $0.location == .launchpad }) { launching = true }
                 Button("Abandon contract", role: .destructive) { store.abandonMission() }.frame(minHeight: 44)
             }
-        }
-    }
-}
-
-struct DeliveryScreen: View {
-    @Environment(GameStore.self) private var store
-    var body: some View {
-        ScreenFrame(title: "Delivery") {
-            PrimaryButton(title: "Unload cargo") { store.deliveryUnloadComplete() }
         }
     }
 }

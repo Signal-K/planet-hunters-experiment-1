@@ -77,7 +77,7 @@ struct StubScreen: View {
     @Environment(GameStore.self) private var store
     let screen: Screen
     var body: some View {
-        ScreenFrame(title: screen.rawValue.replacingOccurrences(of: "-", with: " ").capitalized, back: { store.go(.hub) }) {
+        ScreenFrame(title: "", back: { store.go(.hub) }) {
             Panel { Text("Staged: this scene is routed but its systems are not ported yet.") }
         }
     }
