@@ -20,14 +20,14 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByRole('button', { name: 'Cargo', exact: true })).toHaveCount(0)
       const sell = await page.locator('[data-testid="sell-all-btn"]').boundingBox()
       const crate = await page.locator('[data-testid="exchange-crate-iron"]').boundingBox()
-      const cog = await page.locator('[data-testid="settings-button"]').boundingBox()
+      const back = await page.locator('[data-testid="market-back"]').boundingBox()
       expect(sell && sell.height >= 44 && sell.width >= 44).toBe(true)
       for (const tab of ['sell', 'buy', 'alerts']) {
         const box = await page.locator(`[data-testid="market-tab-${tab}"]`).boundingBox()
         expect(box && box.height >= 44 && box.width >= 44).toBe(true)
       }
       expect(crate && crate.height >= 44 && crate.width >= 44).toBe(true)
-      expect(cog && cog.height >= 44 && cog.width >= 44).toBe(true)
+      expect(back && back.height >= 44 && back.width >= 44).toBe(true)
       const fonts = await page.evaluate(() => {
         const size = (sel: string) => {
           const el = document.querySelector(sel)

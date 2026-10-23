@@ -100,6 +100,16 @@ enum SceneCatalog {
         return gs
     }
 
+    /// Four missions done, landing researched and the starter rooms already fitted.
+    static func landerFitState() -> GameState {
+        var gs = partState()
+        gs.player.missionsDone = 4
+        gs.player.landingResearched = true
+        gs.player.francs = 40_000_000
+        gs.player.shipCustomizerParts = ["engine": "ion-thruster-t1", "booster": "strap-booster-t1", "cockpit": "cockpit-command-t1", "payload": "cargo-payload-t1"]
+        return gs
+    }
+
     /// Six missions done with funds in hand: the tier 3 Surveyor is open in the hangar (web `ui-hangar-surveyor`).
     static func surveyorState() -> GameState {
         var gs = partState()
@@ -204,6 +214,17 @@ enum SceneCatalog {
         case .descend: gs.player.landingStartedAt = landingNow - 3_000
         case .ascend: gs.player.landingReturnStartedAt = landingNow - 5_000; gs.player.miningCargoInProgress = ["iron": 3]
         }
+        return gs
+    }
+
+    /// SSL-574: the transport lesson's unload at its client berth, `elapsed` ms into the 8 s clock.
+    static func deliveryState(elapsed: Double) -> GameState {
+        var gs = pickedState(.delivery, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1, phase: .delivery)
+        let m = Catalog().mission("lnm_m3_relay_bennu_vesta")
+        gs.deliveryTargetId = m?.deliveryTargetId
+        gs.lastCargo = m?.requires.minerals ?? ["iron": 4]
+        gs.player.headingToDelivery = true
+        gs.player.deliveryUnloadStartedAt = landingNow - elapsed
         return gs
     }
 
@@ -509,7 +530,9 @@ enum SceneCatalog {
         scene("transport-hub-live", 874) { var gs = basePlayer(); gs.player.missionsDone = 1; return HubScreen().environment(GameStore(state: gs)) },
         scene("transport-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))).environment(\.flatLayout, true) },
         scene("transport-mining-live", 874) { MiningScreen().environment(GameStore(state: pickedState(.mining, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1, phase: .mining))) },
-        scene("transport-delivery-live", 874) { DeliveryScreen().environment(GameStore(state: pickedState(.delivery, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))) },
+        scene("transport-delivery-live", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 3_000), clock: { landingNow })) },
+        scene("delivery-done-phone", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 8_000), clock: { landingNow })) },
+        scene("delivery-landscape", 402, w: 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 3_000), clock: { landingNow })) },
         scene("transport-debrief-live", 874) { DebriefScreen().environment(GameStore(state: pickedState(.debrief, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))) },
         scene("telescope-hub-live", 874) { var gs = basePlayer(); gs.player.deepSpaceTelescopeBuilt = true; return HubScreen().environment(GameStore(state: gs)) },
         scene("telescope-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab, mission: Instruments.transitMissionId, missionsDone: 5))).environment(\.flatLayout, true) },
@@ -629,6 +652,9 @@ enum SceneCatalog {
         scene("hangar-sealed-phone", 844, w: 390) { HangarScreen().environment(GameStore(state: partState())) },
         scene("hangar-config-phone", 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
         scene("hangar-config-landscape", 402, w: 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
+        // SSL-667: landing researched at 4 missions, the lander room is the last step of the bigger hull.
+        scene("hangar-config-lander-phone", 874) { HangarModulesPanel(startKind: "lander").environment(GameStore(state: landerFitState())) },
+        scene("hangar-config-lander-landscape", 402, w: 874) { HangarModulesPanel(startKind: "lander").environment(GameStore(state: landerFitState())) },
         scene("rover-field-phone", 874) {
             var p = Prospecting(); p.observe("ore-a")
             return RoverFieldScreen(initial: p, deployed: true).environment(GameStore(state: GameState()))
@@ -649,6 +675,11 @@ enum SceneCatalog {
             let gs = Academy.migrate(basePlayer(), now: t0)
             let st = GameStore(state: Academy.applyHire(gs, sourceId: "nasa", now: t0), clock: { 1_760_000_000_000 })
             return AcademyScreen(at: t0).environment(st).environment(\.flatLayout, true)
+        },
+        scene("academy-landing-phone", 1000) {
+            var gs = Academy.migrate(basePlayer(), now: t0)
+            gs.player.missionsDone = 4; gs.player.researchXP = 150
+            return AcademyScreen(at: t0, startTab: .partners).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true)
         },
         scene("launchpad-phone", 874) {
             var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.missionsDone = 3

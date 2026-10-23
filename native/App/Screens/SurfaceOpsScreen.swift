@@ -10,7 +10,7 @@ struct SurfaceOpsScreen: View {
     var at: Double?
 
     var body: some View {
-        ScreenFrame(title: "Surface Operations", back: { store.go(.hub) }) {
+        ScreenFrame(title: "", back: { store.go(.hub) }) {
             TimelineView(.periodic(from: .now, by: 1)) { ctx in
                 let now = at ?? max(store.now, ctx.date.timeIntervalSince1970 * 1000)
                 content(now: now)

@@ -423,6 +423,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       requestPasswordResetFromGate: auth.requestPasswordResetFromGate,
       confirmPasswordResetFromGate: auth.confirmPasswordResetFromGate,
       createAccountFromGate: auth.createAccountFromGate,
+      verifyAccountFromGate: auth.verifyAccountFromGate,
       resetGame: useCallback(() => { void auth.resetGame(DEFAULT_STATE) }, [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
       signOut: auth.signOut,
       // Game loop

@@ -131,6 +131,6 @@ export class DeliveryController extends ScriptBehaviour {
 
     const pulse = .45 + Math.sin(this.phase * 4) * .25
     g.circle(railEnd + 19, railY - 78, 5)
-      .fill({ color: progress >= 1 ? 0x46d99a : AMBER, alpha: progress >= 1 ? .9 : pulse })
+      .fill({ color: progress >= 1 ? 0xd8e9ff : AMBER, alpha: progress >= 1 ? .9 : pulse })
   }
 }

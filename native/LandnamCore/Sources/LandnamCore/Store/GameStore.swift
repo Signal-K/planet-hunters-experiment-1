@@ -213,10 +213,13 @@ public final class GameStore {
             let t = Instruments.exoplanetTarget(candidate, measuredPeriodDays: Tess.periodFromRanges(marks))
             n.player.discoveredExoplanetTargets[t.id] = n.player.discoveredExoplanetTargets[t.id] ?? t
         }
+        let training = subjectId.hasPrefix(MissionLog.trainingPrefix)
+        let first = state.player.tessClassifications[subjectId] == nil
         n.player.tessClassifications[subjectId] = TessClassification(subjectId: subjectId, verdict: verdict, ranges: marks, submittedAt: clock())
         WswBadges.grant(&n.player.badges, .citizenScience, at: clock())
         n.player.researchAnnotations += 1
-        n.player.researchXP += Self.firstClassificationXP
+        // The training light curve pays only the replay reward (web); real subjects pay once.
+        if first && !training { n.player.researchXP += Self.firstClassificationXP }
         FlightPlan.completeTry(&n, "scan")
         ResearchStampRules.add(&n.player, .classification, at: clock())
         apply(n)
@@ -303,6 +306,7 @@ public final class GameStore {
     public func trainCandidate(branch: String) { apply(Academy.applyStartCandidate(state, branch: branch, now: now)) }
     public func collectTraining(_ id: String) { apply(Academy.applyCollectTraining(state, sessionId: id, now: now)) }
     public func researchCrewModule() { apply(Academy.applyResearchCrewModule(state)) }
+    public func researchLanding() { apply(Transitions.applyResearchLanding(state)) }
     public func assignCrew(_ structureId: String, crewId: String?) { apply(Academy.applyAssign(state, structureId: structureId, crewId: crewId)) }
     @discardableResult public func place(_ kind: String, plot: Int) -> Bool {
         let next = Construction.applyPlace(state, kind: kind, plot: plot, now: now)

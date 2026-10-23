@@ -105,6 +105,72 @@ describe('AuthGateSheet', () => {
     await act(async () => root.unmount())
   })
 
+  it('finishes a code-based reset with the emailed code and a new password', async () => {
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const onRequestPasswordReset = vi.fn(async (): Promise<'code'> => 'code')
+    const onConfirmPasswordReset = vi.fn(async () => {})
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<AuthGateSheet error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={vi.fn(async () => {})} onRequestPasswordReset={onRequestPasswordReset} onConfirmPasswordReset={onConfirmPasswordReset} />)
+    })
+    await act(async () => {
+      ;(host.querySelector('[data-testid="auth-gate-forgot-password"]') as HTMLButtonElement).click()
+    })
+    await act(async () => setValue(host.querySelector('[data-testid="auth-gate-email"]') as HTMLInputElement, 'miner@example.com'))
+    await act(async () => {
+      host.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    })
+
+    expect(host.querySelector('[data-testid="auth-gate-email"]')).toBeNull()
+    expect(host.textContent).toContain('code we emailed to miner@example.com')
+    await act(async () => {
+      setValue(host.querySelector('[data-testid="auth-gate-code"]') as HTMLInputElement, '123456')
+      setValue(host.querySelector('[data-testid="auth-gate-password"]') as HTMLInputElement, 'a-new-password')
+      setValue(host.querySelector('[data-testid="auth-gate-password-confirmation"]') as HTMLInputElement, 'a-new-password')
+    })
+    await act(async () => {
+      host.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    })
+    expect(onConfirmPasswordReset).toHaveBeenCalledWith('123456', 'a-new-password')
+
+    await act(async () => root.unmount())
+  })
+
+  it('asks for the emailed code when sign-up needs verification', async () => {
+    window.history.replaceState(null, '', '/game?gate=signup')
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const onCreateAccount = vi.fn(async (): Promise<'verify'> => 'verify')
+    const onVerifyAccount = vi.fn(async () => {})
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<AuthGateSheet error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={onCreateAccount} onVerifyAccount={onVerifyAccount} onRequestPasswordReset={vi.fn(async () => {})} onConfirmPasswordReset={vi.fn(async () => {})} />)
+    })
+    await act(async () => {
+      setValue(host.querySelector('[data-testid="auth-gate-email"]') as HTMLInputElement, 'new@example.com')
+      setValue(host.querySelector('[data-testid="auth-gate-password"]') as HTMLInputElement, 'long-password')
+      setValue(host.querySelector('[data-testid="auth-gate-password-confirmation"]') as HTMLInputElement, 'long-password')
+    })
+    await act(async () => {
+      host.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    })
+    expect(onCreateAccount).toHaveBeenCalledWith('new@example.com', 'long-password')
+    expect(host.querySelector('[data-testid="auth-gate-password"]')).toBeNull()
+    expect(host.querySelector('[data-testid="auth-gate-submit"]')?.textContent).toBe('Confirm Email')
+
+    await act(async () => setValue(host.querySelector('[data-testid="auth-gate-code"]') as HTMLInputElement, '424242'))
+    await act(async () => {
+      host.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    })
+    expect(onVerifyAccount).toHaveBeenCalledWith('424242')
+
+    window.history.replaceState(null, '', '/game')
+    await act(async () => root.unmount())
+  })
+
   it('sets a new password from the emailed reset link and drops the token from the URL', async () => {
     window.history.replaceState(null, '', '/game?reset_token=abc123')
     const host = document.createElement('div')

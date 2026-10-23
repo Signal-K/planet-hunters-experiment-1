@@ -43,14 +43,8 @@ public enum FlightPlan {
         public struct Go: Equatable, Sendable { public let label: String; public let screen: Screen }
     }
 
-    /// Part kinds fitted in the Hangar, in web CUSTOMIZER_BUILD_SEQUENCE order, with the starter module for each.
+    /// The starter hull's rooms (web CUSTOMIZER_BUILD_SEQUENCE); larger hulls add more, see `ShipCustomizer.sequence`.
     public static let moduleKinds = ["engine", "booster", "cockpit", "payload"]
-    public static let modules: [String: [(id: String, name: String)]] = [
-        "engine": [("ion-thruster-t1", "Ion Thruster T1"), ("pulse-thruster-t1", "Pulse Thruster T1")],
-        "booster": [("strap-booster-t1", "Strap Booster Pair"), ("vulcan-booster-t1", "Vulcan Booster Pair")],
-        "cockpit": [("cockpit-command-t1", "Command Cockpit T1"), ("guidance-cockpit-t1", "Guidance Cockpit T1")],
-        "payload": [("cargo-payload-t1", "Cargo Bay T1"), ("mining-payload-t1", "Mining Payload T1")],
-    ]
 
     /// Screens that belong to a live cargo run; the scan and part lines never show here (web LOOP_SCREENS).
     private static let loopScreens: Set<Screen> = [.fab, .roverSurvey, .targets, .mining, .debrief, .transit, .landing, .delivery, .rocketBuy]
@@ -132,10 +126,14 @@ public enum FlightPlan {
         return Coach(kicker: kicker, objective: base.objective, radio: base.radio, go: nil)
     }
 
-    /// Fits one module per ship stage. Needs every stage filled and enough francs for the change; completes the part try.
+    /// Fits one part per room of the hull's sequence. Needs every room filled and enough francs for the net change
+    /// (web `applyConfirmShipCustomizerBuild`); completes the part try.
     public static func applyFit(_ s: GameState, installed: [String: String]) -> GameState {
-        guard moduleKinds.allSatisfy({ installed[$0] != nil }) else { return s }
+        guard ShipCustomizer.sequence(for: s.player).allSatisfy({ installed[$0] != nil }) else { return s }
+        let cost = ShipCustomizer.netCost(installed, previous: s.player.shipCustomizerParts)
+        guard cost <= s.player.francs else { return s }
         var n = s
+        n.player.francs -= cost
         n.player.shipCustomizerParts = installed
         completeTry(&n, "part")
         return n

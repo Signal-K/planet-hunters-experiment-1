@@ -571,9 +571,13 @@ export interface GameActions {
   authGateOpen: boolean
   authGateError: string | null
   signInFromGate: (email: string, password: string) => Promise<void>
-  requestPasswordResetFromGate: (email: string) => Promise<void>
-  confirmPasswordResetFromGate: (token: string, password: string) => Promise<void>
-  createAccountFromGate: (email: string, password: string) => Promise<void>
+  /** Resolves 'code' when the reset continues with an emailed code (Clerk). */
+  requestPasswordResetFromGate: (email: string) => Promise<'code' | void>
+  /** A PocketBase reset-link token, or the emailed Clerk code. */
+  confirmPasswordResetFromGate: (tokenOrCode: string, password: string) => Promise<void>
+  /** Resolves 'verify' when an emailed code must finish sign-up (Clerk). */
+  createAccountFromGate: (email: string, password: string) => Promise<'verify' | void>
+  verifyAccountFromGate: (code: string) => Promise<void>
   go: (screen: Screen) => void
   goBack: (fallback?: Screen) => void
   openLaunchpad: () => void

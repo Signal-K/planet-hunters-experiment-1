@@ -18,7 +18,7 @@ function ratio(a: number[], b: number[]) {
 test.describe('hangar contrast', () => {
   test.use({ viewport: { width: 926, height: 428 } })
 
-  test('rocket cards and the francs chip sit on cool panels at 4.5:1', async ({ page }) => {
+  test('rocket cards sit on cool panels at 4.5:1', async ({ page }) => {
     await page.goto('/game/stage?preset=ship-customizer&chrome=1')
     const grid = page.locator('[data-testid="hangar-fleet-grid"]')
     await expect(grid).toBeVisible()
@@ -49,12 +49,7 @@ test.describe('hangar contrast', () => {
     await expect(cards.nth(0)).toHaveAccessibleName(/Explorer/)
     await expect(cards.nth(1)).toHaveAccessibleName(/Prospector/)
     await expect(grid.locator('img[src*="rover"]')).toHaveCount(0)
-    const chip = await page.locator('[data-testid="hangar-francs-chip"]').evaluate(el => {
-      const s = getComputedStyle(el)
-      return { color: s.color, background: s.backgroundColor, opacity: s.opacity }
-    })
-    expect(Number(chip.opacity)).toBe(1)
-    expect(ratio(channel(chip.color), channel(chip.background))).toBeGreaterThanOrEqual(4.5)
+    // The Hangar's own francs chip went with SSL-611; the balance is in the shared HUD.
   })
 })
 

@@ -124,15 +124,19 @@ test.describe('402px mobile layout', () => {
     await expect(page.getByTestId('ship-stage')).toContainText('4/4')
   })
 
-  test('exchange dev badge stays off the settings cog', async ({ page }) => {
+  test('exchange dev badge stays off the Back button', async ({ page }) => {
     await page.goto('/game/stage?preset=ui-market&chrome=1&dev=1')
-    await expect(page.getByTestId('settings-button')).toBeVisible()
+    await expect(page.getByTestId('market-back')).toBeVisible()
     await expect(page.getByTestId('dev-shortcuts-toggle')).toBeVisible()
     const over = await page.evaluate(() => {
       const dev = document.querySelector('[data-testid="dev-shortcuts-toggle"]')!.getBoundingClientRect()
-      const cog = document.querySelector('[data-testid="settings-button"]')!.getBoundingClientRect()
-      return Math.min(dev.right, cog.right) - Math.max(dev.left, cog.left) > 2 && Math.min(dev.bottom, cog.bottom) - Math.max(dev.top, cog.top) > 2
+      return ['market-back', 'hub-clock-widget', 'sync-chip'].filter(id => {
+        const el = document.querySelector(`[data-testid="${id}"]`)
+        if (!el) return false
+        const r = el.getBoundingClientRect()
+        return Math.min(dev.right, r.right) - Math.max(dev.left, r.left) > 2 && Math.min(dev.bottom, r.bottom) - Math.max(dev.top, r.top) > 2
+      })
     })
-    expect(over).toBe(false)
+    expect(over).toEqual([])
   })
 })
