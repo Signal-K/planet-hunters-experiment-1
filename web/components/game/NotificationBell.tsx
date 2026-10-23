@@ -5,7 +5,7 @@ import { listNotifications, type PlayerNotification } from '@/lib/notifications/
 import { respondToFriendRequest } from '@/lib/friends/client'
 
 function BellButton({ count, onClick }: { count: number; onClick: () => void }) {
-  return <button type="button" onClick={onClick} aria-label={`Notifications${count ? `, ${count} unread` : ''}`} style={{
+  return <button type="button" className="notification-bell" onClick={onClick} aria-label={`Notifications${count ? `, ${count} unread` : ''}`} style={{
     // The top-right corner is used by each scene's primary action. Keep the
     // shared inbox in the header gutter so it never steals that hit target.
     position: 'fixed', top: 64, right: 148, zIndex: 70, minWidth: 44, minHeight: 44,
