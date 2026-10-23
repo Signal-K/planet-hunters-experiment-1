@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { WorldBackdrop } from '@/components/game/hub/WorldBackdrop'
+import ClerkGate from '@/components/game/ClerkGate'
 import { PRODUCT_DESCRIPTOR, PRODUCT_WORDMARK } from '@/lib/brand'
 import { STAGING_PLAYTEST_EMAIL_SUFFIX } from '@/lib/staging-account'
 
@@ -9,10 +10,16 @@ interface AuthGateSheetProps {
   error: string | null
   entry?: 'orionids' | null
   onSignIn: (email: string, password: string) => Promise<void>
-  onCreateAccount: (email: string, password: string) => Promise<void>
-  onRequestPasswordReset: (email: string) => Promise<void>
-  onConfirmPasswordReset: (token: string, password: string) => Promise<void>
+  /** Resolves 'verify' when an emailed code must finish sign-up. */
+  onCreateAccount: (email: string, password: string) => Promise<'verify' | void>
+  onVerifyAccount?: (code: string) => Promise<void>
+  /** Resolves 'code' when the reset continues with an emailed code. */
+  onRequestPasswordReset: (email: string) => Promise<'code' | void>
+  /** Takes the reset-link token, or the emailed code in the 'reset-code' step. */
+  onConfirmPasswordReset: (tokenOrCode: string, password: string) => Promise<void>
 }
+
+type GateMode = 'signin' | 'signup' | 'reset' | 'reset-code' | 'verify'
 
 // iOS Safari's keyboard covers the lower fields and does not scroll the sheet
 // for us; bring the focused input into view once the keyboard has animated in.
@@ -21,15 +28,24 @@ function revealOnFocus(e: React.FocusEvent<HTMLInputElement>) {
   window.setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)
 }
 
-export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateAccount, onRequestPasswordReset, onConfirmPasswordReset }: AuthGateSheetProps) {
+export default function AuthGateSheet(props: AuthGateSheetProps) {
+  return (
+    <ClerkGate>
+      <AuthGateSheetPanel {...props} />
+    </ClerkGate>
+  )
+}
+
+function AuthGateSheetPanel({ error, entry = null, onSignIn, onCreateAccount, onVerifyAccount, onRequestPasswordReset, onConfirmPasswordReset }: AuthGateSheetProps) {
   const [requestedEntry, setRequestedEntry] = useState<'orionids' | null>(entry)
-  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>(() => {
+  const [mode, setMode] = useState<GateMode>(() => {
     if (typeof window === 'undefined') return 'signin'
     return new URLSearchParams(window.location.search).get('gate') === 'signup' ? 'signup' : 'signin'
   })
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [code, setCode] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [resetRequested, setResetRequested] = useState(false)
@@ -79,7 +95,7 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
       await handlePasswordReset()
       return
     }
-    if ((mode === 'signup' || resetToken) && password !== passwordConfirmation) {
+    if ((mode === 'signup' || mode === 'reset-code' || resetToken) && password !== passwordConfirmation) {
       setValidationError('Passwords do not match.')
       return
     }
@@ -93,10 +109,15 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
         setPasswordConfirmation('')
         setPasswordChanged(true)
         setMode('signin')
+      } else if (mode === 'reset-code') {
+        await onConfirmPasswordReset(code.trim(), password)
+      } else if (mode === 'verify') {
+        await onVerifyAccount?.(code.trim())
       } else if (mode === 'signin') {
         await onSignIn(email, password)
-      } else {
-        await onCreateAccount(email, password)
+      } else if (await onCreateAccount(email, password) === 'verify') {
+        setCode('')
+        setMode('verify')
       }
     } catch {
       // error shown via props
@@ -121,8 +142,14 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
     setValidationError(null)
     setSubmitting(true)
     try {
-      await onRequestPasswordReset(email.trim())
-      setResetRequested(true)
+      if (await onRequestPasswordReset(email.trim()) === 'code') {
+        setCode('')
+        setPassword('')
+        setPasswordConfirmation('')
+        setMode('reset-code')
+      } else {
+        setResetRequested(true)
+      }
     } catch {
       // error shown via props
     } finally {
@@ -144,6 +171,12 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
     }
   }
 
+  const awaitingCode = !resetToken && (mode === 'reset-code' || mode === 'verify')
+  const needsEmail = !resetToken && !awaitingCode
+  const needsPassword = mode !== 'reset' && mode !== 'verify'
+  const needsConfirmation = mode === 'signup' || mode === 'reset-code' || Boolean(resetToken)
+  const settingPassword = Boolean(resetToken) || mode === 'reset-code'
+
   return (
     <div
       className="ln-sheet ln-sheet--bottom auth-gate theme-blueprint"
@@ -163,14 +196,18 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
 
         <div className="auth-gate__content">
           <div className="auth-gate__eyebrow">{PRODUCT_WORDMARK} · {PRODUCT_DESCRIPTOR}</div>
-          <div className="auth-gate__heading">{resetToken ? 'New Password' : mode === 'reset' ? 'Reset Password' : requestedEntry === 'orionids' ? 'Fly the Orionids' : mode === 'signin' ? 'Welcome Back' : 'New Space Program'}</div>
+          <div className="auth-gate__heading">{settingPassword ? 'New Password' : mode === 'verify' ? 'Check Your Email' : mode === 'reset' ? 'Reset Password' : requestedEntry === 'orionids' ? 'Fly the Orionids' : mode === 'signin' ? 'Welcome Back' : 'New Space Program'}</div>
           {/* SSL-302: the subtitle used to stay on the "resume" line for both
               tabs — a brand-new player on Sign Up has nothing to resume. */}
           <p className="auth-gate__intro" data-testid="auth-gate-intro">
             {resetToken
               ? 'Choose a new password for your account.'
+              : mode === 'reset-code'
+              ? `Enter the code we emailed to ${email.trim()} and choose a new password.`
+              : mode === 'verify'
+              ? `Enter the code we emailed to ${email.trim()} to finish setting up your program.`
               : mode === 'reset'
-              ? 'Enter your account email and we’ll send you a link to choose a new password.'
+              ? 'Enter your account email and we’ll email you how to choose a new password.'
               : requestedEntry === 'orionids'
               ? 'Sign in or create your program. We’ll take you straight into the Orionids launch, then the rest of Landnam stays open.'
               : mode === 'signin'
@@ -178,7 +215,7 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
               : 'Choose a landing site, build your launchpad, and grow your space program one mission at a time.'}
           </p>
 
-          {!resetToken && mode !== 'reset' && <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
+          {!resetToken && (mode === 'signin' || mode === 'signup') && <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
             {(['signin', 'signup'] as const).map(m => (
               <button key={m} className={`auth-gate__tab${mode === m ? ' is-active' : ''}`} onClick={() => setMode(m)} role="tab" aria-selected={mode === m}>
                 {m === 'signin' ? 'Sign In' : 'Sign Up'}
@@ -187,7 +224,7 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
           </div>}
 
         <form onSubmit={handleSubmit} className="auth-gate__form">
-          {!resetToken && <input
+          {needsEmail && <input
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
@@ -198,18 +235,32 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
             className="auth-gate__input"
             onFocus={revealOnFocus}
           />}
-          {mode !== 'reset' && <input
+          {awaitingCode && (
+            <input
+              type="text"
+              inputMode="numeric"
+              value={code}
+              onChange={e => setCode(e.target.value)}
+              required
+              autoComplete="one-time-code"
+              placeholder="Code from the email"
+              data-testid="auth-gate-code"
+              className="auth-gate__input"
+              onFocus={revealOnFocus}
+            />
+          )}
+          {needsPassword && <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
             autoComplete={mode === 'signin' && !resetToken ? 'current-password' : 'new-password'}
-            placeholder={resetToken ? 'New password' : 'Password'}
+            placeholder={settingPassword ? 'New password' : 'Password'}
             data-testid="auth-gate-password"
             className="auth-gate__input"
             onFocus={revealOnFocus}
           />}
-          {(mode === 'signup' || resetToken) && (
+          {needsConfirmation && (
             <input
               type="password"
               value={passwordConfirmation}
@@ -233,13 +284,13 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
               Forgot password?
             </button>
           )}
-          {mode === 'reset' && !resetToken && (
+          {(mode === 'reset' || awaitingCode) && !resetToken && (
             <button
               type="button"
               className="auth-gate__reset-link"
               data-testid="auth-gate-back-to-signin"
               disabled={submitting}
-              onClick={() => { setValidationError(null); setMode('signin') }}
+              onClick={() => { setValidationError(null); setCode(''); setMode('signin') }}
             >
               Back to sign in
             </button>
@@ -265,14 +316,16 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
 
           <button
             type="submit"
-            disabled={submitting || (!resetToken && !email.trim()) || (mode !== 'reset' && !password)}
+            disabled={submitting || (needsEmail && !email.trim()) || (needsPassword && !password) || (awaitingCode && !code.trim())}
             data-testid="auth-gate-submit"
             className="auth-gate__primary"
           >
             {submitting
-              ? (resetToken ? 'Saving…' : mode === 'reset' ? 'Sending…' : mode === 'signin' ? 'Opening program…' : 'Starting program…')
-              : resetToken
+              ? (settingPassword ? 'Saving…' : mode === 'verify' ? 'Checking…' : mode === 'reset' ? 'Sending…' : mode === 'signin' ? 'Opening program…' : 'Starting program…')
+              : settingPassword
                 ? 'Save Password'
+                : mode === 'verify'
+                ? 'Confirm Email'
                 : mode === 'reset'
                 ? 'Send Reset Link'
                 : requestedEntry === 'orionids'

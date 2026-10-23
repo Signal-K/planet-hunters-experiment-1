@@ -464,6 +464,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             onRequestPasswordReset={game.requestPasswordResetFromGate}
             onConfirmPasswordReset={game.confirmPasswordResetFromGate}
             onCreateAccount={game.createAccountFromGate}
+            onVerifyAccount={game.verifyAccountFromGate}
           />
         )}
         {game.pendingTerritoryClaimFor && !game.authGateOpen && (

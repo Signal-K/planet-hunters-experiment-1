@@ -44,6 +44,16 @@ function GameCanvas() {
   )
   const [orionidsEntryActive, setOrionidsEntryActive] = useState(orionidsEntry.current === 'orionids')
   const orionidsEntryStage = useRef<'waiting' | 'started'>('waiting')
+  // A brand-new account has no remote save to merge. Start the authored
+  // mission immediately instead of waiting for a second auth-state render;
+  // that render may already be showing Intro.
+  const startOrionidsAfterSignUp = () => {
+    if (orionidsEntry.current === 'orionids' && orionidsEntryStage.current === 'waiting') {
+      orionidsEntryStage.current = 'started'
+      game.onPickMission('self-directed-orionids-night-run', 'sell')
+      window.sessionStorage.removeItem('landnam-entry')
+    }
+  }
 
   // The first render is server-rendered, where `window` does not exist. Read
   // the handoff again after hydration before the canonical route drops its
@@ -309,15 +319,12 @@ function GameCanvas() {
             onRequestPasswordReset={game.requestPasswordResetFromGate}
             onConfirmPasswordReset={game.confirmPasswordResetFromGate}
             onCreateAccount={async (email, password) => {
-              await game.createAccountFromGate(email, password)
-              // A brand-new account has no remote save to merge. Start the
-              // authored mission immediately instead of waiting for a second
-              // auth-state render; that render may already be showing Intro.
-              if (orionidsEntry.current === 'orionids' && orionidsEntryStage.current === 'waiting') {
-                orionidsEntryStage.current = 'started'
-                game.onPickMission('self-directed-orionids-night-run', 'sell')
-                window.sessionStorage.removeItem('landnam-entry')
-              }
+              if (await game.createAccountFromGate(email, password) === 'verify') return 'verify'
+              startOrionidsAfterSignUp()
+            }}
+            onVerifyAccount={async code => {
+              await game.verifyAccountFromGate(code)
+              startOrionidsAfterSignUp()
             }}
           />
         )}

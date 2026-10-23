@@ -3,6 +3,10 @@ import { useRouter } from 'next/navigation'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
+import {
+  clerkErrorMessage, clerkFinishPasswordReset, clerkFinishSignUp, clerkSignIn, clerkStartPasswordReset,
+  clerkStartSignUp, ensureClerkAccount, signOutOfClerk, usesClerk,
+} from '@/lib/clerk-auth'
 import { casUpdateGameState } from '@/lib/sync/casSave'
 import { getOutbox, isQueuedUpsert, queueUpdate, queueUpsert } from '@/lib/offline/pbOutbox'
 import { dropSettledMissionRuns, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
@@ -836,40 +840,72 @@ export function useAuthSync({
       await waitForBackendHealth(() => pbShared.health.check(), { onWait: noteWarming })
       await waitForBackendHealth(() => pbLandnam.health.check(), { onWait: noteWarming })
       setAuthGateError(null)
-      const authResult = await retryTransient(
-        () => pbShared.collection('users').authWithPassword(email, password),
-        { onWait: noteWarming },
-      )
-      await openSession(authResult.record.id)
+      let userId: string
+      if (usesClerk(email)) {
+        await retryTransient(() => ensureClerkAccount(email), { onWait: noteWarming })
+        userId = (await clerkSignIn(email, password)).record.id
+      } else {
+        const authResult = await retryTransient(
+          () => pbShared.collection('users').authWithPassword(email, password),
+          { onWait: noteWarming },
+        )
+        userId = authResult.record.id
+      }
+      await openSession(userId)
       setAuthGateOpen(false)
       landOnHubUnlessResumable()
     } catch (e) {
-      const raw = authErrorMessage(e, 'Sign in failed')
-      const msg = signInGateMessage(raw, e)
+      const msg = clerkErrorMessage(e) ?? signInGateMessage(authErrorMessage(e, 'Sign in failed'), e)
       setAuthGateError(msg)
       throw new Error(msg)
     }
   }, [landOnHubUnlessResumable, noteWarming, openSession])
 
-  const requestPasswordResetFromGate = useCallback(async (email: string) => {
+  // Set while a Clerk reset code is out, so the confirm step uses it rather
+  // than a PocketBase reset-link token.
+  const clerkResetPending = useRef(false)
+
+  const requestPasswordResetFromGate = useCallback(async (email: string): Promise<'code' | void> => {
     setAuthGateError(null)
     try {
       await waitForBackendHealth(() => pbShared.health.check(), { onWait: noteWarming })
+      if (usesClerk(email)) {
+        await retryTransient(() => ensureClerkAccount(email), { onWait: noteWarming })
+        await clerkStartPasswordReset(email)
+        clerkResetPending.current = true
+        return 'code'
+      }
       await retryTransient(
         () => pbShared.collection('users').requestPasswordReset(email),
         { onWait: noteWarming },
       )
     } catch (e) {
-      const msg = isTransientAuthFailure(e)
+      const msg = clerkErrorMessage(e) ?? (isTransientAuthFailure(e)
         ? WARMING_GAVE_UP
-        : authErrorMessage(e, 'Unable to request a password reset. Try again in a moment.')
+        : authErrorMessage(e, 'Unable to request a password reset. Try again in a moment.'))
       setAuthGateError(msg)
       throw new Error(msg)
     }
   }, [noteWarming])
 
-  const confirmPasswordResetFromGate = useCallback(async (token: string, password: string) => {
+  const confirmPasswordResetFromGate = useCallback(async (tokenOrCode: string, password: string) => {
     setAuthGateError(null)
+    if (clerkResetPending.current) {
+      try {
+        await waitForBackendHealth(() => pbLandnam.health.check(), { onWait: noteWarming })
+        const { record } = await clerkFinishPasswordReset(tokenOrCode, password)
+        clerkResetPending.current = false
+        await openSession(record.id)
+        setAuthGateOpen(false)
+        landOnHubUnlessResumable()
+      } catch (e) {
+        const msg = clerkErrorMessage(e) ?? (isTransientAuthFailure(e) ? WARMING_GAVE_UP : 'Could not set the new password. Try again.')
+        setAuthGateError(msg)
+        throw new Error(msg)
+      }
+      return
+    }
+    const token = tokenOrCode
     try {
       await waitForBackendHealth(() => pbShared.health.check(), { onWait: noteWarming })
       await retryTransient(
@@ -883,14 +919,62 @@ export function useAuthSync({
       setAuthGateError(msg)
       throw new Error(msg)
     }
-  }, [noteWarming])
+  }, [landOnHubUnlessResumable, noteWarming, openSession])
 
-  const createAccountFromGate = useCallback(async (email: string, password: string) => {
+  // Everything a brand-new account needs once its shared auth exists.
+  const finishNewAccount = useCallback(async (userId: string) => {
+    // Brand-new account: discard any local guest/dev state so the player
+    // starts from scratch with the intro tutorial.
+    localStorage.removeItem(storageKey)
+    localStorage.removeItem(accountGameStateStorageKey(storageKey, userId))
+    setState(DEFAULT_STATE)
+    // Exchange for a native Landnam auth token before touching game_states —
+    // ownership rules require @request.auth to be populated (see
+    // pb-landnam.ts / landnam_auth.go), and this synchronous flow can't
+    // wait for the background exchange effect to catch up.
+    await openSession(userId)
+    // Create the Landnam game_states record synchronously here, before the
+    // gate closes — otherwise it only exists once the debounced persist
+    // effect fires, and closing the tab before then leaves no record at all.
+    const saved = await retryTransient(
+      () => saveRemoteState(userId, DEFAULT_STATE),
+      { onWait: noteWarming },
+    )
+    backendLoadedFor.current = userId
+    if (saved.existing && remoteSaveIsNonEmpty(saved.existing)) {
+      const adopted = resolveGameStateLoad(DEFAULT_STATE, saved.existing, false)
+      remoteSaveProtected.current = true
+      if (!adopted.shouldWriteRemote) {
+        skipNextRemotePersist.current = true
+        adoptedSnapshot.current = adopted.state
+      }
+      setState(adopted.state)
+    }
+    setBackendReady(true)
+    setAuthGateError(null)
+    setAuthGateOpen(false)
+  }, [noteWarming, openSession, saveRemoteState, setState, storageKey])
+
+  const createAccountMessage = (e: unknown) => clerkErrorMessage(e) ?? (isUniqueConstraintError(e)
+    ? 'An account already exists for this email. Use Sign In.'
+    : isTransientAuthFailure(e)
+      ? WARMING_GAVE_UP
+      : authErrorMessage(e, 'Account creation failed'))
+
+  /** Resolves 'verify' when Clerk has emailed a code to finish sign-up. */
+  const createAccountFromGate = useCallback(async (email: string, password: string): Promise<'verify' | void> => {
     setAuthGateError(null)
     try {
       await waitForBackendHealth(() => pbShared.health.check(), { onWait: noteWarming })
       await waitForBackendHealth(() => pbLandnam.health.check(), { onWait: noteWarming })
       setAuthGateError(null)
+      if (usesClerk(email)) {
+        // An existing pre-Clerk account moves into Clerk first, so Clerk
+        // answers "already exists" instead of making a second account.
+        await retryTransient(() => ensureClerkAccount(email), { onWait: noteWarming })
+        await clerkStartSignUp(email, password)
+        return 'verify'
+      }
       // A timed-out create can still commit on the server. Only then is a
       // following unique-constraint a reason to sign in with this password,
       // rather than telling the player the email is taken.
@@ -907,46 +991,25 @@ export function useAuthSync({
         () => pbShared.collection('users').authWithPassword(email, password),
         { onWait: noteWarming },
       )
-      // Brand-new account: discard any local guest/dev state so the player
-      // starts from scratch with the intro tutorial.
-      localStorage.removeItem(storageKey)
-      localStorage.removeItem(accountGameStateStorageKey(storageKey, authResult.record.id))
-      setState(DEFAULT_STATE)
-      // Exchange for a native Landnam auth token before touching game_states —
-      // ownership rules require @request.auth to be populated (see
-      // pb-landnam.ts / landnam_auth.go), and this synchronous flow can't
-      // wait for the background exchange effect to catch up.
-      await openSession(authResult.record.id)
-      // Create the Landnam game_states record synchronously here, before the
-      // gate closes — otherwise it only exists once the debounced persist
-      // effect fires, and closing the tab before then leaves no record at all.
-      const saved = await retryTransient(
-        () => saveRemoteState(authResult.record.id, DEFAULT_STATE),
-        { onWait: noteWarming },
-      )
-      backendLoadedFor.current = authResult.record.id
-      if (saved.existing && remoteSaveIsNonEmpty(saved.existing)) {
-        const adopted = resolveGameStateLoad(DEFAULT_STATE, saved.existing, false)
-        remoteSaveProtected.current = true
-        if (!adopted.shouldWriteRemote) {
-          skipNextRemotePersist.current = true
-          adoptedSnapshot.current = adopted.state
-        }
-        setState(adopted.state)
-      }
-      setBackendReady(true)
-      setAuthGateError(null)
-      setAuthGateOpen(false)
+      await finishNewAccount(authResult.record.id)
     } catch (e) {
-      const msg = isUniqueConstraintError(e)
-        ? 'An account already exists for this email. Use Sign In.'
-        : isTransientAuthFailure(e)
-          ? WARMING_GAVE_UP
-          : authErrorMessage(e, 'Account creation failed')
+      const msg = createAccountMessage(e)
       setAuthGateError(msg)
       throw new Error(msg)
     }
-  }, [noteWarming, openSession, saveRemoteState, setState, storageKey])
+  }, [finishNewAccount, noteWarming])
+
+  const verifyAccountFromGate = useCallback(async (code: string) => {
+    setAuthGateError(null)
+    try {
+      const { record } = await clerkFinishSignUp(code)
+      await finishNewAccount(record.id)
+    } catch (e) {
+      const msg = createAccountMessage(e)
+      setAuthGateError(msg)
+      throw new Error(msg)
+    }
+  }, [finishNewAccount])
 
   const resetGame = useCallback(async (defaultState: GameState) => {
     beforeReset()
@@ -1020,6 +1083,7 @@ export function useAuthSync({
 
     pbShared.authStore.clear()
     pbLandnam.authStore.clear()
+    void signOutOfClerk()
     localStorage.removeItem('landnam-account-credentials')
     localStorage.removeItem(storageKey)
     if (signedOutUserId) localStorage.removeItem(accountGameStateStorageKey(storageKey, signedOutUserId))
@@ -1034,7 +1098,7 @@ export function useAuthSync({
     authUserId, backendReady,
     landnamSynced,
     awaitingRemoteState,
-    authGateOpen, authGateError, signInFromGate, requestPasswordResetFromGate, confirmPasswordResetFromGate, createAccountFromGate,
+    authGateOpen, authGateError, signInFromGate, requestPasswordResetFromGate, confirmPasswordResetFromGate, createAccountFromGate, verifyAccountFromGate,
     resetGame, signOut,
   }
 }

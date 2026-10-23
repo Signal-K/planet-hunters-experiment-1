@@ -11,9 +11,9 @@
     "start": "next start -p 3001",
     "typecheck": "next typegen && tsc --noEmit",
     "sync:shared": "node ../scripts/sync-all-shared.mjs",
-  "authoring:compile": "node ../scripts/authoring.mjs compile",
-  "authoring:check": "node ../scripts/authoring.mjs check",
-  "studio": "node ../scripts/studio.mjs",
+    "authoring:compile": "node ../scripts/authoring.mjs compile",
+    "authoring:check": "node ../scripts/authoring.mjs check",
+    "studio": "node ../scripts/studio.mjs",
     "sync:native-assets": "node ../scripts/sync-native-assets.mjs",
     "verify:scene-surfaces": "node scripts/verify-scene-surfaces.mjs",
     "verify:hue-palette": "node scripts/verify-hue-palette.mjs",
@@ -36,6 +36,7 @@
     "test:scene": "playwright test"
   },
   "dependencies": {
+    "@clerk/react": "6.17.8",
     "@takeon/engine": "file:vendor/takeon/takeon-engine-0.2.2.tgz",
     "@takeon/pixi": "file:vendor/takeon/takeon-pixi-0.2.2.tgz",
     "lucide-react": "^1.17.0",
