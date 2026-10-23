@@ -14,21 +14,21 @@
     "authoredSceneFiles": 8,
     "authoredSceneScripts": 27,
     "authoringSources": 34,
-    "authoredObjectNodes": 159,
-    "authoredGameObjects": 86,
-    "authoredUiElements": 73,
+    "authoredObjectNodes": 162,
+    "authoredGameObjects": 87,
+    "authoredUiElements": 75,
     "authoredPrefabInstances": 5,
     "compiledScenes": 27,
-    "compiledObjectNodes": 159,
+    "compiledObjectNodes": 162,
     "webRuntimeSceneConsumers": 1,
     "nativeRuntimeSceneConsumers": 1,
     "webRuntimeScenes": 1,
     "nativeRuntimeScenes": 1,
-    "mechanics": 25,
+    "mechanics": 27,
     "sharedLayoutObjects": 4,
-    "hostLayoutObjects": 155,
+    "hostLayoutObjects": 158,
     "webGameComponents": 112,
-    "nativeAppComponents": 52
+    "nativeAppComponents": 53
   },
   "scenes": {
     "routed": [
@@ -986,6 +986,7 @@
           "mission-planning",
           "persistence",
           "rocket-assembly",
+          "sky-events",
           "training",
           "world"
         ],
@@ -1005,13 +1006,14 @@
       {
         "id": "instrument-hub",
         "path": "shared/authoring/scenes/instrument-hub.toml",
-        "objects": 6,
-        "gameObjects": 4,
-        "uiElements": 2,
+        "objects": 9,
+        "gameObjects": 5,
+        "uiElements": 4,
         "prefabs": 0,
         "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 6,
+        "hostLayoutObjects": 9,
         "mechanics": [
+          "community-research",
           "instruments"
         ],
         "web": [
@@ -1075,6 +1077,7 @@
         "mechanics": [
           "mission-planning",
           "rocket-assembly",
+          "sky-events",
           "world"
         ],
         "web": [
@@ -1397,7 +1400,7 @@
       },
       {
         "id": "instrument-hub",
-        "objects": 6
+        "objects": 9
       },
       {
         "id": "intro",
@@ -1923,8 +1926,93 @@
         "rover-survey",
         "surface-ops"
       ]
+    },
+    {
+      "id": "community-research",
+      "name": "Research participation and contribution history",
+      "web": [
+        "web/lib/research/stamps.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Systems/ResearchStamps.swift"
+      ],
+      "components": [],
+      "note": "Classifications, surveys, discovery-led missions and qualifying events are eligible per the 22 Oct Craft direction. Current bar is a local placeholder, not a server aggregate. Fragment conversion and the fragment-based weekly revenue bonus are not implemented by the calendar; retain contribution history when they are added.",
+      "scenes": [
+        "instrument-hub"
+      ]
+    },
+    {
+      "id": "sky-events",
+      "name": "Sky events and event fragments",
+      "web": [
+        "web/lib/orionids/fragments.ts"
+      ],
+      "native": [
+        "native/LandnamCore/Sources/LandnamCore/Systems/OrionidsRun.swift",
+        "native/LandnamCore/Sources/LandnamCore/Station/SkyEvents.swift"
+      ],
+      "components": [],
+      "note": "Orionids launch catches and fragment ledger. General research fragments must not erase historical contributions when converted.",
+      "scenes": [
+        "hub",
+        "launchpad"
+      ]
     }
   ],
+  "journey": {
+    "status": "target-not-routing",
+    "source": "Craft: Landnam: community research calendar + simpler progression (22 Oct 2026, including Liam's comments)",
+    "stages": [
+      {
+        "id": "plan",
+        "name": "Plan",
+        "routes": [
+          "missions",
+          "targets",
+          "rocket-buy"
+        ],
+        "policy": "One Plan for contracts and Free Ops. Suggest a ship; changing it is optional."
+      },
+      {
+        "id": "launch",
+        "name": "Launch",
+        "routes": [
+          "fab",
+          "launchpad"
+        ],
+        "policy": "Assembly and launch are one scene. Preserve old routes as deep links."
+      },
+      {
+        "id": "flight",
+        "name": "Flight",
+        "routes": [
+          "transit",
+          "landing"
+        ],
+        "policy": "A faster multi-scene animated sequence with zero required confirmation taps."
+      },
+      {
+        "id": "work",
+        "name": "Work",
+        "routes": [
+          "mining",
+          "rover-survey",
+          "surface-ops"
+        ],
+        "policy": "Perform mining, survey or field work with the appropriate engine adapter."
+      },
+      {
+        "id": "result",
+        "name": "Result",
+        "routes": [
+          "delivery",
+          "debrief"
+        ],
+        "policy": "Combine delivery and result presentation, preserving exactly-once cargo and reward settlement, then return to Base."
+      }
+    ]
+  },
   "components": {
     "web": [
       "web/components/game/ActionConfirmBar.tsx",
@@ -1971,6 +2059,7 @@
       "web/components/game/UnlockPopup.tsx",
       "web/components/game/WorldSpaceWeek.tsx",
       "web/components/game/control-station/ControlStationBoard.tsx",
+      "web/components/game/control-station/ResearchCalendar.tsx",
       "web/components/game/control-station/SurveyScanConsole.tsx",
       "web/components/game/hub/AmbientMotes.tsx",
       "web/components/game/hub/BaseDock.tsx",
@@ -2013,7 +2102,6 @@
       "web/components/game/screens/FlightBody.tsx",
       "web/components/game/screens/FlightFlame.tsx",
       "web/components/game/screens/FlightSky.tsx",
-      "web/components/game/screens/FreeOpsBuildScreen.tsx",
       "web/components/game/screens/HangarBay.tsx",
       "web/components/game/screens/HangarScreen.tsx",
       "web/components/game/screens/HomecomingScreen.tsx",
@@ -2078,6 +2166,7 @@
       "native/App/Screens/MeteorShowerWeather.swift",
       "native/App/Screens/MissionPlanStrip.swift",
       "native/App/Screens/ProgramRoadmap.swift",
+      "native/App/Screens/ResearchCalendarPanel.swift",
       "native/App/Screens/RocketBuilderScreen.swift",
       "native/App/Screens/RouteMap.swift",
       "native/App/Screens/RoverFieldScreen.swift",

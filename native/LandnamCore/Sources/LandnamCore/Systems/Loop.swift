@@ -232,6 +232,10 @@ public enum Loop {
             n.doneSteps["6"] = true
             return n
         }
+        // The starter rover drives off the ship; any other mission with a lander fitted descends first (web transit onArrive).
+        if !Transitions.isStarterRoverMission(mission) && Landing.hasLander(s.player) {
+            return Landing.startDescent(n, now: now)
+        }
         let rover = usesRoverScene(mission, player: s.player)
         n.player.missionPhase = rover ? .survey : .mining
         n.screen = rover ? .roverSurvey : .mining
@@ -239,12 +243,29 @@ public enum Loop {
     }
 
     public static func miningDone(_ s: GameState, cargo: Cargo, catalog: Catalog, now: Double) -> GameState {
-        // SSL-553: the trip home is a short playable flight (boost to arrive); only a delivery leg runs on the clock.
-        guard s.deliveryTargetId != nil else {
-            return Transitions.applyMiningDone(s, cargo: cargo, arrivalAt: nil, transitStartedAt: now, now: now)
+        if s.screen == .mining && Landing.hasLander(s.player) { return Landing.startAscent(s, cargo: cargo, now: now) }
+        let leg = returnLeg(s, catalog: catalog, now: now)
+        return Transitions.applyMiningDone(s, cargo: cargo, arrivalAt: leg.arrivalAt, transitStartedAt: leg.startedAt, now: now)
+    }
+
+    /// The landing scene's clock ran out: touchdown hands over to surface work, redock starts the return leg.
+    public static func landingComplete(_ s: GameState, catalog: Catalog, now: Double) -> GameState {
+        guard s.screen == .landing else { return s }
+        if Landing.mode(s.player) == .ascend {
+            let leg = returnLeg(s, catalog: catalog, now: now)
+            return Transitions.applyRedockComplete(s, cargo: s.player.miningCargoInProgress ?? [:], arrivalAt: leg.arrivalAt,
+                                                   transitStartedAt: leg.startedAt, now: now)
         }
-        let arrival = travelArrival(target: catalog.target(s.deliveryTargetId), player: s.player, now: now)
-        return Transitions.applyMiningDone(s, cargo: cargo, arrivalAt: arrival, transitStartedAt: s.player.freeOperations ? now : nil, now: now)
+        var n = s
+        // A resumed descent whose clock was never saved is already due.
+        n.player.landingStartedAt = s.player.landingStartedAt ?? now
+        return Transitions.applyLandingTouchdown(n, mission: catalog.mission(s.missionId))
+    }
+
+    /// SSL-553: the trip home is a short playable flight (boost to arrive); only a delivery leg runs on the clock.
+    private static func returnLeg(_ s: GameState, catalog: Catalog, now: Double) -> (arrivalAt: Double?, startedAt: Double?) {
+        guard s.deliveryTargetId != nil else { return (nil, now) }
+        return (travelArrival(target: catalog.target(s.deliveryTargetId), player: s.player, now: now), s.player.freeOperations ? now : nil)
     }
 
     /// The rover survey logs the surface, then the ship laser is the only extraction.

@@ -177,7 +177,7 @@ components = ["Clickable"]
 [[objects]]
 id = "staged-rocket"
 kind = "vehicle"
-mechanics = ["rocket-assembly"]
+mechanics = ["rocket-assembly", "sky-events"]
 parent = "launchpad-complex"
 layout = "shared"
 space = "parent"

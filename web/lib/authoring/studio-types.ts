@@ -85,6 +85,7 @@ export interface StudioIndex {
     }
     scenes: { id: string; sharedLayoutObjects: number; hostLayoutObjects: number; mechanics: string[]; web: string[]; native: string[] }[]
     mechanics: import('./docs').MechanicContract[]
+    journey?: import('./docs').JourneyContract
   }
 }
 

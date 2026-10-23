@@ -15,6 +15,12 @@ for (const [viewport, size] of Object.entries(VIEWPORTS)) {
       expect((rocket.x - bounds.x + rocket.width / 2) / bounds.width).toBeCloseTo(0.326, 3)
       expect((rocket.y - bounds.y + rocket.height) / bounds.height).toBeCloseTo(0.908, 3)
       await expect(page.getByTestId('launch-rocket')).toBeVisible()
+      const launch = page.getByTestId('prepare-launch-btn')
+      await expect(launch).toBeInViewport()
+      expect(await launch.evaluate(element => {
+        const r = element.getBoundingClientRect()
+        return [0.1, 0.5, 0.9].every(x => element.contains(document.elementFromPoint(r.x + r.width * x, r.y + r.height / 2)))
+      }), 'The plan must not cover Build rocket').toBe(true)
       expect(await page.getByTestId('launch-rocket').evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true)
       await page.screenshot({ path: `tests/.out/authored-prefab-${viewport}.png` })
       await page.getByTestId('launchpad-status-card').click()

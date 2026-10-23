@@ -145,4 +145,4 @@ kind = "panel"
 parent = "launchpad-preview"
 layout = "host"
 mechanics = ["mission-planning"]
-note = "Web fallback when no mission is selected; native route gating differs."
+note = "Compatibility entry without a mission now opens the shared Mission Board on both platforms (SSL-660). It is not a separate Free Ops setup screen."

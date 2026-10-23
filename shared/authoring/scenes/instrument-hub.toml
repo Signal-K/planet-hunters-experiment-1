@@ -70,8 +70,24 @@ note = "Open the appropriate instrument review."
 
 [[objects]]
 id = "research-calendar"
-kind = "collection"
+kind = "panel"
 parent = "control-station"
 layout = "host"
-mechanics = ["instruments"]
-note = "Wall calendar: one stamp per UTC day with a research task done (classification, survey, event), soft streak, and the monthly community bar."
+mechanics = ["community-research"]
+note = "UTC participation calendar in the instrument scene; not a separate screen."
+
+[[objects]]
+id = "research-tasks"
+kind = "collection"
+parent = "research-calendar"
+layout = "host"
+mechanics = ["community-research"]
+note = "Today's qualifying research tasks and earned stamps."
+
+[[objects]]
+id = "community-progress"
+kind = "panel"
+parent = "research-calendar"
+layout = "host"
+mechanics = ["community-research"]
+note = "Current implementation uses local contribution data. Server aggregation and reward settlement remain gaps, not verified gameplay."

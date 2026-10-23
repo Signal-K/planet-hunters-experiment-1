@@ -17,6 +17,14 @@ export default function ProjectInventory({ inventory, currentScene }: Props) {
   return (
     <section className={styles.card} data-testid="project-inventory">
       <h2 className={styles.cardTitle}>Game object coverage</h2>
+      {inventory.journey && <details open data-testid="target-journey">
+        <summary>Target player flow: five stops</summary>
+        <p className={styles.hint}>These groups guide the migration. They do not change live routing yet; old routes remain deep links.</p>
+        <ol>{inventory.journey.stages.map(stage => <li key={stage.id}>
+          <strong>{stage.name}</strong> · {stage.routes.join(', ')}
+          <p className={styles.hint}>{stage.policy}</p>
+        </li>)}</ol>
+      </details>}
       <div className={workbench.density} data-density={currentMissing ? 'empty' : mapped < counts.authoredSceneScripts ? 'light' : 'composed'}>
         <strong>{mapped} of {counts.authoredSceneScripts} scenes have an object graph</strong>
         <span>{gaps.scenesWithoutObjects.length} still empty</span>

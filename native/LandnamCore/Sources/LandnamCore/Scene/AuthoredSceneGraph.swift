@@ -56,6 +56,18 @@ public struct AuthoredMechanic: Codable, Equatable, Sendable {
     public let note: String
 }
 
+public struct AuthoredJourney: Codable, Equatable, Sendable {
+    public struct Stage: Codable, Equatable, Sendable {
+        public let id: String
+        public let name: String
+        public let routes: [String]
+        public let policy: String
+    }
+    public let status: String
+    public let source: String
+    public let stages: [Stage]
+}
+
 public struct ResolvedSceneObject: Equatable, Sendable {
     public let object: AuthoredSceneObject
     public let frame: SceneRect
@@ -79,6 +91,7 @@ private struct AuthoredSceneFile: Codable {
     let slots: [String: SceneSlot]
     let scenes: [AuthoredScene]
     let mechanics: [AuthoredMechanic]
+    let journey: AuthoredJourney?
 }
 
 public enum AuthoredSceneGraph {
@@ -89,6 +102,7 @@ public enum AuthoredSceneGraph {
 
     public static var scenes: [AuthoredScene] { file.scenes }
     public static var mechanics: [AuthoredMechanic] { file.mechanics }
+    public static var journey: AuthoredJourney? { file.journey }
     public static func scene(_ id: String) -> AuthoredScene? { file.scenes.first { $0.id == id } }
 
     public static func resolve(

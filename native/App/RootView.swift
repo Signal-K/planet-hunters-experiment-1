@@ -39,7 +39,8 @@ struct RootView: View {
             case .surfaceOps: SurfaceOpsScreen().helpable(.surfaceOps)
             case .transit: TransitScreen().helpable(.transit)
             case .roverSurvey: if TakeonSceneFlag.enabled && takeonGoRuntimeAvailable { TakeonSceneScreen(onExit: { store.go(.hub) }) } else { RoverFieldScreen() }
-            case .mining, .landing: MiningScreen().helpable(.mining)
+            case .mining: MiningScreen().helpable(.mining)
+            case .landing: LandingScreen().helpable(.landing)
             case .delivery: DeliveryScreen().helpable(.delivery)
             case .debrief: if store.player.homeDeliveryPending { HomecomingScreen() } else { DebriefScreen() }
             case .market: MarketScreen()

@@ -422,7 +422,7 @@ note = "Pans and zooms. The background is game objects, never a whole-scene imag
 [[objects]]
 id = "sky"
 kind = "layer"
-mechanics = ["world"]
+mechanics = ["world", "sky-events"]
 parent = "world"
 asset = "shared/scenes/sky-events.json"
 note = "A planet is only a point of light from the sky calendar. No planet discs."

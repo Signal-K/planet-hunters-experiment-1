@@ -1,5 +1,5 @@
 import declarations from './authored-scenes.json'
-import type { MechanicContract } from '../authoring/docs'
+import type { JourneyContract, MechanicContract } from '../authoring/docs'
 
 export interface SceneRect { x: number; y: number; w: number; h: number }
 export interface SceneInsets { top: number; right: number; bottom: number; left: number }
@@ -43,6 +43,7 @@ interface AuthoredSceneFile {
   slots: Record<string, SceneRect & { layer: string }>
   scenes: AuthoredScene[]
   mechanics: MechanicContract[]
+  journey?: JourneyContract
 }
 
 const file = declarations as AuthoredSceneFile

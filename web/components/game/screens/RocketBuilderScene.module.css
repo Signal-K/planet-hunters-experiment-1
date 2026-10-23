@@ -546,7 +546,7 @@
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
-  :global(body:has([data-testid='mission-launch-review'])) .stage { top: 80px; }
+  :global([data-testid='mission-launch-review']) .stage { top: 8px; bottom: 8px; }
 }
 
 /* With room beside the gantry, the call to action sits in the sky over the hangar instead of covering the tower. */

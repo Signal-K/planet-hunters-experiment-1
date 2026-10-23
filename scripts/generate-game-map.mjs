@@ -138,6 +138,7 @@ const map = {
     compiled: compiledSceneGraph.scenes.map(scene => ({ id: scene.id, objects: scene.objects.length }))
   },
   mechanics: mechanics.map(mechanic => ({ ...mechanic, scenes: authoredSceneScripts.filter(scene => scene.mechanics.includes(mechanic.id)).map(scene => scene.id) })),
+  journey: compiledSceneGraph.journey,
   components: {
     web: productionFiles(walk('web/components/game', ['.ts', '.tsx'])),
     native: productionFiles([

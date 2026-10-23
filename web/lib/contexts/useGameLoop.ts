@@ -757,7 +757,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const nextLegTarget = hasDelivery
         ? catalog.targets.find(t => t.id === s.deliveryTargetId)
         : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
-      const timedTransit = s.player.freeOperations
+      // Same return leg as onMiningDone (SSL-553): only a delivery leg runs on the clock.
+      const timedTransit = s.player.freeOperations && hasDelivery
       const arrivalAt = (timedTransit && nextLegTarget)
         ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null

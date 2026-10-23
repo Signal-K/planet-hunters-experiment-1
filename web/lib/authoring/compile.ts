@@ -160,6 +160,7 @@ export function compileAll(options: CompileOptions): CompileResult {
     const text = json({
       version: 1,
       coordinateSpace: context.sceneTypes.coordinateSpace ?? 'normalized-safe-area',
+      journey: context.sceneTypes.journey,
       slots: context.sceneTypes.sharedSlots,
       mechanics: context.mechanics ?? [],
       scenes: sceneSources.map(source => sceneDeclaration(valid.get(source) as SceneDoc)),

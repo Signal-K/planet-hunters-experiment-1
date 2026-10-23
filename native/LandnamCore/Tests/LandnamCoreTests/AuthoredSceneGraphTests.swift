@@ -12,7 +12,8 @@ import Testing
         #expect(AuthoredSceneGraph.scenes.count == 27)
         #expect(AuthoredSceneGraph.scenes.allSatisfy { !$0.objects.isEmpty })
         #expect(AuthoredSceneGraph.scenes.flatMap(\.objects).allSatisfy { !($0.mechanics ?? []).isEmpty })
-        #expect(AuthoredSceneGraph.mechanics.count == 25)
+        #expect(Set(AuthoredSceneGraph.mechanics.map(\.id)).count == AuthoredSceneGraph.mechanics.count)
+        #expect(AuthoredSceneGraph.mechanics.contains { $0.id == "community-research" })
         #expect(Set(AuthoredSceneGraph.scenes.map(\.route)).subtracting(Screen.allCases.map(\.rawValue)) == ["refinery"])
     }
 

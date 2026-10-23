@@ -7,7 +7,7 @@ import { closest, validateSchema } from './schema.ts'
 import type { Schema } from './schema.ts'
 import { parseToml, spanForPath } from './toml.ts'
 import type { ParsedToml, Path } from './toml.ts'
-import type { FeedbackDoc, FlowDoc, MechanicContract, MissionDoc, SceneDoc, SceneObject, WorldDoc, WorldEntity } from './docs.ts'
+import type { FeedbackDoc, FlowDoc, JourneyContract, MechanicContract, MissionDoc, SceneDoc, SceneObject, WorldDoc, WorldEntity } from './docs.ts'
 
 export type DocKind = 'world' | 'scene' | 'mission' | 'feedback' | 'flow'
 
@@ -24,6 +24,7 @@ export interface Diagnostic {
 }
 
 export interface SceneTypesFile {
+  journey?: JourneyContract
   coordinateSpace?: string
   sharedSlots: Record<string, { x: number; y: number; w: number; h: number; layer: string }>
   sceneTypes: Record<string, { description: string; slots: string[]; routes: string[] }>

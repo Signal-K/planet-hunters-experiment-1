@@ -17,6 +17,13 @@ export interface MechanicContract {
   note: string
 }
 
+/** Target experience composition. Not a second router or a migration of saved screen values. */
+export interface JourneyContract {
+  status: 'target-not-routing'
+  source: string
+  stages: { id: string; name: string; routes: string[]; policy: string }[]
+}
+
 export interface SceneObject {
   id: string
   kind: string

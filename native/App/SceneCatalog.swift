@@ -15,6 +15,8 @@ struct CatalogScene: Identifiable {
 
 /// 8 Oct 2026, 12:00 UTC: inside World Space Week.
 private let wswNoon: Double = 1791460800000
+/// SSL-666: fixed clock for the lander leg scenes.
+private let landingNow: Double = 1_700_000_000_000
 
 @MainActor
 enum SceneCatalog {
@@ -191,6 +193,17 @@ enum SceneCatalog {
         gs.player.missionsDone = missionsDone
         if let phase { gs.player.missionPhase = phase }
         gs.screen = screen
+        return gs
+    }
+
+    /// SSL-666: the lander leg on a fixed clock, 3 s into the descent or 5 s into the climb back with the haul.
+    static func landingState(_ mode: Landing.Mode) -> GameState {
+        var gs = pickedState(.landing, missionsDone: 4, phase: .landing)
+        gs.player.shipCustomizerParts["lander"] = "lander-module-t1"
+        switch mode {
+        case .descend: gs.player.landingStartedAt = landingNow - 3_000
+        case .ascend: gs.player.landingReturnStartedAt = landingNow - 5_000; gs.player.miningCargoInProgress = ["iron": 3]
+        }
         return gs
     }
 
@@ -485,7 +498,11 @@ enum SceneCatalog {
         scene("cp-early", 874) { HubScreen().environment(GameStore(state: checkpointState(0))) },
         scene("cp-mid", 874) { HubScreen().environment(GameStore(state: checkpointState(1))) },
         scene("cp-late", 874) { HubScreen().environment(GameStore(state: checkpointState(2))) },
-        scene("landing-live", 874) { MiningScreen().environment(GameStore(state: pickedState(.landing, phase: .landing))) },
+        scene("landing-live", 874) { LandingScreen().environment(GameStore(state: landingState(.descend), clock: { landingNow })) },
+        scene("landing-ascent-phone", 874) { LandingScreen().environment(GameStore(state: landingState(.ascend), clock: { landingNow })) },
+        scene("landing-touchdown-phone", 874) { LandingScreen().environment(GameStore(state: landingState(.descend), clock: { landingNow + 5_000 })) },
+        scene("landing-landscape", 402, w: 874) { LandingScreen().environment(GameStore(state: landingState(.descend), clock: { landingNow })) },
+        scene("landing-ascent-landscape", 402, w: 874) { LandingScreen().environment(GameStore(state: landingState(.ascend), clock: { landingNow })) },
         scene("rocket-buy-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.rocketBuy))).environment(\.flatLayout, true) },
         scene("first-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab))).environment(\.flatLayout, true) },
         scene("storage-build-live", 874) { var gs = basePlayer(); gs.player.missionsDone = 2; gs.screen = .build; return BuildScreen().environment(GameStore(state: gs)) },
