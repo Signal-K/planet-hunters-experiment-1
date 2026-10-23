@@ -15,6 +15,10 @@ struct HubScreen: View {
     @State private var placing: Bool
     @State private var picked: String?
     @State private var placeNote: String?
+    /// Build mode: tapping a placed Launchpad, Silo or Academy opens its upgrade bar (web `ActionConfirmBar`).
+    @State private var upgrading: String?
+    /// Measured dock height: on narrow phones it stacks into two rows, so overlays above it cannot use a fixed offset.
+    @State private var dockHeight: CGFloat = 112
     /// Homecoming (SSL-553): the core stage lands on the pad behind the delivery sheet.
     var homecoming = false
     var padLift: CGFloat = 0
@@ -23,8 +27,9 @@ struct HubScreen: View {
     private let zones = HUDZones.standard
 
     /// `startX` / `startDepth` set the opening camera (fixtures and screenshots); the game starts at the surface, x 0.
-    init(safeAreaOverride: EdgeInsets? = nil, biome: EarthBiome = .resolve(), startX: CGFloat = 0, startDepth: CGFloat = 0, homecoming: Bool = false, padLift: CGFloat = 0, padDismantle: CGFloat = 0, placing: Bool = false) {
+    init(safeAreaOverride: EdgeInsets? = nil, biome: EarthBiome = .resolve(), startX: CGFloat = 0, startDepth: CGFloat = 0, homecoming: Bool = false, padLift: CGFloat = 0, padDismantle: CGFloat = 0, placing: Bool = false, upgrading: String? = nil) {
         _placing = State(initialValue: placing)
+        _upgrading = State(initialValue: upgrading)
         self.safeAreaOverride = safeAreaOverride
         self.homecoming = homecoming
         self.padLift = padLift
@@ -68,7 +73,7 @@ struct HubScreen: View {
                 insets: insets,
                 camera: camera,
                 onStructure: { openStructure($0) },
-                onShaft: { store.go(.hubSubsurface) },
+                onShaft: { if !offerUpgrade("surface-silo") { store.go(.hubSubsurface) } },
                 onBuildSilo: { buildSilo() },
                 placing: placing,
                 pickedKind: picked ?? options.first?.id,
@@ -77,15 +82,17 @@ struct HubScreen: View {
             skyCraft(width: size.width, height: size.height)
             topLeftHud(insets: insets, portrait: portrait)
             topRightHud(insets: insets)
-            if placing { picker(width: size.width, insets: insets) }
+            if placing, let upgrading { upgradeBar(upgrading, insets: insets) }
+            else if placing { picker(width: size.width, insets: insets) }
             BaseDock(tile: layout.tile, zones: zones.dock,
                      onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
-                     onBuild: { placeNote = nil; placing.toggle() },
+                     onBuild: { placeNote = nil; upgrading = nil; placing.toggle() },
                      onMenu: { menuOpen = true },
                      onMission: (!placing && store.player.activeMission == nil && !store.player.pendingLaunch) ? { store.go(.missions) } : nil,
                      locationLabel: "Earth",
                      locationNavigationDisabled: true)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dockHeight = $0 }
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             if menuOpen { BaseMenu(onClose: { menuOpen = false }, onBuild: { placeNote = nil; placing = true }) }
@@ -164,11 +171,64 @@ struct HubScreen: View {
                 }
             }
         }
-        .padding(.bottom, insets.bottom + 72)
+        .padding(.bottom, aboveDock(insets))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
     }
 
+    private func aboveDock(_ insets: EdgeInsets) -> CGFloat { insets.bottom + max(zones.dock.bottomInset, 14) + dockHeight + 12 }
+
+    /// In Build mode a finished upgradable building opens its upgrade bar instead of its screen.
+    private func offerUpgrade(_ kind: String) -> Bool {
+        guard placing, BuildingLevels.ids.contains(kind), store.player.placed.contains(kind),
+              Construction.progress(store.player.underConstruction[kind], now: store.now) >= 1 else { return false }
+        upgrading = kind
+        return true
+    }
+
+    /// Web's upgrade confirm bar: level step, the effect now and next, the shortfall, and the price on the button.
+    private func upgradeBar(_ kind: String, insets: EdgeInsets) -> some View {
+        let level = BuildingLevels.level(store.player, kind)
+        let cost = BuildingLevels.cost(kind, level: level)
+        let effects = BuildingLevels.effects[kind] ?? []
+        let effect = { (l: Int) in effects.indices.contains(l - 1) ? effects[l - 1] : "" }
+        let francs = store.player.francs
+        let description: String = {
+            guard let cost else { return "\(effect(level)). Fully upgraded." }
+            let short = francs < cost ? "Needs \(Economy.format(francs: cost - francs)) more. " : ""
+            return "Now: \(effect(level)). Next: \(effect(level + 1)). \(short)Upgrades are permanent."
+        }()
+        let canBuy = cost.map { francs >= $0 } ?? false
+        return VStack(alignment: .leading, spacing: 8) {
+            Text((cost == nil ? "Level \(level) of \(BuildingLevels.maxLevel)" : "Level \(level) to \(level + 1)").uppercased())
+                .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.textMuted)
+            Text("Upgrade \(BuildingLevels.names[kind] ?? kind)").font(AppFont.display(18)).foregroundStyle(Theme.hudInk)
+            Text(description).font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                Button("CANCEL") { upgrading = nil }
+                    .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.hudInk)
+                    .frame(minWidth: 88, minHeight: 44)
+                    .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("confirm-action-dismiss")
+                PrimaryButton(title: cost.map { "Upgrade (\(Economy.format(francs: $0)))" } ?? "Max level", enabled: canBuy) {
+                    if store.upgradeBuilding(kind) { upgrading = nil }
+                }
+                .accessibilityIdentifier("confirm-action-confirm")
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: 440, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hudPanel))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.hudInk, lineWidth: 2))
+        .padding(.horizontal, 16)
+        .padding(.bottom, aboveDock(insets))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .accessibilityIdentifier("action-confirm-bar")
+    }
+
     private func openStructure(_ kind: String) {
+        if offerUpgrade(kind) { return }
         switch kind {
         case "launchpad": store.go(.launchpad)
         // Mission first: the hangar opens on its rocket choice only once a mission and destination are set up.
