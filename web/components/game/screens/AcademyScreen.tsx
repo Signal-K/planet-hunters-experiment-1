@@ -10,6 +10,7 @@ import {
   ACTOR_ARCHETYPES,
   CREW_DAILY_UPKEEP,
   CREW_MODULE_RESEARCH_XP_COST,
+  LANDING_RESEARCH_XP_COST,
   STRUCTURES,
   TRAINING_SESSIONS_PER_DAY,
   type SkillBranch,
@@ -25,6 +26,8 @@ import {
   utcDateKey,
 } from '@/lib/systems/AcademySystem'
 import { crewLevel, crewProgress } from '@/lib/systems/CrewSystem'
+import { LANDING_RESEARCH_PREREQUISITE_MISSIONS_DONE } from '@/lib/systems/LandingSystem'
+import { customizerPartById } from '@/lib/data/shipCustomizer'
 import { formatCountdown, formatCurrency } from '@/lib/format'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
@@ -61,6 +64,7 @@ interface AcademyScreenProps {
   onTrainCandidate: (branch: SkillBranch) => void
   onCollectTraining: (sessionId: string) => void
   onResearchCrewModule: () => void
+  onResearchLanding: () => void
   onAssign: (structureId: string, crewId: string | null) => void
   onShareCharts: (clientId: string) => void
 }
@@ -74,6 +78,13 @@ export default function AcademyScreen(props: AcademyScreenProps) {
   const built = props.player.placed.includes('astronaut-academy')
   const affinityReady = academyAffinityUnlocked(props.player)
   const crew = props.player.crew ?? []
+  // SSL-667: landing research unlocks the Lander Module room, which the Hangar offers from its part's unlock.
+  const landerFitMissions = customizerPartById('lander-module-t1')?.unlockedAtMissions ?? 0
+  const landingUnlocked = props.player.missionsDone >= LANDING_RESEARCH_PREREQUISITE_MISSIONS_DONE
+  const landingReady = landingUnlocked && (props.player.researchXP ?? 0) >= LANDING_RESEARCH_XP_COST
+  const landerCopy = landingUnlocked
+    ? `Research a lander that detaches in orbit, lands on the target and re-docks for the trip home. Fit it in the Hangar from ${landerFitMissions} missions.`
+    : `Opens after ${LANDING_RESEARCH_PREREQUISITE_MISSIONS_DONE} missions. A lander detaches in orbit, lands on the target and re-docks for the trip home.`
   const sessions = props.player.crewTraining ?? []
   const sources = availableCrewSources(props.player, props.catalog.clients)
   const level = academyLevel(props.player)
@@ -261,6 +272,13 @@ export default function AcademyScreen(props: AcademyScreenProps) {
                     </article>
                   )}
                   {props.player.crewModuleResearched && <PrimaryBtn onClick={props.onOpenHangar}>Fit Crew Quarters in Hangar</PrimaryBtn>}
+                  {!props.player.landingResearched && (
+                    <article className={styles.moduleCard} data-testid="academy-landing-research">
+                      <div><strong>Lander Module T1</strong><span>{landerCopy}</span></div>
+                      <PrimaryBtn disabled={!landingReady} onClick={() => { captureGameEvent('academy_landing_researched'); props.onResearchLanding() }}>Research · {LANDING_RESEARCH_XP_COST} XP</PrimaryBtn>
+                    </article>
+                  )}
+                  {props.player.landingResearched && props.player.missionsDone >= landerFitMissions && <PrimaryBtn onClick={props.onOpenHangar}>Fit Lander Module in Hangar</PrimaryBtn>}
                   {Object.values(props.catalog.clients).filter(client => client.suppliesCrew).map(client => (
                     <article className={styles.actionCard} key={client.id}>
                       <div><strong>{client.name}</strong><span>Client level L{clientAffinityLevel(props.player.clientMissions[client.id] ?? 0)} · {props.player.sharedChartsByClient?.[client.id] ?? 0} charts shared</span></div>

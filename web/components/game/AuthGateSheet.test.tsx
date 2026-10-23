@@ -76,7 +76,7 @@ describe('AuthGateSheet', () => {
     await act(async () => root.unmount())
   })
 
-  it('requests password-reset instructions from the sign-in form', async () => {
+  it('requests password-reset instructions with only an email, no password', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
     const onRequestPasswordReset = vi.fn(async () => {})
@@ -86,8 +86,17 @@ describe('AuthGateSheet', () => {
       root.render(<AuthGateSheet error={null} onSignIn={vi.fn(async () => {})} onCreateAccount={vi.fn(async () => {})} onRequestPasswordReset={onRequestPasswordReset} onConfirmPasswordReset={vi.fn(async () => {})} />)
     })
     await act(async () => {
-      setValue(host.querySelector('[data-testid="auth-gate-email"]') as HTMLInputElement, 'miner@example.com')
       ;(host.querySelector('[data-testid="auth-gate-forgot-password"]') as HTMLButtonElement).click()
+    })
+    expect(host.querySelector('[data-testid="auth-gate-password"]')).toBeNull()
+    const submit = host.querySelector('[data-testid="auth-gate-submit"]') as HTMLButtonElement
+    expect(submit.textContent).toBe('Send Reset Link')
+    expect(submit.disabled).toBe(true)
+
+    await act(async () => setValue(host.querySelector('[data-testid="auth-gate-email"]') as HTMLInputElement, 'miner@example.com'))
+    expect(submit.disabled).toBe(false)
+    await act(async () => {
+      host.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
     })
 
     expect(onRequestPasswordReset).toHaveBeenCalledWith('miner@example.com')

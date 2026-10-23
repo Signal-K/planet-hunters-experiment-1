@@ -74,6 +74,8 @@ export default function HangarScreen({
 
   return (
     <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="hangar-screen">
+      {/* The customizer is a full-screen sheet: the bay under it cannot be tapped or tabbed to while it is open. */}
+      <div style={{ display: 'contents' }} inert={customizerOpen}>
       <div className={styles.assembly} data-testid="hangar-assembly" aria-hidden="true">
         <HangarBay stagedTier={stagedTier} />
       </div>
@@ -143,6 +145,7 @@ export default function HangarScreen({
       </div>
 
       <button type="button" className={styles.exit} data-testid="hangar-exit-bay" onClick={onBack}>Exit bay</button>
+      </div>
 
       {customizerOpen && (
         <div data-testid="hangar-customizer-overlay" style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'var(--set-bg)' }}>

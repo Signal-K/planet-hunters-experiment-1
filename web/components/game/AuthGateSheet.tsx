@@ -23,7 +23,7 @@ function revealOnFocus(e: React.FocusEvent<HTMLInputElement>) {
 
 export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateAccount, onRequestPasswordReset, onConfirmPasswordReset }: AuthGateSheetProps) {
   const [requestedEntry, setRequestedEntry] = useState<'orionids' | null>(entry)
-  const [mode, setMode] = useState<'signin' | 'signup'>(() => {
+  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>(() => {
     if (typeof window === 'undefined') return 'signin'
     return new URLSearchParams(window.location.search).get('gate') === 'signup' ? 'signup' : 'signin'
   })
@@ -75,6 +75,10 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (mode === 'reset' && !resetToken) {
+      await handlePasswordReset()
+      return
+    }
     if ((mode === 'signup' || resetToken) && password !== passwordConfirmation) {
       setValidationError('Passwords do not match.')
       return
@@ -99,6 +103,14 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
     } finally {
       setSubmitting(false)
     }
+  }
+
+  // Forgot password opens its own email-only view: the player has no password to type.
+  function openPasswordReset() {
+    setValidationError(null)
+    setResetRequested(false)
+    setPassword('')
+    setMode('reset')
   }
 
   async function handlePasswordReset() {
@@ -151,12 +163,14 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
 
         <div className="auth-gate__content">
           <div className="auth-gate__eyebrow">{PRODUCT_WORDMARK} · {PRODUCT_DESCRIPTOR}</div>
-          <div className="auth-gate__heading">{resetToken ? 'New Password' : requestedEntry === 'orionids' ? 'Fly the Orionids' : mode === 'signin' ? 'Welcome Back' : 'New Space Program'}</div>
+          <div className="auth-gate__heading">{resetToken ? 'New Password' : mode === 'reset' ? 'Reset Password' : requestedEntry === 'orionids' ? 'Fly the Orionids' : mode === 'signin' ? 'Welcome Back' : 'New Space Program'}</div>
           {/* SSL-302: the subtitle used to stay on the "resume" line for both
               tabs — a brand-new player on Sign Up has nothing to resume. */}
           <p className="auth-gate__intro" data-testid="auth-gate-intro">
             {resetToken
               ? 'Choose a new password for your account.'
+              : mode === 'reset'
+              ? 'Enter your account email and we’ll send you a link to choose a new password.'
               : requestedEntry === 'orionids'
               ? 'Sign in or create your program. We’ll take you straight into the Orionids launch, then the rest of Landnam stays open.'
               : mode === 'signin'
@@ -164,7 +178,7 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
               : 'Choose a landing site, build your launchpad, and grow your space program one mission at a time.'}
           </p>
 
-          {!resetToken && <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
+          {!resetToken && mode !== 'reset' && <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
             {(['signin', 'signup'] as const).map(m => (
               <button key={m} className={`auth-gate__tab${mode === m ? ' is-active' : ''}`} onClick={() => setMode(m)} role="tab" aria-selected={mode === m}>
                 {m === 'signin' ? 'Sign In' : 'Sign Up'}
@@ -184,7 +198,7 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
             className="auth-gate__input"
             onFocus={revealOnFocus}
           />}
-          <input
+          {mode !== 'reset' && <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
@@ -194,7 +208,7 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
             data-testid="auth-gate-password"
             className="auth-gate__input"
             onFocus={revealOnFocus}
-          />
+          />}
           {(mode === 'signup' || resetToken) && (
             <input
               type="password"
@@ -214,9 +228,20 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
               className="auth-gate__reset-link"
               data-testid="auth-gate-forgot-password"
               disabled={submitting}
-              onClick={() => { void handlePasswordReset() }}
+              onClick={openPasswordReset}
             >
               Forgot password?
+            </button>
+          )}
+          {mode === 'reset' && !resetToken && (
+            <button
+              type="button"
+              className="auth-gate__reset-link"
+              data-testid="auth-gate-back-to-signin"
+              disabled={submitting}
+              onClick={() => { setValidationError(null); setMode('signin') }}
+            >
+              Back to sign in
             </button>
           )}
 
@@ -240,14 +265,16 @@ export default function AuthGateSheet({ error, entry = null, onSignIn, onCreateA
 
           <button
             type="submit"
-            disabled={submitting || (!resetToken && !email.trim()) || !password}
+            disabled={submitting || (!resetToken && !email.trim()) || (mode !== 'reset' && !password)}
             data-testid="auth-gate-submit"
             className="auth-gate__primary"
           >
             {submitting
-              ? (resetToken ? 'Saving…' : mode === 'signin' ? 'Opening program…' : 'Starting program…')
+              ? (resetToken ? 'Saving…' : mode === 'reset' ? 'Sending…' : mode === 'signin' ? 'Opening program…' : 'Starting program…')
               : resetToken
                 ? 'Save Password'
+                : mode === 'reset'
+                ? 'Send Reset Link'
                 : requestedEntry === 'orionids'
                 ? 'Continue to Orionids'
                 : (mode === 'signin' ? 'Return to Base' : 'Start Program')}

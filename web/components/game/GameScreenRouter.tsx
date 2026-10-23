@@ -642,6 +642,7 @@ function ScreenBody({
           onTrainCandidate={game.startCandidateTraining}
           onCollectTraining={game.collectCrewTraining}
           onResearchCrewModule={game.researchCrewModule}
+          onResearchLanding={game.researchLanding}
           onAssign={game.assignCrewToStructure}
           onShareCharts={game.shareChartsWithClient}
         />
