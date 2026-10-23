@@ -49,6 +49,8 @@ describe('R1 mission setup', () => {
     expect(board).toContain('mission-board-tab-program')
     expect(board).toContain('mission-board-tab-events')
     expect(board).toContain('mission-accept-')
+    expect(board).toContain("onAccept(ORIONIDS_NIGHT_RUN_ID)")
+    expect(board).toContain("onAccept(ORIONIDS_SURFACE_RESEARCH_MISSION_ID)")
   })
 
   it('keeps the Mission Board back control at the 44px touch-target floor', () => {

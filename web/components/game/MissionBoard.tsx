@@ -407,6 +407,13 @@ export default function MissionBoard({
         onAccept(ORIONIDS_SURFACE_RESEARCH_MISSION_ID)
         return
       }
+      // Orionids is its own event chain, not a filter over ordinary Free Run
+      // cargo. Accept the shower mission directly so a user cannot click the
+      // event and accidentally start a generic hydrogen haul instead.
+      if (event.id === 'orionids-2026' && player.orionidsEventStage === 0 && catalog.missions.some(mission => mission.id === ORIONIDS_NIGHT_RUN_ID)) {
+        onAccept(ORIONIDS_NIGHT_RUN_ID)
+        return
+      }
       const target = catalog.targets.find(candidate => candidate.type === 'asteroid' && freeRuns.some(run =>
         Object.keys(run.requires.minerals).some(mineral => candidate.minerals.includes(mineral))))
       setTab('free')
