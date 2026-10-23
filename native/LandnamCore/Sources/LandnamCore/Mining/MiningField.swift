@@ -102,6 +102,7 @@ public struct MiningField: Equatable, Sendable {
     /// Throw cargo overboard (SSL-611 playtest: a wrong pick-up must never strand the hold). Returns units dropped; costs nothing.
     @discardableResult
     public mutating func jettison(_ mineralId: String, all: Bool = false) -> Int {
+        guard !SkyEvents.protectedRewardIds.contains(mineralId) else { return 0 }
         let have = cargo[mineralId, default: 0]
         guard have > 0 else { return 0 }
         let drop = all ? have : 1

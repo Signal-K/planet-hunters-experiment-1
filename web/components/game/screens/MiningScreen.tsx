@@ -19,6 +19,7 @@ import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_FRAGMENT_GOAL } from '@/lib/data/missions'
 import { FIREBALL_FRAGMENT_ID, FIREBALL_FRAGMENT_PRICE, fireballDue } from '@/lib/orionids/fireball'
+import { isProtectedEventReward } from '@/lib/orionids/rewards'
 import { OPEN_MARKET_SELL_RATE } from '@/lib/data/economy'
 import { holdHasRoom } from '@/lib/orionids/night-catches'
 import styles from './MiningTargetCue.module.css'
@@ -65,8 +66,8 @@ function useFreeOpsFirstSuccessAck() {
 
 // Horizontal drag track — left = slow, center = normal, right = fast forward
 // Thumb snaps back to center on release
-function miningGuide(hasDelivery: boolean) {
-  return [
+function miningGuide(hasDelivery: boolean, isOrionids: boolean) {
+  const items = [
     { kind: 'fire', label: 'Fire Laser', desc: 'Fires the vertical beam. Scroll ore under the beam, then fire (Space/F).' },
     { kind: 'charges', label: 'Charges', desc: 'The fire button reads Depleted when the laser is empty. Empty, with the order unfinished, the run stops.' },
     { kind: 'order', label: 'Order', desc: 'The order card lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty.' },
@@ -76,6 +77,10 @@ function miningGuide(hasDelivery: boolean) {
       ? { kind: 'deliver', label: 'Deliver cargo', desc: 'The next leg drops this cargo off. Payout unlocks after delivery.' }
       : { kind: 'return', label: 'Return home', desc: 'Return for recovery. Payout unlocks after landing.' },
   ]
+  if (isOrionids) {
+    items.splice(1, 0, { kind: 'event', label: 'Catch Orionid debris', desc: 'Move the ship under the blue event fragments in the moving field and fire the laser when they cross the beam. Catches count toward the shower run and cannot be dropped.' })
+  }
+  return items
 }
 
 function GuideMark({ kind }: { kind: string }) {
@@ -195,6 +200,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const jettison = useCallback((mineral: string, all: boolean) => {
     const have = cargoRef.current[mineral] ?? 0
     if (have <= 0) return
+    if (isProtectedEventReward(mineral)) {
+      addToast?.('Event rewards are protected until the run is settled.', 'info')
+      return
+    }
     const next = { ...cargoRef.current }
     if (all || have <= 1) delete next[mineral]; else next[mineral] = have - 1
     cargoRef.current = next
@@ -719,8 +728,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             {Object.entries(cargo).filter(([, n]) => n > 0).map(([id, n]) => (
               <div className="mining-hold__row" key={id}>
                 <span>{minerals[id]?.name ?? id} ×{n}</span>
-                <button type="button" onClick={() => jettison(id, false)} aria-label={`Jettison 1 ${minerals[id]?.name ?? id}`}>Drop 1</button>
-                {n > 1 ? <button type="button" onClick={() => jettison(id, true)} aria-label={`Jettison all ${minerals[id]?.name ?? id}`}>Drop all</button> : null}
+                {isProtectedEventReward(id) ? (
+                  <span className="mining-hold__protected">EVENT REWARD · PROTECTED</span>
+                ) : (
+                  <>
+                    <button type="button" onClick={() => jettison(id, false)} aria-label={`Jettison 1 ${minerals[id]?.name ?? id}`}>Drop 1</button>
+                    {n > 1 ? <button type="button" onClick={() => jettison(id, true)} aria-label={`Jettison all ${minerals[id]?.name ?? id}`}>Drop all</button> : null}
+                  </>
+                )}
               </div>
             ))}
           </div>
@@ -843,7 +858,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </div>
           <div className="mining-guide-scroll">
             <div className="mining-guide-column">
-              {miningGuide(!!deliveryTargetName).map(item => (
+              {miningGuide(!!deliveryTargetName, nightRun).map(item => (
                 <article key={item.label} className="mining-guide-card">
                   <GuideMark kind={item.kind} />
                   <div>

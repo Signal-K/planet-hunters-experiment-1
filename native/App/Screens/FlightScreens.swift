@@ -139,9 +139,12 @@ struct MiningScreen: View {
                     laserChrome(field, insets: geo.safeAreaInsets, narrow: geo.size.width < 600, short: geo.size.height < 520).ignoresSafeArea()
                 }
                 if showGuide {
-                    MiningGuide(onRecharge: { showGuide = false; scene?.refill(); say("Laser refilled. Cargo kept.") },
-                                onScrub: { showGuide = false; confirmingScrub = true },
-                                onClose: { showGuide = false })
+                    MiningGuide(
+                        isOrionids: store.mission?.id == OrionidsRun.missionId,
+                        onRecharge: { showGuide = false; scene?.refill(); say("Laser refilled. Cargo kept.") },
+                        onScrub: { showGuide = false; confirmingScrub = true },
+                        onClose: { showGuide = false }
+                    )
                 }
             }
             .onAppear { if scene == nil { setup(geo.size) }; keysFocused = true }
@@ -391,11 +394,12 @@ struct LaunchSequenceScreen: View {
 /// gaps, Recharge and Scrub as separate full-width buttons. The HUD and dock are removed while it shows.
 struct MiningGuide: View {
     @Environment(\.flatLayout) private var flat
+    var isOrionids = false
     let onRecharge: () -> Void
     let onScrub: () -> Void
     let onClose: () -> Void
 
-    private static let items: [(String, String)] = [
+    private static let baseItems: [(String, String)] = [
         ("Fire Laser", "Fires the vertical beam. Scroll ore under the beam, then fire."),
         ("Charges", "The fire button reads Depleted when the laser is empty. Empty, with the order unfinished, the run stops."),
         ("Order", "The order card lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty."),
@@ -404,9 +408,16 @@ struct MiningGuide: View {
         ("Return home", "Return for recovery. Payout unlocks after landing."),
     ]
 
+    private var items: [(String, String)] {
+        guard isOrionids else { return Self.baseItems }
+        var items = Self.baseItems
+        items.insert(("Catch Orionid debris", "Move under the blue event fragments in the moving field and fire when they cross the beam. Event catches count toward the shower run and cannot be dropped."), at: 1)
+        return items
+    }
+
     private var cards: some View {
         VStack(spacing: SetStyle.gap) {
-            ForEach(Self.items, id: \.0) { item in
+            ForEach(items, id: \.0) { item in
                 VStack(alignment: .leading, spacing: 8) {
                     Text(item.0).font(AppFont.display(16, "Bold")).foregroundStyle(SetStyle.ink)
                     Text(item.1).font(AppFont.body(16)).foregroundStyle(SetStyle.muted).fixedSize(horizontal: false, vertical: true)

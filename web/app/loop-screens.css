@@ -420,6 +420,7 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
 .mining-hold__row { display: flex; align-items: center; gap: 6px; min-height: 44px; }
 .mining-hold__row span { flex: 1; }
 .mining-hold__row button { min-height: 44px; padding: 0 10px; background: #05080f; color: #fff; border: 1.5px solid rgba(255, 255, 255, 0.8); border-radius: 4px; font: inherit; cursor: pointer; }
+.mining-hold__protected { flex: 0 0 auto; color: #9fd6e4; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
 .mining-hold__empty { min-height: 32px; opacity: 0.7; }
 @media (max-width: 600px) { .mining-hold { top: 190px; } }
 /* The hub hold is portaled in the HUD, under the launchpad prompt (z-index 80).

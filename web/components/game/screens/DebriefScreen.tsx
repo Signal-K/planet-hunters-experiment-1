@@ -254,11 +254,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             ? willStore
               ? overflowUnits > 0 ? `Store haul · sell ${overflowUnits} over cap` : shownRun ? `Collect ${formatCurrency(shownRun.francs)} · keep haul` : 'Keep haul on Earth'
               : `Collect ${formatCurrency((haulMarketValue ?? 0) + (shownRun?.francs ?? 0))}`
-            : delivered
-              ? isProgramOperation
-                ? 'Log Program Outcome'
-                : `Collect ${formatCurrency(total)}`
-              : shownRun ? `Collect ${formatCurrency(shownRun.francs)}` : 'Return to Base'}
+              : delivered
+                ? isProgramOperation
+                ? 'Log Program Outcome · Return to Base'
+                : `Collect & Return to Base · ${formatCurrency(total)}`
+              : shownRun ? `Collect & Return to Base · ${formatCurrency(shownRun.francs)}` : 'Return to Base'}
         </PrimaryBtn>
       </div>
 

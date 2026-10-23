@@ -113,7 +113,7 @@ struct LaserGauge: View {
 }
 
 
-/// Cargo hold chip: tap to jettison anything you picked up by mistake (one unit, or the lot of a mineral).
+/// Cargo hold chip: tap to jettison ordinary ore picked up by mistake. Event rewards are protected.
 struct CargoMenu: View {
     let field: MiningField
     let onJettison: (String, Bool) -> Void
@@ -127,8 +127,12 @@ struct CargoMenu: View {
             ForEach(field.cargo.keys.sorted(), id: \.self) { id in
                 let n = field.cargo[id, default: 0]
                 let name = Minerals.byId[id]?.name ?? id
-                Button("Jettison 1 \(name)") { onJettison(id, false) }
-                if n > 1 { Button("Jettison all \(name) (\(n))", role: .destructive) { onJettison(id, true) } }
+                if SkyEvents.protectedRewardIds.contains(id) {
+                    Text("EVENT REWARD · \(name) · PROTECTED")
+                } else {
+                    Button("Jettison 1 \(name)") { onJettison(id, false) }
+                    if n > 1 { Button("Jettison all \(name) (\(n))", role: .destructive) { onJettison(id, true) } }
+                }
             }
         } label: {
             HStack(spacing: 6) {

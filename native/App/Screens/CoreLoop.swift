@@ -769,7 +769,7 @@ struct DebriefScreen: View {
                 if !orbital {
                     RecordDockButton(title: scrapped ? "Dismantled" : "Teardown", filled: false, enabled: !scrapped) { scrapped = true }
                 }
-                RecordDockButton(title: run.map { "Collect \(Economy.format(francs: $0.francs + (willStore ? 0 : sale)))" } ?? collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
+                RecordDockButton(title: run.map { "COLLECT & RETURN TO BASE · \(Economy.format(francs: $0.francs + (willStore ? 0 : sale)))" } ?? collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
                     guard !collecting else { return }
                     collecting = true
                     shownRun = run
