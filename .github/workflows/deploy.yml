@@ -94,6 +94,9 @@ jobs:
           NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
           NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-landnam.fly.dev
           NEXT_PUBLIC_LANDNAM_ENV: staging
+          # Same Clerk production instance as playlandnam.space; staging is
+          # served at staging.playlandnam.space so the instance accepts it.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
           NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
           NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
           NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}

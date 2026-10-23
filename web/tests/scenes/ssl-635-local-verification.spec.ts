@@ -22,16 +22,17 @@ for (const viewport of [
     await expect(page.getByTestId('flight-plan')).toHaveCount(0)
     await page.screenshot({ path: `/tmp/ssl-635-launch-${viewport.width}x${viewport.height}.png` })
 
-    await page.getByTestId('settings-button').click()
-    await expect(page.getByTestId('sign-out')).toBeVisible()
-    await page.screenshot({ path: `/tmp/ssl-636-settings-${viewport.width}x${viewport.height}.png` })
-    await page.getByTestId('settings-close').click()
-
     await page.evaluate(() => {
       const bridge = (window as typeof window & { __landnam?: { scenario: (name: string) => boolean } }).__landnam
       if (!bridge?.scenario('cp-late')) throw new Error('cp-late scenario unavailable')
     })
     await expect(page.locator('[data-screen="hub"]')).toBeVisible()
+    // Settings, with sign-out, opens from the Base Menu.
+    await page.getByTestId('hub-btn').click()
+    await page.getByTestId('base-menu-settings').click()
+    await expect(page.getByTestId('settings-sheet').getByRole('button', { name: 'Sign out' })).toBeVisible()
+    await page.screenshot({ path: `/tmp/ssl-636-settings-${viewport.width}x${viewport.height}.png` })
+    await page.getByTestId('settings-close').click()
     await page.getByTestId('hub-build-btn').click()
     await expect(page.getByTestId('hub-build-done-btn')).toBeVisible()
     await page.screenshot({ path: `/tmp/ssl-636-build-${viewport.width}x${viewport.height}.png` })
