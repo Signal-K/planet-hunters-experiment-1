@@ -1,18 +1,32 @@
 import SwiftUI
 import LandnamCore
+import TakeonKit
 
 /// Cargo hand-off at the client's berth (web `DeliveryScreen`). Normally zero taps: the unload runs on the persisted
 /// clock and hands itself over to the flight home. The transport lesson (`Dropoff`) is driven instead: take the Mule
 /// rover to the depot, dump the cargo, return the rover. Back pauses at the base either way.
+/// With the Go runtime linked the lesson runs on the Takeon field like web (seeded cache and hold); without it, on the
+/// berth scene's rover lane.
 struct DeliveryScreen: View {
     @Environment(GameStore.self) private var store
     @State private var dropoff: Dropoff
+    /// The lesson's Takeon field, made on first appearance (or passed in by snapshots). Never saved, as on web.
+    @State private var field: TakeonSceneModel?
     private let zones = HUDZones.standard
     /// The empty rover's drive back to the ship before the hand-off.
     private static let returnSeconds = 1.2
 
     /// Snapshot tests pass a lesson already under way; the app starts with the rover at the ship.
-    init(dropoff: Dropoff = Dropoff()) { _dropoff = State(initialValue: dropoff) }
+    /// Snapshots of the lane fallback pass `useField: false` on builds that link the runtime.
+    private let useField: Bool
+
+    init(dropoff: Dropoff = Dropoff(), field: TakeonSceneModel? = nil, useField: Bool = takeonGoRuntimeAvailable) {
+        _dropoff = State(initialValue: dropoff)
+        _field = State(initialValue: field)
+        self.useField = useField
+    }
+
+    private var takeonLesson: Bool { useField && takeonGoRuntimeAvailable && field?.failure == nil }
 
     var body: some View {
         let rows = Delivery.orderedCargo(store.state.lastCargo ?? [:], mission: store.mission)
@@ -22,7 +36,13 @@ struct DeliveryScreen: View {
             let wide = outer.size.width > outer.size.height
             let inset: CGFloat = wide ? 340 + 16 : 0
             ZStack(alignment: wide ? .bottomLeading : .bottom) {
-                if lesson {
+                if lesson && takeonLesson {
+                    if let field { takeonField(field) } else { Theme.ink.onAppear { field = makeField() } }
+                    lessonPlate(rows: rows, units: units)
+                        .frame(maxWidth: wide ? 340 : 480)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, outer.safeAreaInsets.bottom + zones.dock.bottomInset)
+                } else if lesson {
                     DeliveryWorldScene(progress: 0, cargoUnits: units, leadingInset: inset, rover: dropoff.rover,
                                        dumped: dropoff.stage != .driving, onTapLane: { f in drive { $0.drive(to: f) } })
                     lessonPlate(rows: rows, units: units)
@@ -63,9 +83,54 @@ struct DeliveryScreen: View {
     /// Once the rover is back aboard, launch for Earth (web completes 350 ms after the redock).
     private func lessonHandOff() async {
         guard dropoff.stage == .returned else { return }
-        try? await Task.sleep(for: .milliseconds(Int(Self.returnSeconds * 1000) + 350))
+        // The lane rover drives home first; the Takeon rover is redocked at once, as on web.
+        try? await Task.sleep(for: .milliseconds(Int((takeonLesson ? 0 : Self.returnSeconds) * 1000) + 350))
         guard !Task.isCancelled, store.screen == .delivery else { return }
         store.deliveryUnloadComplete()
+    }
+
+    /// Web mounts the drop-off on the delivery target's Takeon body, seeded from the mission id.
+    private func makeField() -> TakeonSceneModel {
+        let target = store.catalog.target(store.state.deliveryTargetId)
+        let m = TakeonSceneModel(target: TakeonMapping.body(for: target),
+                                 seed: TakeonMapping.stableSeed("tutorial-delivery-\(store.mission?.id ?? "")"), persist: false)
+        m.seedDropoff(TakeonMapping.cargo(Cargo(uniqueKeysWithValues: Delivery.orderedCargo(store.state.lastCargo ?? [:], mission: store.mission).map { ($0.id, $0.units) })))
+        return m
+    }
+
+    /// The iso field, stepped like the rover survey. The cache carries web's lock-on marker until the cargo is in it.
+    private func takeonField(_ m: TakeonSceneModel) -> some View {
+        TimelineView(.animation) { tl in
+            let t = tl.date.timeIntervalSinceReferenceDate
+            Canvas { ctx, size in
+                var ctx = ctx
+                if let st = m.state, let tr = m.terrain {
+                    TakeonIsoRenderer(terrain: tr, state: st, selected: dropoff.stage == .driving ? st.caches?.first : nil, time: t)
+                        .draw(&ctx, size: size)
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .accessibilityHidden(true)
+        .task {
+            var last = ContinuousClock.now
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(50))
+                let now = ContinuousClock.now
+                let d = (now - last).components
+                last = now
+                m.tick(dt: min(0.25, Double(d.seconds) + Double(d.attoseconds) / 1e18))
+            }
+        }
+    }
+
+    private func dump(units: Int) {
+        if let field, takeonLesson {
+            let moved = field.deposit()
+            drive { $0.dump(cargoUnits: units, nearCache: moved > 0) }
+        } else {
+            drive { $0.dump(cargoUnits: units) }
+        }
     }
 
     private func drive(_ change: (inout Dropoff) -> Void) {
@@ -162,15 +227,27 @@ struct DeliveryScreen: View {
                 Text(Dropoff.message(for: r)).font(AppFont.display(14)).tracking(1.1)
                     .accessibilityIdentifier("delivery-dump-error")
             }
+            if stage == .driving, let field, takeonLesson {
+                // Engine directions as seen on screen: 3 NE, 0 SE, 1 SW, 2 NW.
+                HStack(spacing: 8) {
+                    padButton("arrow.up.left", "Drive north west") { field.move(2) }
+                    padButton("arrow.up.right", "Drive north east") { field.move(3) }
+                    padButton("arrow.down.left", "Drive south west") { field.move(1) }
+                    padButton("arrow.down.right", "Drive south east") { field.move(0) }
+                    Spacer(minLength: 0)
+                }
+            }
             HStack(spacing: 8) {
                 if stage == .driving {
-                    padButton("chevron.left", "Drive toward the ship") { drive { $0.drive(by: -Dropoff.step) } }
-                    padButton("chevron.right", "Drive toward the depot") { drive { $0.drive(by: Dropoff.step) } }
-                    PrimaryButton(title: "Dump cargo at building site") { drive { $0.dump(cargoUnits: units) } }
+                    if !takeonLesson {
+                        padButton("chevron.left", "Drive toward the ship") { drive { $0.drive(by: -Dropoff.step) } }
+                        padButton("chevron.right", "Drive toward the depot") { drive { $0.drive(by: Dropoff.step) } }
+                    }
+                    PrimaryButton(title: "Dump cargo at building site") { dump(units: units) }
                         .accessibilityIdentifier("delivery-dump-cargo")
                 } else {
                     PrimaryButton(title: stage == .returned ? "Rover redocked · launch ready" : "Return rover to ship", enabled: stage == .dumped) {
-                        withAnimation(.easeInOut(duration: Self.returnSeconds)) { dropoff.returnRover() }
+                        withAnimation(.easeInOut(duration: takeonLesson ? 0.2 : Self.returnSeconds)) { dropoff.returnRover() }
                     }
                     .accessibilityIdentifier("delivery-return-rover")
                 }

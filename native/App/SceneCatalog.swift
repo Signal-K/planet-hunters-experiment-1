@@ -1,5 +1,6 @@
 import SwiftUI
 import LandnamCore
+import TakeonKit
 
 /// Every screen/component that can be shown on its own from fixture state, with
 /// no loop, no save file and no network. One catalog feeds both:
@@ -227,6 +228,16 @@ enum SceneCatalog {
         gs.player.headingToDelivery = true
         gs.player.deliveryUnloadStartedAt = landingNow - elapsed
         return gs
+    }
+
+    /// The lesson's Takeon field as `DeliveryScreen` builds it (Vesta is the `ceres` body), optionally already unloaded.
+    static func lessonField(deposit: Bool = false) -> TakeonSceneModel {
+        let gs = deliveryState(elapsed: 0, lesson: true)
+        let m = TakeonSceneModel(target: TakeonMapping.body(for: Catalog().target(gs.deliveryTargetId)),
+                                 seed: TakeonMapping.stableSeed("tutorial-delivery-\(gs.missionId ?? "")"), persist: false)
+        m.seedDropoff(TakeonMapping.cargo(gs.lastCargo ?? [:]))
+        if deposit { _ = m.deposit() }
+        return m
     }
 
     static func lessonDropoff(rover: Double, dump: Bool) -> Dropoff {
@@ -544,10 +555,13 @@ enum SceneCatalog {
         scene("transport-delivery-live", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 3_000), clock: { landingNow })) },
         scene("delivery-done-phone", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 8_000), clock: { landingNow })) },
         scene("delivery-landscape", 402, w: 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 3_000), clock: { landingNow })) },
-        scene("delivery-lesson-phone", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
-        scene("delivery-lesson-refused-phone", 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 0.5, dump: true)).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
-        scene("delivery-lesson-dumped-phone", 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 1, dump: true)).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
-        scene("delivery-lesson-landscape", 402, w: 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 1, dump: false)).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-takeon-phone", 874) { DeliveryScreen(field: lessonField()).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-takeon-dumped-phone", 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 1, dump: true), field: lessonField(deposit: true)).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-takeon-landscape", 402, w: 874) { DeliveryScreen(field: lessonField()).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-lesson-phone", 874) { DeliveryScreen(useField: false).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-lesson-refused-phone", 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 0.5, dump: true), useField: false).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-lesson-dumped-phone", 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 1, dump: true), useField: false).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-lesson-landscape", 402, w: 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 1, dump: false), useField: false).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
         scene("transport-debrief-live", 874) { DebriefScreen().environment(GameStore(state: pickedState(.debrief, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))) },
         scene("telescope-hub-live", 874) { var gs = basePlayer(); gs.player.deepSpaceTelescopeBuilt = true; return HubScreen().environment(GameStore(state: gs)) },
         scene("telescope-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab, mission: Instruments.transitMissionId, missionsDone: 5))).environment(\.flatLayout, true) },

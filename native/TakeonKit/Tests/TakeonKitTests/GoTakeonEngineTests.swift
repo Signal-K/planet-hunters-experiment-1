@@ -155,6 +155,24 @@ final class GoTakeonEngineTests: XCTestCase {
         XCTAssertThrowsError(try e.order("nonsense", arg: 0))
     }
 
+    // MARK: seeded drop-off
+
+    func testSeededDropoffDepositsBesideTheCache() throws {
+        let e = GoTakeonEngine()
+        try e.loadWorld(.init(targetId: "bennu", seed: 4212))
+        e.seedCache()
+        try e.seedCargo(["iron": 3, "stone": 2])
+        var st = try TakeonRenderState.decode(e.state())
+        XCTAssertEqual(st.caches, [.init(x: st.rover.pos.x + 1, y: st.rover.pos.y)])
+        XCTAssertEqual(st.rover.cargoUsed, 5)
+        XCTAssertTrue(st.nearCache)
+        XCTAssertEqual(e.deposit(), 5)
+        st = try TakeonRenderState.decode(e.state())
+        XCTAssertEqual(st.rover.cargoUsed, 0)
+        XCTAssertEqual(st.banked, ["iron": 3, "stone": 2])
+        XCTAssertEqual(e.deposit(), 0)
+    }
+
     // MARK: snapshot, easy mining, bank
 
     func testSnapshotRestoreContinuesIdentically() throws {

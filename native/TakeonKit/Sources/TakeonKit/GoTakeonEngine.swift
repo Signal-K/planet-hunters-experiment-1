@@ -123,6 +123,17 @@ public final class GoTakeonEngine: TakeonEngine {
 
     public func bank() -> Bool { engine?.bank() ?? false }
 
+    public func seedCache() { engine?.seedCache() }
+
+    public func seedCargo(_ cargo: [String: Double]) throws {
+        let json = String(decoding: try JSONEncoder().encode(cargo), as: UTF8.self)
+        do { try loaded().seedCargoJSON(json) } catch let e as TakeonEngineError { throw e } catch {
+            throw TakeonEngineError.runtime(error.localizedDescription)
+        }
+    }
+
+    public func deposit() -> Double { engine?.deposit() ?? 0 }
+
     public func missionProgress() throws -> TakeonMissionProgress {
         struct Doc: Decodable { var progress: TakeonMissionProgress }
         do {
@@ -164,6 +175,9 @@ public actor TakeonEngineActor {
     public func order(_ kind: String, arg: Int) throws -> Bool { try engine.order(kind, arg: arg) }
     public func orderMine(x: Int, y: Int) -> Bool { engine.orderMine(x: x, y: y) }
     public func bank() -> Bool { engine.bank() }
+    public func seedCache() { engine.seedCache() }
+    public func seedCargo(_ cargo: [String: Double]) throws { try engine.seedCargo(cargo) }
+    public func deposit() -> Double { engine.deposit() }
     public func missionProgress() throws -> TakeonMissionProgress { try engine.missionProgress() }
     public func state() throws -> Data { try engine.state() }
     public func window(x: Int, y: Int, w: Int, h: Int) throws -> TakeonTerrainWindow { try engine.window(x: x, y: y, w: w, h: h) }

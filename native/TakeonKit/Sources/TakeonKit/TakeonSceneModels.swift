@@ -53,6 +53,15 @@ public struct TakeonRenderState: Decodable, Equatable, Sendable {
     public var landing: Point
     public var stats: Stats
     public var edits: [String: Int]?
+    /// Seeded drop-off caches (absent on worlds with none).
+    public var caches: [Point]?
+    /// Cargo deposited into a cache, by Takeon resource.
+    public var banked: [String: Double]?
+
+    /// The rover is within one tile of a cache, so a deposit will land (Go `Deposit`).
+    public var nearCache: Bool {
+        (caches ?? []).contains { abs($0.x - rover.pos.x) <= 1 && abs($0.y - rover.pos.y) <= 1 }
+    }
 
     public static func decode(_ data: Data) throws -> TakeonRenderState { try JSONDecoder().decode(Self.self, from: data) }
 

@@ -34,10 +34,14 @@ public struct Dropoff: Equatable, Sendable {
 
     /// Returns whether the cargo left the hold. Refusals carry web's messages (`message(for:)`).
     @discardableResult
-    public mutating func dump(cargoUnits: Int) -> Bool {
+    public mutating func dump(cargoUnits: Int) -> Bool { dump(cargoUnits: cargoUnits, nearCache: parked) }
+
+    /// The Takeon field decides reach itself (its deposit moved cargo or not); the lane scene uses `parked`.
+    @discardableResult
+    public mutating func dump(cargoUnits: Int, nearCache: Bool) -> Bool {
         guard stage == .driving else { return false }
         guard cargoUnits > 0 else { refusal = .noCargo; return false }
-        guard parked else { refusal = .notParked; return false }
+        guard nearCache else { refusal = .notParked; return false }
         refusal = nil
         stage = .dumped
         return true

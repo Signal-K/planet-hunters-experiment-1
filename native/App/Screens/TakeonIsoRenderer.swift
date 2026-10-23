@@ -87,6 +87,8 @@ struct TakeonIsoRenderer {
                 roverDrawn = true
                 drawRover(&ctx, o: o)
             }
+            // After the rover on the same diagonal: a cache one tile ahead stands in front of it.
+            for c in state.caches ?? [] where c.x + c.y == s { drawCache(&ctx, at: c, o: o) }
         }
         if !roverDrawn { drawRover(&ctx, o: o) }
         if let sel = selected {
@@ -181,6 +183,29 @@ struct TakeonIsoRenderer {
                                              startPoint: CGPoint(x: b.x - w / 2, y: b.y - s.2), endPoint: CGPoint(x: b.x + w / 2, y: b.y)))
             ctx.stroke(p, with: .color(Self.color(0x06323A, a: 0.8)), lineWidth: 0.8)
         }
+    }
+
+    // MARK: drop-off cache
+
+    /// Receiving cache: a white panelled crate with blue trim and a navy outline, standing on its column.
+    private func drawCache(_ ctx: inout GraphicsContext, at p: TakeonRenderState.Point, o: CGPoint) {
+        let h = terrain.height(p.x, p.y)
+        guard h >= 0 else { return }
+        let q = Self.project(Double(p.x) + 0.5, Double(p.y) + 0.5, Double(h + 1))
+        let c = CGPoint(x: o.x + q.x, y: o.y + q.y)
+        let hw: CGFloat = 26, hh: CGFloat = 13, hgt: CGFloat = 30
+        let n = CGPoint(x: c.x, y: c.y - hh - hgt), e = CGPoint(x: c.x + hw, y: c.y - hgt)
+        let s = CGPoint(x: c.x, y: c.y + hh - hgt), w = CGPoint(x: c.x - hw, y: c.y - hgt)
+        var l = Path(); l.addLines([w, s, CGPoint(x: s.x, y: s.y + hgt), CGPoint(x: w.x, y: w.y + hgt)]); l.closeSubpath()
+        var r = Path(); r.addLines([s, e, CGPoint(x: e.x, y: e.y + hgt), CGPoint(x: s.x, y: s.y + hgt)]); r.closeSubpath()
+        var t = Path(); t.addLines([n, e, s, w]); t.closeSubpath()
+        ctx.fill(l, with: .color(Theme.paper2)); ctx.fill(r, with: .color(Theme.paper2.opacity(0.8))); ctx.fill(t, with: .color(Theme.paper))
+        // Blue trim band round the two visible faces.
+        var band = Path()
+        band.move(to: CGPoint(x: w.x, y: w.y + hgt * 0.45)); band.addLine(to: CGPoint(x: s.x, y: s.y + hgt * 0.45))
+        band.addLine(to: CGPoint(x: e.x, y: e.y + hgt * 0.45))
+        ctx.stroke(band, with: .color(Theme.blue), lineWidth: 4)
+        for f in [l, r, t] { ctx.stroke(f, with: .color(Theme.ink), lineWidth: 2) }
     }
 
     // MARK: rover (stylised, no people)

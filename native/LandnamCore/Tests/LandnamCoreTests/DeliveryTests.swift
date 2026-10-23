@@ -72,4 +72,20 @@ import Foundation
         d.drive(to: 5)
         #expect(d.rover == 1)
     }
+
+    @Test func theTakeonFieldGetsWebsBodyCargoAndSeed() {
+        let cat = Catalog()
+        #expect(TakeonMapping.body(for: cat.target("vesta")) == "ceres")
+        #expect(TakeonMapping.body(for: cat.target("bennu")) == "bennu")
+        #expect(TakeonMapping.cargo(["carbon": 2, "iron": 3, "unobtainium": 4, "gold": 0]) == ["stone": 2, "iron": 3])
+        #expect(TakeonMapping.cargo(["gold": 1, "platinum": 2]) == ["crystal": 3])
+        // Web: stableSeed("a") === 3826002220.
+        #expect(TakeonMapping.stableSeed("a") == 3_826_002_220)
+    }
+
+    @Test func theFieldsDepositDecidesReach() {
+        var d = Dropoff()
+        #expect(!d.dump(cargoUnits: 5, nearCache: false) && d.refusal == .notParked)
+        #expect(d.dump(cargoUnits: 5, nearCache: true) && d.stage == .dumped)
+    }
 }
