@@ -64,7 +64,10 @@ async function callLandnam<T>(page: Page, path: string, init?: { method?: string
 }
 
 async function signUp(page: Page, info: TestInfo, email: string, password: string) {
-  await page.goto(`${stagingBaseUrl?.replace(/\/$/, '')}/game?gate=signup`, { waitUntil: 'networkidle' })
+  // The authenticated shell polls presence and notifications. `networkidle`
+  // therefore is not a stable navigation completion signal; the gate
+  // visibility assertion below is the real readiness condition.
+  await page.goto(`${stagingBaseUrl?.replace(/\/$/, '')}/game?gate=signup`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByTestId('auth-gate-email')).toBeVisible()
   await page.getByRole('tab', { name: 'Sign Up' }).click()
   await page.getByTestId('auth-gate-email').fill(email)
