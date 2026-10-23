@@ -218,14 +218,21 @@ enum SceneCatalog {
     }
 
     /// SSL-574: the transport lesson's unload at its client berth, `elapsed` ms into the 8 s clock.
-    static func deliveryState(elapsed: Double) -> GameState {
-        var gs = pickedState(.delivery, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1, phase: .delivery)
+    /// Timed unload past the lesson; `lesson` is the transport lesson leg (missionsDone 1), where the rover drop-off runs.
+    static func deliveryState(elapsed: Double, lesson: Bool = false) -> GameState {
+        var gs = pickedState(.delivery, mission: "lnm_m3_relay_bennu_vesta", missionsDone: lesson ? 1 : 2, phase: .delivery)
         let m = Catalog().mission("lnm_m3_relay_bennu_vesta")
         gs.deliveryTargetId = m?.deliveryTargetId
         gs.lastCargo = m?.requires.minerals ?? ["iron": 4]
         gs.player.headingToDelivery = true
         gs.player.deliveryUnloadStartedAt = landingNow - elapsed
         return gs
+    }
+
+    static func lessonDropoff(rover: Double, dump: Bool) -> Dropoff {
+        var d = Dropoff(); d.drive(to: rover)
+        if dump { d.dump(cargoUnits: 6) }
+        return d
     }
 
     /// SSL-553: untimed trip home.
@@ -533,6 +540,10 @@ enum SceneCatalog {
         scene("transport-delivery-live", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 3_000), clock: { landingNow })) },
         scene("delivery-done-phone", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 8_000), clock: { landingNow })) },
         scene("delivery-landscape", 402, w: 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 3_000), clock: { landingNow })) },
+        scene("delivery-lesson-phone", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-lesson-refused-phone", 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 0.5, dump: true)).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-lesson-dumped-phone", 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 1, dump: true)).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-lesson-landscape", 402, w: 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 1, dump: false)).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
         scene("transport-debrief-live", 874) { DebriefScreen().environment(GameStore(state: pickedState(.debrief, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))) },
         scene("telescope-hub-live", 874) { var gs = basePlayer(); gs.player.deepSpaceTelescopeBuilt = true; return HubScreen().environment(GameStore(state: gs)) },
         scene("telescope-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab, mission: Instruments.transitMissionId, missionsDone: 5))).environment(\.flatLayout, true) },

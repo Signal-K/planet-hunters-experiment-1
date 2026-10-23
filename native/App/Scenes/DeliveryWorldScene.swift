@@ -4,17 +4,29 @@ import LandnamCore
 /// Cargo hand-off scene (web `DeliveryController`): the ship is docked on the left of the berth deck and crates ride
 /// the transfer rail into the client's depot on the right. Progress comes from the persisted clock, so a remount
 /// never resets or completes the unload. The sky is the same `SpaceBackdrop` transit flies through.
-struct DeliveryWorldScene: View {
+/// The transport lesson (`Dropoff`) swaps the rail for the Mule rover, which the player drives along a lane in front.
+struct DeliveryWorldScene: View, @preconcurrency Animatable {
     var progress: Double
     var cargoUnits: Int
     /// Width covered by the status plate on the left in landscape; the berth is laid out in what is left.
     var leadingInset: CGFloat = 0
+    /// Lesson only: the Mule's place on the lane (0 at the ship, 1 parked at the depot cache). Nil runs the timed rail.
+    var rover: Double? = nil
+    var dumped = false
+    /// Lesson only: a tap on the berth drives the rover to the lane point below it.
+    var onTapLane: ((Double) -> Void)? = nil
+
+    /// Lets a drive step glide instead of jumping from tile to tile.
+    var animatableData: Double {
+        get { rover ?? 0 }
+        set { if rover != nil { rover = newValue } }
+    }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width, h = geo.size.height
-            let deckY = h * (h > w ? 0.62 : 0.72)
+            let deckY = Self.deckY(CGSize(width: w, height: h), lesson: rover != nil)
             TimelineView(.animation(minimumInterval: 1.0 / 24, paused: reduceMotion)) { ctx in
                 let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
                 ZStack {
@@ -24,14 +36,28 @@ struct DeliveryWorldScene: View {
                         drawDeck(&g, size: size, deckY: deckY)
                         drawDepot(&g, size: size, deckY: deckY, t: t)
                         drawShip(&g, size: size, deckY: deckY)
-                        drawTransfer(&g, size: size, deckY: deckY, t: t)
+                        if let rover {
+                            drawLane(&g, size: size, deckY: deckY)
+                            drawMule(&g, size: size, deckY: deckY, at: rover, t: t)
+                        } else {
+                            drawTransfer(&g, size: size, deckY: deckY, t: t)
+                        }
                     }
                 }
             }
+            .contentShape(Rectangle())
+            .gesture(SpatialTapGesture().onEnded { tap in
+                onTapLane?(laneFraction(atX: tap.location.x, size: geo.size))
+            }, including: onTapLane == nil ? .none : .all)
         }
         .ignoresSafeArea()
-        .allowsHitTesting(false)
+        .allowsHitTesting(onTapLane != nil)
         .accessibilityHidden(true)
+    }
+
+    /// The lesson lifts the deck so the rover lane in front stays clear of the taller lesson plate.
+    static func deckY(_ size: CGSize, lesson: Bool) -> CGFloat {
+        size.height * (size.height > size.width ? (lesson ? 0.5 : 0.62) : 0.72)
     }
 
     /// One unit of the web scene's geometry, scaled so the berth reads on every screen size.
@@ -146,6 +172,69 @@ struct DeliveryWorldScene: View {
             var band = Path()
             band.move(to: CGPoint(x: x - 7 * u, y: y - 9.5 * u + bob)); band.addLine(to: CGPoint(x: x + 7 * u, y: y - 9.5 * u + bob))
             g.stroke(band, with: .color(Theme.ink.opacity(0.6)), lineWidth: 1)
+        }
+    }
+
+    // MARK: transport lesson rover
+
+    private func laneY(_ size: CGSize, deckY: CGFloat) -> CGFloat { deckY + 64 * unit(size) }
+    private func laneStart(_ size: CGSize) -> CGFloat { shipX(size) }
+    /// Parked just left of the depot front, with room for the dumped crates on its right.
+    private func laneEnd(_ size: CGSize) -> CGFloat { depotX(size) - 18 * unit(size) }
+    private func muleX(_ size: CGSize, _ f: Double) -> CGFloat { laneStart(size) + (laneEnd(size) - laneStart(size)) * CGFloat(min(1, max(0, f))) }
+
+    /// Lane position (0...1) under a tap at screen x, so tapping the depot drives the rover to it.
+    func laneFraction(atX x: CGFloat, size: CGSize) -> Double {
+        let a = laneStart(size), b = laneEnd(size)
+        return Double(min(1, max(0, (x - a) / max(1, b - a))))
+    }
+
+    /// Painted lane from the cargo door to the depot, the parking ring at the cache and, once dumped, the cargo stack.
+    private func drawLane(_ g: inout GraphicsContext, size: CGSize, deckY: CGFloat) {
+        let u = unit(size), y = laneY(size, deckY: deckY)
+        var lane = Path(); lane.move(to: CGPoint(x: laneStart(size), y: y)); lane.addLine(to: CGPoint(x: laneEnd(size), y: y))
+        g.stroke(lane, with: .color(Theme.paper.opacity(0.35)), style: StrokeStyle(lineWidth: 2 * u, lineCap: .round, dash: [8 * u, 8 * u]))
+        let ex = laneEnd(size)
+        let ring = Path(ellipseIn: CGRect(x: ex - 30 * u, y: y - 7 * u, width: 60 * u, height: 14 * u))
+        if dumped {
+            // The cargo stands on the deck beside the depot, where the client collects it.
+            for (i, dx) in [CGFloat(30), 47, 38].enumerated() {
+                let row = CGFloat(i == 2 ? 1 : 0)
+                let crate = Path(CGRect(x: ex + dx * u - 8 * u, y: y - 14 * u - row * 14 * u, width: 16 * u, height: 14 * u))
+                g.fill(crate, with: .color(Theme.blue))
+                g.stroke(crate, with: .color(Theme.ink), lineWidth: 1.5 * u)
+            }
+        } else {
+            g.stroke(ring, with: .color(Theme.blueBright), style: StrokeStyle(lineWidth: 2 * u, dash: [5 * u, 4 * u]))
+        }
+    }
+
+    /// The Mule: white panelled body with blue trim and a navy outline, wheels on the lane, crates on its bed while loaded.
+    private func drawMule(_ g: inout GraphicsContext, size: CGSize, deckY: CGFloat, at f: Double, t: Double) {
+        let u = unit(size), x = muleX(size, f), y = laneY(size, deckY: deckY)
+        func r(_ dx: CGFloat, _ dy: CGFloat, _ w: CGFloat, _ h: CGFloat) -> CGRect { CGRect(x: x + dx * u, y: y + dy * u, width: w * u, height: h * u) }
+        let body = Path(roundedRect: r(-24, -20, 48, 12), cornerRadius: 3 * u)
+        g.fill(body, with: .color(Theme.paper))
+        g.stroke(body, with: .color(Theme.ink), lineWidth: 2 * u)
+        g.fill(Path(r(-22, -13, 44, 2.5)), with: .color(Theme.blue))
+        let cab = Path(roundedRect: r(10, -31, 14, 11), cornerRadius: 2 * u)
+        g.fill(cab, with: .color(Theme.paper2))
+        g.stroke(cab, with: .color(Theme.ink), lineWidth: 1.5 * u)
+        g.fill(Path(r(14, -28, 7, 5)), with: .color(Theme.ink))
+        var mast = Path(); mast.move(to: CGPoint(x: x + 13 * u, y: y - 31 * u)); mast.addLine(to: CGPoint(x: x + 13 * u, y: y - 40 * u))
+        g.stroke(mast, with: .color(Theme.ink), lineWidth: 1.5 * u)
+        if !dumped {
+            for dx in [CGFloat(-21), -5] {
+                let crate = Path(r(dx, -33, 14, 13))
+                g.fill(crate, with: .color(Theme.blue))
+                g.stroke(crate, with: .color(Theme.ink), lineWidth: 1.5 * u)
+            }
+        }
+        // Wheels rest on the lane line.
+        for wx in [CGFloat(-16), 0, 16] {
+            let wheel = Path(ellipseIn: r(wx - 6, -12, 12, 12))
+            g.fill(wheel, with: .color(Theme.ink))
+            g.stroke(wheel, with: .color(Theme.paper2), lineWidth: 1.5 * u)
         }
     }
 }

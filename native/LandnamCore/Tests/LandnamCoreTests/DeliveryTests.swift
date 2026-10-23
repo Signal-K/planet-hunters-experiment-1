@@ -42,4 +42,34 @@ import Foundation
         #expect(n.screen == .transit && n.player.returningToEarth && n.player.deliveryUnloadStartedAt == nil)
         #expect(n.deliveredCargo == gs.lastCargo)
     }
+
+    @Test func onlyTheTransportLessonUsesTheRoverDropoff() {
+        var p = Player(); p.missionsDone = Transitions.transportLessonMissionsDone
+        #expect(Dropoff.applies(p))
+        p.missionsDone += 1
+        #expect(!Dropoff.applies(p))
+    }
+
+    @Test func theRoverMustParkAtTheDepotBeforeDumping() {
+        var d = Dropoff()
+        #expect(!d.dump(cargoUnits: 6) && d.refusal == .notParked)
+        #expect(Dropoff.message(for: .notParked) == "PARK BESIDE THE DEPOT CACHE")
+        for _ in 0..<7 { d.drive(by: Dropoff.step) }
+        #expect(d.parked)
+        #expect(!d.dump(cargoUnits: 0) && d.refusal == .noCargo)
+        #expect(d.dump(cargoUnits: 6) && d.stage == .dumped && d.refusal == nil)
+        // Emptied: the rover no longer drives until it is sent home.
+        d.drive(to: 0.2)
+        #expect(d.rover >= Dropoff.parkedFrom)
+        d.returnRover()
+        #expect(d.stage == .returned && d.rover == 0)
+    }
+
+    @Test func returningNeedsTheCargoDumpedFirst() {
+        var d = Dropoff()
+        d.returnRover()
+        #expect(d.stage == .driving)
+        d.drive(to: 5)
+        #expect(d.rover == 1)
+    }
 }
