@@ -34,7 +34,8 @@ enum DebugSession {
             try? await Task.sleep(for: .milliseconds(400))
             switch store.screen {
             case .transit: store.transitArrived()
-            case .landing, .mining:
+            case .landing: store.landingComplete()
+            case .mining:
                 let need = store.mission?.requires.minerals ?? [:]
                 store.miningDone(need.isEmpty ? ["nickel": 2] : need)
             case .roverSurvey: store.roverSurveyComplete()

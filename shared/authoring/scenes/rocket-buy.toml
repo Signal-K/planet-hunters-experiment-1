@@ -16,3 +16,45 @@ native = ["native/App/Screens/LaunchReview.swift"]
 [preview]
 route = "rocket-buy"
 state = "ui-rocket-buy"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "launchpad-preview"
+kind = "group"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Mission preparation uses the Launchpad renderer."
+
+[[objects]]
+id = "vehicle-options"
+kind = "collection"
+parent = "launchpad-preview"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Rocket/loadout selection from the shared catalog."
+
+[[objects]]
+id = "mission-plan"
+kind = "panel"
+parent = "launchpad-preview"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Destination, vehicle and cargo requirements."
+
+[[objects]]
+id = "purchase-action"
+kind = "button"
+parent = "launchpad-preview"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Purchase or roll out using the canonical wallet and staged vehicle."
+
+[[objects]]
+id = "part-choices"
+kind = "collection"
+parent = "launchpad-preview"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Optional fitting controls."

@@ -17,3 +17,45 @@ native = ["native/App/Screens/SaturnStormSearchScreen.swift"]
 [preview]
 route = "saturn-storm-search"
 state = "ui-saturn-storm-search"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "saturn-observation"
+kind = "instrument"
+layout = "host"
+mechanics = ["saturn-review"]
+note = "Real Saturn imagery."
+
+[[objects]]
+id = "candidate-list"
+kind = "collection"
+parent = "saturn-observation"
+layout = "host"
+mechanics = ["saturn-review"]
+note = "Available storm subjects."
+
+[[objects]]
+id = "annotation-layer"
+kind = "collection"
+parent = "saturn-observation"
+layout = "host"
+mechanics = ["saturn-review"]
+note = "Storm markings."
+
+[[objects]]
+id = "verdict-controls"
+kind = "panel"
+parent = "saturn-observation"
+layout = "host"
+mechanics = ["saturn-review"]
+note = "Classify the observation."
+
+[[objects]]
+id = "next-action"
+kind = "button"
+parent = "saturn-observation"
+layout = "host"
+mechanics = ["saturn-review"]
+note = "Next candidate or return to the station."

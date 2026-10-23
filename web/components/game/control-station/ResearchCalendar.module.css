@@ -1,0 +1,43 @@
+/* Wall calendar on the control room desk: hull plate, one stamp per research day. */
+.plate {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 2px solid var(--ln-world-outline);
+  border-radius: 14px;
+  background: linear-gradient(var(--ln-world-hull-lit), var(--ln-world-hull));
+  color: var(--ln-world-outline);
+}
+.head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.title { font: 800 14px var(--ln-font-display); letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
+.streak { font: 700 14px var(--ln-font-body); }
+.tasks { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.task { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 10px; border: 1px solid color-mix(in srgb, var(--ln-world-outline) 30%, transparent); border-radius: 8px; font: 600 14px var(--ln-font-body); background: var(--ln-world-hull-lit); }
+.task > span:nth-child(2) { flex: 1; min-width: 0; }
+.taskMark { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ln-world-outline); }
+.task[data-done='true'] .taskMark { background: var(--ln-world-trim-blue); }
+.taskState { flex: none; font: 800 14px var(--ln-font-display); letter-spacing: 0.1em; text-transform: uppercase; }
+.monthLabel { font: 800 14px var(--ln-font-display); letter-spacing: 0.12em; text-transform: uppercase; }
+.grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.dow { font: 700 14px var(--ln-font-display); letter-spacing: 0.08em; text-align: center; opacity: 0.75; }
+.day {
+  position: relative;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--ln-world-outline) 30%, transparent);
+  border-radius: 8px;
+  font: 700 14px var(--ln-font-body);
+  background: color-mix(in srgb, var(--ln-world-hull-shade) 35%, transparent);
+}
+.day[data-future='true'] { opacity: 0.5; }
+.day[data-today='true'] { border: 2px solid var(--ln-world-outline); }
+.day[data-stamped='true'] { background: var(--ln-world-trim-blue); color: var(--ln-world-glass); border-color: var(--ln-world-outline); }
+.stampMark { position: absolute; right: 4px; bottom: 4px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--ln-world-glass); background: var(--ln-world-trim-teal); }
+.bar { display: flex; flex-direction: column; gap: 6px; }
+.barLabel { display: flex; justify-content: space-between; gap: 12px; font: 700 14px var(--ln-font-body); }
+.track { height: 16px; border: 2px solid var(--ln-world-outline); border-radius: 8px; background: var(--ln-world-night-mid); overflow: hidden; }
+.fill { height: 100%; background: var(--ln-world-trim-blue); }
+.note { margin: 0; font: 500 14px var(--ln-font-body); opacity: 0.85; }
+@media (min-width: 1280px) and (min-height: 700px) { .plate { grid-column: 2; } }

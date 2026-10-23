@@ -123,6 +123,12 @@ public struct Player: Codable, Equatable, Sendable {
     public var priceAlerts: [PriceAlert] = []
     /// Hangar ship-customizer fit, room kind to part id (web `shipCustomizerParts`).
     public var shipCustomizerParts: [String: String] = [:]
+    /// Orionid fragment ledger (web `orionidsFragments`). `caught` and `redeemed` only move up.
+    public var orionidsFragments: OrionidsFragments = OrionidsFragments()
+    /// Ledger `caught` count at the moment the shower run was accepted (web `orionidsRunBaseline`, SSL-651).
+    public var orionidsRunBaseline: Int?
+    /// UTC day to research tasks done that day (web `researchStamps`, SSL-663).
+    public var researchStamps: ResearchStamps = ResearchStamps()
     /// Unported save fields, preserved verbatim.
     public var extras: [String: JSONValue] = [:]
 
@@ -176,10 +182,13 @@ public struct Player: Codable, Equatable, Sendable {
         get("loanOffered", &loanOffered); getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
         get("seenPlanets", &seenPlanets); get("researchXP", &researchXP); get("subsurfaceExcavated", &subsurfaceExcavated)
         get("subsurfaceBuilt", &subsurfaceBuilt); get("landingResearched", &landingResearched)
-        get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("priceAlerts", &priceAlerts); get("shipCustomizerParts", &shipCustomizerParts); get("laserCapacitorLevel", &laserCapacitorLevel)
+        get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("priceAlerts", &priceAlerts); get("shipCustomizerParts", &shipCustomizerParts); get("orionidsFragments", &orionidsFragments); get("researchStamps", &researchStamps); getOpt("orionidsRunBaseline", &orionidsRunBaseline); get("laserCapacitorLevel", &laserCapacitorLevel)
         buildingLevels = BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)
         launchpadUpgraded = launchpadUpgraded || (buildingLevels["launchpad"] ?? 1) >= 2
         Self.mergeTelescope(&self)
+        // SSL-569: heal an undercounted counter and a stale Free Ops flag on every load and cloud pull (web normalizeState).
+        missionsDone = max(missionsDone, completedMissions.count)
+        freeOperations = Transitions.freeOperationsUnlocked(self)
         for key in c.allKeys where !consumed.contains(key.stringValue) {
             extras[key.stringValue] = try? c.decode(JSONValue.self, forKey: key)
         }
@@ -238,7 +247,7 @@ public struct Player: Codable, Equatable, Sendable {
         try put("loanOffered", loanOffered); try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
         try put("seenPlanets", seenPlanets); try put("researchXP", researchXP); try put("subsurfaceExcavated", subsurfaceExcavated)
         try put("subsurfaceBuilt", subsurfaceBuilt); try put("landingResearched", landingResearched)
-        try put("licenseGrade", licenseGrade); try put("flightPlan", flightPlan); try put("priceAlerts", priceAlerts); try put("shipCustomizerParts", shipCustomizerParts); try put("laserCapacitorLevel", laserCapacitorLevel)
+        try put("licenseGrade", licenseGrade); try put("flightPlan", flightPlan); try put("priceAlerts", priceAlerts); try put("shipCustomizerParts", shipCustomizerParts); try put("orionidsFragments", orionidsFragments); try put("researchStamps", researchStamps); try putOpt("orionidsRunBaseline", orionidsRunBaseline); try put("laserCapacitorLevel", laserCapacitorLevel)
     }
 }
 
@@ -275,6 +284,7 @@ public struct GameState: Codable, Equatable, Sendable {
         getOpt("deliveryTargetId", &deliveryTargetId); get("rocket", &rocket); getOpt("lastCargo", &lastCargo)
         getOpt("deliveredCargo", &deliveredCargo); get("tutorial", &tutorial); get("doneSteps", &doneSteps)
         getOpt("popup", &popup); get("menuOpen", &menuOpen); getOpt("updatedAt", &updatedAt)
+        if player.freeOperations { tutorial = false } // SSL-569: a healed Free Ops save leaves the tutorial
         for key in c.allKeys where !consumed.contains(key.stringValue) {
             extras[key.stringValue] = try? c.decode(JSONValue.self, forKey: key)
         }

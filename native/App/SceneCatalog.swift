@@ -15,6 +15,8 @@ struct CatalogScene: Identifiable {
 
 /// 8 Oct 2026, 12:00 UTC: inside World Space Week.
 private let wswNoon: Double = 1791460800000
+/// SSL-666: fixed clock for the lander leg scenes.
+private let landingNow: Double = 1_700_000_000_000
 
 @MainActor
 enum SceneCatalog {
@@ -194,6 +196,17 @@ enum SceneCatalog {
         return gs
     }
 
+    /// SSL-666: the lander leg on a fixed clock, 3 s into the descent or 5 s into the climb back with the haul.
+    static func landingState(_ mode: Landing.Mode) -> GameState {
+        var gs = pickedState(.landing, missionsDone: 4, phase: .landing)
+        gs.player.shipCustomizerParts["lander"] = "lander-module-t1"
+        switch mode {
+        case .descend: gs.player.landingStartedAt = landingNow - 3_000
+        case .ascend: gs.player.landingReturnStartedAt = landingNow - 5_000; gs.player.miningCargoInProgress = ["iron": 3]
+        }
+        return gs
+    }
+
     /// SSL-553: untimed trip home.
     static func returnState() -> GameState { var gs = transitState(returning: true); gs.player.arrivalAt = nil; return gs }
     /// SSL-553: landed back on the pad with the haul to settle (surface silo built).
@@ -315,6 +328,18 @@ enum SceneCatalog {
             gs.screen = .debrief
             return DebriefScreen().environment(GameStore(state: gs, catalog: cat)).environment(\.flatLayout, true)
         },
+        // SSL-651: a filled Orionids shower run at debrief (web ui/orionids-shower-debrief).
+        scene("debrief-shower-run-phone", 874) {
+            var gs = GameState()
+            let cat = Catalog()
+            gs.player.freeOperations = true; gs.player.missionsDone = 5
+            gs.player.orionidsFragments = OrionidsFragments(caught: 25, redeemed: 0)
+            gs.player.orionidsRunBaseline = 5
+            gs.missionId = OrionidsRun.missionId; gs.targetId = "eros"
+            gs.lastCargo = ["orionid_debris": 6, "iron": 2]
+            gs.screen = .debrief
+            return DebriefScreen().environment(GameStore(state: gs, catalog: cat)).environment(\.flatLayout, true)
+        },
         scene("debrief-capacitor-phone", 300) {
             let st = GameStore()
             st.go(.missions)
@@ -351,6 +376,16 @@ enum SceneCatalog {
             gs.player.badges = ["rocket-revolution-2026": PlayerBadge(eventId: "rocket-revolution-2026", tier: .gold, earnedAt: wswNoon)]
             let sigs = [InstrumentSignal(id: "n", kind: .deepSpace, title: "NEOCP"), InstrumentSignal(id: "s", kind: .saturn, title: "Frame")]
             return ControlStationScreen(signals: sigs).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
+        },
+        // Daily research plate (SSL-664): half a month of stamps up to the snapshot clock, with a survey and a catch today.
+        scene("research-calendar-phone", 800) {
+            var p = Player()
+            let todayKey = ResearchStampRules.dayKey(wswNoon)
+            let today = Int(todayKey.suffix(2))!, prefix = todayKey.prefix(8)
+            for day in 1...today where day % 3 != 0 {
+                p.researchStamps.days["\(prefix)\(String(format: "%02d", day))"] = day % 4 == 0 ? [.classification, .event] : [.survey]
+            }
+            return ResearchCalendarPanel(stamps: p.researchStamps, now: wswNoon).padding(12).background(Theme.hex(0x1A2744))
         },
         scene("mission-board-wsw-phone", 874) {
             MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
@@ -463,7 +498,11 @@ enum SceneCatalog {
         scene("cp-early", 874) { HubScreen().environment(GameStore(state: checkpointState(0))) },
         scene("cp-mid", 874) { HubScreen().environment(GameStore(state: checkpointState(1))) },
         scene("cp-late", 874) { HubScreen().environment(GameStore(state: checkpointState(2))) },
-        scene("landing-live", 874) { MiningScreen().environment(GameStore(state: pickedState(.landing, phase: .landing))) },
+        scene("landing-live", 874) { LandingScreen().environment(GameStore(state: landingState(.descend), clock: { landingNow })) },
+        scene("landing-ascent-phone", 874) { LandingScreen().environment(GameStore(state: landingState(.ascend), clock: { landingNow })) },
+        scene("landing-touchdown-phone", 874) { LandingScreen().environment(GameStore(state: landingState(.descend), clock: { landingNow + 5_000 })) },
+        scene("landing-landscape", 402, w: 874) { LandingScreen().environment(GameStore(state: landingState(.descend), clock: { landingNow })) },
+        scene("landing-ascent-landscape", 402, w: 874) { LandingScreen().environment(GameStore(state: landingState(.ascend), clock: { landingNow })) },
         scene("rocket-buy-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.rocketBuy))).environment(\.flatLayout, true) },
         scene("first-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab))).environment(\.flatLayout, true) },
         scene("storage-build-live", 874) { var gs = basePlayer(); gs.player.missionsDone = 2; gs.screen = .build; return BuildScreen().environment(GameStore(state: gs)) },

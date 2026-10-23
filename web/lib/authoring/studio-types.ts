@@ -73,8 +73,19 @@ export interface StudioIndex {
       authoredGameObjects: number
       authoredUiElements: number
       authoredPrefabInstances: number
+      mechanics: number
+      sharedLayoutObjects: number
+      hostLayoutObjects: number
     }
-    gaps: { scenesWithoutObjects: string[] }
+    gaps: {
+      scenesWithoutObjects: string[]
+      routesWithoutNativeCase: string[]
+      mechanicsWithoutNativeSources: string[]
+      unownedDomainFiles: string[]
+    }
+    scenes: { id: string; sharedLayoutObjects: number; hostLayoutObjects: number; mechanics: string[]; web: string[]; native: string[] }[]
+    mechanics: import('./docs').MechanicContract[]
+    journey?: import('./docs').JourneyContract
   }
 }
 

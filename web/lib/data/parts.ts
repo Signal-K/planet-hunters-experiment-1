@@ -73,6 +73,8 @@ export function validateBuild(opts: {
   rocket: RocketConfig
   parts?: typeof PARTS
   unlockedSkillNodes?: string[]
+  /** Cargo units and orbit reach added by fitted customizer parts; the builder chips already show them (SSL-647). */
+  loadoutBonus?: { capacity: number; range: number }
 }): BuildCheck {
   const { mission, target, rocket, parts = PARTS } = opts
   const chassis = parts.chassis.find(p => p.id === rocket.chassis) ?? parts.chassis[0]
@@ -80,15 +82,15 @@ export function validateBuild(opts: {
   const drill = parts.drill.find(p => p.id === rocket.drill) ?? parts.drill[0]
 
   const problems: string[] = []
-  const maxOrbit = effectiveMaxOrbit(propulsion, opts.unlockedSkillNodes)
+  const maxOrbit = effectiveMaxOrbit(propulsion, opts.unlockedSkillNodes) + (opts.loadoutBonus?.range ?? 0)
   const infrastructureOrbitBonus = mission.jointProject?.infrastructureOrbitBonus ?? 0
   const requiredOrbit = Math.max(0, target.orbit - infrastructureOrbitBonus)
   if (maxOrbit < requiredOrbit) {
     problems.push(`Propulsion can only reach Orbit ${maxOrbit}, mission needs Orbit ${requiredOrbit}`)
   }
-  const cargoCapacity = effectiveCargoCapacity(chassis, opts.unlockedSkillNodes)
+  const cargoCapacity = effectiveCargoCapacity(chassis, opts.unlockedSkillNodes) + (opts.loadoutBonus?.capacity ?? 0)
   if (cargoCapacity < mission.requires.cargo_min) {
-    problems.push(`Chassis cargo (${cargoCapacity}U) below mission minimum (${mission.requires.cargo_min}U)`)
+    problems.push(`Ship cargo (${cargoCapacity}U) below mission minimum (${mission.requires.cargo_min}U)`)
   }
   // cargo-module-t1 is a valid drill-slot occupant (rate === 0 is intentional for cargo missions)
   if (drill.id !== 'cargo-module-t1' && (drill.tier ?? 0) < mission.requires.drill_tier) {

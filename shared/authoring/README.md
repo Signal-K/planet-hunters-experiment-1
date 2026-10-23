@@ -7,8 +7,8 @@ Every scene and mission is a plain text script in this folder. You can read and 
 Start the dev stack (`make up`; the first time after pulling this, run `make web-deps` once so the Docker web container gets the TOML parser), then open <http://localhost:3001/game/studio>. In Cursor use `Cmd+Shift+P`, then **Simple Browser: Show**. The stage fills the available height and a single drawer sits beside it from 620px wide up. Below that, the drawer moves below the stage. Theme follows your system unless changed in More.
 
 - **Pick a scene or mission** with the first button or `Ctrl/Cmd+K`. Pick a saved setup or campaign checkpoint with the next picker, and a device size beside it.
-- **Things** are everything that can be brought into the sandbox scene. Switch them on, set sliders, then save the combination as a named preset with instructions. Sandbox scenes suppress campaign context unless a thing requests it.
-- **Notes** holds the composer, pins, inspiration, and the agent brief. **Script** opens source files in Cursor, edits standing instructions, and enables object drawing and the inspector.
+- **Setup** controls everything that can be brought into the sandbox scene. Switch objects and state on, set sliders, then save the combination as a named preset with instructions. Sandbox scenes suppress campaign context unless a setup requests it.
+- **Objects** keeps the Hierarchy and Inspector together. **Notes** holds the composer, pins, inspiration, and the agent brief. **Project** opens the source inventory and files in Cursor.
 - **Mission flows** are named sequences in `flows/`; select one from Missions and walk each scripted scene and preset in order.
 - **Data** (in the scene picker): the base world and the missions. Saving recompiles what web and native load.
 - `?follow=1` on the URL makes the Studio jump to whatever scene an agent says it is working in.
@@ -30,7 +30,7 @@ Native appears beside web for phone sizes once a snapshot exists: `scripts/nativ
 | `flows/*.toml` | A named mission walkthrough: scenes in order, their presets, and plain-language instructions. |
 | `schema/*.schema.json` | The format of each file. Cursor's TOML extension (recommended in `.vscode/extensions.json`) uses it for completion, help and red squiggles through the `#:schema` line at the top of each file. |
 
-Objects are a flat list with a `parent` link, the way Godot scenes are. `status = "proposed"` marks an element you drew for an agent to build.
+Objects are a flat serialized scene graph with a `parent` link, matching the hierarchy used by game engines. `status = "proposed"` marks an element you drew for an agent to build.
 
 ## What is compiled and who reads it
 
@@ -38,6 +38,9 @@ Objects are a flat list with a `parent` link, the way Godot scenes are. `status 
 
 - `shared/scenes/base-world.json` and `web/lib/world/base-world.json`: the base world. Web `lib/world` and native `LandnamCore/World` already load it, unchanged.
 - `shared/missions/authored-missions.json`, `web/lib/data/authored-missions.json` and `native/LandnamCore/.../AuthoredMissions.generated.swift`: web `missions.ts` and native `AuthoredMissions.swift` build the two missions from these. Payout follows the fee curve and sequences follow the game's own constants.
+- `shared/engine/authored-scenes.json`, `web/lib/engine/authored-scenes.json` and native `AuthoredScenes.generated.swift`: one validated object graph and mechanic ownership catalog for every route. `shared/engine/mechanics.json` records real domain source owners and known native gaps. Component names and mechanic references are checked, not interpreted as executable code.
+- `layout = "host"` (the default) means the existing renderer still controls the object. `layout = "shared"` means a live adapter consumes its rectangle. `space = "parent"` makes that rectangle local to its parent; otherwise it is in the scene safe area. The Launchpad adapter renders the pad art, rocket, assembly scaffold and mission hotspot from the shared prefab subtree on both platforms. Its fused pad sprite is still legacy art, not independently editable tower/hangar art.
+- The compiler validates the complete batch before writing any output. A bad scene cannot update web data while leaving Swift or missions behind. `node scripts/generate-game-map.mjs --check` also guards against unowned web systems/native systems and industry files, empty scene graphs and missing mechanic ownership. Native route gaps remain explicit rather than being disguised as parity.
 
 Editing a mission or the world in the Studio, or in a text editor followed by `compile`, changes both platforms. A native app needs a rebuild to pick it up.
 
@@ -57,7 +60,7 @@ cd web && SCENES_BASE_URL=http://localhost:3001 npx playwright test tests/scenes
 
 ## Honest limits today
 
-- Only the base world and two missions are compiled and consumed. The other scene scripts describe each screen and hold your notes and drawn proposals, but the screens are still React and SwiftUI. Migrating a screen to data-driven objects is the next step per scene, and these scripts are where its objects go.
+- All 27 existing routes have object/mechanic contracts, not 27 completed engine migrations. Studio's Project workspace distinguishes host-owned layout, shared geometry and missing native sources. The legacy route inventory is not a required player journey; routes can remain compatibility deep links when several scenes are composed into one experience.
 - Dragging objects works for screen-space elements. World-space objects (buildings on the base) are edited in the inspector, not dragged.
 - Native previews are phone-size snapshots from the iOS Simulator, not a live render. A shared runtime would remove that gap; the decision is open in SSL-642 and recorded in ZenNotes (`projects/landnam/decisions/scene-scripts-and-scene-studio`).
 - The Studio is dev only. It is disabled outside `next dev`.

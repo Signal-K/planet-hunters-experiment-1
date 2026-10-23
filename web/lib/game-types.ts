@@ -440,6 +440,8 @@ export interface Player {
    * the daily downlink from re-notifying after reloads or React remounts.
    */
   instrumentDigestNotifiedOn?: Record<string, string>
+  /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
+  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event')[]>
   /** Last seen value for optional Hub prompts; a higher live value shows the card again. */
   dismissedHubPrompts?: Record<string, number>
   discoveredExoplanetTargets?: Record<string, Target>

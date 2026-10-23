@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "scope", "mechanics"],
+  "properties": {
+    "version": { "const": 1 },
+    "scope": { "type": "string" },
+    "mechanics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "web", "native", "note"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "name": { "type": "string", "minLength": 1 },
+          "web": { "type": "array", "items": { "type": "string", "pattern": "^web/" } },
+          "native": { "type": "array", "items": { "type": "string", "pattern": "^native/" } },
+          "components": { "type": "array", "items": { "type": "string" } },
+          "note": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

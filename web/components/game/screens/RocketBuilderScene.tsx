@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
+import LaunchpadPrefab from '@/components/game/LaunchpadPrefab'
 import { formatCurrency } from '@/lib/format'
 import type { RocketConfig, Target } from '@/lib/data'
 import styles from './RocketBuilderScene.module.css'
@@ -51,8 +52,6 @@ export type AssemblyPhase = 'design' | 'building' | 'ready'
 
 /** How long the rocket takes to rise on the pad; the route waits this long before the vehicle is bought. */
 export const ROLLOUT_MS = 1600
-
-const COMPLEX_ART = '/game/assets/base/v7/launchpad'
 
 export default function RocketBuilderScene({
   missionTitle,
@@ -155,17 +154,7 @@ export default function RocketBuilderScene({
 
         <div className={styles.body} data-parts={showParts ? 'open' : 'closed'}>
           <section className={styles.pad} aria-label="Launchpad" data-phase={phase} data-fitted-count={fittedCount}>
-            <div className={styles.complex} data-testid="launchpad-complex">
-              <img className={styles.complexArt} src={`${COMPLEX_ART}/pad-complex.png`} alt="" />
-              <div className={styles.rocketSlot}>
-                <img className={styles.rocket} src="/art/scenes/launchpad/launchpad-rocket-multistage.png" alt="" data-testid="launch-rocket" />
-              </div>
-              <img className={styles.scaffold} src={`${COMPLEX_ART}/pad-scaffold.png`} alt="" data-testid="pad-scaffold" />
-              <span className={styles.weld} aria-hidden="true" />
-              <button type="button" className={styles.gantryHit} data-testid="launchpad-status-card" data-action="primary-mission" aria-label={towerLabel} onClick={onChooseMission}>
-                <span data-testid="launchpad-new-mission-btn" />
-              </button>
-            </div>
+            <LaunchpadPrefab towerLabel={towerLabel} onChooseMission={onChooseMission} />
             {phase === 'idle' && (
               <button type="button" className={styles.choose} data-testid="builder-choose-contract" data-beacon="launchpad-view-contracts" onClick={onChooseMission}>
                 <span>Nothing on the pad</span>

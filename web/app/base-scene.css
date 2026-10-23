@@ -165,3 +165,12 @@
   .scene-location-label svg { display: none; }
   .scene-location-actions .scene-dock-word { min-width: 84px; padding-inline: 7px; }
 }
+
+/* Narrow phones (390px): the arrows, label and three action words need ~410px, so the dock lost "Menu" off the right edge.
+   Drop the action icons and the extra padding, and wrap the selector above the actions if it still does not fit. */
+@media (max-width: 479px) {
+  .scene-location-dock { flex-wrap: wrap; row-gap: 6px; }
+  .scene-location-actions { margin-left: auto; max-width: 100%; }
+  .scene-location-actions .scene-dock-word { min-width: 0; padding-inline: 10px; gap: 0; }
+  .scene-location-actions .scene-dock-word svg { display: none; }
+}

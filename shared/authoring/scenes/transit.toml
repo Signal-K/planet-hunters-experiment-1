@@ -196,3 +196,53 @@ instructions = """
 The return leg. The body ahead is Earth. The tier 4 ship carries every part it has: none may overlap another or clip the
 flame. Check phone portrait, phone landscape and desktop.
 """
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "flight-world"
+kind = "world"
+layout = "host"
+mechanics = ["flight"]
+note = "Target-specific flight environment; not the TESS light-curve scene."
+
+[[objects]]
+id = "flight-rocket"
+kind = "vehicle"
+parent = "flight-world"
+layout = "host"
+mechanics = ["flight"]
+note = "Vehicle moving through the current flight leg."
+
+[[objects]]
+id = "destination"
+kind = "decoration"
+parent = "flight-world"
+layout = "host"
+mechanics = ["flight"]
+note = "Catalog-driven destination visual."
+
+[[objects]]
+id = "flight-progress"
+kind = "panel"
+parent = "flight-world"
+layout = "host"
+mechanics = ["flight"]
+note = "Persisted departure and arrival timestamps."
+
+[[objects]]
+id = "arrival-action"
+kind = "button"
+parent = "flight-world"
+layout = "host"
+mechanics = ["flight"]
+note = "Transition to landing, mining, survey or debrief according to the mission."
+
+[[objects]]
+id = "return-action"
+kind = "button"
+parent = "flight-world"
+layout = "host"
+mechanics = ["flight"]
+note = "Return to the base without replacing the active flight."

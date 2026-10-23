@@ -1250,7 +1250,7 @@ func seedCatalog(app core.App) {
 		slug string
 		missionTemplate
 	}{
-		{"starter-bulk", missionTemplate{tag: "STARTER", difficulty: "L1", clientRole: "starter", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"iron", "silicon", "carbon"}, cargoMin: 4, cargoMax: 8, drillTier: 1, orbitMax: 4, payoutMultiplier: 1.0}},
+		{"starter-bulk", missionTemplate{tag: "STARTER", difficulty: "L1", clientRole: "starter", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"iron", "silicon", "carbon"}, cargoMin: 4, cargoMax: 6, drillTier: 1, orbitMax: 4, payoutMultiplier: 1.0}},
 		{"volatile-bulk", missionTemplate{tag: "BULK", difficulty: "L2", clientRole: "bulk", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"ice", "carbon", "silicon"}, cargoMin: 8, cargoMax: 14, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.35}},
 		{"metal-prospect", missionTemplate{tag: "PROSPECT", difficulty: "L2", clientRole: "prospect", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"nickel", "cobalt", "gold"}, cargoMin: 3, cargoMax: 8, drillTier: 2, orbitMax: 5, payoutMultiplier: 2.25}},
 		{"command-reserve", missionTemplate{tag: "COMMAND", difficulty: "L3", clientRole: "command", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"gold", "rare", "cobalt"}, cargoMin: 3, cargoMax: 6, drillTier: 2, orbitMax: 6, payoutMultiplier: 3.5}},

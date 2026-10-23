@@ -606,10 +606,15 @@ struct DebriefScreen: View {
     @State private var showSettings = false
     @State private var collecting = false
     @State private var scrapped = false
+    /// SSL-651: what a filled Orionids shower run paid. Collecting settles the run and clears its count, so keep showing it until the screen leaves.
+    @State private var shownRun: (francs: Int, fragments: Int)?
 
     var body: some View {
         let m = store.mission
         let cargo = store.state.lastCargo ?? [:]
+        let liveRun = m?.id == OrionidsRun.missionId && OrionidsRun.filled(store.player)
+            ? (francs: OrionidsRun.payout(missionsDone: store.player.missionsDone), fragments: OrionidsRun.catches(store.player)) : nil
+        let run = liveRun ?? shownRun
         let haulUnits = cargo.values.reduce(0) { $0 + max(0, $1) }
         let payout = m.map { MissionGenerator.calibrateOnboardingPayout(raw: $0.payout.francs, missionsDone: store.player.missionsDone) } ?? 0
         let isFreeHaul = (m?.isOwnProgram == true && m?.deliveryTargetId == nil && m?.construction == nil) && cargo.values.contains { $0 > 0 }
@@ -618,7 +623,7 @@ struct DebriefScreen: View {
         let stored = Market.earthStorageBuilt(store.player)
         let disposition = store.player.freeHaulDisposition ?? (stored ? HaulDisposition.store : .sell)
         let willStore = isFreeHaul && disposition == .store && stored
-        let sale = HomeDelivery.marketValue(store.player, units: cargo, now: store.now)
+        let sale = HomeDelivery.marketValue(store.player, units: run == nil ? cargo : OrionidsRun.withoutFragments(cargo), now: store.now)
         let overflow = max(0, Market.storedUnits(store.player.stash) - Market.storageCapacity(store.player))
         let target = store.target
         let status = store.player.shipDestroyed ? "Hull lost · cargo recovered" : program ? "Commissioned · instrument online" : "Docked · mission complete"
@@ -712,6 +717,14 @@ struct DebriefScreen: View {
                         }
                     }
 
+                    if let run {
+                        CreamCard {
+                            Text("SHOWER RUN").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+                            Text("Order filled: \(run.fragments) fragments caught. Kept as fragments, not sold.").font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                            ledgerRow("Run pays", Economy.format(francs: run.francs))
+                        }
+                    }
+
                     if showLaser, let m {
                         LaserCapacitorPanel(
                             level: store.player.laserCapacitorLevel,
@@ -754,9 +767,10 @@ struct DebriefScreen: View {
                 if !orbital {
                     RecordDockButton(title: scrapped ? "Dismantled" : "Teardown", filled: false, enabled: !scrapped) { scrapped = true }
                 }
-                RecordDockButton(title: collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
+                RecordDockButton(title: run.map { "Collect \(Economy.format(francs: $0.francs + (willStore ? 0 : sale)))" } ?? collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
                     guard !collecting else { return }
                     collecting = true
+                    shownRun = run
                     store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: cargo, disposition: isFreeHaul ? disposition : nil)
                 }
             }

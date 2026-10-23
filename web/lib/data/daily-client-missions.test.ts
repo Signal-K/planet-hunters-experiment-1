@@ -129,3 +129,17 @@ describe('construct client contracts (SSL-571)', () => {
     }
   })
 })
+
+// SSL-647: a fresh account's starter contract must fit the free Explorer's hold, on any day.
+describe('starter contracts and the free Explorer', () => {
+  it('never ask for more cargo than the Explorer carries', () => {
+    const explorerHold = 6
+    for (let day = 1; day <= 28; day++) {
+      const date = `2026-11-${String(day).padStart(2, '0')}`
+      const pool = generateDailyClientPool(date, 0, CLIENT_SLOTS, MINERAL_META)
+      for (const mission of pool.filter(m => m.tag === 'STARTER')) {
+        expect(mission.requires.cargo_min, `${date} ${mission.id}`).toBeLessThanOrEqual(explorerHold)
+      }
+    }
+  })
+})

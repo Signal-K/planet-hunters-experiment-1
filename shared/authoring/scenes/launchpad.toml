@@ -10,8 +10,8 @@ qa = ["launchpad"]
 
 [runtime]
 surface = "dom"
-web = ["web/components/game/screens/LaunchpadScreen.tsx"]
-native = ["native/App/Screens/LaunchReview.swift"]
+web = ["web/components/game/screens/LaunchpadScreen.tsx", "web/components/game/LaunchpadPrefab.tsx"]
+native = ["native/App/Screens/LaunchReview.swift", "native/App/Screens/LaunchpadPrefab.swift"]
 
 [preview]
 route = "launchpad"
@@ -128,12 +128,14 @@ reach. After the sequence the flight begins.
 [[objects]]
 id = "world"
 kind = "world"
+mechanics = ["world"]
 slot = "world"
 components = ["BaseWorldSimulation", "BaseCamera"]
 
 [[objects]]
 id = "launchpad-complex"
 kind = "group"
+mechanics = ["rocket-assembly"]
 parent = "world"
 prefab = "launchpad"
 components = ["LaunchpadState"]
@@ -142,44 +144,76 @@ note = "Reusable launch complex assembled from the child game objects below."
 [[objects]]
 id = "apron"
 kind = "terrain"
+mechanics = ["rocket-assembly"]
 parent = "launchpad-complex"
-asset = "shared/authoring/worlds/base-world.toml"
-note = "Paved ground over flat steppe. Every structure rests on this surface."
+layout = "shared"
+space = "parent"
+rect = { x = 0, y = 0, w = 1, h = 1 }
+asset = "web/public/game/assets/base/v7/launchpad/pad-complex.png"
+nativeAsset = "base/v7/launchpad/pad-complex.png"
+note = "Legacy fused pad, tower and hangar sprite. Named subparts below are not yet separate art; do not count them as independent renderers."
 
 [[objects]]
 id = "service-tower"
 kind = "structure"
+mechanics = ["rocket-assembly"]
 parent = "launchpad-complex"
 components = ["LaunchTowerAnimation"]
 
 [[objects]]
 id = "launch-stand"
 kind = "structure"
+mechanics = ["rocket-assembly"]
 parent = "launchpad-complex"
 components = ["LaunchStandState"]
 
 [[objects]]
 id = "support-hangar"
 kind = "structure"
+mechanics = ["rocket-assembly"]
 parent = "launchpad-complex"
 components = ["Clickable"]
 
 [[objects]]
 id = "staged-rocket"
 kind = "vehicle"
+mechanics = ["rocket-assembly", "sky-events"]
 parent = "launchpad-complex"
+layout = "shared"
+space = "parent"
+rect = { x = 0.2308, y = 0.261, w = 0.1904, h = 0.647 }
+asset = "web/public/art/scenes/launchpad/launchpad-rocket-multistage.png"
+nativeAsset = "scene-launchpad-rocket-multistage"
 components = ["StagedRocket", "LaunchSequence"]
 bindings = { visible = "player.selectedStagedRocketId" }
 
 [[objects]]
 id = "launch-control"
 kind = "instrument"
+mechanics = ["mission-planning"]
 parent = "launchpad-complex"
+layout = "shared"
+space = "parent"
+rect = { x = 0.13, y = 0, w = 0.11, h = 0.78 }
+action = "choose-mission"
 components = ["MissionLaunchControl"]
+
+[[objects]]
+id = "assembly-scaffold"
+kind = "structure"
+mechanics = ["rocket-assembly"]
+parent = "launchpad-complex"
+layout = "shared"
+space = "parent"
+rect = { x = 0, y = 0, w = 1, h = 1 }
+asset = "web/public/game/assets/base/v7/launchpad/pad-scaffold.png"
+nativeAsset = "base/v7/launchpad/pad-scaffold.png"
+note = "Assembly animation uses the rocket frame for its welding path."
 
 [[objects]]
 id = "back-control"
 kind = "button"
+mechanics = ["mission-planning"]
 rect = { x = 0.03, y = 0.025, w = 0.22, h = 0.07 }
 label = "Back"
 components = ["Clickable"]
@@ -187,6 +221,7 @@ components = ["Clickable"]
 [[objects]]
 id = "mission-selector"
 kind = "panel"
+mechanics = ["mission-planning"]
 rect = { x = 0.03, y = 0.11, w = 0.94, h = 0.09 }
 components = ["MissionSelector"]
 bindings = { reads = "missionId" }
@@ -194,6 +229,7 @@ bindings = { reads = "missionId" }
 [[objects]]
 id = "pad-status"
 kind = "panel"
+mechanics = ["mission-planning"]
 rect = { x = 0.12, y = 0.28, w = 0.76, h = 0.16 }
 components = ["LaunchpadStatus"]
 bindings = { reads = "missionId,player.selectedStagedRocketId" }
@@ -201,6 +237,7 @@ bindings = { reads = "missionId,player.selectedStagedRocketId" }
 [[objects]]
 id = "launch-action"
 kind = "button"
+mechanics = ["mission-planning","rocket-assembly"]
 slot = "primaryAction"
 label = "Launch"
 components = ["Clickable", "MissionLaunchAction"]

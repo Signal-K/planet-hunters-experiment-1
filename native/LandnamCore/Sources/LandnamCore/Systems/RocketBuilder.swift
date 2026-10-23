@@ -135,6 +135,17 @@ public enum RocketBuilder {
         return n
     }
 
+    /// What the fitted parts add on top of the chassis and propulsion. The Capacity and Range chips show chassis plus this,
+    /// and launch review (`validate`) counts the same numbers (SSL-647). Matches web `loadoutBonuses`.
+    public static func loadoutBonus(_ loadout: [String: String]) -> (capacity: Int, range: Int) {
+        func bonus(_ slot: String, _ pick: (Part) -> Int) -> Int {
+            guard let id = partId(loadout, slot: slot), let part = self.parts.first(where: { $0.id == id }) else { return 0 }
+            return pick(part)
+        }
+        return (bonus("cargo-hold") { $0.successBonus } / 10,
+                bonus("engine") { $0.power } / 5 + bonus("fuel-tank") { $0.successBonus } / 7 + bonus("booster") { $0.power } / 4)
+    }
+
     public static func stats(_ s: GameState, catalog: Catalog) -> (capacity: Int, range: Int, laser: Int) {
         let parts = catalog.parts
         let skills = s.player.unlockedSkillNodes
@@ -142,16 +153,10 @@ public enum RocketBuilder {
         let propulsion = parts.propulsion.first { $0.id == s.rocket.propulsion } ?? parts.propulsion[0]
         let drill = parts.drill.first { $0.id == s.rocket.drill } ?? parts.drill[0]
         let loadout = s.player.shipCustomizerParts
-        func bonus(_ slot: String, _ pick: (Part) -> Int) -> Int {
-            guard let id = partId(loadout, slot: slot), let part = self.parts.first(where: { $0.id == id }) else { return 0 }
-            return pick(part)
-        }
         let laserPart = partId(loadout, slot: "mining-laser").flatMap { id in self.parts.first { $0.id == id } }
-        let capacity = parts.effectiveCargo(chassis, skills: skills) + bonus("cargo-hold") { $0.successBonus } / 10
-        let range = parts.effectiveMaxOrbit(propulsion, skills: skills)
-            + bonus("engine") { $0.power } / 5
-            + bonus("fuel-tank") { $0.successBonus } / 7
-            + bonus("booster") { $0.power } / 4
+        let fitted = loadoutBonus(loadout)
+        let capacity = parts.effectiveCargo(chassis, skills: skills) + fitted.capacity
+        let range = parts.effectiveMaxOrbit(propulsion, skills: skills) + fitted.range
         let laser = Skills.laserChargeCap(skills) + (laserPart?.power ?? drill.rate ?? 1)
         return (capacity, range, laser)
     }

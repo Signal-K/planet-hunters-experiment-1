@@ -16,3 +16,29 @@ native = ["native/App/Screens/BaseRecordScreens.swift"]
 [preview]
 route = "mission-history"
 state = "ui-mission-log"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "mission-records"
+kind = "collection"
+layout = "host"
+mechanics = ["records"]
+note = "Canonical completed mission history."
+
+[[objects]]
+id = "record-detail"
+kind = "panel"
+parent = "mission-records"
+layout = "host"
+mechanics = ["records"]
+note = "Selected operation, cargo and outcome."
+
+[[objects]]
+id = "back-action"
+kind = "button"
+parent = "mission-records"
+layout = "host"
+mechanics = ["records"]
+note = "Return to the base."

@@ -46,3 +46,53 @@ instructions = """
 The end of the first satellite launch. One card: the telescope is online and a daily instrument feed is unlocked. The one
 action logs the outcome and returns to the base. No money talk: a telescope earns nothing by itself.
 """
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "home-berth"
+kind = "world"
+layout = "host"
+mechanics = ["delivery"]
+note = "Homecoming scene when a cargo split is pending."
+
+[[objects]]
+id = "cargo-allocation"
+kind = "panel"
+parent = "home-berth"
+layout = "host"
+mechanics = ["delivery"]
+note = "Allocate each mineral between client, storage and exchange."
+
+[[objects]]
+id = "settle-action"
+kind = "button"
+parent = "home-berth"
+layout = "host"
+mechanics = ["delivery"]
+note = "Settle exactly once through HomeDelivery."
+
+[[objects]]
+id = "mission-result"
+kind = "panel"
+parent = "home-berth"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Completed operation, payouts and affinity."
+
+[[objects]]
+id = "progression-result"
+kind = "panel"
+parent = "home-berth"
+layout = "host"
+mechanics = ["progression"]
+note = "XP and unlocks resulting from the operation."
+
+[[objects]]
+id = "continue-action"
+kind = "button"
+parent = "home-berth"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Return to the same canonical base state."

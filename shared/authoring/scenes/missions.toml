@@ -17,3 +17,53 @@ native = ["native/App/Screens/CoreLoop.swift"]
 [preview]
 route = "missions"
 state = "ui-mission-board"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "mission-board"
+kind = "panel"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Optional contracts and self-directed operations, sourced from the live catalog."
+
+[[objects]]
+id = "client-contracts"
+kind = "collection"
+parent = "mission-board"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Each entry is a mission UI element with client, requirements and payout."
+
+[[objects]]
+id = "own-program"
+kind = "collection"
+parent = "mission-board"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Free Ops work independent of contracts."
+
+[[objects]]
+id = "target-picker"
+kind = "panel"
+parent = "mission-board"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Destination selection for the selected mission."
+
+[[objects]]
+id = "accept-action"
+kind = "button"
+parent = "mission-board"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Accept through the existing mission lifecycle."
+
+[[objects]]
+id = "training-control"
+kind = "panel"
+parent = "mission-board"
+layout = "host"
+mechanics = ["training"]
+note = "Optional training, never a Free Ops gate."

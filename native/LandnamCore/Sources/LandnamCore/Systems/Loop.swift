@@ -33,6 +33,8 @@ public enum Loop {
         // Off-world builds carry the materials from the stash; no kit, no flight.
         if let plan = mission.construction, mission.isOwnProgram, plan.requiredMaterials.contains(where: { (s.player.stash[$0.key] ?? 0) < $0.value }) { return s }
         var base = s
+        // SSL-651: the shower run's 20 fragments count from this accept.
+        if id == OrionidsRun.missionId { OrionidsRun.start(&base.player) }
         base.player.freeHaulDisposition = haul ?? s.player.freeHaulDisposition
         base.doneSteps["2"] = true
         guard let targetId = mission.targetId else {
@@ -177,6 +179,8 @@ public enum Loop {
         n.player.transitStartedAt = now
         n.player.missionPhase = .transit
         n.player.activeMission = ActiveMission(id: mission.id, label: "\(mission.title) → \(target.name)")
+        // The ascent flies through the shower: fragments are home at once (web applyLaunchCatch, SSL-578).
+        OrionidsRun.applyLaunchCatch(&n.player, at: now)
         n.screen = .transit
         n.doneSteps["5"] = true
         return n
@@ -228,6 +232,10 @@ public enum Loop {
             n.doneSteps["6"] = true
             return n
         }
+        // The starter rover drives off the ship; any other mission with a lander fitted descends first (web transit onArrive).
+        if !Transitions.isStarterRoverMission(mission) && Landing.hasLander(s.player) {
+            return Landing.startDescent(n, now: now)
+        }
         let rover = usesRoverScene(mission, player: s.player)
         n.player.missionPhase = rover ? .survey : .mining
         n.screen = rover ? .roverSurvey : .mining
@@ -235,12 +243,29 @@ public enum Loop {
     }
 
     public static func miningDone(_ s: GameState, cargo: Cargo, catalog: Catalog, now: Double) -> GameState {
-        // SSL-553: the trip home is a short playable flight (boost to arrive); only a delivery leg runs on the clock.
-        guard s.deliveryTargetId != nil else {
-            return Transitions.applyMiningDone(s, cargo: cargo, arrivalAt: nil, transitStartedAt: now, now: now)
+        if s.screen == .mining && Landing.hasLander(s.player) { return Landing.startAscent(s, cargo: cargo, now: now) }
+        let leg = returnLeg(s, catalog: catalog, now: now)
+        return Transitions.applyMiningDone(s, cargo: cargo, arrivalAt: leg.arrivalAt, transitStartedAt: leg.startedAt, now: now)
+    }
+
+    /// The landing scene's clock ran out: touchdown hands over to surface work, redock starts the return leg.
+    public static func landingComplete(_ s: GameState, catalog: Catalog, now: Double) -> GameState {
+        guard s.screen == .landing else { return s }
+        if Landing.mode(s.player) == .ascend {
+            let leg = returnLeg(s, catalog: catalog, now: now)
+            return Transitions.applyRedockComplete(s, cargo: s.player.miningCargoInProgress ?? [:], arrivalAt: leg.arrivalAt,
+                                                   transitStartedAt: leg.startedAt, now: now)
         }
-        let arrival = travelArrival(target: catalog.target(s.deliveryTargetId), player: s.player, now: now)
-        return Transitions.applyMiningDone(s, cargo: cargo, arrivalAt: arrival, transitStartedAt: s.player.freeOperations ? now : nil, now: now)
+        var n = s
+        // A resumed descent whose clock was never saved is already due.
+        n.player.landingStartedAt = s.player.landingStartedAt ?? now
+        return Transitions.applyLandingTouchdown(n, mission: catalog.mission(s.missionId))
+    }
+
+    /// SSL-553: the trip home is a short playable flight (boost to arrive); only a delivery leg runs on the clock.
+    private static func returnLeg(_ s: GameState, catalog: Catalog, now: Double) -> (arrivalAt: Double?, startedAt: Double?) {
+        guard s.deliveryTargetId != nil else { return (nil, now) }
+        return (travelArrival(target: catalog.target(s.deliveryTargetId), player: s.player, now: now), s.player.freeOperations ? now : nil)
     }
 
     /// The rover survey logs the surface, then the ship laser is the only extraction.
@@ -259,17 +284,21 @@ public enum Loop {
     /// (already through the onboarding floor), so the ledger and screen agree.
     public static func debriefDone(_ s: GameState, payout rawTotal: Int, affinity: Int, consumed: Cargo = [:],
                                    disposition: HaulDisposition? = nil, catalog: Catalog, now: Double) -> GameState {
-        guard s.screen == .debrief, let missionId = s.missionId, s.targetId != nil, let cargo = s.lastCargo else { return s }
+        guard s.screen == .debrief, let missionId = s.missionId, s.targetId != nil, let haulCargo = s.lastCargo else { return s }
         let mission = catalog.mission(missionId)
         var n = s
+        // SSL-651: a filled shower run pays its francs and keeps the fragments as fragments. Read once up front, because settling resets the count.
+        let showerFilled = missionId == OrionidsRun.missionId && OrionidsRun.filled(s.player)
+        let cargo = showerFilled ? OrionidsRun.withoutFragments(haulCargo) : haulCargo
+        if showerFilled { OrionidsRun.settle(&n.player, missionsDone: s.player.missionsDone) }
         let isFreeHaul = mission.map { $0.isOwnProgram && $0.deliveryTargetId == nil && $0.construction == nil } ?? false
-            && cargo.values.contains { $0 > 0 }
+            && haulCargo.values.contains { $0 > 0 }
         if isFreeHaul && !s.player.cargoSettledOffworld {
             let effective = disposition ?? s.player.freeHaulDisposition ?? (Market.earthStorageBuilt(s.player) ? .store : .sell)
             n = Market.applyFreeHaulDisposition(n, haul: cargo, disposition: effective, now: now)
             n.player.freeHaulDisposition = nil
         }
-        let total = isFreeHaul && !s.player.cargoSettledOffworld ? 0 : rawTotal
+        let total = (isFreeHaul && !s.player.cargoSettledOffworld) || showerFilled ? 0 : rawTotal
         let consume = isFreeHaul && !s.player.cargoSettledOffworld ? [:] : consumed
         let missionsDone = n.player.missionsDone + 1
         let isStory = mission?.tag == "STORY" && mission?.deliveryTargetId == nil

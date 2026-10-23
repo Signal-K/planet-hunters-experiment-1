@@ -49,7 +49,7 @@ public enum MissionGenerator {
     static func onWorldVehicle(for t: MissionTemplate) -> String? { t.id == starterRoverTemplateId ? starterRoverVehicle : nil }
 
     public static let templates: [MissionTemplate] = [
-        MissionTemplate(id: "starter-bulk", tag: "STARTER", difficulty: "L1", mineralKeys: ["platinum", "palladium"], cargoRange: 4...8, drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, clientRole: .starter),
+        MissionTemplate(id: "starter-bulk", tag: "STARTER", difficulty: "L1", mineralKeys: ["platinum", "palladium"], cargoRange: 4...6, drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, clientRole: .starter),
         MissionTemplate(id: "volatile-bulk", tag: "BULK", difficulty: "L2", mineralKeys: ["palladium", "platinum", "iridium"], cargoRange: 4...8, drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.35, clientRole: .bulk),
         MissionTemplate(id: "metal-prospect", tag: "PROSPECT", difficulty: "L2", mineralKeys: ["iridium", "rhodium", "gold"], cargoRange: 3...6, drillTierMin: 2, orbitMax: 5, payoutMultiplier: 2.25, clientRole: .prospect),
         MissionTemplate(id: "command-reserve", tag: "COMMAND", difficulty: "L3", mineralKeys: ["rhodium", "rare", "iridium"], cargoRange: 2...4, drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.5, clientRole: .command),
@@ -192,17 +192,7 @@ public enum MissionGenerator {
                     payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: 0),
                     onWorldVehicle: onWorldVehicle(for: t))
             }
-        if SkyEvents.isOrionidsWindow(ms) {
-            let amount = 8
-            let raw = Double(Minerals.byId["iron"]?.price ?? 0) * Double(amount)
-            runs.append(Mission(
-                id: "self-directed-orionids-night-run", title: "Orionids night run",
-                brief: "No client. Mine \(amount) units of iron after 22:00 while the Orionids fall. Laser the debris once it lands and sell it at the Exchange. Peak night is 21-22 Oct.",
-                client: nil, tag: "FREE OPS", difficulty: "L1", locked: false, sequence: freeOpsMissionSequence,
-                unlockAt: "Reach Free Operations",
-                requires: MissionRequirements(minerals: ["iron": amount], cargoMin: amount, drillTier: 1, maxOrbit: 5),
-                payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: freeOpsMissionSequence), affinity: 0)))
-        }
+        if SkyEvents.isOrionidsWindow(ms) { runs.append(OrionidsRun.mission()) }
         return runs
     }
 

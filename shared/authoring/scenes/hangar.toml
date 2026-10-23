@@ -17,3 +17,53 @@ native = ["native/App/Screens/HangarScreen.swift"]
 [preview]
 route = "hangar"
 state = "ui-hangar-assembly"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "hangar-bay"
+kind = "world"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Self-contained vehicle bay without Hub chrome."
+
+[[objects]]
+id = "owned-ships"
+kind = "collection"
+parent = "hangar-bay"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Each staged or owned craft is a vehicle instance."
+
+[[objects]]
+id = "selected-ship"
+kind = "vehicle"
+parent = "hangar-bay"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Current craft in the bay."
+
+[[objects]]
+id = "part-slots"
+kind = "collection"
+parent = "hangar-bay"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Fitted components and available parts."
+
+[[objects]]
+id = "fit-action"
+kind = "button"
+parent = "hangar-bay"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Install through the existing loadout and economy systems."
+
+[[objects]]
+id = "exit-action"
+kind = "button"
+parent = "hangar-bay"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Leave the bay; no duplicate campaign state."

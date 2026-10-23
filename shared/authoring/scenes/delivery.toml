@@ -17,3 +17,45 @@ engine = ["web/public/game/scenes/delivery.scene.json"]
 [preview]
 route = "delivery"
 state = "transport-delivery"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "delivery-berth"
+kind = "world"
+layout = "host"
+mechanics = ["delivery"]
+note = "Physical destination unloading scene."
+
+[[objects]]
+id = "delivery-ship"
+kind = "vehicle"
+parent = "delivery-berth"
+layout = "host"
+mechanics = ["delivery"]
+note = "Arriving cargo vehicle."
+
+[[objects]]
+id = "cargo-unload"
+kind = "collection"
+parent = "delivery-berth"
+layout = "host"
+mechanics = ["delivery"]
+note = "Cargo transfer animation."
+
+[[objects]]
+id = "unload-progress"
+kind = "panel"
+parent = "delivery-berth"
+layout = "host"
+mechanics = ["delivery"]
+note = "Persisted unload timer."
+
+[[objects]]
+id = "return-action"
+kind = "button"
+parent = "delivery-berth"
+layout = "host"
+mechanics = ["delivery"]
+note = "After unload, start the empty Earth-return leg."

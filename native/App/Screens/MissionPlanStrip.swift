@@ -22,7 +22,7 @@ struct MissionPlanStrip: View {
         guard let mission = store.mission, let target = store.target else { return nil }
         let selected = store.player.stagedRockets.first { $0.id == store.player.selectedStagedRocketId }
         let model = selected.flatMap { Rockets.model(id: Rockets.canonicalId($0.rocketId)) } ?? Rockets.models[0]
-        return store.catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: model), skills: store.player.unlockedSkillNodes).problems.first
+        return store.catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: model), skills: store.player.unlockedSkillNodes, loadoutBonus: RocketBuilder.loadoutBonus(store.player.shipCustomizerParts)).problems.first
     }
 
     /// A run on your own account keeps nothing without a silo: say so before launch, not after landing.

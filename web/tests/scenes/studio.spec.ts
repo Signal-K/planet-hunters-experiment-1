@@ -13,7 +13,10 @@ const SCENE = 'zz-e2e'
 const sceneFile = join(AUTHORING, `scenes/${SCENE}.toml`)
 const feedbackFile = join(AUTHORING, `feedback/${SCENE}.toml`)
 const MISSION = join(AUTHORING, 'missions/free-mining.toml')
-const COMPILED = [join(REPO, 'shared/missions/authored-missions.json'), join(REPO, 'web/lib/data/authored-missions.json'), join(REPO, 'native/LandnamCore/Sources/LandnamCore/Data/AuthoredMissions.generated.swift')]
+const COMPILED = [
+  'shared/missions/authored-missions.json', 'web/lib/data/authored-missions.json', 'native/LandnamCore/Sources/LandnamCore/Data/AuthoredMissions.generated.swift',
+  'shared/engine/authored-scenes.json', 'web/lib/engine/authored-scenes.json', 'native/LandnamCore/Sources/LandnamCore/Scene/AuthoredScenes.generated.swift',
+].map(file => join(REPO, file))
 const originals = new Map<string, string>()
 
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')

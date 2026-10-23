@@ -17,3 +17,45 @@ engine = ["web/public/game/scenes/landing.scene.json"]
 [preview]
 route = "landing"
 state = "ui-landing"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "landing-world"
+kind = "world"
+layout = "host"
+mechanics = ["landing"]
+note = "Target approach environment."
+
+[[objects]]
+id = "landing-craft"
+kind = "vehicle"
+parent = "landing-world"
+layout = "host"
+mechanics = ["landing"]
+note = "Descent or redocking animation."
+
+[[objects]]
+id = "landing-progress"
+kind = "panel"
+parent = "landing-world"
+layout = "host"
+mechanics = ["landing"]
+note = "Progress from the persisted landing start timestamp."
+
+[[objects]]
+id = "continue-action"
+kind = "button"
+parent = "landing-world"
+layout = "host"
+mechanics = ["landing"]
+note = "Complete touchdown or redocking once ready."
+
+[[objects]]
+id = "pause-action"
+kind = "button"
+parent = "landing-world"
+layout = "host"
+mechanics = ["landing"]
+note = "Pause at the hub without discarding the operation."

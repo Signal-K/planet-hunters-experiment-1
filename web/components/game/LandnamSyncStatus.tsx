@@ -49,6 +49,7 @@ export default function LandnamSyncStatus() {
     return () => { unsubscribe(); stop() }
   }, [])
 
+  useTopChipInset()
   const label = syncLabel(game.landnamSynced, outbox, online)
   const host = useChipSlot(mounted && !!game.authUserId && !!label)
   if (!mounted || !game.authUserId || !label) return null
@@ -93,7 +94,52 @@ function useChipSlot(active: boolean): HTMLElement | null {
     place()
     const observer = new MutationObserver(() => { if (!frame) frame = requestAnimationFrame(place) })
     observer.observe(document.body, { childList: true, subtree: true })
-    return () => { observer.disconnect(); if (frame) cancelAnimationFrame(frame); document.querySelector('[data-sync-slot]')?.remove() }
+    const onResize = () => { if (!frame) frame = requestAnimationFrame(place) }
+    window.addEventListener('resize', onResize)
+    return () => {
+      observer.disconnect(); window.removeEventListener('resize', onResize)
+      if (frame) cancelAnimationFrame(frame)
+      document.querySelector('[data-sync-slot]')?.remove()
+    }
   }, [active])
   return host
+}
+
+/**
+ * SSL-655: the OPS coach strip starts after the real top chip row, not at a fixed 200px. The row grows with the
+ * sync chip, a two-digit Stash count or the dev badge, so this runs whether or not the sync chip is showing.
+ */
+function useTopChipInset() {
+  useEffect(() => {
+    let frame = 0
+    const measure = () => {
+      frame = 0
+      const francs = Array.from(document.querySelectorAll<HTMLElement>('[data-testid$="-francs-chip"], .top-bar .scene-chip'))
+        .find(el => el.offsetParent !== null)
+      publishRowInset(francs?.parentElement ?? null, sizes)
+    }
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(measure) }
+    const sizes = new ResizeObserver(schedule)
+    measure()
+    const observer = new MutationObserver(schedule)
+    observer.observe(document.body, { childList: true, subtree: true })
+    window.addEventListener('resize', schedule)
+    return () => {
+      observer.disconnect(); sizes.disconnect(); window.removeEventListener('resize', schedule)
+      if (frame) cancelAnimationFrame(frame)
+      document.documentElement.style.removeProperty('--top-chip-inset')
+    }
+  }, [])
+}
+
+function publishRowInset(row: HTMLElement | null, sizes: ResizeObserver) {
+  if (!row) { document.documentElement.style.removeProperty('--top-chip-inset'); return }
+  const chips = Array.from(row.querySelectorAll<HTMLElement>('.scene-chip'))
+  chips.forEach(el => sizes.observe(el))
+  const rights = chips
+    .map(el => el.getBoundingClientRect())
+    .filter(r => r.width > 0 && r.left < window.innerWidth / 2)
+    .map(r => r.right)
+  if (!rights.length) return
+  document.documentElement.style.setProperty('--top-chip-inset', `${Math.ceil(Math.max(...rights)) + 8}px`)
 }

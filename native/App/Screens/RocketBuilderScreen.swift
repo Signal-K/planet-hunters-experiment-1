@@ -252,16 +252,7 @@ struct RocketBuilderScreen: View {
     }
 
     private func complex(w: CGFloat, h: CGFloat, phase: PadPhase, progress: Double) -> some View {
-        ZStack(alignment: .topLeading) {
-            Art.view("base/v7/launchpad/pad-complex.png").resizable().interpolation(.none).frame(width: w, height: h)
-            PadBuild(phase: phase, p: progress, w: w, h: h)
-            Button(action: onChooseMission) { Color.clear }
-                .buttonStyle(.plain)
-                .frame(width: max(44, w * 0.11), height: h * 0.78)
-                .position(x: w * 0.185, y: h * 0.39)
-                .accessibilityLabel("Choose a mission")
-                .accessibilityIdentifier("launchpad-status-card")
-        }
+        LaunchpadPrefab(phase: phase, progress: progress, width: w, height: h, onChooseMission: onChooseMission)
     }
 
     /// The big call to action when nothing is on the pad.
@@ -441,51 +432,5 @@ struct RocketBuilderScreen: View {
             b = min(255, b + pull * 0.4)
         }
         return Color(.sRGB, red: r / 255, green: g / 255, blue: b / 255, opacity: 1)
-    }
-}
-
-/// The rocket on the mount: blueprint ghost while designing, rising under a scaffold while building, standing when ready.
-/// Animatable so the rise, the scaffold fade and the weld spark follow `p` frame by frame (web `rocket-rise`, `scaffold-fade`, `weld-rise`).
-struct PadBuild: View, @preconcurrency Animatable {
-    var phase: PadPhase
-    var p: Double
-    var w: CGFloat
-    var h: CGFloat
-    var animatableData: Double {
-        get { p }
-        set { p = newValue }
-    }
-
-    var body: some View {
-        let rocketH = h * 0.647
-        let rocketX = w * 0.326
-        let foot = h * (1 - 0.092)
-        let building = phase == .building
-        let scaffold = building ? min(1, p / 0.12) * (p > 0.82 ? max(0, (1 - p) / 0.18) : 1) : 0
-        ZStack(alignment: .topLeading) {
-            if phase != .idle {
-                Image("scene-launchpad-rocket-multistage").resizable().interpolation(.none).scaledToFit()
-                    .frame(width: rocketH * 0.3756, height: rocketH)
-                    .modifier(DesignGhost(on: phase == .design))
-                    .mask(alignment: .bottom) { Rectangle().frame(height: rocketH * (building ? p : 1)) }
-                    .position(x: rocketX, y: foot - rocketH / 2)
-            }
-            Art.view("base/v7/launchpad/pad-scaffold.png").resizable().interpolation(.none)
-                .frame(width: w, height: h).opacity(scaffold)
-            if building && p > 0.08 && p < 0.92 {
-                Rectangle().fill(Theme.paper).frame(width: 28, height: 6)
-                    .shadow(color: Theme.blue, radius: 6)
-                    .position(x: rocketX, y: foot - rocketH * p)
-            }
-        }
-        .frame(width: w, height: h)
-        .allowsHitTesting(false)
-    }
-}
-
-private struct DesignGhost: ViewModifier {
-    var on: Bool
-    func body(content: Content) -> some View {
-        if on { content.grayscale(1).brightness(0.3).opacity(0.5).shadow(color: Theme.blue, radius: 3) } else { content }
     }
 }

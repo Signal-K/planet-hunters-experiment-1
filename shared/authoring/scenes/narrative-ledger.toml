@@ -16,3 +16,29 @@ native = ["native/App/Screens/BaseRecordScreens.swift"]
 [preview]
 route = "narrative-ledger"
 state = "ui-ledger"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "ledger-entries"
+kind = "collection"
+layout = "host"
+mechanics = ["records"]
+note = "Narrative entries derived from canonical progression and discoveries."
+
+[[objects]]
+id = "entry-detail"
+kind = "panel"
+parent = "ledger-entries"
+layout = "host"
+mechanics = ["records"]
+note = "Selected record and its source."
+
+[[objects]]
+id = "back-action"
+kind = "button"
+parent = "ledger-entries"
+layout = "host"
+mechanics = ["records"]
+note = "Return to the base."

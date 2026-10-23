@@ -20,15 +20,15 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
 
     test('the Menu keeps Control station access for a built station or a legacy telescope owner', async ({ page }, info) => {
       await stage(page, 'm1-hub', { chrome: true })
-      await page.getByTestId('hub-menu-btn').dispatchEvent('click')
+      await page.getByTestId('hub-btn').dispatchEvent('click')
       await expect(page.getByTestId('base-menu-control-station')).toHaveCount(0)
       await page.goto('about:blank')
       await stage(page, 'm1-hub', { chrome: true, patch: FULL })
-      await page.getByTestId('hub-menu-btn').dispatchEvent('click')
+      await page.getByTestId('hub-btn').dispatchEvent('click')
       await expect(page.getByTestId('base-menu-control-station')).toBeVisible()
       await page.goto('about:blank')
       await stage(page, 'm1-hub', { chrome: true, patch: { deepSpaceTelescopeBuilt: true } })
-      await page.getByTestId('hub-menu-btn').dispatchEvent('click')
+      await page.getByTestId('hub-btn').dispatchEvent('click')
       const legacyEntry = page.getByTestId('base-menu-control-station')
       await expect(legacyEntry).toBeVisible()
       await page.screenshot({ path: info.outputPath(`legacy-telescope-entry-${vp}.png`) })

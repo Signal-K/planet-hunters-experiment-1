@@ -42,6 +42,7 @@ struct ControlStationScreen: View {
             .padding(12)
             .background(LinearGradient(colors: [Room.hullLit, Room.hull], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Room.outline, lineWidth: 2))
+            ResearchCalendarPanel(stamps: store.player.researchStamps, now: store.now)
             SkyBadgeRow(badges: store.player.badges)
         }
         .helpable(.instrumentHub, firstVisit: true)

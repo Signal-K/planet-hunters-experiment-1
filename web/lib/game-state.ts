@@ -1,3 +1,4 @@
+import { mergeStamps, sanitizeStamps } from '@/lib/research/stamps'
 import { applyMergedLedger } from './sync/ledger'
 import { STARTING_FRANCS } from '@/lib/data/economy'
 import { mergeBuildingLevels, sanitizeBuildingLevels } from '@/lib/data/building-levels'
@@ -96,6 +97,7 @@ export const DEFAULT_STATE: GameState = {
     fireballSpotter: { readAt: null, passedAt: null },
     saturnImagerLaunchedAt: null,
     instrumentDigestNotifiedOn: {},
+    researchStamps: {},
     dismissedHubPrompts: {},
     discoveredExoplanetTargets: {},
     subsurfaceExcavated: false,
@@ -357,7 +359,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
@@ -682,6 +684,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.tessClassifications = mergeKeyed(current.player.tessClassifications, remoteState.player?.tessClassifications)
   merged.player.asteroidClassifications = mergeKeyed(current.player.asteroidClassifications, remoteState.player?.asteroidClassifications)
   merged.player.saturnClassifications = mergeKeyed(current.player.saturnClassifications, remoteState.player?.saturnClassifications)
+  merged.player.researchStamps = mergeStamps(current.player.researchStamps, remoteState.player?.researchStamps)
   merged.player.badges = mergeBadges(current.player.badges, remoteState.player?.badges)
   merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)
   merged.player.meteoriteMastery = Math.max(current.player.meteoriteMastery ?? 0, remoteState.player?.meteoriteMastery ?? 0)

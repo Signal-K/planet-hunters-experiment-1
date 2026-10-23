@@ -102,6 +102,8 @@ struct MiningScreen: View {
     @State private var obstacleAhead = false
     @State private var toast: String?
     @State private var laserCharging = false
+    /// Orionid fragments already added to the ledger from this field's cargo (SSL-651).
+    @State private var fragmentsCounted = 0
     @FocusState private var keysFocused: Bool
     @State private var confirmingScrub = false
     @State private var showSettings = false
@@ -110,8 +112,10 @@ struct MiningScreen: View {
 
     /// SSL-411: Return stays tappable (a dead button reads as a bug) and says what is still missing.
     private func handleReturn(_ f: MiningField) {
-        if f.isComplete || f.charge <= 0 {
-            guard f.cargoUnits > 0 else { say("Nothing mined yet"); return }
+        // SSL-651: a shower run whose fragments are caught (launch plus mined) is filled; leaving early pays it.
+        let showerFilled = store.mission?.id == OrionidsRun.missionId && OrionidsRun.filled(store.player)
+        if f.isComplete || f.charge <= 0 || showerFilled {
+            guard f.cargoUnits > 0 || showerFilled else { say("Nothing mined yet"); return }
             store.miningDone(f.cargo)
             return
         }
@@ -251,13 +255,16 @@ struct MiningScreen: View {
             : max(Skills.laserChargeCap(store.player.unlockedSkillNodes), ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel))
         // Meteor-shower debris joins the field only inside its window and the player's local night (SSL-475).
         let shower = SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now, location: store.player.skyEventLocation) / 2).rounded(.up)))) }
-        let f = MiningField(target: target, required: mission.requires.minerals, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower)
+        let required = mission.id == OrionidsRun.missionId ? ["orionid_debris": max(1, OrionidsRun.fragmentGoal - OrionidsRun.catches(store.player))] : mission.requires.minerals
+        let f = MiningField(target: target, required: required, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower)
         let palette = LaserPalette.resolve(id: target.id, type: target.type, archetype: target.archetype)
         let s = MiningScene(field: f, size: size, palette: palette, landscapeKey: target.id)
         s.showsOpsBrackets = !store.player.freeOperations && store.player.flightPlan.currentTry == "mining"
         s.onChange = { f in
             field = f
             for id in SkyEvents.debrisResourceIds where f.cargo[id, default: 0] > 0 { store.debrisMined(id) }
+            let fragments = f.cargo["orionid_debris", default: 0]
+            if fragments > fragmentsCounted { store.fragmentsMined(fragments - fragmentsCounted); fragmentsCounted = fragments }
         }
         s.onTargetCue = { cue in targetCue = cue }
         s.onObstacleAhead = { obstacleAhead = $0 }
@@ -269,6 +276,7 @@ struct MiningScreen: View {
         s.onBump = { say("Hull bumped: −1 charge") }
         s.onCharging = { c in laserCharging = c }
         s.onFeedback = { msg in toast = msg; Task { try? await Task.sleep(for: .seconds(1.4)); if toast == msg { toast = nil } } }
+        fragmentsCounted = f.cargo["orionid_debris", default: 0]
         field = f; scene = s
     }
 }

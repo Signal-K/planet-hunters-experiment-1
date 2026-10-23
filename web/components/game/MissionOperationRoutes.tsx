@@ -19,6 +19,7 @@ import { isFreeHaulEligibleMission } from '@/lib/data'
 import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-events'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { FIREBALL_2026_BADGE, FIREBALL_SUBJECT_ID, grantFireballCatch } from '@/lib/orionids/fireball'
+import { addStamp } from '@/lib/research/stamps'
 import { addCaughtFragments } from '@/lib/orionids/fragments'
 import { showerRunCatches, showerRunFilled, showerRunPayout, withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { queueEventBadge } from '@/lib/orionids/persist'
@@ -268,7 +269,7 @@ export default function MissionOperationRoutes({
             game.setPlayer(player => {
               const mined = applyDebrisMined(player, preset, now).player
               if (resourceId !== 'orionid_debris') return mined
-              return addCaughtFragments(mined, 1, 'count')
+              return addStamp(addCaughtFragments(mined, 1, 'count'), 'event', now)
             })
           }}
         />

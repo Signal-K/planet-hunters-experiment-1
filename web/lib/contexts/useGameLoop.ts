@@ -1,4 +1,6 @@
+import { addStamp, type StampKind } from '@/lib/research/stamps'
 import { buildingLevel } from '@/lib/data/building-levels'
+import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
@@ -101,6 +103,7 @@ function stagedRocketSupportsMission(stagedRocket: StagedRocket, state: GameStat
     rocket: stagedRocket.rocket,
     parts: catalog.parts,
     unlockedSkillNodes: state.player.unlockedSkillNodes ?? [],
+    loadoutBonus: loadoutBonuses(asLoadout(state.player.shipCustomizerParts)),
   }).ok
 }
 
@@ -754,7 +757,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const nextLegTarget = hasDelivery
         ? catalog.targets.find(t => t.id === s.deliveryTargetId)
         : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
-      const timedTransit = s.player.freeOperations
+      // Same return leg as onMiningDone (SSL-553): only a delivery leg runs on the clock.
+      const timedTransit = s.player.freeOperations && hasDelivery
       const arrivalAt = (timedTransit && nextLegTarget)
         ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
@@ -801,11 +805,20 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     captureGameEvent('survey_scan_started', { target_id: targetId })
   }, [setState])
 
+  // SSL-663: one stamp per research task kind per UTC day, for the calendar in the Control Station.
+  const stampResearch = useCallback((kind: StampKind) => {
+    setState(s => {
+      const player = addStamp(s.player, kind, Date.now())
+      return player === s.player ? s : { ...s, player }
+    })
+  }, [setState])
+
   const resolveSurveyScan = useCallback(() => {
     const current = stateRef.current
     const scan = current.player.activeScan
     const at = Date.now()
     if (!scan || applyResolveScan(current, at) === current) return
+    stampResearch('survey')
     const target = catalog.targets.find(item => item.id === scan.targetId)
     let marked = false
     setState(s => {
@@ -862,6 +875,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const submitTessClassification = useCallback((subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => {
     const submittedAt = Date.now()
+    stampResearch('classification')
     const roundedRanges = ranges
       .map(range => ({ x1: Math.round(range.x1 * 1000) / 1000, x2: Math.round(range.x2 * 1000) / 1000 }))
       .sort((a, b) => a.x1 - b.x1)
@@ -997,6 +1011,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   // verdict record itself.
   const submitAsteroidClassification = useCallback((candidateId: string, verdict: AsteroidVerdict) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
+    stampResearch('classification')
 
     if (!stateRef.current.player.asteroidClassifications?.[candidateId]) {
       addToast(`Asteroid candidate classified. +${RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION} research XP`, 'ok')
@@ -1037,6 +1052,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   // tier comes from the SSL-491 sky event config.
   const submitSaturnClassification = useCallback((candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
+    stampResearch('classification')
     setState(s => {
       const existing = s.player.saturnClassifications?.[candidateId]
       // Historic whole-frame records remain complete; a new 3x3 record only

@@ -34,7 +34,7 @@ function indexSignature(root: string): string {
     if (!existsSync(abs)) continue
     for (const name of readdirSync(abs).sort()) stat(join(abs, name))
   }
-  for (const rel of ['qa/scenes.json', 'shared/engine/scene-types.json', 'shared/engine/game-map.generated.json', 'web/lib/game-types.ts']) stat(join(root, rel))
+  for (const rel of ['qa/scenes.json', 'shared/engine/scene-types.json', 'shared/engine/mechanics.json', 'shared/engine/game-map.generated.json', 'web/lib/game-types.ts']) stat(join(root, rel))
   stat(focusPath(root))
   return parts.join('|')
 }

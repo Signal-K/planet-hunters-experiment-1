@@ -4,6 +4,17 @@
   "status": "approved",
   "coordinateSpace": "normalized-safe-area",
   "about": "Approved minimal cross-platform scene contract for SSL-615. Human-authored scene and mission instances use TOML; rectangles use x/y/w/h in a 0..1 safe-area coordinate space.",
+  "journey": {
+    "status": "target-not-routing",
+    "source": "Craft: Landnam: community research calendar + simpler progression (22 Oct 2026, including Liam's comments)",
+    "stages": [
+      { "id": "plan", "name": "Plan", "routes": ["missions", "targets", "rocket-buy"], "policy": "One Plan for contracts and Free Ops. Suggest a ship; changing it is optional." },
+      { "id": "launch", "name": "Launch", "routes": ["fab", "launchpad"], "policy": "Assembly and launch are one scene. Preserve old routes as deep links." },
+      { "id": "flight", "name": "Flight", "routes": ["transit", "landing"], "policy": "A faster multi-scene animated sequence with zero required confirmation taps." },
+      { "id": "work", "name": "Work", "routes": ["mining", "rover-survey", "surface-ops"], "policy": "Perform mining, survey or field work with the appropriate engine adapter." },
+      { "id": "result", "name": "Result", "routes": ["delivery", "debrief"], "policy": "Combine delivery and result presentation, preserving exactly-once cargo and reward settlement, then return to Base." }
+    ]
+  },
   "sharedSlots": {
     "hud": { "x": 0.02, "y": 0.02, "w": 0.96, "h": 0.1, "layer": "chrome" },
     "objective": { "x": 0.16, "y": 0.13, "w": 0.68, "h": 0.08, "layer": "chrome" },
@@ -45,8 +56,8 @@
     }
   },
   "objectContract": {
-    "required": ["id", "kind", "slot"],
-    "optional": ["prefab", "anchor", "children", "components", "bindings"],
+    "required": ["id", "kind"],
+    "optional": ["parent", "slot", "rect", "space", "layout", "prefab", "asset", "nativeAsset", "components", "mechanics", "bindings", "action"],
     "rule": "Scene files own structure and placement; platform code owns behavior and rendering adapters."
   }
 }

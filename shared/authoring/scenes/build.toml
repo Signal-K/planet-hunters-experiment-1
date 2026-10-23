@@ -11,10 +11,60 @@ qa = ["build", "storage-build"]
 
 [runtime]
 surface = "canvas"
-web = ["web/components/game/screens/FreeOpsBuildScreen.tsx", "web/components/game/screens/HubScreen.tsx"]
+web = ["web/components/game/screens/HubScreen.tsx", "web/components/game/GameScreenRouter.tsx"]
 native = ["native/App/Screens/BuildScreen.swift"]
 engine = ["web/public/game/scenes/hub.scene.json"]
 
 [preview]
 route = "build"
 state = "ui-build"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "base-world"
+kind = "world"
+layout = "host"
+mechanics = ["world"]
+note = "Same world as the Hub; not a second construction mode."
+
+[[objects]]
+id = "build-sites"
+kind = "collection"
+parent = "base-world"
+layout = "host"
+mechanics = ["construction"]
+note = "Fixed sites from shared/layout/base-site.json."
+
+[[objects]]
+id = "placement-ghost"
+kind = "structure"
+parent = "base-world"
+layout = "host"
+mechanics = ["construction"]
+note = "Selected building preview at a legal site."
+
+[[objects]]
+id = "build-catalog"
+kind = "panel"
+parent = "base-world"
+layout = "host"
+mechanics = ["construction"]
+note = "Available structures and resource requirements."
+
+[[objects]]
+id = "place-action"
+kind = "button"
+parent = "base-world"
+layout = "host"
+mechanics = ["construction"]
+note = "Confirm placement through the game state transition."
+
+[[objects]]
+id = "cancel-action"
+kind = "button"
+parent = "base-world"
+layout = "host"
+mechanics = ["construction"]
+note = "Leave placement without purchasing."

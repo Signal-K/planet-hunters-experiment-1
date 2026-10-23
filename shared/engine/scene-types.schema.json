@@ -9,6 +9,22 @@
     "status": { "enum": ["draft", "approved", "retired"] },
     "coordinateSpace": { "const": "normalized-safe-area" },
     "about": { "type": "string" },
+    "journey": {
+      "type": "object",
+      "required": ["status", "source", "stages"],
+      "properties": {
+        "status": { "const": "target-not-routing" },
+        "source": { "type": "string" },
+        "stages": { "type": "array", "items": {
+          "type": "object", "required": ["id", "name", "routes", "policy"],
+          "properties": {
+            "id": { "type": "string" }, "name": { "type": "string" },
+            "routes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "policy": { "type": "string" }
+          }, "additionalProperties": false
+        } }
+      }, "additionalProperties": false
+    },
     "sharedSlots": {
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/slot" }

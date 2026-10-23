@@ -5,16 +5,50 @@ format = 1
 id = "targets"
 type = "menu"
 name = "Solar System Map"
-summary = "Eleven selectable bodies. Entity ids join to the targets catalog for the real orbit and mineral data."
+summary = "Mission destination preparation. The routed setup adapter currently presents the Launchpad; the old standalone target-map asset is not the route renderer."
 tickets = ["SSL-426", "SSL-450", "SSL-411"]
 qa = ["launch-review"]
 
 [runtime]
 surface = "canvas"
-web = ["web/components/TargetPicker/", "web/components/game/MissionSetupRoutes.tsx"]
+web = ["web/components/game/MissionSetupRoutes.tsx", "web/components/game/screens/LaunchpadScreen.tsx"]
 native = ["native/App/Screens/LaunchReview.swift"]
 engine = ["web/public/game/scenes/target-picker.scene.json"]
 
 [preview]
 route = "targets"
 state = "ui-target-picker"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "mission-plan"
+kind = "panel"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Route currently renders mission preparation; do not infer a standalone solar map from its name."
+
+[[objects]]
+id = "target-picker"
+kind = "collection"
+parent = "mission-plan"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Destination choices use the shared target catalog."
+
+[[objects]]
+id = "launchpad-preview"
+kind = "group"
+parent = "mission-plan"
+layout = "host"
+mechanics = ["rocket-assembly"]
+note = "Reusable launchpad presentation from the mission setup adapter."
+
+[[objects]]
+id = "continue-action"
+kind = "button"
+parent = "mission-plan"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Proceed with the selected destination."

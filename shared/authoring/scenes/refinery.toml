@@ -5,7 +5,7 @@ format = 1
 id = "refinery"
 type = "exchange-lab"
 name = "Refinery"
-summary = "Refine raw minerals into higher-value goods. Native has no screen yet and shows a stub."
+summary = "Refine raw minerals into higher-value goods. Native has the domain implementation but no refinery Screen enum case or routed screen."
 qa = ["refinery"]
 
 [runtime]
@@ -16,3 +16,45 @@ native = []
 [preview]
 route = "refinery"
 state = "ui-refinery"
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
+
+[[objects]]
+id = "recipe-list"
+kind = "collection"
+layout = "host"
+mechanics = ["economy"]
+note = "Refinery recipes from the game catalog."
+
+[[objects]]
+id = "recipe-detail"
+kind = "panel"
+parent = "recipe-list"
+layout = "host"
+mechanics = ["economy"]
+note = "Input minerals, cost and duration."
+
+[[objects]]
+id = "refinery-job"
+kind = "instrument"
+parent = "recipe-list"
+layout = "host"
+mechanics = ["economy"]
+note = "Current timed job from player state."
+
+[[objects]]
+id = "start-action"
+kind = "button"
+parent = "recipe-list"
+layout = "host"
+mechanics = ["economy"]
+note = "Validate resources and start the selected job."
+
+[[objects]]
+id = "collect-action"
+kind = "button"
+parent = "recipe-list"
+layout = "host"
+mechanics = ["economy"]
+note = "Collect completed output. No native screen yet."

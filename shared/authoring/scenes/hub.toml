@@ -413,6 +413,7 @@ pad or the control station. Stars show; the moon is the only luminary.
 [[objects]]
 id = "world"
 kind = "world"
+mechanics = ["world"]
 slot = "world"
 prefab = "base-world"
 components = ["BaseWorldSimulation", "BaseCamera"]
@@ -421,6 +422,7 @@ note = "Pans and zooms. The background is game objects, never a whole-scene imag
 [[objects]]
 id = "sky"
 kind = "layer"
+mechanics = ["world", "sky-events"]
 parent = "world"
 asset = "shared/scenes/sky-events.json"
 note = "A planet is only a point of light from the sky calendar. No planet discs."
@@ -428,6 +430,7 @@ note = "A planet is only a point of light from the sky calendar. No planet discs
 [[objects]]
 id = "steppe"
 kind = "terrain"
+mechanics = ["world"]
 parent = "world"
 asset = "shared/authoring/worlds/base-world.toml"
 note = "Escarpments, steppe, paved ground, clouds and weather. Edit the world data to change them on web and native."
@@ -435,6 +438,7 @@ note = "Escarpments, steppe, paved ground, clouds and weather. Edit the world da
 [[objects]]
 id = "building-sites"
 kind = "collection"
+mechanics = ["construction"]
 parent = "world"
 asset = "shared/layout/base-site.json"
 components = ["BuildSiteInteraction"]
@@ -443,6 +447,7 @@ note = "Five fixed sites. The world starts empty; buildings are only what the pl
 [[objects]]
 id = "site-hall"
 kind = "structure"
+mechanics = ["rocket-assembly"]
 parent = "building-sites"
 label = "Hangar"
 components = ["Clickable"]
@@ -450,6 +455,7 @@ components = ["Clickable"]
 [[objects]]
 id = "site-pad"
 kind = "structure"
+mechanics = ["rocket-assembly"]
 parent = "building-sites"
 label = "Launchpad"
 prefab = "launchpad"
@@ -459,6 +465,7 @@ note = "A reusable Launchpad prefab. Its child-object composition is declared in
 [[objects]]
 id = "site-ops"
 kind = "structure"
+mechanics = ["instruments"]
 parent = "building-sites"
 label = "Control station"
 components = ["Clickable"]
@@ -466,6 +473,7 @@ components = ["Clickable"]
 [[objects]]
 id = "site-exchange"
 kind = "structure"
+mechanics = ["economy"]
 parent = "building-sites"
 label = "Exchange"
 components = ["Clickable"]
@@ -474,6 +482,7 @@ note = "The Exchange stays a real building on the base, not a menu item."
 [[objects]]
 id = "site-shaft"
 kind = "structure"
+mechanics = ["construction","delivery"]
 parent = "building-sites"
 label = "Silo"
 components = ["Clickable"]
@@ -482,6 +491,7 @@ note = "The surface silo has no above-ground body. The lift shaft is the silo do
 [[objects]]
 id = "shared-hud"
 kind = "ui"
+mechanics = ["persistence","economy"]
 slot = "hud"
 prefab = "shared-hud"
 note = "One shared HUD on every screen. Never a per-screen HUD."
@@ -489,5 +499,6 @@ note = "One shared HUD on every screen. Never a per-screen HUD."
 [[objects]]
 id = "base-dock"
 kind = "ui"
+mechanics = ["training","mission-planning"]
 prefab = "base-dock"
 note = "Bottom centre: previous, Build, Menu, next. No shared slot fits it yet (see bottom-nav in shared/layout/base-hud-zones.json)."
