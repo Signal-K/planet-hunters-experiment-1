@@ -349,7 +349,10 @@ export default function MissionBoard({
   const [runId, setRunId] = useState<string | null>(null)
   const [eventFocus, setEventFocus] = useState<string | null>(null)
   const picked = pickedId ? catalog.targets.find(t => t.id === pickedId) ?? null : null
-  const pickedRuns = picked ? freeRuns.filter(run => Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m))) : []
+  const pickedRuns = picked ? freeRuns.filter(run =>
+    Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m))
+    || (run.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID && player.orionidsEventStage === 1 && run.targetId === picked.id)
+  ) : []
   const pickedRun = pickedRuns.find(run => run.id === runId) ?? pickedRuns[0] ?? null
   const contractTarget = contractTargetId ? catalog.targets.find(target => target.id === contractTargetId) ?? null : null
   const routeIds = card ? [card.mission.targetId, card.mission.deliveryTargetId].flatMap(id => id && catalog.targets.some(t => t.id === id) ? [id] : []) : []
@@ -498,7 +501,7 @@ export default function MissionBoard({
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
         {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
-          <b>{eventFocus}</b><span>Launch catches fragments · no cargo used</span>
+          <b>{eventFocus}</b><span>{player.orionidsEventStage === 1 ? 'Next mission ready · surface observation' : 'Launch catches fragments · no cargo used'}</span>
         </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>

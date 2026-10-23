@@ -159,6 +159,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </section>
         )}
 
+        <p className={styles.note} data-testid="mission-next-handoff">
+          Mission complete. Return to Base, then open the mission board to choose your next flight.
+          {mission.id === ORIONIDS_NIGHT_RUN_ID && ' Your next Orionids tier is a surface observation, not another mining run.'}
+        </p>
+
         {isOrbitalInstrumentDeployment ? null : isFreeHaul ? (
           <CargoDestinationPanel
             cargo={settledCargo}
@@ -252,13 +257,13 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         >
           {isFreeHaul
             ? willStore
-              ? overflowUnits > 0 ? `Store haul · sell ${overflowUnits} over cap` : shownRun ? `Collect ${formatCurrency(shownRun.francs)} · keep haul` : 'Keep haul on Earth'
-              : `Collect ${formatCurrency((haulMarketValue ?? 0) + (shownRun?.francs ?? 0))}`
+              ? overflowUnits > 0 ? `Complete mission · sell ${overflowUnits} over cap` : shownRun ? `Complete mission · keep haul` : 'Complete mission · keep haul'
+              : `Complete mission · collect ${formatCurrency((haulMarketValue ?? 0) + (shownRun?.francs ?? 0))}`
               : delivered
                 ? isProgramOperation
-                ? 'Log Program Outcome · Return to Base'
-                : `Collect & Return to Base · ${formatCurrency(total)}`
-              : shownRun ? `Collect & Return to Base · ${formatCurrency(shownRun.francs)}` : 'Return to Base'}
+                ? 'Complete mission · return to Base'
+                : `Complete mission · return to Base · ${formatCurrency(total)}`
+              : shownRun ? `Complete mission · return to Base · ${formatCurrency(shownRun.francs)}` : 'Complete mission · return to Base'}
         </PrimaryBtn>
       </div>
 

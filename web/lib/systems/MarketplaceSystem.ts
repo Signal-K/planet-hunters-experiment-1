@@ -2,7 +2,7 @@
 // Selling lives in EconomySystem. Buying and alerts need the Exchange built.
 
 import type { GameState } from '@/lib/game-types'
-import { MINERAL_META } from '@/lib/data'
+import { MINERAL_META, isArtifactMineralId } from '@/lib/data'
 import { GEMINIDS_DEBRIS_PRESET, LEONIDS_DEBRIS_PRESET, debrisWindowStartMs } from '@/lib/data/sky-events'
 import { sellUnitPrice, storageCapacity, storedUnits } from './EconomySystem'
 
@@ -58,13 +58,14 @@ export function spotBoard(player: PricePlayer & { stash?: Record<string, number>
       const spot = sellUnitPrice(id, player, clientId, now).price
       return { id, name: meta.name, spot, ask: buyUnitPrice(id, player, clientId, now), held: player.stash?.[id] ?? 0 }
     })
-    .filter(q => q.spot > 0 && showerListed(q.id, now))
+    .filter(q => (q.spot > 0 && !isArtifactMineralId(q.id) && showerListed(q.id, now)) || (isArtifactMineralId(q.id) && q.held > 0))
     .sort((a, b) => a.spot - b.spot || a.name.localeCompare(b.name))
 }
 
 /** Why the player cannot buy `amount` of a mineral, or null when they can. */
 export function buyBlocker(player: GameState['player'], mineralId: string, amount = 1, now: number = Date.now()): string | null {
   if (!MINERAL_META[mineralId]) return 'Not on the market'
+  if (isArtifactMineralId(mineralId)) return 'Artifacts are protected research evidence'
   if (!exchangeBuilt(player)) return 'Build the Exchange to buy'
   const room = storageCapacity(player) - storedUnits(player.stash)
   if (room < amount) return storageCapacity(player) <= 0 ? 'Build a silo to store ore' : 'Silo is full'

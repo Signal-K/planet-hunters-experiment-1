@@ -172,12 +172,11 @@ describe('silo rocket fabrication and recovery', () => {
 })
 
 describe('applySellMinerals', () => {
-  it('sells orionid_debris at the open-market spot price (SSL-475)', () => {
+  it('protects orionid debris from market sale (SSL-475)', () => {
     const s = makeState({ stash: { orionid_debris: 3 } })
     const next = applySellMinerals(s, 'orionid_debris', 3)
-    expect(next.player.francs).toBe(openMarketSellPrice(MINERAL_META.orionid_debris.price, 0) * 3)
-    expect(next.player.francs).toBeGreaterThan(0)
-    expect(next.player.stash?.orionid_debris).toBeUndefined()
+    expect(next).toBe(s)
+    expect(sellQuote({ orionid_debris: 3 }, s.player)).toBe(0)
   })
 
   it('pays the discounted open-market rate and tracks cumulative supply sold', () => {

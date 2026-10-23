@@ -1,6 +1,12 @@
 import Foundation
 
 public enum Minerals {
+    /// Event debris and fragments are research evidence, never commodities.
+    public static func isArtifact(_ id: String) -> Bool {
+        let lower = id.lowercased()
+        return lower.contains("debris") || lower.contains("fragment") || lower.contains("artifact")
+    }
+
     private static func m(_ id: String, _ name: String, _ sym: String, _ hex: String, _ rarity: MineralRarity,
                           _ use: String, laser: Int, abundant: Bool = false, shape: OreShape) -> MineralMeta {
         MineralMeta(id: id, name: name, symbol: sym, colorHex: hex, rarity: rarity, constructionUse: use,

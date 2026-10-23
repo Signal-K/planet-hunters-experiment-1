@@ -43,6 +43,13 @@ export const MINERAL_META: Record<string, MineralMeta> = {
   fireball_fragment: { name: 'Fireball Fragment', sym: 'Fb', color: '#b7e3ff', price: FIREBALL_FRAGMENT_PRICE, rarity: 'exotic', constructionUse: 'Event fragment; sell at market', laserAccess: 1, shape: 'diamond', cargoUnits: 0 },
 }
 
+/** Event evidence is a research reward, never a commodity. Keep this rule
+ * ID-based so newly added debris, fragments, and artifact records inherit the
+ * same protection without another market exception. */
+export function isArtifactMineralId(id: string): boolean {
+  return /(?:^|[_-])(debris|fragment|artifact)(?:$|[_-])/i.test(id)
+}
+
 /** Rarity band per mineral, for anything pricing against MINERAL_VALUE. */
 export const MINERAL_RARITY: Record<string, MineralRarity> = Object.fromEntries(
   Object.entries(MINERAL_META).map(([id, meta]) => [id, meta.rarity as MineralRarity]),

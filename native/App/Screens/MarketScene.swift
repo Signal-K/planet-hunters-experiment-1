@@ -177,7 +177,13 @@ struct MarketScreen: View {
                     .accessibilityIdentifier("market-price-\(q.id)")
                 trendMark(trend)
             }
-            if tab == .sell && q.held > 0 { sellActions(q) }
+            if tab == .sell && q.held > 0 {
+                if Minerals.isArtifact(q.id) {
+                    Text("PROTECTED RESEARCH EVIDENCE").font(AppFont.display(14, "ExtraBold")).tracking(1.1).foregroundStyle(Theme.blue)
+                } else {
+                    sellActions(q)
+                }
+            }
             if tab == .buy { buyActions(q, blocker: blocker) }
             if tab == .alerts { alertActions(q, alert: alert) }
         }

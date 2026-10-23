@@ -15,20 +15,17 @@ describe('marketplace', () => {
     const board = spotBoard(s.player)
     expect(board.length).toBeGreaterThan(3)
     expect(board.find(q => q.id === 'iron')?.held).toBe(3)
-    for (const q of board) expect(q.ask).toBeGreaterThan(q.spot)
+    for (const q of board.filter(q => q.spot > 0)) expect(q.ask).toBeGreaterThan(q.spot)
   })
 
   it('hides Leonid and Geminid rows until their showers start', () => {
     const october = spotBoard(state().player, undefined, Date.parse('2026-10-20T12:00:00Z'))
     expect(october.find(q => q.id === 'leonid_debris')).toBeUndefined()
     expect(october.find(q => q.id === 'geminid_debris')).toBeUndefined()
-    expect(october.find(q => q.id === 'orionid_debris')).toBeTruthy()
-    const leonids = spotBoard(state().player, undefined, Date.parse('2026-11-17T00:00:00Z'))
-    expect(leonids.find(q => q.id === 'leonid_debris')).toBeTruthy()
-    expect(leonids.find(q => q.id === 'geminid_debris')).toBeUndefined()
-    const geminids = spotBoard(state().player, undefined, Date.parse('2026-12-13T00:00:00Z'))
-    expect(geminids.find(q => q.id === 'geminid_debris')).toBeTruthy()
-    expect(geminids.find(q => q.id === 'leonid_debris')).toBeTruthy()
+    expect(october.find(q => q.id === 'orionid_debris')).toBeUndefined()
+    const later = spotBoard(state().player, undefined, Date.parse('2026-12-13T00:00:00Z'))
+    expect(later.find(q => q.id === 'leonid_debris')).toBeUndefined()
+    expect(later.find(q => q.id === 'geminid_debris')).toBeUndefined()
   })
 
   it('buying costs the ask, adds to the stash and never lets buy-then-sell profit', () => {
