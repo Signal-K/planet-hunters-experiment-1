@@ -36,7 +36,7 @@ public struct CalendarCell: Equatable, Sendable {
 }
 
 public enum ResearchStampRules {
-    /// The weekly revenue bonus the community bar will pay once it is served (placeholder, same as web).
+    /// Mirrors pocketbase/research.go and web `COMMUNITY_GOAL`: every player's stamps this UTC month add to one bar.
     public static let communityGoal = 1000
     public static let communityWeeklyRevenuePct = 3
     static let dayMs: Double = 86_400_000
@@ -102,11 +102,31 @@ public enum ResearchStampRules {
     }
 
     public struct CommunityBar: Equatable, Sendable {
-        public let total: Int, goal: Int, fill: Double, reached: Bool, bonusPct: Int
+        public let total: Int, goal: Int, fill: Double, reached: Bool, bonusPct: Int, bonusUntil: Double?
     }
-    public static func communityBar(own: Int, others: Int = 0) -> CommunityBar {
-        let total = others + own
-        return CommunityBar(total: total, goal: communityGoal, fill: min(1, Double(total) / Double(communityGoal)), reached: total >= communityGoal, bonusPct: communityWeeklyRevenuePct)
+    /// SSL-673: `server.others` leaves out this player, so own stamps not yet synced count once.
+    public static func communityBar(own: Int, server: CommunityResearch? = nil) -> CommunityBar {
+        let goal = server?.goal ?? communityGoal
+        let total = (server?.others ?? 0) + own
+        return CommunityBar(total: total, goal: goal, fill: min(1, Double(total) / Double(goal)), reached: server?.reachedAt != nil,
+                            bonusPct: server?.bonusPct ?? communityWeeklyRevenuePct, bonusUntil: server?.bonusUntil)
+    }
+
+    /// Exchange ore sells pay this much more while the bonus week is open (web `RESEARCH_BONUS_RATE`).
+    public static var bonusRate: Double { Double(communityWeeklyRevenuePct) / 100 }
+
+    /// Web saves the window as `player.researchBonusUntil`; native keeps it in `extras` so it round-trips.
+    public static func bonusUntil(_ p: Player) -> Double? {
+        if case let .number(v)? = p.extras["researchBonusUntil"], v.isFinite { return v }
+        return nil
+    }
+    public static func bonusActive(_ p: Player, now: Double) -> Bool { bonusUntil(p).map { now < $0 } ?? false }
+    /// Keep the latest window the server reported. Returns false when nothing changes.
+    @discardableResult
+    public static func noteBonus(_ p: inout Player, until: Double?) -> Bool {
+        guard let until, until.isFinite, until > (bonusUntil(p) ?? 0) else { return false }
+        p.extras["researchBonusUntil"] = .number(until)
+        return true
     }
 
     /// Today's research tasks, one per stamp kind a player can earn now. Same copy as web `DAILY_TASKS`.
@@ -115,6 +135,44 @@ public enum ResearchStampRules {
         (.survey, "Finish a survey scan"),
         (.event, "Catch debris during a sky event"),
     ]
+    /// SSL-674: a survey flight to a world the player discovered (web `isDiscoveryMission`).
+    public static func isDiscoveryMission(_ id: String) -> Bool { id.hasPrefix("exo-survey-") }
+    /// Shown only once a discovery has opened a survey flight, so a new player never sees a task they cannot do.
+    public static let discoveryTask: (kind: StampKind, label: String) = (.discoveryMission, "Fly a survey to a world you discovered")
+    public static func tasks(hasDiscovery: Bool) -> [(kind: StampKind, label: String)] { hasDiscovery ? dailyTasks + [discoveryTask] : dailyTasks }
     public static let title = "Daily research"
-    public static let blurb = "Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% weekly revenue. Miss a day and nothing is lost."
+    public static let blurb = "Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% on ore sells for a week. Miss a day and nothing is lost."
+}
+
+/// `GET /api/community/research` (pocketbase/research.go).
+public struct CommunityResearch: Codable, Equatable, Sendable {
+    public var month: String
+    public var others: Int
+    public var goal: Int
+    public var bonusPct: Int
+    public var reachedAt: Double?
+    public var bonusUntil: Double?
+
+    public init(month: String, others: Int, goal: Int, bonusPct: Int, reachedAt: Double?, bonusUntil: Double?) {
+        self.month = month; self.others = others; self.goal = goal; self.bonusPct = bonusPct; self.reachedAt = reachedAt; self.bonusUntil = bonusUntil
+    }
+}
+
+public struct CommunityResearchAPI: Sendable {
+    public var baseURL: URL
+    public var token: String
+    public var session: URLSession
+
+    public init(baseURL: URL, token: String, session: URLSession = .shared) {
+        self.baseURL = baseURL; self.token = token; self.session = session
+    }
+
+    /// Nil when offline or the server refuses: the bar then shows the player's own stamps.
+    public func fetch() async -> CommunityResearch? {
+        var request = URLRequest(url: baseURL.appendingPathComponent("api/community/research"))
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        guard let (data, response) = try? await session.data(for: request),
+              let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { return nil }
+        return try? JSONDecoder().decode(CommunityResearch.self, from: data)
+    }
 }

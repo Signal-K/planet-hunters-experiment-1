@@ -24,6 +24,7 @@ import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsSheet from '@/components/game/FriendsSheet'
+import NotificationBell from '@/components/game/NotificationBell'
 import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import SuiteHopRail from '@/components/game/SuiteHopRail'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
@@ -35,6 +36,7 @@ import { ScreenContent } from '@/components/game/GameScreenRouter'
 import { useHelpOpen } from '@/lib/help/open-state'
 import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
+import { heartbeatFriendPresence } from '@/lib/friends/client'
 import OrionidsShowerChrome from '@/components/game/orionids/OrionidsShowerChrome'
 
 function GameChrome({ children }: { children: ReactNode }) {
@@ -74,6 +76,16 @@ function GameChrome({ children }: { children: ReactNode }) {
   // GameApp's equivalent effect for the legacy route shell.
   useEffect(() => {
     initPostHog()
+  }, [])
+
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible' && pbLandnam.authStore.isValid) void heartbeatFriendPresence().catch(() => undefined)
+    }
+    refresh()
+    const interval = window.setInterval(refresh, 60_000)
+    document.addEventListener('visibilitychange', refresh)
+    return () => { window.clearInterval(interval); document.removeEventListener('visibilitychange', refresh) }
   }, [])
 
   useEffect(() => {
@@ -478,6 +490,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
+      {!game.authGateOpen && <NotificationBell />}
       {communityOpen && <CommunityHubSheet onClose={() => setCommunityOpen(false)} />}
     </main>
   )

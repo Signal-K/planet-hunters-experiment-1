@@ -22,10 +22,13 @@ import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsSheet from '@/components/game/FriendsSheet'
+import NotificationBell from '@/components/game/NotificationBell'
 import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 import { applyStoredOrientation } from '@/lib/orientation'
+import { heartbeatFriendPresence } from '@/lib/friends/client'
+import { pbLandnam } from '@/lib/pb-landnam'
 
 function GameCanvas() {
   const game = useGame()
@@ -103,6 +106,18 @@ function GameCanvas() {
 
   useEffect(() => {
     applyStoredOrientation()
+  }, [])
+
+  // Presence is a short server-side lease. Refresh only for an authenticated,
+  // visible game client so a closed tab naturally becomes offline.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible' && pbLandnam.authStore.isValid) void heartbeatFriendPresence().catch(() => undefined)
+    }
+    refresh()
+    const interval = window.setInterval(refresh, 60_000)
+    document.addEventListener('visibilitychange', refresh)
+    return () => { window.clearInterval(interval); document.removeEventListener('visibilitychange', refresh) }
   }, [])
 
   useEffect(() => {
@@ -336,6 +351,7 @@ function GameCanvas() {
           corner button above; everything else routes through the base. */}
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
+      {!game.authGateOpen && <NotificationBell />}
       {hubOpen && <CommunityHubSheet onClose={() => setHubOpen(false)} />}
     </main>
   )

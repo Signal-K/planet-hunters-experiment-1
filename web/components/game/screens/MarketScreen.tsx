@@ -4,6 +4,7 @@ import { requestAlertPermission } from '@/lib/priceAlertNotify'
 import { useEffect, useState } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
 import { openMarketSellPrice } from '@/lib/systems/EconomySystem'
+import { COMMUNITY_WEEKLY_REVENUE_PCT, researchBonusActive } from '@/lib/research/stamps'
 import { spotBoard, type PriceAlert, type SpotQuote } from '@/lib/systems/MarketplaceSystem'
 import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
 import { formatCurrency } from '@/lib/format'
@@ -28,6 +29,8 @@ interface MarketScreenProps {
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
   dailyEconomySnapshot?: DailyEconomySnapshot
+  /** SSL-673: end of the community research bonus week. Ore sells pay +3% before it. */
+  researchBonusUntil?: number
   francs: number
   /** The Exchange building. Buying and price alerts need it. */
   exchangeBuilt: boolean
@@ -48,13 +51,13 @@ interface MarketScreenProps {
 }
 
 export default function MarketScreen({
-  stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, exchangeBuilt, priceAlerts = [], buyBlocker,
+  stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, researchBonusUntil, francs, exchangeBuilt, priceAlerts = [], buyBlocker,
   onSell, onBuy, onSetAlert, onRemoveAlert, refinedGoods, onSellRefined, onBack, onBuild, clientId,
 }: MarketScreenProps) {
   const [tab, setTab] = useState<Tab>('sell')
   const [armed, setArmed] = useState(false)
   const [targets, setTargets] = useState<Record<string, number>>({})
-  const prices: SpotQuote[] = spotBoard({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot }, clientId)
+  const prices: SpotQuote[] = spotBoard({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, researchBonusUntil }, clientId)
   // Selling leads with what you hold; the other tabs list the whole board by price.
   const board = tab === 'sell' ? [...prices].sort((a, b) => Number(b.held > 0) - Number(a.held > 0)) : prices
   const refined = REFINERY_RECIPES.map(r => ({ recipe: r, qty: refinedGoods[r.id] ?? 0 })).filter(r => r.qty > 0)
@@ -91,6 +94,10 @@ export default function MarketScreen({
           <h2 className={styles.title}>Spot prices</h2>
           <span className={styles.balance} data-testid="market-balance" aria-label={`Balance ${formatCurrency(francs)}`}>{formatCurrency(francs, { compact: true })}</span>
         </div>
+
+        {tab === 'sell' && researchBonusActive({ researchBonusUntil }, Date.now()) && (
+          <p className={styles.note} data-testid="market-research-bonus">Community research bonus: ore sells pay +{COMMUNITY_WEEKLY_REVENUE_PCT}% this week.</p>
+        )}
 
         <div className={styles.tabs} role="tablist" aria-label="Marketplace">
           {(['sell', 'buy', 'alerts'] as const).map(id => (

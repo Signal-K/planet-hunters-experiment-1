@@ -65,6 +65,7 @@ import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
+import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
 // Shared per-screen render map — the single source of truth for "which
@@ -106,6 +107,7 @@ function ScreenBody({
   const [launchPending, setLaunchPending] = useState(() =>
     process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('launchscene'))
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
+  const communityResearch = useCommunityResearch(screen === 'instrument-hub' || screen === 'market', game.setPlayer)
 
   useEffect(() => {
     if (screen !== 'hub') return
@@ -341,6 +343,7 @@ function ScreenBody({
       return (
         <InstrumentHubScreen
           player={game.player}
+          communityResearch={communityResearch}
           onClaimSurveyPlot={game.claimSaturnSurveyTerritory}
           targets={game.catalog.targets}
           onStartScan={game.startSurveyScan}
@@ -469,6 +472,7 @@ function ScreenBody({
           marketSupply={game.player.marketSupply ?? {}}
           marketSupplyUpdatedAt={game.player.marketSupplyUpdatedAt ?? {}}
           dailyEconomySnapshot={game.player.dailyEconomySnapshot}
+          researchBonusUntil={game.player.researchBonusUntil}
           francs={game.player.francs}
           exchangeBuilt={exchangeBuilt(game.player)}
           priceAlerts={game.player.priceAlerts}

@@ -12,6 +12,7 @@ import { structureIsStaffed } from './AcademySystem'
 import { buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
 import { freeOperationsUnlocked, trainingFinished } from './AgencyOnboardingSystem'
+import { RESEARCH_BONUS_RATE, researchBonusActive } from '@/lib/research/stamps'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
 export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
@@ -59,12 +60,12 @@ export function openMarketSellPrice(basePrice: number, unitsSold: number): numbe
  *  honoured here rather than dropped from the display. */
 export function sellUnitPrice(
   mineralId: string,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot'>,
+  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchBonusUntil'>,
   clientId?: string,
   now: number = Date.now(),
-): { price: number; base: number; premiumApplied: boolean } {
+): { price: number; base: number; premiumApplied: boolean; bonusApplied: boolean } {
   const meta = MINERAL_META[mineralId]
-  if (!meta) return { price: 0, base: 0, premiumApplied: false }
+  if (!meta) return { price: 0, base: 0, premiumApplied: false, bonusApplied: false }
   const snapshotQuote = player.dailyEconomySnapshot?.prices[mineralId]
   const unitsSold = decayedUnitsSold(player.marketSupply?.[mineralId] ?? 0, player.marketSupplyUpdatedAt?.[mineralId], now)
   // A published daily snapshot is authoritative. The old per-player supply
@@ -73,17 +74,22 @@ export function sellUnitPrice(
   const base = snapshotQuote?.price ?? openMarketSellPrice(meta.price, unitsSold)
   const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) : undefined
   const premiumApplied = !!client && client.mineralPreferences.includes(mineralId) && client.payoutPremium > 0
+  const quoted = premiumApplied ? Math.round(base * (1 + client!.payoutPremium)) : base
+  // SSL-673: the community research week pays a little more on every ore sale. Buy prices read the same
+  // quote without it (MarketplaceSystem.buyUnitPrice), so the bonus is never a buy-and-resell loop.
+  const bonusApplied = researchBonusActive(player, now)
   return {
-    price: premiumApplied ? Math.round(base * (1 + client!.payoutPremium)) : base,
+    price: bonusApplied ? Math.round(quoted * (1 + RESEARCH_BONUS_RATE)) : quoted,
     base,
     premiumApplied,
+    bonusApplied,
   }
 }
 
 /** Total francs a stash (or a subset of it) would fetch at current prices. */
 export function sellQuote(
   stash: Record<string, number>,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot'>,
+  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchBonusUntil'>,
   clientId?: string,
   now: number = Date.now(),
 ): number {

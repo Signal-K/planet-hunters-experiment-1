@@ -447,9 +447,12 @@ function repairStateRoute(rawInput: GameState): GameState {
        ?? input.player.dailyClientPool?.missions.find(m => m.id === input.missionId)
        ?? null)
     : null
-  const hasRuntimeMission = !!input.missionId && RUNTIME_MISSION_IDS.has(input.missionId)
+  // SSL-674: a survey flight to a discovered world is built at runtime from the save, so a reload mid-run keeps it.
+  const discovered = input.player.discoveredExoplanetTargets ?? {}
+  const hasRuntimeMission = !!input.missionId && (RUNTIME_MISSION_IDS.has(input.missionId)
+    || Object.keys(discovered).some(id => input.missionId === `exo-survey-${id}`))
   const target = input.targetId ? TARGETS.find(t => t.id === input.targetId) ?? null : null
-  const hasRuntimeTarget = !!input.targetId && RUNTIME_TARGET_IDS.has(input.targetId)
+  const hasRuntimeTarget = !!input.targetId && (RUNTIME_TARGET_IDS.has(input.targetId) || input.targetId in discovered)
   // A Free Ops player's bare /game/fab (no mission, no target) is the Free Ops
   // Build objective screen, which owns that route (see canonicalGameRoute). It
   // is not a lost mission context, so it must survive a cold load.
@@ -685,6 +688,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.asteroidClassifications = mergeKeyed(current.player.asteroidClassifications, remoteState.player?.asteroidClassifications)
   merged.player.saturnClassifications = mergeKeyed(current.player.saturnClassifications, remoteState.player?.saturnClassifications)
   merged.player.researchStamps = mergeStamps(current.player.researchStamps, remoteState.player?.researchStamps)
+  merged.player.researchBonusUntil = Math.max(current.player.researchBonusUntil ?? 0, remoteState.player?.researchBonusUntil ?? 0) || undefined
   merged.player.badges = mergeBadges(current.player.badges, remoteState.player?.badges)
   merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)
   merged.player.meteoriteMastery = Math.max(current.player.meteoriteMastery ?? 0, remoteState.player?.meteoriteMastery ?? 0)

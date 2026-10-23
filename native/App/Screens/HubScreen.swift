@@ -6,10 +6,14 @@ import LandnamCore
 /// HUD positions come from `HUDZones` (shared/layout/base-hud-zones.json), measured from the safe area.
 struct HubScreen: View {
     @Environment(GameStore.self) private var store
+    @Environment(Services.self) private var services: Services?
     /// Snapshots have no real safe area; fixtures pass the device insets they want to show.
     var safeAreaOverride: EdgeInsets?
     var biome: EarthBiome?
     @State private var showSettings = false
+    @State private var showFriends = false
+    @State private var showNotifications = false
+    @State private var notificationCount = 0
     @State private var menuOpen = false
     /// In-scene placement: pick an unlocked structure, then tap a free slot (the Build screen is this mode).
     @State private var placing: Bool
@@ -51,7 +55,12 @@ struct HubScreen: View {
                 .position(x: full.width / 2 - origin.width, y: full.height / 2 - origin.height)
         }
         .background(Theme.bg.ignoresSafeArea())
-        .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
+        .overlay {
+            if showSettings { SettingsSheet(onClose: { showSettings = false }) }
+            if showFriends { FriendsSheet(onClose: { showFriends = false }) }
+            if showNotifications { NotificationTray(onClose: { showNotifications = false; Task { await refreshNotifications() } }) }
+        }
+        .task { await refreshNotifications() }
     }
 
     private func scene(size: CGSize, insets: EdgeInsets) -> some View {
@@ -243,7 +252,7 @@ struct HubScreen: View {
     private func topLeftHud(insets: EdgeInsets, portrait: Bool) -> some View {
         let z = zones.topLeft
         return VStack(alignment: .leading, spacing: z.gap) {
-            HudGearClock(onSettings: { showSettings = true })
+            HudGearClock(onSettings: { showSettings = true }, onFriends: { showFriends = true }, onNotifications: { showNotifications = true }, notificationCount: notificationCount)
             if store.player.activeMission != nil {
                 ContractCard(width: z.contractCard.width, collapsible: portrait && z.contractCard.collapseInPortrait)
             }
@@ -283,6 +292,11 @@ struct HubScreen: View {
                 .position(x: width * 0.5, y: height * 0.34)
             }
         }
+    }
+
+    private func refreshNotifications() async {
+        guard let api = services?.notificationsAPI() else { notificationCount = 0; return }
+        notificationCount = (try? await api.list().count) ?? 0
     }
 
 }

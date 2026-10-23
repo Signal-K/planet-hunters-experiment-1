@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addStamp, type ResearchStamps, communityBar, mergeStamps, monthGrid, sanitizeStamps, stampDayKey, stampStreak, stampsInMonth } from './stamps'
+import { addStamp, type ResearchStamps, communityBar, mergeStamps, monthGrid, sanitizeStamps, stampDayKey, stampStreak, stampsInMonth, noteResearchBonus, researchBonusActive } from './stamps'
 
 const D = 86_400_000
 const t = Date.UTC(2026, 9, 22, 12)
@@ -35,7 +35,19 @@ describe('research stamps', () => {
   })
   it('counts the month and fills the community bar', () => {
     expect(stampsInMonth({ '2026-10-01': ['survey', 'event'], '2026-09-30': ['survey'] }, 2026, 9)).toBe(2)
-    expect(communityBar(10, 500).fill).toBeCloseTo(0.51)
-    expect(communityBar(10, 995).reached).toBe(true)
+    const server = { month: '2026-10', others: 500, goal: 1000, bonusPct: 3, reachedAt: null, bonusUntil: null }
+    expect(communityBar(10, server).fill).toBeCloseTo(0.51)
+    expect(communityBar(10, server).reached).toBe(false)
+    expect(communityBar(10, { ...server, others: 995, reachedAt: t, bonusUntil: t + 7 * D }).reached).toBe(true)
+    expect(communityBar(4, null)).toMatchObject({ total: 4, goal: 1000, reached: false })
+  })
+  it('keeps the latest bonus window and opens it only inside the week', () => {
+    const p = noteResearchBonus({ researchBonusUntil: undefined }, t + 7 * D)
+    expect(p.researchBonusUntil).toBe(t + 7 * D)
+    expect(noteResearchBonus(p, t)).toBe(p)
+    expect(noteResearchBonus(p, null)).toBe(p)
+    expect(researchBonusActive(p, t)).toBe(true)
+    expect(researchBonusActive(p, t + 7 * D)).toBe(false)
+    expect(researchBonusActive(undefined, t)).toBe(false)
   })
 })

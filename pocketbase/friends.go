@@ -37,6 +37,7 @@ func registerFriendsRoutes(app core.App) {
 		g.POST("/username", friendsSetUsernameHandler(app))
 		g.POST("/request", friendsRequestHandler(app))
 		g.POST("/respond", friendsRespondHandler(app))
+		g.POST("/presence", friendsPresenceHandler(app))
 		g.DELETE("/{id}", friendsRemoveHandler(app))
 		g.GET("/list", friendsListHandler(app))
 		g.GET("/base/{friendId}", friendsBaseHandler(app))
@@ -76,6 +77,17 @@ func publicUser(user *core.Record) map[string]any {
 		"id":       user.Id,
 		"username": usernameFromUser(user),
 	}
+}
+
+// friendOnlineWindow deliberately represents recent, authenticated game
+// activity, not a permanent connection. Clients refresh it while foregrounded;
+// an expired window is therefore safely shown as offline after a crash or a
+// closed tab without introducing a second presence store.
+const friendOnlineWindow = 2 * time.Minute
+
+func friendIsOnline(user *core.Record, now time.Time) bool {
+	lastSeen := user.GetDateTime("lastExchangeAt").Time()
+	return !lastSeen.IsZero() && !lastSeen.After(now) && now.Sub(lastSeen) <= friendOnlineWindow
 }
 
 func loadUser(app core.App, id string) (*core.Record, error) {
@@ -157,6 +169,16 @@ func friendsSetUsernameHandler(app core.App) func(e *core.RequestEvent) error {
 			return apis.NewApiError(http.StatusInternalServerError, "failed to save username", nil)
 		}
 		return e.JSON(http.StatusOK, publicUser(e.Auth))
+	}
+}
+
+func friendsPresenceHandler(app core.App) func(e *core.RequestEvent) error {
+	return func(e *core.RequestEvent) error {
+		e.Auth.Set("lastExchangeAt", time.Now().UTC().Format(time.RFC3339Nano))
+		if err := app.Save(e.Auth); err != nil {
+			return apis.NewApiError(http.StatusInternalServerError, "failed to update presence", nil)
+		}
+		return e.JSON(http.StatusOK, map[string]any{"ok": true})
 	}
 }
 
@@ -267,7 +289,8 @@ func friendsListHandler(app core.App) func(e *core.RequestEvent) error {
 			return apis.NewApiError(http.StatusInternalServerError, "failed to list friendships", nil)
 		}
 
-		today := aestDateKey(time.Now())
+		now := time.Now()
+		today := aestDateKey(now)
 
 		friends := []map[string]any{}
 		incoming := []map[string]any{}
@@ -284,6 +307,7 @@ func friendsListHandler(app core.App) func(e *core.RequestEvent) error {
 			}
 			entry := publicUser(other)
 			entry["friendshipId"] = rec.Id
+			entry["online"] = friendIsOnline(other, now)
 
 			switch rec.GetString("status") {
 			case "accepted":

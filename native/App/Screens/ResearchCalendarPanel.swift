@@ -6,6 +6,10 @@ import LandnamCore
 struct ResearchCalendarPanel: View {
     let stamps: ResearchStamps
     let now: Double
+    /// SSL-673: the shared monthly total, nil until it loads or when offline.
+    var community: CommunityResearch? = nil
+    /// SSL-674: a discovery has opened a survey flight, so the discovery task row shows.
+    var hasDiscovery = false
 
     private static let outline = Theme.hex(0x16293B)
     private static let hullLit = Theme.hex(0xFAF7F0)
@@ -25,7 +29,7 @@ struct ResearchCalendarPanel: View {
     var body: some View {
         let year = utc.year!, month = utc.month!
         let streak = ResearchStampRules.streak(stamps, now: now)
-        let bar = ResearchStampRules.communityBar(own: ResearchStampRules.stampsIn(stamps, year: year, month: month))
+        let bar = ResearchStampRules.communityBar(own: ResearchStampRules.stampsIn(stamps, year: year, month: month), server: community)
         let today = stamps.days[ResearchStampRules.dayKey(now)] ?? []
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
@@ -37,7 +41,7 @@ struct ResearchCalendarPanel: View {
             Text(ResearchStampRules.blurb).font(AppFont.body(14)).foregroundStyle(Self.outline.opacity(0.85)).fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("research-blurb")
             VStack(spacing: 6) {
-                ForEach(ResearchStampRules.dailyTasks, id: \.kind) { task in
+                ForEach(ResearchStampRules.tasks(hasDiscovery: hasDiscovery), id: \.kind) { task in
                     let done = today.contains(task.kind)
                     HStack(spacing: 10) {
                         Circle().fill(done ? Self.blue : Color.clear).frame(width: 16, height: 16).overlay(Circle().stroke(Self.outline, lineWidth: 2))
@@ -69,8 +73,9 @@ struct ResearchCalendarPanel: View {
                 .frame(height: 16).clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Self.outline, lineWidth: 2))
                 .accessibilityElement().accessibilityLabel("Community stamps").accessibilityValue("\(bar.total) of \(bar.goal)")
-                Text(bar.reached ? "Goal reached: +\(bar.bonusPct)% weekly revenue." : "Reach the goal for +\(bar.bonusPct)% weekly revenue (placeholder).")
-                    .font(AppFont.body(14)).foregroundStyle(Self.outline.opacity(0.85))
+                Text(stateLine(bar))
+                    .font(AppFont.body(14)).foregroundStyle(Self.outline.opacity(0.85)).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("research-community-state")
             }.accessibilityIdentifier("research-community-bar")
         }
         .padding(12)
@@ -110,5 +115,18 @@ struct ResearchCalendarPanel: View {
             }
             .opacity(c.future ? 0.5 : 1)
             .accessibilityLabel("\(c.day)\(stamped ? ", \(c.kinds.count) research task\(c.kinds.count == 1 ? "" : "s") stamped" : "")")
+    }
+}
+
+extension ResearchCalendarPanel {
+    /// Same three states and copy as web `research-community-state`.
+    func stateLine(_ bar: ResearchStampRules.CommunityBar) -> String {
+        if let until = bar.bonusUntil, now < until {
+            var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: "UTC")!
+            let d = c.dateComponents([.day, .month], from: Date(timeIntervalSince1970: until / 1000))
+            return "Goal reached. Ore sells pay +\(bar.bonusPct)% until \(d.day!) \(Self.months[d.month! - 1])."
+        }
+        if bar.reached { return "Goal reached this month. The +\(bar.bonusPct)% week has ended." }
+        return "Fill the bar together and everyone's ore sells pay +\(bar.bonusPct)% for a week."
     }
 }

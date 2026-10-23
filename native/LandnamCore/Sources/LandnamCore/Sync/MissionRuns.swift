@@ -138,6 +138,10 @@ public enum CloudMerge {
         n.player.discoveredExoplanetTargets = r.discoveredExoplanetTargets.merging(l.discoveredExoplanetTargets) { _, mine in mine }
         n.player.tessClassifications = r.tessClassifications.merging(l.tessClassifications) { _, mine in mine }
         n.player.asteroidClassifications = r.asteroidClassifications.merging(l.asteroidClassifications) { _, mine in mine }
+        // SSL-674: research stamps are a log, so two devices keep both (web `mergeStamps`); the bonus window never shrinks.
+        n.player.researchStamps = ResearchStampRules.merge(l.researchStamps, r.researchStamps)
+        ResearchStampRules.noteBonus(&n.player, until: ResearchStampRules.bonusUntil(l))
+        ResearchStampRules.noteBonus(&n.player, until: ResearchStampRules.bonusUntil(r))
         n.player.saturnClassifications = r.saturnClassifications.merging(l.saturnClassifications) { _, mine in mine }
         // Run resumability: keep a local in-flight run unless the remote stage moved past it; adopt a remote run when local has none.
         if l.activeMission != nil, both || r.missionsDone <= l.missionsDone {

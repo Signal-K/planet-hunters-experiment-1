@@ -428,7 +428,10 @@ enum SceneCatalog {
             for day in 1...today where day % 3 != 0 {
                 p.researchStamps.days["\(prefix)\(String(format: "%02d", day))"] = day % 4 == 0 ? [.classification, .event] : [.survey]
             }
-            return ResearchCalendarPanel(stamps: p.researchStamps, now: wswNoon).padding(12).background(Theme.hex(0x1A2744))
+            // SSL-673: the served total has filled the bar and the bonus week is open.
+            let community = CommunityResearch(month: String(todayKey.prefix(7)), others: 1004, goal: 1000, bonusPct: 3, reachedAt: wswNoon - 86_400_000, bonusUntil: wswNoon + 6 * 86_400_000)
+            p.researchStamps.days[todayKey, default: []].append(.discoveryMission)
+            return ResearchCalendarPanel(stamps: p.researchStamps, now: wswNoon, community: community, hasDiscovery: true).padding(12).background(Theme.hex(0x1A2744))
         },
         scene("mission-board-wsw-phone", 874) {
             MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
@@ -660,6 +663,12 @@ enum SceneCatalog {
         scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-landscape", 402, w: 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-desktop", 900, w: 1440) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        // SSL-673: inside the community research bonus week, ore quotes pay +3% and the note says so.
+        scene("exchange-research-bonus-phone", 874) {
+            var gs = exchangeState()
+            ResearchStampRules.noteBonus(&gs.player, until: Date().timeIntervalSince1970 * 1000 + 86_400_000)
+            return MarketScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
+        },
         scene("exchange-buy-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-alerts-phone", 844, w: 390) { MarketScreen(tab: .alerts).environment(GameStore(state: exchangeAlertState())).environment(\.flatLayout, true) },
         scene("exchange-locked-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeLockedState())).environment(\.flatLayout, true) },

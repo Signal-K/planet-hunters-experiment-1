@@ -1,4 +1,4 @@
-import { addStamp, type StampKind } from '@/lib/research/stamps'
+import { addStamp, isDiscoveryMission, type StampKind } from '@/lib/research/stamps'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { useCallback, useRef } from 'react'
@@ -1364,11 +1364,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       )
       // SSL-475: our own World Space Week badge for this mission type, graded at
       // completion. The Rocket Revolution launch badge is granted at launch.
-      const wswBadgedPlayer = grantWswBadges(
+      const wswGraded = grantWswBadges(
         constructionPlayer,
         wswMissionTypeFor(mission, s.player.freeOperations),
         skyEventNow(isDevLauncherEnabled()),
       )
+      // SSL-674: a survey flight to a world the player discovered is community research.
+      const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(wswGraded, 'discovery-mission', Date.now()) : wswGraded
       const next: GameState = {
         ...s,
         player: {

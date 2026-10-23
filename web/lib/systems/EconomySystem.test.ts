@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
 import { normalizeAndRepair, type PartialSave } from '@/lib/game-state'
 import { MINERAL_META, CLIENT_SLOTS, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, STRUCTURES, customizerPartById } from '@/lib/data'
+import { buyUnitPrice } from './MarketplaceSystem'
 import { applyBuyLaserCapacitor, applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, rocketPurchaseRefusal, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
@@ -488,6 +489,19 @@ describe('sell quote and sale agree', () => {
     const { price, base, premiumApplied } = sellUnitPrice(unwanted, s.player, premiumClient.id)
     expect(premiumApplied).toBe(false)
     expect(price).toBe(base)
+  })
+
+  it('pays the community research bonus on quote and credit inside the week only (SSL-673)', () => {
+    const now = Date.UTC(2026, 9, 23)
+    const open = makeState({ stash: { iron: 10 }, researchBonusUntil: now + 1000 })
+    const shut = makeState({ stash: { iron: 10 }, researchBonusUntil: now - 1 })
+    const plain = sellUnitPrice('iron', shut.player, undefined, now)
+    const boosted = sellUnitPrice('iron', open.player, undefined, now)
+    expect(plain.bonusApplied).toBe(false)
+    expect(boosted.bonusApplied).toBe(true)
+    expect(boosted.price).toBe(Math.round(plain.price * 1.03))
+    expect(applySellMinerals(open, 'iron', 10, now, null).player.francs - open.player.francs).toBe(sellQuote({ iron: 10 }, open.player, undefined, now))
+    expect(buyUnitPrice('iron', open.player, undefined, now)).toBe(buyUnitPrice('iron', shut.player, undefined, now))
   })
 })
 
