@@ -41,20 +41,13 @@ const VEHICLES = [
   { id: ROCKET_IDS.surveyor, rocketId: ROCKET_IDS.surveyor, label: 'Surveyor' },
 ] as const
 
-function RocketThumbnail({ tier }: { tier: number }) {
-  return (
-    <svg className={styles.vehicleIcon} viewBox="0 0 210 107" aria-hidden="true" shapeRendering="crispEdges">
-      <g stroke="var(--ln-world-outline)" strokeWidth="4" strokeLinejoin="round">
-        <path d="M24 42h114l44 11-44 12H24z" fill="var(--ln-world-hull-lit)" />
-        <path d="M43 42 30 26l30 16M43 65 30 81l30-16" fill="var(--ln-world-trim-blue)" />
-        <path d="M18 44h12v19H18z" fill="var(--ln-world-asphalt)" />
-        <path d="M110 43h10v21h-10z" fill="var(--ln-world-trim-blue)" stroke="none" />
-        <rect x="76" y="48" width="13" height="10" rx="4" fill="var(--ln-world-glass)" strokeWidth="2" />
-        {tier >= 2 && <path d="M91 30h38v12H91z" fill="var(--ln-world-trim-blue)" />}
-        {tier >= 3 && <path d="M91 65h38v12H91z" fill="var(--ln-world-trim-blue)" />}
-      </g>
-    </svg>
-  )
+function RocketThumbnail({ rocketId, tier }: { rocketId?: string; tier: number }) {
+  const source = rocketId === ROCKET_IDS.prospector
+    ? '/game/assets/ships/ship_sr2.png'
+    : rocketId === ROCKET_IDS.surveyor
+      ? '/parts/hull_mk3_heavy_t3.png'
+      : '/game/assets/ships/ship_sr1.png'
+  return <img className={styles.vehicleIcon} src={source} alt="" aria-hidden="true" data-tier={tier} />
 }
 
 export default function HangarScreen({
@@ -124,7 +117,8 @@ export default function HangarScreen({
       {hasMission && (
         <section className={styles.preview} data-testid="hangar-vehicle-preview" aria-live="polite">
           <div className={styles.previewVisual} aria-hidden="true">
-            <RocketThumbnail tier={previewRocket?.tier ?? 1} />
+            <RocketThumbnail rocketId={previewRocket?.id} tier={previewRocket?.tier ?? 1} />
+            <img className={styles.crewSprite} src="/game/assets/actors/crew.png" alt="" />
             <span className={styles.previewStamp}>{previewRocket ? `TIER ${previewRocket.tier}` : 'SELECT'}</span>
           </div>
           <div className={styles.previewCopy}>
@@ -177,7 +171,7 @@ export default function HangarScreen({
               aria-pressed={previewRocketId === vehicle.id}
               onClick={() => setPreviewRocketId(vehicle.id)}
             >
-              <RocketThumbnail tier={rocket?.tier ?? 1} />
+              <RocketThumbnail rocketId={rocket?.id} tier={rocket?.tier ?? 1} />
               <span className={styles.label}>{vehicle.label}</span>
               {note
                 ? <span className={styles.note}>{note}</span>

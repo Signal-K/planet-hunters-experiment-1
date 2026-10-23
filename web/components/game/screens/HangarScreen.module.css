@@ -178,6 +178,8 @@
   display: block;
   width: 100%;
   height: 68px;
+  object-fit: contain;
+  image-rendering: pixelated;
   overflow: visible;
   pointer-events: none;
 }
@@ -201,8 +203,9 @@
   transform: translateX(-50%);
 }
 
-.previewVisual { position: relative; min-width: 0; }
+.previewVisual { position: relative; min-width: 0; padding-right: 18px; }
 .previewVisual .vehicleIcon { height: 64px; }
+.crewSprite { position: absolute; right: -2px; bottom: 0; width: 24px; height: 36px; object-fit: contain; image-rendering: pixelated; }
 .previewStamp {
   position: absolute;
   left: 8px;
@@ -269,6 +272,7 @@
   .vehicleIcon { height: 54px; }
   .preview { bottom: 142px; grid-template-columns: 74px 1fr auto; gap: 8px; width: calc(100% - 20px); min-height: 100px; padding: 8px; }
   .previewVisual .vehicleIcon { height: 46px; }
+  .crewSprite { width: 18px; height: 28px; }
   .previewCopy strong { font-size: 18px; }
   .previewCopy > span:last-child { font-size: 12px; }
   .previewStats { display: none; }
@@ -285,6 +289,7 @@
   .status { top: 8px; }
   .preview { bottom: 112px; min-height: 88px; grid-template-columns: 80px 1fr 180px auto; gap: 8px; padding: 6px 10px; }
   .previewVisual .vehicleIcon { height: 42px; }
+  .crewSprite { width: 18px; height: 28px; }
   .previewCopy strong { font-size: 17px; }
   .previewCopy > span:last-child { font-size: 12px; }
   .previewStats { gap: 5px; }

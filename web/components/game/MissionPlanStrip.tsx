@@ -83,7 +83,7 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
                   game.onPurchaseRocket(model.id)
                   setSheet(null)
                 }}>
-                  <span className={styles.vehicleOptionArt} aria-hidden="true"><i /><b /><em /></span>
+                  <img className={styles.vehicleOptionArt} src={model.img} alt="" aria-hidden="true" />
                   <strong>{model.name}<small>Tier {model.tier}</small></strong>
                   <span className={styles.vehicleOptionStats}><span>CAP {model.stats.cargo}</span><span>RANGE {model.stats.maxOrbit}</span><span>LASER {model.stats.drillTier}</span></span>
                   <span className={styles.vehicleOptionAction}>Stage · {cost}</span>
