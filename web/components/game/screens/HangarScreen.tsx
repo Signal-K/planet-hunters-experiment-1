@@ -28,6 +28,8 @@ interface HangarScreenProps {
   compatibleRocketIds?: string[] | null
   /** Tier of the vehicle standing in the bay, or null when the bay is empty. */
   stagedTier?: number | null
+  /** The staged vehicle currently associated with this mission, if any. */
+  selectedRocketId?: string | null
   onChooseMission?: () => void
   /** Starts building the chosen rocket for the set-up mission. */
   onBuildRocket?: (rocketId: string) => void
@@ -58,10 +60,11 @@ function RocketThumbnail({ tier }: { tier: number }) {
 export default function HangarScreen({
   francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched,
   trainingPartTry = false, onConfirmShipCustomizerBuild, onBack,
-  missionTitle = null, compatibleRocketIds = null, stagedTier = null, onChooseMission, onBuildRocket,
+  missionTitle = null, compatibleRocketIds = null, stagedTier = null, selectedRocketId = null, onChooseMission, onBuildRocket,
 }: HangarScreenProps) {
   const customizerUnlocked = trainingPartTry || hasShipCustomizer(unlockedSkillNodes) || !!crewModuleResearched || !!landingResearched
   const [customizerOpen, setCustomizerOpen] = useState(false)
+  const [previewRocketId, setPreviewRocketId] = useState<string | null>(selectedRocketId)
   const installed = shipCustomizerParts ?? {}
   const hasMission = compatibleRocketIds !== null
 
@@ -71,6 +74,9 @@ export default function HangarScreen({
     captureGameEvent('hangar_rocket_selected', { rocket_id: rocketId, cost_francs: rocket.costFrancs })
     onBuildRocket(rocketId)
   }
+
+  const previewRocket = ROCKET_MODELS.find(model => model.id === previewRocketId) ?? null
+  const previewReady = previewRocket && hasMission && compatibleRocketIds.includes(previewRocket.id)
 
   return (
     <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="hangar-screen">
@@ -103,7 +109,10 @@ export default function HangarScreen({
 
       <div className={styles.status} data-testid="hangar-status" role="status">
         {hasMission ? (
-          <span className={styles.statusText}>{missionTitle ? `Building for ${missionTitle}` : 'Choose a rocket to build'}</span>
+          <>
+            <span className={styles.statusKicker}>VEHICLE BAY</span>
+            <span className={styles.statusText}>{previewRocket ? `${previewRocket.name} selected` : 'Choose a vehicle to inspect'}</span>
+          </>
         ) : (
           <>
             <span className={styles.statusText}>No mission set up</span>
@@ -111,6 +120,39 @@ export default function HangarScreen({
           </>
         )}
       </div>
+
+      {hasMission && (
+        <section className={styles.preview} data-testid="hangar-vehicle-preview" aria-live="polite">
+          <div className={styles.previewVisual} aria-hidden="true">
+            <RocketThumbnail tier={previewRocket?.tier ?? 1} />
+            <span className={styles.previewStamp}>{previewRocket ? `TIER ${previewRocket.tier}` : 'SELECT'}</span>
+          </div>
+          <div className={styles.previewCopy}>
+            <span className={styles.previewEyebrow}>MISSION VEHICLE</span>
+            <strong>{previewRocket?.name ?? 'No vehicle selected'}</strong>
+            <span>{previewRocket ? 'Review the flight profile before staging.' : 'Choose a blueprint below to see what it can carry.'}</span>
+          </div>
+          <div className={styles.previewStats}>
+            {(['cargo', 'maxOrbit', 'drillTier'] as const).map(stat => (
+              <div key={stat} className={styles.previewStat}>
+                <span>{stat === 'maxOrbit' ? 'Range' : stat === 'drillTier' ? 'Laser' : 'Capacity'}</span>
+                <strong>{previewRocket?.stats[stat] ?? '—'}</strong>
+                <i><b style={{ width: `${previewRocket ? Math.min(100, previewRocket.stats[stat] / (stat === 'cargo' ? 18 : stat === 'maxOrbit' ? 9 : 3) * 100) : 0}%` }} /></i>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={styles.previewAction}
+            data-testid="hangar-stage-vehicle"
+            disabled={!previewReady}
+            onClick={() => previewRocket && build(previewRocket.id)}
+          >
+            {previewRocket ? `Stage ${previewRocket.name}` : 'Select a vehicle'}
+            {previewRocket && <small>{previewRocket.costFrancs === 0 ? 'FREE' : formatCurrency(previewRocket.costFrancs, { compact: true })}</small>}
+          </button>
+        </section>
+      )}
 
       <div className={styles.fleet} data-testid="hangar-fleet-grid" data-ui-zone={UI_ZONES.screenContent}>
         {VEHICLES.map(vehicle => {
@@ -132,7 +174,8 @@ export default function HangarScreen({
               data-state={sealed ? 'sealed' : incompatible ? 'incompatible' : waiting ? 'waiting' : 'ready'}
               disabled={disabled}
               aria-label={note ? `${vehicle.label}, ${note}` : `Build ${vehicle.label} for ${cost}`}
-              onClick={() => build(vehicle.id)}
+              aria-pressed={previewRocketId === vehicle.id}
+              onClick={() => setPreviewRocketId(vehicle.id)}
             >
               <RocketThumbnail tier={rocket?.tier ?? 1} />
               <span className={styles.label}>{vehicle.label}</span>

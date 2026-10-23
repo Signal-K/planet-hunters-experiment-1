@@ -20,11 +20,22 @@
 .sheet { position: fixed; z-index: 60; box-sizing: border-box; left: 0; right: 0; bottom: 0; max-height: 60vh; overflow: auto; padding: 16px; background: var(--ln-world-hull-lit); border-top: 2px solid var(--ln-world-outline); pointer-events: auto; }
 .sheet p { margin: 0 0 8px; font-size: 14px; }
 .sheet ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.sheet li button { display: flex; justify-content: space-between; gap: 16px; width: 100%; min-height: 44px; padding: 8px 16px; color: var(--ln-world-outline); font: inherit; font-size: 14px; background: none; border: 1px solid var(--ln-world-outline); }
+.sheet li button { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 72px; padding: 8px 16px; color: var(--ln-world-outline); font: inherit; font-size: 14px; background: none; border: 1px solid var(--ln-world-outline); text-align: left; }
 .sheet li button[data-current] { border-width: 2px; }
+.vehicleOptionArt { position: relative; display: block; flex: 0 0 76px; height: 32px; border-bottom: 3px solid var(--ln-world-trim-blue); }
+.vehicleOptionArt::before { content: ''; position: absolute; left: 18px; top: 7px; width: 44px; height: 14px; background: var(--ln-world-hull-lit); border: 2px solid var(--ln-world-outline); clip-path: polygon(0 0, 78% 0, 100% 50%, 78% 100%, 0 100%); }
+.vehicleOptionArt i, .vehicleOptionArt b, .vehicleOptionArt em { position: absolute; display: block; width: 11px; height: 20px; bottom: 3px; background: var(--ln-world-trim-blue); border: 2px solid var(--ln-world-outline); }
+.vehicleOptionArt i { left: 4px; transform: skewY(28deg); }
+.vehicleOptionArt b { left: 32px; bottom: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--ln-world-glass); }
+.vehicleOptionArt em { left: 62px; transform: skewY(-28deg); }
+.sheet li button > strong { display: grid; gap: 2px; min-width: 100px; font-size: 16px; text-transform: uppercase; letter-spacing: .06em; }
+.sheet li button > strong small { font-size: 12px; font-weight: 600; letter-spacing: .08em; opacity: .68; }
+.vehicleOptionStats { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: .06em; }
+.vehicleOptionAction { min-width: 116px; padding: 8px; border: 1px solid var(--ln-world-outline); text-align: center; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .sheetHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .12em; }
 .sheetHead button { min-height: 44px; padding: 0 16px; color: var(--ln-world-outline); font: inherit; font-size: 14px; background: none; border: 1px solid var(--ln-world-outline); }
 @media (orientation: landscape) and (max-height: 520px) { .host { top: 4px; left: 64px; right: 64px; } .rail { display: none; } .sheet { left: 25%; right: 25%; max-height: 80vh; } }
+@media (max-width: 720px) { .sheet li button { gap: 8px; padding: 8px; } .vehicleOptionArt { flex-basis: 56px; } .vehicleOptionArt::before { left: 12px; width: 36px; } .vehicleOptionArt i { left: 0; } .vehicleOptionArt em { left: 44px; } .vehicleOptionStats { display: none; } .vehicleOptionAction { min-width: 86px; font-size: 11px; } }
 
 /* Phone portrait: the top rows belong to the HUD and builder, so the plan rides just above the dock. */
 @media (max-width: 899px) and (min-height: 521px) { .host { top: auto; bottom: 76px; gap: 4px; } .slots { flex-wrap: nowrap; width: 100%; } .slot { flex: 1 1 0; min-width: 0; padding: 4px 8px; } .slot strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .slot span, .slot em { font-size: 14px; letter-spacing: .04em; } }
