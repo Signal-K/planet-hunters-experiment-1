@@ -7,6 +7,7 @@ struct HangarScreen: View {
     @Environment(GameStore.self) private var store
     @State private var configuring = false
     @State private var launching = false
+    @State private var previewRocketId: String?
 
     private var customizerUnlocked: Bool {
         store.player.unlockedSkillNodes.contains("ship-customizer-1")
@@ -21,6 +22,12 @@ struct HangarScreen: View {
         guard let id = store.player.selectedStagedRocketId,
               let vehicle = store.player.stagedRockets.first(where: { $0.id == id && $0.location == .hangar }) else { return nil }
         return Rockets.model(id: Rockets.canonicalId(vehicle.rocketId))?.tier ?? 1
+    }
+    private var previewModel: RocketModel? {
+        let id = previewRocketId ?? store.player.selectedStagedRocketId.flatMap { selected in
+            store.player.stagedRockets.first(where: { $0.id == selected })?.rocketId
+        }
+        return id.flatMap { Rockets.model(id: Rockets.canonicalId($0)) }
     }
 
     var body: some View {
@@ -56,6 +63,13 @@ struct HangarScreen: View {
                     .frame(maxWidth: short ? 500 : 820)
                     .padding(.horizontal, narrow ? 12 : 24)
                     .padding(.bottom, short ? 56 : 68)
+            }
+            .overlay(alignment: .bottom) {
+                if hasMission {
+                    selectionPanel(short: short, narrow: narrow)
+                        .padding(.horizontal, narrow ? 12 : 24)
+                        .padding(.bottom, short ? 174 : 194)
+                }
             }
             .overlay(alignment: .center) {
                 if stagedInBay || stagedOnPad {
@@ -158,7 +172,7 @@ struct HangarScreen: View {
                     : incompatible ? "Cannot carry this mission" : !hasMission ? "Choose a mission first" : nil
                 let cost = model.map { $0.costFrancs == 0 ? "Free" : Economy.format(francs: $0.costFrancs) } ?? ""
                 Button {
-                    if note == nil { store.purchaseRocket(vehicle.id) }
+                    if note == nil { previewRocketId = vehicle.id }
                 } label: {
                     VStack(spacing: 4) {
                         HangarRocketThumbnail(tier: model?.tier ?? 1)
@@ -185,13 +199,67 @@ struct HangarScreen: View {
                     .padding(.horizontal, short ? 4 : 8)
                     .padding(.vertical, short ? 4 : 8)
                     .frame(maxWidth: .infinity, minHeight: short ? 76 : (narrow ? 104 : 120))
-                    .glowPanel(RoundedRectangle(cornerRadius: 12), active: note == nil)
+                    .glowPanel(RoundedRectangle(cornerRadius: 12), active: note == nil && previewModel?.id == vehicle.id)
                     .opacity(note == nil ? 1 : 0.8)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(note.map { "\(vehicle.name), \($0)" } ?? "Build \(vehicle.name) for \(cost)")
             }
         }
+    }
+
+    private func selectionPanel(short: Bool, narrow: Bool) -> some View {
+        let model = previewModel
+        let stats: [(String, Int, Int)] = [
+            ("CAPACITY", model?.cargo ?? 0, 18),
+            ("RANGE", model?.maxOrbit ?? 0, 9),
+            ("LASER", model?.drillTier ?? 0, 3),
+        ]
+        return HStack(spacing: narrow ? 8 : 14) {
+            HangarRocketThumbnail(tier: model?.tier ?? 1)
+                .frame(width: narrow ? 72 : 108, height: narrow ? 38 : 58)
+                .overlay(alignment: .bottomLeading) {
+                    Text(model.map { "TIER \($0.tier)" } ?? "SELECT")
+                        .font(AppFont.display(10, "Bold")).tracking(1)
+                        .foregroundStyle(Theme.ink).padding(3).background(Glass.cyan)
+                }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("MISSION VEHICLE").font(AppFont.display(11, "Bold")).tracking(1.4).foregroundStyle(Glass.cyan)
+                Text(model?.name.uppercased() ?? "NO VEHICLE SELECTED").font(AppFont.display(narrow ? 16 : 21, "Bold")).tracking(1)
+                Text(model == nil ? "Choose a blueprint to inspect its flight profile." : "Review the profile, then stage this vehicle.")
+                    .font(AppFont.body(12)).lineLimit(2).opacity(0.82)
+            }
+            if !narrow {
+                HStack(spacing: 10) {
+                    ForEach(stats, id: \.0) { stat in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(stat.0).font(AppFont.display(10, "Bold")).tracking(1).opacity(0.72)
+                            Text(model == nil ? "—" : "\(stat.1)").font(AppFont.display(18, "Bold"))
+                            ProgressView(value: Double(stat.1), total: Double(stat.2)).tint(Glass.cyan).frame(width: 48)
+                        }
+                    }
+                }
+            }
+            Button {
+                if let model { store.purchaseRocket(model.id) }
+            } label: {
+                VStack(spacing: 2) {
+                    Text(model == nil ? "SELECT" : "STAGE").font(AppFont.display(12, "Bold")).tracking(1)
+                    if let model { Text(model.costFrancs == 0 ? "FREE" : Economy.format(francs: model.costFrancs)).font(AppFont.body(11, "Bold")) }
+                }
+                .foregroundStyle(Theme.ink).padding(.horizontal, narrow ? 8 : 14).frame(minHeight: 52)
+                .background(Glass.cyan, in: RoundedRectangle(cornerRadius: 6))
+            }
+            .buttonStyle(.plain)
+            .disabled(model == nil)
+            .opacity(model == nil ? 0.5 : 1)
+        }
+        .foregroundStyle(Color.white)
+        .padding(narrow ? 8 : 12)
+        .background(Theme.ink.opacity(0.96), in: RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.paper, lineWidth: 1.5))
+        .shadow(color: Theme.ink.opacity(0.35), radius: 12, y: 6)
+        .accessibilityIdentifier("hangar-vehicle-preview")
     }
 
 }

@@ -519,6 +519,7 @@ function ScreenBody({
             const vehicle = game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId && candidate.location === 'hangar')
             return vehicle ? (ROCKET_MODELS.find(model => model.id === vehicle.rocketId)?.tier ?? 1) : null
           })()}
+          selectedRocketId={game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId)?.rocketId ?? null}
           onChooseMission={() => game.goToMissions()}
           onBuildRocket={game.onPurchaseRocket}
           onBack={onBackFromHangar ?? game.returnFromHangar}
