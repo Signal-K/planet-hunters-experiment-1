@@ -23,7 +23,7 @@ import {
 } from '@/lib/data/sky-events'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { SPACETOBER_PEAK_BADGE, SPACETOBER_WEEK_BADGE, type OrionidsFind } from '@/lib/orionids/finds'
-import { WSW_EVENT_IDS, WSW_RANGE_LABEL, wswBanner, wswChipsForMission } from '@/lib/wsw'
+import { WSW_EVENT_IDS, WSW_RANGE_LABEL, isWorldSpaceWeekUpcoming, wswBanner, wswChipsForMission } from '@/lib/wsw'
 
 export type ProgramStepState = 'done' | 'current' | 'available' | 'locked'
 export type ProgramStepKind = 'instrument' | 'academy' | 'build' | 'mining' | 'focus'
@@ -255,7 +255,7 @@ export function spacetoberStrip(
         id: 'world-space-week',
         name: 'World Space Week',
         when: WSW_RANGE_LABEL,
-        status: wswBanner(badges, now).live ? 'live' : 'ended',
+        status: wswBanner(badges, now).live ? 'live' : isWorldSpaceWeekUpcoming(now) ? 'upcoming' : 'ended',
         tier: weekTier,
       },
       {

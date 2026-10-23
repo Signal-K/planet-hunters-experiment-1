@@ -137,7 +137,7 @@ export default function SkyEventChip({
             )}
             <div className={styles.actions}>
               {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={onParticipate}>VIEW EVENT</button>}
-              {surface === 'base' && <button type="button" className={styles.secondary} data-testid="orionids-read-sky" onClick={openOrionidsReading}>READ THE SKY</button>}
+              {surface === 'base' && <button type="button" className={styles.secondary} data-testid="orionids-read-sky" onClick={() => openOrionidsReading(onParticipate)}>READ THE SKY</button>}
             </div>
             {badgeTier && (
               <button type="button" className={styles.fallback} data-testid="orionids-share" onClick={() => { void share() }}>

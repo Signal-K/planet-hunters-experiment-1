@@ -12,12 +12,16 @@ import {
   FIREBALL_SPOTTER_BADGE,
   FIREBALL_SUBJECT_ID,
   FIREBALLS_IN_THE_SKY_URL,
+  fireballQuizCorrect,
   markFireballRead,
   submitFireballQuiz,
 } from '@/lib/orionids/fireball'
 import { queueEventBadge } from '@/lib/orionids/persist'
-import { OPEN_ORIONIDS_READING_EVENT } from '@/lib/orionids/reading'
+import { OPEN_ORIONIDS_READING_EVENT, type OrionidsReadingDetail } from '@/lib/orionids/reading'
 import styles from './OrionidsShowerChrome.module.css'
+
+const ENTRY_LABELS = ['DEFINITIONS', 'HOW THE NETWORK WORKS', 'IF YOU SEE ONE'] as const
+const CHOICE_KEYS = ['A', 'B', 'C', 'D'] as const
 
 export default function OrionidsShowerChrome() {
   const game = useGame()
@@ -25,7 +29,11 @@ export default function OrionidsShowerChrome() {
   const [open, setOpen] = useState(false)
   const [answers, setAnswers] = useState<number[]>(() => FIREBALL_QUIZ.map(() => -1))
   const [note, setNote] = useState('')
+  const [tab, setTab] = useState<'notes' | 'check'>('check')
+  const [entry, setEntry] = useState(0)
+  const [step, setStep] = useState(0)
   const queued = useRef('')
+  const onPass = useRef<(() => void) | undefined>(undefined)
 
   useEffect(() => {
     const tick = () => setLive(isOrionidsWindow(debrisNow()))
@@ -35,7 +43,15 @@ export default function OrionidsShowerChrome() {
   }, [])
 
   useEffect(() => {
-    const showReading = () => setOpen(true)
+    const showReading = (event: Event) => {
+      onPass.current = (event as CustomEvent<OrionidsReadingDetail>).detail?.onPass
+      setTab('check')
+      setStep(0)
+      setEntry(0)
+      setNote('')
+      setAnswers(FIREBALL_QUIZ.map(() => -1))
+      setOpen(true)
+    }
     window.addEventListener(OPEN_ORIONIDS_READING_EVENT, showReading)
     return () => window.removeEventListener(OPEN_ORIONIDS_READING_EVENT, showReading)
   }, [])
@@ -61,24 +77,15 @@ export default function OrionidsShowerChrome() {
   if (!live) return null
   const art = ORIONIDS_VARIANTS.blueprint
   const spotter = game.player.badges?.[FIREBALL_SPOTTER_BADGE]
-  const read = !!game.player.fireballSpotter?.readAt
-
-  function finishReading() {
-    const now = debrisNow()
-    game.setPlayer(player => markFireballRead(player, now))
-  }
 
   function finishCheck() {
     const now = debrisNow()
-    const preview = submitFireballQuiz(game.player, answers, now)
-    if (!read) {
-      setNote('Read the article first.')
+    if (!fireballQuizCorrect(answers)) {
+      setNote('Not quite. Check the field notes if you need a hint, then try again.')
       return
     }
-    if (!preview.badge && !preview.player.badges?.[FIREBALL_SPOTTER_BADGE]) {
-      setNote('Not quite. Try the three questions again.')
-      return
-    }
+    // The check comes first, so passing it also records the file as read.
+    const preview = submitFireballQuiz(markFireballRead(game.player, now), answers, now)
     if (preview.badge) {
       game.addToast(`Fireball Spotter ${preview.badge.tier} badge`, 'ok')
       queueEventBadge({
@@ -89,8 +96,11 @@ export default function OrionidsShowerChrome() {
         marker: FIREBALL_SPOTTER_BADGE,
       })
     }
-    game.setPlayer(player => submitFireballQuiz(player, answers, now).player)
-    setNote(spotter ? `You hold the ${spotter.tier} Fireball Spotter badge.` : 'Check complete.')
+    game.setPlayer(player => submitFireballQuiz(markFireballRead(player, now), answers, now).player)
+    const next = onPass.current
+    onPass.current = undefined
+    setOpen(false)
+    next?.()
   }
 
   return (
@@ -101,38 +111,83 @@ export default function OrionidsShowerChrome() {
         <img className={styles.streakLate} src={art.streaks[2].file} alt="" />
       </div>
       {open && (
-        <section className={styles.sheet} aria-label="Fireballs in the Sky" data-testid="fireball-reading">
-          <h2>Fireballs in the Sky</h2>
-          {FIREBALL_ARTICLE.map(paragraph => <p key={paragraph.slice(0, 24)}>{paragraph}</p>)}
-          <p>
-            <a href={FIREBALLS_IN_THE_SKY_URL} target="_blank" rel="noreferrer">fireballsinthesky.com.au</a>
-          </p>
-          <div className={styles.actions}>
-            <button type="button" onClick={finishReading} data-testid="fireball-read">
-              {read ? 'Reading done' : 'I have read this'}
-            </button>
-            <button type="button" onClick={() => setOpen(false)}>Close</button>
-          </div>
-          {FIREBALL_QUIZ.map((question, index) => (
-            <fieldset key={question.prompt}>
-              <legend>{question.prompt}</legend>
-              {question.choices.map((choice, choiceIndex) => (
-                <button
-                  key={choice}
-                  type="button"
-                  className={styles.choice}
-                  data-on={answers[index] === choiceIndex ? 'true' : 'false'}
-                  onClick={() => setAnswers(current => current.map((value, at) => at === index ? choiceIndex : value))}
-                >
-                  {choice}
-                </button>
-              ))}
-            </fieldset>
-          ))}
-          <button type="button" onClick={finishCheck} data-testid="fireball-check">Check answers</button>
-          {spotter && <p data-testid="fireball-spotter-badge">Fireball Spotter · {spotter.tier}</p>}
-          {note && <p role="status">{note}</p>}
-        </section>
+        <div className={styles.scrim} data-testid="fireball-reading-scrim">
+          <section className={styles.pad} aria-label="Fireballs in the Sky" data-testid="fireball-reading">
+            <header className={styles.strip}>
+              <span className={styles.led} data-on={spotter ? 'true' : 'false'} aria-hidden="true" />
+              <span className={styles.stripTitle}>FIREBALLS IN THE SKY</span>
+              <span className={styles.stripMeta}>{spotter ? 'PASSED' : 'OPEN'}</span>
+              <button type="button" className={styles.close} onClick={() => setOpen(false)}>Close</button>
+            </header>
+            <div className={styles.tabs} role="tablist">
+              <button type="button" role="tab" aria-selected={tab === 'check'} data-on={tab === 'check' ? 'true' : 'false'} onClick={() => setTab('check')}>SIGHTING CHECK</button>
+              <button type="button" role="tab" aria-selected={tab === 'notes'} data-on={tab === 'notes' ? 'true' : 'false'} onClick={() => setTab('notes')}>FIELD NOTES</button>
+            </div>
+            <div className={styles.screen}>
+              {tab === 'notes' ? (
+                <article className={styles.entry} key={`entry-${entry}`}>
+                  <p className={styles.kicker}>ENTRY {entry + 1} OF {FIREBALL_ARTICLE.length} · {ENTRY_LABELS[entry]}</p>
+                  <p className={styles.body}>{FIREBALL_ARTICLE[entry]}</p>
+                  {entry === FIREBALL_ARTICLE.length - 1 && (
+                    <a className={styles.link} href={FIREBALLS_IN_THE_SKY_URL} target="_blank" rel="noreferrer">fireballsinthesky.com.au</a>
+                  )}
+                </article>
+              ) : (
+                <fieldset className={styles.entry} key={`question-${step}`}>
+                  <legend className={styles.kicker}>QUESTION {step + 1} OF {FIREBALL_QUIZ.length}</legend>
+                  <p className={styles.body}>{FIREBALL_QUIZ[step].prompt}</p>
+                  <div className={styles.choices}>
+                    {FIREBALL_QUIZ[step].choices.map((choice, choiceIndex) => (
+                      <button
+                        key={choice}
+                        type="button"
+                        className={styles.choice}
+                        data-on={answers[step] === choiceIndex ? 'true' : 'false'}
+                        onClick={() => setAnswers(current => current.map((value, at) => at === step ? choiceIndex : value))}
+                      >
+                        <span className={styles.key} aria-hidden="true">{CHOICE_KEYS[choiceIndex]}</span>
+                        <span>{choice}</span>
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
+              {(note || spotter) && (
+                <div className={styles.readout} data-testid={spotter && !note ? 'fireball-spotter-badge' : undefined}>
+                  {note ? <p role="status">{note}</p> : spotter ? <p>FIREBALL SPOTTER · {spotter.tier.toUpperCase()}</p> : null}
+                </div>
+              )}
+            </div>
+            <footer className={styles.foot}>
+              <div className={styles.progress} aria-hidden="true">
+                {(tab === 'notes' ? FIREBALL_ARTICLE : FIREBALL_QUIZ).map((_, at) => (
+                  <span key={at} data-on={at <= (tab === 'notes' ? entry : step) ? 'true' : 'false'} />
+                ))}
+              </div>
+              <div className={styles.nav}>
+                {tab === 'notes' ? (
+                  <>
+                    <button type="button" className={styles.ghost} disabled={entry === 0} onClick={() => setEntry(entry - 1)}>BACK</button>
+                    {entry < FIREBALL_ARTICLE.length - 1 ? (
+                      <button type="button" onClick={() => setEntry(entry + 1)}>NEXT</button>
+                    ) : (
+                      <button type="button" onClick={() => setTab('check')} data-testid="fireball-read">BACK TO THE CHECK</button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <button type="button" className={styles.ghost} disabled={step === 0} onClick={() => setStep(step - 1)}>BACK</button>
+                    {step < FIREBALL_QUIZ.length - 1 ? (
+                      <button type="button" onClick={() => setStep(step + 1)}>NEXT</button>
+                    ) : (
+                      <button type="button" onClick={finishCheck} data-testid="fireball-check">CHECK AND ENTER</button>
+                    )}
+                  </>
+                )}
+              </div>
+            </footer>
+          </section>
+        </div>
       )}
     </>
   )

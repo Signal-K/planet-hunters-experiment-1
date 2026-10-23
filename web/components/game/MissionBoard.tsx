@@ -296,7 +296,7 @@ function Medal({ tier }: { tier: 'gold' | 'silver' | 'empty' }) {
 
 function EventStatus({ card }: { card: SkyBoardCard }) {
   if (card.status === 'upcoming' && card.countdownLabel) return <span className={styles.countdown}>{card.countdownLabel}</span>
-  const label = card.status === 'live' ? 'LIVE' : 'ENDED'
+  const label = card.status === 'live' ? 'LIVE' : card.status === 'upcoming' ? 'UPCOMING' : 'ENDED'
   return <span className={styles.ended}>{label}</span>
 }
 
