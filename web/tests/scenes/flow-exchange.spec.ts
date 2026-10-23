@@ -8,9 +8,8 @@ for (const [name, viewport] of Object.entries(VIEWPORTS)) {
     await page.setViewportSize(viewport)
     const { errors } = await stage(page, 'ui-market')
     expect(await page.evaluate(() => innerWidth)).toBe(viewport.width)
-    await expect(page.getByTestId('settings-button')).toBeVisible()
-    await expect(page.getByTestId('hub-clock-widget')).toBeVisible()
-    await expect(page.getByTestId('base-dock')).toBeVisible()
+    // SSL-645: the Marketplace is a panel over the Exchange scene with its own Back, no dock.
+    await expect(page.getByTestId('market-back')).toBeVisible()
     await expect(page.getByTestId('marketplace-panel')).toBeVisible()
     await expect(page.getByTestId('market-balance')).toBeVisible()
     await expect(page.getByTestId('exchange-price-iron')).toBeVisible()
@@ -46,7 +45,7 @@ for (const [name, viewport] of Object.entries(VIEWPORTS)) {
     await expect(page.getByTestId('sell-all-btn')).toBeDisabled()
 
     await expectSound(page, errors)
-    await page.getByTestId('hub-dock-prev').click()
+    await page.getByTestId('market-back').click()
     await expect(page.locator('.market-screen')).toHaveCount(0)
     expect(errors).toEqual([])
   })

@@ -48,6 +48,9 @@
   cursor: pointer;
 }
 
+/* Dev builds pin the DEV badge at the top-left (8..48px); keep Back clear of it. */
+:global(body:has([data-testid="dev-shortcuts-toggle"])) .exit { left: 56px; }
+
 .panel {
   position: absolute;
   z-index: 2;
