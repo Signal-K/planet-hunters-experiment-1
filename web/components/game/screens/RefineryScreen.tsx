@@ -10,11 +10,12 @@ import MineralChip from '@/components/game/MineralChip'
 import { type RefineryRecipe, REFINERY_RECIPES } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatCurrency } from '@/lib/format'
+import { refinedUnitPrice } from '@/lib/systems/EconomySystem'
 import ScenePanel from '@/components/game/ScenePanel'
 import { captureGameEvent } from '@/lib/posthog'
 
 interface RefineryScreenProps {
-  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; staffed?: boolean }
+  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; staffed?: boolean; researchBonusUntil?: number }
   onBack: () => void
   onStartRefine: (recipeId: string) => void
   onCollect: (recipeId: string) => void
@@ -85,7 +86,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
               return (
                 <div className="order-row" key={id}>
                   <span><span style={{ color: recipe.output.color }}>■</span> {recipe.output.name} ×{amount}</span>
-                  <strong>{formatCurrency(recipe.output.price * amount)}</strong>
+                  <strong>{formatCurrency(refinedUnitPrice(recipe, player) * amount)}</strong>
                 </div>
               )
             })}

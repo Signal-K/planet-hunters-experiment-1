@@ -6,7 +6,9 @@ import { respondToFriendRequest } from '@/lib/friends/client'
 
 function BellButton({ count, onClick }: { count: number; onClick: () => void }) {
   return <button type="button" onClick={onClick} aria-label={`Notifications${count ? `, ${count} unread` : ''}`} style={{
-    position: 'fixed', top: 16, right: 16, zIndex: 70, minWidth: 44, minHeight: 44,
+    // The top-right corner is used by each scene's primary action. Keep the
+    // shared inbox in the header gutter so it never steals that hit target.
+    position: 'fixed', top: 64, right: 148, zIndex: 70, minWidth: 44, minHeight: 44,
     borderRadius: 6, border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-panel)',
     color: 'var(--ln-text)', fontSize: 20, cursor: 'pointer', boxShadow: '0 8px 24px rgba(3, 12, 28, .28)',
   }}>

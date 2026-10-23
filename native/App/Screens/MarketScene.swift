@@ -76,7 +76,7 @@ struct MarketScreen: View {
         store.player.refinedGoods.keys.sorted().compactMap { id in
             let qty = store.player.refinedGoods[id] ?? 0
             guard qty > 0, let recipe = Refinery.byId[id] else { return nil }
-            return Lot(id: id, name: recipe.name, qty: qty, unit: recipe.price)
+            return Lot(id: id, name: recipe.name, qty: qty, unit: Refinery.unitPrice(recipe, player: store.player, now: store.now))
         }
     }
     private var heldValue: Int {
@@ -96,7 +96,7 @@ struct MarketScreen: View {
             }
             if tab == .sell && ResearchStampRules.bonusActive(store.player, now: store.now) {
                 // SSL-673, web `market-research-bonus`.
-                Text("Community research bonus: ore sells pay +\(ResearchStampRules.communityWeeklyRevenuePct)% this week.".uppercased())
+                Text("Community research bonus: sales pay +\(ResearchStampRules.communityWeeklyRevenuePct)% this week.".uppercased())
                     .font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("market-research-bonus")
             }

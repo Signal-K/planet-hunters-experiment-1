@@ -458,6 +458,7 @@ function ScreenBody({
             refinedGoods: game.player.refinedGoods,
             refineryLastStartedAt: game.player.refineryLastStartedAt,
             staffed: !!game.player.structureCrewAssignments?.refinery,
+            researchBonusUntil: game.player.researchBonusUntil,
           }}
           onBack={() => game.goBack()}
           onStartRefine={game.onStartRefine}

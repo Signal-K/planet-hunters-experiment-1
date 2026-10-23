@@ -41,6 +41,16 @@ import Foundation
         #expect(sold.player.francs == done.player.francs + Refinery.byId["refined-copper"]!.price)
     }
 
+    /// SSL-673: inside the community research week a finished good pays +3%, outside it the recipe value.
+    @Test func sellPaysTheResearchBonusInsideTheWeek() {
+        var s = state(); s.player.refinedGoods["refined-copper"] = 2
+        ResearchStampRules.noteBonus(&s.player, until: day + 1000)
+        let price = Refinery.byId["refined-copper"]!.price
+        let boosted = Int((Double(price) * 1.03).rounded())
+        #expect(Refinery.applySell(s, recipeId: "refined-copper", amount: 2, now: day).player.francs == s.player.francs + boosted * 2)
+        #expect(Refinery.applySell(s, recipeId: "refined-copper", amount: 2, now: day + 1000).player.francs == s.player.francs + price * 2)
+    }
+
     @Test func jobsRoundTripThroughTheSave() throws {
         let s = Refinery.applyStart(state(), recipeId: "refined-copper", now: day)
         let back = try JSONDecoder().decode(GameState.self, from: JSONEncoder().encode(s))

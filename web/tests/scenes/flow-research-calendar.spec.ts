@@ -98,3 +98,23 @@ test('the Exchange pays the research bonus on a real sale', async ({ page }) => 
   await page.screenshot({ path: test.info().outputPath('exchange-bonus-phone.png') })
   expect(boosted).toBe(Math.round(plain * 1.03))
 })
+
+// Real path: finished goods pay the same +3% on the Exchange inside the bonus week.
+test('the Exchange pays the research bonus on a finished-goods sale', async ({ page }) => {
+  await page.setViewportSize(VIEWPORTS.phone)
+  const readFrancs = async () => Number((await page.getByTestId('market-balance').getAttribute('aria-label'))!.replace(/[^0-9]/g, ''))
+  async function sellOne(bonusUntil: number) {
+    const { errors } = await stage(page, 'ui-market', { patch: { researchBonusUntil: bonusUntil, refinedGoods: { 'refined-copper': 2 } } })
+    const before = await readFrancs()
+    const crate = page.getByTestId('exchange-crate-refined-copper')
+    await crate.scrollIntoViewIfNeeded()
+    await crate.click()
+    await expect.poll(readFrancs).toBeGreaterThan(before)
+    expect(errors).toEqual([])
+    return (await readFrancs()) - before
+  }
+  const plain = await sellOne(Date.now() - 1000)
+  const boosted = await sellOne(Date.now() + 86_400_000)
+  await page.screenshot({ path: test.info().outputPath('exchange-refined-bonus-phone.png') })
+  expect(boosted).toBe(Math.round(plain * 1.03))
+})

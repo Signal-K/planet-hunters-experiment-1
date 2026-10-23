@@ -112,7 +112,7 @@ public enum ResearchStampRules {
                             bonusPct: server?.bonusPct ?? communityWeeklyRevenuePct, bonusUntil: server?.bonusUntil)
     }
 
-    /// Exchange ore sells pay this much more while the bonus week is open (web `RESEARCH_BONUS_RATE`).
+    /// Exchange sales (ore and finished goods) pay this much more while the bonus week is open (web `RESEARCH_BONUS_RATE`).
     public static var bonusRate: Double { Double(communityWeeklyRevenuePct) / 100 }
 
     /// Web saves the window as `player.researchBonusUntil`; native keeps it in `extras` so it round-trips.
@@ -141,7 +141,7 @@ public enum ResearchStampRules {
     public static let discoveryTask: (kind: StampKind, label: String) = (.discoveryMission, "Fly a survey to a world you discovered")
     public static func tasks(hasDiscovery: Bool) -> [(kind: StampKind, label: String)] { hasDiscovery ? dailyTasks + [discoveryTask] : dailyTasks }
     public static let title = "Daily research"
-    public static let blurb = "Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% on ore sells for a week. Miss a day and nothing is lost."
+    public static let blurb = "Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% on Exchange sales for a week. Miss a day and nothing is lost."
 }
 
 /// `GET /api/community/research` (pocketbase/research.go).

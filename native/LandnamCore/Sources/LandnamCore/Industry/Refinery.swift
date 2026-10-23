@@ -82,14 +82,19 @@ public enum Refinery {
         return n
     }
 
+    /// One finished good now: its recipe value, +3% inside the community research week (web `refinedUnitPrice`, SSL-673).
+    public static func unitPrice(_ r: RefineryRecipe, player: Player, now: Double) -> Int {
+        ResearchStampRules.bonusActive(player, now: now) ? Int((Double(r.price) * (1 + ResearchStampRules.bonusRate)).rounded()) : r.price
+    }
+
     /// Sell finished goods at their recipe output value.
-    public static func applySell(_ s: GameState, recipeId: String, amount: Int) -> GameState {
+    public static func applySell(_ s: GameState, recipeId: String, amount: Int, now: Double = 0) -> GameState {
         guard let r = byId[recipeId] else { return s }
         let have = s.player.refinedGoods[recipeId] ?? 0
         let q = min(max(0, amount), have)
         guard q > 0 else { return s }
         var n = s
-        n.player.francs += r.price * q
+        n.player.francs += unitPrice(r, player: s.player, now: now) * q
         n.player.refinedGoods[recipeId] = have - q
         return n
     }

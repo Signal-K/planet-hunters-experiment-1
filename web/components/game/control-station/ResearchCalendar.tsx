@@ -59,10 +59,10 @@ export function ResearchCalendar({ stamps, now, community, hasDiscovery = false 
         <div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div>
         <p className={styles.note} data-testid="research-community-state" data-state={bonusOpen ? 'bonus' : bar.reached ? 'spent' : 'filling'}>
           {bonusOpen
-            ? `Goal reached. Ore sells pay +${bar.bonusPct}% until ${formatBonusEnd(bar.bonusUntil!)}.`
+            ? `Goal reached. Exchange sales pay +${bar.bonusPct}% until ${formatBonusEnd(bar.bonusUntil!)}.`
             : bar.reached
               ? `Goal reached this month. The +${bar.bonusPct}% week has ended.`
-              : `Fill the bar together and everyone's ore sells pay +${bar.bonusPct}% for a week.`}
+              : `Fill the bar together and everyone's Exchange sales pay +${bar.bonusPct}% for a week.`}
         </p>
       </div>
     </section>

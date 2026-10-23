@@ -3,7 +3,7 @@ import type { GameState } from '@/lib/game-types'
 import { normalizeAndRepair, type PartialSave } from '@/lib/game-state'
 import { MINERAL_META, CLIENT_SLOTS, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, STRUCTURES, customizerPartById } from '@/lib/data'
 import { buyUnitPrice } from './MarketplaceSystem'
-import { applyBuyLaserCapacitor, applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, rocketPurchaseRefusal, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
+import { applyBuyLaserCapacitor, applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, refinedUnitPrice, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, rocketPurchaseRefusal, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 
@@ -449,6 +449,15 @@ describe('off-world storage and refinery settlement', () => {
     const next = applySellRefinedGoods(makeState({ francs: 50, refinedGoods: { [recipe.id]: 2 } }), recipe, 1)
     expect(next.player.francs).toBe(1300)
     expect(next.player.refinedGoods[recipe.id]).toBe(1)
+  })
+
+  it('pays the community research bonus on finished goods inside the week only (SSL-673)', () => {
+    const recipe = { id: 'refined-test', name: 'Refined Test', input: { mineral: 'iron', amount: 1 }, output: { name: 'Test Ingot', sym: 'Fe+', color: '#999', price: 1250 }, time: 1, cost: 10 }
+    const now = Date.UTC(2026, 9, 23)
+    const open = makeState({ francs: 50, refinedGoods: { [recipe.id]: 2 }, researchBonusUntil: now + 1000 })
+    expect(refinedUnitPrice(recipe, open.player, now)).toBe(1288)
+    expect(applySellRefinedGoods(open, recipe, 2, now).player.francs).toBe(50 + 1288 * 2)
+    expect(applySellRefinedGoods(open, recipe, 2, now + 1000).player.francs).toBe(50 + 1250 * 2)
   })
 })
 

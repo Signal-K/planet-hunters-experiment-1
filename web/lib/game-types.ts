@@ -442,7 +442,7 @@ export interface Player {
   instrumentDigestNotifiedOn?: Record<string, string>
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
   researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event')[]>
-  /** End of the community research bonus week (SSL-673), from `/api/community/research`. Exchange ore sells pay +3% before it. */
+  /** End of the community research bonus week (SSL-673), from `/api/community/research`. Exchange sales pay +3% before it. */
   researchBonusUntil?: number
   /** Last seen value for optional Hub prompts; a higher live value shows the card again. */
   dismissedHubPrompts?: Record<string, number>

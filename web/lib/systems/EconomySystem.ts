@@ -262,7 +262,13 @@ export function applyRemoteHaulDisposition(
 }
 
 /** Sell collected refined goods at their recipe output value. */
-export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amount: number): GameState {
+/** What one finished good sells for now: its recipe value, +3% inside the community research week (SSL-673). */
+export function refinedUnitPrice(recipe: Pick<RefineryRecipe, 'output'>, player: Pick<GameState['player'], 'researchBonusUntil'>, now: number = Date.now()): number {
+  const price = recipe.output.price
+  return researchBonusActive(player, now) ? Math.round(price * (1 + RESEARCH_BONUS_RATE)) : price
+}
+
+export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amount: number, now: number = Date.now()): GameState {
   const available = s.player.refinedGoods[recipe.id] ?? 0
   const quantity = Math.min(Math.max(0, Math.floor(amount)), available)
   if (quantity <= 0) return s
@@ -270,7 +276,7 @@ export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amou
     ...s,
     player: {
       ...s.player,
-      francs: s.player.francs + recipe.output.price * quantity,
+      francs: s.player.francs + refinedUnitPrice(recipe, s.player, now) * quantity,
       refinedGoods: { ...s.player.refinedGoods, [recipe.id]: available - quantity },
     },
   }

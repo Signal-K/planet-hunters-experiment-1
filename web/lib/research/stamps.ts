@@ -122,7 +122,7 @@ export function researchBonusActive(player: BonusPlayer | undefined, now: number
   return typeof until === 'number' && now < until
 }
 
-/** Exchange ore sells pay this much more while the bonus is open. */
+/** Exchange sales (ore and finished goods) pay this much more while the bonus is open. */
 export const RESEARCH_BONUS_RATE = COMMUNITY_WEEKLY_REVENUE_PCT / 100
 
 /** Keep the latest bonus window the server reported. Returns the same player when nothing changes. */
@@ -152,4 +152,4 @@ export function dailyTasksFor(hasDiscovery: boolean): readonly { kind: StampKind
 }
 
 export const RESEARCH_TITLE = 'Daily research'
-export const RESEARCH_BLURB = 'Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% on ore sells for a week. Miss a day and nothing is lost.'
+export const RESEARCH_BLURB = 'Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% on Exchange sales for a week. Miss a day and nothing is lost.'

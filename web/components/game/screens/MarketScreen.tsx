@@ -3,7 +3,7 @@
 import { requestAlertPermission } from '@/lib/priceAlertNotify'
 import { useEffect, useState } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
-import { openMarketSellPrice } from '@/lib/systems/EconomySystem'
+import { openMarketSellPrice, refinedUnitPrice } from '@/lib/systems/EconomySystem'
 import { COMMUNITY_WEEKLY_REVENUE_PCT, researchBonusActive } from '@/lib/research/stamps'
 import { spotBoard, type PriceAlert, type SpotQuote } from '@/lib/systems/MarketplaceSystem'
 import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
@@ -29,7 +29,7 @@ interface MarketScreenProps {
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
   dailyEconomySnapshot?: DailyEconomySnapshot
-  /** SSL-673: end of the community research bonus week. Ore sells pay +3% before it. */
+  /** SSL-673: end of the community research bonus week. Exchange sales pay +3% before it. */
   researchBonusUntil?: number
   francs: number
   /** The Exchange building. Buying and price alerts need it. */
@@ -62,7 +62,7 @@ export default function MarketScreen({
   const board = tab === 'sell' ? [...prices].sort((a, b) => Number(b.held > 0) - Number(a.held > 0)) : prices
   const refined = REFINERY_RECIPES.map(r => ({ recipe: r, qty: refinedGoods[r.id] ?? 0 })).filter(r => r.qty > 0)
   const alertFor = (id: string) => priceAlerts.find(a => a.mineralId === id)
-  const sellAllValue = prices.reduce((sum, q) => sum + q.spot * q.held, 0) + refined.reduce((sum, r) => sum + r.recipe.output.price * r.qty, 0)
+  const sellAllValue = prices.reduce((sum, q) => sum + q.spot * q.held, 0) + refined.reduce((sum, r) => sum + refinedUnitPrice(r.recipe, { researchBonusUntil }) * r.qty, 0)
   const hasCargo = prices.some(q => q.held > 0) || refined.length > 0
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export default function MarketScreen({
         </div>
 
         {tab === 'sell' && researchBonusActive({ researchBonusUntil }, Date.now()) && (
-          <p className={styles.note} data-testid="market-research-bonus">Community research bonus: ore sells pay +{COMMUNITY_WEEKLY_REVENUE_PCT}% this week.</p>
+          <p className={styles.note} data-testid="market-research-bonus">Community research bonus: sales pay +{COMMUNITY_WEEKLY_REVENUE_PCT}% this week.</p>
         )}
 
         <div className={styles.tabs} role="tablist" aria-label="Marketplace">
@@ -168,7 +168,7 @@ export default function MarketScreen({
                   <span className={styles.name}>{recipe.output.name}</span>
                   <span className={styles.held}>{qty} held</span>
                 </div>
-                <span className={styles.price}>{formatCurrency(recipe.output.price, { compact: true })}</span>
+                <span className={styles.price}>{formatCurrency(refinedUnitPrice(recipe, { researchBonusUntil }), { compact: true })}</span>
                 <div className={styles.actions}>
                   <button type="button" className={styles.btn} data-testid={`exchange-crate-${recipe.id}`} onClick={() => onSellRefined(recipe.id, 1)}>Sell 1</button>
                   <button type="button" className={styles.btn} onClick={() => onSellRefined(recipe.id, qty)}>All</button>

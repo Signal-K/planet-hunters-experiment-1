@@ -124,9 +124,9 @@ extension ResearchCalendarPanel {
         if let until = bar.bonusUntil, now < until {
             var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: "UTC")!
             let d = c.dateComponents([.day, .month], from: Date(timeIntervalSince1970: until / 1000))
-            return "Goal reached. Ore sells pay +\(bar.bonusPct)% until \(d.day!) \(Self.months[d.month! - 1])."
+            return "Goal reached. Exchange sales pay +\(bar.bonusPct)% until \(d.day!) \(Self.months[d.month! - 1])."
         }
         if bar.reached { return "Goal reached this month. The +\(bar.bonusPct)% week has ended." }
-        return "Fill the bar together and everyone's ore sells pay +\(bar.bonusPct)% for a week."
+        return "Fill the bar together and everyone's Exchange sales pay +\(bar.bonusPct)% for a week."
     }
 }
