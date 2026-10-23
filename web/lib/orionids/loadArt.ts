@@ -22,7 +22,8 @@ function sliceRow(sheet: Texture, frameW: number, frameH: number, count: number)
 export async function loadOrionidsArt(variantId: OrionidsVariantId): Promise<DebrisArtSet | null> {
   const variant = ORIONIDS_VARIANTS[variantId]
   try {
-    const [fallSheet, impactSheet, dust, ...rest] = await Promise.all([
+    const [sky, fallSheet, impactSheet, dust, ...rest] = await Promise.all([
+      loadTexture(variant.sky),
       loadTexture(variant.fallSheet),
       loadTexture(variant.impactSheet),
       loadTexture(variant.dust),
@@ -36,6 +37,8 @@ export async function loadOrionidsArt(variantId: OrionidsVariantId): Promise<Deb
     const minedTex = rest.slice(debrisCount, debrisCount + minedCount)
     const streakTex = rest.slice(debrisCount + minedCount)
     return {
+      sky,
+      skyBlend: variant.skyBlend,
       fallFrames: sliceRow(fallSheet, variant.fallFrame.w, variant.fallFrame.h, variant.fallFrame.count),
       fallFps: variant.fallFrame.fps,
       fallAnchor: { x: variant.fallFrame.ax, y: variant.fallFrame.ay },

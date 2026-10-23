@@ -87,6 +87,15 @@
   box-shadow: inset 0 6px 0 var(--ln-blueprint-blue) !important;
 }
 
+.link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--ln-blue);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .screen :global(.debrief-result-panel) {
   width: 100%;
   pointer-events: auto;

@@ -75,7 +75,37 @@ const freeMiningMission: Mission = {
   payout: { francs: 0, affinity: 0 },
 }
 
+const orionidsMission: Mission = {
+  ...freeMiningMission,
+  id: 'self-directed-orionids-night-run',
+  title: 'Orionids Night Run',
+}
+
 describe('DebriefScreen own-program outcomes', () => {
+  it('adds the Orionids knowledge-log handoff to the debrief', async () => {
+    const host = document.createElement('div')
+    const root = createRoot(host)
+
+    await act(async () => {
+      root.render(
+        <DebriefScreen
+          mission={orionidsMission}
+          target={target}
+          cargo={{ orionid_debris: 20 }}
+          onDone={() => {}}
+          minerals={{}}
+          clients={{}}
+          freeOperations
+        />,
+      )
+    })
+
+    expect(host.querySelector('[data-testid="debrief-orionids-knowledge"]')?.textContent).toContain('Data Pad')
+    expect(host.textContent).toContain('Atlas app')
+    expect(host.querySelector('a[href="https://playlandnam.space"]')).not.toBeNull()
+    root.unmount()
+  })
+
   it('resolves a program flight as an outcome instead of a client payout', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)

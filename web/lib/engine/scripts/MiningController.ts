@@ -148,6 +148,8 @@ export interface MiningControllerOptions {
   surfaceY?: number
   /** Overrides SHIP_Y when the world is sized dynamically from the viewport. */
   shipY?: number
+  /** Live horizontal ship position. The d-pad steers the ship; the field still scrolls independently. */
+  shipX?: () => number
   minerals: string[]
   /** Drawn first, in order, each one deposit-gap apart. `?ores=mixed` uses
    * this so iron, carbon and ice each get their own stretch of soil. */
@@ -323,6 +325,10 @@ export class MiningController extends ScriptBehaviour {
     this.opts = opts
   }
 
+  private currentShipX(): number {
+    return Math.max(40, Math.min(this.opts.worldWidth - 40, this.opts.shipX?.() ?? SHIP_X))
+  }
+
   /** True while `?scroll=` is holding the field still for a spacing check. */
   private pinScroll = false
 
@@ -357,7 +363,7 @@ export class MiningController extends ScriptBehaviour {
 
   /** Where the first deposit sits when `?scroll=0`, clear of the beam. */
   private depositAnchor(): number {
-    return SHIP_X + 160
+    return this.currentShipX() + 160
   }
 
   /** Native stride. A phone-width pass shows one or two deposits. */
@@ -449,9 +455,9 @@ export class MiningController extends ScriptBehaviour {
     const targetOres = heroes.length > 0 ? heroes : seamTargets
     const target = targetOres.reduce<OreEntity | null>((best, ore) => {
       if (!best) return ore
-      return Math.abs(ore.go.transform.position.x - SHIP_X) < Math.abs(best.go.transform.position.x - SHIP_X) ? ore : best
+      return Math.abs(ore.go.transform.position.x - this.currentShipX()) < Math.abs(best.go.transform.position.x - this.currentShipX()) ? ore : best
     }, null)
-    const targetDistance = target ? Math.abs(target.go.transform.position.x - SHIP_X) : Number.POSITIVE_INFINITY
+    const targetDistance = target ? Math.abs(target.go.transform.position.x - this.currentShipX()) : Number.POSITIVE_INFINITY
     const landed = !target?.phase || target.phase === 'intact'
     const inRange = landed && targetDistance < HIT_TOLERANCE
     const targetState = target ? `${target.mineral}:${inRange}` : ''
@@ -468,7 +474,7 @@ export class MiningController extends ScriptBehaviour {
 
   fireLaser(): void {
     const go = new GameObject(`laser-${this.laserCounter++}`, 'Laser', {
-      position: { x: SHIP_X, y: (this.opts.shipY ?? SHIP_Y) + 16 },
+      position: { x: this.currentShipX(), y: (this.opts.shipY ?? SHIP_Y) + 16 },
     })
     const bolt = new ShapeRenderer(
       { shape: 'rect', width: LASER_SIZE.width, height: LASER_SIZE.height, color: this.opts.beamColor ?? LASER_COLOR },
@@ -578,7 +584,7 @@ export class MiningController extends ScriptBehaviour {
   }
 
   private spawnDebris(mineral: string, speedFactor: number, hero = false): void {
-    const x = hero ? SHIP_X : 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
+    const x = hero ? this.currentShipX() : 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
     const y = hero ? -36 : -20 - Math.random() * 40
     const colorHex = this.opts.mineralColors[mineral] ?? LASER_COLOR
     const mineralColor = parseInt(colorHex.replace('#', ''), 16)
@@ -1074,7 +1080,7 @@ export class MiningController extends ScriptBehaviour {
   }
 
   private updatePickups(dt: number): void {
-    const home = { x: SHIP_X, y: this.opts.shipY ?? SHIP_Y }
+    const home = { x: this.currentShipX(), y: this.opts.shipY ?? SHIP_Y }
     this.pickups = this.pickups.filter(p => {
       p.t += dt / 0.55
       if (p.t >= 1) {

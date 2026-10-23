@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { buildLaunchScene, LAUNCH_W, LAUNCH_H, launchFrameDt } from '@/lib/pixi/launchScene'
-import { PadLaunchSequence } from '@/components/game/hub/PadLaunchSequence'
 import { fragmentsCaughtOnLaunch } from '@/lib/orionids/launch-catch'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { skyEventNow } from '@/lib/data/sky-events'
@@ -91,7 +90,10 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
     if (!div) return
 
     const canvas = document.createElement('canvas')
-    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none;'
+    // The Pixi scene is the visible launch sequence. It used to be hidden
+    // underneath PadLaunchSequence, which completed after 3.4 seconds and
+    // made the real 15-second timeline unreachable to the player.
+    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;opacity:1;pointer-events:none;'
     div.appendChild(canvas)
 
     const app = new Application()
@@ -118,10 +120,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
         rocketName,
         rocketImageSrc,
         targetName,
-        // The pad sprite sequence owns the handoff to flight. The Pixi
-        // cinematic stays mounted for its watchdog, and must not cut the
-        // departure short.
-        onComplete: () => {},
+        onComplete: fireComplete,
       })
 
       app.ticker.add(t => {
@@ -151,7 +150,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
   return (
     <SequenceDesktopFrame
       background="#d5ecf7"
-      stageAspect={`${LAUNCH_W} / ${LAUNCH_H}`}
+      stageAspect={isDesktop ? '16 / 9' : `${LAUNCH_W} / ${LAUNCH_H}`}
       leftTitle="MISSION"
       leftRows={[
         { label: 'VEHICLE', value: rocketName },
@@ -164,9 +163,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
       ]}
       showClock
       renderStage={style => (
-        <div ref={divRef} data-testid="launch-sequence-stage" style={{ background: '#d5ecf7', ...style }}>
-          <PadLaunchSequence onComplete={fireComplete} fragments={ascentFragments} />
-        </div>
+        <div ref={divRef} data-testid="launch-sequence-stage" style={{ background: '#d5ecf7', ...style }} data-fragments={ascentFragments || undefined} />
       )}
     >
       {process.env.NODE_ENV === 'development' && (

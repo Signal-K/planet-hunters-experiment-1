@@ -111,3 +111,33 @@ export function queueMeteoriteMastery(earnedAt: number): void {
     pocketBaseId(`meteorite_mastery:${user}`),
   )
 }
+
+/** Queue one compact scene proof for an Orionids event body. */
+export function queueOrionidsEventProof(input: {
+  missionId: string
+  missionRunId: string
+  targetId: string
+  screenshot: string
+  capturedAt: number
+}): void {
+  const user = pbLandnam.authStore.record?.id
+  if (!user || !input.screenshot.startsWith('data:image/')) return
+  const missionRunId = filterValue(input.missionRunId)
+  if (!missionRunId) return
+  void queueUpsert(
+    'event_proofs',
+    `user = "${filterValue(user)}" && mission_run_id = "${missionRunId}" && proof_type = "event-body"`,
+    {
+      user,
+      event_id: ORIONIDS_EVENT_ID,
+      mission_id: filterValue(input.missionId),
+      mission_run_id: missionRunId,
+      target_id: filterValue(input.targetId),
+      proof_type: 'event-body',
+      screenshot: input.screenshot,
+      caption: 'Orionids event body observed during the night run.',
+      captured_at: input.capturedAt,
+    },
+    pocketBaseId(`event_proofs:${user}:${missionRunId}:event-body`),
+  )
+}
