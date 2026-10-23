@@ -1,7 +1,7 @@
 # Landnam native (macOS 14 / iOS 17)
 
 - `LandnamCore/`: pure Swift domain, catalog data, economy, mission systems, `GameStore`. `swift test` runs 17 tests, including parity against the TS mission generator (`Fixtures/web-board.json`).
-- `TakeonKit/`: `TakeonEngine` protocol and native engine adapters. The surface simulation bridge and rendering integration.
+- `TakeonKit/`: `TakeonEngine` protocol and native engine adapters. The surface simulation bridge and rendering integration. Run `TakeonKit/scripts/fetch-xcframework.sh` once to download the Go runtime (9 MB, Apple Silicon); without it the app uses its non-Takeon fallbacks.
 - `App/` + `project.yml`: multiplatform SwiftUI app. `xcodegen generate`, then build the `Landnam` scheme.
 
 Saves are web-compatible JSON; unported fields round-trip untouched via `extras`.
