@@ -9,6 +9,7 @@ export interface FriendPublicUser {
 export interface FriendEntry extends FriendPublicUser {
   friendshipId: string
   giftSentToday?: boolean
+  online?: boolean
 }
 
 export interface FriendsListResponse {
@@ -98,6 +99,11 @@ export function removeFriendship(friendshipId: string) {
 
 export function listFriends(): Promise<FriendsListResponse> {
   return friendsFetch('/list')
+}
+
+/** Refreshes the short-lived, server-side presence lease while the game is foregrounded. */
+export function heartbeatFriendPresence(): Promise<{ ok: boolean }> {
+  return friendsFetch('/presence', { method: 'POST' })
 }
 
 export function viewFriendBase(friendId: string): Promise<{ base: FriendBaseSnapshot }> {

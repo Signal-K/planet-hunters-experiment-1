@@ -1,10 +1,14 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { GameState } from '@/lib/game-types'
 import { normalizeAndRepair, type PartialSave } from '@/lib/game-state'
 import { MINERAL_META, CLIENT_SLOTS, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, STRUCTURES, customizerPartById } from '@/lib/data'
-import { applyBuyLaserCapacitor, applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, rocketPurchaseRefusal, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
+import { buyUnitPrice } from './MarketplaceSystem'
+import { applyBuyLaserCapacitor, applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, refinedUnitPrice, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, rocketPurchaseRefusal, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+
+afterEach(() => vi.useRealTimers())
 
 function makeState(overrides: Partial<GameState['player']> = {}): GameState {
   return {
@@ -370,6 +374,16 @@ describe('Academy and staffing economy', () => {
     expect(applyPlaceStructure(early, silo, silo.kind, 1)).toBe(early)
   })
 
+  it('lets a new Orionids entrant build the surface silo free during the active event', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 9, 23, 12, 0, 0))
+    const silo = STRUCTURES.find(structure => structure.id === 'surface-silo')!
+    const eventState = makeState({ francs: 0, missionsDone: 0, freeOperations: false, placed: ['launchpad'] })
+    const built = applyPlaceStructure({ ...eventState, missionId: ORIONIDS_NIGHT_RUN_ID }, silo, silo.kind, 1)
+    expect(built.player.placed).toContain('surface-silo')
+    expect(built.player.francs).toBe(0)
+  })
+
   it('does not re-raise the Free Ops handoff when a Free Ops player builds another structure', () => {
     const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
     const state = { ...makeState({ francs: academy.cost, stash: { ...academy.costMaterials }, academyResearched: true, placed: ['surface-silo'] }), popup: null }
@@ -449,6 +463,15 @@ describe('off-world storage and refinery settlement', () => {
     expect(next.player.francs).toBe(1300)
     expect(next.player.refinedGoods[recipe.id]).toBe(1)
   })
+
+  it('pays the community research bonus on finished goods inside the week only (SSL-673)', () => {
+    const recipe = { id: 'refined-test', name: 'Refined Test', input: { mineral: 'iron', amount: 1 }, output: { name: 'Test Ingot', sym: 'Fe+', color: '#999', price: 1250 }, time: 1, cost: 10 }
+    const now = Date.UTC(2026, 9, 23)
+    const open = makeState({ francs: 50, refinedGoods: { [recipe.id]: 2 }, researchBonusUntil: now + 1000 })
+    expect(refinedUnitPrice(recipe, open.player, now)).toBe(1288)
+    expect(applySellRefinedGoods(open, recipe, 2, now).player.francs).toBe(50 + 1288 * 2)
+    expect(applySellRefinedGoods(open, recipe, 2, now + 1000).player.francs).toBe(50 + 1250 * 2)
+  })
 })
 
 describe('sell quote and sale agree', () => {
@@ -488,6 +511,19 @@ describe('sell quote and sale agree', () => {
     const { price, base, premiumApplied } = sellUnitPrice(unwanted, s.player, premiumClient.id)
     expect(premiumApplied).toBe(false)
     expect(price).toBe(base)
+  })
+
+  it('pays the community research bonus on quote and credit inside the week only (SSL-673)', () => {
+    const now = Date.UTC(2026, 9, 23)
+    const open = makeState({ stash: { iron: 10 }, researchBonusUntil: now + 1000 })
+    const shut = makeState({ stash: { iron: 10 }, researchBonusUntil: now - 1 })
+    const plain = sellUnitPrice('iron', shut.player, undefined, now)
+    const boosted = sellUnitPrice('iron', open.player, undefined, now)
+    expect(plain.bonusApplied).toBe(false)
+    expect(boosted.bonusApplied).toBe(true)
+    expect(boosted.price).toBe(Math.round(plain.price * 1.03))
+    expect(applySellMinerals(open, 'iron', 10, now, null).player.francs - open.player.francs).toBe(sellQuote({ iron: 10 }, open.player, undefined, now))
+    expect(buyUnitPrice('iron', open.player, undefined, now)).toBe(buyUnitPrice('iron', shut.player, undefined, now))
   })
 })
 

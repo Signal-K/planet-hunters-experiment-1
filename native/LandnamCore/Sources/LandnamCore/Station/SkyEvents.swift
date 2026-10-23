@@ -37,7 +37,7 @@ public enum SkyEvents {
 
     /// Local midnight on a calendar date, ms since epoch. Mirrors web `localMidnightMs`.
     public static func localMidnight(_ year: Int, _ month: Int, _ day: Int, calendar: Calendar = .current) -> Double {
-        var cal = calendar
+        let cal = calendar
         var parts = DateComponents()
         parts.calendar = cal
         parts.timeZone = cal.timeZone
@@ -157,7 +157,7 @@ public enum SkyEvents {
     public static let orionidsPeakReminderBody = "Moon's down — look up. Orionids peak; debris is falling in Landnam."
 
     public static func orionidsPeakReminderMs(calendar: Calendar = .current) -> Double {
-        var cal = calendar
+        let cal = calendar
         var parts = DateComponents()
         parts.calendar = cal
         parts.timeZone = cal.timeZone

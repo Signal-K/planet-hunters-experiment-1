@@ -64,7 +64,7 @@ for (const [ship, rocket] of Object.entries(SHIPS)) {
         test.setTimeout(150_000)
         const browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
         try {
-          const ctx = await browser.newContext({ viewport: size, baseURL: 'http://localhost:3001', hasTouch: input === 'touch' })
+          const ctx = await browser.newContext({ viewport: size, baseURL: 'http://localhost:4320', hasTouch: input === 'touch' })
           const page = await ctx.newPage()
           await open(page, rocket)
           await expect(page.getByTestId('mining-cargo-chip')).toBeAttached({ timeout: 40_000 })

@@ -49,10 +49,19 @@ public protocol TakeonEngine: AnyObject {
     func state() throws -> Data
     /// Top height and top material per column for a rectangle of the world (renderer feed).
     func window(x: Int, y: Int, w: Int, h: Int) throws -> TakeonTerrainWindow
+
+    /// Seeded drop-off (web `TakeOnMount` seedCache / seedCargo): one cache beside the rover, host cargo in the hold.
+    func seedCache()
+    func seedCargo(_ cargo: [String: Double]) throws
+    /// Empty the hold into a cache within one tile; returns units moved (0 when none is in reach).
+    func deposit() -> Double
 }
 
 public extension TakeonEngine {
     var lastRawEvents: [TakeonRawEvent] { [] }
+    func seedCache() {}
+    func seedCargo(_ cargo: [String: Double]) throws {}
+    func deposit() -> Double { 0 }
     func window(x: Int, y: Int, w: Int, h: Int) throws -> TakeonTerrainWindow {
         throw TakeonEngineError.runtime("terrain window unsupported by this engine")
     }

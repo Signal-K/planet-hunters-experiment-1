@@ -1,4 +1,4 @@
-import { addStamp, type StampKind } from '@/lib/research/stamps'
+import { addStamp, isDiscoveryMission, type StampKind } from '@/lib/research/stamps'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { useCallback, useRef } from 'react'
@@ -17,7 +17,7 @@ import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
 import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyBuyLaserCapacitor, applyFreeHaulDisposition, applyPurchaseRocket, applyRemoteHaulDisposition, applyRocketStageRecovery, earthStorageBuilt, hasOperationalRemoteSilo, rocketPurchaseRefusal } from '@/lib/systems/EconomySystem'
-import { getRequiredRocketModel, rocketCompatibleWithMission } from '@/lib/rockets'
+import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { loanOutstanding, repayBankruptcyLoan } from '@/lib/systems/TreasurySystem'
 import { TREASURY_PLAYER_ID } from '@/lib/systems/ProgressionSystem'
@@ -156,9 +156,9 @@ function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState 
 
 /**
  * SSL-450: Accept Contract lands straight on the launch review. The
- * recommended target and default rocket are chosen for the player, a free
- * (F0) rocket is built and rolled out to the pad, and anything that costs
- * francs stops at the Blueprint so spending stays an explicit tap.
+ * recommended target is chosen for the player, but vehicle selection remains
+ * an explicit action. A default config is only a build preview, never a
+ * physical rocket on the pad.
  */
 function finishQuickSetup(s: GameState, catalog: Catalog): GameState {
   let next = s
@@ -170,17 +170,7 @@ function finishQuickSetup(s: GameState, catalog: Catalog): GameState {
     if (!pick) return next
     next = pickTargetState(next, catalog, pick.id)
   }
-  if (next.screen !== 'rocket-buy' || !next.missionId || !next.targetId) return next
-  const mission = missionById(next, catalog, next.missionId)
-  const target = catalog.targets.find(t => t.id === next.targetId)
-  if (!mission || !target) return next
-  const required = getRequiredRocketModel(next.player.missionsDone)
-  const options = ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= next.player.missionsDone).filter(model => validateBuild({
-    mission, target, rocket: rocketConfigForModel(model), parts: catalog.parts, unlockedSkillNodes: next.player.unlockedSkillNodes ?? [],
-  }).ok)
-  const rocket = options.find(model => model.id === required.id) ?? options[0]
-  if (!rocket || rocket.costFrancs !== 0 || !rocketCompatibleWithMission(rocket, mission) || rocketPurchaseRefusal(next, rocket)) return next
-  return rollOutToPad({ ...applyPurchaseRocket(next, rocket) }) ?? next
+  return next
 }
 
 /** Moves the selected hangar vehicle to the launchpad; null when there is nothing to move. */
@@ -1364,11 +1354,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       )
       // SSL-475: our own World Space Week badge for this mission type, graded at
       // completion. The Rocket Revolution launch badge is granted at launch.
-      const wswBadgedPlayer = grantWswBadges(
+      const wswGraded = grantWswBadges(
         constructionPlayer,
         wswMissionTypeFor(mission, s.player.freeOperations),
         skyEventNow(isDevLauncherEnabled()),
       )
+      // SSL-674: a survey flight to a world the player discovered is community research.
+      const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(wswGraded, 'discovery-mission', Date.now()) : wswGraded
       const next: GameState = {
         ...s,
         player: {

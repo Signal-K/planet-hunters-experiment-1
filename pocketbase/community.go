@@ -119,6 +119,8 @@ func ensureCommunityCollections(app core.App) {
 			log.Printf("failed to save share_reports: %v", err)
 		}
 	}
+
+	ensureResearchCollection(app)
 }
 
 // ensureCommentModerationFields adds the report/hide columns to a
@@ -171,6 +173,7 @@ func registerCommunityRoutes(app core.App) {
 		g.POST("/comment/{commentId}/remove", communityCommentRemoveHandler(app))
 		g.POST("/report", communityReportHandler(app))
 		g.GET("/world/{friendId}", communityWorldHandler(app))
+		g.GET("/research", communityResearchHandler(app))
 
 		return se.Next()
 	})

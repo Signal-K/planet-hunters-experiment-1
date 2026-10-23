@@ -172,6 +172,27 @@ public final class GameStore {
         apply(n)
     }
 
+    /// Settles a server-authorised friend gift through the normal persisted
+    /// state path. The server marks the gift claimed before this is called, so
+    /// a network loss after that point cannot duplicate the reward.
+    public func receiveFriendGift(kind: FriendGiftKind, payload: FriendGiftPayload) {
+        var n = state
+        switch kind {
+        case .currency:
+            n.player.francs += max(0, payload.amount ?? 0)
+        case .resource:
+            guard let mineral = payload.mineral else { return }
+            n.player.stash[mineral, default: 0] += max(0, payload.amount ?? 0)
+        case .blueprint:
+            guard let slug = payload.slug else { return }
+            var ids: [JSONValue] = []
+            if case .array(let current)? = n.player.extras["unlockedBlueprints"] { ids = current }
+            guard !ids.contains(.string(slug)) else { return }
+            ids.append(.string(slug)); n.player.extras["unlockedBlueprints"] = .array(ids)
+        }
+        apply(n)
+    }
+
     /// Settings: mark all three tries done and open Free Ops (web `skipFlightPlan`).
     public func skipTraining() {
         var n = state
@@ -267,6 +288,12 @@ public final class GameStore {
         SkyEvents.grant(&n.player.badges, activity: .debrisMining, at: now, only: preset.eventId)
         apply(n)
     }
+    /// SSL-673: keep the community research bonus window the server reported, so Exchange sells pay it offline too.
+    public func noteResearchBonus(until: Double?) {
+        var n = state
+        guard ResearchStampRules.noteBonus(&n.player, until: until) else { return }
+        apply(n)
+    }
     /// Fragments mined with the laser count toward the ledger (web `addCaughtFragments(mined, 1, 'count')`).
     public func fragmentsMined(_ n: Int) {
         var s = state
@@ -342,7 +369,7 @@ public final class GameStore {
     public func upgradeLicense(to grade: LicenseGrade) { apply(Progression.applyUpgrade(state, to: grade)) }
     public func startRefine(_ recipeId: String) { apply(Refinery.applyStart(state, recipeId: recipeId, now: now)) }
     public func collectRefined(_ recipeId: String) { apply(Refinery.applyCollect(state, recipeId: recipeId, now: now)) }
-    public func sellRefined(_ recipeId: String, amount: Int) { apply(Refinery.applySell(state, recipeId: recipeId, amount: amount)) }
+    public func sellRefined(_ recipeId: String, amount: Int) { apply(Refinery.applySell(state, recipeId: recipeId, amount: amount, now: now)) }
     public func sell(_ mineralId: String, amount: Int) { apply(Market.applySell(state, mineralId: mineralId, amount: amount, now: now)) }
     public func buy(_ mineralId: String, amount: Int) { apply(Marketplace.applyBuy(state, mineralId: mineralId, amount: amount, now: now)) }
     public func setPriceAlert(_ mineralId: String, target: Int) { apply(Marketplace.applySetAlert(state, mineralId: mineralId, target: target)) }

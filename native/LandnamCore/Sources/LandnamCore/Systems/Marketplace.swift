@@ -32,7 +32,8 @@ public enum Marketplace {
     }
 
     public static func buyUnitPrice(_ id: String, player: Player, now: Double) -> Int {
-        let spot = spot(id, player: player, now: now)
+        // The ask is set from the quote without the community research bonus (SSL-673).
+        let spot = Market.unitPrice(id, player: player, clientId: player.lastClient, now: now, bonus: false).price
         guard spot > 0 else { return 0 }
         return max(spot + 1, Int((Double(spot) * buyMarkup).rounded()))
     }

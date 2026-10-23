@@ -2,12 +2,12 @@ import { chromium, expect, test, type Page } from '@playwright/test'
 import { VIEWPORTS } from './helpers'
 
 // SSL-365: real browser offline. Signs in for real against the LOCAL stack, drops the network, builds something, reconnects,
-// and checks PocketBase holds the build exactly once. Opt-in (needs local PocketBase :8090/:8091 and a dev server), so it
+// and checks PocketBase holds the build exactly once. Opt-in (needs local PocketBase :8090/:8095 and a dev server), so it
 // never runs with the normal scene suite:  OFFLINE_E2E=1 npx playwright test flow-offline-replay.spec.ts
 test.skip(!process.env.OFFLINE_E2E, 'opt-in; run with OFFLINE_E2E=1 against the local stack')
 
 const SHARED = process.env.OFFLINE_SHARED_PB ?? 'http://127.0.0.1:8090'
-const LANDNAM = process.env.OFFLINE_LANDNAM_PB ?? 'http://127.0.0.1:8091'
+const LANDNAM = process.env.OFFLINE_LANDNAM_PB ?? 'http://127.0.0.1:8095'
 const EMAIL = process.env.OFFLINE_EMAIL ?? 'ssl365.offline@example.com'
 const PASSWORD = process.env.OFFLINE_PASSWORD ?? 'OfflineTest365!'
 
@@ -43,7 +43,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     const before = await remoteState(landnam.token, uid)
     const browser = await chromium.launch({ args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
     try {
-      const context = await browser.newContext({ viewport: size, baseURL: process.env.SCENES_BASE_URL ?? 'http://localhost:3001', hasTouch: vp !== 'desktop' })
+      const context = await browser.newContext({ viewport: size, baseURL: process.env.SCENES_BASE_URL ?? 'http://localhost:4320', hasTouch: vp !== 'desktop' })
       const page = await context.newPage()
       await page.addInitScript(([u]) => {
         if (localStorage.getItem('seeded-offline')) return

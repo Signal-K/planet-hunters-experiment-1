@@ -47,8 +47,27 @@ async function purgeTestAccount(page: Page): Promise<number> {
   }, landnamPbUrl)
 }
 
+async function callLandnam<T>(page: Page, path: string, init?: { method?: string, body?: unknown }): Promise<T> {
+  if (!landnamPbUrl) throw new Error('STAGING_LANDNAM_PB_URL is required')
+  return page.evaluate(async ({ base, path, init }) => {
+    const raw = localStorage.getItem('pocketbase_auth_landnam')
+    if (!raw) throw new Error('Landnam auth exchange was not stored')
+    const auth = JSON.parse(raw) as PocketBaseAuth
+    const response = await fetch(`${base.replace(/\/$/, '')}${path}`, {
+      method: init?.method ?? 'GET',
+      headers: { Authorization: `Bearer ${auth.token}`, ...(init?.body ? { 'Content-Type': 'application/json' } : {}) },
+      body: init?.body ? JSON.stringify(init.body) : undefined,
+    })
+    if (!response.ok) throw new Error(`${path} failed: ${response.status} ${await response.text()}`)
+    return response.json() as Promise<T>
+  }, { base: landnamPbUrl, path, init })
+}
+
 async function signUp(page: Page, info: TestInfo, email: string, password: string) {
-  await page.goto(`${stagingBaseUrl?.replace(/\/$/, '')}/game?gate=signup`, { waitUntil: 'networkidle' })
+  // The authenticated shell polls presence and notifications. `networkidle`
+  // therefore is not a stable navigation completion signal; the gate
+  // visibility assertion below is the real readiness condition.
+  await page.goto(`${stagingBaseUrl?.replace(/\/$/, '')}/game?gate=signup`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByTestId('auth-gate-email')).toBeVisible()
   await page.getByRole('tab', { name: 'Sign Up' }).click()
   await page.getByTestId('auth-gate-email').fill(email)
@@ -127,6 +146,58 @@ test.describe('staging playthrough', () => {
     }
   })
 })
+
+// SSL-673: friend requests are the first typed tray notification. This uses
+// two disposable real accounts because fixture state cannot prove the
+// authenticated request, presence, and accept path.
+for (const [vp, size] of Object.entries(VIEWPORTS)) {
+  test.describe(`staging friends ${vp}`, () => {
+    test.skip(!enabled, 'requires STAGING_PLAYTHROUGH=1 and explicit staging URLs')
+    test.setTimeout(180_000)
+    test.use({ viewport: size, hasTouch: vp !== 'desktop' })
+
+    test(`friend request appears in the notification tray at ${size.width}x${size.height}`, async ({ browser }, info) => {
+      if (!stagingBaseUrl || !landnamPbUrl) throw new Error('STAGING_BASE_URL and STAGING_LANDNAM_PB_URL are required')
+      const senderContext = await browser.newContext({ viewport: size, hasTouch: vp !== 'desktop' })
+      const recipientContext = await browser.newContext({ viewport: size, hasTouch: vp !== 'desktop' })
+      const sender = await senderContext.newPage()
+      const recipient = await recipientContext.newPage()
+      const suffix = runId()
+      const senderName = `SENDER_${suffix.replace(/[^a-z0-9]/gi, '').slice(-12)}`
+      const recipientName = `RECIP_${suffix.replace(/[^a-z0-9]/gi, '').slice(-12)}`
+      let senderStatus = 0
+      let recipientStatus = 0
+
+      try {
+        await signUp(sender, info, `friends-sender-${suffix}@landnam.test`, `Friends-${suffix}-pass!`)
+        await signUp(recipient, info, `friends-recipient-${suffix}@landnam.test`, `Friends-${suffix}-pass!`)
+        await callLandnam(sender, '/api/friends/username', { method: 'POST', body: { username: senderName } })
+        await callLandnam(recipient, '/api/friends/username', { method: 'POST', body: { username: recipientName } })
+        await callLandnam(recipient, '/api/friends/presence', { method: 'POST' })
+        await callLandnam(sender, '/api/friends/request', { method: 'POST', body: { username: recipientName } })
+
+        await expect(recipient.getByLabel(/Notifications, 1 unread/)).toBeVisible({ timeout: 30_000 })
+        await recipient.getByLabel(/Notifications, 1 unread/).click()
+        const tray = recipient.locator('[aria-label="Notifications"]')
+        await expect(tray).toContainText('Friend request')
+        await expect(tray).toContainText(`${senderName} wants to connect.`)
+        await attachScreenshot(recipient, info, `friends-tray-${vp}`)
+        await recipient.getByRole('button', { name: 'ACCEPT' }).click()
+        await expect(tray).toContainText('No new notifications.')
+
+        const friends = await callLandnam<{ friends: Array<{ username: string, online: boolean }> }>(sender, '/api/friends/list')
+        expect(friends.friends).toContainEqual(expect.objectContaining({ username: recipientName, online: true }))
+      } finally {
+        senderStatus = await purgeTestAccount(sender).catch(() => 0)
+        recipientStatus = await purgeTestAccount(recipient).catch(() => 0)
+        await senderContext.close()
+        await recipientContext.close()
+      }
+      expect(senderStatus, 'sender playtest account must be disposed').toBe(200)
+      expect(recipientStatus, 'recipient playtest account must be disposed').toBe(200)
+    })
+  })
+}
 
 // SSL-626: the authenticated playthrough the release gate asks for, at the three required sizes. It runs on the staging
 // Worker, which is the same build as production with NEXT_PUBLIC_LANDNAM_ENV=staging, against the live Landnam and shared

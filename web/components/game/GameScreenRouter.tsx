@@ -10,6 +10,8 @@ import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
 import { formatCurrency } from '@/lib/format'
 import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
+import { ORIONIDS_DEBRIS_PRESET, isDebrisEventActive } from '@/lib/data/sky-events'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 // IntroScreen and HubScreen are the two most likely first paints (cold start
 // and post-onboarding default), so they stay in the main bundle. Every other
 // screen below is code-split with next/dynamic — the switch below only ever
@@ -65,6 +67,7 @@ import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
+import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
 // Shared per-screen render map — the single source of truth for "which
@@ -106,6 +109,7 @@ function ScreenBody({
   const [launchPending, setLaunchPending] = useState(() =>
     process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('launchscene'))
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
+  const communityResearch = useCommunityResearch(screen === 'instrument-hub' || screen === 'market', game.setPlayer)
 
   useEffect(() => {
     if (screen !== 'hub') return
@@ -217,19 +221,23 @@ function ScreenBody({
         missionsDone: game.player.missionsDone,
         hasMiningSettlement: hasEstablishedMiningSettlement(game.player),
       }
+      const eventSiloFree = (game.missionId === ORIONIDS_NIGHT_RUN_ID || game.player.activeMission?.id === ORIONIDS_NIGHT_RUN_ID)
+        && isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, Date.now())
       // Only unlocked structures that are not already on the base are offered.
       const buildOptions: HubBuildOption[] = game.catalog.structures
         .filter(structure => structure.id !== 'garage' && structure.id !== 'astronaut-academy'
-          && !game.player.placed.includes(structure.id) && structureUnlocked(structure, unlockOpts))
+          && !game.player.placed.includes(structure.id)
+          && (structureUnlocked(structure, unlockOpts) || (eventSiloFree && structure.id === 'surface-silo')))
         .map(structure => {
-          const gaps = structureAffordabilityGaps(structure, { francs: game.player.francs, stash: game.player.stash })
+          const pricedStructure = eventSiloFree && structure.id === 'surface-silo' ? { ...structure, cost: 0 } : structure
+          const gaps = structureAffordabilityGaps(pricedStructure, { francs: game.player.francs, stash: game.player.stash })
           const mineralCost = Object.entries(structure.costMaterials ?? {}).map(([mineral, amount]) => `${amount} ${mineral}`).join(' · ')
-          const francs = structure.cost === 0 ? 'Free' : formatCurrency(structure.cost, { compact: true })
+          const francs = pricedStructure.cost === 0 ? 'Free' : formatCurrency(pricedStructure.cost, { compact: true })
           return {
             id: structure.id,
             name: structure.name,
             cost: mineralCost ? `${francs} · ${mineralCost}` : francs,
-            affordable: canAffordStructure(structure, { francs: game.player.francs, stash: game.player.stash }),
+            affordable: canAffordStructure(pricedStructure, { francs: game.player.francs, stash: game.player.stash }),
             reason: gaps.length ? `Need ${gaps.join(', ')}` : undefined,
           }
         })
@@ -341,6 +349,7 @@ function ScreenBody({
       return (
         <InstrumentHubScreen
           player={game.player}
+          communityResearch={communityResearch}
           onClaimSurveyPlot={game.claimSaturnSurveyTerritory}
           targets={game.catalog.targets}
           onStartScan={game.startSurveyScan}
@@ -455,6 +464,7 @@ function ScreenBody({
             refinedGoods: game.player.refinedGoods,
             refineryLastStartedAt: game.player.refineryLastStartedAt,
             staffed: !!game.player.structureCrewAssignments?.refinery,
+            researchBonusUntil: game.player.researchBonusUntil,
           }}
           onBack={() => game.goBack()}
           onStartRefine={game.onStartRefine}
@@ -469,6 +479,7 @@ function ScreenBody({
           marketSupply={game.player.marketSupply ?? {}}
           marketSupplyUpdatedAt={game.player.marketSupplyUpdatedAt ?? {}}
           dailyEconomySnapshot={game.player.dailyEconomySnapshot}
+          researchBonusUntil={game.player.researchBonusUntil}
           francs={game.player.francs}
           exchangeBuilt={exchangeBuilt(game.player)}
           priceAlerts={game.player.priceAlerts}
@@ -615,7 +626,9 @@ function ScreenBody({
           onRequestLaunch={() => {
             const vehicle = game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId)
             if (!vehicle || vehicle.location !== 'launchpad') {
-              game.onPurchaseRocket(rocketModelForConfig(game.rocket).id)
+              // A default config is only a design preview. Never turn the
+              // launch CTA into an implicit rocket purchase.
+              game.go('hangar')
               return
             }
             handleLaunch()

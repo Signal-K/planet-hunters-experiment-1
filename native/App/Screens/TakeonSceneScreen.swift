@@ -23,11 +23,13 @@ final class TakeonSceneModel {
 
     let target: String
     let seed: UInt64
+    /// False for scratch fields (the delivery drop-off) that must never overwrite the saved survey world.
+    private let persist: Bool
     private var lastSave = 0.0
 
     init(engine: TakeonEngine = makeDefaultTakeonEngine(), target: String = "moon", seed: UInt64 = 4212, persist: Bool = true) {
         self.engine = engine
-        self.target = target; self.seed = seed
+        self.target = target; self.seed = seed; self.persist = persist
         guard takeonGoRuntimeAvailable else { failure = "Rover sim unavailable in this build"; return }
         do {
             try engine.loadWorld(TakeonWorldSeed(targetId: target, seed: seed))
@@ -53,7 +55,7 @@ final class TakeonSceneModel {
     /// Saves the world locally and queues the PocketBase upload.
     func save() {
         lastSave = accum
-        guard failure == nil, let st = try? engine.state() else { return }
+        guard persist, failure == nil, let st = try? engine.state() else { return }
         TakeonPersistence.save(target: target, seed: seed, state: st, snapshot: try? engine.snapshot())
     }
 
@@ -86,6 +88,18 @@ final class TakeonSceneModel {
     }
 
     // MARK: intents
+
+    /// Web `TakeOnMount` seedCache + seedCargo: one cache beside the rover and the host's cargo in the hold.
+    func seedDropoff(_ cargo: [String: Double]) {
+        guard failure == nil else { return }
+        engine.seedCache()
+        try? engine.seedCargo(cargo)
+        refresh(force: true)
+    }
+    /// Units moved into an adjacent cache (0 when none is in reach or the hold is empty).
+    func deposit() -> Double { let moved = engine.deposit(); refresh(force: true); return moved }
+    /// One tile in an engine direction (0 SE, 1 SW, 2 NW, 3 NE on screen).
+    func move(_ dir: Int) { _ = try? engine.order("move", arg: dir); heading = dir; refresh() }
     func mineSelected() { if let s = selected, engine.orderMine(x: s.x, y: s.y) { heading = state?.rover.facing ?? heading } }
     func bank() { _ = engine.bank(); refresh(force: true); save() }
     func turn(_ delta: Int) { heading = (heading + delta + 4) % 4 }

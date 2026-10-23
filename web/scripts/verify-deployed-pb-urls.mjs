@@ -18,7 +18,7 @@ const required = [
 const forbidden = [
   /new [A-Za-z0-9_.$]+\("http:\/\/localhost:809/,
   /\$\{"http:\/\/localhost:809/,
-  /\?\? "http:\/\/localhost:8091"/,
+  /\?\? "http:\/\/localhost:8095"/,
 ]
 
 async function jsFiles(dir, out = []) {

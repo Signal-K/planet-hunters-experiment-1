@@ -59,6 +59,8 @@ const isEditing = (el: EventTarget | null) => el instanceof HTMLElement && (el.t
 export default function StudioClient(props: Props) {
   const [index, setIndex] = useState(props.initialIndex)
   const [target, setTarget] = useState(props.initialTarget)
+  // Follow is on by default: the editor tracks the scenes agents declare. Picking a scene yourself pauses it.
+  const [following, setFollowing] = useState(props.follow)
   const [scene, setScene] = useState(props.initialScene)
   const [data, setData] = useState(props.initialData)
   const [view, setView] = useState<View>(props.initialView)
@@ -155,9 +157,9 @@ export default function StudioClient(props: Props) {
     params.set('vp', vp)
     if (target.type === 'scene') params.set('tab', tab)
     if (flowState) { params.set('flow', flowState.id); params.set('step', String(flowState.step + 1)) }
-    if (props.follow) params.set('follow', '1')
+    params.set('follow', following ? '1' : '0')
     window.history.replaceState(null, '', `${window.location.pathname}?${params}`)
-  }, [target, view, selection, vp, tab, flowState, props.follow])
+  }, [target, view, selection, vp, tab, flowState, following])
 
   // Pick up edits made in the code editor, and the focus an agent declares.
   useEffect(() => {
@@ -180,7 +182,7 @@ export default function StudioClient(props: Props) {
   // Follow mode: jump to whatever an agent declares it is working in.
   const lastFocus = useRef('')
   useEffect(() => {
-    if (!props.follow) return
+    if (!following) return
     const timer = setInterval(async () => {
       try {
         const focus = await getFocus()
@@ -190,7 +192,7 @@ export default function StudioClient(props: Props) {
       } catch { /* ignore */ }
     }, 3000)
     return () => clearInterval(timer)
-  }, [props.follow, index.scenes])
+  }, [following, index.scenes])
 
   // The storyboard's comment thread, shown with the notes.
   useEffect(() => {
@@ -338,7 +340,7 @@ export default function StudioClient(props: Props) {
     if (instructions !== undefined) ops.push(instructions ? { op: 'set', path: ['presets', index, 'instructions'], value: instructions } : { op: 'remove', path: ['presets', index, 'instructions'] })
     edit(scene.scene.file, ops, 'Preset saved')
   }
-  const pickScene = (id: string, next?: { view?: View; selection?: Selection }) => { wanted.current = next ?? null; setTarget({ type: 'scene', id }); setPickerOpen(false) }
+  const pickScene = (id: string, next?: { view?: View; selection?: Selection }) => { wanted.current = next ?? null; setFollowing(false); setTarget({ type: 'scene', id }); setPickerOpen(false) }
   const pickFlow = (id: string, step = 0) => {
     const next = index.flows.find(candidate => candidate.id === id)
     const item = next?.steps[step]
@@ -428,7 +430,7 @@ export default function StudioClient(props: Props) {
       </section>}
       <header ref={deckRef} className={styles.bar}>
         <ScenePicker index={index} label={title} currentId={target.type === 'scene' ? target.id : ''} focusIds={focusScenes} open={pickerOpen} onOpen={setPickerOpen} onPickScene={pickScene}
-          onPickFlow={pickFlow} onPickData={(kind, id) => { setTarget({ type: 'data', kind, id }); setPickerOpen(false) }} />
+          onPickFlow={pickFlow} onPickData={(kind, id) => { setFollowing(false); setTarget({ type: 'data', kind, id }); setPickerOpen(false) }} />
         {target.type === 'scene' && <PresetPicker presets={presets} checkpoints={fixtures} view={view} onChange={setFromView} />}
         <span className={styles.seg} role="group" aria-label="Device size">
           {(Object.keys(VIEWPORTS) as ViewportKey[]).map(k => <button key={k} type="button" aria-pressed={vp === k} aria-label={k === 'ls' ? 'Wide' : VIEWPORTS[k].label} onClick={() => setVp(k)} data-testid={`vp-${k}`} title={VIEWPORTS[k].hint}><DeviceIcon k={k} /><span className={styles.segLabel}>{k === 'ls' ? 'Wide' : VIEWPORTS[k].label}</span></button>)}
@@ -438,7 +440,7 @@ export default function StudioClient(props: Props) {
         <button type="button" className={styles.btn} disabled={!redoStack.length} onClick={() => restore('redo')} data-testid="redo">Redo</button>
         {target.type === 'scene' && <button type="button" className={`${styles.btn} ${tab === 'objects' ? styles.btnPrimary : ''}`} onClick={() => { setTab('objects'); setTool('select') }} data-testid="header-objects">Objects</button>}
         <button type="button" className={`${styles.btn} ${tab === 'project' ? styles.btnPrimary : ''}`} onClick={() => setTab('project')} data-testid="header-project">Project</button>
-        <span className={styles.barEnd}><ScriptMenu files={scriptFiles} hostRoot={hostRoot} /><MoreMenu theme={theme} onTheme={chooseTheme} showNative={showNative} canNative={vp === 'ph'} onNative={() => setShowNative(n => !n)} openHref={src} /></span>
+        <span className={styles.barEnd}><button type="button" className={`${styles.btn} ${following ? styles.btnPrimary : ''}`} aria-pressed={following} onClick={() => { lastFocus.current = ''; setFollowing(f => !f) }} title="Show the scenes agents are working on." data-testid="studio-follow">Follow</button><ScriptMenu files={scriptFiles} hostRoot={hostRoot} /><MoreMenu theme={theme} onTheme={chooseTheme} showNative={showNative} canNative={vp === 'ph'} onNative={() => setShowNative(n => !n)} openHref={src} /></span>
       </header>
       {flow && flowState && <FlowBar flow={flow} step={flowState.step} onStep={step => pickFlow(flow.id, step)} onClose={() => setFlowState(null)} />}
       <div className={styles.body}>

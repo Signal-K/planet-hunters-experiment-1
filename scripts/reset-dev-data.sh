@@ -8,7 +8,7 @@
 # purge a backend without that account, use ALLOW_UNPROTECTED_RESET=1.
 
 SHARED_URL="${SHARED_PB_URL_OVERRIDE:-http://localhost:8090}"
-LANDNAM_URL="${LANDNAM_PB_URL_OVERRIDE:-http://localhost:8091}"
+LANDNAM_URL="${LANDNAM_PB_URL_OVERRIDE:-http://localhost:8095}"
 SUPERUSER_EMAIL="liam@skinetics.tech"
 SUPERUSER_PASSWORD="ThisIsATestPassword"
 PROTECTED_EMAIL="liam@skinetics.tech"

@@ -42,4 +42,50 @@ import Foundation
         #expect(n.screen == .transit && n.player.returningToEarth && n.player.deliveryUnloadStartedAt == nil)
         #expect(n.deliveredCargo == gs.lastCargo)
     }
+
+    @Test func onlyTheTransportLessonUsesTheRoverDropoff() {
+        var p = Player(); p.missionsDone = Transitions.transportLessonMissionsDone
+        #expect(Dropoff.applies(p))
+        p.missionsDone += 1
+        #expect(!Dropoff.applies(p))
+    }
+
+    @Test func theRoverMustParkAtTheDepotBeforeDumping() {
+        var d = Dropoff()
+        #expect(!d.dump(cargoUnits: 6) && d.refusal == .notParked)
+        #expect(Dropoff.message(for: .notParked) == "PARK BESIDE THE DEPOT CACHE")
+        for _ in 0..<7 { d.drive(by: Dropoff.step) }
+        #expect(d.parked)
+        #expect(!d.dump(cargoUnits: 0) && d.refusal == .noCargo)
+        #expect(d.dump(cargoUnits: 6) && d.stage == .dumped && d.refusal == nil)
+        // Emptied: the rover no longer drives until it is sent home.
+        d.drive(to: 0.2)
+        #expect(d.rover >= Dropoff.parkedFrom)
+        d.returnRover()
+        #expect(d.stage == .returned && d.rover == 0)
+    }
+
+    @Test func returningNeedsTheCargoDumpedFirst() {
+        var d = Dropoff()
+        d.returnRover()
+        #expect(d.stage == .driving)
+        d.drive(to: 5)
+        #expect(d.rover == 1)
+    }
+
+    @Test func theTakeonFieldGetsWebsBodyCargoAndSeed() {
+        let cat = Catalog()
+        #expect(TakeonMapping.body(for: cat.target("vesta")) == "ceres")
+        #expect(TakeonMapping.body(for: cat.target("bennu")) == "bennu")
+        #expect(TakeonMapping.cargo(["carbon": 2, "iron": 3, "unobtainium": 4, "gold": 0]) == ["stone": 2, "iron": 3])
+        #expect(TakeonMapping.cargo(["gold": 1, "platinum": 2]) == ["crystal": 3])
+        // Web: stableSeed("a") === 3826002220.
+        #expect(TakeonMapping.stableSeed("a") == 3_826_002_220)
+    }
+
+    @Test func theFieldsDepositDecidesReach() {
+        var d = Dropoff()
+        #expect(!d.dump(cargoUnits: 5, nearCache: false) && d.refusal == .notParked)
+        #expect(d.dump(cargoUnits: 5, nearCache: true) && d.stage == .dumped)
+    }
 }

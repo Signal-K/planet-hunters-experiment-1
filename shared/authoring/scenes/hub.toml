@@ -1,6 +1,6 @@
 #:schema ../schema/scene.schema.json
 # Earth Base: the home base. A paved launch complex on flat steppe with low escarpments.
-# Scene script. Edit here or in the Scene Studio (http://localhost:3001/game/studio?scene=hub).
+# Scene script. Edit here or in the Scene Studio (http://localhost:4320/game/studio?scene=hub).
 # Buildings appear only when the player has built them, on the fixed sites in shared/layout/base-site.json.
 # Objects marked status = "proposed" are requests for an agent to build.
 format = 1

@@ -59,7 +59,7 @@ for (const pr of presets) {
   const stage = process.env.LANDNAM_STAGE !== '0'
   const chrome = process.env.LANDNAM_CHROME ? '&chrome=1' : ''
   const patch = (process.env.LANDNAM_PATCH ? `&patch=${encodeURIComponent(process.env.LANDNAM_PATCH)}` : '') + chrome + (process.env.LANDNAM_CLICK ? `&click=${encodeURIComponent(process.env.LANDNAM_CLICK)}` : '')
-  await send('Page.navigate', { url: stage ? `http://localhost:3001/game/stage?preset=${pr}${patch}` : `http://localhost:3001/game?preset=${pr}` })
+  await send('Page.navigate', { url: stage ? `http://localhost:4320/game/stage?preset=${pr}${patch}` : `http://localhost:4320/game?preset=${pr}` })
   if (stage) {
     for (let i = 0; i < 60; i++) { const t = await send('Runtime.evaluate', { expression: `document.querySelector('[data-stage-ready=true] .game-screen-area')?.children.length > 0`, returnByValue: true }); if (t.result?.value) break; await sleep(250) }
     await sleep(+(process.env.LANDNAM_SETTLE ?? 4000))

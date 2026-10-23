@@ -44,7 +44,7 @@ public struct AuthAPI: Sendable {
     public static func fromEnvironment(session: URLSession = .shared) -> AuthAPI {
         let env = ProcessInfo.processInfo.environment
         #if DEBUG
-        let landnam = env["LANDNAM_PB_URL"] ?? "http://localhost:8091"
+        let landnam = env["LANDNAM_PB_URL"] ?? "http://localhost:8095"
         let shared = env["LANDNAM_SHARED_PB_URL"] ?? "http://localhost:8090"
         #else
         let landnam = env["LANDNAM_PB_URL"] ?? "https://signal-k-landnam.fly.dev"

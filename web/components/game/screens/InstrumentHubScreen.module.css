@@ -38,10 +38,12 @@
     align-items: start;
   }
 
-  .screen .frame.frame > :first-child {
+  /* The Daily research plate comes first in the column (SSL-673), so the board is the second child and the plate
+     tops the side column. */
+  .screen .frame.frame > :nth-child(2) {
     grid-column: 1;
     grid-row: 1 / span 6;
   }
 
-  .screen .frame.frame > :not(:first-child) { grid-column: 2; }
+  .screen .frame.frame > :not(:nth-child(2)) { grid-column: 2; }
 }

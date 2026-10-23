@@ -116,6 +116,7 @@ function FriendRow({
         <FriendAvatar seed={entry.id} size={36} />
         <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)', flex: 1 }}>
           {entry.username}
+          <span aria-label={entry.online ? 'Online' : 'Offline'} title={entry.online ? 'Online' : 'Offline'} style={{ width: 9, height: 9, borderRadius: '50%', background: entry.online ? 'var(--ln-cyan-press)' : 'var(--ln-text-muted)', display: 'inline-block', marginLeft: 8 }} />
         </div>
         {onViewBase && <SmallButton label="View Base" onClick={onViewBase} />}
         {onVisitWorld && <SmallButton label="Visit Worlds" onClick={onVisitWorld} />}

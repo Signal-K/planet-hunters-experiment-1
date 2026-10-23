@@ -14,6 +14,7 @@ import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
 import SurveyScanConsole from '@/components/game/control-station/SurveyScanConsole'
 import type { Target } from '@/lib/data'
 import { ResearchCalendar } from '@/components/game/control-station/ResearchCalendar'
+import type { CommunityResearch } from '@/lib/research/stamps'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import { skyEventNow } from '@/lib/data/sky-events'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
@@ -32,13 +33,15 @@ interface InstrumentHubScreenProps {
   targets?: readonly Target[]
   onStartScan?: (targetId: string) => void
   onResolveScan?: () => void
+  /** SSL-673: the shared monthly total, null until it loads or when offline. */
+  communityResearch?: CommunityResearch | null
 }
 
 /**
  * Control Station. The route id stays `instrument-hub` so existing entry
  * points land here. This is the equipment station, not `player.controlBuilt`.
  */
-export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild, onClaimSurveyPlot, targets = [], onStartScan, onResolveScan }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild, onClaimSurveyPlot, targets = [], onStartScan, onResolveScan, communityResearch }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [bodyId, setBodyId] = useState('all')
   const help = useHelp('instrument-hub', { firstVisit: true })
@@ -71,6 +74,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild
       />
       {help.layer}
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
+        <ResearchCalendar stamps={player.researchStamps} now={now} community={communityResearch} hasDiscovery={Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0} />
         <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} onBuild={onBuild} banner={wswBanner(player.badges, now)} />
         {onStartScan && onResolveScan && player.freeOperations && (
           <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />
@@ -87,7 +91,6 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild
             )}
           </section>
         )}
-        <ResearchCalendar stamps={player.researchStamps} now={now} />
         <SkyBadgeRow badges={player.badges} />
       </div>
     </ScenePanel>

@@ -9,7 +9,7 @@ const token = () => `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ id: USER, exp:
 for (const [vp, size] of Object.entries(VIEWPORTS)) test(`events ${vp}`, async () => {
   test.setTimeout(90000)
   const browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
-  const page = await (await browser.newContext({ viewport: size, baseURL: 'http://localhost:3001' })).newPage()
+  const page = await (await browser.newContext({ viewport: size, baseURL: 'http://localhost:4320' })).newPage()
   const record = { id: USER, collectionId: '_pb_users_auth_', collectionName: 'users', email: 'e2e@example.test', verified: true }
   await page.addInitScript(() => { const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, k: string, ...r: unknown[]) { return /webgl/.test(k) ? null : (g as any).call(this, k, ...r) } as any })
   await page.route(/\/api\/(collections|realtime|health)/, r => /auth-refresh/.test(r.request().url()) ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ token: token(), record }) }) : r.abort('connectionrefused'))

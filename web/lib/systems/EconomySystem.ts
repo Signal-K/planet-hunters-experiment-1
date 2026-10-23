@@ -12,6 +12,9 @@ import { structureIsStaffed } from './AcademySystem'
 import { buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
 import { freeOperationsUnlocked, trainingFinished } from './AgencyOnboardingSystem'
+import { RESEARCH_BONUS_RATE, researchBonusActive } from '@/lib/research/stamps'
+import { ORIONIDS_DEBRIS_PRESET, isDebrisEventActive } from '@/lib/data/sky-events'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
 export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
@@ -59,12 +62,12 @@ export function openMarketSellPrice(basePrice: number, unitsSold: number): numbe
  *  honoured here rather than dropped from the display. */
 export function sellUnitPrice(
   mineralId: string,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot'>,
+  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchBonusUntil'>,
   clientId?: string,
   now: number = Date.now(),
-): { price: number; base: number; premiumApplied: boolean } {
+): { price: number; base: number; premiumApplied: boolean; bonusApplied: boolean } {
   const meta = MINERAL_META[mineralId]
-  if (!meta) return { price: 0, base: 0, premiumApplied: false }
+  if (!meta) return { price: 0, base: 0, premiumApplied: false, bonusApplied: false }
   const snapshotQuote = player.dailyEconomySnapshot?.prices[mineralId]
   const unitsSold = decayedUnitsSold(player.marketSupply?.[mineralId] ?? 0, player.marketSupplyUpdatedAt?.[mineralId], now)
   // A published daily snapshot is authoritative. The old per-player supply
@@ -73,17 +76,22 @@ export function sellUnitPrice(
   const base = snapshotQuote?.price ?? openMarketSellPrice(meta.price, unitsSold)
   const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) : undefined
   const premiumApplied = !!client && client.mineralPreferences.includes(mineralId) && client.payoutPremium > 0
+  const quoted = premiumApplied ? Math.round(base * (1 + client!.payoutPremium)) : base
+  // SSL-673: the community research week pays a little more on every ore sale. Buy prices read the same
+  // quote without it (MarketplaceSystem.buyUnitPrice), so the bonus is never a buy-and-resell loop.
+  const bonusApplied = researchBonusActive(player, now)
   return {
-    price: premiumApplied ? Math.round(base * (1 + client!.payoutPremium)) : base,
+    price: bonusApplied ? Math.round(quoted * (1 + RESEARCH_BONUS_RATE)) : quoted,
     base,
     premiumApplied,
+    bonusApplied,
   }
 }
 
 /** Total francs a stash (or a subset of it) would fetch at current prices. */
 export function sellQuote(
   stash: Record<string, number>,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot'>,
+  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchBonusUntil'>,
   clientId?: string,
   now: number = Date.now(),
 ): number {
@@ -256,7 +264,13 @@ export function applyRemoteHaulDisposition(
 }
 
 /** Sell collected refined goods at their recipe output value. */
-export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amount: number): GameState {
+/** What one finished good sells for now: its recipe value, +3% inside the community research week (SSL-673). */
+export function refinedUnitPrice(recipe: Pick<RefineryRecipe, 'output'>, player: Pick<GameState['player'], 'researchBonusUntil'>, now: number = Date.now()): number {
+  const price = recipe.output.price
+  return researchBonusActive(player, now) ? Math.round(price * (1 + RESEARCH_BONUS_RATE)) : price
+}
+
+export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amount: number, now: number = Date.now()): GameState {
   const available = s.player.refinedGoods[recipe.id] ?? 0
   const quantity = Math.min(Math.max(0, Math.floor(amount)), available)
   if (quantity <= 0) return s
@@ -264,7 +278,7 @@ export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amou
     ...s,
     player: {
       ...s.player,
-      francs: s.player.francs + recipe.output.price * quantity,
+      francs: s.player.francs + refinedUnitPrice(recipe, s.player, now) * quantity,
       refinedGoods: { ...s.player.refinedGoods, [recipe.id]: available - quantity },
     },
   }
@@ -459,8 +473,11 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
   if (!structure || structure.kind !== kind) return s
   if (s.player.placed.includes(kind)) return s
   if (kind === 'astronaut-academy' && !s.player.academyResearched) return s
-  if (!structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations, missionsDone: s.player.missionsDone, academyResearched: s.player.academyResearched })) return s
-  if (s.player.francs < structure.cost) return s
+  const eventSiloFree = kind === 'surface-silo'
+    && s.missionId === ORIONIDS_NIGHT_RUN_ID
+    && isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, Date.now())
+  if (!eventSiloFree && !structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations, missionsDone: s.player.missionsDone, academyResearched: s.player.academyResearched })) return s
+  if (!eventSiloFree && s.player.francs < structure.cost) return s
   if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
   const stash = { ...(s.player.stash ?? {}) }
   for (const [mineral, amount] of Object.entries(structure.costMaterials ?? {})) {
@@ -479,7 +496,7 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
     player: {
       ...s.player,
       ...(enteredFreeOperations ? { freeOperations: true } : {}),
-      francs: s.player.francs - structure.cost,
+      francs: s.player.francs - (eventSiloFree ? 0 : structure.cost),
       stash,
       placed,
       placementPlots: { ...s.player.placementPlots, [kind]: plot },

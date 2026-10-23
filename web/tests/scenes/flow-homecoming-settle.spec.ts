@@ -50,7 +50,7 @@ test('settle: crates leave, the rocket is dismantled, the haul is sold and store
   test.setTimeout(120_000)
   const browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
   try {
-    const page = await (await browser.newContext({ viewport: VIEWPORTS.phone, baseURL: 'http://localhost:3001' })).newPage()
+    const page = await (await browser.newContext({ viewport: VIEWPORTS.phone, baseURL: 'http://localhost:4320' })).newPage()
     await open(page, true)
     await expect(page.getByTestId('delivery-sheet')).toBeVisible({ timeout: 30_000 })
     if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/settle-1-sheet.png` })
@@ -71,7 +71,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
     test.setTimeout(120_000)
     const browser = await chromium.launch({ channel: undefined, args: ['--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
     try {
-      const page = await (await browser.newContext({ viewport: size, baseURL: 'http://localhost:3001' })).newPage()
+      const page = await (await browser.newContext({ viewport: size, baseURL: 'http://localhost:4320' })).newPage()
       const errors: string[] = []
       page.on('pageerror', e => errors.push(e.message))
       await open(page, true)

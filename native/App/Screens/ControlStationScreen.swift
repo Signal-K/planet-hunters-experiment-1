@@ -20,7 +20,9 @@ private enum Room {
 /// 640x320 diagram data, so markers can't drift from the planets.
 struct ControlStationScreen: View {
     @Environment(GameStore.self) private var store
+    @Environment(Services.self) private var services: Services?
     @State private var bodyId = "all"
+    @State private var community: CommunityResearch?
     var signals: [InstrumentSignal] = []
 
     private var model: ControlStation.Model {
@@ -30,6 +32,8 @@ struct ControlStationScreen: View {
     var body: some View {
         ScreenFrame(title: "Control Station", back: { store.go(.hub) }, night: true) {
             let m = model
+            // SSL-673: the Daily research plate leads the screen.
+            ResearchCalendarPanel(stamps: store.player.researchStamps, now: store.now, community: community, hasDiscovery: !store.player.discoveredExoplanetTargets.isEmpty)
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
                     WorldSpaceWeekBanner(banner: WorldSpaceWeek.banner(badges: store.player.badges, now: store.now))
@@ -42,10 +46,14 @@ struct ControlStationScreen: View {
             .padding(12)
             .background(LinearGradient(colors: [Room.hullLit, Room.hull], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Room.outline, lineWidth: 2))
-            ResearchCalendarPanel(stamps: store.player.researchStamps, now: store.now)
             SkyBadgeRow(badges: store.player.badges)
         }
         .helpable(.instrumentHub, firstVisit: true)
+        .task {
+            guard let api = services?.communityResearchAPI(), let res = await api.fetch() else { return }
+            community = res
+            store.noteResearchBonus(until: res.bonusUntil)
+        }
     }
 
     private func filters(_ m: ControlStation.Model) -> some View {

@@ -24,6 +24,7 @@ import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsSheet from '@/components/game/FriendsSheet'
+import NotificationBell from '@/components/game/NotificationBell'
 import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import SuiteHopRail from '@/components/game/SuiteHopRail'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
@@ -35,6 +36,7 @@ import { ScreenContent } from '@/components/game/GameScreenRouter'
 import { useHelpOpen } from '@/lib/help/open-state'
 import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
+import { heartbeatFriendPresence } from '@/lib/friends/client'
 import OrionidsShowerChrome from '@/components/game/orionids/OrionidsShowerChrome'
 
 function GameChrome({ children }: { children: ReactNode }) {
@@ -74,6 +76,16 @@ function GameChrome({ children }: { children: ReactNode }) {
   // GameApp's equivalent effect for the legacy route shell.
   useEffect(() => {
     initPostHog()
+  }, [])
+
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible' && pbLandnam.authStore.isValid) void heartbeatFriendPresence().catch(() => undefined)
+    }
+    refresh()
+    const interval = window.setInterval(refresh, 60_000)
+    document.addEventListener('visibilitychange', refresh)
+    return () => { window.clearInterval(interval); document.removeEventListener('visibilitychange', refresh) }
   }, [])
 
   useEffect(() => {
@@ -224,6 +236,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   // navigation. Render the persistent scene from that state so route segment
   // replacement cannot tear down and recreate the background between steps.
   const currentScreen = game.screen
+  const eventMissionActive = game.missionId === 'self-directed-orionids-night-run' || game.player.activeMission?.id === 'self-directed-orionids-night-run'
   const activeTry = currentTrainingTry(game.player.flightPlan)
   const flightStep = activeTry
     ? trainingTryStep(activeTry, currentScreen, { returning: !!game.player.returningToEarth })
@@ -237,9 +250,9 @@ function GameChrome({ children }: { children: ReactNode }) {
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (orionidsEntryActive || settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (orionidsEntryActive || eventMissionActive || settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, orionidsEntryActive, settingsOpen])
+  }, [communityOpen, eventMissionActive, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, orionidsEntryActive, settingsOpen])
 
   const coachIndex = flightStep ? ['mining', 'scan', 'part'].indexOf(flightStep.try) : -1
   // Only the required-looking onboarding (not the optional guide) changes the hub's own copy.
@@ -478,6 +491,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
+      {!game.authGateOpen && <NotificationBell />}
       {communityOpen && <CommunityHubSheet onClose={() => setCommunityOpen(false)} />}
     </main>
   )

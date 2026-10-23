@@ -10,6 +10,7 @@ import { newRecordId } from '@/lib/offline/outbox'
 import type { HubChannel, ReportReason, ShareComment, SharePost, ShareVisibility, ShareKind } from '@/lib/data/community'
 import type { FieldStructureRecord } from '@/lib/game-types'
 import type { BiosphereSeed, TerritoryClaim } from '@/lib/data'
+import type { CommunityResearch } from '@/lib/research/stamps'
 
 export interface FriendWorldSnapshot {
   username: string
@@ -111,3 +112,8 @@ export function visitFriendWorld(friendId: string): Promise<{ world: FriendWorld
 }
 
 export { CommunityApiError }
+
+/** SSL-673: this month's community research total, without the caller's own stamps. */
+export function fetchCommunityResearch(): Promise<CommunityResearch> {
+  return communityFetch('/research')
+}

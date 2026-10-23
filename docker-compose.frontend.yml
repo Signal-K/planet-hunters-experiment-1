@@ -7,7 +7,7 @@ services:
     pull_policy: never
     # Warm the Scene Studio's routes once the server is up, whoever started the container (make up, docker restart, a test run).
     # Next compiles each route on its first request, about 10 seconds on a cold start; this does it before anyone asks.
-    command: ["sh", "-c", "LANDNAM_WEB_URL=http://127.0.0.1:3001 node /repo/scripts/warm-studio.mjs --wait > /tmp/warm-studio.log 2>&1 & exec npm run dev"]
+    command: ["sh", "-c", "LANDNAM_WEB_URL=http://127.0.0.1:${LANDNAM_WEB_PORT:-4320} node /repo/scripts/warm-studio.mjs --wait > /tmp/warm-studio.log 2>&1 & exec npm run dev"]
     volumes:
       - ./web:/app
       # The Scene Studio reads and writes shared/authoring and compiles runtime files for web and native.
@@ -16,13 +16,13 @@ services:
       - web_next_cache:/app/.next
     environment:
       POCKETBASE_INTERNAL_URL: http://host.docker.internal:8090
-      POCKETBASE_LANDNAM_INTERNAL_URL: http://host.docker.internal:8091
+      POCKETBASE_LANDNAM_INTERNAL_URL: http://host.docker.internal:${LANDNAM_PB_PORT:-8095}
       NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8090
-      NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8091
+      NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:${LANDNAM_PB_PORT:-8095}
       # Landnam's Clerk development instance (publishable, not secret; SSL-668).
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dmFsdWVkLW1hc3RvZG9uLTY5OTQuY2xlcmsuYWNjb3VudHMuZGV2JA
       NEXT_TELEMETRY_DISABLED: "1"
-      PORT: "3001"
+      PORT: "${LANDNAM_WEB_PORT:-4320}"
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
       # The follow state lives in /app/.dev-follow.json, inside the host bind
@@ -32,9 +32,9 @@ services:
       # Absolute repo path on the host, for Open in Cursor links. Exported by the Makefile.
       LANDNAM_HOST_ROOT: ${LANDNAM_HOST_ROOT:-}
     ports:
-      - "3001:3001"
+      - "${LANDNAM_WEB_PORT:-4320}:${LANDNAM_WEB_PORT:-4320}"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/api/backend-health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${LANDNAM_WEB_PORT:-4320}/api/backend-health"]
       interval: 5s
       timeout: 3s
       retries: 20

@@ -5,6 +5,7 @@ import LandnamCore
 /// The built Exchange adds Buy (at a dealer markup) and per-mineral sell alerts.
 struct MarketScreen: View {
     @Environment(GameStore.self) private var store
+    @Environment(Services.self) private var services: Services?
     @Environment(\.flatLayout) private var flat
     @State private var showSettings = false
     @State private var armed = false
@@ -60,6 +61,11 @@ struct MarketScreen: View {
             try? await Task.sleep(nanoseconds: 4_000_000_000)
             if !Task.isCancelled { armed = false }
         }
+        .task {
+            // SSL-673: pick up a bonus week opened since the Control Station was last open.
+            guard let api = services?.communityResearchAPI(), let res = await api.fetch() else { return }
+            store.noteResearchBonus(until: res.bonusUntil)
+        }
     }
 
     // MARK: panel
@@ -70,7 +76,7 @@ struct MarketScreen: View {
         store.player.refinedGoods.keys.sorted().compactMap { id in
             let qty = store.player.refinedGoods[id] ?? 0
             guard qty > 0, let recipe = Refinery.byId[id] else { return nil }
-            return Lot(id: id, name: recipe.name, qty: qty, unit: recipe.price)
+            return Lot(id: id, name: recipe.name, qty: qty, unit: Refinery.unitPrice(recipe, player: store.player, now: store.now))
         }
     }
     private var heldValue: Int {
@@ -87,6 +93,12 @@ struct MarketScreen: View {
                     .font(AppFont.display(16, "ExtraBold")).foregroundStyle(Theme.ink)
                     .accessibilityLabel("Balance \(Economy.format(francs: store.player.francs))")
                     .accessibilityIdentifier("market-balance")
+            }
+            if tab == .sell && ResearchStampRules.bonusActive(store.player, now: store.now) {
+                // SSL-673, web `market-research-bonus`.
+                Text("Community research bonus: sales pay +\(ResearchStampRules.communityWeeklyRevenuePct)% this week.".uppercased())
+                    .font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("market-research-bonus")
             }
             HStack(spacing: 6) {
                 ForEach(Tab.allCases, id: \.self) { t in

@@ -2,7 +2,7 @@
 
 **When:** 2026-09-19  
 **Branch:** `cursor/landscape-playable-2a53` / [PR #75](https://github.com/Signal-K/planet-hunters-experiment-1/pull/75)  
-**Method:** Headless Chrome Cypress at true CSS viewports (phone UA on compact sizes) plus a headed DevTools pass. Local `next dev` at `http://localhost:3001`.  
+**Method:** Headless Chrome Cypress at true CSS viewports (phone UA on compact sizes) plus a headed DevTools pass. Local `next dev` at `http://localhost:4320`.
 **Tickets:** [SSL-326](https://linear.app/kestloome/issue/SSL-326) (this change), [SSL-324](https://linear.app/kestloome/issue/SSL-324) / [PR #74](https://github.com/Signal-K/planet-hunters-experiment-1/pull/74) (staging playtest that found the wall), [SSL-299](https://linear.app/kestloome/issue/SSL-299), [SSL-66](https://linear.app/kestloome/issue/SSL-66), [SSL-27](https://linear.app/kestloome/issue/SSL-27).
 
 Shots: [`docs/landscape-perspective-audit/shots/`](./landscape-perspective-audit/shots/).

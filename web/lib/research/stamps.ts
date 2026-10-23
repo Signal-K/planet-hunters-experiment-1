@@ -86,13 +86,50 @@ export function stampsInMonth(stamps: ResearchStamps | undefined, year: number, 
   return Object.entries(stamps ?? {}).reduce((n, [day, kinds]) => n + (day.startsWith(prefix) ? kinds.length : 0), 0)
 }
 
-/** Placeholder until the community total is served: every player's stamps will add to one bar. */
+/** Mirrors pocketbase/research.go: every player's stamps this UTC month add to one bar. */
 export const COMMUNITY_GOAL = 1000
 export const COMMUNITY_WEEKLY_REVENUE_PCT = 3
+export const COMMUNITY_BONUS_DAYS = 7
 
-export function communityBar(ownThisMonth: number, communityOthers = 0) {
-  const total = communityOthers + ownThisMonth
-  return { total, goal: COMMUNITY_GOAL, fill: Math.min(1, total / COMMUNITY_GOAL), reached: total >= COMMUNITY_GOAL, bonusPct: COMMUNITY_WEEKLY_REVENUE_PCT }
+/** `GET /api/community/research`. `others` leaves out the caller, so local stamps not yet synced are counted once. */
+export interface CommunityResearch {
+  month: string
+  others: number
+  goal: number
+  bonusPct: number
+  reachedAt: number | null
+  bonusUntil: number | null
+}
+
+export function communityBar(ownThisMonth: number, server?: CommunityResearch | null) {
+  const goal = server?.goal ?? COMMUNITY_GOAL
+  const total = (server?.others ?? 0) + ownThisMonth
+  return {
+    total,
+    goal,
+    fill: Math.min(1, total / goal),
+    reached: server?.reachedAt != null,
+    bonusPct: server?.bonusPct ?? COMMUNITY_WEEKLY_REVENUE_PCT,
+    bonusUntil: server?.bonusUntil ?? null,
+  }
+}
+
+type BonusPlayer = Pick<Player, 'researchBonusUntil'>
+
+/** The community bonus is open while `now` is inside the week after the bar filled. */
+export function researchBonusActive(player: BonusPlayer | undefined, now: number): boolean {
+  const until = player?.researchBonusUntil
+  return typeof until === 'number' && now < until
+}
+
+/** Exchange sales (ore and finished goods) pay this much more while the bonus is open. */
+export const RESEARCH_BONUS_RATE = COMMUNITY_WEEKLY_REVENUE_PCT / 100
+
+/** Keep the latest bonus window the server reported. Returns the same player when nothing changes. */
+export function noteResearchBonus<T extends BonusPlayer>(player: T, bonusUntil: number | null | undefined): T {
+  if (typeof bonusUntil !== 'number' || !Number.isFinite(bonusUntil)) return player
+  if ((player.researchBonusUntil ?? 0) >= bonusUntil) return player
+  return { ...player, researchBonusUntil: bonusUntil }
 }
 
 /** Today's research tasks, one per stamp kind a player can earn now. Same copy on web and native. */
@@ -102,5 +139,17 @@ export const DAILY_TASKS: readonly { kind: StampKind; label: string }[] = [
   { kind: 'event', label: 'Catch debris during a sky event' },
 ]
 
+/** SSL-674: a survey flight to a world the player discovered (runtimeCatalog `exo-survey-<target>`). */
+export function isDiscoveryMission(id: string | null | undefined): boolean {
+  return !!id && id.startsWith('exo-survey-')
+}
+
+/** Shown only once a discovery has opened a survey flight, so a new player never sees a task they cannot do. */
+export const DISCOVERY_TASK = { kind: 'discovery-mission' as const, label: 'Fly a survey to a world you discovered' }
+
+export function dailyTasksFor(hasDiscovery: boolean): readonly { kind: StampKind; label: string }[] {
+  return hasDiscovery ? [...DAILY_TASKS, DISCOVERY_TASK] : DAILY_TASKS
+}
+
 export const RESEARCH_TITLE = 'Daily research'
-export const RESEARCH_BLURB = 'Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% weekly revenue. Miss a day and nothing is lost.'
+export const RESEARCH_BLURB = 'Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% on Exchange sales for a week. Miss a day and nothing is lost.'

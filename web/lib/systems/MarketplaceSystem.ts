@@ -29,14 +29,15 @@ export interface SpotQuote {
   held: number
 }
 
-type PricePlayer = Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot'>
+type PricePlayer = Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchBonusUntil'>
 
 export function exchangeBuilt(player: Pick<GameState['player'], 'placed'>): boolean {
   return (player.placed ?? []).includes('market')
 }
 
 export function buyUnitPrice(mineralId: string, player: PricePlayer, clientId?: string, now: number = Date.now()): number {
-  const spot = sellUnitPrice(mineralId, player, clientId, now).price
+  // The ask is set from the quote without the community research bonus (SSL-673).
+  const spot = sellUnitPrice(mineralId, { ...player, researchBonusUntil: undefined }, clientId, now).price
   if (spot <= 0) return 0
   return Math.max(spot + 1, Math.round(spot * BUY_MARKUP))
 }

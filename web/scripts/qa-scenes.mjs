@@ -4,7 +4,7 @@
 //   node scripts/qa-scenes.mjs --flow core-loop [--vp ph,dk]    audit + screenshots for every web scene in the flow
 //   node scripts/qa-scenes.mjs --scene launch-review            one scene
 //   node scripts/qa-scenes.mjs --ticket SSL-426                 every scene tagged with a ticket
-// Needs the dev server on :3001. Output: /tmp/landnam-qa/<run>/index.html contact sheet (web shots + native snapshots from SNAPSHOT_DIR) and report.md.
+// Needs the dev server on :4320. Output: /tmp/landnam-qa/<run>/index.html contact sheet (web shots + native snapshots from SNAPSHOT_DIR) and report.md.
 // Native: SNAPSHOT_DIR=/tmp/landnam-snap xcodebuild test -scheme Landnam -destination 'platform=iOS Simulator,name=iPhone 17 Pro' (from native/), then re-run here.
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'

@@ -31,6 +31,7 @@
     "test:scenes": "playwright test scenes",
     "test:scenes:phone": "playwright test scenes --grep \"^phone\"",
     "test:staging": "test -n \"$STAGING_BASE_URL\" && test -n \"$STAGING_LANDNAM_PB_URL\" && STAGING_PLAYTHROUGH=1 SCENES_BASE_URL=\"$STAGING_BASE_URL\" playwright test tests/staging --workers=1",
+    "test:staging:quick": "test -n \"$STAGING_BASE_URL\" && test -n \"$STAGING_LANDNAM_PB_URL\" && STAGING_PLAYTHROUGH=1 SCENES_BASE_URL=\"$STAGING_BASE_URL\" playwright test tests/staging --workers=1 --grep \"staging run phone\"",
     "test:file": "vitest run",
     "test:related": "vitest related --run",
     "test:scene": "playwright test"

@@ -1,5 +1,6 @@
 import SwiftUI
 import LandnamCore
+import TakeonKit
 
 /// Every screen/component that can be shown on its own from fixture state, with
 /// no loop, no save file and no network. One catalog feeds both:
@@ -218,14 +219,31 @@ enum SceneCatalog {
     }
 
     /// SSL-574: the transport lesson's unload at its client berth, `elapsed` ms into the 8 s clock.
-    static func deliveryState(elapsed: Double) -> GameState {
-        var gs = pickedState(.delivery, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1, phase: .delivery)
+    /// Timed unload past the lesson; `lesson` is the transport lesson leg (missionsDone 1), where the rover drop-off runs.
+    static func deliveryState(elapsed: Double, lesson: Bool = false) -> GameState {
+        var gs = pickedState(.delivery, mission: "lnm_m3_relay_bennu_vesta", missionsDone: lesson ? 1 : 2, phase: .delivery)
         let m = Catalog().mission("lnm_m3_relay_bennu_vesta")
         gs.deliveryTargetId = m?.deliveryTargetId
         gs.lastCargo = m?.requires.minerals ?? ["iron": 4]
         gs.player.headingToDelivery = true
         gs.player.deliveryUnloadStartedAt = landingNow - elapsed
         return gs
+    }
+
+    /// The lesson's Takeon field as `DeliveryScreen` builds it (Vesta is the `ceres` body), optionally already unloaded.
+    static func lessonField(deposit: Bool = false) -> TakeonSceneModel {
+        let gs = deliveryState(elapsed: 0, lesson: true)
+        let m = TakeonSceneModel(target: TakeonMapping.body(for: Catalog().target(gs.deliveryTargetId)),
+                                 seed: TakeonMapping.stableSeed("tutorial-delivery-\(gs.missionId ?? "")"), persist: false)
+        m.seedDropoff(TakeonMapping.cargo(gs.lastCargo ?? [:]))
+        if deposit { _ = m.deposit() }
+        return m
+    }
+
+    static func lessonDropoff(rover: Double, dump: Bool) -> Dropoff {
+        var d = Dropoff(); d.drive(to: rover)
+        if dump { d.dump(cargoUnits: 6) }
+        return d
     }
 
     /// SSL-553: untimed trip home.
@@ -269,6 +287,10 @@ enum SceneCatalog {
         scene("intro-biome-desktop", 900, w: 1440) { IntroScreen().environment(GameStore(state: GameState())) },
         scene("takeon-live", 874) { TakeonSceneScreen(onExit: {}).environment(GameStore()) },
         scene("hub-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore(state: webHubState())) },
+        scene("upgrade-launchpad-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },
+        scene("upgrade-academy-short-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), placing: true, upgrading: "astronaut-academy").environment(GameStore(state: { var gs = basePlayer(); gs.player.francs = 1_000_000; return gs }())) },
+        scene("upgrade-silo-max-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), placing: true, upgrading: "surface-silo").environment(GameStore(state: { var gs = basePlayer(); gs.player.buildingLevels["surface-silo"] = 3; return gs }())) },
+        scene("upgrade-launchpad-desktop", 900, w: 1440) { HubScreen(placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },
         scene("hub-phone-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)).environment(GameStore(state: landscapeBase())) },
         scene("hub-desktop", 680, w: 1000) { HubScreen().environment(GameStore()) },
         scene("hub-biome-mountains-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .mountains).environment(GameStore()) },
@@ -406,7 +428,10 @@ enum SceneCatalog {
             for day in 1...today where day % 3 != 0 {
                 p.researchStamps.days["\(prefix)\(String(format: "%02d", day))"] = day % 4 == 0 ? [.classification, .event] : [.survey]
             }
-            return ResearchCalendarPanel(stamps: p.researchStamps, now: wswNoon).padding(12).background(Theme.hex(0x1A2744))
+            // SSL-673: the served total has filled the bar and the bonus week is open.
+            let community = CommunityResearch(month: String(todayKey.prefix(7)), others: 1004, goal: 1000, bonusPct: 3, reachedAt: wswNoon - 86_400_000, bonusUntil: wswNoon + 6 * 86_400_000)
+            p.researchStamps.days[todayKey, default: []].append(.discoveryMission)
+            return ResearchCalendarPanel(stamps: p.researchStamps, now: wswNoon, community: community, hasDiscovery: true).padding(12).background(Theme.hex(0x1A2744))
         },
         scene("mission-board-wsw-phone", 874) {
             MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
@@ -533,6 +558,13 @@ enum SceneCatalog {
         scene("transport-delivery-live", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 3_000), clock: { landingNow })) },
         scene("delivery-done-phone", 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 8_000), clock: { landingNow })) },
         scene("delivery-landscape", 402, w: 874) { DeliveryScreen().environment(GameStore(state: deliveryState(elapsed: 3_000), clock: { landingNow })) },
+        scene("delivery-takeon-phone", 874) { DeliveryScreen(field: lessonField()).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-takeon-dumped-phone", 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 1, dump: true), field: lessonField(deposit: true)).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-takeon-landscape", 402, w: 874) { DeliveryScreen(field: lessonField()).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-lesson-phone", 874) { DeliveryScreen(useField: false).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-lesson-refused-phone", 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 0.5, dump: true), useField: false).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-lesson-dumped-phone", 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 1, dump: true), useField: false).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
+        scene("delivery-lesson-landscape", 402, w: 874) { DeliveryScreen(dropoff: lessonDropoff(rover: 1, dump: false), useField: false).environment(GameStore(state: deliveryState(elapsed: 0, lesson: true), clock: { landingNow })) },
         scene("transport-debrief-live", 874) { DebriefScreen().environment(GameStore(state: pickedState(.debrief, mission: "lnm_m3_relay_bennu_vesta", missionsDone: 1))) },
         scene("telescope-hub-live", 874) { var gs = basePlayer(); gs.player.deepSpaceTelescopeBuilt = true; return HubScreen().environment(GameStore(state: gs)) },
         scene("telescope-fab-live", 874) { LaunchReviewScreen().environment(GameStore(state: pickedState(.fab, mission: Instruments.transitMissionId, missionsDone: 5))).environment(\.flatLayout, true) },
@@ -631,6 +663,12 @@ enum SceneCatalog {
         scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-landscape", 402, w: 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-desktop", 900, w: 1440) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
+        // SSL-673: inside the community research bonus week, ore quotes pay +3% and the note says so.
+        scene("exchange-research-bonus-phone", 874) {
+            var gs = exchangeState()
+            ResearchStampRules.noteBonus(&gs.player, until: Date().timeIntervalSince1970 * 1000 + 86_400_000)
+            return MarketScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
+        },
         scene("exchange-buy-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-alerts-phone", 844, w: 390) { MarketScreen(tab: .alerts).environment(GameStore(state: exchangeAlertState())).environment(\.flatLayout, true) },
         scene("exchange-locked-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeLockedState())).environment(\.flatLayout, true) },

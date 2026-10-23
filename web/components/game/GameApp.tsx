@@ -3,7 +3,7 @@
 import { useMemo, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GameProvider, useGame } from '@/game-context'
-import { trainingCoachSteps } from '@/lib/data'
+import { ORIONIDS_NIGHT_RUN_ID, trainingCoachSteps } from '@/lib/data'
 import type { Screen } from '@/lib/game-types'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import FlightPlan from '@/components/game/FlightPlan'
@@ -22,10 +22,13 @@ import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsSheet from '@/components/game/FriendsSheet'
+import NotificationBell from '@/components/game/NotificationBell'
 import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 import { applyStoredOrientation } from '@/lib/orientation'
+import { heartbeatFriendPresence } from '@/lib/friends/client'
+import { pbLandnam } from '@/lib/pb-landnam'
 
 function GameCanvas() {
   const game = useGame()
@@ -36,6 +39,8 @@ function GameCanvas() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [hubOpen, setHubOpen] = useState(false)
+  const eventMissionActive = game.missionId === ORIONIDS_NIGHT_RUN_ID
+    || game.player.activeMission?.id === ORIONIDS_NIGHT_RUN_ID
   const orionidsEntry = useRef<'orionids' | null>(
     typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('entry') === 'orionids'
       || window.sessionStorage.getItem('landnam-entry') === 'orionids')
@@ -103,6 +108,18 @@ function GameCanvas() {
 
   useEffect(() => {
     applyStoredOrientation()
+  }, [])
+
+  // Presence is a short server-side lease. Refresh only for an authenticated,
+  // visible game client so a closed tab naturally becomes offline.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible' && pbLandnam.authStore.isValid) void heartbeatFriendPresence().catch(() => undefined)
+    }
+    refresh()
+    const interval = window.setInterval(refresh, 60_000)
+    document.addEventListener('visibilitychange', refresh)
+    return () => { window.clearInterval(interval); document.removeEventListener('visibilitychange', refresh) }
   }, [])
 
   useEffect(() => {
@@ -183,18 +200,21 @@ function GameCanvas() {
   }, [game.screen, game.lastCargo, game.mission, game.target])
 
   const coachSteps = useMemo(() => {
-    if (!game.tutorial || game.player.freeOperations || orionidsEntryActive) return []
+    // Event missions are self-contained onboarding. Do not put the academy's
+    // Mining Ops coach over an event launch flow, including direct mission
+    // board entry where the `entry=orionids` handoff is not present.
+    if (!game.tutorial || game.player.freeOperations || orionidsEntryActive || eventMissionActive) return []
     return trainingCoachSteps(agencyTrainingStage(game.player))
-  }, [game.player, game.tutorial, orionidsEntryActive])
+  }, [eventMissionActive, game.player, game.tutorial, orionidsEntryActive])
 
   const coach = useMemo(() => {
     const activeCoach = coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (game.subsurfaceView || settingsOpen || friendsOpen || hubOpen || game.popup || game.authGateOpen || (game.screen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (eventMissionActive || game.subsurfaceView || settingsOpen || friendsOpen || hubOpen || game.popup || game.authGateOpen || (game.screen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return activeCoach
-  }, [coachSteps, friendsOpen, hubOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
+  }, [coachSteps, eventMissionActive, friendsOpen, hubOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const onboardingActive = !!coach
@@ -336,6 +356,7 @@ function GameCanvas() {
           corner button above; everything else routes through the base. */}
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
+      {!game.authGateOpen && <NotificationBell />}
       {hubOpen && <CommunityHubSheet onClose={() => setHubOpen(false)} />}
     </main>
   )

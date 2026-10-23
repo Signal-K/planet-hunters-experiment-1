@@ -34,3 +34,27 @@
 @media (max-width: 899px) and (min-height: 521px) { .slot em { display: none; } .slot { min-height: 44px; } }
 @media (min-width: 900px) and (min-height: 600px) { .host { left: 290px; right: 270px; gap: 8px; flex-wrap: wrap; } .hold { flex: 0 0 100%; width: max-content; max-width: 100%; text-align: center; } .slot em { display: none; } button.slot:not(:disabled)::after { content: '\203A'; font-weight: 800; } .slot { padding: 0 12px; } .slot strong { white-space: nowrap; } }
 @media (max-width: 899px) and (min-height: 521px) { button.slot:not(:disabled)::after { content: '\203A'; position: absolute; right: 8px; top: 4px; font-weight: 800; } .slot { position: relative; } }
+
+/* Medium browser shells can report a compact CSS width while still showing the desktop scene. Make the lower asphalt an intentional launch deck. */
+@media (min-width: 600px) and (min-height: 521px) {
+  .host {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 8px 16px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--ln-world-asphalt) 88%, var(--ln-world-night-mid)), var(--ln-world-asphalt) 30%);
+    border-top: 3px solid color-mix(in srgb, var(--ln-world-hull-lit) 40%, var(--ln-world-asphalt));
+    box-shadow: 0 -10px 24px color-mix(in srgb, var(--ln-world-night-top) 26%, transparent);
+  }
+  .slots { flex-wrap: nowrap; width: min(100%, 1360px); }
+  .slot { display: flex; align-items: center; gap: 8px; min-height: 48px; flex: 1 1 0; padding: 0 12px; }
+  .slot em { display: none; }
+  .slot strong { white-space: nowrap; }
+  .hold { width: min(100%, 1056px); max-width: 100%; text-align: center; }
+  button.slot:not(:disabled)::after { content: '\203A'; margin-left: auto; font-weight: 800; }
+}

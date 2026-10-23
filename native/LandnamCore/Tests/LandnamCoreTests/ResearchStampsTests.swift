@@ -49,8 +49,12 @@ final class ResearchStampsTests: XCTestCase {
 
     func testMonthCountAndCommunityBar() {
         XCTAssertEqual(ResearchStampRules.stampsIn(ResearchStamps(["2026-10-01": [.survey, .event], "2026-09-30": [.survey]]), year: 2026, month: 10), 2)
-        XCTAssertEqual(ResearchStampRules.communityBar(own: 10, others: 500).fill, 0.51, accuracy: 0.001)
-        XCTAssertTrue(ResearchStampRules.communityBar(own: 10, others: 995).reached)
+        let server = CommunityResearch(month: "2026-10", others: 500, goal: 1000, bonusPct: 3, reachedAt: nil, bonusUntil: nil)
+        XCTAssertEqual(ResearchStampRules.communityBar(own: 10, server: server).fill, 0.51, accuracy: 0.001)
+        XCTAssertFalse(ResearchStampRules.communityBar(own: 10, server: server).reached)
+        var full = server; full.others = 995; full.reachedAt = t; full.bonusUntil = t + 7 * day
+        XCTAssertTrue(ResearchStampRules.communityBar(own: 10, server: full).reached)
+        XCTAssertEqual(ResearchStampRules.communityBar(own: 4).total, 4)
     }
 
     func testSaveRoundTripKeepsWebStamps() throws {
@@ -66,5 +70,53 @@ final class ResearchStampsTests: XCTestCase {
         var p = Player()
         OrionidsRun.applyLaunchCatch(&p, at: t) 
         XCTAssertEqual(p.researchStamps.days.count, OrionidsRun.fragmentsCaughtOnLaunch(at: t) > 0 ? 1 : 0)
+    }
+
+    /// SSL-673: the server reply decodes, the window is kept on the save as web `researchBonusUntil`, and ore sells
+    /// pay +3% inside it while the buy ask does not move.
+    func testCommunityBonusWindowAndSellPrice() throws {
+        let reply = #"{"month":"2026-10","others":1004,"goal":1000,"bonusPct":3,"reachedAt":1792670400000,"bonusUntil":1793275200000}"#
+        let res = try JSONDecoder().decode(CommunityResearch.self, from: Data(reply.utf8))
+        var p = Player()
+        p.stash = ["iron": 10]
+        let plain = Market.unitPrice("iron", player: p, clientId: nil, now: t)
+        let ask = Marketplace.buyUnitPrice("iron", player: p, now: t)
+        XCTAssertTrue(ResearchStampRules.noteBonus(&p, until: res.bonusUntil))
+        XCTAssertFalse(ResearchStampRules.noteBonus(&p, until: t))
+        XCTAssertTrue(ResearchStampRules.bonusActive(p, now: t))
+        XCTAssertFalse(ResearchStampRules.bonusActive(p, now: res.bonusUntil!))
+        let boosted = Market.unitPrice("iron", player: p, clientId: nil, now: t)
+        XCTAssertTrue(boosted.bonusApplied)
+        XCTAssertEqual(boosted.price, Int((Double(plain.price) * 1.03).rounded()))
+        XCTAssertEqual(Marketplace.buyUnitPrice("iron", player: p, now: t), ask)
+        let json = String(decoding: try JSONEncoder().encode(p), as: UTF8.self)
+        XCTAssertTrue(json.contains("\"researchBonusUntil\":1793275200000"))
+    }
+
+    /// SSL-674: collecting a survey flight to a discovered world stamps the day; a client job does not.
+    func testDiscoverySurveyDebriefStampsDiscoveryMission() {
+        var s = GameState(); s.screen = .debrief; s.missionId = "exo-survey-exo-subject-42"; s.targetId = "exo-subject-42"; s.lastCargo = [:]
+        let done = Loop.debriefDone(s, payout: 0, affinity: 0, catalog: Catalog(), now: t)
+        XCTAssertEqual(done.player.researchStamps.days[ResearchStampRules.dayKey(t)], [.discoveryMission])
+        var other = s; other.missionId = Catalog().missions.first?.id; other.targetId = "moon"
+        XCTAssertNil(Loop.debriefDone(other, payout: 0, affinity: 0, catalog: Catalog(), now: t).player.researchStamps.days[ResearchStampRules.dayKey(t)])
+        XCTAssertEqual(ResearchStampRules.tasks(hasDiscovery: false).count, 3)
+        XCTAssertEqual(ResearchStampRules.tasks(hasDiscovery: true).last?.kind, .discoveryMission)
+    }
+
+    /// SSL-674: a remote save merges stamps by day union and keeps the later bonus window.
+    func testCloudMergeKeepsStampsFromBothDevices() {
+        var local = GameState(); local.player.missionsDone = 3; local.updatedAt = 1
+        local.player.researchStamps.days["2026-10-20"] = [.classification]
+        var remote = local; remote.updatedAt = 2
+        remote.player.researchStamps.days = ["2026-10-20": [.event], "2026-10-21": [.survey]]
+        ResearchStampRules.noteBonus(&remote.player, until: t)
+        let merged = CloudMerge.merge(local: local, remote: remote)
+        XCTAssertEqual(merged.player.researchStamps.days["2026-10-20"], [.classification, .event])
+        XCTAssertEqual(merged.player.researchStamps.days["2026-10-21"], [.survey])
+        XCTAssertEqual(ResearchStampRules.bonusUntil(merged.player), t)
+        // A remote further along still keeps the local stamps.
+        var ahead = remote; ahead.player.missionsDone = 9; ahead.player.researchStamps.days = [:]
+        XCTAssertEqual(CloudMerge.merge(local: local, remote: ahead).player.researchStamps.days["2026-10-20"], [.classification])
     }
 }

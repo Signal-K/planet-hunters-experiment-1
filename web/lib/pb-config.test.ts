@@ -18,7 +18,7 @@ describe('resolvePocketBaseUrl', () => {
   it('replaces a loopback URL on a staging or production build', () => {
     for (const landnamEnv of ['staging', 'production'] as const) {
       expect(resolvePocketBaseUrl({
-        configured: 'http://localhost:8091',
+        configured: 'http://localhost:8095',
         devFallback,
         deployed,
         landnamEnv,
@@ -46,12 +46,12 @@ describe('resolvePocketBaseUrl', () => {
 
   it('keeps loopback for local builds and when the override is set', () => {
     expect(resolvePocketBaseUrl({
-      configured: 'http://localhost:8091',
+      configured: 'http://localhost:8095',
       devFallback,
       deployed,
       landnamEnv: undefined,
       allowLoopback: false,
-    })).toBe('http://localhost:8091')
+    })).toBe('http://localhost:8095')
     expect(resolvePocketBaseUrl({
       configured: undefined,
       devFallback,
@@ -60,18 +60,18 @@ describe('resolvePocketBaseUrl', () => {
       allowLoopback: false,
     })).toBe(devFallback)
     expect(resolvePocketBaseUrl({
-      configured: 'http://localhost:8091',
+      configured: 'http://localhost:8095',
       devFallback,
       deployed,
       landnamEnv: 'staging',
       allowLoopback: true,
-    })).toBe('http://localhost:8091')
+    })).toBe('http://localhost:8095')
   })
 
   it('recognises loopback hosts only', () => {
-    expect(isLoopbackPbUrl('http://localhost:8091')).toBe(true)
+    expect(isLoopbackPbUrl('http://localhost:8095')).toBe(true)
     expect(isLoopbackPbUrl('http://127.0.0.1:8090/')).toBe(true)
     expect(isLoopbackPbUrl('https://signal-k-landnam.fly.dev')).toBe(false)
-    expect(isLoopbackPbUrl('http://host.docker.internal:8091')).toBe(false)
+    expect(isLoopbackPbUrl('http://host.docker.internal:8095')).toBe(false)
   })
 })

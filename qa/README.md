@@ -21,12 +21,12 @@ To add a scene, add one entry to `scenes.json`. A web preset lives in `web/lib/d
 
 Every scene renders on its own from fixture state. No Flight Plan, sign-in gate, tickers, sync or playing through the loop.
 
-Web (dev server on :3001):
+Web (dev server on :4320):
 
 ```
-http://localhost:3001/game/stage                      index of every fixture
-http://localhost:3001/game/stage?preset=ui-rover-mining
-http://localhost:3001/game/stage?preset=m1-debrief&patch={"francs":0}   tweak player state
+http://localhost:4320/game/stage                      index of every fixture
+http://localhost:4320/game/stage?preset=ui-rover-mining
+http://localhost:4320/game/stage?preset=m1-debrief&patch={"francs":0}   tweak player state
 cd web && node scripts/audit-rendered-screens.mjs 390 844 tag ui-rover-mining   one scene, ~10s, writes /tmp/audit-tag-ui-rover-mining.png
 ```
 
@@ -46,8 +46,8 @@ Do not run the Cypress pipeline to look at a screen. Use the stage, then push on
 ## Live storyboard (keep open beside the terminal)
 
 ```
-cd web && NEXT_PUBLIC_LANDNAM_ENV=staging npm run dev      # or any dev server on :3001
-open http://localhost:3001/game/storyboard
+cd web && NEXT_PUBLIC_LANDNAM_ENV=staging npm run dev      # or any dev server on :4320
+open http://localhost:4320/game/storyboard
 scripts/native-shots.sh [scene-id ...]                     # native PNGs -> /tmp/landnam-snap, then "Reload all"
 ```
 

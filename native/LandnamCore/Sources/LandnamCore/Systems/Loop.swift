@@ -330,6 +330,7 @@ public enum Loop {
             targetId: targetName?.id, clientName: mission?.client.flatMap { Clients.byId[$0]?.name }, targetName: targetName?.name,
             completedAt: now, runId: runId, kind: program ? .program : .client))
         if n.player.completedMissions.count > 100 { n.player.completedMissions.removeFirst(n.player.completedMissions.count - 100) }
+        if ResearchStampRules.isDiscoveryMission(mission?.id ?? missionId) { ResearchStampRules.add(&n.player, .discoveryMission, at: now) }
         n.player.flightPlan.complete("mining")
         let wasFreeOps = s.player.freeOperations
         n.player.missionsDone = missionsDone
