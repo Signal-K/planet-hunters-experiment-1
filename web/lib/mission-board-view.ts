@@ -279,6 +279,7 @@ export function eventsBoard(
   orionidsNow = now,
   finds?: Record<string, OrionidsFind>,
   mastery = 0,
+  orionidsEventStage = 0,
 ): EventsBoard {
   const orionids = getSkyEvent('orionids-2026')
   const start = orionidsLocalStartMs()
@@ -292,8 +293,8 @@ export function eventsBoard(
     countdownLabel: status === 'upcoming' ? countdownLabel(orionidsNow) : null,
     earnedTier: earned === 'gold' || earned === 'silver' ? earned : null,
     blurb: 'Launch through the shower and catch fragments on the way up. They fall any time in the window.',
-    actionLabel: eventActionLabel(status),
-    rewardLabel: eventRewardLabel(status, earned),
+    actionLabel: orionidsEventStage === 1 ? 'Continue research' : eventActionLabel(status),
+    rewardLabel: orionidsEventStage === 1 ? 'Tier 2 · surface observation ready' : eventRewardLabel(status, earned),
   }
   const order = [
     ...WSW_CARD_ORDER.filter(id => (WSW_EVENT_IDS as readonly string[]).includes(id)),

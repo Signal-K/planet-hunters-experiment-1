@@ -8,6 +8,7 @@ import {
   feasibleTargetsFor, validateBuild, rocketConfigForModel,
   isOwnProgramMission,
   isFreeHaulMission,
+  isOrionidsEventMission,
   artifactNarrativeEligible,
   missionTypePrimer,
   BANKRUPTCY_THRESHOLD,
@@ -43,7 +44,7 @@ import { applyHomeSplit, clientDemand, clientPayout, type HomeSplit } from '@/li
 import { completeFlightPlanEvent, currentTrainingTry, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
-import { ORIONIDS_NIGHT_RUN_ID, orionidsNightRun } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, orionidsNightRun } from '@/lib/data/missions'
 import { settleShowerRun, showerRunFilled, startShowerRun, withoutShowerFragments } from '@/lib/orionids/shower-run'
 
 // 42s/orbit-unit — a ~65% cut from the original 2min/unit pace (KES-262):
@@ -1176,7 +1177,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell') => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
-    if (current.missionId === ORIONIDS_NIGHT_RUN_ID) stampResearch('event')
+    if (current.missionId === ORIONIDS_NIGHT_RUN_ID || current.missionId === ORIONIDS_SURFACE_RESEARCH_MISSION_ID) stampResearch('event')
     // A self-directed ("free") haul lands in the stash on return; here the
     // player's Debrief choice decides whether it stays on Earth or is sold at
     // market. Runs as its own state step before the payout/ledger update below
@@ -1221,8 +1222,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // consume the ore again. The screen passes 0/{} for these, but neutralize
     // here too so no code path can double-count the haul.
     const completedIsFreeHaul = !!completedMission && !current.player.cargoSettledOffworld && isFreeHaulMission(completedMission, current.lastCargo)
+    const completedIsOrionidsEvent = !!completedMission && isOrionidsEventMission(completedMission)
     const total = completedIsFreeHaul ? 0 : rawTotal
-    const effectiveConsumed = completedIsFreeHaul ? {} : consumed
+    const effectiveConsumed = completedIsFreeHaul || completedIsOrionidsEvent ? {} : consumed
     const crewAwardId = current.player.missionRunId ?? `${current.missionId}:${current.player.missionsDone}`
     const difficultCrewReturn = !!completedMission
       && Number.parseInt(completedMission.difficulty.replace(/\D/g, ''), 10) >= 3
@@ -1361,7 +1363,15 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         skyEventNow(isDevLauncherEnabled()),
       )
       // SSL-674: a survey flight to a world the player discovered is community research.
-      const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(wswGraded, 'discovery-mission', Date.now()) : wswGraded
+      const eventStampedPlayer = mission?.id === ORIONIDS_NIGHT_RUN_ID || mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
+        ? addStamp(wswGraded, 'event', Date.now())
+        : wswGraded
+      const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(eventStampedPlayer, 'discovery-mission', Date.now()) : eventStampedPlayer
+      const orionidsEventStage = mission?.id === ORIONIDS_NIGHT_RUN_ID
+        ? Math.max(wswBadgedPlayer.orionidsEventStage ?? 0, 1) as 0 | 1 | 2
+        : mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
+          ? 2 as const
+          : wswBadgedPlayer.orionidsEventStage ?? 0
       const next: GameState = {
         ...s,
         player: {
@@ -1407,6 +1417,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           seen_planets,
           crewVisitedTargets,
           roverDeployments,
+          orionidsEventStage,
           dailyClientPool: completedDailyPool,
           transitSatelliteLaunchedAt: mission?.payload?.instrumentId === 'transit-telescope'
             ? (s.player.transitSatelliteLaunchedAt ?? Date.now())

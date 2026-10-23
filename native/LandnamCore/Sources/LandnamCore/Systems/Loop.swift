@@ -291,7 +291,11 @@ public enum Loop {
         let showerFilled = missionId == OrionidsRun.missionId && OrionidsRun.filled(s.player)
         let cargo = showerFilled ? OrionidsRun.withoutFragments(haulCargo) : haulCargo
         if showerFilled { OrionidsRun.settle(&n.player, missionsDone: s.player.missionsDone) }
-        let isFreeHaul = mission.map { $0.isOwnProgram && $0.deliveryTargetId == nil && $0.construction == nil } ?? false
+        if missionId == OrionidsRun.missionId { n.player.orionidsEventStage = max(n.player.orionidsEventStage, 1) }
+        if missionId == OrionidsRun.surfaceResearchMissionId { n.player.orionidsEventStage = 2 }
+        if missionId == OrionidsRun.missionId || missionId == OrionidsRun.surfaceResearchMissionId { ResearchStampRules.add(&n.player, .event, at: now) }
+        let isOrionidsEvent = missionId == OrionidsRun.missionId || missionId == OrionidsRun.surfaceResearchMissionId
+        let isFreeHaul = !isOrionidsEvent && (mission.map { $0.isOwnProgram && $0.deliveryTargetId == nil && $0.construction == nil } ?? false)
             && haulCargo.values.contains { $0 > 0 }
         if isFreeHaul && !s.player.cargoSettledOffworld {
             let effective = disposition ?? s.player.freeHaulDisposition ?? (Market.earthStorageBuilt(s.player) ? .store : .sell)
@@ -299,7 +303,7 @@ public enum Loop {
             n.player.freeHaulDisposition = nil
         }
         let total = (isFreeHaul && !s.player.cargoSettledOffworld) || showerFilled ? 0 : rawTotal
-        let consume = isFreeHaul && !s.player.cargoSettledOffworld ? [:] : consumed
+        let consume = (isFreeHaul && !s.player.cargoSettledOffworld) || isOrionidsEvent ? [:] : consumed
         let missionsDone = n.player.missionsDone + 1
         let isStory = mission?.tag == "STORY" && mission?.deliveryTargetId == nil
         let program = mission?.isOwnProgram ?? false

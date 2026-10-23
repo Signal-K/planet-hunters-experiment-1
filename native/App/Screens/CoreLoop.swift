@@ -83,7 +83,7 @@ struct MissionsScreen: View {
             }
 
             if tab == 3 {
-                FreeRunBoard(runs: store.catalog.missions.filter { $0.id.hasPrefix("self-directed-") && !$0.locked }, eventFocus: eventFocus) { store.pickMission($0) }
+                FreeRunBoard(runs: store.catalog.missions.filter { $0.id.hasPrefix("self-directed-") && !$0.locked && ($0.id != OrionidsRun.surfaceResearchMissionId || store.player.orionidsEventStage == 1) }, eventFocus: eventFocus) { store.pickMission($0) }
                     .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
                     .padding(.top, portrait ? railTop + 64 : railTop)
@@ -567,7 +567,19 @@ struct LaunchScreen: View {
         ScreenFrame(title: "Hangar", back: { store.go(.hub) }) {
             SetButton(title: "Build config", fill: true) { configuring = true }
             if let m = store.mission {
-                Panel { Text(m.title).font(.headline); Text("Target: \(store.target?.name ?? "none")") }
+                Panel {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(m.title).font(.headline)
+                        Text("Target: \(store.target?.name ?? "none")")
+                        if let payload = m.payload {
+                            Divider()
+                            Text("PAYLOAD LOADED").font(AppFont.mono(14)).tracking(1.2).foregroundStyle(Theme.blue)
+                            Text(payload.name).font(AppFont.display(18))
+                            Text(payload.type == .rover ? "Surface rover · deploy on target" : "Mission equipment")
+                                .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                        }
+                    }
+                }
             } else if store.player.stagedRockets.isEmpty {
                 Panel(accent: Theme.teal) {
                     VStack(alignment: .leading, spacing: 8) {
@@ -608,7 +620,8 @@ struct DebriefScreen: View {
         let run = liveRun ?? shownRun
         let haulUnits = cargo.values.reduce(0) { $0 + max(0, $1) }
         let payout = m.map { MissionGenerator.calibrateOnboardingPayout(raw: $0.payout.francs, missionsDone: store.player.missionsDone) } ?? 0
-        let isFreeHaul = (m?.isOwnProgram == true && m?.deliveryTargetId == nil && m?.construction == nil) && cargo.values.contains { $0 > 0 }
+        let isOrionidsEvent = m?.id == OrionidsRun.missionId || m?.id == OrionidsRun.surfaceResearchMissionId
+        let isFreeHaul = !isOrionidsEvent && (m?.isOwnProgram == true && m?.deliveryTargetId == nil && m?.construction == nil) && cargo.values.contains { $0 > 0 }
         let orbital = m?.payload?.type == .satellite
         let program = m?.isOwnProgram == true && !isFreeHaul
         let stored = Market.earthStorageBuilt(store.player)
@@ -716,7 +729,7 @@ struct DebriefScreen: View {
                         }
                     }
 
-                    if m?.id == OrionidsRun.missionId {
+                    if isOrionidsEvent {
                         CreamCard {
                             Text("ORIONIDS KNOWLEDGE LOG").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
                             Text("This run is saved to your Data Pad as a meteor-shower observation. Add your own Orionids photos in the Atlas app to keep building the event record.")
@@ -769,7 +782,7 @@ struct DebriefScreen: View {
                 if !orbital {
                     RecordDockButton(title: scrapped ? "Dismantled" : "Teardown", filled: false, enabled: !scrapped) { scrapped = true }
                 }
-                RecordDockButton(title: run.map { "Collect \(Economy.format(francs: $0.francs + (willStore ? 0 : sale)))" } ?? collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
+                RecordDockButton(title: run.map { "COLLECT & RETURN TO BASE · \(Economy.format(francs: $0.francs + (willStore ? 0 : sale)))" } ?? collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
                     guard !collecting else { return }
                     collecting = true
                     shownRun = run

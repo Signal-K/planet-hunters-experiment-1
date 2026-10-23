@@ -99,7 +99,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         rocketImageSrc={rocketDisplay.img}
         selectedRocketName={rocketDisplay.name}
         hydrated={game.hydrated}
-        mission={{ title: game.mission.title }}
+        mission={{ title: game.mission.title, payload: game.mission.payload }}
         target={target}
         rocket={game.rocket}
         hasStagedRocket={selectedVehicle?.location === 'launchpad'}

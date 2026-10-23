@@ -100,6 +100,8 @@ public enum SkyEvents {
                                                 label: "Dragon dust", resourceId: "draconid_debris", chipLabel: "Draconids active")
     public static let presets = [orionids, draconids]
     public static let debrisResourceIds = presets.map(\.resourceId)
+    /// Event catches remain attached to the run until debrief; they are never jettisonable.
+    public static let protectedRewardIds = Set(debrisResourceIds + ["fireball_fragment"])
 
     /// Local night: 22:00 until 06:00 in the given calendar's time zone.
     public static func isLocalNight(_ ms: Double, calendar: Calendar = .current) -> Bool {

@@ -31,6 +31,16 @@ export interface MissionTypePrimer {
  */
 export const OWN_PROGRAM_CLIENT_ID = 'mission-control'
 
+const ORIONIDS_EVENT_MISSION_IDS = new Set([
+  'self-directed-orionids-night-run',
+  'self-directed-orionids-surface-research',
+])
+
+/** Event evidence is not an ordinary player-owned haul. It is protected research data. */
+export function isOrionidsEventMission(mission: Mission): boolean {
+  return ORIONIDS_EVENT_MISSION_IDS.has(mission.id)
+}
+
 /**
  * True when the mission is the player's own operation rather than work for a
  * client: self-directed Free Ops runs, and anything the player launches for
@@ -55,7 +65,8 @@ export function isOwnProgramMission(mission: Mission): boolean {
  * the units check regardless.
  */
 export function isFreeHaulMission(mission: Mission, cargo: Record<string, number> | null | undefined): boolean {
-  return isOwnProgramMission(mission)
+  return !isOrionidsEventMission(mission)
+    && isOwnProgramMission(mission)
     && !mission.deliveryTargetId
     && !mission.construction
     && Object.values(cargo ?? {}).some(units => units > 0)
@@ -70,7 +81,8 @@ export function isFreeHaulMission(mission: Mission, cargo: Record<string, number
  * interrupted with this choice.
  */
 export function isFreeHaulEligibleMission(mission: Mission): boolean {
-  return isOwnProgramMission(mission) && !mission.deliveryTargetId && !mission.construction
+  return !isOrionidsEventMission(mission)
+    && isOwnProgramMission(mission) && !mission.deliveryTargetId && !mission.construction
 }
 
 /**

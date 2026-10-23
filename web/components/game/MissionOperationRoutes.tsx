@@ -4,7 +4,7 @@ import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
 import { isFreeHaulMission, isOwnProgramMission, laserCapacitorBonus, rocketDisplayForConfig } from '@/lib/data'
-import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
 import { effectiveCargoCapacity } from '@/lib/data/skills'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
@@ -302,7 +302,15 @@ export default function MissionOperationRoutes({
           onFieldDemolish={game.recordFieldDemolish}
           onFabricate={game.fabricateAtField}
           onSeedBiosphere={game.seedBiosphere}
-          onComplete={game.onRoverSurveyComplete}
+          onComplete={() => {
+            if (game.mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID) {
+              game.setLastCargo({})
+              game.setPlayer(player => ({ ...player, missionPhase: 'debrief', debriefPending: false, returningToEarth: false }))
+              game.go('debrief')
+              return
+            }
+            game.onRoverSurveyComplete()
+          }}
           onBack={() => {
             game.setPlayer(player => ({ ...player, missionPhase: 'survey' }))
             game.go('hub')

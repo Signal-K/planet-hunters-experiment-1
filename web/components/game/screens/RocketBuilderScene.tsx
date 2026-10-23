@@ -23,6 +23,7 @@ import {
 
 interface RocketBuilderSceneProps {
   missionTitle?: string | null
+  missionPayload?: { type: string; name: string; cargoCost: number }
   target?: Pick<Target, 'id' | 'name' | 'type' | 'archetype'> | null
   /** A physical vehicle is actually staged on the pad, rather than merely a default configuration. */
   hasStagedRocket?: boolean
@@ -55,6 +56,7 @@ export const ROLLOUT_MS = 1600
 
 export default function RocketBuilderScene({
   missionTitle,
+  missionPayload,
   target = null,
   hasStagedRocket = false,
   rocket,
@@ -155,6 +157,13 @@ export default function RocketBuilderScene({
         <div className={styles.body} data-parts={showParts ? 'open' : 'closed'}>
           <section className={styles.pad} aria-label="Launchpad" data-phase={phase} data-fitted-count={fittedCount}>
             <LaunchpadPrefab towerLabel={towerLabel} onChooseMission={onChooseMission} showRocket={phase === 'building' || phase === 'ready'} />
+            {missionPayload && phase !== 'idle' && (
+              <aside className={styles.payloadManifest} data-testid="launchpad-payload-manifest">
+                <span className={styles.payloadKicker}>PAYLOAD LOADED</span>
+                <strong>{missionPayload.name}</strong>
+                <span>{missionPayload.type === 'rover' ? 'Surface rover · deploy on target' : 'Mission equipment'}</span>
+              </aside>
+            )}
             {phase === 'idle' && (
               <button type="button" className={styles.choose} data-testid="builder-choose-contract" data-beacon="launchpad-view-contracts" onClick={onChooseMission}>
                 <span>Nothing on the pad</span>

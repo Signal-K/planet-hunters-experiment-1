@@ -76,6 +76,12 @@ describe('mission board view', () => {
     ])
   })
 
+  it('changes the Orionids action to the next research tier', () => {
+    const board = eventsBoard(Date.parse('2026-10-24T12:00:00Z'), {}, Date.parse('2026-10-24T12:00:00Z'), {}, 0, 1)
+    expect(board.orionids.actionLabel).toBe('Continue research')
+    expect(board.orionids.rewardLabel).toContain('Tier 2')
+  })
+
   it('shows a WSW earned/total mark only when the mission can earn a chip', () => {
     const mark = contractWswMark(
       {},

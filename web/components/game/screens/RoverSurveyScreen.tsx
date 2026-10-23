@@ -109,6 +109,13 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
           className={styles.takeon}
         />
       </div>
+      {mission.id === 'self-directed-orionids-surface-research' && (
+        <div className={styles.eventBrief} data-testid="orionids-rover-brief">
+          <span>ORIONIDS RESEARCH · FIELD ROVER DEPLOYED</span>
+          <strong>Find the blue fracture outcrop on {target.name}</strong>
+          <small>Scan it to add this meteor observation to the community research record.</small>
+        </div>
+      )}
       <div className={styles.chrome}>
         <button type="button" className={styles.cog} data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -133,7 +140,7 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
             <span className="scene-dock-rule" aria-hidden="true" />
             <DockWordButton data-testid="hub-btn" onClick={onBack}>Hub</DockWordButton>
             <span className="scene-dock-rule" aria-hidden="true" />
-            <DockWordButton data-testid="rover-continue-to-laser" disabled={!logged} onClick={() => { captureGameEvent('rover_survey_complete', { target_id: target.id }); onComplete() }}>Laser</DockWordButton>
+            <DockWordButton data-testid="rover-continue-to-laser" disabled={!logged} onClick={() => { captureGameEvent('rover_survey_complete', { target_id: target.id }); onComplete() }}>{mission.id === 'self-directed-orionids-surface-research' ? 'Log' : 'Laser'}</DockWordButton>
           </nav>
         </div>
       </div>

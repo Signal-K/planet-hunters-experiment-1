@@ -45,6 +45,7 @@ export function generateSelfDirectedMiningPool(now: number = Date.now()): Missio
 
 // SSL-578: Orionids Free Ops run, on the board only during the shower window.
 export const ORIONIDS_NIGHT_RUN_ID = 'self-directed-orionids-night-run'
+export const ORIONIDS_SURFACE_RESEARCH_MISSION_ID = 'self-directed-orionids-surface-research'
 
 /** Fragments the shower run asks for. The 20 is catches stored on the player, any hour in the window. Fragments take no cargo. */
 export const ORIONIDS_FRAGMENT_GOAL = 20
@@ -55,7 +56,7 @@ export function orionidsNightRun(): Mission {
   return {
     id: ORIONIDS_NIGHT_RUN_ID,
     title: 'Orionids shower run',
-    brief: `No client. Launch through the shower and catch ${amount} Orionid fragments on the way up. They fall any time through 7 Nov and take no cargo. Peak night pays double. One fireball fragment falls at 02:00 on 22 Oct.`,
+    brief: `No client. Launch through the shower and catch ${amount} Orionid fragments. Event evidence is protected and is the only collection objective. Peak night pays double. One fireball fragment falls at 02:00 on 22 Oct.`,
     tag: 'FREE OPS',
     difficulty: 'L1',
     locked: false,
@@ -64,10 +65,38 @@ export function orionidsNightRun(): Mission {
     // The shower is collected during ascent; Eros supplies the ordinary
     // starter-compatible mining leg so the run can use the normal loop.
     targetId: 'eros',
-    // The event is a valid first mission: fragments take no hold space, and
-    // the 6U Explorer can carry the ordinary mining haul for the trip home.
-    requires: { minerals: { orionid_debris: amount }, cargo_min: 6, drill_tier: 1, max_orbit: 5 },
+    // Event evidence is not an ordinary cargo haul. Do not ask the player to choose hydrogen or reserve hold space.
+    requires: { minerals: { orionid_debris: amount }, cargo_min: 0, drill_tier: 1, max_orbit: 5 },
     payout: { francs: normalizeMissionPayout((debris?.price ?? 0) * amount, FREE_OPS_MISSION_SEQUENCE), affinity: 0 },
+  }
+}
+
+/** The second Orionids tier deliberately changes activity: observe the marked
+ * surface with the rover instead of running another mining pass. */
+export function orionidsSurfaceResearchMission(): Mission {
+  return {
+    id: ORIONIDS_SURFACE_RESEARCH_MISSION_ID,
+    title: 'Orionids surface observation',
+    brief: 'Drive the rover to the marked Orionids outcrop and log the blue fracture pattern for the community research record.',
+    tag: 'EVENT RESEARCH',
+    difficulty: 'L1',
+    locked: false,
+    sequence: FREE_OPS_MISSION_SEQUENCE,
+    unlockAt: 'Complete the Orionids debris capture',
+    targetId: 'eros',
+    payload: { type: 'rover', name: 'Orionids field rover', cargoCost: 0 },
+    survey: {
+      scanRequired: true,
+      scanCount: 1,
+      scanSource: 'rover',
+      depositsToMap: 1,
+      revealsMinerals: false,
+      revealsLandmarks: ['Orionids fracture outcrop'],
+      unlocksLanding: false,
+      onWorldVehicle: 'starter-rover',
+    },
+    requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 5 },
+    payout: { francs: 0, affinity: 0 },
   }
 }
 

@@ -4,7 +4,7 @@ import { useMemo, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GameProvider, useGame } from '@/game-context'
 import { ORIONIDS_NIGHT_RUN_ID, trainingCoachSteps } from '@/lib/data'
-import type { Screen } from '@/lib/game-types'
+import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import FlightPlan from '@/components/game/FlightPlan'
 import MissionTicker from '@/components/game/MissionTicker'
@@ -356,7 +356,7 @@ function GameCanvas() {
           corner button above; everything else routes through the base. */}
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
-      {!game.authGateOpen && <NotificationBell />}
+      {!game.authGateOpen && !LOCATION_SCREENS.has(game.screen) && <NotificationBell />}
       {hubOpen && <CommunityHubSheet onClose={() => setHubOpen(false)} />}
     </main>
   )

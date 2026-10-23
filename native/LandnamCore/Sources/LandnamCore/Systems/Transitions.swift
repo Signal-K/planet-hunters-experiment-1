@@ -46,6 +46,15 @@ public enum Transitions {
     public static func applyRoverSurveyComplete(_ s: GameState) -> GameState {
         guard s.screen == .roverSurvey, s.missionId != nil, s.targetId != nil else { return s }
         var n = s
+        if s.missionId == OrionidsRun.surfaceResearchMissionId {
+            n.lastCargo = [:]
+            n.player.missionPhase = .debrief
+            n.player.debriefPending = false
+            n.player.returningToEarth = false
+            n.screen = .debrief
+            n.doneSteps["6"] = true
+            return n
+        }
         n.screen = .mining
         n.player.missionPhase = .mining
         return n

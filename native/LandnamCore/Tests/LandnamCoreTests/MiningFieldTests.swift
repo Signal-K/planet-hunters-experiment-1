@@ -23,6 +23,15 @@ struct MiningFieldTests {
         #expect(f.jettison("silicon") == 0)
     }
 
+    @Test func eventRewardsCannotBeJettisoned() {
+        let target = Target(id: "t", name: "T", type: .asteroid, orbit: 2, difficulty: "easy", brief: "", minerals: ["iron"])
+        var f = MiningField(target: target, required: ["orionid_debris": 1], cargoCapacity: 6, laserTier: 1, seed: 7, debris: ("orionid_debris", 1))
+        let node = f.nodes.first { $0.mineralId == "orionid_debris" }!
+        for _ in 0..<node.maxHp { _ = f.strike(nodeId: node.id) }
+        #expect(f.jettison("orionid_debris", all: true) == 0)
+        #expect(f.cargo["orionid_debris"] == 1)
+    }
+
     @Test func sameSeedSameField() {
         #expect(field() == field())
     }

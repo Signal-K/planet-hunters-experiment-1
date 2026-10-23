@@ -18,7 +18,7 @@ import {
   skyEventNow,
   isOrionidsWindow,
 } from '@/lib/data/sky-events'
-import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
 import { FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL, heldFragments } from '@/lib/orionids/fragments'
 import {
   eventsBoard,
@@ -323,8 +323,8 @@ export default function MissionBoard({
   const localOrionids = useMemo(() => localSkyEventWindow(ORIONIDS_EPHEMERIS, player.skyEventLocation), [player.skyEventLocation])
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
   const events = useMemo(
-    () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0),
-    [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsFinds],
+    () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0),
+    [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsEventStage, player.orionidsFinds],
   )
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
   const [contractTargetId, setContractTargetId] = useState<string | null>(null)
@@ -400,6 +400,10 @@ export default function MissionBoard({
       if (event.status === 'upcoming') return
     }
     if (event.id === 'orionids-2026' || event.id === 'draconids-2026' || event.id === 'leonids-2026' || event.id === 'geminids-2026') {
+      if (event.id === 'orionids-2026' && player.orionidsEventStage === 1 && catalog.missions.some(mission => mission.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID)) {
+        onAccept(ORIONIDS_SURFACE_RESEARCH_MISSION_ID)
+        return
+      }
       const target = catalog.targets.find(candidate => candidate.type === 'asteroid' && freeRuns.some(run =>
         Object.keys(run.requires.minerals).some(mineral => candidate.minerals.includes(mineral))))
       setTab('free')

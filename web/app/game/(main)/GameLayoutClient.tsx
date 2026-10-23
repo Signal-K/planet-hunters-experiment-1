@@ -491,7 +491,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
-      {!game.authGateOpen && <NotificationBell />}
+      {!game.authGateOpen && !LOCATION_SCREENS.has(game.screen) && <NotificationBell />}
       {communityOpen && <CommunityHubSheet onClose={() => setCommunityOpen(false)} />}
     </main>
   )
