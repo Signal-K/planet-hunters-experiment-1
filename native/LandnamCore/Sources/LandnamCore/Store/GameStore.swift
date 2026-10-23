@@ -303,6 +303,7 @@ public final class GameStore {
     public func trainCandidate(branch: String) { apply(Academy.applyStartCandidate(state, branch: branch, now: now)) }
     public func collectTraining(_ id: String) { apply(Academy.applyCollectTraining(state, sessionId: id, now: now)) }
     public func researchCrewModule() { apply(Academy.applyResearchCrewModule(state)) }
+    public func researchLanding() { apply(Transitions.applyResearchLanding(state)) }
     public func assignCrew(_ structureId: String, crewId: String?) { apply(Academy.applyAssign(state, structureId: structureId, crewId: crewId)) }
     @discardableResult public func place(_ kind: String, plot: Int) -> Bool {
         let next = Construction.applyPlace(state, kind: kind, plot: plot, now: now)

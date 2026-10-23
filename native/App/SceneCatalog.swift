@@ -100,6 +100,16 @@ enum SceneCatalog {
         return gs
     }
 
+    /// Four missions done, landing researched and the starter rooms already fitted.
+    static func landerFitState() -> GameState {
+        var gs = partState()
+        gs.player.missionsDone = 4
+        gs.player.landingResearched = true
+        gs.player.francs = 40_000_000
+        gs.player.shipCustomizerParts = ["engine": "ion-thruster-t1", "booster": "strap-booster-t1", "cockpit": "cockpit-command-t1", "payload": "cargo-payload-t1"]
+        return gs
+    }
+
     /// Six missions done with funds in hand: the tier 3 Surveyor is open in the hangar (web `ui-hangar-surveyor`).
     static func surveyorState() -> GameState {
         var gs = partState()
@@ -629,6 +639,9 @@ enum SceneCatalog {
         scene("hangar-sealed-phone", 844, w: 390) { HangarScreen().environment(GameStore(state: partState())) },
         scene("hangar-config-phone", 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
         scene("hangar-config-landscape", 402, w: 874) { HangarModulesPanel().environment(GameStore(state: partState())) },
+        // SSL-667: landing researched at 4 missions, the lander room is the last step of the bigger hull.
+        scene("hangar-config-lander-phone", 874) { HangarModulesPanel(startKind: "lander").environment(GameStore(state: landerFitState())) },
+        scene("hangar-config-lander-landscape", 402, w: 874) { HangarModulesPanel(startKind: "lander").environment(GameStore(state: landerFitState())) },
         scene("rover-field-phone", 874) {
             var p = Prospecting(); p.observe("ore-a")
             return RoverFieldScreen(initial: p, deployed: true).environment(GameStore(state: GameState()))
@@ -649,6 +662,11 @@ enum SceneCatalog {
             let gs = Academy.migrate(basePlayer(), now: t0)
             let st = GameStore(state: Academy.applyHire(gs, sourceId: "nasa", now: t0), clock: { 1_760_000_000_000 })
             return AcademyScreen(at: t0).environment(st).environment(\.flatLayout, true)
+        },
+        scene("academy-landing-phone", 1000) {
+            var gs = Academy.migrate(basePlayer(), now: t0)
+            gs.player.missionsDone = 4; gs.player.researchXP = 150
+            return AcademyScreen(at: t0, startTab: .partners).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true)
         },
         scene("launchpad-phone", 874) {
             var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.missionsDone = 3

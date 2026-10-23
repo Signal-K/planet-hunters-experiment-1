@@ -6,8 +6,8 @@ import Foundation
 public enum Landing {
     public enum Mode: Equatable, Sendable { case descend, ascend }
 
-    public static let descendMs: Double = 8_000
-    public static let ascendMs: Double = 8_000
+    public static let descendMs = Economy.landingDescendMs
+    public static let ascendMs = Economy.landingAscendMs
 
     /// The Lander Module ship room (web `shipCustomizerParts.lander`).
     public static func hasLander(_ p: Player) -> Bool { p.shipCustomizerParts["lander"] != nil }

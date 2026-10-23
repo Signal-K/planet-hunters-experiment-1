@@ -9,6 +9,11 @@ struct AcademyScreen: View {
     @State private var branch = "mining"
     var at: Double?
 
+    init(at: Double? = nil, startTab: Tab = .roster) {
+        self.at = at
+        _tab = State(initialValue: startTab)
+    }
+
     var body: some View {
         let p = store.player
         ScreenFrame(title: "Astronaut Academy", back: { store.go(.hub) }) {
@@ -219,6 +224,22 @@ struct AcademyScreen: View {
                 } }
             } else {
                 PrimaryButton(title: "Fit Crew Quarters in Hangar") { store.go(.hangar) }
+            }
+            // SSL-667: landing research unlocks the Lander Module room, offered from the part's own unlock (web AcademyScreen).
+            let landerAt = ShipCustomizer.part("lander-module-t1")?.unlockedAtMissions ?? 0
+            let landingOpen = p.missionsDone >= Transitions.landingResearchMissionsDone
+            if !p.landingResearched {
+                Panel { VStack(alignment: .leading, spacing: 6) {
+                    Text("Lander Module T1").font(AppFont.display(16))
+                    Text(landingOpen
+                         ? "Research a lander that detaches in orbit, lands on the target and re-docks for the trip home. Fit it in the Hangar from \(landerAt) missions."
+                         : "Opens after \(Transitions.landingResearchMissionsDone) missions. A lander detaches in orbit, lands on the target and re-docks for the trip home.")
+                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    PrimaryButton(title: "Research · \(Transitions.landingResearchXPCost) XP",
+                                  enabled: landingOpen && p.researchXP >= Transitions.landingResearchXPCost) { store.researchLanding() }
+                } }
+            } else if p.missionsDone >= landerAt {
+                PrimaryButton(title: "Fit Lander Module in Hangar") { store.go(.hangar) }
             }
             ForEach(Clients.all.filter(\.suppliesCrew)) { c in
                 Panel { VStack(alignment: .leading, spacing: 6) {

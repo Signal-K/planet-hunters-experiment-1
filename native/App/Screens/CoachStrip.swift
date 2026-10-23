@@ -118,8 +118,8 @@ struct HangarModulesPanel: View {
     @State private var picks: [String: String] = [:]
     @State private var step = 0
     var onClose: (() -> Void)?
-
-    private static let stageNames = ["engine": "Engine", "booster": "Boosters", "cockpit": "Cockpit", "payload": "Payload"]
+    /// Opens on this room instead of the first (scene catalog).
+    var startKind: String?
 
     var body: some View {
         GeometryReader { geo in
@@ -141,14 +141,23 @@ struct HangarModulesPanel: View {
             }
         }
         .background(SetStyle.bg.ignoresSafeArea())
+        .onAppear { if let k = startKind, let i = kinds.firstIndex(of: k) { step = i } }
         .foregroundStyle(SetStyle.ink)
     }
 
-    private var kinds: [String] { FlightPlan.moduleKinds }
+    /// The hull's rooms grow with missions done and research (web `getBuildSequence`), so the lander room shows up here.
+    private var kinds: [String] { ShipCustomizer.sequence(for: store.player) }
     private var kind: String { kinds[step] }
     private func pick(_ k: String) -> String? { picks[k] ?? store.player.shipCustomizerParts[k] }
     private var allFitted: Bool { kinds.allSatisfy { pick($0) != nil } }
     private var isLast: Bool { step == kinds.count - 1 }
+    private var fit: [String: String] { Dictionary(uniqueKeysWithValues: kinds.compactMap { k in pick(k).map { (k, $0) } }) }
+    /// Francs left after the picked change, as web's budget chip (net of the parts already fitted).
+    private var remaining: Int { store.player.francs - ShipCustomizer.netCost(fit, previous: store.player.shipCustomizerParts) }
+    /// Web `affordable`: what is left plus a refund of the room's current part covers the new one.
+    private func affordable(_ part: ShipCustomizer.Part) -> Bool {
+        remaining + (ShipCustomizer.part(pick(part.kind))?.price ?? 0) >= part.price
+    }
 
     /// The same pad rocket sprite the base and flight scenes use, drawn grey on a pale blue sheet.
     private var blueprint: some View {
@@ -168,7 +177,7 @@ struct HangarModulesPanel: View {
                     Image(systemName: "chevron.left").font(.system(size: 18, weight: .heavy))
                         .frame(width: 44, height: 44).contentShape(Rectangle())
                 }.buttonStyle(.plain).disabled(step == 0).opacity(step == 0 ? 0.35 : 1).accessibilityLabel("Previous stage")
-                Text("\(Self.stageNames[kind] ?? kind) \(step + 1)/\(kinds.count)".uppercased())
+                Text("\(ShipCustomizer.roomNames[kind] ?? kind) \(step + 1)/\(kinds.count)".uppercased())
                     .font(AppFont.display(14)).tracking(14 * 0.14)
                 Spacer(minLength: 0)
                 HStack(spacing: 8) {
@@ -179,10 +188,14 @@ struct HangarModulesPanel: View {
                 }.accessibilityHidden(true)
             }
             VStack(spacing: 16) {
-                ForEach(FlightPlan.modules[kind] ?? [], id: \.id) { m in
+                Text("\(Economy.format(francs: remaining)) LEFT").font(AppFont.mono(14)).foregroundStyle(SetStyle.muted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                ForEach(ShipCustomizer.parts(for: kind, missionsDone: store.player.missionsDone), id: \.id) { m in
                     let on = pick(kind) == m.id
+                    let canFit = on || affordable(m)
                     Button { picks[kind] = m.id } label: {
-                        SetRowText(title: m.name, status: on ? "Installed" : "Tap to fit", titleColor: on ? SetStyle.card : SetStyle.ink, statusColor: on ? SetStyle.card : SetStyle.muted)
+                        SetRowText(title: m.name, status: on ? "Installed" : (canFit ? Economy.format(francs: m.price) : "CAN'T AFFORD"),
+                                   titleColor: on ? SetStyle.card : SetStyle.ink, statusColor: on ? SetStyle.card : SetStyle.muted)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                             .padding(SetStyle.pad)
                             .background(on ? SetStyle.ink : SetStyle.card, in: RoundedRectangle(cornerRadius: SetStyle.radius))
@@ -190,6 +203,7 @@ struct HangarModulesPanel: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .disabled(!canFit).opacity(canFit ? 1 : 0.5)
                     .accessibilityLabel("\(kind) \(m.name)\(on ? ", selected" : "")")
                 }
             }
@@ -198,9 +212,9 @@ struct HangarModulesPanel: View {
     }
 
     private var footer: some View {
-        SetButton(title: isLast ? "Confirm" : "Next", solid: true, enabled: isLast ? allFitted : true, fill: true) {
+        SetButton(title: isLast ? "Confirm" : "Next", solid: true, enabled: isLast ? allFitted && remaining >= 0 : true, fill: true) {
             if isLast {
-                store.fitHangarModules(Dictionary(uniqueKeysWithValues: kinds.compactMap { k in pick(k).map { (k, $0) } }))
+                store.fitHangarModules(fit)
                 onClose?()
             } else { step += 1 }
         }
