@@ -23,92 +23,254 @@
 .streak { top: 8%; left: -10%; }
 .streakLate { top: 22%; left: -8%; animation-delay: -8s; animation-duration: 22s; }
 
-.sheet button {
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(15, 36, 54, 0.55);
+  pointer-events: auto;
+}
+
+/* The pad: dark bezel around a blueprint-paper screen. */
+.pad {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(100%, 560px);
+  max-height: 100%;
+  min-height: 0;
+  padding: 12px;
+  border-radius: 24px;
+  background: var(--ln-blueprint-ink);
+  color: var(--ln-blueprint-ink);
+  box-shadow: 0 16px 40px rgba(15, 36, 54, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 4px 0 8px;
+  color: var(--ln-blueprint-paper);
+}
+
+.led {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ln-blueprint-line-strong);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+.led[data-on='true'] {
+  background: var(--ln-cyan);
+  box-shadow: 0 0 8px var(--ln-cyan);
+}
+
+.stripTitle {
+  flex: 1;
+  min-width: 0;
+  font: 800 14px/1.2 var(--ln-font-display);
+  letter-spacing: 0.12em;
+}
+
+.stripMeta {
+  font: 700 14px/1 var(--ln-font-display);
+  letter-spacing: 0.1em;
+  color: var(--ln-cyan);
+}
+
+.pad button {
   min-height: 44px;
   min-width: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--ln-text);
-  border-radius: 8px;
-  background: var(--ln-text);
-  color: var(--ln-panel);
+  padding: 0 16px;
+  border: 1px solid var(--ln-blueprint-ink);
+  border-radius: 10px;
+  background: var(--ln-blueprint-ink);
+  color: var(--ln-blueprint-paper);
   font: 800 14px/1 var(--ln-font-display);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
   flex: none;
 }
 
-.sheet {
-  position: absolute;
-  inset: 16px;
-  z-index: 80;
+.pad button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pad button.close {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: transparent;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.pad .tabs button {
+  border-radius: 10px 10px 0 0;
+  border-color: rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: var(--ln-blueprint-paper-2);
+  font-size: 14px;
+}
+
+.pad .tabs button[data-on='true'] {
+  background: var(--ln-blueprint-paper);
+  border-color: var(--ln-blueprint-paper);
+  color: var(--ln-blueprint-ink);
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+  margin-top: -8px;
+  border-radius: 0 0 12px 12px;
+  background:
+    linear-gradient(var(--ln-blueprint-line-strong) 1px, transparent 1px) 0 0 / 100% 32px,
+    linear-gradient(90deg, var(--ln-blueprint-line-strong) 1px, transparent 1px) 0 0 / 32px 100%,
+    var(--ln-blueprint-paper);
+  background-blend-mode: soft-light, soft-light, normal;
+}
+
+.entry {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow: auto;
-  padding: 16px;
-  border: 1px solid var(--ln-cyan-border);
-  border-radius: 12px;
-  background: var(--ln-panel);
-  color: var(--ln-text);
-  pointer-events: auto;
-}
-
-.sheet h2 {
-  margin: 0;
-  font: 700 18px/1.3 var(--ln-font-display);
-  letter-spacing: 0.04em;
-}
-
-.sheet p,
-.choice,
-.sheet legend {
-  margin: 0;
-  font: 14px/1.45 var(--ln-font-body);
-}
-
-.sheet fieldset {
-  border: 0;
   margin: 0;
   padding: 0;
+  border: 0;
+  min-width: 0;
+  animation: pad-in 180ms ease-out;
+}
+
+.kicker {
+  margin: 0;
+  padding: 0;
+  font: 800 14px/1.3 var(--ln-font-display);
+  letter-spacing: 0.12em;
+  color: var(--ln-blueprint-blue);
+}
+
+.body {
+  margin: 0;
+  font: 500 16px/1.55 var(--ln-font-body);
+  color: var(--ln-blueprint-ink);
+}
+
+.link {
+  align-self: flex-start;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font: 700 14px/1 var(--ln-font-display);
+  letter-spacing: 0.06em;
+  color: var(--ln-blueprint-blue);
+}
+
+.choices {
   display: grid;
   gap: 8px;
 }
 
-.sheet a { color: var(--ln-cyan); }
-
-.choice {
+.pad button.choice {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 44px;
+  gap: 12px;
+  height: auto;
+  min-height: 48px;
+  padding: 8px 12px;
   text-align: left;
-  background: var(--ln-surface-2);
-  color: var(--ln-text);
-  border-color: var(--ln-hairline);
   text-transform: none;
   letter-spacing: 0;
-  font: 14px/1.35 var(--ln-font-body);
+  font: 500 14px/1.35 var(--ln-font-body);
+  background: var(--ln-blueprint-paper);
+  color: var(--ln-blueprint-ink);
+  border: 1px solid var(--ln-blueprint-line-strong);
 }
 
-.sheet button.choice {
-  text-transform: none;
-  letter-spacing: 0;
-  font: 14px/1.35 var(--ln-font-body);
-  background: var(--ln-surface-2);
-  color: var(--ln-text);
-  border-color: var(--ln-hairline);
+.pad button.choice[data-on='true'] {
+  border-color: var(--ln-blueprint-blue);
+  background: var(--ln-blueprint-paper-2);
+  box-shadow: inset 4px 0 0 var(--ln-blueprint-blue);
 }
 
-.sheet button.choice[data-on='true'] {
-  border-color: var(--ln-cyan-border);
-  color: var(--ln-cyan);
+.key {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  font: 800 14px/1 var(--ln-font-display);
+  color: var(--ln-blueprint-blue);
 }
 
-.actions {
+.readout {
+  padding: 12px;
+  border: 1px solid var(--ln-blueprint-blue);
+  border-radius: 8px;
+  background: var(--ln-blueprint-paper-2);
+}
+
+.readout p {
+  margin: 0;
+  font: 700 14px/1.4 var(--ln-font-display);
+  letter-spacing: 0.06em;
+}
+
+.foot {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.progress {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.progress span {
+  height: 6px;
+  flex: 1;
+  max-width: 40px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.progress span[data-on='true'] { background: var(--ln-cyan); }
+
+.nav {
+  display: flex;
   gap: 8px;
+}
+
+.pad button.ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+@keyframes pad-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes orionids-drift {
@@ -119,6 +281,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .entry { animation: none; }
   .streak,
   .streakLate { animation: none; left: 18%; opacity: 0.4; }
 }

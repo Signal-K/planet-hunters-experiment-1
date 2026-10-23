@@ -41,9 +41,16 @@ export function isWswEvent(eventId: string): boolean {
   return WSW_EVENT_IDS.includes(eventId)
 }
 
+const WSW_STARTS_UTC = Date.parse('2026-10-04T00:00:00Z')
+
 export function isWorldSpaceWeekLive(now: Date | number): boolean {
   const t = now instanceof Date ? now.getTime() : now
-  return Number.isFinite(t) && t >= Date.parse('2026-10-04T00:00:00Z') && t < WSW_ENDS_UTC
+  return Number.isFinite(t) && t >= WSW_STARTS_UTC && t < WSW_ENDS_UTC
+}
+
+export function isWorldSpaceWeekUpcoming(now: Date | number): boolean {
+  const t = now instanceof Date ? now.getTime() : now
+  return Number.isFinite(t) && t < WSW_STARTS_UTC
 }
 
 const STATE_TEXT: Record<WswChipState, string> = {
@@ -104,11 +111,12 @@ export interface WswBanner {
 
 export function wswBanner(badges: Record<string, PlayerBadge> | undefined, now: Date | number): WswBanner {
   const live = isWorldSpaceWeekLive(now)
+  const upcoming = isWorldSpaceWeekUpcoming(now)
   const earned = WSW_EVENT_IDS.filter(id => !!badges?.[id]).length
   return {
     live,
-    title: live ? `World Space Week ${WSW_RANGE_LABEL}` : 'World Space Week ended',
-    detail: live ? 'Gold badges while it runs. Silver after.' : 'Silver badges are still open.',
+    title: live || upcoming ? `World Space Week ${WSW_RANGE_LABEL}` : 'World Space Week ended',
+    detail: live ? 'Gold badges while it runs. Silver after.' : upcoming ? 'Opens 4 Oct. Gold badges while it runs.' : 'Silver badges are still open.',
     earned,
     total: WSW_EVENT_IDS.length,
   }
