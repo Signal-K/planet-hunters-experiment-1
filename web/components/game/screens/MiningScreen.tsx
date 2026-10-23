@@ -97,7 +97,7 @@ function GuideMark({ kind }: { kind: string }) {
   )
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
@@ -141,6 +141,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   initialEarthDisposition?: 'store' | 'sell'
   /** SSL-475: fired for every sky-event debris chunk mined (first one earns the badge). */
   onDebrisMined?: (resourceId: string) => void
+  /** Captures the first rendered event body as an offline-safe proof. */
+  onEventProof?: (screenshot: string) => void
   /** Fragments already caught this local night. The night-run goal reads this, not the hold. */
   fragmentCatches?: number
   /** Ship hold, in units. When set, further ore stays out of cargo. An Orionid catch still counts. */
@@ -781,6 +783,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           mineralMeta={minerals}
           laserTier={laserTier}
           onCollect={collectMineral}
+          onEventProof={onEventProof}
           onReady={() => setSceneStatus('ready')}
           onFailure={() => setSceneStatus('failed')}
           fireRef={fireRef}

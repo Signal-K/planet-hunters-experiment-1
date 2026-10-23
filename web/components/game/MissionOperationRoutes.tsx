@@ -22,7 +22,7 @@ import { FIREBALL_2026_BADGE, FIREBALL_SUBJECT_ID, grantFireballCatch } from '@/
 import { addStamp } from '@/lib/research/stamps'
 import { addCaughtFragments } from '@/lib/orionids/fragments'
 import { showerRunCatches, showerRunFilled, showerRunPayout, withoutShowerFragments } from '@/lib/orionids/shower-run'
-import { queueEventBadge } from '@/lib/orionids/persist'
+import { queueEventBadge, queueOrionidsEventProof } from '@/lib/orionids/persist'
 import { captureGameEvent } from '@/lib/posthog'
 import { missionResumeScreen } from '@/lib/mission-resume'
 
@@ -164,6 +164,7 @@ export default function MissionOperationRoutes({
 
     case 'mining': {
       if (!game.mission || !game.target) return null
+      const miningTargetId = game.target.id
       const chassis = game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)
       const nightHold = game.mission.id === ORIONIDS_NIGHT_RUN_ID && chassis
         ? effectiveCargoCapacity(chassis, game.player.unlockedSkillNodes)
@@ -270,6 +271,18 @@ export default function MissionOperationRoutes({
               const mined = applyDebrisMined(player, preset, now).player
               if (resourceId !== 'orionid_debris') return mined
               return addStamp(addCaughtFragments(mined, 1, 'count'), 'event', now)
+            })
+          }}
+          onEventProof={screenshot => {
+            if (game.mission?.id !== ORIONIDS_NIGHT_RUN_ID) return
+            const missionRunId = game.player.missionRunId ?? (game.player.transitStartedAt ? `launch-${game.player.transitStartedAt}` : '')
+            if (!missionRunId) return
+            queueOrionidsEventProof({
+              missionId: game.mission.id,
+              missionRunId,
+              targetId: miningTargetId,
+              screenshot,
+              capturedAt: debrisNow(),
             })
           }}
         />

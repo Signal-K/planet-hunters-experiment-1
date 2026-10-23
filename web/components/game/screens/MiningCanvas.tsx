@@ -10,7 +10,7 @@ import type { MineralMeta } from '@/lib/data'
 import type { PlayerLocation } from '@/lib/game-types'
 import { prefersReducedMotion } from '@/lib/pixi/launchSpriteAnim'
 import { recoilOffset } from '@/lib/engine/miningJuice'
-import { activeDebrisPreset, debrisRatePerMinute, type DebrisEventPreset } from '@/lib/data/sky-events'
+import { activeDebrisPreset, debrisRatePerMinute, DEBRIS_RESOURCE_IDS, type DebrisEventPreset } from '@/lib/data/sky-events'
 import { FIREBALL_FRAGMENT_ID, fireballDue } from '@/lib/orionids/fireball'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { loadOrionidsArt } from '@/lib/orionids/loadArt'
@@ -37,6 +37,8 @@ interface MiningCanvasProps {
   /** Equipped drill/laser part tier (1-3). Gates how deep the laser can reach. */
   laserTier?: number
   onCollect: (mineral: string) => void
+  /** Captures the rendered event-body scene once for the event proof ledger. */
+  onEventProof?: (screenshot: string) => void
   /** Signals that the rendered scene is ready to receive operator input. */
   onReady?: () => void
   /** Signals an initialization failure so the enclosing screen can recover. */
@@ -66,7 +68,7 @@ interface MiningCanvasProps {
   skyEventLocation?: PlayerLocation | null
 }
 
-export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, steerRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onEventProof, onReady, onFailure, fireRef, onFireRequest, scrollRef, steerRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
   void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
@@ -75,6 +77,9 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
   fireballCaughtRef.current = fireballCaughtAt
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
+  const onEventProofRef = useRef(onEventProof)
+  onEventProofRef.current = onEventProof
+  const eventProofCapturedRef = useRef(false)
   const onFireRequestRef = useRef(onFireRequest)
   onFireRequestRef.current = onFireRequest
   const onReadyRef = useRef(onReady)
@@ -257,7 +262,17 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           pixelScale: field.pixelScale,
           pixelBeam: true,
           labelInk: palette.labelInk,
-          onCollect: mineral => onCollectRef.current(mineral),
+          onCollect: mineral => {
+            onCollectRef.current(mineral)
+            if (!eventProofCapturedRef.current && DEBRIS_RESOURCE_IDS.includes(mineral)) {
+              eventProofCapturedRef.current = true
+              try {
+                onEventProofRef.current?.(canvas.toDataURL('image/jpeg', 0.72))
+              } catch {
+                // A renderer without a readable back buffer should not stop mining.
+              }
+            }
+          },
           onMiss: () => {
             shakeState.timer = 0.28
             onMissRef.current?.()
