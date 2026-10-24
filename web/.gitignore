@@ -56,3 +56,4 @@ tests/.report
 # Cypress output
 cypress/screenshots/
 cypress/videos/
+.dev-result.json

@@ -15,6 +15,13 @@ struct RoverFieldScreen: View {
         _deployed = State(initialValue: deployed)
     }
 
+    private var readoutText: String {
+        guard let o = prospecting.loggedOutcrop else {
+            return orionidsResearch ? "Drive the rover up to a rock formation, then tap it to log it. Log \(prospecting.goal) formations." : "Use the drive pad to scout the field, then tap an exposed outcrop to log a surface observation."
+        }
+        if !prospecting.canContinue { return "\(o.label) logged, \(prospecting.observations.count) of \(prospecting.goal). Drive to the next formation." }
+        return orionidsResearch ? "\(o.label) logged. The Orionids observations are ready for debrief." : "\(o.label) logged. The ship laser is ready for extraction."
+    }
     private var targetName: String { store.target?.name ?? "Target" }
     private var orionidsResearch: Bool { store.mission?.id == OrionidsRun.surfaceResearchMissionId }
 
@@ -36,6 +43,7 @@ struct RoverFieldScreen: View {
             }
         }
         .background(Theme.bg.ignoresSafeArea())
+        .onAppear { if orionidsResearch { prospecting.goal = 3 } }
     }
 
     private var hotbar: some View {
@@ -47,7 +55,7 @@ struct RoverFieldScreen: View {
             }.buttonStyle(.plain)
             VStack(alignment: .leading, spacing: 2) {
                 Eyebrow(text: "Prospector · \(targetName)")
-                Text(prospecting.logged != nil ? "OBSERVATION LOGGED" : "SCOUTING")
+                Text(prospecting.canContinue ? "OBSERVATION LOGGED" : prospecting.observations.isEmpty ? "SCOUTING" : "LOGGED \(prospecting.observations.count) OF \(prospecting.goal)")
                     .font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.ink)
             }
             .padding(8).background(Theme.paper.opacity(0.9), in: RoundedRectangle(cornerRadius: 8))
@@ -86,7 +94,7 @@ struct RoverFieldScreen: View {
     }
 
     private func outcropButton(_ o: Outcrop) -> some View {
-        let on = prospecting.logged == o.id
+        let on = prospecting.observations.contains(o.id)
         return Button {
             prospecting.observe(o.id)
         } label: {
@@ -110,10 +118,9 @@ struct RoverFieldScreen: View {
                 HStack {
                     Eyebrow(text: "Survey results")
                     Spacer()
-                    Text(prospecting.logged != nil ? "OBSERVATION LOGGED" : "SCOUTING").font(AppFont.display(14)).tracking(1.0)
+                    Text(prospecting.canContinue ? "OBSERVATION LOGGED" : prospecting.observations.isEmpty ? "SCOUTING" : "LOGGED \(prospecting.observations.count) OF \(prospecting.goal)").font(AppFont.display(14)).tracking(1.0)
                 }
-                Text(prospecting.loggedOutcrop.map { orionidsResearch ? "\($0.label) logged. The Orionids observation is ready for debrief." : "\($0.label) logged. The ship laser is ready for extraction." }
-                     ?? "Use the drive pad to scout the field, then tap an exposed outcrop to log a surface observation.")
+                Text(readoutText)
                     .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                 PrimaryButton(title: orionidsResearch ? "LOG OBSERVATION" : "CONTINUE TO SHIP LASER") { store.roverSurveyComplete() }
                     .disabled(!prospecting.canContinue).opacity(prospecting.canContinue ? 1 : 0.45)

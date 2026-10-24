@@ -17,24 +17,36 @@ public struct Prospecting: Equatable, Sendable {
 
     public private(set) var rover = (x: 0.5, y: 0.82)
     public private(set) var logged: String?
+    /// Every outcrop logged so far, in order. `logged` is the latest.
+    public private(set) var observations: [String] = []
+    /// Formations the survey needs. The Orionids survey asks for three and the rover has to be driven within scanner range of each (web parity), which keeps it near a minute.
+    public var goal: Int
+    public static let scanRange = 0.2
 
-    public static func == (a: Prospecting, b: Prospecting) -> Bool { a.rover == b.rover && a.logged == b.logged }
+    public static func == (a: Prospecting, b: Prospecting) -> Bool { a.rover == b.rover && a.logged == b.logged && a.observations == b.observations }
 
-    public init() {}
+    public init(goal: Int = 1) { self.goal = goal }
 
     public var loggedOutcrop: Outcrop? { Self.outcrops.first { $0.id == logged } }
-    /// Continuing to the ship laser needs one logged observation.
-    public var canContinue: Bool { logged != nil }
+    /// Continuing needs `goal` logged observations.
+    public var canContinue: Bool { observations.count >= goal }
 
     /// Drive pad step, clamped to the field.
     public mutating func drive(dx: Double, dy: Double) {
         rover = (min(0.96, max(0.04, rover.x + dx)), min(0.96, max(0.3, rover.y + dy)))
     }
 
-    /// Tap on an outcrop: the rover parks beside it and logs a surface observation.
-    public mutating func observe(_ id: String) {
-        guard let o = Self.outcrops.first(where: { $0.id == id }) else { return }
-        rover = (o.x, min(0.96, o.y + 0.11))
+    /// Outcrop within scanner range of the rover right now.
+    public func inRange(_ o: Outcrop) -> Bool { ((rover.x - o.x) * (rover.x - o.x) + (rover.y - o.y) * (rover.y - o.y)).squareRoot() <= Self.scanRange }
+
+    /// Tap on an outcrop. A single-formation survey parks the rover beside it and logs it. A multi-formation survey only logs what the rover has been driven up to, and never the same one twice. Returns whether it logged.
+    @discardableResult
+    public mutating func observe(_ id: String) -> Bool {
+        guard let o = Self.outcrops.first(where: { $0.id == id }), !observations.contains(o.id), observations.count < goal else { return false }
+        if goal > 1 && !inRange(o) { return false }
+        if goal == 1 { rover = (o.x, min(0.96, o.y + 0.11)) }
         logged = o.id
+        observations.append(o.id)
+        return true
     }
 }

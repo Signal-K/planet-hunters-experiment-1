@@ -754,12 +754,12 @@ final class MiningScene: SKScene {
             node.texture?.filteringMode = .nearest
             node.zPosition = 30
             // Aim near the ship, shifted by the ground scroll during the fall, spread wide so the player has to weave.
-            let fallTime = (size.height + 20 - surfaceY) / 56
-            let aim = beamX + 48 * fallTime + CGFloat.random(in: -300...300)
+            let fallTime = (size.height + 20 - surfaceY) / 39
+            let aim = beamX + 36 * fallTime + CGFloat.random(in: -300...300)
             // Not clamped to the right edge: on a narrow phone the aim sits past the screen and the fragment drifts in (web parity).
             node.position = CGPoint(x: max(40, aim), y: size.height + 20)
             world.addChild(node)
-            falling.append((node, CGFloat.random(in: 52...60)))
+            falling.append((node, CGFloat.random(in: 36...42)))
         }
         var landed: [Int] = []
         for i in falling.indices {
@@ -828,8 +828,8 @@ final class MiningScene: SKScene {
         let dt = min(0.05, lastTime.map { currentTime - $0 } ?? 0)
         lastTime = currentTime
         clock += dt
-        let base: CGFloat = 48
-        let speed = base + CGFloat(scrollInput) * (scrollInput > 0 ? 48 : 32)
+        let base: CGFloat = 36
+        let speed = base + CGFloat(scrollInput) * (scrollInput > 0 ? 36 : 24)
         let dx = speed * CGFloat(dt)
         scrollX += dx
         shift(ground, by: dx, width: groundSpan)
@@ -855,10 +855,10 @@ final class MiningScene: SKScene {
             if let sprite = plume as? SKSpriteNode, !reducedMotion { sprite.texture = flameFrames[Int(clock * 10) % 2] }
         }
         // Altitude (SpriteKit is y-up: positive climbs). Clamp between sky ceiling and just above ground.
-        altitude += CGFloat(-climbInput) * 150 * CGFloat(dt)
+        altitude += CGFloat(-climbInput) * 110 * CGFloat(dt)
         let ceiling = ceilingCenterY - shipY   // stay under the HUD
         altitude = max(floorCenterY - shipY, min(ceiling, altitude))
-        shipShift = max(0, min(maxShift, shipShift + CGFloat(steerInput) * 130 * CGFloat(dt)))
+        shipShift = max(0, min(maxShift, shipShift + CGFloat(steerInput) * 90 * CGFloat(dt)))
         ship.position.x = beamX
         beam.position.x = beamX
         spark.position.x = beamX

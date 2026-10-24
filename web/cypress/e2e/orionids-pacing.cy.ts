@@ -55,3 +55,36 @@ describe('Orionids pacing', () => {
     })
   }
 })
+
+// Stage 2: the field rover has to find and scan three formations, so it takes real driving.
+describe('Orionids pacing, rover', () => {
+  for (const vp of VIEWPORTS) {
+    it(`stage 2 rover survey takes over 40s (${vp.name})`, { defaultCommandTimeout: 30_000 }, function () {
+      if (Cypress.expose('VP') && Cypress.expose('VP') !== vp.name) this.skip()
+      cy.viewport(vp.w, vp.h)
+      cy.visit('/game/stage?preset=ui-orionids-rover')
+      cy.get('[data-testid="rover-survey-screen"] canvas', { timeout: 60_000 }).should('be.visible')
+      cy.get('[data-testid="rover-scan"]', { timeout: 60_000 }).should('not.be.disabled')
+      const start = Date.now()
+      const keys = ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft']
+      const press = (key: string, ms: number) => {
+        cy.get('body').trigger('keydown', { key, code: key, force: true })
+        cy.wait(ms)
+        cy.get('body').trigger('keyup', { key, code: key, force: true })
+      }
+      const drive = (i: number): Cypress.Chainable => cy.get('[data-testid="rover-continue-to-laser"]').then($b => {
+        if (!$b.prop('disabled')) return
+        expect(Date.now() - start, `stage must not run past the cap (${$b.closest('body').find('[data-testid="rover-survey-readout"]').text()})`).to.be.lessThan(MAX_MS)
+        press(keys[i % 4], 1200)
+        cy.get('[data-testid="rover-scan"]').click({ force: true })
+        return cy.wait(300).then(() => drive(i + 1))
+      })
+      drive(0).then(() => {
+        const elapsed = Date.now() - start
+        cy.log(`stage 2 took ${(elapsed / 1000).toFixed(1)}s`)
+        expect(elapsed, 'stage 2 duration').to.be.within(MIN_MS, MAX_MS)
+        cy.screenshot(`orionids-stage2-${vp.name}`)
+      })
+    })
+  }
+})
