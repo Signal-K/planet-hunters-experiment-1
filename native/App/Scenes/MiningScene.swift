@@ -479,7 +479,8 @@ final class MiningScene: SKScene {
     /// Deposits sit buried in the soil under the beam line, far apart so one pass shows one or two.
     private func buildChips() {
         let live = field.nodes.filter { !$0.isDepleted }.sorted { ($0.x + $0.y) < ($1.x + $1.y) }
-        let spacing: CGFloat = 280
+        // Sparse during the shower run so labelled ore does not crowd the falling fragments (web depositGap).
+        let spacing: CGFloat = fragmentRain == nil ? 280 : 640
         track = max(size.width + spacing, CGFloat(live.count) * spacing)
         for (i, n) in live.enumerated() {
             let hex = Minerals.byId[n.mineralId]?.colorHex ?? "#C8CCD2"
@@ -747,19 +748,19 @@ final class MiningScene: SKScene {
         if falling.count == 0 && rainAccumulator < 1 && clock < 1 { rainAccumulator = 1 }   // first fragment shows up straight away
         while rainAccumulator >= 1 {
             rainAccumulator -= 1
-            guard falling.count < 5 else { continue }
+            guard falling.count < 2 else { continue }   // web MAX_RAIN
             let hex = Minerals.byId[rain.resourceId]?.colorHex ?? "#7fd8ff"
             let node = SKSpriteNode(texture: depositTexture(colorHex: hex, variant: falling.count, glint: true))
-            node.setScale(px * 1.1)
+            node.setScale(px * 0.7)   // web draws shower fragments at 0.45
             node.texture?.filteringMode = .nearest
             node.zPosition = 30
             // Aim near the ship, shifted by the ground scroll during the fall, spread wide so the player has to weave.
-            let fallTime = (size.height + 20 - surfaceY) / 39
+            let fallTime = (size.height + 20 - surfaceY) / 56
             let aim = beamX + 36 * fallTime + CGFloat.random(in: -300...300)
             // Not clamped to the right edge: on a narrow phone the aim sits past the screen and the fragment drifts in (web parity).
             node.position = CGPoint(x: max(40, aim), y: size.height + 20)
             world.addChild(node)
-            falling.append((node, CGFloat.random(in: 36...42)))
+            falling.append((node, CGFloat.random(in: 52...60)))
         }
         var landed: [Int] = []
         for i in falling.indices {

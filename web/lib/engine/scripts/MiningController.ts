@@ -379,7 +379,8 @@ export class MiningController extends ScriptBehaviour {
 
   /** Native stride. A phone-width pass shows one or two deposits. */
   private depositGap(): number {
-    return 280
+    // Sparse during the shower run so labelled ore does not crowd the falling fragments.
+    return this.opts.debris?.getSpawn()?.autoCollect ? 640 : 280
   }
 
   update(realDt: number): void {
@@ -660,8 +661,8 @@ export class MiningController extends ScriptBehaviour {
       renderer.setTint(mineralColor)
     }
     if (sprite && hero) sprite.scale.set(2.4)
-    // Shower rain is drawn smaller so five in the air do not crowd the sky.
-    if (sprite && autoCollect) sprite.scale.set(0.7)
+    // Shower rain is drawn small so the sky stays readable.
+    if (sprite && autoCollect) sprite.scale.set(0.45)
     this.gameObject.addChild(go)
     this.ores.push({
       go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, hero ? 24 : 11), labelBaseY: y, mineral,

@@ -189,7 +189,7 @@ struct MiningScreen: View {
         let showerRun = store.mission?.id == OrionidsRun.missionId
         let trainingCue = store.player.flightPlan.currentTry == "mining" ? "Fire on a labelled seam" : nil
         let order = VStack(alignment: .leading, spacing: 6) {
-            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: showerRun ? nil : (targetCue ?? trainingCue), showerCaught: store.mission?.id == OrionidsRun.missionId ? OrionidsRun.catches(store.player) : nil)
+            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: showerRun ? (OrionidsRun.catches(store.player) < 3 ? "STEER UNDER A FRAGMENT · NO LASER" : nil) : (targetCue ?? trainingCue), showerCaught: store.mission?.id == OrionidsRun.missionId ? OrionidsRun.catches(store.player) : nil)
                 .onLongPressGesture { showGuide = true }
         }
         .frame(maxWidth: 220)
