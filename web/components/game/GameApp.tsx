@@ -3,7 +3,7 @@
 import { useMemo, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GameProvider, useGame } from '@/game-context'
-import { ORIONIDS_NIGHT_RUN_ID, trainingCoachSteps } from '@/lib/data'
+import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, trainingCoachSteps } from '@/lib/data'
 import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import FlightPlan from '@/components/game/FlightPlan'
@@ -40,7 +40,9 @@ function GameCanvas() {
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [hubOpen, setHubOpen] = useState(false)
   const eventMissionActive = game.missionId === ORIONIDS_NIGHT_RUN_ID
+    || game.missionId === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
     || game.player.activeMission?.id === ORIONIDS_NIGHT_RUN_ID
+    || game.player.activeMission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
   const orionidsEntry = useRef<'orionids' | null>(
     typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('entry') === 'orionids'
       || window.sessionStorage.getItem('landnam-entry') === 'orionids')

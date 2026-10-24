@@ -44,7 +44,7 @@ import { applyHomeSplit, clientDemand, clientPayout, type HomeSplit } from '@/li
 import { completeFlightPlanEvent, currentTrainingTry, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
-import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, orionidsNightRun } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, orionidsNightRun, orionidsSurfaceResearchMission } from '@/lib/data/missions'
 import { settleShowerRun, showerRunFilled, startShowerRun, withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { requestMissionBoardTab } from '@/lib/mission-board-nav'
 
@@ -332,7 +332,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // Counterpart to mission_completed — without a started event, Trends/
     // Funnels can't tell "never picked a mission" apart from "picked one and
     // dropped off before finishing it".
-    const entryMission = id === ORIONIDS_NIGHT_RUN_ID ? orionidsNightRun() : null
+    const entryMission = id === ORIONIDS_NIGHT_RUN_ID
+      ? orionidsNightRun()
+      : id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
+        ? orionidsSurfaceResearchMission()
+        : null
     const pickedMission = catalog.missions.find(m => m.id === id)
       ?? stateRef.current.player.dailyClientPool?.missions.find(m => m.id === id)
       ?? entryMission
@@ -345,7 +349,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       })
     }
     setState(s => {
-      const isOrionidsEntry = id === ORIONIDS_NIGHT_RUN_ID
+      const isOrionidsEntry = id === ORIONIDS_NIGHT_RUN_ID || id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
       if (s.screen !== 'missions' && s.screen !== 'launchpad' && !isOrionidsEntry) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
@@ -387,7 +391,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           }
         : prepared.player
       // SSL-651: the shower run's 20 fragments count from this accept.
-      const runPlayer = isOrionidsEntry ? startShowerRun(entryPlayer) : entryPlayer
+      const runPlayer = id === ORIONIDS_NIGHT_RUN_ID ? startShowerRun(entryPlayer) : entryPlayer
       const base = {
         ...prepared,
         player: {
