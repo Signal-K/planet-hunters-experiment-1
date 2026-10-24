@@ -1,4 +1,4 @@
-.PHONY: help up follow opener warm-studio up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
+.PHONY: help up ensure check follow test-up test-down opener warm-studio up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 export LANDNAM_HOST_ROOT := $(CURDIR)
@@ -49,6 +49,21 @@ help:
 	@echo "    test-reset-dev-data Verify reset protection with an offline mock"
 	@echo "    docker-disk    Report Docker disk usage and the largest objects"
 	@echo "    docker-prune   Remove stale rebuildable Docker data (never volumes)"
+
+ensure:
+	@scripts/ensure-stack.sh
+
+# Fast in-tab check: make check NAME=orionids-board   (or: node scripts/dev-check.mjs --list)
+check:
+	@node scripts/dev-check.mjs $(NAME)
+
+# Separate test stack on its own port and database, so test runs never disturb the preview tab or its save.
+test-up:
+	$(FRONTEND_COMPOSE) --profile test up -d web-test pb-test
+	@echo "Test web: http://localhost:4321   Test PB: http://localhost:8097   (CYPRESS_BASE_URL=http://localhost:4321)"
+
+test-down:
+	$(FRONTEND_COMPOSE) --profile test stop web-test pb-test
 
 up: pb-up
 	$(FRONTEND_COMPOSE) up -d --remove-orphans web

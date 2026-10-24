@@ -1,0 +1,14 @@
+{
+  "hub-loads": {
+    "route": "/game/hub",
+    "steps": [{ "see": "[data-testid], button", "within": 15000 }]
+  },
+  "orionids-board": {
+    "route": "/game/stage?preset=ui-orionids-events-stage1",
+    "steps": [{ "wait": 1500 }, { "see": "orionids", "within": 15000 }]
+  },
+  "orionids-shower-mining": {
+    "route": "/game/stage?preset=ui-orionids-shower-mining-fresh",
+    "steps": [{ "see": "[data-stage-ready=\"true\"]", "within": 20000 }, { "see": "[data-testid=\"mining-order-readout\"]" }]
+  }
+}

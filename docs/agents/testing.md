@@ -4,7 +4,7 @@ Part of the Landnam agent instructions; `AGENTS.md` (repo root) is the entry poi
 
 ## Testing and completion contract
 
-Test runner: Playwright scene tests. Cypress has been removed; do not add or run Cypress.
+Per-iteration checks: the in-tab runner below. Playwright scene tests are the heavy visual pass, run once when batching. Cypress is only for the Orionids pacing spec, on the test stack.
 
 ```bash
 cd web
@@ -23,5 +23,21 @@ npm run test:unit          # verify:scene-surfaces + vitest
 6. Do not drive the user's own device or desktop (no osascript clicks, desktop captures, or launching windows). Test headless or in the iOS Simulator.
 7. Scene visual check, on every scene task: objects rest on their surfaces with no gaps, and anything that should animate does. Send a short clip or frame strip with the stills.
 
-## Orionids pacing (headless Cypress)
-`cd web && npm run test:orionids` plays the Orionids shower run in real time at phone, landscape and desktop sizes and asserts each stage takes 40 to 240 seconds. Headless Electron, no browser install, no windows. Run with `ELECTRON_RUN_AS_NODE` unset (the npm script does this). Needs the dev server on :4320. `--expose VP=phone` runs one viewport. The rover stage is not covered yet.
+## Fast loop: checks inside Cursor (default for every iteration)
+No Playwright, no Cypress, no second stack. Liam keeps the Simple Browser open on `http://localhost:4320/game/hub?follow=1`; checks run in that tab and report back to you.
+
+```bash
+node scripts/dev-check.mjs --list               # named checks live in scripts/checks.json
+node scripts/dev-check.mjs orionids-board       # navigate, run the steps, PASS/FAIL in seconds (banner in the tab too)
+node scripts/dev-check.mjs --route /game/hub --click "OPEN" --see "SELL"   # one-off
+node scripts/dev-check.mjs hub-loads --native hub-phone   # also render the native scene on a booted simulator
+```
+Steps are `{ click }`, `{ see }` (text or CSS selector), `{ gone }`, `{ key }`, `{ wait }`; a failed step names the step and prints the page text. Add a check to `scripts/checks.json` whenever you fix a flow bug. The result includes the real viewport (`innerWidth x innerHeight`). Exit 3 means no tab answered: ask Liam to open the follow URL; do not fall back to a headless browser.
+
+## Stack lifecycle (never break the preview tab)
+- `make ensure` (the SessionStart hook runs it) starts the stack only if it is not healthy and holds a lock. Never run `make up` or `make down` when `:4320` is healthy; sessions ending no longer stop the stack.
+- Scripted or long runs (Cypress pacing, anything that writes game state) use the test stack: `make test-up` gives web on `:4321` and its own PocketBase on `:8097`. Run with `CYPRESS_BASE_URL=http://localhost:4321`, then `make test-down`.
+- Anything that takes over 60 seconds is a batched, one-off run, never per iteration.
+
+## Orionids pacing (headless Cypress, batched only)
+`cd web && CYPRESS_BASE_URL=http://localhost:4321 npm run test:orionids` plays the Orionids shower run in real time (the pacing rule is the point, so it cannot be shortened) and asserts each stage takes 40 to 240 seconds. Needs `make test-up`. `--expose VP=phone` runs one viewport. Never aim it at `:4320`.

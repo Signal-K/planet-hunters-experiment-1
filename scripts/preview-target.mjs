@@ -21,7 +21,7 @@ const SCREENS = [
   ['instrumenthub', 'instrument-hub'], ['instrumentviewport', 'instrument-hub'],
   ['refinery', 'refinery'], ['missionboard', 'missions'], ['missions', 'missions'],
   ['galaxy', 'galaxy'], ['targets', 'targets'], ['skills', 'skills'], ['academy', 'academy'],
-  ['shower-run', 'ui/orionids-shower-debrief'],
+  ['shower-run', 'ui/orionids-shower-debrief'], ['orionids', 'hub'], ['skyevent', 'hub'],
   ['build', 'build'], ['intro', 'intro'], ['roveryvey', 'rover-survey'], ['surfaceops', 'surface-ops'],
 ]
 
@@ -33,7 +33,8 @@ function toRoute(input) {
   if (input.startsWith('/')  && !input.includes('.')) return input
   if (/^\/?(web\/)?app\/game\//.test(input.replace(root + '/', ''))) {
     const m = input.match(/app\/game\/(?:\([^)]*\)\/)?([^/]+)/)
-    if (m && m[1] !== '[screen]') return `/game/${m[1]}`
+    // A file directly in a route group (layout, loading, GameLayoutClient.tsx) is not a route; fall through.
+    if (m && m[1] !== '[screen]' && !m[1].includes('.')) return `/game/${m[1]}`
   }
   const stem = (input.split('/').pop() ?? '').replace(/\.(module\.css|test\.tsx?|tsx?|css)$/, '').toLowerCase()
   const hit = SCREENS.find(([k]) => stem.startsWith(k))

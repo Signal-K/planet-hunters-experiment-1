@@ -12,7 +12,7 @@ import { hitStopSeconds, pickupPosition, stepHitStop, type HitKind } from '../mi
 import type { DebrisArtSet } from '../debrisArt'
 import { fallFrameIndex, landFrameIndex } from '@/lib/orionids/theme'
 
-export const SCROLL_SPEED = 48
+export const SCROLL_SPEED = 36
 export const SCROLL_SPEED_MIN = 16
 export const SCROLL_SPEED_MAX = 96
 const LASER_SPEED = 480
@@ -226,11 +226,13 @@ const DEBRIS_BASE_FALL_SPEED = 70
 /** Cap so a long run cannot fill the field with chunks. */
 const MAX_DEBRIS = 4
 /** Auto-collected shower fragments: more can be in the air, and one banks only if the ship is under it when it lands. */
-const MAX_RAIN = 5
+const MAX_RAIN = 3
 const CATCH_RADIUS = 100
 /** Rain spreads this far either side of where the ship is, so staying put catches a minority and the player has to weave. */
 const RAIN_SPREAD = 300
-const MAX_STREAKS = 6
+const MAX_STREAKS = 3
+/** Decorative streaks per second, fixed: the sky should feel busy, not scale with how many fragments fall. */
+const STREAKS_PER_SECOND = 0.25
 /** Visual-only meteor streak. */
 interface Streak {
   g: Graphics | null
@@ -520,7 +522,7 @@ export class MiningController extends ScriptBehaviour {
     }
     const rate = spawn.ratePerMinute
     this.debrisAccumulator += (rate / 60) * dt
-    this.streakAccumulator += (rate / 60) * dt * 2
+    this.streakAccumulator += STREAKS_PER_SECOND * dt
     let alive = this.ores.filter(o => o.phase !== undefined).length
     const cap = spawn.autoCollect ? MAX_RAIN : MAX_DEBRIS
     while (this.debrisAccumulator >= 1) {
