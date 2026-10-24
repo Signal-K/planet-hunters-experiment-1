@@ -41,7 +41,8 @@ try { await fetch(`${base}/api/dev/follow`) } catch { console.error(`Dev server 
 
 const id = `${name}-${Date.now().toString(36)}`
 // Route first so the tab navigates, then the steps run once it has loaded.
-const target = check.route
+// `fresh` reloads the page even when the tab is already on the route, so the check starts from the preset state.
+const target = check.fresh ? `${check.route}${check.route.includes('?') ? '&' : '?'}t=${Date.now().toString(36)}` : check.route
 await post({ actions: [], id: null })
 const { spawnSync } = await import('node:child_process')
 spawnSync(process.execPath, [join(root, 'scripts', 'preview-target.mjs'), target], { stdio: 'ignore' })

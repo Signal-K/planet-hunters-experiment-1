@@ -11,7 +11,7 @@ Part of the Landnam agent instructions; `AGENTS.md` (repo root) is the entry poi
 5. Keep discovery bounded: read the active ticket, its latest comments, applicable decisions and the real implementation. Do not scan historical docs or repeat passed checks without a changed input or unresolved failure.
 
 ## Platforms
-14. Native must match web behavior and appearance. For EACH acceptance slice, implement web, then native iOS/iPadOS and macOS before starting another feature. Compare the same state side by side. Shared SwiftUI code does not prove every destination works; explicitly record each destination checked or blocked.
+14. Native must match web behavior and appearance. For EACH acceptance slice, implement web, then native iOS and macOS before starting another feature (iPad is not a target). Compare the same state side by side. Shared SwiftUI code does not prove every destination works; explicitly record each destination checked or blocked.
 
 ## Fast start and consecutive parity
 
