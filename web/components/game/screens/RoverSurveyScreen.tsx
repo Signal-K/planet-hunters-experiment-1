@@ -112,8 +112,8 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
       {mission.id === 'self-directed-orionids-surface-research' && (
         <div className={styles.eventBrief} data-testid="orionids-rover-brief">
           <span>ORIONIDS RESEARCH · FIELD ROVER DEPLOYED</span>
-          <strong>Find the blue fracture outcrop on {target.name}</strong>
-          <small>Scan it to add this meteor observation to the community research record.</small>
+          <strong>Scan a rock formation on {target.name}</strong>
+          <small>Drive until one is in range, then scan. It is added to the community meteor record.</small>
         </div>
       )}
       <div className={styles.chrome}>

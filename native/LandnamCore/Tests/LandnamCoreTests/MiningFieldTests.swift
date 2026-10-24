@@ -30,6 +30,7 @@ struct MiningFieldTests {
         f.catchFragment("orionid_debris")
         f.catchFragment("orionid_debris")
         #expect(f.cargo["orionid_debris"] == 2)
+        #expect(f.cargoUnits == 0 && !f.isFull)
         #expect(f.charge == f.chargeCap)
     }
 

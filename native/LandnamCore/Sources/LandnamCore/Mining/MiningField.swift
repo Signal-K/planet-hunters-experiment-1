@@ -37,7 +37,9 @@ public struct MiningField: Equatable, Sendable {
     /// How far (normalised x) the rover's laser reaches either side of it; driving closer is the point.
     public static let reach = 0.34
 
-    public var cargoUnits: Int { cargo.values.reduce(0, +) }
+    /// Sky-fed fragments take no hold space (web `cargoUnits: 0`), so catching them never blocks mining ore.
+    public private(set) var skyFed: String?
+    public var cargoUnits: Int { cargo.filter { $0.key != skyFed }.values.reduce(0, +) }
     public var isFull: Bool { cargoUnits >= cargoCapacity }
     public var isComplete: Bool { required.allSatisfy { cargo[$0.key, default: 0] >= $0.value } }
 
@@ -77,6 +79,7 @@ public struct MiningField: Equatable, Sendable {
         for mineral in extras { for _ in 0..<2 { place(mineral) } }
         if let debris { for _ in 0..<max(0, debris.count) { place(debris.resourceId) } }
         self.nodes = nodes
+        self.skyFed = skyFed
         self.charge = chargeCap; self.chargeCap = chargeCap
         self.cargoCapacity = cargoCapacity; self.laserTier = laserTier; self.required = required
     }

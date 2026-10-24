@@ -225,6 +225,11 @@ const DEBRIS_RADIUS = 36
 const DEBRIS_BASE_FALL_SPEED = 70
 /** Cap so a long run cannot fill the field with chunks. */
 const MAX_DEBRIS = 4
+/** Auto-collected shower fragments: more can be in the air, and one banks only if the ship is under it when it lands. */
+const MAX_RAIN = 7
+const CATCH_RADIUS = 80
+/** Rain spreads this far either side of where the ship is, so staying put catches a minority and the player has to weave. */
+const RAIN_SPREAD = 300
 const MAX_STREAKS = 6
 /** Visual-only meteor streak. */
 interface Streak {
@@ -514,9 +519,10 @@ export class MiningController extends ScriptBehaviour {
     this.debrisAccumulator += (rate / 60) * dt
     this.streakAccumulator += (rate / 60) * dt * 2
     let alive = this.ores.filter(o => o.phase !== undefined).length
+    const cap = spawn.autoCollect ? MAX_RAIN : MAX_DEBRIS
     while (this.debrisAccumulator >= 1) {
       this.debrisAccumulator -= 1
-      if (alive >= MAX_DEBRIS) continue
+      if (alive >= cap) continue
       this.spawnDebris(spawn.mineral, spawn.speedFactor, false, !!spawn.autoCollect)
       alive += 1
     }
@@ -588,7 +594,15 @@ export class MiningController extends ScriptBehaviour {
   }
 
   private spawnDebris(mineral: string, speedFactor: number, hero = false, autoCollect = false): void {
-    const x = hero ? this.currentShipX() : 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
+    // Aim where the ship is now, shifted by how far the ground scrolls while the fragment falls.
+    const groundY = (this.opts.surfaceY ?? SURFACE_Y) - 4
+    const fallTime = (groundY + 40) / (DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor))
+    const rainX = this.currentShipX() + SCROLL_SPEED * fallTime + (Math.random() * 2 - 1) * RAIN_SPREAD
+    const x = hero
+      ? this.currentShipX()
+      : autoCollect
+        ? Math.max(40, Math.min(this.opts.worldWidth - 40, rainX))
+        : 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
     const y = hero ? -36 : -20 - Math.random() * 40
     const colorHex = this.opts.mineralColors[mineral] ?? LASER_COLOR
     const mineralColor = parseInt(colorHex.replace('#', ''), 16)
@@ -983,6 +997,13 @@ export class MiningController extends ScriptBehaviour {
 
   /** Bank an ore: laser kill, or a landed shower fragment collecting itself. */
   private collectOre(ore: OreEntity): void {
+    if (ore.autoCollect && Math.abs(ore.go.transform.position.x - this.currentShipX()) > CATCH_RADIUS) {
+      // Missed: the fragment breaks up on the surface and is gone.
+      ore.go.active = false
+      if (ore.sprite) ore.sprite.visible = false
+      this.spawnParticleBurst(ore.go.transform.position.x, ore.go.transform.position.y, 0x5a6b78, ore.radius * 0.6)
+      return
+    }
     ore.go.active = false
     if (ore.phase) this.playDebrisMine(ore)
     if (ore.sprite) ore.sprite.visible = false

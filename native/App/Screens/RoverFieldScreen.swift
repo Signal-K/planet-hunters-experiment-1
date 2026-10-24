@@ -60,7 +60,7 @@ struct RoverFieldScreen: View {
             VStack(alignment: .leading, spacing: 10) {
                 Eyebrow(text: "Touchdown · \(targetName)")
                 Text(orionidsResearch ? "Deploy the Orionids field rover" : "Deploy the Mule rover").font(AppFont.display(20))
-                Text(orionidsResearch ? "The rover is loaded in your payload. Drive it onto the meteor, find the blue fracture outcrop, and log the observation for community research." : "The Prospector is your rocket. The Mule is the rover in its hold. Deploy it to scout the terrain and log one outcrop. Ship laser extraction begins after the survey.")
+                Text(orionidsResearch ? "The rover is loaded in your payload. Drive it over the meteor, scan a rock formation, and log the observation for community research." : "The Prospector is your rocket. The Mule is the rover in its hold. Deploy it to scout the terrain and log one outcrop. Ship laser extraction begins after the survey.")
                     .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
                 PrimaryButton(title: "DEPLOY MULE ROVER") { deployed = true }
             }

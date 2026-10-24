@@ -53,6 +53,8 @@ export const UI_ROUTE_PRESETS: Record<string, string> = {
   hangar: 'ui-hangar-assembly',
   'hangar-assembly': 'ui-hangar-assembly',
   'orionids-shower-mining': 'ui-orionids-shower-mining',
+  'orionids-rover': 'ui-orionids-rover',
+  'orionids-events-stage1': 'ui-orionids-events-stage1',
   'orionids-shower-mining-fresh': 'ui-orionids-shower-mining-fresh',
   'orionids-shower-debrief': 'ui-orionids-shower-debrief',
 }

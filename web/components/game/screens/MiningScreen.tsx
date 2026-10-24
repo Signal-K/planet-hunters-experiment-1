@@ -78,7 +78,7 @@ function miningGuide(hasDelivery: boolean, isOrionids: boolean) {
       : { kind: 'return', label: 'Return home', desc: 'Return for recovery. Payout unlocks after landing.' },
   ]
   if (isOrionids) {
-    items.splice(1, 0, { kind: 'event', label: 'Catch Orionid debris', desc: 'Blue fragments fall from the shower and are caught when they hit the ground. No laser needed. Catches count toward the shower run and cannot be dropped.' })
+    items.splice(1, 0, { kind: 'event', label: 'Catch Orionid debris', desc: 'Blue fragments fall from the shower. Steer under them: one counts only if the ship is below it when it lands. No laser needed. Catches count toward the shower run and cannot be dropped.' })
   }
   return items
 }

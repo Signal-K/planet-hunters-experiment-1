@@ -272,6 +272,17 @@ enum SceneCatalog {
         return gs
     }
 
+    /// The Orionids shower run at 0 of 20: fragments fall and bank when the ship is under them (web ui/orionids-shower-mining-fresh).
+    static func showerRunMiningState() -> GameState {
+        var gs = miningState(rover: false, target: "eros")
+        gs.player.freeOperations = true; gs.player.missionsDone = 5
+        gs.player.orionidsFragments = OrionidsFragments(caught: 5, redeemed: 0)
+        gs.player.orionidsRunBaseline = 5
+        gs.missionId = OrionidsRun.missionId
+        gs.player.activeMission = ActiveMission(id: OrionidsRun.missionId, label: "Orionids shower run")
+        return gs
+    }
+
     static func shipMiningState(_ chassis: String, _ propulsion: String, _ drill: String) -> GameState {
         var gs = miningState(rover: false)
         gs.rocket = RocketConfig(chassis: chassis, propulsion: propulsion, drill: drill)
@@ -639,6 +650,8 @@ enum SceneCatalog {
         scene("mining-laser-live", 874) {
             MiningScreen().environment(GameStore(state: miningState(rover: false)))
         },
+        scene("mining-shower-live", 874) { MiningScreen().environment(GameStore(state: showerRunMiningState())) },
+        scene("mining-shower-live-landscape", 402, w: 874) { MiningScreen().environment(GameStore(state: showerRunMiningState())) },
         scene("mining-laser-live-landscape", 402, w: 874) {
             MiningScreen().environment(GameStore(state: miningState(rover: false)))
         },

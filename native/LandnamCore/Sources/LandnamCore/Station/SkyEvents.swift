@@ -110,7 +110,8 @@ public enum SkyEvents {
     }
 
     public static func isActive(_ p: DebrisPreset, at ms: Double, calendar: Calendar = .current) -> Bool {
-        ms >= p.startMs && ms < p.endMs && isLocalNight(ms, calendar: calendar)
+        // Orionids is live every hour of its window (web `allHours`, SSL-578); other showers fall at local night only.
+        ms >= p.startMs && ms < p.endMs && (p.eventId == orionids.eventId || isLocalNight(ms, calendar: calendar))
     }
 
     public static func activePreset(at ms: Double, calendar: Calendar = .current) -> DebrisPreset? {

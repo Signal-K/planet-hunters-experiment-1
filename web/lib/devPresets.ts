@@ -1,7 +1,7 @@
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS } from '@/lib/data'
-import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
@@ -175,6 +175,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-orionids-rover', label: 'Orionids: rover survey', hint: 'Orionids surface observation on Eros with the field rover', stage: 'free-ops' },
+      { key: 'ui-orionids-events-stage1', label: 'Orionids: rover step', hint: 'Mission board at event stage 1: Events tab offers the Orionids surface observation with the rover', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -497,6 +499,10 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-free-ops-fab':
       // Free Ops opens the launch route with no mission picked; it must hand over to the Mission Board.
       return { ...fixture('ui-mission-board'), screen: 'fab' }
+    case 'ui-orionids-events-stage1':
+      // Shower run done (event stage 1): the Events board offers the rover surface observation.
+      { const board = fixture('ui-mission-board')!
+      return { ...board, player: { ...board.player!, orionidsEventStage: 1, orionidsFragments: { caught: 25, redeemed: 0 }, badges: { 'orionids-2026': { eventId: 'orionids-2026', tier: 'gold', earnedAt: Date.UTC(2026, 9, 23) } } } } }
     case 'ui-mission-board':
       return {
         screen: 'missions',
@@ -609,6 +615,27 @@ function fixture(name: string): Partial<GameState> | null {
         targetId: TRANSPORT_MISSION.targetId ?? 'bennu',
         deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-orionids-rover':
+      // The event's second step: the surface observation on Eros with the Orionids field rover.
+      return {
+        screen: 'rover-survey',
+        player: {
+          ...BASE_PLAYER,
+          missionsDone: 6,
+          freeOperations: true,
+          orionidsEventStage: 1,
+          missionPhase: 'survey',
+          activeMission: { id: ORIONIDS_SURFACE_RESEARCH_MISSION_ID, label: 'Orionids surface observation' },
+        },
+        tutorial: false,
+        doneSteps: EXTRACTION_DONE,
+        missionId: ORIONIDS_SURFACE_RESEARCH_MISSION_ID,
+        targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null,
         popup: null,
       }

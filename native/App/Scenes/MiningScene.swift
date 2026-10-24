@@ -730,13 +730,16 @@ final class MiningScene: SKScene {
         if falling.count == 0 && rainAccumulator < 1 && clock < 1 { rainAccumulator = 1 }   // first fragment shows up straight away
         while rainAccumulator >= 1 {
             rainAccumulator -= 1
-            guard falling.count < 4 else { continue }
+            guard falling.count < 7 else { continue }
             let hex = Minerals.byId[rain.resourceId]?.colorHex ?? "#7fd8ff"
             let node = SKSpriteNode(texture: depositTexture(colorHex: hex, variant: falling.count, glint: true))
             node.setScale(px * 1.4)
             node.texture?.filteringMode = .nearest
             node.zPosition = 30
-            node.position = CGPoint(x: CGFloat.random(in: 40...max(80, size.width - 40)), y: size.height + 20)
+            // Aim near the ship, shifted by the ground scroll during the fall, spread wide so the player has to weave.
+            let fallTime = (size.height + 20 - surfaceY) / 85
+            let aim = beamX + 48 * fallTime + CGFloat.random(in: -300...300)
+            node.position = CGPoint(x: min(max(40, aim), max(80, size.width - 40)), y: size.height + 20)
             world.addChild(node)
             falling.append((node, CGFloat.random(in: 70...100)))
         }
@@ -748,7 +751,7 @@ final class MiningScene: SKScene {
         }
         for i in landed.reversed() {
             let (node, _) = falling.remove(at: i)
-            if node.position.x >= -40 && node.position.y <= surfaceY {
+            if abs(node.position.x - beamX) <= 80 {
                 field.catchFragment(rain.resourceId)
                 SK.burst(at: node.position, color: LaserPalette.sk(palette.beamCore), count: 12, speed: 90, in: world)
                 let tag = SKLabelNode(text: "+1 \(Minerals.byId[rain.resourceId]?.symbol ?? "")")
@@ -761,6 +764,7 @@ final class MiningScene: SKScene {
                 tag.run(.sequence([.group([.moveBy(x: 0, y: 28, duration: 0.6), .fadeOut(withDuration: 0.6)]), .removeFromParent()]))
                 onChange?(field)
             }
+            else { SK.burst(at: node.position, color: LaserPalette.sk(palette.groundDeep), count: 6, speed: 50, in: world) }   // missed: breaks up on the surface
             node.run(.sequence([.group([.scale(to: 0.2, duration: 0.15), .fadeOut(withDuration: 0.15)]), .removeFromParent()]))
         }
     }

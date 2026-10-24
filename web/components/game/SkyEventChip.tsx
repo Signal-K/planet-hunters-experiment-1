@@ -176,7 +176,7 @@ export default function SkyEventChip({
           </div>
         )}
         {orionids && badgeTier && (
-          <div className={styles.badge} data-testid="orionids-badge" data-tier={badgeTier} role="status">
+          <div className={styles.badge} data-testid="orionids-badge" data-tier={badgeTier} role="status" aria-label={`Orionids ${badgeTier} badge`}>
             <img src={variant.badgeSmall} alt="" data-tier={badgeTier} />
             <strong>Orionids {badgeTier}</strong>
           </div>

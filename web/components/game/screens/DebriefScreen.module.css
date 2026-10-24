@@ -339,3 +339,8 @@
   .net { font-size: 26px; }
   .route { gap: 16px; }
 }
+
+/* The shared bell sits at y64-108 on the right; the result column starts below it. */
+@media (min-width: 600px) and (min-height: 641px) {
+  .column { top: 116px; }
+}

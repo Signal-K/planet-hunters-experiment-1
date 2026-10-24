@@ -117,22 +117,23 @@ import Foundation
         #expect(SkyEvents.badgeTier("orionids-2026", at: start) == .gold)
         #expect(SkyEvents.badgeTier("orionids-2026", at: start - 1) == nil)
         #expect(SkyEvents.isOrionidsWindow(start + 12 * 3_600_000))
-        #expect(SkyEvents.activePreset(at: start + 12 * 3_600_000) == nil)
+        #expect(SkyEvents.activePreset(at: start + 12 * 3_600_000)?.resourceId == "orionid_debris")   // live every hour of the window, like web
         let reminder = SkyEvents.orionidsPeakReminderMs()
         #expect(reminder == SkyEvents.localMidnight(2026, 10, 22) + 2 * 3_600_000)
         #expect(SkyEvents.orionidsPeakReminderBody == "Moon's down — look up. Orionids peak; debris is falling in Landnam.")
     }
 
-    @Test func debrisNeedsWindowAndNight() {
+    @Test func orionidsAllHoursOtherShowersAtNight() {
         var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeZone(identifier: "UTC")!
         let night = ms("2026-10-22T23:00:00Z"), day = ms("2026-10-22T12:00:00Z")
         #expect(SkyEvents.activePreset(at: night, calendar: cal)?.resourceId == "orionid_debris")
-        #expect(SkyEvents.activePreset(at: day, calendar: cal) == nil)
+        #expect(SkyEvents.activePreset(at: day, calendar: cal)?.resourceId == "orionid_debris")
+        #expect(SkyEvents.activePreset(at: ms("2026-10-08T12:00:00Z"), calendar: cal) == nil)   // Draconids stay night-only
         let location = PlayerLocation(city: "Tallinn", latitude: 59, timeZone: "Europe/Tallinn")
         let bonus = SkyEventWindows.localWindow(location: location).best!.start.timeIntervalSince1970 * 1000
         #expect(SkyEvents.ratePerMinute(SkyEvents.orionids, at: bonus, calendar: cal, location: location) > 11)
         #expect(SkyEvents.activePreset(at: ms("2026-10-08T23:00:00Z"), calendar: cal)?.resourceId == "draconid_debris")
-        #expect(SkyEvents.ratePerMinute(SkyEvents.orionids, at: day, calendar: cal) == 0)
+        #expect(SkyEvents.ratePerMinute(SkyEvents.orionids, at: day, calendar: cal) > 0)
     }
 
     @Test func newMoonFallsOnTenOctober2026() {

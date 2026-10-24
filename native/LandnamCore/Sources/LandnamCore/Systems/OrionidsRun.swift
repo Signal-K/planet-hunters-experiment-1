@@ -27,6 +27,12 @@ public struct OrionidsFragments: Codable, Equatable, Sendable {
 /// from the moment the run is accepted, not from the lifetime ledger, and a filled run pays once.
 public enum OrionidsRun {
     public static let missionId = "self-directed-orionids-night-run"
+    /// Fragments that fall and bank on landing, per minute (web `ORIONIDS_RUN_FRAGMENTS_PER_MINUTE`). A player weaving under
+    /// them fills the order in about a minute; parking in one spot catches roughly a quarter.
+    public static let fragmentsPerMinute = 36.0
+    public static func fragmentRate(at ms: Double, location: PlayerLocation?) -> Double {
+        fragmentsPerMinute * (SkyEventWindows.isInOrionidsBonusWindow(ms, location: location) ? SkyEvents.orionidsPeakMultiplier : 1)
+    }
     public static let surfaceResearchMissionId = "self-directed-orionids-surface-research"
     public static let fragmentGoal = 20
     /// Fragments one launch catches outside peak night.
@@ -97,7 +103,7 @@ public enum OrionidsRun {
     /// The second event tier changes activity from mining to a rover observation.
     public static func surfaceResearchMission() -> Mission {
         Mission(id: surfaceResearchMissionId, title: "Orionids surface observation",
-                brief: "Drive the rover to the marked Orionids outcrop and log the blue fracture pattern for the community research record.",
+                brief: "Drive the rover over the meteor, scan a rock formation, and log it for the community research record.",
                 client: nil, tag: "EVENT RESEARCH", difficulty: "L1", locked: false,
                 sequence: MissionGenerator.freeOpsMissionSequence,
                 unlockAt: "Complete the Orionids debris capture", targetId: "eros",

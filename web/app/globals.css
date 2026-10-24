@@ -4462,6 +4462,10 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   max-width: min(320px, calc(100vw - 16px));
   white-space: normal;
 }
+/* Centred order line must clear the laser gauge on the right (about 190px wide with its margin). */
+@media (min-width: 561px) {
+  .mining-screen .laser-order.scene-dock-word { max-width: min(320px, calc(100vw - 400px)); }
+}
 .portrait-canvas--mining .sync-status { display: none; }
 .mining-seam-brackets {
   position: absolute; z-index: 11; pointer-events: none; left: 60px; top: calc(62% - 14px); width: 40px; height: 28px;
@@ -4581,8 +4585,8 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   cursor: pointer;
 }
 .mining-screen .sky-event-wrap[data-testid="sky-event-mining"] {
-  top: 52px;
-  left: 160px;
+  top: 72px;
+  left: 12px;
 }
 .mining-screen .mining-charge-warning {
   top: 52px;
@@ -5055,7 +5059,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 .mining-bump-note {
   position: absolute;
   left: 50%;
-  top: 30%;
+  top: 112px;
   transform: translateX(-50%);
   z-index: 7;
   padding: 8px 14px;

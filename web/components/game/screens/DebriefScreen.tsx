@@ -160,11 +160,13 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </section>
         )}
 
-        <p className={styles.note} data-testid="mission-next-handoff">
-          {continuesOrionidsResearch
-            ? 'Mission complete. The next Orionids research tier is ready on the Events board: a surface observation with the field rover.'
-            : 'Mission complete. Return to Base, then open the mission board to choose your next flight.'}
-        </p>
+        <section className={styles.card} data-surface="cream">
+          <p className={styles.note} data-testid="mission-next-handoff">
+            {continuesOrionidsResearch
+              ? 'Mission complete. The next Orionids research tier is ready on the Events board: a surface observation with the field rover.'
+              : 'Mission complete. Return to Base, then open the mission board to choose your next flight.'}
+          </p>
+        </section>
 
         {isOrbitalInstrumentDeployment ? null : isFreeHaul ? (
           <CargoDestinationPanel

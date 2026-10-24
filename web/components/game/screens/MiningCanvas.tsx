@@ -10,7 +10,8 @@ import type { MineralMeta } from '@/lib/data'
 import type { PlayerLocation } from '@/lib/game-types'
 import { prefersReducedMotion } from '@/lib/pixi/launchSpriteAnim'
 import { recoilOffset } from '@/lib/engine/miningJuice'
-import { activeDebrisPreset, debrisRatePerMinute, DEBRIS_RESOURCE_IDS, type DebrisEventPreset } from '@/lib/data/sky-events'
+import { isInLocalEventBonusWindow } from '@/lib/data/sky-event-window'
+import { activeDebrisPreset, debrisRatePerMinute, DEBRIS_RESOURCE_IDS, ORIONIDS_PEAK_MULTIPLIER, ORIONIDS_RUN_FRAGMENTS_PER_MINUTE, type DebrisEventPreset } from '@/lib/data/sky-events'
 import { FIREBALL_FRAGMENT_ID, fireballDue } from '@/lib/orionids/fireball'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { loadOrionidsArt } from '@/lib/orionids/loadArt'
@@ -297,7 +298,9 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
               return {
                 mineral: preset.resourceId,
                 speedFactor: preset.speedFactor,
-                ratePerMinute: debrisRatePerMinute(preset, debrisNow(), skyEventLocation),
+                ratePerMinute: preset.eventId === 'orionids-2026'
+                  ? ORIONIDS_RUN_FRAGMENTS_PER_MINUTE * (isInLocalEventBonusWindow(debrisNow(), skyEventLocation) ? ORIONIDS_PEAK_MULTIPLIER : 1)
+                  : debrisRatePerMinute(preset, debrisNow(), skyEventLocation),
                 onceMineral: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current) ? FIREBALL_FRAGMENT_ID : undefined,
                 onceHero: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current),
                 // Shower fragments collect themselves on landing; the laser is for ore and the fireball.
@@ -319,7 +322,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         let steering = 0
         let bumpCooldown = 0
         let lastObstacleAhead: boolean | null = null
-        const minAlt = Math.min(0, 64 - shipY)
+        const minAlt = Math.min(0, 84 - shipY)
         const maxAlt = Math.max(0, surfaceY - 56 - shipY)
         const beamTop = field.beam.y
         const beamSpan = Math.max(24, surfaceY - beamTop)

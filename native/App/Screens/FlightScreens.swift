@@ -186,16 +186,22 @@ struct MiningScreen: View {
     private func laserChrome(_ field: MiningField, insets: EdgeInsets, narrow: Bool, short: Bool = false) -> some View {
         let compact = narrow || short
         let zones = HUDZones.standard
+        let showerRun = store.mission?.id == OrionidsRun.missionId
         let trainingCue = store.player.flightPlan.currentTry == "mining" ? "Fire on a labelled seam" : nil
         let order = VStack(alignment: .leading, spacing: 6) {
-            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue, showerCaught: store.mission?.id == OrionidsRun.missionId ? OrionidsRun.catches(store.player) : nil)
+            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: showerRun ? nil : (targetCue ?? trainingCue), showerCaught: store.mission?.id == OrionidsRun.missionId ? OrionidsRun.catches(store.player) : nil)
                 .onLongPressGesture { showGuide = true }
         }
         .frame(maxWidth: 220)
         return ZStack {
             VStack(alignment: .leading, spacing: 8) {
-                if narrow { order }
-                SkyEventChip().frame(maxWidth: .infinity, alignment: .leading)
+                if narrow {
+                    order
+                    // Phones: the hold sits under the order line, so neither covers the other or the top-right buttons.
+                    CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
+                }
+                // The shower run shows its count in the order line only; the chip stays on Base (matches web).
+                if !showerRun { SkyEventChip().frame(maxWidth: .infinity, alignment: .leading) }
                 Spacer()
             }
             .padding(.leading, insets.leading + zones.topLeft.inset).padding(.top, insets.top + zones.topLeft.inset)
@@ -207,9 +213,11 @@ struct MiningScreen: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
 
-            CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
-                .padding(.trailing, insets.trailing + zones.topRight.inset + 64).padding(.top, insets.top + zones.topRight.inset)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            if !narrow {
+                CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
+                    .padding(.trailing, insets.trailing + zones.topRight.inset + 64).padding(.top, insets.top + zones.topRight.inset)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            }
 
             // Phones: compact pad and gauge in the clear strip under the ground deposits.
             MiningDPad(onAltitude: { scene?.setClimb($0) }, onSteer: { scene?.setSteer($0) }, obstacleAhead: obstacleAhead, tile: short ? 44 : compact ? 52 : 56)
@@ -222,7 +230,7 @@ struct MiningScreen: View {
                 Text(toast).font(AppFont.display(14)).foregroundStyle(Glass.ink)
                     .padding(.horizontal, 12).padding(.vertical, 8)
                     .glowPanel(Capsule())
-                    .padding(.top, insets.top + zones.topLeft.inset + (narrow ? 112 : 64))
+                    .padding(.top, insets.top + zones.topLeft.inset + (narrow ? 168 : 64))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
 
@@ -257,14 +265,14 @@ struct MiningScreen: View {
             ? max(80, ore * 16)
             : max(Skills.laserChargeCap(store.player.unlockedSkillNodes), ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel))
         // Meteor-shower debris joins the field only inside its window and the player's local night (SSL-475).
-        let shower = SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now, location: store.player.skyEventLocation) / 2).rounded(.up)))) }
+        let shower = mission.id == OrionidsRun.missionId ? nil : SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now, location: store.player.skyEventLocation) / 2).rounded(.up)))) }
         let required = mission.id == OrionidsRun.missionId ? ["orionid_debris": max(1, OrionidsRun.fragmentGoal - OrionidsRun.catches(store.player))] : mission.requires.minerals
         let f = MiningField(target: target, required: required, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower, skyFed: mission.id == OrionidsRun.missionId ? "orionid_debris" : nil)
         let palette = LaserPalette.resolve(id: target.id, type: target.type, archetype: target.archetype)
         let s = MiningScene(field: f, size: size, palette: palette, landscapeKey: target.id)
         if mission.id == OrionidsRun.missionId, let preset = SkyEvents.activePreset(at: store.now) {
             // Shower fragments fall and bank on landing; the laser is for ore (matches web autoCollect).
-            s.fragmentRain = (preset.resourceId, SkyEvents.ratePerMinute(preset, at: store.now, location: store.player.skyEventLocation))
+            s.fragmentRain = (preset.resourceId, OrionidsRun.fragmentRate(at: store.now, location: store.player.skyEventLocation))
         }
         s.showsOpsBrackets = !store.player.freeOperations && store.player.flightPlan.currentTry == "mining"
         s.onChange = { f in
@@ -418,7 +426,7 @@ struct MiningGuide: View {
     private var items: [(String, String)] {
         guard isOrionids else { return Self.baseItems }
         var items = Self.baseItems
-        items.insert(("Catch Orionid debris", "Blue fragments fall from the shower and are caught when they hit the ground. No laser needed. Catches count toward the shower run and cannot be dropped."), at: 1)
+        items.insert(("Catch Orionid debris", "Blue fragments fall from the shower. Steer under them: one counts only if the ship is below it when it lands. No laser needed. Catches count toward the shower run and cannot be dropped."), at: 1)
         return items
     }
 

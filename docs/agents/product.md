@@ -43,3 +43,6 @@ Part of the Landnam agent instructions; `AGENTS.md` (repo root) is the entry poi
 - Docker must start fully offline; never add a start-time network fetch.
 - PostHog survey IDs in code must resolve to real, live, non-blocking surveys.
 - Local PocketBase superuser (local only): `liam@skinetics.tech` / `ThisIsATestPassword`. Never point local tooling at a deployed instance.
+
+## Pacing rule for missions and scenes (Liam, 2026-10-24)
+A mining run, catch or other scene objective should finish in about one minute of play and must need some weaving or varied input, not the same action held for the whole minute. Tune the spawn rate and the catch window so a player who stays put gets roughly a quarter to half of the goal and a player who steers under the targets finishes in under a minute. Orionids shower run: `ORIONIDS_RUN_FRAGMENTS_PER_MINUTE` (web `lib/data/sky-events.ts`, native `OrionidsRun.fragmentsPerMinute`), catch radius 80 under the ship.

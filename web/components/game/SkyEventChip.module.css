@@ -254,8 +254,11 @@
   color: var(--ln-cyan);
 }
 :global(.mining-screen) .hud {
-  top: 112px !important;
+  top: 72px !important;
 }
+/* On mining the badge is a 44px mark under the help and menu buttons, so it never competes with the order line or the gauge. */
+:global(.mining-screen) .badge { padding: 0; min-width: 44px; justify-content: center; }
+:global(.mining-screen) .badge strong { display: none; }
 
 .peakTag {
   min-height: 44px;

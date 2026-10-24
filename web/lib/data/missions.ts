@@ -77,7 +77,7 @@ export function orionidsSurfaceResearchMission(): Mission {
   return {
     id: ORIONIDS_SURFACE_RESEARCH_MISSION_ID,
     title: 'Orionids surface observation',
-    brief: 'Drive the rover to the marked Orionids outcrop and log the blue fracture pattern for the community research record.',
+    brief: 'Drive the rover over the meteor, scan a rock formation, and log it for the community research record.',
     tag: 'EVENT RESEARCH',
     difficulty: 'L1',
     locked: false,
