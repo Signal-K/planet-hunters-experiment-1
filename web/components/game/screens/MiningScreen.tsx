@@ -767,6 +767,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               </span>
             ) : fireballMoment ? (
               <span className={styles.targetCueStatus} data-testid="mining-target-cue">FIREBALL · WAIT</span>
+            ) : nightRun && shownCatches < 3 ? (
+              <span className={styles.targetCueStatus} data-testid="mining-shower-cue">STEER UNDER A FRAGMENT · NO LASER</span>
             ) : trainingMiningTry && !nightRun ? <span className={styles.targetCueStatus} data-testid="mining-target-cue">Fire on a labelled seam</span> : null}
           </span>
         </DockWordButton>
