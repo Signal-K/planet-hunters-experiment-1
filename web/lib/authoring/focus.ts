@@ -1,5 +1,5 @@
-// "Which scenes is this work in?" The storyboard's focus file, shared with the Scene Studio so one declaration lights up
-// both pages: scripts/storyboard-focus.sh, scripts/studio.mjs and the Studio itself all read and write the same JSON.
+// "Which scenes is this work in?" The Scene Studio focus file, shared by the
+// Studio CLI and the editor.
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
@@ -12,8 +12,7 @@ export interface Focus {
   description: string
 }
 
-export const focusPath = (root: string): string =>
-  process.env.STORYBOARD_FOCUS_FILE ?? join(process.env.STORYBOARD_DIR ?? join(root, 'web/.storyboard'), 'focus.json')
+export const focusPath = (root: string): string => join(root, 'web/.studio', 'focus.json')
 
 const text = (value: unknown): string => (typeof value === 'string' ? value : '')
 

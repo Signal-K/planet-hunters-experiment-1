@@ -215,16 +215,6 @@
    ]
   },
   {
-   "id": "sky-badges",
-   "name": "Sky badges",
-   "flow": "instruments",
-   "web": null,
-   "native": "sky-badges-phone",
-   "tickets": [
-    "SSL-491"
-   ]
-  },
-  {
    "id": "rover",
    "name": "Rover field",
    "flow": "field",
@@ -291,16 +281,6 @@
    "web": "ui-ledger",
    "native": "ledger-phone",
    "tickets": []
-  },
-  {
-   "id": "help",
-   "name": "Help sheet",
-   "flow": "chrome",
-   "web": null,
-   "native": "help-sheet-phone",
-   "tickets": [
-    "SSL-451"
-   ]
   },
   {
    "id": "market",
@@ -471,6 +451,62 @@
    "web": "cp-late",
    "native": "cp-late",
    "tickets": []
+  }
+ ],
+ "missions": [
+  {
+   "id": "flight-plan",
+   "name": "First flight plan",
+   "scene": "intro",
+   "web": "m1-intro",
+   "native": "intro-phone",
+   "objective": "Place the launchpad and accept the first client run.",
+   "complete": "The launchpad is placed and a mission is accepted."
+  },
+  {
+   "id": "client-contract",
+   "name": "Client contract",
+   "scene": "mission-board",
+   "web": "ui-mission-board",
+   "native": "launchpad-ops-phone",
+   "objective": "Choose one client job, a target, and a compatible vehicle.",
+   "complete": "The contract is accepted and its flight state exists."
+  },
+  {
+   "id": "belt-courier-run",
+   "name": "Belt courier run",
+   "scene": "transport-hub",
+   "web": "transport-hub",
+   "native": "transport-hub-live",
+   "objective": "Mine the requested Bennu cargo and unload it at Vesta.",
+   "complete": "Cargo is delivered and the return debrief settles."
+  },
+  {
+   "id": "self-directed-mining",
+   "name": "Self-directed mining",
+   "scene": "cp-mid",
+   "web": "cp-mid",
+   "native": "cp-mid",
+   "objective": "Pick a reachable target, mine, then sell or store the haul.",
+   "complete": "The return allocation is settled without a client contract."
+  },
+  {
+   "id": "launch-telescope",
+   "name": "Launch telescope",
+   "scene": "telescope-hub",
+   "web": "telescope-hub",
+   "native": "telescope-hub-live",
+   "objective": "Assemble and launch the telescope, then reach first light.",
+   "complete": "The telescope is in orbit and its first observation is open."
+  },
+  {
+   "id": "orionids-shower",
+   "name": "Orionids shower",
+   "scene": "orionids-shower-mining",
+   "web": "ui-orionids-shower-mining-fresh",
+   "native": "mining-shower-live",
+   "objective": "Fire the ship laser through the active shower and collect seams.",
+   "complete": "The mining run returns to the normal debrief path."
   }
  ]
 }

@@ -12,6 +12,6 @@ xcodebuild -project native/Landnam.xcodeproj -scheme Landnam \
   -derivedDataPath /tmp/landnam-ios build CODE_SIGNING_ALLOWED=NO
 ```
 
-Use a filtered `swift test` only for affected LandnamCore logic. Launch the
-matching catalog fixture with `xcrun simctl launch booted com.atlasskyventures.sslandnam -scene <id>`.
+Launch the matching catalog fixture with
+`xcrun simctl launch booted com.atlasskyventures.sslandnam -scene <id>`.
 Do not add macOS, iPadOS, desktop targets, or broad UI/snapshot suites.

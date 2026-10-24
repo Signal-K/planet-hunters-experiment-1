@@ -17,6 +17,6 @@ xcodebuild -project native/Landnam.xcodeproj -scheme Landnam \
 ```
 
 `make ensure` owns the local preview on port 4320. Do not start duplicate
-servers or a separate test stack. CI runs typecheck and build only. Focused
-colocated Vitest and SwiftPM tests are optional tools for affected logic; no
-full suite, browser test, or Chromium installation is part of the workflow.
+servers or a separate test stack. CI runs typecheck and build only. The
+independent fixture is the acceptance path; no full suite, browser test, or
+Chromium installation is part of the workflow.

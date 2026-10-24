@@ -53,7 +53,7 @@ export function listDocs(root: string): { relPath: string; kind: DocKind }[] {
   return docs
 }
 
-const MISSION_KEYS = ['id', 'title', 'brief', 'tag', 'difficulty', 'client', 'locked', 'sequence', 'unlock_at', 'target', 'delivery_target'] as const
+const MISSION_KEYS = ['id', 'title', 'brief', 'tag', 'difficulty', 'client', 'locked', 'sequence', 'unlock_at', 'target', 'delivery_target', 'harness'] as const
 
 function missionDeclaration(value: MissionDoc): Record<string, unknown> {
   const out: Record<string, unknown> = {}

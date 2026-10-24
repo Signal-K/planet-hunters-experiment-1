@@ -17,7 +17,7 @@ interface Props {
   onComplete: () => void
 }
 
-// KES-148: on the deployed build (not local dev/Cypress), this scene was
+// KES-148: on the deployed build (not local development), this scene was
 // observed replaying from the ground indefinitely, stranding the player on
 // the fab screen forever with no way to launch. Root cause wasn't fully
 // pinned down, but the scene's completion effect below only fires once per

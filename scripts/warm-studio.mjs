@@ -18,7 +18,6 @@ const logPath = join(tmpdir(), "landnam-warm-studio.log");
 const ROUTES = [
   ["GET", "/game/studio"],
   ["GET", "/api/dev/studio?index=1"],
-  ["GET", "/game/storyboard/comments"],
   ["POST", "/api/dev/studio/open"],
   ["GET", "/game/stage?preset=sandbox%3Asandbox-hub"],
 ];

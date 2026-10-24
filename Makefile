@@ -57,6 +57,11 @@ ensure:
 check:
 	@node scripts/dev-check.mjs $(NAME)
 
+# All source tests, ~10s: authoring contracts + colocated unit tests (dot reporter).
+test:
+	@node scripts/authoring.mjs check | tail -1
+	@cd web && npx vitest run --reporter=dot 2>&1 | grep -v '^$$' | tail -15
+
 scene:
 	@node scripts/scene.mjs $(NAME) $(CHECK)
 

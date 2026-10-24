@@ -128,6 +128,7 @@ export interface MissionDoc {
   payout: { francs?: number; floor_sequence?: number; affinity: number }
   tickets?: string[]
   preview?: { route?: string; state?: string }
+  harness: { scene: string; web: string; native: string; objective: string; complete: string }
   note?: string
 }
 

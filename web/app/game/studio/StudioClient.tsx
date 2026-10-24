@@ -13,13 +13,12 @@ import Composer from './Composer'
 import DeviceIcon from './DeviceIcon'
 import Inspector from './Inspector'
 import MoreMenu from './MoreMenu'
-import PreviewStage from './PreviewStage'
-import type { StagePin, Tool } from './PreviewStage'
+import SceneHarness from './SceneHarness'
+import type { StagePin, Tool } from './SceneHarness'
 import PresetPicker from './PresetPicker'
 import ProjectInventory from './ProjectInventory'
 import type { View } from './PresetPicker'
 import ReviewPanel from './ReviewPanel'
-import type { ThreadMessage } from './ReviewPanel'
 import ScenePicker from './ScenePicker'
 import ScriptMenu from './ScriptMenu'
 import ScriptPanel from './ScriptPanel'
@@ -71,12 +70,10 @@ export default function StudioClient(props: Props) {
   const [tool, setTool] = useState<Tool>('select')
   const [selectedPath, setSelectedPath] = useState<Path>([])
   const [objectsOn, setObjectsOn] = useState(true)
-  const [showNative, setShowNative] = useState(true)
   const [bump, setBump] = useState(0)
   const [status, setStatus] = useState<{ text: string; bad?: boolean; at: number }>({ text: '', at: 0 })
   const [undoStack, setUndoStack] = useState<History[]>([])
   const [redoStack, setRedoStack] = useState<History[]>([])
-  const [thread, setThread] = useState<ThreadMessage[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const [highlightPin, setHighlightPin] = useState<number | null>(null)
   const [draft, setDraft] = useState('')
@@ -194,16 +191,6 @@ export default function StudioClient(props: Props) {
     return () => clearInterval(timer)
   }, [following, index.scenes])
 
-  // The storyboard's comment thread, shown with the notes.
-  useEffect(() => {
-    const read = async () => {
-      try { const r = await fetch('/game/storyboard/comments', { cache: 'no-store' }); if (r.ok) setThread(((await r.json()).thread as ThreadMessage[]).filter(m => !m.scene || m.scene === (scene?.id ?? ''))) } catch { /* ignore */ }
-    }
-    read()
-    const timer = setInterval(read, 4000)
-    return () => clearInterval(timer)
-  }, [scene?.id])
-
   const adopt = (doc: DocBundle) => {
     if (scene && doc.file === scene.scene.file) setScene({ ...scene, scene: doc })
     else if (scene && doc.file === scene.feedback.file) setScene({ ...scene, feedback: doc })
@@ -245,14 +232,6 @@ export default function StudioClient(props: Props) {
     if (result.compile?.written.length) setTimeout(() => setBump(b => b + 1), 1800)
   }
 
-  const comment = async (text: string) => {
-    try {
-      await fetch('/game/storyboard/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, scene: scene?.id ?? '', viewport: vp }) })
-      const r = await fetch('/game/storyboard/comments', { cache: 'no-store' })
-      if (r.ok) setThread(((await r.json()).thread as ThreadMessage[]).filter(m => !m.scene || m.scene === (scene?.id ?? '')))
-    } catch { /* ignore */ }
-  }
-
   const sceneFile = scene?.scene.file ?? ''
   const entry = sceneDoc?.preview?.state
   const checkpoint = view.kind === 'checkpoint' ? view.key : null
@@ -273,20 +252,16 @@ export default function StudioClient(props: Props) {
     return buildAgentPrompt({ scene: sceneDoc, feedback: scene.feedback.exists ? feedbackDoc : null, notes: scene.notes, origin: typeof window === 'undefined' ? '' : window.location.origin, state: currentStateKey, preset: currentPreset ?? undefined, flow: flow ? { name: flow.name, step: flowState?.step ?? 0, instructions: flow.steps[flowState?.step ?? 0]?.instructions } : undefined })
   }, [scene, sceneDoc, feedbackDoc, currentStateKey, currentPreset, flow, flowState])
 
-  const noteLabel = (kind: string) => `Studio ${kind === 'keep' ? 'keep' : 'note'} on ${scene?.id ?? ''} (${VIEWPORTS[vp].label}${currentStateKey ? `, ${currentStateKey}` : ''})`
   const onPin = (kind: 'wrong' | 'keep', at: { x: number; y: number }, note: string) => {
     if (!scene) return
     const pin: Pin = { kind, note, at, viewport: vp, ...(currentStateKey ? { state: currentStateKey } : {}) }
     const reopen: EditOp[] = feedbackDoc?.status === 'addressed' ? [{ op: 'set', path: ['status'], value: 'open' }] : []
     edit(scene.feedback.file, [...reopen, { op: 'append', path: ['pins'], value: pin as unknown as Record<string, unknown> }], kind === 'wrong' ? 'Pinned' : 'Marked to keep')
-    comment(`${noteLabel(kind)}: ${note}`)
     setDraft(''); setTool('select')
   }
   const onNoteOps = (ops: EditOp[], label: string) => {
     if (!scene) return
     edit(scene.feedback.file, ops, label)
-    const added = ops.find(o => o.op === 'append' && o.path[0] === 'pins')
-    if (added && added.op === 'append') comment(`${noteLabel(String(added.value.kind))}: ${String(added.value.note ?? '')}`)
   }
   const addNote = () => {
     const note = draft.trim()
@@ -381,7 +356,7 @@ export default function StudioClient(props: Props) {
   })
 
   const problems = [...(scene?.scene.diagnostics ?? []), ...(scene?.feedback.diagnostics ?? []), ...(data?.doc.diagnostics ?? [])].filter(d => d.severity === 'error').length
-  const nativeSrc = checkpoint && scene?.nativeByFixture[checkpoint] ? `/game/storyboard/native/${scene.nativeByFixture[checkpoint]}.png?b=${bump}` : null
+  const nativeFixture = scene?.nativeByFixture[checkpoint ?? entry ?? '']
   const title = target.type === 'scene' ? sceneDoc?.name ?? target.id : target.kind === 'mission' ? (data?.doc.value as { title?: string } | null)?.title ?? target.id : target.id
   const pinTool = tool === 'wrong' || tool === 'keep'
   const hostRoot = scene?.hostRoot
@@ -409,10 +384,15 @@ export default function StudioClient(props: Props) {
   return (
     <div className={styles.studio} data-theme={theme} data-testid="studio" style={{ '--deck-h': `${deckH}px` } as CSSProperties}>
       {target.type === 'scene' && <section ref={previewRef} className={styles.stageArea} data-testid="studio-preview-area">
-          <PreviewStage
-            vp={vp} src={src}
-            nativeSrc={nativeSrc}
-            showNative={showNative}
+          <SceneHarness
+            sceneId={target.id}
+            runnerId={sceneDoc?.qa?.[0] ?? target.id}
+            sceneName={title}
+            vp={vp}
+            stageHref={src}
+            nativeFixture={nativeFixture}
+            webSources={sceneDoc?.runtime.web ?? []}
+            nativeSources={sceneDoc?.runtime.native ?? []}
             objects={objectsOnStage}
             selected={selectedPath[0] === 'objects' ? objects[selectedPath[1] as number]?.id ?? null : null}
             tool={tool}
@@ -440,7 +420,7 @@ export default function StudioClient(props: Props) {
         <button type="button" className={styles.btn} disabled={!redoStack.length} onClick={() => restore('redo')} data-testid="redo">Redo</button>
         {target.type === 'scene' && <button type="button" className={`${styles.btn} ${tab === 'objects' ? styles.btnPrimary : ''}`} onClick={() => { setTab('objects'); setTool('select') }} data-testid="header-objects">Objects</button>}
         <button type="button" className={`${styles.btn} ${tab === 'project' ? styles.btnPrimary : ''}`} onClick={() => setTab('project')} data-testid="header-project">Project</button>
-        <span className={styles.barEnd}><button type="button" className={`${styles.btn} ${following ? styles.btnPrimary : ''}`} aria-pressed={following} onClick={() => { lastFocus.current = ''; setFollowing(f => !f) }} title="Show the scenes agents are working on." data-testid="studio-follow">Follow</button><ScriptMenu files={scriptFiles} hostRoot={hostRoot} /><MoreMenu theme={theme} onTheme={chooseTheme} showNative={showNative} canNative={vp === 'ph'} onNative={() => setShowNative(n => !n)} openHref={src} /></span>
+        <span className={styles.barEnd}><button type="button" className={`${styles.btn} ${following ? styles.btnPrimary : ''}`} aria-pressed={following} onClick={() => { lastFocus.current = ''; setFollowing(f => !f) }} title="Show the scenes agents are working on." data-testid="studio-follow">Follow</button><ScriptMenu files={scriptFiles} hostRoot={hostRoot} /><MoreMenu theme={theme} onTheme={chooseTheme} openHref={src} /></span>
       </header>
       {flow && flowState && <FlowBar flow={flow} step={flowState.step} onStep={step => pickFlow(flow.id, step)} onClose={() => setFlowState(null)} />}
       <div className={styles.body}>
@@ -462,8 +442,6 @@ export default function StudioClient(props: Props) {
               onOps={onNoteOps}
               onRef={async dataUrl => { const r = await send({ action: 'ref', scene: scene.id, dataUrl }); if (!r.ok) { say(r.error, true); return null } return r.ref ?? null }}
               prompt={prompt}
-              thread={thread}
-              onChat={comment}
               highlighted={highlightPin}
             />
           </>}

@@ -47,7 +47,7 @@ if (!input) {
   try { input = JSON.parse(readFileSync(0, 'utf8')).tool_input?.file_path } catch { /* no stdin */ }
 }
 if (!input || !/(^\/)|web\//.test(input) || /\.(test|spec)\./.test(input)) process.exit(0)
-// Whatever file is edited, keep "which scenes is this work in" current (shared with the storyboard and the Studio).
+// Whatever file is edited, keep the Scene Studio's active scene declaration current.
 spawnSync(process.execPath, ['--no-warnings', join(root, 'scripts', 'studio.mjs'), 'touch', input], { stdio: 'ignore', timeout: 8000 })
 const route = toRoute(input)
 if (!route) process.exit(0)

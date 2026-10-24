@@ -13,6 +13,7 @@ describe('validateSchema', () => {
     format: 1, id: 'm1', title: 'T', brief: 'B', tag: 'FREE OPS', difficulty: 'L2', locked: false, sequence: 'free-ops',
     requires: { minerals: { nickel: 1 }, cargo_min: 1, drill_tier: 1, max_orbit: 2 },
     payout: { francs: 0, affinity: 0 },
+    harness: { scene: 'mining', web: 'ui-mining', native: 'mining', objective: 'Fire the drill', complete: 'Ore collected' },
   }
 
   it('accepts a valid mission', () => {

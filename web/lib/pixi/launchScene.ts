@@ -403,7 +403,7 @@ export function buildLaunchScene(
       hookSchedule = buildHookSchedule(sheets.meta, T)
       padFx = new FxLayer(sheets)
       sepFx = new FxLayer(sheets)
-      // Sprite sheets resolve asynchronously. Cypress can advance away from
+      // Sprite sheets resolve asynchronously. A scene can advance away from
       // the launch scene before this continuation runs, which removes the
       // root from the stage and made getChildIndex throw during M1/visual QA.
       const stage = app.stage

@@ -3,10 +3,8 @@
 //   node scripts/dev-check.mjs <name>          run a named check from scripts/checks.json
 //   node scripts/dev-check.mjs --list
 //   node scripts/dev-check.mjs --route /game/hub --see "SELL" --click "OPEN"   one-off
-//   add --native <SceneCatalog id> to also render the native scene on a booted simulator
 // The tab navigates, runs the steps, shows a PASS/FAIL banner and posts the result back here. Exit 0 = pass.
 import { readFileSync, existsSync } from 'node:fs'
-import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
@@ -29,12 +27,6 @@ if (!check && flag('--route')) {
   check = { route: flag('--route'), steps }
 }
 if (!check) { console.error(`No check "${name}". Try --list.`); process.exit(2) }
-
-const native = flag('--native')
-if (native) {
-  const shots = spawn('bash', [join(root, 'scripts', 'native-shots.sh'), native], { stdio: 'inherit' })
-  shots.on('exit', (c) => console.log(c === 0 ? `native ${native}: rendered to web/.storyboard/snap` : `native ${native}: render failed`))
-}
 
 const post = (body) => fetch(`${base}/api/dev/follow`, { method: 'POST', body: JSON.stringify(body) })
 try { await fetch(`${base}/api/dev/follow`) } catch { console.error(`Dev server is not answering on ${base}. Run: make ensure`); process.exit(2) }

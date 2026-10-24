@@ -7,14 +7,11 @@ import { usePopoverSide } from './usePopoverSide'
 interface Props {
   theme: 'auto' | 'light' | 'dark'
   onTheme: (theme: 'auto' | 'light' | 'dark') => void
-  showNative: boolean
-  canNative: boolean
-  onNative: () => void
   openHref: string | null
 }
 
 /** The rarely used controls, out of the way. */
-export default function MoreMenu({ theme, onTheme, showNative, canNative, onNative, openHref }: Props) {
+export default function MoreMenu({ theme, onTheme, openHref }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const { side, style } = usePopoverSide(open, ref)
@@ -37,9 +34,8 @@ export default function MoreMenu({ theme, onTheme, showNative, canNative, onNati
           <span className={styles.seg} role="group" aria-label="Theme" style={{ margin: '0 8px 8px' }}>
             {(['auto', 'light', 'dark'] as const).map(t => <button key={t} type="button" aria-pressed={theme === t} onClick={() => onTheme(t)} data-testid={`theme-${t}`}>{t[0].toUpperCase() + t.slice(1)}</button>)}
           </span>
-          {canNative && <button type="button" className={styles.row} onClick={() => { onNative(); setOpen(false) }} data-testid="toggle-native">{showNative ? 'Hide native snapshot' : 'Show native snapshot'}</button>}
-          {openHref && <a className={styles.row} href={openHref} {...(framed ? {} : { target: '_blank', rel: 'noreferrer' })}>Open this scene on its own</a>}
-          <a className={styles.row} href="/game/storyboard">Storyboard (every scene, native beside web)</a>
+          {openHref && <a className={styles.row} href={openHref} {...(framed ? {} : { target: '_blank', rel: 'noreferrer' })}>Run web fixture independently</a>}
+          <a className={styles.row} href="/game/studio?tab=project">Scene and mission inventory</a>
         </div>
       )}
     </div>

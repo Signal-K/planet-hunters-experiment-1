@@ -12,7 +12,7 @@
     "name": { "type": "string", "minLength": 1, "description": "Internal name for tools and tickets. Never shown in the game UI." },
     "summary": { "type": "string", "description": "One or two plain sentences: what the player does here." },
     "tickets": { "type": "array", "items": { "type": "string", "pattern": "^SSL-[0-9]+$" }, "description": "Linear tickets that touch this scene. `studio where SSL-123` finds scenes from these." },
-    "qa": { "type": "array", "items": { "type": "string" }, "description": "Storyboard and QA scene ids (qa/scenes.json) that show this scene. They carry the native snapshot names, so the Studio can show native beside web." },
+    "qa": { "type": "array", "items": { "type": "string" }, "description": "Independent scene ids in qa/scenes.json. They map this graph to the web fixture and iOS SceneCatalog fixture." },
     "runtime": {
       "type": "object",
       "additionalProperties": false,

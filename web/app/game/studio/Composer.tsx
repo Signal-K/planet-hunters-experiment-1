@@ -1,6 +1,6 @@
 'use client'
 
-import type { Tool } from './PreviewStage'
+import type { Tool } from './SceneHarness'
 import styles from './Studio.module.css'
 
 interface Props {

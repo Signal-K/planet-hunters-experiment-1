@@ -10,7 +10,7 @@ Part of the Landnam agent instructions; `AGENTS.md` (repo root) is the entry poi
 - Accounts: no account-free play. No guest mode, demo routes, or "no account needed" links.
 - Offline-first: no direct client writes to the backend; use the SSL-321 outbox and upload on reconnect. Check phone sizes and Safari.
 - Terminology: "client", never "contractor", in UI copy, survey copy and new identifiers.
-- Narrative: no fictional wrapper on mainline citizen-science content. Citizen science is an instrument feed, not a mission type. Crew have no citizen-science role. Satellite Monitoring Station is deleted; do not revive it.
+- Narrative: the active game is the five-stop agency loop: Plan, Launch, Flight, Work, Result. Citizen science is an instrument feed, not a separate mission track. Telescope work extends Free Ops; Academy, refinery, colonies, and settlements remain parked unless an approved independent mission harness adds them. Crew have no citizen-science role. Satellite Monitoring Station is deleted; do not revive it.
 - Do not treat any "M1/M2 active, M3 undefined" onboarding framing as current scope. Onboarding mission order is whatever the current release issue and ZenNotes decisions say.
 
 ## Names and surfaces

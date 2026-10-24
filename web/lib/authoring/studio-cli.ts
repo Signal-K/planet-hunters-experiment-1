@@ -12,7 +12,7 @@ const HELP = `Landnam Scene Studio, for agents and for you
   where <SSL-123 | file ...>   Scenes a ticket or files belong to, with their Studio links and any open feedback.
   changed                      Scenes touched by uncommitted work (git status).
   focus <scene ...> [--ticket SSL-123] [--title "..."] [--desc "..."]
-                               Declare the scenes you are working in. The Studio and the storyboard both show it.
+                               Declare the scenes you are working in. Studio shows it.
   focus --clear                Clear the declaration.
   open <scene> [--state key]   Print the Studio link and point the editor's Simple Browser at it.
   briefs                       Scenes with open notes from you, and where the files are.
@@ -87,7 +87,7 @@ export function main(argv: string[], root: string): number {
     const ids = positional(args)
     const bad = ids.filter(id => !known.has(id))
     if (!ids.length || bad.length) { console.log(bad.length ? `Unknown scene: ${bad.join(', ')}. Known: ${[...known].join(', ')}` : 'Name at least one scene.'); return 1 }
-    // The storyboard matches qa ids, the Studio matches scene ids: write both so one declaration lights up both pages.
+    // Keep script and fixture ids together so the harness can resolve either.
     const qa = ids.flatMap(id => scenes.find(s => s.id === id)?.qa ?? [])
     writeFocus(root, { scenes: [...ids, ...qa], ticket: flag(args, 'ticket'), title: flag(args, 'title'), description: flag(args, 'desc') })
     console.log(`focus: ${ids.join(' ')}${flag(args, 'ticket') ? ` [${flag(args, 'ticket')}]` : ''}`)
