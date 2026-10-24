@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    // tests/ holds Playwright scene specs; they run under `npm run test:scenes`.
+    // Browser matrices are retired; colocated unit tests are the only Vitest input.
     exclude: [...configDefaults.exclude, 'tests/**', '.next/**', '.open-next/**'],
   },
   resolve: {

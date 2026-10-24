@@ -16,10 +16,10 @@ Single canonical file: `AGENTS.md`. Pointers: `CLAUDE.md` (`@AGENTS.md`), `web/A
 ## Claude Code (executed: `claude -p ... --max-turns 1`, run from the repo root)
 
 Prompt 1: In one sentence, what test runner does this repo use and what is the text size floor?
-Response: Playwright scene tests (`npm run test:scenes` from `web/`; Cypress has been removed), and body and map text must be at least 14px.
+Historical response: superseded. Scenes are now checked in the editor Simple Browser, and body and map text must be at least 14px.
 
 Prompt 2 (bug fix): I need to fix a bug in a gameplay screen. In two sentences: what must I do before marking it Done, and can unit tests alone suffice?
-Response: Before marking it Done, fix the bug in the real code path (not only behind a dev preset), then run the type-check and the relevant tests (`test:scenes` for visual or flow changes). Also capture screenshots of the affected screen at 390x844, 926x428 and 1440x900, checking the real viewport via `innerWidth`/`matchMedia`. Check them for overlap, clipping, text under 14px, targets under 44px and wrong colors, and state in the handoff exactly what ran and what didn't. No, unit tests alone can't suffice: a green suite says nothing about whether the game plays, so Done needs the rendered-play proof as well.
+Historical response: superseded. Before marking a ticket Done, inspect the real scene in the Simple Browser and state the focused checks used. Unit tests alone do not prove gameplay.
 
 Prompt 3 (feature/visual): I am adding a feature to the Cycle 4 build. In two sentences: what is the Cycle 4 scope, and can I make the main screen a card list with a dark theme?
 Response: Cycle 4 is Free Ops (self-directed play with no contract required: mine, survey, build, trade) plus optional contracts from clients, which add direction and payout but never gate play. And no, not as described: a card list is only allowed for reference and menu surfaces, since gameplay screens must be illustrated or rendered scenes with actions attached to objects in them, and dark themes are banned outright (light blueprint style only, all colors from the CSS variables in `web/app/globals.css`).

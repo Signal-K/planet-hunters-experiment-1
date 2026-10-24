@@ -1,6 +1,6 @@
 # Native / web Earth Base parity (SSL-499)
 
-Side-by-side: `side-by-side-{phone,landscape,desktop}.png` (native left, web right). Viewports: 402x874, 874x402, 1000x680. Web captured with Playwright (`/game/stage?preset=m1-hub`, installed Chrome); native from the `hub-phone`, `hub-phone-landscape`, `hub-desktop` catalog scenes.
+This historical comparison predates the current lightweight workflow. Inspect web scenes in the editor Simple Browser (`/game/stage?preset=m1-hub`) and launch the matching iOS catalog fixture directly; no browser capture runner is used.
 
 Matched: the four base structure sprites are byte-identical to `web/public/game/assets/base/*_flat.png`; the terrain is the web kit (`EARTH_BASE_WIDE`, same bricks, x, scale, lift, flip, band baselines), the same 28 terrain PNGs, haze `min(.92, (1-depth)^2 * .95)` over each sprite's silhouette, web z-order (bands up to the treeline behind the ground plane, ground-detail and foreground on it), web palette tokens, ground lip and nearer soil band, road bed, and the outlined planet.
 

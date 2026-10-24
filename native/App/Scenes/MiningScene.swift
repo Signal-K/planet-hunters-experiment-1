@@ -748,19 +748,19 @@ final class MiningScene: SKScene {
         if falling.count == 0 && rainAccumulator < 1 && clock < 1 { rainAccumulator = 1 }   // first fragment shows up straight away
         while rainAccumulator >= 1 {
             rainAccumulator -= 1
-            guard falling.count < 2 else { continue }   // web MAX_RAIN
+            guard falling.count < 3 else { continue }   // web MAX_RAIN
             let hex = Minerals.byId[rain.resourceId]?.colorHex ?? "#7fd8ff"
             let node = SKSpriteNode(texture: depositTexture(colorHex: hex, variant: falling.count, glint: true))
             node.setScale(px * 0.7)   // web draws shower fragments at 0.45
             node.texture?.filteringMode = .nearest
             node.zPosition = 30
             // Aim near the ship, shifted by the ground scroll during the fall, spread wide so the player has to weave.
-            let fallTime = (size.height + 20 - surfaceY) / 56
+            let fallTime = (size.height + 20 - surfaceY) / 68
             let aim = beamX + 36 * fallTime + CGFloat.random(in: -300...300)
             // Not clamped to the right edge: on a narrow phone the aim sits past the screen and the fragment drifts in (web parity).
             node.position = CGPoint(x: max(40, aim), y: size.height + 20)
             world.addChild(node)
-            falling.append((node, CGFloat.random(in: 52...60)))
+            falling.append((node, CGFloat.random(in: 64...72)))
         }
         var landed: [Int] = []
         for i in falling.indices {
@@ -910,18 +910,8 @@ final class MiningScene: SKScene {
         }
     }
 
-    #if canImport(UIKit)
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard touches.first != nil else { return }
         fireLaser()
     }
-    #else
-    override func mouseUp(with event: NSEvent) { fireLaser() }
-    override func keyDown(with event: NSEvent) {
-        if event.keyCode == 49 || event.keyCode == 3 { fireLaser() } // space, F
-        if event.keyCode == 123 || event.keyCode == 0 { setSteer(-1) }
-        if event.keyCode == 124 || event.keyCode == 2 { setSteer(1) }
-    }
-    override func keyUp(with event: NSEvent) { setSteer(0) }
-    #endif
 }

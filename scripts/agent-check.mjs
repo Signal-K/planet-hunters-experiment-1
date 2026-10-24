@@ -15,12 +15,12 @@ for (const file of ['web/AGENTS.md', 'web/CLAUDE.md', 'native/AGENTS.md', 'nativ
 check(Number(process.versions.node.split('.')[0]) >= 24, 'Node.js 24+');
 const branch = spawnSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8', timeout: 3000 });
 check(branch.status === 0 && branch.stdout.trim() === 'cycle/4', 'working on cycle/4');
-check(existsSync(resolve(root, 'web/node_modules/.bin/playwright')), 'web dependencies installed (otherwise: cd web && npm ci)');
+check(existsSync(resolve(root, 'web/node_modules/.bin/next')), 'web dependencies installed (otherwise: cd web && npm ci)');
 for (const command of ['swift', 'xcodebuild']) {
   const probe = spawnSync('/usr/bin/which', [command], { encoding: 'utf8', timeout: 3000 });
   console.log(`${probe.status === 0 ? 'AVAILABLE' : 'UNAVAILABLE'} ${command}${probe.status === 0 ? '' : ' (native checks require a macOS/Xcode host)'}`);
 }
 const tokens = spawnSync(process.execPath, ['scripts/sync-shared.mjs', '--check'], { cwd: root, stdio: 'inherit', timeout: 10000 });
 check(tokens.status === 0, 'shared web/native palette is current');
-console.log('Next: read the active Linear ticket; implement web then native; run focused checks. This preflight is not gameplay proof.');
+console.log('Next: read the active Linear ticket; implement web then iOS; use the Simple Browser scene check. This preflight is not gameplay proof.');
 process.exitCode = failures ? 1 : 0;

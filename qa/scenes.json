@@ -97,6 +97,14 @@
    ]
   },
   {
+   "id": "orionids-shower-mining",
+   "name": "Orionids shower run",
+   "flow": "core-loop",
+   "web": "ui-orionids-shower-mining-fresh",
+   "native": "mining-shower-live",
+   "tickets": []
+  },
+  {
    "id": "flight",
    "name": "Transit",
    "flow": "core-loop",

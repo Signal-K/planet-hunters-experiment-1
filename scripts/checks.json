@@ -45,5 +45,20 @@
         "within": 6000
       }
     ]
+  },
+  "orionids-first-catch": {
+    "route": "/game/stage?preset=ui-orionids-shower-mining-fresh",
+    "fresh": true,
+    "timeout": 90000,
+    "steps": [
+      {
+        "see": "[data-stage-ready=\"true\"]",
+        "within": 20000
+      },
+      {
+        "see": "fragments: 1 of 20",
+        "within": 70000
+      }
+    ]
   }
 }

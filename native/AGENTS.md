@@ -1,15 +1,17 @@
-# AGENTS (native)
+# iOS agent notes
 
-Root rules: ../AGENTS.md (token budget, map, standing rules). Do not copy rules here.
+Follow `../AGENTS.md`. `native/` is iOS only: `LandnamCore/` owns domain and
+sync, `App/` owns SwiftUI/SpriteKit scenes, and `SceneCatalog.swift` makes each
+scene launchable in the Simulator.
 
-- `LandnamCore/` pure Swift domain + sync (SwiftPM, fast tests). `App/` SwiftUI app (screens in `App/Screens`, scenes in `App/Scenes`). `TakeonKit/` rover engine. `project.yml` -> `xcodegen generate` (the `.xcodeproj` is generated and gitignored).
-- Never read `App/Assets.xcassets/**`, `App/Resources/Art/**` (synced from web by `npm run sync:native-assets`), `**/.build/**`, `Tests/**/Fixtures/*.json`, `App/Theme.generated.swift` (edit `shared/tokens`).
-- Big files: `App/Scenes/MiningScene.swift`, `App/SceneCatalog.swift`, `App/Screens/CoreLoop.swift` - rg, then read a window.
+Build only the iOS Simulator target after native work:
 
-Targeted checks
-```bash
-cd native/LandnamCore && swift test --filter LoopTests            # one test class (or Class/testName)
-cd native && xcodegen generate && xcodebuild build -scheme Landnam -destination 'generic/platform=iOS Simulator' -quiet
-xcodebuild test -scheme Landnam -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:LandnamTests/SnapshotTests/testName -quiet
+```sh
+xcodebuild -project native/Landnam.xcodeproj -scheme Landnam \
+  -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath /tmp/landnam-ios build CODE_SIGNING_ALLOWED=NO
 ```
-Pipe xcodebuild through `-quiet` or `| tail -40`; never paste a full build log. No TestFlight.
+
+Use a filtered `swift test` only for affected LandnamCore logic. Launch the
+matching catalog fixture with `xcrun simctl launch booted com.atlasskyventures.sslandnam -scene <id>`.
+Do not add macOS, iPadOS, desktop targets, or broad UI/snapshot suites.

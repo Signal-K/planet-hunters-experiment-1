@@ -14,7 +14,7 @@ Start the dev stack (`make up`; the first time after pulling this, run `make web
 - `?follow=1` on the URL makes the Studio jump to whatever scene an agent says it is working in.
 - **Open the script** (every Open in Cursor button, the Script menu and the source view) asks the dev server to open the file at the right line. Cursor's built-in browser will not follow `cursor://` links, and the dev server in Docker cannot launch an app, so a small helper on your machine does it: `make up` starts it (`node scripts/host-opener.mjs status | start | stop`; log in your temp folder as `landnam-host-opener.log`). It listens on `127.0.0.1:3098` only, answers only the Studio's server, and opens only files inside the repo. With the helper off, the button says so and offers Copy path and a plain `cursor://` link, which a normal browser follows. The file opens in the Cursor window you used last.
 
-Native appears beside web for phone sizes once a snapshot exists: `scripts/native-shots.sh hub-phone` renders one from the iOS Simulator (snapshots are phone only today).
+Each authored scene maps to an iOS `SceneCatalog` fixture. Build the iOS app and launch one with `xcrun simctl launch booted com.atlasskyventures.sslandnam -scene <id>`; no snapshot matrix is maintained.
 
 ## The files
 
@@ -47,7 +47,7 @@ Editing a mission or the world in the Studio, or in a text editor followed by `c
 ## Commands
 
 ```bash
-node scripts/authoring.mjs check          # validate everything and fail on stale runtime files (CI runs this as a test)
+node scripts/authoring.mjs check          # validate everything and fail on stale runtime files
 node scripts/authoring.mjs compile        # write the runtime files
 node scripts/authoring.mjs validate       # problems with file:line:column
 node scripts/studio.mjs where SSL-345     # which scenes a ticket or files belong to
@@ -55,13 +55,13 @@ node scripts/studio.mjs changed           # scenes touched by uncommitted work
 node scripts/studio.mjs focus hub --ticket SSL-345   # declare what you are working in (Studio and storyboard show it)
 node scripts/studio.mjs briefs            # scenes with open notes from you
 cd web && npm run test:file -- lib/authoring          # unit tests
-cd web && SCENES_BASE_URL=http://localhost:4320 npx playwright test tests/scenes/studio.spec.ts
+node scripts/scene.mjs <scene> --check    # open and check one scene in Simple Browser
 ```
 
 ## Honest limits today
 
 - All 27 existing routes have object/mechanic contracts, not 27 completed engine migrations. Studio's Project workspace distinguishes host-owned layout, shared geometry and missing native sources. The legacy route inventory is not a required player journey; routes can remain compatibility deep links when several scenes are composed into one experience.
 - Dragging objects works for screen-space elements. World-space objects (buildings on the base) are edited in the inspector, not dragged.
-- Native previews are phone-size snapshots from the iOS Simulator, not a live render. A shared runtime would remove that gap; the decision is open in SSL-642 and recorded in ZenNotes (`projects/landnam/decisions/scene-scripts-and-scene-studio`).
+- Native scenes are launched directly by `SceneCatalog` in the iOS Simulator; use the matching id in `qa/scenes.json`.
 - The Studio is dev only. It is disabled outside `next dev`.
-- Things, presets, and flows currently run in the web sandbox only. Native previews are phone snapshots for legacy campaign checkpoints.
+- Things, presets, and flows run in the web sandbox. Keep a matching iOS catalog fixture for every player-facing scene.

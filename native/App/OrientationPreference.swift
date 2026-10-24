@@ -1,7 +1,5 @@
 import SwiftUI
-#if canImport(UIKit)
 import UIKit
-#endif
 
 /// Player-chosen screen orientation lock. Auto follows the device (the default); iOS only.
 enum OrientationPreference: String, CaseIterable, Identifiable, Sendable {
@@ -16,12 +14,11 @@ enum OrientationPreference: String, CaseIterable, Identifiable, Sendable {
 
     static var current: OrientationPreference { .init(stored: UserDefaults.standard.string(forKey: storageKey)) }
 
-    #if canImport(UIKit)
-    /// Orientations the app may rotate into. iPad keeps upside-down in Auto and Portrait, as the Info.plist allows.
+    /// Orientations the iPhone app may rotate into.
     func mask(idiom: UIUserInterfaceIdiom) -> UIInterfaceOrientationMask {
         switch self {
-        case .auto: idiom == .pad ? .all : .allButUpsideDown
-        case .portrait: idiom == .pad ? [.portrait, .portraitUpsideDown] : .portrait
+        case .auto: .allButUpsideDown
+        case .portrait: .portrait
         case .landscape: .landscape
         }
     }
@@ -34,10 +31,8 @@ enum OrientationPreference: String, CaseIterable, Identifiable, Sendable {
             scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask)) { _ in }
         }
     }
-    #endif
 }
 
-#if canImport(UIKit)
 /// Runtime orientation mask read by the app delegate, so the setting needs no relaunch.
 enum OrientationLock {
     /// Starts as .all so launch never fights the Info.plist; the app applies the saved choice on first appear.
@@ -49,4 +44,3 @@ final class LandnamAppDelegate: NSObject, UIApplicationDelegate {
         OrientationLock.mask
     }
 }
-#endif

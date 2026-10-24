@@ -4,7 +4,7 @@ Part of the Landnam agent instructions; `AGENTS.md` (repo root) is the entry poi
 
 ## Product (Cycle 4)
 
-- Landnám is a space-program game: Next.js web app in `web/`, SwiftUI native app in `native/` (cross-platform direction: web and native share one game model and one look; new features must not be web-only by design).
+- Landnám is a space-program game: Next.js web app in `web/` and SwiftUI iOS app in `native/`. They share one game model and one look; new features must not be web-only by design.
 - Cycle 4 scope: **Free Ops** (self-directed play with no contract required: mine, survey, build, trade on your own) plus **optional contracts** from clients. Contracts add direction and payout; they are never a gate to playing.
 - Scenes: every gameplay screen is a real illustrated or rendered scene with the action attached to an object or instrument in it. A card grid, generic "available actions" stack, or text-and-buttons panel is not acceptable as a gameplay screen. Cards are for reference and menu surfaces only. Reuse the existing scene component when matching another screen; do not re-tune an approximation. Resolve a mechanic from the real component (`GameScreenRouter.tsx`), not from a screen's name ("Transit" means two different things).
 - Accounts: no account-free play. No guest mode, demo routes, or "no account needed" links.
@@ -30,14 +30,14 @@ Part of the Landnam agent instructions; `AGENTS.md` (repo root) is the entry poi
 - Colour: the spec's deep dusk palette (`docs/design/game-theme-spec.md`, section 2) governs scene and world art. Supersedes the earlier "light blueprint, no dark, no orange or purple" rule for scene layers. Orange is a small detail accent only. UI chrome on top of the world follows the spec's section 2.4.
 - Body and map text at least 14px. Tap targets at least 44px. 8pt spacing rhythm.
 - Shared palette source: `shared/tokens/tokens.json`, generated into `web/app/globals.css` and `native/App/Theme.generated.swift`. Web consumes CSS variables; native consumes `Theme`. Never hand-edit generated blocks or invent per-platform colors. World tokens currently live outside the generated block; preserve the game-theme spec and check both implementations. Read `projects/landnam/decisions/landnam-ui-design-language-style-prompt.md` and the `:root` comment in `globals.css` before visual work, since direction has changed several times.
-- Every screen must work in phone portrait, phone landscape, and desktop.
+- Every screen must work in phone portrait, phone landscape, and desktop web layouts; native acceptance is iPhone only.
 - No emoji in the UI. Status = shape + color + label. UPPERCASE with letter-spacing for instrument labels and CTAs.
 - When a redesign removes UI, build new theme-matching elements; never restore the old ones.
 
 ## Tech and layout
 
 - `web/` Next.js 16 (App Router, SPA at `app/game/page.tsx`), TypeScript strict (no `any`, no `@ts-ignore`), Tailwind v4, Framer Motion, PixiJS scenes (`web/public/game/scenes/*.scene.json`). This is not the Next.js you know: read `web/node_modules/next/dist/docs/` before Next-specific code.
-- `native/` SwiftUI app (`LandnamCore`, `TakeonKit`); `pocketbase/` Landnam backend; shared PocketBase at `~/Navigation/backend`. Hub-and-spoke auth via the shared backend. No Godot, no Electron.
+- `native/` is the iOS SwiftUI app (`LandnamCore`, `TakeonKit`); `pocketbase/` is the Landnam backend. Hub-and-spoke auth uses the shared backend. No desktop targets, Godot, Electron, or browser runners.
 - Run `npm` from `web/`; run `git` from the repo root.
 - Key files: `web/game-context.tsx`, `web/lib/data.ts`, `web/lib/catalog.ts`, `web/components/game/GameApp.tsx`.
 - Docker must start fully offline; never add a start-time network fetch.

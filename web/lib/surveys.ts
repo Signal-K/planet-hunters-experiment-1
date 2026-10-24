@@ -10,14 +10,8 @@ type SurveyResponses = Record<string, SurveyResponseValue>
 
 const SHOWN_STORAGE_KEY = 'landnam-surveys-shown'
 
-// Cypress 16 replaced Cypress.env with Cypress.expose; read whichever exists.
-type CypressRuntime = { env?: (key: string) => unknown; expose?: (key: string) => unknown }
-
 export function isSurveyRuntimeEnabled(): boolean {
-  if (process.env.NODE_ENV === 'production') return true
-  if (typeof window === 'undefined') return false
-  const cypress = (window as unknown as { Cypress?: CypressRuntime }).Cypress
-  try { return (cypress?.expose ?? cypress?.env)?.call(cypress, 'allowSurveys') === true } catch { return false }
+  return process.env.NODE_ENV === 'production'
 }
 
 function getShownSurveys(): Set<string> {

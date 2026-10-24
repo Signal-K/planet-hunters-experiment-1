@@ -45,66 +45,6 @@ services:
       retries: 40
       start_period: 5s
 
-  # Test stack (profile "test", `make test-up`): same code, its own port, build cache and database, so
-  # Cypress or any scripted run never touches the preview tab's server or save. Not started by `make up`.
-  web-test:
-    profiles: ["test"]
-    init: true
-    image: landnam-web-dev
-    pull_policy: never
-    restart: "no"
-    stop_grace_period: 2s
-    command: ["npm", "run", "dev"]
-    depends_on:
-      pb-test:
-        condition: service_healthy
-    volumes:
-      - ./web:/app
-      - ./:/repo
-      - web_node_modules:/app/node_modules
-      - web_test_next_cache:/app/.next
-    environment:
-      POCKETBASE_INTERNAL_URL: http://host.docker.internal:8090
-      POCKETBASE_LANDNAM_INTERNAL_URL: http://pb-test:8090
-      NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8090
-      NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8097
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dmFsdWVkLW1hc3RvZG9uLTY5OTQuY2xlcmsuYWNjb3VudHMuZGV2JA
-      NEXT_TELEMETRY_DISABLED: "1"
-      NODE_OPTIONS: --max-old-space-size=3072
-      PORT: "4321"
-      WATCHPACK_POLLING: "true"
-      CHOKIDAR_USEPOLLING: "true"
-      LANDNAM_REPO_ROOT: /repo
-    ports:
-      - "4321:4321"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4321/api/backend-health"]
-      interval: 3s
-      timeout: 3s
-      retries: 40
-      start_period: 5s
-
-  pb-test:
-    profiles: ["test"]
-    build:
-      context: ./pocketbase
-    pull_policy: never
-    restart: "no"
-    environment:
-      SHARED_PB_URL: http://host.docker.internal:8090
-    ports:
-      - "8097:8090"
-    volumes:
-      - pb_test_data:/pb/pb_data
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/health"]
-      interval: 3s
-      timeout: 3s
-      retries: 30
-      start_period: 5s
-
 volumes:
-  web_test_next_cache:
-  pb_test_data:
   web_node_modules:
   web_next_cache:

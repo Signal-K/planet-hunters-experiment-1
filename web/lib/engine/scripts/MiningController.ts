@@ -226,7 +226,7 @@ const DEBRIS_BASE_FALL_SPEED = 70
 /** Cap so a long run cannot fill the field with chunks. */
 const MAX_DEBRIS = 4
 /** Auto-collected shower fragments: more can be in the air, and one banks only if the ship is under it when it lands. */
-const MAX_RAIN = 2
+const MAX_RAIN = 3
 const CATCH_RADIUS = 100
 /** Rain spreads this far either side of where the ship is, so staying put catches a minority and the player has to weave. */
 const RAIN_SPREAD = 300
