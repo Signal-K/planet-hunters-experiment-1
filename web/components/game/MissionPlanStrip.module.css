@@ -33,7 +33,7 @@
 @media (max-width: 720px) { .sheet li button { gap: 8px; padding: 8px; } .vehicleOptionArt { flex-basis: 72px; width: 72px; height: 42px; } .vehicleOptionStats { display: none; } .vehicleOptionAction { min-width: 86px; font-size: 11px; } }
 
 /* Phone portrait: the top rows belong to the HUD and builder, so the plan rides just above the dock. */
-@media (max-width: 899px) and (min-height: 521px) { .host { top: auto; bottom: 76px; gap: 4px; } .slots { flex-wrap: nowrap; width: 100%; } .slot { flex: 1 1 0; min-width: 0; padding: 4px 8px; } .slot strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .slot span, .slot em { font-size: 14px; letter-spacing: .04em; } }
+@media (max-width: 899px) and (min-height: 521px) { .host { top: auto; bottom: 12px; gap: 4px; } .slots { flex-wrap: nowrap; width: 100%; } .slot { flex: 1 1 0; min-width: 0; padding: 4px 8px; } .slot strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .slot span, .slot em { font-size: 14px; letter-spacing: .04em; } }
 
 /* Desktop: ride the empty band between Launch and Target, above the part tabs. */
 @media (min-width: 900px) and (min-height: 600px) { .host { top: 66px; left: 260px; right: 260px; flex-direction: row; justify-content: center; align-items: center; gap: 16px; } .slots { flex-wrap: nowrap; } .slot { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px; } }

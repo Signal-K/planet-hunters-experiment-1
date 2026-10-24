@@ -757,7 +757,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               <span>Cargo {freeOpsCargoUnits}</span>
             ) : (
               orderLines.map(([id, amount]) => (
-                <span key={id}>{`${minerals[id]?.name ?? id} ${Math.min(cargo[id] ?? 0, amount)}/${amount}`}</span>
+                <span key={id}>{`${minerals[id]?.name ?? id} ${Math.min(nightRun && id === 'orionid_debris' ? shownCatches : (cargo[id] ?? 0), amount)}/${amount}`}</span>
               ))
             )}
             {targetCue ? (

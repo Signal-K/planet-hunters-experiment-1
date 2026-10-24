@@ -3075,6 +3075,10 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 @media (max-width: 599px) {
   .notification-bell { top: calc(env(safe-area-inset-top, 0px) + 124px) !important; right: 8px !important; }
 }
+/* The rocket stat cards sit under the strip on the launch review: the bell drops below them instead of covering LASER. */
+@media (max-width: 599px) {
+  body:has([data-testid='rocket-builder-stats']) .notification-bell { top: calc(env(safe-area-inset-top, 0px) + 196px) !important; }
+}
 /* Landscape: the sky-event chip takes the bell's y64 slot, so the bell moves to the end of the top row. */
 @media (min-width: 600px) and (max-height: 640px) {
   .notification-bell { top: calc(env(safe-area-inset-top, 0px) + 8px) !important; right: 12px !important; }

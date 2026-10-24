@@ -96,7 +96,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
     && (!isFreeHaul || willStore) && (cargoEntries.length > 0 || stashUnits > 0)
   const status = shipDestroyed
     ? 'Hull lost · cargo recovered'
-    : isProgramOperation
+    : isOrbitalInstrumentDeployment
       ? 'Commissioned · instrument online'
       : 'Docked · mission complete'
 

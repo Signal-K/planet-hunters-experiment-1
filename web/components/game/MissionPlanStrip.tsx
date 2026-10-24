@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { useGame } from '@/game-context'
 import { ROCKET_MODELS, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
@@ -21,6 +21,17 @@ const STEPS = ['Contract', 'Plan', 'Launch'] as const
 export default function MissionPlanStrip({ game, blockedReason, launched }: { game: Game; blockedReason: string | null; launched: boolean }) {
   const [sheet, setSheet] = useState<Sheet>(null)
   const { mission, target, player } = game
+  const autoStaged = useRef(false)
+  // A new player has one free vehicle and no staged rocket: stage it, so the pad shows a rocket and Launch is ready.
+  const freeStart = !!mission && !!target && !player.stagedRockets?.length
+  useEffect(() => {
+    if (!freeStart || autoStaged.current || !mission || !target) return
+    const free = ROCKET_MODELS.filter(model => !model.locked && model.costFrancs === 0 && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
+      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, unlockedSkillNodes: player.unlockedSkillNodes ?? [] }).ok)
+    if (free.length !== 1) return
+    autoStaged.current = true
+    game.onPurchaseRocket(free[0].id)
+  }, [freeStart, mission, target, player.missionsDone, player.unlockedSkillNodes, game])
   if (!mission || !target) return null
 
   const selectedVehicle = player.stagedRockets?.find(vehicle => vehicle.id === player.selectedStagedRocketId && (vehicle.location === 'hangar' || vehicle.location === 'launchpad'))
