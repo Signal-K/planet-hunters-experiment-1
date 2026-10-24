@@ -23,6 +23,16 @@ struct MiningFieldTests {
         #expect(f.jettison("silicon") == 0)
     }
 
+    @Test func skyFedFragmentsAreNeverSeamsAndBankOnLanding() {
+        let target = Target(id: "t", name: "T", type: .asteroid, orbit: 2, difficulty: "easy", brief: "", minerals: ["iron"])
+        var f = MiningField(target: target, required: ["orionid_debris": 2], cargoCapacity: 1, laserTier: 1, seed: 7, debris: ("orionid_debris", 3), skyFed: "orionid_debris")
+        #expect(!f.nodes.contains { $0.mineralId == "orionid_debris" })
+        f.catchFragment("orionid_debris")
+        f.catchFragment("orionid_debris")
+        #expect(f.cargo["orionid_debris"] == 2)
+        #expect(f.charge == f.chargeCap)
+    }
+
     @Test func eventRewardsCannotBeJettisoned() {
         let target = Target(id: "t", name: "T", type: .asteroid, orbit: 2, difficulty: "easy", brief: "", minerals: ["iron"])
         var f = MiningField(target: target, required: ["orionid_debris": 1], cargoCapacity: 6, laserTier: 1, seed: 7, debris: ("orionid_debris", 1))

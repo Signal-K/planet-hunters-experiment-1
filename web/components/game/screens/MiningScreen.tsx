@@ -78,7 +78,7 @@ function miningGuide(hasDelivery: boolean, isOrionids: boolean) {
       : { kind: 'return', label: 'Return home', desc: 'Return for recovery. Payout unlocks after landing.' },
   ]
   if (isOrionids) {
-    items.splice(1, 0, { kind: 'event', label: 'Catch Orionid debris', desc: 'Move the ship under the blue event fragments in the moving field and fire the laser when they cross the beam. Catches count toward the shower run and cannot be dropped.' })
+    items.splice(1, 0, { kind: 'event', label: 'Catch Orionid debris', desc: 'Blue fragments fall from the shower and are caught when they hit the ground. No laser needed. Catches count toward the shower run and cannot be dropped.' })
   }
   return items
 }
@@ -465,12 +465,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // Deposit contains the target's full mineral pool, not just the mission's objective —
   // otherwise a single-mineral order (e.g. silicon) makes every ore in the field identical.
   // The required mineral(s) are weighted 2x so onboarding orders still fill at a reasonable pace.
+  // Shower fragments fall from the sky and collect themselves, so they are never ground seams.
+  const seamRequired = Object.keys(mission.requires.minerals).filter(id => !(nightRun && id === 'orionid_debris'))
   const depositMinerals = (() => {
-    const required = Object.keys(mission.requires.minerals)
-    const pool = target.minerals && target.minerals.length > 0 ? target.minerals : required
+    const required = seamRequired
+    const pool = (target.minerals && target.minerals.length > 0 ? target.minerals : required).filter(m => !(nightRun && m === 'orionid_debris'))
     const others = pool.filter(m => !required.includes(m))
     const weighted = [...required, ...required, ...others]
-    return weighted.length > 0 ? weighted : required
+    return weighted.length > 0 ? weighted : ['iron']
   })()
 
   const totalNeeded = Object.entries(mission.requires.minerals).reduce((sum, [, v]) => sum + v, 0)
@@ -766,7 +768,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               </span>
             ) : fireballMoment ? (
               <span className={styles.targetCueStatus} data-testid="mining-target-cue">FIREBALL · WAIT</span>
-            ) : trainingMiningTry ? <span className={styles.targetCueStatus} data-testid="mining-target-cue">Fire on a labelled seam</span> : null}
+            ) : trainingMiningTry && !nightRun ? <span className={styles.targetCueStatus} data-testid="mining-target-cue">Fire on a labelled seam</span> : null}
           </span>
         </DockWordButton>
       </div>
@@ -800,7 +802,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           leadMinerals={mixedOres ? ['iron', 'carbon', 'ice'] : undefined}
           scrollScreens={scrollScreens}
           pinScroll={pinScroll}
-          requiredMinerals={Object.keys(mission.requires.minerals)}
+          requiredMinerals={seamRequired}
           mineralMeta={minerals}
           laserTier={laserTier}
           onCollect={collectMineral}

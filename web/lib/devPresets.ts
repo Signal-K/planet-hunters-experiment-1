@@ -175,6 +175,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -691,6 +692,7 @@ function fixture(name: string): Partial<GameState> | null {
 
     // SSL-651: the Orionids shower run with its order filled. 25 caught in all, 5 before this run was accepted.
     case 'ui-orionids-shower-mining':
+    case 'ui-orionids-shower-mining-fresh':
     case 'ui-orionids-shower-debrief': {
       const home = name === 'ui-orionids-shower-debrief'
       const haul = { orionid_debris: 19, iron: 2 }
@@ -700,7 +702,7 @@ function fixture(name: string): Partial<GameState> | null {
           ...POST_ONBOARDING_PLAYER,
           activeMission: { id: ORIONIDS_NIGHT_RUN_ID, label: 'Orionids shower run' },
           missionPhase: home ? 'debrief' : 'mining',
-          orionidsFragments: { caught: 25, redeemed: 0 },
+          orionidsFragments: { caught: name === 'ui-orionids-shower-mining-fresh' ? 5 : 25, redeemed: 0 },
           orionidsRunBaseline: 5,
           stash: home ? haul : {},
         },

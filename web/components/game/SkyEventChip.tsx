@@ -82,7 +82,7 @@ export default function SkyEventChip({
         />
       )}
       <div className={[styles.hud, 'sky-event-wrap', className].filter(Boolean).join(' ')} data-testid={`sky-event-${surface}`}>
-        {(!open || !orionids) && (orionids && surface === 'base' ? (
+        {(!open || !orionids) && !(orionids && surface === 'mining') && (orionids && surface === 'base' ? (
           <button
             type="button"
             className={styles.eventButton}
@@ -159,7 +159,7 @@ export default function SkyEventChip({
             )}
           </div>
         )}
-        {orionids && fragmentGoal != null && (
+        {orionids && fragmentGoal != null && surface !== 'mining' && (
           <div className={styles.tally} data-testid="orionids-fragment-counter">
             <img src={variant.iconResource} alt="" />
             <strong>Catch {fragmentGoal} Orionid fragments</strong>
@@ -169,7 +169,7 @@ export default function SkyEventChip({
         {orionids && peak && surface === 'mining' && (
           <div className={styles.peakTag} data-testid="orionids-peak-tag">PEAK x2</div>
         )}
-        {orionids && debrisCount > 0 && fragmentGoal == null && (
+        {orionids && debrisCount > 0 && fragmentGoal == null && surface !== 'mining' && (
           <div className={styles.tally} data-testid="orionid-debris-count">
             <img src={variant.iconResource} alt="" />
             <strong>Orionid debris {debrisCount}</strong>

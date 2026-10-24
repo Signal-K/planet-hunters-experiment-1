@@ -214,7 +214,7 @@ export interface MiningControllerOptions {
    */
   debris?: {
     /** Live spawn config; null (or rate 0) when the event is not active. */
-    getSpawn: () => { mineral: string; ratePerMinute: number; speedFactor: number; onceMineral?: string; onceHero?: boolean } | null
+    getSpawn: () => { mineral: string; ratePerMinute: number; speedFactor: number; onceMineral?: string; onceHero?: boolean; autoCollect?: boolean } | null
   }
   /** Raster shower art. Omit to keep the vector chunk fallback. */
   debrisArt?: DebrisArtSet | null
@@ -268,6 +268,8 @@ interface OreEntity {
   frames?: Texture[] | null
   /** A one-off fireball. It falls on the ship and does not scroll away. */
   hero?: boolean
+  /** Collected the moment it lands on the surface; the laser is not needed. */
+  autoCollect?: boolean
 }
 
 interface LaserEntity {
@@ -515,7 +517,7 @@ export class MiningController extends ScriptBehaviour {
     while (this.debrisAccumulator >= 1) {
       this.debrisAccumulator -= 1
       if (alive >= MAX_DEBRIS) continue
-      this.spawnDebris(spawn.mineral, spawn.speedFactor)
+      this.spawnDebris(spawn.mineral, spawn.speedFactor, false, !!spawn.autoCollect)
       alive += 1
     }
     while (this.streakAccumulator >= 1) {
@@ -539,6 +541,7 @@ export class MiningController extends ScriptBehaviour {
         ore.phase = useSheet ? 'land' : 'intact'
         if (ore.phase === 'intact') this.showIntact(ore)
         else this.showFallFrame(ore, 6)
+        if (ore.phase === 'intact' && ore.autoCollect) this.collectOre(ore)
       } else if (ore.variant === 0) {
         const art = this.opts.debrisArt
         const frame = art
@@ -557,6 +560,7 @@ export class MiningController extends ScriptBehaviour {
       if (land.done) {
         ore.phase = 'intact'
         this.showIntact(ore)
+        if (ore.autoCollect) this.collectOre(ore)
       }
     }
   }
@@ -583,7 +587,7 @@ export class MiningController extends ScriptBehaviour {
     ore.sprite.anchor.set(piece.ax, piece.ay)
   }
 
-  private spawnDebris(mineral: string, speedFactor: number, hero = false): void {
+  private spawnDebris(mineral: string, speedFactor: number, hero = false, autoCollect = false): void {
     const x = hero ? this.currentShipX() : 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
     const y = hero ? -36 : -20 - Math.random() * 40
     const colorHex = this.opts.mineralColors[mineral] ?? LASER_COLOR
@@ -624,7 +628,7 @@ export class MiningController extends ScriptBehaviour {
       go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, hero ? 24 : 11), labelBaseY: y, mineral,
       hp: 1, maxHp: 1, radius: hero ? 56 : (art ? DEBRIS_RADIUS : 11), flashTimer: 0, mineralColor,
       fallSpeed: DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor) * (hero ? 1.35 : 1),
-      phase: 'fall', animTime: 0, variant, hero,
+      phase: 'fall', animTime: 0, variant, hero, autoCollect,
     })
   }
 
@@ -967,16 +971,7 @@ export class MiningController extends ScriptBehaviour {
         this.freeze(ore.hp <= 0 ? 'collect' : 'hit')
 
         if (ore.hp <= 0) {
-          ore.go.active = false
-          if (ore.phase) this.playDebrisMine(ore)
-          if (ore.sprite) ore.sprite.visible = false
-          if (ore.chip) ore.chip.visible = false
-          if (ore.label) ore.label.visible = false
-          const popY = ore.chip ? ore.chip.y : ore.go.transform.position.y
-          if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, popY, ore.mineralColor, ore.radius)
-          this.spawnPickup(ore.go.transform.position.x, popY, ore.mineralColor)
-          this.spawnPopup(ore.go.transform.position.x, popY - 18, `+1 ${this.opts.mineralSyms?.[ore.mineral] ?? ore.mineral}`)
-          this.opts.onCollect(ore.mineral)
+          this.collectOre(ore)
         } else {
           ore.flashTimer = FLASH_DURATION
           this.applyTint(ore, 0xffffff)
@@ -984,6 +979,20 @@ export class MiningController extends ScriptBehaviour {
         break
       }
     }
+  }
+
+  /** Bank an ore: laser kill, or a landed shower fragment collecting itself. */
+  private collectOre(ore: OreEntity): void {
+    ore.go.active = false
+    if (ore.phase) this.playDebrisMine(ore)
+    if (ore.sprite) ore.sprite.visible = false
+    if (ore.chip) ore.chip.visible = false
+    if (ore.label) ore.label.visible = false
+    const popY = ore.chip ? ore.chip.y : ore.go.transform.position.y
+    if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, popY, ore.mineralColor, ore.radius)
+    this.spawnPickup(ore.go.transform.position.x, popY, ore.mineralColor)
+    this.spawnPopup(ore.go.transform.position.x, popY - 18, `+1 ${this.opts.mineralSyms?.[ore.mineral] ?? ore.mineral}`)
+    this.opts.onCollect(ore.mineral)
   }
 
   private applyTint(ore: OreEntity, tint: number): void {

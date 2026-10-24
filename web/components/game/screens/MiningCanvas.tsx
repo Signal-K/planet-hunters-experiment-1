@@ -300,6 +300,8 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
                 ratePerMinute: debrisRatePerMinute(preset, debrisNow(), skyEventLocation),
                 onceMineral: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current) ? FIREBALL_FRAGMENT_ID : undefined,
                 onceHero: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current),
+                // Shower fragments collect themselves on landing; the laser is for ore and the fireball.
+                autoCollect: preset.eventId === 'orionids-2026',
               }
             },
           },

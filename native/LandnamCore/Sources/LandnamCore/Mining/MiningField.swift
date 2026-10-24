@@ -49,13 +49,15 @@ public struct MiningField: Equatable, Sendable {
 
     /// Builds a field of ore nodes weighted toward the mission's required minerals so a
     /// contract is always completable, then sprinkled with the target's other minerals.
+    /// `skyFed` names a mineral that never appears as a ground seam: it falls from the sky and is caught on landing (Orionids fragments).
     /// `debris` adds drifting shower particles of that resource on top of the normal field (SSL-475).
     public init(target: Target, required: Cargo, cargoCapacity: Int, laserTier: Int, chargeCap: Int = 30, seed: UInt64,
-                debris: (resourceId: String, count: Int)? = nil) {
+                debris: (resourceId: String, count: Int)? = nil, skyFed: String? = nil) {
         var rng = SeededRandom(seed: seed)
         var nodes: [OreNode] = []
         var nextId = 0
         func place(_ mineral: String) {
+            if mineral == skyFed { return }
             let tier = Minerals.byId[mineral]?.laserAccess ?? 1
             _ = tier
             let maxHp = 1   // SSL-538: one accepted laser hit always mines the deposit
@@ -77,6 +79,11 @@ public struct MiningField: Equatable, Sendable {
         self.nodes = nodes
         self.charge = chargeCap; self.chargeCap = chargeCap
         self.cargoCapacity = cargoCapacity; self.laserTier = laserTier; self.required = required
+    }
+
+    /// A sky-fed fragment landed: it banks itself, with no charge and no hold limit (like web, fragments never block on a full hold).
+    public mutating func catchFragment(_ mineralId: String) {
+        cargo[mineralId, default: 0] += 1
     }
 
     /// One laser strike on a node. Costs one charge; progress is hp damage equal to laser tier.

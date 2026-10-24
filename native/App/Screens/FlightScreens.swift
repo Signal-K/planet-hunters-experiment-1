@@ -259,9 +259,13 @@ struct MiningScreen: View {
         // Meteor-shower debris joins the field only inside its window and the player's local night (SSL-475).
         let shower = SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now, location: store.player.skyEventLocation) / 2).rounded(.up)))) }
         let required = mission.id == OrionidsRun.missionId ? ["orionid_debris": max(1, OrionidsRun.fragmentGoal - OrionidsRun.catches(store.player))] : mission.requires.minerals
-        let f = MiningField(target: target, required: required, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower)
+        let f = MiningField(target: target, required: required, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower, skyFed: mission.id == OrionidsRun.missionId ? "orionid_debris" : nil)
         let palette = LaserPalette.resolve(id: target.id, type: target.type, archetype: target.archetype)
         let s = MiningScene(field: f, size: size, palette: palette, landscapeKey: target.id)
+        if mission.id == OrionidsRun.missionId, let preset = SkyEvents.activePreset(at: store.now) {
+            // Shower fragments fall and bank on landing; the laser is for ore (matches web autoCollect).
+            s.fragmentRain = (preset.resourceId, SkyEvents.ratePerMinute(preset, at: store.now, location: store.player.skyEventLocation))
+        }
         s.showsOpsBrackets = !store.player.freeOperations && store.player.flightPlan.currentTry == "mining"
         s.onChange = { f in
             field = f
@@ -414,7 +418,7 @@ struct MiningGuide: View {
     private var items: [(String, String)] {
         guard isOrionids else { return Self.baseItems }
         var items = Self.baseItems
-        items.insert(("Catch Orionid debris", "Move under the blue event fragments in the moving field and fire when they cross the beam. Event catches count toward the shower run and cannot be dropped."), at: 1)
+        items.insert(("Catch Orionid debris", "Blue fragments fall from the shower and are caught when they hit the ground. No laser needed. Catches count toward the shower run and cannot be dropped."), at: 1)
         return items
     }
 

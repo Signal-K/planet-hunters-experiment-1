@@ -11,6 +11,10 @@ final class MiningScene: SKScene {
     var onTargetCue: ((String?) -> Void)?
     var onObstacleAhead: ((Bool) -> Void)?
     var reducedMotion = false
+    /// Sky-fed fragments: resource and spawn rate per minute. Nil means no rain.
+    var fragmentRain: (resourceId: String, perMinute: Double)?
+    private var rainAccumulator = 0.0
+    private var falling: [(node: SKNode, vy: CGFloat)] = []
 
     private let palette: LaserPalette.Spec
     private var scrollInput = 0.0
@@ -719,6 +723,48 @@ final class MiningScene: SKScene {
         tag.run(.sequence([.group([.moveBy(x: 0, y: 28, duration: 0.6), .fadeOut(withDuration: 0.6)]), .removeFromParent()]))
     }
 
+    /// Fragments fall with the shower, drift with the ground, and bank themselves on touching the surface.
+    private func updateRain(dt: TimeInterval, dx: CGFloat) {
+        guard let rain = fragmentRain else { return }
+        rainAccumulator += rain.perMinute / 60 * dt
+        if falling.count == 0 && rainAccumulator < 1 && clock < 1 { rainAccumulator = 1 }   // first fragment shows up straight away
+        while rainAccumulator >= 1 {
+            rainAccumulator -= 1
+            guard falling.count < 4 else { continue }
+            let hex = Minerals.byId[rain.resourceId]?.colorHex ?? "#7fd8ff"
+            let node = SKSpriteNode(texture: depositTexture(colorHex: hex, variant: falling.count, glint: true))
+            node.setScale(px * 1.4)
+            node.texture?.filteringMode = .nearest
+            node.zPosition = 30
+            node.position = CGPoint(x: CGFloat.random(in: 40...max(80, size.width - 40)), y: size.height + 20)
+            world.addChild(node)
+            falling.append((node, CGFloat.random(in: 70...100)))
+        }
+        var landed: [Int] = []
+        for i in falling.indices {
+            falling[i].node.position.x -= dx
+            falling[i].node.position.y -= falling[i].vy * CGFloat(dt)
+            if falling[i].node.position.y <= surfaceY - 6 || falling[i].node.position.x < -40 { landed.append(i) }
+        }
+        for i in landed.reversed() {
+            let (node, _) = falling.remove(at: i)
+            if node.position.x >= -40 && node.position.y <= surfaceY {
+                field.catchFragment(rain.resourceId)
+                SK.burst(at: node.position, color: LaserPalette.sk(palette.beamCore), count: 12, speed: 90, in: world)
+                let tag = SKLabelNode(text: "+1 \(Minerals.byId[rain.resourceId]?.symbol ?? "")")
+                tag.fontName = "Oxanium-ExtraBold"
+                tag.fontSize = 14
+                tag.fontColor = LaserPalette.sk(palette.beamCore)
+                tag.position = CGPoint(x: node.position.x, y: node.position.y + 24)
+                tag.zPosition = 40
+                world.addChild(tag)
+                tag.run(.sequence([.group([.moveBy(x: 0, y: 28, duration: 0.6), .fadeOut(withDuration: 0.6)]), .removeFromParent()]))
+                onChange?(field)
+            }
+            node.run(.sequence([.group([.scale(to: 0.2, duration: 0.15), .fadeOut(withDuration: 0.15)]), .removeFromParent()]))
+        }
+    }
+
     private func placeChips() {
         let span = max(track, 1)
         var labels: [(id: Int, tag: SKNode, x: CGFloat, center: CGFloat, halfWidth: CGFloat)] = []
@@ -771,6 +817,7 @@ final class MiningScene: SKScene {
         shift(surfaceDeposits, by: dx, width: midW)
         placeChips()
         updateTargetCue()
+        updateRain(dt: dt, dx: dx)
 
         let pulse = reducedMotion ? 1 : 0.82 + sin(clock * 9) * 0.18
         if clock >= flashUntil {
