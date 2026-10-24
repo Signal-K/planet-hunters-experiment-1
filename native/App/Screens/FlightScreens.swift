@@ -188,7 +188,7 @@ struct MiningScreen: View {
         let zones = HUDZones.standard
         let trainingCue = store.player.flightPlan.currentTry == "mining" ? "Fire on a labelled seam" : nil
         let order = VStack(alignment: .leading, spacing: 6) {
-            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue)
+            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue, showerCaught: store.mission?.id == OrionidsRun.missionId ? OrionidsRun.catches(store.player) : nil)
                 .onLongPressGesture { showGuide = true }
         }
         .frame(maxWidth: 220)
@@ -292,6 +292,8 @@ struct MiningActionRow: View {
     var onFire: () -> Void = {}
     var showFire = true
     var targetCue: String? = nil
+    /// Shower run: the order reads caught fragments (launch plus mined) over the full goal, like web.
+    var showerCaught: Int? = nil
 
     private var chargePct: Double { field.chargeCap > 0 ? Double(field.charge) / Double(field.chargeCap) : 0 }
 
@@ -300,8 +302,9 @@ struct MiningActionRow: View {
             Button(action: onReturn) {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(field.required.keys.sorted(), id: \.self) { id in
-                        let need = field.required[id] ?? 0
-                        let have = min(need, field.cargo[id, default: 0])
+                        let shower = id == "orionid_debris" ? showerCaught : nil
+                        let need = shower != nil ? OrionidsRun.fragmentGoal : (field.required[id] ?? 0)
+                        let have = min(need, shower ?? field.cargo[id, default: 0])
                         Text("\(Minerals.byId[id]?.name ?? id) \(have)/\(need)")
                             .font(AppFont.mono(14)).foregroundStyle(Glass.ink).lineLimit(1)
                     }

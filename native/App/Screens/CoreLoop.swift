@@ -630,7 +630,7 @@ struct DebriefScreen: View {
         let sale = HomeDelivery.marketValue(store.player, units: run == nil ? cargo : OrionidsRun.withoutFragments(cargo), now: store.now)
         let overflow = max(0, Market.storedUnits(store.player.stash) - Market.storageCapacity(store.player))
         let target = store.target
-        let status = store.player.shipDestroyed ? "Hull lost · cargo recovered" : program ? "Commissioned · instrument online" : "Docked · mission complete"
+        let status = store.player.shipDestroyed ? "Hull lost · cargo recovered" : orbital ? "Commissioned · instrument online" : "Docked · mission complete"
         let reserved = m?.requires.minerals.values.reduce(0, +) ?? 0
         let showLaser = m?.isOwnProgram == false && store.player.missionsDone >= 2 && (LaserCapacitor.units(store.player.stash) > 0 || !cargo.isEmpty)
 

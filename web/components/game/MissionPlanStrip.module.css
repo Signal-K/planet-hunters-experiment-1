@@ -57,10 +57,13 @@
     border-top: 3px solid color-mix(in srgb, var(--ln-world-hull-lit) 40%, var(--ln-world-asphalt));
     box-shadow: 0 -10px 24px color-mix(in srgb, var(--ln-world-night-top) 26%, transparent);
   }
-  .slots { flex-wrap: nowrap; width: min(100%, 1360px); }
+  /* One thin row so the deck leaves the rocket base and pad visible: no progress rail, the hold line shares the row. */
+  .host { flex-direction: row; flex-wrap: nowrap; align-items: center; padding: 8px 8px 12px; }
+  .rail { display: none; }
+  .slots { flex: 1 1 0; flex-wrap: nowrap; width: auto; max-width: 1000px; }
   .slot { display: flex; align-items: center; gap: 8px; min-height: 48px; flex: 1 1 0; padding: 0 12px; }
   .slot em { display: none; }
   .slot strong { white-space: nowrap; }
-  .hold { width: min(100%, 1056px); max-width: 100%; text-align: center; }
+  .hold { flex: 0 1 320px; width: auto; max-width: 34%; text-align: center; }
   button.slot:not(:disabled)::after { content: '\203A'; margin-left: auto; font-weight: 800; }
 }

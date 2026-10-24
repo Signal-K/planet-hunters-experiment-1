@@ -3083,6 +3083,14 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 @media (min-width: 600px) and (max-height: 640px) {
   .notification-bell { top: calc(env(safe-area-inset-top, 0px) + 8px) !important; right: 12px !important; }
 }
+/* Desktop launch review: the bell sat on the CAPACITY card, so it drops under the three stat cards. */
+@media (min-width: 600px) and (min-height: 641px) {
+  body:has([data-testid='rocket-builder-stats']) .notification-bell { top: calc(env(safe-area-inset-top, 0px) + 276px) !important; }
+}
+/* Landscape: the transient sync chip rides under the bell instead of hiding behind it. */
+@media (min-width: 600px) and (max-height: 640px) {
+  .sync-chip--floating { top: calc(env(safe-area-inset-top, 0px) + 60px); }
+}
 /* Wide enough to share the top row: sit between the gear/clock/help cluster and the francs chips, so the strip never covers Back, target or stat cards below. */
 @media (min-width: 600px) {
   .flight-plan-slot { top: calc(env(safe-area-inset-top, 0px) + 6px); left: max(200px, var(--top-chip-inset, 0px)); right: 240px; }
