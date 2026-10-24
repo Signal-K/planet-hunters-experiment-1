@@ -37,12 +37,10 @@ import Testing
         #expect(AuthoredMissions.all.map(\.id) == [
             "program-build-mars-mining-settlement",
             "program-build-remote-silo",
-            "story-astronaut-academy",
             "lnm_m3_relay_bennu_vesta",
             "lnm_m3_relay_itokawa_eros",
             "lnm_relay_psyche_ceres",
             "freeops-self-directed-mining",
-            "freeops-crewed-prospecting",
         ])
         #expect(AuthoredMissions.all.first { $0.id == "lnm_m3_relay_bennu_vesta" } == Self.beltCourierRun)
         #expect(AuthoredMissions.all.first { $0.id == "freeops-self-directed-mining" } == Self.selfDirectedMiningRun)

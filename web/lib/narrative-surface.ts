@@ -11,7 +11,6 @@ export type NarrativeRole =
   | 'base'       // the yard the loop starts and ends in
   | 'service'    // Free Ops base buildings: sell, store, refine, fit a ship
   | 'extension'  // optional, hangs off the loop, ships with its own fixture
-  | 'parked'     // no player entry point, no tutorial step; delete unless re-harnessed
   | 'dev'
 
 export const NARRATIVE_ROLE: Record<Screen, NarrativeRole> = {
@@ -39,8 +38,6 @@ export const NARRATIVE_ROLE: Record<Screen, NarrativeRole> = {
   galaxy: 'extension',
   'asteroid-discovery': 'extension',
   'saturn-storm-search': 'extension',
-  academy: 'parked',
-  skills: 'parked',
   'narrative-ledger': 'dev',
 }
 

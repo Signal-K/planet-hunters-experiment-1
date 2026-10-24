@@ -56,13 +56,6 @@ public enum MissionBoard {
             if m.sequence > seq { return "Complete \(m.sequence - seq) more guided contract\(m.sequence - seq == 1 ? "" : "s")" }
         }
         switch m.id {
-        case AuthoredMissions.academyStoryId:
-            if p.placed.contains("astronaut-academy") && !p.crew.isEmpty { return "Completed" }
-            if !Academy.affinityUnlocked(p) { return "Reach client level 2 with two clients" }
-        case AuthoredMissions.crewedProspectingId:
-            if !p.placed.contains("astronaut-academy") { return "Build the Astronaut Academy first" }
-            let c = crewStatus(m.requires.crew, crew: p.crew)
-            if !c.met { return c.reason }
         default: break
         }
         if let plan = m.construction, m.isOwnProgram {
@@ -79,7 +72,7 @@ public enum MissionBoard {
                                        launchpadUpgraded: p.launchpadUpgraded, launchpadLevel: BuildingLevels.level(p, "launchpad"), skills: p.unlockedSkillNodes).count
         var reason = gate(m, player: p, now: now)
         // Academy setup has no flight target; everything else needs somewhere reachable to fly.
-        if reason == nil, targets == 0, m.id != AuthoredMissions.academyStoryId, m.targetId != nil || m.requires.maxOrbit > 0 {
+        if reason == nil, targets == 0, m.targetId != nil || m.requires.maxOrbit > 0 {
             reason = "No reachable target with your current rocket parts"
         }
         return Entry(mission: m, unlocked: reason == nil, lockedReason: reason, feasibleTargets: targets)

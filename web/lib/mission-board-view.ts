@@ -2,11 +2,9 @@ import type { Catalog } from '@/lib/catalog'
 import type { Mission } from '@/lib/data/types'
 import type { Player } from '@/lib/game-types'
 import {
-  ACADEMY_INTRO_MISSION_ID,
   RESOURCE_FOCUS_MISSION_ID,
   SELF_DIRECTED_MINING_MISSION_ID,
 } from '@/lib/data/missions'
-import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
 import { ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
 import {
   SATURN_IMAGER_MISSION_ID,
@@ -26,7 +24,7 @@ import { SPACETOBER_PEAK_BADGE, SPACETOBER_WEEK_BADGE, type OrionidsFind } from 
 import { WSW_EVENT_IDS, WSW_RANGE_LABEL, isWorldSpaceWeekUpcoming, wswBanner, wswChipsForMission } from '@/lib/wsw'
 
 export type ProgramStepState = 'done' | 'current' | 'available' | 'locked'
-export type ProgramStepKind = 'instrument' | 'academy' | 'build' | 'mining' | 'focus'
+export type ProgramStepKind = 'instrument' | 'build' | 'mining' | 'focus'
 
 export interface ProgramStep {
   id: string
@@ -143,19 +141,6 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
       state: done ? 'done' : locked ? 'locked' : 'available',
       kind: 'instrument',
     }
-  })
-
-  const academy = missionById(catalog, ACADEMY_INTRO_MISSION_ID)
-  const academyDone = (player.placed ?? []).includes('astronaut-academy')
-  const academyLocked = !academyDone && !academyAffinityUnlocked(player)
-  steps.push({
-    id: ACADEMY_INTRO_MISSION_ID,
-    title: academy?.title ?? 'Train the First Astronaut',
-    detail: academy?.programReward?.outcome ?? 'Astronaut Academy online · crew training unlocked',
-    brief: academy?.brief,
-    lockLine: academyLocked ? (academy?.unlockAt ?? 'Reach client level 2 with two clients') : null,
-    state: academyDone ? 'done' : academyLocked ? 'locked' : 'available',
-    kind: 'academy',
   })
 
   const builds = catalog.missions.filter(mission => mission.construction && !mission.client)

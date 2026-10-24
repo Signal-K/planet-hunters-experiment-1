@@ -41,7 +41,6 @@ describe('R1 mission setup', () => {
     const board = read('./MissionBoard.tsx')
 
     expect(routes).toContain('<MissionBoard')
-    expect(routes).toContain("id === ACADEMY_INTRO_MISSION_ID ? game.go('academy')")
     expect(routes).not.toContain('Choose a contract')
     expect(routes).not.toContain('contractGallery')
     expect(styles).not.toContain('.contractGallery')

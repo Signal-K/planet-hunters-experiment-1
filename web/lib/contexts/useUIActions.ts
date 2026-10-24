@@ -54,7 +54,7 @@ export function useUIActions(
     syncSubsurface(screen)
     setState(s => {
       if (screen === 'hangar') {
-        hangarReturnView.current = s.screen === 'launchpad' || s.screen === 'academy'
+        hangarReturnView.current = s.screen === 'launchpad'
           ? s.screen
           : 'hub'
       }

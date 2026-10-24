@@ -318,7 +318,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
-    : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'galaxy' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
+    : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'galaxy' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : 'hub'
   // Price alerts fire when a spot price reaches the target, including as supply pressure recovers over time.
   const hasPriceAlerts = (game.player.priceAlerts ?? []).some(a => a.firedAt == null)
   const checkPriceAlerts = game.checkPriceAlerts

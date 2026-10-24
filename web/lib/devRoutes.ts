@@ -42,8 +42,6 @@ export const MISSION_ROUTE_SHOTS: Record<string, Record<string, string>> = {
 export const UI_ROUTE_PRESETS: Record<string, string> = {
   'mission-board': 'ui-mission-board',
   'target-picker': 'ui-target-picker',
-  'skill-tree': 'ui-skill-tree',
-  skills: 'ui-skill-tree',
   'tess-discovery': 'ui-tess-discovery',
   'instrument-hub': 'ui-instrument-hub',
   'saturn-storm-search': 'ui-saturn-storm-search',

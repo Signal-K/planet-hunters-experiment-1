@@ -183,12 +183,6 @@ describe('resolvePreset — recent UI surfaces', () => {
     expect(p.player!.missionsDone).toBe(2)
   })
 
-  it('opens the new Skill Tree with research progress and unlocked nodes', () => {
-    const p = resolvePreset('ui-skill-tree')!
-    expect(p.screen).toBe('skills')
-    expect(p.player!.researchXP).toBeGreaterThan(0)
-    expect(p.player!.unlockedSkillNodes).toContain('ship-customizer-1')
-  })
 
   it('opens the launch review with a real mission and target loaded', () => {
     const p = resolvePreset('ui-target-picker')!
@@ -223,7 +217,6 @@ describe('dev shortcut routes', () => {
 
   it('maps dedicated UI URLs to recent UI preset keys', () => {
     expect(presetForUiRoute(['mission-board'])).toBe('ui-mission-board')
-    expect(presetForUiRoute(['skill-tree'])).toBe('ui-skill-tree')
     expect(presetForUiRoute(['ship-customizer'])).toBe('ship-customizer')
     expect(presetForUiRoute(['hangar'])).toBe('ui-hangar-assembly')
   })

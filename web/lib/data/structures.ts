@@ -63,16 +63,6 @@ export const STRUCTURES: StructureBlueprint[] = [
     unlockTrigger: 'onboarding-missions',
     description: 'Runs your satellites and telescopes. Build it before you launch one.',
   },
-  {
-    id: 'astronaut-academy',
-    name: 'Astronaut Academy',
-    kind: 'astronaut-academy',
-    cost: STRUCTURE_PRICES.academy,
-    costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
-    unlocksAt: 'Reach client level 2 with two clients, then research it',
-    unlockTrigger: 'academy-research',
-    description: 'Trains named astronauts, manages the roster, and coordinates Base staffing.',
-  },
 ]
 
 /** One-off cost to permanently upgrade the launchpad. Previously duplicated as

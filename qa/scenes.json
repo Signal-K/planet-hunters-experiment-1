@@ -235,22 +235,6 @@
    "tickets": []
   },
   {
-   "id": "skill-tree",
-   "name": "Skill tree",
-   "flow": "progression",
-   "web": "ui-skill-tree",
-   "native": "skill-tree-phone",
-   "tickets": []
-  },
-  {
-   "id": "academy",
-   "name": "Academy",
-   "flow": "progression",
-   "web": "ui-academy",
-   "native": "academy-phone",
-   "tickets": []
-  },
-  {
    "id": "refinery",
    "name": "Refinery",
    "flow": "progression",
@@ -450,6 +434,118 @@
    "flow": "core-loop",
    "web": "cp-late",
    "native": "cp-late",
+   "tickets": []
+  },
+  {
+   "id": "asteroid-discovery",
+   "name": "Asteroid Discovery",
+   "flow": "instruments",
+   "web": "ui-asteroid-discovery",
+   "native": "asteroid-discovery-phone",
+   "tickets": []
+  },
+  {
+   "id": "delivery",
+   "name": "Cargo Delivery",
+   "flow": "core-loop",
+   "web": "transport-delivery",
+   "native": "transport-delivery-live",
+   "tickets": []
+  },
+  {
+   "id": "fab",
+   "name": "Assembly",
+   "flow": "core-loop",
+   "web": "telescope-fab",
+   "native": "telescope-fab-live",
+   "tickets": []
+  },
+  {
+   "id": "galaxy",
+   "name": "Galaxy Map",
+   "flow": "instruments",
+   "web": "ui-tess-discovery",
+   "native": "tess-discovery-phone",
+   "tickets": []
+  },
+  {
+   "id": "hangar",
+   "name": "Hangar",
+   "flow": "ship",
+   "web": "ui-hangar-assembly",
+   "native": "hangar-workshop-phone",
+   "tickets": []
+  },
+  {
+   "id": "hub-subsurface",
+   "name": "Base Subsurface",
+   "flow": "core-loop",
+   "web": "ui-subsurface",
+   "native": "hub-silo-surface-phone",
+   "tickets": []
+  },
+  {
+   "id": "instrument-hub",
+   "name": "Control Station",
+   "flow": "instruments",
+   "web": "ui-instrument-hub",
+   "native": "control-station-phone",
+   "tickets": []
+  },
+  {
+   "id": "mission-history",
+   "name": "Mission Log",
+   "flow": "records",
+   "web": "ui-mission-log",
+   "native": "mission-log-phone",
+   "tickets": []
+  },
+  {
+   "id": "missions",
+   "name": "Mission Board",
+   "flow": "core-loop",
+   "web": "ui-mission-board",
+   "native": "mission-board-live",
+   "tickets": []
+  },
+  {
+   "id": "narrative-ledger",
+   "name": "Ledger",
+   "flow": "records",
+   "web": "ui-ledger",
+   "native": "ledger-phone",
+   "tickets": []
+  },
+  {
+   "id": "rover-survey",
+   "name": "Rover Survey",
+   "flow": "field",
+   "web": "ui-rover-survey",
+   "native": "rover-field-phone",
+   "tickets": []
+  },
+  {
+   "id": "saturn-storm-search",
+   "name": "Saturn Storm Search",
+   "flow": "instruments",
+   "web": "ui-saturn-storm-search",
+   "native": "saturn-imager-phone",
+   "tickets": []
+  },
+  {
+   "id": "targets",
+   "name": "Solar System Map",
+   "flow": "core-loop",
+   "web": "ui-target-picker",
+   "native": "mission-board-live",
+   "tickets": []
+  },
+  {
+   "id": "transit",
+   "name": "Transit",
+   "flow": "core-loop",
+   "web": "sandbox-transit",
+   "native": "transit-live",
    "tickets": []
   }
  ],

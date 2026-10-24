@@ -59,8 +59,6 @@ public enum Archive {
             PathNode(title: "Free Operations", detail: "Finish the guided path to fly your own programme with no client.", entryId: "mission:freeops-self-directed-mining", done: p.freeOperations),
             PathNode(title: "Prospector rocket", detail: "A bigger hull and a tier 2 laser for deeper contracts.", entryId: "rocket:prospector", done: (p.rocketPurchaseCounts["prospector"] ?? 0) > 0 || p.stagedRockets.contains { $0.rocketId == "prospector" }),
             PathNode(title: "Your own instrument", detail: "Launch a telescope or imager and classify real data.", entryId: "instrument:transit", done: done("instrument:transit") || done("instrument:deep-space") || done("instrument:saturn")),
-            PathNode(title: "Astronaut Academy", detail: "Research and build the Academy, then train a crew.", entryId: "structure:astronaut-academy", done: p.placed.contains("astronaut-academy")),
-            PathNode(title: "Crewed prospecting", detail: "Fly a trained specialist to Eros for a frontier bonus.", entryId: "mission:freeops-crewed-prospecting", done: p.completedMissions.contains { $0.id == "freeops-crewed-prospecting" }),
             PathNode(title: "Off-world builds", detail: "Settlement, remote silo, then a refinery near the ore.", entryId: "mission:program-build-mars-mining-settlement",
                      done: Set(ConstructionMissions.records(p).map(\.structureKind)).isSuperset(of: ["mining-settlement", "mineral-silo"])),
         ]
@@ -91,9 +89,6 @@ public enum Archive {
     static func missionSteps(_ m: Mission, _ catalog: Catalog) -> [String] {
         var s: [String] = []
         let launchpad = m.isOwnProgram ? "Launchpad" : "Launchpad → Mission board"
-        if m.id == AuthoredMissions.academyStoryId {
-            return ["Build the Astronaut Academy at Base once it is researched.", "Fund its first day-long session in the Academy.", "Collect the finished session to graduate your first named astronaut."]
-        }
         s.append("Open \(launchpad) and take “\(m.title)”.")
         if let plan = m.construction {
             s.append("Keep \(list(plan.requiredMaterials)) in storage (mine or buy it; the kit leaves your stash on delivery).")

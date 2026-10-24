@@ -717,21 +717,6 @@ enum SceneCatalog {
         scene("rover-touchdown-phone", 874) {
             RoverFieldScreen(initial: Prospecting()).environment(GameStore(state: GameState()))
         },
-        scene("skill-tree-phone", 1300) {
-            var gs = basePlayer(); gs.player.unlockedSkillNodes = ["laser-charge-1"]
-            gs.player.tessClassifications = ["t": TessClassification(subjectId: "t", verdict: .planet, ranges: [], submittedAt: 1)]
-            return SkillTreeScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
-        },
-        scene("academy-phone", 1000) {
-            let gs = Academy.migrate(basePlayer(), now: t0)
-            let st = GameStore(state: Academy.applyHire(gs, sourceId: "nasa", now: t0), clock: { 1_760_000_000_000 })
-            return AcademyScreen(at: t0).environment(st).environment(\.flatLayout, true)
-        },
-        scene("academy-landing-phone", 1000) {
-            var gs = Academy.migrate(basePlayer(), now: t0)
-            gs.player.missionsDone = 4; gs.player.researchXP = 150
-            return AcademyScreen(at: t0, startTab: .partners).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true)
-        },
         scene("launchpad-phone", 874) {
             var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.missionsDone = 3
             return RocketBuilderScreen(launchEnabled: false, onLaunch: {}, onChooseMission: {}).environment(GameStore(state: gs)).environment(\.flatLayout, true)

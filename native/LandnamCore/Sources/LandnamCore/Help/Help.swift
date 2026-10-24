@@ -73,14 +73,6 @@ public enum Help {
             HelpCard(title: "Hand over the cargo", body: "The cargo goes to the client at this body. Start the unload and wait for the timer. Pay arrives when the whole order is delivered."),
             HelpCard(title: "What the client wants", body: "The order says how much of which ore the client needs. Bring all of it so the full payout lands."),
         ]),
-        .skills: HelpTopic(id: "skills", title: "Skill tree", cards: [
-            HelpCard(title: "Spend points on unlocks", body: "Points come from research and play. Pick a node to see what it unlocks, then unlock it. Unlocks are permanent."),
-            HelpCard(title: "License grade", body: "Your license grade sets how far up the tree you can go. Upgrade it to open the next tier."),
-        ]),
-        .academy: HelpTopic(id: "academy", title: "Astronaut academy", cards: [
-            HelpCard(title: "Train and hire crew", body: "Roster shows your crew. Training raises a branch. Hiring adds someone new. Both cost francs and time."),
-            HelpCard(title: "Unlock it first", body: "The academy opens once it is researched and the building is placed on the base. Until then the screen shows it as locked."),
-        ]),
         .surfaceOps: HelpTopic(id: "surface-ops", title: "Surface operations", cards: [
             HelpCard(title: "Sites and access", body: "Each site needs access before you can work there. Buy access, then send a ferry with what the site needs."),
             HelpCard(title: "Logistics and field", body: "Logistics moves cargo between the base and a site. Field runs an operation on the ground once the site is ready."),

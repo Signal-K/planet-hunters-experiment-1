@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
-import { ACADEMY_INTRO_MISSION_ID, canAffordStructure, ROCKET_MODELS, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
+import { canAffordStructure, ROCKET_MODELS, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
 import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
@@ -39,14 +39,12 @@ const MissionOperationRoutes = dynamic(() => import('@/components/game/MissionOp
 const RefineryScreen = dynamic(() => import('@/components/game/screens/RefineryScreen'), { loading: ScreenLoading })
 const MarketScreen = dynamic(loadMarketScreen, { loading: ScreenLoading })
 const HangarScreen = dynamic(() => import('@/components/game/screens/HangarScreen'), { loading: ScreenLoading })
-const SkillTreeScreen = dynamic(() => import('@/components/game/screens/SkillTreeScreen'), { loading: ScreenLoading })
 const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(() => import('@/components/game/screens/InstrumentHubScreen'), { loading: ScreenLoading })
 const TessDiscoveryScreen = dynamic(() => import('@/components/game/screens/TessDiscoveryScreen'), { loading: ScreenLoading })
 const SaturnStormSearchScreen = dynamic(() => import('@/components/game/screens/SaturnStormSearchScreen'), { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(() => import('@/components/game/screens/AsteroidDiscoveryScreen'), { loading: ScreenLoading })
 const SurfaceOpsScreen = dynamic(loadSurfaceOpsScreen, { loading: ScreenLoading })
-const AcademyScreen = dynamic(() => import('@/components/game/screens/AcademyScreen'), { loading: ScreenLoading })
 const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
@@ -277,9 +275,7 @@ function ScreenBody({
             // Mission first: the hangar opens on its rocket choice only once a mission and
             // destination are set up. Otherwise it starts at the contract board.
             if (building === 'hangar') return game.mission && game.target ? game.go('hangar') : game.goToMissions()
-            if (building === 'skills') return game.go('skills')
             if (building === 'deep-space-telescope') return game.go('asteroid-discovery')
-            if (building === 'academy' || building === 'astronaut-academy') return game.go('academy')
             if (building === 'missions') {
               // Unlike Launchpad below, a run in flight does NOT bounce the
               // player away from the Mission Board — they may reasonably want
@@ -526,27 +522,6 @@ function ScreenBody({
         />
       )
 
-    case 'skills':
-      return (
-        <SkillTreeScreen
-          skillPoints={game.player.skillPoints ?? 0}
-          unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
-          onUnlock={game.unlockSkillNode}
-          onBack={() => game.goBack()}
-          researchXP={game.player.researchXP ?? 0}
-          licenseGrade={game.player.licenseGrade ?? 'Grade I'}
-          onUpgradeLicenseGrade={game.upgradeLicenseGrade}
-          firsts={{
-            firstMissionDone: game.player.missionsDone > 0,
-            firstSatelliteLaunched: !!game.player.transitSatelliteLaunchedAt,
-            firstTessClassification: Object.keys(game.player.tessClassifications ?? {}).length > 0,
-            firstBlueprintUnlocked: (game.player.unlockedBlueprints ?? []).length > 0,
-            refineryBuilt: game.player.refineryBuilt,
-            launchpadUpgraded: game.player.launchpadUpgraded,
-          }}
-        />
-      )
-
     case 'narrative-ledger':
       return <NarrativeLedgerScreen onBack={() => game.goBack()} />
 
@@ -584,7 +559,6 @@ function ScreenBody({
         <LaunchpadScreen
           onBack={() => game.goBack()}
           onPick={(id, freeHaulDisposition) => {
-            if (id === ACADEMY_INTRO_MISSION_ID) return game.go('academy')
             game.onPickMission(id, freeHaulDisposition)
           }}
           onViewContracts={() => game.goToMissions()}
@@ -639,28 +613,6 @@ function ScreenBody({
         />
       )
       }
-
-    case 'academy':
-      return (
-        <AcademyScreen
-          player={game.player}
-          catalog={game.catalog}
-          onBack={() => game.goBack()}
-          onBuild={() => game.go('build')}
-          onOpenHangar={() => game.go('hangar')}
-          onResearch={game.researchAcademy}
-          onFunding={game.setAcademyFunding}
-          onHire={game.hireCrew}
-          onRehire={game.rehireCrew}
-          onTrain={game.startCrewTraining}
-          onTrainCandidate={game.startCandidateTraining}
-          onCollectTraining={game.collectCrewTraining}
-          onResearchCrewModule={game.researchCrewModule}
-          onResearchLanding={game.researchLanding}
-          onAssign={game.assignCrewToStructure}
-          onShareCharts={game.shareChartsWithClient}
-        />
-      )
 
     case 'surface-ops':
       return (

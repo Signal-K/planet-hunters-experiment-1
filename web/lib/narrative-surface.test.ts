@@ -9,7 +9,4 @@ describe('narrative surface', () => {
   it('has at least one screen for every stop of the spine', () => {
     expect(SPINE.filter(role => screensWithRole(role).length === 0)).toEqual([])
   })
-  it('parks only what the 2026-10-24 decision parks', () => {
-    expect(screensWithRole('parked').sort()).toEqual(['academy', 'skills'])
-  })
 })

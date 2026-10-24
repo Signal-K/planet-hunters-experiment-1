@@ -157,7 +157,6 @@ export function authoredMission(id: string): Mission {
 // Free Ops self-directed mining — no client, no daily limit, no cooldown.
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
 export const RESOURCE_FOCUS_MISSION_ID = 'focus-resource-mining'
-export const ACADEMY_INTRO_MISSION_ID = 'story-astronaut-academy'
 
 const remoteSiloBlueprint = { requiredMaterials: { aluminium: 18, iron: 12, copper: 6 } }
 
@@ -200,22 +199,6 @@ export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
 
 export const AUTHORED_MISSIONS: Mission[] = [
   ...OWN_PROGRAM_BUILD_MISSIONS,
-  {
-    id: ACADEMY_INTRO_MISSION_ID,
-    title: 'Train the First Astronaut',
-    brief: 'Establish the Astronaut Academy at Base, fund its first day-long session, and graduate a named astronaut into your roster.',
-    tag: 'STORY',
-    difficulty: 'L1',
-    locked: true,
-    sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Reach client level 2 with two clients',
-    requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 0 },
-    programReward: {
-      researchXP: 0,
-      outcome: 'Astronaut Academy online · crew training unlocked',
-    },
-    payout: { francs: 0, affinity: 0 },
-  },
   authoredMission('lnm_m3_relay_bennu_vesta'),
   {
     id: 'lnm_m3_relay_itokawa_eros',
@@ -269,26 +252,6 @@ export const AUTHORED_MISSIONS: Mission[] = [
   },
   // Free Ops self-directed mining: shared/authoring/missions/free-mining.toml
   authoredMission(SELF_DIRECTED_MINING_MISSION_ID),
-  {
-    id: 'freeops-crewed-prospecting',
-    title: 'Crewed Prospecting Flight',
-    brief: 'Ferrum wants a trained mining specialist aboard to assess a surface before automated construction begins. The first qualified astronaut to reach Eros earns a frontier bonus.',
-    client: 'ferrum-orbital-construction',
-    tag: 'CREW',
-    difficulty: 'L2',
-    locked: false,
-    sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Build the Astronaut Academy and fit Crew Quarters',
-    targetId: 'eros',
-    requires: {
-      minerals: { nickel: 2 },
-      cargo_min: 2,
-      drill_tier: 1,
-      max_orbit: 2,
-      crew: { branch: 'mining', minTier: 1, minLevel: 1 },
-    },
-    payout: { francs: missionPayoutFloor(4), affinity: 4 },
-  },
 ]
 
 export const MISSIONS: Mission[] = [...generateMissions(), ...AUTHORED_MISSIONS, ...generateFreeOpsMissions(), ...generateSelfDirectedMiningPool()]

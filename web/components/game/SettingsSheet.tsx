@@ -301,22 +301,6 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
               </div>
             </section>
 
-            {game.player.missionsDone > 0 && (
-              <section>
-                <h3 className="ops-settings__label">Program</h3>
-                <div className="ops-settings__panel">
-                  <Row>
-                    <div className="ops-settings__copy">
-                      <div className="ops-settings__name">Skill tree</div>
-                      <div className="ops-settings__sub" data-testid="menu-skill-points">
-                        {(game.player.skillPoints ?? 0) > 0 ? `${game.player.skillPoints} skill points available` : 'Spend skill points on upgrades'}
-                      </div>
-                    </div>
-                    <button type="button" className="ops-settings__btn" onClick={() => { onClose(); game.go('skills') }}>Open</button>
-                  </Row>
-                </div>
-              </section>
-            )}
 
             {showDebug && (
               <section>

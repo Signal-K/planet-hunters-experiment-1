@@ -199,37 +199,4 @@ describe('buildRuntimeCatalog', () => {
     expect(catalog.missions.some(mission => mission.id === 'freeops-self-directed-mining')).toBe(true)
   })
 
-  it('does not add diplomacy premiums or affinity-gated joint missions', () => {
-    const clientMission = STATIC_CATALOG.missions.find(mission =>
-      !!mission.client
-      && !!mission.targetId
-      && STATIC_CATALOG.clients[mission.client]?.suppliesCrew,
-    )!
-    const clientId = clientMission.client!
-    const diplomat = createCrewMember({
-      id: 'crew-diplomat',
-      crewClass: 'astronaut',
-      selfTrained: true,
-      now: Date.now(),
-    })
-    const player = {
-      ...DEFAULT_STATE.player,
-      freeOperations: true,
-      crew: [diplomat],
-      structureCrewAssignments: { diplomacy: diplomat.id },
-      clientMissions: { [clientId]: 5 },
-      sharedChartsByClient: { [clientId]: 1 },
-    }
-    const catalog = buildRuntimeCatalog({
-      catalog: STATIC_CATALOG,
-      freeOperations: true,
-      missionsDone: 4,
-      player,
-    })
-
-    const improved = catalog.missions.find(mission => mission.id === clientMission.id)!
-    expect(improved.payout.francs).toBe(clientMission.payout.francs)
-    const joint = catalog.missions.find(mission => mission.id === `joint-${clientId}-${clientMission.id}`)
-    expect(joint).toBeUndefined()
-  })
 })

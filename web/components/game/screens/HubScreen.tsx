@@ -343,16 +343,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         onClick: () => onFocusBuilding('deep-space-telescope'),
       }
     }
-    if (kind === 'astronaut-academy') {
-      const activeTraining = player.crewTraining?.length ?? 0
-      return {
-        kind, label: 'Academy',
-        sub: activeTraining > 0 ? `${activeTraining} TRAINING` : player.academyFunded ? 'FUNDED' : 'PAUSED',
-        status: (activeTraining > 0 ? 'warn' : player.academyFunded ? 'ok' : 'info') as 'ok' | 'warn' | 'info',
-        w: 88,
-        onClick: () => onFocusBuilding('academy'),
-      }
-    }
     return {
       kind, label: kind,
       sub: 'BUILT',

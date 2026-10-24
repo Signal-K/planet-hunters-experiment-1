@@ -163,7 +163,6 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-free-ops-fab', label: 'Free Ops launch', hint: 'Free Ops with no mission opens the launch route and lands on the Mission Board', stage: 'free-ops' },
       { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
       { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
-      { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-target-picker', label: 'Launch Review', hint: 'Launch review (the target picker is folded in) with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-rover-survey', label: 'Rover Survey', hint: 'Starter-rover live TakeOn field — survey before ship-laser extraction', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
@@ -173,7 +172,6 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-instrument-hub', label: 'Control Station', hint: 'One hub for telescopes and satellites. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-rover', label: 'Orionids: rover survey', hint: 'Orionids surface observation on Eros with the field rover', stage: 'free-ops' },
       { key: 'ui-orionids-events-stage1', label: 'Orionids: rover step', hint: 'Mission board at event stage 1: Events tab offers the Orionids surface observation with the rover', stage: 'free-ops' },
@@ -544,29 +542,6 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
-    case 'ui-skill-tree':
-      return {
-        screen: 'skills',
-        player: {
-          ...POST_ONBOARDING_PLAYER,
-          missionsDone: 3,
-          researchXP: 260,
-          skillPoints: 3,
-          licenseGrade: 'Grade II',
-          unlockedSkillNodes: ['laser-capacitor-1', 'ship-customizer-1'],
-          refineryBuilt: true,
-          launchpadUpgraded: true,
-          transitSatelliteLaunchedAt: Date.now(),
-        },
-        tutorial: false,
-        doneSteps: TRAINING_DONE,
-        missionId: null,
-        targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null,
-        popup: null,
-      }
-
     case 'ui-target-picker':
       return {
         screen: 'targets',
@@ -682,19 +657,6 @@ function fixture(name: string): Partial<GameState> | null {
         screen: 'asteroid-discovery',
         visualFixture: 'asteroid',
         player: ASTEROID_DISCOVERY_PLAYER,
-        tutorial: false,
-        doneSteps: TRAINING_DONE,
-        missionId: null,
-        targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null,
-        popup: null,
-      }
-
-    case 'ui-academy':
-      return {
-        screen: 'academy',
-        player: ACADEMY_PLAYER,
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

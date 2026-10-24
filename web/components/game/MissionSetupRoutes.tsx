@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
-import { ACADEMY_INTRO_MISSION_ID, isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
+import { isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
 import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
@@ -62,7 +62,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
       selectedIndex={relay.selectedIndex}
       onSelectRelative={relay.selectRelativeSignal}
       onSelectMission={relay.selectSignal}
-      onAccept={(id, disposition) => id === ACADEMY_INTRO_MISSION_ID ? game.go('academy') : game.onPickMission(id, disposition)}
+      onAccept={(id, disposition) => game.onPickMission(id, disposition)}
       onClose={() => game.goBack()}
       onOpenLog={() => game.go('mission-history')}
       onOpenBuild={() => game.go('build')}

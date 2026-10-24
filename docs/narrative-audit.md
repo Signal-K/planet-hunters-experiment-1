@@ -11,13 +11,13 @@ This file records the audit evidence. Screen classification is enforced in `web/
 
 ## Findings
 
-1. **The earlier version of this file overclaimed.** It listed "Applied overhaul" for the five-stop loop. What shipped was the harness registry and Studio contract. The player-facing tutorial still walks 14 steps over 12 screens (launchpad, intro, build, hub, missions, fab, targets, rover-survey, mining, debrief, transit, landing, delivery). The five stops exist as a rule, not yet as the experience.
-2. **Parked systems are fully reachable.** Academy opens from the mission board Program tab and from the Academy building. Skills opens from Settings. A catalog mission (`story-astronaut-academy`) and a crew mission (`freeops-crewed-prospecting`) route into them. "Parked" in `docs/agents/product.md` was a sentence, not a state.
-3. **The mining tutorial contradicts the rover rule.** Step `mine-survey` sends the first-time player to rover-survey, while the standing rule is that rover/Takeon is a separate surface mode and never hijacks laser mining.
+1. **The earlier version of this file overclaimed.** It listed "Applied overhaul" for the five-stop loop. What shipped was the harness registry and Studio contract. A first mission still crosses nine screens (intro, build, hub, missions, fab, targets, mining, debrief) plus transit, landing and delivery on the way home. The five stops exist as a rule, not yet as the experience. The remaining work is the Plan, Launch and Result merges in SSL-675.
+2. **Parked systems were fully reachable.** Academy opened from the mission board and the Academy building, Skills from Settings, and two catalog missions routed into them. "Parked" was a sentence, not a state. **Resolved 2026-10-24: both screens, their scenes, missions, help, presets and the Academy building are deleted on web and iOS** (SSL-676). The crew and skill state fields stay in saves so old saves load; the dead game logic behind them is the next removal.
+3. **A tutorial hint pointed at the rover.** The `mine-survey` hint existed in the mining try; the flow itself only routes to the rover for missions that declare a starter-rover survey. The hint stays because survey missions do enter the rover screen. First-run mining never entered the rover.
 4. **Two narratives were live at once.** The operating model says Earth refinery L1, sites, deeds and treasury are live; the five-stop note said refinery and settlements were parked. Both cannot be true.
 5. **No contractor wording remains in player copy.** Only the legacy-save migration in `game-state.ts` mentions it, which is correct.
 6. **Narrative Ledger is dev-only** (`dev: true` route) and is accurate: client growth planned, market/refining/treasury adapting.
-7. **Registry gaps (SSL-677):** 15 scene TOMLs have no `qa/scenes.json` row (Hangar, Delivery, Skills, Missions, Targets and others).
+7. **Registry gaps (SSL-677): resolved.** 14 scene TOMLs had no registry row; all are registered and a test enforces it. Hub subsurface and Targets share an iOS fixture with the Hub shaft and Mission board because iOS has no dedicated scene for them.
 
 ## Decisions
 
@@ -28,7 +28,7 @@ This file records the audit evidence. Screen classification is enforced in `web/
 | D3 | Rover-survey leaves the mining tutorial. It stays an extension reached from Surface Ops. Laser mining is the only first-run Work verb. |
 | D4 | **Base services stay** (Free Ops only): Exchange, Earth refinery L1, Hangar, Mission log, subsurface. They are places in the yard, never mission tracks. |
 | D5 | **Extensions stay, each needing its own fixture:** Instruments and citizen science (an instrument feed, not a mission type), Sites and deeds with treasury, Surface Ops, Rover. |
-| D6 (SSL-676) | **Parked: Academy and Skills.** Remove every player entry point (mission board Program step, Academy building focus, Settings row) and the two catalog missions. Delete the code at the end of cycle 4 unless an approved independent harness exists. Crew keep no citizen-science role. |
+| D6 (SSL-676) | **Removed: Academy and Skills.** Deleted outright rather than parked (Liam, 2026-10-24: remove everything removable). Crew keep no citizen-science role. |
 | D7 | **Not started and not to be presented as shipped:** daily client growth, completed-build event feed, treasury-funded loans and contribution rewards, off-world refinery, colonies, settlement build missions (`program-build-mars-mining-settlement`). The ledger carries their state. |
 | D8 | **Mission kinds are four:** client contract (extraction, transport), Free Ops mining, event variant (Orionids is a mining run), own-program build. Nothing else gets a mission tag. |
 | D9 | Narrative decisions live in ZenNotes. This file holds evidence. Do not add a third copy. |

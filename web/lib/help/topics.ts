@@ -211,22 +211,6 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       { title: 'Collect when done', body: 'Finished goods wait for you. Collect them to add them to the stash. Nothing is lost while you are away.' },
     ],
   },
-  skills: {
-    id: 'skills',
-    title: 'Skill tree',
-    cards: [
-      { title: 'Spend points on unlocks', body: 'Points come from research and play. Pick a node to see what it unlocks, then unlock it. Unlocks are permanent.' },
-      { title: 'License grade', body: 'Your license grade sets how far up the tree you can go. Upgrade it to open the next tier.' },
-    ],
-  },
-  academy: {
-    id: 'academy',
-    title: 'Astronaut academy',
-    cards: [
-      { title: 'Train and hire crew', body: 'Roster shows your crew. Training raises a branch. Hiring adds someone new. Both cost francs and time.' },
-      { title: 'Unlock it first', body: 'The academy opens once it is researched and the building is placed on the base. Until then the screen shows it as locked.' },
-    ],
-  },
   'surface-ops': {
     id: 'surface-ops',
     title: 'Surface operations',

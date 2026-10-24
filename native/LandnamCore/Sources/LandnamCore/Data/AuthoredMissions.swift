@@ -7,8 +7,6 @@ import Foundation
 public enum AuthoredMissions {
     public static let transportSequence = MissionGenerator.transportSequence
     public static let selfDirectedMiningId = "freeops-self-directed-mining"
-    public static let crewedProspectingId = "freeops-crewed-prospecting"
-    public static let academyStoryId = "story-astronaut-academy"
     public static let remoteSiloBuildId = "program-build-remote-silo"
     public static let marsSettlementBuildId = "program-build-mars-mining-settlement"
     public static let buildTimeMs = 45 * 60 * 1000
@@ -58,13 +56,6 @@ public enum AuthoredMissions {
     }()
 
     public static let all: [Mission] = programBuilds + [
-        Mission(id: academyStoryId, title: "Train the First Astronaut",
-                brief: "Establish the Astronaut Academy at Base, fund its first day-long session, and graduate a named astronaut into your roster.",
-                client: nil, tag: "STORY", difficulty: "L1", locked: true, sequence: MissionGenerator.freeOpsMissionSequence,
-                unlockAt: "Reach client level 2 with two clients", targetId: nil, deliveryTargetId: nil,
-                requires: MissionRequirements(minerals: [:], cargoMin: 0, drillTier: 1, maxOrbit: 0),
-                payout: MissionPayout(francs: 0, affinity: 0), construction: nil, payload: nil,
-                programReward: ProgramReward(researchXP: 0, outcome: "Astronaut Academy online · crew training unlocked")),
         declared("lnm_m3_relay_bennu_vesta"),
         Mission(id: "lnm_m3_relay_itokawa_eros", title: "Nickel Line Handoff",
                 brief: "Helioforge Metals needs nickel pulled from Itokawa, then handed off at Eros before you fly home. You're paid for both jobs: mining the ore and running the relay to Eros.",
@@ -79,13 +70,6 @@ public enum AuthoredMissions {
                 requires: MissionRequirements(minerals: ["nickel": 2, "cobalt": 2], cargoMin: 4, drillTier: 2, maxOrbit: 5),
                 payout: MissionPayout(francs: floor(4), affinity: 4), construction: nil, payload: nil, programReward: nil),
         declared(selfDirectedMiningId),
-        Mission(id: crewedProspectingId, title: "Crewed Prospecting Flight",
-                brief: "Ferrum wants a trained mining specialist aboard to assess a surface before automated construction begins. The first qualified astronaut to reach Eros earns a frontier bonus.",
-                client: "ferrum-orbital-construction", tag: "CREW", difficulty: "L2", locked: false, sequence: MissionGenerator.freeOpsMissionSequence,
-                unlockAt: "Build the Astronaut Academy and fit Crew Quarters", targetId: "eros", deliveryTargetId: nil,
-                requires: MissionRequirements(minerals: ["nickel": 2], cargoMin: 2, drillTier: 1, maxOrbit: 2,
-                                              crew: CrewRequirement(branch: "mining", minTier: 1, minLevel: 1)),
-                payout: MissionPayout(francs: floor(4), affinity: 4), construction: nil, payload: nil, programReward: nil),
     ]
 }
 

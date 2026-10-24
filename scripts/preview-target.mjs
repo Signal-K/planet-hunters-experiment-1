@@ -20,7 +20,7 @@ const SCREENS = [
   ['transit', 'transit'], ['landing', 'landing'], ['delivery', 'delivery'], ['debrief', 'debrief'],
   ['instrumenthub', 'instrument-hub'], ['instrumentviewport', 'instrument-hub'],
   ['refinery', 'refinery'], ['missionboard', 'missions'], ['missions', 'missions'],
-  ['galaxy', 'galaxy'], ['targets', 'targets'], ['skills', 'skills'], ['academy', 'academy'],
+  ['galaxy', 'galaxy'], ['targets', 'targets'],
   ['shower-run', 'ui/orionids-shower-debrief'], ['orionids', 'hub'], ['skyevent', 'hub'],
   ['build', 'build'], ['intro', 'intro'], ['roveryvey', 'rover-survey'], ['surfaceops', 'surface-ops'],
 ]
