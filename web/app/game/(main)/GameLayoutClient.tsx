@@ -17,6 +17,7 @@ import { notifyFiredAlert } from '@/lib/priceAlertNotify'
 import { captureGameEvent, captureScreenView, captureTutorialStepStarted, initPostHog } from '@/lib/posthog'
 import { scheduleOrionidsPeakReminder } from '@/lib/orionids/peak-reminder'
 import { pbLandnam } from '@/lib/pb-landnam'
+import { installChunkRecovery } from '@/lib/chunk-recovery'
 import { queueEventBadge, queueFragmentLedger, queueMeteoriteMastery, queueOrionidsFind, readAtlasLookedUp } from '@/lib/orionids/persist'
 import { grantLookedUp, LOOKED_UP_BADGE_ID, LOOKED_UP_LANDNAM_SUBJECT, LOOKED_UP_MARKER } from '@/lib/orionids/looked-up'
 import { ORIONIDS_EVENT_ID } from '@/lib/orionids/finds'
@@ -77,6 +78,8 @@ function GameChrome({ children }: { children: ReactNode }) {
   useEffect(() => {
     initPostHog()
   }, [])
+
+  useEffect(() => installChunkRecovery(message => captureGameEvent('stale_chunk_reload', { message })), [])
 
   useEffect(() => {
     const refresh = () => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useGame } from '@/game-context'
+import { captureGameEvent } from '@/lib/posthog'
 import { isOrionidsWindow } from '@/lib/data/sky-events'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { ORIONIDS_VARIANTS } from '@/lib/orionids/theme'
@@ -34,6 +35,7 @@ export default function OrionidsShowerChrome() {
   const [step, setStep] = useState(0)
   const queued = useRef('')
   const onPass = useRef<(() => void) | undefined>(undefined)
+  const attempts = useRef(0)
 
   useEffect(() => {
     const tick = () => setLive(isOrionidsWindow(debrisNow()))
@@ -50,6 +52,8 @@ export default function OrionidsShowerChrome() {
       setEntry(0)
       setNote('')
       setAnswers(FIREBALL_QUIZ.map(() => -1))
+      attempts.current = 0
+      captureGameEvent('orionids_quiz_started', { event_id: FIREBALL_SUBJECT_ID, has_handoff: !!onPass.current })
       setOpen(true)
     }
     window.addEventListener(OPEN_ORIONIDS_READING_EVENT, showReading)
@@ -78,9 +82,25 @@ export default function OrionidsShowerChrome() {
   const art = ORIONIDS_VARIANTS.blueprint
   const spotter = game.player.badges?.[FIREBALL_SPOTTER_BADGE]
 
+  function abandon() {
+    captureGameEvent('orionids_quiz_abandoned', {
+      event_id: FIREBALL_SUBJECT_ID,
+      tab,
+      step,
+      attempts: attempts.current,
+    })
+    setOpen(false)
+  }
+
   function finishCheck() {
     const now = debrisNow()
+    attempts.current += 1
     if (!fireballQuizCorrect(answers)) {
+      captureGameEvent('orionids_quiz_failed', {
+        event_id: FIREBALL_SUBJECT_ID,
+        attempt: attempts.current,
+        wrong_questions: FIREBALL_QUIZ.filter((question, at) => answers[at] !== question.answer).length,
+      })
       setNote('Not quite. Check the field notes if you need a hint, then try again.')
       return
     }
@@ -97,6 +117,11 @@ export default function OrionidsShowerChrome() {
       })
     }
     game.setPlayer(player => submitFireballQuiz(markFireballRead(player, now), answers, now).player)
+    captureGameEvent('orionids_quiz_passed', {
+      event_id: FIREBALL_SUBJECT_ID,
+      attempts: attempts.current,
+      has_handoff: !!onPass.current,
+    })
     const next = onPass.current
     onPass.current = undefined
     setOpen(false)
@@ -117,7 +142,7 @@ export default function OrionidsShowerChrome() {
               <span className={styles.led} data-on={spotter ? 'true' : 'false'} aria-hidden="true" />
               <span className={styles.stripTitle}>FIREBALLS IN THE SKY</span>
               <span className={styles.stripMeta}>{spotter ? 'PASSED' : 'OPEN'}</span>
-              <button type="button" className={styles.close} onClick={() => setOpen(false)}>Close</button>
+              <button type="button" className={styles.close} onClick={abandon}>Close</button>
             </header>
             <div className={styles.tabs} role="tablist">
               <button type="button" role="tab" aria-selected={tab === 'check'} data-on={tab === 'check' ? 'true' : 'false'} onClick={() => setTab('check')}>SIGHTING CHECK</button>
