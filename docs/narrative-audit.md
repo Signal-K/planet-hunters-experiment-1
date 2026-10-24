@@ -16,7 +16,7 @@ This file records the audit evidence. Screen classification is enforced in `web/
 3. **A tutorial hint pointed at the rover.** The `mine-survey` hint existed in the mining try; the flow itself only routes to the rover for missions that declare a starter-rover survey. The hint stays because survey missions do enter the rover screen. First-run mining never entered the rover.
 4. **Two narratives were live at once.** The operating model says Earth refinery L1, sites, deeds and treasury are live; the five-stop note said refinery and settlements were parked. Both cannot be true.
 5. **No contractor wording remains in player copy.** Only the legacy-save migration in `game-state.ts` mentions it, which is correct.
-6. **Narrative Ledger is dev-only** (`dev: true` route) and is accurate: client growth planned, market/refining/treasury adapting.
+6. **Narrative Ledger was dev-only** (`dev: true` route; it is now a shipped service screen and the roadmap) and is accurate: client growth planned, market/refining/treasury adapting.
 7. **Registry gaps (SSL-677): resolved.** 14 scene TOMLs had no registry row; all are registered and a test enforces it. Hub subsurface and Targets share an iOS fixture with the Hub shaft and Mission board because iOS has no dedicated scene for them.
 
 ## Decisions
@@ -39,4 +39,8 @@ Add a screen or mission only when it extends the spine, ships with an independen
 
 ## Deleted 2026-10-24 (restore from git history, not from stubs)
 
-Academy, crew, hiring and training; Skill tree, skill points and licence grades; Sites and Surface Ops; site rights, deeds, treasury and bankruptcy loans; the Takeon field sandbox (structure palette, crafting, ownership, territory claims, biosphere seeding); Friends, notification bell and presence heartbeat; Community hub; Narrative Ledger screen (the model lives in ZenNotes); own-program build missions, remote silo, off-world refinery and site-right gating; dark-shipped habitat training and the off-world non-mining build flag; crew ship rooms and their art; the legacy GameApp shell and preview pages; 569 dead CSS rules. Saves keep unknown fields, so old saves still load. The PocketBase collections and daily-economy workflow are untouched and now have no client.
+Academy, crew, hiring and training; Skill tree, skill points and licence grades; Sites and Surface Ops; site rights, deeds, treasury and bankruptcy loans; the Takeon field sandbox (structure palette, crafting, ownership, territory claims, biosphere seeding); Community hub; own-program build missions, remote silo, off-world refinery and site-right gating; dark-shipped habitat training and the off-world non-mining build flag; crew ship rooms and their art; the legacy GameApp shell and preview pages; 569 dead CSS rules. Saves keep unknown fields, so old saves still load. The PocketBase collections and daily-economy workflow are untouched and now have no client.
+
+## Restored 2026-10-24 (shipping this week)
+
+Friends (callsign, requests, daily gifts, read-only visits, presence heartbeat, notification bell) and the Narrative Ledger were deleted in 1eb8b5b6 and restored the same day on web and iOS. World Space Week and the Orionids event were never removed. Friends opens from the Base menu on web and from the top-right HUD on iOS. The Narrative Ledger is now the in-game roadmap: every deleted system above is listed there as planned with how it was previously built, and the Hub menu opens it (role `service`). A friend visit now shows discoveries only, because the field builds it used to show are deleted.

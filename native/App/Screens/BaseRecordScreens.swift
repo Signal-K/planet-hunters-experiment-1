@@ -325,3 +325,56 @@ struct DebriefRecordPanel<Content: View>: View {
             .overlay(Rectangle().stroke(Theme.blue, lineWidth: 2))
     }
 }
+
+/// Product ledger (mirrors web NarrativeLedgerScreen): live, adapting and planned mechanics side by side.
+struct NarrativeLedgerScreen: View {
+    @Environment(GameStore.self) private var store
+    private let loop = ["PLAYER BUILDS FOR CLIENTS", "CLIENT XP UPDATES", "NEXT-DAY DEMAND IS SET", "MARKET PRICES REFRESH"]
+
+    var body: some View {
+        ScreenFrame(title: "Narrative Ledger", back: { store.go(.hub) }) {
+            Eyebrow(text: "Internal product map")
+            Text("One source of truth for the player promise, the systems behind it, and what is actually built.")
+                .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+            Panel(accent: Theme.blueBright) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Eyebrow(text: "The player-facing rule")
+                    Text("What do I launch today?").font(AppFont.display(20))
+                    Text("Every meaningful session starts with one decision. The choices stay visible; the systems behind them stay out of the way.")
+                        .font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                    Text("CLIENT WORK · OWN INFRA · MINING · TEST LAUNCH").font(AppFont.display(14)).tracking(1)
+                }
+            }
+            Panel(accent: Theme.teal) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Eyebrow(text: "Daily economy loop · 00:01 AEST")
+                    ForEach(Array(loop.enumerated()), id: \.offset) { i, l in
+                        Text("\(i + 1)  \(l)").font(AppFont.display(14)).tracking(0.6)
+                    }
+                }
+            }
+            HStack(spacing: 10) {
+                ForEach(LedgerState.allCases, id: \.self) { s in
+                    Text("\(NarrativeLedger.entries.filter { $0.state == s }.count) \(s.label)")
+                        .font(AppFont.display(14)).tracking(1).padding(.horizontal, 10).frame(minHeight: 44)
+                        .background(color(s).opacity(0.18), in: Capsule()).overlay(Capsule().stroke(color(s), lineWidth: 2))
+                }
+            }
+            ForEach(NarrativeLedger.entries) { e in
+                Panel(accent: color(e.state)) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack { Text(e.owner).font(AppFont.display(14)).foregroundStyle(Theme.textMuted); Spacer(); Text(e.state.label).font(AppFont.display(14)).foregroundStyle(color(e.state)) }
+                        Text(e.title).font(AppFont.display(18))
+                        Text(e.playerVerb).font(AppFont.body(14, "SemiBold"))
+                        Text(e.purpose).font(AppFont.body(14)).foregroundStyle(Theme.textDim)
+                        Text("CADENCE  \(e.cadence)").font(AppFont.mono(14))
+                        Text("DEPENDS ON  \(e.dependencies.joined(separator: " · "))").font(AppFont.mono(14)).foregroundStyle(Theme.textDim)
+                        Text(e.implementation).font(AppFont.body(14)).foregroundStyle(Theme.textMuted)
+                    }
+                }
+            }
+        }
+    }
+
+    private func color(_ s: LedgerState) -> Color { s == .live ? Theme.teal : s == .adapt ? Theme.blueBright : Theme.textMuted }
+}

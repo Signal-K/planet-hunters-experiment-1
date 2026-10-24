@@ -24,6 +24,8 @@ import { ORIONIDS_EVENT_ID } from '@/lib/orionids/finds'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
+import FriendsSheet from '@/components/game/FriendsSheet'
+import NotificationBell from '@/components/game/NotificationBell'
 import SuiteHopRail from '@/components/game/SuiteHopRail'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
 import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
@@ -32,7 +34,8 @@ import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import { useHelpOpen } from '@/lib/help/open-state'
 import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
-import { OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
+import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
+import { heartbeatFriendPresence } from '@/lib/friends/client'
 import OrionidsShowerChrome from '@/components/game/orionids/OrionidsShowerChrome'
 
 function GameChrome({ children }: { children: ReactNode }) {
@@ -40,6 +43,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [friendsOpen, setFriendsOpen] = useState(false)
   const [orionidsEntryActive, setOrionidsEntryActive] = useState(false)
   const { phase: backdropSkyPhase } = useTimeOfDay()
 
@@ -75,10 +79,23 @@ function GameChrome({ children }: { children: ReactNode }) {
   useEffect(() => installChunkRecovery(message => captureGameEvent('stale_chunk_reload', { message })), [])
 
   useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible' && pbLandnam.authStore.isValid) void heartbeatFriendPresence().catch(() => undefined)
+    }
+    refresh()
+    const interval = window.setInterval(refresh, 60_000)
+    document.addEventListener('visibilitychange', refresh)
+    return () => { window.clearInterval(interval); document.removeEventListener('visibilitychange', refresh) }
+  }, [])
+
+  useEffect(() => {
     const openSettings = () => setSettingsOpen(true)
+    const openFriends = () => setFriendsOpen(true)
     window.addEventListener(OPEN_SETTINGS_EVENT, openSettings)
+    window.addEventListener(OPEN_FRIENDS_EVENT, openFriends)
     return () => {
       window.removeEventListener(OPEN_SETTINGS_EVENT, openSettings)
+      window.removeEventListener(OPEN_FRIENDS_EVENT, openFriends)
     }
   }, [])
 
@@ -233,9 +250,9 @@ function GameChrome({ children }: { children: ReactNode }) {
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (orionidsEntryActive || eventMissionActive || settingsOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (orionidsEntryActive || eventMissionActive || settingsOpen || friendsOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [eventMissionActive, flightStep, game.authGateOpen, game.launchpadMissionMenuOpen, game.player, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, orionidsEntryActive, settingsOpen])
+  }, [eventMissionActive, flightStep, game.authGateOpen, game.launchpadMissionMenuOpen, game.player, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, friendsOpen, orionidsEntryActive, settingsOpen])
 
   const coachIndex = flightStep ? ['mining', 'scan', 'part'].indexOf(flightStep.try) : -1
   // Only the required-looking onboarding (not the optional guide) changes the hub's own copy.
@@ -323,7 +340,7 @@ function GameChrome({ children }: { children: ReactNode }) {
     function onKeyDown(event: KeyboardEvent) {
       const action = resolveShortcut(event)
       if (action === 'close-tray') {
-        setSettingsOpen(false)
+        setSettingsOpen(false); setFriendsOpen(false)
         if (currentScreen === 'market' || currentScreen === 'hub-subsurface' || currentScreen === 'mission-history') game.goBack('hub')
       } else if (action === 'open-market') {
         if (game.player.freeOperations) game.go('market')
@@ -464,6 +481,8 @@ function GameChrome({ children }: { children: ReactNode }) {
       </div>
 
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
+      {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
+      {!game.authGateOpen && !LOCATION_SCREENS.has(game.screen) && <NotificationBell />}
     </main>
   )
 }

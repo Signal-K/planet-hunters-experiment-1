@@ -108,6 +108,7 @@ export const GAME_ROUTES = [
   { path: '/game/refinery', screen: 'refinery', surface: 'instrument' },
   { path: '/game/launchpad', screen: 'launchpad', surface: 'instrument' },
   { path: '/game/mission-history', screen: 'mission-history', surface: 'instrument' },
+  { path: '/game/narrative-ledger', screen: 'narrative-ledger', surface: 'instrument' },
 
   // Dev-only
   { path: '/game/launcher', surface: 'dev', dev: true },

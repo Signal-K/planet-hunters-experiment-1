@@ -14,6 +14,7 @@ public enum Screen: String, CaseIterable, Sendable {
     case saturnStormSearch = "saturn-storm-search"
     case instrumentHub = "instrument-hub"
     case missionHistory = "mission-history"
+    case narrativeLedger = "narrative-ledger"
 
     /// Locations get the full edge-to-edge viewport on macOS; the rest are menus
     /// that keep the boxed card treatment (mirrors `LOCATION_SCREENS` on web).

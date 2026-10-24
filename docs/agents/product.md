@@ -11,6 +11,7 @@ Part of the Landnam agent instructions; `AGENTS.md` (repo root) is the entry poi
 - Offline-first: no direct client writes to the backend; use the SSL-321 outbox and upload on reconnect. Check phone sizes and Safari.
 - Terminology: "client", never "contractor", in UI copy, survey copy and new identifiers.
 - Narrative: the active game is the five-stop agency loop: Plan, Launch, Flight, Work, Result. Every screen has a role in `web/lib/narrative-surface.ts`; decisions and evidence are in `docs/narrative-audit.md` (2026-10-24). Citizen science is an instrument feed, not a mission track. Base services (Exchange, Earth refinery, Hangar) and extensions (instruments, rover) stay but never become mission tracks. Deleted 2026-10-24: Academy, crew, Skills, Sites and Surface Ops, treasury and loans, site rights, field sandbox and crafting, Friends, Community hub, Narrative Ledger, off-world construction and remote silo. Not started: off-world refinery, colonies, settlements. Satellite Monitoring Station is deleted; do not revive it.
+- Roadmap: the Narrative Ledger screen (`web/lib/data/narrative-ledger.ts`, mirrored in `NarrativeLedger.swift`) is the roadmap. A system removed before launch stays listed there as planned, with how it was previously built; Friends and the Orionids / World Space Week events are core and ship this week. Do not delete either again.
 - Do not treat any "M1/M2 active, M3 undefined" onboarding framing as current scope. Onboarding mission order is whatever the current release issue and ZenNotes decisions say.
 
 ## Names and surfaces

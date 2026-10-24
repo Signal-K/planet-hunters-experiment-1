@@ -251,6 +251,14 @@
    "tickets": []
   },
   {
+   "id": "narrative-ledger",
+   "name": "Ledger",
+   "flow": "records",
+   "web": "ui-ledger",
+   "native": "ledger-phone",
+   "tickets": []
+  },
+  {
    "id": "market",
    "name": "Market",
    "flow": "progression",

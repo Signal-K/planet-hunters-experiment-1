@@ -43,6 +43,7 @@ const TessDiscoveryScreen = dynamic(() => import('@/components/game/screens/Tess
 const SaturnStormSearchScreen = dynamic(() => import('@/components/game/screens/SaturnStormSearchScreen'), { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(() => import('@/components/game/screens/AsteroidDiscoveryScreen'), { loading: ScreenLoading })
 const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
+const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
 import { requestMissionBoardEvent, requestMissionBoardTab } from '@/lib/mission-board-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
@@ -508,6 +509,9 @@ function ScreenBody({
           onBack={onBackFromHangar ?? game.returnFromHangar}
         />
       )
+
+    case 'narrative-ledger':
+      return <NarrativeLedgerScreen onBack={() => game.goBack()} />
 
     case 'launchpad':
       {

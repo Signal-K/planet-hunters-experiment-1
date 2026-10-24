@@ -85,6 +85,7 @@ export type Screen =
   | 'saturn-storm-search'
   | 'instrument-hub'
   | 'mission-history'
+  | 'narrative-ledger'
 
 // Screens that render a physical place in the game world (or a step in a
 // mission run through one) get the full, edge-to-edge viewport on desktop —
@@ -519,6 +520,7 @@ export interface GameActions {
   startSurveyScan: (targetId: string) => void
   /** SSL-512: finish a scan whose time is up. */
   resolveSurveyScan: () => void
+  claimFriendGift: (giftId: string) => Promise<void>
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
   researchLanding: () => void
   toasts: Toast[]

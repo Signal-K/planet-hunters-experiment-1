@@ -25,6 +25,8 @@ import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
 import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
 import { applyResearchLanding } from '@/lib/systems/LandingSystem'
+import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
+import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
 import { canonicalGamePath, entryScreenForPath } from '@/lib/game-route'
@@ -276,6 +278,19 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
 
   const researchLanding = useCallback(() => setState(state => applyResearchLanding(state)), [])
+
+  // KES-83: a claimed friend gift reaches player state through the same setState
+  // path (and, for blueprints, the same unlockBlueprint action) as every other reward.
+  const claimFriendGift = useCallback(async (giftId: string) => {
+    const { kind, payload } = await claimFriendGiftRequest(giftId)
+    if (kind === 'blueprint' && payload.slug) {
+      loop.unlockBlueprint(payload.slug, 0, 0, {})
+    } else {
+      setState(s => applyFriendGiftToPlayer(s, kind, payload))
+    }
+    ui.addToast(friendGiftToastMessage(kind, payload), 'ok')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loop.unlockBlueprint])
   useInstrumentFeedNotifications({
     // Instrument feeds are shared-backend data. Do not start a background
     // request while the auth restore is still pending (or after logout),
@@ -438,6 +453,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       resolveSurveyScan: loop.resolveSurveyScan,
       unlockBlueprint: loop.unlockBlueprint,
       researchLanding,
+      claimFriendGift,
       launchTransitSatellite: loop.launchTransitSatellite,
       submitTessClassification: loop.submitTessClassification,
       chooseSatelliteTarget: loop.chooseSatelliteTarget,

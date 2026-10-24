@@ -15,6 +15,9 @@
         "wait": 1500
       },
       {
+        "click": "Events"
+      },
+      {
         "see": "orionids",
         "within": 15000
       }
@@ -59,6 +62,20 @@
         "see": "fragments: 1 of 20",
         "within": 70000
       }
+    ]
+  },
+  "friends-sheet": {
+    "route": "/game/stage?preset=storage-hub&menu=1",
+    "steps": [
+      { "click": "Friends" },
+      { "see": "Field comms", "within": 8000 }
+    ]
+  },
+  "narrative-ledger": {
+    "route": "/game/stage?preset=ui-ledger",
+    "steps": [
+      { "see": "Friends", "within": 8000 },
+      { "see": "Crew and Academy" }
     ]
   }
 }

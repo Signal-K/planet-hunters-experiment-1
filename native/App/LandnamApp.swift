@@ -41,13 +41,19 @@ struct LandnamApp: App {
                         #endif
                     }
                 }
-                .onChange(of: auth.session) { _, s in services.attach(s) }
-                .onChange(of: scenePhase) { _, p in if p == .active { services.flush(); store.refreshDailyPool(); announcePriceAlerts() } }
+                .onChange(of: auth.session) { _, s in services.attach(s); services.refreshFriendPresence() }
+                .onChange(of: scenePhase) { _, p in if p == .active { services.flush(); services.refreshFriendPresence(); store.refreshDailyPool(); announcePriceAlerts() } }
                 .task {
                     // Sell alerts are checked every 30s while the app runs (web `GameLayoutClient`).
                     while !Task.isCancelled {
                         announcePriceAlerts()
                         try? await Task.sleep(nanoseconds: 30_000_000_000)
+                    }
+                }
+                .task {
+                    while !Task.isCancelled {
+                        services.refreshFriendPresence()
+                        try? await Task.sleep(for: .seconds(60))
                     }
                 }
                 .onAppear { OrientationPreference(stored: orientation).apply() }

@@ -171,6 +171,27 @@ public final class GameStore {
     }
 
 
+    /// Settles a server-authorised friend gift through the normal persisted
+    /// state path. The server marks the gift claimed before this is called, so
+    /// a network loss after that point cannot duplicate the reward.
+    public func receiveFriendGift(kind: FriendGiftKind, payload: FriendGiftPayload) {
+        var n = state
+        switch kind {
+        case .currency:
+            n.player.francs += max(0, payload.amount ?? 0)
+        case .resource:
+            guard let mineral = payload.mineral else { return }
+            n.player.stash[mineral, default: 0] += max(0, payload.amount ?? 0)
+        case .blueprint:
+            guard let slug = payload.slug else { return }
+            var ids: [JSONValue] = []
+            if case .array(let current)? = n.player.extras["unlockedBlueprints"] { ids = current }
+            guard !ids.contains(.string(slug)) else { return }
+            ids.append(.string(slug)); n.player.extras["unlockedBlueprints"] = .array(ids)
+        }
+        apply(n)
+    }
+
     /// Settings: mark all three tries done and open Free Ops (web `skipFlightPlan`).
     public func skipTraining() {
         var n = state

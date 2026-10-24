@@ -756,6 +756,7 @@ enum SceneCatalog {
             let world = BaseWorld(w: phone, h: 874)
             return HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), startX: world.shaftFocusX, startDepth: 0).environment(GameStore(state: siloState(ore: 24)))
         },
+        scene("ledger-phone", 1900) { NarrativeLedgerScreen().environment(GameStore(state: GameState())).environment(\.flatLayout, true) },
     ] + baseWorldScenes }
 
     static func find(_ id: String) -> CatalogScene? { all.first { $0.id == id } }

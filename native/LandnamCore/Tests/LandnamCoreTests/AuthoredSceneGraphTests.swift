@@ -9,7 +9,7 @@ import Testing
         let data = try Data(contentsOf: Self.repo.appendingPathComponent("shared/engine/authored-scenes.json").standardized)
         let shared = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
         #expect(AuthoredSceneDeclarations.json == shared)
-        #expect(AuthoredSceneGraph.scenes.count == 23)
+        #expect(AuthoredSceneGraph.scenes.count == 24)
         #expect(AuthoredSceneGraph.scenes.allSatisfy { !$0.objects.isEmpty })
         #expect(AuthoredSceneGraph.scenes.flatMap(\.objects).allSatisfy { !($0.mechanics ?? []).isEmpty })
         #expect(Set(AuthoredSceneGraph.mechanics.map(\.id)).count == AuthoredSceneGraph.mechanics.count)

@@ -59,7 +59,7 @@ struct HUDZones: Decodable, Sendable {
         return HUDZones(zones: .init(
             topChrome: .init(
                 topLeft: .init(inset: 6, gap: 6, francsChip: .init(height: 36, glyph: 20, padding: 10), contractCard: .init(width: 176, collapseInPortrait: true)),
-                topRight: .init(inset: 6, pill: .init(buttonSize: 44, buttons: ["settings"]))),
+                topRight: .init(inset: 6, pill: .init(buttonSize: 44, buttons: ["friends", "settings"]))),
             bottomNav: .init(bottomInset: 4, padding: 6, gap: 8, tileSize: .init(portrait: 52, landscape: 44), tiles: ["switch", "build", "hub"])),
             scene: .init(roadClearance: 8, outcropMargin: 12, placedApronPortrait: 92,
                          portrait: .init(structureX: [0.17, 0.46, 0.79], structureScale: 1.0, subsurfaceX: 0.30),

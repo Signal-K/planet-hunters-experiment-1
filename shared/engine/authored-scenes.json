@@ -1870,6 +1870,52 @@
       ]
     },
     {
+      "id": "narrative-ledger",
+      "type": "menu",
+      "route": "narrative-ledger",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/NarrativeLedgerScreen.tsx"
+        ],
+        "native": [
+          "native/App/Screens/BaseRecordScreens.swift"
+        ]
+      },
+      "objects": [
+        {
+          "id": "ledger-entries",
+          "kind": "collection",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Narrative entries derived from canonical progression and discoveries."
+        },
+        {
+          "id": "entry-detail",
+          "kind": "panel",
+          "parent": "ledger-entries",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Selected record and its source."
+        },
+        {
+          "id": "back-action",
+          "kind": "button",
+          "parent": "ledger-entries",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Return to the base."
+        }
+      ]
+    },
+    {
       "id": "refinery",
       "type": "exchange-lab",
       "route": "refinery",

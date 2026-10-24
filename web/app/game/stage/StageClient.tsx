@@ -12,7 +12,8 @@ import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { trainingTryStep } from '@/lib/data/tutorial'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import SettingsSheet from '@/components/game/SettingsSheet'
-import { OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
+import FriendsSheet from '@/components/game/FriendsSheet'
+import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 import { SANDBOX_NOW, isSandboxName } from '@/lib/sandbox'
 
 // In the sandbox the base shows the scene, not the player's situation: no clock, no balance, no cargo count.
@@ -104,6 +105,12 @@ function Stage() {
     window.addEventListener(OPEN_SETTINGS_EVENT, open)
     return () => window.removeEventListener(OPEN_SETTINGS_EVENT, open)
   }, [])
+  const [friendsOpen, setFriendsOpen] = useState(false)
+  useEffect(() => {
+    const open = () => setFriendsOpen(true)
+    window.addEventListener(OPEN_FRIENDS_EVENT, open)
+    return () => window.removeEventListener(OPEN_FRIENDS_EVENT, open)
+  }, [])
   const activeTry = currentTrainingTry(game.player.flightPlan)
   const planStep = plan && activeTry
     ? trainingTryStep(activeTry, game.screen, { returning: !!game.player.returningToEarth })
@@ -136,6 +143,7 @@ function Stage() {
         </div>
       </div>
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
+      {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
     </main>
   )
 }

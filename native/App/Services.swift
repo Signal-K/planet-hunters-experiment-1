@@ -162,6 +162,24 @@ final class Services {
         pullIfNeeded()
     }
 
+    /// Social actions are deliberately online-only. Unlike game-state writes,
+    /// requests and daily gifts must be checked atomically by PocketBase and
+    /// therefore never enter the offline outbox.
+    func friendsAPI() -> FriendsAPI? {
+        guard let session else { return nil }
+        return FriendsAPI(baseURL: api.baseURL, token: session.token)
+    }
+
+    func notificationsAPI() -> NotificationsAPI? {
+        guard let session else { return nil }
+        return NotificationsAPI(baseURL: api.baseURL, token: session.token)
+    }
+
+    func refreshFriendPresence() {
+        guard let api = friendsAPI() else { return }
+        Task { try? await api.heartbeat() }
+    }
+
     /// SSL-673: the shared monthly research total. Read-only, so it is fetched live and never queued.
     func communityResearchAPI() -> CommunityResearchAPI? {
         guard let session else { return nil }
