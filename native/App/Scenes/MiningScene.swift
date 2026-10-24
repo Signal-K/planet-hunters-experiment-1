@@ -14,6 +14,21 @@ final class MiningScene: SKScene {
     /// Sky-fed fragments: resource and spawn rate per minute. Nil means no rain.
     var fragmentRain: (resourceId: String, perMinute: Double)?
     private var rainAccumulator = 0.0
+    /// Bracket on the ground under the ship: fragments landing inside it bank (web catch zone).
+    private lazy var catchZone: SKNode = {
+        let r = CGFloat(OrionidsRun.catchRadius), n = SKNode()
+        let bar = SKShapeNode(rect: CGRect(x: -r, y: -5, width: r * 2, height: 10))
+        bar.fillColor = PlatformColor(red: 0.5, green: 0.85, blue: 1, alpha: 0.85); bar.strokeColor = .clear
+        n.addChild(bar)
+        for x in [-r, r - 3] {
+            let tick = SKShapeNode(rect: CGRect(x: x, y: -10, width: 4, height: 34))
+            tick.fillColor = PlatformColor(red: 0.75, green: 0.94, blue: 1, alpha: 0.9); tick.strokeColor = .clear
+            n.addChild(tick)
+        }
+        n.zPosition = 29; n.isHidden = true
+        world.addChild(n)
+        return n
+    }()
     private var falling: [(node: SKNode, vy: CGFloat)] = []
 
     private let palette: LaserPalette.Spec
@@ -725,23 +740,25 @@ final class MiningScene: SKScene {
 
     /// Fragments fall with the shower, drift with the ground, and bank themselves on touching the surface.
     private func updateRain(dt: TimeInterval, dx: CGFloat) {
+        catchZone.isHidden = fragmentRain == nil
+        catchZone.position = CGPoint(x: beamX, y: surfaceY)
         guard let rain = fragmentRain else { return }
         rainAccumulator += rain.perMinute / 60 * dt
         if falling.count == 0 && rainAccumulator < 1 && clock < 1 { rainAccumulator = 1 }   // first fragment shows up straight away
         while rainAccumulator >= 1 {
             rainAccumulator -= 1
-            guard falling.count < 7 else { continue }
+            guard falling.count < 5 else { continue }
             let hex = Minerals.byId[rain.resourceId]?.colorHex ?? "#7fd8ff"
             let node = SKSpriteNode(texture: depositTexture(colorHex: hex, variant: falling.count, glint: true))
-            node.setScale(px * 1.4)
+            node.setScale(px * 1.1)
             node.texture?.filteringMode = .nearest
             node.zPosition = 30
             // Aim near the ship, shifted by the ground scroll during the fall, spread wide so the player has to weave.
-            let fallTime = (size.height + 20 - surfaceY) / 85
+            let fallTime = (size.height + 20 - surfaceY) / 56
             let aim = beamX + 48 * fallTime + CGFloat.random(in: -300...300)
             node.position = CGPoint(x: min(max(40, aim), max(80, size.width - 40)), y: size.height + 20)
             world.addChild(node)
-            falling.append((node, CGFloat.random(in: 70...100)))
+            falling.append((node, CGFloat.random(in: 52...60)))
         }
         var landed: [Int] = []
         for i in falling.indices {
@@ -751,7 +768,7 @@ final class MiningScene: SKScene {
         }
         for i in landed.reversed() {
             let (node, _) = falling.remove(at: i)
-            if abs(node.position.x - beamX) <= 80 {
+            if abs(node.position.x - beamX) <= CGFloat(OrionidsRun.catchRadius) {
                 field.catchFragment(rain.resourceId)
                 SK.burst(at: node.position, color: LaserPalette.sk(palette.beamCore), count: 12, speed: 90, in: world)
                 let tag = SKLabelNode(text: "+1 \(Minerals.byId[rain.resourceId]?.symbol ?? "")")

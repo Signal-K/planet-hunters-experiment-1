@@ -226,8 +226,8 @@ const DEBRIS_BASE_FALL_SPEED = 70
 /** Cap so a long run cannot fill the field with chunks. */
 const MAX_DEBRIS = 4
 /** Auto-collected shower fragments: more can be in the air, and one banks only if the ship is under it when it lands. */
-const MAX_RAIN = 7
-const CATCH_RADIUS = 80
+const MAX_RAIN = 5
+const CATCH_RADIUS = 100
 /** Rain spreads this far either side of where the ship is, so staying put catches a minority and the player has to weave. */
 const RAIN_SPREAD = 300
 const MAX_STREAKS = 6
@@ -310,6 +310,8 @@ export class MiningController extends ScriptBehaviour {
   private streaks: Streak[] = []
   private liveFx: LiveFx[] = []
   private debrisAccumulator = 0
+  /** Catch zone marker on the surface under the ship, shown while shower fragments are auto-collected. */
+  private catchZone: Graphics | null = null
   private streakAccumulator = 0
   /** First active frame drops a chunk immediately so the shower is visible. */
   private debrisPrimed = false
@@ -505,6 +507,7 @@ export class MiningController extends ScriptBehaviour {
     this.updateStreaks(dt)
     if (!debris) return
     const spawn = debris.getSpawn()
+    this.updateCatchZone(!!spawn?.autoCollect && (spawn.ratePerMinute ?? 0) > 0)
     if (!spawn || !(spawn.ratePerMinute > 0)) { this.debrisAccumulator = 0; this.debrisPrimed = false; return }
     if (!this.debrisPrimed) {
       this.debrisPrimed = true
@@ -530,6 +533,23 @@ export class MiningController extends ScriptBehaviour {
       this.streakAccumulator -= 1
       if (this.streaks.length < MAX_STREAKS) this.spawnStreak(spawn.speedFactor)
     }
+  }
+
+  /** A bracket on the ground under the ship, CATCH_RADIUS either side: fragments landing inside it bank. */
+  private updateCatchZone(show: boolean): void {
+    if (!show) { if (this.catchZone) this.catchZone.visible = false; return }
+    if (!this.catchZone) {
+      const g = new Graphics()
+      const y = (this.opts.surfaceY ?? SURFACE_Y) - 20
+      g.rect(-CATCH_RADIUS, y - 5, CATCH_RADIUS * 2, 10).fill({ color: 0x7fd8ff, alpha: 0.85 })
+      g.rect(-CATCH_RADIUS, y - 24, 4, 34).fill({ color: 0xbfefff, alpha: 0.9 })
+      g.rect(CATCH_RADIUS - 4, y - 24, 4, 34).fill({ color: 0xbfefff, alpha: 0.9 })
+      this.opts.container.addChild(g)
+      this.catchZone = g
+    }
+    this.catchZone.visible = true
+    this.catchZone.x = this.currentShipX()
+    this.catchZone.alpha = this.opts.reducedMotion ? 1 : 0.75 + Math.sin(performance.now() / 260) * 0.25
   }
 
   /** Fall until the ground contact meets the surface, play land, then sit mineable. */
@@ -637,6 +657,8 @@ export class MiningController extends ScriptBehaviour {
       renderer.setTint(mineralColor)
     }
     if (sprite && hero) sprite.scale.set(2.4)
+    // Shower rain is drawn smaller so five in the air do not crowd the sky.
+    if (sprite && autoCollect) sprite.scale.set(0.7)
     this.gameObject.addChild(go)
     this.ores.push({
       go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, hero ? 24 : 11), labelBaseY: y, mineral,

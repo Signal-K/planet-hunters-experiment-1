@@ -317,7 +317,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const fireballMoment = fireballDue(debrisNow(), fireballCaughtAt) && !fireballCaughtLocal
   const fireballWorth = formatCurrency(Math.round(FIREBALL_FRAGMENT_PRICE * OPEN_MARKET_SELL_RATE))
   const collectMineral = useCallback((mineral: string) => {
-    if (nightRun && !DEBRIS_RESOURCE_IDS.includes(mineral) && mineral !== FIREBALL_FRAGMENT_ID) return
     // Shower debris rides in cargo when the hold has room. The night-run goal counts the catch either way.
     if (DEBRIS_RESOURCE_IDS.includes(mineral)) onDebrisMinedRef.current?.(mineral)
     if (mineral === FIREBALL_FRAGMENT_ID) {

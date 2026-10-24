@@ -297,7 +297,8 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
               if (!preset) return null
               return {
                 mineral: preset.resourceId,
-                speedFactor: preset.speedFactor,
+                // Shower fragments drift down a little slower than other debris so there is time to line up under them.
+                speedFactor: preset.eventId === 'orionids-2026' ? 0.8 : preset.speedFactor,
                 ratePerMinute: preset.eventId === 'orionids-2026'
                   ? ORIONIDS_RUN_FRAGMENTS_PER_MINUTE * (isInLocalEventBonusWindow(debrisNow(), skyEventLocation) ? ORIONIDS_PEAK_MULTIPLIER : 1)
                   : debrisRatePerMinute(preset, debrisNow(), skyEventLocation),
