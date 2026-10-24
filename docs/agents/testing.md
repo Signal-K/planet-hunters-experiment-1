@@ -22,3 +22,6 @@ npm run test:unit          # verify:scene-surfaces + vitest
 5. Never claim a check passed that you did not run. State what ran, what was skipped, and why. Heavy pipelines (20+ minute e2e) are not run per iteration: iterate with targeted local checks and push batched.
 6. Do not drive the user's own device or desktop (no osascript clicks, desktop captures, or launching windows). Test headless or in the iOS Simulator.
 7. Scene visual check, on every scene task: objects rest on their surfaces with no gaps, and anything that should animate does. Send a short clip or frame strip with the stills.
+
+## Orionids pacing (headless Cypress)
+`cd web && npm run test:orionids` plays the Orionids shower run in real time at phone, landscape and desktop sizes and asserts each stage takes 40 to 240 seconds. Headless Electron, no browser install, no windows. Run with `ELECTRON_RUN_AS_NODE` unset (the npm script does this). Needs the dev server on :4320. `--expose VP=phone` runs one viewport. The rover stage is not covered yet.

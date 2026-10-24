@@ -756,7 +756,8 @@ final class MiningScene: SKScene {
             // Aim near the ship, shifted by the ground scroll during the fall, spread wide so the player has to weave.
             let fallTime = (size.height + 20 - surfaceY) / 56
             let aim = beamX + 48 * fallTime + CGFloat.random(in: -300...300)
-            node.position = CGPoint(x: min(max(40, aim), max(80, size.width - 40)), y: size.height + 20)
+            // Not clamped to the right edge: on a narrow phone the aim sits past the screen and the fragment drifts in (web parity).
+            node.position = CGPoint(x: max(40, aim), y: size.height + 20)
             world.addChild(node)
             falling.append((node, CGFloat.random(in: 52...60)))
         }

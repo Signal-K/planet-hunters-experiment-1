@@ -621,7 +621,8 @@ export class MiningController extends ScriptBehaviour {
     const x = hero
       ? this.currentShipX()
       : autoCollect
-        ? Math.max(40, Math.min(this.opts.worldWidth - 40, rainX))
+        // Not clamped to the right edge: on a narrow phone the aim point sits past the screen and the fragment drifts in. Clamping it made every fragment land out of reach.
+        ? Math.max(40, rainX)
         : 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
     const y = hero ? -36 : -20 - Math.random() * 40
     const colorHex = this.opts.mineralColors[mineral] ?? LASER_COLOR

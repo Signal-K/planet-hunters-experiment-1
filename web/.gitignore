@@ -52,3 +52,7 @@ tests/.report
 .dev-actions.json
 
 /.storyboard/
+
+# Cypress output
+cypress/screenshots/
+cypress/videos/
