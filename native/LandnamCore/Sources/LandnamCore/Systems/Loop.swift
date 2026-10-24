@@ -364,7 +364,11 @@ public enum Loop {
         n.deliveryTargetId = nil
         n.tutorial = !n.player.freeOperations
         n.doneSteps["9"] = true
-        n.screen = mission?.payload?.type == .satellite ? .instrumentHub : program ? .launchpad : .hub
+        n.screen = mission?.payload?.type == .satellite
+            ? .instrumentHub
+            : missionId == OrionidsRun.missionId
+                ? .missions
+                : program ? .launchpad : .hub
         return n
     }
 

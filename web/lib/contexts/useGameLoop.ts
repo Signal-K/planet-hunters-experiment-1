@@ -46,6 +46,7 @@ import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, orionidsNightRun } from '@/lib/data/missions'
 import { settleShowerRun, showerRunFilled, startShowerRun, withoutShowerFragments } from '@/lib/orionids/shower-run'
+import { requestMissionBoardTab } from '@/lib/mission-board-nav'
 
 // 42s/orbit-unit — a ~65% cut from the original 2min/unit pace (KES-262):
 // full round trips were running long enough that players felt locked out of
@@ -1177,6 +1178,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell') => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
+    if (current.missionId === ORIONIDS_NIGHT_RUN_ID) requestMissionBoardTab('events')
     if (current.missionId === ORIONIDS_NIGHT_RUN_ID || current.missionId === ORIONIDS_SURFACE_RESEARCH_MISSION_ID) stampResearch('event')
     // A self-directed ("free") haul lands in the stash on return; here the
     // player's Debrief choice decides whether it stays on Earth or is sold at
@@ -1444,7 +1446,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         doneSteps: { ...s.doneSteps, 9: true },
           screen: mission?.payload?.type === 'satellite'
             ? 'instrument-hub'
-            : isProgramOperation
+            : mission?.id === ORIONIDS_NIGHT_RUN_ID
+              ? 'missions'
+              : isProgramOperation
               ? 'launchpad'
               : flightPlan.completed.mining && !flightPlan.completed.scan
                 ? 'galaxy'

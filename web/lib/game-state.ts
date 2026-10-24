@@ -8,6 +8,7 @@ import { reconcileOrionidsFinds, sanitizeMeteoriteMastery, sanitizeOrionidsFinds
 import { sanitizeFireballCaughtAt, sanitizeFireballSpotter } from '@/lib/orionids/fireball'
 import { mergeNightCatches, sanitizeNightCatches } from '@/lib/orionids/night-catches'
 import { fragmentsFromSave, mergeFragments } from '@/lib/orionids/fragments'
+import { detectOrionidsProgress } from '@/lib/orionids/progress'
 import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, OWN_PROGRAM_CLIENT_ID, TARGETS } from '@/lib/data'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
@@ -199,6 +200,12 @@ export function normalizeState(input: PartialSave): GameState {
     : EARTH_BASE_SCOPE
   const player: Partial<Player> = migrateLegacyContractorFields(input.player ?? {})
   const completedMissions = normalizeCompletedMissions(player.completedMissions)
+  const orionidsProgress = detectOrionidsProgress({ ...player, completedMissions })
+  const orionidsEventStage = orionidsProgress.surfaceCompleted
+    ? 2 as const
+    : orionidsProgress.attempted
+      ? Math.max(player.orionidsEventStage ?? 0, 1) as 0 | 1 | 2
+      : player.orionidsEventStage ?? 0
   const licenseGrade = player.licenseGrade && VALID_LICENSE_GRADES.includes(player.licenseGrade)
     ? player.licenseGrade
     : DEFAULT_STATE.player.licenseGrade
@@ -361,6 +368,7 @@ export function normalizeState(input: PartialSave): GameState {
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
     player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+      orionidsEventStage,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.

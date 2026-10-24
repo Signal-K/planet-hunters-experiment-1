@@ -54,6 +54,7 @@ import Testing
         let done = Loop.debriefDone(d, payout: 0, affinity: 0, catalog: Catalog(), now: ms(25, 12))
         #expect(done.player.francs - before >= OrionidsRun.payout(missionsDone: 5))
         #expect(OrionidsRun.catches(done.player) == 0)
+        #expect(done.screen == .missions)
         #expect(done.player.stash["orionid_debris"] == nil, "fragments are not sold or stored as haul")
     }
 

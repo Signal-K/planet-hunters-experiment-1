@@ -363,11 +363,14 @@ export function buildLaunchScene(
   const plumeGfx = new Graphics()
   plumeContainer.addChild(plumeGfx)
 
-  // SSL-455/456: the stack mounts once the v2 sheets settle (hidden until then, so there is
-  // no procedural-to-sprite pop). A failed or slow load mounts the procedural stack instead.
+  // SSL-455/456: mount a procedural stack immediately so the launch scene has a
+  // real first frame even when the authored sheets are cold. If the sheets arrive
+  // before ignition, replace that placeholder with the authored stack; after that
+  // point the cinematic keeps the already-visible stack rather than popping it.
   const reducedMotion = prefersReducedMotion()
   let stack: LaunchStack | null = null
   let sprites: SpriteStack | null = null
+  let sceneElapsed = 0
   let hookSchedule: ScheduledHook[] = []
   const firedHooks = new Set<string>()
   let padFx: FxLayer | null = null
@@ -385,7 +388,13 @@ export function buildLaunchScene(
   let flameMaskOn = true
 
   function mountStack(sheets: LaunchSheets | null) {
-    if (rocketRoot.destroyed || stack) return
+    if (rocketRoot.destroyed || (stack && (!sheets || sprites || sceneElapsed >= T.ignitionStart))) return
+    if (stack) {
+      rocketRoot.removeChild(stack.root)
+      stack.root.destroy({ children: true })
+      stack = null
+      sprites = null
+    }
     const built = buildLaunchStack(variant, sheets)
     stack = built
     sprites = built.sprites
@@ -406,6 +415,7 @@ export function buildLaunchScene(
       stage.addChildAt(sepFx.container, at + 1)
     }
   }
+  mountStack(null)
   void loadLaunchSheets(variant).then(mountStack)
 
   const hudStyle = new TextStyle({
@@ -454,6 +464,11 @@ export function buildLaunchScene(
 
   const fadeGfx = new Graphics()
   fadeGfx.rect(0, 0, W, H).fill({ color: 0x000000, alpha: 1 })
+  // Keep the first canvas frame legible while Pixi's ticker starts. A fully
+  // opaque veil made a cold launch look like a blank white page on slower
+  // devices; the normal half-second fade still completes from this lighter
+  // veil once the first frame is running.
+  fadeGfx.alpha = 0.32
   app.stage.addChild(fadeGfx)
 
   const debris: DebrisItem[] = []
@@ -521,8 +536,9 @@ export function buildLaunchScene(
 
   function update(elapsed: number, dt: number) {
     if (done) return
+    sceneElapsed = elapsed
 
-    fadeGfx.alpha = elapsed < 0.5 ? Math.max(0, 1 - elapsed / 0.5) : 0
+    fadeGfx.alpha = elapsed < 0.5 ? Math.max(0, 0.32 - (elapsed / 0.5) * 0.32) : 0
 
     if (sprites) {
       for (const hook of hookSchedule) {

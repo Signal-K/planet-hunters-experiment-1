@@ -55,6 +55,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   if (showerRun) shownRunRef.current = showerRun
   const shownRun = shownRunRef.current
   const isOrionidsRun = mission.id === ORIONIDS_NIGHT_RUN_ID || mission.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
+  const continuesOrionidsResearch = mission.id === ORIONIDS_NIGHT_RUN_ID
   const isOrbitalInstrumentDeployment = mission.payload?.type === 'satellite'
   const help = useHelp('debrief')
   const [collecting, setCollecting] = useState(false)
@@ -160,8 +161,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         )}
 
         <p className={styles.note} data-testid="mission-next-handoff">
-          Mission complete. Return to Base, then open the mission board to choose your next flight.
-          {mission.id === ORIONIDS_NIGHT_RUN_ID && ' Your next Orionids tier is a surface observation, not another mining run.'}
+          {continuesOrionidsResearch
+            ? 'Mission complete. The next Orionids research tier is ready on the Events board: a surface observation with the field rover.'
+            : 'Mission complete. Return to Base, then open the mission board to choose your next flight.'}
         </p>
 
         {isOrbitalInstrumentDeployment ? null : isFreeHaul ? (
@@ -255,7 +257,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             }
           }}
         >
-          {isFreeHaul
+          {continuesOrionidsResearch
+            ? 'Complete mission · continue research'
+            : isFreeHaul
             ? willStore
               ? overflowUnits > 0 ? `Complete mission · sell ${overflowUnits} over cap` : shownRun ? `Complete mission · keep haul` : 'Complete mission · keep haul'
               : `Complete mission · collect ${formatCurrency((haulMarketValue ?? 0) + (shownRun?.francs ?? 0))}`
