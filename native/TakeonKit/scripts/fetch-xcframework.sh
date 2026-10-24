@@ -11,6 +11,10 @@ tmp="$(mktemp -d)"; trap 'rm -rf "${tmp:?}"' EXIT
 curl -fsSL "$URL" -o "$tmp/Takeon.xcframework.zip"
 echo "$SHA256  $tmp/Takeon.xcframework.zip" | shasum -a 256 -c -
 ditto -x -k "$tmp/Takeon.xcframework.zip" "$tmp/out"
+# Warn (not fail) if the release lacks a destination we build for: an arm64-only release still
+# works on Apple-silicon Simulators, but a generic Simulator or Intel build fails at link time.
+scripts/verify-xcframework.sh "$tmp/out/Takeon.xcframework" || \
+  echo "WARNING: release $TAG is missing slices. Run scripts/sync-xcframework.sh to build a universal one." >&2
 rm -rf Frameworks/Takeon.xcframework
 mkdir -p Frameworks
 mv "$tmp/out/Takeon.xcframework" Frameworks/
