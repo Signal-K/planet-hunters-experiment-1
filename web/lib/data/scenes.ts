@@ -79,14 +79,6 @@ export const SCENES: readonly SceneDefinition[] = [
     description: 'Catalog of the current registered Hangar hardware loadout.',
   },
   {
-    id: 'subsurface-habitat-training',
-    name: 'Habitat Training',
-    surface: 'dom',
-    location: 'earth-base-subsurface',
-    entityTypes: [],
-    description: 'Feature-gated below-soil astronaut habitat rehearsal scene. No training mechanics are active yet.',
-  },
-  {
     id: 'mining',
     name: 'Mining Run',
     surface: 'canvas',
@@ -95,16 +87,6 @@ export const SCENES: readonly SceneDefinition[] = [
     sceneFile: '/game/scenes/mining.scene.json',
     entityTypes: ['MiningController'],
     description: 'Side-on extraction run at the target. Ore nodes are spawned by the controller, not authored.',
-  },
-  {
-    id: 'construction-target',
-    name: 'On-Target Construction',
-    surface: 'canvas',
-    location: 'target-surface',
-    screen: 'surface-ops',
-    sceneFile: '/game/scenes/construction-target.scene.json',
-    entityTypes: ['ConstructionController'],
-    description: `Building a structure on a target body rather than at ${SCENE_NAMES.base}.`,
   },
   {
     id: 'delivery',
@@ -156,7 +138,6 @@ export const KNOWN_SCENE_FILES: readonly string[] = [
   '/game/scenes/hub.scene.json',
   '/game/scenes/build-place.scene.json',
   '/game/scenes/mining.scene.json',
-  '/game/scenes/construction-target.scene.json',
   '/game/scenes/delivery.scene.json',
   '/game/scenes/target-picker.scene.json',
 ]

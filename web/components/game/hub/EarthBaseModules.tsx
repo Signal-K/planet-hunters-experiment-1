@@ -31,7 +31,6 @@ export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height:
   hangar: { width: 72, height: 44 },
   'deep-space-telescope': { width: 74, height: 96 },
   'transit-telescope': { width: 64, height: 88 },
-  'astronaut-academy': { width: 178, height: 86 },
   market: { width: 160, height: 64 },
 }
 

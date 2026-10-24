@@ -27,11 +27,11 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
   useEffect(() => {
     if (!freeStart || autoStaged.current || !mission || !target) return
     const free = ROCKET_MODELS.filter(model => !model.locked && model.costFrancs === 0 && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
-      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, unlockedSkillNodes: player.unlockedSkillNodes ?? [] }).ok)
+      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok)
     if (free.length !== 1) return
     autoStaged.current = true
     game.onPurchaseRocket(free[0].id)
-  }, [freeStart, mission, target, player.missionsDone, player.unlockedSkillNodes, game])
+  }, [freeStart, mission, target, player.missionsDone, game])
   if (!mission || !target) return null
 
   const selectedVehicle = player.stagedRockets?.find(vehicle => vehicle.id === player.selectedStagedRocketId && (vehicle.location === 'hangar' || vehicle.location === 'launchpad'))
@@ -43,11 +43,11 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
   const noSilo = isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
   const targets = sheet === 'destination'
-    ? feasibleTargetsFor(mission, game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, player.unlockedSkillNodes ?? [], buildingLevel(player, 'launchpad'))
+    ? feasibleTargetsFor(mission, game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, buildingLevel(player, 'launchpad'))
     : []
   const rockets = sheet === 'vehicle'
     ? ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
-      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, unlockedSkillNodes: player.unlockedSkillNodes ?? [] }).ok)
+      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok)
     : []
 
   return (

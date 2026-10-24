@@ -51,68 +51,6 @@
   animation-duration: 50s;
 }
 
-.wash {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(90% 70% at 72% 18%, color-mix(in srgb, var(--ln-board-lavender) 22%, transparent), transparent 58%),
-    radial-gradient(70% 55% at 8% 78%, color-mix(in srgb, var(--ln-purple-depth) 28%, transparent), transparent 64%),
-    radial-gradient(46% 40% at 38% 46%, color-mix(in srgb, var(--ln-world-night-mid) 80%, var(--ln-board-lavender)), transparent 70%),
-    linear-gradient(180deg, var(--ln-world-night-top) 0%, var(--ln-world-night-mid) 46%, var(--ln-world-dusk-top) 100%);
-}
-
-.dust {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(16px);
-  background: radial-gradient(circle, color-mix(in srgb, var(--ln-board-lavender) 46%, var(--ln-world-night-mid)) 0%, transparent 68%);
-  opacity: 0.72;
-  animation: dust 96s linear infinite;
-}
-
-.dust[data-tone='soft'] {
-  background: radial-gradient(circle, color-mix(in srgb, var(--ln-purple-depth) 64%, var(--ln-world-dusk-mid)) 0%, transparent 70%);
-  opacity: 0.5;
-}
-
-.starTrack {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 200%;
-  height: 100%;
-  display: flex;
-  animation: pan 120s linear infinite;
-}
-
-.starTrack[data-speed='mid'] { animation-duration: 68s; }
-.starTrack[data-speed='near'] { animation-duration: 36s; }
-
-.starField {
-  position: relative;
-  width: 50%;
-  height: 100%;
-  flex: 0 0 50%;
-}
-
-.star {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: var(--ln-map-sun);
-  opacity: 0.7;
-}
-
-.star[data-size='2'] { opacity: 0.9; }
-.star[data-size='3'] {
-  width: 3px;
-  height: 3px;
-  opacity: 1;
-  background: var(--ln-world-hull-lit);
-  box-shadow: 0 0 6px color-mix(in srgb, var(--ln-world-hull-lit) 70%, transparent);
-}
-
 .stage {
   position: absolute;
   left: 0;
@@ -176,17 +114,6 @@
   image-rendering: pixelated;
 }
 
-.bodyCanvas {
-  --flight-sea: var(--ln-blueprint-blue);
-  --flight-land: var(--ln-world-grass);
-  --flight-cloud: var(--ln-world-hull-lit);
-  --flight-ice: var(--ln-mineral-ice);
-  --flight-shade: var(--ln-world-night-mid);
-  width: 100%;
-  height: 100%;
-  image-rendering: pixelated;
-}
-
 .progress {
   position: absolute;
   left: 50%;
@@ -208,68 +135,12 @@
   background: linear-gradient(90deg, var(--ln-blueprint-blue) 0%, var(--ln-world-trim-blue) 72%, transparent 100%);
 }
 
-.chrome {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px 12px 0;
-}
-
-.cluster {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  pointer-events: auto;
-}
-
-.cog {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0;
-  border: 1px solid var(--ln-world-outline);
-  border-radius: 4px;
-  background: var(--ln-world-hull-lit);
-  color: var(--ln-world-outline);
-  cursor: pointer;
-}
-
-.clock {
-  pointer-events: none;
-}
-
 .cluster :global(.scene-chip) {
   min-height: 44px;
   height: 44px;
   border-radius: 4px;
   padding: 0 12px;
   font-size: 16px;
-}
-
-.dock {
-  position: absolute;
-  left: 50%;
-  bottom: 8px;
-  z-index: 5;
-  width: max-content;
-  max-width: calc(100% - 16px);
-  transform: translateX(-50%);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  pointer-events: auto;
 }
 
 .controls {
@@ -331,12 +202,12 @@
 
 @media (orientation: landscape) and (max-height: 500px) {
   .screen { --k: 2px; }
-  .top { padding-top: 8px; }
+  
   .stage { top: 56px; bottom: 96px; }
   .ship { left: 36%; top: 46%; }
   .body { right: 8%; top: 46%; }
   .progress { bottom: 80px; }
-  .dock { bottom: 4px; }
+  
 }
 
 @media (min-width: 1024px) {

@@ -151,13 +151,11 @@
     },
     {
       "id": "progression",
-      "name": "Skills, licences and XP",
+      "name": "Research XP and blueprints",
       "web": [
-        "web/lib/systems/ProgressionSystem.ts",
-        "web/lib/systems/XPSystem.ts"
+        "web/lib/systems/ProgressionSystem.ts"
       ],
       "native": [
-        "native/LandnamCore/Sources/LandnamCore/Systems/Progression.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Milestones.swift"
       ],
       "note": "XP source and native progression differ in granularity; source mapping is not behavior parity.",
@@ -175,82 +173,6 @@
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
       ],
       "note": "Training does not gate Free Ops. Replay rewards use the same completion transitions.",
-      "components": []
-    },
-    {
-      "id": "academy",
-      "name": "Academy, staff and crew",
-      "web": [
-        "web/lib/systems/AcademySystem.ts",
-        "web/lib/systems/CrewSystem.ts"
-      ],
-      "native": [
-        "native/LandnamCore/Sources/LandnamCore/Industry/Academy.swift"
-      ],
-      "note": "Roster and training ownership. Crew never increases citizen-science yield.",
-      "components": []
-    },
-    {
-      "id": "surface-logistics",
-      "name": "Off-world sites, construction and ferries",
-      "web": [
-        "web/lib/systems/SurfaceOpsSystem.ts"
-      ],
-      "native": [
-        "native/LandnamCore/Sources/LandnamCore/Industry/SurfaceOps.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
-      ],
-      "note": "Native settlement logistics exists; embedded field factory and biosphere commands need separate adapters.",
-      "components": []
-    },
-    {
-      "id": "field-refining",
-      "name": "Field refinery pipeline",
-      "web": [
-        "web/lib/systems/OffworldRefinerySystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native field refinery adapter identified; base Refinery is a different mechanic.",
-      "components": []
-    },
-    {
-      "id": "ownership",
-      "name": "Ownership transfers",
-      "web": [
-        "web/lib/systems/OwnershipSystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native transfer domain identified.",
-      "components": []
-    },
-    {
-      "id": "site-rights",
-      "name": "Site purchases and leases",
-      "web": [
-        "web/lib/systems/SiteRightsSystem.ts"
-      ],
-      "native": [],
-      "note": "Native SurfaceOps site access is not the full lease/deed model.",
-      "components": []
-    },
-    {
-      "id": "treasury",
-      "name": "Treasury ledger, science rewards and loans",
-      "web": [
-        "web/lib/systems/TreasurySystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native treasury ledger or loan implementation identified.",
-      "components": []
-    },
-    {
-      "id": "sandbox",
-      "name": "Field sandbox rules",
-      "web": [
-        "web/lib/systems/SandboxSystem.ts"
-      ],
-      "native": [],
-      "note": "Do not confuse field sandbox domain rules with Studio preview presets.",
       "components": []
     },
     {
@@ -309,12 +231,10 @@
       "id": "records",
       "name": "Mission history and narrative ledger",
       "web": [
-        "web/lib/mission-log.ts",
-        "web/lib/data/narrative-ledger.ts"
+        "web/lib/mission-log.ts"
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/MissionLog.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/NarrativeLedger.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift"
       ],
       "note": "Read canonical records; do not create a parallel editor save.",
@@ -333,23 +253,6 @@
         "native/LandnamCore/Sources/LandnamCore/Sync/CloudSync.swift"
       ],
       "note": "Host service, not a scene object. All changes use canonical save/outbox paths.",
-      "components": []
-    },
-    {
-      "id": "field-engine",
-      "name": "TakeOn rover and field runtime",
-      "web": [
-        "web/lib/takeon/goRuntime.ts",
-        "web/lib/takeon/events.ts",
-        "web/lib/takeon/LandnamSync.ts",
-        "web/lib/takeon/field-operation.ts"
-      ],
-      "native": [
-        "native/TakeonKit/Sources/TakeonKit/TakeonEngine.swift",
-        "native/TakeonKit/Sources/TakeonKit/GoTakeonEngine.swift",
-        "native/App/TakeonPersistence.swift"
-      ],
-      "note": "Shared Go engine with host adapters. Native field factory/biosphere state commands remain separate gaps; a linked runtime is not full game parity.",
       "components": []
     },
     {

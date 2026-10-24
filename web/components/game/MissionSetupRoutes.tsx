@@ -5,7 +5,6 @@ import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
-import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import { ROLLOUT_MS } from '@/components/game/screens/RocketBuilderScene'
@@ -28,7 +27,7 @@ interface MissionSetupRoutesProps {
 }
 
 export default function MissionSetupRoutes({ screen, game, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
-  const relay = useMissionRelayModels({ catalog: game.catalog, missionsDone: game.player.missionsDone, freeOperations: game.player.freeOperations, francs: game.player.francs, crew: game.player.crew, player: game.player, sceneScope: game.sceneScope })
+  const relay = useMissionRelayModels({ catalog: game.catalog, missionsDone: game.player.missionsDone, freeOperations: game.player.freeOperations, francs: game.player.francs, player: game.player, sceneScope: game.sceneScope })
   const selectedVehicle = game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)
   // SSL-375: the rocket stands in the Workshop while it is prepared, then rolls to the pad in-scene on confirm.
   const [rolling, setRolling] = useState<string | null>(null)
@@ -79,14 +78,13 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   if (!game.mission || !game.target) return null
   const target = game.target
   const selectedRocket = rocketModelForConfig(game.rocket)
-  const crewStatus = crewRequirementStatus(game.mission.requires.crew, game.player.crew ?? [])
-  const launchReady = validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [], loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)) }).ok && (!game.mission.requires.crew || crewStatus.met)
+  const launchReady = validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)) }).ok
   const preparing = !selectedVehicle || selectedVehicle.location !== 'launchpad'
   const ownProgram = isOwnProgramMission(game.mission)
 
   return (
     <div data-testid="mission-launch-review" className={styles.builderHost}>
-      <MissionPlanStrip game={game} launched={launchPending} blockedReason={launchReady ? null : (validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [], loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)) }).problems[0] ?? crewStatus.reason ?? 'Mission requirements not met')} />
+      <MissionPlanStrip game={game} launched={launchPending} blockedReason={launchReady ? null : (validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)) }).problems[0] ?? 'Mission requirements not met')} />
       <LaunchpadScreen
         onBack={() => game.go(ownProgram ? 'launchpad' : 'missions')}
         onPick={game.onPickMission}

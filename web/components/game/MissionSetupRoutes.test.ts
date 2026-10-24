@@ -27,9 +27,6 @@ describe('R1 mission setup', () => {
     expect(routes).toContain('LaunchpadScreen')
     expect(builder).toContain('LaunchpadPrefab')
     expect(builder).toContain('builderLandscape')
-    expect(styles).toContain('.review')
-    expect(styles).toContain('.inlineChoices')
-    expect(styles).toContain('@media (orientation:portrait)')
     expect(styles).not.toContain('@keyframes assemble-')
     expect(styles).not.toContain('.targetMap')
     expect(styles).not.toContain('.rocketBlueprint')
@@ -51,12 +48,6 @@ describe('R1 mission setup', () => {
     expect(board).toContain("onAccept(ORIONIDS_NIGHT_RUN_ID)")
     expect(board).toContain("onAccept(ORIONIDS_SURFACE_RESEARCH_MISSION_ID)")
     expect(board).toContain('data-event-focused')
-  })
-
-  it('keeps the Mission Board back control at the 44px touch-target floor', () => {
-    const styles = read('./MissionSetupRoutes.module.css')
-
-    expect(styles).toMatch(/\.back\s*\{[^}]*min-width:44px;[^}]*min-height:44px;/)
   })
 
   it('keeps the internal setup states on the one canonical missions URL', () => {

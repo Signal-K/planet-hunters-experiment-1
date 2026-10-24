@@ -25,15 +25,4 @@ import Foundation
         let back = try JSONDecoder().decode(GameState.self, from: JSONEncoder().encode(gs))
         #expect(back.player.lastSeenConfirmedAt == "t9")
     }
-
-    @Test func siteDeedIsAQueuedPostOfTheSiteId() {
-        #expect(SiteDeed.op(siteId: "ceres") == .http(path: "api/treasury/site-deed", body: ["siteId": .string("ceres")]))
-    }
-
-    @Test func siteDeedQueuesOfflineAndStaysUntilReplayed() async {
-        let outbox = Outbox(store: MemoryOutboxStore(), execute: { _ in .offline })
-        let sync = CloudSync(outbox: outbox)
-        await sync.enqueue(SiteDeed.op(siteId: "ceres"))
-        #expect(await outbox.pending().count == 1)
-    }
 }

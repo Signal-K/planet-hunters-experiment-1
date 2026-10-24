@@ -30,7 +30,6 @@ interface RocketBuilderSceneProps {
   rocket: RocketConfig
   installed?: BuilderLoadout | null
   missionsDone: number
-  skills?: string[]
   towerLabel: string
   launchTestId?: string
   launchDisabled?: boolean
@@ -62,7 +61,6 @@ export default function RocketBuilderScene({
   rocket,
   installed,
   missionsDone,
-  skills = [],
   towerLabel,
   launchTestId = 'launch-btn',
   launchDisabled = false,
@@ -85,7 +83,7 @@ export default function RocketBuilderScene({
   const [customizing, setCustomizing] = useState(false)
   const showParts = customizing || guided
   const land = builderLandscape(target)
-  const stats = rocketBuilderStats(rocket, loadout, skills)
+  const stats = rocketBuilderStats(rocket, loadout)
   const fitted = fittedModules(loadout)
   const fittedCount = BUILDER_SLOTS.filter(slot => partIdForSlot(loadout, slot)).length
   const targetLabel = target ? target.name : 'Choose a mission'

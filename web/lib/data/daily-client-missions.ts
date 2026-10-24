@@ -18,9 +18,12 @@ export const BASE_DAILY_SLOTS_PER_CLIENT = 3
 // total completed jobs, which never decreases).
 export const MAX_AFFINITY_BONUS_SLOTS = 5
 
+export function clientAffinityLevel(completedJobs: number): number {
+  return 1 + Math.floor(Math.max(0, completedJobs) / CLIENT_AFFINITY_MISSION_THRESHOLD)
+}
+
 export function affinityBonusSlots(completedJobs: number): number {
-  const level = 1 + Math.floor(completedJobs / CLIENT_AFFINITY_MISSION_THRESHOLD)
-  return Math.min(MAX_AFFINITY_BONUS_SLOTS, level - 1)
+  return Math.min(MAX_AFFINITY_BONUS_SLOTS, clientAffinityLevel(completedJobs) - 1)
 }
 
 export interface DailyClientPool {

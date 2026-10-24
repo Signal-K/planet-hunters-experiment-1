@@ -9,7 +9,6 @@ import {
 } from './runtimeCatalog'
 import { tessCandidateToExoplanetTarget, toTessCandidate } from './data'
 import { DEFAULT_STATE } from './game-state'
-import { createCrewMember } from './systems/CrewSystem'
 
 describe('buildRuntimeCatalog', () => {
   it('keeps an active Orionids run resolvable when a remote catalog omits the event row', () => {

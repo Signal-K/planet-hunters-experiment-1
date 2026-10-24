@@ -158,47 +158,8 @@ export function authoredMission(id: string): Mission {
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
 export const RESOURCE_FOCUS_MISSION_ID = 'focus-resource-mining'
 
-const remoteSiloBlueprint = { requiredMaterials: { aluminium: 18, iron: 12, copper: 6 } }
-
-function materialRequirement(materials: Record<string, number>): { minerals: Record<string, number>; cargo_min: number } {
-  return {
-    minerals: { ...materials },
-    // The kit must fit the biggest vehicle the player can launch: a 36U kit against an 18U Surveyor made these steps unflyable.
-    cargo_min: Math.min(
-      Object.values(materials).reduce((total, amount) => total + amount, 0),
-      Math.max(...ROCKET_MODELS.filter(rocket => !rocket.locked).map(rocket => rocket.stats.cargo)),
-    ),
-  }
-}
-
-/** Player-program construction is owned work, so it awards infrastructure
- * rather than a client fee. Keep its costs aligned with the blueprints. */
-export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
-  {
-    id: 'program-build-mars-mining-settlement', title: 'Establish Mars Mining Settlement',
-    brief: 'Carry a starter settlement kit to the program’s assigned Mars area. The permanent site anchors later extraction and support structures.',
-    tag: 'PROGRAM', difficulty: 'L1', locked: false, sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Reach Free Operations · Mars allocation ready', targetId: 'mars',
-    construction: { structureKind: 'mining-settlement', requiredMaterials: { aluminium: 12, iron: 16, silicon: 8 }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
-    programReward: { researchXP: 0, outcome: 'Mars mining settlement established · permanent program site online' },
-    requires: { ...materialRequirement({ aluminium: 12, iron: 16, silicon: 8 }), drill_tier: 1, max_orbit: 4 }, payout: { francs: 0, affinity: 0 },
-  },
-  {
-    id: 'program-build-remote-silo',
-    title: 'Build a Remote Mineral Silo',
-    brief: 'Send construction materials to a target with build rights. The sealed silo stores your extracted ore off-world instead of forcing every haul into an Earth sale.',
-    tag: 'PROGRAM', difficulty: 'L2', locked: false,
-    sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Reach Free Operations',
-    construction: { structureKind: 'mineral-silo', requiredMaterials: { ...remoteSiloBlueprint.requiredMaterials }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
-    programReward: { researchXP: 0, outcome: 'Remote Mineral Silo commissioned · ore can be held at the selected target' },
-    requires: { ...materialRequirement(remoteSiloBlueprint.requiredMaterials), drill_tier: 1, max_orbit: 5 },
-    payout: { francs: 0, affinity: 0 },
-  },
-]
 
 export const AUTHORED_MISSIONS: Mission[] = [
-  ...OWN_PROGRAM_BUILD_MISSIONS,
   authoredMission('lnm_m3_relay_bennu_vesta'),
   {
     id: 'lnm_m3_relay_itokawa_eros',

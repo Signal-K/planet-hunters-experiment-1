@@ -159,7 +159,6 @@ describe('resolvePreset — ship customizer', () => {
     expect(p.screen).toBe('hangar')
     expect(p.tutorial).toBe(false)
     expect(p.player!.placed).toContain('launchpad')
-    expect(p.player!.unlockedSkillNodes).toContain('ship-customizer-1')
     expect(p.missionId).toBe(TRANSPORT_MISSION.id)
     expect(p.targetId).toBe(TRANSPORT_MISSION.targetId)
   })

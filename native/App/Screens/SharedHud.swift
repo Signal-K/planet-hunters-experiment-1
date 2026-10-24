@@ -4,35 +4,8 @@ import LandnamCore
 /// Cog and clock chips shared by the base and flight scenes (top-left).
 struct HudGearClock: View {
     let onSettings: () -> Void
-    var onFriends: (() -> Void)? = nil
-    var onNotifications: (() -> Void)? = nil
-    var notificationCount = 0
     var body: some View {
         HStack(spacing: 8) {
-            if let onFriends {
-                Button(action: onFriends) {
-                    Image(systemName: "person.2.fill").font(.system(size: 16, weight: .black)).foregroundStyle(Theme.hudInk)
-                        .frame(width: 36, height: 36).contentShape(Rectangle())
-                        .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
-                        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
-                }
-                .buttonStyle(.plain).accessibilityLabel("Friends")
-            }
-            if let onNotifications {
-                Button(action: onNotifications) {
-                    ZStack(alignment: .topTrailing) {
-                        Image(systemName: "bell.fill").font(.system(size: 16, weight: .black)).foregroundStyle(Theme.hudInk)
-                            .frame(width: 36, height: 36).contentShape(Rectangle())
-                            .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
-                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
-                        if notificationCount > 0 {
-                            Text("\(notificationCount)").font(AppFont.mono(10)).foregroundStyle(Theme.bg).frame(minWidth: 16, minHeight: 16)
-                                .background(Theme.hudInk, in: Circle()).offset(x: 5, y: -5)
-                        }
-                    }
-                }
-                .buttonStyle(.plain).accessibilityLabel("Notifications\(notificationCount > 0 ? ", \(notificationCount) unread" : "")")
-            }
             Button(action: onSettings) {
                 Image(systemName: "gearshape.fill").font(.system(size: 18, weight: .black)).foregroundStyle(Theme.hudInk)
                     .frame(width: 36, height: 36).contentShape(Rectangle())

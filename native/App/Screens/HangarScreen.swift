@@ -9,12 +9,6 @@ struct HangarScreen: View {
     @State private var launching = false
     @State private var previewRocketId: String?
 
-    private var customizerUnlocked: Bool {
-        store.player.unlockedSkillNodes.contains("ship-customizer-1")
-            || store.player.crewModuleResearched
-            || store.player.landingResearched
-    }
-
     private var stagedInBay: Bool { store.player.stagedRockets.contains { $0.location == .hangar } }
     private var stagedOnPad: Bool { store.player.stagedRockets.contains { $0.location == .launchpad } }
     private var hasMission: Bool { store.mission != nil && store.target != nil }
@@ -132,7 +126,7 @@ struct HangarScreen: View {
 
     private func blueprint(width: CGFloat) -> some View {
         Button {
-            if customizerUnlocked { configuring = true }
+            configuring = true
         } label: {
             Canvas { ctx, size in
                 let k = size.width / 220

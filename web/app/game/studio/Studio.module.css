@@ -254,7 +254,6 @@ textarea.input { height: auto; min-height: 88px; padding: 8px 12px; resize: vert
 .tagNow { border-color: var(--accent); color: var(--accent); }
 .muted { color: var(--muted); }
 .chip { border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: 999px; padding: 0 12px; height: 28px; font: inherit; cursor: pointer; }
-.chipOn { background: var(--accent); color: var(--on-accent); }
 
 /* ---- flow: a mission as steps ---- */
 .flow {
@@ -377,36 +376,7 @@ textarea.input { height: auto; min-height: 88px; padding: 8px 12px; resize: vert
 
 /* ---- stage: the scene in a bezel, lit from behind ---- */
 .stage { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.frames { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; justify-content: center; }
-.device { position: relative; }
-.device::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: 6%;
-  right: 6%;
-  bottom: -20px;
-  height: 30px;
-  background: radial-gradient(50% 50% at 50% 50%, rgb(0 0 0 / 0.6), transparent 72%);
-  filter: blur(7px);
-  pointer-events: none;
-}
-.frameBox {
-  position: relative;
-  overflow: hidden;
-  border: 0;
-  border-radius: 26px;
-  background: #050816;
-  /* bezel, a lit edge, then the drop shadow and the glow behind it */
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.2),
-    0 0 0 7px #090e26,
-    0 0 0 8px rgb(255 255 255 / 0.12),
-    0 40px 70px -22px rgb(0 0 0 / 0.8),
-    0 0 110px 6px rgb(98 112 240 / 0.24);
-}
-.frameBox[data-vp='ls'] { border-radius: 20px; }
-.frameBox[data-vp='dk'] { border-radius: 10px; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.2), 0 0 0 5px #090e26, 0 0 0 6px rgb(255 255 255 / 0.12), 0 40px 70px -22px rgb(0 0 0 / 0.8), 0 0 110px 6px rgb(98 112 240 / 0.24); }
+
 .harnessHeader { width: min(1080px, 100%); display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 14px; color: var(--muted); font-size: 12px; letter-spacing: 0.08em; }
 .harnessHeader > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; }
 .harnessHeader strong { color: var(--ink); font-size: 18px; letter-spacing: normal; }
@@ -452,31 +422,11 @@ textarea.input { height: auto; min-height: 88px; padding: 8px 12px; resize: vert
   transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 .led[data-on='true'] { background: var(--accent); box-shadow: 0 0 10px var(--glow), 0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent) inset; }
-.empty { padding: 16px; color: var(--muted); display: flex; align-items: center; justify-content: center; text-align: center; height: 100%; }
 
 /* what shows while the game inside the frame is still starting */
-.boot {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  padding: 24px;
-  text-align: center;
-  color: #dfe6ff;
-  background: radial-gradient(72% 54% at 50% 36%, rgb(118 130 245 / 0.4), transparent 70%), linear-gradient(180deg, #0f1636, #26256a 68%, #3a2a78);
-  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
-}
-.boot[data-live='true'] { opacity: 0; visibility: hidden; pointer-events: none; }
-.bootRing { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgb(255 255 255 / 0.16); border-top-color: var(--accent); animation: spin 1s linear infinite; }
-.bootText { max-width: 28ch; color: #c3cdf2; }
+
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.overlay { position: absolute; inset: 0; pointer-events: none; }
 .capture { position: absolute; inset: 0; pointer-events: auto; cursor: crosshair; touch-action: none; }
 .box {
   position: absolute;
@@ -536,9 +486,6 @@ textarea.input { height: auto; min-height: 88px; padding: 8px 12px; resize: vert
 .noteText { width: 100%; border: 0; border-radius: 6px; padding: 2px 6px; margin: -2px -6px; background: transparent; color: inherit; font: inherit; resize: none; }
 .noteText:hover, .noteText:focus { background: var(--soft); outline: none; }
 .thumb { display: block; width: 100%; max-height: 180px; object-fit: contain; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); margin-bottom: 8px; }
-.thread { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; margin-bottom: 8px; }
-.msg { padding: 6px 10px; border-radius: 10px; background: var(--soft); }
-.msgAgent { border-left: 3px solid var(--accent); }
 
 .card details { border-top: 1px solid var(--line); }
 .card details:first-child { border-top: 0; }
@@ -649,7 +596,7 @@ textarea.input { height: auto; min-height: 88px; padding: 8px 12px; resize: vert
 .node { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background var(--t); }
 .node:hover { background: color-mix(in srgb, var(--accent) 9%, transparent); }
 .nodeOn { background: color-mix(in srgb, var(--accent) 13%, transparent); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
-.nodeKind { margin-left: auto; color: var(--muted); }
+
 .caret { width: 16px; color: var(--muted); text-align: center; }
 .field { display: grid; grid-template-columns: minmax(72px, 112px) minmax(0, 1fr); gap: 4px 12px; align-items: start; margin-bottom: 8px; }
 .fieldLabel { padding-top: 8px; color: var(--muted); overflow-wrap: anywhere; }

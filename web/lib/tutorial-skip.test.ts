@@ -13,8 +13,6 @@ const baseState: GameState = {
     placementPlots: {},
     controlBuilt: false,
     missionsDone: 0,
-    skillPoints: 0,
-    unlockedSkillNodes: [],
     freeOperations: false,
     clientMissions: {},
     clientStreaks: {},

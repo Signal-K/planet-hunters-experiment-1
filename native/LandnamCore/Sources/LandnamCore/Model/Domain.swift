@@ -84,18 +84,6 @@ public struct Client: Equatable, Identifiable, Sendable {
     public let payoutPremium: Double
     public let affinityBonusPerMission: Double
     public let uiRole: UIRole
-    public let suppliesCrew: Bool
-}
-
-/// A trained crew member a flight needs aboard (web `CrewRequirement`).
-public struct CrewRequirement: Codable, Equatable, Sendable {
-    public var branch: String
-    public var minTier: Int
-    public var minLevel: Int
-    public var count: Int?
-    public init(branch: String, minTier: Int, minLevel: Int, count: Int? = nil) {
-        self.branch = branch; self.minTier = minTier; self.minLevel = minLevel; self.count = count
-    }
 }
 
 public struct MissionRequirements: Codable, Equatable, Sendable {
@@ -103,12 +91,11 @@ public struct MissionRequirements: Codable, Equatable, Sendable {
     public var cargoMin: Int
     public var drillTier: Int
     public var maxOrbit: Int
-    public var crew: CrewRequirement?
-    public init(minerals: Cargo, cargoMin: Int, drillTier: Int, maxOrbit: Int, crew: CrewRequirement? = nil) {
-        self.minerals = minerals; self.cargoMin = cargoMin; self.drillTier = drillTier; self.maxOrbit = maxOrbit; self.crew = crew
+    public init(minerals: Cargo, cargoMin: Int, drillTier: Int, maxOrbit: Int) {
+        self.minerals = minerals; self.cargoMin = cargoMin; self.drillTier = drillTier; self.maxOrbit = maxOrbit
     }
     enum CodingKeys: String, CodingKey {
-        case minerals, cargoMin = "cargo_min", drillTier = "drill_tier", maxOrbit = "max_orbit", crew
+        case minerals, cargoMin = "cargo_min", drillTier = "drill_tier", maxOrbit = "max_orbit"
     }
 }
 

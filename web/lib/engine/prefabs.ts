@@ -58,13 +58,6 @@ export const PREFABS: readonly Prefab[] = [
     components: [{ type: 'MiningController' }],
   },
   {
-    id: 'construction-controller',
-    name: 'Construction Controller',
-    category: 'controller',
-    description: 'Headless entity hosting ConstructionController. One per on-target construction scene.',
-    components: [{ type: 'ConstructionController' }],
-  },
-  {
     id: 'delivery-controller',
     name: 'Delivery Controller',
     category: 'controller',
@@ -77,20 +70,6 @@ export const PREFABS: readonly Prefab[] = [
     category: 'site',
     description: 'A sealed receiving berth where contract cargo visibly leaves the player ship.',
     components: [{ type: 'UnloadPad', role: 'contract-depot' }],
-  },
-  {
-    id: 'academy-controller',
-    name: 'Academy Controller',
-    category: 'controller',
-    description: 'Headless entity hosting AcademyController.',
-    components: [{ type: 'AcademyController' }],
-  },
-  {
-    id: 'training-facility',
-    name: 'Training Facility',
-    category: 'site',
-    description: 'Astronaut Academy on the home ground, with centrifuge and neutral-buoyancy zones.',
-    components: [{ type: 'TrainingFacility', facility: 'astronaut-academy' }],
   },
 ]
 

@@ -39,7 +39,7 @@ import Foundation
             let targets = Targets.feasible(for: entry.mission, missionsDone: 0)
             #expect(!targets.isEmpty, "\(entry.mission.title) has no target a new player can reach")
             if let target = targets.first {
-                #expect(catalog.parts.validate(mission: entry.mission, target: target, rocket: explorer, skills: []).ok, "\(entry.mission.title) is not launchable with the free Explorer")
+                #expect(catalog.parts.validate(mission: entry.mission, target: target, rocket: explorer).ok, "\(entry.mission.title) is not launchable with the free Explorer")
             }
         }
     }

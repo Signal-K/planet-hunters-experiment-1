@@ -16,7 +16,7 @@
  * produced by a merge records nothing.
  */
 
-export const LEDGER_SCALARS = ['francs', 'researchXP', 'skillPoints', 'academyXP', 'researchAnnotations', 'missionsDone'] as const
+export const LEDGER_SCALARS = ['francs', 'researchXP', 'researchAnnotations', 'missionsDone'] as const
 export const LEDGER_RECORDS = ['stash', 'refinedGoods'] as const
 
 export type Counters = Record<string, number>

@@ -46,8 +46,6 @@ export interface TargetStructureBlueprint {
   requiredMaterials: Record<string, number>
   buildTimeMs: number
   description: string
-  /** Cycle 3 scope gate for off-world build listings; data is never deleted. */
-  offworldCategory: import('../featureFlags').OffworldBuildCategory
 }
 
 export interface ClientStructureRecord {
@@ -118,7 +116,6 @@ export interface Mission {
     cargo_min: number
     drill_tier: number
     max_orbit: number
-    crew?: import('./crew').CrewRequirement
   }
   jointProject?: {
     playerCost: number
@@ -208,7 +205,6 @@ export interface Client {
   uiRole: ClientSlot['uiRole']
   payoutNotes?: string
   affinityNotes?: string
-  suppliesCrew: boolean
 }
 
 export interface ClientSlot {
@@ -224,7 +220,6 @@ export interface ClientSlot {
   payoutNotes: string
   affinityNotes: string
   uiRole: 'starter' | 'bulk' | 'prospect' | 'command' | 'science'
-  suppliesCrew: boolean
 }
 
 export interface StructureBlueprint {

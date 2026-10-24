@@ -6,7 +6,6 @@ import type { Mission, SurfaceTarget, Target } from '@/lib/data'
 import { lifeStageForTarget } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import type { Player } from '@/lib/game-types'
-import type { FieldBuildInput, FieldIdentity } from '@/lib/systems/SandboxSystem'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { openSettings } from '@/lib/mining/openChrome'
 import { captureGameEvent } from '@/lib/posthog'
@@ -47,10 +46,6 @@ interface RoverSurveyScreenProps {
   onBack: () => void
   rocketImageSrc?: string
   player?: Player
-  onFieldBuild?: (field: FieldIdentity, structure: FieldBuildInput) => boolean
-  onFieldDemolish?: (targetId: string, structureId: string) => void
-  onFabricate?: (targetId: string, recipeId: string) => boolean
-  onSeedBiosphere?: (target: SurfaceTarget) => boolean
 }
 
 const ORIONIDS_ROVER_FORMATION_GOAL = 3
@@ -61,7 +56,7 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
   const bodyId = useMemo(() => takeonBodyForTarget(target), [target])
   const missionId = useMemo(() => `landnam-rover-survey-${mission.id}-${target.id}`, [mission.id, target.id])
   const seed = useMemo(() => stableSeed(`${mission.id}:${target.id}:takeon`), [mission.id, target.id])
-  const lifeStage = lifeStageForTarget(target, player?.biosphereSeeds?.[target.id])
+  const lifeStage = lifeStageForTarget(target, undefined)
   const takeonHandle = useRef<TakeOnMountHandle | null>(null)
   const loggedRef = useRef<LoggedObservation[]>([])
   const [ready, setReady] = useState(false)

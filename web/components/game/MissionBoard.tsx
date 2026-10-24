@@ -6,7 +6,7 @@ import { useHelp } from '@/components/ui/useHelp'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import type { MissionRelayCardModel } from '@/lib/hooks/useMissionRelayModels'
-import { clientAffinityLevel } from '@/lib/systems/AcademySystem'
+import { clientAffinityLevel } from '@/lib/data/daily-client-missions'
 import { FRANC, formatFrancs } from '@/lib/format'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import {
@@ -80,11 +80,10 @@ function LockIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
 }
 
-const STEP_KIND_LABEL: Record<ProgramStep['kind'], string> = { instrument: 'Instrument', build: 'Build', mining: 'Mining', focus: 'Focus' }
+const STEP_KIND_LABEL: Record<ProgramStep['kind'], string> = { instrument: 'Instrument', mining: 'Mining', focus: 'Focus' }
 const STEP_STATE_LABEL: Record<ProgramStep['state'], string> = { done: 'Done', current: 'Next up', available: 'Open', locked: 'Locked' }
 
 function StepGlyph({ kind }: { kind: ProgramStep['kind'] }) {
-  if (kind === 'build') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 20V9l6-5 6 5v11" /><path d="M10 20v-5h4v5" /></svg>
   if (kind === 'mining' || kind === 'focus') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16M8 18l2-8h4l2 8M10 10V7h4v3" /></svg>
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16c3-1 5-5 8-12 3 7 5 11 8 12" /><circle cx="12" cy="16" r="2" /><path d="M8 20h8" /></svg>
 }

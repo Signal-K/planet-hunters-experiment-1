@@ -14,7 +14,7 @@ public struct SyncLedger: Codable, Equatable, Sendable {
 
 public enum Ledger {
     public static let key = "syncLedger"
-    static let scalars = ["francs", "researchXP", "skillPoints", "academyXP", "researchAnnotations", "missionsDone"]
+    static let scalars = ["francs", "researchXP", "researchAnnotations", "missionsDone"]
 
     public static func get(_ s: GameState) -> SyncLedger? {
         guard let raw = s.extras[key], let data = try? JSONEncoder().encode(raw) else { return nil }
@@ -27,8 +27,8 @@ public enum Ledger {
 
     public static func counters(_ p: Player) -> [String: Double] {
         var c: [String: Double] = [
-            "francs": Double(p.francs), "researchXP": Double(p.researchXP), "skillPoints": Double(p.skillPoints),
-            "academyXP": Double(p.academyXP), "researchAnnotations": Double(p.researchAnnotations), "missionsDone": Double(p.missionsDone),
+            "francs": Double(p.francs), "researchXP": Double(p.researchXP),
+            "researchAnnotations": Double(p.researchAnnotations), "missionsDone": Double(p.missionsDone),
         ]
         for (k, v) in p.stash { c["stash.\(k)"] = Double(v) }
         for (k, v) in p.refinedGoods { c["refinedGoods.\(k)"] = Double(v) }
@@ -48,8 +48,6 @@ public enum Ledger {
         func i(_ k: String) -> Int? { v[k].map { Int($0.rounded()) } }
         if let x = i("francs") { p.francs = x }
         if let x = i("researchXP") { p.researchXP = x }
-        if let x = i("skillPoints") { p.skillPoints = x }
-        if let x = i("academyXP") { p.academyXP = x }
         if let x = i("researchAnnotations") { p.researchAnnotations = x }
         if let x = i("missionsDone") { p.missionsDone = x }
         func rec(_ prefix: String) -> [String: Int] {

@@ -24,6 +24,6 @@ the two builds of that graph.
 
 The shipped game is the agency loop: place a launchpad, take one contract,
 prepare and fly, mine or deliver, debrief, then enter free operations. The
-telescope is an optional extension of that same loop. Academy, refinery,
+telescope is an optional extension of that same loop. Refinery,
 settlement, and other speculative systems are not new mission tracks unless a
 new approved narrative contract adds an independent harness for them.

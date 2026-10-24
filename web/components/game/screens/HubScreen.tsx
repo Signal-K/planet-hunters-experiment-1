@@ -30,7 +30,6 @@ import type { BuildingCallout } from '@/components/game/hub/Building'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { StashChip } from '@/components/game/hub/StashChip'
-import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
@@ -405,7 +404,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         : []
     ),
     { id: 'mission-log', icon: 'log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
-    ...(player.freeOperations ? [{ id: 'sites', icon: 'sites' as const, label: 'Sites', detail: 'Places to survey and settle', onSelect: () => onOpenScene('surface-ops') }] : []),
     { id: 'settings', icon: 'settings', label: 'Settings', detail: 'Sound, display and account', onSelect: openSettings },
   ]
 
@@ -526,7 +524,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           <HubSubsurfaceView
             stash={player.stash}
             installedParts={player.shipCustomizerParts}
-            trainingEnabled={FEATURE_FLAGS.subsurfaceHabitatTraining}
             francs={player.francs}
             subsurfaceExcavated={player.subsurfaceExcavated}
             subsurfaceBuilt={player.subsurfaceBuilt}

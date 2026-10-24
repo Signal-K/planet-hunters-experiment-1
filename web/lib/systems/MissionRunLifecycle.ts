@@ -42,7 +42,6 @@ export function clearActiveRunPlayer(player: Player): Player {
     arrivalAt: null,
     transitStartedAt: null,
     missionRocketSource: undefined,
-    missionCrewIds: [],
     debriefPending: false,
     homeDeliveryPending: false,
     cargoSettledOffworld: false,

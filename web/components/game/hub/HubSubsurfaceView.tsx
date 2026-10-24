@@ -4,9 +4,7 @@ import { useState } from 'react'
 import {
   ArrowLeft,
   Boxes,
-  Dumbbell,
   Hammer,
-  LockKeyhole,
   PackageOpen,
   Shovel,
   Warehouse,
@@ -31,7 +29,6 @@ import styles from './HubSubsurfaceView.module.css'
 interface HubSubsurfaceViewProps {
   stash?: Record<string, number>
   installedParts?: InstalledCustomizerPartsByKind
-  trainingEnabled?: boolean
   francs?: number
   subsurfaceExcavated?: boolean
   subsurfaceBuilt?: string[]
@@ -102,12 +99,10 @@ function RoomScene({
   id,
   minerals,
   parts,
-  trainingEnabled,
 }: {
   id: SubsurfaceRoomId
   minerals: StoredMineral[]
   parts: RegisteredPart[]
-  trainingEnabled: boolean
 }) {
   if (id === 'mineral-vault' || id === 'deep-mineral-vault') {
     const displayedMinerals = minerals.slice(0, 4)
@@ -164,26 +159,6 @@ function RoomScene({
       </div>
     )
   }
-  return (
-    <div className={`${styles.roomScene} ${styles.trainingScene}`} aria-hidden="true">
-      <div className={styles.roomCeiling}>
-        <span />
-        <span />
-        <span />
-      </div>
-      <div className={styles.habitat}>
-        <span className={styles.habitatWindow}>
-          <i />
-          <i />
-        </span>
-        <span className={styles.airlockWheel} />
-      </div>
-      <div className={styles.trainingSeal}>
-        {trainingEnabled ? 'TRAINING DECK ONLINE' : 'BAY SEALED · COMING SOON'}
-      </div>
-      <div className={styles.sceneFloorRail} />
-    </div>
-  )
 }
 
 function UnbuiltRoomScene({ room }: { room: SubsurfaceRoomDefinition }) {
@@ -207,8 +182,7 @@ function UnbuiltRoomScene({ room }: { room: SubsurfaceRoomDefinition }) {
 
 function RoomIcon({ id, size = 18 }: { id: SubsurfaceRoomId; size?: number }) {
   if (id === 'mineral-vault' || id === 'deep-mineral-vault') return <Warehouse size={size} strokeWidth={2} />
-  if (id === 'parts-locker') return <Boxes size={size} strokeWidth={2} />
-  return <Dumbbell size={size} strokeWidth={2} />
+  return <Boxes size={size} strokeWidth={2} />
 }
 
 function StorageSilo({ minerals, capacity }: { minerals: StoredMineral[]; capacity: number }) {
@@ -336,29 +310,6 @@ function PartsLocker({ parts }: { parts: RegisteredPart[] }) {
   )
 }
 
-function HabitatTraining({ enabled }: { enabled: boolean }) {
-  return (
-    <div className={styles.trainingPanel} data-testid="subsurface-habitat-training">
-      <div>
-        <span className={styles.trainingLock}>
-          {enabled
-            ? <Dumbbell size={28} strokeWidth={1.8} />
-            : <LockKeyhole size={28} strokeWidth={1.8} />}
-        </span>
-        <h2 className={styles.trainingTitle}>Habitat Training</h2>
-        <p className={styles.trainingCopy}>
-          {enabled
-            ? 'Feature flag enabled. The below-soil habitat scene is ready for the astronaut-training workflow to be connected.'
-            : 'Specialised astronaut rehearsals for enclosed habitats are planned here. Training mechanics remain offline while storage operations ship first.'}
-        </p>
-        <div className={styles.trainingStatus}>
-          {enabled ? 'Feature flag enabled' : 'Coming soon · Feature gated'}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function RoomBuildPrompt({
   room,
   francs,
@@ -469,7 +420,6 @@ function ExcavatePrompt({
 export function HubSubsurfaceView({
   stash,
   installedParts,
-  trainingEnabled = false,
   francs = 0,
   subsurfaceExcavated = false,
   subsurfaceBuilt = [],
@@ -486,12 +436,11 @@ export function HubSubsurfaceView({
   const activeDefinition = SUBSURFACE_ROOMS.find(room => room.id === activeRoom)
   const builtSet = new Set(subsurfaceBuilt)
 
-  const roomMetric = (room: SubsurfaceRoomDefinition, locked: boolean, built: boolean) => {
-    if (locked) return trainingEnabled ? 'FLAG ON' : 'LOCKED'
+  const roomMetric = (room: SubsurfaceRoomDefinition, built: boolean) => {
     if (!built) return formatRoomCost(room)
     if (room.id === 'mineral-vault') return `${totalMineralUnits} U`
     if (room.id === 'parts-locker') return `${parts.length} PARTS`
-    return trainingEnabled ? 'FLAG ON' : 'LOCKED'
+    return ''
   }
 
   return (
@@ -539,9 +488,7 @@ export function HubSubsurfaceView({
                 <h2 className={styles.detailTitle}>{activeDefinition.name}</h2>
               </div>
             </div>
-            {activeRoom === 'habitat-training' ? (
-              <HabitatTraining enabled={trainingEnabled} />
-            ) : !builtSet.has(activeRoom) ? (
+            {!builtSet.has(activeRoom) ? (
               <RoomBuildPrompt room={activeDefinition} francs={francs} stash={stash} onBuild={onBuildRoom} onFocusResources={onFocusResources} />
             ) : activeRoom === 'mineral-vault' || activeRoom === 'deep-mineral-vault' ? (
               <MineralVault minerals={minerals} capacity={activeRoom === 'deep-mineral-vault' ? DEEP_MINERAL_SILO_CAPACITY : MINERAL_SILO_CAPACITY} onOpenMarket={onOpenMarket} />
@@ -569,11 +516,10 @@ export function HubSubsurfaceView({
               </div>
               <div className={styles.roomGrid}>
                 {SUBSURFACE_ROOMS.map((room, index) => {
-                  const locked = room.id === 'habitat-training' && !trainingEnabled
                   const built = builtSet.has(room.id)
                   return (
                     <button
-                      className={`${styles.roomCard} ${locked ? styles.roomCardLocked : ''}`}
+                      className={styles.roomCard}
                       data-testid={`subsurface-room-${room.id}`}
                       key={room.id}
                       onClick={() => setActiveRoom(room.id)}
@@ -586,29 +532,17 @@ export function HubSubsurfaceView({
                         </div>
                         <span className={styles.bayNumber}>0{index + 1}</span>
                       </div>
-                      {!locked && built ? (
-                        <RoomScene
-                          id={room.id}
-                          minerals={minerals}
-                          parts={parts}
-                          trainingEnabled={trainingEnabled}
-                        />
-                      ) : !locked ? (
-                        <UnbuiltRoomScene room={room} />
+                      {built ? (
+                        <RoomScene id={room.id} minerals={minerals} parts={parts} />
                       ) : (
-                        <RoomScene
-                          id={room.id}
-                          minerals={minerals}
-                          parts={parts}
-                          trainingEnabled={trainingEnabled}
-                        />
+                        <UnbuiltRoomScene room={room} />
                       )}
                       <p className={styles.roomDescription}>{room.description}</p>
                       <div className={styles.roomCardFooter}>
-                        <span className={`${styles.status} ${locked || !built ? styles.statusLocked : ''}`}>
-                          {locked ? 'Coming soon' : built ? 'Online' : 'Unbuilt'}
+                        <span className={`${styles.status} ${!built ? styles.statusLocked : ''}`}>
+                          {built ? 'Online' : 'Unbuilt'}
                         </span>
-                        <span className={styles.roomMetric}>{roomMetric(room, locked, built)}</span>
+                        <span className={styles.roomMetric}>{roomMetric(room, built)}</span>
                       </div>
                     </button>
                   )

@@ -9,7 +9,6 @@ import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
 import { formatCurrency } from '@/lib/format'
-import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 import { ORIONIDS_DEBRIS_PRESET, isDebrisEventActive } from '@/lib/data/sky-events'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 // IntroScreen and HubScreen are the two most likely first paints (cold start
@@ -31,7 +30,6 @@ const ScreenLoading = () => (
 const loadMissionSetupRoutes = () => import('@/components/game/MissionSetupRoutes')
 const loadMarketScreen = () => import('@/components/game/screens/MarketScreen')
 const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScreen')
-const loadSurfaceOpsScreen = () => import('@/components/game/screens/SurfaceOpsScreen')
 const loadMissionHistoryScreen = () => import('@/components/game/screens/MissionHistoryScreen')
 
 const MissionSetupRoutes = dynamic(loadMissionSetupRoutes, { loading: ScreenLoading })
@@ -44,9 +42,7 @@ const InstrumentHubScreen = dynamic(() => import('@/components/game/screens/Inst
 const TessDiscoveryScreen = dynamic(() => import('@/components/game/screens/TessDiscoveryScreen'), { loading: ScreenLoading })
 const SaturnStormSearchScreen = dynamic(() => import('@/components/game/screens/SaturnStormSearchScreen'), { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(() => import('@/components/game/screens/AsteroidDiscoveryScreen'), { loading: ScreenLoading })
-const SurfaceOpsScreen = dynamic(loadSurfaceOpsScreen, { loading: ScreenLoading })
 const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
-const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
 import { requestMissionBoardEvent, requestMissionBoardTab } from '@/lib/mission-board-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
@@ -116,7 +112,6 @@ function ScreenBody({
         loadMissionSetupRoutes(),
         loadLaunchpadScreen(),
         loadMarketScreen(),
-        loadSurfaceOpsScreen(),
         loadMissionHistoryScreen(),
       ])
     }
@@ -213,11 +208,9 @@ function ScreenBody({
     case 'hub-subsurface': {
       const unlockOpts = {
         refineryUnlocked: !!game.player.refineryUnlocked,
-        academyResearched: !!game.player.academyResearched,
         placed: game.player.placed,
         freeOperations: game.player.freeOperations,
         missionsDone: game.player.missionsDone,
-        hasMiningSettlement: hasEstablishedMiningSettlement(game.player),
       }
       const eventSiloFree = (game.missionId === ORIONIDS_NIGHT_RUN_ID || game.player.activeMission?.id === ORIONIDS_NIGHT_RUN_ID)
         && isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, Date.now())
@@ -346,7 +339,6 @@ function ScreenBody({
         <InstrumentHubScreen
           player={game.player}
           communityResearch={communityResearch}
-          onClaimSurveyPlot={game.claimSaturnSurveyTerritory}
           targets={game.catalog.targets}
           onStartScan={game.startSurveyScan}
           onResolveScan={game.resolveSurveyScan}
@@ -410,7 +402,6 @@ function ScreenBody({
           onBack={() => game.goBack()}
           onLaunchImager={() => game.go('launchpad')}
           onSubmit={game.submitSaturnClassification}
-          onClaimTerritory={game.claimSaturnSurveyTerritory}
         />
       )
 
@@ -459,7 +450,6 @@ function ScreenBody({
             refineryQueue: game.player.refineryQueue,
             refinedGoods: game.player.refinedGoods,
             refineryLastStartedAt: game.player.refineryLastStartedAt,
-            staffed: !!game.player.structureCrewAssignments?.refinery,
             researchBonusUntil: game.player.researchBonusUntil,
           }}
           onBack={() => game.goBack()}
@@ -499,13 +489,10 @@ function ScreenBody({
         <HangarScreen
           francs={game.player.francs}
           missionsDone={game.player.missionsDone}
-          unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
           shipCustomizerParts={game.player.shipCustomizerParts}
-          crewModuleResearched={game.player.crewModuleResearched}
           landingResearched={game.player.landingResearched}
           pendingLaunch={game.player.pendingLaunch}
           pendingRocketName={rocketDisplay.name}
-          trainingPartTry={game.player.flightPlan?.replayTry === 'part' || (!game.player.flightPlan?.completed?.part && !!game.player.flightPlan?.completed?.scan)}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
           missionTitle={game.mission?.title ?? null}
           compatibleRocketIds={game.mission && game.target
@@ -521,9 +508,6 @@ function ScreenBody({
           onBack={onBackFromHangar ?? game.returnFromHangar}
         />
       )
-
-    case 'narrative-ledger':
-      return <NarrativeLedgerScreen onBack={() => game.goBack()} />
 
     case 'launchpad':
       {
@@ -613,27 +597,6 @@ function ScreenBody({
         />
       )
       }
-
-    case 'surface-ops':
-      return (
-        <SurfaceOpsScreen
-          player={game.player}
-          onBack={() => game.goBack()}
-          onPurchaseSiteAccess={game.purchaseSiteAccess}
-          onStartFieldOperation={game.startFieldOperation}
-          onBuildLaunchpad={game.buildSettlementLaunchpad}
-          onMined={game.recordSurfaceMined}
-          onDispatch={game.dispatchSurfaceFerry}
-          onRetry={game.retrySurfaceFerry}
-          onReconcile={game.reconcileSurfaceFerry}
-          onAcknowledge={game.acknowledgeSurfaceFerry}
-          onFieldBuild={game.recordFieldBuild}
-          onFieldDemolish={game.recordFieldDemolish}
-          onFieldRefine={game.runFieldRefining}
-          onFabricate={game.fabricateAtField}
-          onSeedBiosphere={game.seedBiosphere}
-        />
-      )
 
     default:
       return null

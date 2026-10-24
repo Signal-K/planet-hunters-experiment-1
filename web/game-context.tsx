@@ -6,7 +6,7 @@ import { cacheSave, dropCachedSave, readCachedSave } from '@/lib/offline/stateCa
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Screen, GameState, GameActions } from '@/lib/game-types'
-import { MISSIONS, TARGETS, getLaserChargeCap } from '@/lib/data'
+import { MISSIONS, TARGETS, BASE_LASER_CHARGES } from '@/lib/data'
 import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair } from '@/lib/game-state'
 import { REMOTE_MERGED_EVENT, sameContent } from '@/lib/sync/casSave'
 import { useRuntimeCatalog } from '@/lib/contexts/useRuntimeCatalog'
@@ -20,16 +20,12 @@ import { useConfirmedDiscoveryPoll } from '@/lib/contexts/useConfirmedDiscoveryP
 import { useCatalogSync } from '@/lib/contexts/useCatalogSync'
 import { useDailyEconomySync } from '@/lib/contexts/useDailyEconomySync'
 import { useDailyClientPoolSync } from '@/lib/contexts/useDailyClientPoolSync'
-import { useTreasurySync } from '@/lib/contexts/useTreasurySync'
 import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
-import { useSurfaceOpsActions } from '@/lib/contexts/useSurfaceOpsActions'
 import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
-import { useAcademyActions } from '@/lib/contexts/useAcademyActions'
+import { applyResearchLanding } from '@/lib/systems/LandingSystem'
 import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
-import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
-import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
 import { canonicalGamePath, entryScreenForPath } from '@/lib/game-route'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
@@ -137,9 +133,9 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
               launchpadUpgraded: false,
             } : {}),
             ...(art === 'built' ? {
-              placed: ['command', 'refinery', 'astronaut-academy', 'launchpad', 'surface-silo'],
-              placementPlots: { command: 0, refinery: 1, 'astronaut-academy': 2, launchpad: 3 },
-              buildingLevels: { launchpad: 3, refinery: 3, 'astronaut-academy': 3, 'surface-silo': 3 },
+              placed: ['command', 'refinery', 'launchpad', 'surface-silo'],
+              placementPlots: { command: 0, refinery: 1, launchpad: 3 },
+              buildingLevels: { launchpad: 3, refinery: 3, 'surface-silo': 3 },
               launchpadUpgraded: true,
             } : {}),
           },
@@ -200,7 +196,6 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   }, [hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const router = useRouter()
-  useTreasurySync(setState, hydrated, isPreview.current)
 
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
@@ -279,23 +274,8 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
-  const surfaceOps = useSurfaceOpsActions(setState, ui.addToast, stateRef, auth.authUserId)
 
-  // KES-83: applies a claimed friend gift to local player state through the
-  // same setState path (and, for blueprints, the same unlockBlueprint action
-  // used elsewhere) every other reward uses — the friends UI never touches
-  // player state directly.
-  const claimFriendGift = useCallback(async (giftId: string) => {
-    const { kind, payload } = await claimFriendGiftRequest(giftId)
-    if (kind === 'blueprint' && payload.slug) {
-      loop.unlockBlueprint(payload.slug, 0, 0, {})
-    } else {
-      setState(s => applyFriendGiftToPlayer(s, kind, payload))
-    }
-    ui.addToast(friendGiftToastMessage(kind, payload), 'ok')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loop.unlockBlueprint])
-  const academy = useAcademyActions(stateRef, setState, useCallback(() => runtimeCatalog, [runtimeCatalog]), ui.addToast)
+  const researchLanding = useCallback(() => setState(state => applyResearchLanding(state)), [])
   useInstrumentFeedNotifications({
     // Instrument feeds are shared-backend data. Do not start a background
     // request while the auth restore is still pending (or after logout),
@@ -396,7 +376,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       sceneScope,
       toasts: ui.toasts,
       addToast: ui.addToast,
-      laserChargeCap: getLaserChargeCap(state.player.unlockedSkillNodes ?? []),
+      laserChargeCap: BASE_LASER_CHARGES,
       // UI
       go: ui.go,
       goBack: ui.goBack,
@@ -414,7 +394,6 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       dismissToast: ui.dismissToast,
       subsurfaceView: ui.subsurfaceView,
       setSubsurfaceView: ui.setSubsurfaceView,
-      clearTerritoryClaimPopup: ui.clearTerritoryClaimPopup,
       // Auth
       awaitingRemoteState: auth.awaitingRemoteState,
       authGateOpen: auth.authGateOpen,
@@ -457,26 +436,13 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       gainResearchXP: loop.gainResearchXP,
       startSurveyScan: loop.startSurveyScan,
       resolveSurveyScan: loop.resolveSurveyScan,
-      upgradeLicenseGrade: loop.upgradeLicenseGrade,
       unlockBlueprint: loop.unlockBlueprint,
-      claimFriendGift,
-      researchAcademy: academy.researchAcademy,
-      researchLanding: academy.researchLanding,
-      setAcademyFunding: academy.setAcademyFunding,
-      hireCrew: academy.hireCrew,
-      rehireCrew: academy.rehireCrew,
-      startCrewTraining: academy.startCrewTraining,
-      startCandidateTraining: academy.startCandidateTraining,
-      collectCrewTraining: academy.collectCrewTraining,
-      researchCrewModule: academy.researchCrewModule,
-      assignCrewToStructure: academy.assignCrewToStructure,
-      shareChartsWithClient: academy.shareChartsWithClient,
+      researchLanding,
       launchTransitSatellite: loop.launchTransitSatellite,
       submitTessClassification: loop.submitTessClassification,
       chooseSatelliteTarget: loop.chooseSatelliteTarget,
       submitAsteroidClassification: loop.submitAsteroidClassification,
       submitSaturnClassification: loop.submitSaturnClassification,
-      claimSaturnSurveyTerritory: loop.claimSaturnSurveyTerritory,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,
@@ -502,24 +468,8 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       upgradeBuilding: economy.upgradeBuilding,
       excavateSubsurface: economy.excavateSubsurface,
       buildSubsurfaceRoom: economy.buildSubsurfaceRoom,
-      unlockSkillNode: economy.unlockSkillNode,
-      acceptLoan: economy.acceptLoan,
       abandonMission: economy.abandonMission,
       confirmShipCustomizerBuild: economy.confirmShipCustomizerBuild,
-      purchaseSiteAccess: surfaceOps.purchaseSiteAccess,
-      startFieldOperation: surfaceOps.startFieldOperation,
-      buildSettlementLaunchpad: surfaceOps.buildSettlementLaunchpad,
-      recordSurfaceMined: surfaceOps.recordSurfaceMined,
-      dispatchSurfaceFerry: surfaceOps.dispatchSurfaceFerry,
-      retrySurfaceFerry: surfaceOps.retrySurfaceFerry,
-      reconcileSurfaceFerry: surfaceOps.reconcileSurfaceFerry,
-      acknowledgeSurfaceFerry: surfaceOps.acknowledgeSurfaceFerry,
-      recordFieldBuild: surfaceOps.recordFieldBuild,
-      recordFieldDemolish: surfaceOps.recordFieldDemolish,
-      runFieldRefining: surfaceOps.runFieldRefining,
-      fabricateAtField: surfaceOps.fabricateAtField,
-      buildFieldKit: surfaceOps.buildFieldKit,
-      seedBiosphere: surfaceOps.seedBiosphere,
     }}>
       {children}
     </GameContext.Provider>

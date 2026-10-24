@@ -4,7 +4,7 @@ const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
   'transit', 'mining', 'delivery', 'debrief', 'refinery', 'market',
   'hangar', 'rocket-buy', 'rover-survey',
-  'launchpad', 'surface-ops',
+  'launchpad',
   'mission-history',
 ])
 

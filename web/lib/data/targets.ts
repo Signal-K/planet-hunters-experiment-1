@@ -183,7 +183,6 @@ export function feasibleTargetsFor(
   parts: { chassis: Part[]; propulsion: Part[]; drill: Part[] },
   missionsDone: number,
   launchpadUpgraded = false,
-  unlockedSkillNodes: string[] = [],
   launchpadLevel = 1,
 ): Target[] {
   const deliveryTarget = mission.deliveryTargetId
@@ -199,8 +198,7 @@ export function feasibleTargetsFor(
       launchpadUpgraded,
       launchpadLevel,
       parts,
-      unlockedSkillNodes,
     })
-    return validateBuild({ mission, target, rocket, parts, unlockedSkillNodes }).ok
+    return validateBuild({ mission, target, rocket, parts }).ok
   })
 }

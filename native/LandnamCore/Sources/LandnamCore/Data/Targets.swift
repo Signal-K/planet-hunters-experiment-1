@@ -85,12 +85,12 @@ public enum Targets {
 
     /// Compatible targets the player's unlocked parts can actually reach, carry and mine.
     public static func feasible(for mission: Mission, targets: [Target] = all, parts: PartCatalog = .standard, missionsDone: Int,
-                                launchpadUpgraded: Bool = false, launchpadLevel: Int = 1, skills: [String] = []) -> [Target] {
+                                launchpadUpgraded: Bool = false, launchpadLevel: Int = 1) -> [Target] {
         let delivery = mission.deliveryTargetId.flatMap { byId[$0] }
         return compatible(with: mission, targets: targets).filter { target in
             let rocket = parts.suggestBuild(mission: mission, target: target, deliveryTarget: delivery,
-                                            missionsDone: missionsDone, launchpadUpgraded: launchpadUpgraded, launchpadLevel: launchpadLevel, skills: skills)
-            return parts.validate(mission: mission, target: target, rocket: rocket, skills: skills).ok
+                                            missionsDone: missionsDone, launchpadUpgraded: launchpadUpgraded, launchpadLevel: launchpadLevel)
+            return parts.validate(mission: mission, target: target, rocket: rocket).ok
         }
     }
 }

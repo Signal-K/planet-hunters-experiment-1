@@ -197,7 +197,6 @@ struct BaseWorldScene: View {
         switch kind {
         case "launchpad": return "Launchpad"
         case "hangar", "garage": return "Hangar"
-        case "astronaut-academy": return "Academy"
         case "market": return "Exchange"
         case "control-station": return "Control station"
         default: return "Structure"

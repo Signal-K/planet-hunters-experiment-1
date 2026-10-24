@@ -22,7 +22,7 @@ const SCREENS = [
   ['refinery', 'refinery'], ['missionboard', 'missions'], ['missions', 'missions'],
   ['galaxy', 'galaxy'], ['targets', 'targets'],
   ['shower-run', 'ui/orionids-shower-debrief'], ['orionids', 'hub'], ['skyevent', 'hub'],
-  ['build', 'build'], ['intro', 'intro'], ['roveryvey', 'rover-survey'], ['surfaceops', 'surface-ops'],
+  ['build', 'build'], ['intro', 'intro'], ['roveryvey', 'rover-survey'],
 ]
 
 function toRoute(input) {

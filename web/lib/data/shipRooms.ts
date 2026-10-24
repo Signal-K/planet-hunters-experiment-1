@@ -9,7 +9,6 @@ export type ShipRoomKind =
   | 'fairing'
   | 'docking-port'
   | 'heat-shield'
-  | 'crew-module'
   | 'lander'
 
 export interface ShipRoomSlot {
@@ -56,7 +55,6 @@ export const SHIP_ROOM_FOOTPRINT: Record<ShipRoomKind, { w: number; h: number }>
   fairing: { w: 1, h: 1 },
   'docking-port': { w: 1, h: 1 },
   'heat-shield': { w: 1, h: 1 },
-  'crew-module': { w: 2, h: 1 },
   lander: { w: 2, h: 1 },
 }
 
@@ -78,7 +76,6 @@ export const SHIP_ROOM_ASSETS: Record<ShipRoomKind, string> = {
   fairing: '/game/assets/rooms/fairing_t1_icon.png',
   'docking-port': '/game/assets/rooms/docking_port_t1_icon.png',
   'heat-shield': '/game/assets/rooms/heat_shield_t1_icon.png',
-  'crew-module': '/game/assets/rooms/crew_module_t1_icon.png',
   lander: '/game/assets/rooms/lander_t1_icon.png',
 }
 
@@ -94,7 +91,6 @@ export const SHIP_ROOM_DETAIL_ASSETS: Record<ShipRoomKind, string> = {
   fairing: '/game/assets/rooms/fairing_t1.png',
   'docking-port': '/game/assets/rooms/docking_port_t1.png',
   'heat-shield': '/game/assets/rooms/heat_shield_t1.png',
-  'crew-module': '/game/assets/rooms/crew_module_t1.png',
   lander: '/game/assets/rooms/lander_t1.png',
 }
 
@@ -115,7 +111,6 @@ export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
       { id: 'explorer-booster', kind: 'booster',  label: 'Boosters',    x: 45.2, y: 13.0, w: 19.1, h: 23.7, gx: 4, gy: 0 },
       { id: 'explorer-engine',  kind: 'engine',   label: 'Engine Room', x: 45.2, y: 36.7, w: 19.1, h: 23.7, gx: 4, gy: 1 },
       // Post-onboarding bolt-ons — installed into the same grid, further aft.
-      { id: 'explorer-crew', kind: 'crew-module', label: 'Crew Module', x: 64.3, y: 13.0, w: 19.1, h: 23.7, gx: 6, gy: 0 },
       { id: 'explorer-lander', kind: 'lander', label: 'Lander Module', x: 64.3, y: 36.7, w: 19.1, h: 23.7, gx: 6, gy: 1 },
     ],
   },

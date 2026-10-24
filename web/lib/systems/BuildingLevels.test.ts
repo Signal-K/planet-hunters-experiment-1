@@ -7,11 +7,9 @@ import { BUILDING_LEVEL_EFFECTS, BUILDING_UPGRADE_COSTS, SURFACE_SILO_CAPACITY, 
 import { REFINERY_RECIPES } from '@/lib/data/structures'
 import { suggestBuild } from '@/lib/data/parts'
 import { applyUpgradeBuilding, applyUpgradeLaunchpad, applyStartRefine, storageCapacity } from './EconomySystem'
-import { applyStartCandidateTraining } from './AcademySystem'
-import { CREW_TRAINING_DURATION_MS } from '@/lib/data/economy'
 
 function state(player: Partial<GameState['player']> = {}): GameState {
-  return { ...DEFAULT_STATE, player: { ...DEFAULT_STATE.player, francs: 1_000_000_000, placed: ['launchpad', 'surface-silo', 'refinery', 'astronaut-academy'], ...player } }
+  return { ...DEFAULT_STATE, player: { ...DEFAULT_STATE.player, francs: 1_000_000_000, placed: ['launchpad', 'surface-silo', 'refinery',], ...player } }
 }
 
 describe('building levels', () => {
@@ -41,7 +39,7 @@ describe('building levels', () => {
     expect(s.player.buildingLevels?.refinery).toBe(3)
     const maxed = applyUpgradeBuilding(s, 'refinery')
     expect(maxed).toBe(s)
-    expect(s.player.placed).toEqual(['launchpad', 'surface-silo', 'refinery', 'astronaut-academy'])
+    expect(s.player.placed).toEqual(['launchpad', 'surface-silo', 'refinery'])
   })
 
   it('refuses unaffordable, unplaced and unknown buildings', () => {
@@ -74,13 +72,6 @@ describe('building levels', () => {
     const l1 = applyStartRefine(state({ stash, refineryQueue: [], refineryLastStartedAt: undefined }), recipe)
     const l3 = applyStartRefine(state({ stash, refineryQueue: [], refineryLastStartedAt: undefined, buildingLevels: { refinery: 3 } }), recipe)
     expect(l3.player.refineryQueue[0].durationMs).toBe((l1.player.refineryQueue[0].durationMs ?? 0) * 0.5)
-  })
-
-  it('academy level shortens candidate training', () => {
-    const now = 1_000
-    const s = state({ academyFunded: true, buildingLevels: { 'astronaut-academy': 2 } })
-    const started = applyStartCandidateTraining(s, 'mining', now)
-    expect(started.player.crewTraining?.[0].completesAt).toBe(now + CREW_TRAINING_DURATION_MS * 0.75)
   })
 
   it('launchpad level 3 counts as two flown missions for part unlocks', () => {

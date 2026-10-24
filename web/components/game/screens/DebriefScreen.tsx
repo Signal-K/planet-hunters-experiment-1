@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
-import { calibrateOnboardingPayout, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig, loanInstalmentFor } from '@/lib/data'
+import { calibrateOnboardingPayout, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { openSettings } from '@/lib/mining/openChrome'
@@ -19,7 +19,7 @@ import type { PlayerBadge } from '@/lib/data/sky-events'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import { withoutShowerFragments } from '@/lib/orionids/shower-run'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -35,8 +35,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   rocketSource?: 'company' | 'fabricated'
   deliveryTargetName?: string
   originTargetName?: string
-  loanDebt?: number
-  firstCrewArrival?: boolean
   hasEarthStorage?: boolean
   storageCapacity?: number
   storageUsed?: number
@@ -80,13 +78,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const contractPayout = delivered ? mission.payout.francs : 0
   const rawTotal = contractPayout
   const calibratedTotal = calibrateOnboardingPayout(rawTotal, missionsDone ?? 0)
-  const crewArrivalBonus = delivered && firstCrewArrival ? FIRST_CREW_ARRIVAL_BONUS : 0
-  const total = calibratedTotal + crewArrivalBonus
+  const total = calibratedTotal
   const isTwoLegJob = !!mission.deliveryTargetId
   const miningFee = isTwoLegJob ? Math.round(mission.payout.francs * 0.5) : 0
   const transportFee = isTwoLegJob ? mission.payout.francs - miningFee : 0
-  const loanRepayment = isProgramOperation ? 0 : loanInstalmentFor(loanDebt)
-  const netTotal = total - vehicleCost - loanRepayment
+  const netTotal = total - vehicleCost
   const cargoEntries = Object.entries(cargo).filter(([, units]) => units > 0)
   const willStore = isFreeHaul && disposition === 'store' && !!hasEarthStorage
   const clientOwedUnits = !isFreeHaul && !isTwoLegJob && delivered
@@ -199,18 +195,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               <PayRow label={isStoryMission ? 'Mission funding' : 'Contract value'} value={mission.payout.francs} />
             )}
             {calibratedTotal > rawTotal && <PayRow label="Onboarding bonus" value={calibratedTotal - rawTotal} />}
-            {crewArrivalBonus > 0 && <PayRow label={`First astronaut at ${target.name}`} value={crewArrivalBonus} />}
             {vehicleCost !== 0 && (
               <PayRow
                 label={`Vehicle · ${starterRocket.name}`}
                 value={-vehicleCost}
-                signed
-              />
-            )}
-            {loanRepayment > 0 && (
-              <PayRow
-                label={loanRepayment >= (loanDebt ?? 0) ? 'Loan · cleared' : 'Loan · instalment'}
-                value={-loanRepayment}
                 signed
               />
             )}

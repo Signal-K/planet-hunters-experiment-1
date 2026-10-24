@@ -11,7 +11,7 @@ describe('hour path has no dead end', () => {
     it(`after ${done} missions the board has a flyable client contract and a flyable own run`, () => {
       const unlocked = <T extends { locked?: boolean; missionsRequired?: number }>(parts: T[]) => parts.filter(p => !p.locked && (p.missionsRequired ?? 0) <= done)
       const parts = { chassis: unlocked(PARTS.chassis), propulsion: unlocked(PARTS.propulsion), drill: unlocked(PARTS.drill) }
-      const flyable = board.filter(m => !m.locked && feasibleTargetsFor(m, TARGETS, parts, done, done >= 3, [], 1).length > 0)
+      const flyable = board.filter(m => !m.locked && feasibleTargetsFor(m, TARGETS, parts, done, done >= 3, 1).length > 0)
       expect(flyable.filter(m => m.client).length).toBeGreaterThanOrEqual(3)
       expect(flyable.filter(m => !m.client).length).toBeGreaterThanOrEqual(2)
     })

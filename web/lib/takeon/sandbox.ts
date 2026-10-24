@@ -16,7 +16,6 @@ import {
   biomeIdsForTarget,
   biomeProfileForTarget,
   LANDNAM_BIOME_IDS,
-  SANDBOX_STRUCTURE_RECIPES,
   type BiomeId,
   type LifeStage,
   type SurfaceTarget,
@@ -37,31 +36,6 @@ export interface SandboxEngine {
 
 /** takeon built-in material ids used as subsurface fill under Landnam biomes. */
 const TAKEON_MATERIAL = { regolith: 1, rock: 2, basalt: 3, ice: 4 } as const
-
-/** Landnam sandbox structures that takeon does not ship. */
-export const LANDNAM_STRUCTURE_DEFS: readonly StructureDef[] = [
-  {
-    type: 'road',
-    name: 'Road segment',
-    cost: {},
-    description: 'Packed surface strip. Guides the rover and marks a route between structures.',
-    category: 'decorative',
-  },
-  {
-    type: 'factory',
-    name: 'Factory',
-    cost: {},
-    description: 'Turns refined goods into rocket components on site.',
-    category: 'functional',
-  },
-  {
-    type: 'silo',
-    name: 'Storage silo',
-    cost: {},
-    description: 'Holds raw ore until a cargo ferry collects it.',
-    category: 'functional',
-  },
-]
 
 /** Which takeon cargo resource a Landnam biome's surface voxel yields when drilled. */
 const BIOME_YIELD: Partial<Record<BiomeId, { resource: string; amount: number }>> = {
@@ -198,24 +172,11 @@ let registered: WeakSet<SandboxEngine> = new WeakSet()
 /**
  * Register Landnam's structures, materials and biomes with the engine. Safe
  * to call repeatedly; each engine namespace is registered once per session.
- * Built-in structure costs are cleared because Landnam charges francs and
- * stash minerals itself (see `craftingAffordability`).
- */
+ *  */
 export function registerLandnamSandbox(engine: SandboxEngine): void {
   if (registered.has(engine)) return
   registered.add(engine)
   reskinBlueprintMaterials(engine)
-  for (const def of LANDNAM_STRUCTURE_DEFS) engine.registerStructure(def)
-  for (const recipe of SANDBOX_STRUCTURE_RECIPES) {
-    if (!recipe.takeonType || LANDNAM_STRUCTURE_DEFS.some(d => d.type === recipe.takeonType)) continue
-    engine.registerStructure({
-      type: recipe.takeonType,
-      name: recipe.name,
-      cost: {},
-      description: recipe.description,
-      category: recipe.decorative ? 'decorative' : 'functional',
-    })
-  }
   for (const biome of LANDNAM_BIOME_IDS) {
     engine.registerMaterial(materialDefForBiome(biome, engine.CUSTOM_MATERIAL_BASE))
     engine.registerBiome(biomeDefForBiome(biome, engine.CUSTOM_MATERIAL_BASE))
@@ -265,13 +226,4 @@ export function buildLandnamBody(
   body.palette = { sky: '#9fd0ee', skyNight: '#0f2436', tint: [1, 1, 1] }
   body.climate = { temperature: profile.temperature, tempVariance: profile.tempVariance }
   return body
-}
-
-/** Human copy for the build banner: what the rover is about to place. */
-export function placementHint(type: StructureType | null): string {
-  if (!type) return 'Select a structure, then tap BUILD to place it on the tile the rover faces.'
-  const def = LANDNAM_STRUCTURE_DEFS.find(d => d.type === type)
-  const recipe = SANDBOX_STRUCTURE_RECIPES.find(r => r.takeonType === type)
-  const name = def?.name ?? recipe?.name ?? type
-  return `Placing ${name} on the tile the rover faces. Drive to line it up, then tap BUILD.`
 }

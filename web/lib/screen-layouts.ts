@@ -95,7 +95,6 @@ export const GAME_ROUTES = [
   // Takeon
   { path: '/game/rover-survey', screen: 'rover-survey', surface: 'takeon' },
   { path: '/game/delivery', screen: 'delivery', surface: 'takeon' },
-  { path: '/game/surface-ops', screen: 'surface-ops', surface: 'takeon' },
 
   // Post-mission summary
   { path: '/game/debrief', screen: 'debrief', surface: 'post-mission' },
@@ -109,7 +108,6 @@ export const GAME_ROUTES = [
   { path: '/game/refinery', screen: 'refinery', surface: 'instrument' },
   { path: '/game/launchpad', screen: 'launchpad', surface: 'instrument' },
   { path: '/game/mission-history', screen: 'mission-history', surface: 'instrument' },
-  { path: '/game/narrative-ledger', screen: 'narrative-ledger', surface: 'instrument', dev: true },
 
   // Dev-only
   { path: '/game/launcher', surface: 'dev', dev: true },
@@ -119,12 +117,6 @@ export const GAME_ROUTES = [
   { path: '/game/demo/[preset]', surface: 'dev', dev: true, redirectTo: '/game/<preset screen>' },
   { path: '/game/mission/[[...slug]]', surface: 'dev', dev: true, redirectTo: '/game/<preset screen>' },
   { path: '/game/ui/[[...slug]]', surface: 'dev', dev: true, redirectTo: '/game/<preset screen>' },
-  { path: '/game/preview', surface: 'dev', dev: true },
-  { path: '/game/construction-kit-demo', surface: 'dev', dev: true },
-  { path: '/game/landscape-lab', surface: 'home', dev: true },
-  { path: '/game/control-room-preview', surface: 'instrument', dev: true },
-  { path: '/game/ship-customizer', surface: 'instrument', dev: true },
-  { path: '/game/mission-flow-preview', surface: 'mission-setup', dev: true },
 ] as const satisfies readonly GameRoute[]
 
 type ScreenRoute = Extract<typeof GAME_ROUTES[number], { screen: Screen }>

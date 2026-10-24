@@ -120,14 +120,10 @@ public enum CloudMerge {
             let l = local.player, r = remote.player
             n.player.francs = max(l.francs, r.francs)
             n.player.researchXP = max(l.researchXP, r.researchXP)
-            n.player.skillPoints = max(l.skillPoints, r.skillPoints)
             n.player.researchAnnotations = max(l.researchAnnotations, r.researchAnnotations)
-            n.player.academyXP = max(l.academyXP, r.academyXP)
-            n.player.crewHiresLifetime = max(l.crewHiresLifetime, r.crewHiresLifetime)
             n.player.stash = maxRec(l.stash, r.stash)
             n.player.refinedGoods = maxRec(l.refinedGoods, r.refinedGoods)
             n.player.clientMissions = maxRec(l.clientMissions, r.clientMissions)
-            n.player.sharedChartsByClient = maxRec(l.sharedChartsByClient, r.sharedChartsByClient)
             n.tutorial = local.tutorial; n.doneSteps = local.doneSteps
         }
         let l = local.player, r = remote.player

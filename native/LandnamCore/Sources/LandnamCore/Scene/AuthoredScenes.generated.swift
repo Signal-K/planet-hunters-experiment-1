@@ -253,13 +253,11 @@ enum AuthoredSceneDeclarations {
     },
     {
       "id": "progression",
-      "name": "Skills, licences and XP",
+      "name": "Research XP and blueprints",
       "web": [
-        "web/lib/systems/ProgressionSystem.ts",
-        "web/lib/systems/XPSystem.ts"
+        "web/lib/systems/ProgressionSystem.ts"
       ],
       "native": [
-        "native/LandnamCore/Sources/LandnamCore/Systems/Progression.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Milestones.swift"
       ],
       "note": "XP source and native progression differ in granularity; source mapping is not behavior parity.",
@@ -277,82 +275,6 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
       ],
       "note": "Training does not gate Free Ops. Replay rewards use the same completion transitions.",
-      "components": []
-    },
-    {
-      "id": "academy",
-      "name": "Academy, staff and crew",
-      "web": [
-        "web/lib/systems/AcademySystem.ts",
-        "web/lib/systems/CrewSystem.ts"
-      ],
-      "native": [
-        "native/LandnamCore/Sources/LandnamCore/Industry/Academy.swift"
-      ],
-      "note": "Roster and training ownership. Crew never increases citizen-science yield.",
-      "components": []
-    },
-    {
-      "id": "surface-logistics",
-      "name": "Off-world sites, construction and ferries",
-      "web": [
-        "web/lib/systems/SurfaceOpsSystem.ts"
-      ],
-      "native": [
-        "native/LandnamCore/Sources/LandnamCore/Industry/SurfaceOps.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
-      ],
-      "note": "Native settlement logistics exists; embedded field factory and biosphere commands need separate adapters.",
-      "components": []
-    },
-    {
-      "id": "field-refining",
-      "name": "Field refinery pipeline",
-      "web": [
-        "web/lib/systems/OffworldRefinerySystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native field refinery adapter identified; base Refinery is a different mechanic.",
-      "components": []
-    },
-    {
-      "id": "ownership",
-      "name": "Ownership transfers",
-      "web": [
-        "web/lib/systems/OwnershipSystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native transfer domain identified.",
-      "components": []
-    },
-    {
-      "id": "site-rights",
-      "name": "Site purchases and leases",
-      "web": [
-        "web/lib/systems/SiteRightsSystem.ts"
-      ],
-      "native": [],
-      "note": "Native SurfaceOps site access is not the full lease/deed model.",
-      "components": []
-    },
-    {
-      "id": "treasury",
-      "name": "Treasury ledger, science rewards and loans",
-      "web": [
-        "web/lib/systems/TreasurySystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native treasury ledger or loan implementation identified.",
-      "components": []
-    },
-    {
-      "id": "sandbox",
-      "name": "Field sandbox rules",
-      "web": [
-        "web/lib/systems/SandboxSystem.ts"
-      ],
-      "native": [],
-      "note": "Do not confuse field sandbox domain rules with Studio preview presets.",
       "components": []
     },
     {
@@ -411,12 +333,10 @@ enum AuthoredSceneDeclarations {
       "id": "records",
       "name": "Mission history and narrative ledger",
       "web": [
-        "web/lib/mission-log.ts",
-        "web/lib/data/narrative-ledger.ts"
+        "web/lib/mission-log.ts"
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/MissionLog.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/NarrativeLedger.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift"
       ],
       "note": "Read canonical records; do not create a parallel editor save.",
@@ -435,23 +355,6 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Sync/CloudSync.swift"
       ],
       "note": "Host service, not a scene object. All changes use canonical save/outbox paths.",
-      "components": []
-    },
-    {
-      "id": "field-engine",
-      "name": "TakeOn rover and field runtime",
-      "web": [
-        "web/lib/takeon/goRuntime.ts",
-        "web/lib/takeon/events.ts",
-        "web/lib/takeon/LandnamSync.ts",
-        "web/lib/takeon/field-operation.ts"
-      ],
-      "native": [
-        "native/TakeonKit/Sources/TakeonKit/TakeonEngine.swift",
-        "native/TakeonKit/Sources/TakeonKit/GoTakeonEngine.swift",
-        "native/App/TakeonPersistence.swift"
-      ],
-      "note": "Shared Go engine with host adapters. Native field factory/biosphere state commands remain separate gaps; a linked runtime is not full game parity.",
       "components": []
     },
     {
@@ -1743,16 +1646,6 @@ enum AuthoredSceneDeclarations {
             "economy"
           ],
           "note": "Wallet and inventory changes."
-        },
-        {
-          "id": "treasury-service",
-          "kind": "group",
-          "parent": "exchange",
-          "layout": "host",
-          "mechanics": [
-            "treasury"
-          ],
-          "note": "Domain ownership only; no native treasury equivalent identified."
         }
       ]
     },
@@ -1982,52 +1875,6 @@ enum AuthoredSceneDeclarations {
       ]
     },
     {
-      "id": "narrative-ledger",
-      "type": "menu",
-      "route": "narrative-ledger",
-      "surface": "dom",
-      "runtime": {
-        "surface": "dom",
-        "web": [
-          "web/components/game/screens/NarrativeLedgerScreen.tsx"
-        ],
-        "native": [
-          "native/App/Screens/BaseRecordScreens.swift"
-        ]
-      },
-      "objects": [
-        {
-          "id": "ledger-entries",
-          "kind": "collection",
-          "layout": "host",
-          "mechanics": [
-            "records"
-          ],
-          "note": "Narrative entries derived from canonical progression and discoveries."
-        },
-        {
-          "id": "entry-detail",
-          "kind": "panel",
-          "parent": "ledger-entries",
-          "layout": "host",
-          "mechanics": [
-            "records"
-          ],
-          "note": "Selected record and its source."
-        },
-        {
-          "id": "back-action",
-          "kind": "button",
-          "parent": "ledger-entries",
-          "layout": "host",
-          "mechanics": [
-            "records"
-          ],
-          "note": "Return to the base."
-        }
-      ]
-    },
-    {
       "id": "refinery",
       "type": "exchange-lab",
       "route": "refinery",
@@ -2178,8 +2025,6 @@ enum AuthoredSceneDeclarations {
           "kind": "world",
           "layout": "host",
           "mechanics": [
-            "field-engine",
-            "sandbox",
             "instruments"
           ],
           "note": "Rover field or TakeOn adapter selected by the feature flag."
@@ -2190,7 +2035,7 @@ enum AuthoredSceneDeclarations {
           "parent": "survey-field",
           "layout": "host",
           "mechanics": [
-            "field-engine"
+            "instruments"
           ],
           "note": "Surface survey vehicle, separate from laser extraction."
         },
@@ -2210,7 +2055,7 @@ enum AuthoredSceneDeclarations {
           "parent": "survey-field",
           "layout": "host",
           "mechanics": [
-            "field-engine"
+            "instruments"
           ],
           "note": "Movement and interaction commands."
         },
@@ -2299,116 +2144,6 @@ enum AuthoredSceneDeclarations {
             "saturn-review"
           ],
           "note": "Next candidate or return to the station."
-        }
-      ]
-    },
-    {
-      "id": "surface-ops",
-      "type": "field",
-      "route": "surface-ops",
-      "surface": "canvas",
-      "runtime": {
-        "surface": "canvas",
-        "web": [
-          "web/components/game/screens/SurfaceOpsScreen.tsx",
-          "web/components/game/screens/ConstructionTargetCanvas.tsx"
-        ],
-        "native": [
-          "native/App/Screens/SurfaceOpsScreen.swift"
-        ],
-        "engine": [
-          "web/public/game/scenes/construction-target.scene.json"
-        ]
-      },
-      "objects": [
-        {
-          "id": "surface-world",
-          "kind": "world",
-          "layout": "host",
-          "mechanics": [
-            "surface-logistics"
-          ],
-          "note": "Selected off-world site."
-        },
-        {
-          "id": "settlement-pads",
-          "kind": "collection",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "surface-logistics"
-          ],
-          "note": "Physical launchpad construction sites."
-        },
-        {
-          "id": "settlement-structures",
-          "kind": "collection",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "surface-logistics"
-          ],
-          "note": "Constructed structures and build progress."
-        },
-        {
-          "id": "ferry",
-          "kind": "vehicle",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "surface-logistics"
-          ],
-          "note": "Cargo transport state, retry and reconciliation."
-        },
-        {
-          "id": "logistics-controls",
-          "kind": "panel",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "surface-logistics"
-          ],
-          "note": "Site access, storage, build, dispatch and acknowledge."
-        },
-        {
-          "id": "field-world",
-          "kind": "world",
-          "layout": "host",
-          "mechanics": [
-            "field-engine",
-            "sandbox"
-          ],
-          "note": "Embedded TakeOn field, not a replacement for ship laser mining."
-        },
-        {
-          "id": "field-factory",
-          "kind": "collection",
-          "parent": "field-world",
-          "layout": "host",
-          "mechanics": [
-            "field-refining"
-          ],
-          "note": "Field-built structures and refinery pipeline; native field adapter pending."
-        },
-        {
-          "id": "site-deeds",
-          "kind": "group",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "site-rights"
-          ],
-          "note": "Domain ownership for site purchases and leases. Not a separately rendered panel or just settlement access."
-        },
-        {
-          "id": "ownership-service",
-          "kind": "group",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "ownership"
-          ],
-          "note": "Transfers of owned entities; no native equivalent identified."
         }
       ]
     },

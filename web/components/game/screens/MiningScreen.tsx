@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Mission, Target, MineralMeta } from '@/lib/data'
-import { FREE_OPS_START_MISSIONS_DONE, REMOTE_MINERAL_SILO_CAPACITY } from '@/lib/data'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data'
 import { miningNeedsRecharge, unitsStillNeeded, rechargeCost } from '@/lib/systems/mining-charges'
 import { useHelp } from '@/components/ui/useHelp'
 import Panel from '@/components/ui/Panel'
@@ -102,11 +102,11 @@ function GuideMark({ kind }: { kind: string }) {
   )
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
-  onComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell', earthDisposition?: 'store' | 'sell') => void
+  onComplete: (cargo: Record<string, number>, earthDisposition?: 'store' | 'sell') => void
   /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
   onBack: (cargo: Record<string, number>, laserCharges: number) => void
   /** Writes cargo and charges while the run is open, so a reload does not refill the laser or drop ore. */
@@ -133,8 +133,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   /** Cargo already collected before a prior "Back to hub" pause on this same mission, restored so the player doesn't lose it on resume. */
   initialCargo?: Record<string, number>
   /** Operational player-owned silo at this target; enables arrival settlement. */
-  remoteSiloAvailable?: boolean
-  remoteSiloUsed?: number
   /** True for a self-directed mining run with no client, delivery, or
    *  construction attached (KES-283) — the only case that gates on a storage
    *  destination before mining can begin. */
@@ -209,7 +207,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     cargoRef.current = next
     setCargo(next)
   }, [])
-  const [remoteDisposition, setRemoteDisposition] = useState<'store' | 'sell'>('store')
   // KES-283: a self-directed run requires a storage destination before mining
   // starts. A destination chosen before a prior back-to-hub pause carries
   // over via initialEarthDisposition so resuming never asks twice.
@@ -430,7 +427,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
   function handleReturn() {
     if (isFreeHaulEligible || orderFilled || laserCharges <= 0) {
-      onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
+      onComplete(cargoRef.current, earthDisposition ?? undefined)
       return
     }
     // SSL-411: a disabled RETURN swallowed taps (read as rageclicks on the
@@ -454,11 +451,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       catchesRef.current = ORIONIDS_FRAGMENT_GOAL
       setCatches(ORIONIDS_FRAGMENT_GOAL)
       cargoRef.current = { ...cargoRef.current, orionid_debris: ORIONIDS_FRAGMENT_GOAL }
-      onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
+      onComplete(cargoRef.current, earthDisposition ?? undefined)
       return
     }
     cargoRef.current = { ...cargoRef.current, ...mission.requires.minerals }
-    onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
+    onComplete(cargoRef.current, earthDisposition ?? undefined)
   }
 
   // Deposit contains the target's full mineral pool, not just the mission's objective —
@@ -904,19 +901,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             : Object.entries(mission.requires.minerals).map(([id, amount]) =>
               `${minerals[id]?.name ?? id}: ${Math.min(cargo[id] ?? 0, amount)} of ${amount} collected. `).join('')}
         </span>
-
-        {remoteSiloAvailable && (isFreeOps || orderFilled || laserCharges <= 0) && (
-          <Panel accent="var(--ln-cyan)" surface="glass" style={{ marginBottom: 8, padding: 10 }}>
-            <div style={{ font: '800 14px var(--ln-font-display)', letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>Arrival settlement</div>
-            <div style={{ font: '14px var(--ln-font-body)', color: 'var(--ln-text-dim)', lineHeight: 1.4, marginTop: 4 }}>
-              Remote Mineral Silo online · {remoteSiloUsed} / {REMOTE_MINERAL_SILO_CAPACITY} U. Choose where this haul goes before the return leg.
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
-              <button type="button" onClick={() => setRemoteDisposition('store')} style={{ padding: '8px 6px', borderRadius: 6, border: `1px solid ${remoteDisposition === 'store' ? 'var(--ln-cyan)' : 'var(--ln-hairline)'}`, background: remoteDisposition === 'store' ? 'var(--ln-cyan-soft)' : 'transparent', color: 'var(--ln-text)', font: '700 14px var(--ln-font-display)' }}>PLACE IN SILO</button>
-              <button type="button" onClick={() => setRemoteDisposition('sell')} style={{ padding: '8px 6px', borderRadius: 6, border: `1px solid ${remoteDisposition === 'sell' ? 'var(--ln-amber)' : 'var(--ln-hairline)'}`, background: remoteDisposition === 'sell' ? 'var(--ln-amber-soft)' : 'transparent', color: 'var(--ln-text)', font: '700 14px var(--ln-font-display)' }}>SELL AT MARKET</button>
-            </div>
-          </Panel>
-        )}
 
         <BaseDock
           variant="flight"

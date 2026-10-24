@@ -2,7 +2,6 @@ import { launchpadMissionFloor } from './building-levels'
 // Landnam game data — rocket parts
 
 import type { Part, Mission, Target, RocketConfig, BuildCheck } from './types'
-import { effectiveCargoCapacity, effectiveMaxOrbit } from './skills'
 
 export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
   chassis: [
@@ -36,8 +35,7 @@ export function suggestBuild(opts: {
   /** Launchpad level 1-3; level 3 counts as two flown missions for part unlocks. */
   launchpadLevel?: number
   parts?: typeof PARTS
-  unlockedSkillNodes?: string[]
-  // For two-leg "mine then deliver" missions — ensures the suggested
+    // For two-leg "mine then deliver" missions — ensures the suggested
   // propulsion also reaches the delivery leg, not just the pickup target.
   deliveryTarget?: Target | null
 }): RocketConfig {
@@ -57,11 +55,11 @@ export function suggestBuild(opts: {
     return true
   }
   const bestAvail = <T extends Part>(arr: T[]) => [...arr].reverse().find(p => available(p)) ?? arr[0]
-  const prop = parts.propulsion.find(p => available(p) && effectiveMaxOrbit(p, opts.unlockedSkillNodes) >= orbit)
+  const prop = parts.propulsion.find(p => available(p) && (p.max_orbit ?? 0) >= orbit)
     ?? bestAvail(parts.propulsion)
   const drill = parts.drill.find(p => available(p) && (p.tier ?? 0) >= drillTier)
     ?? bestAvail(parts.drill)
-  const chassis = parts.chassis.find(p => available(p) && effectiveCargoCapacity(p, opts.unlockedSkillNodes) >= cargoMin)
+  const chassis = parts.chassis.find(p => available(p) && (p.cargo ?? 0) >= cargoMin)
     ?? bestAvail(parts.chassis)
 
   return { chassis: chassis.id, propulsion: prop.id, drill: drill.id }
@@ -72,8 +70,7 @@ export function validateBuild(opts: {
   target: Target
   rocket: RocketConfig
   parts?: typeof PARTS
-  unlockedSkillNodes?: string[]
-  /** Cargo units and orbit reach added by fitted customizer parts; the builder chips already show them (SSL-647). */
+    /** Cargo units and orbit reach added by fitted customizer parts; the builder chips already show them (SSL-647). */
   loadoutBonus?: { capacity: number; range: number }
 }): BuildCheck {
   const { mission, target, rocket, parts = PARTS } = opts
@@ -82,13 +79,13 @@ export function validateBuild(opts: {
   const drill = parts.drill.find(p => p.id === rocket.drill) ?? parts.drill[0]
 
   const problems: string[] = []
-  const maxOrbit = effectiveMaxOrbit(propulsion, opts.unlockedSkillNodes) + (opts.loadoutBonus?.range ?? 0)
+  const maxOrbit = (propulsion.max_orbit ?? 0) + (opts.loadoutBonus?.range ?? 0)
   const infrastructureOrbitBonus = mission.jointProject?.infrastructureOrbitBonus ?? 0
   const requiredOrbit = Math.max(0, target.orbit - infrastructureOrbitBonus)
   if (maxOrbit < requiredOrbit) {
     problems.push(`Propulsion can only reach Orbit ${maxOrbit}, mission needs Orbit ${requiredOrbit}`)
   }
-  const cargoCapacity = effectiveCargoCapacity(chassis, opts.unlockedSkillNodes) + (opts.loadoutBonus?.capacity ?? 0)
+  const cargoCapacity = (chassis.cargo ?? 0) + (opts.loadoutBonus?.capacity ?? 0)
   if (cargoCapacity < mission.requires.cargo_min) {
     problems.push(`Ship cargo (${cargoCapacity}U) below mission minimum (${mission.requires.cargo_min}U)`)
   }

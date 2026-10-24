@@ -263,7 +263,7 @@ struct MiningScreen: View {
         // SSL-538: a full charge lasts about twice as long (matches web MAX_CHARGES * 2).
         let charges = 2 * (mission.sequence <= 2
             ? max(80, ore * 16)
-            : max(Skills.laserChargeCap(store.player.unlockedSkillNodes), ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel))
+            : max(Flight.baseLaserCharges, ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel))
         // Meteor-shower debris joins the field only inside its window and the player's local night (SSL-475).
         let shower = mission.id == OrionidsRun.missionId ? nil : SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now, location: store.player.skyEventLocation) / 2).rounded(.up)))) }
         let required = mission.id == OrionidsRun.missionId ? ["orionid_debris": max(1, OrionidsRun.fragmentGoal - OrionidsRun.catches(store.player))] : mission.requires.minerals

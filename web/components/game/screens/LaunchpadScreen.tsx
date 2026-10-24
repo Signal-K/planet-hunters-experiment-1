@@ -91,7 +91,6 @@ export default function LaunchpadScreen({
         rocket={rocket}
         installed={player.shipCustomizerParts}
         missionsDone={missionsDone}
-        skills={player.unlockedSkillNodes}
         towerLabel={towerLabel}
         launchTestId={launchTestId}
         launchDisabled={launchDisabled}

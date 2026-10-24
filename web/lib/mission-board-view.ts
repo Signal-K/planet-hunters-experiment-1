@@ -5,7 +5,6 @@ import {
   RESOURCE_FOCUS_MISSION_ID,
   SELF_DIRECTED_MINING_MISSION_ID,
 } from '@/lib/data/missions'
-import { ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
 import {
   SATURN_IMAGER_MISSION_ID,
   TRANSIT_TELESCOPE_MISSION_ID,
@@ -24,7 +23,7 @@ import { SPACETOBER_PEAK_BADGE, SPACETOBER_WEEK_BADGE, type OrionidsFind } from 
 import { WSW_EVENT_IDS, WSW_RANGE_LABEL, isWorldSpaceWeekUpcoming, wswBanner, wswChipsForMission } from '@/lib/wsw'
 
 export type ProgramStepState = 'done' | 'current' | 'available' | 'locked'
-export type ProgramStepKind = 'instrument' | 'build' | 'mining' | 'focus'
+export type ProgramStepKind = 'instrument' | 'mining' | 'focus'
 
 export interface ProgramStep {
   id: string
@@ -122,8 +121,7 @@ function gateProgress(step: Omit<ProgramStep, 'progress'> & { progress?: Program
 }
 
 /**
- * Own-program chain for the Program tab. Instruments, the academy story and
- * builds stay in progression order. The first step that can be started is
+ * Own-program chain for the Program tab. Instruments stay in progression order. The first step that can be started is
  * current; later open steps stay available. Repeatable mining is never current.
  */
 export function programChain(catalog: Catalog, player: Player, now = Date.now()): ProgramStep[] {
@@ -142,21 +140,6 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
       kind: 'instrument',
     }
   })
-
-  const builds = catalog.missions.filter(mission => mission.construction && !mission.client)
-  for (const mission of builds) {
-    const delivered = ownProgramStructureDelivered(player, mission.construction!.structureKind)
-    const lockLine = !delivered && !free ? (mission.unlockAt ?? null) : null
-    steps.push({
-      id: mission.id,
-      title: mission.title,
-      detail: mission.programReward?.outcome ?? mission.brief,
-      brief: mission.brief,
-      lockLine,
-      state: delivered ? 'done' : lockLine ? 'locked' : 'available',
-      kind: 'build',
-    })
-  }
 
   const mining = missionById(catalog, SELF_DIRECTED_MINING_MISSION_ID)
   steps.push({

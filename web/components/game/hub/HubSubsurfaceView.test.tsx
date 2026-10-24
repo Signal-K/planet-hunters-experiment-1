@@ -45,10 +45,7 @@ describe('HubSubsurfaceView', () => {
     expect(markup).toContain('Build storage below the fixed surface base')
     expect(markup).toContain('data-testid="subsurface-room-mineral-vault"')
     expect(markup).toContain('data-testid="subsurface-room-parts-locker"')
-    expect(markup).toContain('data-testid="subsurface-room-habitat-training"')
     expect(markup).toContain('Unbuilt')
-    expect(markup).toContain('Coming soon')
-    expect(markup).toContain('LOCKED')
     expect(markup).not.toContain('Commodity Exchange')
   })
 

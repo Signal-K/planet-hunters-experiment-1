@@ -27,7 +27,7 @@ This file records the audit evidence. Screen classification is enforced in `web/
 | D2 (SSL-675) | The first-run tutorial is cut to the spine: place pad, take contract, launch, mine, debrief. Target 7 steps or fewer, no more than 7 screens. Flight and landing are one zero-tap sequence, so no return-leg steps. |
 | D3 | Rover-survey leaves the mining tutorial. It stays an extension reached from Surface Ops. Laser mining is the only first-run Work verb. |
 | D4 | **Base services stay** (Free Ops only): Exchange, Earth refinery L1, Hangar, Mission log, subsurface. They are places in the yard, never mission tracks. |
-| D5 | **Extensions stay, each needing its own fixture:** Instruments and citizen science (an instrument feed, not a mission type), Sites and deeds with treasury, Surface Ops, Rover. |
+| D5 | **Extensions stay, each needing its own fixture:** Instruments and citizen science (an instrument feed, not a mission type) and the Rover survey. **Sites, Surface Ops, site rights, treasury and loans were deleted on 2026-10-24** (not integrated, not early game, unfinished server side). |
 | D6 (SSL-676) | **Removed: Academy and Skills.** Deleted outright rather than parked (Liam, 2026-10-24: remove everything removable). Crew keep no citizen-science role. |
 | D7 | **Not started and not to be presented as shipped:** daily client growth, completed-build event feed, treasury-funded loans and contribution rewards, off-world refinery, colonies, settlement build missions (`program-build-mars-mining-settlement`). The ledger carries their state. |
 | D8 | **Mission kinds are four:** client contract (extraction, transport), Free Ops mining, event variant (Orionids is a mining run), own-program build. Nothing else gets a mission tag. |
@@ -36,3 +36,7 @@ This file records the audit evidence. Screen classification is enforced in `web/
 ## Rule for new work
 
 Add a screen or mission only when it extends the spine, ships with an independent web and iOS fixture, and has a row in `NARRATIVE_ROLE`.
+
+## Deleted 2026-10-24 (restore from git history, not from stubs)
+
+Academy, crew, hiring and training; Skill tree, skill points and licence grades; Sites and Surface Ops; site rights, deeds, treasury and bankruptcy loans; the Takeon field sandbox (structure palette, crafting, ownership, territory claims, biosphere seeding); Friends, notification bell and presence heartbeat; Community hub; Narrative Ledger screen (the model lives in ZenNotes); own-program build missions, remote silo, off-world refinery and site-right gating; dark-shipped habitat training and the off-world non-mining build flag; crew ship rooms and their art; the legacy GameApp shell and preview pages; 569 dead CSS rules. Saves keep unknown fields, so old saves still load. The PocketBase collections and daily-economy workflow are untouched and now have no client.

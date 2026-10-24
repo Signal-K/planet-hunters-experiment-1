@@ -15,7 +15,7 @@ public enum ShipCustomizer {
     public static let roomNames: [String: String] = [
         "engine": "Engine", "booster": "Booster", "cockpit": "Command", "payload": "Payload",
         "fuel-stage": "Propellant", "fairing": "Fairing", "docking-port": "Docking", "heat-shield": "Shield",
-        "crew-module": "Crew", "lander": "Lander",
+        "lander": "Lander",
     ]
 
     /// Web `BUILD_SEQUENCES`: the hull grows rooms at 2, 4 and 6 missions done.
@@ -26,9 +26,9 @@ public enum ShipCustomizer {
         4: ["fuel-stage", "engine", "booster", "cockpit", "fairing", "payload", "docking-port", "heat-shield"],
     ]
 
-    /// Web `getBuildSequence`: researched crew and lander rooms join the two larger hulls only.
-    public static func sequence(missionsDone: Int, crewModuleResearched: Bool, landingResearched: Bool) -> [String] {
-        let bonus = (crewModuleResearched ? ["crew-module"] : []) + (landingResearched ? ["lander"] : [])
+    /// Web `getBuildSequence`: the researched lander room joins the two larger hulls only.
+    public static func sequence(missionsDone: Int, landingResearched: Bool) -> [String] {
+        let bonus = landingResearched ? ["lander"] : []
         if missionsDone >= 6 { return sequences[4]! + bonus }
         if missionsDone >= 4 { return sequences[3]! + bonus }
         if missionsDone >= 2 { return sequences[2]! }
@@ -36,7 +36,7 @@ public enum ShipCustomizer {
     }
 
     public static func sequence(for p: Player) -> [String] {
-        sequence(missionsDone: p.missionsDone, crewModuleResearched: p.crewModuleResearched, landingResearched: p.landingResearched)
+        sequence(missionsDone: p.missionsDone, landingResearched: p.landingResearched)
     }
 
     public static func part(_ id: String?) -> Part? { id.flatMap { id in parts.first { $0.id == id } } }
@@ -82,11 +82,6 @@ public enum ShipCustomizer {
         Part(id: "magnetic-port-t1", kind: "docking-port", name: "Magnetic Port T1", price: 3_900_000, unlockedAtMissions: 4),
         Part(id: "ablative-shield-t1", kind: "heat-shield", name: "Ablative Shield T1", price: 3_400_000, unlockedAtMissions: 6),
         Part(id: "ceramic-shield-t1", kind: "heat-shield", name: "Ceramic Shield T1", price: 5_100_000, unlockedAtMissions: 6),
-        Part(id: "crew-quarters-t1", kind: "crew-module", name: "Crew Quarters T1", price: 5_500_000, unlockedAtMissions: 4),
-        Part(id: "crew-transport-t2", kind: "crew-module", name: "Crew Transport T2", price: 7_700_000, unlockedAtMissions: 5),
-        Part(id: "crew-transport-t3", kind: "crew-module", name: "Crew Transport T3", price: 9_900_000, unlockedAtMissions: 6),
-        Part(id: "crew-transport-t4", kind: "crew-module", name: "Crew Transport T4", price: 12_650_000, unlockedAtMissions: 7),
-        Part(id: "crew-transport-t5", kind: "crew-module", name: "Crew Transport T5", price: 15_950_000, unlockedAtMissions: 8),
         Part(id: "lander-module-t1", kind: "lander", name: "Lander Module T1", price: 5_500_000, unlockedAtMissions: 4),
     ]
 }

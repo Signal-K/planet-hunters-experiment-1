@@ -1,8 +1,7 @@
 import { useCallback } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
 import { applySellMinerals, applySellRefinedGoods, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyUpgradeBuilding, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom } from '@/lib/systems/EconomySystem'
-import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/lib/systems/ProgressionSystem'
-import type { TreasuryState } from '@/lib/systems/TreasurySystem'
+import { applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import { captureGameEvent } from '@/lib/posthog'
 import { completeFlightPlanEvent, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
@@ -82,36 +81,6 @@ export function useEconomyActions(
     setState(s => applyBuildSubsurfaceRoom(s, roomId))
   }, [setState])
 
-  const unlockSkillNode = useCallback((id: string) => {
-    setState(s => applyUnlockSkillNode(s, id))
-  }, [setState])
-
-  const acceptLoan = useCallback(() => {
-    // Loans change both a player's persisted balance and the public treasury,
-    // so the backend owns the transaction. Keep the local-only transition as
-    // a fallback for preview surfaces, which deliberately have no auth.
-    if (!pbLandnam.authStore.isValid) {
-      setState(s => applyAcceptLoan(s))
-      return
-    }
-    void pbLandnam.send<{ state: TreasuryState; changed: boolean; principalFrancs: number }>('/api/treasury/bankruptcy-loan', {
-      method: 'POST',
-    }).then(response => {
-      if (!response.changed) return
-      setState(s => ({
-        ...s,
-        popup: null,
-        player: {
-          ...s.player,
-          francs: s.player.francs + response.principalFrancs,
-          loanDebt: response.principalFrancs,
-          loanOffered: true,
-          treasury: response.state,
-        },
-      }))
-    })
-  }, [setState])
-
   const abandonMission = useCallback((opts?: { confirmed?: boolean }) => {
     if (!opts?.confirmed && !confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
     // mission_completed has no failure counterpart today — a player who
@@ -174,7 +143,7 @@ export function useEconomyActions(
   return {
     sellMinerals, buyMinerals, setPriceAlert, removePriceAlert, checkPriceAlerts, sellRefinedGoods, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad, upgradeBuilding,
     excavateSubsurface, buildSubsurfaceRoom,
-    unlockSkillNode, acceptLoan, abandonMission,
+    abandonMission,
     confirmShipCustomizerBuild,
   }
 }

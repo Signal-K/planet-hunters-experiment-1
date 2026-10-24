@@ -11,7 +11,6 @@ export type NarrativeRole =
   | 'base'       // the yard the loop starts and ends in
   | 'service'    // Free Ops base buildings: sell, store, refine, fit a ship
   | 'extension'  // optional, hangs off the loop, ships with its own fixture
-  | 'dev'
 
 export const NARRATIVE_ROLE: Record<Screen, NarrativeRole> = {
   intro: 'base',
@@ -32,13 +31,11 @@ export const NARRATIVE_ROLE: Record<Screen, NarrativeRole> = {
   refinery: 'service',
   hangar: 'service',
   'mission-history': 'service',
-  'surface-ops': 'extension',
   'rover-survey': 'extension',
   'instrument-hub': 'extension',
   galaxy: 'extension',
   'asteroid-discovery': 'extension',
   'saturn-storm-search': 'extension',
-  'narrative-ledger': 'dev',
 }
 
 export const SPINE: readonly NarrativeRole[] = ['plan', 'launch', 'flight', 'work', 'result']

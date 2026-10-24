@@ -5,7 +5,6 @@ import type { Screen } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
 import { isFreeHaulMission, isOwnProgramMission, laserCapacitorBonus, rocketDisplayForConfig } from '@/lib/data'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
-import { effectiveCargoCapacity } from '@/lib/data/skills'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
@@ -13,7 +12,7 @@ import RoverSurveyScreen from '@/components/game/screens/RoverSurveyScreen'
 import HomecomingScreen from '@/components/game/screens/HomecomingScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
-import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
+import { earthStorageBuilt, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
 import { TRANSPORT_LESSON_MISSIONS_DONE } from '@/lib/systems/AgencyOnboardingSystem'
 import { isFreeHaulEligibleMission } from '@/lib/data'
 import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-events'
@@ -156,7 +155,7 @@ export default function MissionOperationRoutes({
               game.onLandingTouchdown()
               return
             }
-            game.onRedockComplete(game.player.miningCargoInProgress ?? {}, game.player.pendingRemoteDisposition)
+            game.onRedockComplete(game.player.miningCargoInProgress ?? {})
           }}
         />
       )
@@ -167,7 +166,7 @@ export default function MissionOperationRoutes({
       const miningTargetId = game.target.id
       const chassis = game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)
       const nightHold = game.mission.id === ORIONIDS_NIGHT_RUN_ID && chassis
-        ? effectiveCargoCapacity(chassis, game.player.unlockedSkillNodes)
+        ? (chassis.cargo ?? 0)
         : undefined
       return (
         <MiningScreen
@@ -194,7 +193,7 @@ export default function MissionOperationRoutes({
             }))
             game.go('hub')
           }}
-          onComplete={(cargo, remoteDisposition, earthDisposition) => {
+          onComplete={(cargo, earthDisposition) => {
             game.completeStep(6)
             if (game.player.shipCustomizerParts?.lander) {
               game.setPlayer(player => ({
@@ -202,14 +201,13 @@ export default function MissionOperationRoutes({
                 missionPhase: 'landing',
                 landingReturnStartedAt: Date.now(),
                 miningCargoInProgress: cargo,
-                pendingRemoteDisposition: remoteDisposition,
                 freeHaulDisposition: earthDisposition ?? player.freeHaulDisposition,
               }))
               game.go('landing')
               return
             }
             if (earthDisposition) game.setPlayer(player => ({ ...player, freeHaulDisposition: earthDisposition }))
-            game.onMiningDone(cargo, remoteDisposition)
+            game.onMiningDone(cargo)
           }}
           minerals={game.catalog.minerals}
           laserChargeCap={game.laserChargeCap}
@@ -223,8 +221,6 @@ export default function MissionOperationRoutes({
             Object.keys(game.player.clientMissions ?? {}).length > 0
             || (game.player.dailyClientPool?.completedIds.length ?? 0) > 0
           }
-          remoteSiloAvailable={!!game.mission && isOwnProgramMission(game.mission) && !game.mission.deliveryTargetId && !game.mission.construction && hasOperationalRemoteSilo(game.player, game.target.id)}
-          remoteSiloUsed={storedUnits(game.player.remoteStorage?.[game.target.id])}
           // KES-283: gate a self-directed run on a storage destination before
           // mining starts, unless one was already chosen before a prior
           // back-to-hub pause on this same mission.
@@ -298,10 +294,6 @@ export default function MissionOperationRoutes({
           target={roverTarget}
           rocketImageSrc={rocketDisplay.img}
           player={game.player}
-          onFieldBuild={game.recordFieldBuild}
-          onFieldDemolish={game.recordFieldDemolish}
-          onFabricate={game.fabricateAtField}
-          onSeedBiosphere={game.seedBiosphere}
           onComplete={() => {
             if (game.mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID) {
               game.setLastCargo({})
@@ -371,12 +363,6 @@ export default function MissionOperationRoutes({
           rocket={game.rocket}
           rocketSource={game.player.missionRocketSource}
           deliveryTargetName={deliveryTargetName}
-          loanDebt={game.player.loanDebt}
-          firstCrewArrival={
-            (game.player.missionCrewIds?.length ?? 0) > 0
-            && !!game.target
-            && !(game.player.crewVisitedTargets ?? []).includes(game.target.id)
-          }
           hasEarthStorage={earthStorageBuilt(game.player)}
           storageCapacity={storageCapacity(game.player)}
           storageUsed={storedUnits(game.player.stash)}

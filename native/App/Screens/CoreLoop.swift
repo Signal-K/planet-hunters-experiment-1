@@ -151,7 +151,7 @@ struct MissionsScreen: View {
     private func feasibleTargetIds(for mission: Mission) -> [String] {
         Targets.feasible(for: mission, targets: store.catalog.targets, parts: store.catalog.parts,
                          missionsDone: store.player.missionsDone, launchpadUpgraded: store.player.launchpadUpgraded,
-                         launchpadLevel: BuildingLevels.level(store.player, "launchpad"), skills: store.player.unlockedSkillNodes).map(\.id)
+                         launchpadLevel: BuildingLevels.level(store.player, "launchpad")).map(\.id)
     }
 
     private func destinationFilter(entries: [MissionBoard.Entry]) -> some View {

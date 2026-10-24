@@ -22,14 +22,12 @@ public enum Construction {
                            summary: "Cargo dock where you sell ore at the spot price."),
         StructureBlueprint(id: "control-station", name: "Control Station", cost: Economy.controlStationPrice, materials: [:], unlocksAt: "Opens once the guided missions are flown",
                            summary: "Runs your satellites and telescopes. Build it before you launch one."),
-        StructureBlueprint(id: "astronaut-academy", name: "Astronaut Academy", cost: Economy.academyPrice, materials: ["aluminium": 24, "silicon": 12, "copper": 8],
-                           unlocksAt: "Reach client level 2 with two clients, then research it", summary: "Trains named astronauts, manages the roster, and coordinates Base staffing."),
     ]
     public static let byId: [String: StructureBlueprint] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
 
-    /// What the Build screen offers: web hides the Academy here (it is placed after research) and anything already built.
+    /// What the Build screen offers: anything not already built.
     public static func catalog(for p: Player) -> [StructureBlueprint] {
-        all.filter { $0.id != "astronaut-academy" && !p.placed.contains($0.id) }
+        all.filter { !p.placed.contains($0.id) }
     }
 
     /// Silo and Exchange appear once one run is flown: before that there is nothing to store or sell (web `FIRST_STORAGE_MISSIONS_DONE`).
@@ -40,7 +38,6 @@ public enum Construction {
         case "surface-silo": return p.missionsDone >= firstStorageMissionsDone || p.placed.contains("surface-silo")
         case "market": return p.missionsDone >= firstStorageMissionsDone || p.placed.contains("market")
         case "control-station": return p.missionsDone >= firstStorageMissionsDone || p.placed.contains("control-station")
-        case "astronaut-academy": return p.academyResearched || p.placed.contains("astronaut-academy")
         case "launchpad": return true
         default: return false
         }
@@ -64,7 +61,6 @@ public enum Construction {
     public static func applyPlace(_ s: GameState, kind: String, plot: Int, now: Double) -> GameState {
         guard let b = byId[kind], !s.player.placed.contains(kind), (0..<plotCount).contains(plot),
               !occupied(s.player).values.contains(plot),
-              !(kind == "astronaut-academy" && !s.player.academyResearched),
               unlocked(b, player: s.player), canAfford(b, player: s.player) else { return s }
         var n = s
         for (m, c) in b.materials { n.player.stash[m] = max(0, (n.player.stash[m] ?? 0) - c) }
@@ -72,7 +68,6 @@ public enum Construction {
         n.player.placed.append(kind)
         n.player.placementPlots[kind] = plot
         n.player.underConstruction[kind] = now
-        if kind == "astronaut-academy" { n.player.academyFunded = true; n.player.crewUpkeepSettledDate = Academy.dateKey(now) }
         if !s.player.freeOperations && Transitions.freeOperationsUnlocked(n.player) {
             // Free Ops opens with the launchpad, but the three training tries are an optional guide that is still running:
             // only a finished training ends the coach and raises the "agency is operating" sheet (web `applyPlaceStructure`).

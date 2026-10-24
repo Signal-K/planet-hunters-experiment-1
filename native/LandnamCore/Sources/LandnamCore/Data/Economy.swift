@@ -18,13 +18,10 @@ public enum Economy {
     public static let surveyorPrice = 40_000_000
     public static let refineryPrice = 8_000_000
     public static let garagePrice = 6_000_000
-    public static let academyPrice = 12_000_000
     public static let launchpadUpgradePrice = 10_000_000
     public static let deepSpaceTelescopePrice = 15_000_000
 
     public static let startingFrancs = 9_000_000
-    public static let loanPrincipal = 5_000_000
-    public static let bankruptcyThreshold = 2_000_000
     public static let openMarketSellRate = 0.8
     public static let surfaceSiloCapacity = 40
     public static let surfaceSiloPrice = 2_000_000

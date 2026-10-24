@@ -24,7 +24,7 @@ import Testing
         s.player.shipCustomizerParts = ["payload": best.id]
         let bonus = RocketBuilder.loadoutBonus(s.player.shipCustomizerParts)
         let chassis = Catalog().parts.chassis.first { $0.id == s.rocket.chassis } ?? Catalog().parts.chassis[0]
-        let bare = Catalog().parts.effectiveCargo(chassis, skills: [])
+        let bare = Catalog().parts.effectiveCargo(chassis)
         #expect(RocketBuilder.stats(s, catalog: Catalog()).capacity == bare + bonus.capacity)
         #expect(bonus.capacity > 0)
     }

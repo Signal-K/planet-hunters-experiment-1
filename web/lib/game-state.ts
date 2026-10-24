@@ -9,21 +9,15 @@ import { sanitizeFireballCaughtAt, sanitizeFireballSpotter } from '@/lib/orionid
 import { mergeNightCatches, sanitizeNightCatches } from '@/lib/orionids/night-catches'
 import { fragmentsFromSave, mergeFragments } from '@/lib/orionids/fragments'
 import { detectOrionidsProgress } from '@/lib/orionids/progress'
-import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
+import type { CompletedMissionRecord, GameState, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, OWN_PROGRAM_CLIENT_ID, TARGETS } from '@/lib/data'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
-import { migrateCrewRoster } from '@/lib/systems/CrewSystem'
-import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
-import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
 import { findTargetStructure } from '@/lib/data/target-structures'
 import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
-import { resolveOffworldRefinery } from '@/lib/systems/OffworldRefinerySystem'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
-import { CLIENT_TERRITORIES } from '@/lib/data/site-rights'
-import { createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
 import { dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
 import { GAME_SCREENS } from '@/lib/game-screens'
@@ -36,7 +30,6 @@ export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partia
 
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-survey', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-survey', 'delivery', 'debrief'])
-const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
 const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch'])
 const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager'])
 
@@ -55,8 +48,6 @@ export const DEFAULT_STATE: GameState = {
     placementPlots: {},
     controlBuilt: false,
     missionsDone: 0,
-    skillPoints: 0,
-    unlockedSkillNodes: [],
     freeOperations: false,
     flightPlan: EMPTY_FLIGHT_PLAN,
     clientMissions: {},
@@ -110,26 +101,8 @@ export const DEFAULT_STATE: GameState = {
     deepSpaceTelescopeLevel: 1,
     deepSpaceTelescopeLaunchedAt: null,
     deepSpaceTelescopeMissionCompletedAt: null,
-    licenseGrade: 'Grade I',
     researchXP: 0,
     unlockedBlueprints: [],
-    crew: [],
-    formerCrew: [],
-    crewHiresLifetime: 0,
-    crewHiresThisWeek: 0,
-    crewTraining: [],
-    trainingSessionsUsedToday: 0,
-    missionCrewIds: [],
-    crewMissionAwards: [],
-    crewVisitedTargets: [],
-    structureCrewAssignments: {},
-    sharedChartsByClient: {},
-    academyResearched: false,
-    academyFunded: false,
-    academyXP: 0,
-    crewModuleResearched: false,
-    surfaceOps: { sites: {} },
-    siteRights: createSiteRightsState([...CLIENT_TERRITORIES]),
   },
   missionId: null,
   targetId: null,
@@ -206,9 +179,6 @@ export function normalizeState(input: PartialSave): GameState {
     : orionidsProgress.attempted
       ? Math.max(player.orionidsEventStage ?? 0, 1) as 0 | 1 | 2
       : player.orionidsEventStage ?? 0
-  const licenseGrade = player.licenseGrade && VALID_LICENSE_GRADES.includes(player.licenseGrade)
-    ? player.licenseGrade
-    : DEFAULT_STATE.player.licenseGrade
   const researchXP = Number.isFinite(player.researchXP)
     ? Math.max(0, Math.floor(player.researchXP ?? 0))
     : DEFAULT_STATE.player.researchXP
@@ -273,11 +243,6 @@ export function normalizeState(input: PartialSave): GameState {
   const deepSpaceTelescopeLevel = Number.isFinite(player.deepSpaceTelescopeLevel)
     ? Math.max(1, Math.floor(player.deepSpaceTelescopeLevel ?? 1))
     : DEFAULT_STATE.player.deepSpaceTelescopeLevel
-  // Rovers predate the roster, so a save can carry roverDeployments and no
-  // crew at all. Fold them in here — the one choke point every load path runs
-  // through — rather than leaving the roster and roverDeployments to drift.
-  const crew = migrateCrewRoster(player, Date.now())
-  const surfaceOps = normalizeSurfaceOps(player.surfaceOps)
   const clientStructures = Array.isArray(player.clientStructures)
     ? player.clientStructures.map(record => {
       const blueprint = findTargetStructure(record.structureKind)
@@ -304,9 +269,6 @@ export function normalizeState(input: PartialSave): GameState {
     }
   }
   const clientBuildEvents = [...buildEventsById.values()].sort((left, right) => left.eventId.localeCompare(right.eventId))
-  const offworldRefineries = (player.offworldRefineries ?? []).map(refinery =>
-    resolveOffworldRefinery(refinery)
-  )
 
   // `placed` is the record of what the player actually built; the per-structure
   // booleans are conveniences derived from it. They can disagree: a save made
@@ -367,7 +329,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
       orionidsEventStage,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
@@ -495,11 +457,6 @@ function repairStateRoute(rawInput: GameState): GameState {
   if (input.screen === 'instrument-hub' && !input.player.freeOperations) {
     return { ...input, screen: 'hub' }
   }
-  // The retired solo-settlement surface screen must not be restored from an
-  // old route. Its state stays in the save for a future site-right migration.
-  if (input.screen === 'surface-ops') {
-    return { ...input, screen: 'hub' }
-  }
   if (input.screen === 'refinery' && !input.player.refineryBuilt) {
     return { ...input, screen: 'hub' }
   }
@@ -516,7 +473,7 @@ function repairStateRoute(rawInput: GameState): GameState {
 
 
 export function normalizeAndRepair(partial: PartialSave): GameState {
-  return repairStateRoute(settleCrewEconomy(normalizeState(partial)))
+  return repairStateRoute(normalizeState(partial))
 }
 
 /**
@@ -558,11 +515,11 @@ function maxMergeRecord(a: Record<string, number> | undefined, b: Record<string,
 // by an intentional spend/consume the player themselves triggered, so taking
 // the higher of local/remote is safe: neither side can be "more wrong" than
 // the other, only further along, per its own explicit instruction (francs,
-// stash, refinedGoods, researchXP, skillPoints, researchAnnotations) plus
+// stash, refinedGoods, researchXP, researchAnnotations) plus
 // verified monotonic-only-increment accumulators of the same shape
-// (clientMissions, academyXP, crewHiresLifetime, sharedChartsByClient).
-const RESOURCE_NUMBER_FIELDS = ['francs', 'researchXP', 'skillPoints', 'researchAnnotations', 'academyXP', 'crewHiresLifetime'] as const
-const RESOURCE_RECORD_FIELDS = ['stash', 'refinedGoods', 'clientMissions', 'sharedChartsByClient'] as const
+// (clientMissions).
+const RESOURCE_NUMBER_FIELDS = ['francs', 'researchXP', 'researchAnnotations'] as const
+const RESOURCE_RECORD_FIELDS = ['stash', 'refinedGoods', 'clientMissions'] as const
 
 // Exoplanet discoveries are append-only: once a target has been confirmed it
 // must survive a stale remote save just like placed structures and plots.

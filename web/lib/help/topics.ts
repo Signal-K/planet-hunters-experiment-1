@@ -211,14 +211,6 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       { title: 'Collect when done', body: 'Finished goods wait for you. Collect them to add them to the stash. Nothing is lost while you are away.' },
     ],
   },
-  'surface-ops': {
-    id: 'surface-ops',
-    title: 'Surface operations',
-    cards: [
-      { title: 'Sites and access', body: 'Each site needs access before you can work there. Buy access, then send a ferry with what the site needs.' },
-      { title: 'Logistics and field', body: 'Logistics moves cargo between the base and a site. Field runs an operation on the ground once the site is ready.' },
-    ],
-  },
 }
 
 export function getHelpTopic(screen: Screen): HelpTopic | null {

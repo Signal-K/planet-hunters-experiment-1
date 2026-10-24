@@ -73,10 +73,6 @@ public enum Help {
             HelpCard(title: "Hand over the cargo", body: "The cargo goes to the client at this body. Start the unload and wait for the timer. Pay arrives when the whole order is delivered."),
             HelpCard(title: "What the client wants", body: "The order says how much of which ore the client needs. Bring all of it so the full payout lands."),
         ]),
-        .surfaceOps: HelpTopic(id: "surface-ops", title: "Surface operations", cards: [
-            HelpCard(title: "Sites and access", body: "Each site needs access before you can work there. Buy access, then send a ferry with what the site needs."),
-            HelpCard(title: "Logistics and field", body: "Logistics moves cargo between the base and a site. Field runs an operation on the ground once the site is ready."),
-        ]),
         .instrumentHub: HelpTopic(id: "control-station", title: "Control Station", cards: [
             HelpCard(title: "Where things are", body: "The map shows each telescope and satellite you operate. A number means that equipment has items ready to classify."),
             HelpCard(title: "Open a project", body: "Filter by place, then open a row that has a count. That opens the review for those items."),
