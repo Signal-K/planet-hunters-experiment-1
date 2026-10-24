@@ -4,8 +4,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # Bump both together when the runtime changes: built by takeon go/scripts/build.sh ios on orbit/go-runtime.
-TAG=go-runtime-bcf79f9
-SHA256=d4f735c53e04d91c96fa4c150f2e68595f16b0b176b943856b8e46612d0f7596
+TAG=go-runtime-bcf79f9-universal
+SHA256=abe79ecb0edbbf6eb0afae968d54743df61128dd4753fa8d53d597f606bb9f9c
 URL="https://github.com/Signal-K/takeon/releases/download/$TAG/Takeon.xcframework.zip"
 tmp="$(mktemp -d)"; trap 'rm -rf "${tmp:?}"' EXIT
 curl -fsSL "$URL" -o "$tmp/Takeon.xcframework.zip"
