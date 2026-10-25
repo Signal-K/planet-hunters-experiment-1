@@ -167,13 +167,17 @@ struct MissionHistoryScreen: View {
                 .padding(.top, 8)
 
                 if ordered.isEmpty {
-                    Text(legacyCompleted > 0
-                         ? "\(legacyCompleted) completed \(legacyCompleted == 1 ? "mission predates" : "missions predate") detailed mission records. New missions will appear here with their full debrief."
-                         : "No completed missions yet. Choose a contract from the Mission Board to start your log.")
-                        .font(AppFont.body(14)).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
-                        .padding(.vertical, 32).padding(.horizontal, 20).frame(maxWidth: .infinity)
-                        .background(RecordCream.paper)
-                        .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
+                    VStack(spacing: 8) {
+                        Text("ARCHIVE STATUS")
+                            .font(AppFont.display(14, "Bold")).tracking(1.4).foregroundStyle(Theme.blue)
+                        Text(legacyCompleted > 0
+                             ? "\(legacyCompleted) completed \(legacyCompleted == 1 ? "mission predates" : "missions predate") detailed mission records. New missions will appear here with their full debrief."
+                             : "No completed missions yet. Choose a contract from the Mission Board to start your log.")
+                            .font(AppFont.body(14)).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
+                    }
+                    .padding(.vertical, 24).padding(.horizontal, 20).frame(maxWidth: .infinity)
+                    .background(RecordCream.paper)
+                    .overlay(Rectangle().stroke(Theme.ink, lineWidth: 3))
                 } else {
                     VStack(spacing: 24) {
                         ForEach(Array(ordered.enumerated()), id: \.offset) { i, r in record(r, index: i, total: ordered.count) }

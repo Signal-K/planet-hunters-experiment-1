@@ -24,6 +24,8 @@ describe('MissionHistoryScreen', () => {
   it('explains how to start when the log is empty', () => {
     const markup = renderToStaticMarkup(<MissionHistoryScreen onBack={() => {}} records={[]} />)
     expect(markup).toContain('No completed missions yet')
+    expect(markup).toContain('Archive status')
+    expect(markup).not.toContain('emptySlots')
   })
 
   it('explains legacy completions instead of contradicting the lifetime count', () => {

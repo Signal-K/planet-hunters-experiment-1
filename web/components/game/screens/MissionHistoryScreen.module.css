@@ -125,19 +125,22 @@
 .empty {
   display: grid;
   justify-items: center;
-  gap: 16px;
-  padding: 24px 20px;
-  font: 400 14px/1.5 var(--ln-font-body);
+  gap: 8px;
+  padding: 16px 20px 20px;
   text-align: center;
 }
 
-.emptySlots { display: flex; gap: 8px; }
-.emptySlots span {
-  width: 56px;
-  height: 56px;
-  background: rgb(15 36 54 / 0.08);
-  border: 3px dashed var(--ln-blueprint-ink);
-  opacity: 0.55;
+.emptyKicker {
+  color: var(--ln-blueprint-blue);
+  font: 800 14px/1.2 var(--ln-font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.emptyMessage {
+  max-width: 58ch;
+  margin: 0;
+  font: 400 14px/1.5 var(--ln-font-body);
 }
 
 .recordButton {
