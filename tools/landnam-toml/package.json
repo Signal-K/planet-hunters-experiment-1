@@ -1,0 +1,19 @@
+{
+  "name": "landnam-toml",
+  "displayName": "Landnam TOML",
+  "description": "Outline, folding and live compile status for Landnam scene TOMLs (shared/authoring).",
+  "version": "0.0.1",
+  "publisher": "landnam",
+  "engines": { "vscode": "^1.80.0" },
+  "main": "./extension.js",
+  "activationEvents": ["workspaceContains:shared/authoring/scenes/*.toml"],
+  "contributes": {
+    "views": {
+      "explorer": [{ "id": "landnamOutline", "name": "Landnam Scene", "when": "resourceExtname == .toml" }]
+    },
+    "commands": [
+      { "command": "landnam.foldBig", "title": "Landnam: Fold things, states and presets" },
+      { "command": "landnam.openPreview", "title": "Landnam: Open this scene in the preview" }
+    ]
+  }
+}
