@@ -15,6 +15,7 @@ import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsSheet from '@/components/game/FriendsSheet'
 import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 import { SANDBOX_NOW, isSandboxName } from '@/lib/sandbox'
+import { HUB_PROMPT_TRANSIT_TELESCOPE } from '@/lib/hub-prompts'
 import { requestMissionBoardEvent } from '@/lib/mission-board-nav'
 
 // In the sandbox the base shows the scene, not the player's situation: no clock, no balance, no cargo count.
@@ -63,6 +64,14 @@ function Stage() {
     const params = new URLSearchParams(window.location.search)
     const flowCheck = params.get('t') === 'orionids-flow-check' || params.get('preset') === 'ui-orionids-ready'
     const raw = params.get('patch')
+    // Hub follow-up prompts ("Build a control station", "Launch a space telescope") are campaign nudges, not part of
+    // the scene being built. Every stage preset keeps them dismissed unless `&prompts=1` asks to see them.
+    if (params.get('prompts') !== '1') {
+      game.setPlayer(player => ({
+        ...player,
+        dismissedHubPrompts: { ...player.dismissedHubPrompts, [HUB_PROMPT_TRANSIT_TELESCOPE]: 1_000_000_000 },
+      }))
+    }
     if (flowCheck) {
       // The followable Orionids check starts after the field guide. It remains
       // a preview-only patch, so a clean campaign or saved account is untouched.

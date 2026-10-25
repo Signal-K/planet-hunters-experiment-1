@@ -164,7 +164,7 @@ def build_launchpad(with_gantry=True, fresh=True, frame=True):
     for x in (44, 64):
         box(f"clamp{x}", x - 1.5, 11, 3, 5, d=3, y=12, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.6)
     if with_gantry:
-        _gantry(x=20, base_z=7, height=104, width=17.0)
+        _gantry(x=20, base_z=7, height=66, width=20.0)
     # Service hut at the gantry foot: hull-white panels, a blue door, a teal status strip.
     box("hut", 2, 7, 17, 13, d=16, y=STRUCT_Y + 3, colours=("hull_lit", "hull", "hull_shade"))
     box("hut_door", 7, 7, 6, 8, d=0.6, y=STRUCT_Y + 2.6, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.5)
@@ -186,9 +186,9 @@ def _gantry(x, base_z, height, width=14.0):
     """Square steel lattice tower: four legs, cross braces on the front face, three service arms to the right."""
     d = 12.0
     y0 = 10.0
-    for lx in (x, x + width - 2.4):
-        box(f"leg_{lx}", lx, base_z, 2.4, height, d=2.4, y=y0, colours=("steel_lit", "steel", "steel_dark"), outline=0.7)
-        box(f"legb_{lx}", lx, base_z, 2.4, height, d=2.4, y=y0 + d - 2.4, colours=("steel_lit", "steel", "steel_dark"), outline=0.7)
+    for lx in (x, x + width - 3.4):
+        box(f"leg_{lx}", lx, base_z, 3.4, height, d=3.4, y=y0, colours=("steel_lit", "steel", "steel_dark"), outline=0.7)
+        box(f"legb_{lx}", lx, base_z, 3.4, height, d=3.4, y=y0 + d - 2.4, colours=("steel_lit", "steel", "steel_dark"), outline=0.7)
     bay = 13.0
     n = int(height // bay)
     import math as _m
@@ -217,8 +217,8 @@ def _gantry(x, base_z, height, width=14.0):
     for i, frac in enumerate((0.42, 0.62, 0.82)):
         z = base_z + height * frac
         reach = 17 - i * 3
-        box(f"arm{i}", x + width, z, reach, 2.4, d=4, y=y0 + 4, colours=("hull_lit", "hull", "hull_shade"), outline=0.7)
-        box(f"armtip{i}", x + width + reach - 3, z - 2.2, 3, 2.2, d=4, y=y0 + 4, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.6)
+        box(f"arm{i}", x + width, z, reach, 3.6, d=4, y=y0 + 4, colours=("hull_lit", "hull", "hull_shade"), outline=0.7)
+        box(f"armtip{i}", x + width + reach - 3.4, z - 2.6, 3.4, 2.6, d=4, y=y0 + 4, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.6)
 
 
 def _shift_new(before, dx):

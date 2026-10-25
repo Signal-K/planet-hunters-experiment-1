@@ -24,7 +24,7 @@
         "kind": "launchpad",
         "centerX": 201.24,
         "width": 174.72,
-        "height": 212.909
+        "height": 153.875
       }
     ]
   },
@@ -44,7 +44,7 @@
         "kind": "launchpad",
         "centerX": 249.475,
         "width": 174.72,
-        "height": 212.909
+        "height": 153.875
       },
       {
         "kind": "hangar",
@@ -72,7 +72,7 @@
         "kind": "launchpad",
         "centerX": 100.651,
         "width": 174.72,
-        "height": 212.909
+        "height": 153.875
       },
       {
         "kind": "hangar",
@@ -119,7 +119,7 @@
         "kind": "launchpad",
         "centerX": 471,
         "width": 224,
-        "height": 272.96
+        "height": 197.276
       }
     ]
   },
@@ -139,7 +139,7 @@
         "kind": "launchpad",
         "centerX": 532.84,
         "width": 224,
-        "height": 272.96
+        "height": 197.276
       },
       {
         "kind": "hangar",
@@ -167,7 +167,7 @@
         "kind": "launchpad",
         "centerX": 342.04,
         "width": 224,
-        "height": 272.96
+        "height": 197.276
       },
       {
         "kind": "hangar",
@@ -214,7 +214,7 @@
         "kind": "launchpad",
         "centerX": 732,
         "width": 336,
-        "height": 409.44
+        "height": 295.914
       }
     ]
   },
@@ -234,7 +234,7 @@
         "kind": "launchpad",
         "centerX": 824.76,
         "width": 336,
-        "height": 409.44
+        "height": 295.914
       },
       {
         "kind": "hangar",
@@ -262,7 +262,7 @@
         "kind": "launchpad",
         "centerX": 538.56,
         "width": 336,
-        "height": 409.44
+        "height": 295.914
       },
       {
         "kind": "hangar",

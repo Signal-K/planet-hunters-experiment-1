@@ -133,7 +133,11 @@ export function DevFollow() {
           // Follow mode is deliberately authoritative. Any game-state, auth,
           // HMR, or editor refresh that moves this tab elsewhere is repaired
           // on the next poll even when the target timestamp has not changed.
-          if (window.location.pathname + window.location.search + window.location.hash !== target) { window.location.assign(target); return }
+          // Pages may add their own params (studio adds vp/tab), so only the path and the target's own params must match.
+          const want = new URL(target, window.location.origin)
+          const here = new URL(window.location.href)
+          const onTarget = here.pathname === want.pathname && [...want.searchParams].every(([k, v]) => here.searchParams.get(k) === v)
+          if (!onTarget) { window.location.assign(target); return }
         }
         if (actionsTs && actionsTs > lastActs) {
           lastActs = actionsTs
