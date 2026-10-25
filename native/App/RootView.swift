@@ -29,6 +29,7 @@ struct RootView: View {
             case .hub, .hubSubsurface: HubScreen()
             case .missionHistory: MissionHistoryScreen()
             case .narrativeLedger: NarrativeLedgerScreen()
+            case .communityResearch: CommunityResearchScreen()
             case .missions: MissionsScreen().helpable(.missions)
             case .targets, .rocketBuy, .fab: LaunchReviewScreen().helpable(.targets)
             case .launchpad: LaunchReviewScreen()

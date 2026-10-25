@@ -4,6 +4,88 @@ import Foundation
 /// every kind is an instrument or survey result, never a mission type. Order is the canonical order on a day.
 public enum StampKind: String, CaseIterable, Codable, Sendable {
     case classification, survey, discoveryMission = "discovery-mission", event
+    case exchangeSale = "exchange-sale", contractRun = "contract-run", priceAlert = "price-alert"
+}
+
+public struct ResearchPathChoice: Codable, Equatable, Sendable {
+    public var week: String
+    public var path: ResearchPathID
+    public var claimedSteps: [Int]?
+    public init(week: String, path: ResearchPathID, claimedSteps: [Int]? = nil) {
+        self.week = week; self.path = path; self.claimedSteps = claimedSteps
+    }
+}
+
+public enum ResearchPathID: String, Codable, CaseIterable, Sendable { case explorer, trader }
+
+public struct ResearchPathStep: Equatable, Identifiable, Sendable {
+    public let id: String
+    public let kind: StampKind
+    public let days: Int
+    public let icon: String
+    public let title: String
+    public let brief: String
+    public let why: String
+}
+
+public enum ResearchPathRules {
+    public static let dayMs = 86_400_000.0
+    public static func weekKey(_ ms: Double) -> String {
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(identifier: "UTC")!
+        let date = Date(timeIntervalSince1970: ms / 1000)
+        let weekday = calendar.component(.weekday, from: date)
+        let offset = (weekday + 5) % 7
+        return ResearchStampRules.dayKey(ms - Double(offset) * dayMs)
+    }
+    public static func pathThisWeek(_ choice: ResearchPathChoice?, now: Double) -> ResearchPathID? {
+        guard let choice, choice.week == weekKey(now) else { return nil }
+        return choice.path
+    }
+    public static func steps(_ path: ResearchPathID) -> [ResearchPathStep] {
+        switch path {
+        case .explorer:
+            return [
+                .init(id: "classify", kind: .classification, days: 1, icon: "waveform.path.ecg", title: "Classify a signal", brief: "Open your instruments and say what a telescope found.", why: "Your answer joins everyone else's, so we learn what is really out there."),
+                .init(id: "scan", kind: .survey, days: 1, icon: "viewfinder", title: "Finish a survey scan", brief: "Start a scan from the control station and see it through.", why: "Scans show how worlds behave, so they get more believable."),
+                .init(id: "watch", kind: .classification, days: 3, icon: "waveform.path.ecg", title: "Keep watching: 3 days", brief: "Classify a signal on three different days this week.", why: "Signals repeat. Coming back is how a discovery gets confirmed."),
+                .init(id: "scan-again", kind: .survey, days: 3, icon: "viewfinder", title: "Scan on 3 days", brief: "Finish a survey scan on three different days this week.", why: "More scans reveal more of the picture."),
+                .init(id: "breakthrough", kind: .classification, days: 0, icon: "star", title: "Breakthrough", brief: "Stamp research on five different days this week.", why: "Steady research turns scattered reports into a result."),
+            ]
+        case .trader:
+            return [
+                .init(id: "sale", kind: .exchangeSale, days: 1, icon: "chart.line.uptrend.xyaxis", title: "Make an Exchange sale", brief: "Sell an eligible mineral or refined good at the Exchange.", why: "Real prices tell the community which resources are moving."),
+                .init(id: "contract", kind: .contractRun, days: 1, icon: "shippingbox", title: "Complete a contract run", brief: "Take a client contract and bring the run home.", why: "Contracts show where supply is needed, not only what is available."),
+                .init(id: "alert", kind: .priceAlert, days: 1, icon: "bell", title: "Set a price alert", brief: "Open Exchange alerts and set one useful target.", why: "Alerts turn a changing market into a signal you can act on."),
+                .init(id: "sales", kind: .exchangeSale, days: 3, icon: "chart.line.uptrend.xyaxis", title: "Trade on 3 days", brief: "Make Exchange sales on three different days this week.", why: "Steady trades reveal a better pattern than one lucky sale."),
+                .init(id: "breakthrough", kind: .contractRun, days: 0, icon: "star", title: "Breakthrough", brief: "Complete the Trader chain to finish the path.", why: "Contracts, prices and decisions now form one market picture."),
+            ]
+        }
+    }
+    public static func progress(_ step: ResearchPathStep, stamps: ResearchStamps, week: String, now: Double) -> (have: Int, need: Int) {
+        let end = ResearchStampRules.dayKey(now)
+        let days = stamps.days.keys.filter { $0 >= week && $0 <= end }
+        if step.days == 0 { return (min(5, days.filter { !(stamps.days[$0] ?? []).isEmpty }.count), 5) }
+        return (min(step.days, days.filter { stamps.days[$0]?.contains(step.kind) == true }.count), step.days)
+    }
+    public static func rewardStep(_ step: ResearchPathStep) -> Int? {
+        if step.id == "breakthrough" { return 5 }
+        if step.id == "scan" || step.id == "contract" { return 2 }
+        if step.id == "sales" || step.id == "scan-again" || step.id == "world" { return 4 }
+        return nil
+    }
+    @discardableResult public static func claim(_ p: inout Player, step: ResearchPathStep, progress: (have: Int, need: Int), now: Double) -> Bool {
+        guard let marker = rewardStep(step), progress.have >= progress.need, let choice = p.researchPath else { return false }
+        var claimed = choice.claimedSteps ?? []
+        guard !claimed.contains(marker) else { return false }
+        claimed.append(marker); claimed.sort()
+        p.researchPath = ResearchPathChoice(week: choice.week, path: choice.path, claimedSteps: claimed)
+        p.researchFragments += marker == 2 ? 5 : marker == 4 ? 10 : 25
+        if marker == 5 {
+            let id = "community-research-\(choice.week)"
+            if p.badges[id] == nil { p.badges[id] = PlayerBadge(eventId: id, tier: .gold, earnedAt: now) }
+        }
+        return true
+    }
 }
 
 /// UTC day (`YYYY-MM-DD`) to the research tasks done that day. Decoding drops bad days and kinds like web `sanitizeStamps`.

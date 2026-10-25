@@ -263,8 +263,8 @@
    "name": "Community research",
    "flow": "records",
    "web": "ui-community-research",
-   "native": null,
-   "tickets": ["SSL-691"]
+   "native": "community-research-phone",
+   "tickets": ["SSL-691", "SSL-694"]
   },
   {
    "id": "market",

@@ -306,6 +306,8 @@ public enum Loop {
         let missionsDone = n.player.missionsDone + 1
         let isStory = mission?.tag == "STORY" && mission?.deliveryTargetId == nil
         let program = mission?.isOwnProgram ?? false
+        let isDiscoverySurvey = missionId.hasPrefix("exo-survey-")
+        if mission?.client != nil && !isStory && !isDiscoverySurvey { ResearchStampRules.add(&n.player, .contractRun, at: now) }
         if let client = mission?.client, !isStory { n.player.clientMissions[client, default: 0] += max(1, affinity) }
         if mission?.deliveryTargetId == nil {
             for (id, amount) in consume {

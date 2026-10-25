@@ -441,6 +441,13 @@ enum SceneCatalog {
             p.researchStamps.days[todayKey, default: []].append(.discoveryMission)
             return ResearchCalendarPanel(stamps: p.researchStamps, now: wswNoon, community: community, hasDiscovery: true).padding(12).background(Theme.hex(0x1A2744))
         },
+        scene("community-research-phone", 874) {
+            var gs = GameState()
+            gs.player.freeOperations = true
+            gs.player.placed = ["launchpad", "market"]
+            gs.screen = .communityResearch
+            return CommunityResearchScreen().environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
+        },
         scene("mission-board-wsw-phone", 874) {
             MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },

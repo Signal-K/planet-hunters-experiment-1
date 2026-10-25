@@ -40,6 +40,7 @@ struct BaseMenu: View {
         if hasControlStation || ownsOrbitalInstrument { rows.append(Item(id: "control-station", label: hasControlStation ? "Control station" : "Instruments", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
         rows.append(Item(id: "mission-log", label: "Mission log", detail: "Past runs and what they paid", symbol: "list.bullet.rectangle", run: { store.go(.missionHistory) }))
         rows.append(Item(id: "narrative-ledger", label: "Narrative ledger", detail: "What is live, adapting and planned", symbol: "map", run: { store.go(.narrativeLedger) }))
+        rows.append(Item(id: "community-research", label: "Community research", detail: "Choose a weekly path and earn permanent rewards", symbol: "telescope", run: { store.go(.communityResearch) }))
         return rows
     }
 

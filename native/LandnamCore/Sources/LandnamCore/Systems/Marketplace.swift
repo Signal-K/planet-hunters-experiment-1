@@ -69,13 +69,14 @@ public enum Marketplace {
     }
 
     /// One alert per mineral: setting again moves the target and re-arms it.
-    public static func applySetAlert(_ s: GameState, mineralId: String, target: Int) -> GameState {
+    public static func applySetAlert(_ s: GameState, mineralId: String, target: Int, now: Double = Date().timeIntervalSince1970 * 1000) -> GameState {
         guard exchangeBuilt(s.player), Minerals.byId[mineralId] != nil, target > 0 else { return s }
         var others = s.player.priceAlerts.filter { $0.mineralId != mineralId }
         guard others.count < maxPriceAlerts else { return s }
         others.append(PriceAlert(id: "alert-\(mineralId)", mineralId: mineralId, target: target))
         var n = s
         n.player.priceAlerts = others
+        ResearchStampRules.add(&n.player, .priceAlert, at: now)
         return n
     }
 

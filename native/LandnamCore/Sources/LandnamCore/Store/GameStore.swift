@@ -141,6 +141,25 @@ public final class GameStore {
 
     public func go(_ screen: Screen) { var n = state; n.screen = screen; apply(n) }
 
+    public func chooseResearchPath(_ path: ResearchPathID) {
+        guard ResearchPathRules.pathThisWeek(state.player.researchPath, now: now) == nil else { return }
+        var n = state
+        n.player.researchPath = ResearchPathChoice(week: ResearchPathRules.weekKey(now), path: path)
+        apply(n)
+    }
+
+    public func claimResearchRewards() {
+        guard let path = ResearchPathRules.pathThisWeek(state.player.researchPath, now: now) else { return }
+        let week = ResearchPathRules.weekKey(now)
+        var n = state
+        var changed = false
+        for step in ResearchPathRules.steps(path) {
+            let progress = ResearchPathRules.progress(step, stamps: n.player.researchStamps, week: week, now: now)
+            changed = ResearchPathRules.claim(&n.player, step: step, progress: progress, now: now) || changed
+        }
+        if changed { apply(n) }
+    }
+
     public func openMissionBoard(tab: Int) {
         requestedMissionBoardTab = tab
         go(.missions)
@@ -350,7 +369,7 @@ public final class GameStore {
     public func sellRefined(_ recipeId: String, amount: Int) { apply(Refinery.applySell(state, recipeId: recipeId, amount: amount, now: now)) }
     public func sell(_ mineralId: String, amount: Int) { apply(Market.applySell(state, mineralId: mineralId, amount: amount, now: now)) }
     public func buy(_ mineralId: String, amount: Int) { apply(Marketplace.applyBuy(state, mineralId: mineralId, amount: amount, now: now)) }
-    public func setPriceAlert(_ mineralId: String, target: Int) { apply(Marketplace.applySetAlert(state, mineralId: mineralId, target: target)) }
+    public func setPriceAlert(_ mineralId: String, target: Int) { apply(Marketplace.applySetAlert(state, mineralId: mineralId, target: target, now: now)) }
     public func removePriceAlert(_ id: String) { apply(Marketplace.applyRemoveAlert(state, alertId: id)) }
     /// Returns the alerts that fired this call so the caller can notify the player.
     @discardableResult public func checkPriceAlerts() -> [PriceAlert] {

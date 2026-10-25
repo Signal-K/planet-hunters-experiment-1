@@ -65,6 +65,7 @@ public enum Market {
         n.player.stash[mineralId] = held - qty
         if n.player.stash[mineralId]! <= 0 { n.player.stash[mineralId] = nil }
         n.player.francs += revenue
+        ResearchStampRules.add(&n.player, .exchangeSale, at: now)
         return n
     }
 

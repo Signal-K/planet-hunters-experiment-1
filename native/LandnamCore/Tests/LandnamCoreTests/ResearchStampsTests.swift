@@ -99,7 +99,7 @@ final class ResearchStampsTests: XCTestCase {
         let done = Loop.debriefDone(s, payout: 0, affinity: 0, catalog: Catalog(), now: t)
         XCTAssertEqual(done.player.researchStamps.days[ResearchStampRules.dayKey(t)], [.discoveryMission])
         var other = s; other.missionId = Catalog().missions.first?.id; other.targetId = "moon"
-        XCTAssertNil(Loop.debriefDone(other, payout: 0, affinity: 0, catalog: Catalog(), now: t).player.researchStamps.days[ResearchStampRules.dayKey(t)])
+        XCTAssertEqual(Loop.debriefDone(other, payout: 0, affinity: 0, catalog: Catalog(), now: t).player.researchStamps.days[ResearchStampRules.dayKey(t)], [.contractRun])
         XCTAssertEqual(ResearchStampRules.tasks(hasDiscovery: false).count, 3)
         XCTAssertEqual(ResearchStampRules.tasks(hasDiscovery: true).last?.kind, .discoveryMission)
     }
@@ -118,5 +118,23 @@ final class ResearchStampsTests: XCTestCase {
         // A remote further along still keeps the local stamps.
         var ahead = remote; ahead.player.missionsDone = 9; ahead.player.researchStamps.days = [:]
         XCTAssertEqual(CloudMerge.merge(local: local, remote: ahead).player.researchStamps.days["2026-10-20"], [.classification])
+    }
+
+    func testResearchPathLocksForUtcWeekAndResetsOnMonday() {
+        let choice = ResearchPathChoice(week: ResearchPathRules.weekKey(t), path: .trader)
+        XCTAssertEqual(ResearchPathRules.pathThisWeek(choice, now: t), .trader)
+        XCTAssertNil(ResearchPathRules.pathThisWeek(choice, now: t + 7 * day))
+        XCTAssertEqual(ResearchPathRules.steps(.trader).count, 5)
+    }
+
+    func testTraderRewardsAreClaimedOncePerWeek() {
+        var player = Player()
+        player.researchPath = ResearchPathChoice(week: ResearchPathRules.weekKey(t), path: .trader)
+        let step = ResearchPathRules.steps(.trader)[1]
+        let progress = (have: 1, need: 1)
+        XCTAssertTrue(ResearchPathRules.claim(&player, step: step, progress: progress, now: t))
+        XCTAssertEqual(player.researchFragments, 5)
+        XCTAssertFalse(ResearchPathRules.claim(&player, step: step, progress: progress, now: t))
+        XCTAssertEqual(player.researchPath?.claimedSteps, [2])
     }
 }
