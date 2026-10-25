@@ -84,7 +84,14 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
 
   return (
     <div data-testid="mission-launch-review" className={styles.builderHost}>
-      <MissionPlanStrip game={game} launched={launchPending} blockedReason={launchReady ? null : (validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)) }).problems[0] ?? 'Mission requirements not met')} />
+      <MissionPlanStrip
+        game={game}
+        launched={launchPending}
+        blockedReason={launchReady ? null : (validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)) }).problems[0] ?? 'Mission requirements not met')}
+        primaryLabel={preparing ? 'Build rocket' : 'Launch'}
+        primaryDisabled={!!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || (!preparing && !launchReady)}
+        primaryAction={() => { if (preparing) setRolling(selectedRocket.id); else onLaunch() }}
+      />
       <LaunchpadScreen
         onBack={() => game.go(ownProgram ? 'launchpad' : 'missions')}
         onPick={game.onPickMission}

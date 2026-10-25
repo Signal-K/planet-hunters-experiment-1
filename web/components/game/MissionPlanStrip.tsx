@@ -16,7 +16,14 @@ type Sheet = 'destination' | 'vehicle' | null
 const STEPS = ['Contract', 'Plan', 'Launch'] as const
 
 /** Contract, Plan, Launch. The plan strip makes the auto-picked destination and vehicle visible and changeable in place. */
-export default function MissionPlanStrip({ game, blockedReason, launched }: { game: Game; blockedReason: string | null; launched: boolean }) {
+export default function MissionPlanStrip({ game, blockedReason, launched, primaryAction, primaryLabel, primaryDisabled = false }: {
+  game: Game
+  blockedReason: string | null
+  launched: boolean
+  primaryAction?: () => void
+  primaryLabel?: string
+  primaryDisabled?: boolean
+}) {
   const [sheet, setSheet] = useState<Sheet>(null)
   const { mission, target, player } = game
   const autoStaged = useRef(false)
@@ -63,6 +70,9 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
         </button>
         <div className={styles.slot} data-testid="plan-cargo"><span>Cargo</span><strong>{isOrionidsEventMission(mission) ? 'Fragments + minerals' : (minerals.join(', ') || 'None')}</strong></div>
       </div>
+      {primaryAction && primaryLabel && (
+        <button type="button" className={styles.primary} data-testid="plan-launch-btn" disabled={primaryDisabled} onClick={primaryAction}>{primaryLabel}</button>
+      )}
       {isOrionidsEventMission(mission) && (
         <div className={styles.showerField} data-testid="orionids-shower-field" aria-label="Anonymous meteor points arranged in Orion's pattern">
           <svg viewBox="0 0 280 72" role="img" aria-label="Orionids shower points arranged like Orion">

@@ -545,6 +545,7 @@
 
 @media (max-width: 899px) and (min-height: 521px) {
   :global(body:has([data-testid='mission-launch-review'])) .stage { bottom: 166px; }
+  :global([data-testid='mission-launch-review']) .launchDock { display: none; }
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
