@@ -76,10 +76,13 @@ const C = {
 } as const
 
 const LANDSCAPE_PALETTE: Record<EarthBiomeId, { skyTop: number; skyHorizon: number; far: number; near: number; ground: number; groundDark: number }> = {
-  mountains: { skyTop: C.skyTop, skyHorizon: C.skyHorizon, far: C.mountainFar, near: C.mountainNear, ground: C.dirt, groundDark: C.dirtDark },
-  desert: { skyTop: 0xd9b67f, skyHorizon: 0xf0d5a0, far: 0xc9935f, near: 0xa8754f, ground: 0xd4b27d, groundDark: 0xa77a55 },
-  tundra: { skyTop: 0xa9d7e8, skyHorizon: 0xe4f3f6, far: 0xc9e1e7, near: 0x9dbcc8, ground: 0xeaf5f5, groundDark: 0xb7d0d5 },
-  coast: { skyTop: 0x8bc9df, skyHorizon: 0xd8eff0, far: 0x9bbfc8, near: 0x668f9b, ground: 0xd9e9e8, groundDark: 0x9db8b8 },
+  // "mountains" is the legacy id for the player-facing Steppe. Launch is
+  // always at dusk, matching the base and mission-board world rather than
+  // reverting to the retired pale-blue blueprint landscape.
+  mountains: { skyTop: 0x10182c, skyHorizon: 0xc45b6a, far: 0x51576a, near: 0x373d4d, ground: 0x4b4f57, groundDark: 0x8a7a64 },
+  desert: { skyTop: 0x17172c, skyHorizon: 0xb66c5a, far: 0x66534b, near: 0x463d39, ground: 0x5b5148, groundDark: 0x8a6b50 },
+  tundra: { skyTop: 0x0e1930, skyHorizon: 0x7896ac, far: 0x617884, near: 0x3f5664, ground: 0x59636a, groundDark: 0xa6bbc2 },
+  coast: { skyTop: 0x0e1c31, skyHorizon: 0x5e8f9d, far: 0x4e7780, near: 0x304d5b, ground: 0x475e64, groundDark: 0x8eb6b6 },
 }
 
 interface SmokeParticle {
@@ -204,8 +207,8 @@ export function buildLaunchScene(
   const skyGfx = new Graphics()
   app.stage.addChild(skyGfx)
   const sunGfx = new Graphics()
-  sunGfx.circle(W * 0.82, H * 0.12, Math.min(W, H) * 0.045).fill({ color: 0xffffff, alpha: 0.95 })
-  sunGfx.circle(W * 0.82, H * 0.12, Math.min(W, H) * 0.09).fill({ color: 0xffffff, alpha: 0.18 })
+  sunGfx.circle(W * 0.82, H * 0.16, Math.min(W, H) * 0.04).fill({ color: 0xffd0a3, alpha: 0.78 })
+  sunGfx.circle(W * 0.82, H * 0.16, Math.min(W, H) * 0.075).fill({ color: 0xffb38b, alpha: 0.12 })
   app.stage.addChild(sunGfx)
 
   function drawSky(skyT: number) {
@@ -242,14 +245,14 @@ export function buildLaunchScene(
   // Layered outlined parts (blueprint style): ice hills, paper ground, ink outlines, offset shade.
   const mountains = new Graphics()
   const farPeaks: number[] = [0, layout.groundTop]
-  const farHeights = [0.22, 0.34, 0.18, 0.40, 0.26, 0.36, 0.20, 0.32, 0.24]
+  const farHeights = [0.08, 0.13, 0.07, 0.16, 0.10, 0.14, 0.08, 0.12, 0.09]
   for (let i = 0; i <= 8; i++) {
     farPeaks.push((W * i) / 8, layout.groundTop - H * farHeights[i] * 0.55)
   }
   farPeaks.push(W, layout.groundTop, W, H, 0, H)
   mountains.poly(farPeaks).fill(landscape.far).stroke({ width: 2, color: C.ink })
   const nearPeaks: number[] = [0, layout.groundTop]
-  const nearHeights = [0.14, 0.22, 0.10, 0.26, 0.16, 0.20, 0.12]
+  const nearHeights = [0.05, 0.09, 0.04, 0.11, 0.06, 0.09, 0.05]
   for (let i = 0; i <= 6; i++) {
     nearPeaks.push((W * i) / 6, layout.groundTop - H * nearHeights[i] * 0.42)
   }
@@ -298,9 +301,8 @@ export function buildLaunchScene(
   app.stage.addChild(cloudContainer)
   const cloudLayers: { container: Container; puffs: CloudPuff[]; speed: number; parallax: number }[] = []
   const layerDefs = [
-    { count: 5, yMin: 0.42, yMax: 0.62, rMin: 28, rMax: 52, alpha: 0.72, speed: 6, parallax: 0.25 },
-    { count: 4, yMin: 0.22, yMax: 0.42, rMin: 20, rMax: 36, alpha: 0.55, speed: 10, parallax: 0.45 },
-    { count: 3, yMin: 0.08, yMax: 0.24, rMin: 14, rMax: 24, alpha: 0.4, speed: 14, parallax: 0.7 },
+    { count: 3, yMin: 0.42, yMax: 0.62, rMin: 28, rMax: 44, alpha: 0.16, speed: 6, parallax: 0.25 },
+    { count: 2, yMin: 0.22, yMax: 0.42, rMin: 20, rMax: 32, alpha: 0.12, speed: 10, parallax: 0.45 },
   ]
   for (const def of layerDefs) {
     const container = new Container()
@@ -310,9 +312,9 @@ export function buildLaunchScene(
       const y = H * (def.yMin + Math.random() * (def.yMax - def.yMin))
       const r = def.rMin + Math.random() * (def.rMax - def.rMin)
       const g = new Graphics()
-      g.circle(0, 0, r).fill({ color: 0xffffff, alpha: def.alpha })
-      g.circle(r * 0.6, r * 0.12, r * 0.7).fill({ color: 0xffffff, alpha: def.alpha })
-      g.circle(-r * 0.55, r * 0.1, r * 0.55).fill({ color: 0xf2f7ff, alpha: def.alpha * 0.9 })
+      g.circle(0, 0, r).fill({ color: landscape.skyHorizon, alpha: def.alpha })
+      g.circle(r * 0.6, r * 0.12, r * 0.7).fill({ color: landscape.skyHorizon, alpha: def.alpha })
+      g.circle(-r * 0.55, r * 0.1, r * 0.55).fill({ color: landscape.far, alpha: def.alpha * 0.9 })
       g.x = x
       g.y = y
       container.addChild(g)

@@ -34,7 +34,7 @@ final class LaunchScene: SKScene {
         self.variant = variant
         super.init(size: size)
         scaleMode = .resizeFill
-        backgroundColor = Theme.hex(0x6FA3D6).sk
+        backgroundColor = Theme.hex(0x10182C).sk
     }
     required init?(coder: NSCoder) { fatalError() }
 
@@ -54,7 +54,7 @@ final class LaunchScene: SKScene {
 
     // MARK: build
     private func buildSky() {
-        let sky = SKSpriteNode(texture: SK.gradient(top: Theme.hex(0x6FA3D6), bottom: Theme.hex(0xC9DAEA)))
+        let sky = SKSpriteNode(texture: SK.gradient(top: Theme.hex(0x10182C), bottom: Theme.hex(0xC45B6A)))
         sky.size = size; sky.position = CGPoint(x: size.width / 2, y: size.height / 2); sky.zPosition = -30
         addChild(sky)
         spaceOverlay.color = Theme.hex(0x0F2436).sk; spaceOverlay.size = size
@@ -85,9 +85,9 @@ final class LaunchScene: SKScene {
             n.fillColor = fill.sk; n.strokeColor = Theme.ink.sk; n.lineWidth = line; n.lineJoin = .round
             n.zPosition = z; mountains.addChild(n)
         }
-        ridge([0.09, 0.19, 0.07, 0.22, 0.12, 0.17, 0.08, 0.14, 0.1], fill: Theme.hex(0xA8987F), z: -9, line: 2)
-        ridge([0.05, 0.11, 0.04, 0.13, 0.07, 0.1, 0.05], fill: Theme.hex(0xC2B392), z: -8, line: 2.5)
-        let g = SKSpriteNode(color: Theme.hex(0xB4AE9E).sk, size: CGSize(width: size.width, height: gh))
+        ridge([0.04, 0.07, 0.035, 0.08, 0.05, 0.07, 0.04, 0.06, 0.045], fill: Theme.hex(0x51576A), z: -9, line: 2)
+        ridge([0.025, 0.045, 0.02, 0.055, 0.03, 0.045, 0.025], fill: Theme.hex(0x373D4D), z: -8, line: 2.5)
+        let g = SKSpriteNode(color: Theme.hex(0x4B4F57).sk, size: CGSize(width: size.width, height: gh))
         g.anchorPoint = .zero; g.zPosition = -5; ground.addChild(g)
         let lip = SKSpriteNode(color: Theme.ink.sk, size: CGSize(width: size.width, height: 3))
         lip.anchorPoint = .zero; lip.position = CGPoint(x: 0, y: gh - 1); lip.zPosition = -4; ground.addChild(lip)

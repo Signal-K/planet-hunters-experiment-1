@@ -152,7 +152,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, e
 
   return (
     <SequenceDesktopFrame
-      background="#d5ecf7"
+      background="#10182c"
       stageAspect={isDesktop ? '16 / 9' : `${LAUNCH_W} / ${LAUNCH_H}`}
       leftTitle="MISSION"
       leftRows={[
@@ -166,7 +166,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, e
       ]}
       showClock
       renderStage={style => (
-        <div ref={divRef} data-testid="launch-sequence-stage" style={{ background: '#d5ecf7', ...style }} data-fragments={ascentFragments || undefined} />
+        <div ref={divRef} data-testid="launch-sequence-stage" style={{ background: '#10182c', ...style }} data-fragments={ascentFragments || undefined} />
       )}
     >
       {process.env.NODE_ENV === 'development' && (
