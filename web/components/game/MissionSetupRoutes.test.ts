@@ -26,7 +26,8 @@ describe('R1 mission setup', () => {
 
     expect(routes).toContain('LaunchpadScreen')
     expect(builder).toContain('LaunchpadPrefab')
-    expect(builder).toContain('builderLandscape')
+    expect(builder).toContain('BaseWorldCanvas')
+    expect(builder).toContain('earthBiome')
     expect(styles).not.toContain('@keyframes assemble-')
     expect(styles).not.toContain('.targetMap')
     expect(styles).not.toContain('.rocketBlueprint')

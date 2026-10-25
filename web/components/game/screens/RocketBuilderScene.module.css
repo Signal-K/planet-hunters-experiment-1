@@ -11,50 +11,12 @@
   color: var(--ln-blueprint-ink);
 }
 
-.land {
+.sceneBackdrop {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse at 45% 76%, color-mix(in srgb, var(--ln-world-dusk-horizon) 18%, transparent), transparent 38%),
-    linear-gradient(180deg, var(--ln-world-night-top) 0%, var(--ln-world-night-mid) 66%, var(--ln-world-asphalt) 66%);
-}
-
-.land::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 34%;
-  opacity: 0.46;
-  background-image: radial-gradient(circle, var(--ln-world-hull-lit) 0 1px, transparent 1.5px);
-  background-size: 91px 71px;
-  background-position: 12px 8px;
-}
-
-.land::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 34%;
-  border-top: 3px solid color-mix(in srgb, var(--ln-world-hull-lit) 36%, var(--ln-world-asphalt));
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--ln-world-concrete) 80%, var(--ln-world-asphalt)) 0 12px, transparent 12px),
-    repeating-linear-gradient(90deg, transparent 0 56px, color-mix(in srgb, var(--ln-world-hull-lit) 11%, transparent) 56px 58px),
-    var(--ln-world-asphalt);
-}
-
-.wash {
-  position: absolute;
+  z-index: 1;
   pointer-events: none;
-  image-rendering: pixelated;
-}
-
-.wash {
-  inset: 0;
-  background: var(--lb-tint);
-  mix-blend-mode: multiply;
-  opacity: 0.38;
 }
 
 :global(.rocket-builder-host) :global(.launchpad-active-mission) {
