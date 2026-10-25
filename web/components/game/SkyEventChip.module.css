@@ -109,11 +109,16 @@
   border: 1px solid var(--ln-cyan-border);
   border-radius: var(--ln-r-md);
   background: var(--ln-cyan);
-  color: var(--ln-void);
+  color: var(--ln-blueprint-paper);
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
+}
+
+.participate:disabled {
+  opacity: .55;
+  cursor: not-allowed;
 }
 
 .actions {

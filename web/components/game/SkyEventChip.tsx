@@ -23,6 +23,7 @@ export default function SkyEventChip({
   fragmentGoal,
   badgeTier = null,
   onParticipate,
+  orionidsRead = false,
   playerLocation,
 }: {
   surface: 'base' | 'mining'
@@ -31,6 +32,7 @@ export default function SkyEventChip({
   fragmentGoal?: number
   badgeTier?: BadgeTier | null
   onParticipate?: () => void
+  orionidsRead?: boolean
   playerLocation?: PlayerLocation | null
 }) {
   const activePreset = useDebrisEvent()
@@ -136,8 +138,8 @@ export default function SkyEventChip({
               </p>
             )}
             <div className={styles.actions}>
-              {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={onParticipate}>VIEW EVENT</button>}
               {surface === 'base' && <button type="button" className={styles.secondary} data-testid="orionids-read-sky" onClick={() => openOrionidsReading(onParticipate)}>READ THE SKY</button>}
+              {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={onParticipate} disabled={orionids && !orionidsRead} aria-disabled={orionids && !orionidsRead}>{orionids && !orionidsRead ? 'READ THE SKY FIRST' : 'VIEW EVENT'}</button>}
             </div>
             {badgeTier && (
               <button type="button" className={styles.fallback} data-testid="orionids-share" onClick={() => { void share() }}>
