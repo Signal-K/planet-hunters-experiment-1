@@ -174,7 +174,7 @@ interface GalaxyMapProps {
 }
 
 /** The whole screen: sun, orbits, planets and an asteroid belt you can zoom into. Controls are drawn over it. */
-function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick }: GalaxyMapProps) {
+export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick }: GalaxyMapProps) {
   const lit = new Set([...stops, ...candidates, ...(selectedId ? [selectedId] : [])])
   const pickable = mode === 'pick'
   const real = targets.filter(t => t.type !== 'exoplanet')

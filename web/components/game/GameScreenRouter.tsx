@@ -532,8 +532,14 @@ function ScreenBody({
           player={game.player}
           communityResearch={communityResearch}
           onBack={() => game.goBack('hub')}
-          onOpenEvents={() => {
-            requestMissionBoardEvent('orionids-2026')
+          onGo={kind => {
+            if (kind === 'event') requestMissionBoardEvent('orionids-2026')
+            else if (kind === 'discovery-mission') requestMissionBoardTab('free')
+            else if (kind === 'classification' || kind === 'survey') {
+              const hasInstruments = game.player.placed.includes('control-station') || !!game.player.transitSatelliteLaunchedAt
+              if (hasInstruments) return game.go('instrument-hub')
+              requestMissionBoardTab('program')
+            }
             game.goToMissions()
           }}
         />
