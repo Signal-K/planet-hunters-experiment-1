@@ -1,7 +1,7 @@
 import type { Player } from '@/lib/game-types'
 
 /** What earned a stamp. Citizen science is an instrument feed, so every kind is an instrument or survey result, never a mission type. */
-export const STAMP_KINDS = ['classification', 'survey', 'discovery-mission', 'event'] as const
+export const STAMP_KINDS = ['classification', 'survey', 'discovery-mission', 'event', 'exchange-sale', 'contract-run', 'price-alert'] as const
 export type StampKind = typeof STAMP_KINDS[number]
 export type ResearchStamps = Record<string, StampKind[]>
 

@@ -3,6 +3,7 @@ import type { BuildingLevels } from '@/lib/data/building-levels'
 // Covers: sell minerals, refinery queue, launchpad upgrade.
 
 import type { GameState } from '@/lib/game-types'
+import { addStamp } from '@/lib/research/stamps'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
@@ -128,7 +129,7 @@ export function applySellMinerals(
   marketSupplyUpdatedAt[mineralId] = now
   stash[mineralId] = held - sellAmount
   if (stash[mineralId] <= 0) delete stash[mineralId]
-  return { ...s, player: { ...s.player, francs: s.player.francs + revenue, stash, marketSupply, marketSupplyUpdatedAt } }
+  return { ...s, player: addStamp({ ...s.player, francs: s.player.francs + revenue, stash, marketSupply, marketSupplyUpdatedAt }, 'exchange-sale', now) }
 }
 
 // ── Earth-side ore storage (silos) ───────────────────────────────────────────
@@ -235,11 +236,11 @@ export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amou
   if (quantity <= 0) return s
   return {
     ...s,
-    player: {
+    player: addStamp({
       ...s.player,
       francs: s.player.francs + refinedUnitPrice(recipe, s.player, now) * quantity,
       refinedGoods: { ...s.player.refinedGoods, [recipe.id]: available - quantity },
-    },
+    }, 'exchange-sale', now),
   }
 }
 

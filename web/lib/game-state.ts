@@ -547,6 +547,17 @@ function mergeBadges(local: Player['badges'], remote: Player['badges']): NonNull
   return out
 }
 
+function mergeResearchPath(local: Player['researchPath'], remote: Player['researchPath']): Player['researchPath'] {
+  if (!local) return remote
+  if (!remote || local.week > remote.week) return local
+  if (remote.week > local.week) return remote
+  if (local.path !== remote.path) return local
+  return {
+    ...local,
+    claimedSteps: Array.from(new Set([...(remote.claimedSteps ?? []), ...(local.claimedSteps ?? [])])).sort((a, b) => a - b),
+  }
+}
+
 function mergeOrionidsFinds(local: Player['orionidsFinds'], remote: Player['orionidsFinds']): NonNullable<Player['orionidsFinds']> {
   const out = { ...(remote ?? {}) }
   for (const [id, find] of Object.entries(local ?? {})) {
@@ -654,6 +665,8 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.asteroidClassifications = mergeKeyed(current.player.asteroidClassifications, remoteState.player?.asteroidClassifications)
   merged.player.saturnClassifications = mergeKeyed(current.player.saturnClassifications, remoteState.player?.saturnClassifications)
   merged.player.researchStamps = mergeStamps(current.player.researchStamps, remoteState.player?.researchStamps)
+  merged.player.researchPath = mergeResearchPath(current.player.researchPath, remoteState.player?.researchPath)
+  merged.player.researchFragments = Math.max(current.player.researchFragments ?? 0, remoteState.player?.researchFragments ?? 0)
   merged.player.researchBonusUntil = Math.max(current.player.researchBonusUntil ?? 0, remoteState.player?.researchBonusUntil ?? 0) || undefined
   merged.player.badges = mergeBadges(current.player.badges, remoteState.player?.badges)
   merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)

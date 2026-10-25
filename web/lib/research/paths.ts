@@ -1,7 +1,7 @@
 import { stampDayKey, type ResearchStamps, type StampKind } from './stamps'
 
 export type ResearchPathId = 'explorer' | 'trader'
-export interface ResearchPathChoice { week: string; path: ResearchPathId }
+export interface ResearchPathChoice { week: string; path: ResearchPathId; claimedSteps?: number[] }
 
 const DAY_MS = 86_400_000
 
@@ -33,6 +33,12 @@ export interface PathStep {
   why: string
 }
 
+export const WEEKLY_RESEARCH_REWARDS: Record<string, { fragments: number; title: string; explanation: string }> = {
+  'step-2': { fragments: 5, title: 'Field note', explanation: 'A small fragment for making the second connection.' },
+  'step-4': { fragments: 10, title: 'Research cache', explanation: 'A larger fragment bundle for keeping the chain moving.' },
+  breakthrough: { fragments: 25, title: 'Breakthrough', explanation: 'A permanent weekly badge and 25 regular fragments. The badge stays in your collection.' },
+}
+
 export function explorerSteps(opts: { hasDiscovery: boolean; eventName: string | null }): PathStep[] {
   const steps: PathStep[] = [
     { id: 'classify', kind: 'classification', days: 1, icon: 'signal', color: '#58d0ea', title: 'Classify a signal',
@@ -59,6 +65,55 @@ export function explorerSteps(opts: { hasDiscovery: boolean; eventName: string |
     why: 'Event weeks are shared research. Every player who joins fills the same bar.',
   })
   return steps
+}
+
+export function traderSteps(opts: { eventName: string | null }): PathStep[] {
+  const steps: PathStep[] = [
+    { id: 'sale', kind: 'exchange-sale', days: 1, icon: 'signal', color: '#58d0ea', title: 'Make an Exchange sale',
+      brief: 'Sell one eligible mineral or refined good at the Exchange.',
+      why: 'Real prices tell the community which resources are moving through the frontier.' },
+    { id: 'contract', kind: 'contract-run', days: 1, icon: 'world', color: '#c9a7f0', title: 'Complete a contract run',
+      brief: 'Take a client contract from the mission board and bring the run home.',
+      why: 'Contracts show where supply is needed, not only what is available.' },
+    { id: 'alert', kind: 'price-alert', days: 1, icon: 'scan', color: '#9ad28a', title: 'Set a price alert',
+      brief: 'Open the Exchange alerts tab and set one useful price target.',
+      why: 'Alerts turn a changing market into a signal you can act on.' },
+    { id: 'sales', kind: 'exchange-sale', days: 3, icon: 'signal', color: '#58d0ea', title: 'Trade on 3 days',
+      brief: 'Make Exchange sales on three different days this week.',
+      why: 'A few steady trades reveal a better pattern than one lucky sale.' },
+    { id: 'breakthrough', kind: 'contract-run', days: 0, icon: 'star', color: '#f2c24c', title: 'Breakthrough',
+      brief: 'Complete the Trader chain to finish the path.',
+      why: 'The full chain connects contracts, prices and player decisions into one market picture.' },
+  ]
+  if (opts.eventName) steps.splice(4, 0, {
+    id: 'event', kind: 'event', days: 1, icon: 'sky', color: '#e8a24a', title: `Catch debris in the ${opts.eventName}`,
+    brief: 'Join the shared event run and bring a stamp home for the whole community.',
+    why: 'Trader weeks can still contribute to shared sky research.'
+  })
+  return steps
+}
+
+export function weeklyRewardKey(step: PathStep): keyof typeof WEEKLY_RESEARCH_REWARDS | null {
+  if (step.id === 'breakthrough') return 'breakthrough'
+  if (step.id === 'scan' || step.id === 'contract') return 'step-2'
+  if (step.id === 'sales' || step.id === 'scan-again' || step.id === 'world') return 'step-4'
+  return null
+}
+
+export function claimResearchReward<T extends { researchPath?: ResearchPathChoice; researchFragments?: number; badges?: Record<string, { eventId: string; tier: 'gold' | 'silver'; earnedAt: number }> }>(player: T, step: PathStep, progress: { have: number; need: number }, now: number): T {
+  const choice = player.researchPath
+  const rewardKey = weeklyRewardKey(step)
+  if (!choice || !rewardKey || progress.have < progress.need) return player
+  const claimed = choice.claimedSteps ?? []
+  const marker = step.id === 'breakthrough' ? 5 : step.id === 'scan' || step.id === 'contract' ? 2 : 4
+  if (claimed.includes(marker)) return player
+  const reward = WEEKLY_RESEARCH_REWARDS[rewardKey]
+  const next = { ...player, researchPath: { ...choice, claimedSteps: [...claimed, marker] }, researchFragments: (player.researchFragments ?? 0) + reward.fragments }
+  if (rewardKey === 'breakthrough') {
+    const badgeId = `community-research-${choice.week}`
+    next.badges = { ...(player.badges ?? {}), [badgeId]: { eventId: badgeId, tier: 'gold', earnedAt: now } }
+  }
+  return next
 }
 
 /** Progress of one step within the week starting at `week`, as `{have, need}`. The Breakthrough counts any stamped days. */

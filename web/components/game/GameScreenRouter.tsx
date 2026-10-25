@@ -64,7 +64,7 @@ import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
 import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
-import { choosePath } from '@/lib/research/paths'
+import { choosePath, claimResearchReward } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
 // Shared per-screen render map — the single source of truth for "which
@@ -534,9 +534,12 @@ function ScreenBody({
           communityResearch={communityResearch}
           onBack={() => game.goBack('hub')}
           onChoosePath={path => game.setPlayer(current => choosePath(current, path, Date.now()))}
+          onClaimReward={(step, progress) => game.setPlayer(current => claimResearchReward(current, step, progress, Date.now()))}
           onGo={kind => {
             if (kind === 'event') requestMissionBoardEvent('orionids-2026')
             else if (kind === 'discovery-mission') requestMissionBoardTab('free')
+            else if (kind === 'exchange-sale' || kind === 'price-alert') return game.go('market')
+            else if (kind === 'contract-run') requestMissionBoardTab('contracts')
             else if (kind === 'classification' || kind === 'survey') {
               const hasInstruments = game.player.placed.includes('control-station') || !!game.player.transitSatelliteLaunchedAt
               if (hasInstruments) return game.go('instrument-hub')

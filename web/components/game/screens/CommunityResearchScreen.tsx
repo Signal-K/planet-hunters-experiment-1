@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { liveEventWeek } from '@/lib/research/event-week'
 import { communityBar, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
-import { explorerSteps, pathThisWeek, stepProgress, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
+import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './CommunityResearchScreen.module.css'
@@ -14,6 +14,7 @@ interface CommunityResearchScreenProps {
   communityResearch?: CommunityResearch | null
   onBack: () => void
   onChoosePath: (path: ResearchPathId) => void
+  onClaimReward: (step: PathStep, progress: { have: number; need: number }) => void
   /** Jump into the flow that earns this stamp. */
   onGo: (kind: StampKind) => void
 }
@@ -49,12 +50,15 @@ const HOW_IT_WORKS = [
 ]
 
 /** Community research as a mission board: research tasks on the left, the chosen one in the middle, your week and the way in on the right. */
-export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onGo }: CommunityResearchScreenProps) {
+export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo }: CommunityResearchScreenProps) {
   const now = Date.now()
   const event = liveEventWeek(now)
   const path = pathThisWeek(player.researchPath, now)
   const week = weekKey(now)
-  const steps = explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null })
+  const [selectedPath, setSelectedPath] = useState<ResearchPathId>('explorer')
+  const steps = (path ?? selectedPath) === 'trader'
+    ? traderSteps({ eventName: event?.name ?? null })
+    : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null })
   const stamps = player.researchStamps ?? {}
   const progress = steps.map(st => stepProgress(st, stamps, week, now))
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
@@ -67,6 +71,14 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const bar = communityBar(stampsInMonth(stamps, d.getUTCFullYear(), d.getUTCMonth()), communityResearch)
   const finished = progress.filter(p => p.have >= p.need).length
   const color = path ? step.color : '#58d0ea'
+  const rewardSignature = `${path ?? 'picker'}:${player.researchPath?.claimedSteps?.join('.') ?? ''}:${steps.map((researchStep, index) => `${researchStep.id}:${progress[index].have >= progress[index].need ? 'done' : 'open'}`).join('|')}`
+  useEffect(() => {
+    if (!path) return
+    steps.forEach((researchStep, index) => onClaimReward(researchStep, progress[index]))
+    // The signature changes after each claim and stops changing once the
+    // weekly rewards are recorded, so the idempotent updater does not loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [path, rewardSignature])
   return (
     <div className={board.scene} data-testid="community-research-screen" data-screen="community-research">
       <section className={board.dispatch} style={{ '--signal': color } as React.CSSProperties} aria-label="Community research">
@@ -85,14 +97,14 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
             <>
               <section className={styles.left} data-testid="community-research-picker">
                 <div className={styles.paths}>
-                  <button type="button" className={styles.path} data-selected="true" data-testid="research-path-explorer" aria-label="Explorer path"><StepIcon icon="scan" size={34} /><span>Explorer</span></button>
-                  <button type="button" className={styles.path} disabled data-testid="research-path-trader" aria-label="Trader path, coming soon"><StepIcon icon="world" size={34} /><span>Trader</span><small>Soon</small></button>
+                  <button type="button" className={styles.path} data-selected={selectedPath === 'explorer'} data-testid="research-path-explorer" aria-label="Explorer path" onClick={() => setSelectedPath('explorer')}><StepIcon icon="scan" size={34} /><span>Explorer</span><small>Signals</small></button>
+                  <button type="button" className={styles.path} data-selected={selectedPath === 'trader'} data-testid="research-path-trader" aria-label="Trader path" onClick={() => setSelectedPath('trader')}><StepIcon icon="world" size={34} /><span>Trader</span><small>Exchange</small></button>
                   <button type="button" className={styles.path} disabled data-testid="research-path-agency" aria-label="Agency path, locked"><StepIcon icon="star" size={34} /><span>Agency</span><small>Locked</small></button>
                 </div>
                 <div className={styles.focus}>
-                  <span className={styles.eyebrow}>This week\u2019s path</span>
-                  <h2 data-testid="community-research-title">Explorer</h2>
-                  <p>Classify signals, scan worlds and chase the sky. Five steps, and the research helps everyone.</p>
+                  <span className={styles.eyebrow}>This week&apos;s path</span>
+                  <h2 data-testid="community-research-title">{selectedPath === 'trader' ? 'Trader' : 'Explorer'}</h2>
+                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Classify signals, scan worlds and chase the sky. Five steps, and the research helps everyone.'}</p>
                 </div>
               </section>
               <section className={styles.right}>
@@ -100,7 +112,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <ol className={styles.how} data-testid="community-research-how">
                   {HOW_IT_WORKS.map(line => <li key={line}>{line}</li>)}
                 </ol>
-                <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => onChoosePath('explorer')}>START</button>
+                <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => onChoosePath(selectedPath)}>START {selectedPath.toUpperCase()}</button>
               </section>
             </>
           ) : (
@@ -119,14 +131,14 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 </div>
                 <div className={styles.focus}>
                   <span className={styles.stepBig} style={{ color: step.color }}><StepIcon icon={step.icon} size={60} /></span>
-                  <span className={styles.eyebrow}>Step {at + 1} of {steps.length} \u00b7 {progress[at].have}/{progress[at].need}</span>
+                  <span className={styles.eyebrow}>Step {at + 1} of {steps.length} · {progress[at].have}/{progress[at].need}</span>
                   <h2 data-testid="community-research-title">{step.title}</h2>
                   <p>{step.brief}</p>
                   <p className={styles.why} data-testid="community-research-why">{step.why}</p>
                 </div>
               </section>
               <section className={styles.right}>
-                <h2>Explorer week</h2>
+                <h2>{path === 'trader' ? 'Trader week' : 'Explorer week'}</h2>
                 <div className={styles.week} role="list" aria-label="This week" data-testid="community-research-week">
                   {days.map(day => (
                     <div key={day.key} role="listitem" className={styles.day} data-stamped={(stamps[day.key] ?? []).length > 0} data-today={day.today} data-future={day.future}
@@ -140,6 +152,20 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   <b>{finished} of {steps.length} steps</b>
                   <em>{stampedDays} of 7 days stamped</em>
                 </div>
+                {(!player.researchPath?.claimedSteps?.includes(5)) && (
+                  <div className={styles.rewards} data-testid="community-research-rewards">
+                    <strong>How it works</strong>
+                    <span>Step 2: {WEEKLY_RESEARCH_REWARDS['step-2'].fragments} fragments</span>
+                    <span>Step 4: {WEEKLY_RESEARCH_REWARDS['step-4'].fragments} fragments</span>
+                    <span>Step 5: a permanent badge and Breakthrough</span>
+                  </div>
+                )}
+                <div className={styles.ledger} data-testid="community-research-ledger">
+                  <span>Regular fragments</span><b>{player.researchFragments ?? 0}</b>
+                </div>
+                {step.id === 'breakthrough' && progress[at].have >= progress[at].need && (
+                  <p className={styles.breakthrough} data-testid="community-research-breakthrough">{WEEKLY_RESEARCH_REWARDS.breakthrough.explanation}</p>
+                )}
                 <div className={styles.bar} data-testid="research-community-bar">
                   <div className={styles.barLabel}><span>Community</span><span>{bar.total} / {bar.goal}</span></div>
                   <div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps">

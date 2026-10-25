@@ -1251,7 +1251,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const eventStampedPlayer = mission?.id === ORIONIDS_NIGHT_RUN_ID || mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
         ? addStamp(wswGraded, 'event', Date.now())
         : wswGraded
-      const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(eventStampedPlayer, 'discovery-mission', Date.now()) : eventStampedPlayer
+      const stampedPlayer = isProgramOperation ? eventStampedPlayer : addStamp(eventStampedPlayer, 'contract-run', Date.now())
+      const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(stampedPlayer, 'discovery-mission', Date.now()) : stampedPlayer
       const orionidsEventStage = mission?.id === ORIONIDS_NIGHT_RUN_ID
         ? Math.max(wswBadgedPlayer.orionidsEventStage ?? 0, 1) as 0 | 1 | 2
         : mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
