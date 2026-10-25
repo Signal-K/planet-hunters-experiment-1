@@ -223,6 +223,14 @@ export function buildLaunchScene(
   }
   drawSky(0)
 
+  // This is deliberately separate from the ascent sky. At orbit and
+  // departure it is an opaque deep-space floor, so a renderer clear or an
+  // asset transition can never reveal the document's white background.
+  const spaceGfx = new Graphics()
+  spaceGfx.rect(0, 0, W, H).fill(C.void)
+  spaceGfx.alpha = 0
+  app.stage.addChild(spaceGfx)
+
   const starGfx = new Graphics()
   starGfx.alpha = 0
   app.stage.addChild(starGfx)
@@ -605,7 +613,12 @@ export function buildLaunchScene(
       cloudContainer.alpha = 0
       highAtmosContainer.alpha = 0
       sunGfx.alpha = 0
-      orbitScene.alpha = Math.min(1, orbitT / 0.4)
+      skyGfx.alpha = 0
+      spaceGfx.alpha = 1
+      // Earth establishes the orbital insertion, then clears before the
+      // departure burn. The burn should read as deep space, not as a pale
+      // globe or cloud layer left over from the launch pad.
+      orbitScene.alpha = Math.min(1, orbitT / 0.4) * Math.max(0, 1 - departureT / 0.6)
       orbitScene.clear()
       drawPlanet(orbitScene, orbitCenter.x, orbitCenter.y, orbitRadius * 0.70, 'earth', orbitT * 0.35)
       orbitScene.circle(orbitCenter.x, orbitCenter.y, radius).stroke({ color: C.cyan, alpha: 0.28, width: 1 })
@@ -616,6 +629,8 @@ export function buildLaunchScene(
       padContainer.alpha = 1
       smokeContainer.alpha = 1
       orbitScene.alpha = 0
+      skyGfx.alpha = 1
+      spaceGfx.alpha = 0
     }
 
     cloudDrift += dt

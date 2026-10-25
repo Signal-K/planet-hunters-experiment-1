@@ -95,7 +95,11 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, e
     // The Pixi scene is the visible launch sequence. It used to be hidden
     // underneath PadLaunchSequence, which completed after 3.4 seconds and
     // made the real 15-second timeline unreachable to the player.
-    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;opacity:1;pointer-events:none;'
+    // Keep the canvas opaque from its first paint through the orbit handoff.
+    // Some WebGL implementations briefly expose the document clear colour
+    // during a render-target change, which previously showed as a white page
+    // behind the still-live departure telemetry.
+    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;opacity:1;pointer-events:none;background:#10182c;'
     div.appendChild(canvas)
 
     const app = new Application()
@@ -110,7 +114,8 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, e
         canvas,
         width: cw,
         height: ch,
-        background: 0x000000,
+        background: 0x10182c,
+        backgroundAlpha: 1,
         antialias: false,
         autoDensity: true,
         resolution: capDpr(),
