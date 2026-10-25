@@ -195,14 +195,16 @@ function buildProceduralLaunchStack(variant: 'explorer' | 'prospector'): LaunchS
 
 export function buildLaunchScene(
   app: Application,
-  opts: { rocketName: string; rocketImageSrc?: string; targetName: string; earthBiome?: EarthBiomeId; onComplete: () => void },
+  opts: { rocketId?: string; rocketName: string; rocketImageSrc?: string; targetName: string; earthBiome?: EarthBiomeId; onComplete: () => void },
 ) {
   const W = app.screen.width
   const H = app.screen.height
   const T = LAUNCH_TIMELINE
   const layout = launchPadLayout(W, H)
   const landscape = LANDSCAPE_PALETTE[opts.earthBiome ?? 'mountains']
-  const variant: 'explorer' | 'prospector' = /prospector/i.test(opts.rocketName) ? 'prospector' : 'explorer'
+  // This is the same selected vehicle that is staged on the launchpad. Names
+  // are localised display copy and must not decide which launch stack appears.
+  const variant: 'explorer' | 'prospector' = opts.rocketId === 'prospector' ? 'prospector' : 'explorer'
 
   const skyGfx = new Graphics()
   app.stage.addChild(skyGfx)

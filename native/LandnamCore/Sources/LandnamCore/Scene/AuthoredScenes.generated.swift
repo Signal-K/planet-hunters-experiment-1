@@ -1460,8 +1460,8 @@ enum AuthoredSceneDeclarations {
             "w": 0.1904,
             "h": 0.647
           },
-          "asset": "web/public/art/scenes/launchpad/launchpad-rocket-multistage.png",
-          "nativeAsset": "scene-launchpad-rocket-multistage",
+          "asset": "web/public/game/assets/base/kit/pad-rocket.png",
+          "nativeAsset": "base/kit/pad-rocket.png",
           "components": [
             "StagedRocket",
             "LaunchSequence"

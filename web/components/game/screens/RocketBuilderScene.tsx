@@ -5,7 +5,7 @@ import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
 import LaunchpadPrefab from '@/components/game/LaunchpadPrefab'
 import { formatCurrency } from '@/lib/format'
-import type { RocketConfig, Target } from '@/lib/data'
+import { rocketModelForConfig, type RocketConfig, type Target } from '@/lib/data'
 import { BASE_CAMERA_HOME } from '@/lib/scene/base-camera'
 import { kitScale } from '@/lib/scene/base-site'
 import { sanitizeEarthBiome, type EarthBiomeId } from '@/lib/scene/base-world'
@@ -96,6 +96,9 @@ export default function RocketBuilderScene({
   }, [])
   const px = kitScale(viewSize)
   const biome = sanitizeEarthBiome(earthBiome)
+  // The pad and the cinematic must resolve the physical vehicle from the
+  // same config. A display name is copy; it is not a stable visual identity.
+  const rocketId = rocketModelForConfig(rocket).id
   const stats = rocketBuilderStats(rocket, loadout)
   const fitted = fittedModules(loadout)
   const fittedCount = BUILDER_SLOTS.filter(slot => partIdForSlot(loadout, slot)).length
@@ -141,7 +144,6 @@ export default function RocketBuilderScene({
       <div className={styles.stage}>
         <div className={styles.actions}>
           {onBack && <button type="button" className={styles.back} data-testid="top-bar-back" aria-label="back" onClick={onBack}>&lsaquo; Back</button>}
-          {hasLaunchPlan && <button type="button" className={styles.launch} data-testid={launchTestId} data-assembly={phase} disabled={launchDisabled || phase === 'building'} onClick={onLaunch}>{launchLabel}</button>}
           <button type="button" className={styles.target} data-testid="rocket-builder-target" onClick={onChooseMission}>
             <span>{hasLaunchPlan ? 'Change mission' : 'Select mission'}</span>
             <strong>{hasLaunchPlan ? `${missionTitle} · ${targetLabel}` : targetLabel}</strong>
@@ -160,7 +162,7 @@ export default function RocketBuilderScene({
 
         <div className={styles.body} data-parts={showParts ? 'open' : 'closed'}>
           <section className={styles.pad} aria-label="Launchpad" data-phase={phase} data-fitted-count={fittedCount}>
-            <LaunchpadPrefab towerLabel={towerLabel} onChooseMission={onChooseMission} showRocket={phase === 'building' || phase === 'ready'} />
+            <LaunchpadPrefab towerLabel={towerLabel} onChooseMission={onChooseMission} rocketId={rocketId} showRocket={phase === 'building' || phase === 'ready'} />
             {missionPayload && phase !== 'idle' && (
               <aside className={styles.payloadManifest} data-testid="launchpad-payload-manifest">
                 <span className={styles.payloadKicker}>PAYLOAD LOADED</span>
@@ -189,6 +191,12 @@ export default function RocketBuilderScene({
               </div>
             )}
           </section>
+
+          {hasLaunchPlan && (
+            <div className={styles.launchDock}>
+              <button type="button" className={styles.launch} data-testid={launchTestId} data-assembly={phase} disabled={launchDisabled || phase === 'building'} onClick={onLaunch}>{launchLabel}</button>
+            </div>
+          )}
 
           {showParts && <section className={styles.choices} aria-label="Part choices">
             <div className={styles.tabs} role="tablist" data-testid="rocket-builder-tray">
@@ -256,7 +264,7 @@ export default function RocketBuilderScene({
       </div>
 
       {launching && onLaunchComplete && (
-        <LaunchSequenceCanvas rocketName={launchRocketName} rocketImageSrc={launchRocketSrc} targetName={target?.name ?? 'orbit'} earthBiome={biome} onComplete={onLaunchComplete} />
+        <LaunchSequenceCanvas rocketId={rocketId} rocketName={launchRocketName} rocketImageSrc={launchRocketSrc} targetName={target?.name ?? 'orbit'} earthBiome={biome} onComplete={onLaunchComplete} />
       )}
     </div>
   )

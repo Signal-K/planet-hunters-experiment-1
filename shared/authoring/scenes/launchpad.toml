@@ -182,8 +182,8 @@ parent = "launchpad-complex"
 layout = "shared"
 space = "parent"
 rect = { x = 0.2308, y = 0.261, w = 0.1904, h = 0.647 }
-asset = "web/public/art/scenes/launchpad/launchpad-rocket-multistage.png"
-nativeAsset = "scene-launchpad-rocket-multistage"
+asset = "web/public/game/assets/base/kit/pad-rocket.png"
+nativeAsset = "base/kit/pad-rocket.png"
 components = ["StagedRocket", "LaunchSequence"]
 bindings = { visible = "player.selectedStagedRocketId" }
 

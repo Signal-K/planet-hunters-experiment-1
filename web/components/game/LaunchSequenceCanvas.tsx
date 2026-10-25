@@ -12,6 +12,7 @@ import type { EarthBiomeId } from '@/lib/scene/base-world'
 import SequenceDesktopFrame from '@/components/game/SequenceDesktopFrame'
 
 interface Props {
+  rocketId?: string
   rocketName: string
   rocketImageSrc?: string
   targetName: string
@@ -31,7 +32,7 @@ interface Props {
 // can strand a player: worst case they wait a fixed ceiling, not forever.
 const LAUNCH_WATCHDOG_MS = 18_000
 
-export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, earthBiome, onComplete }: Props) {
+export function LaunchSequenceCanvas({ rocketId, rocketName, rocketImageSrc, targetName, earthBiome, onComplete }: Props) {
   const divRef = useRef<HTMLDivElement>(null)
   const completeRef = useRef(onComplete)
   const firedRef = useRef(false)
@@ -124,6 +125,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, e
       if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
 
       const scene = buildLaunchScene(app, {
+        rocketId,
         rocketName,
         rocketImageSrc,
         targetName,
@@ -153,7 +155,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, e
         canvas.remove()
       }
     }
-  }, [earthBiome, rocketImageSrc, rocketName, targetName, isDesktop])
+  }, [earthBiome, rocketId, rocketImageSrc, rocketName, targetName, isDesktop])
 
   return (
     <SequenceDesktopFrame
