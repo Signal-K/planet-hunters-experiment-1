@@ -12,7 +12,7 @@ import { nextLaserCapacitorTier, spendOreUnits } from '@/lib/data/mining-upgrade
 import { buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
 import { freeOperationsUnlocked, trainingFinished } from './AgencyOnboardingSystem'
-import { RESEARCH_BONUS_RATE, researchBonusActive } from '@/lib/research/stamps'
+import { permanentResearchSaleRate } from '@/lib/research/marketplace'
 import { ORIONIDS_DEBRIS_PRESET, isDebrisEventActive } from '@/lib/data/sky-events'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 
@@ -62,7 +62,7 @@ export function openMarketSellPrice(basePrice: number, unitsSold: number): numbe
  *  honoured here rather than dropped from the display. */
 export function sellUnitPrice(
   mineralId: string,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchBonusUntil'>,
+  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>,
   clientId?: string,
   now: number = Date.now(),
 ): { price: number; base: number; premiumApplied: boolean; bonusApplied: boolean } {
@@ -77,11 +77,10 @@ export function sellUnitPrice(
   const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) : undefined
   const premiumApplied = !!client && client.mineralPreferences.includes(mineralId) && client.payoutPremium > 0
   const quoted = premiumApplied ? Math.round(base * (1 + client!.payoutPremium)) : base
-  // SSL-673: the community research week pays a little more on every ore sale. Buy prices read the same
-  // quote without it (MarketplaceSystem.buyUnitPrice), so the bonus is never a buy-and-resell loop.
-  const bonusApplied = researchBonusActive(player, now)
+  const permanentRate = permanentResearchSaleRate(player)
+  const bonusApplied = permanentRate > 0
   return {
-    price: bonusApplied ? Math.round(quoted * (1 + RESEARCH_BONUS_RATE)) : quoted,
+    price: bonusApplied ? Math.round(quoted * (1 + permanentRate)) : quoted,
     base,
     premiumApplied,
     bonusApplied,
@@ -91,7 +90,7 @@ export function sellUnitPrice(
 /** Total francs a stash (or a subset of it) would fetch at current prices. */
 export function sellQuote(
   stash: Record<string, number>,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchBonusUntil'>,
+  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>,
   clientId?: string,
   now: number = Date.now(),
 ): number {
@@ -225,9 +224,10 @@ export function applyFreeHaulDisposition(
 
 /** Sell collected refined goods at their recipe output value. */
 /** What one finished good sells for now: its recipe value, +3% inside the community research week (SSL-673). */
-export function refinedUnitPrice(recipe: Pick<RefineryRecipe, 'output'>, player: Pick<GameState['player'], 'researchBonusUntil'>, now: number = Date.now()): number {
+export function refinedUnitPrice(recipe: Pick<RefineryRecipe, 'output'>, player: Pick<GameState['player'], 'researchPermanentBonuses'>, now: number = Date.now()): number {
   const price = recipe.output.price
-  return researchBonusActive(player, now) ? Math.round(price * (1 + RESEARCH_BONUS_RATE)) : price
+  const rate = permanentResearchSaleRate(player)
+  return rate > 0 ? Math.round(price * (1 + rate)) : price
 }
 
 export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amount: number, now: number = Date.now()): GameState {

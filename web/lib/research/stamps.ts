@@ -88,8 +88,6 @@ export function stampsInMonth(stamps: ResearchStamps | undefined, year: number, 
 
 /** Mirrors pocketbase/research.go: every player's stamps this UTC month add to one bar. */
 export const COMMUNITY_GOAL = 1000
-export const COMMUNITY_WEEKLY_REVENUE_PCT = 3
-export const COMMUNITY_BONUS_DAYS = 7
 
 /** `GET /api/community/research`. `others` leaves out the caller, so local stamps not yet synced are counted once. */
 export interface CommunityResearch {
@@ -109,27 +107,9 @@ export function communityBar(ownThisMonth: number, server?: CommunityResearch | 
     goal,
     fill: Math.min(1, total / goal),
     reached: server?.reachedAt != null,
-    bonusPct: server?.bonusPct ?? COMMUNITY_WEEKLY_REVENUE_PCT,
+    bonusPct: server?.bonusPct ?? 0,
     bonusUntil: server?.bonusUntil ?? null,
   }
-}
-
-type BonusPlayer = Pick<Player, 'researchBonusUntil'>
-
-/** The community bonus is open while `now` is inside the week after the bar filled. */
-export function researchBonusActive(player: BonusPlayer | undefined, now: number): boolean {
-  const until = player?.researchBonusUntil
-  return typeof until === 'number' && now < until
-}
-
-/** Exchange sales (ore and finished goods) pay this much more while the bonus is open. */
-export const RESEARCH_BONUS_RATE = COMMUNITY_WEEKLY_REVENUE_PCT / 100
-
-/** Keep the latest bonus window the server reported. Returns the same player when nothing changes. */
-export function noteResearchBonus<T extends BonusPlayer>(player: T, bonusUntil: number | null | undefined): T {
-  if (typeof bonusUntil !== 'number' || !Number.isFinite(bonusUntil)) return player
-  if ((player.researchBonusUntil ?? 0) >= bonusUntil) return player
-  return { ...player, researchBonusUntil: bonusUntil }
 }
 
 /** Today's research tasks, one per stamp kind a player can earn now. Same copy on web and native. */
@@ -152,4 +132,4 @@ export function dailyTasksFor(hasDiscovery: boolean): readonly { kind: StampKind
 }
 
 export const RESEARCH_TITLE = 'Daily research'
-export const RESEARCH_BLURB = 'Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% on Exchange sales for a week. Miss a day and nothing is lost.'
+export const RESEARCH_BLURB = 'Do one research task a day to earn a stamp. Every stamp fills the community bar and helps unlock permanent research rewards. Miss a day and nothing is lost.'

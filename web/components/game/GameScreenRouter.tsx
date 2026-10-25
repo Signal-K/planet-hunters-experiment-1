@@ -64,6 +64,7 @@ import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
 import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
+import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
 import { choosePath, claimResearchReward } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
@@ -106,7 +107,7 @@ function ScreenBody({
   const [launchPending, setLaunchPending] = useState(() =>
     process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('launchscene'))
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
-  const communityResearch = useCommunityResearch(screen === 'instrument-hub' || screen === 'market' || screen === 'community-research', game.setPlayer)
+  const communityResearch = useCommunityResearch(screen === 'instrument-hub' || screen === 'market' || screen === 'community-research')
 
   useEffect(() => {
     if (screen !== 'hub') return
@@ -468,7 +469,7 @@ function ScreenBody({
             refineryQueue: game.player.refineryQueue,
             refinedGoods: game.player.refinedGoods,
             refineryLastStartedAt: game.player.refineryLastStartedAt,
-            researchBonusUntil: game.player.researchBonusUntil,
+            researchPermanentBonuses: game.player.researchPermanentBonuses,
           }}
           onBack={() => game.goBack()}
           onStartRefine={game.onStartRefine}
@@ -483,7 +484,10 @@ function ScreenBody({
           marketSupply={game.player.marketSupply ?? {}}
           marketSupplyUpdatedAt={game.player.marketSupplyUpdatedAt ?? {}}
           dailyEconomySnapshot={game.player.dailyEconomySnapshot}
-          researchBonusUntil={game.player.researchBonusUntil}
+          researchFragments={game.player.researchFragments ?? 0}
+          researchUniversalFragments={game.player.researchUniversalFragments ?? 0}
+          researchPurchases={game.player.researchPurchases}
+          researchPermanentBonuses={game.player.researchPermanentBonuses}
           francs={game.player.francs}
           exchangeBuilt={exchangeBuilt(game.player)}
           priceAlerts={game.player.priceAlerts}
@@ -498,6 +502,8 @@ function ScreenBody({
           onBuild={() => game.go('build')}
           onHub={() => game.go('instrument-hub')}
           onNext={() => game.go(game.player.activeMission ? 'launchpad' : 'missions')}
+          onConvertResearchFragments={() => game.setPlayer(current => convertResearchFragments(current))}
+          onBuyResearchItem={itemId => game.setPlayer(current => buyResearchItem(current, itemId))}
           clientId={game.player.lastClient}
         />
       )

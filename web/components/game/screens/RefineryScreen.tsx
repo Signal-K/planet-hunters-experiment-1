@@ -15,7 +15,7 @@ import ScenePanel from '@/components/game/ScenePanel'
 import { captureGameEvent } from '@/lib/posthog'
 
 interface RefineryScreenProps {
-  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; researchBonusUntil?: number }
+  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; researchPermanentBonuses?: Record<string, number> }
   onBack: () => void
   onStartRefine: (recipeId: string) => void
   onCollect: (recipeId: string) => void

@@ -347,12 +347,18 @@ export interface Player {
   instrumentDigestNotifiedOn?: Record<string, string>
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
   researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert')[]>
-  /** End of the community research bonus week (SSL-673), from `/api/community/research`. Exchange sales pay +3% before it. */
-  researchBonusUntil?: number
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
   researchPath?: { week: string; path: 'explorer' | 'trader'; claimedSteps?: number[] }
   /** Permanent regular fragments earned from completed weekly research paths. */
   researchFragments?: number
+  /** Universal fragments converted from regular research fragments. */
+  researchUniversalFragments?: number
+  /** Permanent research marketplace purchase count by item id. */
+  researchPurchases?: Record<string, number>
+  /** Permanent research marketplace cosmetics owned by item id. */
+  researchCosmetics?: string[]
+  /** Permanent research marketplace bonus count by item id. */
+  researchPermanentBonuses?: Record<string, number>
   /** Last seen value for optional Hub prompts; a higher live value shows the card again. */
   dismissedHubPrompts?: Record<string, number>
   discoveredExoplanetTargets?: Record<string, Target>

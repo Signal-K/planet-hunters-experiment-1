@@ -91,6 +91,10 @@ export const DEFAULT_STATE: GameState = {
     saturnImagerLaunchedAt: null,
     instrumentDigestNotifiedOn: {},
     researchStamps: {},
+    researchUniversalFragments: 0,
+    researchPurchases: {},
+    researchCosmetics: [],
+    researchPermanentBonuses: {},
     dismissedHubPrompts: {},
     discoveredExoplanetTargets: {},
     subsurfaceExcavated: false,
@@ -667,7 +671,10 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.researchStamps = mergeStamps(current.player.researchStamps, remoteState.player?.researchStamps)
   merged.player.researchPath = mergeResearchPath(current.player.researchPath, remoteState.player?.researchPath)
   merged.player.researchFragments = Math.max(current.player.researchFragments ?? 0, remoteState.player?.researchFragments ?? 0)
-  merged.player.researchBonusUntil = Math.max(current.player.researchBonusUntil ?? 0, remoteState.player?.researchBonusUntil ?? 0) || undefined
+  merged.player.researchUniversalFragments = Math.max(current.player.researchUniversalFragments ?? 0, remoteState.player?.researchUniversalFragments ?? 0)
+  merged.player.researchPurchases = maxMergeRecord(current.player.researchPurchases, remoteState.player?.researchPurchases)
+  merged.player.researchPermanentBonuses = maxMergeRecord(current.player.researchPermanentBonuses, remoteState.player?.researchPermanentBonuses)
+  merged.player.researchCosmetics = [...new Set([...(current.player.researchCosmetics ?? []), ...(remoteState.player?.researchCosmetics ?? [])])]
   merged.player.badges = mergeBadges(current.player.badges, remoteState.player?.badges)
   merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)
   merged.player.meteoriteMastery = Math.max(current.player.meteoriteMastery ?? 0, remoteState.player?.meteoriteMastery ?? 0)
