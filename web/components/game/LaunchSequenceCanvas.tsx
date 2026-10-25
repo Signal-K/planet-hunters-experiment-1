@@ -173,7 +173,11 @@ export function LaunchSequenceCanvas({ rocketId, rocketName, rocketImageSrc, tar
       ]}
       showClock
       renderStage={style => (
-        <div ref={divRef} data-testid="launch-sequence-stage" style={{ background: '#10182c', ...style }} data-fragments={ascentFragments || undefined} />
+        <div ref={divRef} data-testid="launch-sequence-stage" style={{ position: 'relative', isolation: 'isolate', backgroundColor: '#10182c', ...style }} data-fragments={ascentFragments || undefined}>
+          {/* This remains when WebGL is recreated or torn down, so a renderer
+              failure can never reveal the document's white background. */}
+          <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: -1, background: '#10182c' }} />
+        </div>
       )}
     >
       {process.env.NODE_ENV === 'development' && (

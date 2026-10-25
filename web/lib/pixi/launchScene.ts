@@ -15,7 +15,7 @@
  * (public/game/assets/rockets/launch). The procedural Graphics stack below
  * is the fallback when those textures fail to load.
  */
-import { Application, Container, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
+import { Application, Assets, Container, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
 import {
   launchAltitude,
   launchCameraY,
@@ -84,6 +84,14 @@ const LANDSCAPE_PALETTE: Record<EarthBiomeId, { skyTop: number; skyHorizon: numb
   tundra: { skyTop: 0x0e1930, skyHorizon: 0x7896ac, far: 0x617884, near: 0x3f5664, ground: 0x59636a, groundDark: 0xa6bbc2 },
   coast: { skyTop: 0x0e1c31, skyHorizon: 0x5e8f9d, far: 0x4e7780, near: 0x304d5b, ground: 0x475e64, groundDark: 0x8eb6b6 },
 }
+
+// The cinematic begins on the exact composed launchpad the player just left.
+// Keep these paths alongside the authored launchpad object declaration rather
+// than substituting a generic tower or a second rocket design in the first
+// seconds of a launch.
+const AUTHORED_PAD_SRC = '/game/assets/base/v7/launchpad/pad-complex.png'
+const AUTHORED_ROCKET_SRC = '/art/scenes/launchpad/launchpad-rocket-multistage.png'
+const AUTHORED_ROCKET_FRAME = { x: 0.2308, y: 0.261, w: 0.1904, h: 0.647 }
 
 interface SmokeParticle {
   sprite: Sprite
@@ -306,6 +314,59 @@ export function buildLaunchScene(
   gear.rect(layout.towerRightX + 16, layout.padDeckY - 28, 22, 28).fill(C.panel).stroke({ width: 2, color: C.ink })
   gear.rect(layout.towerRightX + 18, layout.padDeckY - 26, 18, 4).fill({ color: C.cyan, alpha: 0.8 })
   padContainer.addChild(gear)
+
+  // The launch review and departure now share the same pad and staged rocket
+  // art. The small procedural construction below remains a resilience fallback
+  // only; it is hidden as soon as the bundled authored textures resolve.
+  const authoredPad = new Sprite(Texture.EMPTY)
+  authoredPad.anchor.set(0.5, 1)
+  authoredPad.visible = false
+  padContainer.addChild(authoredPad)
+  const authoredRocket = new Sprite(Texture.EMPTY)
+  authoredRocket.anchor.set(0.5, 1)
+  authoredRocket.visible = false
+  app.stage.addChild(authoredRocket)
+  let authoredPadReady = false
+  let authoredPadBottom = 0
+  let authoredPadWidth = 0
+  let authoredPadHeight = 0
+  let authoredRocketBaseX = W / 2
+  let authoredRocketBaseY = layout.rocketPadY
+  let authoredRocketScale = 1
+
+  void Promise.all([
+    Assets.load<Texture>(AUTHORED_PAD_SRC),
+    Assets.load<Texture>(AUTHORED_ROCKET_SRC),
+  ]).then(([padTexture, rocketTexture]) => {
+    if (app.stage.destroyed) return
+    const padScale = Math.min(W * 0.96 / Math.max(padTexture.width, 1), H * 0.72 / Math.max(padTexture.height, 1))
+    authoredPad.texture = padTexture
+    authoredPad.scale.set(padScale)
+    authoredPadWidth = padTexture.width * padScale
+    authoredPadHeight = padTexture.height * padScale
+    authoredPadBottom = layout.groundTop + Math.min(layout.groundHeight * 0.72, H * 0.18)
+    authoredPad.position.set(W / 2, authoredPadBottom)
+
+    authoredRocketScale = AUTHORED_ROCKET_FRAME.w * authoredPadWidth / Math.max(rocketTexture.width, 1)
+    authoredRocket.texture = rocketTexture
+    authoredRocketBaseX = W / 2 - authoredPadWidth / 2 + (AUTHORED_ROCKET_FRAME.x + AUTHORED_ROCKET_FRAME.w / 2) * authoredPadWidth
+    authoredRocketBaseY = authoredPadBottom - authoredPadHeight + (1 - AUTHORED_ROCKET_FRAME.y - AUTHORED_ROCKET_FRAME.h) * authoredPadHeight
+    authoredRocket.position.set(authoredRocketBaseX, authoredRocketBaseY)
+    authoredRocket.scale.set(authoredRocketScale)
+    authoredPad.visible = true
+    authoredRocket.visible = true
+    authoredPadReady = true
+    mountains.visible = false
+    groundGfx.visible = false
+    towerGfx.visible = false
+    gear.visible = false
+    // The sheet stack belongs to the old synthetic launch set. Keep it only
+    // until the shared pad art is ready, then never show both vehicle designs.
+    rocketRoot.visible = false
+  }).catch(() => {
+    // A missing bundled texture must leave the dark procedural fallback intact,
+    // never a transparent canvas over the document background.
+  })
 
   const cloudContainer = new Container()
   app.stage.addChild(cloudContainer)
@@ -633,6 +694,21 @@ export function buildLaunchScene(
       orbitScene.alpha = 0
       skyGfx.alpha = 1
       spaceGfx.alpha = 0
+    }
+
+    if (authoredPadReady) {
+      const liftT = Math.max(0, Math.min(1, (elapsed - T.liftoff) / 1.1))
+      authoredPad.y = authoredPadBottom
+      authoredPad.alpha = padContainer.alpha
+      if (orbitActive) {
+        authoredRocket.position.copyFrom(rocketRoot.position)
+      } else {
+        authoredRocket.x = authoredRocketBaseX + (W / 2 - authoredRocketBaseX) * liftT
+        authoredRocket.y = authoredRocketBaseY - altitude + cameraY
+      }
+      authoredRocket.scale.set(authoredRocketScale * (orbitActive ? 0.72 : 1))
+      authoredRocket.rotation = rocketRoot.rotation
+      authoredRocket.alpha = 1
     }
 
     cloudDrift += dt
