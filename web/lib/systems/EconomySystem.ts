@@ -62,7 +62,7 @@ export function openMarketSellPrice(basePrice: number, unitsSold: number): numbe
  *  honoured here rather than dropped from the display. */
 export function sellUnitPrice(
   mineralId: string,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>,
+  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>,
   clientId?: string,
   now: number = Date.now(),
 ): { price: number; base: number; premiumApplied: boolean; bonusApplied: boolean } {
@@ -73,7 +73,11 @@ export function sellUnitPrice(
   // A published daily snapshot is authoritative. The old per-player supply
   // dip remains only as a compatibility fallback for saves created before the
   // shared daily economy exists.
-  const base = snapshotQuote?.price ?? openMarketSellPrice(meta.price, unitsSold)
+  // A player can always make an open-market sale, but the physical Exchange
+  // is what gives access to the full quoted price. Without it, the broker
+  // takes the open-market discount; both paths still respond to supply.
+  const exchangeBuilt = player.placed?.includes('market') ?? false
+  const base = snapshotQuote?.price ?? Math.round(meta.price * (exchangeBuilt ? 1 : OPEN_MARKET_SELL_RATE) * supplyDipMultiplier(unitsSold))
   const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) : undefined
   const premiumApplied = !!client && client.mineralPreferences.includes(mineralId) && client.payoutPremium > 0
   const quoted = premiumApplied ? Math.round(base * (1 + client!.payoutPremium)) : base
@@ -90,7 +94,7 @@ export function sellUnitPrice(
 /** Total francs a stash (or a subset of it) would fetch at current prices. */
 export function sellQuote(
   stash: Record<string, number>,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>,
+  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>,
   clientId?: string,
   now: number = Date.now(),
 ): number {

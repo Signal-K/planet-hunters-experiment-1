@@ -45,6 +45,15 @@ describe('marketplace', () => {
     expect(applyBuyMinerals(poor, 'iron', 1)).toBe(poor)
   })
 
+  it('keeps discounted open-market selling available, while the Exchange pays the full quote', () => {
+    const open = state({ placed: ['launchpad'] })
+    const exchange = state({ placed: ['launchpad', 'market'] })
+    const openQuote = sellUnitPrice('iron', open.player).price
+    const exchangeQuote = sellUnitPrice('iron', exchange.player).price
+    expect(openQuote).toBeLessThan(exchangeQuote)
+    expect(openQuote).toBe(Math.round(exchangeQuote * 0.8))
+  })
+
   it('sets one alert per mineral, needs the Exchange, and fires once the spot reaches the target', () => {
     const s = state()
     const spot = sellUnitPrice('iron', s.player).price

@@ -39,7 +39,11 @@ public enum Market {
                   case let .number(price)? = quote["price"] else { return nil }
             return Int(price)
         }()
-        let base = snapshotPrice ?? openMarketSellPrice(base: meta.price, unitsSold: sold)
+        // Selling remains possible without a structure, but that is an
+        // open-market broker sale at the discounted rate. The constructed
+        // Exchange pays the full quote, with the same supply pressure.
+        let exchangeBuilt = player.placed.contains("market")
+        let base = snapshotPrice ?? Int((Double(meta.price) * (exchangeBuilt ? 1 : Economy.openMarketSellRate) * supplyDipMultiplier(unitsSold: sold)).rounded())
         let client = clientId.flatMap { Clients.byId[$0] }
         let premium = client.map { $0.mineralPreferences.contains(id) && $0.payoutPremium > 0 } ?? false
         let quoted = premium ? Int((Double(base) * (1 + client!.payoutPremium)).rounded()) : base

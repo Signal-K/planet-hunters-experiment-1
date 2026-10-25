@@ -34,7 +34,7 @@ interface MarketScreenProps {
   researchPurchases?: Record<string, number>
   researchPermanentBonuses?: Record<string, number>
   francs: number
-  /** The Exchange building. Buying and price alerts need it. */
+  /** The Exchange building. Buying, research and price alerts need it. */
   exchangeBuilt: boolean
   priceAlerts?: PriceAlert[]
   /** Why a purchase is refused, or null. */
@@ -62,7 +62,7 @@ export default function MarketScreen({
   const [tab, setTab] = useState<Tab>('sell')
   const [armed, setArmed] = useState(false)
   const [targets, setTargets] = useState<Record<string, number>>({})
-  const prices: SpotQuote[] = spotBoard({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, researchPermanentBonuses }, clientId)
+  const prices: SpotQuote[] = spotBoard({ stash, placed: exchangeBuilt ? ['market'] : [], marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, researchPermanentBonuses }, clientId)
   // Selling leads with what you hold; the other tabs list the whole board by price.
   const board = tab === 'sell' ? [...prices].sort((a, b) => Number(b.held > 0) - Number(a.held > 0)) : prices
   const refined = REFINERY_RECIPES.map(r => ({ recipe: r, qty: refinedGoods[r.id] ?? 0 })).filter(r => r.qty > 0)
@@ -108,7 +108,16 @@ export default function MarketScreen({
           ))}
         </div>
 
-        {tab === 'research' ? (
+        {tab !== 'sell' && !exchangeBuilt ? (
+          <div className={styles.lock} data-testid="market-locked">
+            <p className={styles.note}>{tab === 'buy'
+              ? 'Build the Exchange to buy ore.'
+              : tab === 'research'
+                ? 'Build the Exchange to research new technology.'
+                : 'Build the Exchange to set sell alerts.'}</p>
+            <button type="button" className={styles.btn} data-testid="market-build-exchange" onClick={onBuild}>Build the Exchange</button>
+          </div>
+        ) : tab === 'research' ? (
           <div className={styles.research} data-testid="research-marketplace">
             <div className={styles.researchLedger}>
               <span>Regular fragments</span><b>{researchFragments}</b>
@@ -142,11 +151,6 @@ export default function MarketScreen({
                 )
               })}
             </ul>
-          </div>
-        ) : tab !== 'sell' && !exchangeBuilt ? (
-          <div className={styles.lock} data-testid="market-locked">
-            <p className={styles.note}>{tab === 'buy' ? 'Build the Exchange to buy ore.' : 'Build the Exchange to set sell alerts.'}</p>
-            <button type="button" className={styles.btn} data-testid="market-build-exchange" onClick={onBuild}>Build the Exchange</button>
           </div>
         ) : (
           <ul className={styles.rows} data-testid="exchange-prices">

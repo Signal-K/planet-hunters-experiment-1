@@ -283,7 +283,10 @@ struct BaseWorldScene: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .position(x: CGFloat(site.x) * px, y: world.ground - 22 - 3 * px)
+            // Keep the placement affordance above its footprint. The former
+            // centre-line anchor let the wide Control Station pill intrude
+            // into the neighbouring structure on compact landscape screens.
+            .position(x: CGFloat(site.x) * px, y: world.ground - 54 - 3 * px)
             .accessibilityLabel("Place \(kindLabel(kind)) here")
         }
     }

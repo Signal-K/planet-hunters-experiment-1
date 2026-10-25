@@ -30,7 +30,7 @@ export interface SpotQuote {
   held: number
 }
 
-type PricePlayer = Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>
+type PricePlayer = Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>
 
 export function exchangeBuilt(player: Pick<GameState['player'], 'placed'>): boolean {
   return (player.placed ?? []).includes('market')
