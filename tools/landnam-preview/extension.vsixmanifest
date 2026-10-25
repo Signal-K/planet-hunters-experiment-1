@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">
+  <Metadata>
+    <Identity Id="landnam-preview" Version="0.1.1" Publisher="landnam" />
+    <DisplayName>Landnam Preview</DisplayName>
+    <Description>A resilient in-editor preview for Landnam scenes.</Description>
+  </Metadata>
+  <Installation>
+    <InstallationTarget Id="Microsoft.VisualStudio.Code" />
+  </Installation>
+  <Dependencies />
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Address="package.json" />
+    <Asset Type="Microsoft.VisualStudio.Code.Extension" Path="extension" />
+  </Assets>
+</PackageManifest>

@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 
 /**
- * Dev only. Open `/game/hub?follow=1` once in the editor's Simple Browser; the tab then
+ * Dev only. Open the editor preview once; its disposable stage fixture then
  * navigates to whatever page an agent last edited (scripts/preview-target.mjs).
  * The flag is kept in localStorage so it survives editor refreshes, tab recreation,
  * and dev-container restarts. Use `?follow=0` to opt this browser out again.
@@ -22,6 +22,7 @@ export function DevFollow() {
     let last = Number(localStorage.getItem('dev-follow-ts') ?? 0)
     let lastActs = Number(localStorage.getItem('dev-acts-ts') ?? 0)
     let lastScene = Number(localStorage.getItem('dev-scene-ts') ?? 0)
+    let lastHeartbeat = 0
     let stopped = false
     type Act = { key?: string; hold?: number; click?: string; wait?: number; see?: string; gone?: string; within?: number }
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -104,6 +105,12 @@ export function DevFollow() {
       if (stopped || localStorage.getItem('dev-follow') !== '1') return
       restoreMarker()
       try {
+        // A reachable server is not enough. The editor panel must be alive
+        // before a scene check can count as rendered acceptance evidence.
+        if (Date.now() - lastHeartbeat >= 5000) {
+          lastHeartbeat = Date.now()
+          void fetch('/api/dev/follow', { method: 'POST', body: JSON.stringify({ heartbeat: { href: window.location.href, viewport: `${window.innerWidth}x${window.innerHeight}` } }) }).catch(() => {})
+        }
         const res = await fetch('/api/dev/follow', { cache: 'no-store' })
         if (!res.ok) return
         const { route, ts, actions, actionsTs, id, sceneChange } = (await res.json()) as {

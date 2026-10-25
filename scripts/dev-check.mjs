@@ -9,7 +9,10 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const base = process.env.LANDNAM_WEB_URL ?? `http://localhost:${process.env.LANDNAM_WEB_PORT ?? 4320}`
+// Keep the checker on the same IPv4 loopback address as the preview panel.
+// On some editor hosts `localhost` resolves to IPv6 first while Next listens
+// only on IPv4, producing a misleading "server is not answering" failure.
+const base = process.env.LANDNAM_WEB_URL ?? `http://127.0.0.1:${process.env.LANDNAM_WEB_PORT ?? 4320}`
 const checks = JSON.parse(readFileSync(join(root, 'scripts', 'checks.json'), 'utf8'))
 const argv = process.argv.slice(2)
 const flag = (n) => { const i = argv.indexOf(n); return i < 0 ? null : argv[i + 1] }
@@ -29,7 +32,17 @@ if (!check && flag('--route')) {
 if (!check) { console.error(`No check "${name}". Try --list.`); process.exit(2) }
 
 const post = (body) => fetch(`${base}/api/dev/follow`, { method: 'POST', body: JSON.stringify(body) })
-try { await fetch(`${base}/api/dev/follow`) } catch { console.error(`Dev server is not answering on ${base}. Run: make ensure`); process.exit(2) }
+let bridge
+try { bridge = await (await fetch(`${base}/api/dev/follow`, { cache: 'no-store' })).json() } catch { console.error(`Dev server is not answering on ${base}. Run: make ensure`); process.exit(2) }
+const followerDeadline = Date.now() + 7000
+while (!(bridge?.follower?.seenAt > Date.now() - 7000) && Date.now() < followerDeadline) {
+  await new Promise((resolve) => setTimeout(resolve, 400))
+  bridge = await (await fetch(`${base}/api/dev/follow`, { cache: 'no-store' })).json().catch(() => null)
+}
+if (!(bridge?.follower?.seenAt > Date.now() - 7000)) {
+  console.error('No live editor preview is registered. Run “Landnam Preview: Open” in Cursor/VS Code, then retry.')
+  process.exit(2)
+}
 
 const id = `${name}-${Date.now().toString(36)}`
 // Route first so the tab navigates, then the steps run once it has loaded.
@@ -52,5 +65,5 @@ while (Date.now() < deadline) {
   }
   await new Promise((r) => setTimeout(r, 400))
 }
-console.error(`TIMEOUT ${name}: no result. Is the Simple Browser tab open on ${base}/game/hub?follow=1 ?`)
+console.error(`TIMEOUT ${name}: the registered preview did not report a result. Open Landnam Preview status and reconnect the panel.`)
 process.exit(3)

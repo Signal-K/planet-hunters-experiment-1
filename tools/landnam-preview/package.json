@@ -1,0 +1,25 @@
+{
+  "name": "landnam-preview",
+  "displayName": "Landnam Preview",
+  "description": "A resilient in-editor preview for Landnam scenes.",
+  "version": "0.1.1",
+  "publisher": "landnam",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Other"],
+  "main": "./extension.js",
+  "activationEvents": ["onCommand:landnamPreview.open", "onCommand:landnamPreview.restart", "onCommand:landnamPreview.status"],
+  "contributes": {
+    "commands": [
+      { "command": "landnamPreview.open", "title": "Landnam Preview: Open" },
+      { "command": "landnamPreview.restart", "title": "Landnam Preview: Restart preview" },
+      { "command": "landnamPreview.status", "title": "Landnam Preview: Show status" }
+    ],
+    "configuration": {
+      "title": "Landnam Preview",
+      "properties": {
+        "landnamPreview.port": { "type": "number", "default": 4320, "description": "Landnam web preview port." },
+        "landnamPreview.startCommand": { "type": "string", "default": "make ensure", "description": "Workspace command used when the preview server is unavailable." }
+      }
+    }
+  }
+}

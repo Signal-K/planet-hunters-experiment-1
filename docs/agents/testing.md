@@ -1,14 +1,14 @@
 # Scene verification
 
-The editor Simple Browser is the web interaction surface. There is no
+The workspace-owned **Landnam Preview** extension is the web interaction surface. It opens a disposable sandbox fixture (not an account or saved player state), embeds one persistent preview panel, shows its follower heartbeat, and starts the stack only when needed. Install `tools/landnam-preview/landnam-preview-0.1.1.vsix` locally during development. There is no
 Playwright, Cypress, Chromium, Chrome, headless runner, screenshot matrix, or
 test stack.
 
-1. Start once: `make ensure`, then open
-   `http://localhost:4320/game/hub?follow=1` with **Simple Browser: Show**.
+1. Run **Landnam Preview: Open** from the Command Palette. Its status bar item
+   must read `Landnam Preview`, not its warning state.
 2. Run a single authored scene: `node scripts/scene.mjs mining --check`.
-   This sends the independent stage fixture to the follower, checks that it
-   mounted, and reports the actual viewport in the terminal and tab banner.
+   This sends the independent stage fixture to the registered follower, checks
+   that it mounted, and reports the actual viewport in the terminal and tab banner.
 3. For a one-off interaction use
    `node scripts/dev-check.mjs --route /game/stage?preset=ui-mining --see "FIRE" --click "FIRE"`.
 4. Inspect the real scene for readable text, usable controls, clipping, and

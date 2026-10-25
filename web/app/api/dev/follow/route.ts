@@ -5,6 +5,7 @@ import { join } from 'node:path'
 export const dynamic = 'force-dynamic'
 const actionsFile = () => join(process.cwd(), '.dev-actions.json')
 const resultFile = () => join(process.cwd(), '.dev-result.json')
+const followerFile = () => join(process.cwd(), '.dev-follower.json')
 
 export async function GET() {
   if (process.env.NODE_ENV !== 'development') return new Response(null, { status: 404 })
@@ -16,7 +17,9 @@ export async function GET() {
   try { result = JSON.parse(await readFile(resultFile(), 'utf8')) } catch { /* none yet */ }
   let sceneChange: unknown = null
   try { sceneChange = JSON.parse(await readFile(join(process.cwd(), '.dev-scene-change.json'), 'utf8')) } catch { /* none yet */ }
-  return Response.json({ ...follow, ...act, result, sceneChange }, {
+  let follower: unknown = null
+  try { follower = JSON.parse(await readFile(followerFile(), 'utf8')) } catch { /* no editor preview registered */ }
+  return Response.json({ ...follow, ...act, result, sceneChange, follower }, {
     headers: {
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       Pragma: 'no-cache',
@@ -31,7 +34,11 @@ export async function GET() {
  */
 export async function POST(req: Request) {
   if (process.env.NODE_ENV !== 'development') return new Response(null, { status: 404 })
-  const body = (await req.json()) as { actions?: unknown[]; id?: string; result?: unknown }
+  const body = (await req.json()) as { actions?: unknown[]; id?: string; result?: unknown; heartbeat?: unknown }
+  if (body.heartbeat && typeof body.heartbeat === 'object') {
+    await writeFile(followerFile(), JSON.stringify({ ...(body.heartbeat as Record<string, unknown>), seenAt: Date.now() }))
+    return Response.json({ ok: true })
+  }
   if (body.result) {
     await writeFile(resultFile(), JSON.stringify(body.result))
     return Response.json({ ok: true })
