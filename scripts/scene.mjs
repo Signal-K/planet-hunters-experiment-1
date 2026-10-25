@@ -6,6 +6,7 @@
  *   node scripts/scene.mjs list
  *   node scripts/scene.mjs mining
  *   node scripts/scene.mjs orionids-shower --check
+ *   node scripts/scene.mjs hub --preset full-base     open a named setup from fixtures/<scene>.toml in the Studio
  *
  * `--check` sends the selected stage to the Cursor/VS Code Simple Browser and
  * waits for its dev bridge to report that the independent scene mounted.
@@ -37,11 +38,13 @@ if (!entry) {
   process.exit(2)
 }
 
-const route = entry.web ? `/game/stage?preset=${encodeURIComponent(entry.web)}` : '/game/stage'
+const presetIndex = flags.indexOf('--preset')
+const preset = presetIndex >= 0 ? flags[presetIndex + 1] : null
+const route = preset ? `/game/studio?scene=${encodeURIComponent(entry.id)}&preset=${encodeURIComponent(preset)}` : entry.web ? `/game/stage?preset=${encodeURIComponent(entry.web)}` : '/game/stage'
 const open = spawnSync(process.execPath, [join(root, 'scripts', 'preview-target.mjs'), route], { stdio: 'inherit' })
 if (open.status !== 0) process.exit(open.status ?? 1)
 
-console.log(`web: http://localhost:4320${route}&follow=1`)
+console.log(`web: http://localhost:4320${route}${route.includes('?') ? '&' : '?'}follow=1`)
 if (entry.native) console.log(`iOS Simulator: xcrun simctl launch booted com.atlasskyventures.sslandnam -scene ${entry.native}`)
 if (entry.objective) console.log(`objective: ${entry.objective}`)
 if (entry.complete) console.log(`complete: ${entry.complete}`)

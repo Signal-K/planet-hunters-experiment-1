@@ -13,6 +13,7 @@
     },
     "commands": [
       { "command": "landnam.foldBig", "title": "Landnam: Fold things, states and presets" },
+      { "command": "landnam.openPreset", "title": "Landnam: Open a setup (preset) in the Studio" },
       { "command": "landnam.openPreview", "title": "Landnam: Open this scene in the preview" }
     ]
   }

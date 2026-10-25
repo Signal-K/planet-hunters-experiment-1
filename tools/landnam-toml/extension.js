@@ -84,6 +84,17 @@ exports.activate = function (ctx) {
       const lines = parse(ed.document).filter(t => BIG.has(t.table)).map(t => t.line)
       await vscode.commands.executeCommand('editor.fold', { selectionLines: lines, levels: 1 })
     }),
+    vscode.commands.registerCommand('landnam.openPreset', async () => {
+      const ed = vscode.window.activeTextEditor; if (!isScene(ed && ed.document)) return
+      const id = path.basename(ed.document.fileName, '.toml')
+      const file = path.join(path.dirname(ed.document.fileName), '..', 'fixtures', `${id}.toml`)
+      const text = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : ed.document.getText()
+      const presets = [...text.matchAll(/^\[\[presets\]\]\s*\nid\s*=\s*"([^"]+)"(?:\s*\nname\s*=\s*"([^"]*)")?/gm)].map(m => ({ label: m[2] || m[1], description: m[1] }))
+      const pick = await vscode.window.showQuickPick(presets, { placeHolder: `Open which setup of ${id}?` })
+      if (!pick) return
+      const term = vscode.window.createTerminal('landnam scene')
+      term.sendText(`node scripts/scene.mjs ${id} --preset ${pick.description}`, true)
+    }),
     vscode.commands.registerCommand('landnam.openPreview', () => {
       const ed = vscode.window.activeTextEditor; if (!isScene(ed && ed.document)) return
       const id = path.basename(ed.document.fileName, '.toml')
