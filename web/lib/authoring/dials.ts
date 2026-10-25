@@ -1,6 +1,6 @@
 // A dial is a one-line list of options that each become a Thing (see scene.schema.json "dial").
 // Expansion happens when a scene is read, so the Studio, validation and presets see ordinary things.
-import type { Thing } from './docs.ts'
+import type { SceneState, Thing } from './docs.ts'
 
 export interface Dial {
   label?: string
@@ -26,8 +26,15 @@ export function expandDials(dials: Record<string, Dial> | undefined): Thing[] {
   }))
 }
 
-/** A scene value with its dials turned into things (listed after the hand-written ones). */
-export function withDials<T extends { things?: Thing[]; dials?: Record<string, Dial> }>(value: T): T {
-  if (!value.dials) return value
-  return { ...value, things: [...(value.things ?? []), ...expandDials(value.dials)] }
+/** Keyed one-line tables (`[parts]`, `[checkpoints]`) become the arrays the rest of the code reads, with the key as `id`. */
+const keyed = <T>(table: Record<string, Omit<T, 'id'>> | undefined): T[] => Object.entries(table ?? {}).map(([id, item]) => ({ id, ...item }) as T)
+
+/** A scene value with parts, dials and checkpoints expanded into things and states (after any hand-written ones). */
+export function withDials<T extends { things?: Thing[]; states?: SceneState[]; dials?: Record<string, Dial>; parts?: Record<string, Omit<Thing, 'id'>>; checkpoints?: Record<string, Omit<SceneState, 'id'>> }>(value: T): T {
+  if (!value.dials && !value.parts && !value.checkpoints) return value
+  return {
+    ...value,
+    things: [...(value.things ?? []), ...keyed<Thing>(value.parts), ...expandDials(value.dials)],
+    states: [...(value.states ?? []), ...keyed<SceneState>(value.checkpoints)],
+  }
 }

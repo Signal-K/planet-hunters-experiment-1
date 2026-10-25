@@ -6,7 +6,8 @@ const path = require('path')
 
 const isScene = d => d && /shared[\\/]authoring[\\/](scenes|fixtures|missions|flows)[\\/][^\\/]+\.toml$/.test(d.fileName)
 const HEADER = /^\s*\[\[?\s*([A-Za-z0-9_.-]+)\s*\]\]?\s*(#.*)?$/
-const BIG = new Set(['things', 'states', 'presets'])
+const BIG = new Set(['things', 'states', 'presets', 'parts', 'checkpoints', 'dials'])
+const KEYED = new Set(['parts', 'checkpoints', 'dials'])
 
 /** Every [table] / [[table]] with its line and a readable name from id / label inside it. */
 function parse(doc) {
@@ -17,7 +18,18 @@ function parse(doc) {
     if (out.length) out[out.length - 1].end = i - 1
     out.push({ table: m[1], line: i, end: doc.lineCount - 1, id: null, label: null })
   }
+  // One-line entries (`launchpad = { label = ... }`) under [parts] / [checkpoints] / [dials] are outline items too.
+  const keyed = []
   for (const t of out) {
+    if (!KEYED.has(t.table)) continue
+    for (let i = t.line + 1; i <= t.end; i++) {
+      const m = /^([A-Za-z0-9_-]+)\s*=\s*\{(.*)\}\s*$/.exec(doc.lineAt(i).text)
+      if (m) { const lb = /label\s*=\s*"([^"]*)"/.exec(m[2]); keyed.push({ table: t.table, line: i, end: i, id: m[1], label: lb && lb[1] }) }
+    }
+  }
+  out.push(...keyed)
+  for (const t of out) {
+    if (KEYED.has(t.table) && t.id) continue
     for (let i = t.line + 1; i <= t.end && i < t.line + 8; i++) {
       const s = doc.lineAt(i).text
       const id = /^\s*id\s*=\s*"([^"]*)"/.exec(s); if (id && !t.id) t.id = id[1]

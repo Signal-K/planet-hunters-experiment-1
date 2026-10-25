@@ -46,6 +46,16 @@
       "description": "Pick-one or pick-any lists of things that only change a stage switch or one game-state value, such as time of day or weather. Each line becomes one thing per option, so a six-option dial is one line instead of six tables.",
       "additionalProperties": { "$ref": "#/definitions/dial" }
     },
+    "parts": {
+      "type": "object",
+      "description": "Things keyed by id, one line each: structures, craft, instruments, overlays. The fields of a thing without the id.",
+      "additionalProperties": { "$ref": "#/definitions/part" }
+    },
+    "checkpoints": {
+      "type": "object",
+      "description": "Game checkpoints keyed by id, one line each. The fields of a state without the id.",
+      "additionalProperties": { "$ref": "#/definitions/checkpoint" }
+    },
     "things": {
       "type": "array",
       "description": "Everything that can be in this scene. Switch things on in the Studio to see them in the real game, then save the combination as a preset.",
@@ -125,6 +135,149 @@
         "state": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9.]*$", "description": "Or a game-state path each option sets, such as player.earthBiome." },
         "default": { "type": "string", "description": "The option that is on when the scene starts." },
         "options": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*(=[a-z0-9,-]+)?$" }, "description": "Option ids. Write id=value when the value sent differs from the id, such as rocket-launch=launch." }
+      }
+    },
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What the Studio shows."
+        },
+        "group": {
+          "type": "string",
+          "description": "The heading it is listed under, such as Structures or Time of day."
+        },
+        "note": {
+          "type": "string",
+          "description": "One plain line about it."
+        },
+        "exclusive": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Things that share a value here are choices: only one of them can be on."
+        },
+        "default": {
+          "type": "boolean",
+          "description": "On when the scene starts."
+        },
+        "state": {
+          "type": "object",
+          "description": "Game state to layer over the scene's starting point while this is on. Tables merge, lists gain entries, anything else is replaced. Keys are checked against the game's own state. \"@now-30s\" and \"@now+2h\" mean an instant relative to now."
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Switches of the stage page. Several things that set the same key are joined with commas.",
+          "properties": {
+            "time": {
+              "enum": [
+                "dawn",
+                "morning",
+                "midday",
+                "afternoon",
+                "dusk",
+                "night"
+              ],
+              "description": "Time of day over the base."
+            },
+            "season": {
+              "enum": [
+                "spring",
+                "summer",
+                "autumn",
+                "winter"
+              ],
+              "description": "Season over the base."
+            },
+            "sky": {
+              "type": "string",
+              "pattern": "^[a-z,-]+$",
+              "description": "Sky events and weather to force: meteors, launch, balloon, satellite, aurora, comet, eclipse, venus, clear, cloudy, windy, rain, storm, fog."
+            },
+            "shower": {
+              "const": "1",
+              "description": "Show the Orionids event, which is otherwise only seen in its real dates."
+            },
+            "hud": {
+              "const": "1",
+              "description": "Show the base's clock and balance, which the sandbox hides."
+            },
+            "menu": {
+              "const": "1",
+              "description": "Open the base menu."
+            },
+            "building": {
+              "type": "string",
+              "pattern": "^[a-z-]+$",
+              "description": "Focus a building on the base, such as hangar."
+            },
+            "launchscene": {
+              "const": "1",
+              "description": "Start the launch sequence on the launchpad."
+            },
+            "click": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_,-]+$",
+              "description": "data-testid values to click, in order, once the scene has loaded. Reaches states that need an action."
+            }
+          }
+        },
+        "range": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max",
+            "value"
+          ],
+          "description": "Makes this a slider, which is always applied. Use {value} and {rest} (max minus value) inside strings in `state`.",
+          "properties": {
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            },
+            "value": {
+              "type": "number",
+              "description": "Where the slider starts."
+            }
+          }
+        }
+      }
+    },
+    "checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "preset"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "preset": {
+          "type": "string",
+          "description": "Stage fixture (dev preset) key."
+        },
+        "patch": {
+          "type": "object",
+          "description": "Shallow-merged into the player after load, to reach states no fixture covers."
+        },
+        "note": {
+          "type": "string"
+        }
       }
     },
     "thing": {

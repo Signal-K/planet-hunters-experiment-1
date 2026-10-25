@@ -1,18 +1,8 @@
 # Earth Base fixtures: the sample players and switches the Studio and the preview use. The scene script is scenes/hub.toml.
 # Not game content. A fixture says 'show the base as this player would see it'; the game's real state lives in the save.
-#
-# Start here:  [dials]  time, season, weather, landscape, sky events (one line each)
-#              [[presets]]  the named setups people open (3)
-#              [[things]]  structures, craft, instruments, overlays (switch on to see them)
-#              [[states]]  game checkpoints, tucked away
-
-# One line per list of options; each option becomes a thing (pick = "one" makes them choices).
-[dials]
-time = { label = "Time of day", query = "time", default = "midday", options = ["dawn", "morning", "midday", "afternoon", "dusk", "night"] }
-season = { label = "Season", query = "season", default = "summer", options = ["spring", "summer", "autumn", "winter"] }
-land = { label = "Landscape", state = "player.earthBiome", default = "mountains", options = ["mountains", "desert", "tundra", "coast"] }
-weather = { label = "Weather", query = "sky", default = "clear", options = ["clear", "cloudy", "windy", "rain", "storm", "fog"] }
-sky-events = { label = "Sky events", pick = "any", query = "sky", options = ["meteors", "rocket-launch=launch", "balloon", "satellite", "aurora", "comet", "eclipse", "venus"] }
+# Start here: [[presets]] (the named setups people open), [dials] (time, season, weather, landscape, sky events),
+# [parts] (structures, craft, instruments, overlays: state is laid over the game state, query sets stage switches),
+# [checkpoints] (real playthrough points, tucked away in the Studio).
 
 [[presets]]
 id = "fresh-base"
@@ -41,160 +31,40 @@ The base once the first telescope is in orbit. The orbital network should be rea
 pad or the control station. Stars show; the moon is the only luminary.
 """
 
-[[things]]
-id = "launchpad"
-label = "Launchpad"
-group = "Structures"
-default = true
-state = { player = { placed = ["launchpad"], placementPlots = { launchpad = 0 } } }
+# One line per list of options; each option becomes a thing (pick = "one" makes them choices).
+[dials]
+time = { label = "Time of day", query = "time", default = "midday", options = ["dawn", "morning", "midday", "afternoon", "dusk", "night"] }
+season = { label = "Season", query = "season", default = "summer", options = ["spring", "summer", "autumn", "winter"] }
+land = { label = "Landscape", state = "player.earthBiome", default = "mountains", options = ["mountains", "desert", "tundra", "coast"] }
+weather = { label = "Weather", query = "sky", default = "clear", options = ["clear", "cloudy", "windy", "rain", "storm", "fog"] }
+sky-events = { label = "Sky events", pick = "any", query = "sky", options = ["meteors", "rocket-launch=launch", "balloon", "satellite", "aurora", "comet", "eclipse", "venus"] }
 
-[[things]]
-id = "exchange"
-label = "Exchange"
-group = "Structures"
-note = "A real building on the base, not a menu item."
-state = { player = { placed = ["market"], placementPlots = { market = 1 } } }
+[parts]
+# Structures
+launchpad = { label = "Launchpad", group = "Structures", default = true, state = { player = { placed = ["launchpad"], placementPlots = { launchpad = 0 } } } }
+exchange = { label = "Exchange", group = "Structures", note = "A real building on the base, not a menu item.", state = { player = { placed = ["market"], placementPlots = { market = 1 } } } }
+silo = { label = "Silo", group = "Structures", note = "No body above ground. The lift shaft is the silo door.", state = { player = { placed = ["surface-silo"], placementPlots = { surface-silo = 2 } } } }
+control-station = { label = "Control station", group = "Structures", exclusive = "plot-3", state = { player = { placed = ["control-station"], placementPlots = { control-station = 3 } } } }
+hangar = { label = "Hangar", group = "Structures", exclusive = "plot-3", note = "Shares the fourth plot with the control station.", state = { player = { placed = ["hangar"], placementPlots = { hangar = 3 } } } }
+pad-callout = { label = "Prompt on the pad", group = "Structures", note = "The callout that suggests the next step. Off in the sandbox unless you bring it in.", state = { player = { dismissedHubPrompts = { transit-telescope = 0 } } } }
+# Craft
+rocket-on-pad = { label = "Rocket on the pad", group = "Craft", exclusive = "craft", state = { player = { selectedStagedRocketId = "sandbox-rocket", stagedRockets = [{ id = "sandbox-rocket", rocketId = "explorer", rocket = { chassis = "hull-mk1", propulsion = "ion-a1", drill = "hand-drill" }, location = "launchpad", source = "company", missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu" }] } } }
+rocket-in-hangar = { label = "Rocket in the hangar", group = "Craft", exclusive = "craft", state = { player = { selectedStagedRocketId = "sandbox-rocket", stagedRockets = [{ id = "sandbox-rocket", rocketId = "explorer", rocket = { chassis = "hull-mk1", propulsion = "ion-a1", drill = "hand-drill" }, location = "hangar", source = "company", missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu" }] } } }
+craft-in-flight = { label = "Craft in flight", group = "Craft", exclusive = "craft", state = { missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu", player = { activeMission = { id = "lnm_m3_relay_bennu_vesta", label = "Belt Courier Run" }, missionPhase = "transit", transitStartedAt = "@now-5m", arrivalAt = "@now+1h" } } }
+craft-mining = { label = "Craft mining", group = "Craft", exclusive = "craft", state = { missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu", player = { activeMission = { id = "lnm_m3_relay_bennu_vesta", label = "Belt Courier Run" }, missionPhase = "mining" } } }
+# Instruments
+telescope-in-orbit = { label = "Telescope in orbit", group = "Instruments", note = "Shows the orbital instrument network over the base.", state = { player = { transitSatelliteLaunchedAt = "@now-1d", transitSatelliteLevel = 1 } } }
+deep-space-telescope = { label = "Deep-space telescope", group = "Instruments", state = { player = { deepSpaceTelescopeBuilt = true, deepSpaceTelescopeLevel = 1, transitSatelliteLevel = 2 } } }
+# Overlays
+orionids-banner = { label = "Orionids banner", group = "Overlays", note = "The live-event chip and sky. Normally only seen in its real dates.", query = { shower = "1" } }
+menu-open = { label = "Menu open", group = "Overlays", query = { menu = "1" } }
+balance-and-clock = { label = "Balance and clock", group = "Overlays", note = "The sandbox hides them so the scene is the subject. Bring them in to check how the chrome sits.", query = { hud = "1" } }
 
-[[things]]
-id = "silo"
-label = "Silo"
-group = "Structures"
-note = "No body above ground. The lift shaft is the silo door."
-state = { player = { placed = ["surface-silo"], placementPlots = { surface-silo = 2 } } }
-
-[[things]]
-id = "control-station"
-label = "Control station"
-group = "Structures"
-exclusive = "plot-3"
-state = { player = { placed = ["control-station"], placementPlots = { control-station = 3 } } }
-
-[[things]]
-id = "hangar"
-label = "Hangar"
-group = "Structures"
-exclusive = "plot-3"
-note = "Shares the fourth plot with the control station."
-state = { player = { placed = ["hangar"], placementPlots = { hangar = 3 } } }
-
-[[things]]
-id = "pad-callout"
-label = "Prompt on the pad"
-group = "Structures"
-note = "The callout that suggests the next step. Off in the sandbox unless you bring it in."
-state = { player = { dismissedHubPrompts = { transit-telescope = 0 } } }
-
-[[things]]
-id = "rocket-on-pad"
-label = "Rocket on the pad"
-group = "Craft"
-exclusive = "craft"
-state = { player = { selectedStagedRocketId = "sandbox-rocket", stagedRockets = [{ id = "sandbox-rocket", rocketId = "explorer", rocket = { chassis = "hull-mk1", propulsion = "ion-a1", drill = "hand-drill" }, location = "launchpad", source = "company", missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu" }] } }
-
-[[things]]
-id = "rocket-in-hangar"
-label = "Rocket in the hangar"
-group = "Craft"
-exclusive = "craft"
-state = { player = { selectedStagedRocketId = "sandbox-rocket", stagedRockets = [{ id = "sandbox-rocket", rocketId = "explorer", rocket = { chassis = "hull-mk1", propulsion = "ion-a1", drill = "hand-drill" }, location = "hangar", source = "company", missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu" }] } }
-
-[[things]]
-id = "craft-in-flight"
-label = "Craft in flight"
-group = "Craft"
-exclusive = "craft"
-state = { missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu", player = { activeMission = { id = "lnm_m3_relay_bennu_vesta", label = "Belt Courier Run" }, missionPhase = "transit", transitStartedAt = "@now-5m", arrivalAt = "@now+1h" } }
-
-[[things]]
-id = "craft-mining"
-label = "Craft mining"
-group = "Craft"
-exclusive = "craft"
-state = { missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu", player = { activeMission = { id = "lnm_m3_relay_bennu_vesta", label = "Belt Courier Run" }, missionPhase = "mining" } }
-
-[[things]]
-id = "telescope-in-orbit"
-label = "Telescope in orbit"
-group = "Instruments"
-note = "Shows the orbital instrument network over the base."
-state = { player = { transitSatelliteLaunchedAt = "@now-1d", transitSatelliteLevel = 1 } }
-
-[[things]]
-id = "deep-space-telescope"
-label = "Deep-space telescope"
-group = "Instruments"
-state = { player = { deepSpaceTelescopeBuilt = true, deepSpaceTelescopeLevel = 1, transitSatelliteLevel = 2 } }
-
-[[things]]
-id = "orionids-banner"
-label = "Orionids banner"
-group = "Overlays"
-note = "The live-event chip and sky. Normally only seen in its real dates."
-query = { shower = "1" }
-
-[[things]]
-id = "menu-open"
-label = "Menu open"
-group = "Overlays"
-query = { menu = "1" }
-
-[[things]]
-id = "balance-and-clock"
-label = "Balance and clock"
-group = "Overlays"
-note = "The sandbox hides them so the scene is the subject. Bring them in to check how the chrome sits."
-query = { hud = "1" }
-
-# ---------------------------------------------------------------------------------------------------------------
-# Presets: named setups with plain-language instructions. The agent treats the instructions as the test for the setup.
-# ---------------------------------------------------------------------------------------------------------------
-
-# Game checkpoints: the base at points of a real playthrough. They carry the campaign with them (tutorial, balance,
-# prompts), so the Studio keeps them out of the way. To look at the base, use the things and presets below.
-[[states]]
-id = "first-pad"
-label = "First launchpad"
-preset = "m1-hub"
-note = "Launchpad built. The Extraction coach is active."
-
-[[states]]
-id = "transport-lesson"
-label = "Transport lesson"
-preset = "transport-hub"
-note = "One mission done. The Transport coach asks for a two-leg client job."
-
-[[states]]
-id = "silo-next"
-label = "Silo next"
-preset = "storage-hub"
-note = "Both guided missions done. No silo yet and Free Ops is still locked."
-
-[[states]]
-id = "free-ops-telescope"
-label = "Free Ops and telescope"
-preset = "telescope-hub"
-note = "Post-onboarding. Free Ops is unlocked and a telescope is built."
-
-[[states]]
-id = "early"
-label = "About 15 minutes in"
-preset = "cp-early"
-
-[[states]]
-id = "mid"
-label = "About 35 minutes in"
-preset = "cp-mid"
-note = "Silo, academy and refinery built."
-
-[[states]]
-id = "late"
-label = "About 55 minutes in"
-preset = "cp-late"
-note = "Every building is built."
-
-# ---------------------------------------------------------------------------------------------------------------
-# Everything that can be on the base. Switch things on in the Studio (Things tab) to see them in the real game, then
-# save the combination as a preset. Tables merge, lists gain entries, anything else is replaced.
-# The base has four build plots (0 pad, 1 exchange, 2 silo, 3 ops), so the hangar cannot stand beside the control
-# station yet: that is why they are a choice.
-# ---------------------------------------------------------------------------------------------------------------
+[checkpoints]
+first-pad = { label = "First launchpad", preset = "m1-hub", note = "Launchpad built. The Extraction coach is active." }
+transport-lesson = { label = "Transport lesson", preset = "transport-hub", note = "One mission done. The Transport coach asks for a two-leg client job." }
+silo-next = { label = "Silo next", preset = "storage-hub", note = "Both guided missions done. No silo yet and Free Ops is still locked." }
+free-ops-telescope = { label = "Free Ops and telescope", preset = "telescope-hub", note = "Post-onboarding. Free Ops is unlocked and a telescope is built." }
+early = { label = "About 15 minutes in", preset = "cp-early" }
+mid = { label = "About 35 minutes in", preset = "cp-mid", note = "Silo, academy and refinery built." }
+late = { label = "About 55 minutes in", preset = "cp-late", note = "Every building is built." }

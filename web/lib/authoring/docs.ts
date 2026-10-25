@@ -90,6 +90,8 @@ export interface SceneDoc {
   preview: { route: string; state?: string }
   states?: SceneState[]
   dials?: Record<string, import('./dials.ts').Dial>
+  parts?: Record<string, Omit<Thing, 'id'>>
+  checkpoints?: Record<string, Omit<SceneState, 'id'>>
   things?: Thing[]
   presets?: ScenePreset[]
   objects?: SceneObject[]
