@@ -61,6 +61,7 @@ check:
 test:
 	@node scripts/authoring.mjs check | tail -1
 	@cd web && npx vitest run --reporter=dot 2>&1 | grep -v '^$$' | tail -15
+	@cd shared/core && go test ./... 2>&1 | grep -v 'no test files'
 
 scene:
 	@node scripts/scene.mjs $(NAME) $(CHECK)
